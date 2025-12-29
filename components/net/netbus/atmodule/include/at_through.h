@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#if CONFIG_ATMODULE_NANO
+#ifndef CONFIG_ATMODULE_FULL_FEAT
 #define AT_THROUGH_MAX_LEN (256)
 #else
 #define AT_THROUGH_MAX_LEN (1*1536)

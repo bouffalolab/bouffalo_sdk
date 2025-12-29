@@ -68,6 +68,12 @@ SECTIONS
         *(.text)
         *(.text.*)
 
+        /* section information for components's version */
+        . = ALIGN(4);
+        _version_info_section_start = .;
+        KEEP(*(.version.*))
+        _version_info_section_end = .;
+
         /* section information for shell */
         . = ALIGN(4);
         __fsymtab_start = .;

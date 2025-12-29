@@ -7,7 +7,12 @@
 #include "task.h"
 #include "queue.h"
 #include <stdlib.h>
+
+#ifdef CONFIG_WL80211
+#define FHOST_RX_BUF_CNT 20// fixme
+#else
 #include "fhost.h"
+#endif
 
 #ifdef CONFIG_SDIO3_SOFT_RST_INT_USER
 #include <bflb_sdio3.h>
@@ -85,7 +90,7 @@ static int msg_upld_send_done_cb(frame_elem_t *frame_elem, void *arg);
 static int transportsdio_hwreset(frame_elem_t *frame_elem, void *arg);
 
 /* WiFi TX completion callback */
-static void wifi_tx_done_cb(struct wifi_wifista_priv *priv, frame_elem_t *frame_elem);
+static void wifi_tx_done_cb(frame_elem_t *frame_elem);
 
 /**
  * @brief Wake up the WiFi processing task
@@ -142,8 +147,9 @@ static bool wifi_connection_state_update(struct wifi_wifista_priv *priv)
  * @param[in] frame_elem Pointer to frame element
  * @param[in] success TX success flag
  */
-static void wifi_tx_done_cb(struct wifi_wifista_priv *priv, frame_elem_t *frame_elem)
+static void wifi_tx_done_cb(frame_elem_t *frame_elem)
 {
+    struct wifi_wifista_priv *priv = g_wifi_priv;
     if (!frame_elem) {
         return;
     }

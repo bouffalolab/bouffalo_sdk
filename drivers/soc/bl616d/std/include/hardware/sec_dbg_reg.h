@@ -132,6 +132,49 @@
 #define SEC_DBG_SD_DBG_RESERVED_MSK    (((1U << SEC_DBG_SD_DBG_RESERVED_LEN) - 1) << SEC_DBG_SD_DBG_RESERVED_POS)
 #define SEC_DBG_SD_DBG_RESERVED_UMSK   (~(((1U << SEC_DBG_SD_DBG_RESERVED_LEN) - 1) << SEC_DBG_SD_DBG_RESERVED_POS))
 
+/* 0x20 : sd_auth */
+#define SEC_DBG_SD_AUTH_OFFSET           (0x20)
+#define SEC_DBG_SD_AUTH_CODE_0           SEC_DBG_SD_AUTH_CODE_0
+#define SEC_DBG_SD_AUTH_CODE_0_POS       (0U)
+#define SEC_DBG_SD_AUTH_CODE_0_LEN       (4U)
+#define SEC_DBG_SD_AUTH_CODE_0_MSK       (((1U<<SEC_DBG_SD_AUTH_CODE_0_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_0_POS)
+#define SEC_DBG_SD_AUTH_CODE_0_UMSK      (~(((1U<<SEC_DBG_SD_AUTH_CODE_0_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_0_POS))
+#define SEC_DBG_SD_AUTH_CODE_1           SEC_DBG_SD_AUTH_CODE_1
+#define SEC_DBG_SD_AUTH_CODE_1_POS       (4U)
+#define SEC_DBG_SD_AUTH_CODE_1_LEN       (4U)
+#define SEC_DBG_SD_AUTH_CODE_1_MSK       (((1U<<SEC_DBG_SD_AUTH_CODE_1_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_1_POS)
+#define SEC_DBG_SD_AUTH_CODE_1_UMSK      (~(((1U<<SEC_DBG_SD_AUTH_CODE_1_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_1_POS))
+#define SEC_DBG_SD_AUTH_CODE_2           SEC_DBG_SD_AUTH_CODE_2
+#define SEC_DBG_SD_AUTH_CODE_2_POS       (8U)
+#define SEC_DBG_SD_AUTH_CODE_2_LEN       (4U)
+#define SEC_DBG_SD_AUTH_CODE_2_MSK       (((1U<<SEC_DBG_SD_AUTH_CODE_2_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_2_POS)
+#define SEC_DBG_SD_AUTH_CODE_2_UMSK      (~(((1U<<SEC_DBG_SD_AUTH_CODE_2_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_2_POS))
+#define SEC_DBG_SD_AUTH_CODE_3           SEC_DBG_SD_AUTH_CODE_3
+#define SEC_DBG_SD_AUTH_CODE_3_POS       (12U)
+#define SEC_DBG_SD_AUTH_CODE_3_LEN       (4U)
+#define SEC_DBG_SD_AUTH_CODE_3_MSK       (((1U<<SEC_DBG_SD_AUTH_CODE_3_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_3_POS)
+#define SEC_DBG_SD_AUTH_CODE_3_UMSK      (~(((1U<<SEC_DBG_SD_AUTH_CODE_3_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_3_POS))
+#define SEC_DBG_SD_AUTH_CODE_LOCK_0      SEC_DBG_SD_AUTH_CODE_LOCK_0
+#define SEC_DBG_SD_AUTH_CODE_LOCK_0_POS  (28U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_0_LEN  (1U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_0_MSK  (((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_0_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_0_POS)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_0_UMSK (~(((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_0_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_0_POS))
+#define SEC_DBG_SD_AUTH_CODE_LOCK_1      SEC_DBG_SD_AUTH_CODE_LOCK_1
+#define SEC_DBG_SD_AUTH_CODE_LOCK_1_POS  (29U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_1_LEN  (1U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_1_MSK  (((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_1_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_1_POS)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_1_UMSK (~(((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_1_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_1_POS))
+#define SEC_DBG_SD_AUTH_CODE_LOCK_2      SEC_DBG_SD_AUTH_CODE_LOCK_2
+#define SEC_DBG_SD_AUTH_CODE_LOCK_2_POS  (30U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_2_LEN  (1U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_2_MSK  (((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_2_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_2_POS)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_2_UMSK (~(((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_2_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_2_POS))
+#define SEC_DBG_SD_AUTH_CODE_LOCK_3      SEC_DBG_SD_AUTH_CODE_LOCK_3
+#define SEC_DBG_SD_AUTH_CODE_LOCK_3_POS  (31U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_3_LEN  (1U)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_3_MSK  (((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_3_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_3_POS)
+#define SEC_DBG_SD_AUTH_CODE_LOCK_3_UMSK (~(((1U<<SEC_DBG_SD_AUTH_CODE_LOCK_3_LEN)-1)<<SEC_DBG_SD_AUTH_CODE_LOCK_3_POS))
+
 struct sec_dbg_reg {
     /* 0x0 : sd_chip_id_low */
     union {
@@ -202,6 +245,22 @@ struct sec_dbg_reg {
         } BF;
         uint32_t WORD;
     } sd_dbg_reserved;
+
+    /* 0x20 : sd_auth */
+    union {
+        struct {
+            uint32_t sd_auth_code_0      :  4; /* [ 3: 0],        r/w,        0x0 */
+            uint32_t sd_auth_code_1      :  4; /* [ 7: 4],        r/w,        0x0 */
+            uint32_t sd_auth_code_2      :  4; /* [11: 8],        r/w,        0x0 */
+            uint32_t sd_auth_code_3      :  4; /* [15:12],        r/w,        0x0 */
+            uint32_t reserved_16_27      : 12; /* [27:16],       rsvd,        0x0 */
+            uint32_t sd_auth_code_lock_0 :  1; /* [   28],          r,        0x0 */
+            uint32_t sd_auth_code_lock_1 :  1; /* [   29],          r,        0x0 */
+            uint32_t sd_auth_code_lock_2 :  1; /* [   30],          r,        0x0 */
+            uint32_t sd_auth_code_lock_3 :  1; /* [   31],          r,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } sd_auth;
 };
 
 typedef volatile struct sec_dbg_reg sec_dbg_reg_t;

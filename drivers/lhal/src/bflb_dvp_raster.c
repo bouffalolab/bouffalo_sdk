@@ -25,18 +25,21 @@ void bflb_dvp_raster_init(struct bflb_device_s *dev, struct bflb_dvp_raster_conf
 #else
     uint32_t reg_base;
     uint32_t regval;
+    uint32_t pixel_cnt = config->resolution_x * config->resolution_y;
 
     /* config dvp2sram0 */
     reg_base = DVP2SRAM0_BASE;
     putreg32((config->resolution_x * 8) << DVP2SRAM_REG_SRAM_ADDR_FEND_SHIFT, reg_base + DVP2SRAM_D2S_SRAM_ADDR_OFFSET);
-    putreg32((config->resolution_y << DVP2SRAM_REG_FRAM_LINE_CNT_SHIFT) | config->resolution_x, reg_base + DVP2SRAM_D2S_MEM_BCNT_OFFSET);
-    putreg32(config->resolution_x * config->resolution_y, reg_base + DVP2SRAM_D2S_FRAME_BCNT_OFFSET);
+    putreg32((config->resolution_y << DVP2SRAM_REG_FRAM_LINE_CNT_SHIFT) | config->resolution_x,
+             reg_base + DVP2SRAM_D2S_MEM_BCNT_OFFSET);
+    putreg32(pixel_cnt, reg_base + DVP2SRAM_D2S_FRAME_BCNT_OFFSET);
 
     /* config dvp2sram1 */
     reg_base = DVP2SRAM1_BASE;
     putreg32((config->resolution_x * 4) << DVP2SRAM_REG_SRAM_ADDR_FEND_SHIFT, reg_base + DVP2SRAM_D2S_SRAM_ADDR_OFFSET);
-    putreg32(((config->resolution_y / 2) << DVP2SRAM_REG_FRAM_LINE_CNT_SHIFT) | config->resolution_x, reg_base + DVP2SRAM_D2S_MEM_BCNT_OFFSET);
-    putreg32(config->resolution_x * config->resolution_y / 2, reg_base + DVP2SRAM_D2S_FRAME_BCNT_OFFSET);
+    putreg32(((config->resolution_y / 2) << DVP2SRAM_REG_FRAM_LINE_CNT_SHIFT) | config->resolution_x,
+             reg_base + DVP2SRAM_D2S_MEM_BCNT_OFFSET);
+    putreg32(pixel_cnt / 2, reg_base + DVP2SRAM_D2S_FRAME_BCNT_OFFSET);
     regval = getreg32(reg_base + DVP2SRAM_D2S_CONFIGUE_OFFSET);
     regval |= DVP2SRAM_REG_DVP_DATA_BSEL | DVP2SRAM_REG_V_SUBSAMPLE_EN;
     putreg32(regval, reg_base + DVP2SRAM_D2S_CONFIGUE_OFFSET);
@@ -45,7 +48,11 @@ void bflb_dvp_raster_init(struct bflb_device_s *dev, struct bflb_dvp_raster_conf
     reg_base = MM_MISC_BASE;
     regval = getreg32(reg_base + MM_MISC_DVP_MUX_SEL_REG_OFFSET);
     regval &= ~MM_MISC_REG_D2XA_IN_SEL_MASK;
+#if defined(CPU_MODEL_A0)
     regval |= 2 << MM_MISC_REG_D2XA_IN_SEL_SHIFT;
+#else
+    regval |= 3 << MM_MISC_REG_D2XA_IN_SEL_SHIFT;
+#endif
     putreg32(regval, reg_base + MM_MISC_DVP_MUX_SEL_REG_OFFSET);
 
     regval = getreg32(reg_base + MM_MISC_OFFSET);
@@ -55,10 +62,12 @@ void bflb_dvp_raster_init(struct bflb_device_s *dev, struct bflb_dvp_raster_conf
 
     /* config raster2block */
     reg_base = dev->reg_base;
-    putreg32(((config->resolution_y / 16) << RASTER2BLOCK_REG_FRAME_HBLK_SHIFT) | (config->resolution_x / 16), reg_base + RASTER2BLOCK_R2B_CFG1_OFFSET);
+    putreg32(((config->resolution_y / 16) << RASTER2BLOCK_REG_FRAME_HBLK_SHIFT) | (config->resolution_x / 16),
+             reg_base + RASTER2BLOCK_R2B_CFG1_OFFSET);
     putreg32(config->y_frame_addr, reg_base + RASTER2BLOCK_R2B_NENC_CFG0_OFFSET);
     putreg32(config->uv_frame_addr, reg_base + RASTER2BLOCK_R2B_NENC_CFG1_OFFSET);
-    putreg32(config->uv_frame_cnt << RASTER2BLOCK_REG_C_MEM_FRAME_CNT_SHIFT | config->y_frame_cnt, reg_base + RASTER2BLOCK_R2B_NENC_CFG2_OFFSET);
+    putreg32(config->uv_frame_cnt << RASTER2BLOCK_REG_C_MEM_FRAME_CNT_SHIFT | config->y_frame_cnt,
+             reg_base + RASTER2BLOCK_R2B_NENC_CFG2_OFFSET);
     regval = getreg32(reg_base + RASTER2BLOCK_R2B_CFG0_OFFSET);
     regval &= ~(RASTER2BLOCK_REG_MIRROR_EN | RASTER2BLOCK_REG_FLIP_EN | RASTER2BLOCK_REG_FRAME_MODE_MASK);
     regval |= (config->mode & 0xf0);
@@ -70,19 +79,32 @@ void bflb_dvp_raster_init(struct bflb_device_s *dev, struct bflb_dvp_raster_conf
     regval |= BLOCK2RASTER_REG_B2R_DVP_MODE | BLOCK2RASTER_REG_B2R_BP_WAIT;
     putreg32(regval, reg_base + BLOCK2RASTER_B2R_BASIC_CFG0_OFFSET);
     if (config->mode & (1 << 6)) {
-        putreg32(((config->resolution_x / 16) << BLOCK2RASTER_REG_H_BLK_SHIFT) | (config->resolution_y / 16), reg_base + BLOCK2RASTER_B2R_FRAME_CFG0_OFFSET);
+        putreg32(((config->resolution_x / 16) << BLOCK2RASTER_REG_H_BLK_SHIFT) | (config->resolution_y / 16),
+                 reg_base + BLOCK2RASTER_B2R_FRAME_CFG0_OFFSET);
     } else {
-        putreg32(((config->resolution_y / 16) << BLOCK2RASTER_REG_H_BLK_SHIFT) | (config->resolution_x / 16), reg_base + BLOCK2RASTER_B2R_FRAME_CFG0_OFFSET);
+        putreg32(((config->resolution_y / 16) << BLOCK2RASTER_REG_H_BLK_SHIFT) | (config->resolution_x / 16),
+                 reg_base + BLOCK2RASTER_B2R_FRAME_CFG0_OFFSET);
     }
     regval = getreg32(reg_base + BLOCK2RASTER_B2R_FRAME_CFG1_OFFSET);
     regval &= ~BLOCK2RASTER_REG_W_BLANK_MASK;
-    if (config->resolution_x <= 640) {
+    if (((getreg32(reg_base + BLOCK2RASTER_B2R_FRAME_CFG0_OFFSET) & BLOCK2RASTER_REG_W_BLK_MASK) * 16) <= 640) {
         putreg32(regval | (0xaff << BLOCK2RASTER_REG_W_BLANK_SHIFT), reg_base + BLOCK2RASTER_B2R_FRAME_CFG1_OFFSET);
     } else {
         putreg32(regval | (0xfff << BLOCK2RASTER_REG_W_BLANK_SHIFT), reg_base + BLOCK2RASTER_B2R_FRAME_CFG1_OFFSET);
     }
     putreg32(config->y_frame_addr, reg_base + BLOCK2RASTER_B2R_MEM_LAYOUT_CFG0_OFFSET);
     putreg32(config->uv_frame_addr, reg_base + BLOCK2RASTER_B2R_MEM_LAYOUT_CFG1_OFFSET);
+    if (config->y_frame_cnt > 1) {
+        putreg32(config->y_frame_addr + pixel_cnt, reg_base + BLOCK2RASTER_B2R_MEM_LAYOUT_CFG2_OFFSET);
+        if (config->uv_frame_cnt > 1) {
+            regval = getreg32(reg_base + BLOCK2RASTER_B2R_BASIC_CFG0_OFFSET);
+            regval |= BLOCK2RASTER_REG_B2R_SWAP_MODE;
+            putreg32(regval, reg_base + BLOCK2RASTER_B2R_BASIC_CFG0_OFFSET);
+        }
+    }
+    if (config->uv_frame_cnt > 1) {
+        putreg32(config->uv_frame_addr + pixel_cnt / 2, reg_base + BLOCK2RASTER_B2R_MEM_LAYOUT_CFG3_OFFSET);
+    }
 #endif
 }
 
@@ -153,6 +175,72 @@ void bflb_dvp_raster_disable(struct bflb_device_s *dev)
     putreg32(regval, reg_base + DVP2SRAM_D2S_CONFIGUE_OFFSET);
 #endif
 }
+
+void bflb_dvp_raster_sw_mode(struct bflb_device_s *dev, bool enable)
+{
+#ifdef romapi_bflb_dvp_raster_sw_mode
+    romapi_bflb_dvp_raster_sw_mode(dev, enable);
+#else
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = BLOCK2RASTER_BASE;
+    regval = getreg32(reg_base + BLOCK2RASTER_B2R_BASIC_CFG0_OFFSET);
+    if (enable) {
+        regval |= BLOCK2RASTER_REG_B2R_SW_MODE;
+        putreg32((64 << 16) | 128, reg_base + BLOCK2RASTER_B2R_FRAME_CFG1_OFFSET);
+    } else {
+        regval &= ~BLOCK2RASTER_REG_B2R_SW_MODE;
+        if (((getreg32(reg_base + BLOCK2RASTER_B2R_FRAME_CFG0_OFFSET) & BLOCK2RASTER_REG_W_BLK_MASK) * 16) <= 640) {
+            putreg32((64 << 16) | 0xaff, reg_base + BLOCK2RASTER_B2R_FRAME_CFG1_OFFSET);
+        } else {
+            putreg32((64 << 16) | 0xfff, reg_base + BLOCK2RASTER_B2R_FRAME_CFG1_OFFSET);
+        }
+    }
+    putreg32(regval, reg_base + BLOCK2RASTER_B2R_BASIC_CFG0_OFFSET);
+#endif
+}
+
+void bflb_dvp_raster_sw_mode_kick(struct bflb_device_s *dev)
+{
+#ifdef romapi_bflb_dvp_raster_sw_mode_kick
+    romapi_bflb_dvp_raster_sw_mode_kick(dev);
+#else
+    putreg32(BLOCK2RASTER_REG_B2R_SW_KICK, BLOCK2RASTER_BASE + BLOCK2RASTER_B2R_R_W1P_OFFSET);
+#endif
+}
+
+#if !defined(CPU_MODEL_A0)
+void bflb_dvp_raster_sw_mode_output_rgb(struct bflb_device_s *dev, bool enable)
+{
+#ifdef romapi_bflb_dvp_raster_sw_mode_output_rgb
+    romapi_bflb_dvp_raster_sw_mode_output_rgb(dev, enable);
+#else
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = MM_MISC_BASE;
+    putreg32(MM_MISC_CR_ISP_Y2R_EN, reg_base + MM_MISC_ISP_Y2R_CONFIG_0_OFFSET);
+    if (enable) {
+        regval = getreg32(reg_base + MM_MISC_DVP_MUX_SEL_REG2_OFFSET);
+        regval |= MM_MISC_REG_422TO444_SEL;
+        putreg32(regval, reg_base + MM_MISC_DVP_MUX_SEL_REG2_OFFSET);
+        regval = getreg32(reg_base + MM_MISC_DVP_MUX_SEL_REG_OFFSET);
+        regval &= ~MM_MISC_REG_D2XA_IN_SEL_MASK;
+        regval |= 4 << MM_MISC_REG_D2XA_IN_SEL_SHIFT;
+        putreg32(regval, reg_base + MM_MISC_DVP_MUX_SEL_REG_OFFSET);
+    } else {
+        regval = getreg32(reg_base + MM_MISC_DVP_MUX_SEL_REG2_OFFSET);
+        regval &= ~MM_MISC_REG_422TO444_SEL;
+        putreg32(regval, reg_base + MM_MISC_DVP_MUX_SEL_REG2_OFFSET);
+        regval = getreg32(reg_base + MM_MISC_DVP_MUX_SEL_REG_OFFSET);
+        regval &= ~MM_MISC_REG_D2XA_IN_SEL_MASK;
+        regval |= 3 << MM_MISC_REG_D2XA_IN_SEL_SHIFT;
+        putreg32(regval, reg_base + MM_MISC_DVP_MUX_SEL_REG_OFFSET);
+    }
+#endif
+}
+#endif
 
 void bflb_dvp_raster_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask)
 {

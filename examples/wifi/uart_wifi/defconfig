@@ -1,9 +1,22 @@
-#CONFIG_ATMODULE_NANO        =y
 #CONFIG_WL80211              =y
+
+ifneq ($(CONFIG_WL80211),y)
+CONFIG_ATMODULE_WIFI_AP   =y
+CONFIG_ATMODULE_FULL_FEAT =y
+CONFIG_ATMODULE_WORK_Q    =y
+CONFIG_ATMODULE_NETWORK   =y
+CONFIG_ATMODULE_HTTP      =y
+CONFIG_ATMODULE_MQTT      =y
+CONFIG_ATMODULE_FS        =y
+endif
 
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
 -include $(BL_SDK_BASE)/examples/wifi/at_defconfig
 
-CONFIG_PS_EXTEND            =y
 CONFIG_ATMODULE_UART        =y
+
+CONFIG_MQTT                 =y
+CONFIG_HTTP                 =y
+CONFIG_HTTP_CLIENT          =y
+CONFIG_LITTLEFS             =y

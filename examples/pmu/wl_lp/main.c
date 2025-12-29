@@ -473,6 +473,21 @@ SHELL_CMD_EXPORT_ALIAS(cmd_send_arp, arp_send, cmd send arp);
 
 #endif
 
+static void f32k_clk_init_task(void *pvParameters)
+{
+    LOG_I("F32K clock init task started\r\n");
+
+    /* Initialize F32K clock */
+    if (app_clock_init() != 0) {
+        LOG_E("F32K clock initialization failed!\r\n");
+    } else {
+        LOG_I("F32K clock initialization success!\r\n");
+    }
+
+    /* Task done, delete itself */
+    vTaskDelete(NULL);
+}
+
 /**********************************************************
     proc_hellow_entry task func
  **********************************************************/
@@ -544,7 +559,9 @@ int main(void)
 
     ci_pm_test_init();
 
-    app_clock_init();
+    /* Create F32K clock init task */
+    printf("[OS] Create f32k_clk_init task...\r\n");
+    xTaskCreate(f32k_clk_init_task, (char *)"f32k_clk_init", 1024, NULL, 12, NULL);
 
 #if 0
     printf("[OS] Starting proc_hellow_entry task...\r\n");

@@ -76,6 +76,7 @@ typedef struct {
     uint64_t io_wakeup_unmask;
 } lp_gpio_cfg_type;
 
+BL_Err_Type pm_disable_gpio_keep(uint32_t pin);
 void pm_pds_mask_all_wakeup_src(void);
 BL_Err_Type pm_pds_wakeup_src_en(uint32_t WakeupType);
 BL_Sts_Type pm_pds_get_wakeup_src(uint32_t WakeupType);

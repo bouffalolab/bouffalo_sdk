@@ -5,7 +5,17 @@
 #define USER_UNUSED(a) ((void)(a))
 
 #define PARTITION_MAGIC                 (0x54504642)
+#if defined(BL616D)
+#define PARTITION_FW0_PART_NAME          "FW0"
+#define PARTITION_FW1_PART_NAME          "FW1"
+#ifdef CPU_AP
+#define PARTITION_FW_PART_NAME PARTITION_FW0_PART_NAME
+#else
+#define PARTITION_FW_PART_NAME PARTITION_FW1_PART_NAME
+#endif
+#else
 #define PARTITION_FW_PART_NAME          "FW"
+#endif
 #define PARTITION_FW_PART_HEADER_SIZE   (0x1000)
 //TODO use header file from project
 #define FW_XIP_ADDRESS                  (FLASH_XIP_BASE)

@@ -4,34 +4,34 @@
 #include <stdint.h>
 
 /* WiFi async event */
-#define  EV_WIFI                  ((uintptr_t)wifi_mgmr_init)
+#define EV_WIFI                                      ((uintptr_t)wifi_mgmr_init)
 
-#define  CODE_WIFI_ON_INIT_DONE   1
-#define  CODE_WIFI_ON_MGMR_DONE   2
-#define  CODE_WIFI_CMD_RECONNECT  3
-#define  CODE_WIFI_ON_CONNECTED   4
-#define  CODE_WIFI_ON_DISCONNECT  5
-#define  CODE_WIFI_ON_PRE_GOT_IP  6
-#define  CODE_WIFI_ON_GOT_IP      7
-#define  CODE_WIFI_ON_CONNECTING  8
-#define  CODE_WIFI_ON_SCAN_DONE   9
-#define  CODE_WIFI_ON_SCAN_DONE_ONJOIN  10
-#define  CODE_WIFI_ON_AP_STARTED        11
-#define  CODE_WIFI_ON_AP_STOPPED        12
-#define  CODE_WIFI_ON_PROV_SSID         13
-#define  CODE_WIFI_ON_PROV_BSSID        14
-#define  CODE_WIFI_ON_PROV_PASSWD       15
-#define  CODE_WIFI_ON_PROV_CONNECT      16
-#define  CODE_WIFI_ON_PROV_DISCONNECT   17
-#define  CODE_WIFI_ON_PROV_SCAN_START   18
-#define  CODE_WIFI_ON_PROV_STATE_GET    19
-#define  CODE_WIFI_ON_MGMR_DENOISE      20
-#define  CODE_WIFI_ON_AP_STA_ADD        21
-#define  CODE_WIFI_ON_AP_STA_DEL        22
-#define  CODE_WIFI_ON_EMERGENCY_MAC     23
-#define  CODE_WIFI_ON_EXIT_PS           24
-#define  CODE_WIFI_ON_GOT_IP6           25
-#define  CODE_WIFI_ON_SET_PS_DONE       26
+#define CODE_WIFI_ON_INIT_DONE                       1
+#define CODE_WIFI_ON_MGMR_DONE                       2
+#define CODE_WIFI_CMD_RECONNECT                      3
+#define CODE_WIFI_ON_CONNECTED                       4
+#define CODE_WIFI_ON_DISCONNECT                      5
+#define CODE_WIFI_ON_PRE_GOT_IP                      6
+#define CODE_WIFI_ON_GOT_IP                          7
+#define CODE_WIFI_ON_CONNECTING                      8
+#define CODE_WIFI_ON_SCAN_DONE                       9
+#define CODE_WIFI_ON_SCAN_DONE_ONJOIN                10
+#define CODE_WIFI_ON_AP_STARTED                      11
+#define CODE_WIFI_ON_AP_STOPPED                      12
+#define CODE_WIFI_ON_PROV_SSID                       13
+#define CODE_WIFI_ON_PROV_BSSID                      14
+#define CODE_WIFI_ON_PROV_PASSWD                     15
+#define CODE_WIFI_ON_PROV_CONNECT                    16
+#define CODE_WIFI_ON_PROV_DISCONNECT                 17
+#define CODE_WIFI_ON_PROV_SCAN_START                 18
+#define CODE_WIFI_ON_PROV_STATE_GET                  19
+#define CODE_WIFI_ON_MGMR_DENOISE                    20
+#define CODE_WIFI_ON_AP_STA_ADD                      21
+#define CODE_WIFI_ON_AP_STA_DEL                      22
+#define CODE_WIFI_ON_EMERGENCY_MAC                   23
+#define CODE_WIFI_ON_EXIT_PS                         24
+#define CODE_WIFI_ON_GOT_IP6                         25
+#define CODE_WIFI_ON_SET_PS_DONE                     26
 
 #define MAX_FIXED_CHANNELS_LIMIT                     (42)
 
@@ -102,8 +102,8 @@ typedef struct wifi_mgmr_scan_item {
 typedef struct wifi_mgmr_connect_ind_stat_info {
     uint16_t status_code;
     uint16_t reason_code;
-    char ssid[33];
-    char passphr[65];
+    char ssid[MGMR_SSID_LEN + 1];
+    char passphr[MGMR_KEY_LEN + 1];
     /// BSSID
     uint8_t bssid[6];
     uint8_t type_ind;
@@ -122,38 +122,126 @@ typedef struct wifi_mgmr_connect_ind_stat_info {
     bool qos;
 } wifi_mgmr_connect_ind_stat_info_t;
 
+typedef struct wifi_mgmr_sta_connect_params {
+    char ssid[MGMR_SSID_LEN + 1];
+    // uint8_t ssid_tail[1];
+    char key[MGMR_KEY_LEN + 1];
+    // char key_tail[1];
+    // uint8_t ssid_len;
+    // uint8_t key_len;
+    char bssid_str[MGMR_BSSID_LEN + 1];
+    // must be uppercase, NULL terminated string
+    char akm_str[MGMR_AKM_LEN + 1];
+    // uint8_t akm_len;
+    uint16_t freq1;
+    uint16_t freq2;
+    uint8_t pmf_cfg;
+    uint8_t use_dhcp;
+    // listen_interval to monitor AP beacon
+    // range:[1, 100]
+    uint16_t listen_interval;
+    // default: 0, scan on all channels
+    // if 1, quick scan, connect to the first ssid_matched AP
+    uint8_t scan_mode;
+    // default: normal connect
+    // if 1, quick connect
+    uint8_t quick_connect;
+    int timeout_ms;
+    // Extra flags passed to wpa_supplicant. See FHOST_WPA_SSID_* in fhost_wpa.h.
+    int wpa_flags;
+    // conn scan duration, In TUs.
+    uint16_t duration;
+    // conn scan probe req cnt
+    uint16_t probe_cnt;
+    // Auth and Assoc timeout, in sec. 0, use default value
+    uint8_t auth_timeout;
+    // Timeout before EAPOL 1 after associtiated, in sec. 0, use default value
+    uint8_t eapol_1_timeout;
+    // Remaining EAPOL session timeout, in sec. 0, use default value
+    uint8_t eapol_rem_timeout;
+} wifi_mgmr_sta_connect_params_t;
+
 typedef void (*scan_item_cb_t)(void *env, void *arg, wifi_mgmr_scan_item_t *item);
 
+/* Initialize WiFi manager and register event handlers */
 void wifi_mgmr_init(void);
+/* Enable power saving mode for STA */
 void wifi_mgmr_sta_ps_enter(void);
+/* Disable power saving mode for STA */
 void wifi_mgmr_sta_ps_exit(void);
 
+/* STA Status and Information  */
+/* Get connected AP's BSSID (MAC address) */
 int wifi_mgmr_sta_get_bssid(uint8_t bssid[6]);
+/* Get STA MAC address */
 int wifi_mgmr_sta_mac_get(uint8_t mac[6]);
+/* Get current RSSI signal strength in dBm */
 int wifi_mgmr_sta_rssi_get(int *rssi);
+/* Get current WiFi channel number */
 int wifi_mgmr_sta_channel_get(uint8_t *channel);
+/* Get Association ID allocated by AP */
 int wifi_mgmr_sta_aid_get(void);
+/* Get STA connection state (1=connected, 0=disconnected) */
 int wifi_mgmr_sta_state_get(void);
+/* Get detailed connection status and parameters */
 int wifi_mgmr_sta_connect_ind_stat_get(wifi_mgmr_connect_ind_stat_info_t *wifi_mgmr_ind_stat);
-int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config);
-uint32_t wifi_mgmr_sta_scanlist_nums_get(void);
-uint32_t wifi_mgmr_sta_scanlist_dump(void *results, uint32_t resultNums);
-int wifi_mgmr_sta_scanlist_free(void);
-int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb);
+/* Get WiFi connection status code */
 uint16_t wifi_mgmr_sta_info_status_code_get(void);
+/* Get WiFi disconnection reason code */
 uint16_t wifi_mgmr_sta_info_reason_code_get(void);
-int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);
-int wifi_mgmr_get_channel_list(const char *country_code, uint8_t **c24G_list, uint8_t **c5G_list);
-int wifi_mgmr_set_country_code(char *country_code);
-int wifi_mgmr_get_country_code(char *country_code);
 
-int wifi_mgmr_ap_state_get(void);
+/* STA Scan Operations */
+/* Start WiFi scan with specified parameters */
+int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config);
+/* Get number of scan results */
+uint32_t wifi_mgmr_sta_scanlist_nums_get(void);
+/* Copy scan results to buffer */
+uint32_t wifi_mgmr_sta_scanlist_dump(void *results, uint32_t resultNums);
+/* Free scan results memory */
+int wifi_mgmr_sta_scanlist_free(void);
+/* Iterate scan results with callback function */
+int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb);
+/* Set the listening interval during scanning (TU)  */
+int wifi_mgmr_sta_set_listen_itv(uint16_t itv);
+/* Get the listening interval during the scan (TU) */
+uint16_t wifi_mgmr_sta_get_listen_itv(void);
+
+/* STA Management Operations */
+/* Connect to WiFi AP with specified parameters */
+int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *conn_param);
+/* Disconnect from current WiFi AP */
+int wifi_mgmr_sta_disconnect(void);
+/* Get channel count for country code */
+int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);
+/* Get channel list for country code */
+int wifi_mgmr_get_channel_list(const char *country_code, uint8_t **c24G_list, uint8_t **c5G_list);
+/* Set regulatory country code */
+int wifi_mgmr_set_country_code(char *country_code);
+/* Get current country code */
+int wifi_mgmr_get_country_code(char *country_code);
+/* Set static IP configuration (not implemented, returns -1) */
 int wifi_mgmr_sta_ip_set(uint32_t ip, uint32_t mask, uint32_t gw, uint32_t dns);
-int wifi_mgmr_ap_mac_get(uint8_t mac[6]);
+/* Print scan list to console (not implemented, returns -1) */
 int wifi_mgmr_sta_scanlist(void);
+/* Disable automatic reconnection (not implemented, returns -1) */
 int wifi_mgmr_sta_autoconnect_disable(void);
+
+/* AP Mode Management */
+/* Get AP state (not implemented, returns -1) */
+int wifi_mgmr_ap_state_get(void);
+/* Get AP MAC address (not implemented, returns -1) */
+int wifi_mgmr_ap_mac_get(uint8_t mac[6]);
+
+/* String Conversion Utilities */
+/* Convert WiFi mode to string (e.g., "BGN", "BGNAX") */
 char *wifi_mgmr_mode_to_str(uint32_t mode);
+/* Convert auth type to string (e.g., "WPA2-PSK", "WPA3-SAE") */
 char *wifi_mgmr_auth_to_str(uint8_t auth);
+/* Convert cipher type to string (e.g., "AES", "TKIP/AES") */
 char *wifi_mgmr_cipher_to_str(uint8_t cipher);
+/* Convert status code to error description string */
 const char *wifi_mgmr_get_sm_status_code_str(uint16_t status_code);
+/* Convert or check MAC address string to byte array */
+int wifi_mgmr_mac_str_to_addr(const char *str, uint8_t addr[]);
+
 #endif

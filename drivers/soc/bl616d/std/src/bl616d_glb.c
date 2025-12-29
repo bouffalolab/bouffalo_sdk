@@ -3190,23 +3190,23 @@ BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(uint8_t clkSel)
 }
 
 /****************************************************************************/ /**
- * @brief  set CAM clock
+ * @brief  set CAM_REF clock
  *
- * @param  enable: Enable or disable CAM clock
- * @param  clkSel: CAM clock type, this parameter can be one of the following values:
- *           @arg GLB_CAM_CLK_XCLK
- *           @arg GLB_CAM_CLK_WIFIPLL_96M
- *           @arg GLB_CAM_CLK_TOP_AUPLL_DIV5
+ * @param  enable: Enable or disable CAM reference clock
+ * @param  clkSel: CAM reference clock type, this parameter can be one of the following values:
+ *           @arg GLB_CAM_REF_CLK_XCLK
+ *           @arg GLB_CAM_REF_CLK_WIFIPLL_96M
+ *           @arg GLB_CAM_REF_CLK_CPUPLL_100M
  * @param  div: clock divider
  *
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+BL_Err_Type GLB_Set_CAM_REF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
     uint32_t tmpVal = 0;
 
-    CHECK_PARAM(IS_GLB_CAM_CLK_TYPE(clkSel));
+    CHECK_PARAM(IS_GLB_CAM_REF_CLK_TYPE(clkSel));
     CHECK_PARAM((div <= 0x3));
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_CAM_CFG0);
@@ -3225,6 +3225,86 @@ BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
         tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_REG_CAM_REF_CLK_EN);
     }
     BL_WR_REG(GLB_BASE, GLB_CAM_CFG0, tmpVal);
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  set CAM clock
+ *
+ * @param  enable: Enable or disable CAM core clock
+ * @param  clkSel: CAM core clock type, this parameter can be one of the following values:
+ *           @arg GLB_CAM_CLK_BCLK
+ *           @arg GLB_CAM_CLK_WIFIPLL_160M
+ *           @arg GLB_CAM_CLK_WIFIPLL_240M
+ *           @arg GLB_CAM_CLK_WIFIPLL_96M
+ * @param  div: clock divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    CHECK_PARAM(IS_GLB_CAM_CLK_TYPE(clkSel));
+    CHECK_PARAM((div <= 0xF));
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_ISP_CLK_EN);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_ISP_CLK_SEL, clkSel);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_ISP_CLK_DIV, div);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_ISP_CLK_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_ISP_CLK_EN);
+    }
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  set display clock
+ *
+ * @param  enable: Enable or disable display module clock
+ * @param  clkSel: display module clock type, this parameter can be one of the following values:
+ *           @arg GLB_DP_CLK_XCLK
+ *           @arg GLB_DP_CLK_WIFIPLL_160M
+ *           @arg GLB_DP_CLK_WIFIPLL_240M
+ *           @arg GLB_DP_CLK_WIFIPLL_96M
+ * @param  div: clock divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_Display_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    CHECK_PARAM(IS_GLB_DP_CLK_TYPE(clkSel));
+    CHECK_PARAM((div <= 0xF));
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_DP_CLK_EN);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_DP_CLK_SEL, clkSel);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_DP_CLK_DIV, div);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_DP_CLK_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_DP_CLK_EN);
+    }
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
     return SUCCESS;
 }
 

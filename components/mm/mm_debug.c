@@ -47,28 +47,30 @@ static void mm_dump_info(uint32_t heap_id)
 
     allocator->get_usage_info(heap, &usage);
 
+    /* clang-format off */
     LOG_I("\033[32mHeap id:%u (%s, %s)\033[0m, Usage Info:\r\n",
           heap_id, heap->name, allocator->name);
 
-    LOG_I("%10s  %10s  %10s  %13s  %11s  %11s\r\n",
-          "Total_Size", "Free_Size", "Used_Size", "Max_Free_Size", "Free_Nodes", "Alloc_Nodes");
-    LOG_I("%10u  %10u  %10u  %13u  %11u  %11u\r\n",
+    LOG_I("%10s  %10s  %10s  %12s  %11s  %13s\r\n",
+          "Total_Size", "Free_Size", "Used_Size", "Alloc_Nodes", "Free_Nodes", "Max_Free_Size");
+    LOG_I("%10u  %10u  %10u  %12u  %11u  %13u\r\n",
           usage.total_size,
           usage.free_size,
           usage.used_size,
-          usage.max_free_size,
+          (uint32_t)usage.alloc_node,
           (uint32_t)usage.free_node,
-          (uint32_t)usage.alloc_node);
+          usage.max_free_size);
 
 #if (CONFIG_MM_ENABLE_STATISTICS)
-    LOG_I("%10s  %10s  %10s  %13s  %11s\r\n",
+    LOG_I("%10s  %10s  %10s  %12s  %11s\r\n",
           "Start_Addr", "End_Addr", "Total_Size", "Alloc_Count", "Free_Count");
-    LOG_I("0x%08X  0x%08X  %10u  %13u  %11u\r\n",
+    LOG_I("0x%08X  0x%08X  %10u  %12u  %11u\r\n",
           (uint32_t)(uintptr_t)heap->start_addr,
           (uint32_t)(uintptr_t)heap->end_addr,
           (uint32_t)heap->total_size,
           heap->stats.alloc_count,
           heap->stats.free_count);
+    /* clang-format on */
 
     if ((uint32_t)heap->total_size != usage.total_size) {
         LOG_E("Heap size mismatch, Memory may be corruption\r\n");

@@ -104,8 +104,8 @@ endif()
 
 if(CONFIG_POST_BUILDS_GENERATE_LITTLEFS)
     list(APPEND post_build_cmds
-        COMMAND ${CMAKE} -E echo "[littlefs] generate littlefs.bin using littlefs directory"
-        COMMAND ${BL_SDK_BASE}/tools/genlfs/mklfs${TOOL_SUFFIX} -c lfs -b 4096 -p 256 -r 256 -s 0x71000 -i ./${BUILD_DIR}/build_out/littlefs.bin)
+        COMMAND ${CMAKE} -E echo "[littlefs] generate littlefs.bin using littlefs directory, size=${CONFIG_POST_BUILDS_LITTLEFS_SIZE}"
+        COMMAND ${BL_SDK_BASE}/tools/genlfs/mklfs${TOOL_SUFFIX} -c lfs -b 4096 -p 256 -r 256 -s ${CONFIG_POST_BUILDS_LITTLEFS_SIZE} -i ./${BUILD_DIR}/build_out/littlefs.bin)
 endif()
 
 if(VSCODE_PARSE_EN AND CMAKE_EXPORT_COMPILE_COMMANDS)

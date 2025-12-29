@@ -20,7 +20,6 @@
 #include "bl616d_tzc_sec.h"
 #include "bl616d_psram.h"
 #include "bl616d_glb.h"
-
 #include "board_flash_psram.h"
 
 #include "mm.h"
@@ -50,6 +49,26 @@ static struct bflb_device_s *uart;
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLB_LOG) || defined(CONFIG_FATFS))
 static struct bflb_device_s *rtc;
 #endif
+
+
+static void system_bod_init(void)
+{
+    uint8_t enableBod = 1;
+    /*0:BOD will trigger interrupt,1:trigger reset*/
+    uint8_t enableBodInt = 0;
+    /* 0:2.2v,1:2.3v,2:2.4v....7:2.9v */
+    uint8_t bodThreshold = 2;
+
+    AON_Set_BOD_Config(enableBod, bodThreshold, enableBodInt);
+}
+
+static void system_bod_isr(int irq, void *arg)
+{
+    printf("BOD interrupt occurred!\n");
+    while (1) {
+        ;
+    }
+}
 
 static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
 {
@@ -127,8 +146,13 @@ static void peripheral_clock_init(void)
         GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
         GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SINGLE_END);
         GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0) / 2000000 - 1);
-        GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_WIFIPLL_96M, 3);
+        GLB_Set_CAM_REF_CLK(ENABLE, GLB_CAM_REF_CLK_WIFIPLL_96M, 3);
+        GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_BCLK, 0);
+        GLB_Set_Display_CLK(ENABLE, GLB_DP_CLK_WIFIPLL_96M, 3);
         GLB_Set_PEC_CLK(ENABLE, GLB_PEC_CLK_MUXPLL_160M, 0);
+        GLB_Set_Audio_AUTO_CLK(DISABLE);
+        GLB_Set_Audio_ADC_CLK(ENABLE, 2);
+        GLB_Set_Audio_SOLO_CLK(ENABLE, 2);
 #if defined(CPU_MODEL_A0)
         GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_160M);
 #else
@@ -262,17 +286,37 @@ void bl_show_log(void)
     puts("Copyright (c) 2022 Bouffalolab team\r\n");
 }
 
-void bl_show_component_version(void)
+const char *bl_sys_version(const char ***ctx)
 {
     extern uint8_t _version_info_section_start;
     extern uint8_t _version_info_section_end;
-    char **version_str_p = NULL;
+    const char **const version_section_start = (const char **)&_version_info_section_start;
+    const char **const version_section_end = (const char **)&_version_info_section_end;
+    const char *version_str;
+
+    //init
+    if (NULL == (*ctx)) {
+        (*ctx) = version_section_start;
+    }
+    //check the end
+    if (version_section_end == (*ctx)) {
+        return NULL;
+    }
+    version_str = (**ctx);
+    *ctx = (*ctx) + 1;
+    return version_str;
+}
+
+void bl_show_component_version(void)
+{
+    const char *version_str;
+    const char **ctx = NULL;
     bflb_verinf_t version = { 0 };
 
     puts("Version of used components:\r\n");
-    for (version_str_p = (char **)&_version_info_section_start; version_str_p < (char **)&_version_info_section_end; version_str_p++) {
+    while ((version_str = bl_sys_version(&ctx))) {
         puts("\tVersion: ");
-        puts(*version_str_p);
+        puts(version_str);
         puts("\r\n");
     }
 
@@ -559,8 +603,8 @@ void board_init(void)
 #ifdef CONFIG_WIFI6
     /* Enable wifi irq */
     extern void interrupt0_handler(void);
-    bflb_irq_attach(WIFI_TO_CPU_IRQn, (irq_callback)interrupt0_handler, NULL);
-    bflb_irq_enable(WIFI_TO_CPU_IRQn);
+    bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
+    bflb_irq_enable(WIFI_IRQn);
 #endif
 #ifdef CONFIG_HIGH_ISR_STACK
     bflb_wfa_init();
@@ -568,6 +612,11 @@ void board_init(void)
 
     /* console init (uart or wo) */
     console_init();
+    
+    /* config chip pod */
+    bflb_irq_attach(BOD_IRQn, system_bod_isr, NULL);
+    bflb_irq_enable(BOD_IRQn);
+    system_bod_init();
 
     /* ram and heap init (including psram) */
     ram_heap_init();
@@ -643,8 +692,8 @@ void board_init(void)
 #ifdef CONFIG_WIFI6
     /* Enable wifi irq */
     extern void interrupt0_handler(void);
-    bflb_irq_attach(WIFI_TO_CPU_IRQn, (irq_callback)interrupt0_handler, NULL);
-    bflb_irq_enable(WIFI_TO_CPU_IRQn);
+    bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
+    bflb_irq_enable(WIFI_IRQn);
 #endif
 
     console_init();

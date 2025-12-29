@@ -264,12 +264,16 @@ void board_i2s_codec_gpio_init(void)
     /* I2S_BCLK */
     bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
-    /* I2S output MCLK,
-    Will change the clock source of i2s,
-    It needs to be called before i2s is initialized
-    clock source 25M
-    */
-    GLB_Set_I2S_CLK(ENABLE, 2, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
+    GLB_Config_AUDIO_PLL_To_491P52M();
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
+
+    /*!< output MCLK,
+        Will change the clock source of i2s,
+        It needs to be called before i2s is initialized
+        clock source 24.576M */
+
+    /*!< MCLK = 24.576 / (5+1) = 4.096MHz */
+    GLB_Set_I2S_CLK(ENABLE, 5, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
     GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_I2S_REF_CLK);
 
     /* MCLK CLKOUT */

@@ -100,11 +100,11 @@ static int _check_ota_header(at_ota_header_t *ota_header, uint32_t *ota_len, int
     memcpy(str, ota_header->u.s.header, sizeof(ota_header->u.s.header));
     str[sizeof(ota_header->u.s.header)] = '\0';
     printf("[OTA] [HEADER] ota header is %s\r\n", str);
-
+#if 0
     if (strstr(str, "BFLB_OTA") == NULL) {
         return -1;
     }
-
+#endif
     memcpy(str, ota_header->u.s.type, sizeof(ota_header->u.s.type));
     str[sizeof(ota_header->u.s.type)] = '\0';
     printf("[OTA] [HEADER] file type is %s\r\n", str);

@@ -46,16 +46,11 @@ if ATMODULE
     menu "AT Module Components"
         depends on ATMODULE
         # AT Moudle components support
-        config ATMODULE_NANO
-            bool "Enable AT module nano config"
+        config ATMODULE_FULL_FEAT
+            bool "Enable AT module full feat"
             default y
             help
-                Enable AT module nano config.
-        config ATMODULE_WIFI
-            bool "Enable AT WIFI module"
-            default y
-            help
-                This enables AT WIFI module support.
+                Enable AT module full feat config.
         config ATMODULE_BLUETOOTH
             bool "Enable AT BLE module"
             help

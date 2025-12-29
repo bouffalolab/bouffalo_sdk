@@ -38,7 +38,7 @@ make CHIP=bl616 BOARD=bl616dk
 ### bl616d Series
 
 ```bash
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap CONFIG_ROMAPI=n
+make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
 ```
 
 ## Hardware GPIO Configuration

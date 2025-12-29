@@ -6,6 +6,7 @@
 #else
 
 #include "board_gpio.h"
+#include "board_flash_psram.h"
 
 void board_init(void);
 

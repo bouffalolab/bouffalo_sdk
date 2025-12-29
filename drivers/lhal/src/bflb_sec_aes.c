@@ -480,7 +480,11 @@ void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source)
     reg_base = dev->reg_base;
 
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
-    regval |= (source << 0);
+    if (source == 0) {
+        regval &= ~SEC_ENG_SE_AES_0_SBOOT_KEY_SEL;
+    } else {
+        regval |= SEC_ENG_SE_AES_0_SBOOT_KEY_SEL;
+    }
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
 #endif
 }

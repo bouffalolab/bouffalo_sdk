@@ -474,7 +474,6 @@ BL_Err_Type PDS_Set_All_GPIO_Pad_IntClr(void);
 uint64_t PDS_Get_All_GPIO_Pad_IntStatus(void);
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg);
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg);
-BL_Err_Type PDS_Disable_GPIO_Keep(void);
 /*----------*/
 BL_Err_Type PDS_Set_MCU0_Clock_Enable(void);
 BL_Err_Type PDS_Set_MCU0_Clock_Disable(void);

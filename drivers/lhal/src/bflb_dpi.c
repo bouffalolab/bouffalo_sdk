@@ -35,8 +35,13 @@ void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *co
     regval &= ~DVP_TSRC_CR_ENABLE;
     putreg32(regval, reg_base + DVP_TSRC_CONFIG_OFFSET);
 
-    regval &= ~(DVP_TSRC_CR_AXI_DVP_DATA_MODE_MASK | DVP_TSRC_CR_AXI_B0_SEL_MASK | DVP_TSRC_CR_AXI_B1_SEL_MASK | DVP_TSRC_CR_AXI_B2_SEL_MASK);
-    regval |= ((config->data_format % 4) << DVP_TSRC_CR_AXI_DVP_DATA_MODE_SHIFT);
+    regval = getreg32(reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+    regval &= ~DVP_TSRC_CR_AXI_420_SP_MODE;
+    putreg32(regval, reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+
+    regval &= ~(DVP_TSRC_CR_AXI_DVP_DATA_MODE_MASK | DVP_TSRC_CR_AXI_B0_SEL_MASK | DVP_TSRC_CR_AXI_B1_SEL_MASK |
+                DVP_TSRC_CR_AXI_B2_SEL_MASK);
+    regval |= ((config->data_format % 5) << DVP_TSRC_CR_AXI_DVP_DATA_MODE_SHIFT);
     switch (config->data_format) {
         case DPI_DATA_FORMAT_YUYV:
             regval |= (1 << DVP_TSRC_CR_AXI_B1_SEL_SHIFT);
@@ -52,6 +57,12 @@ void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *co
 
         case DPI_DATA_FORMAT_NRGB8888:
             regval |= (2 << DVP_TSRC_CR_AXI_B0_SEL_SHIFT | 1 << DVP_TSRC_CR_AXI_B1_SEL_SHIFT);
+            break;
+
+        case DPI_DATA_FORMAT_Y_UV_PLANAR:
+            putreg32(getreg32(reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET) | DVP_TSRC_CR_AXI_420_SP_MODE,
+                     reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+            putreg32(config->uv_framebuffer_addr, reg_base + DVP_TSRC_AXI2DVP_SWAP_ADDR_UV_OFFSET);
             break;
 
         case DPI_DATA_FORMAT_UYVY:
@@ -145,10 +156,14 @@ void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *co
             putreg32(0, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_0_OFFSET);
             putreg32(128 << MM_MISC_CR_DISP_R2Y_POS_1_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_1_OFFSET);
             putreg32(128 << MM_MISC_CR_DISP_R2Y_POS_2_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_2_OFFSET);
-            putreg32(0x99 | 0x12d << MM_MISC_CR_DISP_R2Y_MTX_01_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_3_OFFSET);
-            putreg32(0x3a | 0xfa9 << MM_MISC_CR_DISP_R2Y_MTX_10_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_4_OFFSET);
-            putreg32(0xf57 | 0x100 << MM_MISC_CR_DISP_R2Y_MTX_12_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_5_OFFSET);
-            putreg32(0x100 | 0xf29 << MM_MISC_CR_DISP_R2Y_MTX_21_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_6_OFFSET);
+            putreg32(0x99 | 0x12d << MM_MISC_CR_DISP_R2Y_MTX_01_SHIFT,
+                     dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_3_OFFSET);
+            putreg32(0x3a | 0xfa9 << MM_MISC_CR_DISP_R2Y_MTX_10_SHIFT,
+                     dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_4_OFFSET);
+            putreg32(0xf57 | 0x100 << MM_MISC_CR_DISP_R2Y_MTX_12_SHIFT,
+                     dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_5_OFFSET);
+            putreg32(0x100 | 0xf29 << MM_MISC_CR_DISP_R2Y_MTX_21_SHIFT,
+                     dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_6_OFFSET);
             putreg32(0xfd7, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_7_OFFSET);
             putreg32(MM_MISC_CR_DISP_R2Y_EN, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_0_OFFSET);
 
@@ -167,7 +182,7 @@ void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *co
             putreg32(regval, dev->reg_base + MM_MISC_DVP_MUX_SEL_REG2_OFFSET);
             break;
 
-        case DPI_INPUT_SEL_FRAMEUFFER_WITH_OSD:
+        case DPI_INPUT_SEL_FRAMEBUFFER_WITH_OSD:
             regval = getreg32(reg_base + DVP_TSRC_CONFIG_OFFSET);
             regval |= DVP_TSRC_CR_AXI_EN;
             putreg32(regval, reg_base + DVP_TSRC_CONFIG_OFFSET);
@@ -177,14 +192,20 @@ void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *co
 
             if (config->data_format == DPI_DATA_FORMAT_YUYV || config->data_format == DPI_DATA_FORMAT_UYVY) {
                 regval |= 1 << MM_MISC_RG_DISP_OSD_SEL_SHIFT;
+            } else if (config->data_format == DPI_DATA_FORMAT_Y_UV_PLANAR) {
+                regval &= ~MM_MISC_RG_DISP_OSD_SEL_MASK;
             } else {
                 putreg32(0, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_0_OFFSET);
                 putreg32(128 << MM_MISC_CR_DISP_R2Y_POS_1_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_1_OFFSET);
                 putreg32(128 << MM_MISC_CR_DISP_R2Y_POS_2_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_2_OFFSET);
-                putreg32(0x99 | 0x12d << MM_MISC_CR_DISP_R2Y_MTX_01_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_3_OFFSET);
-                putreg32(0x3a | 0xfa9 << MM_MISC_CR_DISP_R2Y_MTX_10_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_4_OFFSET);
-                putreg32(0xf57 | 0x100 << MM_MISC_CR_DISP_R2Y_MTX_12_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_5_OFFSET);
-                putreg32(0x100 | 0xf29 << MM_MISC_CR_DISP_R2Y_MTX_21_SHIFT, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_6_OFFSET);
+                putreg32(0x99 | 0x12d << MM_MISC_CR_DISP_R2Y_MTX_01_SHIFT,
+                         dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_3_OFFSET);
+                putreg32(0x3a | 0xfa9 << MM_MISC_CR_DISP_R2Y_MTX_10_SHIFT,
+                         dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_4_OFFSET);
+                putreg32(0xf57 | 0x100 << MM_MISC_CR_DISP_R2Y_MTX_12_SHIFT,
+                         dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_5_OFFSET);
+                putreg32(0x100 | 0xf29 << MM_MISC_CR_DISP_R2Y_MTX_21_SHIFT,
+                         dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_6_OFFSET);
                 putreg32(0xfd7, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_7_OFFSET);
                 putreg32(MM_MISC_CR_DISP_R2Y_EN, dev->reg_base + MM_MISC_DISP_R2Y_CONFIG_0_OFFSET);
                 regval |= 2 << MM_MISC_RG_DISP_OSD_SEL_SHIFT;
@@ -265,6 +286,29 @@ void bflb_dpi_framebuffer_switch(struct bflb_device_s *dev, uint32_t addr)
 #endif
 }
 
+void bflb_dpi_framebuffer_planar_switch(struct bflb_device_s *dev, uint32_t y_addr, uint32_t uv_addr)
+{
+#ifdef romapi_bflb_dpi_framebuffer_planar_switch
+    romapi_bflb_dpi_framebuffer_planar_switch(dev, y_addr, uv_addr);
+#else
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = DTSRC_BASE;
+    regval = getreg32(reg_base + DVP_TSRC_CONFIG_OFFSET);
+    if (regval & DVP_TSRC_CR_AXI_SWAP_IDX_SWV) {
+        putreg32(y_addr, reg_base + DVP_TSRC_AXI2DVP_SWAP_ADDR_BY_OFFSET);
+        putreg32(uv_addr, reg_base + DVP_TSRC_AXI2DVP_SWAP_ADDR_UV_OFFSET);
+        regval &= ~(DVP_TSRC_CR_AXI_SWAP_IDX_SWV);
+    } else {
+        putreg32(y_addr, reg_base + DVP_TSRC_AXI2DVP_START_ADDR_BY_OFFSET);
+        putreg32(uv_addr, reg_base + DVP_TSRC_AXI2DVP_START_ADDR_UV_OFFSET);
+        regval |= DVP_TSRC_CR_AXI_SWAP_IDX_SWV;
+    }
+    putreg32(regval, reg_base + DVP_TSRC_CONFIG_OFFSET);
+#endif
+}
+
 uint32_t bflb_dpi_get_framebuffer_using(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_dpi_get_framebuffer_using
@@ -299,8 +343,30 @@ int bflb_dpi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     return romapi_bflb_dpi_feature_control(dev, cmd, arg);
 #else
     int ret = 0;
+    uint32_t regval;
+    uint32_t reg_base;
 
+    reg_base = DTSRC_BASE;
     switch (cmd) {
+        case DPI_CMD_SET_YUV420_UV_VALID_LINE:
+            /* Set yuv420 uv valid line, arg use @ref DPI_YUV420 */
+            regval = getreg32(reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+            if (arg) {
+                regval |= DVP_TSRC_CR_AXI_420_UD_SEL;
+            } else {
+                regval &= ~(DVP_TSRC_CR_AXI_420_UD_SEL);
+            }
+            putreg32(regval, reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+            break;
+
+        case DPI_CMD_SET_BURST:
+            /* Set burst length, arg use @ref DPI_BURST */
+            regval = getreg32(reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+            regval &= ~DVP_TSRC_CR_AXI_XLEN_MASK;
+            regval |= ((arg << DVP_TSRC_CR_AXI_XLEN_SHIFT) & DVP_TSRC_CR_AXI_XLEN_MASK);
+            putreg32(regval, reg_base + DVP_TSRC_AXI2DVP_SETTING_OFFSET);
+            break;
+
         default:
             ret = -EPERM;
             break;

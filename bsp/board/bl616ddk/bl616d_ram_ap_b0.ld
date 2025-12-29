@@ -38,10 +38,10 @@ MEMORY
 {
     /* fw_header_memory  (rx)  : ORIGIN = 0xa1020000 - (256+16), LENGTH = 256+16 */
     code_memory  (rx)  : ORIGIN = 0xa1020000, LENGTH = 96K
-    ram_psram  (wxa)   : ORIGIN = 0x38000000, LENGTH = 2M
-    ram_nocache (!rx) : ORIGIN = 0x61038000, LENGTH = 80K - 1K /* reserved 1k for security */
+    ram_psram  (wxa)   : ORIGIN = 0xb8000000, LENGTH = 2M
+    ram_nocache (!rx) : ORIGIN = 0x21038000, LENGTH = 80K - 1K /* reserved 1k for security */
     ram_memory  (!rx) : ORIGIN = 0xa1038000, LENGTH = 80K - 1K /* reserved 1k for security */
-    ram_wifi  (wxa)   : ORIGIN = 0xa104c000, LENGTH = 8K
+    ram_wifi  (wxa)   : ORIGIN = 0x2104c000, LENGTH = 8K
 }
 
 SECTIONS
@@ -190,6 +190,7 @@ SECTIONS
     .ram_skip_nocache_region (NOLOAD) :
     {
         . += (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
+        . = ALIGN(64);
     } > ram_memory
 
     __itcm_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
@@ -275,12 +276,12 @@ SECTIONS
 
     .psram_data_region : AT (__psram_load_addr)
     {
-        . = ALIGN(4);
+        . = ALIGN(64);
         __psram_data_start__ = .;
 
         KEEP(*(.psram_data*))
 
-        . = ALIGN(4);
+        . = ALIGN(64);
         __psram_data_end__ = .;
     } > ram_psram
 
@@ -292,13 +293,13 @@ SECTIONS
     .lpcpu : AT (__psram_end_addr)
     {
         /* For DMA Burst copy lpfw binary from flash to ram */
-        . = ALIGN(32);
+        . = ALIGN(64);
         LONG(0x0);        /* LPFW SHA256 */
-        . = ALIGN(32);
+        . = ALIGN(64);
         LONG(0x5746504C); /* LPFW */
-        . = ALIGN(32);
+        . = ALIGN(64);
         PROVIDE( __lpfw_start = . );
-        ASSERT(((ABSOLUTE(__lpfw_start) & 0x1F) == 0), "LPFW not aligned 32!");
+        ASSERT(((ABSOLUTE(__lpfw_start) & 0x3F) == 0), "LPFW not aligned 64!");
     } > ram_memory
 
 
@@ -350,12 +351,12 @@ SECTIONS
 
     .heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(64);
         __HeapBase = .;
 
         KEEP(*(.heap*))
 
-        . = ALIGN(4);
+        . = ALIGN(64);
         __HeapLimit = .;
     } > ram_memory
 
@@ -376,10 +377,10 @@ SECTIONS
 
     .psram_heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(64);
         __psram_heap_base = .;
         KEEP(*(.psram_heap*))
-        . = ALIGN(4);
+        . = ALIGN(64);
         __psram_heap_end = .;
     } > ram_psram
 

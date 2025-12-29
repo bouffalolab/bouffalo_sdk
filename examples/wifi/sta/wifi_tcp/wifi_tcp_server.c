@@ -39,6 +39,7 @@ static void test_close(int sig)
     }
     if (recv_data) {
         free(recv_data);
+        recv_data = NULL;
     }
     abort_exec(sig);
     if (recv_data_cnt > 0) {
@@ -124,6 +125,7 @@ static void wifi_test_tcp_server_init(int argc, char **argv)
         }
         if (recv_data) {
             free(recv_data);
+            recv_data = NULL;
         }
 
         return;

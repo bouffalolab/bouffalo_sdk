@@ -50,8 +50,7 @@ typedef enum {
 typedef struct nh_skb {
     uint8_t *data;              /**< Data buffer pointer */
     uint32_t len;               /**< Data length (bytes) */
-    void (*free_cb)(void *priv, void *frame_elem); /**< Callback function to free packet memory */
-    void *cb_priv;              /**< Callback function private parameter */
+    void (*free_cb)(void *frame_elem); /**< Callback function to free packet memory */
     void *cb_arg;               /**< Callback function parameter */
     struct nh_skb *next;        /**< Next packet in queue */
 } nh_skb_t;

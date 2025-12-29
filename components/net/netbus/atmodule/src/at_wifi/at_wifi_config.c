@@ -15,7 +15,6 @@
 //#ifdef EASYFLASH_ENABLE
 #include <easyflash.h>
 //#endif
-#include <wifi_mgmr.h>
 #include "at_config.h"
 #include "at_wifi_config.h"
 #include "at_wifi_main.h"

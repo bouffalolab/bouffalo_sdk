@@ -185,6 +185,23 @@ int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_i
     regval |= AUADC_AUDADC_CONV;
     putreg32(regval, reg_base + AUADC_AUDADC_CMD_OFFSET);
 
+    if(adc_analog_cfg->adc_pga_mode == AUADC_ADC_PGA_MODE_DC_DIFFER || adc_analog_cfg->adc_pga_mode == AUADC_ADC_PGA_MODE_DC_SINGLE) {
+        /* op number control for integrator in SDM */
+        regval = getreg32(reg_base + AUADC_AUDADC_ANA_CFG2_OFFSET);
+        regval &= ~AUADC_AUDADC_NCTRL_ADC1_MASK;
+        regval |= (0x5 << AUADC_AUDADC_NCTRL_ADC1_SHIFT);
+        regval &= ~AUADC_AUDADC_ICTRL_ADC_MASK;
+        regval |= (0x2 << AUADC_AUDADC_ICTRL_ADC_SHIFT);
+        putreg32(regval, reg_base + AUADC_AUDADC_ANA_CFG2_OFFSET);
+
+        /* PGA_OPMIC and PGA_OPAAF bias current control */
+        regval = getreg32(reg_base + AUADC_AUDADC_ANA_CFG1_OFFSET);
+        regval &= ~AUADC_AUDADC_ICTRL_PGA_MIC_MASK;
+        regval |= (0x2 << AUADC_AUDADC_ICTRL_PGA_MIC_SHIFT);
+        regval &= ~AUADC_AUDADC_ICTRL_PGA_AAF_MASK;
+        regval |= (0x2 << AUADC_AUDADC_ICTRL_PGA_MIC_SHIFT);
+        putreg32(regval, reg_base + AUADC_AUDADC_ANA_CFG1_OFFSET);
+    }
     return 0;
 #endif
 }

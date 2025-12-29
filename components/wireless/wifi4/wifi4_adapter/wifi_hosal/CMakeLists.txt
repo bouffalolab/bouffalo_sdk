@@ -4,6 +4,7 @@ sdk_generate_library()
 sdk_add_include_directories(include)
 
 sdk_library_add_sources(wifi_hosal.c)
+sdk_library_add_sources(bflb_pm.c)
 
 
 if(("${CHIP}" STREQUAL "bl602"))

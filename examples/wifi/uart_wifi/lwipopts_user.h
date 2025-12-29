@@ -20,7 +20,7 @@
 #define LWIP_ASSERT_CORE_LOCKED()
 #define LWIP_NOASSERT
 
-#define LWIP_NETCONN_SEM_PER_THREAD   1 
+#define LWIP_NETCONN_SEM_PER_THREAD   1
 #define LWIP_NETCONN_THREAD_SEM_GET() sys_thread_sem_get()
 
 #define DNS_MAX_SERVERS               3
@@ -28,6 +28,8 @@
 #define TCPIP_MBOX_SIZE               64
 #define TCPIP_THREAD_STACKSIZE        512
 #define TCPIP_THREAD_PRIO             28
+
+#define LWIP_SOCKET_POLL              1
 
 #define DEFAULT_THREAD_STACKSIZE      1024
 #define DEFAULT_THREAD_PRIO           1
@@ -37,6 +39,8 @@
 #define DEFAULT_ACCEPTMBOX_SIZE       32
 
 #define SNTP_SERVER_DNS               1
+#define LWIP_DHCP_MAX_NTP_SERVERS     3
+#define SNTP_STARTUP_DELAY            0
 #define LWIP_NETIF_LOOPBACK           1
 #define LWIP_HAVE_LOOPIF              1
 #define LWIP_LOOPBACK_MAX_PBUFS       0
@@ -66,8 +70,12 @@
 //#define TCP_OOSEQ_MAX_PBUFS           MAC_RXQ_DEPTH
 
 #define TCP_MSS                       (1500 - 40)
-#define TCP_WND                       ((2 * MAC_RXQ_DEPTH) * TCP_MSS)
-#define TCP_SND_BUF                   (4 * MAC_TXQ_DEPTH * TCP_MSS)
+#if (defined(BL602))
+#define TCP_WND                       (3 * TCP_MSS)
+#else
+#define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
+#endif
+#define TCP_SND_BUF                   (4 * TCP_MSS)
 
 #define TCP_QUEUE_OOSEQ               1
 #define MEMP_NUM_TCP_SEG              ((4 * TCP_SND_BUF) / TCP_MSS)
@@ -82,6 +90,11 @@
 #define MEM_ALIGNMENT                 4
 
 #define MEMP_NUM_SYS_TIMEOUT          (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 8 + 3)
+#if (defined(BL602))
+#define LWIP_HEAP_SIZE (11 * 1024)
+#else
+#define LWIP_HEAP_SIZE (18 * 1024)
+#endif
 
 #ifdef LWIP_HEAP_SIZE
 #define MEM_SIZE LWIP_HEAP_SIZE
@@ -91,10 +104,6 @@
 #else
 #define MEM_SIZE 8192
 #endif
-#endif
-
-#ifdef CONFIG_IPV6
-#define LWIP_IPV6 1
 #endif
 
 #ifndef CONFIG_WL80211

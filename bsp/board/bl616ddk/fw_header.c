@@ -128,12 +128,20 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
 # 2 : cmds bypass wrap commands to macro, cmds force wrap16 * 4 splitted into two wrap8 * 4;
 # 3 : cmds handle wrap commands, cmds force wrap16 * 4 splitted into two wrap8 * 4
 #endif
+#if defined(CPU_MODEL_A0)
     .basic_cfg.cmds_wrap_mode = 0x1, /* [24: 23] cmds wrap mode */
+#else
+    .basic_cfg.cmds_wrap_mode = 0x2, /* [24: 23] cmds wrap mode */
+#endif
 #if 0
 # 0 : SF_CTRL_WRAP_LEN_8, 1 : SF_CTRL_WRAP_LEN_16, 2 : SF_CTRL_WRAP_LEN_32,
 # 3 : SF_CTRL_WRAP_LEN_64, 9 : SF_CTRL_WRAP_LEN_4096
 #endif
+#if defined(CPU_MODEL_A0)
     .basic_cfg.cmds_wrap_len = 0x9,  /* [28: 25] cmds wrap len */
+#else
+    .basic_cfg.cmds_wrap_len = 0x2,  /* [28: 25] cmds wrap len */
+#endif
     .basic_cfg.icache_invalid = 0x1, /* [29] icache invalid */
     .basic_cfg.dcache_invalid = 0x1, /* [30] dcache invalid */
     .basic_cfg.rsvd_3 = 0x0,         /* [31] rsvd_3 */
@@ -160,7 +168,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
 
     /* image_address_offset */
     .cpu_cfg.image_address_offset = 0x0,
+#if defined(CPU_MODEL_A0)
     .cpu_cfg.rsvd1 = 0x80000000,   /* rsvd */
+#else
+    .cpu_cfg.rsvd1 = 0xb0000000,   /* rsvd */
+#endif
     .cpu_cfg.msp_val = 0x00000000, /* msp value */
 
     /* address of partition table 0 */

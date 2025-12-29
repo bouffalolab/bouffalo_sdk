@@ -228,6 +228,7 @@ struct bflb_device_s *bflb_device_get_by_name(const char *name)
         }
     }
     LHAL_PARAM_ASSERT(0);
+    bflb_lhal_assert_func(__FILE__, __LINE__, __func__, name);
     return NULL;
 }
 

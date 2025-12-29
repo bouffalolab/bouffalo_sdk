@@ -82,15 +82,23 @@ typedef enum {
 #define TZC_SEC_MASTER_TYPE_DMA2  2
 #define TZC_SEC_MASTER_TYPE_2DDMA 3
 
-
-#define TZC_SEC_DMA_BIT_CH0  (1 << 0)
-#define TZC_SEC_DMA_BIT_CH1  (1 << 1)
-#define TZC_SEC_DMA_BIT_CH2  (1 << 2)
-#define TZC_SEC_DMA_BIT_CH3  (1 << 3)
-#define TZC_SEC_DMA_BIT_CH4  (1 << 4)
-#define TZC_SEC_DMA_BIT_CH5  (1 << 5)
-#define TZC_SEC_DMA_BIT_CH6  (1 << 6)
-#define TZC_SEC_DMA_BIT_CH7  (1 << 7)
+/* dma channel bitmap */
+#define TZC_SEC_DMA_CH0_GRP0 (0)
+#define TZC_SEC_DMA_CH0_GRP1 (1 << 0)
+#define TZC_SEC_DMA_CH1_GRP0 (0)
+#define TZC_SEC_DMA_CH1_GRP1 (1 << 1)
+#define TZC_SEC_DMA_CH2_GRP0 (0)
+#define TZC_SEC_DMA_CH2_GRP1 (1 << 2)
+#define TZC_SEC_DMA_CH3_GRP0 (0)
+#define TZC_SEC_DMA_CH3_GRP1 (1 << 3)
+#define TZC_SEC_DMA_CH4_GRP0 (0)
+#define TZC_SEC_DMA_CH4_GRP1 (1 << 4)
+#define TZC_SEC_DMA_CH5_GRP0 (0)
+#define TZC_SEC_DMA_CH5_GRP1 (1 << 5)
+#define TZC_SEC_DMA_CH6_GRP0 (0)
+#define TZC_SEC_DMA_CH6_GRP1 (1 << 6)
+#define TZC_SEC_DMA_CH7_GRP0 (0)
+#define TZC_SEC_DMA_CH7_GRP1 (1 << 7)
 
 /**
  *  @brief TZC_SEC slave type definition
@@ -299,7 +307,7 @@ typedef enum {
 void Tzc_Sec_Set_Sboot_Done(void);
 void Tzc_Sec_Set_Bus_Remap(uint8_t busRmpEn);
 void Tzc_Sec_Set_Master_Group(TZC_SEC_Master_Type masterType, uint8_t group);
-void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_t group);
+void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channelBitmap);
 void Tzc_Sec_Set_Codec_Group(uint8_t group);
 void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group);
 void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group);

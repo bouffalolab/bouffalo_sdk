@@ -17,72 +17,22 @@
  *
  ****************************************************************************/
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
 
-#include <lwip/tcpip.h>
-#include <lwip/sockets.h>
-#include <lwip/netdb.h>
-
-#include "bl_fw_api.h"
-#include "fhost_api.h"
-#include "wifi_mgmr_ext.h"
-#include "wifi_mgmr.h"
-
-#include "bflb_irq.h"
-#include "bflb_uart.h"
-
-#include "rfparam_adapter.h"
-
 #include "board.h"
 #include "shell.h"
 
-
 #include "bflb_core.h"
 #include "bflb_mtimer.h"
-
-#include "bflb_sdio_drv.h"
-#include "bflb_msg_ctrl.h"
-#include "bflb_frame_buff_ctrl.h"
-#include "bflb_tty.h"
-#include <transportsdio.h>
-#include <nethub.h>
+#include "bflb_uart.h"
 
 #include <app_user.h>
-
-#define DBG_TAG "MAIN"
-#include "log.h"
-
-struct bflb_device_s *gpio;
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
 
 static struct bflb_device_s *uart0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
-
-/****************************************************************************
- * Private Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Functions
- ****************************************************************************/
 
 void app_init_entry(void *param)
 {
@@ -104,3 +54,4 @@ int main(void)
     while (1) {
     }
 }
+

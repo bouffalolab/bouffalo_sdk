@@ -77,7 +77,7 @@ typedef enum {
 #else
     SPI3_IRQn = IRQ_NUM_BASE + 15,   /*!< SPI3 Interrupt                                                 */
 #endif
-    WIFI_TO_CPU_PART2_IRQn = IRQ_NUM_BASE + 16, /*!< WIFI To CPU Part2 Interrupt                                    */
+    WIFI_IRQn = IRQ_NUM_BASE + 16, /*!< WIFI To CPU Part2 Interrupt                                    */
     RF_TOP_INT0_IRQn = IRQ_NUM_BASE + 17,       /*!< RF_TOP_INT0 Interrupt                                          */
     RF_TOP_INT1_IRQn = IRQ_NUM_BASE + 18,       /*!< RF_TOP_INT1 Interrupt                                          */
     WIFI_TBTT_SLEEP_IRQn = IRQ_NUM_BASE + 19,   /*!< WIFI TBTT Sleep Interrupt                                      */
@@ -106,7 +106,7 @@ typedef enum {
     MJDEC_IRQn = IRQ_NUM_BASE + 1,                              /*!< MJDEC Interrupt                                */
     DISPLAY_IRQn = IRQ_NUM_BASE + 2,                            /*!< Display Interrupt                              */
     USB_IRQn = IRQ_NUM_BASE + 3,                                /*!< USB Interrupt                                  */
-    WIFI_TO_CPU_IRQn = IRQ_NUM_BASE + 4,                        /*!< WIFI To CPU Interrupt                          */
+    WIFI_IRQn = IRQ_NUM_BASE + 4,                               /*!< WIFI To CPU Interrupt                          */
     RF_TOP_INT0_IRQn = IRQ_NUM_BASE + 5,                        /*!< RF_TOP_INT0 Interrupt                          */
     RF_TOP_INT1_IRQn = IRQ_NUM_BASE + 6,                        /*!< RF_TOP_INT1 Interrupt                          */
     SDIO_IRQn = IRQ_NUM_BASE + 7,                               /*!< SDIO Interrupt                                 */
@@ -157,9 +157,9 @@ typedef enum {
     HBN_OUT1_IRQn = IRQ_NUM_BASE + 52,                          /*!< Hibernate out 1 Interrupt                      */
     BOD_IRQn = IRQ_NUM_BASE + 53,                               /*!< BOR Interrupt                                  */
 #if defined(CPU_MODEL_A0)
-    WIFI_IRQn = IRQ_NUM_BASE + 54,                              /*!< WIFI To CPU Interrupt                          */
+    RESERVED54_IRQn = IRQ_NUM_BASE + 54,                        /*!< Reserved Interrupt                             */
 #else
-    DMA2D_IRQn = IRQ_NUM_BASE + 54,  /*!< DMA2D Interrupt                          */
+    DMA2D_IRQn = IRQ_NUM_BASE + 54,                             /*!< DMA2D Interrupt                                */
 #endif
     BZ_PHY_INT_IRQn = IRQ_NUM_BASE + 55,                        /*!< BZ phy Interrupt                               */
     BLE_IRQn = IRQ_NUM_BASE + 56,                               /*!< BLE Interrupt                                  */
@@ -224,7 +224,7 @@ typedef enum {
 #define MJDEC_IRQn                             (IRQn_LAST + 1)
 #define DISPLAY_IRQn                           (IRQn_LAST + 2)
 #define USB_IRQn                               (IRQn_LAST + 3)
-// #define WIFI_TO_CPU_IRQn                       (IRQn_LAST + 4)
+// #define WIFI_IRQn                              (IRQn_LAST + 4)
 // #define RF_TOP_INT0_IRQn                       (IRQn_LAST + 5)
 // #define RF_TOP_INT1_IRQn                       (IRQn_LAST + 6)
 #define SDIO_IRQn                              (IRQn_LAST + 7)
@@ -275,7 +275,7 @@ typedef enum {
 #define HBN_OUT1_IRQn                          (IRQn_LAST + 52)
 #define BOD_IRQn                               (IRQn_LAST + 53)
 #if defined(CPU_MODEL_A0)
-#define WIFI_IRQn (IRQn_LAST + 54)
+#define RESERVED54_IRQn (IRQn_LAST + 54)
 #else
 #define DMA2D_IRQn (IRQn_LAST + 54)
 #endif
@@ -299,8 +299,8 @@ typedef enum {
 #define BL616D_OCRAM_CACHEABLE_BASE (0x61000000)
 #define BL616D_OCRAM_CACHEABLE_END  (0x61000000 + 320 * 1024)
 #else
-#define BL616D_OCRAM_BASE           (0x61000000)
-#define BL616D_OCRAM_END            (0x61000000 + 320 * 1024)
+#define BL616D_OCRAM_BASE           (0x21000000)
+#define BL616D_OCRAM_END            (0x21000000 + 320 * 1024)
 #define BL616D_OCRAM_CACHEABLE_BASE (0xA1000000)
 #define BL616D_OCRAM_CACHEABLE_END  (0xA1000000 + 320 * 1024)
 #endif
@@ -315,8 +315,8 @@ typedef enum {
 #define BL616D_WRAM_CACHEABLE_BASE (0x61050000)
 #define BL616D_WRAM_CACHEABLE_END  (0x61050000 + 320 * 1024)
 #else
-#define BL616D_WRAM_BASE           (0x61070000)
-#define BL616D_WRAM_END            (0x61070000 + 320 * 1024)
+#define BL616D_WRAM_BASE           (0x21070000)
+#define BL616D_WRAM_END            (0x21070000 + 320 * 1024)
 #define BL616D_WRAM_CACHEABLE_BASE (0xA1070000)
 #define BL616D_WRAM_CACHEABLE_END  (0xA1070000 + 320 * 1024)
 #endif
@@ -331,8 +331,8 @@ typedef enum {
 #define BL616D_L2RAM_CACHEABLE_BASE (0x610A0000)
 #define BL616D_L2RAM_CACHEABLE_END  (0x610A0000 + 160 * 1024)
 #else
-#define BL616D_L2RAM_BASE           (0x61050000)
-#define BL616D_L2RAM_END            (0x61050000 + 128 * 1024)
+#define BL616D_L2RAM_BASE           (0x21050000)
+#define BL616D_L2RAM_END            (0x21050000 + 128 * 1024)
 #define BL616D_L2RAM_CACHEABLE_BASE (0xA1050000)
 #define BL616D_L2RAM_CACHEABLE_END  (0xA1050000 + 128 * 1024)
 #endif
@@ -347,8 +347,8 @@ typedef enum {
 #define BL616D_XRAM_CACHEABLE_BASE (0x610C8000)
 #define BL616D_XRAM_CACHEABLE_END  (0x610C8000 + 16 * 1024)
 #else
-#define BL616D_XRAM_BASE           (0x610C0000)
-#define BL616D_XRAM_END            (0x610C0000 + 16 * 1024)
+#define BL616D_XRAM_BASE           (0x210C0000)
+#define BL616D_XRAM_END            (0x210C0000 + 16 * 1024)
 #define BL616D_XRAM_CACHEABLE_BASE (0xA10C0000)
 #define BL616D_XRAM_CACHEABLE_END  (0xA10C0000 + 16 * 1024)
 #endif
@@ -413,8 +413,8 @@ typedef enum {
 #define BL616D_ALLRAM_CACHEABLE_BASE (0x61000000)
 #define BL616D_ALLRAM_CACHEABLE_END  (0x61000000 + 320 * 1024 + 320 * 1024 + 160 * 1024 + 16 * 1024)
 #else
-#define BL616D_ALLRAM_BASE           (0x61000000)
-#define BL616D_ALLRAM_END            (0x61000000 + 320 * 1024 + 128 * 1024 + 320 * 1024 + 16 * 1024)
+#define BL616D_ALLRAM_BASE           (0x21000000)
+#define BL616D_ALLRAM_END            (0x21000000 + 320 * 1024 + 128 * 1024 + 320 * 1024 + 16 * 1024)
 #define BL616D_ALLRAM_CACHEABLE_BASE (0xA1000000)
 #define BL616D_ALLRAM_CACHEABLE_END  (0xA1000000 + 320 * 1024 + 128 * 1024 + 320 * 1024 + 16 * 1024)
 #endif

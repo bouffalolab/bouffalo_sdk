@@ -788,6 +788,7 @@ void wifi_sta_info_cmd(int argc, char **argv)
     fhost_printf("================================================================\r\n");
 }
 
+#if !MACSW_WFA
 void wifi_mgmr_ap_start_cmd(int argc, char **argv)
 {
     getopt_env_t getopt_env;
@@ -891,6 +892,7 @@ void wifi_mgmr_ap_stop_cmd(int argc, char **argv)
 {
     wifi_mgmr_ap_stop();
 }
+#endif
 
 #if WIFI_STATISTIC_ENABLE
 void cmd_fw_dbg(int argc, char **argv)
@@ -1084,12 +1086,14 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_on_cmd, wifi_sta_ps_on, wifi sta powersave mo
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_off_cmd, wifi_sta_ps_off, wifi sta powersave mode off);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_set_cmd, wifi_sta_ps_set, wifi sta powersave mode set parameters);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_info_cmd, wifi_sta_info, wifi sta info);
+#if !MACSW_WFA 
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_list_get_cmd, wifi_sta_list, get sta list in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_delete_cmd, wifi_sta_del, delete one sta in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_start_cmd, wifi_ap_start, start AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_stop_cmd, wifi_ap_stop, stop AP mode);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_mac_get, wifi_ap_mac_get, get wifi ap mac);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_conf_max_sta, wifi_ap_conf_max_sta, config AP mac sta);
+#endif
 SHELL_CMD_EXPORT_ALIAS(wifi_country_code_get_cmd, wifi_country_code_get, Get current country code);
 SHELL_CMD_EXPORT_ALIAS(wifi_country_code_set_cmd, wifi_country_code_set, Set country code (e.g. CN, US, JP));
 SHELL_CMD_EXPORT_ALIAS(wifi_country_add_custom_cmd, wifi_country_add_custom, Add custom country with channel configuration);
@@ -1120,6 +1124,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_non_pref_chan, non_pref_chan, set non_pref_chan);
 SHELL_CMD_EXPORT_ALIAS(cmd_non_pref_chan_notify, non_pref_chan_notify, notify non_pref_chan change);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_setup, wifi_mgmr_sta_twt_setup, Setup WiFi Manager STA TWT functionality);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_teardown, wifi_mgmr_sta_twt_teardown, Teardown WiFi Manager STA TWT functionality);
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_statusget, wifi_mgmr_sta_twt_statusget, Get WiFi Manager STA TWT status);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mode_set, wifi_mode_set, set ap/sta mode);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_get_tx_remaining, get_tx_remaining, get tx remaining);
 #if WIFI_STATISTIC_ENABLE

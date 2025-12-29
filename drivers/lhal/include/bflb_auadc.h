@@ -11,7 +11,7 @@
   * @{
   */
 
-#if defined(BL616) || defined(BL702L)
+#if defined(BL616) || defined(BL616D) || defined(BL702L)
 #define AUADC_ANALOG_ADC_SUPPORT  1
 
 #elif defined(BL616L)

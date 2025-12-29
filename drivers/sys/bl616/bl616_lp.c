@@ -1390,6 +1390,11 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     L1C_DCache_Clean_All();
 
+    /* Check buf_addr when bcmc_dtim_mode is enabled */
+    if (iot2lp_para->bcmc_dtim_mode && iot2lp_para->buf_addr == 0) {
+        assert(0);
+    }
+
     bl_lp_debug_record_time(iot2lp_para, "lp_fw_save_cpu_para");
 
     lp_fw_save_cpu_para(GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR);

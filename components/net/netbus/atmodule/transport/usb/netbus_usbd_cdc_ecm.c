@@ -30,14 +30,24 @@
 #include "eth_phy.h"
 #include "ephy_general.h"
 
+#ifdef CONFIG_WL80211
+#include <wl80211.h>
+#include <wl80211_mac.h>
+#include <netpacket_filter.h>
+#else
 #include <wifi_pkt_hooks.h>
 #include <net_pkt_filter.h>
 #include <net_al.h>
 #include <fhost.h>
+#endif
 #include "netbus_usbd_cdc_acm.h"
 
 #define DBG_TAG "USBECM"
 #include "log.h"
+
+#define CONFIG_BYPASS_TX    (0)
+#define CONFIG_BYPASS_TX2   (0)
+#define CONFIG_BYPASS_RX    (0)
 
 #define NXBD_UPLD_ITEMS     (20)
 #define NXBD_DNLD_ITEMS     (11)
@@ -45,6 +55,7 @@
 #define TX_PBUF_PAYLOAD_LEN (PBUF_LINK_ENCAPSULATION_HLEN + TX_PBUF_FRAME_LEN)
 
 #define ecm_print(...)
+//#define ecm_print printf
 
 typedef struct _trans_desc {
     struct pbuf_custom pbuf;
@@ -215,12 +226,21 @@ volatile uint8_t g_cdc_acm_init_done = 0;
 char     s_buf[NXBD_DNLD_ITEMS*TX_PBUF_PAYLOAD_LEN+31] __attribute__((section("SHAREDRAM")));
 trans_desc_t dnmsg_desc[NXBD_DNLD_ITEMS] __attribute__((section(".nocache_ram")));// up+dn
 
+// FIXME
+
 static void cdc_ecm_macaddr_init(void)
 {
     char wlan_mac[6] = {0};
     char mac_addr[13] = {0};
 
+#ifdef CONFIG_WL80211
+    extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
+    mfg_media_read_macaddr_with_lock(wlan_mac, 1);
+#else
     wifi_mgmr_sta_mac_get(wlan_mac);
+#endif
+
+    //wifi_mgmr_sta_mac_get(wlan_mac);
     snprintf(mac_addr, sizeof(mac_addr), "%02x%02x%02x%02x%02x%02x",
              wlan_mac[0], wlan_mac[1], wlan_mac[2], wlan_mac[3], wlan_mac[4], wlan_mac[5]);
 
@@ -305,29 +325,100 @@ static void custom_free(struct pbuf *p)
             g_usbecm.dnmsg, s_cnt);
 }
 
+#ifdef CONFIG_WL80211
+err_t _wl80211_output(wl80211_vif_type vif, struct pbuf *buf)
+{
+    struct wl80211_tx_header *txhdr;
+    struct iovec txseg[5];
+    int seg_cnt;
+    int payload_len = buf->tot_len;
+    int remain_len = payload_len;
+
+    // first segment record payload
+    txseg[0].iov_base = buf->payload;
+    txseg[0].iov_len = buf->len;
+    remain_len -= buf->len;
+
+    // Increase the ref count so that the buffer is not freed by the networking
+    // stack until it is actually sent over the WiFi interface
+    pbuf_ref(buf);
+
+    if (pbuf_header_force(buf, PBUF_LINK_ENCAPSULATION_HLEN)) {
+        abort();
+    }
+
+    /* get tx desc */
+    txhdr = (void *)ALIGN4_HI((uint32_t)buf->payload);
+
+    struct pbuf *buf_t = buf->next;
+    int idx = 1;
+    while (remain_len && buf_t && (idx < 5)) {
+        txseg[idx].iov_base = buf->payload;
+        txseg[idx].iov_len = buf->len;
+
+        remain_len -= buf->len;
+        idx++;
+        buf_t = buf_t->next;
+    }
+    seg_cnt = idx;
+    assert(remain_len == 0);
+
+    if (wl80211_mac_tx(vif, txhdr, 0, txseg, seg_cnt, pbuf_free, buf)) {
+        pbuf_free(buf);
+        return ERR_BUF;
+    }
+
+    return (ERR_OK);
+}
+#endif
+
 int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
 {
     struct pbuf *p = (struct pbuf *)msg;
+    int res = 0;
+#ifdef CONFIG_WL80211
+    struct netif *net_if;
+    struct netif *net_if_sta, *net_if_ap;
+#else
     net_al_if_t *net_if;
+#endif
+
+#if (CONFIG_BYPASS_TX == 1)
+    pbuf_free(p);
+    return 0;
+#endif
 
     if (!p) {
         printf("alloc error.\r\n");
         return -1;
     }
-
     // get intf
+#ifdef CONFIG_WL80211
+    net_if = (struct netif *)(wl80211_mac_vif[is_sta ? WL80211_VIF_STA : WL80211_VIF_AP]);
+    net_if_sta = (struct netif *)wl80211_mac_vif[WL80211_VIF_STA];
+    net_if_ap  = (struct netif *)wl80211_mac_vif[WL80211_VIF_AP];
+#else
     if (is_sta) {
-        net_if = fhost_env.vif[0].net_if;
+        net_if = (net_al_if_t *)fhost_env.vif[0].net_if;
     } else {
-        net_if = fhost_env.vif[1].net_if;
+        net_if = (net_al_if_t *)fhost_env.vif[1].net_if;
     }
+#endif
+
+#if 0
     if ((!net_if) || (!netif_is_up((struct netif *)net_if))) {
+#ifdef CONFIG_WL80211
         ecm_print("    netif_status - sta:%d ap:%d\r\n",
-                  fhost_env.vif[0].net_if ? netif_is_up((struct netif *)fhost_env.vif[0].net_if) : -1,
-                  fhost_env.vif[1].net_if ? netif_is_up((struct netif *)fhost_env.vif[1].net_if) : -1);
+                  net_if_sta ? netif_is_up(net_if_sta) : -1,
+                  net_if_ap ? netif_is_up(net_if_ap) : -1);
+#else
+        ecm_print("    netif_status - sta:%d\r\n",
+                  (net_if_sta ? netif_is_up(net_if_sta) : -1));
+#endif
         pbuf_free(p);
         return -1;
     }
+#endif
 
     {
         static uint32_t g_fhost_tx_cnt = 0;
@@ -338,14 +429,20 @@ int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
                     msg->pbuf.pbuf.payload,
                     ((uint32_t)msg->pbuf.pbuf.payload-(uint32_t)msg->payload_buf));
     }
-
-    if (0 != fhost_tx_start(net_if, p, NULL, NULL)) {
-        printf("tx error.\r\n");
-        pbuf_free(p);
-        return -1;
-    }
-
+#if (CONFIG_BYPASS_TX2 == 1)
+    pbuf_free(p);
     return 0;
+#endif
+#ifdef CONFIG_WL80211
+    if (0 != _wl80211_output(is_sta ? WL80211_VIF_STA : WL80211_VIF_AP, p)) {
+#else
+    if (0 != fhost_tx_start(net_if, p, NULL, NULL)) {
+#endif
+        //printf("  tx error.\r\n");
+        res = -1;
+    }
+    pbuf_free(p);
+    return res;
 }
 
 int usb_dn_task(void *arg)
@@ -491,9 +588,68 @@ static int usbecm_queue_init(void)
     return 0;
 }
 
+#ifdef CONFIG_WL80211
+#ifndef CONFIG_UPLD_ZEROCOPY_THRES
+#define CONFIG_UPLD_ZEROCOPY_THRES 500
+#endif
+
+void usb_input(void *prv, wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
+                         uint32_t status /* enum rx_status_bits */)
+{
+    struct pbuf_custom *pc;
+    struct pbuf *p;
+
+    // TODO If the current packet is being forwarded to the host, use zerocopy.
+#if 0
+    if (frm_len < CONFIG_UPLD_ZEROCOPY_THRES) {
+        pc = malloc(sizeof(struct pbuf_custom) + frm_len);
+        if (pc == NULL) {
+            /// TODO
+            assert(0);
+        }
+
+        p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+        pc->custom_free_function = (void *)free;
+
+        memcpy(p->payload, buf, frm_len);
+        // free rx right now
+        wl80211_mac_rx_free(rxhdr);
+    } else {
+        pc = rxhdr;
+        p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+        pc->custom_free_function = (void *)wl80211_mac_rx_free;
+    }
+#else
+    pc = rxhdr;
+    p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+    pc->custom_free_function = (void *)wl80211_mac_rx_free;
+#endif
+
+#if 0
+    assert(p != NULL);
+    assert(p->ref > 0);
+
+    assert(vif2netif[vif].input != NULL);
+#endif
+    if (WL80211_VIF_STA == vif) {
+        eth_input_hook(1, p, NULL);
+    } else {
+        pbuf_free(p);
+    }
+}
+#endif
+
 static int usbecm_wifi_init(void)
 {
+#ifdef CONFIG_WL80211
+#if CONFIG_BYPASS_RX
+#else
+    wl80211_register_input_cb(usb_input, NULL);
+#endif
+#else
     bl_pkt_eth_input_hook_register(eth_input_hook, NULL);
+    // todo
+#endif
     return 0;
 }
 

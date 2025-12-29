@@ -517,6 +517,43 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel15 = {
     }
 };
 
+
+/****************************************************************************/ /**
+ * @brief  Disable GPIO Keep,include PDS_IO and HBN_IO
+ *
+ * @param  pin: gpio number
+ *
+ * @return SUCCESS
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION pm_disable_gpio_keep(uint32_t pin)
+{
+    uint32_t tmpVal = 0;
+    uint32_t pos = 0;
+
+    if (pin <= GPIO_PIN_7) {
+        tmpVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_0);
+        tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_REG_AON_GPIO_ISO_MODE);
+        BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_0, tmpVal);
+    } else if (pin < GPIO_PIN_MAX) {
+        /* PDS_IO keep disable */
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL);
+        tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_GPIO_ISO_MODE);
+        /* don't entry PDS */
+        tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_START_PS);
+        BL_WR_REG(PDS_BASE, PDS_CTL, tmpVal);
+
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL5);
+        tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_GPIO_KEEP_EN);
+        BL_WR_REG(PDS_BASE, PDS_CTL5, tmpVal);
+    } else {
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+
 /****************************************************************************/ /**
  * @brief  Enable PDS Wakeup Source
  *

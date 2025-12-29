@@ -96,22 +96,17 @@ void tty_free_after_cb(frame_elem_t *frame_elem, void *arg)
 static void tty_dnld_data_output(struct bflb_tty_priv *priv, frame_elem_t *frame_elem)
 {
     struct bflb_tty_msg_packt *msg_packt;
-    uint8_t str_buff[128];
     uint16_t data_len;
-    uint16_t str_len;
 
     msg_packt = (struct bflb_tty_msg_packt *)frame_elem->buff_addr;
-
     data_len = msg_packt->msg_packt.len - (sizeof(struct bflb_tty_msg_packt) - sizeof(bflb_msg_packt_t));
-    str_len = data_len > sizeof(str_buff) - 1 ? sizeof(str_buff) - 1 : data_len;
 
-    memcpy(str_buff, msg_packt->data, str_len);
-    str_buff[str_len] = '\0';
-
-    // LOG_I("TTY %dByte: %s\r\n", data_len, str_buff);
-
-    if (priv->dnld_cb) {
-        priv->dnld_cb (priv->cbpri_arg, msg_packt->data, str_len);
+    if (data_len <= TTY_FRAME_RAWSIZE) {
+        if (priv->dnld_cb) {
+            priv->dnld_cb (priv->cbpri_arg, msg_packt->data, data_len);
+        }
+    } else {
+        printf("%s, pkt err and drop it, data_len:%d, mtu:%d\r\n", __func__, data_len, TTY_FRAME_RAWSIZE);
     }
 
     /* Free the frame */

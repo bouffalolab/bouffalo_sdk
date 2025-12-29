@@ -8,6 +8,7 @@ This is the NetHub Linux host driver userspace toolset, providing a complete sol
 - **AP Disconnection**: Disconnect from currently connected WiFi hotspots
 - **Status Query**: Query current WiFi connection status and IP information
 - **Network Scanning**: Scan for available WiFi networks in the vicinity
+- **OTA Firmware Upgrade**: Support firmware upgrade via serial port
 - **Dual Implementation Support**: C language version and Expect script version
 - **One-Click Network Access**: Automated WiFi connection and static IP configuration
 - **Hardware Abstraction**: Unified communication based on `/dev/ttyHD0` TTY interface
@@ -28,6 +29,7 @@ make
 ./easyat/src/easyat disconnect_ap
 ./easyat/src/easyat get_link_status
 ./easyat/src/easyat wifi_scan
+./easyat/src/easyat ota firmware.bin.ota
 ```
 
 ### Expect Script Version Usage
@@ -37,6 +39,7 @@ cd easyat/scripts
 ./disconnect_ap
 ./get_link_status
 ./wifi_scan
+./ota firmware.bin.ota
 ```
 
 ## Project Structure
@@ -53,7 +56,8 @@ userspace/
 │   │   ├── connect             # WiFi connection script
 │   │   ├── disconnect_ap       # AP disconnection script
 │   │   ├── get_link_status     # Status query script
-│   │   └── wifi_scan           # WiFi scanning script
+│   │   ├── wifi_scan           # WiFi scanning script
+│   │   └── ota                 # OTA firmware upgrade script
 │   └── docs/                   # Detailed documentation
 │       ├── c-implementation.md     # C implementation detailed description
 │       ├── expect-implementation.md # Expect implementation detailed description
@@ -109,6 +113,11 @@ newgrp dialout
   - WiFi connection: 20 seconds
   - Status query: 2 seconds
   - WiFi scan: 10 seconds
+  - OTA Operations:
+    - Device detection: 2 seconds
+    - OTA startup: 5 seconds
+    - Data transmission: 5 seconds/block
+    - OTA completion: 5 seconds
 - **Response Detection**: Detect "GOTIP" (success) and "ERROR" (failure)
 
 ## Return Values
@@ -160,6 +169,12 @@ sudo make uninstall
 
 # Scan networks
 ./easyat/scripts/wifi_scan
+
+# OTA firmware upgrade (C version)
+./easyat/src/easyat ota firmware.bin.ota
+
+# OTA firmware upgrade (Expect version)
+./easyat/scripts/ota firmware.bin.ota
 ```
 
 ## Troubleshooting
@@ -184,6 +199,12 @@ sudo make uninstall
    - Check if GCC toolchain is installed
    - Confirm Makefile path is correct
 
+5. **OTA Upgrade Failure**
+   - Confirm firmware file exists and is readable
+   - Check if file format is correct .ota format
+   - Confirm device connection is normal and supports OTA function
+   - Check if serial communication is stable
+
 ### Debugging Tips
 
 - **View Serial Output**: Use `screen /dev/ttyHD0 115200` to monitor communication
@@ -200,3 +221,4 @@ sudo make uninstall
 ## License
 
 MIT License - See LICENSE file in project root directory for details
+

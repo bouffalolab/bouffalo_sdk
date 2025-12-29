@@ -15,7 +15,7 @@
 #endif
 
 /* async event type */
-#define EV_WL80211 ((uintptr_t)wl80211_post_event)
+#define EV_WL80211     ((uintptr_t)wl80211_post_event)
 
 #define ALIGN4_HI(val) (((val) + 3) & ~3)
 
@@ -95,6 +95,7 @@ struct wl80211_global_state {
     unsigned int associated     : 1;
     unsigned int authenticating : 1;
     unsigned int link_up        : 1;
+    unsigned int ap_started     : 1;
 
     uint8_t ssid[33];
     uint8_t password[65];
@@ -110,13 +111,9 @@ struct wl80211_global_state {
     // AP info
     uint8_t ap_ssid[33];
     uint8_t ap_password[65];
-    struct mac_rateset ap_rateset;
-    uint16_t max_listen_interval;
     uint8_t assoc_sta_count;
-    uint8_t max_sta_supported;
+    uint16_t max_listen_interval;
     struct aid_list_entry aid_list[MACSW_REMOTE_STA_MAX];
-    uint8_t ap_setting_ctrl_port;
-    void *hostapd;
 };
 extern struct wl80211_global_state wl80211_glb;
 
@@ -131,7 +128,8 @@ typedef int (*wl80211_input_cb_t)(void *prv, wl80211_vif_type vif, void *rxhdr, 
 
 void wl80211_init(void);
 void wl80211_tcpip_input(wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);
-int wl80211_output_raw(wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *), void *opaque);
+int wl80211_output_raw(wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
+                       void *opaque);
 
 /* Input callback registration interface - allows external modules to register receive callback */
 int wl80211_register_input_cb(wl80211_input_cb_t cb, void *prv);
@@ -139,8 +137,12 @@ int wl80211_unregister_input_cb(void);
 
 enum {
     WL80211_EVT_SCAN_DONE,
-    WL80211_EVT_CONNECTED,
-    WL80211_EVT_DISCONNECTED,
+    WL80211_EVT_STA_CONNECTED,
+    WL80211_EVT_STA_DISCONNECTED,
+
+    WL80211_EVT_AP_STARTED,
+    WL80211_EVT_AP_STOPPED,
+    WL80211_EVT_AP_STA_ADDED,
 };
 
 // post wifi event in async
@@ -159,8 +161,11 @@ enum {
     WL80211_CTRL_STA_SET_PASSWORD, // param akm, passwd, generate pmk
     WL80211_CTRL_STA_GET_PASSWORD,
 
-    WL80211_CTRL_STA_SET_PSK_PMK,  // PMK Caching
+    WL80211_CTRL_STA_SET_PSK_PMK, // PMK Caching
     WL80211_CTRL_STA_GET_PSK_PMK,
+
+    WL80211_CTRL_STA_SET_LISTEN_INTERVAL,
+    WL80211_CTRL_STA_GET_LISTEN_INTERVAL,
 
     WL80211_CTRL_STA_GET_LAST_STATUS,
 

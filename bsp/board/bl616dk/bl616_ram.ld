@@ -198,7 +198,7 @@ SECTIONS
 
     .psram_data_region : AT (__psram_load_addr)
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_data_start__ = .;
 
         KEEP(*(.psram_code*))
@@ -207,7 +207,7 @@ SECTIONS
 
         KEEP(*(.psram_data*))
 
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_data_end__ = .;
     } > ram_psram
 
@@ -252,26 +252,38 @@ SECTIONS
 
     .heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __HeapBase = .;
 
         /*__end__ = .;*/
         /*end = __end__;*/
         KEEP(*(.heap*))
 
-        . = ALIGN(4);
+        . = ALIGN(32);
         __HeapLimit = .;
     } > ram_memory
 
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
     ASSERT(__HeapLimit - __HeapBase >= HeapMinSize, "heap region overflow")
 
-    .psram_heap (NOLOAD):
+    .psram_noinit_data (NOLOAD):
     {
         . = ALIGN(4);
+        __psram_noinit_data_start__ = .;
+
+        KEEP(*(.psram_noinit*))
+        KEEP(*(.img_buf*))
+
+        . = ALIGN(4);
+        __psram_noinit_data_end__ = .;
+    } > ram_psram
+
+    .psram_heap (NOLOAD):
+    {
+        . = ALIGN(32);
         __psram_heap_base = .;
         KEEP(*(.psram_heap*))
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_heap_end = .;
     } > ram_psram
 

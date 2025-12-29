@@ -6,6 +6,8 @@ static uint16_t data_write_arr[256];
 
 struct bflb_device_s *wo;
 
+volatile int flag_end = 0, flag_fifo = 0;
+
 void wo_isr(int irq, void *arg)
 {
     uint32_t int_status = bflb_wo_get_int_status(wo);
@@ -13,12 +15,14 @@ void wo_isr(int irq, void *arg)
     if (int_status & WO_INT_END) {
         printf("interrupt end!\n");
         bflb_wo_int_clear(wo, WO_INT_END);
+        flag_end++;
     }
     if (int_status & WO_INT_FIFO) {
         printf("interrupt fifo!\n");
         bflb_wo_int_clear(wo, WO_INT_FIFO | WO_INT_FER);
         bflb_wo_disable(wo);
         bflb_wo_int_mask(wo, WO_INT_FIFO);
+        flag_fifo++;
     }
     if (int_status & WO_INT_FER) {
         printf("interrupt fer!\n");
@@ -42,6 +46,7 @@ int main(void)
     board_init();
     wo = bflb_device_get_by_name("wo");
     bflb_wo_init(wo, &cfg);
+    printf("fifo available cnt: %d\n", bflb_wo_get_fifo_available_cnt(wo));
     bflb_wo_int_unmask(wo, WO_INT_END);
     bflb_wo_int_mask(wo, WO_INT_FIFO | WO_INT_FER);
     bflb_irq_attach(wo->irq_num, wo_isr, NULL);
@@ -50,15 +55,18 @@ int main(void)
     bflb_wo_disable(wo);
     bflb_wo_push_fifo(wo, data_write_arr, 5);
     bflb_wo_enable(wo);
-    bflb_mtimer_delay_us(50);
+    while (flag_end == 0);
 
     bflb_wo_disable(wo);
+#if defined(BL616L)
+    bflb_wo_push_fifo(wo, data_write_arr, 16);
+#else
     bflb_wo_push_fifo(wo, data_write_arr, 128);
+#endif
     bflb_wo_int_mask(wo, WO_INT_END);
     bflb_wo_int_unmask(wo, WO_INT_FIFO | WO_INT_FER);
     bflb_wo_enable(wo);
-    bflb_mtimer_delay_us(200);
-    for (uint32_t i = 0; i < 130; i++) {
-        *(volatile uint32_t *)0x20000B04 = i;
-    }
+    while (flag_fifo == 0);
+
+    bflb_wo_push_fifo_force(wo, data_write_arr, 130);
 }

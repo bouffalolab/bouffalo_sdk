@@ -37,6 +37,37 @@ extern "C" {
 #define AT_WIFI_ENC_WPA2_PSK 3
 #define AT_WIFI_ENC_WPA3_PSK 4
 
+enum at_wifi_state {
+    AT_WIFI_STATE_STA_DISCONNECTED = 0,
+    AT_WIFI_STATE_STA_SCANNING,
+    AT_WIFI_STATE_STA_CONNECTING,
+    AT_WIFI_STATE_STA_4WAY_HANDSHAKE,
+    AT_WIFI_STATE_STA_GROUP_HANDSHAKE,
+    AT_WIFI_STATE_STA_CONNECTED,
+};
+
+/// WiFi Mode
+typedef enum {
+    /// 802.ll b
+    AT_WIFI_MODE_802_11B       = 0x01,
+    /// 802.11 a
+    AT_WIFI_MODE_802_11A       = 0x02,
+    /// 802.11 g
+    AT_WIFI_MODE_802_11G       = 0x04,
+    /// 802.11n at 2.4GHz
+    AT_WIFI_MODE_802_11N_2_4   = 0x08,
+    /// 802.11n at 5GHz
+    AT_WIFI_MODE_802_11N_5     = 0x10,
+    /// 802.11ac at 5GHz
+    AT_WIFI_MODE_802_11AC_5    = 0x20,
+    /// 802.11ac at 2.4GHz
+    AT_WIFI_MODE_802_11AC_2_4  = 0x40,
+    /// 802.11ax at 2.4GHz
+    AT_WIFI_MODE_802_11AX_2_4  = 0x80,
+    /// 802.11ax at 5GHz
+    AT_WIFI_MODE_802_11AX_5    = 0x100,
+} at_wifi_mode_t;
+
 int at_wifi_start(void);
 
 int at_wifi_stop(void);

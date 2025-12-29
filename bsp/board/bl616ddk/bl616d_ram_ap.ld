@@ -181,6 +181,7 @@ SECTIONS
     .ram_skip_nocache_region (NOLOAD) :
     {
         . += (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
+        . = ALIGN(32);
     } > ram_memory
 
     __itcm_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
@@ -266,12 +267,12 @@ SECTIONS
 
     .psram_data_region : AT (__psram_load_addr)
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_data_start__ = .;
 
         KEEP(*(.psram_data*))
 
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_data_end__ = .;
     } > ram_psram
 
@@ -341,12 +342,12 @@ SECTIONS
 
     .heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __HeapBase = .;
 
         KEEP(*(.heap*))
 
-        . = ALIGN(4);
+        . = ALIGN(32);
         __HeapLimit = .;
     } > ram_memory
 
@@ -367,10 +368,10 @@ SECTIONS
 
     .psram_heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_heap_base = .;
         KEEP(*(.psram_heap*))
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_heap_end = .;
     } > ram_psram
 

@@ -3,6 +3,7 @@
 #include "bflb_cam.h"
 #include "image_sensor.h"
 #include "board.h"
+#include "malloc.h"
 
 #define CAM_FRAME_COUNT_USE 50
 
@@ -37,8 +38,7 @@ int main(void)
         printf("\r\nSensor name: %s\r\n", sensor_config->name);
     } else {
         printf("\r\nError! Can't identify sensor!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
 
     bflb_cam_int_mask(cam0, CAM_INTMASK_NORMAL, false);
@@ -48,20 +48,18 @@ int main(void)
     memcpy(&cam_config, sensor_config, IMAGE_SENSOR_INFO_COPY_SIZE);
     cam_config.with_mjpeg = false;
     cam_config.input_source = CAM_INPUT_SOURCE_DVP;
-    cam_config.output_format = CAM_OUTPUT_FORMAT_AUTO;    
+    cam_config.output_format = CAM_OUTPUT_FORMAT_AUTO;
     cam_config.output_bufsize = cam_config.resolution_x * cam_config.resolution_y * 2 * 2;
     cam_config.output_bufaddr = (uint32_t)memalign(32, cam_config.output_bufsize);
     if (cam_config.output_bufaddr == 0) {
         printf("\r\nError! Can't allocate memory!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
 
     bflb_cam_init(cam0, &cam_config);
     bflb_cam_start(cam0);
 
-    while (cam_int_cnt < CAM_FRAME_COUNT_USE) {
-    }
+    while (cam_int_cnt < CAM_FRAME_COUNT_USE) {}
 
     bflb_cam_stop(cam0);
 

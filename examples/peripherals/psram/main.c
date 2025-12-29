@@ -2,8 +2,9 @@
 #include "bflb_l1c.h"
 #include "board.h"
 
-#define BFLB_PSRAM_TEST_SIZE (16 * 1024 * 1024)
 #define BFLB_PSRAM_TEST_ADDR (BFLB_PSRAM_BASE + (0 * 1024 * 1024))
+
+uint32_t psram_test_size = 0;
 
 void test32(void)
 {
@@ -11,11 +12,11 @@ void test32(void)
 
     printf("============= check uint32_t ==============\r\n");
 
-    for (i = 0; i < BFLB_PSRAM_TEST_SIZE; i += 4) {
+    for (i = 0; i < psram_test_size; i += 4) {
         *((volatile uint32_t *)(BFLB_PSRAM_TEST_ADDR + i)) = i / 4;
     }
 
-    for (i = 0; i < BFLB_PSRAM_TEST_SIZE; i += 4) {
+    for (i = 0; i < psram_test_size; i += 4) {
         val = *((volatile uint32_t *)(BFLB_PSRAM_TEST_ADDR + i));
         if (i / 4 != val) {
             printf("addr = 0x%08X, val = 0x%08X, expect = 0x%08X\r\n", (BFLB_PSRAM_TEST_ADDR + i), val, i / 4);
@@ -32,10 +33,10 @@ void test16(void)
 
     printf("============= check uint16_t ==============\r\n");
 
-    for (i = 0; i < BFLB_PSRAM_TEST_SIZE; i += 2) {
+    for (i = 0; i < psram_test_size; i += 2) {
         *((volatile uint16_t *)(BFLB_PSRAM_TEST_ADDR + i)) = i / 2;
     }
-    for (i = 0; i < BFLB_PSRAM_TEST_SIZE; i += 2) {
+    for (i = 0; i < psram_test_size; i += 2) {
         val = *((volatile uint16_t *)(BFLB_PSRAM_TEST_ADDR + i));
 
         if (((i / 2) & 0xffff) != val) {
@@ -54,11 +55,11 @@ void test8(void)
 
     printf("============= check uint8_t ==============\r\n");
 
-    for (i = 0; i < BFLB_PSRAM_TEST_SIZE; i++) {
+    for (i = 0; i < psram_test_size; i++) {
         *((volatile uint8_t *)(BFLB_PSRAM_TEST_ADDR + i)) = i;
     }
 
-    for (i = 0; i < BFLB_PSRAM_TEST_SIZE; i++) {
+    for (i = 0; i < psram_test_size; i++) {
         val = *((volatile uint8_t *)(BFLB_PSRAM_TEST_ADDR + i));
 
         if ((i & 0xff) != val) {
@@ -74,6 +75,8 @@ int main(void)
 {
     board_init();
 
+    psram_test_size = board_psram_size_get();
+    printf(" psram test size: %u MB\r\n", psram_test_size / (1024 * 1024));
     printf(" psram read write test \r\n");
 
     bflb_l1c_dcache_clean_all();

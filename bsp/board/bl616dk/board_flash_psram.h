@@ -13,6 +13,7 @@ void bl_show_flashinfo(void);
 
 /* psram */
 uint32_t board_psram_x8_init(void);
+uint32_t board_psram_size_get(void);
 
 #endif
 #endif

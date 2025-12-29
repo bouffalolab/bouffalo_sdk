@@ -7,10 +7,12 @@
 #include <errno.h>
 #include <sys/select.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #define SERIAL_DEVICE "/dev/ttyHD0"
 #define BAUD_RATE B115200
 #define BUFFER_SIZE 2048
+#define OTA_CHUNK_SIZE 512
 
 // Serial port file descriptor
 static int serial_fd = -1;
@@ -255,6 +257,210 @@ int cmd_disconnect_ap() {
     }
 }
 
+// 检查文件是否可读
+int check_file_readable(const char *filename) {
+    struct stat st;
+
+    // 检查文件是否存在
+    if (stat(filename, &st) != 0) {
+        printf("错误: OTA文件不存在: %s\n", filename);
+        return 0;
+    }
+
+    // 检查文件是否可读
+    if (access(filename, R_OK) != 0) {
+        printf("错误: OTA文件不可读: %s\n", filename);
+        return 0;
+    }
+
+    return 1;
+}
+
+// 发送二进制数据块
+int send_binary_data(const char *data, int size) {
+    int bytes_sent = 0;
+
+    while (bytes_sent < size) {
+        int result = write(serial_fd, data + bytes_sent, size - bytes_sent);
+        if (result < 0) {
+            printf("Failed to send binary data: %s\n", strerror(errno));
+            return -1;
+        }
+        bytes_sent += result;
+    }
+
+    return bytes_sent;
+}
+
+// OTA升级命令
+int cmd_ota(const char *filename) {
+    FILE *file_handle;
+    long file_size;
+    char *file_buffer;
+    long bytes_sent = 0;
+    int chunk_count = 0;
+    char cmd[64];
+
+    printf("使用OTA文件: %s\n", filename);
+
+    // 检查文件是否可读
+    if (!check_file_readable(filename)) {
+        return 1;
+    }
+
+    // 打开OTA文件
+    file_handle = fopen(filename, "rb");
+    if (!file_handle) {
+        printf("错误: 无法打开OTA文件: %s\n", filename);
+        return 1;
+    }
+
+    // 获取文件大小
+    fseek(file_handle, 0, SEEK_END);
+    file_size = ftell(file_handle);
+    fseek(file_handle, 0, SEEK_SET);
+
+    printf("开始OTA升级，文件大小: %ld 字节\n", file_size);
+
+    // 分配内存缓冲区
+    file_buffer = malloc(OTA_CHUNK_SIZE);
+    if (!file_buffer) {
+        printf("错误: 无法分配内存缓冲区\n");
+        fclose(file_handle);
+        return 1;
+    }
+
+    // 发送AT命令确认设备连接
+    printf("检查设备连接...\n");
+    if (send_cmd("AT\r\n") != 0) {
+        free(file_buffer);
+        fclose(file_handle);
+        return 1;
+    }
+
+    // 等待OK响应
+    if (!wait_response("OK", 2)) {
+        printf("设备未响应，请检查连接\n");
+        free(file_buffer);
+        fclose(file_handle);
+        return 1;
+    }
+
+    // 配置OTA开始
+    printf("配置OTA模式...\n");
+    if (send_cmd("AT+OTASTART?\r\n") != 0) {
+        free(file_buffer);
+        fclose(file_handle);
+        return 1;
+    }
+
+    if (!wait_response("OK", 2)) {
+        printf("OTASTART查询失败\n");
+        free(file_buffer);
+        fclose(file_handle);
+        return 1;
+    }
+
+    // 启动OTA模式
+    if (send_cmd("AT+OTASTART=1\r\n") != 0) {
+        free(file_buffer);
+        fclose(file_handle);
+        return 1;
+    }
+
+    if (!wait_response("OK", 5)) {
+        printf("OTASTART启动失败\n");
+        free(file_buffer);
+        fclose(file_handle);
+        return 1;
+    }
+
+    printf("OTA模式已启动，开始发送数据...\n");
+
+    // 循环读取并发送数据块
+    while (bytes_sent < file_size) {
+        int current_chunk_size;
+        int bytes_read;
+
+        // 计算当前数据块大小
+        current_chunk_size = file_size - bytes_sent;
+        if (current_chunk_size > OTA_CHUNK_SIZE) {
+            current_chunk_size = OTA_CHUNK_SIZE;
+        }
+
+        printf("发送数据块 %d: 大小 %d 字节，总进度: %ld/%ld\n",
+               chunk_count, current_chunk_size, bytes_sent, file_size);
+
+        // 发送AT+OTASEND命令
+        snprintf(cmd, sizeof(cmd), "AT+OTASEND=%d\r\n", current_chunk_size);
+        if (send_cmd(cmd) != 0) {
+            free(file_buffer);
+            fclose(file_handle);
+            return 1;
+        }
+
+        // 等待OTASEND命令响应
+        if (!wait_response("OK", 5)) {
+            printf("OTASEND命令，未收到预期响应\n");
+            free(file_buffer);
+            fclose(file_handle);
+            return 1;
+        }
+
+        // 读取数据块
+        bytes_read = fread(file_buffer, 1, current_chunk_size, file_handle);
+        if (bytes_read != current_chunk_size) {
+            printf("读取文件数据错误\n");
+            free(file_buffer);
+            fclose(file_handle);
+            return 1;
+        }
+
+        // 直接发送二进制数据到串口
+        if (send_binary_data(file_buffer, current_chunk_size) != current_chunk_size) {
+            printf("发送二进制数据失败\n");
+            free(file_buffer);
+            fclose(file_handle);
+            return 1;
+        }
+
+        printf("发送 %d 字节原始数据\n", current_chunk_size);
+
+        // 等待数据发送确认
+        if (!wait_response("SEND OK", 10)) {
+            printf("数据块 %d，未收到预期响应\n", chunk_count);
+            free(file_buffer);
+            fclose(file_handle);
+            return 1;
+        }
+
+        printf("数据块 %d 发送成功\n", chunk_count);
+
+        bytes_sent += current_chunk_size;
+        chunk_count++;
+    }
+
+    // 清理资源
+    free(file_buffer);
+    fclose(file_handle);
+
+    printf("OTA数据发送完成，共发送 %ld 字节，分 %d 个数据块\n", bytes_sent, chunk_count);
+
+    // OTA完成，发送完成命令
+    printf("完成OTA升级...\n");
+    if (send_cmd("AT+OTAFIN\r\n") != 0) {
+        return 1;
+    }
+
+    if (!wait_response("OK", 5)) {
+        printf("OTAFIN命令，未收到预期响应\n");
+        return 1;
+    }
+
+    printf("OTA升级成功完成！\n");
+    return 0;
+}
+
 // Show usage help
 void show_usage(const char *prog_name) {
     printf("Usage:\n");
@@ -262,11 +468,13 @@ void show_usage(const char *prog_name) {
     printf("  %s disconnect_ap              - Disconnect from AP\n", prog_name);
     printf("  %s get_link_status            - Get connection status\n", prog_name);
     printf("  %s wifi_scan                  - Scan WiFi networks\n", prog_name);
+    printf("  %s ota <filename>             - OTA upgrade with firmware file\n", prog_name);
     printf("\n");
     printf("Examples:\n");
     printf("  %s connect MyWiFi password123\n", prog_name);
     printf("  %s connect OpenWiFi\n", prog_name);
     printf("  %s disconnect_ap\n", prog_name);
+    printf("  %s ota firmware.bin.ota\n", prog_name);
 }
 
 int main(int argc, char *argv[]) {
@@ -316,6 +524,14 @@ int main(int argc, char *argv[]) {
             result = 1;
         } else {
             result = cmd_wifi_scan();
+        }
+    } else if (strcmp(argv[1], "ota") == 0) {
+        if (argc != 3) {
+            printf("ota command requires filename parameter\n");
+            show_usage(argv[0]);
+            result = 1;
+        } else {
+            result = cmd_ota(argv[2]);
         }
     } else {
         printf("Unknown command: %s\n", argv[1]);

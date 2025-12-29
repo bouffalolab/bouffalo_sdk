@@ -3,6 +3,7 @@
 #include "bflb_cam.h"
 #include "image_sensor.h"
 #include "board.h"
+#include "malloc.h"
 
 #define CROP_WQVGA_X           416
 #define CROP_WQVGA_Y           240
@@ -29,8 +30,7 @@ int main(void)
         printf("\r\nSensor name: %s\r\n", sensor_config->name);
     } else {
         printf("\r\nError! Can't identify sensor!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
 
     /* Crop resolution_x, should be set before init */
@@ -45,8 +45,7 @@ int main(void)
     cam_config.output_bufaddr = (uint32_t)memalign(32, CAM_OUTPUT_BUFFER_SIZE);
     if (cam_config.output_bufaddr == 0) {
         printf("\r\nError! Can't allocate memory!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
     cam_config.output_bufsize = CAM_OUTPUT_BUFFER_SIZE;
 
@@ -57,8 +56,7 @@ int main(void)
     bflb_cam_start(cam0);
 
     for (i = 0; i < CAM_FRAME_COUNT_USE; i++) {
-        while (bflb_cam_get_frame_count(cam0) == 0) {
-        }
+        while (bflb_cam_get_frame_count(cam0) == 0) {}
         pic_size = bflb_cam_get_frame_info(cam0, &pic);
 #if defined(BL616D)
         bflb_cam_int_clear(cam0, CAM_INTCLR_NORMAL);

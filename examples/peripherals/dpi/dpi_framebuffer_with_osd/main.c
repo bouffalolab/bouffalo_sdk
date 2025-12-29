@@ -190,7 +190,7 @@ int main(void)
         .vbp = 7,
         .vfp = 5,
         .interface = DPI_INTERFACE_24_PIN,
-        .input_sel = DPI_INPUT_SEL_FRAMEUFFER_WITH_OSD,
+        .input_sel = DPI_INPUT_SEL_FRAMEBUFFER_WITH_OSD,
         .test_pattern = DPI_TEST_PATTERN_NULL,
         .data_format = DPI_DATA_FORMAT_RGB565,
         .framebuffer_addr = (uint32_t)framebuffer_1,

@@ -31,11 +31,11 @@ VerOffset = 0xc00;
 
 MEMORY
 {
-    fw_header_memory  (rx)  : ORIGIN = 0x80000000 - 0x1000, LENGTH = 4K
-    xip_memory  (rx)  : ORIGIN = 0x80000000, LENGTH = 4M
-    ram_psram  (wxa)   : ORIGIN = 0x88000000, LENGTH = 4M
-    ram_nocache (!rx) : ORIGIN = 0x21000400, LENGTH = 320K - 1K /* reserved 1k for security */
-    ram_memory  (!rx) : ORIGIN = 0x61000400, LENGTH = 320K - 1K /* reserved 1k for security */
+    fw_header_memory  (rx)  : ORIGIN = 0xb0000000 - 0x1000, LENGTH = 4K
+    xip_memory  (rx)  : ORIGIN = 0xb0000000, LENGTH = 4M
+    ram_psram  (wxa)   : ORIGIN = 0xb8000000, LENGTH = 4M
+    ram_nocache (!rx) : ORIGIN = 0x21020400, LENGTH = 120K - 1K /* reserved 1k for security */
+    ram_memory  (!rx) : ORIGIN = 0xa1020400, LENGTH = 120K - 1K /* reserved 1k for security */
     ram_wifi  (wxa)   : ORIGIN = 0x21050000, LENGTH = 320K
 }
 
@@ -193,7 +193,7 @@ SECTIONS
     .ram_skip_nocache_region (NOLOAD) :
     {
         . += (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
-        . = ALIGN(32);
+        . = ALIGN(64);
     } > ram_memory
 
     .itcm_region :
@@ -287,15 +287,15 @@ SECTIONS
         __psram_data_start__ = ADDR(.psram_data_region);
         __psram_data_end__ = ADDR(.psram_data_region) + SIZEOF(.psram_data_region);
 
-        . = ALIGN(32);
+        . = ALIGN(64);
 
         KEEP(*(.psram_code*))
 
-        . = ALIGN(32);
+        . = ALIGN(64);
 
         KEEP(*(.psram_data*))
 
-        . = ALIGN(32);
+        . = ALIGN(64);
     } > ram_psram AT > xip_memory
 
     __etext_final = (__psram_load_addr + SIZEOF (.psram_data_region));
@@ -346,12 +346,12 @@ SECTIONS
 
     .heap (NOLOAD):
     {
-        . = ALIGN(32);
+        . = ALIGN(64);
         __HeapBase = .;
 
         KEEP(*(.heap*))
 
-        . = ALIGN(32);
+        . = ALIGN(64);
         __HeapLimit = .;
     } > ram_memory
 
@@ -361,21 +361,21 @@ SECTIONS
     .psram_noinit_data (NOLOAD):
     {
         . = ALIGN(4);
-        __psram_noinit_data_start__ = .;
+        __psram_noinit_start__ = .;
 
         KEEP(*(.psram_noinit*))
         KEEP(*(.img_buf*))
 
         . = ALIGN(4);
-        __psram_noinit_data_end__ = .;
+        __psram_noinit_end__ = .;
     } > ram_psram
 
     .psram_heap (NOLOAD):
     {
-        . = ALIGN(32);
+        . = ALIGN(64);
         __psram_heap_base = .;
         KEEP(*(.psram_heap*))
-        . = ALIGN(32);
+        . = ALIGN(64);
         __psram_heap_end = .;
     } > ram_psram
 

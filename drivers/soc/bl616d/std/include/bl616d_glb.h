@@ -302,12 +302,34 @@ typedef struct {
     uint32_t sdmin;                                  /*!< u(19,11), sdm input, 1400/10*2^11 */
 } GLB_DSIPLL_Cfg_Type;
 
-/** @defgroup GLB CAM clock type definition
+/** @defgroup GLB CAM reference clock type definition
   * @{
   */
-#define GLB_CAM_CLK_XCLK                    (0) /*!< Select XCLK as CAM clock */
-#define GLB_CAM_CLK_WIFIPLL_96M             (1) /*!< Select WIFIPLL_96M as CAM clock */
-#define GLB_CAM_CLK_TOP_AUPLL_DIV5          (2) /*!< Select TOP_AUPLL_DIV5 as CAM clock */
+#define GLB_CAM_REF_CLK_XCLK                (0) /*!< Select XCLK as CAM reference clock */
+#define GLB_CAM_REF_CLK_WIFIPLL_96M         (1) /*!< Select WIFIPLL_96M as CAM reference clock */
+#define GLB_CAM_REF_CLK_CPUPLL_100M         (2) /*!< Select CPUPLL_100M as CAM reference clock */
+/**
+  * @}
+  */
+
+/** @defgroup GLB CAM core clock type definition
+  * @{
+  */
+#define GLB_CAM_CLK_BCLK                    (0) /*!< Select BCLK as CAM core clock */
+#define GLB_CAM_CLK_WIFIPLL_160M            (1) /*!< Select WIFIPLL_160M as CAM core clock */
+#define GLB_CAM_CLK_WIFIPLL_240M            (2) /*!< Select WIFIPLL_240M as CAM core clock */
+#define GLB_CAM_CLK_WIFIPLL_96M             (3) /*!< Select WIFIPLL_96M as CAM core clock */
+/**
+  * @}
+  */
+
+/** @defgroup GLB display module clock type definition
+  * @{
+  */
+#define GLB_DP_CLK_XCLK                     (0) /*!< Select XCLK as display module clock */
+#define GLB_DP_CLK_WIFIPLL_160M             (1) /*!< Select WIFIPLL_160M as display module clock */
+#define GLB_DP_CLK_WIFIPLL_240M             (2) /*!< Select WIFIPLL_240M as display module clock */
+#define GLB_DP_CLK_WIFIPLL_96M              (3) /*!< Select WIFIPLL_96M as display module clock */
 /**
   * @}
   */
@@ -1236,12 +1258,28 @@ typedef union {
 #define IS_GLB_UHSPLL_REF_CLK_TYPE(type) (((type) == GLB_UHSPLL_REF_XTAL_SOC_CLK) || \
                                           ((type) == GLB_UHSPLL_REF_RC32M_CLK))
 
+/** @defgroup  GLB_CAM_REF_CLK_TYPE
+ *  @{
+ */
+#define IS_GLB_CAM_REF_CLK_TYPE(type) (((type) == GLB_CAM_REF_CLK_XCLK) ||        \
+                                       ((type) == GLB_CAM_REF_CLK_WIFIPLL_96M) || \
+                                       ((type) == GLB_CAM_REF_CLK_CPUPLL_100M))
+
 /** @defgroup  GLB_CAM_CLK_TYPE
  *  @{
  */
-#define IS_GLB_CAM_CLK_TYPE(type) (((type) == GLB_CAM_CLK_XCLK) ||        \
-                                   ((type) == GLB_CAM_CLK_WIFIPLL_96M) || \
-                                   ((type) == GLB_CAM_CLK_TOP_AUPLL_DIV5))
+#define IS_GLB_CAM_CLK_TYPE(type) (((type) == GLB_CAM_CLK_BCLK) ||        \
+                                   ((type) == GLB_CAM_CLK_WIFIPLL_160M) || \
+                                   ((type) == GLB_CAM_CLK_WIFIPLL_240M) || \
+                                   ((type) == GLB_CAM_CLK_WIFIPLL_96M))
+
+/** @defgroup  GLB_DP_CLK_TYPE
+ *  @{
+ */
+#define IS_GLB_DP_CLK_TYPE(type) (((type) == GLB_DP_CLK_XCLK) ||        \
+                                  ((type) == GLB_DP_CLK_WIFIPLL_160M) || \
+                                  ((type) == GLB_DP_CLK_WIFIPLL_240M) || \
+                                  ((type) == GLB_DP_CLK_WIFIPLL_96M))
 
 /** @defgroup  GLB_SDH_CLK_TYPE
  *  @{
@@ -1981,7 +2019,9 @@ BL_Err_Type GLB_Invert_ETH_TX_CLK(uint8_t enable);
 BL_Err_Type GLB_Invert_ETH_REF_O_CLK(uint8_t enable);
 BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(uint8_t clkSel);
 /*----------*/
+BL_Err_Type GLB_Set_CAM_REF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_Set_Display_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 /*----------*/
 BL_Err_Type GLB_Config_SDIO_Host_Reset_System(uint8_t enable);

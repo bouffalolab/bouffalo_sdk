@@ -284,6 +284,20 @@ const struct bflb_device_s bl616d_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_I2S,
       .user_data = NULL },
+    { .name = BFLB_NAME_AUADC,
+      .reg_base = AUADC_BASE,
+      .irq_num = BL616D_IRQ_AUADC,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_AUDIOADC,
+      .user_data = NULL },
+    { .name = BFLB_NAME_AUDAC,
+      .reg_base = AUDAC_BASE,
+      .irq_num = BL616D_IRQ_AUDAC,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_AUDIODAC,
+      .user_data = NULL },
     { .name = BFLB_NAME_TIMER0,
       .reg_base = TIMER_BASE,
       .irq_num = BL616D_IRQ_TIMER0,
@@ -494,11 +508,25 @@ const struct bflb_device_s bl616d_device_table[] = {
       .sub_idx = 1,
       .dev_type = BFLB_DEVICE_TYPE_IPC,
       .user_data = NULL },
-#if !defined(CPU_LP)
+#if !defined(CPU_MODEL_A0)
     { .name = BFLB_NAME_CAN0,
-      .reg_base = CANFD_BASE,
-      .irq_num = BL616D_IRQ_CANFD,
+      .reg_base = CAN0_BASE,
+      .irq_num = BL616D_IRQ_CAN0,
       .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAN,
+      .user_data = NULL },
+    { .name = BFLB_NAME_CAN1,
+      .reg_base = CAN1_BASE,
+      .irq_num = BL616D_IRQ_CAN1,
+      .idx = 1,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAN,
+      .user_data = NULL },
+    { .name = BFLB_NAME_CAN2,
+      .reg_base = CAN2_BASE,
+      .irq_num = BL616D_IRQ_CAN2,
+      .idx = 2,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_CAN,
       .user_data = NULL },
@@ -618,6 +646,7 @@ struct bflb_device_s *bflb_device_get_by_name(const char *name)
         }
     }
     LHAL_PARAM_ASSERT(0);
+    bflb_lhal_assert_func(__FILE__, __LINE__, __func__, name);
     return NULL;
 }
 

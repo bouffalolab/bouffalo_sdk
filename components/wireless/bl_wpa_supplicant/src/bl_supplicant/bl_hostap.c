@@ -130,6 +130,8 @@ bool hostap_deinit(void *data)
         return true;
     }
 
+    bl_wifi_unset_appie_internal(hapd->vif_idx, WIFI_APPIE_WPA_RSN);
+
 #if 0 // wpa_ie is from ROM
     os_free(hapd->wpa_auth->wpa_ie);
 #endif
@@ -145,8 +147,6 @@ bool hostap_deinit(void *data)
     os_free(hapd->conf);
 
     os_free(hapd);
-
-    bl_wifi_unset_appie_internal(hapd->vif_idx, WIFI_APPIE_WPA_RSN);
 
     return true;
 }

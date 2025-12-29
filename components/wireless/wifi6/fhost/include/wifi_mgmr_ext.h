@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "mac_types.h"
+#include "macsw.h"
 
 #if defined(BL616D)
 #define MAX_FIXED_CHANNELS_LIMIT (42)
@@ -992,6 +993,18 @@ int wifi_mgmr_sta_twt_setup(twt_setup_params_struct_t *twt_setup_params_ptr);
  * @return Returns the result of the function execution, 0 for success and -1 for failure
  */
 int wifi_mgmr_sta_twt_teardown(twt_teardown_params_struct_t *twt_teardown_params_ptr);
+
+/**
+ * @brief Get WiFi Manager STA TWT (Target Wake Time) status
+ *
+ * This function retrieves the current TWT status including all active TWT flows
+ * and their configurations.
+ *
+ * @param conf Pointer to an array of twt_status_info structures to store TWT flow configurations
+ * @param twt_num Pointer to store the number of active TWT flows
+ * @return Returns the result of the function execution, 0 for success and -1 for failure
+ */
+int wifi_mgmr_sta_twt_statusget(struct twt_status_info *conf, uint8_t *twt_num);
 
 /**
  * wifi_mgmr_sta_set_listen_itv

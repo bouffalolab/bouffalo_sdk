@@ -19,15 +19,17 @@ else ()
         sdk_add_compile_definitions(-DCONFIG_HIGH_PERFORMANCE=1)
     endif()
 
-
-target_sources(app PRIVATE
-                   app/src/app_uartwifi.c
-                   app/src/atmodule/app_atmodule.c
-                   )
+    target_sources(app PRIVATE
+                       app/src/app_uartwifi.c
+                       app/src/atmodule/app_atmodule.c
+                       )
 endif()
+
+target_sources(app PRIVATE boards/${CHIP}/board_gpio_overlay.c)
 
 sdk_add_include_directories(.)
 sdk_add_include_directories(./app/include)
+sdk_add_include_directories(./boards/${CHIP})
 
 sdk_set_main_file(main.c)
 

@@ -38,8 +38,14 @@
 #define FLASH_XIP_BASE (0x23000000)
 #elif defined(BL616)
 #define FLASH_XIP_BASE (0xA0000000)
-#elif defined(BL628) || defined(BL616D) || defined(BL616L)
+#elif defined(BL628) || defined(BL616L)
 #define FLASH_XIP_BASE (0x80000000)
+#elif defined(BL616D) 
+#if defined(CPU_MODEL_A0)
+#define FLASH_XIP_BASE (0x80000000)
+#else
+#define FLASH_XIP_BASE (0xb0000000)
+#endif
 #elif defined(BL808) || defined(BL606P)
 #define FLASH_XIP_BASE (0x58000000)
 #endif

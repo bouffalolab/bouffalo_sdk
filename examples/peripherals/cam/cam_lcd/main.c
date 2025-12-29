@@ -4,6 +4,7 @@
 #include "bflb_gpio.h"
 
 #include "stdlib.h"
+#include "malloc.h"
 
 #include "board.h"
 #include "image_sensor.h"
@@ -113,7 +114,8 @@ static ATTR_TCM_SECTION __attribute__((optimize("O3"))) void yuyv_640x480_to_nrg
 }
 #endif
 
-static ATTR_TCM_SECTION __attribute__((optimize("O3"))) void yuyv_640x480_to_nrgb_320x240(uint8_t *yuyv_src, uint8_t *nrgb_dest)
+static ATTR_TCM_SECTION __attribute__((optimize("O3"))) void yuyv_640x480_to_nrgb_320x240(uint8_t *yuyv_src,
+                                                                                          uint8_t *nrgb_dest)
 {
     uint8_t *src;
     uint8_t *dest;
@@ -143,7 +145,8 @@ static ATTR_TCM_SECTION __attribute__((optimize("O3"))) void yuyv_640x480_to_nrg
     }
 }
 
-static ATTR_TCM_SECTION __attribute__((optimize("O3"))) void yuyv_640x480_to_rgb565_320x240(uint8_t *yuyv_src, uint8_t *nrgb_dest)
+static ATTR_TCM_SECTION __attribute__((optimize("O3"))) void yuyv_640x480_to_rgb565_320x240(uint8_t *yuyv_src,
+                                                                                            uint8_t *nrgb_dest)
 {
     uint8_t *src;
     uint8_t *dest;
@@ -232,11 +235,11 @@ int main(void)
     initYUV2RGBTabel();
     cam_gpio_init();
     if (image_sensor_scan(i2c0, &sensor_config)) {
-        printf("\r\nSensor name: %s, size: %d*%d\r\n", sensor_config->name, sensor_config->resolution_x, sensor_config->resolution_y);
+        printf("\r\nSensor name: %s, size: %d*%d\r\n", sensor_config->name, sensor_config->resolution_x,
+               sensor_config->resolution_y);
     } else {
         printf("\r\nError! Can't identify sensor!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
 
     memcpy(&cam_config, sensor_config, IMAGE_SENSOR_INFO_COPY_SIZE);
@@ -247,8 +250,7 @@ int main(void)
     cam_config.output_bufaddr = (uint32_t)memalign(32, cam_config.output_bufsize);
     if (cam_config.output_bufaddr == 0) {
         printf("\r\nError! Can't allocate memory!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
 
     bflb_cam_init(cam0, &cam_config);
@@ -258,8 +260,7 @@ int main(void)
     bflb_cam_start(cam0);
 
     while (1) {
-        while (bflb_cam_get_frame_count(cam0) == 0) {
-        }
+        while (bflb_cam_get_frame_count(cam0) == 0) {}
         bflb_cam_get_frame_info(cam0, &pic);
 
         if (LCD_COLOR_DEPTH == 32) {
@@ -269,8 +270,7 @@ int main(void)
         }
         //yuyv_to_nrgb(pic, display_buffer);
         lcd_draw_picture_nonblocking(0, 0, lcd_max_x, lcd_max_y, (void *)display_buffer);
-        while (lcd_draw_is_busy()) {
-        }
+        while (lcd_draw_is_busy()) {}
 
 #if defined(BL616D)
         bflb_cam_int_clear(cam0, CAM_INTCLR_NORMAL);

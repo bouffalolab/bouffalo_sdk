@@ -41,45 +41,18 @@
  *----------------------------------------------------------*/
 #include "stdio.h"
 
-
-static inline unsigned long long getCycleCounter(void) {
-#if __riscv_xlen == 32
-  register unsigned int cycle, cycleh, cycleh_tmp;
-  do {
-    asm volatile ("rdcycleh %0" : "=r"(cycleh));
-    asm volatile ("rdcycle %0" : "=r"(cycle));
-    asm volatile ("rdcycleh %0" : "=r"(cycleh_tmp));
-  } while(cycleh != cycleh_tmp);
-  return ((unsigned long long)cycleh << 32) | cycle;
-#elif __riscv_xlen == 64
-  register unsigned long long cycle;
-  asm volatile ("rdcycle %0" : "=r"(cycle));
-  return cycle;
-#endif
-}
-
-static inline void resetCycleCounter(void) {
-  asm volatile ("csrw mcycle, x0");
-}
-
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() resetCycleCounter()
-#define portGET_RUN_TIME_COUNTER_VALUE() getCycleCounter()
-
-#define configCPU_CORE_CLOCK_HZ (320 * 1000 * 1000)
-#define portHAS_STAT_TRAP_TIME 1
-#define configGENERATE_RUN_TIME_STATS 1
-#define INCLUDE_xTaskGetIdleTaskHandle 1
-#define configRUN_TIME_COUNTER_TYPE uint64_t
-
-
-#ifdef BFLB_undef
+#if defined(BL602) || defined(BL702) || defined(BL702L)
 #define configMTIME_BASE_ADDRESS    (0x02000000UL + 0xBFF8UL)
 #define configMTIMECMP_BASE_ADDRESS (0x02000000UL + 0x4000UL)
 #else
-#define configMTIME_BASE_ADDRESS    (0xE0000000UL + 0xBFF8UL)
-#define configMTIMECMP_BASE_ADDRESS (0xE0000000UL + 0x4000UL)
+#if __riscv_xlen == 64
+#define configMTIME_BASE_ADDRESS    (0)
+#define configMTIMECMP_BASE_ADDRESS ((0xE4000000UL) + 0x4000UL)
+#else
+#define configMTIME_BASE_ADDRESS    ((0xE0000000UL) + 0xBFF8UL)
+#define configMTIMECMP_BASE_ADDRESS ((0xE0000000UL) + 0x4000UL)
 #endif
-
+#endif
 #define configSUPPORT_STATIC_ALLOCATION         1
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     0
@@ -101,12 +74,10 @@ static inline void resetCycleCounter(void) {
 #define configUSE_MALLOC_FAILED_HOOK            1
 #define configUSE_APPLICATION_TASK_TAG          1
 #define configUSE_COUNTING_SEMAPHORES           1
+#define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
-#define configUSE_POSIX_ERRNO                   1
-
-#ifndef configUSE_TICKLESS_IDLE
 #define configUSE_TICKLESS_IDLE                 0
-#endif
+#define configUSE_POSIX_ERRNO                   1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES           0
@@ -154,21 +125,6 @@ void vAssertCalled(void);
 #if (configUSE_TICKLESS_IDLE != 0)
 void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
-
-#ifndef configEXPECTED_IDLE_TIME_BEFORE_SLEEP
-extern uint32_t expected_idle_before_sleep(void);
-#define configEXPECTED_IDLE_TIME_BEFORE_SLEEP expected_idle_before_sleep()
-#endif
-
-#ifdef TICKLESS_DEBUG
-#include <stdint.h>
-#include "portmacro.h"
-extern void tickless_debug_who_wake_me(const char *name, TickType_t ticks);
-#define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING( x ) do { \
-  TCB_t *next_wake_tcb = (TCB_t *)((uint32_t)pxDelayedTaskList->xListEnd.pxNext - 4); \
-  tickless_debug_who_wake_me(next_wake_tcb->pcTaskName, next_wake_tcb->xStateListItem.xItemValue); \
-} while(0);
-#endif
 #endif
 
 // #define portUSING_MPU_WRAPPERS

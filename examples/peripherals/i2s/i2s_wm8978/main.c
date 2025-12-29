@@ -7,8 +7,6 @@
 #include "bflb_dma.h"
 #include "bflb_gpio.h"
 
-#include "bl616_glb.h"
-
 #include "fhm_onechannel_16k_20.h"
 #include "bsp_wm8978.h"
 
@@ -66,15 +64,6 @@ void i2s_dma_init()
     bflb_i2s_link_txdma(i2s0, true);
     bflb_i2s_link_rxdma(i2s0, true);
 
-    /* I2S_FS */
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    /* I2S_DI */
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    /* I2S_DO */
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    /* I2S_BCLK */
-    bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
     LOG_I("dma init\r\n");
     dma0_ch0 = bflb_device_get_by_name("dma0_ch0");
     bflb_dma_channel_init(dma0_ch0, &tx_config);
@@ -91,33 +80,8 @@ void i2s_dma_init()
     bflb_dma_channel_start(dma0_ch0);
 }
 
-void mclk_out_init()
-{
-#ifdef BL616
-    GLB_Config_AUDIO_PLL_To_491P52M();
-    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
-
-    /*!< output MCLK,
-        Will change the clock source of i2s,
-        It needs to be called before i2s is initialized
-        clock source 24.576M */
-
-    /*!< MCLK = 24.576 / (5+1) = 4.096MHz */
-    GLB_Set_I2S_CLK(ENABLE, 5, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
-    GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_I2S_REF_CLK);
-#endif
-
-    /* MCLK CLKOUT */
-    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-}
-
 void wm8978_init(void)
 {
-    /* I2C0_SCL */
-    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    /* I2C0_SDA */
-    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
     i2c0 = bflb_device_get_by_name("i2c0");
     _ASSERT_PARAM(NULL != i2c0);
 
@@ -147,17 +111,15 @@ int main(void)
 {
     board_init();
 
-    gpio = bflb_device_get_by_name("gpio");
-
     LOG_I("\r\ni2s wm8988 play test\r\n");
+
+    /* gpio init */
+    board_i2s_codec_gpio_init();
 
     /* init wm8978 Codec */
     LOG_I("wm8978 init\r\n");
     wm8978_init();
     LOG_I("wm8978 init success\r\n");
-
-    /* mclk clkout init */
-    mclk_out_init();
 
     /* i2s init */
     i2s_dma_init();

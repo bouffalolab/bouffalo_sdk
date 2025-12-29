@@ -3,6 +3,7 @@
 #include "bflb_cam.h"
 #include "image_sensor.h"
 #include "board.h"
+#include "malloc.h"
 
 #define CAM_FRAME_COUNT_USE 50
 
@@ -28,8 +29,7 @@ int main(void)
         printf("\r\nSensor name: %s\r\n", sensor_config->name);
     } else {
         printf("\r\nError! Can't identify sensor!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
 
     /* Init cam0 for Y */
@@ -41,8 +41,7 @@ int main(void)
     cam_config.output_bufaddr = (uint32_t)memalign(32, cam_config.output_bufsize);
     if (cam_config.output_bufaddr == 0) {
         printf("\r\nError! Can't allocate memory!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
     bflb_cam_init(cam0_y, &cam_config);
 
@@ -52,8 +51,7 @@ int main(void)
     cam_config.output_bufaddr = (uint32_t)memalign(32, cam_config.output_bufsize);
     if (cam_config.output_bufaddr == 0) {
         printf("\r\nError! Can't allocate memory!\r\n");
-        while (1) {
-        }
+        while (1) {}
     }
     bflb_cam_init(cam1_uv, &cam_config);
 
@@ -66,8 +64,7 @@ int main(void)
     bflb_cam_start(cam1_uv);
 
     for (i = 0; i < CAM_FRAME_COUNT_USE; i++) {
-        while (bflb_cam_get_frame_count(cam0_y) == 0 || bflb_cam_get_frame_count(cam1_uv) == 0) {
-        }
+        while (bflb_cam_get_frame_count(cam0_y) == 0 || bflb_cam_get_frame_count(cam1_uv) == 0) {}
         pic_size_y = bflb_cam_get_frame_info(cam0_y, &pic_y);
         pic_size_uv = bflb_cam_get_frame_info(cam1_uv, &pic_uv);
 #if defined(BL616D)

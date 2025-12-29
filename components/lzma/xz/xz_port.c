@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include <stddef.h>
 #include <string.h>
+#include <stdint.h>
 
 static uint8_t *mallocBuf = NULL;
 static uint32_t malloced = 0;

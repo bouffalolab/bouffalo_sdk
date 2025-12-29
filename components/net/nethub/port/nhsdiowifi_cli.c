@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
+#if 0
 #ifdef CONFIG_NETHUB_DEBUG
 #include "shell.h"
 #include "nhsdiowifi.h"
@@ -58,6 +58,7 @@ static const char *get_interface_name_by_type(nhif_type_t type)
     return NULL;
 }
 
+#if 0
 /**
  * @brief Create test packet
  * @param data Data to be sent
@@ -164,6 +165,7 @@ static int send_data_to_interface(const char *interface_name, const char *data)
 
     return 0;
 }
+#endif
 
 /**
  * @brief Print dump information
@@ -207,6 +209,7 @@ int cmd_sdiowifi(int argc, char **argv)
     if (strcmp(subcmd, "help") == 0) {
         show_help();
         return 0;
+#if 0
     } else if (strcmp(subcmd, "send") == 0) {
         if (argc != 4) {
             printf("[SDIOWIFI_CLI] Error: send command requires 3 parameters\n");
@@ -214,6 +217,7 @@ int cmd_sdiowifi(int argc, char **argv)
             return -1;
         }
         return send_data_to_interface(argv[2], argv[3]);
+#endif
     } else if (strcmp(subcmd, "dump") == 0) {
         const char *dump_type = (argc >= 3) ? argv[2] : "rules";
         return dump_info(dump_type);
@@ -226,5 +230,6 @@ int cmd_sdiowifi(int argc, char **argv)
 
 /* Register shell command */
 SHELL_CMD_EXPORT_ALIAS(cmd_sdiowifi, sdiowifi, SDIO WiFi port CLI commands);
+#endif
 #endif
 

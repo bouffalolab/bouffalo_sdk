@@ -159,7 +159,7 @@ void Tzc_Sec_Set_Master_Group(TZC_SEC_Master_Type masterType, uint8_t group)
     }
 }
 
-void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_t group)
+void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channelBitmap)
 {
     uint32_t tmpVal;
     uint32_t tmpVal2;
@@ -168,22 +168,18 @@ void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
 
     if (dmaType == TZC_SEC_MASTER_TYPE_DMA2) {
-        if (channel_bits > 0xf) {
-            return;
-        }
+        channelBitmap &= 0xf;
+    } else if (dmaType == TZC_SEC_MASTER_TYPE_2DDMA) {
+        channelBitmap &= 0x3;
     }
 
     if (dmaType == TZC_SEC_MASTER_TYPE_DMA0) {
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_DMA_TZMID);
         tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
 
-        if (group == 0) {
-            tmpVal &= (~channel_bits);
-        } else {
-            tmpVal |= channel_bits;
-        }
-
-        tmpVal |= (channel_bits << TZC_SEC_TZC_DMA_TZMID_SEL_POS);
+        tmpVal &= TZC_SEC_TZC_DMA_TZMID_UMSK;
+        tmpVal |= (channelBitmap << TZC_SEC_TZC_DMA_TZMID_POS);
+        tmpVal |= (0xff << TZC_SEC_TZC_DMA_TZMID_SEL_POS);
         tmpVal2 |= (1 << TZC_SEC_TZC_DMA_TZMID_LOCK_POS);
 
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_DMA_TZMID, tmpVal);
@@ -192,13 +188,9 @@ void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID);
         tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID_LOCK);
 
-        if (group == 0) {
-            tmpVal &= ((~channel_bits) << TZC_SEC_TZC_XDMA_TZMID_POS);
-        } else {
-            tmpVal |= (channel_bits << TZC_SEC_TZC_XDMA_TZMID_POS);
-        }
-
-        tmpVal |= (channel_bits << TZC_SEC_TZC_XDMA_TZMID_SEL_POS);
+        tmpVal &= TZC_SEC_TZC_XDMA_TZMID_UMSK;
+        tmpVal |= (channelBitmap << TZC_SEC_TZC_XDMA_TZMID_POS);
+        tmpVal |= (0xff << TZC_SEC_TZC_XDMA_TZMID_SEL_POS);
         tmpVal2 |= (1 << TZC_SEC_TZC_XDMA_TZMID_LOCK_POS);
 
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID, tmpVal);
@@ -207,13 +199,9 @@ void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
         tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
 
-        if (group == 0) {
-            tmpVal &= ((~channel_bits) << TZC_SEC_TZC_DMA2_TZMID_POS);
-        } else {
-            tmpVal |= (channel_bits << TZC_SEC_TZC_DMA2_TZMID_POS);
-        }
-
-        tmpVal |= (channel_bits << TZC_SEC_TZC_DMA2_TZMID_SEL_POS);
+        tmpVal &= TZC_SEC_TZC_DMA2_TZMID_UMSK;
+        tmpVal |= (channelBitmap << TZC_SEC_TZC_DMA2_TZMID_POS);
+        tmpVal |= (0xf << TZC_SEC_TZC_DMA2_TZMID_SEL_POS);
         tmpVal2 |= (1 << TZC_SEC_TZC_DMA2_TZMID_LOCK_POS);
 
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
@@ -221,13 +209,10 @@ void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_
     } else {
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
 
-        if (group == 0) {
-            tmpVal &= ((~channel_bits) << TZC_SEC_TZC_2DDMA_TZMID_POS);
-        } else {
-            tmpVal |= (channel_bits << TZC_SEC_TZC_2DDMA_TZMID_POS);
-        }
-
-        tmpVal |= (channel_bits << TZC_SEC_TZC_2DDMA_TZMID_SEL_POS);
+        tmpVal &= TZC_SEC_TZC_2DDMA_TZMID_UMSK;
+        tmpVal |= (channelBitmap << TZC_SEC_TZC_2DDMA_TZMID_POS);
+        tmpVal |= (0x3 << TZC_SEC_TZC_2DDMA_TZMID_SEL_POS);
+        tmpVal |= (1 << TZC_SEC_TZC_2DDMA_TZMID_LOCK_POS);
 
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal);
     }

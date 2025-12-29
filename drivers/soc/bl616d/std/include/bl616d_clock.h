@@ -141,6 +141,7 @@ typedef enum {
     BL_PERIPHERAL_CLOCK_TIMER3,   /*!< TIMER3 clock */
     BL_PERIPHERAL_CLOCK_PWM0,     /*!< PWM0 clock */
     BL_PERIPHERAL_CLOCK_PWM1,     /*!< PWM1 clock */
+    BL_PERIPHERAL_CLOCK_DISPLAY,  /*!< DISPLAY clock */
     BL_PERIPHERAL_CLOCK_MAX,
 } BL_Peripheral_Type;
 

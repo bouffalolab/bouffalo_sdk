@@ -590,29 +590,6 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg)
     }
     return SUCCESS;
 }
-/****************************************************************************/ /**
- * @brief  Disable PDS GPIO Keep
- *
- * @return SUCCESS
- *
-*******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Disable_GPIO_Keep(void)
-{
-    uint32_t tmpVal = 0;
-
-    /* PDS_IO keep disable */
-    tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_GPIO_ISO_MODE);
-    /* don't entry PDS */
-    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_START_PS);
-    BL_WR_REG(PDS_BASE, PDS_CTL, tmpVal);
-
-    tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL5);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_GPIO_KEEP_EN);
-    BL_WR_REG(PDS_BASE, PDS_CTL5, tmpVal);
-
-    return SUCCESS;
-}
 
 /****************************************************************************/ /**
  * @brief  set MCU0 clock enable

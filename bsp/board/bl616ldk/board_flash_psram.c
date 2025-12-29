@@ -561,6 +561,8 @@ static uint16_t psram_winbond_init_dqs(int8_t burst_len, uint8_t is_fix_latency,
     return reg_read;
 }
 
+static uint32_t g_psram_size = 0;
+
 static uint32_t psram_winbond_default_init(uint8_t psram_info)
 {
     bflb_ef_ctrl_com_trim_t trim;
@@ -642,7 +644,27 @@ static uint32_t psram_winbond_default_init(uint8_t psram_info)
         return ERROR;
     }
 
+    switch(psram_id_value) {
+        case PSRAM_ID_WINBOND_4MB:
+            g_psram_size = 4 * 1024 * 1024;
+            break;
+        case PSRAM_ID_WINBOND_8MB:
+            g_psram_size = 8 * 1024 * 1024;
+            break;
+        case PSRAM_ID_WINBOND_16MB:
+            g_psram_size = 16 * 1024 * 1024;
+            break;
+        case PSRAM_ID_WINBOND_32MB:
+            g_psram_size = 32 * 1024 * 1024;
+            break;
+    }
+
     return SUCCESS;
+}
+
+uint32_t board_psram_size_get(void)
+{
+    return g_psram_size;
 }
 
 uint32_t board_psram_x8_init(void)

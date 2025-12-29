@@ -219,7 +219,7 @@ static int at_query_cmd_sysram(int argc, const char **argv)
 {
     int lwip_heap = 0;
 
-#if CONFIG_ATMODULE_NETWORK
+#ifdef CONFIG_ATMODULE_NETWORK
     lwip_heap = at_lwip_heap_free_size();
 #endif
     //at_response_string("+SYSRAM:%d,%d", info.free_size, info.total_size);
@@ -343,7 +343,7 @@ static int at_setup_cmd_sysstore(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-#if defined(BL616)
+#ifdef CONFIG_ATMODULE_CHIP_TEMP
 #define AVERAGE_COUNT 5
 static int at_query_temp(int argc, const char **argv)
 {
@@ -945,7 +945,7 @@ static int at_query_part(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-#if CONFIG_ATMODULE_OTA
+#ifdef CONFIG_ATMODULE_OTA
 
 #define OTA_BUFFER_LEN (4096)
 static at_ota_handle_t g_ota_handle = NULL;
@@ -1128,7 +1128,7 @@ static int at_setup_ota_finish_reset(int argc, const char **argv)
 }
 #endif
 
-#if CONFIG_ATMODULE_FS
+#ifdef CONFIG_ATMODULE_FS
 static int at_setup_fs(int argc, const char **argv)
 {
     int ret = -1;
@@ -1374,7 +1374,7 @@ static int at_setup_mfg(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-#if defined(BL616)
+#ifdef CONFIG_ATMODULE_CHIP_VBAT
 static void adc_vbat_init(void)
 {
     struct bflb_device_s *adc = bflb_device_get_by_name("adc");
@@ -1456,6 +1456,7 @@ static at_base_adc_tsen_init(void)
 
 int at_minidump();
 static const at_cmd_struct at_base_cmd[] = {
+#ifdef CONFIG_ATMODULE_BASE
     {"+RST",            NULL, NULL, at_exe_cmd_rst, 0, 0},
     {"+GMR",            NULL, NULL, at_exe_cmd_gmr, 0, 0},
     {"+CMD",            at_query_cmd_cmd, NULL, NULL, 0, 0},
@@ -1467,22 +1468,23 @@ static const at_cmd_struct at_base_cmd[] = {
     {"+SYSMSG",         at_query_cmd_sysmsg, at_setup_cmd_sysmsg, NULL, 1, 1},
     {"+SYSLOG",         at_query_cmd_syslog, at_setup_cmd_syslog, NULL, 1, 1},
     {"+SYSSTORE",       at_query_cmd_sysstore, at_setup_cmd_sysstore, NULL, 1, 1},
-#if defined(BL616)
-    {"+TEMP",           at_query_temp, NULL, NULL, 0, 0},
-#endif
     {"+GMAC",           at_query_gmac, NULL, NULL, 0, 0},
     {"+PN",             at_query_pn, NULL, NULL, 0, 0},
     {"+MFG",            NULL, NULL, at_setup_mfg, 0, 0},
-#if defined(BL616)
+    {"+PART",           at_query_part, NULL, NULL, 0, 0},
+#endif
+#ifdef CONFIG_ATMODULE_CHIP_TEMP
+    {"+TEMP",           at_query_temp, NULL, NULL, 0, 0},
+#endif
+#ifdef CONFIG_ATMODULE_CHIP_VBAT
     {"+VBAT",           at_query_vbat, NULL, NULL, 0, 0},
 #endif
-    {"+PART",           at_query_part, NULL, NULL, 0, 0},
 #if CONFIG_ATMODULE_EFUSE
     {"+EFUSE-W",        NULL, at_setup_efuse_write, NULL, 2, 3},
     {"+EFUSE-R",        NULL, at_setup_efuse_read, NULL, 2, 3},
     {"+EFUSE-CFM",      NULL, NULL, at_setup_efuse_write_cfm, 0, 0},
 #endif
-#if CONFIG_ATMODULE_FLASH
+#ifdef CONFIG_ATMODULE_FLASH
     {"+FLASH-W",        NULL, at_setup_flash_write, NULL, 2, 2},
     {"+FLASH-R",        NULL, at_setup_flash_read, NULL, 2, 2},
     {"+FLASH-E",        NULL, at_setup_flash_erase, NULL, 2, 2},
@@ -1491,21 +1493,21 @@ static const at_cmd_struct at_base_cmd[] = {
     {"+EFUSE-R-HEX",    NULL, at_setup_efuse_read_hex, NULL, 2, 3},
     {"+FLASH-R-HEX",    NULL, at_setup_flash_read_hex, NULL, 2, 2},
 #endif
-#if CONFIG_ATMODULE_GPIO
+#ifdef CONFIG_ATMODULE_GPIO
     {"+IOPUPD",         NULL, at_setup_gpio_output, NULL, 2, 2},
     {"+IOOUT",          NULL, at_setup_gpio_set, NULL, 2, 2},
     {"+IOIN",           at_query_gpio_input, at_setup_gpio_input, NULL, 2, 2},
     {"+IORST",          NULL, at_setup_gpio_analog_input, NULL, 1, 1},
 #endif
-#if CONFIG_ATMODULE_OTA
+#ifdef CONFIG_ATMODULE_OTA
     {"+OTASTART",       at_query_ota_start, at_setup_ota_start, NULL, 1, 1},
     {"+OTASEND",        NULL, at_setup_ota_send, NULL, 1, 1},
     {"+OTAFIN",         NULL, NULL, at_setup_ota_finish_reset, 0, 0},
 #endif
-#if CONFIG_ATMODULE_FS
+#ifdef CONFIG_ATMODULE_FS
     {"+FS",             NULL, at_setup_fs, NULL, 3, 5},
 #endif
-#if CONFIG_ATMODULE_MINIDUMP
+#ifdef CONFIG_ATMODULE_MINIDUMP
     {"+MINIDUMP",       NULL, NULL, at_minidump, 0, 0},
 #endif
     {NULL,              NULL, NULL, NULL, 0, 0},
@@ -1515,7 +1517,7 @@ bool at_base_cmd_regist(void)
 {
     at_base_config_init();
 
-#if defined(BL616)
+#ifdef CONFIG_ATMODULE_CHIP_VBAT
     at_base_adc_tsen_init();
 #endif
 

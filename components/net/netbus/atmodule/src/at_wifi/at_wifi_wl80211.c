@@ -18,7 +18,7 @@
 #include "wifi_mgmr.h"
 #include "supplicant_api.h"
 #include "bl_wpa.h"
-
+#include "async_event.h"
 #include <lwip/etharp.h>
 #include <lwip/mem.h>
 #include <lwip/netifapi.h>
@@ -28,68 +28,32 @@
 
 extern struct netif vif2netif[WL80211_VIF_MAX];
 
-static void ip_got_cb(struct netif *netif) {
-  char *state, *connected;
-
-  if (wifi_mgmr_sta_state_get()) {
-    state = "UP";
-    connected = ",CONNECTED";
-    at_wifi_event_notify(NULL, AT_WIFI_EVENT_GOTIP);
-  } else {
-    state = "DOWN";
-    connected = "";
-  }
-
-  printf("Memory left is %d Bytes\r\n", kfree_size());
-  printf(
-      "[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n",
-      netif->num, netif->name[0], netif->name[1], netif->hwaddr[0],
-      netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4],
-      netif->hwaddr[5], netif->ip_addr.addr & 0xff,
-      (netif->ip_addr.addr >> 8) & 0xff, (netif->ip_addr.addr >> 16) & 0xff,
-      (netif->ip_addr.addr >> 24) & 0xff,
-      32 - __builtin_clz(netif->netmask.addr), state, connected);
-}
-
-static void start_dhcp_tsk(void) {
-  printf("wl80211 linkup, start dhcp...\n");
-  netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
-  if (netifapi_dhcp_start(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
-    printf("start dhcp success.\n");
-  } else {
-    printf("start dhcp fail.\n");
-  }
-}
-
-static void disconnect_tsk(void) {
-  printf("wl80211 disconnected, stop dhcp...\n");
-  netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
-  if (netifapi_dhcp_stop(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
-    printf("stop dhcp success.\n");
-  } else {
-    printf("stop dhcp fail.\n");
-  }
-}
-
 static int at_wifi_event_code_get(uint32_t code)
 {
-    if (code == WL80211_EVT_CONNECTED) {
+    if (code == CODE_WIFI_ON_MGMR_DONE) {
+        return AT_WIFI_EVENT_INIT_DONE;
+    } else if (code == CODE_WIFI_ON_CONNECTED) {
         return AT_WIFI_EVENT_CONNECTED;
-    } else if (code == WL80211_EVT_DISCONNECTED) {
+    } else if (code == CODE_WIFI_ON_GOT_IP) {
+        return AT_WIFI_EVENT_GOTIP;
+    } else if (code == CODE_WIFI_ON_DISCONNECT) {
         return AT_WIFI_EVENT_DISCONNECTED;
-    } else if (code == WL80211_EVT_SCAN_DONE) {
+    } else if (code == CODE_WIFI_ON_SCAN_DONE) {
         return AT_WIFI_EVENT_SCAN_DONE;
+    } else if (code == CODE_WIFI_ON_AP_STARTED) {
+        return AT_WIFI_EVENT_AP_STARTED;
+    } else if (code == CODE_WIFI_ON_AP_STOPPED) {
+        return AT_WIFI_EVENT_AP_STOP;
+    } else if (code == CODE_WIFI_ON_AP_STA_ADD) {
+        return AT_WIFI_EVENT_AP_STA_ADD;
+    } else if (code == CODE_WIFI_ON_AP_STA_DEL) {
+        return AT_WIFI_EVENT_AP_STA_DEL;
     }
     return 0;
 }
 
 static void _wifi_event(void *private_data, uint32_t code)
 {
-    if (code == AT_WIFI_EVENT_CONNECTED) {
-        start_dhcp_tsk();
-    } else if (code == AT_WIFI_EVENT_DISCONNECTED) {
-        disconnect_tsk();
-    }
     at_wifi_event_notify(private_data, code);
 }
 
@@ -101,6 +65,47 @@ static void wifi_event_start(uint32_t code)
     configASSERT(xReturn == pdPASS);
 }
 
+static void evt_handler_wrapper(void (*handler)(void))
+{
+    assert(handler != NULL);
+    handler();
+
+    vTaskDelete(NULL);
+}
+
+static void wl80211_event_handler(input_event_t ev, void *priv)
+{
+    void (*handler)(void) = NULL;
+    uint16_t stack_size = 265;
+
+    switch (ev->code) {
+        case WL80211_EVT_STA_CONNECTED:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED, 0);
+            //handler = start_dhcp_tsk;
+            break;
+
+        case WL80211_EVT_SCAN_DONE:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_SCAN_DONE, 0);
+            //handler = dump_scan_result;
+            break;
+
+        case WL80211_EVT_STA_DISCONNECTED:
+            //connect_ind_dump((ev->value >> 16) & 0xFF, ev->value & 0xFF);
+            async_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0);
+            //handler = disconnect_tsk;
+            break;
+    }
+
+    if (handler != NULL) {
+        xTaskCreate((void *)evt_handler_wrapper, "evt", stack_size, handler, 20, NULL);
+    }
+}
+
+static void wifi_mgmr_event_handler(input_event_t ev, void *priv)
+{
+    wifi_event_start(at_wifi_event_code_get(ev->code));
+}
+
 struct netif *at_wifi_netif_get(uint8_t vif_idx)
 {
     if (vif_idx == AT_WIFI_VIF_STA) {
@@ -110,21 +115,43 @@ struct netif *at_wifi_netif_get(uint8_t vif_idx)
     }
 }
 
-void wl80211_event_handler(uint32_t code1, uint32_t code2)
+/* async event handler */
+static void async_event_handler(void *arg1, uint32_t arg2)
 {
-    wifi_event_start(at_wifi_event_code_get(code1));
+    vTaskSuspendAll();
+    async_event_loop();
+    xTaskResumeAll();
+}
+
+static void async_event_loop_wake(void)
+{
+    BaseType_t xReturn;
+    TickType_t wait = portMAX_DELAY;
+
+    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
+        wait = 0;
+    }
+
+    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
+    configASSERT(xReturn == pdPASS);
 }
 
 int at_wifi_start(void)
 {
+    async_event_init(async_event_loop_wake);
+
     /* Start Wifi_FW */
     wifi_task_create();
 
     wl80211_init();
 
-    bl_supplicant_init();
+    //wifi_mgmr_init();
 
-    wpa_cbs->wpa_sta_init();
+    async_register_event_filter(EV_WL80211, wl80211_event_handler, NULL);
+    async_register_event_filter(EV_WIFI, wifi_mgmr_event_handler, NULL);
+
+    async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
+    async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
 
     return 0;
 }

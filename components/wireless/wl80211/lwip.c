@@ -11,6 +11,7 @@
 #include <lwip/netifapi.h>
 #include <lwip/pbuf.h>
 #include <lwip/tcpip.h>
+#include <dhcp_server.h>
 
 #include "wl80211_mac.h"
 
@@ -267,3 +268,14 @@ void *_wifi_mgmr_get_sta_netif(void)
 {
     return (void *)&vif2netif[WL80211_VIF_STA];
 }
+
+void _wifi_mgmr_sta_start_dhcpd(void)
+{
+    printf("start dhcpd\n");
+    dhcpd_start(&vif2netif[WL80211_VIF_AP], -1, -1);
+}
+
+_Static_assert(sizeof(struct wl80211_mac_tx_desc) <= PBUF_LINK_ENCAPSULATION_HLEN, "tx_desc too large");
+
+_Static_assert(sizeof(struct rx_info) >= sizeof(struct pbuf_custom), "pbuf_custom too large");
+

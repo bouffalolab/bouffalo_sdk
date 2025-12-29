@@ -1,4 +1,5 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
+-include $(BL_SDK_BASE)/examples/wifi/at_defconfig
 
 CONFIG_BFLB_MTD  =y
 CONFIG_BFLB_OTA  =y
@@ -24,9 +25,9 @@ CONFIG_DUAL_ETH     =n
 
 CONFIG_LITTLEFS     =y
 
-CONFIG_ATMODULE     =y
 CONFIG_ATMODULE_USB =y
-CONFIG_ATMODULE_WIFI      =y
+CONFIG_ATMODULE_WORK_Q    =y
+CONFIG_ATMODULE_OTA       =y
 
 CONFIG_CHERRYUSB                =y
 CONFIG_CHERRYUSB_DEVICE         =y

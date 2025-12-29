@@ -532,6 +532,11 @@ BL_Err_Type GLB_Power_On_DSIPLL_Clk(uint8_t xtalType) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_DSI_ESC_CLK(uint8_t enable, uint8_t sel, uint8_t div) {
+    return RomDriver_GLB_Set_DSI_ESC_CLK(enable, sel, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t div) {
     return RomDriver_GLB_Set_CPUPLL_PostOut(enable, div);
 }
@@ -1009,6 +1014,16 @@ BL_Err_Type GLB_Halt_CPU(uint8_t coreID) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Release_CPU(uint8_t coreID) {
     return RomDriver_GLB_Release_CPU(coreID);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void GLB_Lock_NP_Reset(void) {
+    return RomDriver_GLB_Lock_NP_Reset();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void GLB_Unlock_NP_Reset(void) {
+    return RomDriver_GLB_Unlock_NP_Reset();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1697,6 +1712,11 @@ void Tzc_Sec_Set_Master_Group(TZC_SEC_Master_Type masterType, uint8_t group) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_t group) {
+    return RomDriver_Tzc_Sec_Set_Master_DMA_Group(dmaType, channel_bits, group);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group) {
     return RomDriver_Tzc_Sec_Set_Slave_Group(slaveType, group);
 }
@@ -1737,6 +1757,16 @@ void Tzc_Sec_OCRAM_Access_Set_Regionx(uint8_t group) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+void Tzc_Sec_TCM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
+    return RomDriver_Tzc_Sec_TCM_Access_Set_Advance(region, startAddr, length, group);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void Tzc_Sec_TCM_Access_Set_Regionx(uint8_t group) {
+    return RomDriver_Tzc_Sec_TCM_Access_Set_Regionx(group);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_WRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
     return RomDriver_Tzc_Sec_WRAM_Access_Set_Advance(region, startAddr, length, group);
 }
@@ -1747,8 +1777,23 @@ void Tzc_Sec_WRAM_Access_Set_Regionx(uint8_t group) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void Tzc_Sec_HBNRAM_Access_Set(uint32_t startAddr, uint32_t length) {
-    return RomDriver_Tzc_Sec_HBNRAM_Access_Set(startAddr, length);
+void Tzc_Sec_XRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
+    return RomDriver_Tzc_Sec_XRAM_Access_Set_Advance(region, startAddr, length, group);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void Tzc_Sec_XRAM_Access_Set_Regionx(uint8_t group) {
+    return RomDriver_Tzc_Sec_XRAM_Access_Set_Regionx(group);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void Tzc_Sec_Mini_Ram_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
+    return RomDriver_Tzc_Sec_Mini_Ram_Access_Set_Advance(region, startAddr, length, group);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void Tzc_Sec_Mini_Ram_Access_Set_Regionx(uint8_t group) {
+    return RomDriver_Tzc_Sec_Mini_Ram_Access_Set_Regionx(group);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

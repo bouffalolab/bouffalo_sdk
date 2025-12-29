@@ -8,6 +8,7 @@
 - **AP 断开连接**: 断开当前连接的 WiFi 热点
 - **状态查询**: 查询当前 WiFi 连接状态和 IP 信息
 - **网络扫描**: 扫描周围可用的 WiFi 网络
+- **OTA 固件升级**: 支持通过串口进行固件升级
 - **双实现支持**: C 语言版本和 Expect 脚本版本
 - **一键联网**: 自动化 WiFi 连接和静态 IP 配置
 - **硬件抽象**: 基于 `/dev/ttyHD0` TTY 接口的统一通信
@@ -28,6 +29,7 @@ make
 ./easyat/src/easyat disconnect_ap
 ./easyat/src/easyat get_link_status
 ./easyat/src/easyat wifi_scan
+./easyat/src/easyat ota firmware.bin.ota
 ```
 
 ### Expect 脚本版本使用
@@ -37,6 +39,7 @@ cd easyat/scripts
 ./disconnect_ap
 ./get_link_status
 ./wifi_scan
+./ota usb_wifi_bl616l.bin.ota
 ```
 
 ## 项目结构
@@ -53,7 +56,8 @@ userspace/
 │   │   ├── connect             # WiFi 连接脚本
 │   │   ├── disconnect_ap       # AP 断开连接脚本
 │   │   ├── get_link_status     # 状态查询脚本
-│   │   └── wifi_scan           # WiFi 扫描脚本
+│   │   ├── wifi_scan           # WiFi 扫描脚本
+│   │   └── ota                 # OTA 固件升级脚本
 │   └── docs/                   # 详细文档
 │       ├── c-implementation.md     # C 实现详细说明
 │       ├── expect-implementation.md # Expect 实现详细说明
@@ -109,6 +113,11 @@ newgrp dialout
   - WiFi 连接: 20 秒
   - 状态查询: 2 秒
   - WiFi 扫描: 10 秒
+  - OTA 操作:
+    - 设备检测: 2 秒
+    - OTA 启动: 5 秒
+    - 数据发送: 5 秒/块
+    - OTA 完成: 5 秒
 - **响应检测**: 检测 "GOTIP"（成功）和 "ERROR"（失败）
 
 ## 返回值
@@ -160,6 +169,12 @@ sudo make uninstall
 
 # 扫描网络
 ./easyat/scripts/wifi_scan
+
+# OTA 固件升级（C 版本）
+./easyat/src/easyat ota firmware.bin.ota
+
+# OTA 固件升级（Expect 版本）
+./easyat/scripts/ota firmware.bin.ota
 ```
 
 
@@ -185,6 +200,12 @@ sudo make uninstall
    - 检查 GCC 工具链是否安装
    - 确认 Makefile 路径正确
 
+5. **OTA 升级失败**
+   - 确认固件文件存在且可读
+   - 检查文件格式是否为正确的 .ota 格式
+   - 确认设备连接正常且支持 OTA 功能
+   - 检查串口通信是否稳定
+
 ### 调试技巧
 
 - **查看串口输出**: 使用 `screen /dev/ttyHD0 115200` 监控通信
@@ -201,3 +222,4 @@ sudo make uninstall
 ## 许可证
 
 MIT License - 详见项目根目录 LICENSE 文件
+

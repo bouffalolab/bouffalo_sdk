@@ -536,8 +536,6 @@ BL_Err_Type HBN_Get_Gpio_Keep(uint8_t *gpioKeep);
 BL_Err_Type HBN_Clear_Gpio_Keep(uint8_t gpioKeep);
 BL_Err_Type HBN_Set_PDS_Gpio_Keep(uint8_t gpioKeep);
 BL_Err_Type HBN_Get_PDS_Gpio_Keep(uint8_t *gpioKeep);
-BL_Err_Type HBN_Clear_PDS_Gpio_Keep(uint8_t gpioKeep);
-BL_Err_Type HBN_Disable_Gpio_Keep(int pin);
 BL_Err_Type HBN_Clear_RTC_Counter(void);
 BL_Err_Type HBN_Enable_RTC_Counter(void);
 BL_Err_Type HBN_Set_RTC_Timer(uint8_t delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode);

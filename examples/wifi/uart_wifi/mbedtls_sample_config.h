@@ -35,6 +35,8 @@
 #define MBEDTLS_SSL_MAX_CONTENT_LEN (6*1024)
 
 #define MBEDTLS_PLATFORM_MEMORY
+#define MBEDTLS_PLATFORM_CALLOC_MACRO calloc
+#define MBEDTLS_PLATFORM_FREE_MACRO   free
 #define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 
 #define MBEDTLS_CIPHER_MODE_CBC
@@ -115,12 +117,12 @@
 
 #define MBEDTLS_SSL_COOKIE_C
 #define MBEDTLS_SSL_CLI_C
+#define MBEDTLS_SSL_SRV_C
 #define MBEDTLS_SSL_TLS_C
 #define MBEDTLS_X509_USE_C
 #define MBEDTLS_X509_CRT_PARSE_C
 
 #define MBEDTLS_PK_WRITE_C
-
 //#define MBEDTLS_NET_C
 
 //#define MBEDTLS_FS_IO
@@ -130,8 +132,8 @@
 
 #define MBEDTLS_PLATFORM_STD_MEM_HDR "mbedtls_port_bouffalo_sdk.h"
 
-// Define BFLB_MPI_LARGE_NUM_SOFTWARE_MPI to allow operate on very big bignums
-/* #define BFLB_MPI_LARGE_NUM_SOFTWARE_MPI */
+// Define BL_MPI_LARGE_NUM_SOFTWARE_MPI to allow operate on very big bignums
+/* #define BL_MPI_LARGE_NUM_SOFTWARE_MPI */
 
 // Hash HW
 #ifdef CONFIG_MBEDTLS_SHA1_USE_HW

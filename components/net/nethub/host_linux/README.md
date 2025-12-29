@@ -6,6 +6,7 @@ This project implements kernel and userspace components. The kernel compiles to 
 
 - **Host Driver**: Virtualizes multiple interfaces as Ethernet and TTY channels
 - **WiFi Connection**: Connect to specified WiFi networks, query WiFi status, scan available WiFi networks
+- **OTA Firmware Upgrade**: Support firmware upgrade via serial port
 - **Dual Implementations**: C language version and Expect script version
 
 ## Project Structure
@@ -52,6 +53,11 @@ sudo ./build.sh load
 ### Network Scan
 ```bash
 ./userspace/easyat/src/easyat wifi_scan
+```
+
+### OTA Firmware Upgrade
+```bash
+./userspace/easyat/src/easyat ota firmware.bin.ota
 ```
 
 ## Notes and Common Questions

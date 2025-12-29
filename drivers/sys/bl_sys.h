@@ -19,6 +19,8 @@
 #include "bl616l_sys.h"
 #elif defined(BL616D)
 #include "bl616d_sys.h"
+#elif defined(BL602)
+#include "bl602_sys.h"
 #endif
 
 #endif

@@ -21,19 +21,17 @@
 
 /* 私有内存池配置，内存块数影响到 tty 接收与 msg 发送 */
 #define TTY_FRAME_CNT                    (4)
-#define TTY_FRAME_SIZE                   (512 + FRAME_BUFF_PAYLOAD_OFFSET)// call api
-
-/* 为 msg 命令包保留的内存块, 其他空闲内存块放入 tty rx 中 */
-#define TTY_CMD_FRAME_CNT                (2)// 1
+#define TTY_FRAME_RAWSIZE                (512)
+#define TTY_FRAME_SIZE                   (TTY_FRAME_RAWSIZE + FRAME_BUFF_PAYLOAD_OFFSET)// call api
 
 /* 下行流控限制值, 也是初始流控限制值, 会消耗 msg 的 dnld pool, 为 0 时无流控限制 */
-#define TTY_DNLD_CREDIT_MAX              (6)// 1
+#define TTY_DNLD_CREDIT_MAX              (TTY_FRAME_CNT - 1)// 1
 
 /* 流控汇报触发阈值, 当前流控值与上次更新值的差大于此值时, 主动发送流控更新 */
 #define TTY_DNLD_CREDIT_UPDATE_THRESHOLD (2)// less then TTY_DNLD_CREDIT_MAX
 
 /** 接收来自 msg 数据的队列深度 */
-#define TTY_MSG_QUEUE_DEPTH              (16)
+#define TTY_MSG_QUEUE_DEPTH              (TTY_FRAME_CNT + 1)
 
 /** @defgroup BL_TTY_HOST_STATES TTY Host State Machine
  * @brief State definitions for TTY host state machine

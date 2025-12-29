@@ -128,19 +128,6 @@ static void flash_bank2_access_init(void)
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
-void System_BOD_Init(void)
-{
-    HBN_BOD_CFG_Type bodCfg;
-    bodCfg.enableBod = 1;
-    /*0:BOD not trigger interrupt,1:trigger interrupt*/
-    bodCfg.enableBodInt = 0;
-    /* 0:2.2v, 1:2.3v, 2:2.4v .... 7:2.9v */
-    bodCfg.bodThreshold = 7;
-    /*1:BOD will cause reset, 0:BOD will not cause reset */
-    bodCfg.enablePorInBod = 1;
-    HBN_Set_BOD_Cfg(&bodCfg);
-}
-
 void SystemInit(void)
 {
     uint32_t i = 0;
@@ -234,8 +221,4 @@ void System_Post_Init(void)
     /* global IRQ enable */
     __enable_irq();
 #endif
-
-    /* config chip pod */
-    System_BOD_Init();
-
 }

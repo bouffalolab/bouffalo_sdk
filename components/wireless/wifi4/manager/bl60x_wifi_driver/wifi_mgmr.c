@@ -1667,7 +1667,7 @@ int wifi_mgmr_init(wifi_conf_t *conf)
 
 int wifi_mgmr_task_start(void)
 {
-    wifi_mgmr_init(&conf);
+    return wifi_mgmr_init(&conf);
 }
 
 int wifi_mgmr_internel_init(void)

@@ -63,9 +63,17 @@
 #elif defined(BL616)
 #define BFLB_FLASH_XIP_BASE    (0xA0000000)
 #define BFLB_FLASH_XIP_END     (0xA0000000 + 64 * 1024 * 1024)
-#elif defined(BL628) || defined(BL616D) || defined(BL616L)
+#elif defined(BL628) || defined(BL616L)
 #define BFLB_FLASH_XIP_BASE    (0x80000000)
 #define BFLB_FLASH_XIP_END     (0x80000000 + 64 * 1024 * 1024)
+#elif defined(BL616D) 
+#if defined(CPU_MODEL_A0)
+#define BFLB_FLASH_XIP_BASE    (0x80000000)
+#define BFLB_FLASH_XIP_END     (0x80000000 + 64 * 1024 * 1024)
+#else
+#define BFLB_FLASH_XIP_BASE    (0xb0000000)
+#define BFLB_FLASH_XIP_END     (0xb0000000 + 64 * 1024 * 1024)
+#endif
 #endif
 
 #if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)

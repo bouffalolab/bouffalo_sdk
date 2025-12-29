@@ -1026,7 +1026,7 @@ static inline uint32_t Clock_CAM_REF_Clk_Mux_Output(uint8_t sel)
         /* xclk */
         return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK);
     } else if (sel == 1) {
-        /* wifi pull 96m */
+        /* wifi pll 96m */
         return Clock_Get_WIFI_PLL_Output(96 * 1000 * 1000);
     } else if ((sel == 2) || (sel == 3)) {
         /* cpupll div5 clk */
@@ -1054,10 +1054,78 @@ static inline uint8_t Clock_Get_CAM_REF_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_CAM_REF_CLK_DIV);
 }
 
-static inline uint32_t Clock_CAM_Clk_Mux_Output(void)
+static inline uint32_t Clock_CAM_Clk_Mux_Output(uint8_t sel)
 {
-    /* mcu bclk */
-    return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_PBCLK);
+    if (sel == 0) {
+        /* bclk */
+        return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_PBCLK);
+    } else if (sel == 1) {
+        /* wifi pll 160m */
+        return Clock_Get_WIFI_PLL_Output(160 * 1000 * 1000);
+    } else if (sel == 2) {
+        /* wifi pll 240m */
+        return Clock_Get_WIFI_PLL_Output(240 * 1000 * 1000);
+    } else if (sel == 3) {
+        /* wifi pll 96m */
+        return Clock_Get_WIFI_PLL_Output(96 * 1000 * 1000);
+    } else {
+        return 0;
+    }
+}
+
+static inline uint8_t Clock_Get_CAM_Clk_Sel_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, GLB_ISP_CLK_SEL);
+}
+
+static inline uint8_t Clock_Get_CAM_Div_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, GLB_ISP_CLK_DIV);
+}
+
+static inline uint32_t Clock_Display_Clk_Mux_Output(uint8_t sel)
+{
+    if (sel == 0) {
+        /* xclk */
+        return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK);
+    } else if (sel == 1) {
+        /* wifi pll 160m */
+        return Clock_Get_WIFI_PLL_Output(160 * 1000 * 1000);
+    } else if (sel == 2) {
+        /* wifi pll 240m */
+        return Clock_Get_WIFI_PLL_Output(240 * 1000 * 1000);
+    } else if (sel == 3) {
+        /* wifi pll 96m */
+        return Clock_Get_WIFI_PLL_Output(96 * 1000 * 1000);
+    } else {
+        return 0;
+    }
+}
+
+static inline uint8_t Clock_Get_Display_Clk_Sel_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, GLB_DP_CLK_SEL);
+}
+
+static inline uint8_t Clock_Get_Display_Div_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, GLB_DP_CLK_DIV);
 }
 
 /****************************************************************************/ /**
@@ -1401,7 +1469,14 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
 
         /*!< CAM clock */
         case BL_PERIPHERAL_CLOCK_CAM:
-            return Clock_CAM_Clk_Mux_Output();
+            clock = Clock_CAM_Clk_Mux_Output(Clock_Get_CAM_Clk_Sel_Val());
+            div = Clock_Get_CAM_Div_Val();
+            return clock / (div + 1);
+
+        case BL_PERIPHERAL_CLOCK_DISPLAY:
+            clock = Clock_Display_Clk_Mux_Output(Clock_Get_Display_Clk_Sel_Val());
+            div = Clock_Get_Display_Div_Val();
+            return clock / (div + 1);
 
         /*!< SDH clock */
         case BL_PERIPHERAL_CLOCK_SDH:

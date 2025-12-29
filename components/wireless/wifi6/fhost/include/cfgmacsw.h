@@ -222,6 +222,9 @@ enum cfgmacsw_msg_index {
     /// Requset to config TWT teardown
     CFGMACSW_TWT_TEARDOWN_CMD,
     CFGMACSW_TWT_TEARDOWN_RESP,
+    /// Request to get TWT status
+    CFGMACSW_TWT_STATUSGET_CMD,
+    CFGMACSW_TWT_STATUSGET_RESP,
     /// Sent to get edca (param: @ref cfgmacsw_get_edca)
     CFGMACSW_GET_EDCA_CMD,
     /// Response to CFGMACSW_GET_EDCA_CMD  (param: @ref cfgmacsw_get_edca_resp)
@@ -984,6 +987,35 @@ struct cfgmacsw_twt_teardown_req {
     uint8_t all_twt;
     /// TWT flow ID
     uint8_t id;
+};
+
+/// Maximum number of TWT flows
+#ifndef NX_TWT_FLOW_NB
+#define NX_TWT_FLOW_NB 8
+#endif
+
+/// structure for CFGMACSW_TWT_STATUSGET_CMD
+struct cfgmacsw_twt_statusget_req {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
+};
+
+/// structure for CFGMACSW_TWT_STATUSGET_RESP
+struct cfgmacsw_twt_statusget_resp {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Status
+    uint8_t status;
+    /// Total number of active TWT flows
+    uint8_t flows;
+    /// AP TWT supported flag
+    uint8_t twt_supported;
+    /// AP DTIM
+    uint8_t dtim;
+    /// TWT flow configurations
+    struct twt_status_info conf[NX_TWT_FLOW_NB];
 };
 
 enum stats_vif_type

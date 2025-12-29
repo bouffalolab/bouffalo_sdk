@@ -1,19 +1,18 @@
 sdk_generate_library()
 
-sdk_library_add_sources(nethub/forwardrules/hostless_rules.c
-                        nethub/forwardrules/sdiowifi_rules.c
-                        port/port_sdio.c
-                        port/port_sta.c
-                        port/port_tcpipsta.c
-                        port/port_ap.c
-                        port/port_tcpipap.c
-                        port/port_sys.c
-                        port/nhsdiowifi.c
-                        port/nhsdiowifi_cli.c
-                        port/transportsdio.c
-                        nethub/src/nethub.c
-                        nethub/src/nh_forward.c
-                        nethub/src/nhif_manager.c)
+sdk_library_add_sources(nethub/forwardrules/hostless_rules.c)
+sdk_library_add_sources(nethub/forwardrules/sdiowifi_rules.c)
+sdk_library_add_sources(channel/sdio.c)
+sdk_library_add_sources_ifdef(CONFIG_FHOST channel/wifi.c)
+sdk_library_add_sources_ifdef(CONFIG_WL80211 channel/wifi_wl80211.c)
+sdk_library_add_sources(channel/tcpip.c)
+sdk_library_add_sources(port/port_sys.c)
+sdk_library_add_sources(port/nhsdiowifi.c)
+sdk_library_add_sources(port/nhsdiowifi_cli.c)
+sdk_library_add_sources(port/transportsdio.c)
+sdk_library_add_sources(nethub/src/nethub.c)
+sdk_library_add_sources(nethub/src/nh_forward.c)
+sdk_library_add_sources(nethub/src/nhif_manager.c)
 
 sdk_add_include_directories(nethub/include port)
 

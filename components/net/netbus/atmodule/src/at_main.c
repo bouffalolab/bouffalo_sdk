@@ -31,12 +31,12 @@
 #include "at_through.h"
 #include "at_ble_cmd.h"
 
-#if CONFIG_ATMODULE_NANO
+#ifndef CONFIG_ATMODULE_FULL_FEAT
 #define ATCMD_TASK_STACK_SIZE (384)
 #else
 #define ATCMD_TASK_STACK_SIZE (896)
 #endif
-#define ATCMD_TASK_PRIORITY 28
+#define ATCMD_TASK_PRIORITY 25
 
 #if CONFIG_ATMODULE_WORK_Q
 /* Static task stack and control block for at_workq_task */
@@ -254,9 +254,7 @@ static void at_main_task(void *pvParameters)
                 if (ret == -1) {
                 	printf("at_through_input fail, exit throughput mode %d\r\n", ret);
                     at_set_work_mode(AT_WORK_MODE_CMD);
-#ifdef CONFIG_ATMODULE_BASE
                     if (at_base_config->sysmsg_cfg.bit.quit_throughput_msg)
-#endif
                         at->device_ops.write_data((uint8_t *)AT_CMD_MSG_QUIT_THROUGHPUT, strlen(AT_CMD_MSG_QUIT_THROUGHPUT));
                 }
                 else if (ret == -2) {
@@ -316,17 +314,13 @@ int at_module_init(void)
 #endif
 
     /* register base AT command */
-#ifdef CONFIG_ATMODULE_BASE
     at_base_cmd_regist();
     at->syslog = at_base_config->sysmsg_cfg.syslog;
-#endif
 
     /* register user AT command */
     at_user_cmd_regist();
-#ifdef CONFIG_ATMODULE_WIFI
     /* register wifi AT command */
     at_wifi_cmd_regist();
-#endif
 #ifdef CONFIG_ATMODULE_MQTT
     /* register mqtt AT command */
     at_mqtt_cmd_regist();

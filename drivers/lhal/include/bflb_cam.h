@@ -14,15 +14,15 @@
 /** @defgroup CAM_INPUT_FORMAT CAMERA input format definition
   * @{
   */
-#define CAM_INPUT_FORMAT_YUV422_YUYV 0
-#define CAM_INPUT_FORMAT_YUV422_YVYU 1
-#define CAM_INPUT_FORMAT_YUV422_UYVY 2
-#define CAM_INPUT_FORMAT_YUV422_VYUY 3
-#define CAM_INPUT_FORMAT_GRAY        4
-#define CAM_INPUT_FORMAT_RGB565      5
-#define CAM_INPUT_FORMAT_BGR565      6
-#define CAM_INPUT_FORMAT_RGB888      7
-#define CAM_INPUT_FORMAT_BGR888      8
+#define CAM_INPUT_FORMAT_YUV422_YUYV       0
+#define CAM_INPUT_FORMAT_YUV422_YVYU       1
+#define CAM_INPUT_FORMAT_YUV422_UYVY       2
+#define CAM_INPUT_FORMAT_YUV422_VYUY       3
+#define CAM_INPUT_FORMAT_GRAY              4
+#define CAM_INPUT_FORMAT_RGB565            5
+#define CAM_INPUT_FORMAT_BGR565            6
+#define CAM_INPUT_FORMAT_RGB888            7
+#define CAM_INPUT_FORMAT_BGR888            8
 /**
   * @}
   */
@@ -58,14 +58,14 @@
 #define CAM_INTSTS_HSYNC_MISMATCH   (1 << 8)
 #define CAM_INTSTS_VSYNC_MISMATCH   (1 << 9)
 #else
-#define CAM_INTSTS_NORMAL           (1 << 12)
+#define CAM_INTSTS_NORMAL (1 << 12)
 #if !defined(BL616D)
 #define CAM_INTSTS_MEMORY_OVERWRITE (1 << 13)
 #define CAM_INTSTS_FRAME_OVERWRITE  (1 << 14)
 #endif
-#define CAM_INTSTS_FIFO_OVERWRITE   (1 << 15)
-#define CAM_INTSTS_HSYNC_MISMATCH   (1 << 21)
-#define CAM_INTSTS_VSYNC_MISMATCH   (1 << 22)
+#define CAM_INTSTS_FIFO_OVERWRITE (1 << 15)
+#define CAM_INTSTS_HSYNC_MISMATCH (1 << 21)
+#define CAM_INTSTS_VSYNC_MISMATCH (1 << 22)
 #endif
 /**
   * @}
@@ -82,14 +82,14 @@
 #define CAM_INTMASK_HSYNC_MISMATCH   (1 << 5)
 #define CAM_INTMASK_VSYNC_MISMATCH   (1 << 6)
 #else
-#define CAM_INTMASK_NORMAL           (1 << 8)
+#define CAM_INTMASK_NORMAL (1 << 8)
 #if !defined(BL616D)
 #define CAM_INTMASK_MEMORY_OVERWRITE (1 << 9)
 #define CAM_INTMASK_FRAME_OVERWRITE  (1 << 10)
 #endif
-#define CAM_INTMASK_FIFO_OVERWRITE   (1 << 11)
-#define CAM_INTMASK_HSYNC_MISMATCH   (1 << 6)
-#define CAM_INTMASK_VSYNC_MISMATCH   (1 << 7)
+#define CAM_INTMASK_FIFO_OVERWRITE (1 << 11)
+#define CAM_INTMASK_HSYNC_MISMATCH (1 << 6)
+#define CAM_INTMASK_VSYNC_MISMATCH (1 << 7)
 #endif
 /**
   * @}
@@ -98,14 +98,14 @@
 /** @defgroup CAM_INTCLR CAMERA interrupt clear definition
   * @{
   */
-#define CAM_INTCLR_NORMAL           (1 << 4)
+#define CAM_INTCLR_NORMAL (1 << 4)
 #if !defined(BL616D)
 #define CAM_INTCLR_MEMORY_OVERWRITE (1 << 5)
 #define CAM_INTCLR_FRAME_OVERWRITE  (1 << 6)
 #endif
-#define CAM_INTCLR_FIFO_OVERWRITE   (1 << 7)
-#define CAM_INTCLR_HSYNC_MISMATCH   (1 << 8)
-#define CAM_INTCLR_VSYNC_MISMATCH   (1 << 9)
+#define CAM_INTCLR_FIFO_OVERWRITE (1 << 7)
+#define CAM_INTCLR_HSYNC_MISMATCH (1 << 8)
+#define CAM_INTCLR_VSYNC_MISMATCH (1 << 9)
 /**
   * @}
   */
@@ -113,8 +113,8 @@
 /** @defgroup CAM_POLARITY CAMERA hsync/vsync polarity active level definition
   * @{
   */
-#define CAM_POLARITY_ACTIVE_LOW  0
-#define CAM_POLARITY_ACTIVE_HIGH 1
+#define CAM_POLARITY_ACTIVE_LOW   0
+#define CAM_POLARITY_ACTIVE_HIGH  1
 /**
   * @}
   */
@@ -122,7 +122,7 @@
 /** @defgroup CAM_INPUT_SOURCE CAMERA input source definition
   * @{
   */
-#define CAM_INPUT_SOURCE_DVP 0
+#define CAM_INPUT_SOURCE_DVP      0
 #if defined(BL808)
 #define CAM_INPUT_SOURCE_CSI 1
 #endif
@@ -154,22 +154,23 @@
 #if !defined(BL702)
 #define CAM_CMD_SET_RGBA8888_ALPHA 4
 #if !defined(BL616D)
-#define CAM_CMD_GET_FRAME_ID       5
+#define CAM_CMD_GET_FRAME_ID 5
 #endif
 #endif
 #define CAM_CMD_WRAP_MODE                6
 #define CAM_CMD_COUNT_TRIGGER_NORMAL_INT 7
 #if !defined(BL702)
 #if !defined(BL616D)
-#define CAM_CMD_FRAME_ID_RESET         8
+#define CAM_CMD_FRAME_ID_RESET 8
 #endif
 #define CAM_CMD_INVERSE_VSYNC_POLARITY 9
 #define CAM_CMD_INVERSE_HSYNC_POLARITY 10
 #define CAM_CMD_INVERSE_YUYV2UYVY      11
 #define CAM_CMD_FRAME_FILTER           12
 #endif
+#define CAM_CMD_SET_OUTPUT_ADDR 13
 #if defined(BL616D)
-#define CAM_CMD_SET_OUTPUT_ADDR        13
+#define CAM_CMD_SET_PIXEL_SIZE 14
 #endif
 
 // clang-format off

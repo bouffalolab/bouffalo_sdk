@@ -7,6 +7,7 @@
 |:----------------:|:------:|
 |BL616/BL618       |        |
 |BL616D            |        |
+|BL616L/BL618L     |        |
 
 ## Compile
 
@@ -21,6 +22,12 @@ make CHIP=bl616 BOARD=bl616dk
 ```
 make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
 make CHIP=bl616d BOARD=bl616ddk CPU_ID=np
+```
+
+- BL616L/BL618L
+
+```
+make CHIP=bl616l BOARD=bl616ldk
 ```
 
 ## Flash

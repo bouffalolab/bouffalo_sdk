@@ -213,9 +213,11 @@
 #define BL616D_IRQ_IPC0_CH1             (BL616D_IRQ_NUM_BASE + 65)
 #define BL616D_IRQ_IPC1_CH0             (BL616D_IRQ_NUM_BASE + 66)
 #define BL616D_IRQ_IPC1_CH1             (BL616D_IRQ_NUM_BASE + 67)
-#define BL616D_IRQ_RESERVED68           (BL616D_IRQ_NUM_BASE + 68)
-#define BL616D_IRQ_RESERVED69           (BL616D_IRQ_NUM_BASE + 69)
-#define BL616D_IRQ_CANFD                (BL616D_IRQ_NUM_BASE + 70)
+#if !defined(CPU_MODEL_A0)
+#define BL616D_IRQ_CAN0                 (BL616D_IRQ_NUM_BASE + 68)
+#define BL616D_IRQ_CAN1                 (BL616D_IRQ_NUM_BASE + 69)
+#define BL616D_IRQ_CAN2                 (BL616D_IRQ_NUM_BASE + 70)
+#endif
 #define BL616D_IRQ_DMA2_INT0            (BL616D_IRQ_NUM_BASE + 71)
 #define BL616D_IRQ_DMA2_INT1            (BL616D_IRQ_NUM_BASE + 72)
 #define BL616D_IRQ_DMA2_INT2            (BL616D_IRQ_NUM_BASE + 73)
@@ -243,6 +245,7 @@
 #define BL616D_IRQ_SPI2     (BL616D_IRQ_NUM_BASE + 95)
 #define BL616D_IRQ_TOUCH    (BL616D_IRQ_NUM_BASE + 96)
 #endif
+#define BL616D_IRQ_AUDAC    (BL616D_IRQ_NUM_BASE + 97)
 #endif
 
 #endif

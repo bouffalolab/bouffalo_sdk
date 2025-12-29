@@ -25,6 +25,36 @@ typedef struct {
 
 static scan_result_t g_scan_cache = {0};
 
+static int hex_char_to_int(char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static void url_decode(char *dst, const char *src, size_t dst_size)
+{
+    size_t di = 0;
+    while (*src && di < dst_size - 1) {
+        if (*src == '%' && src[1] && src[2]) {
+            int h = hex_char_to_int(src[1]);
+            int l = hex_char_to_int(src[2]);
+            if (h >= 0 && l >= 0) {
+                dst[di++] = (char)((h << 4) | l);
+                src += 3;
+                continue;
+            }
+        } else if (*src == '+') {
+            dst[di++] = ' ';
+            src++;
+            continue;
+        }
+        dst[di++] = *src++;
+    }
+    dst[di] = '\0';
+}
+
 static void scan_item_cb(wifi_mgmr_ap_item_t *env, uint32_t *param1, wifi_mgmr_ap_item_t *item)
 {
     scan_result_t *result = (scan_result_t *)param1;
@@ -92,10 +122,10 @@ static const char *cgi_connect(int idx, int num, char *param[], char *val[])
 
     for (int i = 0; i < num; i++) {
         if (strcmp(param[i], "ssid") == 0) {
-            strncpy(ssid, val[i], sizeof(ssid) - 1);
+            url_decode(ssid, val[i], sizeof(ssid));
             ok = 1;
         } else if (strcmp(param[i], "password") == 0) {
-            strncpy(passwd, val[i], sizeof(passwd) - 1);
+            url_decode(passwd, val[i], sizeof(passwd));
         }
     }
 

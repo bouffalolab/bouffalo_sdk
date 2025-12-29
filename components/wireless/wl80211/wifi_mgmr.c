@@ -21,6 +21,7 @@
 extern void *_wifi_mgmr_sta_start_dhcpc(void);
 extern void *_wifi_mgmr_sta_stop_dhcpc(void);
 extern void *_wifi_mgmr_get_sta_netif(void);
+extern void *_wifi_mgmr_sta_start_dhcpd(void);
 
 static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
 {
@@ -61,6 +62,11 @@ static void start_dhcp_tsk(void)
 static void disconnect_tsk(void)
 {
     _wifi_mgmr_sta_stop_dhcpc();
+}
+
+static void start_dhcpd_tsk(void)
+{
+    _wifi_mgmr_sta_start_dhcpd();
 }
 
 static int cmp_rssi_desc(const void *a, const void *b)
@@ -186,7 +192,7 @@ static void wl80211_event_handler(input_event_t ev, void *priv)
     uint16_t stack_size = 265;
 
     switch (ev->code) {
-        case WL80211_EVT_CONNECTED:
+        case WL80211_EVT_STA_CONNECTED:
             connect_ind_dump(0, 0);
             async_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED, 0);
             handler = start_dhcp_tsk;
@@ -197,10 +203,15 @@ static void wl80211_event_handler(input_event_t ev, void *priv)
             handler = dump_scan_result;
             break;
 
-        case WL80211_EVT_DISCONNECTED:
+        case WL80211_EVT_STA_DISCONNECTED:
             connect_ind_dump((ev->value >> 16) & 0xFF, ev->value & 0xFF);
             async_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0);
             handler = disconnect_tsk;
+            break;
+
+        case WL80211_EVT_AP_STARTED:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STARTED, 0);
+            handler = start_dhcpd_tsk;
             break;
     }
 
@@ -627,6 +638,82 @@ int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb)
     return 0;
 }
 
+int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *config)
+{
+    int ret;
+
+    /* freq (channel) */
+    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_FREQ, config->freq1);
+    if (ret) {
+        return ret;
+    }
+
+    /* pmf */
+    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_PMF, config->pmf_cfg);
+    if (ret) {
+        return ret;
+    }
+
+    /* ssid */
+    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_SSID, config->ssid);
+    if (ret) {
+        return ret;
+    }
+
+    /* password */
+    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_PASSWORD, config->key);
+    if (ret) {
+        return ret;
+    }
+
+    /* bssid */
+    uint8_t bssid_addr[6] = { 0 };
+    if (strlen(config->bssid_str)) {
+        ret = wifi_mgmr_mac_str_to_addr(config->bssid_str, bssid_addr);
+        if (ret) {
+            return ret;
+        }
+    }
+    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_BSSID, bssid_addr);
+    if (ret) {
+        return ret;
+    }
+
+    /* listen_interval */
+    if (config->listen_interval) {
+        ret = wl80211_cntrl(WL80211_CTRL_STA_SET_LISTEN_INTERVAL, &(config->listen_interval));
+        if (ret) {
+            return ret;
+        }
+    }
+
+    /* start scan and connect */
+    ret = wl80211_cntrl(WL80211_CTRL_STA_CONNECT);
+    if (ret) {
+        return ret;
+    }
+
+    return 0;
+}
+
+int wifi_mgmr_sta_disconnect(void)
+{
+    return wl80211_cntrl(WL80211_CTRL_STA_DISCONNECT);
+}
+
+int wifi_mgmr_sta_set_listen_itv(uint16_t itv)
+{
+    return wl80211_cntrl(WL80211_CTRL_STA_SET_LISTEN_INTERVAL, &itv);
+}
+
+uint16_t wifi_mgmr_sta_get_listen_itv(void)
+{
+    uint16_t itv = 0;
+
+    wl80211_cntrl(WL80211_CTRL_STA_GET_LISTEN_INTERVAL, &itv);
+    return itv;
+}
+
 int wifi_mgmr_ap_state_get(void)
 {
     return -1;
@@ -813,4 +900,28 @@ static const char *_get_status_code_str(const struct reason_code list[], uint16_
 const char *wifi_mgmr_get_sm_status_code_str(uint16_t status_code)
 {
     return _get_status_code_str(sm_reason_list, sizeof(sm_reason_list) / sizeof(sm_reason_list[0]), status_code);
+}
+
+int wifi_mgmr_mac_str_to_addr(const char *str, uint8_t addr[])
+{
+    const char *ptr = str;
+    uint32_t i;
+
+    if (!str || strlen(str) < 17)
+        return -1;
+
+    for (i = 0; i < 6; i++) {
+        char *next;
+        long int hex = strtol(ptr, &next, 16);
+        if (((unsigned)hex > 255) || (next == ptr) || ((i < 5) && (*next != ':')) || ((i == 5) && (*next != '\0'))) {
+            return -1;
+        }
+        ptr = ++next;
+
+        if (addr) {
+            ((uint8_t *)addr)[i] = (uint8_t)hex;
+        }
+    }
+
+    return 0;
 }

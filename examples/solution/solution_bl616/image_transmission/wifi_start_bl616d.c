@@ -238,8 +238,8 @@ void wifi_start_firmware_task(void *param)
 
     /* Enable wifi irq */
     extern void interrupt0_handler(void);
-    bflb_irq_attach(WIFI_TO_CPU_IRQn, (irq_callback)interrupt0_handler, NULL);
-    bflb_irq_enable(WIFI_TO_CPU_IRQn);
+    bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
+    bflb_irq_enable(WIFI_IRQn);
 #endif
 
     wl_cfg = wl_cfg_get((uint8_t *)phyrf_ram);

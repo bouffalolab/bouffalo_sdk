@@ -86,10 +86,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # Untested platform-specific optimizations.
             # https://github.com/Mbed-TLS/mbedtls/issues/9588
             'Config: MBEDTLS_HAVE_SSE2',
-            # Obsolete configuration option, to be replaced by
-            # PSA entropy drivers.
-            # https://github.com/Mbed-TLS/mbedtls/issues/8150
-            'Config: MBEDTLS_NO_PLATFORM_ENTROPY',
             # Untested aspect of the platform interface.
             # https://github.com/Mbed-TLS/mbedtls/issues/9589
             'Config: MBEDTLS_PLATFORM_NO_STD_FUNCTIONS',
@@ -102,9 +98,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'Config: MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY',
             'Config: MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY',
             'Config: MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY',
-            # We don't run test_suite_config when we test this.
-            # https://github.com/Mbed-TLS/mbedtls/issues/9586
-            'Config: MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND',
         ],
         'test_suite_config.psa_boolean': [
             # We don't test with HMAC disabled.
@@ -670,6 +663,12 @@ class DriverVSReference_block_cipher_dispatch(outcome_analysis.DriverVSReference
             # but these are not available in the accelerated component.
             'CMAC null arguments',
             re.compile('CMAC.* (AES|ARIA|Camellia).*'),
+        ],
+        'test_suite_cipher.constant_time': [
+            # Like with test_suite_cipher.aes and such, these tests call
+            # cipher_wrapper in a way that requires the block cipher to
+            # be built in.
+            re.compile('.*(AES|ARIA|CAMELLIA).*(encrypt|decrypt).*', re.I),
         ],
         'test_suite_cipher.padding': [
             # Following tests require AES_C/CAMELLIA_C to be enabled,

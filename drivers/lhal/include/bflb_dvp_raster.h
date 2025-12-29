@@ -99,6 +99,31 @@ void bflb_dvp_raster_enable(struct bflb_device_s *dev);
 void bflb_dvp_raster_disable(struct bflb_device_s *dev);
 
 /**
+ * @brief Enable or disable dvp raster software mode.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, false means disable
+ */
+void bflb_dvp_raster_sw_mode(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Trigger dvp raster software mode to process one frame.
+ *
+ * @param [in] dev device handle
+ */
+void bflb_dvp_raster_sw_mode_kick(struct bflb_device_s *dev);
+
+#if !defined(CPU_MODEL_A0)
+/**
+ * @brief Enable or disable dvp raster software mode to output rgb data.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, false means disable
+ */
+void bflb_dvp_raster_sw_mode_output_rgb(struct bflb_device_s *dev, bool enable);
+#endif
+
+/**
  * @brief Enable or disable dvp raster interrupt.
  *
  * @param [in] dev device handle

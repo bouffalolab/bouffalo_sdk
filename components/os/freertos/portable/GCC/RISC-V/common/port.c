@@ -104,10 +104,8 @@ const BaseType_t * pTrapNetCounter = &TrapNetCounter;
 
 /* Holds the critical nesting value - deliberately non-zero at start up to
  * ensure interrupts are not accidentally enabled before the scheduler starts. */
-/* disable restore xCriticalNesting to stack.
 size_t xCriticalNesting = ( size_t ) 0xaaaaaaaa;
 size_t *pxCriticalNesting = &xCriticalNesting;
-*/
 
 /* Used to catch tasks that attempt to return from their implementing function. */
 size_t xTaskReturnAddress = ( size_t ) portTASK_RETURN_ADDRESS;

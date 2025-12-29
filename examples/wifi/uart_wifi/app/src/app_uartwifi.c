@@ -6,7 +6,6 @@
 #include <lwip/netdb.h>
 
 #include "wifi_mgmr_ext.h"
-#include "wifi_mgmr.h"
 
 #include "bflb_irq.h"
 #include "bflb_uart.h"

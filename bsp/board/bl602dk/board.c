@@ -1,3 +1,8 @@
+
+#if __has_include("board_overlay.h")
+/* Use board_overlay.c instead of this file */
+#else
+
 #include "bflb_uart.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
@@ -57,6 +62,27 @@ void bl_show_log(void)
     printf("\r\n");
     printf("Build:%s,%s\r\n", __TIME__, __DATE__);
     printf("Copyright (c) 2022 Bouffalolab team\r\n");
+}
+
+const char *bl_sys_version(const char ***ctx)
+{
+    extern uint8_t _version_info_section_start;
+    extern uint8_t _version_info_section_end;
+    const char **const version_section_start = (const char **)&_version_info_section_start;
+    const char **const version_section_end = (const char **)&_version_info_section_end;
+    const char *version_str;
+
+    //init
+    if (NULL == (*ctx)) {
+        (*ctx) = version_section_start;
+    }
+    //check the end
+    if (version_section_end == (*ctx)) {
+        return NULL;
+    }
+    version_str = (**ctx);
+    *ctx = (*ctx) + 1;
+    return version_str;
 }
 
 void bl_show_flashinfo(void)
@@ -182,14 +208,6 @@ void board_init(void)
     printf("===========================\r\n");
 }
 
-void board_uartx_gpio_init()
-{
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_uart_init(gpio, GPIO_PIN_1, GPIO_UART_FUNC_UART1_TX);
-    bflb_gpio_uart_init(gpio, GPIO_PIN_12, GPIO_UART_FUNC_UART1_RX);
-}
 
 void board_i2c0_gpio_init()
 {
@@ -287,3 +305,5 @@ __attribute__((weak)) char *bflb_log_thread(void)
     return "";
 }
 #endif
+
+#endif /* __has_include("board_overlay.h") */

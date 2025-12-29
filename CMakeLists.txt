@@ -45,7 +45,7 @@ add_subdirectory(components)
 add_subdirectory(drivers/lhal)
 add_subdirectory(drivers/soc/${CHIP}/std)
 
-set(SYS_DRV_EXCLUDED_CHIPS bl602 bl628 bl606p bl808)
+set(SYS_DRV_EXCLUDED_CHIPS bl628 bl606p bl808)
 if(NOT "${CHIP}" IN_LIST SYS_DRV_EXCLUDED_CHIPS)
     add_subdirectory(drivers/sys)
 endif()

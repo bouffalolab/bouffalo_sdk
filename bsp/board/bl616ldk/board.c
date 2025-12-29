@@ -46,6 +46,27 @@ static struct bflb_device_s *uart0;
 static struct bflb_device_s *rtc;
 #endif
 
+static void system_bod_init(void)
+{
+    HBN_BOD_CFG_Type bodCfg;
+    bodCfg.enableBod = 1;
+    /*0:BOD not trigger interrupt,1:trigger interrupt*/
+    bodCfg.enableBodInt = 1;
+    /* 0:2.2v, 1:2.3v, 2:2.4v .... 7:2.9v */
+    bodCfg.bodThreshold = 2;
+    /*1:BOD will cause reset, 0:BOD will not cause reset */
+    bodCfg.enablePorInBod = 0;
+    HBN_Set_BOD_Cfg(&bodCfg);
+}
+
+static void system_bod_isr(int irq, void *arg)
+{
+    printf("BOD interrupt occurred!\n");
+    while (1) {
+        ;
+    }
+}
+
 static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
 {
 #if 1
@@ -437,6 +458,11 @@ void board_init(void)
 
     /* console init (uart or wo) */
     console_init();
+
+    /* config chip pod */
+    bflb_irq_attach(BOD_IRQn, system_bod_isr, NULL);
+    bflb_irq_enable(BOD_IRQn);
+    system_bod_init();
 
     /* ram and heap init (including psram) */
     ram_heap_init();

@@ -109,17 +109,6 @@ static void flash_bank2_access_init(void)
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
-void System_BOD_Init(void)
-{
-    uint8_t enableBod = 1;
-    /*0:BOD not trigger interrupt,1:trigger interrupt*/
-    uint8_t enableBodInt = 1;
-    /* 0:2.2v,1:2.3v,2:2.4v....7:2.9v */
-    uint8_t bodThreshold = 7;
-
-    AON_Set_BOD_Config(enableBod, bodThreshold, enableBodInt);
-}
-
 static void __cpu_pre_init(void)
 {
     uint32_t i = 0;
@@ -207,9 +196,6 @@ void SystemInit(void)
 void System_Post_Init(void)
 {
     __cpu_post_init();
-
-    /* config chip pod */
-    System_BOD_Init();
 
     PDS_Trim_RC32M();
 }

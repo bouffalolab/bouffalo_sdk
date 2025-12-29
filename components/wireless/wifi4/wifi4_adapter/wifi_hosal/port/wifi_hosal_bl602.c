@@ -27,7 +27,7 @@ extern "C" {
  ****************************************************************************/
 
 #include "wifi_hosal.h"
-
+#include "bflb_pm.h"
 #ifdef BL602_MATTER_SUPPORT
 #include <hosal_adc.c>
 #endif
@@ -69,13 +69,13 @@ wifi_hosal_funcs_t g_wifi_hosal_funcs =
   .adc_device_get = hosal_adc_device_get,
   .adc_tsen_value_get = hosal_adc_tsen_value_get,
   #endif
-  .pm_init = hosal_wifi_ret_zero,
-  .pm_event_register = hosal_wifi_ret_zero,
-  .pm_deinit = hosal_wifi_ret_zero,
-  .pm_state_run = hosal_wifi_ret_zero,
-  .pm_capacity_set = hosal_wifi_ret_zero,
-  .pm_post_event = hosal_wifi_ret_zero,
-  .pm_event_switch = hosal_wifi_ret_zero,
+  .pm_init = bl_pm_init,
+  .pm_event_register = bl_pm_event_register,
+  .pm_deinit = bl_pm_deinit,
+  .pm_state_run = bl_pm_state_run,
+  .pm_capacity_set = bl_pm_capacity_set,
+  .pm_post_event = pm_post_event,
+  .pm_event_switch = bl_pm_event_switch,
 };
 
 #ifdef __cplusplus

@@ -29,6 +29,7 @@ extern void wifi_main(void *param);
 void wifi_task_create(void) {
   BaseType_t res;
 
+  wifi_hosal_pm_init();
   res = xTaskCreate(wifi_main, "wifi fw", WIFI_TASK_STACK_SIZE, NULL, 30,
                     &wifi_task_handle);
 

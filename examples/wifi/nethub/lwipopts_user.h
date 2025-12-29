@@ -103,7 +103,9 @@
 #endif
 #endif
 
+#ifdef CONFIG_FHOST
 #define LWIP_HOOK_FILENAME        "lwiphooks.h"
+#endif
 
 #define LWIP_RAW                  1
 #define LWIP_MULTICAST_TX_OPTIONS 1

@@ -312,6 +312,11 @@
     #define MACSW_TWT_FLOW_NB      0
 #endif //MACSW_UMAC_PRESENT && MACSW_HE && defined CFG_TWT
 
+/// Alias for backward compatibility
+#ifndef NX_TWT_FLOW_NB
+#define NX_TWT_FLOW_NB MACSW_TWT_FLOW_NB
+#endif
+
 /** @} TWT */
 
 /**
@@ -1899,6 +1904,8 @@ struct me_set_control_port_req
 
 struct me_set_control_port_cfm
 {
+    /// Index of the station for which the control port state is changed
+    uint8_t sta_idx;
     /// Control port state
     bool control_port_open;
 };
@@ -2341,6 +2348,23 @@ struct twt_conf_tag
     uint16_t wake_int_mantissa;
 };
 
+///TWT Flow status information (includes flow_id for identification)
+struct twt_status_info
+{
+    /// Flow Type (0: Announced, 1: Unannounced)
+    uint8_t flow_type;
+    /// Wake interval Exponent
+    uint8_t wake_int_exp;
+    /// Unit of measurement of TWT Minimum Wake Duration (0:256us, 1:tu)
+    bool wake_dur_unit;
+    /// Nominal Minimum TWT Wake Duration
+    uint8_t min_twt_wake_dur;
+    /// TWT Wake Interval Mantissa
+    uint16_t wake_int_mantissa;
+    /// TWT Flow Identifier
+    uint8_t flow_id;
+};
+
 ///TWT Setup request message structure
 struct twt_setup_req
 {
@@ -2388,6 +2412,28 @@ struct twt_setup_ind
     uint8_t sta_idx;
     /// TWT Setup configuration
     struct twt_conf_tag conf;
+};
+
+///TWT StatusGet request message structure
+struct twt_statusget_req
+{
+    /// VIF Index
+    uint8_t vif_idx;
+};
+
+///TWT StatusGet confirmation message structure
+struct twt_statusget_cfm
+{
+    /// Status (0 = TWT Status has been get successfully)
+    uint8_t status;
+    /// Total number of flows
+    uint8_t flows;
+    /// AP TWT supported
+    uint8_t twt_supported;
+    /// AP DTIM
+    uint8_t dtim;
+    /// TWT flow configurations
+    struct twt_status_info conf[MACSW_TWT_FLOW_NB];
 };
 
 ///////////////////////////////////////////////////////
@@ -3504,6 +3550,10 @@ enum twt_msg_tag
     TWT_TEARDOWN_REQ,
     /// Confirm to destroy a TWT Establishment or all of them
     TWT_TEARDOWN_CFM,
+    /// Request to get TWT status
+    TWT_STATUSGET_REQ,
+    /// Confirm TWT status get
+    TWT_STATUSGET_CFM,
 
     /// MAX number of messages
     TWT_MAX,
