@@ -1,0 +1,97 @@
+#!/usr/bin/expect
+
+# 主程序
+spawn -open [open /dev/ttyACM1 "r+"]
+
+# 保存 spawn_id
+set serial_id $spawn_id
+
+# AT test
+send -i $serial_id "AT\r\n"
+expect -i $serial_id "OK"
+
+# set wifi mode
+set timeout 2
+send -i $serial_id "AT+CWMODE=2\r\n"
+expect {
+    -i $serial_id "OK" {
+    }
+    -i $serial_id timeout {
+        puts "mode set 超时，未收到 OK 响应"
+        close -i $serial_id
+        exit 1
+    }
+    -i $serial_id eof {
+        puts "✗ 设备连接结束"
+        close -i $serial_id
+        exit 1
+    }
+}
+
+
+# set dhcp
+set timeout 2
+send -i $serial_id "AT+CWDHCP=0,2\r\n"
+expect {
+    -i $serial_id "OK" {
+    }
+    -i $serial_id timeout {
+        puts "dhcp set timeout，未收到 OK 响应"
+        close -i $serial_id
+        exit 1
+    }
+    -i $serial_id eof {
+        puts "✗ 设备连接结束"
+        close -i $serial_id
+        exit 1
+    }
+}
+
+
+# start ap
+set timeout 10
+send -i $serial_id "AT+CWSAP=\"soc_ap\",\"12345678\",1,2,3,0\r\n"
+expect {
+    -i $serial_id "OK" {
+    }
+    -i $serial_id timeout {
+        puts "✗ 超时，未收到 OK 响应"
+        close -i $serial_id
+        exit 1
+    }
+    -i $serial_id eof {
+        puts "✗ 设备连接结束"
+        close -i $serial_id
+        exit 1
+    }
+}
+
+# 持续监听串口数据显示，直到按下 Ctrl+C
+puts "AP 模式已启动，正在监听串口数据... (按 Ctrl+C 退出)"
+
+# 设置 Ctrl+C 信号处理
+trap {
+    puts "\n检测到 Ctrl+C，正在关闭串口..."
+    close -i $serial_id
+    exit 0
+} SIGINT
+
+# 持续监听循环
+set timeout 1
+while {1} {
+    expect {
+        -i $serial_id -re ".+" {
+            # 接收到任何数据就直接输出
+            puts $expect_out(buffer)
+        }
+        -i $serial_id timeout {
+            # 超时继续循环，不做任何操作
+        }
+        -i $serial_id eof {
+            puts "✗ 设备连接意外断开"
+            close -i $serial_id
+            exit 1
+        }
+    }
+}
+
