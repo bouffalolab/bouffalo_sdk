@@ -1,0 +1,36 @@
+CONFIG_NEWLIB                =y
+CONFIG_NEWLIB_STANDARD       =n
+
+CONFIG_BFLB_LOG              =n
+
+#CONFIG_LOG_DISABLE          =n
+#CONFIG_ASSERT_DISABLE       =n
+#CONFIG_LOG_LEVEL            =3
+#CONFIG_LOG_POOL_SIZE        =1024
+#CONFIG_LOG_NCOLOR           =n
+
+CONFIG_SHELL                =y
+CONFIG_FREERTOS             =y
+
+# EMAC PHY
+CONFIG_BSP_ETH_PHY          =y
+
+# Message Router
+CONFIG_BSP_MR               =y
+# MR SDIO
+CONFIG_MR_SDIO_DRIVER       =y
+CONFIG_MR_MSG_CTRL_SDIO     =y
+CONFIG_MR_SDIO_QUEUE_DEPTH  =4
+# MR NETDEV
+CONFIG_MR_NETDEV            =y
+CONFIG_MR_NETDEV_EMAC       =y
+# MR SPEED TEST
+CONFIG_MR_SPEED_TEST        =y
+CONFIG_MR_SPEED_TEST_START  =y
+# MR TTY
+CONFIG_MR_TTY               =y
+CONFIG_MR_TTY_CLI           =y
+CONFIG_MR_TTY_CLI_CMD       =y
+CONFIG_MR_TTY_CLI_USER_1    =y
+CONFIG_MR_TTY_CLI_USER_2    =y
+CONFIG_MR_TTY_CLI_USER_3    =y
