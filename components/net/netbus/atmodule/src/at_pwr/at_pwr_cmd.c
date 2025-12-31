@@ -466,6 +466,77 @@ static int at_lp_interval_get_cmd(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
+/**
+ * @brief AT+CWCOEXEN=<enable> - Enable or disable WiFi/BLE coexistence mode
+ * @param enable 0: disable, 1: enable
+ */
+static int at_setup_cmd_cwcoexen(int argc, const char **argv)
+{
+    int enable = 0;
+    int ret = 0;
+
+    AT_CMD_PARSE_NUMBER(0, &enable);
+
+    if (enable != 0 && enable != 1) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
+
+    if (enable) {
+        ret = wifi_mgmr_sta_coex_enable();
+    } else {
+        ret = wifi_mgmr_sta_coex_disable();
+    }
+
+    if (ret != 0) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
+    }
+
+    return AT_RESULT_CODE_OK;
+}
+
+/**
+ * @brief AT+CWCOEXEN? - Query coexistence mode status
+ * @return +CWCOEXEN:<status> (0: disabled, 1: enabled)
+ */
+static int at_query_cmd_cwcoexen(int argc, const char **argv)
+{
+    bool status = wifi_mgmr_sta_coex_status_get();
+
+    at_response_string("+CWCOEXEN:%d\r\n", status ? 1 : 0);
+
+    return AT_RESULT_CODE_OK;
+}
+
+/**
+ * @brief AT+CWCOEXDUTY=<active_ms> - Set WiFi active time in coex duty cycle
+ * @param active_ms WiFi active time in milliseconds (within 100ms cycle)
+ */
+static int at_setup_cmd_cwcoexduty(int argc, const char **argv)
+{
+    int active_ms = 0;
+
+    AT_CMD_PARSE_NUMBER(0, &active_ms);
+
+    if (wifi_mgmr_sta_coex_duty_set((uint8_t)active_ms) != 0) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
+    }
+
+    return AT_RESULT_CODE_OK;
+}
+
+/**
+ * @brief AT+CWCOEXDUTY? - Query current coex duty cycle setting
+ * @return +CWCOEXDUTY:<active_ms>
+ */
+static int at_query_cmd_cwcoexduty(int argc, const char **argv)
+{
+    uint32_t active_ms = wifi_mgmr_sta_coex_duty_get();
+
+    at_response_string("+CWCOEXDUTY:%lu\r\n", active_ms);
+
+    return AT_RESULT_CODE_OK;
+}
+
 static const at_cmd_struct at_pwr_cmd[] = {
     {"+PWR",                NULL, at_pwr_cmd_pwrmode, NULL, 1, 3},
     {"+SLWKDTIM",           NULL, at_dtim_cmd, NULL, 1, 1},
@@ -489,6 +560,8 @@ static const at_cmd_struct at_pwr_cmd[] = {
     {"+PWR_CLEAR",          NULL, NULL, at_pwr_clear_cmd, 0, 0},
     {"+PWR_GET",            NULL, NULL, at_pwr_get_cmd, 0, 0},
     {"+LP_INTERVAL_GET",    NULL, NULL, at_lp_interval_get_cmd, 0, 0},
+    {"+CWCOEXEN",           at_query_cmd_cwcoexen, at_setup_cmd_cwcoexen, NULL, 1, 1},
+    {"+CWCOEXDUTY",         at_query_cmd_cwcoexduty, at_setup_cmd_cwcoexduty, NULL, 1, 1},
     {NULL,              NULL, NULL, NULL, 0, 0},
 };
 

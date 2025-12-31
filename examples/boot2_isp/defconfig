@@ -15,3 +15,8 @@ CONFIG_CHERRYUSB                = y
 CONFIG_CHERRYUSB_DEVICE         = y
 # Enable the CherryUSB device classes
 CONFIG_CHERRYUSB_DEVICE_CDC_ACM = y
+
+# Use the boot2 link script
+CONFIG_CUSTOM_LINKSCRIPT            = y
+# Config flash 4-byte address mode for 32M flash
+CONFIG_FLASH_4BYTE_ADDR_MODE_ENABLE = n

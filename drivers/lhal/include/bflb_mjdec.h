@@ -48,6 +48,17 @@
   * @}
   */
 
+/** @defgroup MJDEC_BURST MJDEC burst length definition
+  * @{
+  */
+#define MJDEC_BURST_INCR1  (0)
+#define MJDEC_BURST_INCR4  (1)
+#define MJDEC_BURST_INCR8  (2)
+#define MJDEC_BURST_INCR16 (3)
+/**
+  * @}
+  */
+
 /** @defgroup MJDEC_INTSTS mjdec interrupt status definition
   * @{
   */
@@ -64,6 +75,11 @@
   * @}
   */
 
+/** @defgroup MJDEC_CMD MJDEC feature control cmd definition
+  * @{
+  */
+#define MJDEC_CMD_SET_READ_BURST  (1)
+#define MJDEC_CMD_SET_WRITE_BURST (2)
 /**
   * @}
   */

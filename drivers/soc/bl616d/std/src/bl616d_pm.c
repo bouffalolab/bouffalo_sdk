@@ -529,7 +529,6 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel15 = {
 BL_Err_Type ATTR_TCM_SECTION pm_disable_gpio_keep(uint32_t pin)
 {
     uint32_t tmpVal = 0;
-    uint32_t pos = 0;
 
     if (pin <= GPIO_PIN_7) {
         tmpVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_0);
@@ -905,7 +904,7 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
 #endif
 
     if (ENABLE == p->ldo_soc_cfg.lp_mode_en) {
-        AON_Ctrl_Ldo_Soc_Mode_by_HW(ENABLE);
+        AON_Set_Ldo_Soc_Mode(AON_LDO_SOC_LOWPOWER_MODE);
         AON_Set_Ldo_Soc_Vout_in_Lowpower(p->ldo_soc_cfg.voltage_level);
     } else {
         AON_Set_Ldo_Soc_Mode(AON_LDO_SOC_NORMAL_MODE);
@@ -913,7 +912,7 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
     }
 
     if (ENABLE == p->dcdc_sys_cfg.lp_mode_en) {
-        AON_Ctrl_Dcdc_Sys_Mode_by_HW(ENABLE);
+        AON_Set_Dcdc_Sys_Mode(AON_DCDC_SYS_LOWPOWER_MODE);
         AON_Set_Dcdc_Sys_Vout_in_Lowpower(p->dcdc_sys_cfg.voltage_level);
     } else {
         AON_Set_Dcdc_Sys_Mode(AON_DCDC_SYS_NORMAL_MODE);
@@ -921,7 +920,7 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
     }
 
     if (ENABLE == p->ldo18_aon_cfg.lp_mode_en) {
-        AON_Ctrl_Ldo18_Aon_Mode_by_HW(ENABLE);
+        AON_Set_Ldo18_Aon_Mode(AON_LDO18_AON_LOWPOWER_MODE);
         AON_Set_Ldo18_Aon_Vout_in_Lowpower(p->ldo18_aon_cfg.voltage_level);
     } else {
         AON_Set_Ldo18_Aon_Mode(AON_LDO18_AON_NORMAL_MODE);

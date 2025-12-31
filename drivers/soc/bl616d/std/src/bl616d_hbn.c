@@ -652,6 +652,30 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_Off_RC32K(void)
     return SUCCESS;
 }
 
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_RC32K_R_Code(uint32_t r_code)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT, r_code);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_RC32K_EXT_CODE_EN);
+    BL_WR_REG(HBN_BASE, HBN_RC32K_CTRL0, tmpVal);
+
+    return SUCCESS;
+}
+
+
+uint32_t ATTR_CLOCK_SECTION HBN_Get_RC32K_R_Code(void)
+{
+    uint32_t tmpVal;
+    uint32_t r_code;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
+    r_code = BL_GET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT);
+
+    return r_code;
+}
+
 /****************************************************************************/ /**
  * @brief  Trim RC32K According to Efuse
  *
@@ -1375,7 +1399,6 @@ BL_Sts_Type HBN_Get_INT_State(uint8_t irqType)
         return RESET;
     }
 }
-
 
 /****************************************************************************/ /**
  * @brief  HBN get all interrupt status

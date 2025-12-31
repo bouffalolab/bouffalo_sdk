@@ -188,21 +188,20 @@ void board_dvp_gpio_init(void)
     /* DVP0 GPIO init */
     /* I2C GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
     /* Power down GPIO */
-    //bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    //bflb_gpio_reset(gpio, GPIO_PIN_2);
-
+    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_29);
     /* Reset GPIO */
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_reset(gpio, GPIO_PIN_15);
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_19);
     bflb_mtimer_delay_ms(10);
-    bflb_gpio_set(gpio, GPIO_PIN_15);
+    bflb_gpio_set(gpio, GPIO_PIN_19);
     bflb_mtimer_delay_ms(10);
 
     /* MCLK GPIO */
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
     /* DVP0 GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
@@ -325,4 +324,30 @@ void board_usb_gpio_init(void)
     gpio = bflb_device_get_by_name("gpio");
     bflb_gpio_init(gpio, GPIO_PIN_40, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, GPIO_PIN_41, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+}
+
+void board_ap_console_gpio_init(void)
+{
+    volatile uint32_t *p = (uint32_t *)0x2000C060;
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_uart_init(gpio, GPIO_PIN_11, GPIO_UART_FUNC_UART0_TX);
+    if ((*p) & (0x1 << 22)) {
+        /* QFN68 */
+        bflb_gpio_uart_init(gpio, GPIO_PIN_42, GPIO_UART_FUNC_UART0_RX);
+    } else {
+        bflb_gpio_uart_init(gpio, GPIO_PIN_12, GPIO_UART_FUNC_UART0_RX);
+    }
+}
+
+void board_np_console_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_uart_init(gpio, GPIO_PIN_20, GPIO_UART_FUNC_UART1_TX);
+    bflb_gpio_uart_init(gpio, GPIO_PIN_21, GPIO_UART_FUNC_UART1_RX);
 }

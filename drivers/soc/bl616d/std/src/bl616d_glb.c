@@ -2551,10 +2551,11 @@ BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, 
 *******************************************************************************/
 #if defined(CPU_MODEL_A0)
 BL_Err_Type GLB_Set_SPI0_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+{
 #else
 BL_Err_Type GLB_Set_SPI0_2_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
-#endif
 {
+#endif
     uint32_t tmpVal = 0;
 
     CHECK_PARAM(IS_GLB_SPI_CLK_TYPE(clkSel));
@@ -5141,6 +5142,7 @@ BL_Err_Type GLB_MINI_PER_Software_Reset(uint8_t swrst)
  *
 *******************************************************************************/
 BL_Err_Type GLB_Set_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+{
 #else
 /****************************************************************************/ /**
  * @brief  set SPI 3 clock
@@ -5155,8 +5157,8 @@ BL_Err_Type GLB_Set_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
  *
 *******************************************************************************/
 BL_Err_Type GLB_Set_SPI3_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
-#endif
 {
+#endif
     uint32_t tmpVal = 0;
 #if defined(CPU_MODEL_A0)
     CHECK_PARAM(IS_GLB_SPI1_CLK_TYPE(clkSel));

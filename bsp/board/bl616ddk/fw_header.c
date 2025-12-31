@@ -10,7 +10,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .rivison = 0x00000001,
     /*flash config */
     .flash_cfg.magiccode = 0x47464346,
-    .flash_cfg.cfg.ioMode = 0x11,               /*!< Serail flash interface mode,bit0-3:IF mode,bit4:unwrap */
+#ifdef CONFIG_FLASH_4BYTE_ADDR_MODE_ENABLE
+    .flash_cfg.cfg.ioMode = 0x31,               /*!< Serail flash interface mode,bit0-3:IF mode,bit4:unwrap,bit5:4-byte addr mode support */
+#else
+    .flash_cfg.cfg.ioMode = 0x11,               /*!< Serail flash interface mode,bit0-3:IF mode,bit4:unwrap,bit5:4-byte addr mode support */
+#endif
     .flash_cfg.cfg.cReadSupport = 0x00,         /*!< Support continuous read mode,bit0:continuous read mode support,bit1:read mode cfg */
 	//0.5T Delay clkDelay=0x00,clkInvert=0x3;
 	//1T Delay clkDelay=0x01,clkInvert=0x01;

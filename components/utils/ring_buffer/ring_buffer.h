@@ -23,7 +23,19 @@
 #ifndef __RING_BUFFER_H__
 #define __RING_BUFFER_H__
 
+#ifndef RING_BUFFER_HOST_TEST
 #include "bflb_core.h"
+#else
+/* Host test build: avoid pulling in MCU chip headers and provide minimal defs. */
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+
+static inline void arch_memcpy_fast(void *dst, const void *src, uint32_t len)
+{
+    (void)memcpy(dst, src, (size_t)len);
+}
+#endif
 
 /** @addtogroup  BL_Common_Component
  *  @{
@@ -49,16 +61,13 @@ typedef enum {
 /**
  *  @brief Ring buffer structure definition
  */
-typedef struct
-{
-    uint8_t *pointer;     /*!< Pointer of ring buffer */
-    uint8_t readMirror;   /*!< Read mirror,used to judge empty or full */
-    uint32_t readIndex;   /*!< Index of read address */
-    uint8_t writeMirror;  /*!< Write mirror,used to judge empty or full */
-    uint32_t writeIndex;  /*!< Index of write address */
-    uint32_t size;        /*!< Size of ring buffer */
-    void (*lock)(void);   /*!< Lock ring buffer */
-    void (*unlock)(void); /*!< Unlock ring buffer */
+typedef struct {
+    uint8_t *pointer;           /*!< Pointer of ring buffer */
+    volatile uint32_t readPos;  /*!< Packed read position: bit31=mirror, bit[30:0]=index */
+    volatile uint32_t writePos; /*!< Packed write position: bit31=mirror, bit[30:0]=index */
+    uint32_t size;              /*!< Size of ring buffer */
+    void (*lock)(void);         /*!< Lock ring buffer */
+    void (*unlock)(void);       /*!< Unlock ring buffer */
 } Ring_Buffer_Type;
 
 /*@} end of group RING_BUFFER_Public_Types */
@@ -70,9 +79,8 @@ typedef struct
 /** @defgroup  RING_BUFFER_STATUS_TYPE
  *  @{
  */
-#define IS_RING_BUFFER_STATUS_TYPE(type) (((type) == RING_BUFFER_EMPTY) ||   \
-                                          ((type) == RING_BUFFER_PARTIAL) || \
-                                          ((type) == RING_BUFFER_FULL))
+#define IS_RING_BUFFER_STATUS_TYPE(type) \
+    (((type) == RING_BUFFER_EMPTY) || ((type) == RING_BUFFER_PARTIAL) || ((type) == RING_BUFFER_FULL))
 
 /*@} end of group RING_BUFFER_Public_Constants */
 
@@ -89,7 +97,7 @@ typedef void(ringBuffer_Write_Callback)(void *, uint8_t *, uint32_t);
  *  @{
  */
 void Ring_Buffer_Init(Ring_Buffer_Type *rbType, uint8_t *buffer, uint32_t size, ringBuffer_Lock_Callback *lockCb,
-                             ringBuffer_Lock_Callback *unlockCb);
+                      ringBuffer_Lock_Callback *unlockCb);
 void Ring_Buffer_Reset(Ring_Buffer_Type *rbType);
 uint32_t Ring_Buffer_Write_Callback(Ring_Buffer_Type *rbType, uint32_t length, ringBuffer_Write_Callback *writeCb,
                                     void *parameter);
@@ -106,6 +114,28 @@ uint32_t Ring_Buffer_Peek_Byte(Ring_Buffer_Type *rbType, uint8_t *data);
 uint32_t Ring_Buffer_Get_Length(Ring_Buffer_Type *rbType);
 uint32_t Ring_Buffer_Get_Empty_Length(Ring_Buffer_Type *rbType);
 Ring_Buffer_Status_Type Ring_Buffer_Get_Status(Ring_Buffer_Type *rbType);
+
+/**
+ * @brief  Get current read index of ring buffer
+ *
+ * @param  rbType: Ring buffer type structure pointer
+ *
+ * @return Current read index in range [0, size)
+ */
+uint32_t Ring_Buffer_Get_Read_Index(Ring_Buffer_Type *rbType);
+
+/**
+ * @brief  Advance ring buffer read pointer by length bytes
+ *
+ * This API is intended for DMA/zero-copy style consumers where data is
+ * consumed directly from the ring buffer storage.
+ *
+ * @param  rbType: Ring buffer type structure pointer
+ * @param  length: Bytes to advance
+ *
+ * @return Actual advanced bytes
+ */
+uint32_t Ring_Buffer_Advance_Read(Ring_Buffer_Type *rbType, uint32_t length);
 
 /*@} end of group RING_BUFFER_Public_Functions */
 

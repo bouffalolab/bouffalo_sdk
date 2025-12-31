@@ -32,6 +32,7 @@ else()
         endif()
         sdk_add_subdirectory_ifdef(CONFIG_BT_BREDR btprofile)
         sdk_add_subdirectory_ifdef(CONFIG_AUTO_PTS bleptstest)
+        sdk_add_subdirectory_ifdef(CONFIG_BT_NEARBY   nearby)
     endif()
 endif()
 

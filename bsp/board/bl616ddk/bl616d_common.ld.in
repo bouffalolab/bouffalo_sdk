@@ -76,9 +76,17 @@
 #define SECTION_DATA_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); __##name##_load__ = ABSOLUTE(LOADADDR(name)); name attr:
 #define SECTION_BSS_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); name attr:
 
+#if CONFIG_LPAPP
+__LPFW_SIZE = 120K;
+/* Link stage feature control */
+PROVIDE( __macsw_conf_bl_wifi_ps_enable = 1 );
+PROVIDE( __macsw_conf_plat_dma_enable = 0 );
+#else
 /* Link stage feature control */
 PROVIDE( __macsw_conf_bl_wifi_ps_enable = 0 );
 PROVIDE( __macsw_conf_plat_dma_enable = 1 );
+#endif
+
 
 OUTPUT_ARCH( "riscv" )
 ENTRY(__start)
@@ -367,9 +375,27 @@ SECTIONS
     } > ram_wifi AT > rom
 */
 
+#if CONFIG_LPAPP
+
+    .lpfw_share (NOLOAD) :
+    {
+        __lpfw_share_start__ = ABSOLUTE(ADDR(.lpfw_share)); 
+        __lpfw_share_end__ = ADDR(.lpfw_share) + __LPFW_SIZE;
+
+        _sshram = . ;
+        *(.lpfw_share_nocache_noinit*)
+        __lpfw_share_used__ = .;
+        . = (__lpfw_share_used__ < __lpfw_share_end__) ? __lpfw_share_end__ : .;
+    } > ram_wifi
+
+    SECTION_BSS_PROLOGUE(wifi_bss, (NOLOAD),)
+    {
+#else
     SECTION_BSS_PROLOGUE(wifi_bss, (NOLOAD),)
     {
       _sshram = . ;
+#endif
+
       *(SHAREDRAMIPC)
       *(SHAREDRAM)
       _eshram = . ;
@@ -466,5 +492,19 @@ SECTIONS
 
         . = ALIGN(1024);
     } > rom
+
+#if CONFIG_LPAPP
+    SECTION_DATA_PROLOGUE(lpfw, ,)
+    {
+        /* For DMA Burst copy lpfw binary from flash to ram */
+        . = ALIGN(32);
+        LONG(0x0);        /* LPFW SHA256 */
+        . = ALIGN(32);
+        LONG(0x5746504C); /* LPFW */
+        . = ALIGN(32);
+    
+        __lpfw_load_addr = .;
+    } > rom
+#endif
     GROUP_END(rom)
 }

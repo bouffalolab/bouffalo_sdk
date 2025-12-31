@@ -656,7 +656,11 @@ static ATTR_TCM_SECTION void dbi_disp_lcd_task(void *pvParameters)
 #if (defined(LCD_DBI_INTERFACE_TYPE) || defined(LCD_DBI_WORK_MODE))
 
 #if ((LCD_W >= 480) && (LCD_H >= 640))
-        yuyv422_to_yuv444_dbi_display_fast(disp_src_frame.x_start, disp_src_frame.y_start, disp_src_frame.x_end, disp_src_frame.y_end, disp_src_frame.elem_base.frame_addr);
+        yuyv422_to_yuv444_dbi_display_fast(disp_src_frame.x_start + (800 - (disp_src_frame.x_end - disp_src_frame.x_start + 1)) / 2,
+                                         disp_src_frame.y_start,
+                                         disp_src_frame.x_end + (800 - (disp_src_frame.x_end - disp_src_frame.x_start + 1)) / 2,
+                                         disp_src_frame.y_end,
+                                         disp_src_frame.elem_base.frame_addr);
 #elif ((LCD_W >= 320) && (LCD_H >= 480))
         yuyv422_640x480_scaling_yuv444_480x320_dbi_display_fast(disp_src_frame.elem_base.frame_addr, disp_src_frame.y_start, disp_src_frame.y_end + 1);
 #endif

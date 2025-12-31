@@ -99,9 +99,9 @@ void wifi_event_handler(uint32_t code)
         } break;
         case CODE_WIFI_ON_AP_STARTED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
-#if (CONFIG_SOLUTION_FUNC_HIBOOSTER)
-            cmd_mjpeg_start();
-#endif
+// #if (CONFIG_SOLUTION_FUNC_HIBOOSTER)
+//             cmd_mjpeg_start();
+// #endif
         } break;
         case CODE_WIFI_ON_AP_STOPPED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);

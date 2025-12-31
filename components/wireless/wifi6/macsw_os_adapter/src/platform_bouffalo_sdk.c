@@ -24,7 +24,6 @@
 
 #ifdef LP_APP
 #include "bl_lp.h"
-#include "bl616_clock.h"
 #include "macsw.h"
 
 extern int lpfw_recal_rc32k(uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode, int clock_ready_check);
@@ -225,7 +224,11 @@ void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
 
     /* update bcn rate */
     uint8_t bcn_rate = platform_get_leg_rate(param->beacon_rate);
-    BEACON_DATA_RATE = bcn_rate;
+    if (iot2lp_para->wifi_parameter) {
+        iot2lp_para->wifi_parameter->beacon_leg_rate = bcn_rate;
+    } else {
+        assert(0);
+    }
 
     /* get rtc timestamp */
     rtc_stamp_us = BL_PDS_CNT_TO_US(rtc_cnt);

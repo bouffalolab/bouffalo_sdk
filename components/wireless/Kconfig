@@ -44,4 +44,3 @@ if CONFIG_WIRELESS_ENABLE
 endif  # CONFIG_WIRELESS_ENABLE
 
 endmenu  # Wireless
-

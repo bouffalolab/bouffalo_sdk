@@ -545,6 +545,9 @@ void bflb_spi_tcint_mask(struct bflb_device_s *dev, bool mask)
 
 void bflb_spi_rtoint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_spi_rtoint_mask
+    romapi_bflb_spi_rtoint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -555,6 +558,7 @@ void bflb_spi_rtoint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~SPI_CR_SPI_STO_MASK;
     }
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask)

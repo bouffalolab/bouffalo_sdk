@@ -167,7 +167,9 @@ int main(void)
 {
     /* board init */
     board_init();
+#ifdef BL616
     bl_cpu_sysmap_init(true, true);
+#endif
 
     /* shell init */
     uart0 = bflb_device_get_by_name("uart0");

@@ -515,6 +515,8 @@ BL_Err_Type HBN_Set_HRAM_slp(void);
 BL_Err_Type HBN_Set_HRAM_Ret(void);
 BL_Err_Type HBN_Keep_On_RC32K(void);
 BL_Err_Type HBN_Power_Off_RC32K(void);
+BL_Err_Type HBN_Set_RC32K_R_Code(uint32_t r_code);
+uint32_t HBN_Get_RC32K_R_Code(void);
 BL_Err_Type HBN_Trim_RC32K(void);
 uint32_t HBN_Get_Status_Flag(void);
 BL_Err_Type HBN_Set_Status_Flag(uint32_t flag);

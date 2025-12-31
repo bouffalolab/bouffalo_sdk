@@ -6,6 +6,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "coexm.h"
+
 /**
  * WiFi MACSW RTOS porting implemention
  */
@@ -29,6 +31,16 @@ void wifi_task_create(void) {
 }
 
 void wifi_task_suspend(void) {
+  if (ps_is_coex_mode() && (pm_coex_sleep() == 0))
+  {
+    // Wait for notification in coex sleep mode
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    pm_coex_wakeup();
+
+    return;
+  }
+
   // wait for notification
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 }

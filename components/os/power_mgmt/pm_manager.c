@@ -9,7 +9,8 @@
 #include <string.h>
 
 #include "pm_manager.h"
-#include "bl616_lp.h"
+
+#include "bl_lp.h"
 
 #ifndef container_of
 #define container_of(ptr, type, member) \
@@ -114,10 +115,8 @@ void set_dtim_config(int dtim)
     int listen_interval = 1;
 
     if (dtim == 0) {
-        lpfw_cfg.bcmc_dtim_mode = 0;
         listen_interval = 1;
     } else {
-        lpfw_cfg.bcmc_dtim_mode = 1;
         listen_interval = dtim;
     }
     lpfw_cfg.dtim_origin = listen_interval;
@@ -196,11 +195,14 @@ int pm_enter_lp_perparation(void)
 
         if (!ret) {
             lpfw_cfg.buf_addr = pm_manager_handle_get();
+            lpfw_cfg.bcmc_dtim_mode = 1;
         } else {
             lpfw_cfg.buf_addr = NULL;
+            lpfw_cfg.bcmc_dtim_mode = 0;
         }
     } else {
         lpfw_cfg.buf_addr = NULL;
+        lpfw_cfg.bcmc_dtim_mode = 0;
     }
 
     bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);

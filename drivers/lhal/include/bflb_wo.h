@@ -115,9 +115,8 @@ uint32_t bflb_wo_push_fifo(struct bflb_device_s *dev, uint16_t *data, uint32_t l
  * @param [in] dev device handle
  * @param [in] data pointer to save send data
  * @param [in] len length to send
- * @return count has been failed to send.
  */
-uint32_t bflb_wo_push_fifo_force(struct bflb_device_s *dev, uint16_t *data, uint32_t len);
+void bflb_wo_push_fifo_force(struct bflb_device_s *dev, uint16_t *data, uint32_t len);
 
 /**
  * @brief Clear wo fifo.

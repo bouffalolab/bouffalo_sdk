@@ -245,6 +245,18 @@ enum cfgmacsw_msg_index {
     CFGMACSW_NULL_DATA_SEND_CMD,
     CFGMACSW_NULL_DATA_SEND_RESP,
 #endif
+    /// Request to enable WiFi/BLE coexistence (param: @ref cfgmacsw_coex_enable)
+    CFGMACSW_COEX_ENABLE_CMD,
+    /// Response to CFGMACSW_COEX_ENABLE_CMD (param: @ref cfgmacsw_resp)
+    CFGMACSW_COEX_ENABLE_RESP,
+    /// Request to disable WiFi/BLE coexistence (param: @ref cfgmacsw_coex_disable)
+    CFGMACSW_COEX_DISABLE_CMD,
+    /// Response to CFGMACSW_COEX_DISABLE_CMD (param: @ref cfgmacsw_resp)
+    CFGMACSW_COEX_DISABLE_RESP,
+    /// Request to set coexistence duty cycle (param: @ref cfgmacsw_coex_duty_set)
+    CFGMACSW_COEX_DUTY_SET_CMD,
+    /// Response to CFGMACSW_COEX_DUTY_SET_CMD (param: @ref cfgmacsw_resp)
+    CFGMACSW_COEX_DUTY_SET_RESP,
 };
 
 /// CFGMACSW status
@@ -953,6 +965,32 @@ struct cfgmacsw_set_ps_mode {
     bool enabled;
     /// PS mode
     uint8_t ps_mode;
+};
+
+/// structure for CFGMACSW_COEX_ENABLE_CMD
+struct cfgmacsw_coex_enable {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
+};
+
+/// structure for CFGMACSW_COEX_DISABLE_CMD
+struct cfgmacsw_coex_disable {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
+};
+
+/// structure for CFGMACSW_COEX_DUTY_SET_CMD
+struct cfgmacsw_coex_duty_set {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
+    /// WiFi active time in ms (10-90)
+    uint8_t active_ms;
 };
 
 /// structure for CFGMACSW_TWT_SETUP_CMD

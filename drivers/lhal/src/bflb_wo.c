@@ -168,14 +168,15 @@ uint32_t bflb_wo_push_fifo(struct bflb_device_s *dev, uint16_t *data, uint32_t l
 #endif
 }
 
-uint32_t bflb_wo_push_fifo_force(struct bflb_device_s *dev, uint16_t *data, uint32_t len)
+void bflb_wo_push_fifo_force(struct bflb_device_s *dev, uint16_t *data, uint32_t len)
 {
-    uint32_t idx = 0;
-
-    while (idx < len) {
-        putreg32((uint32_t)data[idx++], dev->reg_base + GLB_GPIO_CFG144_OFFSET);
+#ifdef romapi_bflb_wo_push_fifo_force
+    romapi_bflb_wo_push_fifo_force(dev, data, len);
+#else
+    for (uint32_t idx = 0; idx < len; idx++) {
+        putreg32((uint32_t)data[idx], dev->reg_base + GLB_GPIO_CFG144_OFFSET);
     }
-    return idx;
+#endif
 }
 
 void bflb_wo_clear_fifo(struct bflb_device_s *dev)

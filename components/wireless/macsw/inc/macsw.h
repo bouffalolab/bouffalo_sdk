@@ -1619,6 +1619,10 @@ struct mm_p2p_vif_ps_change_ind
     uint8_t ps_state;
 };
 
+struct flow_cntrl_change_ind {
+    uint8_t vif_index;
+    uint8_t enable;
+};
 
 #if (MACSW_MESH_EN)
 /// Structure containing the parameters of the @ref MESH_PATH_UPDATE_IND message.
@@ -2799,6 +2803,47 @@ __INLINE void co_write16p(uint32_t addr, uint32_t value)
 
 /**
  ****************************************************************************************
+ * @brief Read a packed 32 bits word.
+ * @param[in] addr The address of the first byte of the 32 bits word.
+ * @return The 32 bits value.
+ ****************************************************************************************
+ */
+__INLINE uint32_t co_read32p(uint32_t addr)
+{
+    #ifdef CFG_RWTL
+    return ((((uint32_t)co_read16p(addr + 2)) << 16) | co_read16p(addr));
+    #else
+    struct co_read32_struct
+    {
+        uint32_t val __PACKED;
+    } *ptr = (struct co_read32_struct*) addr;
+    return ptr->val;
+    #endif
+}
+
+/**
+ ****************************************************************************************
+ * @brief Write a packed 32 bits word.
+ * @param[in] addr The address of the first byte of the 32 bits word.
+ * @param[in] value The value to write.
+ ****************************************************************************************
+ */
+__INLINE void co_write32p(uint32_t addr, uint32_t value)
+{
+    #ifdef CFG_RWTL
+    co_write16p(addr, value & 0xFFFF);
+    co_write16p(addr + 2, ((value >> 16) & 0xFFFF));
+    #else
+    struct co_read32_struct
+    {
+        uint32_t val __PACKED;
+    } *ptr = (struct co_read32_struct*) addr;
+    ptr->val = value;
+    #endif
+}
+
+/**
+ ****************************************************************************************
  * @brief Swap bytes of a 32 bits value.
  * The swap is done in every case. Should not be called directly.
  * @param[in] val32 The 32 bits value to swap.
@@ -3048,6 +3093,8 @@ enum sm_msg_tag
     SM_FIX_RATE_CANCLE_TIMEOUT_REQ,
     SM_KEEPALIVE_REQ,
     SM_STATUS_IND,
+    /// Timeout waiting for 4-way handshake after association (coex protection)
+    SM_HANDSHAKE_WAIT_TIMEOUT_IND,
 };
 
 enum {
@@ -3183,6 +3230,10 @@ enum mm_msg_tag
     MM_SET_PS_MODE_REQ,
     /// Set Power Save mode confirmation
     MM_SET_PS_MODE_CFM,
+    /// Set Coexistence mode
+    MM_SET_COEX_MODE_REQ,
+    /// Set Coexistence mode confirmation
+    MM_SET_COEX_MODE_CFM,
     /// Request to add a channel context
     MM_CHAN_CTXT_ADD_REQ,
     /// Confirmation of the channel context addition
@@ -3241,6 +3292,8 @@ enum mm_msg_tag
     MM_SET_PS_OPTIONS_CFM,
     /// Indication of PS state change for a P2P VIF
     MM_P2P_VIF_PS_CHANGE_IND,
+    /// Indication of flow control state change for a VIF
+    MM_FLOW_CNTRL_CHANGE_IND,
     /// Indication that CSA counter has been updated
     MM_CSA_COUNTER_IND,
     /// Message containing channel information
@@ -4073,6 +4126,19 @@ void bl_tpc_power_table_get(int8_t *power_table);
  */
 void bl_sta_set_keepalive_period(uint8_t time_seconds);
 int bl_wifi_sta_ps_active_ms(uint16_t active_ms);
+/**
+ * @brief Check if WiFi/BLE coexistence mode is enabled
+ * @return true if coex mode enabled, false otherwise
+ */
+bool ps_is_coex_mode(void);
+void pm_coex_force_wifi_role(void);
+void pm_coex_force_ble_and_thread(void);
+
+/**
+ * @brief Get current WiFi active time (duty) in milliseconds
+ * @return WiFi active time in ms
+ */
+uint32_t bl_wifi_sta_ps_active_ms_get(void);
 
 void *sta_idx_getp_mac_addr(uint8_t sta_idx);
 uint8_t sta_idx_get_mlink_idx(uint8_t sta_idx);

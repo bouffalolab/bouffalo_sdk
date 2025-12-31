@@ -63,6 +63,8 @@
 #else
 #if !defined(CONFIG_BT_CONN)
 #define CONFIG_BT_RX_STACK_SIZE  1024
+#elif defined(CONFIG_BT_NEARBY)
+#define CONFIG_BT_RX_STACK_SIZE  3072
 #else
 #define CONFIG_BT_RX_STACK_SIZE  2048//1536//1024
 #endif

@@ -83,3 +83,8 @@ if(CONFIG_FREERTOS)
 sdk_library_add_sources(async_event/async_event.c async_event/rtos_al.c)
 sdk_add_include_directories(async_event)
 endif()
+
+# wifi_ota (when FHOST is enabled - for all WiFi demos)
+if(CONFIG_FHOST)
+add_subdirectory(wifi_ota)
+endif()

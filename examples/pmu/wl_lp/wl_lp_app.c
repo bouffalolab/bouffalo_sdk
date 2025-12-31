@@ -126,7 +126,6 @@ SHELL_CMD_EXPORT_ALIAS(cmd_wakeup_timer, wakeup_timer, wakeup timer);
 static void cmd_set_dtim(int argc, char **argv)
 {	
 	int dtim = 10;
-    int broadcast = 0;
 
     if ((argc > 1) && (argv[1] != NULL)) {
         printf("%s\r\n", argv[1]);

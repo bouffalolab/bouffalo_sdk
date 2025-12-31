@@ -168,6 +168,17 @@ uint8_t bflb_ef_ctrl_get_trim_parity(uint32_t val, uint8_t len);
  */
 int bflb_ef_ctrl_busy(struct bflb_device_s *dev);
 
+#if defined(BL616D) && !defined(CPU_MODEL_A0)
+/****************************************************************************/ /**
+ * @brief  Check efuse region1 busy status
+ *
+ * @param dev  ef control device pointer
+ *
+ * @return 1 for busy 0 for not
+ *
+*******************************************************************************/
+int bflb_ef_ctrl_busy_r1(struct bflb_device_s *dev);
+#endif
 #ifdef __cplusplus
 }
 #endif

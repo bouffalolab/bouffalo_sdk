@@ -831,7 +831,7 @@ static void mfg_cmd(int argc, char **argv)
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
-
+#if 0
 #ifdef LP_APP
 #include "bl_lp.h"
 
@@ -973,6 +973,7 @@ void cmd_acomp_test(char *buf, int len, int argc, char **argv)
 SHELL_CMD_EXPORT_ALIAS(cmd_io_test, io_test, cmd io_test);
 SHELL_CMD_EXPORT_ALIAS(cmd_acomp_test, acomp_test, cmd acomp_test);
 #endif /* LP_APP */
+#endif
 
 #endif /* CONFIG_SHELL */
 

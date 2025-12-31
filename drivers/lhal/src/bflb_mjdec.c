@@ -532,8 +532,8 @@ void bflb_mjdec_init(struct bflb_device_s *dev, const struct bflb_mjdec_config_s
     putreg32(regval, reg_base + MJDEC_JDEC_CONTROL_1_OFFSET);
 
     regval = 0;
-    regval |= (3 << MJDEC_REG_R_XLEN_SHIFT); /* AXI read burst count 16 increment */
-    regval |= (3 << MJDEC_REG_W_XLEN_SHIFT); /* AXI write burst count 16 increment */
+    regval |= (MJDEC_BURST_INCR16 << MJDEC_REG_R_XLEN_SHIFT);
+    regval |= (MJDEC_BURST_INCR16 << MJDEC_REG_W_XLEN_SHIFT);
     if (config->swap_enable) {
         regval |= MJDEC_REG_SWAP_MODE;
     } else {
@@ -648,8 +648,8 @@ void bflb_mjdec_push_jpeg(struct bflb_device_s *dev, void *frame)
 {
     LHAL_PARAM_ASSERT(IS_MJDEC_ADDR(frame));
 
-#ifdef romapi_bflb_mjdec_push_frame
-    romapi_bbflb_mjdec_push_frame(dev, frame);
+#ifdef romapi_bflb_mjdec_push_jpeg
+    romapi_bbflb_mjdec_push_jpeg(dev, frame);
 #else
     putreg32((uint32_t)frame | MJDEC_REG_JP_PUSH, dev->reg_base + MJDEC_JDEC_FRAM_PUSH_OFFSET);
 #endif
@@ -744,6 +744,22 @@ int bflb_mjdec_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     reg_base = dev->reg_base;
 
     switch (cmd) {
+        case MJDEC_CMD_SET_READ_BURST:
+            /* Set read burst length, arg use @ref MJDEC_BURST */
+            regval = getreg32(reg_base + MJDEC_JDEC_CONTROL_1_OFFSET);
+            regval &= ~MJDEC_REG_R_XLEN_MASK;
+            regval |= (arg << MJDEC_REG_R_XLEN_SHIFT) & MJDEC_REG_R_XLEN_MASK;
+            putreg32(regval, reg_base + MJDEC_JDEC_CONTROL_1_OFFSET);
+            break;
+
+        case MJDEC_CMD_SET_WRITE_BURST:
+            /* Set write burst length, arg use @ref MJDEC_BURST */
+            regval = getreg32(reg_base + MJDEC_JDEC_CONTROL_1_OFFSET);
+            regval &= ~MJDEC_REG_W_XLEN_MASK;
+            regval |= (arg << MJDEC_REG_W_XLEN_SHIFT) & MJDEC_REG_W_XLEN_MASK;
+            putreg32(regval, reg_base + MJDEC_JDEC_CONTROL_1_OFFSET);
+            break;
+
         default:
             ret = -EPERM;
             break;

@@ -973,6 +973,52 @@ int wifi_mgmr_sta_ps_exit(void);
 int wifi_mgmr_sta_ps_active_time(uint32_t ms);
 
 /**
+ * @brief Enable WiFi/BLE coexistence mode
+ *
+ * This function enables time-division multiplexing between WiFi and BLE.
+ * WiFi must be connected before calling this function.
+ *
+ * @return 0 on success, negative error code on failure
+ *         -1: WiFi not ready
+ *         -2: WiFi not connected
+ *         -3: Command failed
+ */
+int wifi_mgmr_sta_coex_enable(void);
+
+/**
+ * @brief Disable WiFi/BLE coexistence mode
+ *
+ * This function disables coexistence mode and restores normal WiFi operation.
+ *
+ * @return 0 on success, negative error code on failure
+ */
+int wifi_mgmr_sta_coex_disable(void);
+
+/**
+ * @brief Set WiFi active duty cycle for coexistence mode
+ *
+ * This function configures the WiFi active time per TBTT period.
+ *
+ * @param active_ms  WiFi active time in milliseconds (valid range: 10-90)
+ * @return 0 on success, -1 on invalid parameter
+ */
+int wifi_mgmr_sta_coex_duty_set(uint8_t active_ms);
+
+/**
+ * @brief Get WiFi/BLE coexistence mode status
+ *
+ * @return true if coex mode is enabled, false otherwise
+ */
+bool wifi_mgmr_sta_coex_status_get(void);
+
+/**
+ * @brief Get current WiFi active duty cycle
+ *
+ * @return WiFi active time in milliseconds
+ */
+uint32_t wifi_mgmr_sta_coex_duty_get(void);
+
+/**
  * @brief Set up WiFi Manager STA TWT (Target Wake Time) functionality
  *
  * This function is used to set up the WiFi Manager's STA TWT functionality

@@ -44,6 +44,17 @@
 
 #include <app_init.h>
 
+/* Dual-core OTA Flash RPC support (NP core - Remote) */
+#ifdef CONFIG_WIFI_OTA_DUAL_CORE
+#include "rpc/flash_rpc_remote.h"
+
+/* Core detection override for simple_rpc - NP core */
+int simple_rpc_is_ap_core(void)
+{
+    return 0; /* NP core always returns 0 (not AP) */
+}
+#endif
+
 #define DBG_TAG "MAIN"
 #include "log.h"
 
@@ -58,7 +69,6 @@ struct bflb_device_s *gpio;
  ****************************************************************************/
 
 static struct bflb_device_s *uart1;
-
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
@@ -77,6 +87,11 @@ void wifi_start_firmware_task(void *param)
 
     LOG_I("Starting fhost ...\r\n");
     fhost_init();
+
+#ifdef CONFIG_WIFI_OTA_DUAL_CORE
+    flash_rpc_remote_init();
+    LOG_I("Flash RPC Remote started on NP core\r\n");
+#endif
 
     vTaskDelete(NULL);
 }
@@ -130,8 +145,6 @@ int loop_cnt = 0;
 
 void app_wifi_entry(void *param)
 {
-    int i;
-
     printf("%s entry.\r\n", __FUNCTION__);
 
     printf("wifi start\r\n");
@@ -148,6 +161,7 @@ void app_wifi_entry(void *param)
 
     printf("wifi done\r\n");
     app_init();
+
     while (1) {
         //printf("loop, cpu:%d, loop_cnt:%d\r\n", GLB_Get_Core_Type(), loop_cnt++);
         vTaskDelay(1000);

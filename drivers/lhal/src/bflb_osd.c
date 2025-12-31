@@ -27,7 +27,8 @@ void bflb_osd_blend_init(struct bflb_device_s *dev, struct bflb_osd_blend_config
     putreg32(regval, reg_base + OSD_BLEND_OBND_MEM_CONFIG0_OFFSET);
 
     regval = getreg32(reg_base + OSD_BLEND_OBND_LAYER_CONFIG0_OFFSET);
-    regval &= ~(OSD_BLEND_OBND_COLOR_FORMAT_MASK | OSD_BLEND_OBND_ORDER_A_MASK | OSD_BLEND_OBND_ORDER_RV_MASK | OSD_BLEND_OBND_ORDER_GY_MASK | OSD_BLEND_OBND_ORDER_BU_MASK);
+    regval &= ~(OSD_BLEND_OBND_COLOR_FORMAT_MASK | OSD_BLEND_OBND_ORDER_A_MASK | OSD_BLEND_OBND_ORDER_RV_MASK |
+                OSD_BLEND_OBND_ORDER_GY_MASK | OSD_BLEND_OBND_ORDER_BU_MASK);
     regval |= ((config->blend_format << OSD_BLEND_OBND_COLOR_FORMAT_SHIFT) & OSD_BLEND_OBND_COLOR_FORMAT_MASK);
     regval |= ((config->order_a << OSD_BLEND_OBND_ORDER_A_SHIFT) & OSD_BLEND_OBND_ORDER_A_MASK);
     regval |= ((config->order_rv << OSD_BLEND_OBND_ORDER_RV_SHIFT) & OSD_BLEND_OBND_ORDER_RV_MASK);
@@ -35,8 +36,10 @@ void bflb_osd_blend_init(struct bflb_device_s *dev, struct bflb_osd_blend_config
     regval |= ((config->order_bu << OSD_BLEND_OBND_ORDER_BU_SHIFT) & OSD_BLEND_OBND_ORDER_BU_MASK);
     putreg32(regval, reg_base + OSD_BLEND_OBND_LAYER_CONFIG0_OFFSET);
 
-    putreg32(((config->coor.end_x - 1) << OSD_BLEND_OBND_X_MAX_SHIFT) | (config->coor.start_x), reg_base + OSD_BLEND_OBND_LAYER_XCONFIG_OFFSET);
-    putreg32(((config->coor.end_y - 1) << OSD_BLEND_OBND_Y_MAX_SHIFT) | (config->coor.start_y), reg_base + OSD_BLEND_OBND_LAYER_YCONFIG_OFFSET);
+    putreg32(((config->coor.end_x - 1) << OSD_BLEND_OBND_X_MAX_SHIFT) | (config->coor.start_x),
+             reg_base + OSD_BLEND_OBND_LAYER_XCONFIG_OFFSET);
+    putreg32(((config->coor.end_y - 1) << OSD_BLEND_OBND_Y_MAX_SHIFT) | (config->coor.start_y),
+             reg_base + OSD_BLEND_OBND_LAYER_YCONFIG_OFFSET);
     putreg32(config->layer_buffer_addr, reg_base + OSD_BLEND_OBND_MEM_CONFIG1_OFFSET);
     putreg32(200, reg_base + OSD_BLEND_OBND_SH_OFFSET);
     putreg32(OSD_BLEND_REG_RFIFO_DRAIN_MASK_W, reg_base + OSD_BLEND_OBND_ERROR_OFFSET);
@@ -148,8 +151,19 @@ void bflb_osd_blend_set_coordinate(struct bflb_device_s *dev, struct bflb_osd_co
 #ifdef romapi_bflb_osd_blend_set_coordinate
     romapi_bflb_osd_blend_set_coordinate(dev, coor);
 #else
-    putreg32(((coor->end_x - 1) << OSD_BLEND_OBND_X_MAX_SHIFT) | (coor->start_x), dev->reg_base + OSD_BLEND_OBND_LAYER_XCONFIG_OFFSET);
-    putreg32(((coor->end_y - 1) << OSD_BLEND_OBND_Y_MAX_SHIFT) | (coor->start_y), dev->reg_base + OSD_BLEND_OBND_LAYER_YCONFIG_OFFSET);
+    putreg32(((coor->end_x - 1) << OSD_BLEND_OBND_X_MAX_SHIFT) | (coor->start_x),
+             dev->reg_base + OSD_BLEND_OBND_LAYER_XCONFIG_OFFSET);
+    putreg32(((coor->end_y - 1) << OSD_BLEND_OBND_Y_MAX_SHIFT) | (coor->start_y),
+             dev->reg_base + OSD_BLEND_OBND_LAYER_YCONFIG_OFFSET);
+#endif
+}
+
+void bflb_osd_blend_set_layer_buffer(struct bflb_device_s *dev, uint32_t addr)
+{
+#ifdef romapi_bflb_osd_blend_set_layer_buffer
+    romapi_bflb_osd_blend_set_layer_buffer(dev, addr);
+#else
+    putreg32(addr, dev->reg_base + OSD_BLEND_OBND_MEM_CONFIG1_OFFSET);
 #endif
 }
 
@@ -222,7 +236,8 @@ void bflb_osd_blend_set_palette_color(struct bflb_device_s *dev, uint8_t index, 
 #endif
 }
 
-void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable, struct bflb_osd_blend_replace_s *replace)
+void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable,
+                                          struct bflb_osd_blend_replace_s *replace)
 {
 #ifdef romapi_bflb_osd_blend_replace_palette_index
     romapi_bflb_osd_blend_replace_palette_index(dev, enable, replace);
@@ -259,8 +274,11 @@ void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable
 #endif
 }
 
-void bflb_osd_blend_replace_color_value(struct bflb_device_s *dev, bool enable, struct bflb_osd_blend_replace_s *replace_a,
-                                        struct bflb_osd_blend_replace_s *replace_rv, struct bflb_osd_blend_replace_s *replace_gy, struct bflb_osd_blend_replace_s *replace_bu)
+void bflb_osd_blend_replace_color_value(struct bflb_device_s *dev, bool enable,
+                                        struct bflb_osd_blend_replace_s *replace_a,
+                                        struct bflb_osd_blend_replace_s *replace_rv,
+                                        struct bflb_osd_blend_replace_s *replace_gy,
+                                        struct bflb_osd_blend_replace_s *replace_bu)
 {
 #ifdef romapi_bflb_osd_blend_replace_color_value
     romapi_bflb_osd_blend_replace_color_value(dev, enable, replace_a, replace_rv, replace_gy, replace_bu);

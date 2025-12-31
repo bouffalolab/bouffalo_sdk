@@ -18,3 +18,6 @@ CONFIG_SHELL                 =y
 #CONFIG_LOG_LEVEL            =3
 #CONFIG_LOG_POOL_SIZE        =1024
 #CONFIG_LOG_NCOLOR           =n
+
+CONFIG_WIFI_OTA_DUAL_CORE   =y
+CONFIG_IPC                  =y

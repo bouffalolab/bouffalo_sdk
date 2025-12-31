@@ -25,11 +25,7 @@ endif()
 add_subdirectory(../solution_utils solution_utils)
 
 if(CONFIG_WIFI6)
-    if("${CHIP}" STREQUAL "bl616d")
-        target_sources(app PRIVATE wifi_start_bl616d.c)
-    else()
-        target_sources(app PRIVATE wifi_start.c)
-    endif()
+    target_sources(app PRIVATE wifi_start.c)
 endif()
 
 sdk_set_main_file(main.c)

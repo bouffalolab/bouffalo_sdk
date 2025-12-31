@@ -389,7 +389,7 @@ static void rc32k_coarse_trim_task(void *pvParameters)
         bflb_lp_set_32k_clock_ready(1);
     }
 
-    printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_fr_ext);
+    printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
 
     printf("rc32k_coarse task: vTaskDelete\r\n");
     vTaskDelete(NULL);

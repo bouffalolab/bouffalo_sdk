@@ -13,11 +13,12 @@
 #include "sf_ctrl_reg.h"
 #include "bl_lp.h"
 
+
+static ATTR_NOCACHE_RAM_SECTION sf_recovery_para_t g_flash_para = {0};
+static ATTR_NOCACHE_NOINIT_RAM_SECTION lp_fw_tzc_t tzc_info;
+static ATTR_NOCACHE_NOINIT_RAM_SECTION lp_fw_sf_sec_t sf_sec_info;
+
 #define SF_Ctrl_Get_AES_Region(addr, r) (addr + SF_CTRL_AES_REGION_OFFSET + (r) * 0x80)
-
-static lp_fw_sf_sec_t sf_sec_info;
-struct bflb_sf_ctrl_io_cs_clk_delay_cfg io_cs_delay_cfg;
-
 
 static __inline uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel_Val(void)
 {
@@ -45,6 +46,7 @@ static __inline uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel2_Val(void)
 
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_SEL2);
 }
+
 static void bl_lp_xip_get_flash_clock(uint8_t *flash_clk, uint8_t *flash_clk_div)
 {
     uint8_t sel = Clock_Get_SF_Clk_Sel_Val();
@@ -78,26 +80,29 @@ static void bl_lp_xip_get_flash_clock(uint8_t *flash_clk, uint8_t *flash_clk_div
     *flash_clk_div = Clock_Get_SF_Div_Val();
 }
 
-extern uint32_t __binary_length;
-void bl_lp_xip_para_save(void)
+static void bl_lp_tzc_para_save(void)
+{
+    iot2lp_para->tzc_cfg = &tzc_info;
+
+    tzc_info.tzc_ocram_tzsrg_ctrl = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_CTRL);
+    tzc_info.tzc_ocram_tzsrg_r0 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R0);
+    tzc_info.tzc_ocram_tzsrg_r1 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R1);
+    tzc_info.tzc_ocram_tzsrg_r2 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R2);
+
+    tzc_info.tzc_sf_tzsrg_ctrl = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL);
+    tzc_info.tzc_sf_tzsrg_r0 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R0);
+    tzc_info.tzc_sf_tzsrg_r1 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R1);
+    tzc_info.tzc_sf_tzsrg_r2 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R2);
+    tzc_info.tzc_sf_tzsrg_msb = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_MSB);
+}
+
+static void bl_lp_sec_para_save(void)
 {
     iot2lp_para->sec_cfg = &sf_sec_info;
 
     uint32_t tmpVal;
     uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 0);
     uint32_t *iv = iot2lp_para->sec_cfg->r0_aes_iv;
-    //spi_flash_cfg_type *flash_cfg;
-    uint8_t flash_clk, flash_clk_div;
-
-
-    /* flash info save */
-    uint32_t flash_cfg_len;
-    bflb_flash_get_cfg((uint8_t **)&iot2lp_para->flash_cfg, &flash_cfg_len);
-    iot2lp_para->flash_jdec_id = GLB_Get_Flash_Id_Value();
-
-    /* flash io cs clk delay info save */
-    bflb_sf_ctrl_get_flash_io_cs_clk_delay((struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)&io_cs_delay_cfg);
-    iot2lp_para->flash_io_cs_clk_delay_cfg = (void *)&io_cs_delay_cfg;
 
     tmpVal = getreg32(SF_CTRL_BASE + SF_CTRL_SF_AES_OFFSET);
 
@@ -156,16 +161,39 @@ void bl_lp_xip_para_save(void)
     iv[2] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET);
     iv[3] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET);
 
-    uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
-    iot2lp_para->img_len = (int)(&__binary_length) + lpfw_size;
-    printf("[LP] flash: app_len: %d, lp_len: %d, image_len: %d\r\n", (int)&__binary_length, (int)lpfw_size, (int)iot2lp_para->img_len);
+}
 
+void bl_lp_xip_para_save(void)
+{
+    uint8_t flash_clk, flash_clk_div;
+    uint32_t flash_cfg_len;
+    static struct bflb_sf_ctrl_io_cs_clk_delay_cfg io_cs_delay_cfg;
+
+    bflb_flash_get_cfg((uint8_t **)&g_flash_para.flash_cfg, &flash_cfg_len);
+    g_flash_para.flash_jdec_id = GLB_Get_Flash_Id_Value();
     bl_lp_xip_get_flash_clock(&flash_clk, &flash_clk_div);
-    iot2lp_para->flash_clk = flash_clk;
-    iot2lp_para->flash_clk_div = flash_clk_div;
+    g_flash_para.flash_clk = flash_clk;
+    g_flash_para.flash_clk_div = flash_clk_div;
     printf("[LP] flash_clk: %d, flash_clk_div: %d\r\n", flash_clk, flash_clk_div);
 
-    iot2lp_para->do_xip_recovery = 0;
+    g_flash_para.flash_offset = bflb_sf_ctrl_get_flash_image_offset(0, SF_CTRL_FLASH_BANK0);
+    g_flash_para.flash_pin_cfg = (BL_RD_WORD(0x2005605C) >> 14) & 0x3f;
+
+    /* flash io cs clk delay info save */
+    bflb_sf_ctrl_get_flash_io_cs_clk_delay((struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)&io_cs_delay_cfg);
+    g_flash_para.flash_io_cs_clk_delay_cfg = (void *)&io_cs_delay_cfg;
+    g_flash_para.do_xip_recovery = 0;
+
+    iot2lp_para->flash_parameter = &g_flash_para;
+
+    bl_lp_tzc_para_save();
+    bl_lp_sec_para_save();
+ 
+    // extern uint32_t __binary_length;
+    // uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
+    // iot2lp_para->img_len = (int)(&__binary_length) + lpfw_size;
+    // printf("[LP] flash: app_len: %d, lp_len: %d, image_len: %d\r\n", (int)&__binary_length, (int)lpfw_size, (int)iot2lp_para->img_len);
+
 }
 
 
@@ -331,9 +359,8 @@ static void bflb_bootrom_sboot_set(uint8_t val)
 }
 
 int format_printf(const char *format, ...);
-void bl_lp_xip_recovery()
+void bl_lp_xip_recovery(void)
 {
-    uint32_t flash_pin = 0;
     uint32_t encrypted = 0;
     uint32_t jdec_id = 0;
     uint32_t timeout = 0;
@@ -344,7 +371,8 @@ void bl_lp_xip_recovery()
 
     bl_lp_debug_record_time(iot2lp_para, "xip flash start");
 
-    spi_flash_cfg_type *pFlashCfg = (spi_flash_cfg_type *)iot2lp_para->flash_cfg;
+    sf_recovery_para_t *p_flash_para = (sf_recovery_para_t *)iot2lp_para->flash_parameter;
+    spi_flash_cfg_type *pFlashCfg = (spi_flash_cfg_type *)p_flash_para->flash_cfg;
 
     /* called from lowpower, open clock */
     *((volatile uint32_t *)0x20000584) = 0xffffffff;
@@ -377,40 +405,38 @@ void bl_lp_xip_recovery()
 #else
     arch_delay_us(200);
 #endif
-    /* get flash gpio info */
-    flash_pin = BL_RD_WORD(0x2005605C);
-    flash_pin = (flash_pin >> 14) & 0x3f;
+
     /* init flash gpio */
-    bflb_sf_cfg_init_flash_gpio((uint8_t)flash_pin, 0);
+    bflb_sf_cfg_init_flash_gpio(p_flash_para->flash_pin_cfg, 0);
 
     uint32_t REG_PLL_BASE_ADDRESS = 0;
     uint32_t tmpVal = 0;
 
     REG_PLL_BASE_ADDRESS = GLB_BASE + GLB_WIFI_PLL_CFG0_OFFSET;
-    if (iot2lp_para->flash_clk == 0) {
+    if (p_flash_para->flash_clk == 0) {
         tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV8); //120M
         BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
-    } else if (iot2lp_para->flash_clk == 2) {
+    } else if (p_flash_para->flash_clk == 2) {
         GLB_Config_AUDIO_PLL_To_491P52M();
-    } else if (iot2lp_para->flash_clk == 3) {
+    } else if (p_flash_para->flash_clk == 3) {
         tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV12); //80M
         BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
-    } else if (iot2lp_para->flash_clk == 5) {
+    } else if (p_flash_para->flash_clk == 5) {
         tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV10); //96M
         BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
     }
 
     /* set flash clock */
-    GLB_Set_SF_CLK(1, iot2lp_para->flash_clk, iot2lp_para->flash_clk_div);
+    GLB_Set_SF_CLK(1, p_flash_para->flash_clk, p_flash_para->flash_clk_div);
 
     /* update flash controller */
     bl_lp_xip_set_sf_ctrl(pFlashCfg);
 
     /* set flash io cs clk delay */
-    bflb_sf_ctrl_set_flash_io_cs_clk_delay(*(struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)iot2lp_para->flash_io_cs_clk_delay_cfg);
+    bflb_sf_ctrl_set_flash_io_cs_clk_delay(*(struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)p_flash_para->flash_io_cs_clk_delay_cfg);
 
     /* set flash cmds */
     bl_lp_flash_set_cmds(pFlashCfg);
@@ -447,7 +473,7 @@ void bl_lp_xip_recovery()
         bflb_sflash_get_jedecid(pFlashCfg, (uint8_t *)&jdec_id);
         /* Dummy disable burstwrap for make sure */
         bflb_sflash_write_enable(pFlashCfg);
-    } while (jdec_id != iot2lp_para->flash_jdec_id);
+    } while (jdec_id != p_flash_para->flash_jdec_id);
 
     GLB_Set_Flash_Id_Value(jdec_id);
 
@@ -504,10 +530,10 @@ void bl_lp_xip_recovery()
     encrypted = BL_RD_WORD(0x20056000);
     encrypted = encrypted & 0x03;
     if (encrypted == 0) {
-        bl_lp_xip_read_enable(pFlashCfg, 1 /* cont read*/, iot2lp_para->flash_offset);
+        bl_lp_xip_read_enable(pFlashCfg, 1 /* cont read*/, p_flash_para->flash_offset);
     } else {
         bflb_bootrom_media_boot_set_encrypt();
-        bl_lp_xip_read_enable(pFlashCfg, 0 /* not cont read*/, iot2lp_para->flash_offset);
+        bl_lp_xip_read_enable(pFlashCfg, 0 /* not cont read*/, p_flash_para->flash_offset);
     }
 
     /* recovery tzc register */
@@ -534,8 +560,4 @@ void bl_lp_xip_recovery()
     csi_dcache_invalid();
 
     bl_lp_debug_record_time(iot2lp_para, "xip flash end");
-
-    void (*pFunc)(uint32_t);
-    pFunc = (void (*)(uint32_t))iot2lp_para->app_entry;
-    pFunc(iot2lp_para->args[0]);
 }

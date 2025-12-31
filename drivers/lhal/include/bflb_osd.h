@@ -204,6 +204,14 @@ void bflb_osd_blend_disable(struct bflb_device_s *dev);
 void bflb_osd_blend_set_coordinate(struct bflb_device_s *dev, struct bflb_osd_coordinate_s *coor);
 
 /**
+ * @brief Set osd blend layer buffer.
+ *
+ * @param [in] dev device handle
+ * @param [in] addr start address of layer buffer
+ */
+void bflb_osd_blend_set_layer_buffer(struct bflb_device_s *dev, uint32_t addr);
+
+/**
  * @brief Set osd blend global alpha.
  *
  * @param [in] dev device handle
@@ -239,7 +247,8 @@ void bflb_osd_blend_set_palette_color(struct bflb_device_s *dev, uint8_t index, 
  * @param [in] enable enable or disable replace function
  * @param [in] replace pointer to save osd blend palette index replace config
  */
-void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable, struct bflb_osd_blend_replace_s *replace);
+void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable,
+                                          struct bflb_osd_blend_replace_s *replace);
 
 /**
  * @brief Replace osd blend color value with target value.
@@ -252,8 +261,11 @@ void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable
  * @param [in] replace_bu pointer to save osd blend value of B/U replace config
  * 
  */
-void bflb_osd_blend_replace_color_value(struct bflb_device_s *dev, bool enable, struct bflb_osd_blend_replace_s *replace_a,
-                                        struct bflb_osd_blend_replace_s *replace_rv, struct bflb_osd_blend_replace_s *replace_gy, struct bflb_osd_blend_replace_s *replace_bu);
+void bflb_osd_blend_replace_color_value(struct bflb_device_s *dev, bool enable,
+                                        struct bflb_osd_blend_replace_s *replace_a,
+                                        struct bflb_osd_blend_replace_s *replace_rv,
+                                        struct bflb_osd_blend_replace_s *replace_gy,
+                                        struct bflb_osd_blend_replace_s *replace_bu);
 
 /**
  * @brief Initialize osd draw rectangle.

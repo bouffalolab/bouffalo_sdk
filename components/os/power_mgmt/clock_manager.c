@@ -6,11 +6,19 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
+#if defined(BL616)
 #include "bl616_glb.h"
-#include "bl616_hbn.h"
+#include "bl616_aon.h"
+#elif defined(BL616L)
+#include "bl616l_glb.h"
+#include "bl616l_aon.h"
+#elif defined(BL616D)
+#include "bl616d_glb.h"
+#include "bl616d_aon.h"
+#endif
 #include "bflb_mtimer.h"
 #include "clock_manager.h"
-#include "bl616_lp.h"
+#include "bl_lp.h"
 
 #define CLOCK_SOURCE_KEY "clock_src"
 #define RC_CAL_DATA_KEY  "rc_cal"
@@ -479,7 +487,7 @@ static void rc32k_coarse_trim_task(void *pvParameters)
         }
     }
 
-    printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_fr_ext);
+    printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
 
     printf("rc32k_coarse task: vTaskDelete\r\n");
     vTaskDelete(NULL);

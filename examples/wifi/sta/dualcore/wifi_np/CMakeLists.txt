@@ -26,6 +26,18 @@ target_sources(app PRIVATE
 sdk_add_include_directories(.)
 sdk_add_include_directories(app/include)
 
+sdk_add_include_directories(${CMAKE_SOURCE_DIR}/../../../../../components/utils/wifi_ota)
+
+# Add flash_rpc_remote.c for dual-core OTA (NP core - Remote)
+if(CONFIG_WIFI_OTA_DUAL_CORE)
+    sdk_add_include_directories(${CMAKE_SOURCE_DIR}/../../../../../components/utils/wifi_ota/rpc)
+    sdk_add_include_directories(${CMAKE_SOURCE_DIR}/../../../../../drivers/soc/bl616d/std/include)
+    target_sources(app PRIVATE
+        ${CMAKE_SOURCE_DIR}/../../../../../components/utils/wifi_ota/rpc/flash_rpc_remote.c
+    )
+endif()
+
 sdk_set_main_file(main.c)
 
 project(wifi)
+

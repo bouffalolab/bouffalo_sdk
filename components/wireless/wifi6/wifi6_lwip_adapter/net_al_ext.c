@@ -9,6 +9,8 @@
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
 
+#include "coexm.h"
+
 #include "lwip/netifapi.h"
 #include "lwip/api.h"
 #include "lwip/dns.h"
@@ -46,6 +48,28 @@ int net_dhcpd_start(net_al_if_t net_if, int start, int limit)
     return -1
 }
 #else
+
+/**
+ * @brief Re-enable Wi-Fi PS mode for coex time-division
+ *
+ * Wi-Fi PS does not auto-enable on reconnect, so we must explicitly
+ * request it when coex mode is enabled. This function sends
+ * ME_SET_PS_MODE_REQ to enable dynamic PS mode (PS_MODE_ON_DYN).
+ */
+#if MACSW_POWERSAVE
+static void ps_coex_wifi_ps_enable(void)
+{
+    struct me_set_ps_mode_req *ps_req = rtos_malloc(sizeof(struct me_set_ps_mode_req));
+    if (ps_req) {
+        ps_req->ps_state = 1;
+        ps_req->ps_mode = PS_MODE_ON_DYN;
+        macif_kmsg_call(ME_SET_PS_MODE_CFM, NULL, 0,
+                        ME_SET_PS_MODE_REQ, TASK_ME, ps_req,
+                        sizeof(struct me_set_ps_mode_req));
+        rtos_free(ps_req);
+    }
+}
+#endif
 
 static void net_if_disable_arp_for_us(net_al_if_t net_if)
 {
@@ -190,12 +214,19 @@ static int fhost_dhcp_stop(net_al_if_t net_if)
 static int fhost_dhcp_start(net_al_if_t net_if, uint32_t to_ms)
 {
     uint32_t start_ms;
+    bool coex_prot_acquired = false;
+    int ret = 0;
+
+    if (wifi_mgmr_sta_coex_status_get()) {
+        coex_prot_acquired = (coex_protect_acquire(COEX_PROT_DHCP) == 0);
+    }
 
     // Run DHCP client
     if (net_dhcp_start(net_if))
     {
         printf("Failed to start DHCP");
-        return DHCPC_START_FAILED;
+        ret = DHCPC_START_FAILED;
+        goto out;
     }
 
     start_ms = rtos_now(false);
@@ -209,17 +240,24 @@ static int fhost_dhcp_start(net_al_if_t net_if, uint32_t to_ms)
 
     if (stop_dhcpc) {
         fhost_dhcp_stop(net_if);
-        return DHCPC_START_ABORT;
+        ret = DHCPC_START_ABORT;
+        goto out;
     }
 
     if (net_dhcp_address_obtained(net_if))
     {
         printf("DHCP start timeout");
         fhost_dhcp_stop(net_if);
-        return DHCPC_START_TIMEOUT;
+        ret = DHCPC_START_TIMEOUT;
+        goto out;
     }
 
-    return 0;
+out:
+    if (coex_prot_acquired) {
+        (void)coex_protect_release(COEX_PROT_DHCP);
+    }
+
+    return ret;
 }
 
 int net_al_ext_set_vif_ip(int fvif_idx, struct net_al_ext_ip_addr_cfg *cfg)
@@ -632,7 +670,7 @@ void net_al_ext_dhcp_connect(void)
 }
 
 int net_al_set_ipv6_enable(int enable)
-{   
+{
 #ifdef CFG_IPV6
     net_al_create_ip6_linklocal_address(enable);
     return 0;
@@ -664,7 +702,13 @@ void net_al_ext_netif_status_callback(struct netif *netif)
             platform_post_event(EV_WIFI, CODE_WIFI_ON_LOST_IP, 0);
         } else if (netif_is_flag_set(netif, NETIF_FLAG_UP)){
             platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
-            //wifi_mgmr_sta_ps_change();
+
+#if MACSW_POWERSAVE
+            /* Resume coex runtime behaviors and re-enable Wi-Fi PS on reconnect */
+            if (ps_is_coex_mode()) {
+                ps_coex_wifi_ps_enable();
+            }
+#endif
         }
     }
     ip4_addr_copy(old_addr, *netif_ip4_addr(netif));

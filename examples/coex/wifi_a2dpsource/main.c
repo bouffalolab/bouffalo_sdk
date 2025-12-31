@@ -1,44 +1,217 @@
-#include <FreeRTOS.h>
-#include <task.h>
-#include <timers.h>
+/****************************************************************************
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ ****************************************************************************/
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
 
 #include <lwip/tcpip.h>
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 
-#include <board.h>
-#include <board_rf.h>
-#include <shell.h>
+#include "wifi_mgmr_ext.h"
 
-#define INIT_STACK_SIZE    (2048)
-#define INIT_TASK_PRIORITY (16)
+#include "bflb_irq.h"
+#include "bflb_uart.h"
+
+#include "rfparam_adapter.h"
+
+#include "board.h"
+#include "shell.h"
+
+
+#include "bluetooth.h"
+#include "conn.h"
+#include "conn_internal.h"
+#if defined(BL702)
+#include "ble_lib_api.h"
+#elif defined(BL602)
+#include "ble_lib_api.h"
+#include "bl602_glb.h"
+#include "rfparam_adapter.h"
+#elif defined(BL616)
+#include "btble_lib_api.h"
+#include "bl616_glb.h"
+#include "rfparam_adapter.h"
+#elif defined(BL616D)
+#include "btble_lib_api.h"
+#include "bl616d_glb.h"
+#include "rfparam_adapter.h"
+#elif defined(BL808)
+#include "btble_lib_api.h"
+#include "bl808_glb.h"
+#endif
+
+#include "ble_cli_cmds.h"
+#include "hci_driver.h"
+#include "hci_core.h"
+#if defined(CONFIG_BT_SETTINGS)
+#include "bflb_mtd.h"
+#include "easyflash.h"
+#endif
+
+#define DBG_TAG "MAIN"
+#include "log.h"
+
+struct bflb_device_s *gpio;
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
 
 static struct bflb_device_s *uart0;
+
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
-void app_init_entry(void *param)
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Functions
+ ****************************************************************************/
+
+void wifi_start_firmware_task(void *param)
 {
-    app_user_init();
+    LOG_I("Starting wifi ...\r\n");
+
+    wifi_task_create();
+
+    LOG_I("Starting fhost ...\r\n");
+    fhost_init();
 
     vTaskDelete(NULL);
 }
+
+void wifi_event_handler(uint32_t code)
+{
+    switch (code) {
+        case CODE_WIFI_ON_INIT_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
+            wifi_mgmr_task_start();
+        } break;
+        case CODE_WIFI_ON_MGMR_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_SCAN_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
+            wifi_mgmr_sta_scanlist();
+        } break;
+        case CODE_WIFI_ON_CONNECTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
+            void mm_sec_keydump();
+            mm_sec_keydump();
+        } break;
+        case CODE_WIFI_ON_GOT_IP: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+        } break;
+        case CODE_WIFI_ON_DISCONNECT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STARTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STOPPED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STA_ADD: {
+            LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
+        } break;
+        case CODE_WIFI_ON_AP_STA_DEL: {
+            LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
+        } break;
+        default: {
+            LOG_I("[APP] [EVT] Unknown code %u \r\n", code);
+        }
+    }
+}
+
+void bt_enable_cb(int err)
+{
+    if (!err) {
+        bt_addr_le_t bt_addr;
+        bt_get_local_public_address(&bt_addr);
+        printf("BD_ADDR:(MSB)%02x:%02x:%02x:%02x:%02x:%02x(LSB) \r\n",
+               bt_addr.a.val[5], bt_addr.a.val[4], bt_addr.a.val[3], bt_addr.a.val[2], bt_addr.a.val[1], bt_addr.a.val[0]);
+    }
+}
+
+static TaskHandle_t bluetooth_start_handle;
+
+static void bluetooth_start_task(void *pvParameters)
+{
+    // Initialize BLE controller
+    #if defined(BL702) || defined(BL602)
+    ble_controller_init(configMAX_PRIORITIES - 1);
+    #else
+    btble_controller_init(configMAX_PRIORITIES - 1);
+    #endif
+    // Initialize BLE Host stack
+    hci_driver_init();
+    bt_enable(bt_enable_cb);
+
+    vTaskDelete(NULL);
+}
+
 
 int main(void)
 {
     board_init();
 
-#ifdef LP_APP
-    app_pm_init();
-#endif
-
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
+       
+    #if defined(CONFIG_BT_SETTINGS)
+        bflb_mtd_init();
+        /* ble stack need easyflash kv */
+        easyflash_init();
+    #endif
 
-    xTaskCreate(app_init_entry, (char *)"init", INIT_STACK_SIZE, NULL, INIT_TASK_PRIORITY, NULL);
+    /* romsfs init mount use media factory*/
+    romfs_mount(0x378000);
 
+    if (0 != rfparam_init(0, NULL, 0)) {
+        LOG_I("PHY RF init failed!\r\n");
+        return 0;
+    }
+
+    LOG_I("PHY RF init success!\r\n");
+
+    tcpip_init(NULL, NULL);
+
+    xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
+    xTaskCreate(bluetooth_start_task, (char *)"bluetooth_start", 1024, NULL, 10, &bluetooth_start_handle);
     vTaskStartScheduler();
 
     while (1) {
     }
 }
-

@@ -1,4 +1,7 @@
 # Changes
+## 2025-12-29
+1.[blestack]: Support Google Nearby Fastpair.
+
 ## 2025-11-10
 1.[blestack]: fix CCC subscription crash and prevent configuration sharing.
 

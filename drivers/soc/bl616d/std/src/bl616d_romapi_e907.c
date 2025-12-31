@@ -652,6 +652,11 @@ BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, 
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_SPI0_2_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
+    return RomDriver_GLB_Set_SPI0_2_CLK(enable, clkSel, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_SPI_Sig_Swap_Set(uint8_t group, uint8_t swap) {
     return RomDriver_GLB_SPI_Sig_Swap_Set(group, swap);
 }
@@ -757,8 +762,18 @@ BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(uint8_t clkSel) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_CAM_REF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
+    return RomDriver_GLB_Set_CAM_REF_CLK(enable, clkSel, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
     return RomDriver_GLB_Set_CAM_CLK(enable, clkSel, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_Display_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
+    return RomDriver_GLB_Set_Display_CLK(enable, clkSel, div);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -979,6 +994,11 @@ BL_Err_Type GLB_Release_Mini_Sys(void) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_MINI_PER_Software_Reset(uint8_t swrst) {
     return RomDriver_GLB_MINI_PER_Software_Reset(swrst);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_SPI3_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
+    return RomDriver_GLB_Set_SPI3_CLK(enable, clkSel, div);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1297,16 +1317,6 @@ BL_Err_Type HBN_Get_PDS_Gpio_Keep(uint8_t *gpioKeep) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Clear_PDS_Gpio_Keep(uint8_t gpioKeep) {
-    return RomDriver_HBN_Clear_PDS_Gpio_Keep(gpioKeep);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Disable_Gpio_Keep(int pin) {
-    return RomDriver_HBN_Disable_Gpio_Keep(pin);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Clear_RTC_Counter(void) {
     return RomDriver_HBN_Clear_RTC_Counter();
 }
@@ -1459,11 +1469,6 @@ BL_Err_Type PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg) {
     return RomDriver_PDS_Set_Flash_Pad_Pull_None_Fast(pinCfg);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Disable_GPIO_Keep(void) {
-    return RomDriver_PDS_Disable_GPIO_Keep();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1677,6 +1682,11 @@ void Sec_Dbg_Set_Dbg_Pwd(const uint32_t pwd[4]) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+SEC_DBG_STATE_Type Sec_Dbg_Read_Dbg_State(void) {
+    return RomDriver_Sec_Dbg_Read_Dbg_State();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Sec_Dbg_Read_Dbg_Mode(void) {
     return RomDriver_Sec_Dbg_Read_Dbg_Mode();
 }
@@ -1712,8 +1722,8 @@ void Tzc_Sec_Set_Master_Group(TZC_SEC_Master_Type masterType, uint8_t group) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_t group) {
-    return RomDriver_Tzc_Sec_Set_Master_DMA_Group(dmaType, channel_bits, group);
+void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channelBitmap) {
+    return RomDriver_Tzc_Sec_Set_Master_DMA_Group(dmaType, channelBitmap);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

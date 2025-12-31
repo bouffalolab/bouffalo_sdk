@@ -25,7 +25,11 @@
 *******************************************************************************/
 uint32_t bflb_peripheral_clock_get(uint8_t peri)
 {
+#ifdef romapi_bflb_peripheral_clock_get
+    return romapi_bflb_peripheral_clock_get(peri);
+#else
     return bflb_peripheral_clock_get_by_id(peri);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -39,7 +43,11 @@ uint32_t bflb_peripheral_clock_get(uint8_t peri)
 *******************************************************************************/
 int ATTR_CLOCK_SECTION bflb_peripheral_clock_control(uint8_t peri, bool enable)
 {
+#ifdef romapi_bflb_peripheral_clock_control
+    return romapi_bflb_peripheral_clock_control(peri, enable);
+#else
     return bflb_peripheral_clock_control_by_id(peri, enable);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -52,6 +60,10 @@ int ATTR_CLOCK_SECTION bflb_peripheral_clock_control(uint8_t peri, bool enable)
 *******************************************************************************/
 int bflb_peripheral_clock_status_get(uint8_t peri)
 {
+#ifdef romapi_bflb_peripheral_clock_status_get
+    return romapi_bflb_peripheral_clock_status_get(peri);
+#else
     return bflb_peripheral_clock_status_get_by_id(peri);
+#endif
 }
 

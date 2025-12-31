@@ -16,13 +16,86 @@ extern "C" {
 #endif
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <bflb_ipc.h>
 
-typedef struct
-{
+#ifdef CONFIG_WIFI_OTA_DUAL_CORE
+#include <hardware/bl616d.h>
+#endif
+
+typedef struct {
     struct bflb_device_s *ipc;
     void *data;
 } ipm_device_t;
+
+/* Ringbuffer configuration */
+#define RB_ENTRY_SIZE     512 /* Size per ringbuffer entry */
+#define RB_MAX_ENTRIES    8   /* Number of entries (must be power of 2) */
+#define RB_INDEX_MASK     (RB_MAX_ENTRIES - 1)
+
+/* IPM message IDs */
+#define IPM_ID_FLASH_CMD  1 /* NP -> AP: Flash operation command */
+#define IPM_ID_FLASH_RESP 2 /* AP -> NP: Flash operation response */
+
+/* Ringbuffer entry structure */
+typedef struct {
+    volatile uint32_t len;                          /* Data length */
+    uint8_t data[RB_ENTRY_SIZE - sizeof(uint32_t)]; /* Data payload */
+} ringbuffer_entry_t;
+
+typedef struct {
+    volatile uint32_t head; /* Consumer read pointer */
+    volatile uint32_t tail; /* Producer write pointer */
+    ringbuffer_entry_t entries[RB_MAX_ENTRIES];
+} ringbuffer_t;
+
+/* XRAM ringbuffer pointers (fixed addresses in BL616D XRAM)
+ * - A0 version: 0x210C8000
+ * - B0+ version: 0x210C0000
+ */
+#ifdef CONFIG_WIFI_OTA_DUAL_CORE
+#define XRAM_AP2NP_RINGBUF ((volatile ringbuffer_t *)(BL616D_XRAM_BASE + 0x0000))
+#define XRAM_NP2AP_RINGBUF ((volatile ringbuffer_t *)(BL616D_XRAM_BASE + 0x2000))
+#endif
+
+/****************************************************************************
+ * Simple RPC API (only for BL616D dual-core WiFi OTA)
+ ****************************************************************************/
+
+#ifdef CONFIG_WIFI_OTA_DUAL_CORE
+/**
+ * @brief Initialize simple RPC layer
+ *
+ * Initializes IPM device for interrupt notification.
+ * Ringbuffers are in XRAM at fixed addresses (no dynamic allocation).
+ *
+ * @return 0 on success, negative on error
+ */
+int simple_rpc_init(void);
+
+/**
+ * @brief Send data to remote core via XRAM ringbuffer
+ *
+ * @param data Pointer to data to send
+ * @param len Length of data (max RB_ENTRY_SIZE)
+ * @return 0 on success, -EBUSY if ringbuffer full, -EAGAIN if not ready
+ */
+int simple_rpc_send(const uint8_t *data, uint32_t len);
+
+/**
+ * @brief Receive data from remote core (non-blocking)
+ *
+ * @param data Buffer to store received data
+ * @param len Pointer to store actual received length
+ * @param timeout_ms Timeout in milliseconds (unused, for API compatibility)
+ * @return 0 on success, -EAGAIN if no data available
+ */
+int simple_rpc_recv(uint8_t *data, uint32_t *len);
+#endif /* CONFIG_WIFI_OTA_DUAL_CORE */
+
+/****************************************************************************
+ * IPM Driver API
+ ****************************************************************************/
 
 /**
  * @typedef ipm_callback_t
@@ -38,9 +111,9 @@ typedef struct
  * @param id Message type identifier.
  * @param data Message data pointer. The correct amount of data to read out
  *        must be inferred using the message id/upper level protocol.
- */
-typedef void (*ipm_callback_t)(ipm_device_t *ipmdev, void *user_data,
-                   uint32_t id, volatile void *data);
+ * */
+
+typedef void (*ipm_callback_t)(ipm_device_t *ipmdev, void *user_data, uint32_t id, volatile void *data);
 
 /**
  * @brief Try to send a message over the IPM device.
@@ -141,18 +214,9 @@ int ipm_set_enabled(ipm_device_t *ipmdev, int enable);
  *
  * @param ipmdev Driver instance pointer.
  */
-void ipm_complete(ipm_device_t *ipmdev);
-
-
 
 #ifdef __cplusplus
 }
 #endif
-
-/**
- * @}
- */
-
-
 
 #endif /* __DRIVERS_IPM_H_ */

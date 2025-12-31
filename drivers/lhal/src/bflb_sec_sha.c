@@ -207,6 +207,9 @@ int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, con
 
 int bflb_sha1_once_padded(struct bflb_device_s *dev, const uint8_t *input, uint8_t *output, uint32_t nblock)
 {
+#ifdef romapi_bflb_sha1_once_padded
+    return romapi_bflb_sha1_once_padded(dev, input, output, nblock);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint64_t start_time;
@@ -263,6 +266,7 @@ int bflb_sha1_once_padded(struct bflb_device_s *dev, const uint8_t *input, uint8
     *output++ = ((regval >> 24) & 0xff);
 
     return 0;
+#endif
 }
 
 int bflb_sha256_update(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx, const uint8_t *input, uint32_t len)

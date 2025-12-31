@@ -11,6 +11,11 @@ if(CONFIG_BSP_ETH_PHY)
     endif()
 endif()
 
+# Message Router
+if(CONFIG_BSP_MR)
+    add_subdirectory(msg_router/device)
+endif()
+
 # sdh sdcard driver
 if(CONFIG_BSP_SDH_SD)
     sdk_add_compile_definitions(-D CONFIG_BSP_SDH_SD)

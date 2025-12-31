@@ -1715,6 +1715,107 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_puya_q32h = {
     .qe_data = 0,
 };
 
+__UNUSED static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_issi_25lp256 = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
+    .mid = 0x9d,
+
+    .de_burst_wrap_cmd = 0xC0,
+    .de_burst_wrap_cmd_dmy_clk = 0x00,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_1_LINE,
+    .de_burst_wrap_data = 0x00,
+
+    /*reg*/
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
+
+    .qe_index = 0,
+    .qe_bit = 0x06,
+    .qe_write_reg_len = 0x01,
+    .qe_read_reg_len = 0x1,
+
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
+
+    .read_reg_cmd[0] = 0x05,
+    .write_reg_cmd[0] = 0x01,
+
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xA0,
+
+    .burst_wrap_cmd = 0xC0,
+    .burst_wrap_cmd_dmy_clk = 0x00,
+    .burst_wrap_data_mode = SF_CTRL_DATA_1_LINE,
+    .burst_wrap_data = 0x06,
+    /*erase*/
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
+    /*write*/
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x38,
+    .qpp_addr_mode = SF_CTRL_ADDR_4_LINES,
+
+    .io_mode = (SF_CTRL_QIO_MODE | 0x20),
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
+
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
+
+    /*id*/
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+#if defined(BL702L) || defined(BL702) || defined(BL602)
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+#else
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0x29,
+#endif
+    .sector_size = 4,
+    .page_size = 256,
+
+    /*read*/
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
+
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x00,
+
+    /* qpi mode */
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
+
+    /*AC*/
+    .time_e_sector = 300,
+    .time_e_32k = 500,
+    .time_e_64k = 1000,
+    .time_page_pgm = 5,
+    .time_ce = 65 * 1000,
+    .pd_delay = 5,
+    .qe_data = 0,
+};
+
 #ifndef CONFIG_NOT_SUPPORT_0X13_0X14_0X15_0X16_FLASH
 static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_boya40 = {
     .reset_c_read_cmd = 0xff,
@@ -2736,6 +2837,11 @@ __UNUSED static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         .jedec_id = 0x1920c2,
         //.name="mx_25l256_256_33",
         .cfg = &flash_cfg_mxic_25l256,
+    },
+    {
+        .jedec_id = 0x19609d,
+        //.name="issi_25lp256_33",
+        .cfg = &flash_cfg_issi_25lp256,
     },
     {
         .jedec_id = 0x3425c2,

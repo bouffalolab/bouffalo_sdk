@@ -100,7 +100,7 @@ static int ephy_general_ability_check(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg
 int ephy_general_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
 {
     uint16_t regval;
-    uint32_t negotia_ability;
+    uint32_t negotia_ability = 0;
 
     /* reset */
     eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);

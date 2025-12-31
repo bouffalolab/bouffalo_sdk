@@ -935,7 +935,7 @@
     #elif(LCD_DBI_WORK_MODE == 3)
         #define LCD_DBI_TYPEB_PIN_WR    GPIO_PIN_17
         #define LCD_DBI_TYPEB_PIN_CS    GPIO_PIN_18
-        #define LCD_DBI_TYPEB_PIN_RD    GPIO_PIN_19
+        #define LCD_DBI_TYPEB_PIN_RD    GPIO_PIN_18
         #define LCD_DBI_TYPEB_PIN_DC    GPIO_PIN_20
 
         #define LCD_DBI_TYPEB_PIN_DAT0  GPIO_PIN_21
@@ -989,7 +989,7 @@
 #if (defined(LCD_RESET_EN) && LCD_RESET_EN)
 
 /* lcd reset signal pin, please leave blank if not needed */
-#define LCD_RESET_PIN GPIO_PIN_40
+#define LCD_RESET_PIN GPIO_PIN_43
 
 /* lcd reset signal active level
     0: lcd reset at low level

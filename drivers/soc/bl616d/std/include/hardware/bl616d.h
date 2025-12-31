@@ -468,7 +468,7 @@ typedef enum {
 #if defined(CPU_MODEL_A0)
 #define SPI_BASE ((uint32_t)0x20018000)
 #else
-#define AUADC_BASE ((uint32_t)0x20017000)
+#define AUADC_BASE ((uint32_t)0x20017C00)
 #define SPI1_BASE  ((uint32_t)0x20018000)
 #endif
 #define PWM_BASE   ((uint32_t)0x20019000)
