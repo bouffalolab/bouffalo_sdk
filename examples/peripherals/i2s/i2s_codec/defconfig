@@ -1,0 +1,14 @@
+# Enable FreeRTOS for audio_src_sink/audio_play tasks
+CONFIG_FREERTOS =y
+
+# Keep demo lightweight
+CONFIG_BFLB_LOG =n
+# printf helpers
+CONFIG_VSNPRINTF_LONG_LONG =y
+
+# Use unified BSP audio codec layer
+CONFIG_BSP_AUDIO_CODEC =y
+
+# MP3 decoder (PacketVideo pvmp3dec)
+CONFIG_MULTIMEDIA =y
+CONFIG_PVMP3DEC =y
