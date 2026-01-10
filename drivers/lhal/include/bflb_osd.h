@@ -212,6 +212,14 @@ void bflb_osd_blend_set_coordinate(struct bflb_device_s *dev, struct bflb_osd_co
 void bflb_osd_blend_set_layer_buffer(struct bflb_device_s *dev, uint32_t addr);
 
 /**
+ * @brief Get osd blend layer buffer.
+ *
+ * @param [in] dev device handle
+ * @return Start address of the layer buffer
+ */
+uint32_t bflb_osd_blend_get_layer_buffer(struct bflb_device_s *dev);
+
+/**
  * @brief Set osd blend global alpha.
  *
  * @param [in] dev device handle

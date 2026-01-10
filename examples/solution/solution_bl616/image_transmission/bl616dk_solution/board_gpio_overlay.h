@@ -18,4 +18,17 @@ void board_timer_gpio_init(void);
 void board_5v_enable(void);
 void board_5v_disable(void);
 
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_dbi_type_c_4_wire_gpio_init(void);
+void board_lcd_dbi_type_c_3_wire_gpio_init(void);
+void board_lcd_dbi_type_b_gpio_init(void);
+void board_lcd_dbi_ex_qspi_gpio_init(void);
+
+void board_lcd_spi_0_hard_4_gpio_init(void);
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void);
+#endif
+#endif
+
 #endif

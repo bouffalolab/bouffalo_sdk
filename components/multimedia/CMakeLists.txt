@@ -1,3 +1,5 @@
+add_subdirectory(xcommon)
+
 sdk_add_subdirectory_ifdef(CONFIG_AACDEC aacdec)
 sdk_add_subdirectory_ifdef(CONFIG_AMRNB amrnb)
 sdk_add_subdirectory_ifdef(CONFIG_AMRWB amrwb)

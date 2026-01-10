@@ -326,24 +326,40 @@ void board_keyscan_gpio_init(void)
 
     gpio = bflb_device_get_by_name("gpio");
     /* keyscan driver io init // col */
-    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_8, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_9, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_3,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_8,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_9,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_10,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_20,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_21,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_22,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_29,
+                   GPIO_FUN_KEY_SCAN_DRIVE | GPIO_ALTERNATE | GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     GLB_Set_Kys_Drv_Col(0); // GPIO output value
     /* keyscan input io init // row */
-    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
-    bflb_gpio_init(gpio, GPIO_PIN_31, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_11,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_12,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_13,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_17,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_18,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_19,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_30,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
+    bflb_gpio_init(gpio, GPIO_PIN_31,
+                   GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
 }
 
 void board_timer_gpio_init()
@@ -355,6 +371,32 @@ void board_timer_gpio_init()
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_spi_0_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+#endif
+#endif
 #if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
 void rf_reset_done_callback(void)
 {

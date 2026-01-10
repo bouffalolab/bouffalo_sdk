@@ -23,6 +23,7 @@
 #include "bl_rx.h"
 #include "bl_tx.h"
 #include "bl_cmds.h"
+#include "bl_defs.h"  /* For BL_VIF_AP, struct mac_addr */
 
 #ifdef CFG_NETBUS_WIFI_ENABLE
 #include <netbus_mgmr.h>
@@ -32,6 +33,9 @@
 
 #undef os_printf
 #define os_printf(...) do {} while(0)
+
+/* Macro to check if MAC address is broadcast/multicast */
+#define IS_BC_MC(byte)             ((byte) & 0x01)
 
 extern struct bl_hw wifi_hw;
 
@@ -441,6 +445,40 @@ int tcpip_stack_input(void *swdesc, uint8_t status, void *hwhdr, unsigned int ms
         bl_rx_mgmt(skb_payload, hw_rxhdr, hw_rxhdr->hwvect.len, &info);
         pbuf_free(h);
     } else {
+        /*
+         * Intra-BSS forwarding for AP mode:
+         * When AP receives a frame from STA1 destined to STA2, we need to
+         * forward it at L2 layer before passing to lwIP stack.
+         */
+        struct ethhdr *eth_hdr = (struct ethhdr *)(h->payload);
+
+        /* Check if this is AP mode by comparing netif with AP netif */
+        struct netif *ap_netif = wifi_mgmr_ap_netif_get();
+        bool is_ap_mode = (bl_vif->dev == ap_netif);
+
+        if (is_ap_mode) {
+            /* Get the correct vif_idx from source STA's entry */
+            uint8_t sta_vif_idx = wifi_hw.sta_table[hw_rxhdr->flags_sta_idx].vif_idx;
+
+            if (IS_BC_MC(eth_hdr->h_dest[0])) {
+                /* Broadcast/Multicast: forward to all other STAs, then continue to lwIP */
+                bl_tx_intra_bss_broadcast(h, hw_rxhdr->flags_sta_idx);
+                /* Continue to send to lwIP for local processing (e.g., ARP for AP itself) */
+            } else {
+                /* Unicast: check if destination is another associated STA */
+                int dst_sta_idx = bl_tx_find_sta_by_mac(sta_vif_idx, (struct mac_addr *)eth_hdr->h_dest);
+                if (dst_sta_idx >= 0 && dst_sta_idx != hw_rxhdr->flags_sta_idx) {
+                    /* Destination is another STA, forward directly without going through lwIP */
+                    bl_tx_intra_bss_forward(h, dst_sta_idx);
+                    /* Don't send to lwIP, skip to free */
+                    pbuf_free(h);
+                    goto free;
+                }
+                /* Destination is AP itself or unknown, continue to lwIP */
+            }
+        } else {
+        }
+
 #ifdef PKT_INPUT_HOOK
         if (bl_wifi_pkt_eth_input_hook) {
             bool is_sta = bl_vif->dev == wifi_mgmr_sta_netif_get();

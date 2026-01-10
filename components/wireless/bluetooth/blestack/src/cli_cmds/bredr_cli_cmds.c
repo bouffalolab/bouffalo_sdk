@@ -119,7 +119,7 @@ static void avrcp_handle_stop(void);
 static void avrcp_handle_pause(void);
 static void avrcp_handle_next(void);
 static void avrcp_handle_previous(void);
-static bool steam_pause = false;
+static bool stream_pause = false;
 
 struct avrcp_pth_handler {
 	uint8_t op;
@@ -913,8 +913,10 @@ static void a2dp_chain(struct bt_conn *conn, uint8_t state)
 
     if (state == BT_A2DP_CHAIN_CONNECTED) {
         printf("a2dp connected. \n");
+        stream_pause = false;
     } else if (state == BT_A2DP_CHAIN_DISCONNECTED) {
         printf("a2dp disconnected. \n");
+        stream_pause = true;
     }
 }
 
@@ -935,7 +937,7 @@ static void media_thread(void *args)
 {
    while (1) 
    {
-        if(steam_pause == false)
+        if(stream_pause == false)
         {
             int err;
             err = bt_a2dp_send_media(audio_buf, audio_buf_size);
@@ -1260,7 +1262,7 @@ static void avrcp_passthrough_handler(uint8_t released, u8_t option_id)
 static void avrcp_handle_play(void)
 {
     printf("%s\r\n",__func__);
-    steam_pause = false;
+    stream_pause = false;
 }
 
 static void avrcp_handle_stop(void)
@@ -1271,7 +1273,7 @@ static void avrcp_handle_stop(void)
 static void avrcp_handle_pause(void)
 {
     printf("%s\r\n",__func__);
-    steam_pause = true;
+    stream_pause = true;
 }
 
 static void avrcp_handle_next(void)

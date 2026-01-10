@@ -788,7 +788,7 @@ void wifi_sta_info_cmd(int argc, char **argv)
     fhost_printf("================================================================\r\n");
 }
 
-#if !MACSW_WFA
+#if MACSW_BEACONING
 void wifi_mgmr_ap_start_cmd(int argc, char **argv)
 {
     getopt_env_t getopt_env;
@@ -1089,7 +1089,7 @@ SHELL_CMD_EXPORT_ALIAS(wifi_coex_enable_cmd, wifi_sta_coex_enable, wifi sta coex
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_disable_cmd, wifi_sta_coex_disable, wifi sta coex disable);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_duty_set_cmd, wifi_sta_coex_duty_set, wifi sta coex duty set);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_info_cmd, wifi_sta_info, wifi sta info);
-#if !MACSW_WFA 
+#if MACSW_BEACONING
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_list_get_cmd, wifi_sta_list, get sta list in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_delete_cmd, wifi_sta_del, delete one sta in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_start_cmd, wifi_ap_start, start AP mode);

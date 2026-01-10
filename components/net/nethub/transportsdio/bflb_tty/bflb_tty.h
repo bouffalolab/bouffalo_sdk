@@ -21,7 +21,7 @@
 
 /* 私有内存池配置，内存块数影响到 tty 接收与 msg 发送 */
 #define TTY_FRAME_CNT                    (4)
-#define TTY_FRAME_RAWSIZE                (512)
+#define TTY_FRAME_RAWSIZE                (1024)
 #define TTY_FRAME_SIZE                   (TTY_FRAME_RAWSIZE + FRAME_BUFF_PAYLOAD_OFFSET)// call api
 
 /* 下行流控限制值, 也是初始流控限制值, 会消耗 msg 的 dnld pool, 为 0 时无流控限制 */

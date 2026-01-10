@@ -130,7 +130,7 @@ static void uart_init(void)
         .parity = UART_PARITY_NONE,
         .bit_order = UART_LSB_FIRST,
 #if UART_FLOW_CTRL_ENABLE
-        .flow_ctrl = 1,
+        .flow_ctrl = UART_FLOWCTRL_CTS,
 #else
         .flow_ctrl = 0,
 #endif

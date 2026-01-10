@@ -1028,8 +1028,8 @@ struct cfgmacsw_twt_teardown_req {
 };
 
 /// Maximum number of TWT flows
-#ifndef NX_TWT_FLOW_NB
-#define NX_TWT_FLOW_NB 8
+#ifndef MACSW_TWT_FLOW_NB
+#define MACSW_TWT_FLOW_NB 8
 #endif
 
 /// structure for CFGMACSW_TWT_STATUSGET_CMD
@@ -1053,7 +1053,7 @@ struct cfgmacsw_twt_statusget_resp {
     /// AP DTIM
     uint8_t dtim;
     /// TWT flow configurations
-    struct twt_status_info conf[NX_TWT_FLOW_NB];
+    struct twt_status_info conf[MACSW_TWT_FLOW_NB];
 };
 
 enum stats_vif_type

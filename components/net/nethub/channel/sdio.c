@@ -10,6 +10,9 @@
 #include "bflb_sdio_drv.h"
 
 #include <bflb_tty.h>
+#ifdef CONFIG_NETHUB_NETLINK
+#include <bflb_netlink.h>
+#endif
 
 #include <wifi_mgmr.h>
 #include <wifi_mgmr_ext.h>
@@ -124,6 +127,11 @@ static int _sdio_init(void)
 
     /* Initialize TTY device */
     bflb_tty_init(msg_ctrl, BL_MSG_TAG_TTY);
+
+#ifdef CONFIG_NETHUB_NETLINK
+    /* Initialize Netlink device */
+    bflb_netlink_init(msg_ctrl, BL_MSG_TAG_NETLINK);
+#endif
 
     g_sdio_ctx_p = malloc(sizeof(struct wifi_wifista_priv));
     if (!g_sdio_ctx_p) {

@@ -30,6 +30,8 @@
 # cmake-format: on
 
 include(${CMAKE_CURRENT_LIST_DIR}/cherryusb.cmake)
+list(REMOVE_DUPLICATES cherryusb_srcs)
+list(REMOVE_DUPLICATES cherryusb_incs)
 
 sdk_generate_library(cherryusb)
 sdk_add_include_directories(${cherryusb_incs})

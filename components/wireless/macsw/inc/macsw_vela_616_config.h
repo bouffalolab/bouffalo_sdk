@@ -16,6 +16,8 @@
 #undef CFG_STA_MAX
 #define CFG_STA_MAX 2
 
+#define CFG_MACSW_HE_DISABLE_ER
+
 // TX PBD 数量
 // #define CFG_TX_PBD_CNT 5
 

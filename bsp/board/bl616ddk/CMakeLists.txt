@@ -25,6 +25,8 @@ endif()
 else()
 if("${CPU_ID}" STREQUAL "ap")
 sdk_set_linker_script_macro(bl616d_ram_ap_b0.ld)
+elseif("${CPU_ID}" STREQUAL "lp")
+sdk_set_linker_script_macro(bl616d_ram_lp_b0.ld)
 endif()
 endif()
 

@@ -40,6 +40,9 @@
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define configMTIME_BASE_ADDRESS    (0x02000000UL + 0xBFF8UL)
 #define configMTIMECMP_BASE_ADDRESS (0x02000000UL + 0x4000UL)
+#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#define configMTIME_BASE_ADDRESS    (0x18000000UL + 0x30000UL)
+#define configMTIMECMP_BASE_ADDRESS (0x18000000UL + 0x30008UL)
 #else
 #if __riscv_xlen == 64
 #define configMTIME_BASE_ADDRESS    (0)
@@ -49,14 +52,15 @@
 #define configMTIMECMP_BASE_ADDRESS ((0xE0000000UL) + 0x4000UL)
 #endif
 #endif
-#define configSUPPORT_STATIC_ALLOCATION         1
-#define configUSE_PREEMPTION                    1
-#define configUSE_IDLE_HOOK                     0
-#define configUSE_TICK_HOOK                     0
-#define configCPU_CLOCK_HZ                      ((uint32_t)(1 * 1000 * 1000))
-#define configTICK_RATE_HZ                      ((TickType_t)1000)
-#define configMAX_PRIORITIES                    (7)
-#define configMINIMAL_STACK_SIZE                ((unsigned short)128) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
+#define configSUPPORT_STATIC_ALLOCATION 1
+#define configUSE_PREEMPTION            1
+#define configUSE_IDLE_HOOK             0
+#define configUSE_TICK_HOOK             0
+#define configCPU_CLOCK_HZ              ((uint32_t)(1 * 1000 * 1000))
+#define configTICK_RATE_HZ              ((TickType_t)1000)
+#define configMAX_PRIORITIES            (7)
+#define configMINIMAL_STACK_SIZE \
+    ((unsigned short)128) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
 #define configTOTAL_HEAP_SIZE                   ((size_t)24 * 1024)
 #define configMAX_TASK_NAME_LEN                 (16)
 #define configUSE_TRACE_FACILITY                1

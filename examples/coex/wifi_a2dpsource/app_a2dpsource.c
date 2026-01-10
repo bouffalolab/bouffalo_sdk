@@ -27,14 +27,13 @@
 #include <hci_host.h>
 #include <l2cap.h>
 #include <l2cap_internal.h>
-
+#include "a2dp_source_audio.h"
 #ifdef CONFIG_BT_A2DP
 #include <a2dp.h>
 #endif
 #ifdef CONFIG_BT_AVRCP
 #include <avrcp.h>
 #endif
-#include "bflb_romfs.h"
 
 #if defined(CONFIG_SHELL)
 #include "shell.h"
@@ -72,7 +71,7 @@ static void avrcp_handle_stop(void);
 static void avrcp_handle_pause(void);
 static void avrcp_handle_next(void);
 static void avrcp_handle_previous(void);
-static bool steam_pause = false;
+static bool stream_pause = false;
 
 struct avrcp_pth_handler {
 	uint8_t op;
@@ -230,8 +229,10 @@ static void a2dp_chain(struct bt_conn *conn, uint8_t state)
 
     if (state == BT_A2DP_CHAIN_CONNECTED) {
         printf("a2dp connected. \n");
+        stream_pause = false;
     } else if (state == BT_A2DP_CHAIN_DISCONNECTED) {
         printf("a2dp disconnected. \n");
+        stream_pause = true;
     }
 }
 
@@ -250,16 +251,9 @@ static void a2dp_stream(uint8_t state)
 static void media_thread(void *args)
 {
    while (1) {
-        if(steam_pause == false) {
+        if(stream_pause == false) {
             int err;
-            romfs_file_t    fp;
-            romfs_filebuf_t filebuf;
-
-            romfs_open(&fp, "/romfs/bp_stereo_441.pcm", 0);
-            romfs_getbuf(&fp, &filebuf);
-            //printf("xip:0x%08lX, size:%d\r\n", filebuf.buf, filebuf.bufsize);
-
-            err = bt_a2dp_send_media(filebuf.buf, filebuf.bufsize);
+            err = bt_a2dp_send_media(audio_buf, audio_buf_size);
             if (err) {
                 printf("send media fail %d\r\n", err);
             }
@@ -345,7 +339,7 @@ static void avrcp_passthrough_handler(bool released, u8_t option_id)
 static void avrcp_handle_play(void)
 {
     printf("%s\r\n",__func__);
-    steam_pause = false;
+    stream_pause = false;
 }
 
 static void avrcp_handle_stop(void)
@@ -356,7 +350,7 @@ static void avrcp_handle_stop(void)
 static void avrcp_handle_pause(void)
 {
     printf("%s\r\n",__func__);
-    steam_pause = true;
+    stream_pause = true;
 }
 
 static void avrcp_handle_next(void)
@@ -370,46 +364,6 @@ static void avrcp_handle_previous(void)
 }
 #endif
 
-/* ============================  pri func ============================ */
-static void ble_connected(struct bt_conn *conn, u8_t err)
-{
-    if(err || conn->type != BT_CONN_TYPE_LE) {
-        return;
-    }
-    printf("%s",__func__);
-}
-
-static void ble_disconnected(struct bt_conn *conn, u8_t reason)
-{ 
-    int ret;
-
-    if(conn->type != BT_CONN_TYPE_LE)
-    {
-        return;
-    }
-
-    printf("%s",__func__);
-
-    // enable adv
-    ret = set_adv_enable(true);
-    if(ret) {
-        printf("Restart adv fail. \r\n");
-    }
-}
-
-/* ============================  pri cli ============================ */
-int bt_coex_init(void)
-{
-    bredr_init(0, NULL);
-
-    return 0;
-}
-
-int bt_coex_deinit(void)
-{
-    printf("Not support deinit.\r\n");
-    return 0;
-}
 
 int bt_a2dp_scan(void)
 {
@@ -430,12 +384,6 @@ int bt_a2dp_scan(void)
     return 0;
 }
 
-void __reverse_bytearray(uint8_t *src, uint8_t *result, int array_size)
-{
-    for(int i=0; i < array_size;i++){
-        result[array_size - i -1] = src[i];
-    }
-}
 int bt_br_connect(char *str)
 {
     struct bt_conn *conn;

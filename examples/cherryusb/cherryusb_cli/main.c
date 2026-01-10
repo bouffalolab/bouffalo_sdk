@@ -45,7 +45,7 @@ int main(void)
 {
     board_init();
 
-    LOG_I("cherryUSB Device demo\r\n");
+    LOG_I("CherryUSB Device/Host demo, CherryUSB version: %s (0x%X)\r\n", CHERRYUSB_VERSION_STR, CHERRYUSB_VERSION);
 
 #if defined(BOARD_USB_VIA_GPIO)
     board_usb_gpio_init();

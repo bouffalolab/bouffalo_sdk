@@ -54,7 +54,7 @@ static eth_phy_init_cfg_t phy_cfg = {
 
 /* emac cfg */
 static struct bflb_emac_config_s emac_cfg = {
-    .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
+    .mac_addr = { MAC_ADDR_NUM_0, MAC_ADDR_NUM_1, MAC_ADDR_NUM_2, MAC_ADDR_NUM_3, MAC_ADDR_NUM_4, MAC_ADDR_NUM_5 },
     .clk_internal_mode = false,
 #if defined(BL616L) || defined(BL616D)
     .md_clk_div = 79,
@@ -99,7 +99,6 @@ static void eth_emac_irq_cb(void *arg, uint32_t irq_event, struct bflb_emac_tran
             break;
 
         case EMAC_IRQ_EVENT_RX_FRAME:
-            trans_desc->data_len -= 4; /* remove FCS */
             xQueueSendFromISR(emac_rx_process_queue, trans_desc, &pxHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
             if (eth_emac_event_cb) {
@@ -256,6 +255,11 @@ void eth_emac_restart(void)
     memset((void *)&emac_debug_info, 0, sizeof(struct emac_debug_info_s));
     g_link_sta = 0;
 
+    if (emac_tx_pool_queue == NULL || emac_rx_process_queue == NULL) {
+        LOG_E("emac queues not init\r\n");
+        return;
+    }
+
     /* tx queue reinit */
     xQueueReset(emac_tx_pool_queue);
     for (int i = 0; i < EMAC_TX_BUFF_CNT; i++) {
@@ -283,6 +287,10 @@ void eth_emac_restart(void)
 bool eth_link_state_update(void)
 {
     static int speed_mode = 0;
+
+    if (phy_ctrl.phy_drv == NULL) {
+        return false;
+    }
 
     int sta = eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_LINK_STA, 0);
     int speed = eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_SPEED_MODE, 0);

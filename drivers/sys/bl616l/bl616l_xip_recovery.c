@@ -6,9 +6,11 @@
 #include "bl616l_clock.h"
 #include "bl616l_xip_recovery.h"
 #include "tzc_sec_reg.h"
+#include "bl616l_lp.h"
 
-ATTR_DTCM_SECTION sf_recovery_para_t g_flash_para;
-
+static ATTR_NOCACHE_RAM_SECTION sf_recovery_para_t g_flash_para = { 0 };
+static ATTR_NOCACHE_RAM_SECTION lp_fw_sf_sec_t sf_sec_info = { 0 };
+static ATTR_NOCACHE_RAM_SECTION lp_fw_tzc_t tzc_info = { 0 };
 
 static inline uint8_t Clock_Get_SF_Clk_Sel_Val(void)
 {
@@ -70,10 +72,21 @@ static void bl_lp_xip_get_flash_clock(uint8_t *flash_clk, uint8_t *flash_clk_div
     *flash_clk_div = Clock_Get_SF_Div_Val();
 }
 
+static void bl_lp_tzc_para_save(void)
+{
+    iot2lp_para->tzc_cfg = &tzc_info;
+}
+
+static void bl_lp_sec_para_save(void)
+{
+    iot2lp_para->sec_cfg = &sf_sec_info;
+}
+
 void bl_lp_xip_para_save(void)
 {
     uint8_t flash_clk, flash_clk_div;
     uint32_t flash_cfg_len;
+    static struct bflb_sf_ctrl_io_cs_clk_delay_cfg io_cs_delay_cfg;
 
     bflb_flash_get_cfg((uint8_t **)&g_flash_para.flash_cfg, &flash_cfg_len);
     g_flash_para.flash_jdec_id=bflb_flash_get_jedec_id();
@@ -83,13 +96,21 @@ void bl_lp_xip_para_save(void)
     g_flash_para.flash_offset = bflb_sf_ctrl_get_flash_image_offset(0, SF_CTRL_FLASH_BANK0);
     g_flash_para.flash_pin_cfg = (BL_RD_WORD(0x20056000 + 0x74) >> 5) & 0x3F;
 
+    /* flash io cs clk delay info save */
+    bflb_sf_ctrl_get_flash_io_cs_clk_delay((struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)&io_cs_delay_cfg);
+    g_flash_para.flash_io_cs_clk_delay_cfg = (void *)&io_cs_delay_cfg;
+    g_flash_para.do_xip_recovery = 0;
+
+    iot2lp_para->flash_parameter = &g_flash_para;
+
+    bl_lp_tzc_para_save();
+    bl_lp_sec_para_save();
+
     // printf("flash_offset: %d\r\n", g_flash_para.flash_offset);
     // printf("flash_jdec_id: %08x\r\n", g_flash_para.flash_jdec_id);
     // printf("flash_clk: %d\r\n", g_flash_para.flash_clk);
     // printf("flash_clk_div: %d\r\n", g_flash_para.flash_clk_div);
     // printf("flash_pin_cfg: %d\r\n", g_flash_para.flash_pin_cfg);
-
-    g_flash_para.do_xip_recovery = 0;
 }
 
 static void ATTR_TCM_SECTION bl_lp_set_sf_ctrl(spi_flash_cfg_type *pFlashCfg)
@@ -137,6 +158,22 @@ static int ATTR_TCM_SECTION bl_lp_xip_read_enable(spi_flash_cfg_type *pFlashCfg,
     return 0;
 }
 
+void ATTR_TCM_SECTION bl_lp_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
+{
+    struct sf_ctrl_cmds_cfg cmds_cfg;
+
+    cmds_cfg.ack_latency = 1;
+    cmds_cfg.cmds_core_en = 1;
+    cmds_cfg.cmds_en = 1;
+    cmds_cfg.cmds_wrap_mode = 1;
+    cmds_cfg.cmds_wrap_len = 9;
+
+    if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
+        cmds_cfg.cmds_wrap_mode = 2;
+        cmds_cfg.cmds_wrap_len = 2;
+    }
+    bflb_sf_ctrl_cmds_set(&cmds_cfg, 0);
+}
 
 void ATTR_TCM_SECTION bl_lp_xip_recovery(void)
 {
@@ -145,21 +182,29 @@ void ATTR_TCM_SECTION bl_lp_xip_recovery(void)
     uint32_t timeout = 0;
     uint32_t tmp_val;
     uint32_t ret = 0;
-    spi_flash_cfg_type *pFlashCfg = (spi_flash_cfg_type *)g_flash_para.flash_cfg;
+    sf_recovery_para_t *p_flash_para = (sf_recovery_para_t *)iot2lp_para->flash_parameter;
+    spi_flash_cfg_type *pFlashCfg = (spi_flash_cfg_type *)p_flash_para->flash_cfg;
 
     /* power on flash power */
     /* dcdc18 Always On */
     AON_LDO18_IO_Switch_Flash(1);
 
     /* init flash gpio */
-    bflb_sf_cfg_init_flash_gpio(g_flash_para.flash_pin_cfg, 0);
+    bflb_sf_cfg_init_flash_gpio(p_flash_para->flash_pin_cfg, 0);
 
     /* flash_clk 0:144M, 1:XCLK(RC32M or XTAL), 2:57.6M, 3:72M, 4:BCLK, 5:96M */
     /* set flash clock */
-    GLB_Set_SF_CLK(1, g_flash_para.flash_clk, g_flash_para.flash_clk_div);
+    GLB_Set_SF_CLK(1, p_flash_para->flash_clk, p_flash_para->flash_clk_div);
 
     /* update flash controller */
     bl_lp_set_sf_ctrl(pFlashCfg);
+
+    /* set flash io cs clk delay */
+    bflb_sf_ctrl_set_flash_io_cs_clk_delay(
+        *(struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)p_flash_para->flash_io_cs_clk_delay_cfg);
+
+    /* set flash cmds */
+    bl_lp_flash_set_cmds(pFlashCfg);
 
     /* do flash recovery */
     bflb_sflash_release_powerdown(pFlashCfg);
@@ -192,9 +237,7 @@ void ATTR_TCM_SECTION bl_lp_xip_recovery(void)
         /* Delete this line before the other flash_2_wires glitch */
         // bflb_sflash_disable_burst_wrap(pFlashCfg);
 
-    } while (jdec_id != g_flash_para.flash_jdec_id);
-
-
+    } while (jdec_id != p_flash_para->flash_jdec_id);
 
     timeout = 0;
     do {
@@ -227,20 +270,5 @@ void ATTR_TCM_SECTION bl_lp_xip_recovery(void)
         arch_delay_us(10);
     } while (timeout < 1000 && tmp_val != 0x504e4642); /* BFNP */
 
-    /* protect bootrom */
-    // tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_CTRL);
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_SBOOT_DONE, val);
-    // BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_CTRL, tmpVal);
-
-    // encrypted = BL_RD_WORD(0x40007010);
-    // encrypted = (encrypted >>21) & 0x1;
-    // if (encrypted == 0) {
-        bl_lp_xip_read_enable(pFlashCfg, 1 /* cont read*/, g_flash_para.flash_offset);
-    // } else {
-    //     bflb_bootrom_media_boot_set_encrypt();
-        // bl_lp_xip_read_enable(pFlashCfg, 0 /* not cont read*/, g_flash_para.flash_offset);
-    // }
-
-    g_flash_para.do_xip_recovery = 1;
-
+    bl_lp_xip_read_enable(pFlashCfg, 1 /* cont read*/, p_flash_para->flash_offset);
 }

@@ -12,6 +12,27 @@
 #define EMAC_RX_BUFF_SIZE  (14 + 1500 + 4)
 #define EMAC_RX_BUFF_CNT   (10)
 
+/* MAC ADDRESS NUM */
+#define MAC_ADDR_NUM_0     (0x18)
+#define MAC_ADDR_NUM_1     (0xB9)
+#define MAC_ADDR_NUM_2     (0x05)
+#define MAC_ADDR_NUM_3     (0x12)
+#define MAC_ADDR_NUM_4     (0x34)
+#define MAC_ADDR_NUM_5     (0x56)
+/* MAC ADDRESS ASCII */
+#define MAC_ADDR_ASCII_00  ('1')
+#define MAC_ADDR_ASCII_01  ('8')
+#define MAC_ADDR_ASCII_10  ('B')
+#define MAC_ADDR_ASCII_11  ('9')
+#define MAC_ADDR_ASCII_20  ('0')
+#define MAC_ADDR_ASCII_21  ('5')
+#define MAC_ADDR_ASCII_30  ('1')
+#define MAC_ADDR_ASCII_31  ('2')
+#define MAC_ADDR_ASCII_40  ('3')
+#define MAC_ADDR_ASCII_41  ('4')
+#define MAC_ADDR_ASCII_50  ('5')
+#define MAC_ADDR_ASCII_51  ('6')
+
 typedef void (*eth_emac_event_cb_t)(uint32_t irq_event);
 
 struct emac_debug_info_s {

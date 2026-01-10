@@ -8,7 +8,13 @@
 
 /* ================ USB common Configuration ================ */
 
+#ifdef __RTTHREAD__
+#include <rtthread.h>
+
+#define CONFIG_USB_PRINTF(...) rt_kprintf(__VA_ARGS__)
+#else
 #define CONFIG_USB_PRINTF(...) printf(__VA_ARGS__)
+#endif
 
 #ifndef CONFIG_USB_DBG_LEVEL
 #define CONFIG_USB_DBG_LEVEL USB_DBG_INFO
@@ -40,9 +46,6 @@
 #ifndef CONFIG_USBDEV_REQUEST_BUFFER_LEN
 #define CONFIG_USBDEV_REQUEST_BUFFER_LEN 512
 #endif
-
-/* Setup packet log for debug */
-// #define CONFIG_USBDEV_SETUP_LOG_PRINT
 
 /* Send ep0 in data from user buffer instead of copying into ep0 reqdata
  * Please note that user buffer must be aligned with CONFIG_USB_ALIGN_SIZE
@@ -247,40 +250,22 @@
 /* ================ USB Device Port Configuration ================*/
 
 #ifndef CONFIG_USBDEV_MAX_BUS
-#define CONFIG_USBDEV_MAX_BUS 1 // for now, bus num must be 1 except hpm ip
-#endif
-
-#ifndef CONFIG_USBDEV_EP_NUM
-#define CONFIG_USBDEV_EP_NUM 8
+#define CONFIG_USBDEV_MAX_BUS 1
 #endif
 
 // #define CONFIG_USBDEV_SOF_ENABLE
-
-/* When your chip hardware supports high-speed and wants to initialize it in high-speed mode, the relevant IP will configure the internal or external high-speed PHY according to CONFIG_USB_HS. */
-// #define CONFIG_USB_HS
 
 /* ---------------- FSDEV Configuration ---------------- */
 //#define CONFIG_USBDEV_FSDEV_PMA_ACCESS 2 // maybe 1 or 2, many chips may have a difference
 
 /* ---------------- DWC2 Configuration ---------------- */
-/* (5 * number of control endpoints + 8) + ((largest USB packet used / 4) + 1 for
- * status information) + (2 * number of OUT endpoints) + 1 for Global NAK
- */
-// #define CONFIG_USB_DWC2_RXALL_FIFO_SIZE (1024 / 4)
-/* IN Endpoints Max packet Size / 4 */
-// #define CONFIG_USB_DWC2_TX0_FIFO_SIZE (64 / 4)
-// #define CONFIG_USB_DWC2_TX1_FIFO_SIZE (1024 / 4)
-// #define CONFIG_USB_DWC2_TX2_FIFO_SIZE (64 / 4)
-// #define CONFIG_USB_DWC2_TX3_FIFO_SIZE (64 / 4)
-// #define CONFIG_USB_DWC2_TX4_FIFO_SIZE (0 / 4)
-// #define CONFIG_USB_DWC2_TX5_FIFO_SIZE (0 / 4)
-// #define CONFIG_USB_DWC2_TX6_FIFO_SIZE (0 / 4)
-// #define CONFIG_USB_DWC2_TX7_FIFO_SIZE (0 / 4)
-// #define CONFIG_USB_DWC2_TX8_FIFO_SIZE (0 / 4)
-
+/* enable dwc2 buffer dma mode for device
+ * in xxx32 chips, only pb14/pb15 can support dma mode, pa11/pa12 is not supported(only a few supports, but we ignore them)
+*/
 // #define CONFIG_USB_DWC2_DMA_ENABLE
 
 /* ---------------- MUSB Configuration ---------------- */
+#define CONFIG_USB_MUSB_EP_NUM 8
 // #define CONFIG_USB_MUSB_SUNXI
 
 /* ================ USB Host Port Configuration ==================*/
@@ -288,17 +273,13 @@
 #define CONFIG_USBHOST_MAX_BUS 1
 #endif
 
-#ifndef CONFIG_USBHOST_PIPE_NUM
-#define CONFIG_USBHOST_PIPE_NUM 10
-#endif
-
 /* ---------------- EHCI Configuration ---------------- */
 
 #define CONFIG_USB_EHCI_HCCR_OFFSET     (0x0)
 #define CONFIG_USB_EHCI_FRAME_LIST_SIZE 1024
-#define CONFIG_USB_EHCI_QH_NUM          CONFIG_USBHOST_PIPE_NUM
+#define CONFIG_USB_EHCI_QH_NUM          10
 #define CONFIG_USB_EHCI_QTD_NUM         (CONFIG_USB_EHCI_QH_NUM * 3)
-#define CONFIG_USB_EHCI_ITD_NUM         20
+#define CONFIG_USB_EHCI_ITD_NUM         10
 #define CONFIG_USB_EHCI_HCOR_RESERVED_DISABLE
 // #define CONFIG_USB_EHCI_CONFIGFLAG
 // #define CONFIG_USB_EHCI_ISO
@@ -307,7 +288,7 @@
 
 /* ---------------- OHCI Configuration ---------------- */
 #define CONFIG_USB_OHCI_HCOR_OFFSET (0x0)
-#define CONFIG_USB_OHCI_ED_NUM CONFIG_USBHOST_PIPE_NUM
+#define CONFIG_USB_OHCI_ED_NUM 10
 #define CONFIG_USB_OHCI_TD_NUM 3
 // #define CONFIG_USB_OHCI_DESC_DCACHE_ENABLE
 
@@ -315,18 +296,19 @@
 #define CONFIG_USB_XHCI_HCCR_OFFSET (0x0)
 
 /* ---------------- DWC2 Configuration ---------------- */
-/* largest non-periodic USB packet used / 4 */
-// #define CONFIG_USB_DWC2_NPTX_FIFO_SIZE (512 / 4)
-/* largest periodic USB packet used / 4 */
-// #define CONFIG_USB_DWC2_PTX_FIFO_SIZE (1024 / 4)
-/*
- * (largest USB packet used / 4) + 1 for status information + 1 transfer complete +
- * 1 location each for Bulk/Control endpoint for handling NAK/NYET scenario
- */
-// #define CONFIG_USB_DWC2_RX_FIFO_SIZE ((1012 - CONFIG_USB_DWC2_NPTX_FIFO_SIZE - CONFIG_USB_DWC2_PTX_FIFO_SIZE))
+// nothing to define
 
 /* ---------------- MUSB Configuration ---------------- */
+#define CONFIG_USB_MUSB_PIPE_NUM 8
 // #define CONFIG_USB_MUSB_SUNXI
+// #define CONFIG_USB_MUSB_WITHOUT_MULTIPOINT
+
+/* When your chip hardware supports high-speed and wants to initialize it in high-speed mode,
+ * the relevant IP will configure the internal or external high-speed PHY according to CONFIG_USB_HS.
+ *
+ * in xxx32 chips, only pb14/pb15 can support hs mode, pa11/pa12 is not supported(only a few supports, but we ignore them).
+*/
+// #define CONFIG_USB_HS
 
 #ifndef usb_phyaddr2ramaddr
 #define usb_phyaddr2ramaddr(addr) (addr)
@@ -335,5 +317,8 @@
 #ifndef usb_ramaddr2phyaddr
 #define usb_ramaddr2phyaddr(addr) (addr)
 #endif
+
+/* Enable OTG support, only support hpmicro now */
+// #define CONFIG_USB_OTG_ENABLE
 
 #endif

@@ -404,15 +404,23 @@ void board_keyscan_gpio_init(void)
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_0,
+                   GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_1,
+                   GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_2,
+                   GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_3,
+                   GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
 
-    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_16,
+                   GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_17,
+                   GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_18,
+                   GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_19,
+                   GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
 
     GLB_Set_QDEC_CLK(GLB_QDEC_CLK_F32K, 0);
 }
@@ -450,6 +458,33 @@ void board_dvp_gpio_init(void)
 
     GLB_SWAP_EMAC_CAM_Pin(GLB_EMAC_CAM_PIN_CAM);
 }
+
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_spi_0_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+#endif
+#endif
 
 #if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
 void rf_full_cal_start_callback(uint32_t addr, uint32_t size)

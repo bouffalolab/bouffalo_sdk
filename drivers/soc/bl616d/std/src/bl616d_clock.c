@@ -141,8 +141,8 @@ static inline uint32_t ATTR_CLOCK_SECTION Clock_Xtal_Output(void)
                 return 24 * 1000 * 1000;
             case GLB_XTAL_32M:
                 return 32 * 1000 * 1000;
-            case GLB_XTAL_38P4M:
-                return 38.4 * 1000 * 1000;
+            case GLB_XTAL_52M:
+                return 52 * 1000 * 1000;
             case GLB_XTAL_40M:
                 return 40 * 1000 * 1000;
             case GLB_XTAL_26M:
@@ -1582,10 +1582,16 @@ BL_Err_Type ATTR_CLOCK_SECTION CPU_Set_MTimer_RST(uint8_t rstEn)
 
     switch (GLB_Get_Core_Type()) {
         case GLB_CORE_ID_AP:
+#if !defined(CPU_MODEL_A0)
+            return ERROR;
+#endif
             address = 0x20009014;
             mask = (1 << 30);
             break;
         case GLB_CORE_ID_NP:
+#if !defined(CPU_MODEL_A0)
+            return ERROR;
+#endif
             address = 0x24001014;
             mask = (1 << 30);
             break;
@@ -1644,8 +1650,7 @@ BL_Err_Type ATTR_CLOCK_SECTION CPU_Set_MTimer_CLK(uint8_t enable, uint8_t clock_
     uint32_t en_mask = 0;
     uint32_t div_mask = 0;
 
-    CHECK_PARAM((div <= 0x3FF));
-
+#if defined(CPU_MODEL_A0)
     switch (GLB_Get_Core_Type()) {
         case GLB_CORE_ID_AP:
             address = 0x20009014;
@@ -1699,7 +1704,64 @@ BL_Err_Type ATTR_CLOCK_SECTION CPU_Set_MTimer_CLK(uint8_t enable, uint8_t clock_
         tmpVal |= en_mask;
     }
     BL_WR_WORD(address, tmpVal);
+#else
+    switch (GLB_Get_Core_Type()) {
+        case GLB_CORE_ID_AP:
+            /* set div */
+            tmpVal = BL_RD_WORD(0x20009104);
+            tmpVal &= (~0xFFFF);
+            tmpVal |= ((div + 1) & 0xFFFF);
+            BL_WR_WORD(0x20009104, tmpVal);
+            return SUCCESS;
+        case GLB_CORE_ID_NP:
+            /* set div */
+            tmpVal = BL_RD_WORD(0x24001104);
+            tmpVal &= (~0xFFFF);
+            tmpVal |= ((div + 1) & 0xFFFF);
+            BL_WR_WORD(0x24001104, tmpVal);
+            return SUCCESS;
+        case GLB_CORE_ID_LP:
+            address = 0x00080080;
+            src_mask = 0;
+            en_mask = (1 << 12);
+            div_mask = (0x3FF << 0);
+            break;
+        default:
+            /* set div */
+            tmpVal = BL_RD_WORD(0x20009104);
+            tmpVal &= (~0xFFFF);
+            tmpVal |= ((div + 1) & 0xFFFF);
+            BL_WR_WORD(0x20009104, tmpVal);
+            return SUCCESS;
+    }
 
+    /* Set MTimer Source Clock */
+    tmpVal = BL_RD_WORD(address);
+    if (0 == clock_src) {
+        tmpVal &= (~src_mask);
+    } else {
+        tmpVal |= src_mask;
+    }
+    BL_WR_WORD(address, tmpVal);
+
+    /* disable rtc first */
+    tmpVal = BL_RD_WORD(address);
+    tmpVal &= (~en_mask);
+    BL_WR_WORD(address, tmpVal);
+
+    /* set div */
+    tmpVal = BL_RD_WORD(address);
+    tmpVal &= (~div_mask);
+    tmpVal |= (div & div_mask);
+    BL_WR_WORD(address, tmpVal);
+
+    /* enable or not */
+    tmpVal = BL_RD_WORD(address);
+    if (enable) {
+        tmpVal |= en_mask;
+    }
+    BL_WR_WORD(address, tmpVal);
+#endif
     return SUCCESS;
 }
 
@@ -1714,11 +1776,10 @@ BL_Err_Type ATTR_CLOCK_SECTION CPU_Set_MTimer_CLK(uint8_t enable, uint8_t clock_
 uint32_t ATTR_CLOCK_SECTION CPU_Get_MTimer_Source_Clock(void)
 {
     uint32_t coreFreq = 0;
+#if defined(CPU_MODEL_A0)
     uint32_t tmpVal = 0;
     uint32_t address = 0;
     uint32_t src_mask = 0;
-
-    CHECK_PARAM((div <= 0x3FF));
 
     switch (GLB_Get_Core_Type()) {
         case GLB_CORE_ID_AP:
@@ -1746,7 +1807,22 @@ uint32_t ATTR_CLOCK_SECTION CPU_Get_MTimer_Source_Clock(void)
     } else {
         coreFreq = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK);
     }
-
+#else
+    switch (GLB_Get_Core_Type()) {
+        case GLB_CORE_ID_AP:
+            coreFreq = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK);
+            break;
+        case GLB_CORE_ID_NP:
+            coreFreq = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_XCLK);
+            break;
+        case GLB_CORE_ID_LP:
+            coreFreq = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MINI_XCLK);
+            break;
+        default:
+            coreFreq = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK);
+            break;
+    }
+#endif
     return coreFreq;
 }
 
@@ -1764,6 +1840,7 @@ uint32_t ATTR_CLOCK_SECTION CPU_Get_MTimer_Clock(void)
     uint32_t tmpVal = 0;
     uint32_t address = 0;
 
+#if defined(CPU_MODEL_A0)
     switch (GLB_Get_Core_Type()) {
         case GLB_CORE_ID_AP:
             address = 0x20009014;
@@ -1782,6 +1859,34 @@ uint32_t ATTR_CLOCK_SECTION CPU_Get_MTimer_Clock(void)
     tmpVal = BL_RD_WORD(address);
     div = tmpVal & 0x3FF;
     div += 1;
+#else
+    switch (GLB_Get_Core_Type()) {
+        case GLB_CORE_ID_AP:
+            address = 0x20009104;
+            tmpVal = BL_RD_WORD(address);
+            div = tmpVal & 0xFFFF;
+            div = (div == 0) ? 0x10000 : div;
+            break;
+        case GLB_CORE_ID_NP:
+            address = 0x24001104;
+            tmpVal = BL_RD_WORD(address);
+            div = tmpVal & 0xFFFF;
+            div = (div == 0) ? 0x10000 : div;
+            break;
+        case GLB_CORE_ID_LP:
+            address = 0x00080080;
+            tmpVal = BL_RD_WORD(address);
+            div = tmpVal & 0x3FF;
+            div += 1;
+            break;
+        default:
+            address = 0x20009104;
+            tmpVal = BL_RD_WORD(address);
+            div = tmpVal & 0xFFFF;
+            div = (div == 0) ? 0x10000 : div;
+            break;
+    }
+#endif
 
     return CPU_Get_MTimer_Source_Clock() / div;
 }

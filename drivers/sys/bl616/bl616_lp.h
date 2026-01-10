@@ -5,15 +5,14 @@
 #include "bl616_xip_recovery.h"
 
 #ifdef BL_WIFI_LP_FW
-extern uint64_t (*shared_cpu_get_mtimer_counter)(void);
+extern uint64_t (*shared_CPU_Get_MTimer_Counter)(void);
 extern void (*shared_arch_delay_ms)(uint32_t);
 extern void (*shared_arch_delay_us)(uint32_t);
-extern int32_t (*shared_cpu_reset_mtimer)(void);
-extern int32_t (*shared_lpfw_calculate_beacon_delay)(uint64_t, uint64_t, uint32_t);
-extern int32_t (*shared_lpfw_beacon_delay_sliding_win_update)(int32_t,uint64_t);
+extern int32_t (*shared_CPU_Reset_MTimer)(void);
+extern int32_t (*shared_lpfw_calculate_beacon_delay)(uint32_t *, uint64_t, uint64_t, uint32_t);
 extern int32_t (*shared_lpfw_beacon_delay_sliding_win_get_average)(uint32_t *);
-extern int32_t (*shared_aon_set_ldo11_soc_sstart_delay)(uint32_t);
-extern int32_t (*shared_pds_default_level_config)(uint32_t*, uint32_t);
+extern int32_t (*shared_AON_Set_LDO11_SOC_Sstart_Delay)(uint32_t);
+extern int32_t (*shared_PDS_Default_Level_Config)(uint32_t*, uint32_t);
 #endif
 
 #define IOT2LP_PARA_ADDR          0x20010400
@@ -587,8 +586,11 @@ int bl_lp_set_32k_clock_ready(uint8_t ready_val);
 int bl_lp_get_32k_clock_ready(void);
 int bl_lp_set_32k_trim_ready(uint8_t ready_val);
 int bl_lp_get_32k_trim_ready(void);
+int lpfw_recal_rc32k(lp_fw_rc32k_trim_t* p_rc32k_trim_param,uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode, int clock_ready_check);
 
 int bl_lp_get_bcn_delay_ready(void);
+void bl_lp_bcn_loss_cnt_clear(void);
+void bl_lp_bcn_timestamp_update(uint64_t beacon_timestamp_us, uint64_t rtc_timestamp_us, uint32_t mode);
 
 /* bcn loss cfg */
 void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num, uint16_t loop_start, uint16_t loss_max);
@@ -626,4 +628,6 @@ void bl_lp_turnoff_rf(void);
 void bl_lp_turnon_rf(void);
 void bl_pm_resume_wifi(bool isr);
 
+uint32_t bl_lp_get_beacon_interval_tu(void);
+uint32_t bl_lp_get_dtim_num(void);
 #endif

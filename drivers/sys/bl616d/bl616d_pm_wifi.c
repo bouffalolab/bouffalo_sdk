@@ -150,3 +150,4 @@ int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode)
 
     return 0;
 }
+

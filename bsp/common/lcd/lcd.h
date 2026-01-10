@@ -299,4 +299,7 @@ int lcd_draw_str_ascii16(lcd_color_t *screen_buffer, uint16_t x, uint16_t y, lcd
 
 #endif
 
+#if defined(LCD_BACKLIGHT_EN)
+void lcd_backlight_toggle(bool on);
+#endif
 #endif

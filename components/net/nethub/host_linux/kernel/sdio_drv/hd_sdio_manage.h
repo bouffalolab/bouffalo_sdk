@@ -18,6 +18,7 @@
 
 /* Forward declarations */
 struct hd_tty_priv;
+struct hd_netlink_priv;
 
 /** @defgroup SDIO_MANAGE_MACROS SDIO Management Macros
  * @{
@@ -118,6 +119,7 @@ struct hd_sdio_card {
     struct hd_sdio_manage *sdio_manage; /**< Associated SDIO management structure */
     struct net_device *netdev;          /**< Associated network device */
     struct hd_tty_priv *tty_msg;        /**< Associated TTY message interface */
+    struct hd_netlink_priv *netlink_msg; /**< Associated Netlink message interface */
     /** @} */
 
     /** @name Function Pointers - Register Operations

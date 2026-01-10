@@ -145,29 +145,31 @@ static void usbh_cdc_ecm_int_callback(void *arg, int nbytes)
 {
     struct usbh_cdc_ecm *cdc_ecm_class = (struct usbh_cdc_ecm *)arg;
 
+    g_ecm_int_busy_flag = false;
+    if (g_usbh_cdc_ecm_in_sem) {
+        usb_osal_sem_give(g_usbh_cdc_ecm_in_sem);
+    }
+
     if (nbytes < 0) {
         USB_LOG_ERR("USBH int error,ret:%d\r\n", nbytes);
-        g_ecm_int_busy_flag = false;
         return;
     }
 
     if (g_cdc_ecm_inttx_buffer[1] == CDC_ECM_NOTIFY_CODE_NETWORK_CONNECTION) {
-        if (g_cdc_ecm_inttx_buffer[2] == CDC_ECM_NET_CONNECTED) {
+        if (g_cdc_ecm_inttx_buffer[2] == CDC_ECM_NET_CONNECTED && cdc_ecm_class->connect_status == false) {
             USB_LOG_INFO("CDC ECM link up\r\n");
             cdc_ecm_class->connect_status = true;
-        } else {
+        } else if (g_cdc_ecm_inttx_buffer[2] == CDC_ECM_NET_DISCONNECTED && cdc_ecm_class->connect_status == true) {
             USB_LOG_INFO("CDC ECM link down\r\n");
             cdc_ecm_class->connect_status = false;
+            cdc_ecm_class->speed[0] = 0;
+            cdc_ecm_class->speed[1] = 0;
         }
     } else if (g_cdc_ecm_inttx_buffer[1] == CDC_ECM_NOTIFY_CODE_CONNECTION_SPEED_CHANGE) {
-        memcpy(cdc_ecm_class->speed, &g_cdc_ecm_inttx_buffer[8], 8);
-        USB_LOG_INFO("CDC ECM speed change, up: %uMbps, down:%uMbps\r\n", cdc_ecm_class->speed[0] / 1000000, cdc_ecm_class->speed[1] / 1000000);
-    }
-
-    g_ecm_int_busy_flag = false;
-
-    if (g_usbh_cdc_ecm_in_sem) {
-        usb_osal_sem_give(g_usbh_cdc_ecm_in_sem);
+        if (memcmp(&g_cdc_ecm_inttx_buffer[8], cdc_ecm_class->speed, 8) != 0) {
+            memcpy(cdc_ecm_class->speed, &g_cdc_ecm_inttx_buffer[8], 8);
+            USB_LOG_INFO("CDC ECM speed change, up: %uMbps, down:%uMbps\r\n", cdc_ecm_class->speed[0] / 1000000, cdc_ecm_class->speed[1] / 1000000);
+        }
     }
 }
 
@@ -184,7 +186,6 @@ static void usbh_cdc_ecm_in_callback(void *arg, int nbytes)
     }
 
     g_ecm_in_busy_flag = false;
-
     if (g_usbh_cdc_ecm_in_sem) {
         usb_osal_sem_give(g_usbh_cdc_ecm_in_sem);
     }
@@ -201,7 +202,6 @@ static void usbh_cdc_ecm_out_callback(void *arg, int nbytes)
     }
 
     g_ecm_out_busy_flag = false;
-
     if (g_usbh_cdc_ecm_out_sem) {
         usb_osal_sem_give(g_usbh_cdc_ecm_out_sem);
     }

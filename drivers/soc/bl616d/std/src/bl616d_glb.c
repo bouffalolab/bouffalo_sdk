@@ -80,7 +80,7 @@ static BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *b
  */
 
 /* WiFi PLL Config*/
-const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_32M_38P4M_40M = {
+const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_32M_40M = {
     .refdivRatio = 2,  /*!< refclk divide ratio, Fref=Fxtal/wifipll_refclk_div_ratio */
     .vcoSpeed = 5,     /*!< 5:825M~1.2GHz */
 #if defined(CPU_MODEL_A0)
@@ -90,6 +90,22 @@ const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_
 #endif
     .vco480mEn = 0,    /*!< 1: wifipll enable low power mode */
     .sdmBypass = 1,    /*!< hardware control, 1'b1 bypass sdm, integer-N pll */
+    .dtcRSel = 0,      /*!< dtc resolution select, 0: 36.4p~58.8p, 1:43.57p~70.56p */
+    .lfAlphaBase = 0,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
+    .lfAlphaExp = 3,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
+    .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
+    .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+    .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
+    .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
+    .spdGain = 1,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
+};
+
+const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_52M = {
+    .refdivRatio = 2,  /*!< refclk divide ratio, Fref=Fxtal/wifipll_refclk_div_ratio */
+    .vcoSpeed = 5,     /*!< 5:825M~1.2GHz */
+    .vcoIdacExtra = 0, /*!< wifipll_resv1 */
+    .vco480mEn = 0,    /*!< 1: wifipll enable low power mode */
+    .sdmBypass = 0,    /*!< hardware control, 1'b1 bypass sdm, integer-N pll */
     .dtcRSel = 0,      /*!< dtc resolution select, 0: 36.4p~58.8p, 1:43.57p~70.56p */
     .lfAlphaBase = 0,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
     .lfAlphaExp = 3,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
@@ -132,7 +148,7 @@ const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_
     .spdGain = 1,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
 };
 
-const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpower_32M_38P4M_40M = {
+const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpower_32M_40M = {
     .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/wifipll_refclk_div_ratio */
 #if defined(CPU_MODEL_A0)
     .vcoSpeed = 3,     /*!< 5:825M~1.2GHz */
@@ -153,6 +169,22 @@ const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpowe
 #else
     .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
 #endif
+    .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
+    .spdGain = 0,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
+};
+
+const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpower_52M = {
+    .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/wifipll_refclk_div_ratio */
+    .vcoSpeed = 1,     /*!< 5:825M~1.2GHz */
+    .vcoIdacExtra = 2, /*!< wifipll_resv1 */
+    .vco480mEn = 1,    /*!< 1: wifipll enable low power mode */
+    .sdmBypass = 0,    /*!< hardware control, 1'b1 bypass sdm, integer-N pll */
+    .dtcRSel = 3,      /*!< dtc resolution select, 0: 36.4p~58.8p, 1:43.57p~70.56p */
+    .lfAlphaBase = 1,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
+    .lfAlphaExp = 2,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
+    .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
+    .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+    .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
     .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
     .spdGain = 0,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
 };
@@ -190,23 +222,23 @@ const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpowe
 };
 
 const GLB_WIFIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION wifipllCfgNormal_960M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                                      /*!< XTAL is None */
-    { &wifipllBasicCfgNormal_24M, 0x500000 },           /*!< XTAL is 24M */
-    { &wifipllBasicCfgNormal_32M_38P4M_40M, 0x780000 }, /*!< XTAL is 32M */
-    { &wifipllBasicCfgNormal_32M_38P4M_40M, 0x640000 }, /*!< XTAL is 38.4M */
-    { &wifipllBasicCfgNormal_32M_38P4M_40M, 0x600000 }, /*!< XTAL is 40M */
-    { &wifipllBasicCfgNormal_26M, 0x49D89D },           /*!< XTAL is 26M */
-    { &wifipllBasicCfgNormal_32M_38P4M_40M, 0x780000 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                                /*!< XTAL is None */
+    { &wifipllBasicCfgNormal_24M, 0x500000 },     /*!< XTAL is 24M */
+    { &wifipllBasicCfgNormal_32M_40M, 0x780000 }, /*!< XTAL is 32M */
+    { &wifipllBasicCfgNormal_52M, 0x49D89D },     /*!< XTAL is 52M */
+    { &wifipllBasicCfgNormal_32M_40M, 0x600000 }, /*!< XTAL is 40M */
+    { &wifipllBasicCfgNormal_26M, 0x49D89D },     /*!< XTAL is 26M */
+    { &wifipllBasicCfgNormal_32M_40M, 0x780000 }, /*!< XTAL is RC32M */
 };
 
 const GLB_WIFIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION wifipllCfgLowpower_960M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                                        /*!< XTAL is None */
-    { &wifipllBasicCfgLowpower_24M, 0x500000 },           /*!< XTAL is 24M */
-    { &wifipllBasicCfgLowpower_32M_38P4M_40M, 0x780000 }, /*!< XTAL is 32M */
-    { &wifipllBasicCfgLowpower_32M_38P4M_40M, 0x640000 }, /*!< XTAL is 38.4M */
-    { &wifipllBasicCfgLowpower_32M_38P4M_40M, 0x600000 }, /*!< XTAL is 40M */
-    { &wifipllBasicCfgLowpower_26M, 0x49D89D },           /*!< XTAL is 26M */
-    { &wifipllBasicCfgLowpower_32M_38P4M_40M, 0x780000 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                                  /*!< XTAL is None */
+    { &wifipllBasicCfgLowpower_24M, 0x500000 },     /*!< XTAL is 24M */
+    { &wifipllBasicCfgLowpower_32M_40M, 0x780000 }, /*!< XTAL is 32M */
+    { &wifipllBasicCfgLowpower_52M, 0x49D89D },     /*!< XTAL is 52M */
+    { &wifipllBasicCfgLowpower_32M_40M, 0x600000 }, /*!< XTAL is 40M */
+    { &wifipllBasicCfgLowpower_26M, 0x49D89D },     /*!< XTAL is 26M */
+    { &wifipllBasicCfgLowpower_32M_40M, 0x780000 }, /*!< XTAL is RC32M */
 };
 
 const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupllBasicCfg_24M_26M = {
@@ -257,7 +289,7 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll640MCfg_24M_26M =
     .lmsExtValue = 40, /*!< tt50 = 0.68 */
 };
 
-const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupllBasicCfg_32M_38P4M_40M = {
+const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupllBasicCfg_32M_40M_52M = {
     .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/cpupll_refclk_div_ratio */
     .vcoSpeed = 4,     /*!< 4:450M~550MHz */
     .vcoIdacExtra = 0, /*!< cpupll_resv0 */
@@ -281,7 +313,7 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupllBasicCfg_32M_38P4
 #endif
 };
 
-const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll320MCfg_32M_38P4M_40M = {
+const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll320MCfg_32M_40M_52M = {
     .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/cpupll_refclk_div_ratio */
     .vcoSpeed = 1,     /*!< 1:320MHz */
     .vcoIdacExtra = 0, /*!< cpupll_resv0 */
@@ -305,31 +337,7 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll320MCfg_32M_38P4M
 #endif
 };
 
-const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll640MCfg_32M_38P4M_40M = {
-    .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/cpupll_refclk_div_ratio */
-    .vcoSpeed = 7,     /*!< 1:640MHz */
-#if defined(CPU_MODEL_A0)
-    .vcoIdacExtra = 2, /*!< cpupll_resv0 */
-#else
-    .vcoIdacExtra = 0, /*!< cpupll_resv0 */
-#endif
-    .dtcRSel = 1,      /*!< dtc resolution select, 0: 52p~91p, 1:65p~113p, 2:74p~129p, 3: 102p~180p */
-    .lfAlphaBase = 0,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
-    .lfAlphaExp = 3,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
-    .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
-    .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
-    .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
-    .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
-    .spdGain = 2,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
-    .lmsExtEn = 0,     /*!< 1'b1 enable external lms coe, and disable lms block */
-    .lmsExtValue = 40, /*!< tt50 = 0.68 */
-#if !defined(CPU_MODEL_A0)
-    .momUpdatePeriod = 3,
-    .coarseGain = 3,
-#endif
-};
-
-const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll638p976MCfg_32M_38P4M_40M = {
+const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll640MCfg_32M_40M_52M = {
     .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/cpupll_refclk_div_ratio */
     .vcoSpeed = 7,     /*!< 1:640MHz */
 #if defined(CPU_MODEL_A0)
@@ -354,43 +362,43 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll638p976MCfg_32M_3
 };
 
 const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_638p976M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                             /*!< XTAL is None */
-    { &cpupll640MCfg_24M_26M, 0x1A9FB },       /*!< XTAL is 24M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x27EF9 }, /*!< XTAL is 32M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x2147A }, /*!< XTAL is 38.4M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x1FF2E }, /*!< XTAL is 40M */
-    { &cpupll640MCfg_24M_26M, 0x18937 },       /*!< XTAL is 26M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x27EF9 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                           /*!< XTAL is None */
+    { &cpupll640MCfg_24M_26M, 0x1A9FB },     /*!< XTAL is 24M */
+    { &cpupll640MCfg_32M_40M_52M, 0x27EF9 }, /*!< XTAL is 32M */
+    { &cpupll640MCfg_32M_40M_52M, 0x18937 }, /*!< XTAL is 52M */
+    { &cpupll640MCfg_32M_40M_52M, 0x1FF2E }, /*!< XTAL is 40M */
+    { &cpupll640MCfg_24M_26M, 0x18937 },     /*!< XTAL is 26M */
+    { &cpupll640MCfg_32M_40M_52M, 0x27EF9 }, /*!< XTAL is RC32M */
 };
 
 const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_640M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                             /*!< XTAL is None */
-    { &cpupll640MCfg_24M_26M, 0x1AAAA },       /*!< XTAL is 24M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x28000 }, /*!< XTAL is 32M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x21555 }, /*!< XTAL is 38.4M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x20000 }, /*!< XTAL is 40M */
-    { &cpupll640MCfg_24M_26M, 0x189D8 },       /*!< XTAL is 26M */
-    { &cpupll640MCfg_32M_38P4M_40M, 0x28000 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                           /*!< XTAL is None */
+    { &cpupll640MCfg_24M_26M, 0x1AAAA },     /*!< XTAL is 24M */
+    { &cpupll640MCfg_32M_40M_52M, 0x28000 }, /*!< XTAL is 32M */
+    { &cpupll640MCfg_32M_40M_52M, 0x189D8 }, /*!< XTAL is 52M */
+    { &cpupll640MCfg_32M_40M_52M, 0x20000 }, /*!< XTAL is 40M */
+    { &cpupll640MCfg_24M_26M, 0x189D8 },     /*!< XTAL is 26M */
+    { &cpupll640MCfg_32M_40M_52M, 0x28000 }, /*!< XTAL is RC32M */
 };
 
 const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_480M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                              /*!< XTAL is None */
-    { &cpupllBasicCfg_24M_26M, 0x14000 },       /*!< XTAL is 24M */
-    { &cpupllBasicCfg_32M_38P4M_40M, 0x1E000 }, /*!< XTAL is 32M */
-    { &cpupllBasicCfg_32M_38P4M_40M, 0x19000 }, /*!< XTAL is 38.4M */
-    { &cpupllBasicCfg_32M_38P4M_40M, 0x18000 }, /*!< XTAL is 40M */
-    { &cpupllBasicCfg_24M_26M, 0x12762 },       /*!< XTAL is 26M */
-    { &cpupllBasicCfg_32M_38P4M_40M, 0x1E000 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                            /*!< XTAL is None */
+    { &cpupllBasicCfg_24M_26M, 0x14000 },     /*!< XTAL is 24M */
+    { &cpupllBasicCfg_32M_40M_52M, 0x1E000 }, /*!< XTAL is 32M */
+    { &cpupllBasicCfg_32M_40M_52M, 0x12762 }, /*!< XTAL is 52M */
+    { &cpupllBasicCfg_32M_40M_52M, 0x18000 }, /*!< XTAL is 40M */
+    { &cpupllBasicCfg_24M_26M, 0x12762 },     /*!< XTAL is 26M */
+    { &cpupllBasicCfg_32M_40M_52M, 0x1E000 }, /*!< XTAL is RC32M */
 };
 
 const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_320M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                             /*!< XTAL is None */
-    { &cpupll320MCfg_24M_26M, 0xD555 },        /*!< XTAL is 24M */
-    { &cpupll320MCfg_32M_38P4M_40M, 0x14000 }, /*!< XTAL is 32M */
-    { &cpupll320MCfg_32M_38P4M_40M, 0x10AAA }, /*!< XTAL is 38.4M */
-    { &cpupll320MCfg_32M_38P4M_40M, 0x10000 }, /*!< XTAL is 40M */
-    { &cpupll320MCfg_24M_26M, 0xC4EC },        /*!< XTAL is 26M */
-    { &cpupll320MCfg_32M_38P4M_40M, 0x14000 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                           /*!< XTAL is None */
+    { &cpupll320MCfg_24M_26M, 0xD555 },      /*!< XTAL is 24M */
+    { &cpupll320MCfg_32M_40M_52M, 0x14000 }, /*!< XTAL is 32M */
+    { &cpupll320MCfg_32M_40M_52M, 0xC4EC },  /*!< XTAL is 52M */
+    { &cpupll320MCfg_32M_40M_52M, 0x10000 }, /*!< XTAL is 40M */
+    { &cpupll320MCfg_24M_26M, 0xC4EC },      /*!< XTAL is 26M */
+    { &cpupll320MCfg_32M_40M_52M, 0x14000 }, /*!< XTAL is RC32M */
 };
 
 
@@ -400,11 +408,11 @@ const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_320M[GLB_XTAL_MAX] 
  * lf_alpha_base, lf_alpha_exp, lf_alpha_fast, lf_beta_base, lf_beta_exp,
  * lf_beta_fast, spd_gain, lms_ext_en, lms_ext_value, bitclk_div              */
 /* Provided numeric sequences:
- * 32/38.4/40M XTAL : 4 6 2 0 0 0 2 3 3 1 1 0 0 32 2
- * 24/26M    XTAL   : 2 6 2 0 0 0 2 3 3 1 1 0 0 32 2
+ * 32/40/52M XTAL : 4 6 2 0 0 0 2 3 3 1 1 0 0 32 2
+ * 24/26M    XTAL : 2 6 2 0 0 0 2 3 3 1 1 0 0 32 2
  */
 
-const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll1400MCfg_32M_38P4M_40M = {
+const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll1400MCfg_32M_40M_52M = {
     .refdiv_ratio   = 4,  /* XTAL pre-div so that PFD stays in valid range */
     .vco_speed      = 6,  /* VCO range index (device-specific table) */
     .vco_idac_extra = 2,  /* Extra bias current trim for VCO */
@@ -441,13 +449,13 @@ const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll1400MCfg_24M_26M 
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_1400M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                              /*!< XTAL is None */
-    { &dsipll1400MCfg_24M_26M, 0x3A555 },       /*!< XTAL is 24M */
-    { &dsipll1400MCfg_32M_38P4M_40M, 0x57800 }, /*!< XTAL is 32M */
-    { &dsipll1400MCfg_32M_38P4M_40M, 0x48EAA }, /*!< XTAL is 38.4M */
-    { &dsipll1400MCfg_32M_38P4M_40M, 0x46000 }, /*!< XTAL is 40M */
-    { &dsipll1400MCfg_24M_26M, 0x35D89 },       /*!< XTAL is 26M */
-    { &dsipll1400MCfg_32M_38P4M_40M, 0x57800 }, /*!< XTAL is RC32M */
+    { NULL, 0x0 },                            /*!< XTAL is None */
+    { &dsipll1400MCfg_24M_26M, 0x3A555 },     /*!< XTAL is 24M */
+    { &dsipll1400MCfg_32M_40M_52M, 0x57800 }, /*!< XTAL is 32M */
+    { &dsipll1400MCfg_32M_40M_52M, 0x35D89 }, /*!< XTAL is 52M */
+    { &dsipll1400MCfg_32M_40M_52M, 0x46000 }, /*!< XTAL is 40M */
+    { &dsipll1400MCfg_24M_26M, 0x35D89 },     /*!< XTAL is 26M */
+    { &dsipll1400MCfg_32M_40M_52M, 0x57800 }, /*!< XTAL is RC32M */
 };
 
 const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GLB_SLAVE_GRP_0_MAX] = {
@@ -494,7 +502,7 @@ const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GL
  *           @arg GLB_XTAL_NONE
  *           @arg GLB_XTAL_24M
  *           @arg GLB_XTAL_32M
- *           @arg GLB_XTAL_38P4M
+ *           @arg GLB_XTAL_52M
  *           @arg GLB_XTAL_40M
  *           @arg GLB_XTAL_26M
  *           @arg GLB_XTAL_RC32M
@@ -580,7 +588,8 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_XTAL_And_PLL_CLK(uint8_t xtalType, u
 #endif
     }
 
-    arch_delay_us(75);
+    /* Wait 1.5*180us */
+    arch_delay_us(270);
 
     if (xtalType != GLB_XTAL_RC32M) {
         /* if power on xtal, always set xclk from xtal */
@@ -1149,7 +1158,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *co
  *           @arg GLB_XTAL_NONE
  *           @arg GLB_XTAL_24M
  *           @arg GLB_XTAL_32M
- *           @arg GLB_XTAL_38P4M
+ *           @arg GLB_XTAL_52M
  *           @arg GLB_XTAL_40M
  *           @arg GLB_XTAL_26M
  *           @arg GLB_XTAL_RC32M
@@ -1290,86 +1299,6 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t d
     return SUCCESS;
 }
 #endif
-
-/****************************************************************************/ /**
- * @brief  GLB enable or disable USB clock
- *
- * @param  enable: ENABLE or DISABLE
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_USB_CLK_From_WIFIPLL(uint8_t enable)
-{
-    uint32_t tmpVal = 0;
-
-    /* pu_usbpll_mmdiv */
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG10);
-    if (enable) {
-        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_PU_USBPLL_MMDIV);
-    } else {
-        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PU_USBPLL_MMDIV);
-    }
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG10, tmpVal);
-
-    /* delay > 2us */
-    arch_delay_us(3);
-
-    /* toggle usbpll_rstb */
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG10);
-    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_USBPLL_RSTB);
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG10, tmpVal);
-    arch_delay_us(2);
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG10);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_USBPLL_RSTB);
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG10, tmpVal);
-    arch_delay_us(2);
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG10);
-    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_USBPLL_RSTB);
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG10, tmpVal);
-
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  GLB enable or disable SSC clock
- *
- * @param  enable: ENABLE or DISABLE
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_SSC_CLK_From_WIFIPLL(uint8_t enable)
-{
-    uint32_t tmpVal = 0;
-
-    /* pu_usbpll_mmdiv */
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG12);
-    if (enable) {
-        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_PU_SSCDIV_MMDIV);
-    } else {
-        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PU_SSCDIV_MMDIV);
-    }
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG12, tmpVal);
-
-    /* delay > 2us */
-    arch_delay_us(3);
-
-    /* toggle sscdiv_rstb */
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG12);
-    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_SSCDIV_RSTB);
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG12, tmpVal);
-    arch_delay_us(2);
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG12);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_SSCDIV_RSTB);
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG12, tmpVal);
-    arch_delay_us(2);
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_WIFI_PLL_CFG12);
-    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_SSCDIV_RSTB);
-    BL_WR_REG(GLB_BASE, GLB_WIFI_PLL_CFG12, tmpVal);
-
-    return SUCCESS;
-}
 
 /****************************************************************************/ /**
  * @brief  Set System clock divider
@@ -3720,6 +3649,36 @@ static BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *b
 }
 
 /****************************************************************************/ /**
+ * @brief  multimedia software reset
+ *
+ * @param  swrst: GLB_MM_SW_xxx
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_MM_Software_Reset(uint32_t swrst)
+{
+    uint32_t tmpVal;
+    uint32_t regAddr;
+
+    regAddr = MM_MISC_BASE + MM_MISC_MM_MBIST_CTRL_OFFSET;
+
+    tmpVal = BL_RD_WORD(regAddr);
+    tmpVal &= ~swrst;
+    BL_WR_WORD(regAddr, tmpVal);
+    BL_DRV_DUMMY;
+    tmpVal = BL_RD_WORD(regAddr);
+    tmpVal |= swrst;
+    BL_WR_WORD(regAddr, tmpVal);
+    BL_DRV_DUMMY;
+    tmpVal = BL_RD_WORD(regAddr);
+    tmpVal &= ~swrst;
+    BL_WR_WORD(regAddr, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  hold IPs clock
  *
  * @param  ips: GLB_AHB_CLOCK_CPU | GLB_AHB_CLOCK_RSVD | ...... (not GLB_AHB_CLOCK_IP_xxx)
@@ -4335,7 +4294,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_SW_POR_Reset(void)
  *           @arg GLB_XTAL_NONE
  *           @arg GLB_XTAL_24M
  *           @arg GLB_XTAL_32M
- *           @arg GLB_XTAL_38P4M
+ *           @arg GLB_XTAL_52M
  *           @arg GLB_XTAL_40M
  *           @arg GLB_XTAL_26M
  *           @arg GLB_XTAL_RC32M
@@ -4366,7 +4325,7 @@ BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(uint8_t calcXtalType)
  *           @arg GLB_XTAL_NONE
  *           @arg GLB_XTAL_24M
  *           @arg GLB_XTAL_32M
- *           @arg GLB_XTAL_38P4M
+ *           @arg GLB_XTAL_52M
  *           @arg GLB_XTAL_40M
  *           @arg GLB_XTAL_26M
  *           @arg GLB_XTAL_RC32M
@@ -4755,7 +4714,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_Slave_Grp_0_CLK(uint8_t slave, uint8_t en
  *           @arg GLB_XTAL_NONE, should not used as para
  *           @arg GLB_XTAL_24M
  *           @arg GLB_XTAL_32M
- *           @arg GLB_XTAL_38P4M
+ *           @arg GLB_XTAL_52M
  *           @arg GLB_XTAL_40M
  *           @arg GLB_XTAL_26M
  *           @arg GLB_XTAL_RC32M, should not used as para
@@ -4781,7 +4740,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFIPLL(uint8_t xtalType, const GLB_WI
  *           @arg GLB_XTAL_NONE, should not used as para
  *           @arg GLB_XTAL_24M
  *           @arg GLB_XTAL_32M
- *           @arg GLB_XTAL_38P4M
+ *           @arg GLB_XTAL_52M
  *           @arg GLB_XTAL_40M
  *           @arg GLB_XTAL_26M
  *           @arg GLB_XTAL_RC32M

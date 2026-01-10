@@ -12,6 +12,7 @@
 # set(CONFIG_CHERRYUSB_DEVICE_MSC 1)
 # set(CONFIG_CHERRYUSB_DEVICE_AUDIO 1)
 # set(CONFIG_CHERRYUSB_DEVICE_VIDEO 1)
+# set(CONFIG_CHERRYUSB_DEVICE_DWC2_ST 1)
 
 # set(CONFIG_CHERRYUSB_HOST 1)
 # set(CONFIG_CHERRYUSB_HOST_CDC_ACM 1)
@@ -25,6 +26,7 @@
 # set(CONFIG_CHERRYUSB_HOST_BLUETOOTH 1)
 # set(CONFIG_CHERRYUSB_HOST_ASIX 1)
 # set(CONFIG_CHERRYUSB_HOST_RTL8152 1)
+# set(CONFIG_CHERRYUSB_HOST_DWC2_ST 1)
 
 # set(CONFIG_CHERRYUSB_OSAL "freertos")
 # cmake-format: on
@@ -108,16 +110,6 @@ if(CONFIG_CHERRYUSB_HOST)
     endif()
     if(CONFIG_CHERRYUSB_HOST_MSC)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/msc/usbh_msc.c)
-
-        if(CONFIG_CHERRYUSB_HOST_MSC_FATFS)
-            list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/third_party/fatfs-0.14/source/port/fatfs_usbh.c)
-            list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/third_party/fatfs-0.14/source/diskio.c)
-            list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/third_party/fatfs-0.14/source/ff.c)
-            list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/third_party/fatfs-0.14/source/ffsystem.c)
-            list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/third_party/fatfs-0.14/source/ffunicode.c)
-
-            list(APPEND cherryusb_incs ${CMAKE_CURRENT_LIST_DIR}/third_party/fatfs-0.14/source)
-        endif()
     endif()
     if(CONFIG_CHERRYUSB_HOST_VIDEO)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/video/usbh_video.c)
@@ -127,41 +119,6 @@ if(CONFIG_CHERRYUSB_HOST)
     endif()
     if(CONFIG_CHERRYUSB_HOST_BLUETOOTH)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/wireless/usbh_bluetooth.c)
-
-        set(BLUETOOTH_PATH ${CMAKE_CURRENT_LIST_DIR}/third_party/zephyr_bluetooth-2.7.5)
-
-        list(
-            APPEND
-            cherryusb_srcs
-            ${BLUETOOTH_PATH}/ble_hci_usbh.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/beacon/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/central/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/central_hr/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/central_ht/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/central_multilink/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/central_multilink/src/central_multilink.c
-            # ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/handsfree/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/ibeacon/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral/src/cts.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_csc/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_dis/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_esp/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_hids/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_hids/src/hog.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_hr/src/main.c
-            # ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_ht/src/main.c
-            # ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_ht/src/hts.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_identity/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_identity/src/peripheral_identity.c
-            # ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_ots/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/peripheral_sc_only/src/main.c
-            ${BLUETOOTH_PATH}/zephyr_bluetooth/examples/scan_adv/src/main.c
-        )
-
-        include(${BLUETOOTH_PATH}/zephyr_bluetooth/zephyr_bluetooth.cmake)
-        list(APPEND cherryusb_srcs ${zephyr_bluetooth_srcs})
-        list(APPEND cherryusb_incs ${zephyr_bluetooth_incs})
     endif()
 
     if(CONFIG_CHERRYUSB_HOST_ASIX)
@@ -182,16 +139,16 @@ if(CONFIG_CHERRYUSB_HOST)
     if(CONFIG_CHERRYUSB_HOST_PL2303)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/vendor/serial/usbh_pl2303.c)
     endif()
-    if(CONFIG_CHERRYUSB_HOST_BL616)
-        list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/vendor/wifi/usbh_bl616.c)
-    endif()
     if(CONFIG_CHERRYUSB_HOST_AOA)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/aoa/usbh_aoa.c)
     endif()
 
     # ehci port
     list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/port/ehci/usb_hc_ehci.c)
+endif()
 
+if(CONFIG_CHERRYUSB_DEVICE AND CONFIG_CHERRYUSB_HOST)
+    list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/core/usbotg_core.c)
 endif()
 
 if(DEFINED CONFIG_CHERRYUSB_OSAL)

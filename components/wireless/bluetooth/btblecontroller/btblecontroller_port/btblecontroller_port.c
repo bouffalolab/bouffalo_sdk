@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "btblecontroller_port.h"
 #if defined(CONFIG_IOT_SDK)
 #include "bl_irq.h"
@@ -252,11 +253,15 @@ __attribute__((weak)) int btblecontroller_printf(const char *fmt, ...)
     va_start(argp, fmt);
     vprint(fmt, argp);
     va_end(argp);
+    #else
+    va_list argp;
+    va_start(argp, fmt);
+    vprintf(fmt, argp);
+    va_end(argp);
     #endif
 
     return 0;
 }
-
 
 #if defined(BL702L) || defined(BL616) || defined(BL616D)
 __attribute__((weak)) void btblecontroller_sys_reset(void)

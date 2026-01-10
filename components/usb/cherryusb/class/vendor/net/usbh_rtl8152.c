@@ -1034,17 +1034,17 @@ static int generic_ocp_read(struct usbh_rtl8152 *tp, uint16_t index, uint16_t si
 static int generic_ocp_write(struct usbh_rtl8152 *tp, uint16_t index, uint16_t byteen,
                              uint16_t size, void *data, uint16_t type)
 {
-    int ret;
+    int ret = -USB_ERR_INVAL;
     uint16_t byteen_start, byteen_end, byen;
     uint16_t limit = 512;
     uint8_t *buf = data;
 
     /* both size and indix must be 4 bytes align */
     if ((size & 3) || !size || (index & 3) || !buf)
-        return -USB_ERR_INVAL;
+        return ret;
 
     if ((uint32_t)index + (uint32_t)size > 0xffff)
-        return -USB_ERR_INVAL;
+        return ret;
 
     byteen_start = byteen & BYTE_EN_START_MASK;
     byteen_end = byteen & BYTE_EN_END_MASK;
@@ -1121,7 +1121,7 @@ static inline int usb_ocp_write(struct usbh_rtl8152 *tp, uint16_t index, uint16_
 
 static uint32_t ocp_read_dword(struct usbh_rtl8152 *tp, uint16_t type, uint16_t index)
 {
-    uint32_t data;
+    uint32_t data = 0;
 
     generic_ocp_read(tp, index, sizeof(data), &data, type);
 
@@ -1138,7 +1138,7 @@ static void ocp_write_dword(struct usbh_rtl8152 *tp, uint16_t type, uint16_t ind
 static uint16_t ocp_read_word(struct usbh_rtl8152 *tp, uint16_t type, uint16_t index)
 {
     uint32_t data;
-    uint32_t tmp;
+    uint32_t tmp = 0;
     uint16_t byen = BYTE_EN_WORD;
     uint8_t shift = index & 2;
 
@@ -1178,7 +1178,7 @@ static void ocp_write_word(struct usbh_rtl8152 *tp, uint16_t type, uint16_t inde
 static uint8_t ocp_read_byte(struct usbh_rtl8152 *tp, uint16_t type, uint16_t index)
 {
     uint32_t data;
-    uint32_t tmp;
+    uint32_t tmp = 0;
     uint8_t shift = index & 3;
 
     index &= ~3;
@@ -1254,7 +1254,7 @@ static inline int r8152_mdio_read(struct usbh_rtl8152 *tp, uint32_t reg_addr)
 static uint8_t usbh_rtl8152_get_version(struct usbh_rtl8152 *rtl8152_class)
 {
     uint8_t version;
-    uint32_t temp;
+    uint32_t temp = 0;
     uint32_t ocp_data;
 
     usbh_rtl8152_read_regs(rtl8152_class, PLA_TCR0, MCU_TYPE_PLA, 4, &temp);
@@ -2050,7 +2050,7 @@ static int usbh_rtl8152_connect(struct usbh_hubport *hport, uint8_t intf)
     }
 
     memset(mac_buffer, 0, 12);
-    ret = usbh_get_string_desc(rtl8152_class->hport, 3, (uint8_t *)mac_buffer);
+    ret = usbh_get_string_desc(rtl8152_class->hport, 3, (uint8_t *)mac_buffer, 12);
     if (ret < 0) {
         return ret;
     }

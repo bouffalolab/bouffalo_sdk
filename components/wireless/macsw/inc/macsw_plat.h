@@ -113,4 +113,16 @@ void wifi_task_resume(bool isr);
  */
 uint32_t wifi_sys_now_ms(bool isr);
 
+
+/**
+ ****************************************************************************************
+ * @brief Formatted output to system log.
+ *
+ * @param[in] priority Log priority
+ * @param[in] fmt Format string
+ ****************************************************************************************
+ */
+void __attribute__((used)) __attribute__((__format__(__printf__, 2, 3)))
+wifi_syslog(int priority, const char *fmt, ...);
+
 #endif // RTOS_H_

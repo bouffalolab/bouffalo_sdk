@@ -1,6 +1,7 @@
 #ifndef __BL616L_LP_H__
 #define __BL616L_LP_H__
 #include <stdint.h>
+#include "bl616l_xip_recovery.h"
 
 #define IOT2LP_PARA_ADDR          0x20010400
 // #define LP_FW_MAX_SIZE            30 * 1024
@@ -106,35 +107,81 @@ typedef struct {
 } lp_fw_tzc_t;
 
 typedef struct {
-    uint32_t pattern; /*0xAA5555AA*/
-    lp_fw_static_variable_t* lpfw_static_val;
-    /* flash recovery */
-    uint32_t mcu_sts;
-    void *flash_cfg;
-    void *flash_io_cs_clk_delay_cfg;
-    uint32_t flash_jdec_id;
-    lp_fw_sf_sec_t *sec_cfg;
-    lp_fw_tzc_t *tzc_cfg;
-    uint32_t img_len;
-    uint8_t flash_clk;
-    uint8_t flash_clk_div;
-    uint8_t do_xip_recovery;
-    uint8_t unkown_io_wakeup_en;
-
-    /* wifi para */
     uint8_t ap_channel;
     uint8_t tim_wakeup_en;
     uint16_t aid;
+
     uint8_t bssid[6];
     uint8_t local_mac[6];
+    uint8_t bcmc_dtim_mode;
+    uint8_t last_beacon_dtim_count; /* last beacon dtim count */
+
+    uint8_t beacon_dtim_period; /* beacon dtim period */
+    int8_t bcn_target_level;
+    uint8_t dtim_num;
+    uint8_t beacon_leg_rate;
+
     uint32_t beacon_interval_tu; /* beacon interval tu */
-    uint8_t* wifi_rx_buff; /* not used */
+    uint8_t *wifi_rx_buff;
+    uint32_t buf_addr;
+    uint32_t pack_env;
+} lp_fw_wifi_para_t;
+
+typedef struct {
+    int32_t *bcn_delay_sliding_win_buff;
+    uint8_t bcn_delay_sliding_win_size;
+    uint8_t bcn_delay_sliding_win_point;
+    uint8_t bcn_delay_sliding_win_status;
+    int32_t last_beacon_delay_us; /* beacon delay */
+    int32_t bcn_delay_offset;
+} lp_fw_bcn_delay_t;
+
+typedef struct {
+    uint32_t mtimer_timeout_mini_us;
+    uint32_t mtimer_timeout_max_us;
+    uint8_t mtimer_timeout_en;
+} lp_fw_mtimer_t;
+
+typedef struct {
+    uint32_t continuous_loss_cnt;
+    uint32_t continuous_loss_cnt_max;
+    /* beacon loss ctrl */
+    lp_fw_bcn_loss_level_t *bcn_loss_cfg_table;
+    int32_t bcn_loss_level;
+    int32_t bcn_loss_loop_start;
+    int32_t bcn_loss_level_max;
+} lp_fw_bcn_loss_t;
+
+typedef struct {
+    uint8_t rc32k_auto_cal_en;
+    uint8_t rc32k_clock_ready;
+    uint8_t rc32k_trim_ready;
+    uint8_t last_rc32trim_stamp_valid;
+    uint64_t last_rc32trim_stamp_rtc_us;
+    uint64_t last_rc32trim_stamp_beacon_us;
+    int32_t rc32k_fr_ext;
+    int32_t rtc32k_error_ppm;
+} lp_fw_rc32k_trim_t;
+
+typedef struct {
+    uint32_t pattern; /*0xAA5555AA*/
+    lp_fw_static_variable_t *lpfw_static_val;
+    /* flash recovery */
+    sf_recovery_para_t *flash_parameter;
+    lp_fw_sf_sec_t *sec_cfg;
+    lp_fw_tzc_t *tzc_cfg;
+    /* wifi para */
+    lp_fw_wifi_para_t *wifi_parameter;
+
+    uint32_t mcu_sts;
+
     /* system para */
     uint32_t wakeup_flag;
-    uint32_t flash_offset;
+    // uint32_t flash_offset;
     uint32_t app_entry;
     uint32_t args[4];
     uint32_t cpu_regs[32];
+
     uint32_t tim_wake_enable;
     uint32_t rtc_wakeup_en;  /* rtc wakeup enable */
     uint64_t rtc_wakeup_cnt; /* The value of the next rtc wake up */
@@ -151,45 +198,22 @@ typedef struct {
 
     int32_t last_sleep_error_us;
     uint32_t last_beacon_stamp_rtc_valid;
-    uint64_t last_beacon_stamp_rtc_us;    /*  */
+    uint64_t last_beacon_stamp_rtc_us; /*  */
     uint64_t last_beacon_stamp_beacon_us;
 
-    uint32_t mtimer_timeout_mini_us;
-    uint32_t mtimer_timeout_max_us;
-    uint8_t mtimer_timeout_en;
+    lp_fw_mtimer_t *mtimer_parameter;
 
-    uint8_t dtim_num;
-    uint8_t beacon_leg_rate;
+    uint8_t unkown_io_wakeup_en;
     uint8_t debug_io; /* io toggle after wifi init*/
 
     int32_t rtc32k_jitter_error_ppm; /* Jitter error compensation, ppm (10^6) */
 
-    /* Statistical analysis */
-    int32_t *bcn_delay_sliding_win_buff;
-    uint8_t bcn_delay_sliding_win_size;
-    uint8_t bcn_delay_sliding_win_point;
-    uint8_t bcn_delay_sliding_win_status;
-    int32_t last_beacon_delay_us; /* beacon delay */
-    int32_t bcn_delay_offset;
+    lp_fw_bcn_delay_t *bcn_delay_info;
 
-    uint32_t continuous_loss_cnt;
-    uint32_t continuous_loss_cnt_max;
-    /* beacon loss ctrl */
-    lp_fw_bcn_loss_level_t *bcn_loss_cfg_table;
-    int32_t bcn_loss_level;
-    int32_t bcn_loss_loop_start;
-    int32_t bcn_loss_level_max;
-    int8_t  bcn_target_level;
+    lp_fw_bcn_loss_t *bcn_loss_info;
 
     /* rtc32k_trim */
-    uint8_t rc32k_auto_cal_en;
-    uint8_t rc32k_clock_ready;
-    uint8_t rc32k_trim_ready;
-    uint8_t last_rc32trim_stamp_valid;
-    uint64_t last_rc32trim_stamp_rtc_us;
-    uint64_t last_rc32trim_stamp_beacon_us;
-    int32_t rc32k_fr_ext;
-    int32_t rtc32k_error_ppm; /*  */
+    lp_fw_rc32k_trim_t *rc32k_trim_parameter;
 
     /* iot2lp_para record info (internal) */
     struct bl_lp_info_s *lp_info;
@@ -211,6 +235,35 @@ typedef struct {
     } reset_keep;
 
 } iot2lp_para_t;
+
+typedef struct {
+    uint8_t tim_wakeup_en : 1; /* 1: enable tim wakeup */
+    uint8_t lpfw_copy     : 1; /* copy lpfw or not */
+    uint8_t lpfw_verify   : 1; /* verify lpfw or not */
+    uint8_t channel;
+    int8_t rssi;
+    uint8_t bssid[6];
+    uint8_t mac[6];
+    uint8_t bcmc_dtim_mode;
+    uint8_t dtim_num;
+    uint8_t dtim_origin;
+    uint16_t rsv;
+    uint32_t mtimer_timeout_mini_us;
+    uint32_t mtimer_timeout_max_us;
+
+    uint32_t mcu_sts;
+    uint32_t aid;
+
+    uint64_t rtc_wakeup_cmp_cnt; /* 0: disable, use rtc_timeout_us */
+    uint64_t rtc_timeout_us;     /* 0: disable rtc wakeup */
+
+    int32_t wakeup_reason;  /* Cause of wakeup */
+    uint32_t lpfw_recv_cnt; /* count of loss packet during rtc_timeout_ms */
+    uint32_t lpfw_loss_cnt; /* count of wakeup during rtc_timeout_ms */
+
+    uint32_t buf_addr;
+    uint32_t pack_env;
+} bl_lp_fw_cfg_t;
 
 #define iot2lp_para               ((iot2lp_para_t *)IOT2LP_PARA_ADDR)
 

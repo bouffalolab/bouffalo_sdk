@@ -29,6 +29,7 @@
 #include "hd_msg_ctrl.h"
 #include "hd_eth_netdev.h"
 #include "hd_tty.h"
+#include "hd_netlink.h"
 #include "hd_sdio2.h"
 #include "hd_debugfs.h"
 #include "hd_speed_test.h"
@@ -912,6 +913,12 @@ static void hd_sdio2_remove(struct sdio_func *func)
         card->tty_msg = NULL;
     }
 
+    if (card->netlink_msg) {
+        /* stop netlink interface */
+        hd_netlink_deinit(card->netlink_msg);
+        card->netlink_msg = NULL;
+    }
+
     /* stop speed test thread */
     hd_speed_test_thread_destroy_all();
 
@@ -1043,6 +1050,13 @@ static int hd_sdio2_probe(struct sdio_func *func, const struct sdio_device_id *i
     if (card->tty_msg == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         /* Continue without TTY - not critical */
+    }
+
+    /* create netlink interface */
+    card->netlink_msg = hd_netlink_init(msg_ctrl, HD_MSG_TAG_NETLINK);
+    if (card->netlink_msg == NULL) {
+        SDIO_DRV_ERR(card, "failed to create netlink interface\n");
+        /* Continue without Netlink - not critical */
     }
 
 #if 0

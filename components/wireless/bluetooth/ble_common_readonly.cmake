@@ -978,7 +978,6 @@ if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl808") OR ("${CHIP}" ST
 		_check_conflict(CONFIG_BT_MFG y)
 		_check_conflict(CONFIG_BLE_MFG_HCI_CMD y)
 		_check_conflict(CONFIG_BT_MFG_HCI_CMD y)
-		_check_conflict(CONFIG_BLE_HOST_DISABLE y)
 	endif()
 
 	if("${PRIV_CONFIG_GEN_BLE}" STREQUAL "wlanif")

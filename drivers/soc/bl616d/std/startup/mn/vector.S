@@ -21,8 +21,15 @@
     .global g_trap_sp
 g_trap_sp_base:
 #if defined(__riscv_flen)
-    .space 1024
+#if __riscv_flen == 64
+    /* double precision */
+    .space 2048
 #else
+    /* single precision */
+    .space 1024
+#endif
+#else
+    /* no FPU */
     .space 512
 #endif
 g_trap_sp:
@@ -104,16 +111,52 @@ default_interrupt_handler:
     csrs    mstatus, 8
 
     /* keep stack 16bytes aligned */
+#if defined(__riscv_flen) && (__riscv_flen == 64)
+    /* double precision: 160 bytes for 20 FP regs + alignment */
+    addi    sp, sp, -192
+#elif defined(__riscv_flen)
+    /* single precision: 80 bytes for 20 FP regs + alignment */
     addi    sp, sp, -96
+#endif
 
     /* - 76:  mstatus  */
+#if defined(__riscv_flen)
     csrr    t1, mstatus
+#if __riscv_flen == 64
+    sw      t1, 180(sp)
+#else
     sw      t1, 84(sp)
+#endif
     srli    t2, t1, 13
     andi    t2, t2, 0x3
     li      t0, 0x3
     bne     t2, t0,  .F_RegNotSave1
+#endif
 
+#if defined(__riscv_flen) && (__riscv_flen == 64)
+    /* double precision */
+    fsd     ft0, 0(sp)
+    fsd     ft1, 8(sp)
+    fsd     ft2, 16(sp)
+    fsd     ft3, 24(sp)
+    fsd     ft4, 32(sp)
+    fsd     ft5, 40(sp)
+    fsd     ft6, 48(sp)
+    fsd     ft7, 56(sp)
+    fsd     fa0, 64(sp)
+    fsd     fa1, 72(sp)
+    fsd     fa2, 80(sp)
+    fsd     fa3, 88(sp)
+    fsd     fa4, 96(sp)
+    fsd     fa5, 104(sp)
+    fsd     fa6, 112(sp)
+    fsd     fa7, 120(sp)
+    fsd     ft8, 128(sp)
+    fsd     ft9, 136(sp)
+    fsd     ft10,144(sp)
+    fsd     ft11,152(sp)
+#elif defined(__riscv_flen)
+    /* single precision */
     fsw     ft0, 0(sp)
     fsw     ft1, 4(sp)
     fsw     ft2, 8(sp)
@@ -134,6 +177,7 @@ default_interrupt_handler:
     fsw     ft9, 68(sp)
     fsw     ft10,72(sp)
     fsw     ft11,76(sp)
+#endif
 .F_RegNotSave1:
 
     csrr    a0, mcause
@@ -142,12 +186,42 @@ default_interrupt_handler:
     la      t2, interrupt_entry
     jalr    t2
 
+#if defined(__riscv_flen)
+#if __riscv_flen == 64
+    lw      t1, 180(sp)
+#else
     lw      t1, 84(sp)
+#endif
     srli    t2, t1, 13
     andi    t2, t2, 0x3
     li      t0, 0x3
     bne     t2, t0,  .F_RegNotLoad
+#endif
 
+#if defined(__riscv_flen) && (__riscv_flen == 64)
+    /* double precision */
+    fld     ft0, 0(sp)
+    fld     ft1, 8(sp)
+    fld     ft2, 16(sp)
+    fld     ft3, 24(sp)
+    fld     ft4, 32(sp)
+    fld     ft5, 40(sp)
+    fld     ft6, 48(sp)
+    fld     ft7, 56(sp)
+    fld     fa0, 64(sp)
+    fld     fa1, 72(sp)
+    fld     fa2, 80(sp)
+    fld     fa3, 88(sp)
+    fld     fa4, 96(sp)
+    fld     fa5, 104(sp)
+    fld     fa6, 112(sp)
+    fld     fa7, 120(sp)
+    fld     ft8, 128(sp)
+    fld     ft9, 136(sp)
+    fld     ft10,144(sp)
+    fld     ft11,152(sp)
+#elif defined(__riscv_flen)
+    /* single precision */
     flw     ft0, 0(sp)
     flw     ft1, 4(sp)
     flw     ft2, 8(sp)
@@ -168,9 +242,16 @@ default_interrupt_handler:
     flw     ft9, 68(sp)
     flw     ft10,72(sp)
     flw     ft11,76(sp)
+#endif
 
 .F_RegNotLoad:
+#if defined(__riscv_flen) && (__riscv_flen == 64)
+    /* double precision */
+    addi    sp, sp, 192
+#elif defined(__riscv_flen)
+    /* single precision */
     addi    sp, sp, 96
+#endif
     /* mret included, and IRQ tail-chain may happen */
     /* ipop */
 

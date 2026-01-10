@@ -92,7 +92,12 @@
 
 #ifdef CONFIG_ARCH_FPU
 
-#define FPU_REG_SIZE  1 /* size in uint32_t */
+/* Double precision FPU has 64-bit registers (2 uint32_t each) */
+#if __riscv_flen == 64
+#define FPU_REG_SIZE 2
+#else
+#define FPU_REG_SIZE 1
+#endif
 
 #define REG_F0_NDX    (INT_XCPT_REGS + FPU_REG_SIZE * 0)
 #define REG_F1_NDX    (INT_XCPT_REGS + FPU_REG_SIZE * 1)

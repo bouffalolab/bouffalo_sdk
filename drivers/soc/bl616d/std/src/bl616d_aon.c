@@ -917,33 +917,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(uint8_t en
  *          @arg AON_DCDC_SYS_LEVEL_1P150V
  *          @arg AON_DCDC_SYS_LEVEL_1P175V
  *          @arg AON_DCDC_SYS_LEVEL_1P200V
- *          @arg AON_DCDC_SYS_LEVEL_1P225V
- *          @arg AON_DCDC_SYS_LEVEL_1P250V
- *          @arg AON_DCDC_SYS_LEVEL_1P275V
- *          @arg AON_DCDC_SYS_LEVEL_1P300V
- *          @arg AON_DCDC_SYS_LEVEL_1P325V
- *          @arg AON_DCDC_SYS_LEVEL_1P350V
- *          @arg AON_DCDC_SYS_LEVEL_1P375V
- *          @arg AON_DCDC_SYS_LEVEL_1P400V
- *          @arg AON_DCDC_SYS_LEVEL_1P425V
- *          @arg AON_DCDC_SYS_LEVEL_1P450V
- *          @arg AON_DCDC_SYS_LEVEL_1P475V
- *          @arg AON_DCDC_SYS_LEVEL_1P500V
- *          @arg AON_DCDC_SYS_LEVEL_1P525V
- *          @arg AON_DCDC_SYS_LEVEL_1P550V
- *          @arg AON_DCDC_SYS_LEVEL_1P575V
- *          @arg AON_DCDC_SYS_LEVEL_1P600V
- *          @arg AON_DCDC_SYS_LEVEL_1P625V
- *          @arg AON_DCDC_SYS_LEVEL_1P650V
- *          @arg AON_DCDC_SYS_LEVEL_1P675V
- *          @arg AON_DCDC_SYS_LEVEL_1P700V
- *          @arg AON_DCDC_SYS_LEVEL_1P725V
- *          @arg AON_DCDC_SYS_LEVEL_1P750V
- *          @arg AON_DCDC_SYS_LEVEL_1P775V
  *          @arg AON_DCDC_SYS_LEVEL_1P800V
- *          @arg AON_DCDC_SYS_LEVEL_1P825V
- *          @arg AON_DCDC_SYS_LEVEL_1P850V
- *          @arg AON_DCDC_SYS_LEVEL_1P875V
  *          @arg AON_DCDC_SYS_LEVEL_1P900V
  *
  * @return SUCCESS or ERROR
@@ -1020,33 +994,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Set_Ldo18_Aon_Vout_in_Lowpower(uint8_t level)
  *          @arg AON_DCDC_SYS_LEVEL_1P150V
  *          @arg AON_DCDC_SYS_LEVEL_1P175V
  *          @arg AON_DCDC_SYS_LEVEL_1P200V
- *          @arg AON_DCDC_SYS_LEVEL_1P225V
- *          @arg AON_DCDC_SYS_LEVEL_1P250V
- *          @arg AON_DCDC_SYS_LEVEL_1P275V
- *          @arg AON_DCDC_SYS_LEVEL_1P300V
- *          @arg AON_DCDC_SYS_LEVEL_1P325V
- *          @arg AON_DCDC_SYS_LEVEL_1P350V
- *          @arg AON_DCDC_SYS_LEVEL_1P375V
- *          @arg AON_DCDC_SYS_LEVEL_1P400V
- *          @arg AON_DCDC_SYS_LEVEL_1P425V
- *          @arg AON_DCDC_SYS_LEVEL_1P450V
- *          @arg AON_DCDC_SYS_LEVEL_1P475V
- *          @arg AON_DCDC_SYS_LEVEL_1P500V
- *          @arg AON_DCDC_SYS_LEVEL_1P525V
- *          @arg AON_DCDC_SYS_LEVEL_1P550V
- *          @arg AON_DCDC_SYS_LEVEL_1P575V
- *          @arg AON_DCDC_SYS_LEVEL_1P600V
- *          @arg AON_DCDC_SYS_LEVEL_1P625V
- *          @arg AON_DCDC_SYS_LEVEL_1P650V
- *          @arg AON_DCDC_SYS_LEVEL_1P675V
- *          @arg AON_DCDC_SYS_LEVEL_1P700V
- *          @arg AON_DCDC_SYS_LEVEL_1P725V
- *          @arg AON_DCDC_SYS_LEVEL_1P750V
- *          @arg AON_DCDC_SYS_LEVEL_1P775V
  *          @arg AON_DCDC_SYS_LEVEL_1P800V
- *          @arg AON_DCDC_SYS_LEVEL_1P825V
- *          @arg AON_DCDC_SYS_LEVEL_1P850V
- *          @arg AON_DCDC_SYS_LEVEL_1P875V
  *          @arg AON_DCDC_SYS_LEVEL_1P900V
  *
  * @return SUCCESS or ERROR
@@ -1289,13 +1237,19 @@ BL_Err_Type AON_Set_BOD_Config(uint8_t enable, uint8_t threshold, uint8_t mode)
  * @return NULL
  *
 *******************************************************************************/
-void AON_Wdg_Init(uint16_t comp_val)
+BL_Err_Type AON_Wdg_Init(uint16_t comp_val)
 {
     uint32_t tmpVal = 0;
+
+    if (comp_val > 63) {
+        return ERROR;
+    }
 
     tmpVal = BL_RD_REG(AON_BASE, AON_WDT);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_CR_CNT_MASK_BIT, comp_val);
     BL_WR_REG(AON_BASE, AON_WDT, tmpVal);
+
+    return SUCCESS;
 }
 
 /****************************************************************************/ /**
@@ -1312,6 +1266,23 @@ void AON_Wdg_Start(void)
 
     tmpVal = BL_RD_REG(AON_BASE, AON_WDT);
     tmpVal = BL_SET_REG_BIT(tmpVal, AON_CR_ANO_WDT_EN);
+    BL_WR_REG(AON_BASE, AON_WDT, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  Stop WatchDog in hbn domain
+ *
+ * @param  NULL
+ *
+ * @return NULL
+ *
+*******************************************************************************/
+void AON_Wdg_Stop(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_WDT);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_CR_ANO_WDT_EN);
     BL_WR_REG(AON_BASE, AON_WDT, tmpVal);
 }
 
@@ -1344,6 +1315,8 @@ void AON_Wdg_Status_Clear(void)
     tmpVal = BL_SET_REG_BIT(tmpVal, AON_CR_AON_WDT_CLR);
     BL_WR_REG(AON_BASE, AON_WDT, tmpVal);
 
+    arch_delay_us(100);
+
     tmpVal = BL_RD_REG(AON_BASE, AON_WDT);
     tmpVal = BL_CLR_REG_BIT(tmpVal, AON_CR_AON_WDT_CLR);
     BL_WR_REG(AON_BASE, AON_WDT, tmpVal);
@@ -1364,6 +1337,8 @@ void AON_Wdg_Kick(void)
     tmpVal = BL_RD_REG(AON_BASE, AON_WDT);
     tmpVal = BL_SET_REG_BIT(tmpVal, AON_CR_SW_KICK_POS);
     BL_WR_REG(AON_BASE, AON_WDT, tmpVal);
+
+    arch_delay_us(100);
 
     tmpVal = BL_RD_REG(AON_BASE, AON_WDT);
     tmpVal = BL_CLR_REG_BIT(tmpVal, AON_CR_SW_KICK_POS);
@@ -1389,10 +1364,19 @@ void ATTR_CLOCK_SECTION AON_Set_RC32M_Speed_As_8M(uint8_t enable)
         tmpVal &= ~(1 << 25);
     }
     BL_WR_REG(AON_BASE, AON_RC32M_CTRL1_AON, tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_RC32M_CTRL2_AON);
+
+    if (enable) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_RC32M_EXT_CODE_SEL, 0);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_RC32M_EXT_CODE_SEL, 1);
+    }
+    BL_WR_REG(AON_BASE, AON_RC32M_CTRL2_AON, tmpVal);
 }
 
 /****************************************************************************/ /**
- * @brief  set rc32m external code in for frequency setting
+ * @brief  set rc32m external code for frequency setting in lowpower mode
  *
  * @param  code: code value
  *
@@ -1406,6 +1390,23 @@ void AON_Set_RC32M_Code_Fr_Ext(uint8_t code)
     tmpVal = BL_RD_REG(AON_BASE, AON_RC32M_CTRL0_AON);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_RC32M_CODE_FR_EXT, code);
     BL_WR_REG(AON_BASE, AON_RC32M_CTRL0_AON, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  set rc32m external code for frequency setting in normal mode
+ *
+ * @param  code: code value
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void AON_Set_RC32M_Code_Fr_Ext2(uint8_t code)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_RC32M_CTRL2_AON);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_RC32M_CODE_FR_EXT2, code);
+    BL_WR_REG(AON_BASE, AON_RC32M_CTRL2_AON, tmpVal);
 }
 
 /****************************************************************************/ /**

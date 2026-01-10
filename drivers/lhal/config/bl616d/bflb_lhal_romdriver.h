@@ -1870,7 +1870,7 @@ typedef enum {
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_wo_push_fifo])
 
 #define romapi_bflb_wo_push_fifo_force \
-    ((uint32_t (*)(struct bflb_device_s *dev, uint16_t *data, uint32_t len)) \
+    ((void (*)(struct bflb_device_s *dev, uint16_t *data, uint32_t len)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_wo_push_fifo_force])
 
 #define romapi_bflb_wo_clear_fifo \

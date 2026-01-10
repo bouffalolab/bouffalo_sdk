@@ -652,6 +652,14 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_Off_RC32K(void)
     return SUCCESS;
 }
 
+/****************************************************************************/ /**
+ * @brief  Set RC3K R_CODE
+ *
+ * @param  r_code
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
 BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_RC32K_R_Code(uint32_t r_code)
 {
     uint32_t tmpVal;
@@ -664,7 +672,14 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_RC32K_R_Code(uint32_t r_code)
     return SUCCESS;
 }
 
-
+/****************************************************************************/ /**
+ * @brief  Get RC3K R_CODE
+ *
+ * @param  NULL
+ *
+ * @return r_code
+ *
+*******************************************************************************/
 uint32_t ATTR_CLOCK_SECTION HBN_Get_RC32K_R_Code(void)
 {
     uint32_t tmpVal;
@@ -977,8 +992,8 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Get_Xtal_Value(uint32_t *xtalVal)
             case GLB_XTAL_32M:
                 *xtalVal = 32000000;
                 break;
-            case GLB_XTAL_38P4M:
-                *xtalVal = 38400000;
+            case GLB_XTAL_52M:
+                *xtalVal = 52000000;
                 break;
             case GLB_XTAL_40M:
                 *xtalVal = 40000000;

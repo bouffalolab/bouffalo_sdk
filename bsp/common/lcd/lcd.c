@@ -25,9 +25,15 @@
 #include "font.h"
 #include "bflb_core.h"
 
-#if defined(LCD_RESET_EN)
+#if defined(LCD_RESET_EN) || defined(LCD_BACKLIGHT_EN)
 #include "bflb_gpio.h"
 #include "bflb_mtimer.h"
+#endif
+
+#if defined (BL606P) || defined (BL628) ||defined(BL702L) || defined(BL702) || defined(BL808)
+#include "board.h"
+#else
+#include "board_gpio.h"
 #endif
 
 uint8_t lcd_dir = 0;
@@ -45,13 +51,13 @@ int lcd_init(void)
 {
     int res;
 
-#if (defined(LCD_RESET_EN) && LCD_RESET_EN)
+#if (defined(LCD_RESET_EN)&&LCD_RESET_EN) || (defined(LCD_BACKLIGHT_EN)&&LCD_BACKLIGHT_EN)
     struct bflb_device_s *gpio;
-
     /* gpio init */
     gpio = bflb_device_get_by_name("gpio");
+#endif
+#if (defined(LCD_RESET_EN) && LCD_RESET_EN)
     bflb_gpio_init(gpio, LCD_RESET_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
     /* lcd reset */
 #if LCD_RESET_ACTIVE_LEVEL
     bflb_gpio_set(gpio, LCD_RESET_PIN);
@@ -69,6 +75,17 @@ int lcd_init(void)
 #endif
 
     bflb_mtimer_delay_ms(LCD_RESET_DELAY);
+#endif
+
+#if(defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN)
+    /* close backlight */
+    bflb_gpio_init(gpio, LCD_BACKLIGHT_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+
+#if LCD_BACKLIGHT_ACTIVE_LEVEL
+    bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
+#else
+    bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
+#endif
 #endif
 
     res = _LCD_FUNC_DEFINE(init);
@@ -663,4 +680,26 @@ int lcd_draw_str_ascii16(lcd_color_t *screen_buffer, uint16_t x, uint16_t y, lcd
 }
 #endif
 
+#if (defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN)
+void lcd_backlight_toggle(bool on)
+{
+    struct bflb_device_s *gpio;
+
+    /* gpio init */
+    gpio = bflb_device_get_by_name("gpio");
+    if (on) {
+#if LCD_BACKLIGHT_ACTIVE_LEVEL
+        bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
+#else
+        bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
+#endif
+    } else {
+#if LCD_BACKLIGHT_ACTIVE_LEVEL
+        bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
+#else
+        bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
+#endif
+    }
+}
+#endif
 #endif

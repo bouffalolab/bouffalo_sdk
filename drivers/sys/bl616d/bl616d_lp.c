@@ -1272,72 +1272,6 @@ void bl_lp_debug_dump_time(iot2lp_para_t *iot_lp_para)
 #endif
 }
 
-int bl_lp_rtc_rc32k_coarse_adj(uint32_t expect_time, uint32_t rc32k_actual_time)
-{
-    int diff_val, diff_ppm, diff_code;
-
-    if (iot2lp_para->rc32k_trim_parameter->rc32k_clock_ready) {
-        return 0;
-    }
-
-    if (expect_time == 0 || rc32k_actual_time == 0) {
-        return 1000 * 1000;
-    }
-
-    diff_val = rc32k_actual_time - expect_time;
-    diff_ppm = (int64_t)diff_val * 1000 * 1000 / expect_time;
-    if (diff_ppm < 0) {
-        diff_code = (diff_ppm / 200 - 1);
-    } else {
-        diff_code = (diff_ppm / 200 + 1);
-    }
-
-    if (diff_ppm > 800 * 1000 || diff_ppm < -800 * 1000) {
-        /* The error is too large. Abort calibration */
-        return 1000 * 1000;
-    }
-
-    /* get rc32k recal code */
-    uint32_t rc32k_code = HBN_Get_RC32K_R_Code();
-
-    BL_LP_LOG("rc32k coarse_adj, code:%d, ppm:%d, diff_code:%d\r\n", rc32k_code, diff_ppm, diff_code);
-
-    if (diff_code != 0) {
-        rc32k_code += diff_code;
-
-        /* set rc32k code */
-        HBN_Set_RC32K_R_Code(rc32k_code);
-    }
-
-    /* save the code */
-    iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext = rc32k_code;
-
-    return diff_ppm;
-}
-
-int bl_lp_set_32k_clock_ready(uint8_t ready_val)
-{
-    iot2lp_para->rc32k_trim_parameter->rc32k_clock_ready = ready_val;
-    iot2lp_para->rc32k_trim_parameter->rc32k_trim_ready = 0;
-
-    BL_LP_LOG("bl_lp set 32k ready %d\r\n", ready_val);
-
-    return ready_val;
-}
-
-int bl_lp_get_32k_clock_ready(void)
-{
-    return iot2lp_para->rc32k_trim_parameter->rc32k_clock_ready;
-}
-
-int bl_lp_set_32k_trim_ready(uint8_t ready_val)
-{
-    iot2lp_para->rc32k_trim_parameter->rc32k_trim_ready = ready_val;
-
-    BL_LP_LOG("bl_lp set 32k trim ready %d\r\n", ready_val);
-
-    return ready_val;
-}
 
 int bl_lp_get_bcn_delay_ready(void)
 {
@@ -1349,7 +1283,32 @@ int bl_lp_get_bcn_delay_ready(void)
     }
 }
 
-int bl_lp_get_32k_trim_ready(void)
+
+ATTR_TCM_SECTION void bl_lp_bcn_loss_cnt_clear(void)
 {
-    return iot2lp_para->rc32k_trim_parameter->rc32k_trim_ready;
+    if (!iot2lp_para->bcn_loss_info) {
+        return;
+    }
+
+    /* clear continuous loss cnt */
+    iot2lp_para->bcn_loss_info->continuous_loss_cnt = 0;
+    iot2lp_para->bcn_loss_info->bcn_loss_level = 0;
+}
+
+ATTR_TCM_SECTION void bl_lp_bcn_timestamp_update(uint64_t beacon_timestamp_us, uint64_t rtc_timestamp_us, uint32_t mode)
+{
+    /* update timestamp_us */
+    iot2lp_para->last_beacon_stamp_rtc_valid = mode;
+    iot2lp_para->last_beacon_stamp_rtc_us = rtc_timestamp_us;
+    iot2lp_para->last_beacon_stamp_beacon_us = beacon_timestamp_us;
+}
+
+ATTR_TCM_SECTION uint32_t bl_lp_get_beacon_interval_tu(void)
+{
+    return iot2lp_para->wifi_parameter->beacon_interval_tu;
+}
+
+ATTR_TCM_SECTION uint32_t bl_lp_get_dtim_num(void)
+{
+    return iot2lp_para->wifi_parameter->dtim_num;
 }

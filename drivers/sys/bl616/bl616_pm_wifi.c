@@ -97,3 +97,23 @@ void bl_lp_turnon_rf(void)
 {
     PDS_Power_On_WB();
 }
+
+int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu)
+{
+    if (beacon_interval_tu < 20 || beacon_interval_tu > 1000) {
+        return -1;
+    }
+
+    if (beacon_interval_tu == iot2lp_para->wifi_parameter->beacon_interval_tu) {
+        return 0;
+    }
+
+    // BL_LP_LOG("beacon interval update %d -> %d", (int)iot2lp_para->wifi_parameter->beacon_interval_tu, (int)beacon_interval_tu);
+
+    iot2lp_para->wifi_parameter->beacon_interval_tu = beacon_interval_tu;
+
+    /* TODO: Other actions may be required, such as resetting the state */
+
+    return 0;
+}
+

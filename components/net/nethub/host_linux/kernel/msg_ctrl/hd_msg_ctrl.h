@@ -32,6 +32,8 @@ enum {
 
     HD_MSG_TAG_TTY, /**< TTY/UART subsystem messages */
 
+    HD_MSG_TAG_NETLINK, /**< Netlink subsystem messages */
+
     HD_MSG_TAG_MAX /**< Maximum tag value (boundary marker) */
 };
 

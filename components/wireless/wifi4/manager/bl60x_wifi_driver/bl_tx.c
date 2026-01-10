@@ -220,7 +220,7 @@ static void bl_tx_push(struct bl_sta* sta, struct txdesc_host *txdesc_host, void
     host->packet_addr = (uint32_t)(0x11111111); // FIXME we use this magic for unvaild packet_addr
     host->flags       = 0;
 
-    /* 
+    /*
      * Buffer transfer and descriptor tranform
      */
 #if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
@@ -564,7 +564,7 @@ err_t bl_output(struct bl_hw *bl_hw, int is_sta, struct pbuf *p, struct bl_tx_cf
         return ERR_IF;
     }
 
-    /* Check reserved len for link 
+    /* Check reserved len for link
      *           PBUF_LINK_ENCAPSULATION_HLEN (48)
      * | align (8) | struct bl_txhdr (24) | reserved (16) |
      */
@@ -622,4 +622,125 @@ void bl_tx_cntrl_link_down(struct bl_sta *sta)
 {
     /* Purge pending_list and waiting_list */
     bl_tx_cntrl_purge_check(sta, 0);
+}
+
+/**
+ * @brief Find STA index by MAC address in the given VIF
+ */
+int bl_tx_find_sta_by_mac(uint8_t vif_idx, struct mac_addr *mac)
+{
+    struct bl_sta *sta;
+    int i;
+
+    for (i = 0; i < NX_REMOTE_STA_STORE_MAX; i++)
+    {
+        sta = &wifi_hw.sta_table[i];
+        if (sta->is_used && sta->vif_idx == vif_idx &&
+            memcmp(&sta->sta_addr, mac, sizeof(struct mac_addr)) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/**
+ * @brief Forward a unicast frame to a specific STA (intra-BSS forwarding)
+ */
+err_t bl_tx_intra_bss_forward(struct pbuf *p, int dst_sta_idx)
+{
+    struct bl_sta *sta;
+    struct pbuf *q;
+    err_t ret;
+
+    if (dst_sta_idx < 0 || dst_sta_idx >= NX_REMOTE_STA_STORE_MAX)
+    {
+        return ERR_ARG;
+    }
+
+    sta = &wifi_hw.sta_table[dst_sta_idx];
+    if (!sta->is_used)
+    {
+        return ERR_CONN;
+    }
+
+    /* Allocate new pbuf with enough headroom for WiFi TX header */
+    q = pbuf_alloc(PBUF_RAW, PBUF_LINK_ENCAPSULATION_HLEN + p->tot_len, PBUF_RAM);
+    if (!q)
+    {
+        return ERR_MEM;
+    }
+
+    /* Reserve space for WiFi TX header */
+    pbuf_header(q, -PBUF_LINK_ENCAPSULATION_HLEN);
+    /* Copy the original data */
+    pbuf_copy(q, p);
+
+    /* Use bl_output to send the packet, is_sta=0 for AP mode */
+#ifdef CFG_NETBUS_WIFI_ENABLE
+    ret = bl_output(&wifi_hw, 0, q, NULL, 1);
+#else
+    ret = bl_output(&wifi_hw, 0, q, NULL);
+#endif
+    pbuf_free(q);
+    return ret;
+}
+
+/**
+ * @brief Forward a broadcast/multicast frame to all other STAs (excluding sender)
+ */
+err_t bl_tx_intra_bss_broadcast(struct pbuf *p, int src_sta_idx)
+{
+    struct bl_sta *sta;
+    struct pbuf *q;
+    int i;
+    int fwd_count = 0;
+
+    /* Get vif_idx from the source STA's entry in sta_table */
+    uint8_t vif_idx = wifi_hw.sta_table[src_sta_idx].vif_idx;
+
+    for (i = 0; i < NX_REMOTE_STA_STORE_MAX; i++)
+    {
+        /* Skip the source STA */
+        if (i == src_sta_idx)
+        {
+            continue;
+        }
+
+        sta = &wifi_hw.sta_table[i];
+        /* Only forward to STAs belonging to the same VIF */
+        if (sta->is_used && sta->vif_idx == vif_idx)
+        {
+            if (sta->sta_addr.array[0] == 0 && sta->sta_addr.array[1] == 0 &&
+                sta->sta_addr.array[2] == 0 && sta->sta_addr.array[3] == 0 &&
+                sta->sta_addr.array[4] == 0 && sta->sta_addr.array[5] == 0)
+            {
+                continue;
+            }
+
+            /* Allocate new pbuf with enough headroom for WiFi TX header */
+            q = pbuf_alloc(PBUF_RAW, PBUF_LINK_ENCAPSULATION_HLEN + p->tot_len, PBUF_RAM);
+            if (q)
+            {
+                /* Reserve space for WiFi TX header */
+                pbuf_header(q, -PBUF_LINK_ENCAPSULATION_HLEN);
+                /* Copy the original data */
+                pbuf_copy(q, p);
+
+#ifdef CFG_NETBUS_WIFI_ENABLE
+                err_t ret = bl_output(&wifi_hw, 0, q, NULL, 1);
+#else
+                err_t ret = bl_output(&wifi_hw, 0, q, NULL);
+#endif
+                /* bl_output refs the pbuf, we need to free our reference */
+                pbuf_free(q);
+                fwd_count++;
+            }
+            else
+            {
+            }
+        }
+    }
+
+    return ERR_OK;
 }

@@ -84,14 +84,22 @@ const struct bflb_device_s bl616d_device_table[] = {
       .user_data = NULL },
     { .name = BFLB_NAME_SPI1,
       .reg_base = SPI1_BASE,
+#if !defined(CPU_LP) || defined(CPU_MODEL_A0)
       .irq_num = BL616D_IRQ_SPI1,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 1,
       .dev_type = BFLB_DEVICE_TYPE_SPI,
       .user_data = NULL },
 #if !defined(CPU_MODEL_A0)
     { .name = BFLB_NAME_SPI2,
       .reg_base = SPI2_BASE,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_SPI2,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 2,
       .dev_type = BFLB_DEVICE_TYPE_SPI,
       .user_data = NULL },
@@ -293,7 +301,11 @@ const struct bflb_device_s bl616d_device_table[] = {
       .user_data = NULL },
     { .name = BFLB_NAME_AUDAC,
       .reg_base = AUDAC_BASE,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_AUDAC,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 0,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_AUDIODAC,
@@ -511,21 +523,33 @@ const struct bflb_device_s bl616d_device_table[] = {
 #if !defined(CPU_MODEL_A0)
     { .name = BFLB_NAME_CAN0,
       .reg_base = CAN0_BASE,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_CAN0,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 0,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_CAN,
       .user_data = NULL },
     { .name = BFLB_NAME_CAN1,
       .reg_base = CAN1_BASE,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_CAN1,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 1,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_CAN,
       .user_data = NULL },
     { .name = BFLB_NAME_CAN2,
       .reg_base = CAN2_BASE,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_CAN2,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 2,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_CAN,
@@ -623,14 +647,22 @@ const struct bflb_device_s bl616d_device_table[] = {
       .user_data = NULL },
     { .name = BFLB_NAME_DSI,
       .reg_base = DSI_BASE,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_DSI,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 0,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_DSI,
       .user_data = NULL },
     { .name = BFLB_NAME_TOUCH_V2,
       .reg_base = PDS_BASE + 0x100,
+#if !defined(CPU_LP)
       .irq_num = BL616D_IRQ_TOUCH,
+#else
+      .irq_num = 0xff,
+#endif
       .idx = 0,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_TOUCH_V2,

@@ -167,6 +167,15 @@ void bflb_osd_blend_set_layer_buffer(struct bflb_device_s *dev, uint32_t addr)
 #endif
 }
 
+uint32_t bflb_osd_blend_get_layer_buffer(struct bflb_device_s *dev)
+{
+#ifdef romapi_bflb_osd_blend_get_layer_buffer
+    return romapi_bflb_osd_blend_get_layer_buffer(dev);
+#else
+    return (getreg32(dev->reg_base + OSD_BLEND_OBND_MEM_CONFIG1_OFFSET));
+#endif
+}
+
 void bflb_osd_blend_set_global_a(struct bflb_device_s *dev, bool enable, uint8_t value)
 {
 #ifdef romapi_bflb_osd_blend_set_global_a

@@ -31,10 +31,7 @@ static struct bflb_device_s *rtc;
 static void system_clock_init(void)
 {
     /* wifipll/audiopll */
-    GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL |
-                                                    GLB_PLL_CPUPLL |
-                                                    GLB_PLL_UHSPLL |
-                                                    GLB_PLL_MIPIPLL);
+    GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL | GLB_PLL_CPUPLL | GLB_PLL_UHSPLL | GLB_PLL_MIPIPLL);
 
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_WIFIPLL_320M);
     GLB_Set_DSP_System_CLK(GLB_DSP_SYS_CLK_CPUPLL_400M);
@@ -270,8 +267,7 @@ void board_init(void)
 #ifdef CONFIG_PSRAM
 #ifndef CONFIG_PSRAM_COPY_CODE
     if (uhs_psram_init() < 0) {
-        while (1) {
-        }
+        while (1) {}
     }
 #endif
     // extern uint32_t __psram_load_addr;
@@ -619,6 +615,86 @@ void board_touch_gpio_init(void)
     /* TOUCH_CH3 */
     bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
 }
+
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_dbi_type_c_4_wire_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_dbi_type_c_3_wire_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_dbi_type_b_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_24, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_dbi_ex_qspi_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_spi_0_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+#endif
+#endif
 
 #ifdef CONFIG_BFLB_LOG
 __attribute__((weak)) uint64_t bflb_log_clock(void)

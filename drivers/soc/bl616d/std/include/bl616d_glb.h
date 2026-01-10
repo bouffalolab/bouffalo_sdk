@@ -49,6 +49,7 @@
 #include "bl616d_pds.h"
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
+#include "mm_misc_reg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -618,6 +619,47 @@ typedef struct {
   * @}
   */
 
+/** @defgroup GLB multimedia software reset type definition
+  * @{
+  */
+#if defined(CPU_MODEL_A0)
+#define GLB_MM_SW_MISC              (1 << 0)
+#define GLB_MM_SW_D2XA              (1 << 1)
+#define GLB_MM_SW_D2XB              (1 << 2)
+#define GLB_MM_SW_MJPEG             (1 << 3)
+#define GLB_MM_SW_MJDEC             (1 << 4)
+#define GLB_MM_SW_DTSRC             (1 << 5)
+#define GLB_MM_SW_R2B               (1 << 6)
+#define GLB_MM_SW_B2R               (1 << 7)
+#define GLB_MM_SW_D2SA              (1 << 8)
+#define GLB_MM_SW_D2SB              (1 << 9)
+#define GLB_MM_SW_OSDA              (1 << 10)
+#define GLB_MM_SW_DISP              (1 << 11)
+#else
+#define GLB_MM_SW_MISC              (1 << 0)
+#define GLB_MM_SW_REG               (1 << 1)
+#define GLB_MM_SW_S2P               (1 << 2)
+#define GLB_MM_SW_BT656             (1 << 3)
+#define GLB_MM_SW_DVPAS             (1 << 4)
+#define GLB_MM_SW_422TO420A         (1 << 5)
+#define GLB_MM_SW_422TO422A         (1 << 6)
+#define GLB_MM_SW_YUV2RGB           (1 << 7)
+#define GLB_MM_SW_D2XA              (1 << 8)
+#define GLB_MM_SW_D2XB              (1 << 9)
+#define GLB_MM_SW_MJPEG             (1 << 10)
+#define GLB_MM_SW_MJDEC             (1 << 11)
+#define GLB_MM_SW_DTSRC             (1 << 12)
+#define GLB_MM_SW_R2B               (1 << 13)
+#define GLB_MM_SW_B2R               (1 << 14)
+#define GLB_MM_SW_D2SA              (1 << 15)
+#define GLB_MM_SW_D2SB              (1 << 16)
+#define GLB_MM_SW_OSDA              (1 << 17)
+#define GLB_MM_SW_DISP              (1 << 18)
+#endif
+/**
+  * @}
+  */
+
 /** @defgroup GLB dis reset type definition
   * @{
   */
@@ -879,7 +921,7 @@ typedef struct {
 #define GLB_XTAL_NONE                      (0) /*!< XTAL is none */
 #define GLB_XTAL_24M                       (1) /*!< XTAL is 24M */
 #define GLB_XTAL_32M                       (2) /*!< XTAL is 32M */
-#define GLB_XTAL_38P4M                     (3) /*!< XTAL is 38.4M */
+#define GLB_XTAL_52M                       (3) /*!< XTAL is 52M */
 #define GLB_XTAL_40M                       (4) /*!< XTAL is 40M */
 #define GLB_XTAL_26M                       (5) /*!< XTAL is 26M */
 #define GLB_XTAL_RC32M                     (6) /*!< XTAL is RC32M */
@@ -1726,7 +1768,7 @@ typedef union {
 #define IS_GLB_XTAL_TYPE(type) (((type) == GLB_XTAL_NONE) ||  \
                                 ((type) == GLB_XTAL_24M) ||   \
                                 ((type) == GLB_XTAL_32M) ||   \
-                                ((type) == GLB_XTAL_38P4M) || \
+                                ((type) == GLB_XTAL_52M) ||   \
                                 ((type) == GLB_XTAL_40M) ||   \
                                 ((type) == GLB_XTAL_26M) ||   \
                                 ((type) == GLB_XTAL_RC32M) || \
@@ -1961,8 +2003,6 @@ BL_Err_Type GLB_Config_WIFIPLL(uint8_t xtalType, const GLB_WIFIPLL_Cfg_Type *pll
 BL_Err_Type GLB_Config_CPUPLL(uint8_t xtalType, const GLB_CPUPLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t div);
 BL_Err_Type GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t div);
-BL_Err_Type GLB_Set_USB_CLK_From_WIFIPLL(uint8_t enable);
-BL_Err_Type GLB_Set_SSC_CLK_From_WIFIPLL(uint8_t enable);
 /*----------*/
 BL_Err_Type GLB_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uint8_t mcuPBclkDiv);
 BL_Err_Type GLB_Get_MCU_System_CLK_Div(uint8_t *mcuClkDiv, uint8_t *mcuPBclkDiv);
@@ -2036,6 +2076,7 @@ BL_Err_Type GLB_Clr_Reset_Reason(void);
 BL_Err_Type GLB_Get_Reset_Reason(GLB_RESET_RECORD_Type *reason);
 /*----------*/
 BL_Err_Type GLB_AHB_MCU_Software_Reset(uint8_t swrst);
+BL_Err_Type GLB_MM_Software_Reset(uint32_t swrst);
 BL_Err_Type GLB_PER_Clock_Gate(uint64_t ips);
 BL_Err_Type GLB_PER_Clock_UnGate(uint64_t ips);
 BL_Err_Type GLB_PLL_CGEN_Clock_Gate(uint8_t clk);

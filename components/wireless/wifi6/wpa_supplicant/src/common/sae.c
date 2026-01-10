@@ -647,6 +647,7 @@ static struct crypto_ec_point * sswu(struct crypto_ec *ec, int group,
 		*x1a, *x1b, *y = NULL;
 	struct crypto_bignum *x1 = NULL, *x2, *gx1, *gx2, *v = NULL;
 	unsigned int m_is_zero, is_qr, is_eq;
+	struct crypto_bignum *temp_result = NULL;
 	size_t prime_len;
 	u8 bin[SAE_MAX_ECC_PRIME_LEN];
 	u8 bin1[SAE_MAX_ECC_PRIME_LEN];
@@ -676,8 +677,9 @@ static struct crypto_ec_point * sswu(struct crypto_ec *ec, int group,
 	x2 = crypto_bignum_init();
 	gx1 = crypto_bignum_init();
 	gx2 = crypto_bignum_init();
+	temp_result = crypto_bignum_init();
 	if (!u2 || !t1 || !t2 || !z || !t || !zero || !one || !two || !three ||
-	    !x1a || !x1b || !x2 || !gx1 || !gx2)
+	    !x1a || !x1b || !x2 || !gx1 || !gx2 || !temp_result)
 		goto fail;
 
 	if (z_int < 0 && crypto_bignum_sub(prime, z, z) < 0)
@@ -760,11 +762,11 @@ static struct crypto_ec_point * sswu(struct crypto_ec *ec, int group,
 	 * --> gx1^((p-1)/2) modulo p is zero or one */
 	if (crypto_bignum_sub(prime, one, t1) < 0 ||
 	    crypto_bignum_rshift(t1, 1, t1) < 0 ||
-	    crypto_bignum_exptmod(gx1, t1, prime, t1) < 0)
+	    crypto_bignum_exptmod(gx1, t1, prime, temp_result) < 0)
 		goto fail;
 	debug_print_bignum("SSWU: gx1^((p-1)/2) modulo p", t1, prime_len);
-	is_qr = const_time_eq(crypto_bignum_is_zero(t1) |
-			      crypto_bignum_is_one(t1), 1);
+	is_qr = const_time_eq(crypto_bignum_is_zero(temp_result) |
+			      crypto_bignum_is_one(temp_result), 1);
 
 	/* v = CSEL(l, gx1, gx2) */
 	if (crypto_bignum_to_bin(gx1, bin1, sizeof(bin1), prime_len) < 0 ||
@@ -811,6 +813,7 @@ static struct crypto_ec_point * sswu(struct crypto_ec *ec, int group,
 	p = crypto_ec_point_from_bin(ec, x_y);
 
 fail:
+	crypto_bignum_deinit(temp_result, 0);
 	crypto_bignum_deinit(u2, 1);
 	crypto_bignum_deinit(t1, 1);
 	crypto_bignum_deinit(t2, 1);

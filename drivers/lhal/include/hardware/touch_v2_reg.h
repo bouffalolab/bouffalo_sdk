@@ -432,6 +432,7 @@
 #define TOUCH_CHL_SCN_LST_INT_CLR                               (1<<16U)
 #define TOUCH_HOP_FREQ_TH_INT_CLR_SHIFT                         (17U)
 #define TOUCH_HOP_FREQ_TH_INT_CLR_MASK                          (0x3<<TOUCH_HOP_FREQ_TH_INT_CLR_SHIFT)
+#define TOUCH_INT_CLR_P                                         (1<<31U)
 
 /* 0x6b0 : touch_hop_freq_cfg */
 #define TOUCH_RESERVED_SHIFT                                    (0U)

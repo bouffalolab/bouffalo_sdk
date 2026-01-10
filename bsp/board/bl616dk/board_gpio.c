@@ -256,11 +256,11 @@ void board_i2s_codec_gpio_init(void)
     gpio = bflb_device_get_by_name("gpio");
 
     /* I2S_FS */
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     /* I2S_DI */
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     /* I2S_DO */
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     /* I2S_BCLK */
     bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
@@ -272,17 +272,94 @@ void board_i2s_codec_gpio_init(void)
         It needs to be called before i2s is initialized
         clock source 24.576M */
 
-    /*!< MCLK = 24.576 / (5+1) = 4.096MHz */
-    GLB_Set_I2S_CLK(ENABLE, 5, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
-    GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_I2S_REF_CLK);
+    /*!< MCLK = 24.576 / (1+1) = 12.288MHz */
+    GLB_Set_I2S_CLK(ENABLE, 1, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
+    GLB_Set_Chip_Clock_Out2_Sel(GLB_CHIP_CLK_OUT_2_I2S_REF_CLK);
 
     /* MCLK CLKOUT */
-    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
     /* I2C0_SCL */
-    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     /* I2C0_SDA */
-    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_dbi_type_c_4_wire_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_dbi_type_c_3_wire_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_dbi_type_b_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_6, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_7, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_8, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_9, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_lcd_dbi_ex_qspi_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+void board_lcd_spi_0_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* LCD_SPI_DAT */
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* LCD_SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+#endif
+#endif
 #endif

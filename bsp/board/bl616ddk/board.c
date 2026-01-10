@@ -32,6 +32,7 @@ extern uint32_t __HeapLimit;
 extern uint8_t _heap_wifi_start;
 extern uint8_t _heap_wifi_size;
 #endif
+#ifndef CPU_LP
 extern uint32_t __psram_heap_base;
 extern uint32_t __psram_limit;
 
@@ -39,6 +40,7 @@ extern uint32_t __psram_data_start__;
 extern uint32_t __psram_data_end__;
 extern uint32_t __psram_noinit_start__;
 extern uint32_t __psram_noinit_end__;
+#endif
 
 #ifdef CONFIG_CONSOLE_WO
 static struct bflb_device_s *wo;
@@ -49,7 +51,6 @@ static struct bflb_device_s *uart;
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLB_LOG) || defined(CONFIG_FATFS))
 static struct bflb_device_s *rtc;
 #endif
-
 
 static void system_bod_init(void)
 {
@@ -94,13 +95,16 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
         *(volatile uint32_t *)(0x2008F994) = 0x5A000000;
 #endif
 
-        CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
+        CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK,
+                           Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
 
         /* enable wifi clock */
         GLB_Set_WIFIPLL_Fine_Tune();
-        GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_IP_WIFI_PHY | GLB_AHB_CLOCK_IP_WIFI_MAC_PHY | GLB_AHB_CLOCK_IP_WIFI_PLATFORM);
+        GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_IP_WIFI_PHY | GLB_AHB_CLOCK_IP_WIFI_MAC_PHY |
+                             GLB_AHB_CLOCK_IP_WIFI_PLATFORM);
     } else if (GLB_CORE_ID_NP == GLB_Get_Core_Type()) {
-        CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_XCLK) / 1000000 - 1);
+        CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK,
+                           Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_XCLK) / 1000000 - 1);
     }
 }
 
@@ -145,7 +149,8 @@ static void peripheral_clock_init(void)
         GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_XCLK);
         GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
         GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SINGLE_END);
-        GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0) / 2000000 - 1);
+        GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK,
+                       bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0) / 2000000 - 1);
         GLB_Set_CAM_REF_CLK(ENABLE, GLB_CAM_REF_CLK_WIFIPLL_96M, 3);
         GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_BCLK, 0);
         GLB_Set_Display_CLK(ENABLE, GLB_DP_CLK_WIFIPLL_96M, 3);
@@ -158,7 +163,6 @@ static void peripheral_clock_init(void)
 #else
         GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_320M);
 #endif
-        GLB_Set_USB_CLK_From_WIFIPLL(1);
         GLB_Swap_MCU_SPI_0_MOSI_With_MISO(0);
     }
 }
@@ -229,7 +233,6 @@ static void peripheral_clock_init_lp(void)
 
 #ifdef CONFIG_BSP_USB
     PERIPHERAL_CLOCK_USB_ENABLE();
-    GLB_Set_USB_CLK_From_WIFIPLL(1);
 #endif
 
     PERIPHERAL_CLOCK_ADC_DAC_ENABLE();
@@ -251,14 +254,20 @@ static void bflb_check_anti_rollback(void)
     }
 
     if (app_ver.anti_rollback < efuse_version) {
-        printf("app version in application is: %d, less than app version in efuse, the application should not run up\r\n", app_ver.anti_rollback);
+        printf(
+            "app version in application is: %d, less than app version in efuse, the application should not run up\r\n",
+            app_ver.anti_rollback);
     } else {
-        printf("app version in application is: %d, not less than app version in efuse, the application should run up\r\n", app_ver.anti_rollback);
+        printf(
+            "app version in application is: %d, not less than app version in efuse, the application should run up\r\n",
+            app_ver.anti_rollback);
     }
 
     /* change app version in efuse to app_ver.anti_rollback, default is 0 */
     if (app_ver.anti_rollback > efuse_version) {
-        bflb_set_app_version_to_efuse(app_ver.anti_rollback); //be attention! app version in efuse is incremental(from 0 to 128), and cannot be reduced forever
+        bflb_set_app_version_to_efuse(
+            app_ver
+                .anti_rollback); //be attention! app version in efuse is incremental(from 0 to 128), and cannot be reduced forever
         printf("update app version in efuse to %d\r\n", app_ver.anti_rollback);
 
         /* check app version in efuse */
@@ -406,7 +415,8 @@ void np_board_main(void)
     uint32_t cycle_h = 0;
 
     /* set mtimer clock */
-    CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_XCLK) / 1000000 - 1);
+    CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK,
+                       Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_XCLK) / 1000000 - 1);
 
     printf("NP boot up\r\n");
     __WFI();
@@ -536,6 +546,7 @@ void ram_heap_init(void)
     mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, (size_t)&_heap_wifi_size);
 #endif
 
+#ifndef CPU_LP
 #ifdef CONFIG_PSRAM
 #if defined(CPU_AP)
     /* psram init */
@@ -567,6 +578,7 @@ void ram_heap_init(void)
     printf("dynamic memory init success\r\n"
            "  ocram heap size: %d Kbyte \r\n",
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#endif
 #endif
 }
 
@@ -612,7 +624,7 @@ void board_init(void)
 
     /* console init (uart or wo) */
     console_init();
-    
+
     /* config chip pod */
     bflb_irq_attach(BOD_IRQn, system_bod_isr, NULL);
     bflb_irq_enable(BOD_IRQn);
@@ -639,10 +651,13 @@ void board_init(void)
     putreg32(0xffffffff, GLB_BASE + GLB_CGEN_CFG1_OFFSET);
     putreg32(0xffffffff, GLB_BASE + GLB_CGEN_CFG2_OFFSET);
 
-    printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET), getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
-    printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET), getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
+    printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET),
+           getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
+    printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET),
+           getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
     HBN_Get_Xtal_Value(&xtal_value);
-    printf("xtal:%dHz(%s)\r\n", xtal_value, ((getreg32(AON_BASE + AON_XTAL_CFG_OFFSET) >> 3) & 0x01) ? "oscillator" : "crystal");
+    printf("xtal:%dHz(%s)\r\n", xtal_value,
+           ((getreg32(AON_BASE + AON_XTAL_CFG_OFFSET) >> 3) & 0x01) ? "oscillator" : "crystal");
 
     log_start();
 
@@ -703,8 +718,10 @@ void board_init(void)
 
     bl_show_log();
 
-    printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET), getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
-    printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET), getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
+    printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET),
+           getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
+    printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET),
+           getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
     log_start();
 
     bflb_irq_restore(flag);
@@ -715,7 +732,8 @@ void board_init(void)
 #elif defined(CPU_LP)
 void board_init(void)
 {
-    CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
+    CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK,
+                       Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
 
     bflb_irq_initialize();
 
@@ -724,14 +742,16 @@ void board_init(void)
     console_init();
 
     /* heap init */
-    heap_init();
+    ram_heap_init();
 
     bl_show_log();
 
     //printf("lp does not use memheap due to little ram \r\n");
 
-    printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET), getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
-    printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET), getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
+    printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET),
+           getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
+    printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET),
+           getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
 
     log_start();
 }
@@ -801,8 +821,8 @@ extern int bl_sys_reset_por(void);
 
 static void reboot_cmd(int argc, char **argv)
 {
-    if(argc > 1){
-        if(strcmp(argv[1],"uart")==0){
+    if (argc > 1) {
+        if (strcmp(argv[1], "uart") == 0) {
             HBN_Set_User_Boot_Config(1);
         }
     }

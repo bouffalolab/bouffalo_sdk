@@ -18,6 +18,19 @@ void board_csi_gpio_init(void);
 void board_timer_gpio_init(void);
 void board_touch_gpio_init(void);
 
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_dbi_type_c_4_wire_gpio_init(void);
+void board_lcd_dbi_type_c_3_wire_gpio_init(void);
+void board_lcd_dbi_type_b_gpio_init(void);
+void board_lcd_dbi_ex_qspi_gpio_init(void);
+
+void board_lcd_spi_0_hard_4_gpio_init(void);
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void);
+#endif
+#endif
+
 #define APP_PWM_TRI_CH_U  (PWM_CH0)
 #define APP_PWM_TRI_CH_V  (PWM_CH1)
 #define APP_PWM_TRI_CH_W  (PWM_CH2)

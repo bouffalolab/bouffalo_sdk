@@ -778,8 +778,8 @@ struct usbd_interface *usbd_video_init_intf(uint8_t busid,
 bool usbd_video_stream_split_transfer(uint8_t busid, uint8_t ep)
 {
     struct video_payload_header *header;
-    uint32_t offset = 0;
-    uint32_t len = 0;
+    static uint32_t offset = 0;
+    static uint32_t len = 0;
 
     if (g_usbd_video[busid].stream_finish) {
         g_usbd_video[busid].stream_finish = false;
@@ -815,9 +815,15 @@ bool usbd_video_stream_split_transfer(uint8_t busid, uint8_t ep)
         g_usbd_video[busid].stream_finish = true;
     }
 
-    usbd_ep_start_write(busid, ep,
-                        (uint8_t *)header,
-                        g_usbd_video[busid].stream_headerlen + len);
+    if (g_usbd_video[busid].do_copy) {
+        usbd_ep_start_write(busid, ep,
+                            g_usbd_video[busid].ep_buf,
+                            g_usbd_video[busid].stream_headerlen + len);
+    } else {
+        usbd_ep_start_write(busid, ep,
+                            &g_usbd_video[busid].stream_buf[offset - g_usbd_video[busid].stream_headerlen],
+                            g_usbd_video[busid].stream_headerlen + len);
+    }
 
     return false;
 }
@@ -830,20 +836,16 @@ int usbd_video_stream_start_write(uint8_t busid, uint8_t ep, uint8_t *ep_buf, ui
         return -1;
     }
 
-    uint32_t len = MIN(stream_len,
-                       g_usbd_video[busid].probe.dwMaxPayloadTransferSize -
-                           g_usbd_video[busid].stream_headerlen);
-
-    usb_memcpy(&ep_buf[g_usbd_video[busid].stream_headerlen], stream_buf, len);
-
-    uintptr_t flag = usb_osal_enter_critical_section();
-
     g_usbd_video[busid].ep_buf = ep_buf;
     g_usbd_video[busid].stream_buf = stream_buf;
     g_usbd_video[busid].stream_len = stream_len;
     g_usbd_video[busid].stream_offset = 0;
     g_usbd_video[busid].stream_finish = false;
     g_usbd_video[busid].do_copy = do_copy;
+
+    uint32_t len = MIN(g_usbd_video[busid].stream_len,
+                       g_usbd_video[busid].probe.dwMaxPayloadTransferSize -
+                           g_usbd_video[busid].stream_headerlen);
 
     header = (struct video_payload_header *)&ep_buf[0];
     header->bHeaderLength = g_usbd_video[busid].stream_headerlen;
@@ -852,12 +854,11 @@ int usbd_video_stream_start_write(uint8_t busid, uint8_t ep, uint8_t *ep_buf, ui
     header->headerInfoUnion.headerInfoBits.endOfFrame = 0;
     header->headerInfoUnion.headerInfoBits.frameIdentifier = g_usbd_video[busid].stream_frameid;
 
+    usb_memcpy(&ep_buf[g_usbd_video[busid].stream_headerlen], stream_buf, len);
     g_usbd_video[busid].stream_offset += len;
     g_usbd_video[busid].stream_len -= len;
 
     usbd_ep_start_write(busid, ep, ep_buf, g_usbd_video[busid].stream_headerlen + len);
-
-    usb_osal_leave_critical_section(flag);
     return 0;
 }
 

@@ -356,6 +356,8 @@ int sdio2_upld_start(frame_elem_t *frame_elem, void *arg)
         upld_desc.data_len = (upld_desc.data_len + blk_size - 1) & ~(blk_size - 1); /* Align up to blk_size */
     }
 
+    upld_desc.buff_len = (upld_desc.data_len+511)&(~511);
+
     ret = bflb_sdio2_upld_port_push(sdio2_hd, &upld_desc);
     if (ret != 0) {
         LOG_E("sdio2 upld push failed, ret: %d\r\n", ret);

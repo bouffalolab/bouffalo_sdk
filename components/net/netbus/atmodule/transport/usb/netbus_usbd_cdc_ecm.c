@@ -113,8 +113,6 @@ typedef struct _usbecm_desc {
 /*!< config descriptor size */
 #define USB_CONFIG_SIZE    (9 + CDC_ECM_DESCRIPTOR_LEN + CDC_ACM_DESCRIPTOR_LEN)
 
-#define CDC_ECM_ETH_STATISTICS_BITMAP 0x00000000
-
 /* str idx = 4 is for mac address: aa:bb:cc:dd:ee:ff*/
 #define CDC_ECM_MAC_STRING_INDEX      4
 
@@ -122,7 +120,7 @@ typedef struct _usbecm_desc {
 static uint8_t cdc_ecm_descriptor[] = {
     USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
     USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x04, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
-    CDC_ECM_DESCRIPTOR_INIT(0x00, CDC_ECM_INT_EP, CDC_ECM_OUT_EP, CDC_ECM_IN_EP, CDC_MAX_MPS, CDC_ECM_ETH_STATISTICS_BITMAP, ECM_EMAC_NETIF_MTU, 0, 0, CDC_ECM_MAC_STRING_INDEX),
+    CDC_ECM_DESCRIPTOR_INIT(0x00, CDC_ECM_INT_EP, CDC_ECM_OUT_EP, CDC_ECM_IN_EP, CDC_MAX_MPS, CDC_ECM_MAC_STRING_INDEX),
     CDC_ACM_DESCRIPTOR_INIT(0x02, CDC_ACM_INT_EP, CDC_ACM_OUT_EP, CDC_ACM_IN_EP, CDC_MAX_MPS, 0x02),
     ///////////////////////////////////////
     /// string0 descriptor

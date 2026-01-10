@@ -547,16 +547,6 @@ BL_Err_Type GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t div) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_USB_CLK_From_WIFIPLL(uint8_t enable) {
-    return RomDriver_GLB_Set_USB_CLK_From_WIFIPLL(enable);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_SSC_CLK_From_WIFIPLL(uint8_t enable) {
-    return RomDriver_GLB_Set_SSC_CLK_From_WIFIPLL(enable);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uint8_t mcuPBclkDiv) {
     return RomDriver_GLB_Set_MCU_System_CLK_Div(mcuClkDiv, mcuPBclkDiv);
 }
@@ -1209,6 +1199,16 @@ BL_Err_Type HBN_Keep_On_RC32K(void) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Power_Off_RC32K(void) {
     return RomDriver_HBN_Power_Off_RC32K();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type HBN_Set_RC32K_R_Code(uint32_t r_code) {
+    return RomDriver_HBN_Set_RC32K_R_Code(r_code);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+uint32_t HBN_Get_RC32K_R_Code(void) {
+    return RomDriver_HBN_Get_RC32K_R_Code();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

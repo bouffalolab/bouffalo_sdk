@@ -580,7 +580,7 @@ void bflb_touch_v2_clear_int(struct bflb_device_s *dev, uint32_t int_mask)
 
     reg_base = dev->reg_base;
 
-    putreg32(int_mask, reg_base + TOUCH_INT_CLR_OFFSET);
+    putreg32(int_mask | TOUCH_INT_CLR_P, reg_base + TOUCH_INT_CLR_OFFSET);
 }
 
 /**

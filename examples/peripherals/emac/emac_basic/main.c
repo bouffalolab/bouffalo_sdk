@@ -1,4 +1,5 @@
 #include "bflb_mtimer.h"
+#include "bflb_name.h"
 #include "bflb_emac.h"
 
 #include "eth_phy.h"
@@ -10,7 +11,7 @@
 #define DBG_TAG "MAIN"
 #include "log.h"
 
-struct bflb_device_s *emac0;
+struct bflb_device_s *emacx;
 eth_phy_ctrl_t phy_ctrl;
 
 volatile uint32_t tx_success_cnt = 0;
@@ -102,13 +103,17 @@ int emac_test_init(void)
     };
 
     /* emac init */
-    emac0 = bflb_device_get_by_name("emac0");
-    if (emac0 == NULL) {
+#ifdef BL616D
+    emacx = bflb_device_get_by_name(BFLB_NAME_EMAC_V2_1);
+#else
+    emacx = bflb_device_get_by_name(BFLB_NAME_EMAC0);
+#endif
+    if (emacx == NULL) {
         LOG_E("device_get error\r\n");
         return -1;
     }
-    bflb_emac_init(emac0, &emac_cfg);
-    bflb_emac_irq_attach(emac0, emac_irq_cb, NULL);
+    bflb_emac_init(emacx, &emac_cfg);
+    bflb_emac_irq_attach(emacx, emac_irq_cb, NULL);
 
     /* scan eth_phy */
     ret = eth_phy_scan(&phy_ctrl, EPHY_ADDR_MIN, EPHY_ADDR_MAX);
@@ -126,7 +131,7 @@ int emac_test_init(void)
     if( (emac_cfg.clk_internal_mode == false) &&
         (phy_ctrl.phy_drv->phy_id == EPHY_LAN8720_ID)) {
         LOG_W("Invert rx_clk for LAN8720 Timing Adjustment.\r\n");
-        bflb_emac_feature_control(emac0, EMAC_CMD_SET_MAC_RX_CLK_INVERT, true);
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_MAC_RX_CLK_INVERT, true);
     }
 
     /* wait link up */
@@ -148,9 +153,19 @@ int emac_test_init(void)
     }
 
     if (speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX || speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
-        bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_FULL_DUPLEX, true);
     } else {
-        bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, false);
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_FULL_DUPLEX, false);
+    }
+    if (speed_mode == EPHY_SPEED_MODE_10M_HALF_DUPLEX || speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
+#ifdef BL616D
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_10M, NULL);
+#else
+        LOG_E("10M speed not supported!!!!\r\n");
+        while(1);
+#endif
+    } else {
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_100M, NULL);
     }
 
 #if 0
@@ -158,7 +173,7 @@ int emac_test_init(void)
     eth_phy_ctrl(&phy_ctrl, EPHY_CMD_SET_LOOPBACK_MODE, true);
     LOG_I("eth_phy loopback mode\r\n");
 
-    bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
+    bflb_emac_feature_control(emacx, EMAC_CMD_SET_FULL_DUPLEX, true);
 #endif
 
     LOG_I("eth_phy init done\r\n\r\n");
@@ -196,22 +211,22 @@ void emac_test(void)
     };
 
     /* enable tx and rx */
-    bflb_emac_feature_control(emac0, EMAC_CMD_SET_TX_EN, true);
-    bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_EN, true);
+    bflb_emac_feature_control(emacx, EMAC_CMD_SET_TX_EN, true);
+    bflb_emac_feature_control(emacx, EMAC_CMD_SET_RX_EN, true);
 
     time_node = bflb_mtimer_get_time_ms();
 
     while (1) {
         /* try to push tx */
-        if (bflb_emac_feature_control(emac0, EMAC_CMD_GET_TX_DB_AVAILABLE, 0) > 0) {
-            if (bflb_emac_queue_tx_push(emac0, &tx_test_desc) == 0) {
+        if (bflb_emac_feature_control(emacx, EMAC_CMD_GET_TX_DB_AVAILABLE, 0) > 0) {
+            if (bflb_emac_queue_tx_push(emacx, &tx_test_desc) == 0) {
                 tx_push_cnt += 1;
             }
         }
 
         /* try to push rx */
-        if (bflb_emac_feature_control(emac0, EMAC_CMD_GET_RX_DB_AVAILABLE, 0) > 0) {
-            if (bflb_emac_queue_rx_push(emac0, &rx_test_desc) == 0) {
+        if (bflb_emac_feature_control(emacx, EMAC_CMD_GET_RX_DB_AVAILABLE, 0) > 0) {
+            if (bflb_emac_queue_rx_push(emacx, &rx_test_desc) == 0) {
                 rx_push_cnt += 1;
             }
         }
@@ -220,8 +235,8 @@ void emac_test(void)
         if (bflb_mtimer_get_time_ms() - time_node > 2 * 1000) {
             time_node = bflb_mtimer_get_time_ms();
 
-            uint32_t tx_db_avail = bflb_emac_feature_control(emac0, EMAC_CMD_GET_TX_DB_AVAILABLE, 0);
-            uint32_t rx_db_avail = bflb_emac_feature_control(emac0, EMAC_CMD_GET_RX_DB_AVAILABLE, 0);
+            uint32_t tx_db_avail = bflb_emac_feature_control(emacx, EMAC_CMD_GET_TX_DB_AVAILABLE, 0);
+            uint32_t rx_db_avail = bflb_emac_feature_control(emacx, EMAC_CMD_GET_RX_DB_AVAILABLE, 0);
 
             uint64_t tx_size = tx_total_size - tx_total_size_old;
             tx_total_size_old = tx_total_size;
@@ -244,9 +259,9 @@ void emac_test(void)
             if (eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_LINK_STA, 0) != EPHY_LINK_STA_UP) {
                 LOG_W("EPHY LINK DOWN\r\n");
                 /* disable tx and rx, and clean tx/rx bd */
-                bflb_emac_feature_control(emac0, EMAC_CMD_SET_TX_EN, false);
-                bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_EN, false);
-                bflb_emac_bd_ctrl_clean(emac0);
+                bflb_emac_feature_control(emacx, EMAC_CMD_SET_TX_EN, false);
+                bflb_emac_feature_control(emacx, EMAC_CMD_SET_RX_EN, false);
+                bflb_emac_bd_ctrl_clean(emacx);
 
                 LOG_I("waiting link_up...\r\n");
                 while (eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_LINK_STA, 0) != EPHY_LINK_STA_UP) {
@@ -266,13 +281,13 @@ void emac_test(void)
                 }
 
                 if (speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX || speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
-                    bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
+                    bflb_emac_feature_control(emacx, EMAC_CMD_SET_FULL_DUPLEX, true);
                 } else {
-                    bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, false);
+                    bflb_emac_feature_control(emacx, EMAC_CMD_SET_FULL_DUPLEX, false);
                 }
                 /* enable tx and rx */
-                bflb_emac_feature_control(emac0, EMAC_CMD_SET_TX_EN, true);
-                bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_EN, true);
+                bflb_emac_feature_control(emacx, EMAC_CMD_SET_TX_EN, true);
+                bflb_emac_feature_control(emacx, EMAC_CMD_SET_RX_EN, true);
 
                 time_node = bflb_mtimer_get_time_ms();
             }
@@ -284,7 +299,11 @@ int main(void)
 {
     board_init();
     /* emac gpio init */
+#ifdef BL616D
+    board_emac1_gpio_init();
+#else
     board_emac_gpio_init();
+#endif
 
     bflb_mtimer_delay_ms(100);
 

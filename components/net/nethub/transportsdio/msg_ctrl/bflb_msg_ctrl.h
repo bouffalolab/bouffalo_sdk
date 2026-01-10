@@ -45,6 +45,8 @@ enum {
 
     BL_MSG_TAG_TTY, /**< TTY message tag */
 
+    BL_MSG_TAG_NETLINK, /**< Netlink message tag */
+
     BL_MSG_TAG_MAX /**< Maximum message tag */
 };
 

@@ -40,12 +40,6 @@
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
         2: nrgb8888 (32-bit, output rgb888)
@@ -74,12 +68,6 @@
         1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
 
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
@@ -110,12 +98,6 @@
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
         2: nrgb8888 (32-bit, output rgb888)
@@ -145,12 +127,6 @@
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
         2: nrgb8888 (32-bit, output rgb888)
@@ -179,12 +155,6 @@
         1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl606p, bl808),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
 
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
@@ -226,12 +196,6 @@
     */
     #define ST7735_SPI_PIXEL_FORMAT 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 0
-
     /* LCD width and height */
     #define ST7735_SPI_W 240
     #define ST7735_SPI_H 320
@@ -254,12 +218,6 @@
         1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl606p, bl808),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
 
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
@@ -289,12 +247,6 @@
         1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080), QSPI; (support chips: bl616, bl606p, bl808),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
 
     /* Selecting pixel format
         1: rgb565 (16-bit, output rgb565)
@@ -337,12 +289,6 @@
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* Selecting pixel format
         1: rgb565 (16-bits)
     */
@@ -380,12 +326,6 @@
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* Selecting pixel format
         1: rgb565 (16-bits)
     */
@@ -417,12 +357,6 @@
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* Selecting pixel format
         1: rgb565 (16-bits)
     */
@@ -447,12 +381,6 @@
         1: Software spi 9-bit mode
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 0
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 0
 
     /* Selecting pixel format
         1: rgb565 (16-bits)
@@ -498,12 +426,6 @@
     */
     #define ILI9488_SPI_PIXEL_FORMAT 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* ILI9488 LCD width and height */
     #define ILI9488_SPI_W 320
     #define ILI9488_SPI_H 480
@@ -531,12 +453,6 @@
         1: rgb565, 16-bit/pixel
     */
     #define ILI9341_SPI_PIXEL_FORMAT 1
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
 
     /* LCD width and height */
     #define ILI9341_SPI_W 240
@@ -566,12 +482,6 @@
     */
     #define ST7789V_SPI_PIXEL_FORMAT 1
 
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
-
     /* LCD width and height */
     #define ST7789V_SPI_W 320
     #define ST7789V_SPI_H 480
@@ -593,12 +503,6 @@
         1: rgb565
     */
     #define ST7796_SPI_PIXEL_FORMAT 1
-
-    /* enable the lcd reset function
-        0: Does not care about lcd hard reset
-        1: use gpio to reset the lcd
-    */
-    #define LCD_RESET_EN 1
 
     /* LCD width and height */
     #define ST7796_SPI_W 320
@@ -671,8 +575,21 @@
         2: DBI TypeC 3-wire mode
         3: DBI TypeB x8 mode (8080)
         4: DBI QSPI mode (Not the mipi standard. Extra support for QSPI mode)
+       Select the following configuration:
+        #define LCD_DBI_WORK_MODE 1
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_c_4_wire_gpio_init
+
+        #define LCD_DBI_WORK_MODE 2
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_c_3_wire_gpio_init
+
+        #define LCD_DBI_WORK_MODE 3
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_b_gpio_init
+
+        #define LCD_DBI_WORK_MODE 4
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_ex_qspi_gpio_init
     */
     #define LCD_DBI_WORK_MODE 1
+    #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_c_4_wire_gpio_init
 
     /* RGB-BGR Order control 
         0: output R-G-B
@@ -686,51 +603,20 @@
     /* The maximum amount of data to be transferred affects the number of LLI memory pools */
     #define DBI_DBI_DATA_SIZE_MAX (800 * 480 * 4)
 
-    /* pin cfg */
-    #if(LCD_DBI_WORK_MODE == 1)
-        #define LCD_DBI_TYPEC_PIN_CLK   GPIO_PIN_10
-        #define LCD_DBI_TYPEC_PIN_CS    GPIO_PIN_11
-        #define LCD_DBI_TYPEC_PIN_DAT   GPIO_PIN_12
-        #define LCD_DBI_TYPEC_PIN_DC    GPIO_PIN_13
-
-    #elif(LCD_DBI_WORK_MODE == 2)
-        #define LCD_DBI_TYPEC_PIN_CLK   GPIO_PIN_12
-        #define LCD_DBI_TYPEC_PIN_CS    GPIO_PIN_13
-        #define LCD_DBI_TYPEC_PIN_DAT   GPIO_PIN_14
-
-    #elif(LCD_DBI_WORK_MODE == 3)
-        #define LCD_DBI_TYPEB_PIN_WR    GPIO_PIN_4
-        #define LCD_DBI_TYPEB_PIN_CS    GPIO_PIN_5
-        #define LCD_DBI_TYPEB_PIN_RD    GPIO_PIN_6
-        #define LCD_DBI_TYPEB_PIN_DC    GPIO_PIN_7
-
-        #define LCD_DBI_TYPEB_PIN_DAT0  GPIO_PIN_8
-        #define LCD_DBI_TYPEB_PIN_DAT1  GPIO_PIN_9
-        #define LCD_DBI_TYPEB_PIN_DAT2  GPIO_PIN_10
-        #define LCD_DBI_TYPEB_PIN_DAT3  GPIO_PIN_11
-        #define LCD_DBI_TYPEB_PIN_DAT4  GPIO_PIN_12
-        #define LCD_DBI_TYPEB_PIN_DAT5  GPIO_PIN_13
-        #define LCD_DBI_TYPEB_PIN_DAT6  GPIO_PIN_14
-        #define LCD_DBI_TYPEB_PIN_DAT7  GPIO_PIN_15
-
-    #elif(LCD_DBI_WORK_MODE == 4)
-        #define LCD_DBI_QSPI_PIN_CLK   GPIO_PIN_10
-        #define LCD_DBI_QSPI_PIN_CS    GPIO_PIN_11
-
-        #define LCD_DBI_QSPI_PIN_DAT0  GPIO_PIN_12
-        #define LCD_DBI_QSPI_PIN_DAT1  GPIO_PIN_13
-        #define LCD_DBI_QSPI_PIN_DAT2  GPIO_PIN_14
-        #define LCD_DBI_QSPI_PIN_DAT3  GPIO_PIN_15
-
-    #endif
-
 #endif
 
 /********** SPI hard 4-wire configuration ***********/
 #if (defined(LCD_SPI_INTERFACE_TYPE) && (LCD_SPI_INTERFACE_TYPE == 1))
 
-    /* spi idx */
+    /*Select the spi idx and following configuration:
+        #define LCD_SPI_HARD_4_NAME "spi0"
+        #define LCD_SPI_HARD_4_GPIO_INIT_FUNC board_lcd_spi_0_hard_4_gpio_init
+
+        #define LCD_SPI_HARD_4_NAME "spi1"
+        #define LCD_SPI_HARD_4_GPIO_INIT_FUNC board_lcd_spi_1_hard_4_gpio_init
+    */
     #define LCD_SPI_HARD_4_NAME "spi0"
+    #define LCD_SPI_HARD_4_GPIO_INIT_FUNC board_lcd_spi_0_hard_4_gpio_init
 
     /* dma used by spi */
     #define LCD_SPI_HARD_4_DMA_NAME "dma0_ch3"
@@ -738,16 +624,14 @@
     /* The maximum pixel cnt to be transferred affects the number of LLI memory pools */
     #define LCD_SPI_HARD_4_PIXEL_CNT_MAX (800 * 640)
 
-    /* spi pin, hardware controlled */
-    #define LCD_SPI_HARD_4_PIN_CLK   GPIO_PIN_13
-    #define LCD_SPI_HARD_4_PIN_DAT   GPIO_PIN_15
-    /* cs/dc pin, software controlled */
     #define LCD_SPI_HARD_4_PIN_CS   GPIO_PIN_14
     #define LCD_SPI_HARD_4_PIN_DC   GPIO_PIN_16
 
 #endif
 
 /********** lcd reset configuration ***********/
+#define LCD_RESET_EN 1
+
 #if (defined(LCD_RESET_EN) && LCD_RESET_EN)
 
 /* lcd reset signal pin, please leave blank if not needed */
@@ -764,6 +648,20 @@
 
 /* lcd recovery time after reset end (ms) */
 #define LCD_RESET_DELAY   100
+
+#endif
+
+/********** lcd back light configuration ***********/
+#define LCD_BACKLIGHT_EN 1
+
+#if (defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN)
+/* lcd backlight pin */
+#define LCD_BACKLIGHT_PIN GPIO_PIN_16
+/* lcd backlight signal active level
+    0: lcd backlight at low level
+    1: lcd backlight at high level
+ */
+#define LCD_BACKLIGHT_ACTIVE_LEVEL 1
 
 #endif
 

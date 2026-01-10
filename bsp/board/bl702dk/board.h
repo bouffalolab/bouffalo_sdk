@@ -20,4 +20,11 @@ void board_dvp_gpio_init();
 #define DEFAULT_TEST_UART_DMA_TDR DMA_ADDR_UART1_TDR
 #define DEFAULT_TEST_UART_DMA_RDR DMA_ADDR_UART1_RDR
 
+#if defined(CONFIG_BSP_LCD)
+
+void board_lcd_spi_0_hard_4_gpio_init(void);
+#if defined(GPIO_FUNC_SPI1)
+void board_lcd_spi_1_hard_4_gpio_init(void);
+#endif
+#endif
 #endif

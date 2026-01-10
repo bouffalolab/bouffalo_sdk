@@ -450,4 +450,10 @@ int bl_lp_set_32k_trim_ready(uint8_t ready_val);
 int bl_lp_get_32k_trim_ready(void);
 
 char *bl_lpfw_bin_get_version_str(void);
+
+void bl_lp_bcn_loss_cnt_clear(void);
+void bl_lp_bcn_timestamp_update(uint64_t beacon_timestamp_us, uint64_t rtc_timestamp_us, uint32_t mode);
+
+uint32_t bl_lp_get_beacon_interval_tu(void);
+uint32_t bl_lp_get_dtim_num(void);
 #endif

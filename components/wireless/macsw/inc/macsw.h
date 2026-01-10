@@ -312,11 +312,6 @@
     #define MACSW_TWT_FLOW_NB      0
 #endif //MACSW_UMAC_PRESENT && MACSW_HE && defined CFG_TWT
 
-/// Alias for backward compatibility
-#ifndef NX_TWT_FLOW_NB
-#define NX_TWT_FLOW_NB MACSW_TWT_FLOW_NB
-#endif
-
 /** @} TWT */
 
 /**

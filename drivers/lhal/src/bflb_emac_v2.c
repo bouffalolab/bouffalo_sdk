@@ -34,6 +34,7 @@
   ******************************************************************************
   */
 #include "bflb_emac_v2.h"
+#include "bflb_emac_common.h"
 #include "bflb_clock.h"
 #include "bflb_l1c.h"
 
@@ -1551,10 +1552,12 @@ static int bflb_emac_v2_dma_desc_list_init(struct bflb_device_s *dev, struct bfl
     handle->tx_index_cpu = 0;
     handle->tx_index_cnt = tx_dma_desc_cnt - 1;
     handle->tx_dma_desc = tx_dma_desc;
+    handle->tx_busy_cnt = 0;
     handle->rx_index_emac_v2 = 0;
     handle->rx_index_cpu = 0;
     handle->rx_index_cnt = rx_dma_desc_cnt - 1;
     handle->rx_dma_desc = rx_dma_desc;
+    handle->rx_idle_cnt = 0;
 
     /* Fill each DMARxDesc descriptor with the right values */
     for (i = 0; i < tx_dma_desc_cnt; i++) {
@@ -1647,9 +1650,6 @@ int bflb_emac_v2_get_tx_qptr(struct bflb_device_s *dev, uint32_t *status, uint32
         return -1;
     }
 
-    /* busy tx descriptor is reduced by one as it will be handed over to Processor now */
-    (thiz->tx_busy_cnt)--;
-
     if (status != 0) {
         *status = txdesc->status;
     }
@@ -1687,6 +1687,9 @@ int bflb_emac_v2_get_tx_qptr(struct bflb_device_s *dev, uint32_t *status, uint32
     bflb_emac_v2_tx_dma_desc_init(txdesc, bflb_emac_v2_is_last_tx_desc(txdesc));
     thiz->tx_index_emac_v2 = bflb_emac_v2_is_last_tx_desc(txdesc) ? 0 : txover + 1;
     //txdesc = thiz->tx_dma_desc + thiz->tx_index_emac_v2;
+
+    /* busy tx descriptor is reduced by one after it is fully reclaimed */
+    (thiz->tx_busy_cnt)--;
 
     return txover;
 }
@@ -3878,6 +3881,24 @@ int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case EMAC_CMD_SET_SPEED_10M:
             bflb_emac_v2_mii_select(dev);
             bflb_emac_v2_mii_speed_set(dev, 10);
+            break;
+
+        case EMAC_CMD_GET_TX_DB_AVAILABLE:
+            if (thiz == NULL) {
+                ret = 0;
+            } else {
+                uint16_t tx_desc_cnt = (uint16_t)(thiz->tx_index_cnt + 1);
+                ret = (thiz->tx_busy_cnt >= tx_desc_cnt) ? 0 : (tx_desc_cnt - thiz->tx_busy_cnt);
+            }
+            break;
+
+        case EMAC_CMD_GET_RX_DB_AVAILABLE:
+            if (thiz == NULL) {
+                ret = 0;
+            } else {
+                uint16_t rx_desc_cnt = (uint16_t)(thiz->rx_index_cnt + 1);
+                ret = (thiz->rx_idle_cnt >= rx_desc_cnt) ? 0 : (rx_desc_cnt - thiz->rx_idle_cnt);
+            }
             break;
         default:
             ret = -EPERM;

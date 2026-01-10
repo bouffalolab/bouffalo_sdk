@@ -99,3 +99,12 @@ if(CONFIG_BSP_IMAGE_SENSOR)
     endif()
 endif()
 
+# audio codec driver
+if(CONFIG_BSP_AUDIO_CODEC)
+    target_sources(app PRIVATE audio_codec/audio_codec.c)
+    target_sources(app PRIVATE audio_codec/audio_codec_es8311.c)
+    target_sources(app PRIVATE audio_codec/audio_codec_es8388.c)
+    target_sources(app PRIVATE audio_codec/audio_codec_wm8978.c)
+    sdk_add_include_directories(audio_codec)
+endif()
+

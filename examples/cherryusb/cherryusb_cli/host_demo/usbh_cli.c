@@ -59,4 +59,23 @@ int shell_usbh_stop(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(shell_usbh_stop, usbh_stop, usb host stop);
 
+/* lsusb */
 SHELL_CMD_EXPORT_ALIAS(lsusb, lsusb, ls usb);
+
+/* config_index select */
+uint8_t usbh_get_hport_active_config_index(struct usbh_hubport *hport)
+{
+    struct usb_device_descriptor *dev_desc = &(hport->device_desc);
+
+    if (dev_desc->idVendor == 0x1A86) {
+        /* WinChipHead (WCH) */
+        if (dev_desc->idProduct == 0x5397) {
+            /* CH397-ECM */
+            USB_LOG_INFO("CH397-ECM select config index 1\r\n");
+            return 1;
+        }
+    }
+
+    /* Default to configuration index 0 */
+    return 0;
+}

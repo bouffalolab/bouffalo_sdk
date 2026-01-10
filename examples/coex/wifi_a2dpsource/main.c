@@ -196,9 +196,6 @@ int main(void)
         easyflash_init();
     #endif
 
-    /* romsfs init mount use media factory*/
-    romfs_mount(0x378000);
-
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");
         return 0;

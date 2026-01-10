@@ -26,10 +26,8 @@
 #include "bl_lp.h"
 #include "macsw.h"
 
-extern int lpfw_recal_rc32k(uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode, int clock_ready_check);
-extern int32_t lpfw_calculate_beacon_delay(uint64_t beacon_timestamp_us, uint64_t rtc_timestamp_us, uint32_t mode);
-// extern int32_t lpfw_beacon_delay_sliding_win_update(int32_t beacon_delay_us, uint64_t beacon_timestamp_us);
-
+extern int32_t lpfw_calculate_beacon_delay(lp_fw_bcn_delay_t *p_bcn_delay, uint64_t beacon_timestamp_us,
+                                           uint64_t rtc_timestamp_us, uint32_t mode);
 extern int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu);
 extern int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode);
 #endif
@@ -261,12 +259,11 @@ void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
 #endif
 
     /* rc32k recal */
-    lpfw_recal_rc32k(beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP, 1);
+    lpfw_recal_rc32k(iot2lp_para->rc32k_trim_parameter, beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP, 1);
 
     /* calculate_beacon_delay, and update rtc timestamp */
-    beacon_delay_us = lpfw_calculate_beacon_delay(beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP);
-    /* update beacon delay sliding_window  */
-    // lpfw_beacon_delay_sliding_win_update(beacon_delay_us, beacon_stamp_us);
+    beacon_delay_us =
+        lpfw_calculate_beacon_delay(iot2lp_para->bcn_delay_info, beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP);
 
     /* update beacon interval */
     bl_lp_beacon_interval_update(bcn->bcnint);

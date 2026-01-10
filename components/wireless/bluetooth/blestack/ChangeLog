@@ -1,4 +1,10 @@
 # Changes
+## 2026-01-07
+1.Save local irk to flash.
+
+## 2025-12-30
+1. Enhance A2DP stream pause control in CLI commands.
+
 ## 2025-12-29
 1.[blestack]: Support Google Nearby Fastpair.
 

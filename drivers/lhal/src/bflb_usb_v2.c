@@ -307,6 +307,10 @@ struct bl_udc {
 
 static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_setup_buffer[8];
 
+#ifdef CONFIG_USBDEV_TEST_MODE
+static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_test_packet_buffer[53];
+#endif
+
 static void bflb_usb_reset_fifo(uint8_t fifo)
 {
     uint32_t regval;
@@ -1247,6 +1251,7 @@ int usbd_ep_start_write(uint8_t busid, const uint8_t ep, const uint8_t *data, ui
         if (data_len == 0) {
             g_bl_udc.in_ep[ep_idx].ep_active = false;
             bflb_usb_control_transfer_done();
+            usbd_event_ep_in_complete_handler(busid, 0x80, 0);
         } else {
             data_len = MIN(data_len, g_bl_udc.in_ep[ep_idx].ep_mps);
             g_bl_udc.in_ep[ep_idx].xfer_len = data_len;
@@ -1276,6 +1281,8 @@ int usbd_ep_start_read(uint8_t busid, const uint8_t ep, uint8_t *data, uint32_t 
     }
 
     if (data_len == 0) {
+        bflb_usb_control_transfer_done();
+        usbd_event_ep_out_complete_handler(busid, 0x00, 0);
         return 0;
     }
 
@@ -1399,9 +1406,6 @@ void USBD_IRQHandler(uint8_t busid)
                 if (g_bl_udc.in_ep[0].ep_active) {
                     g_bl_udc.in_ep[0].ep_active = false;
                     g_bl_udc.in_ep[0].actual_xfer_len = g_bl_udc.in_ep[0].xfer_len - bflb_usb_vdma_get_remain_size(USB_FIFO_CXF);
-                    if (g_bl_udc.in_ep[0].actual_xfer_len < g_bl_udc.in_ep[0].ep_mps) {
-                        bflb_usb_control_transfer_done();
-                    }
                     usbd_event_ep_in_complete_handler(busid, 0x80, g_bl_udc.in_ep[0].actual_xfer_len);
                 } else {
                     g_bl_udc.out_ep[0].ep_active = false;
@@ -1441,50 +1445,48 @@ void usbd_execute_test_mode(uint8_t busid, uint8_t test_mode)
             regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_JSTA;
             putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
-            bflb_usb_control_transfer_done();
+            USB_LOG_INFO("test_mode done: Test_J\r\n");
         } break;
         case 2: // Test_K
         {
             regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_KSTA;
             putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
-
-            bflb_usb_control_transfer_done();
+            USB_LOG_INFO("test_mode done: Test_K\r\n");
         } break;
         case 3: // TEST_SE0_NAK
         {
             regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_SE0NAK;
             putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
-
-            bflb_usb_control_transfer_done();
+            USB_LOG_INFO("test_mode done: TEST_SE0_NAK\r\n");
         } break;
         case 4: // Test_Packet
         {
-            bflb_usb_control_transfer_done();
             regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_PKT;
             putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
-            __attribute__((aligned(32))) uint8_t temp[53];
-            uint8_t *pp;
-            uint8_t i;
-            pp = temp;
-
-            for (i = 0; i < 9; i++) /*JKJKJKJK x 9*/
+            /* fill test packet */
+            uint8_t *pp = g_test_packet_buffer;
+            /* JKJKJKJK * 9 */
+            for (uint8_t i = 0; i < 9; i++) {
                 *pp++ = 0x00;
-
-            for (i = 0; i < 8; i++) /* 8*AA */
+            }
+            /* JJKKJJKK * 8 */
+            for (uint8_t i = 0; i < 8; i++) {
                 *pp++ = 0xAA;
-
-            for (i = 0; i < 8; i++) /* 8*EE */
+            }
+            /* JJJJKKKK * 8 */
+            for (uint8_t i = 0; i < 8; i++) {
                 *pp++ = 0xEE;
-
+            }
+            /* JJJJJJJKKKKKKK * 8, JJJJJJJK * 8 */
             *pp++ = 0xFE;
-
-            for (i = 0; i < 11; i++) /* 11*FF */
+            for (uint8_t i = 0; i < 11; i++) {
                 *pp++ = 0xFF;
-
+            }
+            /* {JKKKKKKK * 10}, JK*/
             *pp++ = 0x7F;
             *pp++ = 0xBF;
             *pp++ = 0xDF;
@@ -1502,12 +1504,28 @@ void usbd_execute_test_mode(uint8_t busid, uint8_t test_mode)
             *pp++ = 0xFD;
             *pp++ = 0x7E;
 
-            bflb_usb_vdma_start_write(USB_FIFO_CXF, temp, 53);
+            /* write the test packet to CX FIFO */
+            bflb_usb_vdma_start_write(USB_FIFO_CXF, g_test_packet_buffer, 53);
 
+            /* wait for transfer complete */
+            for (int i = 0; i < 10000; i++) {
+                regval = getreg32(BFLB_USB_BASE + USB_DEV_ISG3_OFFSET);
+                if (regval & USB_VDMA_CMPLT_CXF) {
+                    putreg32(USB_VDMA_CMPLT_CXF, BFLB_USB_BASE + USB_DEV_ISG3_OFFSET);
+                    break;
+                }
+                arch_delay_us(2);
+            }
+            if (!(regval & USB_VDMA_CMPLT_CXF)) {
+                USB_LOG_ERR("test_mode Test_Packet timeout\r\n");
+            }
+
+            /* set PKDONE */
             regval = getreg32(BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
             regval |= USB_TST_PKDONE;
             putreg32(regval, BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
 
+            USB_LOG_INFO("test_mode done: Test_Packet\r\n");
         } break;
         case 5: // Test_Force_Enable
             break;

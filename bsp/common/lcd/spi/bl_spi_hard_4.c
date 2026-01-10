@@ -10,7 +10,7 @@
 #include "bflb_gpio.h"
 #include "bflb_l1c.h"
 
-#if(LCD_SPI_HARD_4_PIXEL_CNT_MAX < LCD_H * LCD_W)
+#if (LCD_SPI_HARD_4_PIXEL_CNT_MAX < LCD_H * LCD_W)
 #error LCD_SPI_HARD_4_PIXEL_CNT_MAX too small.
 #endif
 
@@ -129,23 +129,14 @@ int lcd_spi_hard_4_init(lcd_spi_hard_4_init_t *dbi_parra)
 
     /* CS and DC pin init */
     gpio = bflb_device_get_by_name("gpio");
+    void LCD_SPI_HARD_4_GPIO_INIT_FUNC(void);
+    LCD_SPI_HARD_4_GPIO_INIT_FUNC();
+
     bflb_gpio_init(gpio, LCD_SPI_HARD_4_PIN_CS, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, LCD_SPI_HARD_4_PIN_DC, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
     LCD_SPI_HARD_4_CS_HIGH;
     LCD_SPI_HARD_4_DC_HIGH;
-
-    if (spi_hd->idx == 0) {
-        bflb_gpio_init(gpio, LCD_SPI_HARD_4_PIN_CLK, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-        bflb_gpio_init(gpio, LCD_SPI_HARD_4_PIN_DAT, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    }
-#if defined(GPIO_FUNC_SPI1)
-    else if (spi_hd->idx == 1) {
-        bflb_gpio_init(gpio, LCD_SPI_HARD_4_PIN_CLK, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-        bflb_gpio_init(gpio, LCD_SPI_HARD_4_PIN_DAT, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    }
-
-#endif
-
     /* spi init */
     bflb_spi_init(spi_hd, &spi_cfg);
 

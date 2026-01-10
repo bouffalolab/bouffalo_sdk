@@ -22,6 +22,12 @@
 #include "bl616d_lp.h"
 #endif
 
+#ifdef SHARED_FUNC_EN
+    #define SHARE_HOOK(func_name, ...)   shared_##func_name(__VA_ARGS__)
+#else
+    #define SHARE_HOOK(func_name, ...)   func_name(__VA_ARGS__)
+#endif
+
 #define LP_HOOK(x, ...)           \
     if (&lp_hook_##x) {           \
         lp_hook_##x(__VA_ARGS__); \

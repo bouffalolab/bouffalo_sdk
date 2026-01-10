@@ -10,6 +10,7 @@ SRC += debugfs/hd_debugfs.o
 SRC += speed_test/hd_speed_test.o
 SRC += eth_netdev/hd_eth_netdev.o
 SRC += tty/hd_tty.o
+SRC += netlink/hd_netlink.o
 
 # Include paths for modular headers
 ccflags-y += -I$(PWD)/bootrom
@@ -19,6 +20,7 @@ ccflags-y += -I$(PWD)/eth_netdev
 ccflags-y += -I$(PWD)/speed_test
 ccflags-y += -I$(PWD)/debugfs
 ccflags-y += -I$(PWD)/tty
+ccflags-y += -I$(PWD)/netlink
 
 KVERSION = $(shell uname -r)
 KDIR :=  /lib/modules/$(KVERSION)/build

@@ -649,7 +649,7 @@ void bflb_mjdec_push_jpeg(struct bflb_device_s *dev, void *frame)
     LHAL_PARAM_ASSERT(IS_MJDEC_ADDR(frame));
 
 #ifdef romapi_bflb_mjdec_push_jpeg
-    romapi_bbflb_mjdec_push_jpeg(dev, frame);
+    romapi_bflb_mjdec_push_jpeg(dev, frame);
 #else
     putreg32((uint32_t)frame | MJDEC_REG_JP_PUSH, dev->reg_base + MJDEC_JDEC_FRAM_PUSH_OFFSET);
 #endif

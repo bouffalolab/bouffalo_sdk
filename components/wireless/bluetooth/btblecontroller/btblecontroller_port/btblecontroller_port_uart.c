@@ -43,6 +43,28 @@
 #endif
 #endif
 
+#if defined(BL616)
+#define UART_TXD_PIN               27
+#define UART_RXD_PIN               28
+#define UART_CTS_PIN               29
+#define UART_RTS_PIN               30
+#endif
+
+#if defined(BL616D)
+#define UART_TXD_PIN               27
+#define UART_RXD_PIN               28
+#define UART_CTS_PIN               25
+#define UART_RTS_PIN               26
+#endif
+
+#if defined(BL702L)
+#define UART_TXD_PIN               14 //23
+#define UART_RXD_PIN               15 //24
+#define UART_CTS_PIN               25
+#define UART_RTS_PIN               26
+#endif
+
+
 /*
  * DEFINES
  *****************************************************************************************
@@ -228,6 +250,8 @@ __attribute__((weak)) void btble_uart_init(uint8_t uartid)
     char uart_name[64];
     struct bflb_uart_config_s cfg;
 
+    btble_uart_pin_config(uartid, UART_TXD_PIN, UART_RXD_PIN, UART_CTS_PIN, UART_RTS_PIN);
+
     uart_id = uartid;
     snprintf((char *)uart_name,sizeof(uart_name)-1, "uart%d", uartid);
     btble_uart = bflb_device_get_by_name(uart_name);
@@ -239,7 +263,7 @@ __attribute__((weak)) void btble_uart_init(uint8_t uartid)
     cfg.data_bits = UART_DATA_BITS_8;
     cfg.stop_bits = UART_STOP_BITS_1;
     cfg.parity = UART_PARITY_NONE;
-    cfg.flow_ctrl = 1;
+    cfg.flow_ctrl = UART_FLOWCTRL_CTS;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
     bflb_uart_init(btble_uart, &cfg);

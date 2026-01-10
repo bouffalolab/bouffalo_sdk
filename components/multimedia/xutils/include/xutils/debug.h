@@ -12,6 +12,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <xcommon/xcommon.h>
+
 #define MSP_DEBUG_COLOR (1)
 
 typedef void (*except_process_t)(int err, const char *file, int line, const char *func_name, void *caller);
@@ -27,7 +29,6 @@ void msp_set_except_callback(except_process_t except);
 */
 void msp_set_except_default();
 
-extern void msp_print_version(const char *format, ...);
 extern void msp_debug(const char *tag, const char *filename, const long line, const char *funcname, const char *format, ...);
 
 #ifndef __FILENAME__

@@ -25,7 +25,7 @@ void bflb_i2s_init(struct bflb_device_s *dev, const struct bflb_i2s_config_s *co
     regval &= ~I2S_CR_I2S_M_EN;
     regval &= ~I2S_CR_I2S_S_EN;
     regval &= ~I2S_CR_I2S_TXD_EN;
-    regval &= ~I2S_CR_I2S_TXD_EN;
+    regval &= ~I2S_CR_I2S_RXD_EN;
     putreg32(regval, reg_base + I2S_CONFIG_OFFSET);
 
     if (config->channel_mode == I2S_CHANNEL_MODE_NUM_1) {

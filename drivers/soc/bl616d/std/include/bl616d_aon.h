@@ -100,38 +100,38 @@ extern "C" {
 /** @defgroup AON DCDC_SYS level type definition
   * @{
   */
-#define AON_DCDC_SYS_LEVEL_1P125V         (0)  /*!< AON DCDC SYS voltage 1.125V */
-#define AON_DCDC_SYS_LEVEL_1P150V         (1)  /*!< AON DCDC SYS voltage 1.150V */
-#define AON_DCDC_SYS_LEVEL_1P175V         (2)  /*!< AON DCDC SYS voltage 1.175V */
-#define AON_DCDC_SYS_LEVEL_1P200V         (3)  /*!< AON DCDC SYS voltage 1.200V */
-#define AON_DCDC_SYS_LEVEL_1P225V         (4)  /*!< AON DCDC SYS voltage 1.225V */
-#define AON_DCDC_SYS_LEVEL_1P250V         (5)  /*!< AON DCDC SYS voltage 1.250V */
-#define AON_DCDC_SYS_LEVEL_1P275V         (6)  /*!< AON DCDC SYS voltage 1.275V */
-#define AON_DCDC_SYS_LEVEL_1P300V         (7)  /*!< AON DCDC SYS voltage 1.300V */
-#define AON_DCDC_SYS_LEVEL_1P325V         (8)  /*!< AON DCDC SYS voltage 1.325V */
-#define AON_DCDC_SYS_LEVEL_1P350V         (9)  /*!< AON DCDC SYS voltage 1.350V */
-#define AON_DCDC_SYS_LEVEL_1P375V         (10) /*!< AON DCDC SYS voltage 1.375V */
-#define AON_DCDC_SYS_LEVEL_1P400V         (11) /*!< AON DCDC SYS voltage 1.400V */
-#define AON_DCDC_SYS_LEVEL_1P425V         (12) /*!< AON DCDC SYS voltage 1.425V */
-#define AON_DCDC_SYS_LEVEL_1P450V         (13) /*!< AON DCDC SYS voltage 1.450V */
-#define AON_DCDC_SYS_LEVEL_1P475V         (14) /*!< AON DCDC SYS voltage 1.475V */
-#define AON_DCDC_SYS_LEVEL_1P500V         (15) /*!< AON DCDC SYS voltage 1.500V */
-#define AON_DCDC_SYS_LEVEL_1P525V         (16) /*!< AON DCDC SYS voltage 1.525V */
-#define AON_DCDC_SYS_LEVEL_1P550V         (17) /*!< AON DCDC SYS voltage 1.550V */
-#define AON_DCDC_SYS_LEVEL_1P575V         (18) /*!< AON DCDC SYS voltage 1.575V */
-#define AON_DCDC_SYS_LEVEL_1P600V         (19) /*!< AON DCDC SYS voltage 1.600V */
-#define AON_DCDC_SYS_LEVEL_1P625V         (20) /*!< AON DCDC SYS voltage 1.625V */
-#define AON_DCDC_SYS_LEVEL_1P650V         (21) /*!< AON DCDC SYS voltage 1.650V */
-#define AON_DCDC_SYS_LEVEL_1P675V         (22) /*!< AON DCDC SYS voltage 1.675V */
-#define AON_DCDC_SYS_LEVEL_1P700V         (23) /*!< AON DCDC SYS voltage 1.700V */
-#define AON_DCDC_SYS_LEVEL_1P725V         (24) /*!< AON DCDC SYS voltage 1.725V */
-#define AON_DCDC_SYS_LEVEL_1P750V         (25) /*!< AON DCDC SYS voltage 1.750V */
-#define AON_DCDC_SYS_LEVEL_1P775V         (26) /*!< AON DCDC SYS voltage 1.775V */
-#define AON_DCDC_SYS_LEVEL_1P800V         (27) /*!< AON DCDC SYS voltage 1.800V */
-#define AON_DCDC_SYS_LEVEL_1P825V         (28) /*!< AON DCDC SYS voltage 1.825V */
-#define AON_DCDC_SYS_LEVEL_1P850V         (29) /*!< AON DCDC SYS voltage 1.850V */
-#define AON_DCDC_SYS_LEVEL_1P875V         (30) /*!< AON DCDC SYS voltage 1.875V */
-#define AON_DCDC_SYS_LEVEL_1P900V         (31) /*!< AON DCDC SYS voltage 1.900V */
+#define AON_DCDC_SYS_LEVEL_0P700V         (0)  /*!< AON DCDC SYS voltage 0.700V */
+#define AON_DCDC_SYS_LEVEL_0P725V         (1)  /*!< AON DCDC SYS voltage 0.725V */
+#define AON_DCDC_SYS_LEVEL_0P750V         (2)  /*!< AON DCDC SYS voltage 0.750V */
+#define AON_DCDC_SYS_LEVEL_0P775V         (3)  /*!< AON DCDC SYS voltage 0.775V */
+#define AON_DCDC_SYS_LEVEL_0P800V         (4)  /*!< AON DCDC SYS voltage 0.800V */
+#define AON_DCDC_SYS_LEVEL_0P825V         (5)  /*!< AON DCDC SYS voltage 0.825V */
+#define AON_DCDC_SYS_LEVEL_0P850V         (6)  /*!< AON DCDC SYS voltage 0.850V */
+#define AON_DCDC_SYS_LEVEL_0P875V         (7)  /*!< AON DCDC SYS voltage 0.875V */
+#define AON_DCDC_SYS_LEVEL_0P900V         (8)  /*!< AON DCDC SYS voltage 0.900V */
+#define AON_DCDC_SYS_LEVEL_0P925V         (9)  /*!< AON DCDC SYS voltage 0.925V */
+#define AON_DCDC_SYS_LEVEL_0P950V         (10) /*!< AON DCDC SYS voltage 0.950V */
+#define AON_DCDC_SYS_LEVEL_0P975V         (11) /*!< AON DCDC SYS voltage 0.975V */
+#define AON_DCDC_SYS_LEVEL_1P000V         (12) /*!< AON DCDC SYS voltage 1.000V */
+#define AON_DCDC_SYS_LEVEL_1P025V         (13) /*!< AON DCDC SYS voltage 1.025V */
+#define AON_DCDC_SYS_LEVEL_1P050V         (14) /*!< AON DCDC SYS voltage 1.050V */
+#define AON_DCDC_SYS_LEVEL_1P075V         (15) /*!< AON DCDC SYS voltage 1.075V */
+#define AON_DCDC_SYS_LEVEL_1P100V         (16) /*!< AON DCDC SYS voltage 1.100V */
+#define AON_DCDC_SYS_LEVEL_1P125V         (17) /*!< AON DCDC SYS voltage 1.125V */
+#define AON_DCDC_SYS_LEVEL_1P150V         (18) /*!< AON DCDC SYS voltage 1.150V */
+#define AON_DCDC_SYS_LEVEL_1P175V         (19) /*!< AON DCDC SYS voltage 1.175V */
+#define AON_DCDC_SYS_LEVEL_1P200V         (20) /*!< AON DCDC SYS voltage 1.200V */
+#define AON_DCDC_SYS_LEVEL_1P225V         (21) /*!< AON DCDC SYS voltage 1.225V */
+#define AON_DCDC_SYS_LEVEL_1P250V         (22) /*!< AON DCDC SYS voltage 1.250V */
+#define AON_DCDC_SYS_LEVEL_1P275V         (23) /*!< AON DCDC SYS voltage 1.275V */
+#define AON_DCDC_SYS_LEVEL_1P300V         (24) /*!< AON DCDC SYS voltage 1.300V */
+#define AON_DCDC_SYS_LEVEL_1P325V         (25) /*!< AON DCDC SYS voltage 1.325V */
+#define AON_DCDC_SYS_LEVEL_1P350V         (26) /*!< AON DCDC SYS voltage 1.350V */
+#define AON_DCDC_SYS_LEVEL_1P375V         (27) /*!< AON DCDC SYS voltage 1.375V */
+#define AON_DCDC_SYS_LEVEL_1P400V         (28) /*!< AON DCDC SYS voltage 1.400V */
+#define AON_DCDC_SYS_LEVEL_1P425V         (29) /*!< AON DCDC SYS voltage 1.425V */
+#define AON_DCDC_SYS_LEVEL_1P450V         (30) /*!< AON DCDC SYS voltage 1.450V */
+#define AON_DCDC_SYS_LEVEL_1P475V         (31) /*!< AON DCDC SYS voltage 1.475V */
 /**
   * @}
   */
@@ -254,23 +254,29 @@ extern "C" {
 /** @defgroup WDG RESET TIME definition
   * @{
   */
-#define WDG_RESET_TIME_556US              (2)
-#define WDG_RESET_TIME_867US              (4)
-#define WDG_RESET_TIME_1MS7               (5)
-#define WDG_RESET_TIME_3MS4               (6)
-#define WDG_RESET_TIME_6MS9               (7)
-#define WDG_RESET_TIME_13MS8              (8)
-#define WDG_RESET_TIME_27MS6              (9)
-#define WDG_RESET_TIME_55MS2              (10)
-#define WDG_RESET_TIME_110MS4             (11)
-#define WDG_RESET_TIME_220MS8             (12)
-#define WDG_RESET_TIME_441MS6             (13)
-#define WDG_RESET_TIME_883MS2             (14)
-#define WDG_RESET_TIME_1S76               (15)
-#define WDG_RESET_TIME_3S53               (16)
-#define WDG_RESET_TIME_7S06               (17)
-#define WDG_RESET_TIME_14S                (18)
-#define WDG_RESET_TIME_28S                (19)
+#define WDG_RESET_TIME_214US              (3)
+#define WDG_RESET_TIME_458US              (4)
+#define WDG_RESET_TIME_946US              (5)
+#define WDG_RESET_TIME_1MS9               (6)
+#define WDG_RESET_TIME_3MS9               (7)
+#define WDG_RESET_TIME_7MS8               (8)
+#define WDG_RESET_TIME_15MS6              (9)
+#define WDG_RESET_TIME_31MS2              (10)
+#define WDG_RESET_TIME_62MS5              (11)
+#define WDG_RESET_TIME_125MS              (12)
+#define WDG_RESET_TIME_250MS              (13)
+#define WDG_RESET_TIME_500MS              (14)
+#define WDG_RESET_TIME_1S                 (15)
+#define WDG_RESET_TIME_2S00               (16)
+#define WDG_RESET_TIME_4S00               (17)
+#define WDG_RESET_TIME_8S00               (18)
+#define WDG_RESET_TIME_16S                (19)
+#define WDG_RESET_TIME_32S                (20)
+#define WDG_RESET_TIME_64S                (21)
+#define WDG_RESET_TIME_128S               (22)
+#define WDG_RESET_TIME_256S               (23)
+#define WDG_RESET_TIME_512S               (24)
+
 /**
   * @}
   */
@@ -331,7 +337,24 @@ extern "C" {
 /** @defgroup  AON_DCDC_SYS_LEVEL_TYPE
  *  @{
  */
-#define IS_AON_DCDC_SYS_LEVEL_TYPE(type) (((type) == AON_DCDC_SYS_LEVEL_1P125V) || \
+#define IS_AON_DCDC_SYS_LEVEL_TYPE(type) (((type) == AON_DCDC_SYS_LEVEL_0P700V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P725V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P750V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P775V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P800V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P825V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P850V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P875V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P900V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P925V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P950V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_0P975V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P000V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P025V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P050V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P075V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P100V) || \
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P125V) || \
                                           ((type) == AON_DCDC_SYS_LEVEL_1P150V) || \
                                           ((type) == AON_DCDC_SYS_LEVEL_1P175V) || \
                                           ((type) == AON_DCDC_SYS_LEVEL_1P200V) || \
@@ -345,24 +368,7 @@ extern "C" {
                                           ((type) == AON_DCDC_SYS_LEVEL_1P400V) || \
                                           ((type) == AON_DCDC_SYS_LEVEL_1P425V) || \
                                           ((type) == AON_DCDC_SYS_LEVEL_1P450V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P475V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P500V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P525V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P550V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P575V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P600V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P625V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P650V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P675V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P700V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P725V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P750V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P775V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P800V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P825V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P850V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P875V) || \
-                                          ((type) == AON_DCDC_SYS_LEVEL_1P900V))
+                                          ((type) == AON_DCDC_SYS_LEVEL_1P475V))
 
 /** @defgroup  AON_LDO_SOC_LEVEL_TYPE
  *  @{
@@ -545,14 +551,16 @@ BL_Err_Type AON_Set_Dcdc_Sys_Sstart_Delay(uint8_t delay);
 BL_Sts_Type AON_Get_BOD_OUT_State(void);
 BL_Err_Type AON_Set_BOD_Config(uint8_t enable, uint8_t threshold, uint8_t mode);
 /*----------*/
-void AON_Wdg_Init(uint16_t comp_val);
+BL_Err_Type AON_Wdg_Init(uint16_t comp_val);
 void AON_Wdg_Start(void);
+void AON_Wdg_Stop(void);
 BL_Sts_Type AON_Wdg_Status_Get(void);
 void AON_Wdg_Status_Clear(void);
 void AON_Wdg_Kick(void);
 /*----------*/
 void AON_Set_RC32M_Speed_As_8M(uint8_t enable);
 void AON_Set_RC32M_Code_Fr_Ext(uint8_t code);
+void AON_Set_RC32M_Code_Fr_Ext2(uint8_t code);
 /*----------*/
 BL_Err_Type AON_Trim_Ldo_Soc_Vout(void);
 BL_Err_Type AON_Trim_Ldo08_Aon_Vout(void);

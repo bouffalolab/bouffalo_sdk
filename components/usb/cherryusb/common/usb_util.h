@@ -45,6 +45,12 @@
 #define __ALIGNED(x) __attribute__((aligned(x)))
 #endif
 #elif defined(__ICCARM__) || defined(__ICCRX__) || defined(__ICCRISCV__)
+#if (__VER__ >= 8000000)
+  #define __ICCARM_V8 1
+#else
+  #define __ICCARM_V8 0
+#endif
+
 #ifndef __USED
 #if defined(__ICCARM_V8) || defined(__ICCRISCV__)
 #define __USED __attribute__((used))
@@ -179,8 +185,8 @@
         (field)[3] = (uint8_t)((value) >> 0);  \
     } while (0)
 
-#define WBVAL(x) (x & 0xFF), ((x >> 8) & 0xFF)
-#define DBVAL(x) (x & 0xFF), ((x >> 8) & 0xFF), ((x >> 16) & 0xFF), ((x >> 24) & 0xFF)
+#define WBVAL(x) ((x) & 0xFF), (((x) >> 8) & 0xFF)
+#define DBVAL(x) ((x) & 0xFF), (((x) >> 8) & 0xFF), (((x) >> 16) & 0xFF), (((x) >> 24) & 0xFF)
 
 #define PP_NARG(...) \
     PP_NARG_(__VA_ARGS__, PP_RSEQ_N())

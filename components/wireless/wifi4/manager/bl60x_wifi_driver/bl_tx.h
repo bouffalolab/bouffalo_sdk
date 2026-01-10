@@ -85,4 +85,9 @@ int   bl_tx_cfm(void *pthis, void *host_id);
 void  bl_tx_try_flush(int param, struct ke_tx_fc *tx_fc_field);
 void  bl_tx_cntrl_link_up(struct bl_sta *sta);
 void  bl_tx_cntrl_link_down(struct bl_sta *sta);
+
+int bl_tx_find_sta_by_mac(uint8_t vif_idx, struct mac_addr *mac);
+err_t bl_tx_intra_bss_forward(struct pbuf *p, int dst_sta_idx);
+err_t bl_tx_intra_bss_broadcast(struct pbuf *p, int src_sta_idx);
+
 #endif

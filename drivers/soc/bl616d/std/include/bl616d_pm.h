@@ -38,17 +38,14 @@ enum pm_event_type {
 };
 
 typedef struct {
-    uint8_t lp_mode_en    : 1; /*!< Whether Enable LDO's or DCDC's lowpower Mode during PDS */
-    uint8_t voltage_level : 4; /* LDO's or DCDC's voltage level during PDS */
-    uint8_t rsv           : 3;
+    uint32_t  lp_mode_en    : 1; /*!< Whether Enable LDO's or DCDC's lowpower Mode during PDS */
+    uint32_t  voltage_level : 16; /* LDO's or DCDC's voltage level during PDS */
+    uint32_t  rsv           : 15;
 } PM_PWR_Cfg;
 
 typedef struct
 {
     uint8_t pdsLevel;         /*!< PDS level */
-    PM_PWR_Cfg ldo18_aon_cfg; /*!< Power Config of ldo18_aon */
-    PM_PWR_Cfg dcdc_sys_cfg;  /*!< Power Config of dcdc_sys */
-    PM_PWR_Cfg ldo_soc_cfg;   /*!< Power Config of ldo_soc */
     uint8_t turnOffRF;        /*!< Wheather turn off RF */
     uint8_t powerDownFlash;   /*!< Whether power down flash */
     uint8_t ramRetEn;         /*!< Whether OCRAM Retention */
@@ -56,6 +53,9 @@ typedef struct
     uint8_t turnoffWifiPLL;   /*!< Whether trun off WiFi PLL */
     uint8_t turnoffCpuPLL;    /*!< Whether trun off CPU PLL */
     uint8_t ioKeepEn;         /*!< PDS io keep select */
+    PM_PWR_Cfg ldo18_aon_cfg; /*!< Power Config of ldo18_aon */
+    PM_PWR_Cfg dcdc_sys_cfg;  /*!< Power Config of dcdc_sys */
+    PM_PWR_Cfg ldo_soc_cfg;   /*!< Power Config of ldo_soc */
     uint32_t sleepTime;       /*!< PDS sleep time */
     uint32_t *flashCfg;       /*!< Flash config pointer, used when power down flash */
     void (*preCbFun)(void);   /*!< Pre callback function */

@@ -10,6 +10,12 @@
 #include "bflb_gpio.h"
 #include "bflb_l1c.h"
 
+#if defined (BL606P) || defined (BL628) ||defined(BL702L) || defined(BL702) || defined(BL808)
+#include "board.h"
+#else
+#include "board_gpio.h"
+#endif
+
 #if ((LCD_DBI_WORK_MODE == 4) && (DBI_QSPI_SUPPORT == 0))
 #error : "The DBI of this chip does not support QSPI mode."
 #endif
@@ -94,8 +100,6 @@ int lcd_dbi_async_callback_enable(bool enable)
 
 int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
 {
-    struct bflb_device_s *gpio;
-
     /* dbi cfg */
     struct bflb_dbi_config_s dbi_cfg = {
         .clk_mode = DBI_CLOCK_MODE_1,
@@ -124,29 +128,17 @@ int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
 #if (LCD_DBI_WORK_MODE == 1)
     /* dbi typeC 4-wire mode */
     dbi_cfg.dbi_mode = DBI_MODE_TYPE_C_4_WIRE;
-    uint32_t dbi_gpio_func = GPIO_FUNC_DBI_C;
-    uint8_t dbi_gpio_list[] = { LCD_DBI_TYPEC_PIN_CLK, LCD_DBI_TYPEC_PIN_CS, LCD_DBI_TYPEC_PIN_DAT, LCD_DBI_TYPEC_PIN_DC };
-
 #elif (LCD_DBI_WORK_MODE == 2)
     /* dbi typeC 3-wire mode */
     dbi_cfg.dbi_mode = DBI_MODE_TYPE_C_3_WIRE;
-    uint32_t dbi_gpio_func = GPIO_FUNC_DBI_C;
-    uint8_t dbi_gpio_list[] = { LCD_DBI_TYPEC_PIN_CLK, LCD_DBI_TYPEC_PIN_CS, LCD_DBI_TYPEC_PIN_DAT };
 
 #elif (LCD_DBI_WORK_MODE == 3)
     /* dbi typeB x8 mode */
     dbi_cfg.dbi_mode = DBI_MODE_TYPE_B;
-    uint32_t dbi_gpio_func = GPIO_FUNC_DBI_B;
-    uint8_t dbi_gpio_list[] = { LCD_DBI_TYPEB_PIN_WR, LCD_DBI_TYPEB_PIN_CS, LCD_DBI_TYPEB_PIN_RD, LCD_DBI_TYPEB_PIN_DC,
-                                LCD_DBI_TYPEB_PIN_DAT0, LCD_DBI_TYPEB_PIN_DAT1, LCD_DBI_TYPEB_PIN_DAT2, LCD_DBI_TYPEB_PIN_DAT3,
-                                LCD_DBI_TYPEB_PIN_DAT4, LCD_DBI_TYPEB_PIN_DAT5, LCD_DBI_TYPEB_PIN_DAT6, LCD_DBI_TYPEB_PIN_DAT7 };
 
 #elif (LCD_DBI_WORK_MODE == 4)
     /* dbi Ex QSPI */
     dbi_cfg.dbi_mode = DBI_MODE_EX_QSPI;
-    uint32_t dbi_gpio_func = GPIO_FUNC_DBI_QSPI;
-    uint8_t dbi_gpio_list[] = { LCD_DBI_QSPI_PIN_CLK, LCD_DBI_QSPI_PIN_CS,
-                                LCD_DBI_QSPI_PIN_DAT0, LCD_DBI_QSPI_PIN_DAT1, LCD_DBI_QSPI_PIN_DAT2, LCD_DBI_QSPI_PIN_DAT3 };
 #endif
 
     if (dbi_parra->pixel_format == LCD_DBI_LCD_PIXEL_FORMAT_RGB565) {
@@ -166,10 +158,8 @@ int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
     }
 
     /* gpio init */
-    gpio = bflb_device_get_by_name("gpio");
-    for (uint8_t i = 0; i < sizeof(dbi_gpio_list) / sizeof(dbi_gpio_list[0]); i++) {
-        bflb_gpio_init(gpio, dbi_gpio_list[i], dbi_gpio_func | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    }
+    void LCD_DBI_GPIO_INIT_FUNC(void);
+    LCD_DBI_GPIO_INIT_FUNC();
 
     /* get dma dev */
     dbi_dma_hd = bflb_device_get_by_name(LCD_DBI_DMA_NAME);
@@ -290,8 +280,7 @@ int lcd_dbi_transmit_cmd_pixel_fill_sync(uint8_t cmd, uint32_t pixel_val, size_t
     }
 
     /* wait transfer complete */
-    while ((bflb_dbi_get_intstatus(dbi_hd) & DBI_INTSTS_TC) == 0) {
-    };
+    while ((bflb_dbi_get_intstatus(dbi_hd) & DBI_INTSTS_TC) == 0) {};
 
     /* clear end flag */
     bflb_dbi_int_clear(dbi_hd, DBI_INTCLR_TC);

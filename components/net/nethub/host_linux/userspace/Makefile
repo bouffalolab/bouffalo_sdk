@@ -1,10 +1,10 @@
 # NetHub Userspace Tools Makefile
 # 支持 C 语言版本和 Expect 脚本版本的统一构建
 
-.PHONY: all clean install uninstall expect c build-prepare help check-deps test
+.PHONY: all clean install uninstall expect c netlink_ctrl build-prepare help check-deps test
 
-# 默认目标：构建 C 版本并设置 Expect 脚本权限
-all: build-prepare expect c
+# 默认目标：构建 C 版本、netlink_ctrl 并设置 Expect 脚本权限
+all: build-prepare expect c netlink_ctrl
 
 # 构建准备
 build-prepare:
@@ -27,6 +27,12 @@ expect:
 	@chmod +x easyat/scripts/wifi_scan
 	@echo "✓ Expect 脚本版本设置完成"
 
+# netlink_ctrl 工具构建
+netlink_ctrl:
+	@echo "构建 netlink_ctrl 工具..."
+	@cd netlink_ctrl && $(MAKE)
+	@echo "✓ netlink_ctrl 构建完成"
+
 # 只构建 C 版本
 c-only: build-prepare
 	@cd easyat/src && $(MAKE)
@@ -38,16 +44,23 @@ expect-only: build-prepare expect
 clean:
 	@echo "清理构建文件..."
 	@cd easyat/src && $(MAKE) clean 2>/dev/null || true
+	@cd netlink_ctrl && $(MAKE) clean 2>/dev/null || true
 	@rm -f easyat/src/easyat
 	@echo "✓ 构建文件清理完成"
 
 # 安装到系统
 install: all
-	@echo "安装 EasyAT 工具到系统..."
+	@echo "安装工具到系统..."
 	@# 创建安装目录
 	@sudo mkdir -p /usr/local/bin
 	@sudo mkdir -p /usr/local/share/easyat
 	@sudo mkdir -p /usr/local/share/doc/easyat
+
+	@# 安装 netlink_ctrl
+	@if [ -f netlink_ctrl/netlink_app ]; then \
+		sudo cp netlink_ctrl/netlink_app /usr/local/bin/netlink_app; \
+		echo "✓ netlink_app 已安装: /usr/local/bin/netlink_app"; \
+	fi
 
 	@# 安装 C 版本可执行文件
 	@if [ -f easyat/src/easyat ]; then \
@@ -78,7 +91,8 @@ install: all
 
 # 从系统卸载
 uninstall:
-	@echo "从系统卸载 EasyAT 工具..."
+	@echo "从系统卸载工具..."
+	@sudo rm -f /usr/local/bin/netlink_app
 	@sudo rm -f /usr/local/bin/easyat
 	@sudo rm -f /usr/local/bin/connect_and_setip
 	@sudo rm -f /usr/local/bin/easyat-connect

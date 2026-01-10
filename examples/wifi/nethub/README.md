@@ -65,7 +65,21 @@ Example:
 make flash CHIP=bl616 COMX=/dev/ttyUSB0
 ```
 
-## System Architecture
+## System Architecture and Host Manual
+
+For detailed system architecture description and host-side usage manual, please refer to: [components/net/nethub/host_linux/README.md](../../components/net/nethub/host_linux/README.md)
+
+### Quick Links
+
+- **[Software Architecture and Features](../../components/net/nethub/host_linux/README.md#1-software-architecture-and-features)** - Learn about the overall architecture of host drivers and device control
+- **[Quick Start](../../components/net/nethub/host_linux/README.md#2-quick-start)** - Guide on compilation, driver loading, and network configuration
+- **[Notes and FAQ](../../components/net/nethub/host_linux/README.md#3-notes-and-frequently-asked-questions)** - Key information on interfaces, DHCP configuration, packet filtering, etc.
+
+### Important Notes
+
+⚠️ **DHCP Configuration**: In the current solution, the DHCP client runs on the device side. The host side must use static IP configuration and ensure that both host and device use the same IP address.
+
+---
 
 The Nethub solution consists of two parts:
 - **Device Side**: Runs on Bouffalo chips, handles WiFi connections and data forwarding

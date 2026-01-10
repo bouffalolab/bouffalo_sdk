@@ -5765,12 +5765,17 @@ static int irk_init(void)
 #if defined(BFLB_BLE_PATCH_SETTINGS_LOAD)
     u8_t empty_irk[16];
     int err;
+
     /*local irk has been loaded from flash in bt_enable, check if irk is null*/
     memset(empty_irk, 0, 16);
     if (memcmp(bt_dev.irk[0], empty_irk, 16) != 0)
         return 0;
 
     err = bt_rand(&bt_dev.irk[0], 16);
+    if (!err){
+        if (IS_ENABLED(CONFIG_BT_SETTINGS))
+            bt_settings_save_id();
+    }
 
     return err;
 #else
