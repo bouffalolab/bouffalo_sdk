@@ -45,26 +45,43 @@ static void async_event_handler(void *arg1, uint32_t arg2)
     /* XXX: Prevents blocking operations in the Timer context. */
     vTaskSuspendAll();
 
-    wifi_event_handler(arg2, (uint32_t)arg1);
+    async_event_loop();
 
     xTaskResumeAll();
+}
 
-    input_event_t event = {
-        .code = arg2,
+static void async_event_loop_wake(void)
+{
+    BaseType_t xReturn;
+    TickType_t wait = portMAX_DELAY;
+
+    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
+        wait = 0;
+    }
+
+    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
+    configASSERT(xReturn == pdPASS);
+}
+
+static void wifi_async_event(async_input_event_t event, void *code2)
+{
+    platform_event_t ev = {
+        .code = event->code,
     };
     if (pfn_event_handler) {
-        pfn_event_handler(&event, (uint32_t)p_event_arg);
+        pfn_event_handler(&ev, code2);
     }
 }
 
 int platform_register_event(int catalogue, pfn_wifi_event cb, void *arg)
 {
     pfn_event_handler = cb;
-    p_event_arg = arg;
+    async_register_event_filter(EV_WIFI, wifi_async_event, arg);
 }
 
 int platform_unregister_event(int catalogue, pfn_wifi_event cb, void *arg)
 {
+    async_unregister_event_filter(EV_WIFI, wifi_async_event, arg);
     pfn_event_handler = NULL;
 }
 
@@ -79,10 +96,8 @@ int platform_unregister_event(int catalogue, pfn_wifi_event cb, void *arg)
 
 void platform_post_event(int catalogue, int code1, int code2)
 {
-    BaseType_t xReturn;
-
-    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)code2, code1, portMAX_DELAY);
-    configASSERT(xReturn == pdPASS);
+    async_event_init(async_event_loop_wake);
+    async_post_event(EV_WIFI, code1, code2);
 }
 
 int platform_wifi_enable_irq(void)

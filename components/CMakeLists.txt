@@ -1,5 +1,6 @@
 add_subdirectory(ai)
 add_subdirectory(crypto)
+sdk_add_subdirectory_ifdef(CONFIG_BACKTRACE debug)
 add_subdirectory(fs)
 add_subdirectory(graphics)
 add_subdirectory(mm)

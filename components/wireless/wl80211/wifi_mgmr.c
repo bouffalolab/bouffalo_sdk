@@ -4,54 +4,35 @@
 #include <string.h>
 
 #include "wl80211.h"
-#include "supplicant_api.h"
-#include "rtos_al.h"
-#include "wifi_mgmr.h"
-#include "async_event.h"
+#include "macsw.h"
 
-#include <lwip/etharp.h>
-#include <lwip/netdb.h>
-#include <lwip/netifapi.h>
-#include <lwip/sockets.h>
-#include <lwip/tcpip.h>
+#include "supplicant_api.h"
+#include "wl80211_platform.h"
+
+#include "wifi_mgmr.h"
+
+#if !defined(__NuttX__)
+#include "async_event.h"
+#endif
 
 #define DBG_TAG "WIFI_MGMR"
 #include "log.h"
 
+#if !defined(__NuttX__)
 extern void *_wifi_mgmr_sta_start_dhcpc(void);
 extern void *_wifi_mgmr_sta_stop_dhcpc(void);
-extern void *_wifi_mgmr_get_sta_netif(void);
-extern void *_wifi_mgmr_sta_start_dhcpd(void);
+extern void _wifi_mgmr_ip_got_dump(void);
+extern void *_wifi_mgmr_ap_start_dhcpd(void);
+extern void _wifi_mgmr_ap_stop_dhcpd(void);
 
 static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
 {
-    printf("=================================================================\r\n");
-    printf("[AT][RX] Connection Status\r\n");
-    printf("[AT][RX]   status_code %u\r\n", status_code);
-    printf("[AT][RX]   reason_code %u\r\n", ieeetypes_code);
-    printf("[AT][RX]   status detail: %s\r\n", wifi_mgmr_get_sm_status_code_str(status_code));
-    printf("=================================================================\r\n");
-}
-
-static void ip_got_cb(struct netif *netif)
-{
-    char *state, *connected;
-
-    if (wifi_mgmr_sta_state_get()) {
-        state = "UP";
-        connected = ",CONNECTED";
-    } else {
-        state = "DOWN";
-        connected = "";
-    }
-
-    extern size_t kfree_size(void);
-    printf("Memory left is %d Bytes\r\n", kfree_size());
-    printf("[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n", netif->num, netif->name[0],
-           netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4],
-           netif->hwaddr[5], netif->ip_addr.addr & 0xff, (netif->ip_addr.addr >> 8) & 0xff,
-           (netif->ip_addr.addr >> 16) & 0xff, (netif->ip_addr.addr >> 24) & 0xff,
-           32 - __builtin_clz(netif->netmask.addr), state, connected);
+    wl80211_printf("=================================================================\r\n");
+    wl80211_printf("[AT][RX] Connection Status\r\n");
+    wl80211_printf("[AT][RX]   status_code %u\r\n", status_code);
+    wl80211_printf("[AT][RX]   reason_code %u\r\n", ieeetypes_code);
+    wl80211_printf("[AT][RX]   status detail: %s\r\n", wifi_mgmr_get_sm_status_code_str(status_code));
+    wl80211_printf("=================================================================\r\n");
 }
 
 static void start_dhcp_tsk(void)
@@ -66,8 +47,14 @@ static void disconnect_tsk(void)
 
 static void start_dhcpd_tsk(void)
 {
-    _wifi_mgmr_sta_start_dhcpd();
+    _wifi_mgmr_ap_start_dhcpd();
 }
+
+static void stop_dhcpd_tsk(void)
+{
+    _wifi_mgmr_ap_stop_dhcpd();
+}
+#endif
 
 static int cmp_rssi_desc(const void *a, const void *b)
 {
@@ -103,8 +90,8 @@ static void dump_scan_result(void)
 
     qsort(rssi_sorted, total, sizeof(void *), cmp_rssi_desc);
 
-    printf("cached scan list\r\n");
-    printf("*********************************************************************"
+    wl80211_printf("cached scan list\r\n");
+    wl80211_printf("*********************************************************************"
            "*******************************\r\n");
 
     for (i = 0; i < total; i++) {
@@ -159,7 +146,7 @@ static void dump_scan_result(void)
             cipher = WIFI_EVENT_BEACON_IND_CIPHER_NONE;
         }
 
-        printf("index[%02d]: channel %3u, bssid %02X:%02X:%02X:%02X:%02X:%02X, "
+        wl80211_printf("index[%02d]: channel %3u, bssid %02X:%02X:%02X:%02X:%02X:%02X, "
                "rssi %3d, ppm abs:rel %3d : %3d, wps %2d, mode %6s, auth %20s, "
                "cipher:%12s, SSID %s\r\n",
                i, n->channel, n->bssid[0], n->bssid[1], n->bssid[2], n->bssid[3], n->bssid[4], n->bssid[5], n->rssi, 0,
@@ -171,13 +158,14 @@ static void dump_scan_result(void)
         }
         free(n);
     }
-    printf("index[%02d]: empty\r\n", total);
-    printf("---------------------------------------------------------------------"
+    wl80211_printf("index[%02d]: empty\r\n", total);
+    wl80211_printf("---------------------------------------------------------------------"
            "-------------------------------\r\n");
 
     free(rssi_sorted);
 }
 
+#if !defined(__NuttX__)
 static void evt_handler_wrapper(void (*handler)(void))
 {
     assert(handler != NULL);
@@ -186,7 +174,7 @@ static void evt_handler_wrapper(void (*handler)(void))
     vTaskDelete(NULL);
 }
 
-static void wl80211_event_handler(input_event_t ev, void *priv)
+static void wl80211_event_handler(async_input_event_t ev, void *priv)
 {
     void (*handler)(void) = NULL;
     uint16_t stack_size = 265;
@@ -213,6 +201,12 @@ static void wl80211_event_handler(input_event_t ev, void *priv)
             async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STARTED, 0);
             handler = start_dhcpd_tsk;
             break;
+
+        case WL80211_EVT_AP_STOPPED:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STOPPED, 0);
+            handler = stop_dhcpd_tsk;
+            break;
+
     }
 
     if (handler != NULL) {
@@ -220,7 +214,7 @@ static void wl80211_event_handler(input_event_t ev, void *priv)
     }
 }
 
-static void wifi_mgmr_event_handler(input_event_t ev, void *priv)
+static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
 {
     switch (ev->code) {
         case CODE_WIFI_ON_INIT_DONE: {
@@ -239,7 +233,7 @@ static void wifi_mgmr_event_handler(input_event_t ev, void *priv)
             mm_sec_keydump();
         } break;
         case CODE_WIFI_ON_GOT_IP: {
-            ip_got_cb(_wifi_mgmr_get_sta_netif());
+            _wifi_mgmr_ip_got_dump();
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
@@ -262,30 +256,31 @@ static void wifi_mgmr_event_handler(input_event_t ev, void *priv)
         }
     }
 }
+#endif
 
 void wifi_mgmr_init(void)
 {
+#if !defined(__NuttX__)
     async_register_event_filter(EV_WL80211, wl80211_event_handler, NULL);
     async_register_event_filter(EV_WIFI, wifi_mgmr_event_handler, NULL);
 
     /* compat legacy wifi mgmr */
     async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
     async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
+#endif
 }
 
 void wifi_mgmr_sta_ps_enter(void)
 {
-    if (wl80211_cntrl(WL80211_CTRL_STA_SET_PS_MODE, 1)) {
-        printf("enable ps mode failed!\r\n");
-        abort();
+    if (wl80211_sta_set_ps(1)) {
+        wl80211_printf("enable ps mode failed!\r\n");
     }
 }
 
 void wifi_mgmr_sta_ps_exit(void)
 {
-    if (wl80211_cntrl(WL80211_CTRL_STA_SET_PS_MODE, 0)) {
-        printf("exit ps mode failed!\r\n");
-        abort();
+    if (wl80211_sta_set_ps(0)) {
+        wl80211_printf("exit ps mode failed!\r\n");
     }
 }
 
@@ -314,19 +309,16 @@ static int parse_mac_addr(const char *str, uint8_t *addr)
 int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const char *akm_str, uint8_t pmf_cfg,
                      uint16_t freq1, uint16_t freq2, uint8_t use_dhcp)
 {
-    char conn_ssid[33] = { 0 };
-    char conn_password[65] = { 0 };
-    uint8_t conn_bssid[6] = { 0 };
-    uint8_t conn_pmf_cfg = 0;
-    uint16_t conn_freq = 0;
+    struct wl80211_connect_params conn_params;
     int ssid_len, key_len;
 
+    memset(&conn_params, 0, sizeof(struct wl80211_connect_params));
     if (ssid) {
         ssid_len = strlen(ssid);
         if (ssid_len <= 0 || ssid_len > MGMR_SSID_LEN) {
             return -1;
         }
-        strcpy(conn_ssid, ssid);
+        strcpy((char *)conn_params.ssid, ssid);
     } else {
         return -1;
     }
@@ -336,17 +328,13 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
         if ((key_len < 8 && key_len != 5 && key_len != 0) || (key_len > MGMR_KEY_LEN)) {
             return -1;
         }
-        strcpy(conn_password, key);
-    } else {
-        memset(conn_password, 0, sizeof(conn_password));
+        strcpy((char *)conn_params.password, key);
     }
 
     if (bssid) {
-        if (strlen(bssid) > MGMR_BSSID_LEN || parse_mac_addr(bssid, conn_bssid) != 0) {
+        if (strlen(bssid) > MGMR_BSSID_LEN || parse_mac_addr(bssid, conn_params.bssid) != 0) {
             return -1;
         }
-    } else {
-        memset(conn_bssid, 0, sizeof(conn_bssid));
     }
 
     (void)akm_str;
@@ -354,41 +342,33 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
     if (pmf_cfg < 0 || pmf_cfg > 2) {
         return -1;
     } else {
-        conn_pmf_cfg = pmf_cfg;
+        conn_params.mfp = pmf_cfg;
     }
 
-    if ((freq1 && wl80211_freq_valid_check(freq1)) || (freq2 && wl80211_freq_valid_check(freq2)) ||
+    if ((freq1 && wl80211_freq_check(freq1) > 0) || (freq2 && wl80211_freq_check(freq2) > 0) ||
         (freq1 && freq2 && freq1 != freq2)) {
         return -1;
     } else {
-        conn_freq = freq1 ? freq1 : freq2;
+        uint16_t freq = freq1 ? freq1 : freq2;
+        conn_params.channel = wl80211_freq_to_channel(freq);
     }
 
     (void)use_dhcp;
 
-    wl80211_cntrl(WL80211_CTRL_STA_SET_SSID, conn_ssid);
-    wl80211_cntrl(WL80211_CTRL_STA_SET_PASSWORD, conn_password);
-    wl80211_cntrl(WL80211_CTRL_STA_SET_BSSID, conn_bssid);
-    wl80211_cntrl(WL80211_CTRL_STA_SET_FREQ, conn_freq);
-    wl80211_cntrl(WL80211_CTRL_STA_SET_PMF, conn_pmf_cfg);
-    wl80211_cntrl(WL80211_CTRL_STA_CONNECT);
-
+    wl80211_sta_connect(&conn_params);
     return 0;
 }
 
 int wifi_sta_disconnect(void)
 {
-    return wl80211_cntrl(WL80211_CTRL_STA_DISCONNECT);
+    return wl80211_sta_disconnect();
 }
 
 int wifi_mgmr_sta_get_bssid(uint8_t bssid[6])
 {
-    if (wl80211_glb.link_up == 0) {
+    if (wl80211_sta_get_bssid(bssid) < 0) {
         return -1;
     }
-
-    assert(bssid != NULL);
-    memcpy(bssid, wl80211_glb.bssid, 6);
     return 0;
 }
 
@@ -411,69 +391,75 @@ int wifi_mgmr_sta_rssi_get(int *rssi)
 
 int wifi_mgmr_sta_channel_get(uint8_t *channel)
 {
-    if (wl80211_glb.link_up == 0) {
+    int ch;
+    ch = wl80211_sta_get_channel();
+    if (ch < 0) {
         return -1;
     }
-    assert(channel != NULL);
+    *channel = ch;
 
-    *channel = (uint8_t)phy_freq_to_channel(PHY_BAND_2G4, wl80211_glb.freq);
     return 0;
 }
 
 int wifi_mgmr_sta_aid_get(void)
 {
-    if (wl80211_glb.link_up == 0) {
-        return -1;
-    }
-
-    return wl80211_glb.aid;
+    return wl80211_sta_get_aid();
 }
 
 int wifi_mgmr_sta_state_get(void)
 {
-    return wl80211_glb.link_up;
+    return wl80211_sta_is_connected();
 }
 
 void wifi_mgmr_sta_info_dump(wifi_mgmr_connect_ind_stat_info_t *connection_info)
 {
     int passphr_len = strlen(connection_info->passphr);
-    printf("Connected\r\n");
-    printf("ssid:            %s\r\n", connection_info->ssid);
+    wl80211_printf("Connected\r\n");
+    wl80211_printf("ssid:            %s\r\n", connection_info->ssid);
     // fix show error when using wps
-    printf("passphr:         %s\r\n", (passphr_len || connection_info->security) ? "********" : "Open");
-    printf("bssid:           %02X:%02X:%02X:%02X:%02X:%02X\r\n", connection_info->bssid[0], connection_info->bssid[1],
+    wl80211_printf("passphr:         %s\r\n", (passphr_len || connection_info->security) ? "********" : "Open");
+    wl80211_printf("bssid:           %02X:%02X:%02X:%02X:%02X:%02X\r\n", connection_info->bssid[0], connection_info->bssid[1],
            connection_info->bssid[2], connection_info->bssid[3], connection_info->bssid[4], connection_info->bssid[5]);
-    printf("aid:             %d\r\n", connection_info->aid);
-    printf("channel:         %d\r\n", connection_info->channel);
-    printf("band:            %s\r\n", (connection_info->chan_band) ? "5G" : "2.4G");
-    printf("security:        %d\r\n", connection_info->security);
+    wl80211_printf("aid:             %d\r\n", connection_info->aid);
+    wl80211_printf("channel:         %d\r\n", connection_info->channel);
+    wl80211_printf("band:            %s\r\n", (connection_info->chan_band) ? "5G" : "2.4G");
+    wl80211_printf("security:        %d\r\n", connection_info->security);
 }
 
 int wifi_mgmr_sta_connect_ind_stat_get(wifi_mgmr_connect_ind_stat_info_t *wifi_mgmr_ind_stat)
 {
-    if (wl80211_glb.link_up) {
-        int ssid_len = strlen((char *)wl80211_glb.ssid);
+    if (wifi_mgmr_sta_state_get()) {
+        char ssid[33];
+        char password[65];
+        uint8_t bssid[6];
+        wl80211_sta_get_ssid(ssid);
+        wl80211_sta_get_password(password);
+        wl80211_sta_get_bssid(bssid);
+
+        int ssid_len = strlen(ssid);
         if (ssid_len > 0) {
-            memcpy(wifi_mgmr_ind_stat->ssid, wl80211_glb.ssid, ssid_len);
+            memcpy(wifi_mgmr_ind_stat->ssid, ssid, ssid_len);
             wifi_mgmr_ind_stat->ssid[ssid_len] = '\0';
         }
 
-        int passphr_len = strlen((char *)wl80211_glb.password);
+        int passphr_len = strlen(password);
         if (passphr_len > 0) {
-            memcpy(wifi_mgmr_ind_stat->passphr, wl80211_glb.password, passphr_len);
+            memcpy(wifi_mgmr_ind_stat->passphr, password, passphr_len);
             wifi_mgmr_ind_stat->passphr[passphr_len] = '\0';
         }
-        memcpy(wifi_mgmr_ind_stat->bssid, wl80211_glb.bssid, sizeof(wl80211_glb.bssid));
-        wifi_mgmr_ind_stat->aid = wl80211_glb.aid;
-        wifi_mgmr_ind_stat->channel = (uint8_t)phy_freq_to_channel(wl80211_glb.chan_band, wl80211_glb.freq);
-        wifi_mgmr_ind_stat->chan_band = wl80211_glb.chan_band;
-        wifi_mgmr_ind_stat->security = wl80211_glb.security;
+
+        memcpy(wifi_mgmr_ind_stat->bssid, bssid, 6);
+        wifi_mgmr_ind_stat->aid = wl80211_sta_get_aid();
+        wifi_mgmr_ind_stat->channel = wl80211_sta_get_channel();
+        wifi_mgmr_ind_stat->chan_band = wl80211_channel_check(wifi_mgmr_ind_stat->channel);
+        assert(wifi_mgmr_ind_stat->chan_band != (uint8_t)-1);
+        wifi_mgmr_ind_stat->security = wl80211_glb.security; // FIXME
 
         wifi_mgmr_sta_info_dump(wifi_mgmr_ind_stat);
 
         return 0;
     } else {
-        printf("No Connect\r\n");
+        wl80211_printf("No Connect\r\n");
         return -1;
     }
 }
@@ -481,26 +467,28 @@ int wifi_mgmr_sta_connect_ind_stat_get(wifi_mgmr_connect_ind_stat_info_t *wifi_m
 int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config)
 {
     struct wl80211_scan_params scan_params;
-
     memset(&scan_params, 0, sizeof(struct wl80211_scan_params));
-    scan_params.ssid_length = config->ssid_length;
+
+    scan_params.ssid_len = config->ssid_length;
     if (config->ssid_length) {
-        memcpy(scan_params.ssid, config->ssid_array, config->ssid_length);
+        scan_params.ssid = config->ssid_array;
     }
     if (config->bssid_set_flag) {
-        memcpy(scan_params.bssid, config->bssid, 6);
-    } else {
-        memset(scan_params.bssid, 0xFF, 6);
+        scan_params.bssid = config->bssid;
     }
+
     if (config->channels_cnt) {
         scan_params.channels_cnt = config->channels_cnt;
-        memcpy(scan_params.channels, config->channels, config->channels_cnt);
+        scan_params.channels = config->channels;
     }
-    scan_params.probe_cnt = config->probe_cnt;
-    scan_params.duration = config->duration;
-    scan_params.passive = config->passive;
 
-    return wl80211_cntrl(WL80211_CTRL_SCAN_PARAMS, &scan_params);
+    scan_params.probe_cnt = config->probe_cnt;
+    scan_params.probe_interval = config->duration;
+    if (config->passive) {
+        scan_params.flags |= WL80211_SCAN_FLAGS_PASSIVE;
+    }
+
+    return wl80211_scan(&scan_params);
 }
 
 uint32_t wifi_mgmr_sta_scanlist_nums_get(void)
@@ -641,30 +629,24 @@ int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb)
 int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *config)
 {
     int ret;
+    struct wl80211_connect_params params;
+
+    memset(&params, 0, sizeof(struct wl80211_connect_params));
 
     /* freq (channel) */
-    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_FREQ, config->freq1);
-    if (ret) {
-        return ret;
+    params.channel = wl80211_freq_to_channel(config->freq1);
+    if (params.channel == (uint8_t)-1) {
+        params.channel = 0;
     }
 
-    /* pmf */
-    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_PMF, config->pmf_cfg);
-    if (ret) {
-        return ret;
-    }
+    // FIXME pmf_cfg => mfp convert
+    params.mfp = config->pmf_cfg;
 
     /* ssid */
-    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_SSID, config->ssid);
-    if (ret) {
-        return ret;
-    }
+    memcpy(params.ssid, config->ssid, 32);
 
     /* password */
-    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_PASSWORD, config->key);
-    if (ret) {
-        return ret;
-    }
+    memcpy(params.password, config->key, 64);
 
     /* bssid */
     uint8_t bssid_addr[6] = { 0 };
@@ -674,21 +656,15 @@ int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *config)
             return ret;
         }
     }
-    ret = wl80211_cntrl(WL80211_CTRL_STA_SET_BSSID, bssid_addr);
-    if (ret) {
-        return ret;
-    }
+    memcpy(params.bssid, &bssid_addr, 6);
 
     /* listen_interval */
     if (config->listen_interval) {
-        ret = wl80211_cntrl(WL80211_CTRL_STA_SET_LISTEN_INTERVAL, &(config->listen_interval));
-        if (ret) {
-            return ret;
-        }
+        // not use
     }
 
     /* start scan and connect */
-    ret = wl80211_cntrl(WL80211_CTRL_STA_CONNECT);
+    ret = wl80211_sta_connect(&params);
     if (ret) {
         return ret;
     }
@@ -698,20 +674,18 @@ int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *config)
 
 int wifi_mgmr_sta_disconnect(void)
 {
-    return wl80211_cntrl(WL80211_CTRL_STA_DISCONNECT);
+    return wl80211_sta_disconnect();
 }
 
+// XXX need this?
 int wifi_mgmr_sta_set_listen_itv(uint16_t itv)
 {
-    return wl80211_cntrl(WL80211_CTRL_STA_SET_LISTEN_INTERVAL, &itv);
+    return -1;
 }
 
 uint16_t wifi_mgmr_sta_get_listen_itv(void)
 {
-    uint16_t itv = 0;
-
-    wl80211_cntrl(WL80211_CTRL_STA_GET_LISTEN_INTERVAL, &itv);
-    return itv;
+    return 100;
 }
 
 int wifi_mgmr_ap_state_get(void)
@@ -751,12 +725,25 @@ uint16_t wifi_mgmr_sta_info_reason_code_get(void)
 
 int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt)
 {
-    return wl80211_get_channel_nums(country_code, c24G_cnt, c5G_cnt);
+    const struct ieee80211_dot_d *country;
+    country = wl80211_get_country();
+    assert(country != NULL);
+    *c24G_cnt = country->channel24G_num;
+    *c5G_cnt = country->channel5G_num;
+
+    return 0;
 }
 
 int wifi_mgmr_get_channel_list(const char *country_code, uint8_t **c24G_list, uint8_t **c5G_list)
 {
-    return wl80211_get_channel_list(country_code, c24G_list, c5G_list);
+    const struct ieee80211_dot_d *country;
+    country = wl80211_get_country();
+    assert(country != NULL);
+
+    *c24G_list = (uint8_t *)&country->channel24G_chan[0];
+    *c5G_list = (uint8_t *)&country->channel5G_chan[0];
+
+    return 0;
 }
 
 int wifi_mgmr_set_country_code(char *country_code)
@@ -766,7 +753,12 @@ int wifi_mgmr_set_country_code(char *country_code)
 
 int wifi_mgmr_get_country_code(char *country_code)
 {
-    return wl80211_get_country_code(country_code);
+    const char *c = wl80211_get_country_code();
+    if (!c) {
+        return NULL;
+    }
+    memcpy(country_code, c, 3); // XXX
+    return 0;
 }
 
 char *wifi_mgmr_mode_to_str(uint32_t mode)

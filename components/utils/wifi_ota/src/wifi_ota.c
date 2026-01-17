@@ -292,7 +292,7 @@ static int wifi_ota_download_firmware(int sock, uint32_t ota_addr, uint32_t bin_
     int total_cnt = 0;
 
     mbedtls_sha256_init(&ctx_sha256);
-    mbedtls_sha256_starts_ret(&ctx_sha256, 0);
+    mbedtls_sha256_starts(&ctx_sha256, 0);
     memset(sha256_result, 0, sizeof(sha256_result));
 
     while (1) {
@@ -319,7 +319,11 @@ static int wifi_ota_download_firmware(int sock, uint32_t ota_addr, uint32_t bin_
                 LOG_I("Will Write %u to 0x%08X left %u.\r\n", buffer_offset, ota_addr + flash_offset,
                       (bin_size - total_cnt) + buffer_offset);
                 bflb_l1c_dcache_clean_range(g_recv_buffer, buffer_offset);
+#ifdef CONFIG_MBEDTLS_V3
+                ret = mbedtls_sha256_update(&ctx_sha256, g_recv_buffer, buffer_offset);
+#else
                 ret = mbedtls_sha256_update_ret(&ctx_sha256, g_recv_buffer, buffer_offset);
+#endif
                 if (ret != 0) {
                     LOG_E("sha256 update fail! %d\r\n", ret);
                 }
@@ -348,7 +352,7 @@ static int wifi_ota_download_firmware(int sock, uint32_t ota_addr, uint32_t bin_
 
     LOG_I("Download complete, total=%u, verifying SHA256...\r\n", total_cnt);
 
-    mbedtls_sha256_finish_ret(&ctx_sha256, sha256_result);
+    mbedtls_sha256_finish(&ctx_sha256, sha256_result);
     mbedtls_sha256_free(&ctx_sha256);
 
     if (memcmp(sha256_img, sha256_result, 32)) {

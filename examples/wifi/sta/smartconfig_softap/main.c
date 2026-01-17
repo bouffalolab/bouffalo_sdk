@@ -31,6 +31,7 @@
 
 #define DBG_TAG "MAIN"
 #include "log.h"
+#include "async_event.h"
 
 #define AP_SSID    "BL602_Config"
 #define AP_PASSWD  NULL
@@ -41,9 +42,12 @@ static struct bflb_device_s *uart0;
 static web_config_t g_web_ctx;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
+extern void wifi_event_handler(async_input_event_t ev, void *priv);
 
 static void wifi_init_task(void *param)
 {
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
     wifi_task_create();
     fhost_init();
     vTaskDelete(NULL);
@@ -67,8 +71,10 @@ static void web_init_task(void *param)
     vTaskDelete(NULL);
 }
 
-void wifi_event_handler(uint32_t code)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
+    uint32_t code = ev->code;
+
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE:
             wifi_mgmr_init(&conf);

@@ -193,7 +193,7 @@ typedef struct boot_info_data {
     /** @} */
 
     uint32_t sw_cfg0; /**< Software configuration 0 */
-    uint64_t chip_id; /**< Unique chip identifier */
+    uint8_t chip_id[8]; /**< Unique chip identifier */
     uint32_t sw_cfg1; /**< Software configuration 1 */
 
     // uint32_t crc32;                                  /**< CRC32 (commented out) */
@@ -317,7 +317,7 @@ typedef struct hd_sdio_bootrom {
     uint32_t chip_version;   /**< Chip version */
     uint8_t chip_sign_type;  /**< Chip signature type */
     uint8_t chip_encry_type; /**< Chip encryption type */
-    uint64_t chip_id;        /**< Unique chip identifier */
+    uint8_t chip_id[8];        /**< Unique chip identifier */
     /** @} */
 
     /** @name Communication Buffers

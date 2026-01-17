@@ -193,7 +193,9 @@ struct __attribute__((packed, aligned(4))) bootheader_t {
     uint32_t rsvd0[6]; /* rsvd */
     uint32_t rsvd1[6]; /* rsvd */
 
-    uint32_t rsvd; /* 4 */
+    uint8_t  boot2_age;                                                 /* 4 */
+    uint8_t  boot2_ota_enable; 
+    uint16_t rsvd3; 
 
     uint32_t crc32; /* 4 */
 };

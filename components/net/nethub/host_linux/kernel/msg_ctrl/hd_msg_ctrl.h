@@ -19,7 +19,7 @@
  * @{
  */
 enum {
-    HD_MSG_TAG_NONE, /**< No specific tag */
+    HD_MSG_TAG_NONE = 0, /**< No specific tag */
 
     HD_MSG_TAG_TEST_1, /**< Test message tag 1 */
     HD_MSG_TAG_TEST_2, /**< Test message tag 2 */

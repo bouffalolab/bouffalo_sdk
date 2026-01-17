@@ -800,3 +800,80 @@ __WEAK int32_t bflb_get_boot2_info_from_flash(bflb_verinf_t *version)
 
     return 0;
 }
+
+/****************************************************************************/ /**
+ * @brief  get chip type and version
+ *
+ * @param  chip_type: chip type pointer，the chip type can be one of the following values:
+ *           @arg BFLB_CHIP_TYPE_BL616
+ *           @arg BFLB_CHIP_TYPE_BL616D
+ *           @arg BFLB_CHIP_TYPE_BL616L
+ *           @arg BFLB_CHIP_TYPE_BL602
+ *           @arg BFLB_CHIP_TYPE_BL702
+ *           @arg BFLB_CHIP_TYPE_BL702L
+ *                                           
+ * @param  chip_version: chip version pointer
+ *
+ * @return int
+ *
+*******************************************************************************/
+int32_t bflb_get_chip_type(uint8_t *chip_type, uint8_t *chip_version)
+{
+#ifdef romapi_bflb_get_chip_type
+    return romapi_bflb_get_chip_type(chip_type, chip_version);
+#else
+    uint32_t tmp = 0x0;
+    if (NULL == chip_type || NULL == chip_version) {
+        return -1;
+    }
+#if defined(BL616)
+    tmp = *(uint32_t *)(0x90000000 + 0x15800);
+    if (tmp == 0x06160002) {
+        *chip_type = BFLB_CHIP_TYPE_BL616;
+        *chip_version = 0x02;
+    } else if (tmp == 0x06160001) {
+        *chip_type = BFLB_CHIP_TYPE_BL616;
+        *chip_version = 0x01;
+    } else {
+        return -1;
+    }
+#elif defined(BL616D)
+    tmp = *(uint32_t *)(0x60f60000 + 0x22800);
+    if (tmp == 0x0616d002) {
+        *chip_type = BFLB_CHIP_TYPE_BL616D;
+        *chip_version = 0x02;
+    } else if (tmp == 0x0616d001) {
+        *chip_type = BFLB_CHIP_TYPE_BL616D;
+        *chip_version = 0x11;
+    } else {
+        return -1;
+    }
+#elif defined(BL616L)
+    tmp = *(uint32_t *)(0x90000000 + 0x20000);
+    if (tmp == 0x0616a001) {
+        *chip_type = BFLB_CHIP_TYPE_BL616L;
+        *chip_version = 0x11;
+    } else {
+        tmp = *(uint32_t *)(0x90000000 + 0x18800);
+        if (tmp == 0x0616a002) {
+            *chip_type = BFLB_CHIP_TYPE_BL616L;
+            *chip_version = 0x02;
+        } else {
+            return -1;
+        }
+    }
+#elif defined(BL602)
+    tmp = *(uint32_t *)(0x21000000 + 0x10800);
+    if (tmp == 0x06020002) {
+        *chip_type = BFLB_CHIP_TYPE_BL602;
+        *chip_version = 0x02;
+    } else if (tmp == 0x06020001) {
+        *chip_type = BFLB_CHIP_TYPE_BL602;
+        *chip_version = 0x01;
+    } else {
+        return -1;
+    }
+#endif
+    return 0;
+#endif
+}

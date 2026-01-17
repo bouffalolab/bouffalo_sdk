@@ -19,15 +19,20 @@
 
 #define DBG_TAG "MAIN"
 #include <log.h>
+#include "async_event.h"
 
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (16)
 
 // extern void app_atmoudle_init(void);
+void wifi_event_handler(async_input_event_t ev, void *priv);
 
 void wifi_start_firmware_task(void *param)
 {
     LOG_I("Starting wifi ...\r\n");
+
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
 
     wifi_task_create();
 
@@ -37,9 +42,11 @@ void wifi_start_firmware_task(void *param)
     vTaskDelete(NULL);
 }
 
-void wifi_event_handler(uint32_t code)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
-#ifdef BL_HOSTROUTER_ENABLE
+    uint32_t code = ev->code;
+
+    #ifdef BL_HOSTROUTER_ENABLE
     extern void rnm_event_handler(uint32_t code);
     rnm_event_handler(code);
 #endif

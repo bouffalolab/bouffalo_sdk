@@ -1,10 +1,19 @@
 sdk_generate_library()
 
-# transport sdio
+# source
 sdk_library_add_sources(frame_buff_ctrl/bflb_frame_buff_ctrl.c)
 sdk_library_add_sources(msg_ctrl/bflb_msg_ctrl.c)
-sdk_library_add_sources(bflb_tty/bflb_tty.c)
+sdk_library_add_sources(bflb_eth/transportsdio.c)
 sdk_library_add_sources_ifdef(CONFIG_NETHUB_NETLINK bflb_netlink/bflb_netlink.c)
+sdk_library_add_sources(bflb_tty/bflb_tty.c)
+
+# include
+sdk_add_include_directories(frame_buff_ctrl)
+sdk_add_include_directories(msg_ctrl)
+sdk_add_include_directories(sdio_driver)
+sdk_add_include_directories(bflb_eth)
+sdk_add_include_directories_ifdef(CONFIG_NETHUB_NETLINK bflb_netlink)
+sdk_add_include_directories(bflb_tty)
 
 #sdk_library_add_sources_ifdef(CONFIG_NETHUB_CHANNEL adapter/sdio_driver/bflb_sdio2_drv.c)
 set(SDIO2_LIMITED_CHIPS "bl616" "bl616l")
@@ -20,11 +29,3 @@ if("${CHIP}" IN_LIST SDIO3_LIMITED_CHIPS)
     message(STATUS "Configuring build for SDIO3 driver (chip=${CHIP})")
 endif()
 sdk_add_compile_definitions(-D SDIO3_FUNC_QUEUE_NUM_MAX=16)
-
-sdk_add_include_directories(include)
-sdk_add_include_directories(transportsdio)
-sdk_add_include_directories(frame_buff_ctrl)
-sdk_add_include_directories(msg_ctrl)
-sdk_add_include_directories(sdio_driver)
-sdk_add_include_directories(bflb_tty)
-sdk_add_include_directories_ifdef(CONFIG_NETHUB_NETLINK bflb_netlink)

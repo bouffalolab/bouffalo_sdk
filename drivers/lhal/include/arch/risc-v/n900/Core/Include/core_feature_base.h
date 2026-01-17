@@ -52,7 +52,7 @@ extern "C" {
 #define __PMP_ENTRY_NUM     32
 #define __SPMP_PRESENT      1
 #define __SPMP_ENTRY_NUM    16
-#define __SMPU_PRESENT      0
+#define __SMPU_PRESENT      1
 #define __SYSTIMER_PRESENT  1
 #define __SYSTIMER_BASEADDR (__IREGION_BASEADDR + IREGION_TIMER_OFS)
 #define __SSTC_PRESENT      1
@@ -89,32 +89,32 @@ typedef unsigned long rv_csr_t;
  */
 typedef union {
     struct {
-        rv_csr_t a : 1;                          /*!< bit: 0  Atomic extension */
-        rv_csr_t b : 1;                          /*!< bit: 1  B extension */
-        rv_csr_t c : 1;                          /*!< bit: 2  Compressed extension */
-        rv_csr_t d : 1;                          /*!< bit: 3  Double-precision floating-point extension */
-        rv_csr_t e : 1;                          /*!< bit: 4  RV32E/64E base ISA */
-        rv_csr_t f : 1;                          /*!< bit: 5  Single-precision floating-point extension */
-        rv_csr_t g : 1;                          /*!< bit: 6  Reserved */
-        rv_csr_t h : 1;                          /*!< bit: 7  Hypervisor extension */
-        rv_csr_t i : 1;                          /*!< bit: 8  RV32I/64I/128I base ISA */
-        rv_csr_t j : 1;                          /*!< bit: 9  Reserved */
-        rv_csr_t k : 1;                          /*!< bit: 10 Reserved */
-        rv_csr_t l : 1;                          /*!< bit: 11 Reserved */
-        rv_csr_t m : 1;                          /*!< bit: 12 Integer Multiply/Divide extension */
-        rv_csr_t n : 1;                          /*!< bit: 13 Tentatively reserved for User-Level Interrupts extension */
-        rv_csr_t o : 1;                          /*!< bit: 14 Reserved */
-        rv_csr_t p : 1;                          /*!< bit: 15 Tentatively reserved for Packed-SIMD extension  */
-        rv_csr_t q : 1;                          /*!< bit: 16 Quad-precision floating-point extension  */
-        rv_csr_t r : 1;                          /*!< bit: 17 Reserved */
-        rv_csr_t s : 1;                          /*!< bit: 18 Supervisor mode implemented  */
-        rv_csr_t t : 1;                          /*!< bit: 19 Reserved */
-        rv_csr_t u : 1;                          /*!< bit: 20 User mode implemented  */
-        rv_csr_t v : 1;                          /*!< bit: 21 Vector extension  */
-        rv_csr_t w : 1;                          /*!< bit: 22 Reserved */
-        rv_csr_t x : 1;                          /*!< bit: 23 Non-standard extensions present  */
-        rv_csr_t y : 1;                          /*!< bit: 24 Reserved */
-        rv_csr_t z : 1;                          /*!< bit: 25 Reserved */
+        rv_csr_t a : 1; /*!< bit: 0  Atomic extension */
+        rv_csr_t b : 1; /*!< bit: 1  B extension */
+        rv_csr_t c : 1; /*!< bit: 2  Compressed extension */
+        rv_csr_t d : 1; /*!< bit: 3  Double-precision floating-point extension */
+        rv_csr_t e : 1; /*!< bit: 4  RV32E/64E base ISA */
+        rv_csr_t f : 1; /*!< bit: 5  Single-precision floating-point extension */
+        rv_csr_t g : 1; /*!< bit: 6  Reserved */
+        rv_csr_t h : 1; /*!< bit: 7  Hypervisor extension */
+        rv_csr_t i : 1; /*!< bit: 8  RV32I/64I/128I base ISA */
+        rv_csr_t j : 1; /*!< bit: 9  Reserved */
+        rv_csr_t k : 1; /*!< bit: 10 Reserved */
+        rv_csr_t l : 1; /*!< bit: 11 Reserved */
+        rv_csr_t m : 1; /*!< bit: 12 Integer Multiply/Divide extension */
+        rv_csr_t n : 1; /*!< bit: 13 Tentatively reserved for User-Level Interrupts extension */
+        rv_csr_t o : 1; /*!< bit: 14 Reserved */
+        rv_csr_t p : 1; /*!< bit: 15 Tentatively reserved for Packed-SIMD extension  */
+        rv_csr_t q : 1; /*!< bit: 16 Quad-precision floating-point extension  */
+        rv_csr_t r : 1; /*!< bit: 17 Reserved */
+        rv_csr_t s : 1; /*!< bit: 18 Supervisor mode implemented  */
+        rv_csr_t t : 1; /*!< bit: 19 Reserved */
+        rv_csr_t u : 1; /*!< bit: 20 User mode implemented  */
+        rv_csr_t v : 1; /*!< bit: 21 Vector extension  */
+        rv_csr_t w : 1; /*!< bit: 22 Reserved */
+        rv_csr_t x : 1; /*!< bit: 23 Non-standard extensions present  */
+        rv_csr_t y : 1; /*!< bit: 24 Reserved */
+        rv_csr_t z : 1; /*!< bit: 25 Reserved */
         rv_csr_t _reserved0 : __RISCV_XLEN - 28; /*!< bit: 26..XLEN-3 Reserved  */
         rv_csr_t mxl : 2;                        /*!< bit: XLEN-2..XLEN-1 Machine XLEN  */
     } b;                                         /*!< Structure used for bit  access */
@@ -250,7 +250,7 @@ typedef union {
  */
 typedef union {
     struct {
-        rv_csr_t mdcause : 3;                   /*!< bit: 0..2   More detailed exception information as MCAUSE supplement */
+        rv_csr_t mdcause : 3; /*!< bit: 0..2   More detailed exception information as MCAUSE supplement */
         rv_csr_t _reserved0 : __RISCV_XLEN - 3; /*!< bit: 3..XLEN-1 Reserved */
     } b;                                        /*!< Structure used for bit  access */
     rv_csr_t d;                                 /*!< Type      used for csr data access */
@@ -261,22 +261,23 @@ typedef union {
  */
 typedef union {
     struct {
-        rv_csr_t _reserved0      : 1;            /*!< bit: 0     Reserved */
-        rv_csr_t zclsd_en        : 1;            /*!< bit: 1     Control the Zclsd will uses the Zcf extension encoding or not */
-        rv_csr_t _reserved1      : 1;            /*!< bit: 2     Reserved */
-        rv_csr_t bpu             : 1;            /*!< bit: 3     dynamic prediction enable flag */
-        rv_csr_t _reserved2      : 2;            /*!< bit: 4..5  Reserved */
-        rv_csr_t misalign        : 1;            /*!< bit: 6     misaligned access support flag */
-        rv_csr_t zcmt_zcmp       : 1;            /*!< bit: 7     Zc Ext uses the cfdsp of D Ext’s encoding or not */
-        rv_csr_t core_buserr     : 1;            /*!< bit: 8     core bus error exception or interrupt */
-        rv_csr_t nmi_cause       : 1;            /*!< bit: 9     mnvec control and nmi mcase exccode */
-        rv_csr_t imreturn_en     : 1;            /*!< bit: 10    IMRETURN mode of trace */
-        rv_csr_t sijump_en       : 1;            /*!< bit: 11    SIJUMP mode of trace */
-        rv_csr_t ldspec_en       : 1;            /*!< bit: 12    enable load speculative goes to mem interface */
-        rv_csr_t _reserved3      : 1;            /*!< bit: 13    Reserved */
-        rv_csr_t dbg_sec         : 1;            /*!< bit: 14    debug access mode, removed in latest releases */
-        rv_csr_t _reserved4      : 2;            /*!< bit: 15..16 Reserved */
-        rv_csr_t csr_excl_enable : 1;            /*!< bit: 17    Exclusive instruction(lr,sc) on Non-cacheable/Device memory can send exclusive flag in memory bus */
+        rv_csr_t _reserved0  : 1; /*!< bit: 0     Reserved */
+        rv_csr_t zclsd_en    : 1; /*!< bit: 1     Control the Zclsd will uses the Zcf extension encoding or not */
+        rv_csr_t _reserved1  : 1; /*!< bit: 2     Reserved */
+        rv_csr_t bpu         : 1; /*!< bit: 3     dynamic prediction enable flag */
+        rv_csr_t _reserved2  : 2; /*!< bit: 4..5  Reserved */
+        rv_csr_t misalign    : 1; /*!< bit: 6     misaligned access support flag */
+        rv_csr_t zcmt_zcmp   : 1; /*!< bit: 7     Zc Ext uses the cfdsp of D Ext’s encoding or not */
+        rv_csr_t core_buserr : 1; /*!< bit: 8     core bus error exception or interrupt */
+        rv_csr_t nmi_cause   : 1; /*!< bit: 9     mnvec control and nmi mcase exccode */
+        rv_csr_t imreturn_en : 1; /*!< bit: 10    IMRETURN mode of trace */
+        rv_csr_t sijump_en   : 1; /*!< bit: 11    SIJUMP mode of trace */
+        rv_csr_t ldspec_en   : 1; /*!< bit: 12    enable load speculative goes to mem interface */
+        rv_csr_t _reserved3  : 1; /*!< bit: 13    Reserved */
+        rv_csr_t dbg_sec     : 1; /*!< bit: 14    debug access mode, removed in latest releases */
+        rv_csr_t _reserved4  : 2; /*!< bit: 15..16 Reserved */
+        rv_csr_t
+            csr_excl_enable : 1; /*!< bit: 17    Exclusive instruction(lr,sc) on Non-cacheable/Device memory can send exclusive flag in memory bus */
         rv_csr_t _reserved5 : __RISCV_XLEN - 18; /*!< bit: 18..XLEN-1 Reserved */
     } b;                                         /*!< Structure used for bit  access */
     rv_csr_t d;                                  /*!< Type      used for csr data access */
@@ -290,8 +291,9 @@ typedef CSR_MMISCCTRL_Type CSR_MMISC_CTL_Type;
  */
 typedef union {
     struct {
-        rv_csr_t ic_en          : 1;             /*!< bit: 0 I-Cache enable */
-        rv_csr_t ic_scpd_mod    : 1;             /*!< bit: 1 Scratchpad mode, 0: Scratchpad as ICache Data RAM, 1: Scratchpad as ILM SRAM */
+        rv_csr_t ic_en : 1; /*!< bit: 0 I-Cache enable */
+        rv_csr_t
+            ic_scpd_mod : 1; /*!< bit: 1 Scratchpad mode, 0: Scratchpad as ICache Data RAM, 1: Scratchpad as ILM SRAM */
         rv_csr_t ic_ecc_en      : 1;             /*!< bit: 2 I-Cache ECC enable */
         rv_csr_t ic_ecc_excp_en : 1;             /*!< bit: 3 I-Cache 2bit ECC error exception enable */
         rv_csr_t ic_rwtecc      : 1;             /*!< bit: 4 Control I-Cache Tag Ram ECC code injection */
@@ -322,14 +324,14 @@ typedef CSR_MCACHECTL_Type CSR_MCACHE_CTL_Type;
  */
 typedef union {
     struct {
-        rv_csr_t mpie1      : 1;                 /*!< bit: 0     interrupt enable flag of fisrt level NMI/exception nestting */
-        rv_csr_t mpp1       : 2;                 /*!< bit: 1..2  privilede mode of fisrt level NMI/exception nestting */
-        rv_csr_t _reserved0 : 3;                 /*!< bit: 3..5  Reserved */
-        rv_csr_t ptyp1      : 2;                 /*!< bit: 6..7  NMI/exception type of before first nestting */
-        rv_csr_t mpie2      : 1;                 /*!< bit: 8     interrupt enable flag of second level NMI/exception nestting */
-        rv_csr_t mpp2       : 2;                 /*!< bit: 9..10 privilede mode of second level NMI/exception nestting */
-        rv_csr_t _reserved1 : 3;                 /*!< bit: 11..13     Reserved */
-        rv_csr_t ptyp2      : 2;                 /*!< bit: 14..15     NMI/exception type of before second nestting */
+        rv_csr_t mpie1      : 1; /*!< bit: 0     interrupt enable flag of fisrt level NMI/exception nestting */
+        rv_csr_t mpp1       : 2; /*!< bit: 1..2  privilede mode of fisrt level NMI/exception nestting */
+        rv_csr_t _reserved0 : 3; /*!< bit: 3..5  Reserved */
+        rv_csr_t ptyp1      : 2; /*!< bit: 6..7  NMI/exception type of before first nestting */
+        rv_csr_t mpie2      : 1; /*!< bit: 8     interrupt enable flag of second level NMI/exception nestting */
+        rv_csr_t mpp2       : 2; /*!< bit: 9..10 privilede mode of second level NMI/exception nestting */
+        rv_csr_t _reserved1 : 3; /*!< bit: 11..13     Reserved */
+        rv_csr_t ptyp2      : 2; /*!< bit: 14..15     NMI/exception type of before second nestting */
         rv_csr_t _reserved2 : __RISCV_XLEN - 16; /*!< bit: 16..XLEN-1 Reserved */
     } b;                                         /*!< Structure used for bit  access */
     rv_csr_t w;                                  /*!< Type      used for csr data access */
@@ -517,11 +519,11 @@ typedef CSR_MECCLOCK_Type CSR_MECC_LOCK_Type;
  */
 typedef union {
     struct {
-        rv_csr_t code       : 9;                 /*!< bit: 0..8 Used to inject ECC check code */
-        rv_csr_t _reserved0 : 7;                 /*!< bit: 9..15 Reserved 0 */
-        rv_csr_t ramid      : 5;                 /*!< bit: 16..20 The ID of RAM that has 2bit ECC error, software can clear these bits */
-        rv_csr_t _reserved1 : 3;                 /*!< bit: 21..23 Reserved 0 */
-        rv_csr_t sramid     : 5;                 /*!< bit: 24..28 The ID of RAM that has 1bit ECC error, software can clear these bits */
+        rv_csr_t code       : 9; /*!< bit: 0..8 Used to inject ECC check code */
+        rv_csr_t _reserved0 : 7; /*!< bit: 9..15 Reserved 0 */
+        rv_csr_t ramid : 5; /*!< bit: 16..20 The ID of RAM that has 2bit ECC error, software can clear these bits */
+        rv_csr_t _reserved1 : 3; /*!< bit: 21..23 Reserved 0 */
+        rv_csr_t sramid : 5; /*!< bit: 24..28 The ID of RAM that has 1bit ECC error, software can clear these bits */
         rv_csr_t _reserved2 : __RISCV_XLEN - 29; /*!< bit: 29..XLEN-1 Reserved 0 */
     } b;                                         /*!< Structure used for bit  access */
     rv_csr_t d;                                  /*!< Type      used for csr data access */
@@ -534,16 +536,26 @@ typedef CSR_MECCCODE_Type CSR_MECC_CODE_Type;
  */
 typedef union {
     struct {
-        rv_csr_t ilm_fch_msk : 1;                /*!< bit: 0 Write 1 to disable aggregate ILM fetch ECC fatal error to safety_error output */
-        rv_csr_t ilm_acc_msk : 1;                /*!< bit: 1 Write 1 to disable aggregate ILM load/store access ECC fatal error to safety_error output */
-        rv_csr_t dlm_acc_msk : 1;                /*!< bit: 2 Write 1 to disable aggregate DLM access ECC fatal error to safety_error output */
-        rv_csr_t ic_fch_msk  : 1;                /*!< bit: 3 Write 1 to disable aggregate ICache fetch ECC fatal error to safety_error output */
-        rv_csr_t dc_acc_msk  : 1;                /*!< bit: 4 Write 1 to disable aggregate DCache access ECC fatal error to safety_error output */
-        rv_csr_t ilm_ext_msk : 1;                /*!< bit: 5 Write 1 to disable aggregate ILM external access ECC fatal error to safety_error output */
-        rv_csr_t dlm_ext_msk : 1;                /*!< bit: 6 Write 1 to disable aggregate DLM external access ECC fatal error to safety_error output */
-        rv_csr_t ic_ccm_msk  : 1;                /*!< bit: 7 Write 1 to disable aggregate ICache CCM ECC fatal error to safety_error output */
-        rv_csr_t dc_ccm_msk  : 1;                /*!< bit: 8 Write 1 to disable aggregate DCache CCM ECC fatal error to safety_error output */
-        rv_csr_t dc_cpbk_msk : 1;                /*!< bit: 9 Write 1 to disable aggregate DCache CPBK ECC fatal error to safety_error output */
+        rv_csr_t
+            ilm_fch_msk : 1; /*!< bit: 0 Write 1 to disable aggregate ILM fetch ECC fatal error to safety_error output */
+        rv_csr_t
+            ilm_acc_msk : 1; /*!< bit: 1 Write 1 to disable aggregate ILM load/store access ECC fatal error to safety_error output */
+        rv_csr_t
+            dlm_acc_msk : 1; /*!< bit: 2 Write 1 to disable aggregate DLM access ECC fatal error to safety_error output */
+        rv_csr_t
+            ic_fch_msk : 1; /*!< bit: 3 Write 1 to disable aggregate ICache fetch ECC fatal error to safety_error output */
+        rv_csr_t
+            dc_acc_msk : 1; /*!< bit: 4 Write 1 to disable aggregate DCache access ECC fatal error to safety_error output */
+        rv_csr_t
+            ilm_ext_msk : 1; /*!< bit: 5 Write 1 to disable aggregate ILM external access ECC fatal error to safety_error output */
+        rv_csr_t
+            dlm_ext_msk : 1; /*!< bit: 6 Write 1 to disable aggregate DLM external access ECC fatal error to safety_error output */
+        rv_csr_t
+            ic_ccm_msk : 1; /*!< bit: 7 Write 1 to disable aggregate ICache CCM ECC fatal error to safety_error output */
+        rv_csr_t
+            dc_ccm_msk : 1; /*!< bit: 8 Write 1 to disable aggregate DCache CCM ECC fatal error to safety_error output */
+        rv_csr_t
+            dc_cpbk_msk : 1; /*!< bit: 9 Write 1 to disable aggregate DCache CPBK ECC fatal error to safety_error output */
         rv_csr_t _reserved0 : __RISCV_XLEN - 10; /*!< bit: 10..XLEN-1 Reserved 0 */
     } b;                                         /*!< Structure used for bit  access */
     rv_csr_t d;                                  /*!< Type      used for csr data access */
@@ -574,9 +586,9 @@ typedef union {
  */
 typedef union {
     struct {
-        rv_csr_t _reserved0   : 1;                 /*!< bit: 0 Reserved */
-        rv_csr_t iregion_size : 5;                 /*!< bit: 1..5 Indicates the size of IREGION and it should be power of 2 */
-        rv_csr_t _reserved1   : 4;                 /*!< bit: 6..9 Reserved */
+        rv_csr_t _reserved0   : 1; /*!< bit: 0 Reserved */
+        rv_csr_t iregion_size : 5; /*!< bit: 1..5 Indicates the size of IREGION and it should be power of 2 */
+        rv_csr_t _reserved1   : 4; /*!< bit: 6..9 Reserved */
         rv_csr_t iregion_base : __RISCV_XLEN - 10; /*!< bit: 10..PA_SIZE IREGION Base Address */
     } b;                                           /*!< Structure used for bit  access */
     rv_csr_t d;                                    /*!< Type      used for csr data access */
@@ -600,13 +612,14 @@ typedef union {
  */
 typedef union {
     struct {
-        rv_csr_t tlb_ecc_en          : 1;       /*!< bit: 0 MTLB ECC eanble */
-        rv_csr_t tlb_ecc_excp_en     : 1;       /*!< bit: 1 MTLB double bit ECC exception enable control */
-        rv_csr_t tlb_tram_ecc_inj_en : 1;       /*!< bit: 2 Controls to inject the ECC Code in CSR mecc_code to MTLB tag rams */
-        rv_csr_t tlb_dram_ecc_inj_en : 1;       /*!< bit: 3 Controls to inject the ECC Code in CSR mecc_code to MTLB data rams */
-        rv_csr_t _reserved0          : 2;       /*!< bit: 4..5 Reserved */
-        rv_csr_t tlb_ecc_chk_en      : 1;       /*!< bit: 6 Controls to check the ECC when core access to MTLB */
-        rv_csr_t napot_en            : 1;       /*!< bit: 7 NAPOT page enable */
+        rv_csr_t tlb_ecc_en          : 1; /*!< bit: 0 MTLB ECC eanble */
+        rv_csr_t tlb_ecc_excp_en     : 1; /*!< bit: 1 MTLB double bit ECC exception enable control */
+        rv_csr_t tlb_tram_ecc_inj_en : 1; /*!< bit: 2 Controls to inject the ECC Code in CSR mecc_code to MTLB tag rams */
+        rv_csr_t
+            tlb_dram_ecc_inj_en : 1; /*!< bit: 3 Controls to inject the ECC Code in CSR mecc_code to MTLB data rams */
+        rv_csr_t _reserved0     : 2; /*!< bit: 4..5 Reserved */
+        rv_csr_t tlb_ecc_chk_en : 1; /*!< bit: 6 Controls to check the ECC when core access to MTLB */
+        rv_csr_t napot_en       : 1; /*!< bit: 7 NAPOT page enable */
         rv_csr_t _reserved1 : __RISCV_XLEN - 8; /*!< bit: 8..XLEN-1 Reserved */
     } b;                                        /*!< Structure used for bit  access */
     rv_csr_t d;                                 /*!< Type      used for csr data access */
@@ -641,14 +654,11 @@ typedef union {
  * \param val   value to store into the CSR register
  * \return the CSR register value before written
  */
-#define __RV_CSR_SWAP(csr, val)                           \
-    ({                                                    \
-        rv_csr_t __v = (unsigned long)(val);              \
-        __ASM volatile("csrrw %0, " STRINGIFY(csr) ", %1" \
-                       : "=r"(__v)                        \
-                       : "rK"(__v)                        \
-                       : "memory");                       \
-        __v;                                              \
+#define __RV_CSR_SWAP(csr, val)                                                                \
+    ({                                                                                         \
+        rv_csr_t __v = (unsigned long)(val);                                                   \
+        __ASM volatile("csrrw %0, " STRINGIFY(csr) ", %1" : "=r"(__v) : "rK"(__v) : "memory"); \
+        __v;                                                                                   \
     })
 
 /**
@@ -659,14 +669,11 @@ typedef union {
  *              \ref NMSIS_Core_CSR_Registers, eg. \ref CSR_MSTATUS
  * \return the CSR register value
  */
-#define __RV_CSR_READ(csr)                        \
-    ({                                            \
-        rv_csr_t __v;                             \
-        __ASM volatile("csrr %0, " STRINGIFY(csr) \
-                       : "=r"(__v)                \
-                       :                          \
-                       : "memory");               \
-        __v;                                      \
+#define __RV_CSR_READ(csr)                                                   \
+    ({                                                                       \
+        rv_csr_t __v;                                                        \
+        __ASM volatile("csrr %0, " STRINGIFY(csr) : "=r"(__v) : : "memory"); \
+        __v;                                                                 \
     })
 
 /**
@@ -677,13 +684,10 @@ typedef union {
  *              \ref NMSIS_Core_CSR_Registers, eg. \ref CSR_MSTATUS
  * \param val   value to store into the CSR register
  */
-#define __RV_CSR_WRITE(csr, val)                     \
-    ({                                               \
-        rv_csr_t __v = (rv_csr_t)(val);              \
-        __ASM volatile("csrw " STRINGIFY(csr) ", %0" \
-                       :                             \
-                       : "rK"(__v)                   \
-                       : "memory");                  \
+#define __RV_CSR_WRITE(csr, val)                                                \
+    ({                                                                          \
+        rv_csr_t __v = (rv_csr_t)(val);                                         \
+        __ASM volatile("csrw " STRINGIFY(csr) ", %0" : : "rK"(__v) : "memory"); \
     })
 
 /**
@@ -696,14 +700,11 @@ typedef union {
  * \param val   Mask value to be used wih csrrs instruction
  * \return the CSR register value before written
  */
-#define __RV_CSR_READ_SET(csr, val)                       \
-    ({                                                    \
-        rv_csr_t __v = (rv_csr_t)(val);                   \
-        __ASM volatile("csrrs %0, " STRINGIFY(csr) ", %1" \
-                       : "=r"(__v)                        \
-                       : "rK"(__v)                        \
-                       : "memory");                       \
-        __v;                                              \
+#define __RV_CSR_READ_SET(csr, val)                                                            \
+    ({                                                                                         \
+        rv_csr_t __v = (rv_csr_t)(val);                                                        \
+        __ASM volatile("csrrs %0, " STRINGIFY(csr) ", %1" : "=r"(__v) : "rK"(__v) : "memory"); \
+        __v;                                                                                   \
     })
 
 /**
@@ -714,13 +715,10 @@ typedef union {
  *              \ref NMSIS_Core_CSR_Registers, eg. \ref CSR_MSTATUS
  * \param val   Mask value to be used wih csrs instruction
  */
-#define __RV_CSR_SET(csr, val)                       \
-    ({                                               \
-        rv_csr_t __v = (rv_csr_t)(val);              \
-        __ASM volatile("csrs " STRINGIFY(csr) ", %0" \
-                       :                             \
-                       : "rK"(__v)                   \
-                       : "memory");                  \
+#define __RV_CSR_SET(csr, val)                                                  \
+    ({                                                                          \
+        rv_csr_t __v = (rv_csr_t)(val);                                         \
+        __ASM volatile("csrs " STRINGIFY(csr) ", %0" : : "rK"(__v) : "memory"); \
     })
 
 /**
@@ -733,14 +731,11 @@ typedef union {
  * \param val   Mask value to be used wih csrrc instruction
  * \return the CSR register value before written
  */
-#define __RV_CSR_READ_CLEAR(csr, val)                     \
-    ({                                                    \
-        rv_csr_t __v = (rv_csr_t)(val);                   \
-        __ASM volatile("csrrc %0, " STRINGIFY(csr) ", %1" \
-                       : "=r"(__v)                        \
-                       : "rK"(__v)                        \
-                       : "memory");                       \
-        __v;                                              \
+#define __RV_CSR_READ_CLEAR(csr, val)                                                          \
+    ({                                                                                         \
+        rv_csr_t __v = (rv_csr_t)(val);                                                        \
+        __ASM volatile("csrrc %0, " STRINGIFY(csr) ", %1" : "=r"(__v) : "rK"(__v) : "memory"); \
+        __v;                                                                                   \
     })
 
 /**
@@ -751,13 +746,10 @@ typedef union {
  *              \ref NMSIS_Core_CSR_Registers, eg. \ref CSR_MSTATUS
  * \param val   Mask value to be used wih csrc instruction
  */
-#define __RV_CSR_CLEAR(csr, val)                     \
-    ({                                               \
-        rv_csr_t __v = (rv_csr_t)(val);              \
-        __ASM volatile("csrc " STRINGIFY(csr) ", %0" \
-                       :                             \
-                       : "rK"(__v)                   \
-                       : "memory");                  \
+#define __RV_CSR_CLEAR(csr, val)                                                \
+    ({                                                                          \
+        rv_csr_t __v = (rv_csr_t)(val);                                         \
+        __ASM volatile("csrc " STRINGIFY(csr) ", %0" : : "rK"(__v) : "memory"); \
     })
 #else
 
@@ -2436,10 +2428,7 @@ __STATIC_FORCEINLINE void __set_mideleg(unsigned long mask)
  * \param p     predecessor set, such as iorw, rw, r, w
  * \param s     successor set, such as iorw, rw, r, w
  **/
-#define __FENCE(p, s) __ASM volatile("fence " #p "," #s \
-                                     :                  \
-                                     :                  \
-                                     : "memory")
+#define __FENCE(p, s) __ASM volatile("fence " #p "," #s : : : "memory")
 
 /**
  * \brief   Fence.i Instruction
@@ -2471,10 +2460,7 @@ __STATIC_FORCEINLINE void __FENCE_I(void)
 #define __SMP_WMB()   __FENCE(w, w)
 
 /** \brief CPU relax for busy loop */
-#define __CPU_RELAX() __ASM volatile("" \
-                                     :  \
-                                     :  \
-                                     : "memory")
+#define __CPU_RELAX() __ASM volatile("" : : : "memory")
 
 /* ===== Load/Store Operations ===== */
 /**
@@ -2487,9 +2473,7 @@ __STATIC_FORCEINLINE uint8_t __LB(volatile void *addr)
 {
     uint8_t result;
 
-    __ASM volatile("lb %0, 0(%1)"
-                   : "=r"(result)
-                   : "r"(addr));
+    __ASM volatile("lb %0, 0(%1)" : "=r"(result) : "r"(addr));
     return result;
 }
 
@@ -2503,9 +2487,7 @@ __STATIC_FORCEINLINE uint16_t __LH(volatile void *addr)
 {
     uint16_t result;
 
-    __ASM volatile("lh %0, 0(%1)"
-                   : "=r"(result)
-                   : "r"(addr));
+    __ASM volatile("lh %0, 0(%1)" : "=r"(result) : "r"(addr));
     return result;
 }
 
@@ -2519,9 +2501,7 @@ __STATIC_FORCEINLINE uint32_t __LW(volatile void *addr)
 {
     uint32_t result;
 
-    __ASM volatile("lw %0, 0(%1)"
-                   : "=r"(result)
-                   : "r"(addr));
+    __ASM volatile("lw %0, 0(%1)" : "=r"(result) : "r"(addr));
     return result;
 }
 
@@ -2536,9 +2516,7 @@ __STATIC_FORCEINLINE uint32_t __LW(volatile void *addr)
 __STATIC_FORCEINLINE uint64_t __LD(volatile void *addr)
 {
     uint64_t result;
-    __ASM volatile("ld %0, 0(%1)"
-                   : "=r"(result)
-                   : "r"(addr));
+    __ASM volatile("ld %0, 0(%1)" : "=r"(result) : "r"(addr));
     return result;
 }
 #endif
@@ -2551,9 +2529,7 @@ __STATIC_FORCEINLINE uint64_t __LD(volatile void *addr)
  */
 __STATIC_FORCEINLINE void __SB(volatile void *addr, uint8_t val)
 {
-    __ASM volatile("sb %0, 0(%1)"
-                   :
-                   : "r"(val), "r"(addr));
+    __ASM volatile("sb %0, 0(%1)" : : "r"(val), "r"(addr));
 }
 
 /**
@@ -2564,9 +2540,7 @@ __STATIC_FORCEINLINE void __SB(volatile void *addr, uint8_t val)
  */
 __STATIC_FORCEINLINE void __SH(volatile void *addr, uint16_t val)
 {
-    __ASM volatile("sh %0, 0(%1)"
-                   :
-                   : "r"(val), "r"(addr));
+    __ASM volatile("sh %0, 0(%1)" : : "r"(val), "r"(addr));
 }
 
 /**
@@ -2577,9 +2551,7 @@ __STATIC_FORCEINLINE void __SH(volatile void *addr, uint16_t val)
  */
 __STATIC_FORCEINLINE void __SW(volatile void *addr, uint32_t val)
 {
-    __ASM volatile("sw %0, 0(%1)"
-                   :
-                   : "r"(val), "r"(addr));
+    __ASM volatile("sw %0, 0(%1)" : : "r"(val), "r"(addr));
 }
 
 #if __RISCV_XLEN != 32
@@ -2591,9 +2563,7 @@ __STATIC_FORCEINLINE void __SW(volatile void *addr, uint32_t val)
  */
 __STATIC_FORCEINLINE void __SD(volatile void *addr, uint64_t val)
 {
-    __ASM volatile("sd %0, 0(%1)"
-                   :
-                   : "r"(val), "r"(addr));
+    __ASM volatile("sd %0, 0(%1)" : : "r"(val), "r"(addr));
 }
 #endif
 
@@ -2613,15 +2583,14 @@ __STATIC_INLINE uint32_t __CAS_W(volatile uint32_t *addr, uint32_t oldval, uint3
     uint32_t result;
     uint32_t rc;
 
-    __ASM volatile(
-        "0:     lr.w %0, %2      \n"
-        "       bne  %0, %z3, 1f \n"
-        "       sc.w %1, %z4, %2 \n"
-        "       bnez %1, 0b      \n"
-        "1:\n"
-        : "=&r"(result), "=&r"(rc), "+A"(*addr)
-        : "r"(oldval), "r"(newval)
-        : "memory");
+    __ASM volatile("0:     lr.w %0, %2      \n"
+                   "       bne  %0, %z3, 1f \n"
+                   "       sc.w %1, %z4, %2 \n"
+                   "       bnez %1, 0b      \n"
+                   "1:\n"
+                   : "=&r"(result), "=&r"(rc), "+A"(*addr)
+                   : "r"(oldval), "r"(newval)
+                   : "memory");
     return result;
 }
 
@@ -2636,10 +2605,7 @@ __STATIC_FORCEINLINE uint32_t __AMOSWAP_W(volatile uint32_t *addr, uint32_t newv
 {
     uint32_t result;
 
-    __ASM volatile("amoswap.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(newval)
-                   : "memory");
+    __ASM volatile("amoswap.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(newval) : "memory");
     return result;
 }
 
@@ -2654,10 +2620,7 @@ __STATIC_FORCEINLINE int32_t __AMOADD_W(volatile int32_t *addr, int32_t value)
 {
     int32_t result;
 
-    __ASM volatile("amoadd.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoadd.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2672,10 +2635,7 @@ __STATIC_FORCEINLINE int32_t __AMOAND_W(volatile int32_t *addr, int32_t value)
 {
     int32_t result;
 
-    __ASM volatile("amoand.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoand.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2690,10 +2650,7 @@ __STATIC_FORCEINLINE int32_t __AMOOR_W(volatile int32_t *addr, int32_t value)
 {
     int32_t result;
 
-    __ASM volatile("amoor.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoor.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2708,10 +2665,7 @@ __STATIC_FORCEINLINE int32_t __AMOXOR_W(volatile int32_t *addr, int32_t value)
 {
     int32_t result;
 
-    __ASM volatile("amoxor.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoxor.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2726,10 +2680,7 @@ __STATIC_FORCEINLINE uint32_t __AMOMAXU_W(volatile uint32_t *addr, uint32_t valu
 {
     uint32_t result;
 
-    __ASM volatile("amomaxu.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amomaxu.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2744,10 +2695,7 @@ __STATIC_FORCEINLINE int32_t __AMOMAX_W(volatile int32_t *addr, int32_t value)
 {
     int32_t result;
 
-    __ASM volatile("amomax.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amomax.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2762,10 +2710,7 @@ __STATIC_FORCEINLINE uint32_t __AMOMINU_W(volatile uint32_t *addr, uint32_t valu
 {
     uint32_t result;
 
-    __ASM volatile("amominu.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amominu.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2780,10 +2725,7 @@ __STATIC_FORCEINLINE int32_t __AMOMIN_W(volatile int32_t *addr, int32_t value)
 {
     int32_t result;
 
-    __ASM volatile("amomin.w %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amomin.w %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2804,15 +2746,14 @@ __STATIC_INLINE uint64_t __CAS_D(volatile uint64_t *addr, uint64_t oldval, uint6
     uint64_t result;
     uint64_t rc;
 
-    __ASM volatile(
-        "0:     lr.d %0, %2      \n"
-        "       bne  %0, %z3, 1f \n"
-        "       sc.d %1, %z4, %2 \n"
-        "       bnez %1, 0b      \n"
-        "1:\n"
-        : "=&r"(result), "=&r"(rc), "+A"(*addr)
-        : "r"(oldval), "r"(newval)
-        : "memory");
+    __ASM volatile("0:     lr.d %0, %2      \n"
+                   "       bne  %0, %z3, 1f \n"
+                   "       sc.d %1, %z4, %2 \n"
+                   "       bnez %1, 0b      \n"
+                   "1:\n"
+                   : "=&r"(result), "=&r"(rc), "+A"(*addr)
+                   : "r"(oldval), "r"(newval)
+                   : "memory");
     return result;
 }
 
@@ -2827,10 +2768,7 @@ __STATIC_FORCEINLINE uint64_t __AMOSWAP_D(volatile uint64_t *addr, uint64_t newv
 {
     uint64_t result;
 
-    __ASM volatile("amoswap.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(newval)
-                   : "memory");
+    __ASM volatile("amoswap.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(newval) : "memory");
     return result;
 }
 
@@ -2845,10 +2783,7 @@ __STATIC_FORCEINLINE int64_t __AMOADD_D(volatile int64_t *addr, int64_t value)
 {
     int64_t result;
 
-    __ASM volatile("amoadd.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoadd.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2863,10 +2798,7 @@ __STATIC_FORCEINLINE int64_t __AMOAND_D(volatile int64_t *addr, int64_t value)
 {
     int64_t result;
 
-    __ASM volatile("amoand.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoand.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2881,10 +2813,7 @@ __STATIC_FORCEINLINE int64_t __AMOOR_D(volatile int64_t *addr, int64_t value)
 {
     int64_t result;
 
-    __ASM volatile("amoor.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoor.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2899,10 +2828,7 @@ __STATIC_FORCEINLINE int64_t __AMOXOR_D(volatile int64_t *addr, int64_t value)
 {
     int64_t result;
 
-    __ASM volatile("amoxor.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amoxor.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2917,10 +2843,7 @@ __STATIC_FORCEINLINE uint64_t __AMOMAXU_D(volatile uint64_t *addr, uint64_t valu
 {
     uint64_t result;
 
-    __ASM volatile("amomaxu.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amomaxu.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2935,10 +2858,7 @@ __STATIC_FORCEINLINE int64_t __AMOMAX_D(volatile int64_t *addr, int64_t value)
 {
     int64_t result;
 
-    __ASM volatile("amomax.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amomax.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2953,10 +2873,7 @@ __STATIC_FORCEINLINE uint64_t __AMOMINU_D(volatile uint64_t *addr, uint64_t valu
 {
     uint64_t result;
 
-    __ASM volatile("amominu.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amominu.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 
@@ -2971,10 +2888,7 @@ __STATIC_FORCEINLINE int64_t __AMOMIN_D(volatile int64_t *addr, int64_t value)
 {
     int64_t result;
 
-    __ASM volatile("amomin.d %0, %2, %1"
-                   : "=r"(result), "+A"(*addr)
-                   : "r"(value)
-                   : "memory");
+    __ASM volatile("amomin.d %0, %2, %1" : "=r"(result), "+A"(*addr) : "r"(value) : "memory");
     return *addr;
 }
 #endif /* __RISCV_XLEN == 64  */

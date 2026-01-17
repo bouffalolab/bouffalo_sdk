@@ -73,6 +73,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 void otPlatAssertFail(const char *aFilename, int aLineNumber)
 {
     printf("otPlatAssertFail, %s @ %d\r\n", aFilename, aLineNumber);
+    abort();
 }
 
 void otPlatWakeHost(void)

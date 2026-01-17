@@ -9,12 +9,8 @@
 #include "at_main.h"
 #include "bflb_dma.h"
 
-netbus_tty_ctx_t at_tty;
-
 void app_atmodule_init(void)
 {
-    netbus_tty_init(&at_tty, 1024, 1024);
-
     at_module_init();
 }
 

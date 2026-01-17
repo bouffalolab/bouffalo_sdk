@@ -19,6 +19,7 @@
 
 #define DBG_TAG "MAIN"
 #include <log.h>
+#include "async_event.h"
 
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (16)
@@ -32,8 +33,9 @@ static void hostrouter(void *arg)
     vTaskDelete(NULL);
 }
 
-void wifi_event_handler(uint32_t code, uint32_t code1)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
+    uint32_t code = ev->code;
 #ifdef BL_HOSTROUTER_ENABLE
     extern void rnm_event_handler(uint32_t code);
     rnm_event_handler(code);
@@ -75,10 +77,10 @@ void wifi_event_handler(uint32_t code, uint32_t code1)
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
         } break;
         case CODE_WIFI_ON_AP_STA_ADD: {
-            LOG_I("[APP] [EVT] [AP] [ADD] %lld, code1:%u\r\n", xTaskGetTickCount(), code1);
+            LOG_I("[APP] [EVT] [AP] [ADD] %lld, code1:%u\r\n", xTaskGetTickCount(), priv);
         } break;
         case CODE_WIFI_ON_AP_STA_DEL: {
-            LOG_I("[APP] [EVT] [AP] [DEL] %lld, code1:%u\r\n", xTaskGetTickCount(), code1);
+            LOG_I("[APP] [EVT] [AP] [DEL] %lld, code1:%u\r\n", xTaskGetTickCount(), priv);
         } break;
         default: {
             LOG_I("[APP] [EVT] Unknown code %u \r\n", code);
@@ -114,6 +116,8 @@ int app_sdiowifi_init(void)
     // romfs_mount(0x378000);
 
     /* Start Wifi_FW */
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
     wifi_task_create();
 
     vTaskDelay(500);

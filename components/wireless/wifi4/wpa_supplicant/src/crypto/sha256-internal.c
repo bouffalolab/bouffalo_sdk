@@ -43,6 +43,9 @@
 #include <bl_sec.h>
 #endif
 
+#ifdef CONFIG_MBEDTLS_V3
+#include "mbedtls/compat-2.x.h"
+#endif
 #ifndef USE_MBEDTLS_CRYPTO
 /**
  * sha256_vector - SHA256 hash for data vector

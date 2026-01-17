@@ -24,6 +24,10 @@ sdk_library_add_sources(src/bl602_sflash_ext.c)
 sdk_library_add_sources(src/bl602_xip_sflash_ext.c)
 sdk_library_add_sources(src/bl602_sf_cfg_ext.c)
 
+sdk_library_add_sources(src/bl602_mfg_efuse.c)
+sdk_library_add_sources(src/bl602_mfg_media.c)
+sdk_library_add_sources(src/bl602_ef_ctrl.c)
+
 sdk_library_add_sources(port/bl602_clock.c)
 sdk_library_add_sources(src/bl602_pm.c)
 

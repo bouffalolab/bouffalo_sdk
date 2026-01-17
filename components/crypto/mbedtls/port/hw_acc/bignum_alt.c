@@ -6,6 +6,10 @@
 #include "bflb_sec_pka.h"
 #include "bignum_ext.h"
 
+#ifndef CONFIG_MBEDTLS_V3
+#define MBEDTLS_PRIVATE(member) member
+#endif
+
 struct bflb_device_s *bignum_pka;
 
 #define Sec_Eng_PKA_MADD(dt, di, s0t, s0i, s1t, s1i, s2t, s2i, lastop) bflb_pka_madd(bignum_pka, s0i, s0t, di, dt, s1i, s1t, s2i, s2t, lastop)
@@ -86,7 +90,7 @@ int bl_mpi_exp_mod_wo_lock(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_m
 #endif
     }
 
-    if (mbedtls_mpi_cmp_int(N, 0) <= 0 || (N->p[0] & 1) == 0)
+    if (mbedtls_mpi_cmp_int(N, 0) <= 0 || (N->MBEDTLS_PRIVATE(p)[0] & 1) == 0)
         return MBEDTLS_ERR_MPI_BAD_INPUT_DATA;
 
     if (mbedtls_mpi_cmp_int(E, 0) < 0)
@@ -109,7 +113,7 @@ int bl_mpi_exp_mod_wo_lock(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_m
 
     mbedtls_mpi_init(&PrimeN_new);
 
-    if (_RN == NULL || _RN->p == NULL) {
+    if (_RN == NULL || _RN->MBEDTLS_PRIVATE(p) == NULL) {
         MBEDTLS_MPI_CHK(mpi_hensel_quad_mod_inv_prime_n(&PrimeN_new, N, words_N * 32));
         if (_RN != NULL) {
             MBEDTLS_MPI_CHK(mbedtls_mpi_copy(_RN, PrimeN));
@@ -195,11 +199,11 @@ cvt_back:
     MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(X, tmp, words_N * 4));
 
     // Compensate for negative X
-    if (A->s == -1 && (E->p[0] & 1) != 0) {
-        X->s = -1;
+    if (A->MBEDTLS_PRIVATE(s) == -1 && (E->MBEDTLS_PRIVATE(p)[0] & 1) != 0) {
+        X->MBEDTLS_PRIVATE(s) = -1;
         MBEDTLS_MPI_CHK(mbedtls_mpi_add_mpi(X, N, X));
     } else {
-        X->s = 1;
+        X->MBEDTLS_PRIVATE(s) = 1;
     }
 
 cleanup:

@@ -1548,7 +1548,7 @@ int wifi_mgmr_event_notify(wifi_mgmr_msg_t *msg, int use_block)
     return 0;
 }
 
-static void event_cb_wifi_event_mgmr(input_event_t *event, void *private_data)
+static void event_cb_wifi_event_mgmr(platform_event_t *event, void *private_data)
 {
     switch (event->code) {
         case CODE_WIFI_ON_MGMR_DENOISE:

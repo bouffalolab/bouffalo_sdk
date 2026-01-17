@@ -15,11 +15,6 @@
 #define DBG_TAG "appuartwifi"
 #include "log.h"
 
-#define WIFI_STACK_SIZE  (1536)
-#define TASK_PRIORITY_FW (16)
-
-extern void app_atmodule_init(void);
-
 int app_uartwifi_init(void)
 {
     /* RF param init */
@@ -35,8 +30,7 @@ int app_uartwifi_init(void)
     bflb_mtd_init();
     easyflash_init();
 
-    /* AT moudle start */
-    app_atmodule_init();
+    app_wifi_init();
 
     return 0;
 }

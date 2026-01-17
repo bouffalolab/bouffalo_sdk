@@ -5,15 +5,12 @@
 
 #include "wl80211.h"
 #include "supplicant_api.h"
-#include "rtos_al.h"
+#include "wl80211_platform.h"
 #include "wifi_mgmr.h"
-#include "async_event.h"
 
-#include <lwip/etharp.h>
-#include <lwip/netdb.h>
-#include <lwip/netifapi.h>
-#include <lwip/sockets.h>
-#include <lwip/tcpip.h>
+#if !defined(__NuttX__)
+#include "async_event.h"
+#endif
 
 #include "utils_getopt.h"
 #include "utils_hex.h"
@@ -58,8 +55,7 @@ int wifi_connect_cmd(int argc, char **argv)
 
             case 'c':
                 channel_index = atoi(getopt_env.optarg);
-                uint8_t band = (channel_index > MAC_DOMAINCHANNEL_24G_MAX) ? PHY_BAND_5G : PHY_BAND_2G4;
-                conn_param.freq1 = phy_channel_to_freq(band, channel_index);
+                conn_param.freq1 = wl80211_channel_to_freq(channel_index);
                 if (conn_param.freq1 > 0) {
                     LOG_I("connect channel_index: %d(%dMhz)\r\n", channel_index, conn_param.freq1);
                 } else {

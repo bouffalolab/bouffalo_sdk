@@ -28,7 +28,7 @@
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/x509_crt.h"
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #include "at_net_ssl.h"
 
 #define AT_NET_SSL_PRINTF printf
@@ -229,7 +229,11 @@ void *mbedtls_ssl_connect(int fd, const ssl_conn_param_t *param)
     }
 
     if (param->private_cert && param->private_cert_len > 0) {
+#ifdef CONFIG_MBEDTLS_V3
+        ret = mbedtls_pk_parse_key(&ssl_param->pkey, (unsigned char *)param->private_cert, param->private_cert_len, NULL, 0, NULL, NULL);
+#else
         ret = mbedtls_pk_parse_key(&ssl_param->pkey, (unsigned char *)param->private_cert, param->private_cert_len, NULL, 0);
+#endif
         if (ret != 0) {
             AT_NET_SSL_PRINTF("[MBEDTLS] ssl connect: x509 parse failed- 0x%x\r\n", -ret);
             goto ERROR;
@@ -449,7 +453,11 @@ void *mbedtls_ssl_accept(int fd, const char *ca_cert, int ca_cert_len,
     }
 
     if (private_cert && private_cert_len > 0) {
+#ifdef CONFIG_MBEDTLS_V3
+        ret = mbedtls_pk_parse_key(&ssl_param->pkey, (unsigned char *)private_cert, private_cert_len, NULL, 0, NULL, NULL);
+#else
         ret = mbedtls_pk_parse_key(&ssl_param->pkey, (unsigned char *)private_cert, private_cert_len, NULL, 0);
+#endif
         if (ret != 0) {
             AT_NET_SSL_PRINTF("[MBEDTLS] ssl accept: x509 parse failed- 0x%x\r\n", -ret);
             goto ERROR;

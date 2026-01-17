@@ -16,7 +16,6 @@
 #include "wl80211_mac.h"
 
 #include "async_event.h"
-#include "wifi_mgmr.h" // for async_event
 
 struct netif vif2netif[WL80211_VIF_MAX];
 
@@ -24,10 +23,13 @@ struct netif vif2netif[WL80211_VIF_MAX];
 #define CONFIG_WL80211_RX_ZEROCOPY_THRES 500
 #endif
 
+_Static_assert(sizeof(struct wl80211_mac_tx_desc) <= PBUF_LINK_ENCAPSULATION_HLEN, "tx_desc too large");
+_Static_assert(sizeof(struct rx_info) >= sizeof(struct pbuf_custom), "pbuf_custom too large");
+
 // FIXME
 extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
 
-void wl80211_tcpip_input(wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
+void wl80211_tcpip_input(enum wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
                          uint32_t status /* enum rx_status_bits */)
 {
     struct pbuf_custom *pc;
@@ -126,7 +128,7 @@ static void pbuf_custom_raw_free(struct pbuf_custom *pc)
     mem_free(p);
 }
 
-int wl80211_output_raw(wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
+int wl80211_output_raw(enum wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
                        void *opaque)
 {
     struct pbuf *p;
@@ -200,7 +202,7 @@ static err_t wl80211_netif_init(struct netif *net_if)
 
     if (0 == mfg_media_read_macaddr_with_lock((uint8_t *)net_if->hwaddr, 1)) {}
 
-    printf("mac addr: %02X:%02X:%02X:%02X:%02X:%02X\r\n", net_if->hwaddr[0], net_if->hwaddr[1], net_if->hwaddr[2],
+    wl80211_printf("mac addr: %02X:%02X:%02X:%02X:%02X:%02X\r\n", net_if->hwaddr[0], net_if->hwaddr[1], net_if->hwaddr[2],
            net_if->hwaddr[3], net_if->hwaddr[4], net_if->hwaddr[5]);
 
     // hwaddr is updated in net_if_add
@@ -227,6 +229,10 @@ int wl80211_lwip_init(void)
     return 0;
 }
 
+/* wifi_mgmr lwip porting  */
+
+#include "wifi_mgmr.h"
+
 // for wifi mgmr
 static void ip_got_cb(struct netif *netif)
 {
@@ -243,10 +249,10 @@ void _wifi_mgmr_sta_start_dhcpc(void)
     netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
 
     if (netifapi_dhcp_start(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
-        printf("start dhcpc success.\n");
+        wl80211_printf("start dhcpc success.\n");
     } else {
         // system in strange state, abort it.
-        printf("start dhcpc fail.\n");
+        wl80211_printf("start dhcpc fail.\n");
         abort();
     }
 }
@@ -256,26 +262,47 @@ void _wifi_mgmr_sta_stop_dhcpc(void)
     netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
 
     if (netifapi_dhcp_stop(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
-        printf("stop dhcpc success.\n");
+        wl80211_printf("stop dhcpc success.\n");
     } else {
         // system in strange state, abort it.
-        printf("stop dhcpc fail.\n");
+        wl80211_printf("stop dhcpc fail.\n");
         abort();
     }
 }
 
-void *_wifi_mgmr_get_sta_netif(void)
+void _wifi_mgmr_ip_got_dump(void)
 {
-    return (void *)&vif2netif[WL80211_VIF_STA];
+    char *state, *connected;
+    struct netif *netif = &vif2netif[WL80211_VIF_STA];
+
+    if (wifi_mgmr_sta_state_get()) {
+        state = "UP";
+        connected = ",CONNECTED";
+    } else {
+        state = "DOWN";
+        connected = "";
+    }
+
+    extern size_t kfree_size(void);
+    wl80211_printf("Memory left is %d Bytes\r\n", kfree_size());
+    wl80211_printf("[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n", netif->num, netif->name[0],
+           netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4],
+           netif->hwaddr[5], netif->ip_addr.addr & 0xff, (netif->ip_addr.addr >> 8) & 0xff,
+           (netif->ip_addr.addr >> 16) & 0xff, (netif->ip_addr.addr >> 24) & 0xff,
+           32 - __builtin_clz(netif->netmask.addr), state, connected);
 }
 
-void _wifi_mgmr_sta_start_dhcpd(void)
+void _wifi_mgmr_ap_start_dhcpd(void)
 {
-    printf("start dhcpd\n");
+    wl80211_printf("start dhcpd\n");
     dhcpd_start(&vif2netif[WL80211_VIF_AP], -1, -1);
 }
 
-_Static_assert(sizeof(struct wl80211_mac_tx_desc) <= PBUF_LINK_ENCAPSULATION_HLEN, "tx_desc too large");
+void _wifi_mgmr_ap_stop_dhcpd(void)
+{
+    wl80211_printf("stop dhcpd\n");
 
-_Static_assert(sizeof(struct rx_info) >= sizeof(struct pbuf_custom), "pbuf_custom too large");
-
+    extern err_t dhcp_server_stop(struct netif *netif);
+    dhcpd_clear_dns_server(&vif2netif[WL80211_VIF_AP]);
+    dhcp_server_stop(&vif2netif[WL80211_VIF_AP]);
+}

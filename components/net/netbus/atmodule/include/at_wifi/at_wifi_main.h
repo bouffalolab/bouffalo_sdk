@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include "at_wifi_config.h"
+#include "async_event.h"
 
 #ifndef WIFI_MGMR_SCAN_ITEMS_MAX
 #define WIFI_MGMR_SCAN_ITEMS_MAX 50

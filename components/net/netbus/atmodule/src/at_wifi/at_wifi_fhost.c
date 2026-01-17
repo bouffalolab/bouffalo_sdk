@@ -119,20 +119,16 @@ static void wifi_event_start(uint32_t code)
     configASSERT(xReturn == pdPASS);
 }
 
-void wifi_event_handler(uint32_t code)
+static void wifi_event_handler(async_input_event_t event, void *private_data)
 {
-    wifi_event_start(code);
+    wifi_event_start(event->code);
 }
 
 int at_wifi_start(void)
 {
-    vTaskDelay(100);
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
-    /* Start Wifi_FW */
-    wifi_task_create();
-    vTaskDelay(500);
-    fhost_init();
-
+    at_wifi_main_init();
     return 0;
 }
 

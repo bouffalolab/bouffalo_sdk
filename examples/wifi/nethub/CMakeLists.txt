@@ -29,6 +29,7 @@ sdk_add_compile_definitions(-DCONFIG_NETHUB=1)
 target_sources(app PRIVATE
                    app/src/atmodule/app_atmodule.c
                    app/src/app_user.c
+                   app/src/wifi/app_wifi_fhost.c
                    )
 
 sdk_add_include_directories(.)

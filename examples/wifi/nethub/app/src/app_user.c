@@ -39,8 +39,8 @@ int app_user_init(void)
     /* nethub init */
     nethub_sdiowifi_init();
 
-    /* AT moudle start */
-    app_atmodule_init();
+    /* wifi start */
+    app_wifi_init();
 
     return 0;
 }

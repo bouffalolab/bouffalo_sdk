@@ -259,7 +259,7 @@ static void wifi_test_ota_test_init(int argc, char **argv)
     uint8_t sha256_result[32];
 #if SHA256_SEL
     mbedtls_sha256_init(&ctx_sha256);
-    mbedtls_sha256_starts_ret(&ctx_sha256, 0);
+    mbedtls_sha256_starts(&ctx_sha256, 0);
 #else
     sha256_context ctx_sha256;
     utils_sha256_init(&ctx_sha256);
@@ -329,7 +329,11 @@ static void wifi_test_ota_test_init(int argc, char **argv)
             printf("Will Write %u to %08X from %p left %lu.\r\n", buffer_offset, ota_addr + flash_offset, recv_buffer, bin_size - total_cnt);
 #if SHA256_SEL
             bflb_l1c_dcache_clean_range(recv_buffer, buffer_offset);
+#ifdef CONFIG_MBEDTLS_V3
+            status = mbedtls_sha256_update(&ctx_sha256, recv_buffer, buffer_offset);
+#else
             status = mbedtls_sha256_update_ret(&ctx_sha256, recv_buffer, buffer_offset);
+#endif
             if (status != 0) {
                 printf("sha256 update fail! %d\r\n", status);
             }
@@ -350,7 +354,7 @@ static void wifi_test_ota_test_init(int argc, char **argv)
             if (bin_size == total_cnt) {
                 closesocket(sock_client);
 #if SHA256_SEL
-                mbedtls_sha256_finish_ret(&ctx_sha256, sha256_result);
+                mbedtls_sha256_finish(&ctx_sha256, sha256_result);
 #else
                 utils_sha256_finish(&ctx_sha256, sha256_result);
 #endif

@@ -30,6 +30,7 @@ void wifi_sta_ps_set_cmd(int argc, char **argv);
 void wifi_coex_enable_cmd(int argc, char *argv[]);
 void wifi_coex_disable_cmd(int argc, char *argv[]);
 void wifi_coex_duty_set_cmd(int argc, char **argv);
+void wifi_coex_status_cmd(int argc, char **argv);
 void wifi_sta_info_cmd(int argc, char *argv[]);
 void wifi_ap_sta_list_get_cmd(int argc, char *argv[]);
 void wifi_ap_sta_delete_cmd(int argc, char *argv[]);

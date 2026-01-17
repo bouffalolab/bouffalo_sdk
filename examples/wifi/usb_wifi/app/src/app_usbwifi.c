@@ -36,7 +36,7 @@ int app_usbwifi_init(void)
     /* romsfs init mount use media factory*/
     // romfs_mount(0x378000);
 
-    at_module_init();
+    app_wifi_init();
 
     return 0;
 }

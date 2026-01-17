@@ -29,7 +29,7 @@ void otPlatALarm_msTimerCallback( TimerHandle_t xTimer )
 
 void ot_alarmInit(void) 
 {
-    otAlarm_timerHandle = xTimerCreate("ot_alarm", 1, pdFALSE, (void *)otAlarm_timerHandle, otPlatALarm_msTimerCallback);
+    otAlarm_timerHandle = xTimerCreate("ot_alarm", 1, pdFALSE, (void *)&otAlarm_timerHandle, otPlatALarm_msTimerCallback);
 }
 #endif
 

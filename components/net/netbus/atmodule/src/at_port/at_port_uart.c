@@ -17,17 +17,19 @@
 
 #define AT_PORT_PRINTF printf
 
-static int at_serial_fd = -1;
-static int at_serial_baudrate = 2000000;
-static uint8_t at_serial_databits = 8;
-static uint8_t at_serial_stopbits = 1;
-static uint8_t at_serial_parity = 0;
-static uint8_t at_serial_flow_control = 0;
-
-extern netbus_uart_ctx_t at_uart;
+static const netbus_uart_config_t uart_config = {
+    .name = "uart1",
+    .speed = 2000000,
+    .databits = 8,
+    .stopbits = 1,
+    .parity = 0,
+    .flow_control =0,
+};
+static netbus_uart_ctx_t at_uart;
 
 int at_port_init(void)
 {
+    netbus_uart_init(&at_uart, &uart_config, 1024, 1024);
     return 1;
 }
 
@@ -133,7 +135,7 @@ int at_port_para_set(int baudrate, uint8_t databits, uint8_t stopbits, uint8_t p
         uart_flow_control = HOSAL_FLOW_CONTROL_CTS_RTS;
     else
         return -1;
-    
+
     if (aos_ioctl(at_serial_fd, IOCTL_UART_IOC_BAUD_MODE, uart_baudrate) != 0) {
         AT_PORT_PRINTF("uart set baudrate failed!\r\n");
         return -1;

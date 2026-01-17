@@ -76,6 +76,7 @@ uint32_t const bflb_lhal_romapi_table[]={
     [BFLB_LHAL_ROMAPI_INDEX_bflb_set_app_version_to_efuse]                     = (uint32_t)bflb_set_app_version_to_efuse,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_get_boot2_version_from_efuse]                 = (uint32_t)bflb_get_boot2_version_from_efuse,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_set_boot2_version_to_efuse]                   = (uint32_t)bflb_set_boot2_version_to_efuse,
+    [BFLB_LHAL_ROMAPI_INDEX_bflb_get_chip_type]                                = (uint32_t)bflb_get_chip_type,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_dac_init]                                     = (uint32_t)bflb_dac_init,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_dac_channel_enable]                           = (uint32_t)bflb_dac_channel_enable,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_dac_channel_disable]                          = (uint32_t)bflb_dac_channel_disable,

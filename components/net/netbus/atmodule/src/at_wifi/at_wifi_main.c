@@ -537,41 +537,8 @@ static int reason_code_get(int code)
 void at_wifi_event_notify(void *private_data, uint32_t code)
 {
     switch (code) {
-        case AT_WIFI_EVENT_INIT_DONE: {
-            LOG_I("[APP] [EVT], CODE_WIFI_ON_MGMR_DONE\r\n");
-
-#ifdef CONFIG_ATMODULE_FULL_FEAT
-            if (at_wifi_config->sta_proto.byte) {
-                at_wifi_mode_set(0, at_wifi_config->sta_proto);
-            } else {
-                at_wifi_config->sta_proto = at_wifi_mode_get(0);
-            }
-            if (at_wifi_config->ap_proto.byte) {
-                at_wifi_mode_set(1, at_wifi_config->ap_proto);
-            } else {
-                at_wifi_config->ap_proto = at_wifi_mode_get(1);
-            }
-#endif
-            at_port_netmode_set(at_wifi_config->netmode);
-            if (at_wifi_config->netmode == 0) {
-                at_wifi_config->dhcp_state.bit.sta_dhcp = 0;
-            }
-            if (at_wifi_config->wifi_mode == WIFI_SOFTAP_MODE || at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
-                at_wifi_ap_start();
-            }
-
-            if (at_wifi_config->wifi_mode == WIFI_STATION_MODE || at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
-                if (at_wifi_config->auto_conn == WIFI_AUTOCONN_ENABLE) {
-                    wifiopt_sta_connect();
-                }
-            }
-        }
-        break;
 
         case AT_WIFI_EVENT_DISCONNECTED: {
-#if CONFIG_ATMODULE_TTY
-            transportsdio_linkdown();
-#endif
             if (g_wifi_sta_is_connected) {
                 if (at_get_work_mode() != AT_WORK_MODE_THROUGHPUT
                     ||  at_base_config->sysmsg_cfg.bit.link_state_msg
@@ -608,9 +575,7 @@ void at_wifi_event_notify(void *private_data, uint32_t code)
         break;
 
         case AT_WIFI_EVENT_CONNECTED: {
-#if CONFIG_ATMODULE_TTY
-            transportsdio_linkup();
-#endif
+
             if (!g_wifi_sta_is_connected) {
                 if (at_get_work_mode() != AT_WORK_MODE_THROUGHPUT
                     ||  at_base_config->sysmsg_cfg.bit.link_state_msg
@@ -852,5 +817,36 @@ int at_wifi_hostname_set(char *hostname)
         netif_set_hostname(netif, hostname);
     }
 #endif
+    return 0;
+}
+
+/* This function must be called after wifi init done */
+int at_wifi_main_init(void)
+{
+#ifdef CONFIG_ATMODULE_FULL_FEAT
+    if (at_wifi_config->sta_proto.byte) {
+        at_wifi_mode_set(0, at_wifi_config->sta_proto);
+    } else {
+        at_wifi_config->sta_proto = at_wifi_mode_get(0);
+    }
+    if (at_wifi_config->ap_proto.byte) {
+        at_wifi_mode_set(1, at_wifi_config->ap_proto);
+    } else {
+        at_wifi_config->ap_proto = at_wifi_mode_get(1);
+    }
+#endif
+    at_port_netmode_set(at_wifi_config->netmode);
+    if (at_wifi_config->netmode == 0) {
+        at_wifi_config->dhcp_state.bit.sta_dhcp = 0;
+    }
+    if (at_wifi_config->wifi_mode == WIFI_SOFTAP_MODE || at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
+        at_wifi_ap_start();
+    }
+
+    if (at_wifi_config->wifi_mode == WIFI_STATION_MODE || at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
+        if (at_wifi_config->auto_conn == WIFI_AUTOCONN_ENABLE) {
+            wifiopt_sta_connect();
+        }
+    }
     return 0;
 }

@@ -37,4 +37,7 @@ whole:
 flash: whole
 	$(FLASH_CMD) --chip=$(CHIP) --port $(COMX) --whole_chip --firmware $(BUILD_DIR)/whole_flash_data.bin
 
+ota: whole
+	$(BL_SDK_BASE)/tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc-ubuntu --chipname=$(CHIP) --imgfile=$(BUILD_DIR)/$(APP_NAME)_$(CHIP).bin --appkeys=shared --brdcfgdir=$(BL_SDK_BASE)/bsp/board/$(BOARD)/config
+
 .PHONY: clean

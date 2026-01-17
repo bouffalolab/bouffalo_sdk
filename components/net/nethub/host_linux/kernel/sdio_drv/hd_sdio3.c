@@ -707,7 +707,7 @@ static int hd_sdio3_wait_card_ready(struct hd_sdio_card *card, int timeout_ms)
 
         if (card_ready) {
             break;
-        } else if ((ktime_get_boottime() - time_s) / (1000 * 1000) < timeout_ms) {
+        } else if (ktime_to_ms(ktime_sub(ktime_get_boottime(), time_s)) < timeout_ms) {
             usleep_range(100, 100);
         } else {
             ret = -ETIME;

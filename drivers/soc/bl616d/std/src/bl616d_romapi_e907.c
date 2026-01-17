@@ -262,13 +262,18 @@ BL_Err_Type AON_Set_BOD_Config(uint8_t enable, uint8_t threshold, uint8_t mode) 
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void AON_Wdg_Init(uint16_t comp_val) {
+BL_Err_Type AON_Wdg_Init(uint16_t comp_val) {
     return RomDriver_AON_Wdg_Init(comp_val);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void AON_Wdg_Start(void) {
     return RomDriver_AON_Wdg_Start();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void AON_Wdg_Stop(void) {
+    return RomDriver_AON_Wdg_Stop();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -294,6 +299,11 @@ void AON_Set_RC32M_Speed_As_8M(uint8_t enable) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void AON_Set_RC32M_Code_Fr_Ext(uint8_t code) {
     return RomDriver_AON_Set_RC32M_Code_Fr_Ext(code);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void AON_Set_RC32M_Code_Fr_Ext2(uint8_t code) {
+    return RomDriver_AON_Set_RC32M_Code_Fr_Ext2(code);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -534,6 +544,16 @@ BL_Err_Type GLB_Power_On_DSIPLL_Clk(uint8_t xtalType) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_DSI_ESC_CLK(uint8_t enable, uint8_t sel, uint8_t div) {
     return RomDriver_GLB_Set_DSI_ESC_CLK(enable, sel, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_DSI_POST_CLK(uint8_t enable, uint8_t div) {
+    return RomDriver_GLB_Set_DSI_POST_CLK(enable, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_DSI_BIT_CLK(uint8_t enable, uint8_t div) {
+    return RomDriver_GLB_Set_DSI_BIT_CLK(enable, div);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -822,6 +842,11 @@ BL_Err_Type GLB_Disrst_Set(uint8_t enable, uint8_t disrst) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_MM_Software_Reset(uint32_t swrst) {
+    return RomDriver_GLB_MM_Software_Reset(swrst);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_PER_Clock_Gate(uint64_t ips) {
     return RomDriver_GLB_PER_Clock_Gate(ips);
 }
@@ -1084,6 +1109,26 @@ uint32_t GLB_Get_Mini_System_Status(void) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_SET_JTAG_CHAIN(uint8_t enable) {
     return RomDriver_GLB_SET_JTAG_CHAIN(enable);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void GLB_Set_SDH_Timing(GLB_SDH_TIMING_Type *timing) {
+    return RomDriver_GLB_Set_SDH_Timing(timing);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void GLB_Set_SDU_Timing(GLB_SDU_TIMING_Type *timing) {
+    return RomDriver_GLB_Set_SDU_Timing(timing);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_Slave_Bus_Protect_Enable(uint32_t slaves) {
+    return RomDriver_GLB_Set_Slave_Bus_Protect_Enable(slaves);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_Slave_Bus_Protect_Disable(uint32_t slaves) {
+    return RomDriver_GLB_Set_Slave_Bus_Protect_Disable(slaves);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

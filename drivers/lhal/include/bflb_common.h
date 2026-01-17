@@ -148,11 +148,25 @@ typedef struct
     uint32_t rsvd1;        /* rsvd1 */
 } bflb_verinf_t;
 
+/** @defgroup chip type definition
+  * @{
+  */
+#define BFLB_CHIP_TYPE_BL616                                      (0)
+#define BFLB_CHIP_TYPE_BL616D                                     (1)
+#define BFLB_CHIP_TYPE_BL616L                                     (2)
+#define BFLB_CHIP_TYPE_BL602                                      (3)
+#define BFLB_CHIP_TYPE_BL702                                      (4)
+#define BFLB_CHIP_TYPE_BL702L                                     (5)
+/**
+  * @}
+  */
+
 int32_t bflb_get_app_version_from_efuse(uint8_t *version);
 int32_t bflb_set_app_version_to_efuse(uint8_t version);
 int32_t bflb_get_boot2_version_from_efuse(uint8_t *version);
 int32_t bflb_set_boot2_version_to_efuse(uint8_t version);
 int32_t bflb_get_boot2_info_from_flash(bflb_verinf_t *version);
+int32_t bflb_get_chip_type(uint8_t *chip_type, uint8_t *chip_version);
 
 static inline __attribute__((always_inline)) void bflb_lhal_assert_func(const char *file, uint32_t line, const char *function, const char *string)
 {

@@ -46,6 +46,7 @@
 
 #define DBG_TAG "MAIN"
 #include "log.h"
+#include "async_event.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -91,6 +92,7 @@ SemaphoreHandle_t sem_wifi_disconnect;
 #endif
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
+extern void wifi_event_handler(async_input_event_t ev, void *priv);
 
 /****************************************************************************
  * Private Function Prototypes
@@ -104,6 +106,9 @@ void wifi_start_firmware_task(void *param)
 {
     LOG_I("Starting wifi ...\r\n");
 
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
+
     wifi_task_create();
 
     LOG_I("Starting fhost ...\r\n");
@@ -112,8 +117,10 @@ void wifi_start_firmware_task(void *param)
     vTaskDelete(NULL);
 }
 
-void wifi_event_handler(uint32_t code)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
+    uint32_t code = ev->code;
+
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);

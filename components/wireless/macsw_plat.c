@@ -34,18 +34,13 @@ void wifi_task_create(void) {
 }
 
 void wifi_task_suspend(void) {
-  if (ps_is_coex_mode() && (pm_coex_sleep() == 0))
-  {
-    // Wait for notification in coex sleep mode
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-    pm_coex_wakeup();
-
-    return;
-  }
+  // Coex sleep duration is event-driven; coordinator commits sleep only at safe point.
+  bool slept_committed = coex_coord_on_wifi_suspend_enter();
 
   // wait for notification
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+  coex_coord_on_wifi_wake(slept_committed);
 }
 
 void wifi_task_resume(bool isr) {

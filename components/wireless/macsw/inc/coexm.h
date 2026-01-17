@@ -93,7 +93,9 @@ int pm_coex_deinit(void);
 /**
  * @brief Enter sleep mode.
  * @note Performs a pre-check to ensure the system can sleep safely.
- * @return 0 on success, -1 on failure.
+ *
+ * @return 0 on success. On failure returns a non-zero bitmask (see
+ *         PM_COEX_SLEEP_FAIL_*).
  */
 int pm_coex_sleep(void);
 
@@ -118,24 +120,115 @@ int pm_coex_pause(void);
 int pm_coex_resume(void);
 
 /**
- * @brief Check if currently in WiFi/BLE coexistence mode
- * @return true if coexistence mode is enabled, false otherwise
+ * @brief Coex coordinator "gate" (master enable).
+ *
+ * Persistent enable gate used by coex coordinator to decide whether coex-related
+ * behaviors may be attached (regardless of runtime pause state).
+ *
+ * @return true if coexistence mode is enabled, false otherwise.
+ */
+bool coex_coord_is_enabled(void);
+
+bool coex_coord_is_active(void);
+
+/**
+ * @brief Backward-compatible alias of @ref coex_coord_is_enabled.
+ *
+ * @deprecated Prefer @ref coex_coord_is_enabled for coordinator semantics.
  */
 bool ps_is_coex_mode(void);
 
+/*
+ * COEX coordinator - Stage 1 entrypoints
+ ****************************************************************************************
+ */
+
+/// TXQ pending query callback (implemented by fhost, registered at runtime)
+typedef bool (*coex_txq_has_pending_cb_t)(uint8_t vif_idx);
+
 /**
- * @brief Pause coexistence runtime behaviors on Wi-Fi disconnect
- * @details Pauses runtime behaviors (PTA switching, flow control, protect)
- *          while preserving the persistent coex_mode_enabled flag.
- *          Does nothing if coex mode is not enabled.
+ * @brief Register a callback for querying whether Host TXQ has pending packets.
+ *
+ * This avoids tight linkage between macsw (coex coordinator) and fhost.
+ * The callback SHALL be fast and non-blocking.
+ */
+void coex_coord_register_txq_has_pending_cb(coex_txq_has_pending_cb_t cb);
+
+/**
+ * @brief TBTT hook (Wi-Fi RX anchor) for coex coordinator.
+ * @param tbtt_time   TBTT timestamp (us, MAC timer).
+ * @param vif_index   MAC VIF index associated with this TBTT.
+ */
+void coex_coord_on_tbtt(uint32_t tbtt_time, uint8_t vif_index);
+
+/**
+ * @brief Called by platform right before Wi-Fi task blocks.
+ *
+ * @return true if `pm_coex_sleep()` commit succeeded and caller MUST pair with
+ *         `coex_coord_on_wifi_wake(true)`.
+ */
+bool coex_coord_on_wifi_suspend_enter(void);
+
+/**
+ * @brief Called by platform right after Wi-Fi task is woken up.
+ * @param slept_committed  Return value from @ref coex_coord_on_wifi_suspend_enter.
+ */
+void coex_coord_on_wifi_wake(bool slept_committed);
+
+/**
+ * @brief Coex coordinator runtime hooks (called by PS layer).
+ *
+ * These hooks reflect the existing coex runtime gating semantics:
+ * - enable/disable: persistent master switch
+ * - runtime pause/resume: disconnect/reconnect gating while preserving enable flag
+ */
+void coex_coord_on_enable(void);
+void coex_coord_on_disable(void);
+void coex_coord_on_runtime_pause(void);
+void coex_coord_on_runtime_resume(void);
+
+/*
+ * pm_coex_sleep failure bitmask (Stage 1)
+ ****************************************************************************************
+ */
+
+/// pm_coex_sleep(): guard / not ready (not init, runtime paused, wrong state)
+#define PM_COEX_SLEEP_FAIL_GUARD         (1u << 0)
+/// PS is OFF
+#define PM_COEX_SLEEP_FAIL_PS_OFF        (1u << 1)
+/// prevent_sleep is active (global or per-VIF)
+#define PM_COEX_SLEEP_FAIL_PREVENT_SLEEP (1u << 2)
+/// TX path is not sleepable (TX inflight / pck_cnt etc)
+#define PM_COEX_SLEEP_FAIL_TX_INFLIGHT   (1u << 3)
+/// HW timer / MAC state blocks sleep
+#define PM_COEX_SLEEP_FAIL_HW_TIMER      (1u << 4)
+/// KE msg queue not empty / state not allowing sleep
+#define PM_COEX_SLEEP_FAIL_KE_MSG        (1u << 5)
+/// CPU / events block sleep
+#define PM_COEX_SLEEP_FAIL_CPU           (1u << 6)
+/// pm_coex_sleep_ctl(true) failed
+#define PM_COEX_SLEEP_FAIL_SLEEP_CTL     (1u << 7)
+
+/**
+ * @brief Pause coexistence runtime behaviors
+ * @details Pauses runtime behaviors (PTA switching, TBTT slice, host TX gating)
+ *          while preserving the persistent "coex enabled" configuration.
+ *
+ * This is typically triggered when Wi-Fi PS is turned OFF (e.g. disconnect).
+ * Does nothing if coex is disabled.
+ *
+ * @note Coex protect module enable follows the persistent coex feature enable
+ *       and stays enabled while coex is enabled (regardless of runtime pause).
  */
 void ps_coex_runtime_pause(void);
 
 /**
- * @brief Resume coexistence runtime behaviors on Wi-Fi reconnect (Got IP)
- * @details Resumes runtime behaviors that were paused on disconnect.
- *          Does nothing if coex mode is not enabled.
+ * @brief Resume coexistence runtime behaviors
+ * @details Resumes runtime behaviors after Wi-Fi PS is turned ON.
+ *          Does nothing if coex is disabled.
  * @note Wi-Fi PS re-enable must be handled separately by caller.
+ * @note Coex protect module stays enabled while coex is enabled; protection
+ *       ref-count state is preserved across runtime pause/resume.
  */
 void ps_coex_runtime_resume(void);
 
@@ -160,14 +253,15 @@ bool pm_coex_is_wifi_active_window(void);
  */
 typedef enum {
     COEX_PROT_SCAN = 0,      ///< WiFi scan protection
-    COEX_PROT_CONNECT,       ///< WiFi connect/handshake protection
+    COEX_PROT_CONNECT,       ///< WiFi connect protection (AUTH/ASSOC)
     COEX_PROT_DHCP,          ///< DHCP protection
     COEX_PROT_DISCONNECT,    ///< Disconnect protection (deauth TX)
+    COEX_PROT_KEY_MGMT,      ///< Key management protection (ASSOCIATED->AUTHORIZED)
     COEX_PROT_MAX
 } coex_protect_type_t;
 
 /// Timeout for 4-way handshake wait (milliseconds)
-#define PM_COEX_HANDSHAKE_WAIT_TIMEOUT_MS  5000
+#define PM_COEX_HANDSHAKE_WAIT_TIMEOUT_MS  10000
 
 /**
  * @brief Enable/disable coex protection module
@@ -207,9 +301,57 @@ void coex_protect_release_all(void);
 bool coex_protect_is_active(void);
 
 /**
+ * @brief Get current protection bitmask (read-only)
+ * @return Active protection bitmask (bit per type)
+ */
+uint32_t coex_protect_get_mask(void);
+
+/**
  * @brief Dump coex protection state for debugging
  */
 void coex_protect_dump(void);
+
+/*
+ * COEX STATUS QUERY API (Read-Only)
+ ****************************************************************************************
+ */
+
+/**
+ * @brief Coex status snapshot for read-only query
+ *
+ * This structure captures a point-in-time snapshot of coex state.
+ * All fields are read-only and do not modify any internal state.
+ */
+struct pm_coex_status {
+    /* PS layer coex gate */
+    uint8_t ps_coex_state;          ///< ps_env.coex_state (PS_COEX_DISABLED/ENABLED/RUNNING)
+
+    /* pm_coex state machine */
+    uint8_t pm_state;               ///< g_pm_coex_ctx.state (PM_COEX_STATE_*)
+    uint8_t pta_current_role;       ///< g_pm_coex_ctx.pta_current_role (PTA_ROLE_*)
+    bool wifi_active_window;        ///< g_pm_coex_ctx.wifi_active_window
+    bool wifi_connecting;           ///< g_pm_coex_ctx.wifi_connecting
+
+    /* WiFi duty cycle config */
+    uint32_t wifi_duty_ms;          ///< WiFi active time in ms (configured via wifi_sta_coex_duty_set)
+
+    /* coex protect */
+    bool protect_enabled;           ///< coex_protect module enabled
+    bool protect_active;            ///< any protection currently active
+    uint32_t protect_mask;          ///< active protection bitmask
+};
+
+/**
+ * @brief Get coex status snapshot (read-only)
+ *
+ * @param[out] out  Pointer to status structure to fill
+ * @return 0 on success, -1 if out is NULL or module not initialized
+ *
+ * @note This function is safe to call from any context.
+ *       Uses GLOBAL_INT_DISABLE() internally for atomic read.
+ * @note This function does NOT modify any internal state.
+ */
+int pm_coex_get_status(struct pm_coex_status *out);
 
 
 #ifdef __cplusplus

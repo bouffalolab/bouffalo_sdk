@@ -24,6 +24,7 @@ target_sources(app PRIVATE
                 #    app/src/pm/app_pm.c
                 #    app/src/pm/tickless.c
                    app/src/sample/app_sample.c
+                   app/src/wifi/app_wifi_fhost.c
                    )
 
 #sdio

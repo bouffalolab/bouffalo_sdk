@@ -12,7 +12,7 @@
 #include <linux/version.h>
 #include <linux/skbuff.h>
 #include <linux/netlink.h>
-#include <linux/sched/signal.h>
+#include <linux/kthread.h>
 #include <linux/sysfs.h>
 #include <linux/kobject.h>
 

@@ -21,7 +21,7 @@ struct filter_list_node {
 };
 
 static SLIST_HEAD(filter_list, filter_list_node) filters = SLIST_HEAD_INITIALIZER(&filters);
-static SLIST_HEAD(event_list, input_event) events = SLIST_HEAD_INITIALIZER(&events);
+static SLIST_HEAD(event_list, async_input_event) events = SLIST_HEAD_INITIALIZER(&events);
 
 static void (*notify_cb)(void);
 
@@ -35,7 +35,7 @@ void async_event_init(void (*notify)(void))
 void async_event_loop(void)
 {
     struct filter_list_node *fn, *fn_tmp;
-    struct input_event *ie;
+    struct async_input_event *ie;
 
     async_rtos_lock();
     while ((ie = SLIST_FIRST(&events)) != NULL) {
@@ -67,12 +67,12 @@ void async_event_loop(void)
     async_rtos_unlock();
 }
 
-int async_post_general_event(input_event_t event)
+int async_post_general_event(async_input_event_t event)
 {
-    input_event_t event_new;
+    async_input_event_t event_new;
     assert(event != NULL);
 
-    if (event->size < sizeof(struct input_event)) {
+    if (event->size < sizeof(struct async_input_event)) {
         printf("%s: invalid message length\n", __func__);
         return -1;
     }
@@ -97,10 +97,10 @@ int async_post_general_event(input_event_t event)
 
 int async_post_event(uintptr_t type, uint16_t code, unsigned long value)
 {
-    struct input_event event;
+    struct async_input_event event;
 
-    memset(&event, 0, sizeof(struct input_event));
-    event.size = sizeof(struct input_event);
+    memset(&event, 0, sizeof(struct async_input_event));
+    event.size = sizeof(struct async_input_event);
     event.type = type;
 
     event.code = code;

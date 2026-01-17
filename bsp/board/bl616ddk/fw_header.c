@@ -192,7 +192,12 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .rsvd0[0] = 0x00000000,
     .rsvd0[1] = 0x00000000,
 
-
+    .boot2_age = 0x0,
+#if defined(CONFIG_BOOT2_OTA_ENABLE)
+    .boot2_ota_enable = 0x1,
+#else
+    .boot2_ota_enable = 0x0,
+#endif
     .crc32 = 0xdeadbeef
 };
 

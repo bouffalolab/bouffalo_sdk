@@ -135,10 +135,6 @@ SHELL_CMD_EXPORT_ALIAS(atspisync_fakepush_forpop_cmd, atfake, spisync fake push 
 
 void app_atmodule_init(void)
 {
-    nxspi_init();
-#if NXSPI_NET
-    spinet_init();
-#endif
     at_module_init();
 }
 

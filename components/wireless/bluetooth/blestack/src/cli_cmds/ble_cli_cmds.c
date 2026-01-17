@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <inttypes.h>
 #include "conn.h"
 #include "conn_internal.h"
 #include "gatt.h"
@@ -35,6 +36,13 @@
 #define CLI_PRIO (CONFIG_BT_RX_PRIO - 2)
 static struct k_thread ble_cli_task_h;
 static struct k_fifo ble_cli_queue;
+
+// BLE scan statistics variables
+static bool g_scan_stats_mode = false;  // Statistics mode flag
+static uint32_t g_scan_count = 0;       // Count of scanned devices
+static uint32_t g_last_stats_time = 0;  // Last time statistics were printed
+static const uint32_t SCAN_STATS_INTERVAL_MS = 10000; // 10 seconds
+
 typedef enum{
     CLI_MSG_ENABLE_ADV,
     CLI_MSG_DISCONNECT,
@@ -205,7 +213,8 @@ BLE_CLI(le_test_end);
         Parameter:[Scan type: 0:passive scan; 1:active scan] \
         [filtering: 0:Disable duplicate; 1:Enable duplicate] \
         [Scan interval: 0x0004-4000;e.g.0080] \
-        [Scan window: 0x0004-4000;e.g.0050]);
+        [Scan window: 0x0004-4000;e.g.0050]   \
+        [Stats mode: 0:normal; 1:statistics mode]);
     SHELL_CMD_EXPORT_ALIAS(blecli_stop_scan, ble_stop_scan, ble stop scan Parameter:[Null]);
 #endif /* CONFIG_BT_OBSERVER */
 #if defined(CONFIG_BT_PERIPHERAL)
@@ -370,7 +379,8 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     Parameter [Scan type, 0:passive scan, 1:active scan]\r\n\
     [filtering, 0:Disable duplicate, 1:Enable duplicate]\r\n\
     [Scan interval, 0x0004-4000,e.g.0080]\r\n\
-    [Scan window, 0x0004-4000,e.g.0050]\r\n", blecli_start_scan},
+    [Scan window, 0x0004-4000,e.g.0050]\r\n\
+    [Stats mode, 0:normal, 1:statistics mode]\r\n", blecli_start_scan},
     {"ble_stop_scan", "ble stop scan\r\nParameter [Null]\r\n", blecli_stop_scan},
 #endif
 #if defined(CONFIG_BT_PERIPHERAL)
@@ -1051,22 +1061,41 @@ static void device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
 {
 	char 		le_addr[BT_ADDR_LE_STR_LEN];
 	char 		name[NAME_LEN];
+	uint32_t current_time;
 
-	(void)memset(name, 0, sizeof(name));
-	bt_data_parse(buf, data_cb, name);
-	bt_addr_le_to_str(addr, le_addr, sizeof(le_addr));
+	// Increment scan count
+	g_scan_count++;
+
+	current_time = k_now_ms();
+	if (g_last_stats_time == 0) {
+		g_last_stats_time = current_time;
+	}
 	
-	vOutputString("[DEVICE]: %s, AD evt type %u, RSSI %i %s \r\n",le_addr, evtype, rssi, name);
+	if ((current_time - g_last_stats_time) >= SCAN_STATS_INTERVAL_MS) {
+		vOutputString("Starting scan in statistics mode (show count every %ld)\r\n",SCAN_STATS_INTERVAL_MS);
+		g_scan_count = 0;
+		g_last_stats_time = current_time;
+	}
+	
+	// If not in stats mode, print device details
+	if (!g_scan_stats_mode) {
+		(void)memset(name, 0, sizeof(name));
+		bt_data_parse(buf, data_cb, name);
+		bt_addr_le_to_str(addr, le_addr, sizeof(le_addr));
+		
+		vOutputString("[DEVICE]: %s, AD evt type %u, RSSI %i %s \r\n",le_addr, evtype, rssi, name);
+	}
 }
 
 BLE_CLI(start_scan)
 {
     struct bt_le_scan_param scan_param;
     int err;
+    uint8_t stats_mode = 0;
 
     (void)err;
 
-    if(argc != 5){
+    if(argc != 5 && argc != 6){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
@@ -1078,6 +1107,16 @@ BLE_CLI(start_scan)
     get_uint16_from_string(&argv[3], &scan_param.interval);
     
     get_uint16_from_string(&argv[4], &scan_param.window);
+
+    // Get optional statistics mode parameter (5th parameter, optional)
+    if (argc == 6) {
+        get_uint8_from_string(&argv[5], &stats_mode);
+    }
+
+    // Initialize scan statistics
+    g_scan_stats_mode = (stats_mode == 1) ? true : false;
+    g_scan_count = 0;
+    g_last_stats_time = k_now_ms();
 
     err = bt_le_scan_start(&scan_param, device_found);
     

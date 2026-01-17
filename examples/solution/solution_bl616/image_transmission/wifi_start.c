@@ -46,6 +46,7 @@
 
 #define DBG_TAG "WIFI"
 #include "log.h"
+#include "async_event.h"
 
 /********* solution video *********/
 #if (CONFIG_SOLUTION_FUNC_HIBOOSTER)
@@ -69,8 +70,10 @@ static void cmd_mjpeg_start(void);
 /****************************************************************************
  * Functions
  ****************************************************************************/
-void wifi_event_handler(uint32_t code)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
+    uint32_t code = ev->code;
+
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
@@ -223,6 +226,9 @@ void wifi_start_firmware_task(void *param)
         return 0;
     }
     LOG_I("PHY RF init success!\r\n");
+
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
 
     wifi_task_create();
 

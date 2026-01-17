@@ -77,7 +77,7 @@ int lcd_init(void)
     bflb_mtimer_delay_ms(LCD_RESET_DELAY);
 #endif
 
-#if(defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN)
+#if (defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN)
     /* close backlight */
     bflb_gpio_init(gpio, LCD_BACKLIGHT_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 

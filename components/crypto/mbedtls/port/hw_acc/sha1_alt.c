@@ -35,10 +35,15 @@
 #include "mbedtls/platform.h"
 #include "sec_mutex.h"
 
+#ifdef CONFIG_MBEDTLS_V3
+#define SHA1_VALIDATE_RET(cond)
+#define SHA1_VALIDATE(cond)
+#else
 #define SHA1_VALIDATE_RET(cond)                             \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
 
 #define SHA1_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+#endif
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha1_link_ctx_s link_ctx_temp;
 
@@ -95,10 +100,17 @@ int mbedtls_sha1_starts_ret( mbedtls_sha1_context *ctx )
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
+#ifdef CONFIG_MBEDTLS_V3
+int mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
+{
+    return mbedtls_sha1_starts_ret( ctx );
+}
+#else
 void mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
 {
     mbedtls_sha1_starts_ret( ctx );
 }
+#endif
 #endif
 
 /*
@@ -125,12 +137,21 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
+#ifdef CONFIG_MBEDTLS_V3
+int mbedtls_sha1_update( mbedtls_sha1_context *ctx,
+                          const unsigned char *input,
+                          size_t ilen )
+{
+    return mbedtls_sha1_update_ret( ctx, input, ilen );
+}
+#else
 void mbedtls_sha1_update( mbedtls_sha1_context *ctx,
                           const unsigned char *input,
                           size_t ilen )
 {
     mbedtls_sha1_update_ret( ctx, input, ilen );
 }
+#endif
 #endif
 
 /*
@@ -152,11 +173,19 @@ int mbedtls_sha1_finish_ret( mbedtls_sha1_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
+#ifdef CONFIG_MBEDTLS_V3
+int mbedtls_sha1_finish( mbedtls_sha1_context *ctx,
+                          unsigned char output[20] )
+{
+    return mbedtls_sha1_finish_ret( ctx, output );
+}
+#else
 void mbedtls_sha1_finish( mbedtls_sha1_context *ctx,
                           unsigned char output[20] )
 {
     mbedtls_sha1_finish_ret( ctx, output );
 }
+#endif
 #endif
 
 void mbedtls_sha1_once_padded_init( void )

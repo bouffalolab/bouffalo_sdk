@@ -1616,7 +1616,7 @@ struct mm_p2p_vif_ps_change_ind
 
 struct flow_cntrl_change_ind {
     uint8_t vif_index;
-    uint8_t enable;
+    uint8_t tx_paused;
 };
 
 #if (MACSW_MESH_EN)
@@ -1834,6 +1834,8 @@ struct scanu_start_req
     uint32_t probe_cnt;
     /// If true, it means will not to connnect after scan done
     bool scan_only;
+    /// WiFi Mode (passed from wifi_manager to determine probe IE capabilities)
+    uint32_t mode;
 };
 
 /// Structure containing the parameters of @ref SM_CONNECT_REQ and SM_FT_AUTH_RSP message.
@@ -3088,7 +3090,7 @@ enum sm_msg_tag
     SM_FIX_RATE_CANCLE_TIMEOUT_REQ,
     SM_KEEPALIVE_REQ,
     SM_STATUS_IND,
-    /// Timeout waiting for 4-way handshake after association (coex protection)
+    /// Coex protection watchdog timeout (single timer)
     SM_HANDSHAKE_WAIT_TIMEOUT_IND,
 };
 

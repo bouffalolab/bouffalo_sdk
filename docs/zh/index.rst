@@ -40,6 +40,12 @@ BouffaloSDK 使用指南
 
 .. toctree::
    :maxdepth: 1
+   :caption: 调试
+
+    debug/backtrace
+
+.. toctree::
+   :maxdepth: 1
    :caption: 应用笔记
 
    notes/note_uart

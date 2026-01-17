@@ -45,18 +45,21 @@ struct wl80211_mac_rx_desc {
     uint32_t payload[CO_ALIGN4_HI(RX_MAX_AMSDU_SUBFRAME_LEN + 1) / sizeof(uint32_t)];
 };
 
-int wl80211_eapol_input(wl80211_vif_type vif, uint8_t *payload, size_t len);
+int wl80211_eapol_input(enum wl80211_vif_type vif, uint8_t *payload, size_t len);
 int wl80211_mac_mgmt_input(uint8_t *payload, size_t len);
 int wl80211_mac_disconnect(uint16_t reason_code, uint16_t status_code);
-int wl80211_mac_do_scan(void);
-int wl80211_mac_do_connect(void);
+int wl80211_mac_do_scan(struct wl80211_scan_params *params);
+int wl80211_mac_do_connect(struct wl80211_connect_params *conn_params);
 int wl80211_mac_ctrl_port(uint8_t sta_id, int control_port_open);
 int wl80211_mac_set_ps_mode(int enable);
-int wl80211_mac_chan_config_update(uint8_t channel24G_num, uint8_t *channel24G_chan, uint8_t channel5G_num,
-                                   uint8_t *channel5G_chan);
+int wl80211_mac_chan_config_update(uint8_t channel24G_num, const uint8_t *channel24G_chan, uint8_t channel5G_num,
+                                   const uint8_t *channel5G_chan);
 struct mac_chan_def *wl80211_mac_chan_get(int freq);
 
-int wl80211_mac_start_ap(void);
+int wl80211_mac_start_ap(struct wl80211_ap_settings *ap_settings);
+int wl80211_mac_stop_ap(void);
+int wl80211_mac_ap_set_key(uint8_t key_idx, uint8_t sta_idx, uint8_t *key, uint8_t key_len, uint8_t cipher_suite,
+                           bool pairwise);
 int wl80211_mac_ap_ctrl_port(uint8_t sta_id, int control_port_open);
 // AP mode process auth packet
 void wl80211_mac_ap_auth_handler(void *frame_payload, uint32_t frame_length);
@@ -66,8 +69,8 @@ void wl80211_mac_ap_assoc_req_handler(void *frame_payload, uint32_t frame_length
 // only for type checker
 struct wl80211_tx_header;
 #define WL80211_MAC_TX_FLAG_MGMT 0x1
-int wl80211_mac_tx(wl80211_vif_type vif, struct wl80211_tx_header *desc, unsigned int flags, struct iovec *seg, int seg_cnt,
-                   void *txdone_cb, void *opaque);
+int wl80211_mac_tx(enum wl80211_vif_type vif, struct wl80211_tx_header *desc, unsigned int flags, struct iovec *seg,
+                   int seg_cnt, void *txdone_cb, void *opaque);
 
 void wl80211_mac_rx_free(void *info);
 
@@ -77,12 +80,17 @@ void wl80211_mac_rx_free(void *info);
 //////////////////////
 extern const struct me_chan_config_req _macsw_chan_def;
 
+int _macsw_add_vif(enum mac_vif_type vif_type);
+int _macsw_remove_vif(int vif_idx);
+struct scanu_start_req *_macsw_make_scan_req(struct wl80211_scan_params *params);
+struct me_config_req *_macsw_make_me_config(void);
+
 void _find_wpa_rsn_ie(uint32_t var_part_addr, uint32_t var_part_len, uint32_t *wpa_ie, uint32_t *rsn_ie);
 uint8_t _macsw_get_staid(int vif_idx, struct mac_addr *dst_addr, bool mgmt_frame);
 void _sme_auth_mgmt_rx(uint8_t *frame, size_t len);
 void *_ap_get_wpa_sm(uint8_t *mac);
 
-int external_auth_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-int ap_start_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
-int sta_add_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int _external_auth_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int _ap_start_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int _sta_add_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 #endif

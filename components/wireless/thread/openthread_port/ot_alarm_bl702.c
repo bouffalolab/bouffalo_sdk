@@ -50,7 +50,7 @@ void otAlarm_microTimerCallback(void)
 
 void ot_alarmInit(void) 
 {
-    otAlarm_timerHandle = xTimerCreate("ot_timer", 1, pdFALSE, (void *)otAlarm_timerHandle, otPlatALarm_msTimerCallback);
+    otAlarm_timerHandle = xTimerCreate("ot_timer", 1, pdFALSE, (void *)&otAlarm_timerHandle, otPlatALarm_msTimerCallback);
 
     uint32_t tag = otrEnterCrit();
 

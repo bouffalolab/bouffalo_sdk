@@ -69,19 +69,25 @@
 /* @todo: which includes are really needed? */
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
+#ifndef CONFIG_MBEDTLS_V3
 #include "mbedtls/certs.h"
+#endif
 #include "mbedtls/x509.h"
 #include "mbedtls/ssl.h"
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/platform.h"
 //#include "mbedtls/memory_buffer_alloc.h"
 #include "mbedtls/ssl_cache.h"
-
-#include "mbedtls/ssl_internal.h" /* to call mbedtls_flush_output after ERR_MEM */
-
 #include <string.h>
+
+#ifdef CONFIG_MBEDTLS_V3
+extern int mbedtls_ssl_flush_output(mbedtls_ssl_context *ssl);
+#else
+#include "mbedtls/ssl_internal.h" /* to call mbedtls_flush_output after ERR_MEM */
+#define MBEDTLS_PRIVATE(mem) mem
+#endif
 
 #ifndef ALTCP_MBEDTLS_ENTROPY_PTR
 #define ALTCP_MBEDTLS_ENTROPY_PTR   NULL
@@ -677,7 +683,11 @@ altcp_tls_create_config(int is_server, int have_cert, int have_pkey, int have_ca
   struct altcp_tls_config *conf;
   mbedtls_x509_crt *mem;
 
+#ifdef CONFIG_MBEDTLS_V3
+  if (TCP_WND < MBEDTLS_SSL_IN_CONTENT_LEN) {
+#else
   if (TCP_WND < MBEDTLS_SSL_MAX_CONTENT_LEN) {
+#endif
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG|LWIP_DBG_LEVEL_SERIOUS,
       ("altcp_tls: TCP_WND is smaller than the RX decryption buffer, connection RX might stall!\n"));
   }
@@ -777,8 +787,11 @@ altcp_tls_create_config_server_privkey_cert(const u8_t *privkey, size_t privkey_
     altcp_mbedtls_free_config(conf);
     return NULL;
   }
-
+#ifdef CONFIG_MBEDTLS_V3
+  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len, NULL, NULL);
+#else
   ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len);
+#endif
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_public_key failed: %d\n", ret));
     mbedtls_x509_crt_free(srvcert);
@@ -858,7 +871,11 @@ altcp_tls_create_config_client_2wayauth(const u8_t *ca, size_t ca_len, const u8_
   }
 
   mbedtls_pk_init(conf->pkey);
+#ifdef CONFIG_MBEDTLS_V3
+  ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len, NULL, NULL);
+#else
   ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len);
+#endif
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_key failed: %d 0x%x", ret, -1*ret));
     altcp_mbedtls_free_config(conf);
@@ -1009,7 +1026,8 @@ altcp_mbedtls_sndbuf(struct altcp_pcb *conn)
           size_t ret;
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
           /* @todo: adjust ssl_added to real value related to negociated cipher */
-          size_t max_frag_len = mbedtls_ssl_get_max_frag_len(&state->ssl_context);
+          extern size_t mbedtls_ssl_get_output_max_frag_len(const mbedtls_ssl_context *ssl);
+          size_t max_frag_len = mbedtls_ssl_get_output_max_frag_len(&state->ssl_context);
           max_len = LWIP_MIN(max_frag_len, max_len);
 #endif
           /* Adjust sndbuf of inner_conn with what added by SSL */
@@ -1052,9 +1070,9 @@ altcp_mbedtls_write(struct altcp_pcb *conn, const void *dataptr, u16_t len, u8_t
   /* HACK: if thre is something left to send, try to flush it and only
      allow sending more if this succeeded (this is a hack because neither
      returning 0 nor MBEDTLS_ERR_SSL_WANT_WRITE worked for me) */
-  if (state->ssl_context.out_left) {
+  if (state->ssl_context.MBEDTLS_PRIVATE(out_left)) {
     mbedtls_ssl_flush_output(&state->ssl_context);
-    if (state->ssl_context.out_left) {
+    if (state->ssl_context.MBEDTLS_PRIVATE(out_left)) {
       return ERR_MEM;
     }
   }

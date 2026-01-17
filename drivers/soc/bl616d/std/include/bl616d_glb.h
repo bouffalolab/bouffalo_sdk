@@ -737,6 +737,26 @@ typedef struct {
   * @}
   */
 
+/** @defgroup GLB_SLAVE_BUS_PROT definition
+  * @{
+  */
+#define GLB_SLAVE_BUS_PROT_SEC                           (1U << 0)  /*!< SEC slave bus protection */
+#define GLB_SLAVE_BUS_PROT_QSPI                          (1U << 2)  /*!< QSPI slave bus protection */
+#define GLB_SLAVE_BUS_PROT_EMAC                          (1U << 4)  /*!< EMAC slave bus protection */
+#define GLB_SLAVE_BUS_PROT_SDH                           (1U << 6)  /*!< SDH slave bus protection */
+#define GLB_SLAVE_BUS_PROT_SDU                           (1U << 8)  /*!< SDU slave bus protection */
+#define GLB_SLAVE_BUS_PROT_USB2                          (1U << 10) /*!< USB2 slave bus protection */
+#define GLB_SLAVE_BUS_PROT_EMACB                         (1U << 12) /*!< EMACB slave bus protection */
+#define GLB_SLAVE_BUS_PROT_GMACA                         (1U << 14) /*!< GMACA slave bus protection */
+#define GLB_SLAVE_BUS_PROT_GMACB                         (1U << 16) /*!< GMACB slave bus protection */
+#define GLB_SLAVE_BUS_PROT_TOP2MINI                      (1U << 18) /*!< TOP2MINI slave bus protection */
+#define GLB_SLAVE_BUS_PROT_DMA                           (1U << 20) /*!< DMA slave bus protection */
+#define GLB_SLAVE_BUS_PROT_PWR                           (1U << 22) /*!< PWR slave bus protection */
+#define GLB_SLAVE_BUS_PROT_ALL                           (0x555555) /*!< All slave bus protection */
+/**
+  * @}
+  */
+
 /** @defgroup BMX bus err interrupt type definition
   * @{
   */
@@ -1130,6 +1150,50 @@ typedef struct {
 /**
   * @}
   */
+
+#if !defined(CPU_MODEL_A0)
+typedef struct {
+    uint8_t clock_i_inv;
+    uint8_t clock_o_inv;
+    uint8_t clock_i_delay;
+    uint8_t clock_o_delay;
+    uint8_t cmd_i_delay;
+    uint8_t cmd_o_delay;
+    uint8_t cmd_e_delay;
+    uint8_t data0_i_delay;
+    uint8_t data1_i_delay;
+    uint8_t data2_i_delay;
+    uint8_t data3_i_delay;
+    uint8_t data0_o_delay;
+    uint8_t data1_o_delay;
+    uint8_t data2_o_delay;
+    uint8_t data3_o_delay;
+    uint8_t data0_e_delay;
+    uint8_t data1_e_delay;
+    uint8_t data2_e_delay;
+    uint8_t data3_e_delay;
+} GLB_SDH_TIMING_Type;
+
+typedef struct {
+    uint8_t clock_inv;
+    uint8_t clock_delay;
+    uint8_t cmd_i_delay;
+    uint8_t cmd_o_delay;
+    uint8_t cmd_e_delay;
+    uint8_t data0_i_delay;
+    uint8_t data1_i_delay;
+    uint8_t data2_i_delay;
+    uint8_t data3_i_delay;
+    uint8_t data0_o_delay;
+    uint8_t data1_o_delay;
+    uint8_t data2_o_delay;
+    uint8_t data3_o_delay;
+    uint8_t data0_e_delay;
+    uint8_t data1_e_delay;
+    uint8_t data2_e_delay;
+    uint8_t data3_e_delay;
+} GLB_SDU_TIMING_Type;
+#endif
 
 typedef struct {
     uint32_t clkOffSetAddr;
@@ -1999,6 +2063,8 @@ BL_Err_Type GLB_Power_Off_CPUPLL(void);
 BL_Err_Type GLB_CPUPLL_Ref_Clk_Sel(uint8_t refClk);
 BL_Err_Type GLB_Power_On_CPUPLL(const GLB_CPUPLL_Cfg_Type *const cfg, uint8_t waitStable);
 BL_Err_Type GLB_Power_On_DSIPLL_Clk(uint8_t xtalType);
+BL_Err_Type GLB_Set_DSI_POST_CLK(uint8_t enable, uint8_t div);
+BL_Err_Type GLB_Set_DSI_BIT_CLK(uint8_t enable, uint8_t div);
 BL_Err_Type GLB_Config_WIFIPLL(uint8_t xtalType, const GLB_WIFIPLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Config_CPUPLL(uint8_t xtalType, const GLB_CPUPLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t div);
@@ -2145,6 +2211,13 @@ BL_Err_Type GLB_Power_Off_DSIPLL(void);
 BL_Err_Type GLB_DSIPLL_Ref_Clk_Sel(uint8_t refClk);
 BL_Err_Type GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *const cfg, uint8_t waitStable);
 BL_Err_Type GLB_Set_DSI_ESC_CLK(uint8_t enable, uint8_t sel, uint8_t div);
+/*----------*/
+#if !defined(CPU_MODEL_A0)
+void GLB_Set_SDH_Timing(GLB_SDH_TIMING_Type *timing);
+void GLB_Set_SDU_Timing(GLB_SDU_TIMING_Type *timing);
+#endif
+BL_Err_Type GLB_Set_Slave_Bus_Protect_Enable(uint32_t slaves);
+BL_Err_Type GLB_Set_Slave_Bus_Protect_Disable(uint32_t slaves);
 
 /*@} end of group GLB_Public_Functions */
 

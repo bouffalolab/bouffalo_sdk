@@ -14,11 +14,13 @@
 extern "C" {
 #endif
 
+#ifndef CONFIG_MBEDTLS_V3
 #include "mbedtls/config.h"
+#endif
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/x509_crt.h"
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 
 typedef struct {
     int ssl_inited;

@@ -28,6 +28,10 @@
 #include "mbedtls/sha1.h"
 #endif
 
+#ifdef CONFIG_MBEDTLS_V3
+#include "mbedtls/compat-2.x.h"
+#endif
+
 typedef struct SHA1Context SHA1_CTX;
 
 void SHA1Transform(u32 state[5], const unsigned char buffer[64]);

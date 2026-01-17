@@ -19,6 +19,9 @@
 #include "md5_i.h"
 #include "crypto.h"
 
+#ifdef CONFIG_MBEDTLS_V3
+#include "mbedtls/compat-2.x.h"
+#endif
 
 #ifndef USE_MBEDTLS_CRYPTO
 static void MD5Transform(u32 buf[4], u32 const in[16]);

@@ -1088,6 +1088,7 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_set_cmd, wifi_sta_ps_set, wifi sta powersave 
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_enable_cmd, wifi_sta_coex_enable, wifi sta coex enable);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_disable_cmd, wifi_sta_coex_disable, wifi sta coex disable);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_duty_set_cmd, wifi_sta_coex_duty_set, wifi sta coex duty set);
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_status_cmd, wifi_sta_coex_status, wifi sta coex status);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_info_cmd, wifi_sta_info, wifi sta info);
 #if MACSW_BEACONING
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_list_get_cmd, wifi_sta_list, get sta list in AP mode);

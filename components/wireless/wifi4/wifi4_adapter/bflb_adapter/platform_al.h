@@ -4,11 +4,12 @@
 #ifndef __PLATFORM_AL_H__
 #define __PLATFORM_AL_H__
 
-#ifdef BOUFFALO_SDK 
+#ifdef BOUFFALO_SDK
+#include "async_event.h"
+#endif
 typedef struct {
     int code;
-} input_event_t;
-#endif
+} platform_event_t;
 
 /**
 ****************************************************************************************
@@ -18,7 +19,7 @@ typedef struct {
 * @param[in] code Code of event.
 ****************************************************************************************
 */
-typedef void (* pfn_wifi_event)(input_event_t *event, uint32_t code2);
+typedef void (* pfn_wifi_event)(platform_event_t *event, uint32_t code2);
 
 int platform_register_event(int catalogue, pfn_wifi_event cb, void *arg);
 

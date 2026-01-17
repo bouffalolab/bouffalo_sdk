@@ -1215,6 +1215,129 @@
 #define GLB_STS_PROT_RDY_OPI_MSK                                (((1U<<GLB_STS_PROT_RDY_OPI_LEN)-1)<<GLB_STS_PROT_RDY_OPI_POS)
 #define GLB_STS_PROT_RDY_OPI_UMSK                               (~(((1U<<GLB_STS_PROT_RDY_OPI_LEN)-1)<<GLB_STS_PROT_RDY_OPI_POS))
 
+/* 0x33C : bmx_cfg7 */
+#define GLB_BMX_CFG7_OFFSET                                     (0x33C)
+#define GLB_REG_PROT_REQ_SEC                                    GLB_REG_PROT_REQ_SEC
+#define GLB_REG_PROT_REQ_SEC_POS                                (0U)
+#define GLB_REG_PROT_REQ_SEC_LEN                                (1U)
+#define GLB_REG_PROT_REQ_SEC_MSK                                (((1U<<GLB_REG_PROT_REQ_SEC_LEN)-1)<<GLB_REG_PROT_REQ_SEC_POS)
+#define GLB_REG_PROT_REQ_SEC_UMSK                               (~(((1U<<GLB_REG_PROT_REQ_SEC_LEN)-1)<<GLB_REG_PROT_REQ_SEC_POS))
+#define GLB_STS_PROT_RDY_SEC                                    GLB_STS_PROT_RDY_SEC
+#define GLB_STS_PROT_RDY_SEC_POS                                (1U)
+#define GLB_STS_PROT_RDY_SEC_LEN                                (1U)
+#define GLB_STS_PROT_RDY_SEC_MSK                                (((1U<<GLB_STS_PROT_RDY_SEC_LEN)-1)<<GLB_STS_PROT_RDY_SEC_POS)
+#define GLB_STS_PROT_RDY_SEC_UMSK                               (~(((1U<<GLB_STS_PROT_RDY_SEC_LEN)-1)<<GLB_STS_PROT_RDY_SEC_POS))
+#define GLB_REG_PROT_REQ_QSPI                                   GLB_REG_PROT_REQ_QSPI
+#define GLB_REG_PROT_REQ_QSPI_POS                               (2U)
+#define GLB_REG_PROT_REQ_QSPI_LEN                               (1U)
+#define GLB_REG_PROT_REQ_QSPI_MSK                               (((1U<<GLB_REG_PROT_REQ_QSPI_LEN)-1)<<GLB_REG_PROT_REQ_QSPI_POS)
+#define GLB_REG_PROT_REQ_QSPI_UMSK                              (~(((1U<<GLB_REG_PROT_REQ_QSPI_LEN)-1)<<GLB_REG_PROT_REQ_QSPI_POS))
+#define GLB_STS_PROT_RDY_QSPI                                   GLB_STS_PROT_RDY_QSPI
+#define GLB_STS_PROT_RDY_QSPI_POS                               (3U)
+#define GLB_STS_PROT_RDY_QSPI_LEN                               (1U)
+#define GLB_STS_PROT_RDY_QSPI_MSK                               (((1U<<GLB_STS_PROT_RDY_QSPI_LEN)-1)<<GLB_STS_PROT_RDY_QSPI_POS)
+#define GLB_STS_PROT_RDY_QSPI_UMSK                              (~(((1U<<GLB_STS_PROT_RDY_QSPI_LEN)-1)<<GLB_STS_PROT_RDY_QSPI_POS))
+#define GLB_REG_PROT_REQ_EMAC_SLV                               GLB_REG_PROT_REQ_EMAC_SLV
+#define GLB_REG_PROT_REQ_EMAC_SLV_POS                           (4U)
+#define GLB_REG_PROT_REQ_EMAC_SLV_LEN                           (1U)
+#define GLB_REG_PROT_REQ_EMAC_SLV_MSK                           (((1U<<GLB_REG_PROT_REQ_EMAC_SLV_LEN)-1)<<GLB_REG_PROT_REQ_EMAC_SLV_POS)
+#define GLB_REG_PROT_REQ_EMAC_SLV_UMSK                          (~(((1U<<GLB_REG_PROT_REQ_EMAC_SLV_LEN)-1)<<GLB_REG_PROT_REQ_EMAC_SLV_POS))
+#define GLB_STS_PROT_RDY_EMAC_SLV                               GLB_STS_PROT_RDY_EMAC_SLV
+#define GLB_STS_PROT_RDY_EMAC_SLV_POS                           (5U)
+#define GLB_STS_PROT_RDY_EMAC_SLV_LEN                           (1U)
+#define GLB_STS_PROT_RDY_EMAC_SLV_MSK                           (((1U<<GLB_STS_PROT_RDY_EMAC_SLV_LEN)-1)<<GLB_STS_PROT_RDY_EMAC_SLV_POS)
+#define GLB_STS_PROT_RDY_EMAC_SLV_UMSK                          (~(((1U<<GLB_STS_PROT_RDY_EMAC_SLV_LEN)-1)<<GLB_STS_PROT_RDY_EMAC_SLV_POS))
+#define GLB_REG_PROT_REQ_SDH_SLV                                GLB_REG_PROT_REQ_SDH_SLV
+#define GLB_REG_PROT_REQ_SDH_SLV_POS                            (6U)
+#define GLB_REG_PROT_REQ_SDH_SLV_LEN                            (1U)
+#define GLB_REG_PROT_REQ_SDH_SLV_MSK                            (((1U<<GLB_REG_PROT_REQ_SDH_SLV_LEN)-1)<<GLB_REG_PROT_REQ_SDH_SLV_POS)
+#define GLB_REG_PROT_REQ_SDH_SLV_UMSK                           (~(((1U<<GLB_REG_PROT_REQ_SDH_SLV_LEN)-1)<<GLB_REG_PROT_REQ_SDH_SLV_POS))
+#define GLB_STS_PROT_RDY_SDH_SLV                                GLB_STS_PROT_RDY_SDH_SLV
+#define GLB_STS_PROT_RDY_SDH_SLV_POS                            (7U)
+#define GLB_STS_PROT_RDY_SDH_SLV_LEN                            (1U)
+#define GLB_STS_PROT_RDY_SDH_SLV_MSK                            (((1U<<GLB_STS_PROT_RDY_SDH_SLV_LEN)-1)<<GLB_STS_PROT_RDY_SDH_SLV_POS)
+#define GLB_STS_PROT_RDY_SDH_SLV_UMSK                           (~(((1U<<GLB_STS_PROT_RDY_SDH_SLV_LEN)-1)<<GLB_STS_PROT_RDY_SDH_SLV_POS))
+#define GLB_REG_PROT_REQ_SDU_SLV                                GLB_REG_PROT_REQ_SDU_SLV
+#define GLB_REG_PROT_REQ_SDU_SLV_POS                            (8U)
+#define GLB_REG_PROT_REQ_SDU_SLV_LEN                            (1U)
+#define GLB_REG_PROT_REQ_SDU_SLV_MSK                            (((1U<<GLB_REG_PROT_REQ_SDU_SLV_LEN)-1)<<GLB_REG_PROT_REQ_SDU_SLV_POS)
+#define GLB_REG_PROT_REQ_SDU_SLV_UMSK                           (~(((1U<<GLB_REG_PROT_REQ_SDU_SLV_LEN)-1)<<GLB_REG_PROT_REQ_SDU_SLV_POS))
+#define GLB_STS_PROT_RDY_SDU_SLV                                GLB_STS_PROT_RDY_SDU_SLV
+#define GLB_STS_PROT_RDY_SDU_SLV_POS                            (9U)
+#define GLB_STS_PROT_RDY_SDU_SLV_LEN                            (1U)
+#define GLB_STS_PROT_RDY_SDU_SLV_MSK                            (((1U<<GLB_STS_PROT_RDY_SDU_SLV_LEN)-1)<<GLB_STS_PROT_RDY_SDU_SLV_POS)
+#define GLB_STS_PROT_RDY_SDU_SLV_UMSK                           (~(((1U<<GLB_STS_PROT_RDY_SDU_SLV_LEN)-1)<<GLB_STS_PROT_RDY_SDU_SLV_POS))
+#define GLB_REG_PROT_REQ_U2                                     GLB_REG_PROT_REQ_U2
+#define GLB_REG_PROT_REQ_U2_POS                                 (10U)
+#define GLB_REG_PROT_REQ_U2_LEN                                 (1U)
+#define GLB_REG_PROT_REQ_U2_MSK                                 (((1U<<GLB_REG_PROT_REQ_U2_LEN)-1)<<GLB_REG_PROT_REQ_U2_POS)
+#define GLB_REG_PROT_REQ_U2_UMSK                                (~(((1U<<GLB_REG_PROT_REQ_U2_LEN)-1)<<GLB_REG_PROT_REQ_U2_POS))
+#define GLB_STS_PROT_RDY_U2                                     GLB_STS_PROT_RDY_U2
+#define GLB_STS_PROT_RDY_U2_POS                                 (11U)
+#define GLB_STS_PROT_RDY_U2_LEN                                 (1U)
+#define GLB_STS_PROT_RDY_U2_MSK                                 (((1U<<GLB_STS_PROT_RDY_U2_LEN)-1)<<GLB_STS_PROT_RDY_U2_POS)
+#define GLB_STS_PROT_RDY_U2_UMSK                                (~(((1U<<GLB_STS_PROT_RDY_U2_LEN)-1)<<GLB_STS_PROT_RDY_U2_POS))
+#define GLB_REG_PROT_REQ_EMACB                                  GLB_REG_PROT_REQ_EMACB
+#define GLB_REG_PROT_REQ_EMACB_POS                              (12U)
+#define GLB_REG_PROT_REQ_EMACB_LEN                              (1U)
+#define GLB_REG_PROT_REQ_EMACB_MSK                              (((1U<<GLB_REG_PROT_REQ_EMACB_LEN)-1)<<GLB_REG_PROT_REQ_EMACB_POS)
+#define GLB_REG_PROT_REQ_EMACB_UMSK                             (~(((1U<<GLB_REG_PROT_REQ_EMACB_LEN)-1)<<GLB_REG_PROT_REQ_EMACB_POS))
+#define GLB_STS_PROT_RDY_EMACB                                  GLB_STS_PROT_RDY_EMACB
+#define GLB_STS_PROT_RDY_EMACB_POS                              (13U)
+#define GLB_STS_PROT_RDY_EMACB_LEN                              (1U)
+#define GLB_STS_PROT_RDY_EMACB_MSK                              (((1U<<GLB_STS_PROT_RDY_EMACB_LEN)-1)<<GLB_STS_PROT_RDY_EMACB_POS)
+#define GLB_STS_PROT_RDY_EMACB_UMSK                             (~(((1U<<GLB_STS_PROT_RDY_EMACB_LEN)-1)<<GLB_STS_PROT_RDY_EMACB_POS))
+#define GLB_REG_PROT_REQ_GMACA_SLV                              GLB_REG_PROT_REQ_GMACA_SLV
+#define GLB_REG_PROT_REQ_GMACA_SLV_POS                          (14U)
+#define GLB_REG_PROT_REQ_GMACA_SLV_LEN                          (1U)
+#define GLB_REG_PROT_REQ_GMACA_SLV_MSK                          (((1U<<GLB_REG_PROT_REQ_GMACA_SLV_LEN)-1)<<GLB_REG_PROT_REQ_GMACA_SLV_POS)
+#define GLB_REG_PROT_REQ_GMACA_SLV_UMSK                         (~(((1U<<GLB_REG_PROT_REQ_GMACA_SLV_LEN)-1)<<GLB_REG_PROT_REQ_GMACA_SLV_POS))
+#define GLB_STS_PROT_RDY_GMACA_SLV                              GLB_STS_PROT_RDY_GMACA_SLV
+#define GLB_STS_PROT_RDY_GMACA_SLV_POS                          (15U)
+#define GLB_STS_PROT_RDY_GMACA_SLV_LEN                          (1U)
+#define GLB_STS_PROT_RDY_GMACA_SLV_MSK                          (((1U<<GLB_STS_PROT_RDY_GMACA_SLV_LEN)-1)<<GLB_STS_PROT_RDY_GMACA_SLV_POS)
+#define GLB_STS_PROT_RDY_GMACA_SLV_UMSK                         (~(((1U<<GLB_STS_PROT_RDY_GMACA_SLV_LEN)-1)<<GLB_STS_PROT_RDY_GMACA_SLV_POS))
+#define GLB_REG_PROT_REQ_GMACB_SLV                              GLB_REG_PROT_REQ_GMACB_SLV
+#define GLB_REG_PROT_REQ_GMACB_SLV_POS                          (16U)
+#define GLB_REG_PROT_REQ_GMACB_SLV_LEN                          (1U)
+#define GLB_REG_PROT_REQ_GMACB_SLV_MSK                          (((1U<<GLB_REG_PROT_REQ_GMACB_SLV_LEN)-1)<<GLB_REG_PROT_REQ_GMACB_SLV_POS)
+#define GLB_REG_PROT_REQ_GMACB_SLV_UMSK                         (~(((1U<<GLB_REG_PROT_REQ_GMACB_SLV_LEN)-1)<<GLB_REG_PROT_REQ_GMACB_SLV_POS))
+#define GLB_STS_PROT_RDY_GMACB_SLV                              GLB_STS_PROT_RDY_GMACB_SLV
+#define GLB_STS_PROT_RDY_GMACB_SLV_POS                          (17U)
+#define GLB_STS_PROT_RDY_GMACB_SLV_LEN                          (1U)
+#define GLB_STS_PROT_RDY_GMACB_SLV_MSK                          (((1U<<GLB_STS_PROT_RDY_GMACB_SLV_LEN)-1)<<GLB_STS_PROT_RDY_GMACB_SLV_POS)
+#define GLB_STS_PROT_RDY_GMACB_SLV_UMSK                         (~(((1U<<GLB_STS_PROT_RDY_GMACB_SLV_LEN)-1)<<GLB_STS_PROT_RDY_GMACB_SLV_POS))
+#define GLB_REG_PROT_REQ_TOP2MINI                               GLB_REG_PROT_REQ_TOP2MINI
+#define GLB_REG_PROT_REQ_TOP2MINI_POS                           (18U)
+#define GLB_REG_PROT_REQ_TOP2MINI_LEN                           (1U)
+#define GLB_REG_PROT_REQ_TOP2MINI_MSK                           (((1U<<GLB_REG_PROT_REQ_TOP2MINI_LEN)-1)<<GLB_REG_PROT_REQ_TOP2MINI_POS)
+#define GLB_REG_PROT_REQ_TOP2MINI_UMSK                          (~(((1U<<GLB_REG_PROT_REQ_TOP2MINI_LEN)-1)<<GLB_REG_PROT_REQ_TOP2MINI_POS))
+#define GLB_STS_PROT_RDY_TOP2MINI                               GLB_STS_PROT_RDY_TOP2MINI
+#define GLB_STS_PROT_RDY_TOP2MINI_POS                           (19U)
+#define GLB_STS_PROT_RDY_TOP2MINI_LEN                           (1U)
+#define GLB_STS_PROT_RDY_TOP2MINI_MSK                           (((1U<<GLB_STS_PROT_RDY_TOP2MINI_LEN)-1)<<GLB_STS_PROT_RDY_TOP2MINI_POS)
+#define GLB_STS_PROT_RDY_TOP2MINI_UMSK                          (~(((1U<<GLB_STS_PROT_RDY_TOP2MINI_LEN)-1)<<GLB_STS_PROT_RDY_TOP2MINI_POS))
+#define GLB_REG_PROT_REQ_DMA                                    GLB_REG_PROT_REQ_DMA
+#define GLB_REG_PROT_REQ_DMA_POS                                (20U)
+#define GLB_REG_PROT_REQ_DMA_LEN                                (1U)
+#define GLB_REG_PROT_REQ_DMA_MSK                                (((1U<<GLB_REG_PROT_REQ_DMA_LEN)-1)<<GLB_REG_PROT_REQ_DMA_POS)
+#define GLB_REG_PROT_REQ_DMA_UMSK                               (~(((1U<<GLB_REG_PROT_REQ_DMA_LEN)-1)<<GLB_REG_PROT_REQ_DMA_POS))
+#define GLB_STS_PROT_RDY_DMA                                    GLB_STS_PROT_RDY_DMA
+#define GLB_STS_PROT_RDY_DMA_POS                                (21U)
+#define GLB_STS_PROT_RDY_DMA_LEN                                (1U)
+#define GLB_STS_PROT_RDY_DMA_MSK                                (((1U<<GLB_STS_PROT_RDY_DMA_LEN)-1)<<GLB_STS_PROT_RDY_DMA_POS)
+#define GLB_STS_PROT_RDY_DMA_UMSK                               (~(((1U<<GLB_STS_PROT_RDY_DMA_LEN)-1)<<GLB_STS_PROT_RDY_DMA_POS))
+#define GLB_REG_PROT_REQ_PWR                                    GLB_REG_PROT_REQ_PWR
+#define GLB_REG_PROT_REQ_PWR_POS                                (22U)
+#define GLB_REG_PROT_REQ_PWR_LEN                                (1U)
+#define GLB_REG_PROT_REQ_PWR_MSK                                (((1U<<GLB_REG_PROT_REQ_PWR_LEN)-1)<<GLB_REG_PROT_REQ_PWR_POS)
+#define GLB_REG_PROT_REQ_PWR_UMSK                               (~(((1U<<GLB_REG_PROT_REQ_PWR_LEN)-1)<<GLB_REG_PROT_REQ_PWR_POS))
+#define GLB_STS_PROT_RDY_PWR                                    GLB_STS_PROT_RDY_PWR
+#define GLB_STS_PROT_RDY_PWR_POS                                (23U)
+#define GLB_STS_PROT_RDY_PWR_LEN                                (1U)
+#define GLB_STS_PROT_RDY_PWR_MSK                                (((1U<<GLB_STS_PROT_RDY_PWR_LEN)-1)<<GLB_STS_PROT_RDY_PWR_POS)
+#define GLB_STS_PROT_RDY_PWR_UMSK                               (~(((1U<<GLB_STS_PROT_RDY_PWR_LEN)-1)<<GLB_STS_PROT_RDY_PWR_POS))
+
 /* 0x340 : audio_cfg0 */
 #define GLB_AUDIO_CFG0_OFFSET                                   (0x340)
 #define GLB_REG_AUDIO_ADC_CLK_DIV                               GLB_REG_AUDIO_ADC_CLK_DIV
@@ -1345,6 +1468,107 @@
 #define GLB_REG_SDH_CLK_EN_MSK                                  (((1U<<GLB_REG_SDH_CLK_EN_LEN)-1)<<GLB_REG_SDH_CLK_EN_POS)
 #define GLB_REG_SDH_CLK_EN_UMSK                                 (~(((1U<<GLB_REG_SDH_CLK_EN_LEN)-1)<<GLB_REG_SDH_CLK_EN_POS))
 
+/* 0x438 : smih_io_dly_0 */
+#define GLB_SMIH_IO_DLY_0_OFFSET                                (0x438)
+#define GLB_CR_SMIH_CLK_I_INV                                   GLB_CR_SMIH_CLK_I_INV
+#define GLB_CR_SMIH_CLK_I_INV_POS                               (0U)
+#define GLB_CR_SMIH_CLK_I_INV_LEN                               (1U)
+#define GLB_CR_SMIH_CLK_I_INV_MSK                               (((1U<<GLB_CR_SMIH_CLK_I_INV_LEN)-1)<<GLB_CR_SMIH_CLK_I_INV_POS)
+#define GLB_CR_SMIH_CLK_I_INV_UMSK                              (~(((1U<<GLB_CR_SMIH_CLK_I_INV_LEN)-1)<<GLB_CR_SMIH_CLK_I_INV_POS))
+#define GLB_CR_SMIH_CLK_O_INV                                   GLB_CR_SMIH_CLK_O_INV
+#define GLB_CR_SMIH_CLK_O_INV_POS                               (1U)
+#define GLB_CR_SMIH_CLK_O_INV_LEN                               (1U)
+#define GLB_CR_SMIH_CLK_O_INV_MSK                               (((1U<<GLB_CR_SMIH_CLK_O_INV_LEN)-1)<<GLB_CR_SMIH_CLK_O_INV_POS)
+#define GLB_CR_SMIH_CLK_O_INV_UMSK                              (~(((1U<<GLB_CR_SMIH_CLK_O_INV_LEN)-1)<<GLB_CR_SMIH_CLK_O_INV_POS))
+#define GLB_CR_SMIH_CLK_I_DLY                                   GLB_CR_SMIH_CLK_I_DLY
+#define GLB_CR_SMIH_CLK_I_DLY_POS                               (2U)
+#define GLB_CR_SMIH_CLK_I_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_CLK_I_DLY_MSK                               (((1U<<GLB_CR_SMIH_CLK_I_DLY_LEN)-1)<<GLB_CR_SMIH_CLK_I_DLY_POS)
+#define GLB_CR_SMIH_CLK_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_CLK_I_DLY_LEN)-1)<<GLB_CR_SMIH_CLK_I_DLY_POS))
+#define GLB_CR_SMIH_CLK_O_DLY                                   GLB_CR_SMIH_CLK_O_DLY
+#define GLB_CR_SMIH_CLK_O_DLY_POS                               (4U)
+#define GLB_CR_SMIH_CLK_O_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_CLK_O_DLY_MSK                               (((1U<<GLB_CR_SMIH_CLK_O_DLY_LEN)-1)<<GLB_CR_SMIH_CLK_O_DLY_POS)
+#define GLB_CR_SMIH_CLK_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_CLK_O_DLY_LEN)-1)<<GLB_CR_SMIH_CLK_O_DLY_POS))
+#define GLB_CR_SMIH_CMD_I_DLY                                   GLB_CR_SMIH_CMD_I_DLY
+#define GLB_CR_SMIH_CMD_I_DLY_POS                               (6U)
+#define GLB_CR_SMIH_CMD_I_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_CMD_I_DLY_MSK                               (((1U<<GLB_CR_SMIH_CMD_I_DLY_LEN)-1)<<GLB_CR_SMIH_CMD_I_DLY_POS)
+#define GLB_CR_SMIH_CMD_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_CMD_I_DLY_LEN)-1)<<GLB_CR_SMIH_CMD_I_DLY_POS))
+#define GLB_CR_SMIH_CMD_O_DLY                                   GLB_CR_SMIH_CMD_O_DLY
+#define GLB_CR_SMIH_CMD_O_DLY_POS                               (8U)
+#define GLB_CR_SMIH_CMD_O_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_CMD_O_DLY_MSK                               (((1U<<GLB_CR_SMIH_CMD_O_DLY_LEN)-1)<<GLB_CR_SMIH_CMD_O_DLY_POS)
+#define GLB_CR_SMIH_CMD_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_CMD_O_DLY_LEN)-1)<<GLB_CR_SMIH_CMD_O_DLY_POS))
+#define GLB_CR_SMIH_CMD_E_DLY                                   GLB_CR_SMIH_CMD_E_DLY
+#define GLB_CR_SMIH_CMD_E_DLY_POS                               (10U)
+#define GLB_CR_SMIH_CMD_E_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_CMD_E_DLY_MSK                               (((1U<<GLB_CR_SMIH_CMD_E_DLY_LEN)-1)<<GLB_CR_SMIH_CMD_E_DLY_POS)
+#define GLB_CR_SMIH_CMD_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_CMD_E_DLY_LEN)-1)<<GLB_CR_SMIH_CMD_E_DLY_POS))
+#define GLB_CR_SMIH_D_0_I_DLY                                   GLB_CR_SMIH_D_0_I_DLY
+#define GLB_CR_SMIH_D_0_I_DLY_POS                               (16U)
+#define GLB_CR_SMIH_D_0_I_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_0_I_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_0_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_0_I_DLY_POS)
+#define GLB_CR_SMIH_D_0_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_0_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_0_I_DLY_POS))
+#define GLB_CR_SMIH_D_1_I_DLY                                   GLB_CR_SMIH_D_1_I_DLY
+#define GLB_CR_SMIH_D_1_I_DLY_POS                               (18U)
+#define GLB_CR_SMIH_D_1_I_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_1_I_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_1_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_1_I_DLY_POS)
+#define GLB_CR_SMIH_D_1_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_1_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_1_I_DLY_POS))
+#define GLB_CR_SMIH_D_2_I_DLY                                   GLB_CR_SMIH_D_2_I_DLY
+#define GLB_CR_SMIH_D_2_I_DLY_POS                               (20U)
+#define GLB_CR_SMIH_D_2_I_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_2_I_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_2_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_2_I_DLY_POS)
+#define GLB_CR_SMIH_D_2_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_2_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_2_I_DLY_POS))
+#define GLB_CR_SMIH_D_3_I_DLY                                   GLB_CR_SMIH_D_3_I_DLY
+#define GLB_CR_SMIH_D_3_I_DLY_POS                               (22U)
+#define GLB_CR_SMIH_D_3_I_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_3_I_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_3_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_3_I_DLY_POS)
+#define GLB_CR_SMIH_D_3_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_3_I_DLY_LEN)-1)<<GLB_CR_SMIH_D_3_I_DLY_POS))
+
+/* 0x43C : smih_io_dly_1 */
+#define GLB_SMIH_IO_DLY_1_OFFSET                                (0x43C)
+#define GLB_CR_SMIH_D_0_O_DLY                                   GLB_CR_SMIH_D_0_O_DLY
+#define GLB_CR_SMIH_D_0_O_DLY_POS                               (0U)
+#define GLB_CR_SMIH_D_0_O_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_0_O_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_0_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_0_O_DLY_POS)
+#define GLB_CR_SMIH_D_0_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_0_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_0_O_DLY_POS))
+#define GLB_CR_SMIH_D_1_O_DLY                                   GLB_CR_SMIH_D_1_O_DLY
+#define GLB_CR_SMIH_D_1_O_DLY_POS                               (2U)
+#define GLB_CR_SMIH_D_1_O_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_1_O_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_1_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_1_O_DLY_POS)
+#define GLB_CR_SMIH_D_1_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_1_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_1_O_DLY_POS))
+#define GLB_CR_SMIH_D_2_O_DLY                                   GLB_CR_SMIH_D_2_O_DLY
+#define GLB_CR_SMIH_D_2_O_DLY_POS                               (4U)
+#define GLB_CR_SMIH_D_2_O_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_2_O_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_2_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_2_O_DLY_POS)
+#define GLB_CR_SMIH_D_2_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_2_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_2_O_DLY_POS))
+#define GLB_CR_SMIH_D_3_O_DLY                                   GLB_CR_SMIH_D_3_O_DLY
+#define GLB_CR_SMIH_D_3_O_DLY_POS                               (6U)
+#define GLB_CR_SMIH_D_3_O_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_3_O_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_3_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_3_O_DLY_POS)
+#define GLB_CR_SMIH_D_3_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_3_O_DLY_LEN)-1)<<GLB_CR_SMIH_D_3_O_DLY_POS))
+#define GLB_CR_SMIH_D_0_E_DLY                                   GLB_CR_SMIH_D_0_E_DLY
+#define GLB_CR_SMIH_D_0_E_DLY_POS                               (16U)
+#define GLB_CR_SMIH_D_0_E_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_0_E_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_0_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_0_E_DLY_POS)
+#define GLB_CR_SMIH_D_0_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_0_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_0_E_DLY_POS))
+#define GLB_CR_SMIH_D_1_E_DLY                                   GLB_CR_SMIH_D_1_E_DLY
+#define GLB_CR_SMIH_D_1_E_DLY_POS                               (18U)
+#define GLB_CR_SMIH_D_1_E_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_1_E_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_1_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_1_E_DLY_POS)
+#define GLB_CR_SMIH_D_1_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_1_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_1_E_DLY_POS))
+#define GLB_CR_SMIH_D_2_E_DLY                                   GLB_CR_SMIH_D_2_E_DLY
+#define GLB_CR_SMIH_D_2_E_DLY_POS                               (20U)
+#define GLB_CR_SMIH_D_2_E_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_2_E_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_2_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_2_E_DLY_POS)
+#define GLB_CR_SMIH_D_2_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_2_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_2_E_DLY_POS))
+#define GLB_CR_SMIH_D_3_E_DLY                                   GLB_CR_SMIH_D_3_E_DLY
+#define GLB_CR_SMIH_D_3_E_DLY_POS                               (22U)
+#define GLB_CR_SMIH_D_3_E_DLY_LEN                               (2U)
+#define GLB_CR_SMIH_D_3_E_DLY_MSK                               (((1U<<GLB_CR_SMIH_D_3_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_3_E_DLY_POS)
+#define GLB_CR_SMIH_D_3_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMIH_D_3_E_DLY_LEN)-1)<<GLB_CR_SMIH_D_3_E_DLY_POS))
+
 /* 0x440 : sdio_cfg0 */
 #define GLB_SDIO_CFG0_OFFSET                                    (0x440)
 #define GLB_SMID_RSV                                            GLB_SMID_RSV
@@ -1418,6 +1642,110 @@
 #define GLB_CR_SMID_OCR_LEN                                     (32U)
 #define GLB_CR_SMID_OCR_MSK                                     (((1U<<GLB_CR_SMID_OCR_LEN)-1)<<GLB_CR_SMID_OCR_POS)
 #define GLB_CR_SMID_OCR_UMSK                                    (~(((1U<<GLB_CR_SMID_OCR_LEN)-1)<<GLB_CR_SMID_OCR_POS))
+
+/* 0x44C : sdio_cfg3 */
+#define GLB_SDIO_CFG3_OFFSET                                    (0x44C)
+#define GLB_CR_SMID_CMD11_CLK_STP_CNT                           GLB_CR_SMID_CMD11_CLK_STP_CNT
+#define GLB_CR_SMID_CMD11_CLK_STP_CNT_POS                       (0U)
+#define GLB_CR_SMID_CMD11_CLK_STP_CNT_LEN                       (31U)
+#define GLB_CR_SMID_CMD11_CLK_STP_CNT_MSK                       (((1U<<GLB_CR_SMID_CMD11_CLK_STP_CNT_LEN)-1)<<GLB_CR_SMID_CMD11_CLK_STP_CNT_POS)
+#define GLB_CR_SMID_CMD11_CLK_STP_CNT_UMSK                      (~(((1U<<GLB_CR_SMID_CMD11_CLK_STP_CNT_LEN)-1)<<GLB_CR_SMID_CMD11_CLK_STP_CNT_POS))
+#define GLB_CR_SMID_CMD11_SW_ABORT                              GLB_CR_SMID_CMD11_SW_ABORT
+#define GLB_CR_SMID_CMD11_SW_ABORT_POS                          (31U)
+#define GLB_CR_SMID_CMD11_SW_ABORT_LEN                          (1U)
+#define GLB_CR_SMID_CMD11_SW_ABORT_MSK                          (((1U<<GLB_CR_SMID_CMD11_SW_ABORT_LEN)-1)<<GLB_CR_SMID_CMD11_SW_ABORT_POS)
+#define GLB_CR_SMID_CMD11_SW_ABORT_UMSK                         (~(((1U<<GLB_CR_SMID_CMD11_SW_ABORT_LEN)-1)<<GLB_CR_SMID_CMD11_SW_ABORT_POS))
+
+/* 0x450 : smid_io_dly_0 */
+#define GLB_SMID_IO_DLY_0_OFFSET                                (0x450)
+#define GLB_CR_SMID_CLK_INV                                     GLB_CR_SMID_CLK_INV
+#define GLB_CR_SMID_CLK_INV_POS                                 (0U)
+#define GLB_CR_SMID_CLK_INV_LEN                                 (1U)
+#define GLB_CR_SMID_CLK_INV_MSK                                 (((1U<<GLB_CR_SMID_CLK_INV_LEN)-1)<<GLB_CR_SMID_CLK_INV_POS)
+#define GLB_CR_SMID_CLK_INV_UMSK                                (~(((1U<<GLB_CR_SMID_CLK_INV_LEN)-1)<<GLB_CR_SMID_CLK_INV_POS))
+#define GLB_CR_SMID_CLK_DLY                                     GLB_CR_SMID_CLK_DLY
+#define GLB_CR_SMID_CLK_DLY_POS                                 (2U)
+#define GLB_CR_SMID_CLK_DLY_LEN                                 (2U)
+#define GLB_CR_SMID_CLK_DLY_MSK                                 (((1U<<GLB_CR_SMID_CLK_DLY_LEN)-1)<<GLB_CR_SMID_CLK_DLY_POS)
+#define GLB_CR_SMID_CLK_DLY_UMSK                                (~(((1U<<GLB_CR_SMID_CLK_DLY_LEN)-1)<<GLB_CR_SMID_CLK_DLY_POS))
+#define GLB_CR_SMID_CMD_I_DLY                                   GLB_CR_SMID_CMD_I_DLY
+#define GLB_CR_SMID_CMD_I_DLY_POS                               (6U)
+#define GLB_CR_SMID_CMD_I_DLY_LEN                               (2U)
+#define GLB_CR_SMID_CMD_I_DLY_MSK                               (((1U<<GLB_CR_SMID_CMD_I_DLY_LEN)-1)<<GLB_CR_SMID_CMD_I_DLY_POS)
+#define GLB_CR_SMID_CMD_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_CMD_I_DLY_LEN)-1)<<GLB_CR_SMID_CMD_I_DLY_POS))
+#define GLB_CR_SMID_CMD_O_DLY                                   GLB_CR_SMID_CMD_O_DLY
+#define GLB_CR_SMID_CMD_O_DLY_POS                               (8U)
+#define GLB_CR_SMID_CMD_O_DLY_LEN                               (2U)
+#define GLB_CR_SMID_CMD_O_DLY_MSK                               (((1U<<GLB_CR_SMID_CMD_O_DLY_LEN)-1)<<GLB_CR_SMID_CMD_O_DLY_POS)
+#define GLB_CR_SMID_CMD_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_CMD_O_DLY_LEN)-1)<<GLB_CR_SMID_CMD_O_DLY_POS))
+#define GLB_CR_SMID_CMD_E_DLY                                   GLB_CR_SMID_CMD_E_DLY
+#define GLB_CR_SMID_CMD_E_DLY_POS                               (10U)
+#define GLB_CR_SMID_CMD_E_DLY_LEN                               (2U)
+#define GLB_CR_SMID_CMD_E_DLY_MSK                               (((1U<<GLB_CR_SMID_CMD_E_DLY_LEN)-1)<<GLB_CR_SMID_CMD_E_DLY_POS)
+#define GLB_CR_SMID_CMD_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_CMD_E_DLY_LEN)-1)<<GLB_CR_SMID_CMD_E_DLY_POS))
+#define GLB_CR_SMID_D_0_I_DLY                                   GLB_CR_SMID_D_0_I_DLY
+#define GLB_CR_SMID_D_0_I_DLY_POS                               (16U)
+#define GLB_CR_SMID_D_0_I_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_0_I_DLY_MSK                               (((1U<<GLB_CR_SMID_D_0_I_DLY_LEN)-1)<<GLB_CR_SMID_D_0_I_DLY_POS)
+#define GLB_CR_SMID_D_0_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_0_I_DLY_LEN)-1)<<GLB_CR_SMID_D_0_I_DLY_POS))
+#define GLB_CR_SMID_D_1_I_DLY                                   GLB_CR_SMID_D_1_I_DLY
+#define GLB_CR_SMID_D_1_I_DLY_POS                               (18U)
+#define GLB_CR_SMID_D_1_I_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_1_I_DLY_MSK                               (((1U<<GLB_CR_SMID_D_1_I_DLY_LEN)-1)<<GLB_CR_SMID_D_1_I_DLY_POS)
+#define GLB_CR_SMID_D_1_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_1_I_DLY_LEN)-1)<<GLB_CR_SMID_D_1_I_DLY_POS))
+#define GLB_CR_SMID_D_2_I_DLY                                   GLB_CR_SMID_D_2_I_DLY
+#define GLB_CR_SMID_D_2_I_DLY_POS                               (20U)
+#define GLB_CR_SMID_D_2_I_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_2_I_DLY_MSK                               (((1U<<GLB_CR_SMID_D_2_I_DLY_LEN)-1)<<GLB_CR_SMID_D_2_I_DLY_POS)
+#define GLB_CR_SMID_D_2_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_2_I_DLY_LEN)-1)<<GLB_CR_SMID_D_2_I_DLY_POS))
+#define GLB_CR_SMID_D_3_I_DLY                                   GLB_CR_SMID_D_3_I_DLY
+#define GLB_CR_SMID_D_3_I_DLY_POS                               (22U)
+#define GLB_CR_SMID_D_3_I_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_3_I_DLY_MSK                               (((1U<<GLB_CR_SMID_D_3_I_DLY_LEN)-1)<<GLB_CR_SMID_D_3_I_DLY_POS)
+#define GLB_CR_SMID_D_3_I_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_3_I_DLY_LEN)-1)<<GLB_CR_SMID_D_3_I_DLY_POS))
+
+/* 0x454 : smid_io_dly_1 */
+#define GLB_SMID_IO_DLY_1_OFFSET                                (0x454)
+#define GLB_CR_SMID_D_0_O_DLY                                   GLB_CR_SMID_D_0_O_DLY
+#define GLB_CR_SMID_D_0_O_DLY_POS                               (0U)
+#define GLB_CR_SMID_D_0_O_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_0_O_DLY_MSK                               (((1U<<GLB_CR_SMID_D_0_O_DLY_LEN)-1)<<GLB_CR_SMID_D_0_O_DLY_POS)
+#define GLB_CR_SMID_D_0_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_0_O_DLY_LEN)-1)<<GLB_CR_SMID_D_0_O_DLY_POS))
+#define GLB_CR_SMID_D_1_O_DLY                                   GLB_CR_SMID_D_1_O_DLY
+#define GLB_CR_SMID_D_1_O_DLY_POS                               (2U)
+#define GLB_CR_SMID_D_1_O_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_1_O_DLY_MSK                               (((1U<<GLB_CR_SMID_D_1_O_DLY_LEN)-1)<<GLB_CR_SMID_D_1_O_DLY_POS)
+#define GLB_CR_SMID_D_1_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_1_O_DLY_LEN)-1)<<GLB_CR_SMID_D_1_O_DLY_POS))
+#define GLB_CR_SMID_D_2_O_DLY                                   GLB_CR_SMID_D_2_O_DLY
+#define GLB_CR_SMID_D_2_O_DLY_POS                               (4U)
+#define GLB_CR_SMID_D_2_O_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_2_O_DLY_MSK                               (((1U<<GLB_CR_SMID_D_2_O_DLY_LEN)-1)<<GLB_CR_SMID_D_2_O_DLY_POS)
+#define GLB_CR_SMID_D_2_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_2_O_DLY_LEN)-1)<<GLB_CR_SMID_D_2_O_DLY_POS))
+#define GLB_CR_SMID_D_3_O_DLY                                   GLB_CR_SMID_D_3_O_DLY
+#define GLB_CR_SMID_D_3_O_DLY_POS                               (6U)
+#define GLB_CR_SMID_D_3_O_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_3_O_DLY_MSK                               (((1U<<GLB_CR_SMID_D_3_O_DLY_LEN)-1)<<GLB_CR_SMID_D_3_O_DLY_POS)
+#define GLB_CR_SMID_D_3_O_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_3_O_DLY_LEN)-1)<<GLB_CR_SMID_D_3_O_DLY_POS))
+#define GLB_CR_SMID_D_0_E_DLY                                   GLB_CR_SMID_D_0_E_DLY
+#define GLB_CR_SMID_D_0_E_DLY_POS                               (16U)
+#define GLB_CR_SMID_D_0_E_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_0_E_DLY_MSK                               (((1U<<GLB_CR_SMID_D_0_E_DLY_LEN)-1)<<GLB_CR_SMID_D_0_E_DLY_POS)
+#define GLB_CR_SMID_D_0_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_0_E_DLY_LEN)-1)<<GLB_CR_SMID_D_0_E_DLY_POS))
+#define GLB_CR_SMID_D_1_E_DLY                                   GLB_CR_SMID_D_1_E_DLY
+#define GLB_CR_SMID_D_1_E_DLY_POS                               (18U)
+#define GLB_CR_SMID_D_1_E_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_1_E_DLY_MSK                               (((1U<<GLB_CR_SMID_D_1_E_DLY_LEN)-1)<<GLB_CR_SMID_D_1_E_DLY_POS)
+#define GLB_CR_SMID_D_1_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_1_E_DLY_LEN)-1)<<GLB_CR_SMID_D_1_E_DLY_POS))
+#define GLB_CR_SMID_D_2_E_DLY                                   GLB_CR_SMID_D_2_E_DLY
+#define GLB_CR_SMID_D_2_E_DLY_POS                               (20U)
+#define GLB_CR_SMID_D_2_E_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_2_E_DLY_MSK                               (((1U<<GLB_CR_SMID_D_2_E_DLY_LEN)-1)<<GLB_CR_SMID_D_2_E_DLY_POS)
+#define GLB_CR_SMID_D_2_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_2_E_DLY_LEN)-1)<<GLB_CR_SMID_D_2_E_DLY_POS))
+#define GLB_CR_SMID_D_3_E_DLY                                   GLB_CR_SMID_D_3_E_DLY
+#define GLB_CR_SMID_D_3_E_DLY_POS                               (22U)
+#define GLB_CR_SMID_D_3_E_DLY_LEN                               (2U)
+#define GLB_CR_SMID_D_3_E_DLY_MSK                               (((1U<<GLB_CR_SMID_D_3_E_DLY_LEN)-1)<<GLB_CR_SMID_D_3_E_DLY_POS)
+#define GLB_CR_SMID_D_3_E_DLY_UMSK                              (~(((1U<<GLB_CR_SMID_D_3_E_DLY_LEN)-1)<<GLB_CR_SMID_D_3_E_DLY_POS))
 
 /* 0x490 : tzc_cfg0 */
 #define GLB_TZC_CFG0_OFFSET                                     (0x490)
@@ -10218,8 +10546,37 @@ struct  glb_reg {
         uint32_t WORD;
     } bmx_cfg6;
 
-    /* 0x33c  reserved */
-    uint8_t RESERVED0x33c[4];
+    /* 0x33C : bmx_cfg7 */
+    union {
+        struct {
+            uint32_t reg_prot_req_sec               :  1; /* [    0],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_sec               :  1; /* [    1],          r,        0x0 */
+            uint32_t reg_prot_req_qspi              :  1; /* [    2],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_qspi              :  1; /* [    3],          r,        0x0 */
+            uint32_t reg_prot_req_emac_slv          :  1; /* [    4],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_emac_slv          :  1; /* [    5],          r,        0x0 */
+            uint32_t reg_prot_req_sdh_slv           :  1; /* [    6],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_sdh_slv           :  1; /* [    7],          r,        0x0 */
+            uint32_t reg_prot_req_sdu_slv           :  1; /* [    8],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_sdu_slv           :  1; /* [    9],          r,        0x0 */
+            uint32_t reg_prot_req_u2                :  1; /* [   10],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_u2                :  1; /* [   11],          r,        0x0 */
+            uint32_t reg_prot_req_emacB             :  1; /* [   12],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_emacB             :  1; /* [   13],          r,        0x0 */
+            uint32_t reg_prot_req_gmacA_slv         :  1; /* [   14],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_gmacA_slv         :  1; /* [   15],          r,        0x0 */
+            uint32_t reg_prot_req_gmacB_slv         :  1; /* [   16],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_gmacB_slv         :  1; /* [   17],          r,        0x0 */
+            uint32_t reg_prot_req_top2mini          :  1; /* [   18],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_top2mini          :  1; /* [   19],          r,        0x0 */
+            uint32_t reg_prot_req_dma               :  1; /* [   20],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_dma               :  1; /* [   21],          r,        0x0 */
+            uint32_t reg_prot_req_pwr               :  1; /* [   22],        r/w,        0x0 */
+            uint32_t sts_prot_rdy_pwr               :  1; /* [   23],          r,        0x0 */
+            uint32_t reserved_24_31                 :  8; /* [31:24],       rsvd,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } bmx_cfg7;
 
     /* 0x340 : audio_cfg0 */
     union {
@@ -10300,7 +10657,44 @@ struct  glb_reg {
     } sdh_cfg0;
 
     /* 0x434  reserved */
-    uint8_t RESERVED0x434[12];
+    uint8_t RESERVED0x434[4];
+
+    /* 0x438 : smih_io_dly_0 */
+    union {
+        struct {
+            uint32_t cr_smih_clk_i_inv              :  1; /* [    0],        r/w,        0x0 */
+            uint32_t cr_smih_clk_o_inv              :  1; /* [    1],        r/w,        0x0 */
+            uint32_t cr_smih_clk_i_dly              :  2; /* [ 3: 2],        r/w,        0x0 */
+            uint32_t cr_smih_clk_o_dly              :  2; /* [ 5: 4],        r/w,        0x0 */
+            uint32_t cr_smih_cmd_i_dly              :  2; /* [ 7: 6],        r/w,        0x0 */
+            uint32_t cr_smih_cmd_o_dly              :  2; /* [ 9: 8],        r/w,        0x0 */
+            uint32_t cr_smih_cmd_e_dly              :  2; /* [11:10],        r/w,        0x0 */
+            uint32_t reserved_12_15                 :  4; /* [15:12],       rsvd,        0x0 */
+            uint32_t cr_smih_d_0_i_dly              :  2; /* [17:16],        r/w,        0x0 */
+            uint32_t cr_smih_d_1_i_dly              :  2; /* [19:18],        r/w,        0x0 */
+            uint32_t cr_smih_d_2_i_dly              :  2; /* [21:20],        r/w,        0x0 */
+            uint32_t cr_smih_d_3_i_dly              :  2; /* [23:22],        r/w,        0x0 */
+            uint32_t reserved_24_31                 :  8; /* [31:24],       rsvd,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } smih_io_dly_0;
+
+    /* 0x43C : smih_io_dly_1 */
+    union {
+        struct {
+            uint32_t cr_smih_d_0_o_dly              :  2; /* [ 1: 0],        r/w,        0x0 */
+            uint32_t cr_smih_d_1_o_dly              :  2; /* [ 3: 2],        r/w,        0x0 */
+            uint32_t cr_smih_d_2_o_dly              :  2; /* [ 5: 4],        r/w,        0x0 */
+            uint32_t cr_smih_d_3_o_dly              :  2; /* [ 7: 6],        r/w,        0x0 */
+            uint32_t reserved_8_15                  :  8; /* [15: 8],       rsvd,        0x0 */
+            uint32_t cr_smih_d_0_e_dly              :  2; /* [17:16],        r/w,        0x0 */
+            uint32_t cr_smih_d_1_e_dly              :  2; /* [19:18],        r/w,        0x0 */
+            uint32_t cr_smih_d_2_e_dly              :  2; /* [21:20],        r/w,        0x0 */
+            uint32_t cr_smih_d_3_e_dly              :  2; /* [23:22],        r/w,        0x0 */
+            uint32_t reserved_24_31                 :  8; /* [31:24],       rsvd,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } smih_io_dly_1;
 
     /* 0x440 : sdio_cfg0 */
     union {
@@ -10338,8 +10732,54 @@ struct  glb_reg {
         uint32_t WORD;
     } sdio_cfg2;
 
-    /* 0x44c  reserved */
-    uint8_t RESERVED0x44c[68];
+    /* 0x44C : sdio_cfg3 */
+    union {
+        struct {
+            uint32_t cr_smid_cmd11_clk_stp_cnt      : 31; /* [30: 0],        r/w,    0x10000 */
+            uint32_t cr_smid_cmd11_sw_abort         :  1; /* [   31],        w1p,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } sdio_cfg3;
+
+    /* 0x450 : smid_io_dly_0 */
+    union {
+        struct {
+            uint32_t cr_smid_clk_inv                :  1; /* [    0],        r/w,        0x0 */
+            uint32_t reserved_1                     :  1; /* [    1],       rsvd,        0x0 */
+            uint32_t cr_smid_clk_dly                :  2; /* [ 3: 2],        r/w,        0x0 */
+            uint32_t reserved_4_5                   :  2; /* [ 5: 4],       rsvd,        0x0 */
+            uint32_t cr_smid_cmd_i_dly              :  2; /* [ 7: 6],        r/w,        0x0 */
+            uint32_t cr_smid_cmd_o_dly              :  2; /* [ 9: 8],        r/w,        0x0 */
+            uint32_t cr_smid_cmd_e_dly              :  2; /* [11:10],        r/w,        0x0 */
+            uint32_t reserved_12_15                 :  4; /* [15:12],       rsvd,        0x0 */
+            uint32_t cr_smid_d_0_i_dly              :  2; /* [17:16],        r/w,        0x0 */
+            uint32_t cr_smid_d_1_i_dly              :  2; /* [19:18],        r/w,        0x0 */
+            uint32_t cr_smid_d_2_i_dly              :  2; /* [21:20],        r/w,        0x0 */
+            uint32_t cr_smid_d_3_i_dly              :  2; /* [23:22],        r/w,        0x0 */
+            uint32_t reserved_24_31                 :  8; /* [31:24],       rsvd,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } smid_io_dly_0;
+
+    /* 0x454 : smid_io_dly_1 */
+    union {
+        struct {
+            uint32_t cr_smid_d_0_o_dly              :  2; /* [ 1: 0],        r/w,        0x0 */
+            uint32_t cr_smid_d_1_o_dly              :  2; /* [ 3: 2],        r/w,        0x0 */
+            uint32_t cr_smid_d_2_o_dly              :  2; /* [ 5: 4],        r/w,        0x0 */
+            uint32_t cr_smid_d_3_o_dly              :  2; /* [ 7: 6],        r/w,        0x0 */
+            uint32_t reserved_8_15                  :  8; /* [15: 8],       rsvd,        0x0 */
+            uint32_t cr_smid_d_0_e_dly              :  2; /* [17:16],        r/w,        0x0 */
+            uint32_t cr_smid_d_1_e_dly              :  2; /* [19:18],        r/w,        0x0 */
+            uint32_t cr_smid_d_2_e_dly              :  2; /* [21:20],        r/w,        0x0 */
+            uint32_t cr_smid_d_3_e_dly              :  2; /* [23:22],        r/w,        0x0 */
+            uint32_t reserved_24_31                 :  8; /* [31:24],       rsvd,        0x0 */
+        }BF;
+        uint32_t WORD;
+    } smid_io_dly_1;
+
+    /* 0x458  reserved */
+    uint8_t RESERVED0x458[56];
 
     /* 0x490 : tzc_cfg0 */
     union {

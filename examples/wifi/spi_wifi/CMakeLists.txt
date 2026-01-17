@@ -13,6 +13,7 @@ if (CONFIG_LPAPP)
                        app/src/app_spiwifi.c
                        app/src/atmodule/app_atmodule.c
                        app/src/pm/app_pm.c
+                       app/src/wifi/app_wifi_fhost.c
                        )
 else ()
 
@@ -21,6 +22,7 @@ sdk_add_compile_definitions(-DHIGH_PERFORMANCE_PBUF=1)
 target_sources(app PRIVATE
                    app/src/app_spiwifi.c
                    app/src/atmodule/app_atmodule.c
+                   app/src/wifi/app_wifi_fhost.c
                    # app/src/easyflash4/app_easyflash4.c
                    # app/src/atcmd/app_atcmd.c
                    # app/src/sample/app_sample.c

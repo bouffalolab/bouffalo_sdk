@@ -96,9 +96,9 @@ void mfg_config(void)
 
 }
 
-void wifi_event_handler(uint32_t code)
+void wifi_event_handler(async_input_event_t event, void *private_data)
 {
-    wifi_event_start(code);
+    wifi_event_start(event->code);
 }
 
 // WiFi Adapter Wrapper Functions
@@ -385,7 +385,8 @@ int at_wifi_mgmr_scan_ap_all(void *env, void *arg, void (*cb)(void *, void *, at
 
 int at_wifi_start(void)
 {
-    wifi_task_create();
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+    at_wifi_main_init();
     return 0;
 }
 

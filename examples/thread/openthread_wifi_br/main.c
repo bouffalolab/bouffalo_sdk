@@ -40,6 +40,7 @@
 
 #include "board.h"
 #include "shell.h"
+#include "async_event.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -66,6 +67,7 @@ static char otbr_wifi_pass[65];
  ****************************************************************************/
 extern void __libc_init_array(void);
 extern void shell_init_with_task(struct bflb_device_s *shell);
+extern void wifi_event_handler(async_input_event_t ev, void *priv);
 static void netif_status_callback(struct netif *netif);
 static void otr_start_default(void);
 
@@ -101,6 +103,8 @@ void wifi_start_firmware_task(void *param)
     wifi_mgmr_coex_enable(1);
 
     memset(otbr_getThreadNetif(), 0, sizeof(struct netif));
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
     wifi_task_create();
 
     LOG_I("Starting fhost ...\r\n");
@@ -109,9 +113,11 @@ void wifi_start_firmware_task(void *param)
     vTaskDelete(NULL);
 }
 
-void wifi_event_handler(uint32_t code)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
-    switch (code) {
+    uint32_t code = ev->code;
+
+     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
             wifi_mgmr_task_start();

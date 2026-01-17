@@ -192,7 +192,7 @@ static int hd_bootrom_get_boot_info(struct hd_sdio_card *card, hd_sdio_bootrom_t
     sdio_boot->chip_version = boot_info->version;
     sdio_boot->chip_sign_type = boot_info->sign_type[0];
     sdio_boot->chip_encry_type = boot_info->encry_type[0];
-    sdio_boot->chip_id = boot_info->chip_id;
+    memcpy(sdio_boot->chip_id, boot_info->chip_id, sizeof(boot_info->chip_id));
 
     SDIO_DRV_INFO(card, "get boot info OK, info data size: %d", ack->len);
     SDIO_DRV_INFO(card, "    chip_version: 0x%08X, ", sdio_boot->chip_version);

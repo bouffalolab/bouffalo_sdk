@@ -44,10 +44,15 @@
 #include "sec_mutex.h"
 
 /* Parameter validation macros based on platform_util.h */
+#ifdef CONFIG_MBEDTLS_V3
+#define AES_VALIDATE_RET( cond )
+#define AES_VALIDATE( cond )
+#else
 #define AES_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_AES_BAD_INPUT_DATA )
 #define AES_VALIDATE( cond )        \
     MBEDTLS_INTERNAL_VALIDATE( cond )
+#endif
 
 #if defined(MBEDTLS_PADLOCK_C) &&                      \
     ( defined(MBEDTLS_HAVE_X86) || defined(MBEDTLS_PADLOCK_ALIGN16) )

@@ -1141,6 +1141,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *co
     /* dsipll clock divider enable */
     tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
     tmpVal = BL_SET_REG_BIT(tmpVal, DSIPLL_POSTDIV_EN);
+    tmpVal = BL_SET_REG_BIT(tmpVal, DSI_MIPLPLL_CLK_EN);
     BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
 
     if (waitStable) {
@@ -1207,6 +1208,68 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_DSI_ESC_CLK(uint8_t enable, uint8_t sel, 
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_DSI_TXCLKESC_SEL, sel);
 
     BL_WR_REG(GLB_BASE, GLB_DIG_CLK_CFG3, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  GLB set DSI post clock
+ *
+ * @param  enable: Enable or disable
+ * @param  div: divider, only support even number from 2 to 254
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_DSI_POST_CLK(uint8_t enable, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    /* 1. disable post clock */
+    tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, DSIPLL_POSTDIV_EN);
+    BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+    /* 2. set post clock divider */
+    tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, DSIPLL_POSTDIV, div);
+    BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+    /* 1. enable post clock */
+    if (enable) {
+        tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
+        tmpVal = BL_SET_REG_BIT(tmpVal, DSIPLL_POSTDIV_EN);
+        BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+    }
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  GLB set DSI bit clock
+ *
+ * @param  enable: Enable or disable
+ * @param  div: divider, 0~15 is available, 0/1 is div1, 2/3 is div2, 4/5 is div4 ...
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_DSI_BIT_CLK(uint8_t enable, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    /* 1. disable bit clock */
+    tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, DSI_MIPLPLL_CLK_EN);
+    BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+    /* 2. set bit clock divider */
+    tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, DSIPLL_BICLK_DIV, div);
+    BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+    /* 1. enable bit clock */
+    if (enable) {
+        tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
+        tmpVal = BL_SET_REG_BIT(tmpVal, DSI_MIPLPLL_CLK_EN);
+        BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+    }
 
     return SUCCESS;
 }
@@ -5712,6 +5775,172 @@ BL_Err_Type GLB_SET_JTAG_CHAIN(uint8_t enable)
     return SUCCESS;
 }
 
+#if !defined(CPU_MODEL_A0)
+/****************************************************************************/ /**
+ * @brief  Set SDH Timing
+ *
+ * @param  timing: pointer of GLB_SDH_TIMING_Type structure
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void GLB_Set_SDH_Timing(GLB_SDH_TIMING_Type *timing)
+{
+    uint32_t tmpVal;
+    uint8_t val;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SMIH_IO_DLY_0);
+    if (timing->clock_i_inv) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_CR_SMIH_CLK_I_INV);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_CR_SMIH_CLK_I_INV);
+    }
+    if (timing->clock_o_inv) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_CR_SMIH_CLK_O_INV);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_CR_SMIH_CLK_O_INV);
+    }
+    val = (timing->clock_i_delay > 3) ? 3 : timing->clock_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_CLK_I_DLY, val);
+    val = (timing->clock_o_delay > 3) ? 3 : timing->clock_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_CLK_O_DLY, val);
+    val = (timing->cmd_i_delay > 3) ? 3 : timing->cmd_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_CMD_I_DLY, val);
+    val = (timing->cmd_o_delay > 3) ? 3 : timing->cmd_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_CMD_O_DLY, val);
+    val = (timing->cmd_e_delay > 3) ? 3 : timing->cmd_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_CMD_E_DLY, val);
+    val = (timing->data0_i_delay > 3) ? 3 : timing->data0_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_0_I_DLY, val);
+    val = (timing->data1_i_delay > 3) ? 3 : timing->data1_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_1_I_DLY, val);
+    val = (timing->data2_i_delay > 3) ? 3 : timing->data2_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_2_I_DLY, val);
+    val = (timing->data3_i_delay > 3) ? 3 : timing->data3_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_3_I_DLY, val);
+    BL_WR_REG(GLB_BASE, GLB_SMIH_IO_DLY_0, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SMIH_IO_DLY_1);
+    val = (timing->data0_o_delay > 3) ? 3 : timing->data0_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_0_O_DLY, val);
+    val = (timing->data1_o_delay > 3) ? 3 : timing->data1_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_1_O_DLY, val);
+    val = (timing->data2_o_delay > 3) ? 3 : timing->data2_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_2_O_DLY, val);
+    val = (timing->data3_o_delay > 3) ? 3 : timing->data3_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_3_O_DLY, val);
+    val = (timing->data0_e_delay > 3) ? 3 : timing->data0_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_0_E_DLY, val);
+    val = (timing->data1_e_delay > 3) ? 3 : timing->data1_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_1_E_DLY, val);
+    val = (timing->data2_e_delay > 3) ? 3 : timing->data2_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_2_E_DLY, val);
+    val = (timing->data3_e_delay > 3) ? 3 : timing->data3_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMIH_D_3_E_DLY, val);
+    BL_WR_REG(GLB_BASE, GLB_SMIH_IO_DLY_1, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  Set SDU Timing
+ *
+ * @param  timing: pointer of GLB_SDU_TIMING_Type structure
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void GLB_Set_SDU_Timing(GLB_SDU_TIMING_Type *timing)
+{
+    uint32_t tmpVal;
+    uint8_t val;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SMID_IO_DLY_0);
+    if (timing->clock_inv) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_CR_SMID_CLK_INV);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_CR_SMID_CLK_INV);
+    }
+    val = (timing->clock_delay > 3) ? 3 : timing->clock_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_CLK_DLY, val);
+    val = (timing->cmd_i_delay > 3) ? 3 : timing->cmd_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_CMD_I_DLY, val);
+    val = (timing->cmd_o_delay > 3) ? 3 : timing->cmd_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_CMD_O_DLY, val);
+    val = (timing->cmd_e_delay > 3) ? 3 : timing->cmd_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_CMD_E_DLY, val);
+    val = (timing->data0_i_delay > 3) ? 3 : timing->data0_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_0_I_DLY, val);
+    val = (timing->data1_i_delay > 3) ? 3 : timing->data1_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_1_I_DLY, val);
+    val = (timing->data2_i_delay > 3) ? 3 : timing->data2_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_2_I_DLY, val);
+    val = (timing->data3_i_delay > 3) ? 3 : timing->data3_i_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_3_I_DLY, val);
+    BL_WR_REG(GLB_BASE, GLB_SMID_IO_DLY_0, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SMID_IO_DLY_1);
+    val = (timing->data0_o_delay > 3) ? 3 : timing->data0_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_0_O_DLY, val);
+    val = (timing->data1_o_delay > 3) ? 3 : timing->data1_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_1_O_DLY, val);
+    val = (timing->data2_o_delay > 3) ? 3 : timing->data2_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_2_O_DLY, val);
+    val = (timing->data3_o_delay > 3) ? 3 : timing->data3_o_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_3_O_DLY, val);
+    val = (timing->data0_e_delay > 3) ? 3 : timing->data0_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_0_E_DLY, val);
+    val = (timing->data1_e_delay > 3) ? 3 : timing->data1_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_1_E_DLY, val);
+    val = (timing->data2_e_delay > 3) ? 3 : timing->data2_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_2_E_DLY, val);
+    val = (timing->data3_e_delay > 3) ? 3 : timing->data3_e_delay;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CR_SMID_D_3_E_DLY, val);
+    BL_WR_REG(GLB_BASE, GLB_SMID_IO_DLY_1, tmpVal);
+}
+#endif
+
+/****************************************************************************/ /**
+ * @brief  Enable slave bus protection for specified peripherals
+ *
+ * @param  slaves: Peripheral mask, use GLB_SLAVE_BUS_PROT_xxx macros combined with OR
+ *                 e.g. GLB_SLAVE_BUS_PROT_SEC | GLB_SLAVE_BUS_PROT_QSPI
+ *
+ * @return SUCCESS
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_Slave_Bus_Protect_Enable(uint32_t slaves)
+{
+    uint32_t tmpVal;
+
+    slaves &= GLB_SLAVE_BUS_PROT_ALL;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_BMX_CFG7);
+    tmpVal |= slaves;
+    BL_WR_REG(GLB_BASE, GLB_BMX_CFG7, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Disable slave bus protection for specified peripherals
+ *
+ * @param  slaves: Peripheral mask, use GLB_SLAVE_BUS_PROT_xxx macros combined with OR
+ *                 e.g. GLB_SLAVE_BUS_PROT_SEC | GLB_SLAVE_BUS_PROT_QSPI
+ *
+ * @return SUCCESS
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_Slave_Bus_Protect_Disable(uint32_t slaves)
+{
+    uint32_t tmpVal;
+
+    slaves &= GLB_SLAVE_BUS_PROT_ALL;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_BMX_CFG7);
+    tmpVal &= ~slaves;
+    BL_WR_REG(GLB_BASE, GLB_BMX_CFG7, tmpVal);
+
+    return SUCCESS;
+}
 /*@} end of group GLB_Public_Functions */
 
 /*@} end of group GLB */

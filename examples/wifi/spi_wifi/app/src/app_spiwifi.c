@@ -19,9 +19,6 @@
 #define DBG_TAG "appspiwifi"
 #include "log.h"
 
-#define WIFI_STACK_SIZE  (1536)
-#define TASK_PRIORITY_FW (16)
-
 int app_spiwifi_init(void)
 {
     /* RF param init */
@@ -33,25 +30,11 @@ int app_spiwifi_init(void)
     /* TCP/IP stack init */
     tcpip_init(NULL, NULL);
 
-    /* enable wifi clock */
-    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_IP_WIFI_PHY | GLB_AHB_CLOCK_IP_WIFI_MAC_PHY | GLB_AHB_CLOCK_IP_WIFI_PLATFORM);
-    GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_WIFI);
-
-    /* Enable wifi irq */
-    extern void interrupt0_handler(void);
-    bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
-    bflb_irq_enable(WIFI_IRQn);
-
     /* Enable easyflash(littlefs) */
     bflb_mtd_init();
     easyflash_init();
 
-    #ifdef LP_APP
-    app_pm_init();
-    #else
-    app_atmodule_init();
-    #endif
-
+    app_wifi_init();
     return 0;
 }
 

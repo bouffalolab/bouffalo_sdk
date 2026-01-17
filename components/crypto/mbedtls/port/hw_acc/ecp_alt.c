@@ -86,8 +86,9 @@
 #include "mbedtls/threading.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error.h"
+#ifndef CONFIG_MBEDTLS_V3
 #include "mbedtls/bn_mul.h"
-
+#endif
 #include "ecp_invasive.h"
 
 #include <string.h>
@@ -131,14 +132,20 @@ void Sec_Eng_PKA_LCMP(uint8_t *out, uint8_t s0t, uint8_t s0i, uint8_t s1t, uint8
 #define CREG(d)         Sec_Eng_PKA_CREG( s, d, mpi_reg_size_to_words( s ), 1 )
 
 /* Parameter validation macros based on platform_util.h */
+#ifdef CONFIG_MBEDTLS_V3
+#define ECP_VALIDATE_RET( cond )
+#define ECP_VALIDATE( cond )
+#else
 #define ECP_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
 #define ECP_VALIDATE( cond )        \
     MBEDTLS_INTERNAL_VALIDATE( cond )
+#endif
 
 #include "mbedtls/platform.h"
-
+#ifndef CONFIG_MBEDTLS_V3
 #include "mbedtls/ecp_internal.h"
+#endif
 
 #if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
 #if defined(MBEDTLS_HMAC_DRBG_C)
@@ -2653,7 +2660,12 @@ cleanup:
 /*
  * Check a public-private key pair
  */
+#ifdef CONFIG_MBEDTLS_V3
+int mbedtls_ecp_check_pub_priv( const mbedtls_ecp_keypair *pub, const mbedtls_ecp_keypair *prv,
+int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+#else
 int mbedtls_ecp_check_pub_priv( const mbedtls_ecp_keypair *pub, const mbedtls_ecp_keypair *prv )
+#endif
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_ecp_point Q;

@@ -25,6 +25,11 @@ else ()
                        )
 endif()
 
+if (CONFIG_WL80211)
+    target_sources(app PRIVATE app/src/wifi/app_wifi_wl80211.c)
+else ()
+    target_sources(app PRIVATE app/src/wifi/app_wifi_fhost.c)
+endif()
 target_sources(app PRIVATE boards/${CHIP}/board_gpio_overlay.c)
 
 sdk_add_include_directories(.)

@@ -36,6 +36,9 @@ extern uint32_t __psram_data_end__;
 extern uint32_t __psram_noinit_data_start__;
 extern uint32_t __psram_noinit_data_end__;
 
+extern uint32_t _heap_wifi_start;
+extern uint32_t _heap_wifi_size;
+
 #ifdef CONFIG_CONSOLE_WO
 static struct bflb_device_s *wo;
 #else
@@ -377,6 +380,7 @@ void ram_heap_init(void)
     /* ocram heap init */
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+    mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, (uintptr_t)&_heap_wifi_size);
 
 #ifdef CONFIG_PSRAM
     /* psram init */

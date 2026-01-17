@@ -172,7 +172,7 @@ static void notify_user_(bl_wps_event_t event, void *payload)
     }
 }
 
-static void wifi_event_cb_(input_event_t *event, void *private_data)
+static void wifi_event_cb_(async_input_event_t *event, void *private_data)
 {
     struct wps_sm *sm = (struct wps_sm *)private_data;
     wps_evq_msg_t msg = {};

@@ -42,7 +42,7 @@ extern "C" {
 
 int platform_get_mac(uint8_t mac[6])
 {
-    if (0 == bflb_efuse_read_mac_address_opt(0, mac, 1)) {
+    if (0 == mfg_media_read_macaddr_with_lock(mac, 1)) {
         return 0;
     }
     return -1;

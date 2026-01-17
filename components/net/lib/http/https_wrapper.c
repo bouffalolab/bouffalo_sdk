@@ -26,7 +26,7 @@
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/x509_crt.h"
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 
 #if defined(MBEDTLS_THREADING_ALT)
 #include "mbedtls/threading.h"
@@ -245,7 +245,11 @@ static void *ssl_connect(int fd, const http_wrapper_ssl_param_t *param)
     }
 
     if (param->private_cert && param->private_cert_len > 0) {
+#ifdef CONFIG_MBEDTLS_V3
+        ret = mbedtls_pk_parse_key(&ssl_param->pkey, (unsigned char *)param->private_cert, param->private_cert_len, NULL, 0, NULL, NULL);
+#else
         ret = mbedtls_pk_parse_key(&ssl_param->pkey, (unsigned char *)param->private_cert, param->private_cert_len, NULL, 0);
+#endif
         if (ret != 0) {
             LOG_DBG("[MBEDTLS] ssl connect: x509 parse failed- 0x%x\r\n", -ret);
             goto ERROR;
@@ -292,9 +296,7 @@ static void *ssl_connect(int fd, const http_wrapper_ssl_param_t *param)
         goto ERROR;
     }
 
-    if (param->sni) {
-        mbedtls_ssl_set_hostname(&ssl_param->ssl, param->sni);
-    }
+    mbedtls_ssl_set_hostname(&ssl_param->ssl, param->sni);
     mbedtls_ssl_set_bio(&ssl_param->ssl, &ssl_param->net, ssl_data_send, ssl_data_recv, NULL);
 
     /*

@@ -11,7 +11,7 @@
 
 #include <bflb_efuse.h>
 #include <bflb_sec_trng.h>
-
+#include "wifi_mgmr_ext.h"
 #include "mm.h"
 
 #if defined(BL616)
@@ -31,9 +31,6 @@ extern int32_t lpfw_calculate_beacon_delay(lp_fw_bcn_delay_t *p_bcn_delay, uint6
 extern int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu);
 extern int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode);
 #endif
-
-/* User defined wifi event handler */
-extern void wifi_event_handler(uint32_t code1, uint32_t code2);
 
 /* FIXME: Registers should not be read directly */
 /// Address of the MONOTONIC_COUNTER_2_LO register
@@ -120,10 +117,21 @@ static void async_event_handler(void *arg1, uint32_t arg2)
 {
     /* XXX: Prevents blocking operations in the Timer context. */
     vTaskSuspendAll();
-
-    wifi_event_handler(arg2, (uint32_t)arg1);
-
+    async_event_loop();
     xTaskResumeAll();
+}
+
+static void async_event_loop_wake(void)
+{
+    BaseType_t xReturn;
+    TickType_t wait = portMAX_DELAY;
+
+    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
+        wait = 0;
+    }
+
+    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
+    configASSERT(xReturn == pdPASS);
 }
 
 /**
@@ -137,10 +145,8 @@ static void async_event_handler(void *arg1, uint32_t arg2)
 
 void platform_post_event(int catalogue, int code1, int code2)
 {
-    BaseType_t xReturn;
-
-    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)code2, code1, portMAX_DELAY);
-    configASSERT(xReturn == pdPASS);
+    async_event_init(async_event_loop_wake);
+    async_post_event(EV_WIFI, code1, code2);
 }
 
 /**

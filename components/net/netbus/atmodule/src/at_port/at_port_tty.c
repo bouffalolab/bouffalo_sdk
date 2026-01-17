@@ -17,10 +17,11 @@
 
 #define AT_PORT_PRINTF printf
 
-extern netbus_tty_ctx_t at_tty;
+netbus_tty_ctx_t at_tty;
 
 int at_port_init(void)
 {
+    netbus_tty_init(&at_tty, 1024, 1024);
     return 1;
 }
 

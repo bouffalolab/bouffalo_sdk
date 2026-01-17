@@ -73,7 +73,7 @@ static void evt_handler_wrapper(void (*handler)(void))
     vTaskDelete(NULL);
 }
 
-static void wl80211_event_handler(input_event_t ev, void *priv)
+static void wl80211_event_handler(async_input_event_t ev, void *priv)
 {
     void (*handler)(void) = NULL;
     uint16_t stack_size = 265;
@@ -101,7 +101,7 @@ static void wl80211_event_handler(input_event_t ev, void *priv)
     }
 }
 
-static void wifi_mgmr_event_handler(input_event_t ev, void *priv)
+static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
 {
     wifi_event_start(at_wifi_event_code_get(ev->code));
 }
@@ -115,44 +115,12 @@ struct netif *at_wifi_netif_get(uint8_t vif_idx)
     }
 }
 
-/* async event handler */
-static void async_event_handler(void *arg1, uint32_t arg2)
-{
-    vTaskSuspendAll();
-    async_event_loop();
-    xTaskResumeAll();
-}
-
-static void async_event_loop_wake(void)
-{
-    BaseType_t xReturn;
-    TickType_t wait = portMAX_DELAY;
-
-    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
-        wait = 0;
-    }
-
-    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
-    configASSERT(xReturn == pdPASS);
-}
-
 int at_wifi_start(void)
 {
-    async_event_init(async_event_loop_wake);
-
-    /* Start Wifi_FW */
-    wifi_task_create();
-
-    wl80211_init();
-
-    //wifi_mgmr_init();
-
     async_register_event_filter(EV_WL80211, wl80211_event_handler, NULL);
     async_register_event_filter(EV_WIFI, wifi_mgmr_event_handler, NULL);
 
-    async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
-    async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
-
+    at_wifi_main_init();
     return 0;
 }
 

@@ -6,6 +6,9 @@
 
 __attribute__((weak)) void vAssertCalled(void)
 {
+#if defined(CONFIG_BACKTRACE)
+    backtrace_now();
+#endif
     printf("vAssertCalled\r\n");
     abort();
 }

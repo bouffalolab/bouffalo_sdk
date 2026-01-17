@@ -1,4 +1,7 @@
 # Changes
+## 2026-01-14
+1.[blestack] Add statistics mode to BLE scan CLI command.
+
 ## 2026-01-07
 1.Save local irk to flash.
 
