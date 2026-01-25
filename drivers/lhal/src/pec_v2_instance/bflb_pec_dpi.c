@@ -60,6 +60,7 @@ int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi)
     struct bflb_pec_cfg_s cfg;
     uint8_t mem;
     int ret;
+    uint8_t pclk_sampling, pclk_modify;
 
     ret = bflb_pec_memory_size_check(dev, dpi->mem, 64, &mem);
     if (ret != PEC_STS_OK) {
@@ -134,6 +135,13 @@ int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi)
     dpi->level_vsync = dpi->level_vsync ? 1 : 0;
     dpi->level_hsync = dpi->level_hsync ? 1 : 0;
     dpi->level_de = dpi->level_de ? 1 : 0;
+    if (dpi->level_pclk) {
+        pclk_sampling = 3;
+        pclk_modify = 2;
+    } else {
+        pclk_sampling = 2;
+        pclk_modify = 3;
+    }
 
     dpi->height = ((dpi->height ? dpi->height : 1) > 65535) ? 65535 : dpi->height;
     dpi->width = ((dpi->width ? dpi->width : 1) > 65535) ? 65535 : dpi->width;
@@ -149,45 +157,45 @@ int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi)
 
     /* VSync */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_V_RECUR, PARA_V_CFG, PARA_BIT_POS_SYNC, PARA_BIT_LEN_SYNC, pec_instr_side(0, 0, 2))); mem++; /* get vsync length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_VSYNC, dpi->level_vsync, pec_instr_side(2, 0, 2))); mem++; /* set vsync pin level */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_VSYNC, dpi->level_vsync, pec_instr_side(pclk_modify, 0, 2))); mem++; /* set vsync pin level */
     /* VSync: HSync */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_SYNC, PARA_BIT_LEN_SYNC, pec_instr_side(0, 0, 2))); mem++; /* get hsync length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hsync */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hsync */
     /* VSync: HBP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_BP, PARA_BIT_LEN_BP, pec_instr_side(0, 0, 2))); mem++; /* get hbp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level toggle */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hbp */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level toggle */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hbp */
     /* VSync: HACT */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_ACTURAL, PARA_BIT_POS_H, PARA_BIT_LEN_H, pec_instr_side(0, 0, 2))); mem++; /* get picture width */
-    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(2, 1, 2))); mem++; /* nop */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of picture width */
+    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(pclk_modify, 1, 2))); mem++; /* nop */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of picture width */
     /* VSync: HFP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_FP, PARA_BIT_LEN_FP, pec_instr_side(0, 0, 2))); mem++; /* get hfp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(2, 1, 2))); mem++; /* nop */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hfp */
+    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(pclk_modify, 1, 2))); mem++; /* nop */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hfp */
     /* VSync recurse */
     bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 12, PARA_V_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(0, 0, 2))); mem++; /* recurse of vsync, jump to 'VSync: HSync' */
 
     /* VBP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_V_RECUR, PARA_V_CFG, PARA_BIT_POS_BP, PARA_BIT_LEN_BP, pec_instr_side(0, 0, 2))); mem++; /* get vbp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_VSYNC, !(dpi->level_vsync), pec_instr_side(2, 0, 2))); mem++; /* set vsync pin level toggle */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_VSYNC, !(dpi->level_vsync), pec_instr_side(pclk_modify, 0, 2))); mem++; /* set vsync pin level toggle */
     /* VBP: HSync */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_SYNC, PARA_BIT_LEN_SYNC, pec_instr_side(0, 0, 2))); mem++; /* get hsync length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hsync */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hsync */
     /* VBP: HBP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_BP, PARA_BIT_LEN_BP, pec_instr_side(0, 0, 2))); mem++; /* get hbp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level toggle */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hbp */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level toggle */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hbp */
     /* VBP: HACT */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_ACTURAL, PARA_BIT_POS_H, PARA_BIT_LEN_H, pec_instr_side(0, 0, 2))); mem++; /* get picture width */
-    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(2, 1, 2))); mem++; /* nop */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of picture width */
+    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(pclk_modify, 1, 2))); mem++; /* nop */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of picture width */
     /* VBP: HFP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_FP, PARA_BIT_LEN_FP, pec_instr_side(0, 0, 2))); mem++; /* get hfp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(2, 1, 2))); mem++; /* nop */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hfp */
+    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(pclk_modify, 1, 2))); mem++; /* nop */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hfp */
     /* VBP recurse */
     bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 12, PARA_V_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(0, 0, 2))); mem++; /* recurse of vbp, jump to 'VBP: HSync' */
 
@@ -195,22 +203,22 @@ int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi)
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_V_RECUR, PARA_ACTURAL, PARA_BIT_POS_V, PARA_BIT_LEN_V, pec_instr_side(0, 0, 2))); mem++; /* get picture height */
     /* VACT: HSync */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_SYNC, PARA_BIT_LEN_SYNC, pec_instr_side(0, 0, 2))); mem++; /* get hsync length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hsync */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hsync */
     /* VACT: HBP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_BP, PARA_BIT_LEN_BP, pec_instr_side(0, 0, 2))); mem++; /* get hbp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level toggle */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hbp */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level toggle */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hbp */
     /* VACT: HACT */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_ACTURAL, PARA_BIT_POS_H, PARA_BIT_LEN_H, pec_instr_side(0, 0, 2))); mem++; /* get picture width */
     bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_DE, dpi->level_de, pec_instr_side(0, 0, 2))); mem++; /* set de pin level */
-    bflb_pec_mem_write(dev, mem, pec_instr_PULLB(pec_instr_side(0, 0, 2))); mem++;
-    bflb_pec_mem_write(dev, mem, pec_instr_OUTPINVAL(0, dpi->pin_data_count[0], pec_instr_side(2, 1, 2))); mem++; /* output all data in only period */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 2, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 0, 2))); mem++; /* recurse of picture width */
+    bflb_pec_mem_write(dev, mem, pec_instr_PULLEB(pec_instr_side(0, 0, 2))); mem++;
+    bflb_pec_mem_write(dev, mem, pec_instr_OUTPINVAL(0, dpi->pin_data_count[0], pec_instr_side(pclk_modify, 1, 2))); mem++; /* output all data in only period */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 2, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 0, 2))); mem++; /* recurse of picture width */
     /* VACT: HFP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_FP, PARA_BIT_LEN_FP, pec_instr_side(0, 0, 2))); mem++; /* get hfp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_DE, !(dpi->level_de), pec_instr_side(2, 1, 2))); mem++; /* set de pin level toggle */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hfp */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_DE, !(dpi->level_de), pec_instr_side(pclk_modify, 1, 2))); mem++; /* set de pin level toggle */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hfp */
     /* VACT recurse */
     bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 14, PARA_V_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(0, 0, 2))); mem++; /* recurse of vact, jump to 'VACT: HSync' */
 
@@ -218,20 +226,20 @@ int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi)
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_V_RECUR, PARA_V_CFG, PARA_BIT_POS_FP, PARA_BIT_LEN_FP, pec_instr_side(0, 0, 2))); mem++; /* get vfp length */
     /* VFP: HSync */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_SYNC, PARA_BIT_LEN_SYNC, pec_instr_side(0, 0, 2))); mem++; /* get hsync length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hsync */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, dpi->level_hsync, pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hsync */
     /* VFP: HBP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_BP, PARA_BIT_LEN_BP, pec_instr_side(0, 0, 2))); mem++; /* get hbp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(2, 1, 2))); mem++; /* set hsync pin level toggle */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hbp */
+    bflb_pec_mem_write(dev, mem, pec_instr_SET(PIN_SET_HSYNC, !(dpi->level_hsync), pec_instr_side(pclk_modify, 1, 2))); mem++; /* set hsync pin level toggle */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hbp */
     /* VFP: HACT */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_ACTURAL, PARA_BIT_POS_H, PARA_BIT_LEN_H, pec_instr_side(0, 0, 2))); mem++; /* get picture width */
-    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(2, 1, 2))); mem++; /* nop */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of picture width */
+    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(pclk_modify, 1, 2))); mem++; /* nop */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of picture width */
     /* VFP: HFP */
     bflb_pec_mem_write(dev, mem, pec_instr_MOV(PARA_H_RECUR, PARA_H_CFG, PARA_BIT_POS_FP, PARA_BIT_LEN_FP, pec_instr_side(0, 0, 2))); mem++; /* get hfp length */
-    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(2, 1, 2))); mem++; /* nop */
-    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(3, 1, 2))); mem++; /* recurse of hfp */
+    bflb_pec_mem_write(dev, mem, pec_instr_NOP(PEC_R0, pec_instr_side(pclk_modify, 1, 2))); mem++; /* nop */
+    bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 1, PARA_H_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(pclk_sampling, 1, 2))); mem++; /* recurse of hfp */
     /* VFP recurse */
     bflb_pec_mem_write(dev, mem, pec_instr_JRNZ(mem - 12, PARA_V_RECUR, PEC_INSTR_CMP_DEC, pec_instr_side(0, 0, 2))); mem++; /* recurse of vfp, jump to 'VFP: HSync' */
 

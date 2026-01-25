@@ -1,3 +1,4 @@
+#include "macsw_default_config.h"
 #define CFG_ADHOC_ENABLE
 #ifndef CFG_RAW_SEND_ENABLE
 #define CFG_RAW_SEND_ENABLE

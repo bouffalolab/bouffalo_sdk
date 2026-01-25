@@ -9,11 +9,12 @@
  ****************************************************************************************
  */
 
-#ifndef _RTOS_AL_
-#define _RTOS_AL_
+#ifndef _WL80211_PLATFORM_H_
+#define _WL80211_PLATFORM_H_
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "wl80211.h"
 
 extern const struct platform_feature {
     uint32_t he_mcs  : 2;
@@ -188,8 +189,8 @@ void rtos_timeouts_start(unsigned int delay);
  ****************************************************************************************
  */
 
-int platform_get_mac(uint8_t *mac);
+int platform_get_mac(enum wl80211_vif_type vif, uint8_t mac[6]);
 int platform_feature_index(void);
 #define WL80211_FEATURE(feat) (wl80211_platform_feature[platform_feature_index()].feat)
 
-#endif /* _RTOS_AL_ */
+#endif /* _WL80211_PLATFORM_H_ */

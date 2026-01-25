@@ -902,6 +902,11 @@
     */
     #define LCD_DPI_V2_TEST_PATTERN     0
 
+    /* Enable OSD layer switch for screen buffer updates
+        When enabled, OSD layer is used for displaying LVGL content on top
+        of the base layer (which can show MJDEC YUV output) */
+    #define LCD_DPI_V2_USE_OSD_LAYER_SWITCH 0
+
 
 #endif
 

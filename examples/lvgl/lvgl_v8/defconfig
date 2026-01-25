@@ -1,4 +1,5 @@
-CONFIG_PSRAM        =n
+CONFIG_PSRAM                =n
+CONFIG_PSRAM_FOR_AP_SIZE = 0x500000
 
 CONFIG_BFLB_LOG     =n
 

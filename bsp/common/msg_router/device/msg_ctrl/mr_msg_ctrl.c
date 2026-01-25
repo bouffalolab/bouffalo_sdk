@@ -93,14 +93,14 @@ int mr_msg_host_reset_cb(mr_msg_ctrl_priv_t *msg_ctrl)
 int mr_msg_upld_send_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success)
 {
     int ret = 0;
-    mr_msg_t *msg_packt = (mr_msg_t *)frame_elem->buff_addr;
+    mr_msg_t *msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
 
     if (success == false) {
         goto err_exit;
     }
 
-    if (msg_packt->tag >= MR_MSG_TAG_MAX) {
-        LOG_E("msg upld send err: tag 0x%02X is invalid, drop it!\r\n", msg_packt->tag);
+    if (msg_pkt->tag >= MR_MSG_TAG_MAX) {
+        LOG_E("msg upld send err: tag 0x%02X is invalid, drop it!\r\n", msg_pkt->tag);
         goto err_exit;
     }
 
@@ -134,20 +134,20 @@ err_exit:
 int mr_msg_dnld_recv_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success)
 {
     int ret = 0;
-    mr_msg_t *msg_packt = (mr_msg_t *)frame_elem->buff_addr;
+    mr_msg_t *msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
 
     if (success == false) {
         goto err_exit;
     }
 
-    if (msg_packt->tag >= MR_MSG_TAG_MAX) {
-        LOG_E("msg dnld recv err: tag 0x%02X is invalid, drop it!\r\n", msg_packt->tag);
+    if (msg_pkt->tag >= MR_MSG_TAG_MAX) {
+        LOG_E("msg dnld recv err: tag 0x%02X is invalid, drop it!\r\n", msg_pkt->tag);
         goto err_exit;
     }
 
-    if (frame_elem->data_size < msg_packt->len + sizeof(mr_msg_t)) {
+    if (frame_elem->data_size < msg_pkt->len + sizeof(mr_msg_t)) {
         LOG_E("msg dnld recv err: frame size (%d < %d) is too small for tag 0x%02X, drop it!\r\n",
-              frame_elem->data_size, msg_packt->len + sizeof(mr_msg_t), msg_packt->tag);
+              frame_elem->data_size, msg_pkt->len + sizeof(mr_msg_t), msg_pkt->tag);
         goto err_exit;
     }
 
@@ -237,16 +237,16 @@ int mr_msg_ctrl_dnld_free(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_e
 int mr_msg_ctrl_upld_send(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem)
 {
     int ret;
-    mr_msg_t *msg_packt = (mr_msg_t *)frame_elem->buff_addr;
+    mr_msg_t *msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
 
-    if (msg_packt->tag >= MR_MSG_TAG_MAX) {
-        LOG_E("msg send error: tag 0x%02X is invalid, drop it!\r\n", msg_packt->tag);
+    if (msg_pkt->tag >= MR_MSG_TAG_MAX) {
+        LOG_E("msg send error: tag 0x%02X is invalid, drop it!\r\n", msg_pkt->tag);
         return -1;
     }
 
-    if (frame_elem->data_size < msg_packt->len + sizeof(mr_msg_t)) {
+    if (frame_elem->data_size < msg_pkt->len + sizeof(mr_msg_t)) {
         LOG_E("msg send err: frame size (%d < %d) is too small for tag 0x%02X !\r\n", frame_elem->data_size,
-              msg_packt->len + sizeof(mr_msg_t), msg_packt->tag);
+              msg_pkt->len + sizeof(mr_msg_t), msg_pkt->tag);
 
         return -1;
     }
@@ -277,7 +277,7 @@ static void msg_proc_task(void *arg)
     mr_msg_ctrl_priv_t *msg_ctrl = (mr_msg_ctrl_priv_t *)arg;
 
     mr_frame_elem_t *frame_elem = NULL;
-    mr_msg_t *msg_packt = NULL;
+    mr_msg_t *msg_pkt = NULL;
 
     mr_msg_cb_t msg_cb = NULL;
     void *msg_arg = NULL;
@@ -388,13 +388,13 @@ wait_ready:
                 /* Queue empty, clear event flag */
                 notified_value &= ~notified_mask;
             } else {
-                msg_packt = (mr_msg_t *)frame_elem->buff_addr;
-                msg_cb = msg_ctrl->mr_msg_upld_send_cb[msg_packt->tag];
-                msg_arg = msg_ctrl->mr_msg_upld_send_arg[msg_packt->tag];
+                msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
+                msg_cb = msg_ctrl->mr_msg_upld_send_cb[msg_pkt->tag];
+                msg_arg = msg_ctrl->mr_msg_upld_send_arg[msg_pkt->tag];
                 if (msg_cb != NULL) {
                     ret = msg_cb(frame_elem, msg_arg);
                     if (ret < 0) {
-                        LOG_E("msg upld send err: tag 0x%02X callback failed, drop it!\r\n", msg_packt->tag);
+                        LOG_E("msg upld send err: tag 0x%02X callback failed, drop it!\r\n", msg_pkt->tag);
                         mr_frame_queue_free_elem(frame_elem);
                     }
                 } else {
@@ -412,14 +412,14 @@ wait_ready:
                 /* Queue empty, clear event flag */
                 notified_value &= ~notified_mask;
             } else {
-                msg_packt = (mr_msg_t *)frame_elem->buff_addr;
-                msg_cb = msg_ctrl->mr_msg_dnld_recv_cb[msg_packt->tag];
-                msg_arg = msg_ctrl->mr_msg_dnld_recv_arg[msg_packt->tag];
+                msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
+                msg_cb = msg_ctrl->mr_msg_dnld_recv_cb[msg_pkt->tag];
+                msg_arg = msg_ctrl->mr_msg_dnld_recv_arg[msg_pkt->tag];
                 if (msg_cb != NULL) {
                     /* Call the registered callback */
                     ret = msg_cb(frame_elem, msg_arg);
                     if (ret < 0) {
-                        LOG_E("msg dnld recv err: tag 0x%02X callback failed, drop it!\r\n", msg_packt->tag);
+                        LOG_E("msg dnld recv err: tag 0x%02X callback failed, drop it!\r\n", msg_pkt->tag);
                         mr_frame_queue_free_elem(frame_elem);
                     }
                 } else {
@@ -477,11 +477,13 @@ mr_msg_ctrl_priv_t *mr_msg_ctrl_init(mr_msg_ctrl_cfg_t *cfg)
     msg_ctrl->cfg = *cfg;
 
     /* Create download frame queue controller */
-    mr_frame_queue_ctrl_init_cfg_t dnld_frame_cfg = { .frame_buff = msg_ctrl->cfg.dnld_frame_buff,
-                                                   .frame_type = msg_ctrl->cfg.dnld_frame_type,
-                                                   .frame_elem_cnt = msg_ctrl->cfg.dnld_frame_count,
-                                                   .frame_elem_size = msg_ctrl->cfg.dnld_frame_size,
-                                                   .name = msg_ctrl->cfg.name };
+    mr_frame_queue_ctrl_init_cfg_t dnld_frame_cfg = {
+        .frame_buff = msg_ctrl->cfg.dnld_frame_buff,
+        .frame_type = msg_ctrl->cfg.dnld_frame_type,
+        .frame_elem_cnt = msg_ctrl->cfg.dnld_frame_count,
+        .frame_elem_size = msg_ctrl->cfg.dnld_frame_size,
+        .name = msg_ctrl->cfg.name
+    };
     msg_ctrl->dnld_queue_ctrl = mr_frame_queue_create(&dnld_frame_cfg);
     if (msg_ctrl->dnld_queue_ctrl == NULL) {
         LOG_E("Failed to create download queue controller\r\n");

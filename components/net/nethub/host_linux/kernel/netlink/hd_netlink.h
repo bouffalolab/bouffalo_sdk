@@ -24,7 +24,8 @@
 /** Netlink multicast group */
 #define HD_NETLINK_MCGRP       (1)
 /** Maximum message size */
-#define HD_NETLINK_MAX_MSGLEN  (1024+4)
+#define HD_NETLINK_RAWMTU      (1500)                /* MTU */
+#define HD_NETLINK_MAX_MSGLEN  (HD_NETLINK_RAWMTU+4) /* MTU + type(4) */
 /** Maximum pending queue depth (0 = unlimited) */
 #define HD_NETLINK_PENDING_MAX (128)
 /** @} */

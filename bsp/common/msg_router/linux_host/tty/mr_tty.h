@@ -32,7 +32,7 @@
 #define MR_TTY_MAJOR           0                      /**< Major number (0 = dynamic allocation) */
 #define MR_TTY_TYPE            TTY_DRIVER_TYPE_SERIAL /**< TTY driver type */
 #define MR_TTY_SUBTYPE         SERIAL_TYPE_NORMAL     /**< TTY driver subtype */
-#define MR_TTY_FLAGS           (TTY_DRIVER_REAL_RAW | TTY_DRIVER_DYNAMIC_DEV | TTY_DRIVER_UNNUMBERED_NODE)
+#define MR_TTY_FLAGS           (TTY_DRIVER_REAL_RAW | TTY_DRIVER_DYNAMIC_DEV)
 
 /** TTY buffer sizes */
 #define MR_TTY_MAX_PACKET_SIZE (512 * 3)                     /**< Maximum packet size over transport */
@@ -90,16 +90,16 @@ enum {
 #pragma pack(push, 1)
 
 /**
- * @struct mr_tty_msg_packt
+ * @struct mr_tty_msg_pkt
  * @brief TTY message packet header with flow control
  * @details Header structure for TTY message packets sent over transport
- *          Similar to mr_eth_msg_packt but for TTY communication
+ *          Similar to mr_eth_msg_pkt but for TTY communication
  */
-struct mr_tty_msg_packt {
-    struct mr_msg_packt msg_packt; /**< Base message packet header */
+struct mr_tty_msg_pkt {
+    struct mr_msg_pkt msg_pkt; /**< Base message packet header */
 
-    uint8_t reseved[1]; /**< Alignment padding */
-    uint8_t flag;       /**< Packet flag (see MR_TTY_FLAG_*) */
+    uint8_t reserved[1]; /**< Alignment padding */
+    uint8_t flag;        /**< Packet flag (see MR_TTY_FLAG_*) */
 
     uint8_t credit_update_flag; /**< Credit update flag */
     uint8_t credit_limit_cnt;   /**< Credit limit counter */
@@ -126,20 +126,19 @@ struct mr_tty_priv {
     /** @name TTY Port and Device
      * @{
      */
-    struct tty_port port;      /**< Standard TTY port structure */
-    struct device *tty_dev;    /**< TTY device (for dynamic registration) */
-    bool is_device_registered; /**< Device registration status */
-    bool is_open;              /**< Port open status */
+    struct tty_port port;   /**< Standard TTY port structure */
+    struct device *tty_dev; /**< TTY device (for dynamic registration) */
+    bool is_open;           /**< Port open status */
     /** @} */
 
     /** @name State Machine
      * @{
      */
-    int tty_status;                      /**< Current TTY status */
-    struct task_struct *daemon_thread;   /**< Background daemon thread */
-    struct sk_buff_head thread_skb_head; /**< Thread SKB queue */
-    wait_queue_head_t waitq;             /**< Thread wait queue */
-    bool thread_condition;               /**< Thread wakeup condition */
+    int tty_status;                       /**< Current TTY status */
+    struct task_struct *daemon_thread;    /**< Background daemon thread */
+    struct sk_buff_head receive_skb_head; /**< SKB queue for packets received from device */
+    wait_queue_head_t waitq;              /**< Thread wait queue */
+    bool thread_condition;                /**< Thread wakeup condition */
     /** @} */
 
     /** @name Flow Control
@@ -173,11 +172,11 @@ struct mr_tty_priv {
 /* Convenience macros for data length calculation */
 /**
  * @brief Calculate data length from message packet length
- * @param[in] msg_packt_len Total length field from mr_msg_packt structure
+ * @param[in] msg_pkt_len Total length field from mr_msg_pkt structure
  * @return Length of data payload (excluding TTY message header)
  */
-#define MR_TTY_GET_DATA_LEN(msg_packt_len) \
-    ((msg_packt_len) - (sizeof(struct mr_tty_msg_packt) - sizeof(struct mr_msg_packt)))
+#define MR_TTY_GET_DATA_LEN(msg_pkt_len) \
+    ((msg_pkt_len) - (sizeof(struct mr_tty_msg_pkt) - sizeof(struct mr_msg_pkt)))
 
 /*****************************************************************************
  * Function Declarations
@@ -188,10 +187,11 @@ struct mr_tty_priv {
  * @param[in] msg_ctrl Message control interface
  * @param[in] msg_tag Message tag for routing
  * @param[in] device_name Name of the TTY device to create
+ * @param[in] idx Index of the TTY device
  * @retval Pointer to TTY private structure on success
  * @retval NULL on failure
  */
-struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, char *device_name);
+struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, char *device_name, uint8_t idx);
 
 /**
  * @brief Deinitialize TTY driver

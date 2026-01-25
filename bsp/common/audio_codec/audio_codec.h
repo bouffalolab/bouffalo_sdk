@@ -24,8 +24,9 @@ extern "C" {
 typedef uint8_t audio_codec_type_t;
 #define AUDIO_CODEC_TYPE_UNKNOWN ((audio_codec_type_t)0)
 #define AUDIO_CODEC_TYPE_ES8311  ((audio_codec_type_t)1)
-#define AUDIO_CODEC_TYPE_ES8388  ((audio_codec_type_t)2)
-#define AUDIO_CODEC_TYPE_WM8978  ((audio_codec_type_t)3)
+#define AUDIO_CODEC_TYPE_ES8389  ((audio_codec_type_t)2)
+#define AUDIO_CODEC_TYPE_ES8388  ((audio_codec_type_t)3)
+#define AUDIO_CODEC_TYPE_WM8978  ((audio_codec_type_t)4)
 
 typedef uint8_t audio_codec_i2s_fmt_t;
 #define AUDIO_CODEC_I2S_FMT_I2S     ((audio_codec_i2s_fmt_t)0)
@@ -44,6 +45,7 @@ typedef uint8_t audio_codec_mic_input_t;
  */
 #define AUDIO_CODEC_MIC_INPUT_DIFF   ((audio_codec_mic_input_t)0)
 #define AUDIO_CODEC_MIC_INPUT_SINGLE ((audio_codec_mic_input_t)1)
+#define AUDIO_CODEC_MIC_INPUT_DIGITAL ((audio_codec_mic_input_t)2)
 
 typedef uint8_t audio_codec_work_mode_t;
 /* Codec init mode (codec-specific). Default is CODEC when omitted (0). */

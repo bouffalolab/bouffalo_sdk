@@ -20,7 +20,11 @@ extern "C" {
  *****************************************************************************/
 
 /** Frame buffer header room size in bytes */
+#ifdef CONFIG_MR_FRAME_BUFF_CTRL_HEADER_ROOM
+#define FRAME_BUFF_HEADER_ROOM CONFIG_MR_FRAME_BUFF_CTRL_HEADER_ROOM
+#else
 #define FRAME_BUFF_HEADER_ROOM 32
+#endif
 
 /*****************************************************************************
  * Type Definitions
@@ -121,9 +125,9 @@ int mr_frame_queue_remove(mr_frame_queue_ctrl_t *ctrl);
  * @retval 0 Success
  * @retval -1 Error
  */
-int mr_frame_queue_free_cb_register(mr_frame_queue_ctrl_t *ctrl, mr_frame_queue_free_cb_t before_free_cb,
-                                    void *before_free_cb_arg, mr_frame_queue_free_cb_t after_free_cb,
-                                    void *after_free_cb_arg);
+int mr_frame_queue_free_cb_register(mr_frame_queue_ctrl_t *ctrl,
+                                    mr_frame_queue_free_cb_t before_free_cb, void *before_free_cb_arg,
+                                    mr_frame_queue_free_cb_t after_free_cb, void *after_free_cb_arg);
 
 /**
  * @brief Send item to queue (supports ISR)

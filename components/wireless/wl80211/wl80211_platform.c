@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "wl80211_mac.h"
 #include "wl80211_platform.h"
 
 #include "FreeRTOS.h"
@@ -15,9 +16,19 @@
 
 #include "async_event.h"
 
-static TimerHandle_t timeout_tmr;
+extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
 
+static TimerHandle_t timeout_tmr;
 const struct platform_feature wl80211_platform_feature[] = { { 2, 1, 1 }, { 1, 0, 0 } };
+
+/// RX Packet Reordering Buffer Size
+#define MACSW_AMPDU_RX_BUF_SIZE CFG_REORD_BUF
+#if (MACSW_AMPDU_RX && ((MACSW_AMPDU_RX_BUF_SIZE < 4) || (MACSW_AMPDU_RX_BUF_SIZE > 64)))
+#error "Incorrect reordering buffer size"
+#endif
+
+const unsigned int wl80211_rx_buf_mem_len = (MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2);
+struct wl80211_mac_rx_desc wl80211_rx_buf_mem[(MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2)] __SHAREDRAM;
 
 uint32_t rtos_ms2tick(int ms)
 {
@@ -182,6 +193,11 @@ int platform_feature_index(void)
 #elif defined(BL616L) || defined(BL616)
     return 1;
 #endif
+}
+
+int platform_get_mac(enum wl80211_vif_type vif, uint8_t mac[6]) {
+    (void)vif;
+    return mfg_media_read_macaddr_with_lock((uint8_t *)mac, 1);
 }
 
 int wl80211_printf(const char *fmt, ...)

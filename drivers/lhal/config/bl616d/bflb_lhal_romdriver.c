@@ -251,6 +251,7 @@ uint32_t const bflb_lhal_romapi_table[]={
     [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_start]                                 = (uint32_t)bflb_pwm_v2_start,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_stop]                                  = (uint32_t)bflb_pwm_v2_stop,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_get_frequency]                         = (uint32_t)bflb_pwm_v2_get_frequency,
+    [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_get_duty]                              = (uint32_t)bflb_pwm_v2_get_duty,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_channel_init]                          = (uint32_t)bflb_pwm_v2_channel_init,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_channel_set_threshold]                 = (uint32_t)bflb_pwm_v2_channel_set_threshold,
     [BFLB_LHAL_ROMAPI_INDEX_bflb_pwm_v2_channel_positive_start]                = (uint32_t)bflb_pwm_v2_channel_positive_start,

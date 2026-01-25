@@ -15,7 +15,7 @@ extern "C" {
 
 #define VERSION_OT_SRC_MAJOR 1
 #define VERSION_OT_SRC_MINOR 6
-#define VERSION_OT_SRC_PATCH 20
+#define VERSION_OT_SRC_PATCH 21
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 

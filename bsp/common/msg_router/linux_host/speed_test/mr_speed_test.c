@@ -9,9 +9,13 @@
  */
 
 #include <linux/kernel.h>
-#include <linux/debugfs.h>
-#include <linux/delay.h>
-#include <linux/jiffies.h>
+#include <linux/version.h>
+#include <linux/errno.h>
+#include <linux/slab.h>
+#include <linux/module.h>
+#include <linux/skbuff.h>
+#include <linux/kthread.h>
+#include <linux/wait.h>
 
 #include "mr_debugfs.h"
 #include "mr_msg_ctrl.h"
@@ -56,7 +60,7 @@ static int mr_speed_test_buff_init(struct mr_speed_test *speed_test)
 {
     int32_t i, j;
     uint8_t *buff;
-    struct mr_msg_packt *msg_packt;
+    struct mr_msg_pkt *msg_pkt;
 
     if (speed_test == NULL) {
         printk("mr_speed_test_buff_init: speed_test is NULL\n");
@@ -116,35 +120,35 @@ static int mr_speed_test_buff_init(struct mr_speed_test *speed_test)
     for (i = 0; i < MR_SPEED_TEST_BUFF_CNT; i++) {
         // printk("    dnld_buff[%d] 0x%8p\n", i, speed_test->dnld_test_buff[i]);
 
-        msg_packt = (struct mr_msg_packt *)speed_test->dnld_test_buff[i];
-        msg_packt->tag = speed_test->msg_tag;
-        msg_packt->sub_tag = i;
-        msg_packt->len = speed_test->dnld_max_size - sizeof(struct mr_msg_packt);
+        msg_pkt = (struct mr_msg_pkt *)speed_test->dnld_test_buff[i];
+        msg_pkt->tag = speed_test->msg_tag;
+        msg_pkt->sub_tag = i;
+        msg_pkt->len = speed_test->dnld_max_size - sizeof(struct mr_msg_pkt);
 
 #if 0
         /* 测试一些特殊的长度 */
         if (i == 0) {
-            msg_packt->len = 63 - sizeof(struct mr_msg_packt);
+            msg_pkt->len = 63 - sizeof(struct mr_msg_pkt);
         }
 
         if (i == 1) {
-            msg_packt->len = 100 - sizeof(struct mr_msg_packt);
+            msg_pkt->len = 100 - sizeof(struct mr_msg_pkt);
         }
 
         if (i == 2) {
-            msg_packt->len = 500 - sizeof(struct mr_msg_packt);
+            msg_pkt->len = 500 - sizeof(struct mr_msg_pkt);
         }
 
         if (i == 3) {
-            msg_packt->len = 1000 - sizeof(struct mr_msg_packt);
+            msg_pkt->len = 1000 - sizeof(struct mr_msg_pkt);
         }
 
         if (i == 4) {
-            msg_packt->len = 512 * 3 - sizeof(struct mr_msg_packt);
+            msg_pkt->len = 512 * 3 - sizeof(struct mr_msg_pkt);
         }
 
         if (i == 5) {
-            msg_packt->len = 512 * 4 - sizeof(struct mr_msg_packt);
+            msg_pkt->len = 512 * 4 - sizeof(struct mr_msg_pkt);
         }
 #endif
     }
@@ -165,7 +169,7 @@ static int mr_speed_test_buff_init(struct mr_speed_test *speed_test)
 static int mr_speed_test_dnld(struct mr_speed_test *speed_test, uint8_t *dnld_test_buff)
 {
     int ret = 0;
-    struct mr_msg_packt *msg_packt = (struct mr_msg_packt *)dnld_test_buff;
+    struct mr_msg_pkt *msg_pkt = (struct mr_msg_pkt *)dnld_test_buff;
 
     struct sk_buff *skb = dev_alloc_skb(speed_test->dnld_max_size);
     if (!skb) {
@@ -173,8 +177,8 @@ static int mr_speed_test_dnld(struct mr_speed_test *speed_test, uint8_t *dnld_te
         ret = -ENOMEM;
         goto return_out;
     }
-    skb_put(skb, (msg_packt->len + sizeof(struct mr_msg_packt)));
-    memcpy(skb->data, dnld_test_buff, (msg_packt->len + sizeof(struct mr_msg_packt)));
+    skb_put(skb, (msg_pkt->len + sizeof(struct mr_msg_pkt)));
+    memcpy(skb->data, dnld_test_buff, (msg_pkt->len + sizeof(struct mr_msg_pkt)));
 
     ret = mr_msg_ctrl_send(speed_test->msg_ctrl, skb);
     if (ret < 0) {
@@ -240,7 +244,7 @@ static int mr_speed_test_dnld_cb(struct sk_buff *skb, bool success, void *arg)
 static int mr_speed_test_upld_cb(struct sk_buff *skb, bool success, void *arg)
 {
     struct mr_speed_test *speed_test = (struct mr_speed_test *)arg;
-    struct mr_msg_packt *msg_packt = NULL;
+    struct mr_msg_pkt *msg_pkt = NULL;
 
     if (!success) {
         SPEED_TEST_ERR(speed_test, "upld_test transfer failed!\n");
@@ -273,10 +277,10 @@ static int mr_speed_test_upld_cb(struct sk_buff *skb, bool success, void *arg)
 
     memcpy(speed_test->upld_test_buff[speed_test->upld_cnt], skb->data, skb->len);
 
-    msg_packt = (struct mr_msg_packt *)(speed_test->upld_test_buff[speed_test->upld_cnt]);
-    if (msg_packt->sub_tag != speed_test->upld_cnt) {
+    msg_pkt = (struct mr_msg_pkt *)(speed_test->upld_test_buff[speed_test->upld_cnt]);
+    if (msg_pkt->sub_tag != speed_test->upld_cnt) {
         SPEED_TEST_ERR(speed_test, "upld_test sub_tag mismatch: expected=%d, received=%d\n", speed_test->upld_cnt,
-                       msg_packt->sub_tag);
+                       msg_pkt->sub_tag);
         /* Continue processing even with mismatch - don't return error */
     }
 
@@ -348,7 +352,7 @@ static int mr_speed_test_check(struct mr_speed_test *speed_test)
 {
     int i, j;
     int check_size;
-    struct mr_msg_packt *dnld_msg_packt, *upld_msg_packt;
+    struct mr_msg_pkt *dnld_msg_pkt, *upld_msg_pkt;
     uint8_t *dnld_buff, *upld_buff;
     int error_count = 0;
 
@@ -359,10 +363,10 @@ static int mr_speed_test_check(struct mr_speed_test *speed_test)
         dnld_buff = speed_test->dnld_test_buff[i];
         upld_buff = speed_test->upld_test_buff[i];
 
-        dnld_msg_packt = (struct mr_msg_packt *)dnld_buff;
-        upld_msg_packt = (struct mr_msg_packt *)upld_buff;
+        dnld_msg_pkt = (struct mr_msg_pkt *)dnld_buff;
+        upld_msg_pkt = (struct mr_msg_pkt *)upld_buff;
 
-        check_size = dnld_msg_packt->len + sizeof(struct mr_msg_packt);
+        check_size = dnld_msg_pkt->len + sizeof(struct mr_msg_pkt);
 
         SPEED_TEST_DBG(speed_test, "checking packet %d, size %d", i, check_size);
 
@@ -403,9 +407,8 @@ static int mr_speed_test(struct mr_speed_test *speed_test)
 {
     int ret = 0, i = 0, j = 0;
 
-    struct timespec64 ts_start, ts_end;
-    struct timespec64 ts_delta;
-    uint64_t time_delta_ns = 0;
+    ktime_t ts_start, ts_end, ts_delta, ts_delta_total;
+    uint32_t ts_delta_total_ms;
 
     if (speed_test == NULL) {
         pr_err("[mr_speed_test] speed_test is NULL!\n");
@@ -456,6 +459,8 @@ static int mr_speed_test(struct mr_speed_test *speed_test)
     speed_test->upld_total_size = 0;
     spin_unlock(&speed_test->stats_lock);
 
+    ts_delta_total = ktime_set(0, 0);
+
     for (i = 0; i < MR_SPEED_TEST_CNT; i++) {
         SPEED_TEST_INFO(speed_test, "test: %d/%d\r\n", i + 1, MR_SPEED_TEST_CNT);
 
@@ -471,7 +476,7 @@ static int mr_speed_test(struct mr_speed_test *speed_test)
         }
 
         /* Record start time for this round */
-        ktime_get_boottime_ts64(&ts_start);
+        ts_start = ktime_get_boottime();
 
         /* Download (asynchronous) */
         for (j = 0; j < MR_SPEED_TEST_BUFF_CNT; j++) {
@@ -488,9 +493,9 @@ static int mr_speed_test(struct mr_speed_test *speed_test)
         }
 
         /* Add this round's transfer time to total */
-        ktime_get_boottime_ts64(&ts_end);
-        ts_delta = timespec64_sub(ts_end, ts_start);
-        time_delta_ns += timespec64_to_ns(&ts_delta);
+        ts_end = ktime_get_boottime();
+        ts_delta = ktime_sub(ts_end, ts_start);
+        ts_delta_total = ktime_add(ts_delta_total, ts_delta);
 
         /* Check data integrity for all packets in this round */
         ret = mr_speed_test_check(speed_test);
@@ -499,12 +504,13 @@ static int mr_speed_test(struct mr_speed_test *speed_test)
         }
     }
 
+    ts_delta_total_ms = div64_s64(ktime_to_ns(ts_delta_total), NSEC_PER_MSEC);
+
     SPEED_TEST_INFO(speed_test, "total data: %d KB, dnld: %d KB, upld: %d KB\r\n",
                     ((speed_test->dnld_total_size + speed_test->upld_total_size) / 1024),
                     (speed_test->dnld_total_size / 1024), (speed_test->upld_total_size / 1024));
-    SPEED_TEST_INFO(speed_test, "total time: %lld ms \r\n", time_delta_ns / 1000 / 1000);
-    SPEED_TEST_INFO(speed_test, "speed: %lld KByte/s\r\n",
-                    (speed_test->dnld_total_size + speed_test->upld_total_size) / (time_delta_ns / 1000 / 1000));
+    SPEED_TEST_INFO(speed_test, "total time: %u ms \r\n", ts_delta_total_ms);
+    SPEED_TEST_INFO(speed_test, "speed: %u KByte/s\r\n", (speed_test->dnld_total_size + speed_test->upld_total_size) / ts_delta_total_ms);
 
 return_out:
 

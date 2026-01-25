@@ -114,6 +114,7 @@ struct mr_sdio_card {
      */
     struct mr_sdio_manage *sdio_manage; /**< Associated SDIO management structure */
     struct net_device *netdev;          /**< Associated network device */
+    struct mr_netlink_priv *netlink;    /**< Associated netlink private structure */
     struct mr_tty_priv *tty_msg_cmd;    /**< Associated TTY message interface */
     struct mr_tty_priv *tty_msg_user_1;
     struct mr_tty_priv *tty_msg_user_2;

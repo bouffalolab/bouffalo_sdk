@@ -137,7 +137,7 @@ static void common_set(u16_t id, uint32_t opcode, uint8_t ack,
 }
 #endif
 
-#if defined(BL602) || defined(BL702) || defined(BL606P) || defined(BL616) || defined(BL808) || defined(BL702L) || defined(BL616D)
+#if defined(BL602) || defined(BL702) || defined(BL606P) || defined(BL616) || defined(BL808) || defined(BL702L) || defined(BL616D) || defined(BL616L)
 #define vOutputString(...)  printf(__VA_ARGS__)
 #else
 #define vOutputString(...)  bl_print(SYSTEM_UART_ID, PRINT_MODULE_CLI, __VA_ARGS__)

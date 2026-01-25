@@ -380,14 +380,6 @@
   #define MACSW_TX_PAYLOAD_MAX 1
 #endif
 
-/// Maximum size of A-MSDU supported in reception
-#ifdef CFG_AMSDU_4K
-  #define MACSW_MAX_AMSDU_RX    4096
-#elif defined CFG_AMSDU_8K
-  #define MACSW_MAX_AMSDU_RX    8192
-#elif defined CFG_AMSDU_12K
-  #define MACSW_MAX_AMSDU_RX    12288
-#endif
 /** @} A-MSDU */
 
 /**
@@ -419,11 +411,6 @@
   /// Maximum number of RX Block Ack
   #define MACSW_MAX_BA_RX CFG_BARX
   #define MACSW_AMPDU_RX CFG_BARX
-  /// RX Packet Reordering Buffer Size
-  #define MACSW_AMPDU_RX_BUF_SIZE CFG_REORD_BUF
-  #if (MACSW_AMPDU_RX && ((MACSW_AMPDU_RX_BUF_SIZE < 4) || (MACSW_AMPDU_RX_BUF_SIZE > 64)))
-     #error "Incorrect reordering buffer size"
-  #endif
   /// A-MSDU de-aggregation support
   #ifdef CFG_DEAGG
     #define MACSW_AMSDU_DEAGG 1
@@ -547,26 +534,6 @@
 #define MACSW_TXQ_CNT          (AC_MAX)
 #endif
 
-/// Number of TX descriptors available in the system (BK)
-#define MACSW_TXDESC_CNT0       CFG_TXDESC0
-/// Number of TX descriptors available in the system (BE)
-#define MACSW_TXDESC_CNT1       CFG_TXDESC1
-/// Number of TX descriptors available in the system (VI)
-#define MACSW_TXDESC_CNT2       CFG_TXDESC2
-/// Number of TX descriptors available in the system (VO)
-#define MACSW_TXDESC_CNT3       CFG_TXDESC3
-#if MACSW_AC_BCN_USED
-  /// Number of TX descriptors available in the system (BCN)
-  #define MACSW_TXDESC_CNT4       CFG_TXDESC4
-#else
-  #define MACSW_TXDESC_CNT4 0
-#endif
-
-/// Total number of TX descriptors
-#define MACSW_TXDESC_CNT ((MACSW_USER_MAX * (MACSW_TXDESC_CNT0 + MACSW_TXDESC_CNT1 + \
-                                       MACSW_TXDESC_CNT2 + MACSW_TXDESC_CNT3)) \
-                       + MACSW_TXDESC_CNT4)
-
 /// Number of TX frame descriptors and buffers available for frames generated internally
 #define MACSW_TXFRAME_CNT (MACSW_VIRT_DEV_MAX + MACSW_BFR_TXFRAME_CNT)
 #if MACSW_TXFRAME_CNT < 4
@@ -606,13 +573,6 @@
 #else
   #define MACSW_RX_LONG_MPDU_CNT  2
 #endif
-
-/// Number of RX payload descriptors - defined to be n times the maximum A-MSDU size
-/// plus one extra one used for HW flow control
-#define MACSW_RX_PAYLOAD_DESC_CNT ((MACSW_MAX_AMSDU_RX / MACSW_RX_PAYLOAD_LEN) * MACSW_RX_LONG_MPDU_CNT + 1)
-
-/// Number of RX descriptors (SW and Header descriptors)
-#define MACSW_RXDESC_CNT MACSW_RX_PAYLOAD_DESC_CNT
 
 #if MACSW_AMSDU_DEAGG
 /// Maximum number MSDUs supported in one received A-MSDU
@@ -3704,6 +3664,30 @@ struct rxu_stat_desc
     struct rxu_stat_val val;
 };
 
+///// lmac/rxl_hwdesc
+#define RXL_RXDESC_SIZE STRUCT_SIZE_RXDESC
+
+//// umac/rxu_cntrl
+#if (MACSW_AMPDU_RX)
+/// Size of the pool containing reordering structure
+#define RX_CNTRL_REORD_POOL_SIZE        (MACSW_MAX_BA_RX)
+/// Maximum time we can wait for an SN (in us)
+#define RX_CNTRL_REORD_MAX_WAIT         (50000)
+
+/// Structure describing an element of the RX reordering table
+struct rxu_cntrl_reord_elt
+{
+    /// Packet number of the received packet (used for replay check)
+    uint64_t pn;
+    /// Host Buffer Address
+    uint32_t host_id;
+    /// flag indicating if the PN must be verified
+    bool pn_check;
+};
+
+
+#endif //(MACSW_AMPDU_RX)
+
 struct rx_vector_1_pad {
   uint32_t pad[4];
 };
@@ -4018,6 +4002,11 @@ struct hostdesc
 #endif
 #define STRUCT_SIZE_TX_HW_DESC 68
 #define STRUCT_SIZE_TXL_BUFFER_TAG 240
+#define STRUCT_SIZE_RXDESC 156
+
+struct tx_hw_desc_public {
+    uint32_t pad[STRUCT_SIZE_TX_HW_DESC / 4];
+};
 
 struct txdesc;
 /// LMAC Tx Descriptor
@@ -4047,6 +4036,69 @@ typedef struct bcn_param {
     int8_t beacon_rssi;
 } bcn_param_t;
 
+
+//// lmac/txl_agg
+/// Number of A-MPDU descriptor queues
+#define TX_AMPDU_DESC_QUEUE_CNT (MACSW_TXQ_CNT + MACSW_MAC_HE)
+/// Minimum of A-MPDU descriptors per queue
+#define TX_MIN_AMPDU_NB_PER_AC  (3 * MACSW_USER_MAX)
+/// Number of TX descriptors for 1 AGG descriptor
+#define TX_AGG_DIVIDER          (8 / MACSW_USER_MAX)
+
+#if MACSW_MAC_HE
+/// Number of A-MPDU descriptors for HE TB queue
+#define TX_MAX_AMPDU_NB_FOR_HE_TB 3 // FIXME check if 3 is appropriate
+/// Index of the HE TB A-MPDU descriptor queue
+#define TX_HE_TB_AMPDU_QUEUE_IDX (TX_AMPDU_DESC_QUEUE_CNT - 1)
+/// Approximate time needed to finish a A-MPDU (in us)
+#define TX_AGG_FINISH_DUR 5
+#endif
+
+/// Aggregation descriptor, containing AMPDU THD, BAR descriptor, BAR payload and Policy Table
+#define STRUCT_SIZE_TX_AGG_DESC 348
+struct tx_agg_desc_pub {
+    uint32_t pad[STRUCT_SIZE_TX_AGG_DESC/4];
+};
+
+#define MACSW_CONFIG(name) \
+        g_macsw_config_##name
+#define MACSW_CONFIG_VAL_DEF(type, x) \
+    const type g_macsw_config_##x##size = sizeof(x)
+#define MACSW_CONFIG_DEF(type, x) \
+    const type g_macsw_config_##x = (x)
+#define MACSW_CONFIG_DECL(type, x) \
+    extern const type g_macsw_config_##x
+
+MACSW_CONFIG_DECL(uint16_t, MACSW_AMPDU_RX_BUF_SIZE);
+MACSW_CONFIG_DECL(uint16_t, RX_STAT_DESC_CNT);
+MACSW_CONFIG_DECL(uint16_t, RX_CNTRL_REORD_WIN_SIZE);
+MACSW_CONFIG_DECL(uint16_t, MACSW_MAX_AMSDU_RX);
+MACSW_CONFIG_DECL(uint16_t, MACSW_TXDESC_CNT);
+MACSW_CONFIG_DECL(uint16_t, rxl_hw_buffer1size);
+MACSW_CONFIG_DECL(uint16_t, rxl_hw_buffer2size);
+
+/// Array of aggregation descriptors for the BK queue
+extern struct tx_agg_desc_pub tx_agg_desc_array0[];
+/// Array of aggregation descriptors for the BE queue
+extern struct tx_agg_desc_pub tx_agg_desc_array1[];
+/// Array of aggregation descriptors for the VI queue
+extern struct tx_agg_desc_pub tx_agg_desc_array2[];
+/// Array of aggregation descriptors for the VO queue
+extern struct tx_agg_desc_pub tx_agg_desc_array3[];
+#if MACSW_AC_BCN_USED
+/// Array of aggregation descriptors for the BCN queue
+extern struct tx_agg_desc_pub tx_agg_desc_array4[];
+#endif
+#if MACSW_MAC_HE
+/// Array of aggregation descriptors for the BCN queue
+extern struct tx_agg_desc_pub tx_agg_desc_array5[];
+#endif
+extern uint32_t rxl_hw_buffer1[];
+extern uint32_t rxl_hw_buffer2[];
+#if !MACSW_FULLY_HOSTED
+extern struct tx_hw_desc_public tx_hw_desc[];
+#endif
+extern struct txdesc_public txdesc_array[];
 
 uint32_t mac_ie_multi_bssid_find(uint32_t buffer, uint16_t buflen);
 uint32_t mac_ie_sub_non_txed_bssid_find(uint32_t buffer, uint16_t buflen);

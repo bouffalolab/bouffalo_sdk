@@ -35,15 +35,14 @@
 #if defined(CONFIG_NXSPI_HCI)
 #include "btble_spi_uart.h"
 #else
-//616L_todo, bringup dma uart
-#if defined(CONFIG_DBG_RUN_ON_FPGA) || defined(BL616L)
+#if defined(CONFIG_DBG_RUN_ON_FPGA)
 #define BL_DMA_UART 0
 #else
 #define BL_DMA_UART 1
 #endif
 #endif
 
-#if defined(BL616)
+#if defined(BL616) || defined(BL616L)
 #define UART_TXD_PIN               27
 #define UART_RXD_PIN               28
 #define UART_CTS_PIN               29

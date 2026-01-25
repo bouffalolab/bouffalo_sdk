@@ -17,7 +17,6 @@ sdk_library_add_sources(${SOURCES})
 if(CONFIG_LVGL8_PORT_DISP)
     sdk_library_add_sources(port/lv_port_disp_mcu.c)
     sdk_library_add_sources(port/lv_port_disp_rgb.c)
-
 endif()
 
 if(CONFIG_LVGL8_PORT_FS)

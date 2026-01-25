@@ -24,13 +24,25 @@
 #include <linux/mmc/host.h>
 
 #include "mr_sdio_manage.h"
-#include "mr_msg_ctrl.h"
-#include "mr_netdev.h"
-#include "mr_tty.h"
 #include "mr_sdio2.h"
+#include "mr_msg_ctrl.h"
 #include "mr_debugfs.h"
+
+#ifdef CONFIG_MR_NETDEV
+#include "mr_netdev.h"
+#endif
+#ifdef CONFIG_MR_NETLINK
+#include "mr_netlink.h"
+#endif
+#ifdef CONFIG_MR_SPEED_TEST
 #include "mr_speed_test.h"
+#endif
+#ifdef CONFIG_MR_TTY
+#include "mr_tty.h"
+#endif
+#ifdef CONFIG_MR_BOOTROM
 #include "mr_bootrom.h"
+#endif
 
 /**
  * @brief Read data from SDIO card register
@@ -338,8 +350,7 @@ static int mr_sdio2_dnld_transmit(struct mr_sdio_card *card, struct sdio_trans_d
     /* Determine transfer length based on data size */
     if (dnld_desc->data_len >= SDIO2_CMD53_BYTE_MOD_SIZE_MAX) {
         /* Block mode, align to block size */
-        trans_len =
-            (dnld_desc->data_len + card->func->cur_blksize - 1) / card->func->cur_blksize * card->func->cur_blksize;
+        trans_len = (dnld_desc->data_len + card->func->cur_blksize - 1) / card->func->cur_blksize * card->func->cur_blksize;
     } else {
         /* Byte mode, max size 512 */
         trans_len = dnld_desc->data_len;
@@ -680,8 +691,8 @@ static int mr_sdio2_wait_card_ready(struct mr_sdio_card *card, int timeout_ms)
 
         if (io_reg) {
             break;
-        } else if ((ktime_get_boottime() - time_s) / (1000 * 1000) < timeout_ms) {
-            usleep_range(100, 100);
+        } else if (ktime_to_ns(ktime_sub(ktime_get_boottime(), time_s)) < timeout_ms * NSEC_PER_MSEC) {
+            usleep_range(100, 200);
         } else {
             ret = -ETIME;
             goto return_out;
@@ -913,6 +924,14 @@ static void mr_sdio2_remove(struct sdio_func *func)
     }
 #endif
 
+#ifdef CONFIG_MR_NETLINK
+    if (card->netlink) {
+        /* stop netlink */
+        mr_netlink_deinit(card->netlink);
+        card->netlink = NULL;
+    }
+#endif
+
 #ifdef CONFIG_MR_TTY
 #ifdef CONFIG_MR_TTY_CMD
     if (card->tty_msg_cmd) {
@@ -1081,11 +1100,21 @@ static int mr_sdio2_probe(struct sdio_func *func, const struct sdio_device_id *i
     }
 #endif
 
+#ifdef CONFIG_MR_NETLINK
+    /* create netlink */
+    card->netlink = mr_netlink_init(msg_ctrl, MR_MSG_TAG_NETLINK);
+    if (card->netlink == NULL) {
+        SDIO_DRV_ERR(card, "failed to create netlink\n");
+        ret = -ENOMEM;
+        goto msg_ctrl_exit;
+    }
+#endif
+
 #ifdef CONFIG_MR_TTY
 
 #ifdef CONFIG_MR_TTY_CMD
     /* create tty devices */
-    card->tty_msg_cmd = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_CMD, "ttyMR_cmd0");
+    card->tty_msg_cmd = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_CMD, "ttyMR_cmd", 0);
     if (card->tty_msg_cmd == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1094,7 +1123,7 @@ static int mr_sdio2_probe(struct sdio_func *func, const struct sdio_device_id *i
 
 #ifdef CONFIG_MR_TTY_USER_1
     /* create tty devices */
-    card->tty_msg_user_1 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_1, "ttyMR_user1");
+    card->tty_msg_user_1 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_1, "ttyMR_user", 1);
     if (card->tty_msg_user_1 == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1103,7 +1132,7 @@ static int mr_sdio2_probe(struct sdio_func *func, const struct sdio_device_id *i
 
 #ifdef CONFIG_MR_TTY_USER_2
     /* create tty devices */
-    card->tty_msg_user_2 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_2, "ttyMR_user2");
+    card->tty_msg_user_2 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_2, "ttyMR_user", 2);
     if (card->tty_msg_user_2 == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1112,7 +1141,7 @@ static int mr_sdio2_probe(struct sdio_func *func, const struct sdio_device_id *i
 
 #ifdef CONFIG_MR_TTY_USER_1
     /* create tty devices */
-    card->tty_msg_user_3 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_3, "ttyMR_user3");
+    card->tty_msg_user_3 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_3, "ttyMR_user", 3);
     if (card->tty_msg_user_3 == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1156,7 +1185,7 @@ static const struct sdio_device_id mr_sdio2_ids[] = {
     { SDIO_DEVICE(0x424c, 0x606) },
     { /* end: all zeroes */ },
 };
-MODULE_DEVICE_TABLE(sdio, mr_sdio2_ids);
+MODULE_DEVICE_TABLE(sdio2, mr_sdio2_ids);
 
 struct sdio_driver mr_sdio2 = {
     .name = "mr_sdio2",

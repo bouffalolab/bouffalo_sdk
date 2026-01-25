@@ -1,6 +1,7 @@
 add_subdirectory(wpa_supplicant)
 add_subdirectory(wifi6_lwip_adapter)
 add_subdirectory(macsw_os_adapter)
+add_subdirectory(fhost_config)
 
 sdk_add_compile_definitions(-D__FILENAME__=__FILE__)
 sdk_add_compile_definitions_ifdef(CONFIG_CSIDMA_CLI -DCFG_CSIDMA_CLI=1)

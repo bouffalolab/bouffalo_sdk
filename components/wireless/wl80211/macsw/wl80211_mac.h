@@ -60,11 +60,25 @@ int wl80211_mac_start_ap(struct wl80211_ap_settings *ap_settings);
 int wl80211_mac_stop_ap(void);
 int wl80211_mac_ap_set_key(uint8_t key_idx, uint8_t sta_idx, uint8_t *key, uint8_t key_len, uint8_t cipher_suite,
                            bool pairwise);
+int wl80211_mac_ap_del_key(uint8_t sta_idx);
+int wl80211_mac_ap_del_sta(uint8_t sta_idx);
 int wl80211_mac_ap_ctrl_port(uint8_t sta_id, int control_port_open);
 // AP mode process auth packet
 void wl80211_mac_ap_auth_handler(void *frame_payload, uint32_t frame_length);
 // AP mode process assoc packet
 void wl80211_mac_ap_assoc_req_handler(void *frame_payload, uint32_t frame_length, bool is_reassoc);
+// AP mode process probe request packet
+void wl80211_mac_ap_probe_req_handler(void *frame_payload, uint32_t frame_length);
+// AP mode process deauth packet
+void wl80211_mac_ap_deauth_handler(void *frame_payload, uint32_t frame_length);
+// AP mode process disassoc packet
+void wl80211_mac_ap_disassoc_handler(void *frame_payload, uint32_t frame_length);
+
+extern wl80211_monitor_rx_cb_t _wl80211_monitor_rx;
+extern void *_wl80211_monitor_rx_ctx;
+
+int wl80211_mac_monitor_start(struct wl80211_monitor_settings *mon_setting);
+int wl80211_mac_monitor_stop(void);
 
 // only for type checker
 struct wl80211_tx_header;
@@ -80,7 +94,7 @@ void wl80211_mac_rx_free(void *info);
 //////////////////////
 extern const struct me_chan_config_req _macsw_chan_def;
 
-int _macsw_add_vif(enum mac_vif_type vif_type);
+int _macsw_add_vif(enum mac_vif_type vif_type, uint8_t mac[6]);
 int _macsw_remove_vif(int vif_idx);
 struct scanu_start_req *_macsw_make_scan_req(struct wl80211_scan_params *params);
 struct me_config_req *_macsw_make_me_config(void);

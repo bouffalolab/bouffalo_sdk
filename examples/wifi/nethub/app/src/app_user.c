@@ -33,7 +33,6 @@ int app_user_init(void)
     tcpip_init(NULL, NULL);
 
     /* Enable easyflash(littlefs) */
-    bflb_mtd_init();
     easyflash_init();
 
     /* nethub init */

@@ -7,7 +7,7 @@
 #include "bl616_l1c.h"
 #endif
 
-#if defined(BL616)
+#if defined(BL616) || defined(BL616L)
 #define UART_NAME                  "uart1"
 #define UART_BAUDRATE              2000000
 #define UART_TXD_PIN               27

@@ -29,6 +29,7 @@
 #define HTTP_HDR_XML            HTTP_CONTENT_TYPE("text/xml")
 #define HTTP_HDR_PDF            HTTP_CONTENT_TYPE("application/pdf")
 #define HTTP_HDR_JSON           HTTP_CONTENT_TYPE("application/json")
+#define HTTP_HDR_TXT            HTTP_CONTENT_TYPE("text/plain")
 #define HTTP_HDR_CSV            HTTP_CONTENT_TYPE("text/csv")
 #define HTTP_HDR_TSV            HTTP_CONTENT_TYPE("text/tsv")
 #define HTTP_HDR_SVG            HTTP_CONTENT_TYPE("image/svg+xml")
@@ -53,6 +54,10 @@
 #define OT_REST_RESOURCE_PATH_NODE_EXTPANID "/node/ext-panid"
 #define OT_REST_RESOURCE_PATH_NODE_DATASET_ACTIVE "/node/dataset/active"
 #define OT_REST_RESOURCE_PATH_NODE_DATASET_PENDING "/node/dataset/pending"
+#define OT_REST_RESOURCE_PATH_NODE_COMMISSIONER_STATE "/node/commissioner/state"
+#define OT_REST_RESOURCE_PATH_NODE_COMMISSIONER_JOINER "/node/commissioner/joiner"
+#define OT_REST_RESOURCE_PATH_NODE_COPROCESSOR "/node/coprocessor"
+#define OT_REST_RESOURCE_PATH_NODE_COPROCESSOR_VERSION "/node/coprocessor/version"
 #define OT_REST_RESOURCE_PATH_NETWORK "/networks"
 #define OT_REST_RESOURCE_PATH_NETWORK_CURRENT "/networks/current"
 #define OT_REST_RESOURCE_PATH_NETWORK_CURRENT_COMMISSION "/networks/commission"
@@ -97,8 +102,8 @@ typedef enum {
 typedef void (* http_continue_func_t)(void *connection);
 
 bool openthread_rest_request(void *connection, http_method_type_t method, http_accept_type_t accept_type, char *uri, char *body, http_continue_func_t continue_func);
-char * openthread_rest_construct_resp(http_resp_state_t resp_state, char * body);
-err_t http_setup_file(void * connection, http_resp_state_t resp_state, char * body);
+char * openthread_rest_construct_resp(http_accept_type_t accept_type, http_resp_state_t resp_state, char * body);
+err_t http_setup_file(void * connection, http_accept_type_t accept_type, http_resp_state_t resp_state, char * body);
 err_t http_init_error_file(void *hs, http_resp_state_t resp_state);
 
 #endif /* LWIP_HTTPD_DEFINE_H */

@@ -180,10 +180,17 @@ static int ATTR_TCM_SECTION clk_pll_set(uint32_t sdmin)
     int vco_speed_bit = 1;
     int ret = -1;
 
+#if defined(CPU_MODEL_A0)
     regval = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_SDMIN_OFFSET);
     regval = regval & RF_ANA1_WIFIPLL_SDM_IN_UMSK;
     regval = regval | sdmin;
     BL_WR_WORD(RF_BASE + RF_ANA1_WIFIPLL_SDMIN_OFFSET, regval);
+#else
+    regval = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_SDMIN_OFFSET);
+    regval = regval & CCI_WIFIPLL_SDM_IN_UMSK;
+    regval = regval | sdmin;
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_SDMIN_OFFSET, regval);
+#endif
 
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
     GLB_Set_MCU_System_CLK_Div(0, 0);
@@ -196,6 +203,7 @@ static int ATTR_TCM_SECTION clk_pll_set(uint32_t sdmin)
         }
     }
 
+#if defined(CPU_MODEL_A0)
     /* set vco_speed, dtc_r_sel = 3, pu_wifipll = 1, wifipll_rstb = 1 */
     regval = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_ANA_CTRL_OFFSET);
     regval = BL_SET_REG_BITS_VAL(regval, RF_ANA1_WIFIPLL_VCO_SPEED, vco_speed_bit);
@@ -226,6 +234,38 @@ static int ATTR_TCM_SECTION clk_pll_set(uint32_t sdmin)
     if (BL_GET_REG_BITS_VAL(regval, RF_ANA1_WIFIPLL_LO_LOCK) == 1) {
         ret = 0;
     }
+#else
+    /* set vco_speed, dtc_r_sel = 3, pu_wifipll = 1, wifipll_rstb = 1 */
+    regval = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    regval = BL_SET_REG_BITS_VAL(regval, CCI_WIFIPLL_VCO_SPEED, vco_speed_bit);
+    regval = BL_SET_REG_BITS_VAL(regval, CCI_WIFIPLL_DTC_R_SEL, 3);
+    regval = BL_SET_REG_BITS_VAL(regval, CCI_PU_WIFIPLL, 1);
+    regval = BL_SET_REG_BITS_VAL(regval, CCI_WIFIPLL_RSTB, 1);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, regval);
+
+    /* delay > 2us */
+    arch_delay_us(3);
+
+    /* wifipll_rstb = 0 */
+    regval = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    regval = BL_SET_REG_BITS_VAL(regval, CCI_WIFIPLL_RSTB, 0);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, regval);
+
+    /* delay > 1us */
+    arch_delay_us(2);
+
+    /* wifipll_rstb = 1 */
+    regval = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    regval = BL_SET_REG_BITS_VAL(regval, CCI_WIFIPLL_RSTB, 1);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, regval);
+
+    arch_delay_us(270);
+
+    regval = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_READBACK_OFFSET);
+    if (BL_GET_REG_BITS_VAL(regval, CCI_WIFIPLL_LO_LOCK) == 1) {
+        ret = 0;
+    }
+#endif
 
 #if defined(CPU_MODEL_A0)
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M);
@@ -265,8 +305,13 @@ static int ATTR_TCM_SECTION board_get_flash_delay(spi_flash_cfg_type *p_flash_cf
     uint32_t pre_sdmin;
 
     /* save register changed by calibration */
+#if defined(CPU_MODEL_A0)
     regval = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_SDMIN_OFFSET);
     pre_sdmin = regval & RF_ANA1_WIFIPLL_SDM_IN_MSK;
+#else
+    regval = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_SDMIN_OFFSET);
+    pre_sdmin = regval & CCI_WIFIPLL_SDM_IN_MSK;
+#endif
 
     for (int index = 0; index < sizeof(flash_clock_para_list) / sizeof(flash_clock_para_list[0]); index++) {
         GLB_Set_SF_CLK(1, flash_clock_para_list[index].flash_clock, flash_clock_para_list[index].flash_clock_div);

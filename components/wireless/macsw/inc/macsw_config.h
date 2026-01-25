@@ -10,17 +10,10 @@
 #define CFG_COEX
 #define CFG_BCN
 #define CFG_AGG
-#define CFG_AMSDU_4K
 
 #define CFG_VIF_MAX 2
 #define CFG_STA_MAX 4
 #define CFG_SPC 16
-
-#define CFG_TXDESC0 1
-#define CFG_TXDESC1 32
-#define CFG_TXDESC2 1
-#define CFG_TXDESC3 1
-#define CFG_TXDESC4 4
 
 #define CFG_MAC_VER_V21
 #define CFG_MDM_VER_V30

@@ -80,8 +80,8 @@ static int msg_dnld_recv_done_cb(mr_frame_elem_t *frame_elem, void *arg)
         return -1;
     }
 
-    mr_tty_msg_t *tty_msg_packt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
-    ret = mr_frame_queue_send(priv->msg_dnld_queue, &tty_msg_packt, 0);
+    mr_tty_msg_t *tty_msg_pkt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
+    ret = mr_frame_queue_send(priv->msg_dnld_queue, &tty_msg_pkt, 0);
     if (ret < 0) {
         LOG_E("%s Failed to send frame to download queue\r\n", priv->tty_cfg.name);
         return -1;
@@ -107,13 +107,13 @@ static int msg_upld_send_done_cb(mr_frame_elem_t *frame_elem, void *arg)
         return -1;
     }
 
-    mr_tty_msg_t *tty_msg_packt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
+    mr_tty_msg_t *tty_msg_pkt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
     if (priv->tty_cfg.upld_done_cb) {
         /* User-defined callback */
-        ret = priv->tty_cfg.upld_done_cb(priv, tty_msg_packt);
+        ret = priv->tty_cfg.upld_done_cb(priv, tty_msg_pkt);
     } else {
         /* Release back to pool */
-        ret = mr_tty_upld_elem_free(priv, tty_msg_packt);
+        ret = mr_tty_upld_elem_free(priv, tty_msg_pkt);
     }
 
     return ret;
@@ -147,28 +147,28 @@ static int msg_hw_reset_cb(mr_frame_elem_t *unused, void *arg)
 static int msg_upld_send_cmd_packet(mr_tty_priv_t *priv, uint8_t tty_flag, uint8_t *data, uint16_t data_size)
 {
     int ret;
-    mr_tty_msg_t *tty_msg_packt;
+    mr_tty_msg_t *tty_msg_pkt;
 
-    ret = mr_tty_upld_elem_alloc(priv, &tty_msg_packt, 100);
+    ret = mr_tty_upld_elem_alloc(priv, &tty_msg_pkt, 100);
     if (ret < 0) {
         LOG_E("%s Failed to allocate upld msg packet\r\n", priv->tty_cfg.name);
         return -1;
     }
 
-    tty_msg_packt->flag = tty_flag;
+    tty_msg_pkt->flag = tty_flag;
 
     if (data && data_size > 0) {
-        memcpy(tty_msg_packt->data, data, data_size);
-        MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_packt, data_size);
+        memcpy(tty_msg_pkt->data, data, data_size);
+        MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_pkt, data_size);
     } else {
-        MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_packt, 0);
+        MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_pkt, 0);
     }
 
-    /* send tty_msg_packt */
-    ret = mr_tty_upld_elem_send(priv, tty_msg_packt);
+    /* send tty_msg_pkt */
+    ret = mr_tty_upld_elem_send(priv, tty_msg_pkt);
     if (ret < 0) {
         LOG_E("%s Failed to send TTY control message\r\n", priv->tty_cfg.name);
-        mr_tty_upld_elem_free(priv, tty_msg_packt);
+        mr_tty_upld_elem_free(priv, tty_msg_pkt);
         return -1;
     }
 
@@ -189,7 +189,7 @@ static void tty_proc_task(void *arg)
     int ret;
     mr_tty_priv_t *priv = (mr_tty_priv_t *)arg;
 
-    mr_tty_msg_t *tty_msg_packt = NULL;
+    mr_tty_msg_t *tty_msg_pkt = NULL;
     uint32_t notified_value = 0;
     uint32_t notified_mask = 0;
 
@@ -227,27 +227,27 @@ static void tty_proc_task(void *arg)
         /* get message from queue (non-blocking) */
         notified_mask = TTY_EVENT_DNLD_DONE;
         if (notified_value & notified_mask) {
-            ret = mr_frame_queue_receive(priv->msg_dnld_queue, &tty_msg_packt, 0);
+            ret = mr_frame_queue_receive(priv->msg_dnld_queue, &tty_msg_pkt, 0);
             if (ret < 0) {
                 /* queue empty */
                 notified_value &= ~notified_mask;
-                tty_msg_packt = NULL;
+                tty_msg_pkt = NULL;
             }
         }
 
         /* Handle reset/stop commands - reset state machine */
-        if (tty_msg_packt &&
-            (tty_msg_packt->flag == MR_TTY_FLAG_HOST_RESET || tty_msg_packt->flag == MR_TTY_FLAG_HOST_STOP)) {
+        if (tty_msg_pkt &&
+            (tty_msg_pkt->flag == MR_TTY_FLAG_HOST_RESET || tty_msg_pkt->flag == MR_TTY_FLAG_HOST_STOP)) {
             LOG_W("%s received host %s command\r\n", priv->tty_cfg.name,
-                  tty_msg_packt->flag == MR_TTY_FLAG_HOST_RESET ? "RESET" : "STOP");
+                  tty_msg_pkt->flag == MR_TTY_FLAG_HOST_RESET ? "RESET" : "STOP");
 
             priv->tty_status = MR_TTY_DSTA_IDLE;
             priv->tty_ready = false;
             priv->device_dnld_credit_limit = priv->tty_cfg.dnld_credit_max;
             priv->credit_limit_update_last = 0;
 
-            mr_tty_dnld_elem_free(priv, tty_msg_packt);
-            tty_msg_packt = NULL;
+            mr_tty_dnld_elem_free(priv, tty_msg_pkt);
+            tty_msg_pkt = NULL;
             continue;
         }
 
@@ -255,7 +255,7 @@ static void tty_proc_task(void *arg)
         switch (priv->tty_status) {
             case MR_TTY_DSTA_IDLE:
                 /* Wait for HOST_READY message */
-                if (tty_msg_packt == NULL || tty_msg_packt->flag != MR_TTY_FLAG_HOST_READY) {
+                if (tty_msg_pkt == NULL || tty_msg_pkt->flag != MR_TTY_FLAG_HOST_READY) {
                     break;
                 }
                 LOG_I("%s received HOST_READY message\r\n", priv->tty_cfg.name);
@@ -279,20 +279,20 @@ static void tty_proc_task(void *arg)
 
             case MR_TTY_DSTA_DEVICE_RUN:
 
-                if (tty_msg_packt == NULL) {
+                if (tty_msg_pkt == NULL) {
                     break;
 
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_DNLD_DATA) {
+                } else if (tty_msg_pkt->flag == MR_TTY_FLAG_DNLD_DATA) {
                     /* Download data packet - pass to user callback */
-                    ret = priv->tty_cfg.dnld_output_cb(priv, tty_msg_packt);
+                    ret = priv->tty_cfg.dnld_output_cb(priv, tty_msg_pkt);
                     if (ret < 0) {
                         LOG_E("%s Failed to output dnld data\r\n", priv->tty_cfg.name);
                         break;
                     }
-                    tty_msg_packt = NULL;
+                    tty_msg_pkt = NULL;
                     break;
 
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_OPEN) {
+                } else if (tty_msg_pkt->flag == MR_TTY_FLAG_OPEN) {
                     LOG_I("%s received tty OPEN message\r\n", priv->tty_cfg.name);
                     if (priv->tty_ready == false) {
                         priv->tty_ready = true;
@@ -303,7 +303,7 @@ static void tty_proc_task(void *arg)
                         LOG_W("%s already ready, ignoring OPEN message\r\n", priv->tty_cfg.name);
                     }
 
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_CLOSE) {
+                } else if (tty_msg_pkt->flag == MR_TTY_FLAG_CLOSE) {
                     LOG_I("%s received tty CLOSE message\r\n", priv->tty_cfg.name);
                     if (priv->tty_ready == true) {
                         priv->tty_ready = false;
@@ -314,19 +314,19 @@ static void tty_proc_task(void *arg)
                         LOG_W("%s already closed, ignoring CLOSE message\r\n", priv->tty_cfg.name);
                     }
 
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_SET_TERMIOS) {
+                } else if (tty_msg_pkt->flag == MR_TTY_FLAG_SET_TERMIOS) {
                     LOG_I("%s received tty SET_TERMIOS message\r\n", priv->tty_cfg.name);
                     if (priv->tty_cfg.tty_event) {
                         priv->tty_cfg.tty_event(priv, MR_TTY_FLAG_SET_TERMIOS);
                     }
 
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_BREAK) {
+                } else if (tty_msg_pkt->flag == MR_TTY_FLAG_BREAK) {
                     LOG_I("%s received tty BREAK message\r\n", priv->tty_cfg.name);
                     if (priv->tty_cfg.tty_event) {
                         priv->tty_cfg.tty_event(priv, MR_TTY_FLAG_BREAK);
                     }
 
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_HANGUP) {
+                } else if (tty_msg_pkt->flag == MR_TTY_FLAG_HANGUP) {
                     LOG_I("%s received tty HANGUP message\r\n", priv->tty_cfg.name);
                     if (priv->tty_cfg.tty_event) {
                         priv->tty_cfg.tty_event(priv, MR_TTY_FLAG_HANGUP);
@@ -342,9 +342,9 @@ static void tty_proc_task(void *arg)
         }
 
         /* Release received packet if not handled by callback */
-        if (tty_msg_packt) {
-            mr_tty_dnld_elem_free(priv, tty_msg_packt);
-            tty_msg_packt = NULL;
+        if (tty_msg_pkt) {
+            mr_tty_dnld_elem_free(priv, tty_msg_pkt);
+            tty_msg_pkt = NULL;
         }
 
         /* Proactively send credit update if threshold exceeded */
@@ -382,12 +382,12 @@ static void tty_proc_task(void *arg)
 /**
  * @brief Allocate upload message packet buffer from pool
  * @param[in] priv Pointer to TTY private structure
- * @param[out] tty_msg_packt Pointer to store allocated message packet
+ * @param[out] tty_msg_pkt Pointer to store allocated message packet
  * @param[in] timeout Timeout in ticks to wait for buffer
  * @retval 0 Success
  * @retval <0 No buffer available
  */
-int mr_tty_upld_elem_alloc(mr_tty_priv_t *priv, mr_tty_msg_t **tty_msg_packt, uint32_t timeout)
+int mr_tty_upld_elem_alloc(mr_tty_priv_t *priv, mr_tty_msg_t **tty_msg_pkt, uint32_t timeout)
 {
     int ret;
     mr_frame_elem_t *frame_elem;
@@ -395,18 +395,18 @@ int mr_tty_upld_elem_alloc(mr_tty_priv_t *priv, mr_tty_msg_t **tty_msg_packt, ui
     ret = mr_frame_queue_alloc_elem(priv->upld_frame_ctrl, &frame_elem, timeout);
     if (ret < 0) {
         /* No available buffer, try later */
-        *tty_msg_packt = NULL;
+        *tty_msg_pkt = NULL;
         return -1;
     }
 
-    *tty_msg_packt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
+    *tty_msg_pkt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
 
-    MR_TTY_MSG_PACKET_SET_DATA_SIZE((*tty_msg_packt), 0);
-    (*tty_msg_packt)->msg_packt.tag = priv->tty_cfg.msg_tag;
-    (*tty_msg_packt)->msg_packt.sub_tag = 0;
-    (*tty_msg_packt)->flag = MR_TTY_FLAG_UPLD_DATA; /* Upload data flag */
-    (*tty_msg_packt)->credit_update_flag = false;
-    (*tty_msg_packt)->credit_limit_cnt = 0;
+    MR_TTY_MSG_PACKET_SET_DATA_SIZE((*tty_msg_pkt), 0);
+    (*tty_msg_pkt)->msg_pkt.tag = priv->tty_cfg.msg_tag;
+    (*tty_msg_pkt)->msg_pkt.sub_tag = 0;
+    (*tty_msg_pkt)->flag = MR_TTY_FLAG_UPLD_DATA; /* Upload data flag */
+    (*tty_msg_pkt)->credit_update_flag = false;
+    (*tty_msg_pkt)->credit_limit_cnt = 0;
 
     return 0;
 }
@@ -414,16 +414,16 @@ int mr_tty_upld_elem_alloc(mr_tty_priv_t *priv, mr_tty_msg_t **tty_msg_packt, ui
 /**
  * @brief Send allocated upload message packet
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Message packet (must be allocated by mr_tty_upld_elem_alloc)
+ * @param[in] tty_msg_pkt Message packet (must be allocated by mr_tty_upld_elem_alloc)
  * @retval 0 Success
  * @retval <0 Error
  * @note Automatically attaches flow control credit if configured
  */
-int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
+int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt)
 {
     int ret;
     uintptr_t flag;
-    mr_frame_elem_t *frame_elem = MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(tty_msg_packt);
+    mr_frame_elem_t *frame_elem = MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(tty_msg_pkt);
 
     if (frame_elem->data_size > frame_elem->buff_size) {
         LOG_E("%s upld data size too large: %d > %d\r\n", priv->tty_cfg.name, frame_elem->data_size,
@@ -434,12 +434,14 @@ int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
          * and ensure credit values are sent in order */
     flag = bflb_irq_save();
 
-    if ((priv->tty_cfg.dnld_credit_max != 0) && (priv->credit_limit_update_last != priv->device_dnld_credit_limit) &&
-        (tty_msg_packt->flag == MR_TTY_FLAG_UPLD_DATA || tty_msg_packt->flag == MR_TTY_FLAG_CREDIT_UPDATE ||
-         tty_msg_packt->flag == MR_TTY_FLAG_DEVICE_START)) {
+    if ((priv->tty_cfg.dnld_credit_max != 0) &&
+        (priv->credit_limit_update_last != priv->device_dnld_credit_limit) &&
+        (tty_msg_pkt->flag == MR_TTY_FLAG_UPLD_DATA ||
+         tty_msg_pkt->flag == MR_TTY_FLAG_CREDIT_UPDATE ||
+         tty_msg_pkt->flag == MR_TTY_FLAG_DEVICE_START)) {
         /* Send through msg ctrl */
-        tty_msg_packt->credit_update_flag = true;
-        tty_msg_packt->credit_limit_cnt = priv->device_dnld_credit_limit;
+        tty_msg_pkt->credit_update_flag = true;
+        tty_msg_pkt->credit_limit_cnt = priv->device_dnld_credit_limit;
         priv->credit_limit_update_last = priv->device_dnld_credit_limit;
 
         ret = mr_msg_ctrl_upld_send(priv->tty_cfg.msg_ctrl, frame_elem);
@@ -449,8 +451,14 @@ int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
     } else {
         bflb_irq_restore(flag);
 
-        tty_msg_packt->credit_update_flag = false;
-        tty_msg_packt->credit_limit_cnt = 0;
+        if (tty_msg_pkt->flag == MR_TTY_FLAG_CREDIT_UPDATE) {
+            /* No credit update needed, skip sending CREDIT_UPDATE message */
+            mr_tty_upld_elem_free(priv, tty_msg_pkt);
+            return 0;
+        }
+
+        tty_msg_pkt->credit_update_flag = false;
+        tty_msg_pkt->credit_limit_cnt = 0;
         ret = mr_msg_ctrl_upld_send(priv->tty_cfg.msg_ctrl, frame_elem);
     }
 
@@ -465,16 +473,16 @@ int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
 /**
  * @brief Free upload message packet buffer back to pool
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Message packet to free
+ * @param[in] tty_msg_pkt Message packet to free
  * @retval 0 Success
  * @retval <0 Error
  * @note Equivalent to mr_frame_queue_free_elem, must be called in upld_done_cb
  */
-int mr_tty_upld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
+int mr_tty_upld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt)
 {
     int ret;
 
-    mr_frame_elem_t *frame_elem = MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(tty_msg_packt);
+    mr_frame_elem_t *frame_elem = MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(tty_msg_pkt);
     ret = mr_frame_queue_free_elem(frame_elem);
     if (ret < 0) {
         LOG_E("%s Failed to free upld frame element\r\n", priv->tty_cfg.name);
@@ -495,35 +503,35 @@ int mr_tty_upld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
 int mr_tty_upld_data_send(mr_tty_priv_t *priv, const uint8_t *data_buff, uint16_t data_size)
 {
     int ret;
-    mr_tty_msg_t *tty_msg_packt;
+    mr_tty_msg_t *tty_msg_pkt;
 
     if (!priv || !data_buff || data_size == 0) {
         return -1;
     }
 
     /* Allocate message packet */
-    ret = mr_tty_upld_elem_alloc(priv, &tty_msg_packt, 100);
+    ret = mr_tty_upld_elem_alloc(priv, &tty_msg_pkt, 100);
     if (ret < 0) {
         return -1; /* No available buffer, try later */
     }
 
     /* Check buffer size */
-    if (data_size > MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_packt)) {
+    if (data_size > MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_pkt)) {
         LOG_E("%s upld data size too large: %d > %d\r\n", priv->tty_cfg.name, data_size,
-              MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_packt));
-        mr_tty_upld_elem_free(priv, tty_msg_packt);
+              MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_pkt));
+        mr_tty_upld_elem_free(priv, tty_msg_pkt);
         return -1;
     }
 
     /* Copy user data */
-    memcpy(tty_msg_packt->data, data_buff, data_size);
-    MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_packt, data_size);
+    memcpy(tty_msg_pkt->data, data_buff, data_size);
+    MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_pkt, data_size);
 
     /* Send message packet */
-    ret = mr_tty_upld_elem_send(priv, tty_msg_packt);
+    ret = mr_tty_upld_elem_send(priv, tty_msg_pkt);
     if (ret < 0) {
         LOG_E("%s Failed to send TTY upld data to msg_ctrl: %d\r\n", priv->tty_cfg.name, ret);
-        mr_tty_upld_elem_free(priv, tty_msg_packt);
+        mr_tty_upld_elem_free(priv, tty_msg_pkt);
         return -1;
     }
 
@@ -533,23 +541,23 @@ int mr_tty_upld_data_send(mr_tty_priv_t *priv, const uint8_t *data_buff, uint16_
 /**
  * @brief Free download message packet and update flow control
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Message packet to free
+ * @param[in] tty_msg_pkt Message packet to free
  * @retval 0 Success
  * @retval <0 Error
  * @note Must be called after processing download data, automatically updates credit counter
  */
-int mr_tty_dnld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
+int mr_tty_dnld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt)
 {
     int ret;
 
-    if (!priv || !tty_msg_packt) {
+    if (!priv || !tty_msg_pkt) {
         return -1;
     }
 
-    uint8_t packt_flag = tty_msg_packt->flag;
+    uint8_t pkt_flag = tty_msg_pkt->flag;
 
     /* Free frame element */
-    mr_frame_elem_t *frame_elem = MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(tty_msg_packt);
+    mr_frame_elem_t *frame_elem = MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(tty_msg_pkt);
     ret = mr_msg_ctrl_dnld_free(priv->tty_cfg.msg_ctrl, frame_elem);
     if (ret < 0) {
         LOG_E("%s Failed to free dnld frame element\r\n", priv->tty_cfg.name);
@@ -557,7 +565,9 @@ int mr_tty_dnld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
     }
 
     /* Update flow control credit counter */
-    if (priv->tty_cfg.dnld_credit_max && packt_flag == MR_TTY_FLAG_DNLD_DATA) {
+    if (priv->tty_cfg.dnld_credit_max &&
+        priv->tty_status == MR_TTY_DSTA_DEVICE_RUN &&
+        pkt_flag == MR_TTY_FLAG_DNLD_DATA) {
         /* Lock protection for atomic credit update */
         uintptr_t flag = bflb_irq_save();
         bool wakeup_needed = false;
@@ -610,11 +620,13 @@ mr_tty_priv_t *mr_tty_init(mr_tty_cfg_t *cfg)
     priv->tty_cfg = *cfg;
 
     /* Initialize upload frame buffer pool */
-    mr_frame_queue_ctrl_init_cfg_t upld_frame_cfg = { .frame_buff = priv->tty_cfg.upld_frame_buff,
-                                                   .frame_type = priv->tty_cfg.upld_frame_type,
-                                                   .frame_elem_cnt = priv->tty_cfg.upld_frame_count,
-                                                   .frame_elem_size = priv->tty_cfg.upld_frame_size,
-                                                   .name = priv->tty_cfg.name };
+    mr_frame_queue_ctrl_init_cfg_t upld_frame_cfg = {
+        .frame_buff = priv->tty_cfg.upld_frame_buff,
+        .frame_type = priv->tty_cfg.upld_frame_type,
+        .frame_elem_cnt = priv->tty_cfg.upld_frame_count,
+        .frame_elem_size = priv->tty_cfg.upld_frame_size,
+        .name = priv->tty_cfg.name
+    };
     priv->upld_frame_ctrl = mr_frame_queue_create(&upld_frame_cfg);
     if (!priv->upld_frame_ctrl) {
         LOG_E("%s Failed to create TTY frame queue\r\n", priv->tty_cfg.name);
@@ -658,6 +670,6 @@ error_exit:
         mr_msg_cb_unregister(priv->tty_cfg.msg_ctrl, priv->tty_cfg.msg_tag);
     }
     free(priv);
-    LOG_I("%s device initialized failed\r\n", cfg->name);
+    LOG_E("%s device initialized failed\r\n", cfg->name);
     return NULL;
 }

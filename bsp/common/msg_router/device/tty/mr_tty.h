@@ -84,7 +84,7 @@ enum {
  * @param ptr Pointer to mr_tty_msg_t
  * @return Data payload size in bytes
  */
-#define MR_TTY_MSG_PACKET_GET_DATA_SIZE(ptr)      (ptr->msg_packt.len - (sizeof(mr_tty_msg_t) - sizeof(mr_msg_t)))
+#define MR_TTY_MSG_PACKET_GET_DATA_SIZE(ptr)      (ptr->msg_pkt.len - (sizeof(mr_tty_msg_t) - sizeof(mr_msg_t)))
 
 /**
  * @brief Set data payload size for TTY message packet
@@ -93,7 +93,7 @@ enum {
  */
 #define MR_TTY_MSG_PACKET_SET_DATA_SIZE(ptr, size)                                          \
     do {                                                                                    \
-        ptr->msg_packt.len = (sizeof(mr_tty_msg_t) - sizeof(mr_msg_t)) + size;              \
+        ptr->msg_pkt.len = (sizeof(mr_tty_msg_t) - sizeof(mr_msg_t)) + size;                \
         MR_TTY_MSG_PACKET_TO_FRAME_ELEM_ADDR(ptr)->data_size = sizeof(mr_tty_msg_t) + size; \
     } while (0)
 
@@ -114,13 +114,13 @@ enum {
  * @mr_tty_msg_t
  * @brief TTY message packet header with flow control
  * @details Header structure for TTY message packets sent over transport
- *          Similar to mr_eth_msg_packt but for TTY communication
+ *          Similar to mr_eth_msg_pkt but for TTY communication
  */
 typedef struct {
-    struct mr_msg_packt msg_packt; /**< Base message packet header */
+    struct mr_msg_pkt msg_pkt; /**< Base message packet header */
 
-    uint8_t reseved[1]; /**< Alignment padding */
-    uint8_t flag;       /**< Packet flag (see MR_TTY_FLAG_*) */
+    uint8_t reserved[1]; /**< Alignment padding */
+    uint8_t flag;        /**< Packet flag (see MR_TTY_FLAG_*) */
 
     uint8_t credit_update_flag; /**< Credit update flag */
     uint8_t credit_limit_cnt;   /**< Credit limit counter */
@@ -147,25 +147,18 @@ struct mr_tty_cfg_s {
     /* Upload (device to host) buffer configuration */
     uint16_t upld_frame_size;  /**< Frame buffer size in bytes */
     uint16_t upld_frame_count; /**< Number of frame buffers */
-    void *upld_frame_buff; /**< Frame buffer address (must be non-cacheable, total size = upld_frame_size * upld_frame_count) */
-    uint16_t upld_frame_type; /**< Frame buffer type identifier (for debugging) */
+    void *upld_frame_buff;     /**< Frame buffer address (must be non-cacheable, total size = upld_frame_size * upld_frame_count) */
+    uint16_t upld_frame_type;  /**< Frame buffer type identifier (for debugging) */
 
     /* Flow control configuration */
-    uint8_t
-        dnld_credit_max; /**< Download credit limit (also initial value sent to host during handshake, 0 = no flow control) */
-    uint8_t
-        upld_credit_update_threshold; /**< Threshold for proactive credit update (when current credit - last update > threshold) */
+    uint8_t dnld_credit_max;              /**< Download credit limit (also initial value sent to host during handshake, 0 = no flow control) */
+    uint8_t upld_credit_update_threshold; /**< Threshold for proactive credit update (when current credit - last update > threshold) */
 
     /* Callback functions */
-    int (*dnld_output_cb)(
-        mr_tty_priv_t *priv,
-        mr_tty_msg_t *tty_msg_packt); /**< Download data receive callback (must call mr_tty_dnld_elem_free after use) */
-    int (*upld_done_cb)(
-        mr_tty_priv_t *priv,
-        mr_tty_msg_t *tty_msg_packt); /**< Upload complete callback (optional, auto-freed if not registered) */
-    int (*tty_event)(mr_tty_priv_t *priv,
-                     uint32_t event_mask);    /**< Event notification callback (optional, e.g., OPEN/CLOSE events) */
-    int (*tty_reset_cb)(mr_tty_priv_t *priv); /**< Reset callback (optional) */
+    int (*dnld_output_cb)(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt); /**< Download data receive callback (must call mr_tty_dnld_elem_free after use) */
+    int (*upld_done_cb)(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt);   /**< Upload complete callback (optional, auto-freed if not registered) */
+    int (*tty_event)(mr_tty_priv_t *priv, uint32_t event_mask);            /**< Event notification callback (optional, e.g., OPEN/CLOSE events) */
+    int (*tty_reset_cb)(mr_tty_priv_t *priv);                              /**< Reset callback (optional) */
 
     int32_t task_stack_size; /**< TTY processing task stack size */
     int32_t task_priority;   /**< TTY processing task priority */
@@ -213,31 +206,31 @@ mr_tty_priv_t *mr_tty_init(mr_tty_cfg_t *cfg);
 /**
  * @brief Allocate upload message packet buffer
  * @param[in] priv Pointer to TTY private structure
- * @param[out] tty_msg_packt Pointer to store allocated message packet
+ * @param[out] tty_msg_pkt Pointer to store allocated message packet
  * @param[in] timeout Timeout in ticks to wait for allocation
  * @retval 0 Success
  * @retval <0 Error (no buffer available)
  */
-int mr_tty_upld_elem_alloc(mr_tty_priv_t *priv, mr_tty_msg_t **tty_msg_packt, uint32_t timeout);
+int mr_tty_upld_elem_alloc(mr_tty_priv_t *priv, mr_tty_msg_t **tty_msg_pkt, uint32_t timeout);
 
 /**
  * @brief Send upload message packet
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Pointer to message packet (must be allocated by mr_tty_upld_elem_alloc)
+ * @param[in] tty_msg_pkt Pointer to message packet (must be allocated by mr_tty_upld_elem_alloc)
  * @retval 0 Success
  * @retval <0 Error
  */
-int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt);
+int mr_tty_upld_elem_send(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt);
 
 /**
  * @brief Free upload message packet buffer
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Pointer to message packet to free
+ * @param[in] tty_msg_pkt Pointer to message packet to free
  * @retval 0 Success
  * @retval <0 Error
  * @note Should be called in upld_done_cb or after send failure
  */
-int mr_tty_upld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt);
+int mr_tty_upld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt);
 
 /**
  * @brief Send TTY upload data (convenient wrapper)
@@ -253,11 +246,11 @@ int mr_tty_upld_data_send(mr_tty_priv_t *priv, const uint8_t *data_buff, uint16_
 /**
  * @brief Free download message packet buffer and update flow control
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Pointer to message packet to free
+ * @param[in] tty_msg_pkt Pointer to message packet to free
  * @retval 0 Success
  * @retval <0 Error
  * @note Must be called after processing download data in dnld_output_cb
  */
-int mr_tty_dnld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt);
+int mr_tty_dnld_elem_free(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt);
 
 #endif /* __MR_TTY_H_ */

@@ -186,7 +186,7 @@ void bflb_pwm_v2_stop(struct bflb_device_s *dev)
 #endif
 }
 
-float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
+uint32_t bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_pwm_v2_get_frequency
     return romapi_bflb_pwm_v2_get_frequency(dev);
@@ -194,7 +194,7 @@ float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
     uint32_t reg_base;
     uint32_t regval;
     uint32_t tmp;
-    float src, div, period;
+    uint32_t src, div, period;
 
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
@@ -202,24 +202,53 @@ float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
     tmp = (regval & PWM_REG_CLK_SEL_MASK) >> PWM_REG_CLK_SEL_SHIFT;
     switch (tmp) {
         case 0:
-            src = (float)bflb_clk_get_system_clock(BFLB_SYSTEM_XCLK);
+            src = bflb_clk_get_system_clock(BFLB_SYSTEM_XCLK);
             break;
         case 1:
-            src = (float)bflb_clk_get_system_clock(BFLB_SYSTEM_PBCLK);
+            src = bflb_clk_get_system_clock(BFLB_SYSTEM_PBCLK);
             break;
         default:
-            src = (float)bflb_clk_get_system_clock(BFLB_SYSTEM_32K_CLK);
+            src = bflb_clk_get_system_clock(BFLB_SYSTEM_32K_CLK);
             break;
     }
-    /* get clock dividor */
+    /* get clock divider */
     tmp = (regval & PWM_CLK_DIV_MASK) >> PWM_CLK_DIV_SHIFT;
-    div = tmp ? (float)tmp : 1.0f;
+    div = tmp ? tmp : 1;
     /* get pwm period count */
     regval = getreg32(reg_base + PWM_MC0_PERIOD_OFFSET);
-    tmp = (regval & PWM_PERIOD_MASK) >> PWM_PERIOD_SHIFT;
-    period = (float)tmp;
-    /* calculate freaueny */
-    return (src / div / period);
+    period = (regval & PWM_PERIOD_MASK) >> PWM_PERIOD_SHIFT;
+    /* calculate frequency */
+    tmp = div * period;
+    return (src + tmp / 2) / tmp;
+#endif
+}
+
+void bflb_pwm_v2_get_duty(struct bflb_device_s *dev, uint8_t ch, uint32_t *delta, uint32_t *period)
+{
+    LHAL_PARAM_ASSERT(delta);
+    LHAL_PARAM_ASSERT(period);
+
+#ifdef romapi_bflb_pwm_v2_get_duty
+    romapi_bflb_pwm_v2_get_duty(dev, ch, delta, period);
+#else
+    uint32_t reg_base;
+    uint32_t regval;
+    uint32_t val, val2;
+
+    reg_base = dev->reg_base;
+    /* get pwm period count */
+    regval = getreg32(reg_base + PWM_MC0_PERIOD_OFFSET);
+    *period = (regval & PWM_PERIOD_MASK) >> PWM_PERIOD_SHIFT;
+    /* get pwm threshold count */
+    regval = getreg32(reg_base + PWM_MC0_CH0_THRE_OFFSET + ch * 4);
+    val = (regval & PWM_CH0_THREL_MASK) >> PWM_CH0_THREL_SHIFT;
+    val2 = (regval & PWM_CH0_THREH_MASK) >> PWM_CH0_THREH_SHIFT;
+    /* calculate delta of threshold */
+    if (val >= val2) {
+        *delta = 0;
+    } else {
+        *delta = val2 - val;
+    }
 #endif
 }
 

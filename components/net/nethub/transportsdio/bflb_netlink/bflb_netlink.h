@@ -21,7 +21,7 @@
 /** Private memory pool configuration, frame count affects netlink RX and msg TX */
 #define NETLINK_FRAME_CNT                    (4)
 #define NETLINK_DATA_HDR_LEN                 (4)
-#define NETLINK_FRAME_RAWSIZE                (1024)
+#define NETLINK_FRAME_RAWSIZE                (1500)
 #define NETLINK_FRAME_SIZE                   (NETLINK_DATA_HDR_LEN + NETLINK_FRAME_RAWSIZE + FRAME_BUFF_PAYLOAD_OFFSET)
 
 /** Download flow control limit value, also the initial flow control limit value */

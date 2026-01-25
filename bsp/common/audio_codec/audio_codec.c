@@ -6,12 +6,14 @@
 
 #include "audio_codec_driver.h"
 #include "audio_codec_es8311.h"
+#include "audio_codec_es8389.h"
 #include "audio_codec_es8388.h"
 #include "audio_codec_wm8978.h"
 
 static const audio_codec_driver_t *g_drivers[] = {
     NULL,
     &audio_codec_es8311_driver,
+    &audio_codec_es8389_driver,
     &audio_codec_es8388_driver,
     &audio_codec_wm8978_driver,
 };

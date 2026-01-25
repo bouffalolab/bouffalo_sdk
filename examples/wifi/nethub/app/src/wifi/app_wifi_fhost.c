@@ -67,13 +67,12 @@ void app_wifi_init(void)
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
     wifi_task_create();
-    vTaskDelay(500);
 
     LOG_I("Starting fhost ...\r\n");
     fhost_init();
 
     while (!wifi_init_done) {
-        vTaskDelay(500);
+        vTaskDelay(1);
     }
     app_atmodule_init();
 }

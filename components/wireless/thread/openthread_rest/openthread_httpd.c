@@ -154,7 +154,7 @@ static const http_method_t http_method_list[] = {
     running out of memory */
 static struct http_state *http_connections;
 
-fs_bytes_left(struct fs_file *file)
+int fs_bytes_left(struct fs_file *file)
 {
   return file->len - file->index;
 }
@@ -597,12 +597,16 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
 
   /* received enough data for minimal request? */
   data_len = hs->req->tot_len;
-  VerifyOrExit(data_len >= MIN_REQ_LEN, (lwip_debug_str = "Invalid length\n", 
-                                         error_state = http_resp_state_bad_request));
+#ifdef LWIP_DEBUG
+  lwip_debug_str = "Invalid length\n";
+#endif
+  VerifyOrExit(data_len >= MIN_REQ_LEN, error_state = http_resp_state_bad_request);
 
   data = (char *)malloc(data_len + 1);
-  VerifyOrExit(data != NULL, (lwip_debug_str = "No enough memory\n",
-                              error_state = http_resp_state_internal_server_error));
+#ifdef LWIP_DEBUG
+  lwip_debug_str = "No enough memory\n";
+#endif
+  VerifyOrExit(data != NULL, error_state = http_resp_state_internal_server_error);
   pbuf_copy_partial(hs->req, data, data_len, 0);
   data[data_len] = '\0';
 
@@ -619,10 +623,10 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
       if (sp1) {
         sp1 = sp1 + sizeof(HTTP_CONTENT_LEN) - 1;
         sp2 = lwip_strnstr(sp1, CRLF, (size_t)(http_header_end - sp1 + sizeof(CRLF) - 1));
-
-        VerifyOrExit(sp2 && (size_t)(sp2 - sp1) < sizeof(body_len_str), 
-                     (lwip_debug_str = "No found http request\n",
-                      error_state = http_resp_state_bad_request));
+#ifdef LWIP_DEBUG
+        lwip_debug_str = "No found http request\n";
+#endif
+        VerifyOrExit(sp2 && (size_t)(sp2 - sp1) < sizeof(body_len_str), error_state = http_resp_state_bad_request);
 
         memcpy(body_len_str, sp1, (size_t)(sp2 - sp1));
         body_len_str[(size_t)(sp2 - sp1)] = '\0';
@@ -633,16 +637,17 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
     } while (sp1);
 
     hs->req_len = body_len + (size_t)(http_header_end - data) + 2 * (sizeof(CRLF) - 1);
-    LWIP_DEBUGF(HTTPD_DEBUG, ("Expect %d bytes, and %d bytes received\n", hs->req_len, data_len));
+    LWIP_DEBUGF(HTTPD_DEBUG, ("Expect %d bytes, and %ld bytes received\n", hs->req_len, data_len));
     VerifyOrExit(data_len >= hs->req_len, error_state = http_resp_state_none);
 
     /** try to request line */
     ptr = data;
     do {
       sp2 = lwip_strnstr(ptr, CRLF, (size_t)(http_header_end + sizeof(CRLF) - ptr - 1));
-
-      VerifyOrExit(sp2, (lwip_debug_str = "Failed to get http request line\n",
-                         error_state = http_resp_state_bad_request));
+#ifdef LWIP_DEBUG
+      lwip_debug_str = "Failed to get http request line\n";
+#endif
+      VerifyOrExit(sp2, error_state = http_resp_state_bad_request);
       sp2[0] = '\0';
       sp1 = lwip_strnstr(ptr, " ", (size_t)(sp2 - ptr));
       if (sp1) {
@@ -678,12 +683,18 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
       ptr = sp2 + 2;
     } while (ptr < http_header_end);
 
-    VerifyOrExit(uri && http_header_start, (lwip_debug_str = "Failed to parse requet line\n",
-                                            error_state = http_resp_state_bad_request));
+#ifdef LWIP_DEBUG
+    lwip_debug_str = "Failed to parse requet line\n";
+#endif
+    VerifyOrExit(uri && http_header_start, error_state = http_resp_state_bad_request);
 
-    VerifyOrExit(method_type != http_method_type_unkown, (lwip_debug_str = "Unsupported request method\n",
-                                                          error_state = http_resp_state_not_implemented));
-
+#ifdef LWIP_DEBUG
+    lwip_debug_str = "Unsupported request method\n";
+#endif
+    VerifyOrExit(method_type != http_method_type_unkown, error_state = http_resp_state_not_implemented);
+#ifdef LWIP_DEBUG
+    lwip_debug_str = NULL;
+#endif
     LWIP_DEBUGF(HTTPD_DEBUG, ("Received %s %s request for URI: %s\n",
                               ver ? ver:"HTTP/0.9", http_method_list[method_type].method, uri));
 
@@ -692,7 +703,7 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
 
     do {
       line_len = strlen(ptr);
-      LWIP_DEBUGF(HTTPD_DEBUG, ("HTTP header: [%s], %d\n", ptr, line_len));
+      LWIP_DEBUGF(HTTPD_DEBUG, ("HTTP header: [%s], %ld\n", ptr, line_len));
 
       if (lwip_strnstr(ptr, HTTP11_CONNECTIONKEEPALIVE, line_len) 
         || lwip_strnstr(ptr, HTTP11_CONNECTIONKEEPALIVE2, line_len)) {
@@ -701,16 +712,17 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
         hs->keepalive = 0;
       }
 
-      if (lwip_strnstr(ptr, HTTP_HDR_ACCEPT_JSON, line_len)) {
+      if (0 == memcmp(ptr, HTTP_HDR_ACCEPT_JSON, line_len)) {
         accept_type = http_accept_type_json;
-      } else if (lwip_strnstr(sp1, HTTP_HDR_ACCEPT_TXT, line_len)) {
+      }
+      else if (0 == memcmp(ptr, HTTP_HDR_ACCEPT_TXT, line_len)) {
         accept_type = http_accept_type_txt;
       }
 
       ptr = ptr + line_len + 2;
     } while (ptr < http_header_end);
 
-    LWIP_DEBUGF(HTTPD_DEBUG, ("More %d bytes over body %d bytes.\n", 
+    LWIP_DEBUGF(HTTPD_DEBUG, ("More %ld bytes over body %ld bytes.\n", 
                               data_len - (body_len + (size_t)(http_header_end - data) + 2 * (sizeof(CRLF) - 1)),
                               body_len));
 
@@ -718,16 +730,22 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
       body = http_header_end + 4;
     }
 
-    VerifyOrExit(openthread_rest_request(hs, method_type, accept_type, uri, body, http_continue), 
-                 (lwip_debug_str = "Failed to construct response", 
-                  error_state = http_resp_state_internal_server_error));
+#ifdef LWIP_DEBUG
+    lwip_debug_str = "Failed to construct response";
+#endif
+    VerifyOrExit(openthread_rest_request(hs, method_type, accept_type, uri, body, http_continue),
+                  error_state = http_resp_state_internal_server_error);
 
     error_state = http_resp_state_ok;
   }
   else {
-    LWIP_DEBUGF(HTTPD_DEBUG, ("Received %d bytes, but not found CRLF CRLF\n", data_len));
+    LWIP_DEBUGF(HTTPD_DEBUG, ("Received %ld bytes, but not found CRLF CRLF\n", data_len));
     VerifyOrExit(data_len < LWIP_HTTPD_MAX_REQ_LENGTH, error_state = http_resp_state_bad_request);
   }
+
+#ifdef LWIP_DEBUG
+  lwip_debug_str = NULL;
+#endif
 
 exit:
 
@@ -1028,10 +1046,10 @@ httpd_init_pcb(struct altcp_pcb *pcb, u16_t port)
  * @param uri pointer that receives the actual file name URI
  * @return file struct for the error page or NULL no matching file was found
  */
-err_t http_setup_file(void * connection, http_resp_state_t resp_state, char * body)
+err_t http_setup_file(void * connection, http_accept_type_t accept_type, http_resp_state_t resp_state, char * body)
 {
   struct http_state *hs = (struct http_state *) connection;
-  char * resp = openthread_rest_construct_resp(resp_state, body);
+  char * resp = openthread_rest_construct_resp(accept_type, resp_state, body);
 
   if (NULL == resp) {
     return ERR_VAL;
@@ -1048,7 +1066,7 @@ err_t http_setup_file(void * connection, http_resp_state_t resp_state, char * bo
 
 err_t http_init_error_file(void *hs, http_resp_state_t resp_state)
 {
-  return ERR_OK == http_setup_file(hs, resp_state, NULL);
+  return ERR_OK == http_setup_file(hs, http_accept_type_json, resp_state, NULL);
 }
 /**
  * @ingroup openthread_httpd_init

@@ -387,15 +387,11 @@ static int hd_netlink_send_to_userspace(struct hd_netlink_priv *priv,
 
     if (ret < 0) {
         atomic_inc(&priv->nl_tx_dropped);
-        if (ret == -ECONNREFUSED) {
-            NETLINK_ERR(priv, "Failed to send Netlink message: %d (ECONNREFUSED - no userspace listener)\n", ret);
-        } else {
-            NETLINK_ERR(priv, "Failed to send Netlink message: %d\n", ret);
-        }
+        NETLINK_ERR(priv, "Failed to send Netlink message: %d (ECONNREFUSED - no userspace listener)\n", ret);
 
         /* Print first bytes of data for debugging */
         if (msg_len > 0) {
-            int print_len = min_t(int, msg_len, 2048);
+            int print_len = min_t(int, msg_len, HD_NETLINK_MAX_MSGLEN);
             NETLINK_ERR(priv, "Data preview[%u]: %*ph\n", msg_len, print_len, msg);
         }
 

@@ -33,6 +33,8 @@ enum {
     MR_MSG_TAG_TTY_USER_2, /**< TTY user message tag */
     MR_MSG_TAG_TTY_USER_3, /**< TTY user message tag */
 
+    MR_MSG_TAG_NETLINK, /**< Netlink message tag */
+
     MR_MSG_TAG_MAX /**< Maximum message tag */
 };
 
@@ -47,11 +49,11 @@ enum {
 #pragma pack(push, 1)
 
 /**
- * @struct mr_msg_packt
+ * @struct mr_msg_pkt
  * @brief Message packet header structure
  * @details Defines the format of message packets used for inter-subsystem communication
  */
-struct mr_msg_packt {
+struct mr_msg_pkt {
     uint8_t tag;     /**< Primary message tag (see MR_MSG_TAG_*) */
     uint8_t sub_tag; /**< Secondary message tag for subcategories */
     uint16_t len;    /**< Length of data payload in bytes */

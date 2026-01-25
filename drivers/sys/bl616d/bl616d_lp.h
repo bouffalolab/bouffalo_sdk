@@ -6,6 +6,9 @@
 
 typedef int (*bl_lp_cb_t)(void *arg);
 
+#define BL_LP_SOFT_INT_TRIG             (csi_vic_set_pending_irq(MSOFT_IRQn))
+#define BL_LP_SOFT_INT_CLEAR            (csi_vic_clear_pending_irq(MSOFT_IRQn))
+
 #define IOT2LP_PARA_ADDR (0x20090000 + 0x0400)
 // #define LP_FW_MAX_SIZE            30 * 1024
 
@@ -21,6 +24,51 @@ enum PSM_EVENT {
     PSM_EVENT_APP,
     PSM_EVENT_LP_BUF_REUSED,
 };
+
+/******************** io wakeup cfg ********************/
+
+#define BL_LP_WAKEUP_IO_MAX_NUM                    52
+
+
+#define BL_LP_IO_WAKEUP_MODE_LOW             1
+#define BL_LP_IO_WAKEUP_MODE_HIGH            2
+#define BL_LP_IO_WAKEUP_MODE_FALLING         3
+#define BL_LP_IO_WAKEUP_MODE_RISING          4
+#define BL_LP_IO_WAKEUP_MODE_RISING_FALLING  5
+
+/** @defgroup BL_LP_AON_IO_TRIG aon io wakeup trigger mode
+  * @{
+  */
+#define BL_LP_AON_IO_TRIG_SYNC_FALLING_EDGE        (0x0) /*!< AON_IO INT trigger type: sync falling edge trigger */
+#define BL_LP_AON_IO_TRIG_SYNC_RISING_EDGE         (0x1) /*!< AON_IO INT trigger type: sync rising edge trigger */
+#define BL_LP_AON_IO_TRIG_SYNC_LOW_LEVEL           (0x2) /*!< AON_IO INT trigger type: sync low level trigger */
+#define BL_LP_AON_IO_TRIG_SYNC_HIGH_LEVEL          (0x3) /*!< AON_IO INT trigger type: sync high level trigger */
+#define BL_LP_AON_IO_TRIG_SYNC_RISING_FALLING_EDGE (0x4) /*!< AON_IO INT trigger type: sync rising falling edge trigger */
+#define BL_LP_AON_IO_TRIG_ASYNC_FALLING_EDGE       (0x8) /*!< AON_IO INT trigger type: async falling edge trigger */
+#define BL_LP_AON_IO_TRIG_ASYNC_RISING_EDGE        (0x9) /*!< AON_IO INT trigger type: async rising edge trigger */
+#define BL_LP_AON_IO_TRIG_ASYNC_LOW_LEVEL          (0xA) /*!< AON_IO INT trigger type: async low level trigger */
+#define BL_LP_AON_IO_TRIG_ASYNC_HIGH_LEVEL         (0xB) /*!< AON_IO INT trigger type: async high level trigger */
+#define BL_LP_AON_IO_TRIG_NONE                     (0xF) /*!< AON_IO INT trigger type: none */
+/**
+  * @}
+  */
+
+/** @defgroup BL_LP_PDS_IO_TRIG aon io wakeup trigger mode
+  * @{
+  */
+#define BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE        (0x0) /*!< PDS_IO INT trigger type: sync falling edge trigger */
+#define BL_LP_PDS_IO_TRIG_SYNC_RISING_EDGE         (0x1) /*!< PDS_IO INT trigger type: sync rising edge trigger */
+#define BL_LP_PDS_IO_TRIG_SYNC_LOW_LEVEL           (0x2) /*!< PDS_IO INT trigger type: sync low level trigger */
+#define BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL          (0x3) /*!< PDS_IO INT trigger type: sync high level trigger */
+#define BL_LP_PDS_IO_TRIG_SYNC_RISING_FALLING_EDGE (0x4) /*!< PDS_IO INT trigger type: sync rising falling edge trigger */
+#define BL_LP_PDS_IO_TRIG_ASYNC_FALLING_EDGE       (0x8) /*!< PDS_IO INT trigger type: async falling edge trigger */
+#define BL_LP_PDS_IO_TRIG_ASYNC_RISING_EDGE        (0x9) /*!< PDS_IO INT trigger type: async rising edge trigger */
+#define BL_LP_PDS_IO_TRIG_ASYNC_LOW_LEVEL          (0xA) /*!< PDS_IO INT trigger type: async low level trigger */
+#define BL_LP_PDS_IO_TRIG_ASYNC_HIGH_LEVEL         (0xB) /*!< PDS_IO INT trigger type: async high level trigger */
+#define BL_LP_PDS_IO_TRIG_NONE                     (0xF) /*!< PDS_IO INT trigger type: none */
+/**
+  * @}
+  */
 
 #define TIME_DEBUG_NUM_MAX 20
 
@@ -134,16 +182,7 @@ typedef struct {
 } lp_fw_wifi_para_t;
 
 typedef struct {
-    uint64_t io_ie;
-    uint64_t io_pu;
-    uint64_t io_pd;
-    uint8_t io_0_5_trig_mode;
-    uint8_t io_6_36_trig_mode[31];
-    uint64_t io_wakeup_unmask;
-} lp_fw_gpio_cfg_t;
-
-typedef struct {
-    lp_fw_gpio_cfg_t *io_wakeup_parameter;
+    void *io_wakeup_parameter;
     uint8_t wifi_wakeup_en;
     uint8_t ble_wakeup_en;
     uint8_t rtc_wakeup_en;
@@ -154,8 +193,6 @@ typedef struct {
     int32_t wakeup_reason;        /* reason of wake up */
     uint64_t wakeup_io_bits;      /* wake io bits */
     uint64_t wakeup_io_edge_bits; /* wake edge bits */
-    // uint8_t wake_acomp_bits;      /* wake acomp bits */
-    // uint8_t wake_acomp_edge_bits; /* wake acomp bits */
 } lp_fw_wakeup_reason_t;
 
 typedef struct {
@@ -324,47 +361,6 @@ typedef struct {
     char lpfw_version_str[];
 } bl_lp_fw_info_t;
 
-typedef struct {
-    /* input enable, use @ref BL_LP_ACOMP_EN */
-    uint8_t acomp0_en;
-    uint8_t acomp1_en;
-
-    /* Map to pins num, range: 2, 3, 10, 12, 13, 14, 19 */
-    uint8_t acomp0_io_num;
-    uint8_t acomp1_io_num;
-
-    /* trigger mode, use @ref BL_LP_ACOMP_TRIG  */
-    uint8_t acomp0_trig_mode;
-    uint8_t acomp1_trig_mode;
-
-} bl_lp_acomp_cfg_t;
-
-// /******************** acomp wakeup cfg ********************/
-
-// #define BL_LP_WAKEUP_ACOMP_MAX_NUM           2
-
-// /** @defgroup BL_LP_ACOMP_EN acomp input enable
-//   * @{
-//   */
-// #define BL_LP_ACOMP_DISABLE                  0
-// #define BL_LP_ACOMP_ENABLE                   1
-// /**
-//   * @}
-//   */
-
-// /** @defgroup BL_LP_ACOMP_TRIG acomp wakeup trigger mode
-//   * @{
-//   */
-//  #define BL_LP_ACOMP_TRIG_EDGE_FALLING        1
-//  #define BL_LP_ACOMP_TRIG_EDGE_RISING         2
-//  #define BL_LP_ACOMP_TRIG_EDGE_FALLING_RISING 3
-//  /**
-//    * @}
-//    */
-
-// #define BL_LP_ACOMP_WAKEUP_MODE_FALLING 1
-// #define BL_LP_ACOMP_WAKEUP_MODE_RISING  2
-
 /* statistics info */
 typedef struct {
     int32_t lpfw_wakeup_cnt;
@@ -376,6 +372,11 @@ typedef struct {
     uint64_t active_lpfw_us;
     uint64_t active_app_us;
 } bl_lp_info_t;
+
+typedef struct {
+    void (*wakeup_io_callback)(uint64_t wake_up_io_bits);
+} bl_lp_soft_irq_callback_t;
+
 
 /* beacon stamp valid type */
 #define BEACON_STAMP_LPFW   1
@@ -456,4 +457,7 @@ void bl_lp_bcn_timestamp_update(uint64_t beacon_timestamp_us, uint64_t rtc_times
 
 uint32_t bl_lp_get_beacon_interval_tu(void);
 uint32_t bl_lp_get_dtim_num(void);
+
+int bl_lp_io_wakeup_cfg(void *io_wakeup_cfg);
+
 #endif

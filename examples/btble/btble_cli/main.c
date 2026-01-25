@@ -6,9 +6,7 @@
 #include "bluetooth.h"
 #include "conn.h"
 #include "conn_internal.h"
-#if defined(BL702)
-#include "ble_lib_api.h"
-#elif defined(BL602)
+#if defined(BL602)
 #include "ble_lib_api.h"
 #include "bl602_glb.h"
 #include "rfparam_adapter.h"
@@ -89,7 +87,7 @@ static TaskHandle_t app_start_handle;
 static void app_start_task(void *pvParameters)
 {
     // Initialize BLE controller
-    #if defined(BL702) || defined(BL602)
+    #if defined(BL602)
     ble_controller_init(configMAX_PRIORITIES - 1);
     #else
     btble_controller_init(configMAX_PRIORITIES - 1);
@@ -114,13 +112,12 @@ int main(void)
     /* ble stack need easyflash kv */
     easyflash_init();
 #endif
-#if defined(BL616)||defined(BL616D)||defined(BL602)
+
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return 0;
     }
-#endif
 
     xTaskCreate(app_start_task, (char *)"app_start", 1024, NULL, configMAX_PRIORITIES - 2, &app_start_handle);
 

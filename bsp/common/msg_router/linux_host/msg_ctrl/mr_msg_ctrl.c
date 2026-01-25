@@ -29,18 +29,18 @@ static int mr_msg_upld_recv_handler(struct mr_msg_ctrl *msg_ctrl, struct sk_buff
     int ret = 0;
     mr_msg_cb_t upld_recv_cb = NULL;
     void *upld_recv_arg = NULL;
-    struct mr_msg_packt *msg_packt;
+    struct mr_msg_pkt *msg_pkt;
     int skb_len;
     uint8_t msg_tag;
 
-    if (skb->len < sizeof(struct mr_msg_packt)) {
+    if (skb->len < sizeof(struct mr_msg_pkt)) {
         MSG_CTRL_ERR(msg_ctrl, "msg skb len is invalid: %d", skb->len);
         ret = -EINVAL;
         goto err_exit;
     }
 
-    msg_packt = (struct mr_msg_packt *)skb->data;
-    msg_tag = msg_packt->tag;
+    msg_pkt = (struct mr_msg_pkt *)skb->data;
+    msg_tag = msg_pkt->tag;
 
     if (msg_tag >= MR_MSG_TAG_MAX) {
         MSG_CTRL_ERR(msg_ctrl, "msg skb tag is invalid: %d", msg_tag);
@@ -48,15 +48,15 @@ static int mr_msg_upld_recv_handler(struct mr_msg_ctrl *msg_ctrl, struct sk_buff
         goto err_exit;
     }
 
-    if (msg_packt->len + sizeof(struct mr_msg_packt) > skb->len) {
-        MSG_CTRL_ERR(msg_ctrl, "msg skb len is less than hdr len: %d < %lu", skb->len,
-                     msg_packt->len + sizeof(struct mr_msg_packt));
+    if (msg_pkt->len + sizeof(struct mr_msg_pkt) > skb->len) {
+        MSG_CTRL_ERR(msg_ctrl, "msg skb len is less than hdr len: %d < %u", skb->len,
+                     (unsigned int)(msg_pkt->len + sizeof(struct mr_msg_pkt)));
         ret = -EINVAL;
         goto err_exit;
     }
 
     /* Trim SKB to actual message length to remove SDIO block alignment padding */
-    skb_trim(skb, msg_packt->len + sizeof(struct mr_msg_packt));
+    skb_trim(skb, msg_pkt->len + sizeof(struct mr_msg_pkt));
     skb_len = skb->len;
 
     mutex_lock(&msg_ctrl->upld_cb_mutex);
@@ -170,11 +170,11 @@ static int mr_msg_dnld_send_handler(struct mr_msg_ctrl *msg_ctrl, struct sk_buff
     int ret = 0;
     mr_msg_cb_t dnld_send_cb = NULL;
     void *dnld_send_arg = NULL;
-    struct mr_msg_packt *msg_packt;
+    struct mr_msg_pkt *msg_pkt;
     uint8_t msg_tag;
 
-    msg_packt = (struct mr_msg_packt *)skb->data;
-    msg_tag = msg_packt->tag;
+    msg_pkt = (struct mr_msg_pkt *)skb->data;
+    msg_tag = msg_pkt->tag;
 
     mutex_lock(&msg_ctrl->dnld_cb_mutex);
     dnld_send_cb = msg_ctrl->mr_msg_dnld_send_cb[msg_tag];
@@ -210,7 +210,7 @@ static int mr_msg_dnld_send_handler(struct mr_msg_ctrl *msg_ctrl, struct sk_buff
 static int mr_msg_dnld_send_cplt_cb(struct sk_buff *skb, bool success, void *arg)
 {
     struct mr_msg_ctrl *msg_ctrl = arg;
-    struct mr_msg_packt *msg_packt;
+    struct mr_msg_pkt *msg_pkt;
     uint8_t msg_tag;
     mr_msg_cb_t dnld_send_cb = NULL;
     void *dnld_send_arg = NULL;
@@ -218,8 +218,8 @@ static int mr_msg_dnld_send_cplt_cb(struct sk_buff *skb, bool success, void *arg
 
     MSG_CTRL_DBG(msg_ctrl, "mr_msg_dnld_send_cplt_cb, success: %s", success ? "true" : "false");
 
-    msg_packt = (struct mr_msg_packt *)skb->data;
-    msg_tag = msg_packt->tag;
+    msg_pkt = (struct mr_msg_pkt *)skb->data;
+    msg_tag = msg_pkt->tag;
 
     if (msg_tag >= MR_MSG_TAG_MAX) {
         MSG_CTRL_ERR(msg_ctrl, "dnld completion invalid tag: %d", msg_tag);
@@ -626,30 +626,30 @@ int mr_msg_ctrl_send(struct mr_msg_ctrl *msg_ctrl, struct sk_buff *skb)
 {
     int ret;
 
-    struct mr_msg_packt *msg_packt;
+    struct mr_msg_pkt *msg_pkt;
 
     if (!msg_ctrl || !skb) {
         MSG_CTRL_ERR(msg_ctrl, "send msg_ctrl or skb is NULL");
         return -EINVAL;
     }
 
-    if (skb->len < sizeof(struct mr_msg_packt)) {
+    if (skb->len < sizeof(struct mr_msg_pkt)) {
         MSG_CTRL_ERR(msg_ctrl, "send msg skb len is invalid: %d", skb->len);
         ret = -EINVAL;
         goto err_exit;
     }
 
-    msg_packt = (struct mr_msg_packt *)skb->data;
+    msg_pkt = (struct mr_msg_pkt *)skb->data;
 
-    if (msg_packt->tag >= MR_MSG_TAG_MAX) {
-        MSG_CTRL_ERR(msg_ctrl, "send msg skb tag is invalid: %d", msg_packt->tag);
+    if (msg_pkt->tag >= MR_MSG_TAG_MAX) {
+        MSG_CTRL_ERR(msg_ctrl, "send msg skb tag is invalid: %d", msg_pkt->tag);
         ret = -EINVAL;
         goto err_exit;
     }
 
-    if (msg_packt->len + sizeof(struct mr_msg_packt) > skb->len) {
-        MSG_CTRL_ERR(msg_ctrl, "send msg skb len is less than hdr len: %d < %lu", skb->len,
-                     msg_packt->len + sizeof(struct mr_msg_packt));
+    if (msg_pkt->len + sizeof(struct mr_msg_pkt) > skb->len) {
+        MSG_CTRL_ERR(msg_ctrl, "send msg skb len is less than hdr len: %d < %u", skb->len,
+                     (unsigned int)(msg_pkt->len + sizeof(struct mr_msg_pkt)));
         ret = -EINVAL;
         goto err_exit;
     }
@@ -665,7 +665,7 @@ int mr_msg_ctrl_send(struct mr_msg_ctrl *msg_ctrl, struct sk_buff *skb)
         goto err_exit;
     }
 
-    MSG_CTRL_DBG(msg_ctrl, "mr_msg_ctrl_send queued, tag: %d, len: %d", msg_packt->tag, msg_packt->len);
+    MSG_CTRL_DBG(msg_ctrl, "mr_msg_ctrl_send queued, tag: %d, len: %d", msg_pkt->tag, msg_pkt->len);
     /* Note: Success statistics will be updated by dnld completion callback */
     return 0;
 

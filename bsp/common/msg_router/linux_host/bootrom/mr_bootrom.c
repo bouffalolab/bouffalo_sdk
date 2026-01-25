@@ -196,7 +196,7 @@ static int mr_bootrom_get_boot_info(struct mr_sdio_card *card, mr_sdio_bootrom_t
     SDIO_DRV_INFO(card, "    chip_version: 0x%08X, ", sdio_boot->chip_version);
     SDIO_DRV_INFO(card, "    chip_sign_type: 0x%02X, ", sdio_boot->chip_sign_type);
     SDIO_DRV_INFO(card, "    chip_encry_type: 0x%02X, ", sdio_boot->chip_encry_type);
-    SDIO_DRV_INFO(card, "    chip_id: 0x%016llX, ", sdio_boot->chip_id);
+    SDIO_DRV_INFO(card, "    chip_id: 0x%016llX, ", (unsigned long long)sdio_boot->chip_id);
 
     if (sdio_boot->chip_sign_type != sdio_boot->fw_sign_type) {
         SDIO_DRV_ERR(card, "Sign mode of the firmware and chip is different!");

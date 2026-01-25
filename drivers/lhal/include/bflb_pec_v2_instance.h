@@ -189,6 +189,7 @@ struct bflb_pec_dpi_s {
     uint8_t pin_vsync;         /*!< DPI vsync pin */
     uint8_t pin_hsync;         /*!< DPI hsync pin */
     uint8_t pin_de;            /*!< DPI de pin */
+    uint8_t level_pclk;        /*!< DPI pixel clock level, 0: sample on falling edge, others: sample on rising edge */
     uint8_t level_vsync;       /*!< DPI vsync level in vertical synchronization segment */
     uint8_t level_hsync;       /*!< DPI hsync level in horizontal synchronization segment */
     uint8_t level_de;          /*!< DPI de level when data is enabled */

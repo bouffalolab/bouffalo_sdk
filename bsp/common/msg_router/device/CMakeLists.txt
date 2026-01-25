@@ -40,6 +40,15 @@ if(CONFIG_MR_NETDEV)
     endif()
 endif()
 
+if(CONFIG_MR_NETLINK)
+    sdk_add_include_directories(netlink)
+    sdk_library_add_sources(netlink/mr_netlink.c)
+
+    if(CONFIG_MR_NETLINK_CLI)
+        sdk_library_add_sources(netlink/mr_netlink_cli.c)
+    endif()
+endif()
+
 if(CONFIG_MR_SPEED_TEST)
     sdk_add_include_directories(speed_test)
     sdk_library_add_sources(speed_test/mr_speed_test.c)

@@ -28,15 +28,17 @@
 #define HTTP_VERSION "HTTP/1.1"
 #endif
 
-#ifndef HTTP_SERVER_CONTENT_TYPE 
 #define VERSION_STRING_HELPER(x, y, z) #x "." #y "." #z
 #define VERSION_STRING(x, y, z) VERSION_STRING_HELPER(x, y, z)
 #define VERSION_REST_STRING VERSION_STRING(VERSION_OT_UTILS_MAJOR, VERSION_OT_UTILS_MINOR, VERSION_OT_UTILS_PATCH)
 
-#define HTTP_SERVER_CONTENT_TYPE \
+#define HTTP_SERVER_CONTENT_TYPE_JSON \
 "Server: bflb-otbr/" VERSION_REST_STRING "\r\n"\
 "Content-Type: application/json\r\n"
-#endif
+
+#define HTTP_SERVER_CONTENT_TYPE_TXT \
+"Server: bflb-otbr/" VERSION_REST_STRING "\r\n"\
+"Content-Type: text/plain\r\n"
 
 typedef int (* http_rest_func_t)(http_accept_type_t accept_type, void *, char **);
 
@@ -194,6 +196,30 @@ exit:
     }
 
     return json;
+}
+
+static char *array_to_string(uint8_t * aArray, size_t len) 
+{
+    static const char   hex_chars[] = "0123456789ABCDEF";
+    char                * hex_string = NULL;
+    int                 i = 0;
+
+    if (0 == len || aArray == NULL) {
+        return NULL;
+    }
+
+    hex_string = (char *) malloc (len * 2 + 1);
+    if (hex_string == NULL) {
+        return NULL;
+    }
+
+    for (i = 0; i < len; i++) {
+        hex_string[i * 2] = hex_chars[aArray[i] >> 4];
+        hex_string[i * 2 + 1] = hex_chars[aArray[i] & 0x0F];
+    }
+    hex_string[i * 2] = '\0';
+
+    return hex_string;
 }
 
 static cJSON * ip6addr_to_json(otIp6Address * aIp6addr) 
@@ -1029,11 +1055,11 @@ static int openthread_rest_get_node_extpanid(http_accept_type_t accept_type, voi
 
 static char * get_dataset_json_string(http_accept_type_t accept_type, bool isActive) 
 {
-    cJSON               * json = NULL;
     otError             err;
 
     if (accept_type == http_accept_type_txt) {
         otOperationalDatasetTlvs    datasetTlvs;
+        char *                      str = NULL;
 
         otrLock();
         if (isActive) {
@@ -1045,14 +1071,14 @@ static char * get_dataset_json_string(http_accept_type_t accept_type, bool isAct
         otrUnlock();
 
         if (err == OT_ERROR_NONE) {
-            json = array_to_json(datasetTlvs.mTlvs, datasetTlvs.mLength);
+            str = array_to_string(datasetTlvs.mTlvs, datasetTlvs.mLength);
         }
-        else if (err == OT_ERROR_NOT_FOUND) {
-            json = cJSON_CreateNull();
-        }
+
+        return str;
     }
     else {
         otOperationalDataset dataset;
+        cJSON*               json = NULL;
 
         otrLock();
         if (isActive) {
@@ -1074,10 +1100,10 @@ static char * get_dataset_json_string(http_accept_type_t accept_type, bool isAct
         else if (err == OT_ERROR_NOT_FOUND) {
             json = cJSON_CreateNull();
         }
-    }
 
-    if (json) {
-        return json_to_string(json);
+        if (json) {
+            return json_to_string(json);
+        }
     }
 
     return NULL;
@@ -1431,6 +1457,7 @@ bool openthread_rest_request(void *connection, http_method_type_t method,
     const rest_request_t    *req_list = rest_request_list[(int)method];
     char                    *resp_body = NULL;
     int                     i = 0;
+    char method_str[3][4] = {"GET", "PUT", "DEL"};
 
     if ((int)method >= sizeof(rest_request_list) / sizeof(rest_request_list[0])) {
         return false;
@@ -1443,20 +1470,22 @@ bool openthread_rest_request(void *connection, http_method_type_t method,
             }
             i++;
         }
+
+        printf ("http request [%s]: %s\r\n", method_str[method], uri);
         if (NULL == req_list[i].uri) {
             ret_state = http_resp_state_forbidden;
-            return http_resp_state_not_found;
+            break;
         }
 
         ret_state = req_list[i].func(accept_type, body, &resp_body);
 
     } while (0);
 
-    return ERR_OK == http_setup_file(connection, ret_state, resp_body);
+    return ERR_OK == http_setup_file(connection, accept_type, ret_state, resp_body);
 }
 
 
-char * openthread_rest_construct_resp(http_resp_state_t resp_state, char * body) 
+char * openthread_rest_construct_resp(http_accept_type_t accept_type, http_resp_state_t resp_state, char * body) 
 {
     char * resp = NULL, *p;
     int body_len = body? strlen(body): 0;
@@ -1478,8 +1507,14 @@ char * openthread_rest_construct_resp(http_resp_state_t resp_state, char * body)
     p[1] = '\n';
     p += 2;
 
-    memcpy(p, HTTP_SERVER_CONTENT_TYPE, sizeof(HTTP_SERVER_CONTENT_TYPE));
-    p += sizeof(HTTP_SERVER_CONTENT_TYPE) - 1;
+    if (accept_type == http_accept_type_txt) {
+        memcpy(p, HTTP_SERVER_CONTENT_TYPE_TXT, sizeof(HTTP_SERVER_CONTENT_TYPE_TXT));
+        p += sizeof(HTTP_SERVER_CONTENT_TYPE_TXT) - 1;
+    }
+    else if ((accept_type == http_accept_type_json)) {
+        memcpy(p, HTTP_SERVER_CONTENT_TYPE_JSON, sizeof(HTTP_SERVER_CONTENT_TYPE_JSON));
+        p += sizeof(HTTP_SERVER_CONTENT_TYPE_JSON) - 1;
+    }
 
     memcpy(p, HTTP_CONTENT_LEN, sizeof(HTTP_CONTENT_LEN));
     p += sizeof(HTTP_CONTENT_LEN) - 1;
@@ -1490,18 +1525,24 @@ char * openthread_rest_construct_resp(http_resp_state_t resp_state, char * body)
     else if (resp_state == http_resp_state_ok) {
         p += snprintf(p, resp_len - (size_t)(p - resp), "%d\r\n\r\n", body_len);
         VerifyOrExit((size_t)(p - resp) + body_len + 1 < resp_len, (free(resp), resp = NULL));
-        strncpy(p, body, body_len);
+        if (body_len) {
+            strncpy(p, body, body_len);
+        }
     }
     else {
-        body = p + 16;
-        body_len = snprintf(body, resp_len - (size_t)(body - resp), 
+        char * err_body = p + 16;
+        body_len = snprintf(err_body, resp_len - (size_t)(err_body - resp), 
                     "{\"ErrorCode\": %d, \"ErrorMessage\": \"%s\"}\r\n", 
                     http_resp_state_lines[resp_state].state, http_resp_state_lines[resp_state].txt);
 
         p += snprintf(p, 16, "%d\r\n\r\n", body_len);
-        memmove(p, body, body_len + 1);
+        memmove(p, err_body, body_len + 1);
     }
     p[body_len] = '\0';
+
+    if (body) {
+        free(body);
+    }
 
 exit:
     return resp;

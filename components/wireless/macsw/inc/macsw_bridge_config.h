@@ -1,15 +1,11 @@
-#undef CFG_AMSDU_4K
+#ifdef __MACSW_CONFIG_INTERNEL_ALLOW__
 #define CFG_AMSDU_8K
-#undef CFG_TXDESC0
-#undef CFG_TXDESC1
-#undef CFG_TXDESC2
-#undef CFG_TXDESC3
-#undef CFG_TXDESC4
 #define CFG_TXDESC0 12
 #define CFG_TXDESC1 64
 #define CFG_TXDESC2 12
 #define CFG_TXDESC3 12
 #define CFG_TXDESC4 2
+#endif
 
 #undef CFG_BARX
 #undef CFG_BATX

@@ -16,6 +16,9 @@
 #include <linux/mutex.h>
 #include "hd_msg_ctrl.h"
 
+/* Interface name */
+#define ETH_DRV_NAME "hd_eth%d"
+
 /** @defgroup HD_ETH_HOST_STATES Ethernet Host State Machine
  * @brief State definitions for Ethernet host state machine
  * @{

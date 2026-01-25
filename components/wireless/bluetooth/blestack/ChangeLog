@@ -1,4 +1,7 @@
 # Changes
+## 2026-01-20
+1.[blestack]: standardize include paths in blestack headers.
+
 ## 2026-01-14
 1.[blestack] Add statistics mode to BLE scan CLI command.
 

@@ -84,8 +84,8 @@ static int msg_dnld_recv_done_cb(mr_frame_elem_t *frame_elem, void *arg)
         return -1;
     }
 
-    mr_netdev_msg_t *netdev_msg_packt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
-    ret = mr_frame_queue_send(priv->msg_dnld_queue, &netdev_msg_packt, 0);
+    mr_netdev_msg_t *netdev_msg_pkt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
+    ret = mr_frame_queue_send(priv->msg_dnld_queue, &netdev_msg_pkt, 0);
     if (ret < 0) {
         LOG_E("%s Failed to send frame to download queue\r\n", priv->netdev_cfg.name);
         return -1;
@@ -111,13 +111,13 @@ static int msg_upld_send_done_cb(mr_frame_elem_t *frame_elem, void *arg)
         return -1;
     }
 
-    mr_netdev_msg_t *netdev_msg_packt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
+    mr_netdev_msg_t *netdev_msg_pkt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
     if (priv->netdev_cfg.upld_done_cb) {
         /* User-defined callback */
-        ret = priv->netdev_cfg.upld_done_cb(priv, netdev_msg_packt);
+        ret = priv->netdev_cfg.upld_done_cb(priv, netdev_msg_pkt);
     } else {
         /* Release back to pool */
-        ret = mr_netdev_upld_elem_free(priv, netdev_msg_packt);
+        ret = mr_netdev_upld_elem_free(priv, netdev_msg_pkt);
     }
 
     return ret;
@@ -151,28 +151,28 @@ static int msg_hw_reset_cb(mr_frame_elem_t *unused, void *arg)
 static int msg_upld_send_cmd_packet(mr_netdev_priv_t *priv, uint8_t eth_flag, uint8_t *data, uint16_t data_size)
 {
     int ret;
-    mr_netdev_msg_t *netdev_msg_packt;
+    mr_netdev_msg_t *netdev_msg_pkt;
 
-    ret = mr_netdev_upld_elem_alloc(priv, &netdev_msg_packt, 100);
+    ret = mr_netdev_upld_elem_alloc(priv, &netdev_msg_pkt, 100);
     if (ret < 0) {
         LOG_E("%s Failed to allocate upld msg packet\r\n", priv->netdev_cfg.name);
         return -1;
     }
 
-    netdev_msg_packt->flag = eth_flag;
+    netdev_msg_pkt->flag = eth_flag;
 
     if (data && data_size > 0) {
-        memcpy(netdev_msg_packt->data, data, data_size);
-        MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_packt, data_size);
+        memcpy(netdev_msg_pkt->data, data, data_size);
+        MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_pkt, data_size);
     } else {
-        MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_packt, 0);
+        MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_pkt, 0);
     }
 
-    /* send netdev_msg_packt */
-    ret = mr_netdev_upld_elem_send(priv, netdev_msg_packt);
+    /* send netdev_msg_pkt */
+    ret = mr_netdev_upld_elem_send(priv, netdev_msg_pkt);
     if (ret < 0) {
         LOG_E("%s Failed to send NETDEV control message\r\n", priv->netdev_cfg.name);
-        mr_netdev_upld_elem_free(priv, netdev_msg_packt);
+        mr_netdev_upld_elem_free(priv, netdev_msg_pkt);
         return -1;
     }
 
@@ -199,7 +199,7 @@ static void netdev_proc_task(void *arg)
     int ret;
     mr_netdev_priv_t *priv = (mr_netdev_priv_t *)arg;
 
-    mr_netdev_msg_t *netdev_msg_packt = NULL;
+    mr_netdev_msg_t *netdev_msg_pkt = NULL;
     uint32_t notified_value = 0;
     uint32_t notified_mask = 0;
 
@@ -253,26 +253,26 @@ static void netdev_proc_task(void *arg)
         notified_mask = NETDEV_EVENT_DNLD_DONE;
         if (notified_value & notified_mask) {
             /* get message from queue (non-blocking) */
-            ret = mr_frame_queue_receive(priv->msg_dnld_queue, &netdev_msg_packt, 0);
+            ret = mr_frame_queue_receive(priv->msg_dnld_queue, &netdev_msg_pkt, 0);
             if (ret < 0) {
                 /* queue empty */
                 notified_value &= ~notified_mask;
-                netdev_msg_packt = NULL;
+                netdev_msg_pkt = NULL;
             }
         }
 
         /* Handle reset/stop commands - reset state machine */
-        if (netdev_msg_packt && (netdev_msg_packt->flag == MR_NETDEV_FLAG_HOST_RESET ||
-                                 netdev_msg_packt->flag == MR_NETDEV_FLAG_HOST_STOP)) {
+        if (netdev_msg_pkt && (netdev_msg_pkt->flag == MR_NETDEV_FLAG_HOST_RESET ||
+                               netdev_msg_pkt->flag == MR_NETDEV_FLAG_HOST_STOP)) {
             LOG_W("%s received host %s command\r\n", priv->netdev_cfg.name,
-                  netdev_msg_packt->flag == MR_NETDEV_FLAG_HOST_RESET ? "RESET" : "STOP");
+                  netdev_msg_pkt->flag == MR_NETDEV_FLAG_HOST_RESET ? "RESET" : "STOP");
 
             priv->netdev_status = MR_NETDEV_DSTA_IDLE;
             priv->device_dnld_credit_limit = priv->netdev_cfg.dnld_credit_max;
             priv->credit_limit_update_last = 0;
 
-            mr_netdev_dnld_elem_free(priv, netdev_msg_packt);
-            netdev_msg_packt = NULL;
+            mr_netdev_dnld_elem_free(priv, netdev_msg_pkt);
+            netdev_msg_pkt = NULL;
             continue;
         }
 
@@ -280,7 +280,7 @@ static void netdev_proc_task(void *arg)
         switch (priv->netdev_status) {
             case MR_NETDEV_DSTA_IDLE:
                 /* Wait for HOST_READY message */
-                if (netdev_msg_packt == NULL || netdev_msg_packt->flag != MR_NETDEV_FLAG_HOST_READY) {
+                if (netdev_msg_pkt == NULL || netdev_msg_pkt->flag != MR_NETDEV_FLAG_HOST_READY) {
                     break;
                 }
                 LOG_I("%s received HOST_READY message\r\n", priv->netdev_cfg.name);
@@ -321,16 +321,16 @@ static void netdev_proc_task(void *arg)
                     priv->netdev_status = MR_NETDEV_DSTA_IDLE;
                 }
 
-                if (netdev_msg_packt == NULL) {
+                if (netdev_msg_pkt == NULL) {
                     break;
-                } else if (netdev_msg_packt->flag == MR_NETDEV_FLAG_DNLD_DATA) {
+                } else if (netdev_msg_pkt->flag == MR_NETDEV_FLAG_DNLD_DATA) {
                     /* Download data packet - pass to user callback */
-                    ret = priv->netdev_cfg.dnld_output_cb(priv, netdev_msg_packt);
+                    ret = priv->netdev_cfg.dnld_output_cb(priv, netdev_msg_pkt);
                     if (ret < 0) {
                         LOG_E("%s Failed to output dnld data\r\n", priv->netdev_cfg.name);
                         break;
                     }
-                    netdev_msg_packt = NULL;
+                    netdev_msg_pkt = NULL;
                     break;
                 }
 
@@ -343,9 +343,9 @@ static void netdev_proc_task(void *arg)
         }
 
         /* Release received packet if not handled by callback */
-        if (netdev_msg_packt) {
-            mr_netdev_dnld_elem_free(priv, netdev_msg_packt);
-            netdev_msg_packt = NULL;
+        if (netdev_msg_pkt) {
+            mr_netdev_dnld_elem_free(priv, netdev_msg_pkt);
+            netdev_msg_pkt = NULL;
         }
 
         /* MAC/IP update event */
@@ -396,7 +396,7 @@ static void netdev_proc_task(void *arg)
  * @note These functions can be called by upper layer applications
  *****************************************************************************/
 
-int mr_netdev_upld_elem_alloc(mr_netdev_priv_t *priv, mr_netdev_msg_t **netdev_msg_packt, uint32_t timeout)
+int mr_netdev_upld_elem_alloc(mr_netdev_priv_t *priv, mr_netdev_msg_t **netdev_msg_pkt, uint32_t timeout)
 {
     int ret;
     mr_frame_elem_t *frame_elem;
@@ -404,27 +404,27 @@ int mr_netdev_upld_elem_alloc(mr_netdev_priv_t *priv, mr_netdev_msg_t **netdev_m
     ret = mr_frame_queue_alloc_elem(priv->upld_frame_ctrl, &frame_elem, timeout);
     if (ret < 0) {
         /* No available buffer, try later */
-        *netdev_msg_packt = NULL;
+        *netdev_msg_pkt = NULL;
         return -1;
     }
 
-    *netdev_msg_packt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
+    *netdev_msg_pkt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
 
-    MR_NETDEV_MSG_PACKET_SET_DATA_SIZE((*netdev_msg_packt), 0);
-    (*netdev_msg_packt)->msg_packt.tag = priv->netdev_cfg.msg_tag;
-    (*netdev_msg_packt)->msg_packt.sub_tag = 0;
-    (*netdev_msg_packt)->flag = MR_NETDEV_FLAG_UPLD_DATA; /* Upload data flag */
-    (*netdev_msg_packt)->credit_update_flag = false;
-    (*netdev_msg_packt)->credit_limit_cnt = 0;
+    MR_NETDEV_MSG_PACKET_SET_DATA_SIZE((*netdev_msg_pkt), 0);
+    (*netdev_msg_pkt)->msg_pkt.tag = priv->netdev_cfg.msg_tag;
+    (*netdev_msg_pkt)->msg_pkt.sub_tag = 0;
+    (*netdev_msg_pkt)->flag = MR_NETDEV_FLAG_UPLD_DATA; /* Upload data flag */
+    (*netdev_msg_pkt)->credit_update_flag = false;
+    (*netdev_msg_pkt)->credit_limit_cnt = 0;
 
     return 0;
 }
 
-int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     int ret;
     uintptr_t flag;
-    mr_frame_elem_t *frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_packt);
+    mr_frame_elem_t *frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_pkt);
 
     if (frame_elem->data_size > frame_elem->buff_size) {
         LOG_E("%s upld data size too large: %d > %d\r\n", priv->netdev_cfg.name, frame_elem->data_size,
@@ -435,12 +435,14 @@ int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg
          * and ensure credit values are sent in order */
     flag = bflb_irq_save();
 
-    if ((priv->netdev_cfg.dnld_credit_max != 0) && (priv->credit_limit_update_last != priv->device_dnld_credit_limit) &&
-        (netdev_msg_packt->flag == MR_NETDEV_FLAG_UPLD_DATA || netdev_msg_packt->flag == MR_NETDEV_FLAG_CREDIT_UPDATE ||
-         netdev_msg_packt->flag == MR_NETDEV_FLAG_DEVICE_START)) {
+    if ((priv->netdev_cfg.dnld_credit_max != 0) &&
+        (priv->credit_limit_update_last != priv->device_dnld_credit_limit) &&
+        (netdev_msg_pkt->flag == MR_NETDEV_FLAG_UPLD_DATA ||
+         netdev_msg_pkt->flag == MR_NETDEV_FLAG_CREDIT_UPDATE ||
+         netdev_msg_pkt->flag == MR_NETDEV_FLAG_DEVICE_START)) {
         /* Send through msg ctrl */
-        netdev_msg_packt->credit_update_flag = true;
-        netdev_msg_packt->credit_limit_cnt = priv->device_dnld_credit_limit;
+        netdev_msg_pkt->credit_update_flag = true;
+        netdev_msg_pkt->credit_limit_cnt = priv->device_dnld_credit_limit;
         priv->credit_limit_update_last = priv->device_dnld_credit_limit;
 
         ret = mr_msg_ctrl_upld_send(priv->netdev_cfg.msg_ctrl, frame_elem);
@@ -450,8 +452,14 @@ int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg
     } else {
         bflb_irq_restore(flag);
 
-        netdev_msg_packt->credit_update_flag = false;
-        netdev_msg_packt->credit_limit_cnt = 0;
+        if (netdev_msg_pkt->flag == MR_NETDEV_FLAG_CREDIT_UPDATE) {
+            /* No credit update needed, skip sending CREDIT_UPDATE message */
+            mr_netdev_upld_elem_free(priv, netdev_msg_pkt);
+            return 0;
+        }
+
+        netdev_msg_pkt->credit_update_flag = false;
+        netdev_msg_pkt->credit_limit_cnt = 0;
         ret = mr_msg_ctrl_upld_send(priv->netdev_cfg.msg_ctrl, frame_elem);
     }
 
@@ -463,11 +471,11 @@ int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg
     return 0;
 }
 
-int mr_netdev_upld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+int mr_netdev_upld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     int ret;
 
-    mr_frame_elem_t *frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_packt);
+    mr_frame_elem_t *frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_pkt);
     ret = mr_frame_queue_free_elem(frame_elem);
     if (ret < 0) {
         LOG_E("%s Failed to free upld frame element\r\n", priv->netdev_cfg.name);
@@ -477,19 +485,19 @@ int mr_netdev_upld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg
     return 0;
 }
 
-int mr_netdev_dnld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+int mr_netdev_dnld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     int ret;
-    uint8_t packt_flag;
+    uint8_t pkt_flag;
 
-    if (!priv || !netdev_msg_packt) {
+    if (!priv || !netdev_msg_pkt) {
         return -1;
     }
 
-    packt_flag = netdev_msg_packt->flag;
+    pkt_flag = netdev_msg_pkt->flag;
 
     /* Free frame element */
-    mr_frame_elem_t *frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_packt);
+    mr_frame_elem_t *frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_pkt);
     // ret = mr_frame_queue_free_elem(frame_elem);
     ret = mr_msg_ctrl_dnld_free(priv->netdev_cfg.msg_ctrl, frame_elem);
     if (ret < 0) {
@@ -498,7 +506,9 @@ int mr_netdev_dnld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg
     }
 
     /* Update flow control credit counter */
-    if (priv->netdev_cfg.dnld_credit_max && packt_flag == MR_NETDEV_FLAG_DNLD_DATA) {
+    if (priv->netdev_cfg.dnld_credit_max &&
+        priv->netdev_status == MR_NETDEV_DSTA_DEVICE_RUN &&
+        pkt_flag == MR_NETDEV_FLAG_DNLD_DATA) {
         /* Lock protection for atomic credit update */
         uintptr_t flag = bflb_irq_save();
         bool wakeup_needed = false;
@@ -564,10 +574,14 @@ mr_netdev_priv_t *mr_netdev_init(mr_netdev_cfg_t *cfg)
     mr_netdev_priv_t *priv;
 
     /* Parameter validation */
-    if (cfg == NULL || cfg->msg_ctrl == NULL || cfg->upld_frame_size <= sizeof(mr_netdev_msg_t) ||
-        cfg->upld_frame_count < 2 || cfg->upld_frame_buff == NULL ||
+    if (cfg == NULL ||
+        cfg->msg_ctrl == NULL ||
+        cfg->upld_frame_size <= sizeof(mr_netdev_msg_t) ||
+        cfg->upld_frame_count < 2 ||
+        cfg->upld_frame_buff == NULL ||
         (cfg->dnld_credit_max && cfg->dnld_credit_max <= cfg->upld_credit_update_threshold) ||
-        cfg->dnld_credit_max > 127 || cfg->dnld_output_cb == NULL) {
+        cfg->dnld_credit_max > 127 ||
+        cfg->dnld_output_cb == NULL) {
         LOG_E("%s Invalid parameters for NETDEV initialization\r\n", cfg->name);
         return NULL;
     }
@@ -584,11 +598,13 @@ mr_netdev_priv_t *mr_netdev_init(mr_netdev_cfg_t *cfg)
     priv->netdev_cfg = *cfg;
 
     /* Initialize upload frame buffer pool */
-    mr_frame_queue_ctrl_init_cfg_t upld_frame_cfg = { .frame_buff = priv->netdev_cfg.upld_frame_buff,
-                                                   .frame_type = priv->netdev_cfg.upld_frame_type,
-                                                   .frame_elem_cnt = priv->netdev_cfg.upld_frame_count,
-                                                   .frame_elem_size = priv->netdev_cfg.upld_frame_size,
-                                                   .name = priv->netdev_cfg.name };
+    mr_frame_queue_ctrl_init_cfg_t upld_frame_cfg = {
+        .frame_buff = priv->netdev_cfg.upld_frame_buff,
+        .frame_type = priv->netdev_cfg.upld_frame_type,
+        .frame_elem_cnt = priv->netdev_cfg.upld_frame_count,
+        .frame_elem_size = priv->netdev_cfg.upld_frame_size,
+        .name = priv->netdev_cfg.name
+    };
     priv->upld_frame_ctrl = mr_frame_queue_create(&upld_frame_cfg);
     if (!priv->upld_frame_ctrl) {
         LOG_E("%s Failed to create NETDEV frame queue\r\n", priv->netdev_cfg.name);
@@ -603,8 +619,10 @@ mr_netdev_priv_t *mr_netdev_init(mr_netdev_cfg_t *cfg)
     }
 
     /* Register message controller callbacks */
-    ret = mr_msg_cb_register(priv->netdev_cfg.msg_ctrl, priv->netdev_cfg.msg_tag, msg_dnld_recv_done_cb, priv,
-                             msg_upld_send_done_cb, priv, msg_hw_reset_cb, priv);
+    ret = mr_msg_cb_register(priv->netdev_cfg.msg_ctrl, priv->netdev_cfg.msg_tag,
+                             msg_dnld_recv_done_cb, priv,
+                             msg_upld_send_done_cb, priv,
+                             msg_hw_reset_cb, priv);
     if (ret < 0) {
         LOG_E("%s Failed to register NETDEV message callbacks\r\n", priv->netdev_cfg.name);
         goto error_exit;

@@ -21,6 +21,7 @@
 #include "bl616d_psram.h"
 #include "bl616d_glb.h"
 #include "board_flash_psram.h"
+#include "bl616d_pm.h"
 
 #include "mm.h"
 
@@ -851,13 +852,14 @@ static void mfg_cmd(int argc, char **argv)
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
-#if 0
+
 #ifdef LP_APP
 #include "bl_lp.h"
 
 static void test_io_wakeup_status(uint8_t io_num)
 {
     int wakeup_mode;
+
 
     wakeup_mode = bl_lp_wakeup_io_get_mode(io_num);
 
@@ -881,6 +883,8 @@ static void test_io_wakeup_status(uint8_t io_num)
             printf("edge falling\r\n");
         } else if (wakeup_mode == BL_LP_IO_WAKEUP_MODE_RISING) {
             printf("edge rising\r\n");
+        } else if (wakeup_mode == BL_LP_IO_WAKEUP_MODE_RISING_FALLING) {
+            printf("edge falling and rising\r\n");
         } else {
             printf("unkown error: %d\r\n", wakeup_mode);
         }
@@ -899,42 +903,40 @@ static void test_wakeup_io_callback(uint64_t wake_up_io_bits)
 
 void cmd_io_test(char *buf, int len, int argc, char **argv)
 {
-    static bl_lp_io_cfg_t lp_wake_io_cfg = {
+    static lp_gpio_cfg_type lp_wake_io_cfg = {
         /* input enable, use @ref BL_LP_IO_INPUT_EN */
-        .io_0_15_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_16_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_17_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_18_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_19_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_20_34_ie = BL_LP_IO_INPUT_ENABLE,
+        .io_ie = 0,
+        .io_pu = 0,
+        .io_pd = 0,
+
         /* trigger mode */
-        .io_0_7_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE,          /* use @ref BL_LP_PDS_IO_TRIG */
-        .io_8_15_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL,           /* use @ref BL_LP_PDS_IO_TRIG */
-        .io_16_19_aon_trig_mode = BL_LP_AON_IO_TRIG_SYNC_RISING_FALLING_EDGE, /* aon io, use @ref BL_LP_AON_IO_TRIG, full mode support */
-        .io_20_27_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE,        /* use @ref BL_LP_PDS_IO_TRIG */
-        .io_28_34_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE,        /* use @ref BL_LP_PDS_IO_TRIG */
-        /* resistors */
-        .io_0_15_res = BL_LP_IO_RES_PULL_UP,
-        .io_16_res = BL_LP_IO_RES_NONE,
-        .io_17_res = BL_LP_IO_RES_NONE,
-        .io_18_res = BL_LP_IO_RES_PULL_UP,
-        .io_19_res = BL_LP_IO_RES_PULL_UP,
-        .io_20_34_res = BL_LP_IO_RES_PULL_DOWN,
+        .io_0_7_trig_mode = PDS_GPIO_INT_SYNC_FALLING_EDGE,
+        .io_8_15_trig_mode = PDS_GPIO_INT_SYNC_HIGH_LEVEL,
+        .io_16_23_trig_mode = PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE,
+        .io_24_31_trig_mode = PDS_GPIO_INT_SYNC_RISING_EDGE,
+        .io_32_39_trig_mode = PDS_GPIO_INT_SYNC_FALLING_EDGE,
+        .io_40_47_trig_mode = PDS_GPIO_INT_SYNC_FALLING_EDGE,
+        .io_48_52_trig_mode = PDS_GPIO_INT_SYNC_FALLING_EDGE,
+
         /* wake up unmask */
         .io_wakeup_unmask = 0,
     };
 
     /* wake up unmask */
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 0); /* gpio 0 */
-    // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 10); /* gpio 10 */
-    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 18); /* gpio 18 */
+    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 1); /* gpio 1 */
+    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 10); /* gpio 10 */
+    // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 18); /* gpio 18 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 19); /* gpio 19 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 20); /* gpio 20 */
-
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 31); /* gpio 31 */
-    // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 32); /* gpio 32 */
+    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 32); /* gpio 32 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 33);     /* gpio 33 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 34);     /* gpio 34 */
+
+    lp_wake_io_cfg.io_ie = lp_wake_io_cfg.io_wakeup_unmask;
+    lp_wake_io_cfg.io_pu |= ((uint64_t)1 << 0) | ((uint64_t)1 << 1) | ((uint64_t)1 << 32);
+    lp_wake_io_cfg.io_pd |= ((uint64_t)1 << 10) | ((uint64_t)1 << 31);
 
     bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
 
@@ -942,58 +944,8 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
     bl_lp_wakeup_io_int_register(test_wakeup_io_callback);
 }
 
-static void test_acomp_wakeup_status(uint8_t acomp_num)
-{
-    int wakeup_mode;
-
-    wakeup_mode = bl_lp_wakeup_acomp_get_mode(acomp_num);
-
-    if (wakeup_mode) {
-        printf("ACOMP %d wakeup: ", acomp_num);
-        if (wakeup_mode == BL_LP_ACOMP_WAKEUP_MODE_FALLING) {
-            printf("edge falling\r\n");
-        } else if (wakeup_mode == BL_LP_ACOMP_WAKEUP_MODE_RISING) {
-            printf("edge rising\r\n");
-        } else {
-            printf("unkown error: %d\r\n", wakeup_mode);
-        }
-    }
-}
-
-static void test_wakeup_acomp_callback(uint32_t wake_up_acomp_bits)
-{
-    printf("acomp wakeup bits 0x%02X\r\n", wake_up_acomp_bits);
-
-    for (uint8_t i = 0; i < BL_LP_WAKEUP_ACOMP_MAX_NUM; i++) {
-        test_acomp_wakeup_status(i);
-    }
-}
-
-void cmd_acomp_test(char *buf, int len, int argc, char **argv)
-{
-    static bl_lp_acomp_cfg_t lp_wake_acomp_cfg = {
-        /* input enable, use @ref BL_LP_ACOMP_EN */
-        .acomp0_en = BL_LP_ACOMP_ENABLE,
-        .acomp1_en = BL_LP_ACOMP_ENABLE,
-
-        /* Map to pins num, range: 2, 3, 10, 12, 13, 14, 19 */
-        .acomp0_io_num = 13,
-        .acomp1_io_num = 14,
-
-        /* trigger mode, use @ref BL_LP_ACOMP_TRIG  */
-        .acomp0_trig_mode = BL_LP_ACOMP_TRIG_EDGE_FALLING,
-        .acomp1_trig_mode = BL_LP_ACOMP_TRIG_EDGE_FALLING_RISING,
-    };
-
-    bl_lp_acomp_wakeup_cfg(&lp_wake_acomp_cfg);
-
-    /* register acomp wakeup callback */
-    bl_lp_wakeup_acomp_int_register(test_wakeup_acomp_callback);
-}
 SHELL_CMD_EXPORT_ALIAS(cmd_io_test, io_test, cmd io_test);
-SHELL_CMD_EXPORT_ALIAS(cmd_acomp_test, acomp_test, cmd acomp_test);
 #endif /* LP_APP */
-#endif
 
 #endif /* CONFIG_SHELL */
 

@@ -21,7 +21,7 @@ extern "C" {
 #define BFLBVCHAN_DATA_HDR_LEN   (4)  /* sizeof(data_type) + sizeof(reserved[3]) */
 
 /* Maximum data length per message */
-#define BFLBVCHAN_MAX_DATA_LEN   (1024)
+#define BFLBVCHAN_MAX_DATA_LEN   (1500)
 
 /* ==================== Data Type Definitions ==================== */
 

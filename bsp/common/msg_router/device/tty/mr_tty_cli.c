@@ -71,21 +71,21 @@ static mr_tty_priv_t *g_tty_user_3_priv = NULL;
 /**
  * @brief Process TTY download data (host to device)
  * @param[in] priv Pointer to TTY private structure
- * @param[in] tty_msg_packt Pointer to received message packet
+ * @param[in] tty_msg_pkt Pointer to received message packet
  * @retval 0 Success
  * @details Prints received data in hexadecimal format and frees the buffer
  */
-static int tty_cli_dnld_data_output(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_packt)
+static int tty_cli_dnld_data_output(mr_tty_priv_t *priv, mr_tty_msg_t *tty_msg_pkt)
 {
     uint16_t data_len;
 
-    data_len = MR_TTY_MSG_PACKET_GET_DATA_SIZE(tty_msg_packt);
+    data_len = MR_TTY_MSG_PACKET_GET_DATA_SIZE(tty_msg_pkt);
 
     LOG_I("TTY %s dnld %dByte:\r\n", priv->tty_cfg.name, data_len);
-    DBG_HEXDUMP(tty_msg_packt->data, data_len);
+    DBG_HEXDUMP(tty_msg_pkt->data, data_len);
 
     /* Free the buffer and update flow control */
-    mr_tty_dnld_elem_free(priv, tty_msg_packt);
+    mr_tty_dnld_elem_free(priv, tty_msg_pkt);
 
     return 0;
 }
@@ -101,7 +101,7 @@ static void tty_cli_upld_send_str(mr_tty_priv_t *priv, int argc, char **argv)
 {
     int ret;
     int buffer_pos = 0;
-    mr_tty_msg_t *tty_msg_packt;
+    mr_tty_msg_t *tty_msg_pkt;
 
     /* Verify TTY channel is ready for transmission */
     if (priv->tty_status != MR_TTY_DSTA_DEVICE_RUN || !priv->tty_ready) {
@@ -110,7 +110,7 @@ static void tty_cli_upld_send_str(mr_tty_priv_t *priv, int argc, char **argv)
     }
 
     /* Allocate upload message packet */
-    ret = mr_tty_upld_elem_alloc(priv, &tty_msg_packt, 20);
+    ret = mr_tty_upld_elem_alloc(priv, &tty_msg_pkt, 20);
     if (ret < 0) {
         LOG_E("No available TTY upld buffer\r\n");
         return;
@@ -121,32 +121,32 @@ static void tty_cli_upld_send_str(mr_tty_priv_t *priv, int argc, char **argv)
         int arg_len = strlen(argv[i]);
 
         /* Check if we have enough space for this argument + space + null terminator */
-        if (buffer_pos + arg_len + 2 >= MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_packt)) {
+        if (buffer_pos + arg_len + 2 >= MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_pkt)) {
             LOG_W("Command line too long, truncating at %d characters\r\n", buffer_pos);
             break;
         }
 
         /* Add space before argument (except for first one) */
-        tty_msg_packt->data[buffer_pos++] = ' ';
+        tty_msg_pkt->data[buffer_pos++] = ' ';
 
         /* Copy argument */
-        memcpy(&tty_msg_packt->data[buffer_pos], argv[i], arg_len);
+        memcpy(&tty_msg_pkt->data[buffer_pos], argv[i], arg_len);
         buffer_pos += arg_len;
     }
 
     /* Add newline at the end */
-    if (buffer_pos + 2 < MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_packt)) {
-        tty_msg_packt->data[buffer_pos++] = '\r';
-        tty_msg_packt->data[buffer_pos++] = '\n';
+    if (buffer_pos + 2 < MR_TTY_MSG_PACKET_GET_BUFF_SIZE(tty_msg_pkt)) {
+        tty_msg_pkt->data[buffer_pos++] = '\r';
+        tty_msg_pkt->data[buffer_pos++] = '\n';
     }
 
-    MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_packt, buffer_pos);
+    MR_TTY_MSG_PACKET_SET_DATA_SIZE(tty_msg_pkt, buffer_pos);
 
     /* Send message packet */
-    ret = mr_tty_upld_elem_send(priv, tty_msg_packt);
+    ret = mr_tty_upld_elem_send(priv, tty_msg_pkt);
     if (ret < 0) {
         LOG_E("Failed to send TTY upld data to msg_ctrl: %d\r\n", ret);
-        mr_tty_upld_elem_free(priv, tty_msg_packt);
+        mr_tty_upld_elem_free(priv, tty_msg_pkt);
     }
 }
 

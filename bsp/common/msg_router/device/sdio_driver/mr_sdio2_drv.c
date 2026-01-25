@@ -18,7 +18,7 @@
 #include "mr_frame_buff_ctrl.h"
 #include "mr_msg_ctrl.h"
 
-#define DBG_TAG "MAIN"
+#define DBG_TAG "MR_SDIO2"
 #include "log.h"
 
 /*****************************************************************************
@@ -344,6 +344,9 @@ static int sdio2_upld_start(mr_frame_elem_t *frame_elem)
 
     if (upld_desc.data_len >= 64) {
         upld_desc.data_len = (upld_desc.data_len + blk_size - 1) & ~(blk_size - 1); /* Align up to blk_size */
+        if (upld_desc.buff_len < upld_desc.data_len) {
+            upld_desc.buff_len = upld_desc.data_len;
+        }
     }
 
     ret = bflb_sdio2_upld_port_push(sdio2_hd, &upld_desc);

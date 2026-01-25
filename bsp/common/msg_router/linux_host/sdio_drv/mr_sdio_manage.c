@@ -69,7 +69,9 @@ static int mr_sdio_dnld_polling(struct mr_sdio_manage *sdio_manage)
         return true;
     }
 
-    dnld_desc.buff = skb->data;
+    memcpy(sdio_manage->dnld_trans_buf, skb->data, skb->len);
+
+    dnld_desc.buff = sdio_manage->dnld_trans_buf;
     dnld_desc.data_len = skb->len;
     dnld_desc.buff_len = sdio_manage->sdio_card->dnld_max_size;
 
@@ -234,25 +236,23 @@ static void mr_sdio_workqueue_func(struct work_struct *work)
         if (dnld_proc_flag == EBUSY) {
             dnld_retry_cnt++;
 
-            if (upld_proc_flag == false) {
+            if (upld_proc_flag) {
+                /* If upload has packets, yield bandwidth to upload and periodically query download */
+                if ((dnld_retry_cnt < 10 && dnld_retry_cnt % 2 == 1) ||
+                    (dnld_retry_cnt > 10 && dnld_retry_cnt % 4 == 1)) {
+                    dnld_proc_flag = mr_sdio_dnld_polling(sdio_manage);
+                }
+            } else {
                 dnld_proc_flag = mr_sdio_dnld_polling(sdio_manage);
-
                 if (dnld_proc_flag == EBUSY) {
                     /* Download is still busy, wait and retry */
-                    if (dnld_retry_cnt < 30) {
-                        usleep_range(dnld_retry_cnt * 10, dnld_retry_cnt * 20);
+                    if (dnld_retry_cnt < 20) {
+                        usleep_range(dnld_retry_cnt * 20, dnld_retry_cnt * 40);
                     } else {
                         usleep_range(1000, 1100);
                     }
-                } else {
-                    dnld_retry_cnt = 0;
                 }
-            } else if ((dnld_retry_cnt < 10 && dnld_retry_cnt % 3 == 0) ||
-                       (dnld_retry_cnt > 10 && dnld_retry_cnt % 4 == 0)) {
-                /* If upload has packets, yield bandwidth to upload and periodically query download */
-                dnld_proc_flag = mr_sdio_dnld_polling(sdio_manage);
             }
-
         } else {
             /* When download is not busy, continue attempting */
             dnld_proc_flag = mr_sdio_dnld_polling(sdio_manage);

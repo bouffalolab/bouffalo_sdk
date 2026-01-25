@@ -154,6 +154,23 @@ void bflb_pwm_v1_set_period(struct bflb_device_s *dev, uint8_t ch, uint16_t peri
 void bflb_pwm_v1_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold);
 
 /**
+ * @brief Get pwm frequency.
+ *
+ * @param [in] dev device handle
+ * @return frequency
+ */
+uint32_t bflb_pwm_v1_get_frequency(struct bflb_device_s *dev);
+
+/**
+ * @brief Get pwm duty.
+ *
+ * @param [in] dev device handle
+ * @param [in] delta pointer to save delta of threshold
+ * @param [in] period pointer to save period
+ */
+void bflb_pwm_v1_get_duty(struct bflb_device_s *dev, uint32_t *delta, uint32_t *period);
+
+/**
  * @brief Enable pwm interrupt.
  *
  * @param [in] dev device handle

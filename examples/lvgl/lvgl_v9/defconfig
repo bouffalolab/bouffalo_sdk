@@ -1,5 +1,5 @@
 CONFIG_PSRAM                =n
-
+CONFIG_PSRAM_FOR_AP_SIZE = 0x600000
 CONFIG_BSP_LCD              =y
 CONFIG_BSP_TOUCH            =y
 

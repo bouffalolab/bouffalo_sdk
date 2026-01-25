@@ -422,7 +422,7 @@ bflb_msg_ctrl_t *bflb_msg_ctrl_init(bflb_msg_ctrl_ops_t *sdio_ops)
     msg_ctrl->upld_queue = xQueueCreate(BL_MSG_CTRL_UPLD_QUEUE_DEPTH, sizeof(void *));
 
     for (int i = 0; i < BL_MSG_CTRL_DNLD_FRAME_NUM; i++) {
-        printf("num[%d] ----: elem:%p, payload:%p\r\n",
+        LOG_D("num[%d] ----: elem:%p, payload:%p\r\n",
                 i,
                 &(msg_dnld_frame_buff[i][0]),
                 &(msg_dnld_frame_buff[i][FRAME_BUFF_ELEM_OFFSET]) );

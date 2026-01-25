@@ -204,7 +204,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
 {
     uint32_t code = ev->code;
 
-     (code) {
+     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
             wifi_mgmr_task_start();

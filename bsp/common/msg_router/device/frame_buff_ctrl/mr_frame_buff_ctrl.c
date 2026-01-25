@@ -224,7 +224,7 @@ int mr_frame_queue_pool_get_available(mr_frame_queue_ctrl_t *ctrl)
  * @retval -1 Error
  */
 int mr_frame_queue_free_cb_register(mr_frame_queue_ctrl_t *ctrl, mr_frame_queue_free_cb_t before_free_cb,
-                                 void *before_free_cb_arg, mr_frame_queue_free_cb_t after_free_cb, void *after_free_cb_arg)
+                                    void *before_free_cb_arg, mr_frame_queue_free_cb_t after_free_cb, void *after_free_cb_arg)
 {
     if (!ctrl) {
         return -1;

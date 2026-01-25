@@ -44,10 +44,10 @@
 #endif
 
 /* Forward declarations for EMAC hardware interface */
-static int emac_tx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt);
-static void emac_tx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt, bool success);
-static int emac_rx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt);
-static void emac_rx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt, bool success);
+static int emac_tx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);
+static void emac_tx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt, bool success);
+static int emac_rx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);
+static void emac_rx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt, bool success);
 
 static struct bflb_device_s *g_emac_dev = NULL;
 static eth_phy_ctrl_t g_phy_ctrl;
@@ -148,10 +148,10 @@ static bool eth_link_state_update(eth_phy_ctrl_t *phy_ctrl, struct bflb_device_s
 static void emac_irq_cb(void *arg, uint32_t irq_event, struct bflb_emac_trans_desc_s *trans_desc)
 {
     mr_netdev_priv_t *priv = (mr_netdev_priv_t *)arg;
-    mr_netdev_msg_t *netdev_msg_packt = NULL;
+    mr_netdev_msg_t *netdev_msg_pkt = NULL;
 
     if (trans_desc) {
-        netdev_msg_packt = (mr_netdev_msg_t *)((uintptr_t)trans_desc->buff_addr - sizeof(mr_netdev_msg_t));
+        netdev_msg_pkt = (mr_netdev_msg_t *)((uintptr_t)trans_desc->buff_addr - sizeof(mr_netdev_msg_t));
     }
 
     switch (irq_event) {
@@ -159,25 +159,25 @@ static void emac_irq_cb(void *arg, uint32_t irq_event, struct bflb_emac_trans_de
             // LOG_W("emac rx busy\r\n");
             break;
 
-        /* rx 错误或者控制帧 */
+        /* rx error or control frame */
         case EMAC_IRQ_EVENT_RX_CTRL_FRAME:
         case EMAC_IRQ_EVENT_RX_ERR_FRAME:
-            MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_packt, 0);
-            emac_rx_done_isr_cb(priv, netdev_msg_packt, false);
+            MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_pkt, 0);
+            emac_rx_done_isr_cb(priv, netdev_msg_pkt, false);
             break;
-        /* rx 成功 */
+        /* rx success */
         case EMAC_IRQ_EVENT_RX_FRAME:
-            MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_packt, trans_desc->data_len);
-            emac_rx_done_isr_cb(priv, netdev_msg_packt, true);
+            MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(netdev_msg_pkt, trans_desc->data_len);
+            emac_rx_done_isr_cb(priv, netdev_msg_pkt, true);
             break;
 
-        /* tx 错误 */
+        /* tx error */
         case EMAC_IRQ_EVENT_TX_ERR_FRAME:
-            emac_tx_done_isr_cb(priv, netdev_msg_packt, false);
+            emac_tx_done_isr_cb(priv, netdev_msg_pkt, false);
             break;
-        /* tx 成功 */
+        /* tx success */
         case EMAC_IRQ_EVENT_TX_FRAME:
-            emac_tx_done_isr_cb(priv, netdev_msg_packt, true);
+            emac_tx_done_isr_cb(priv, netdev_msg_pkt, true);
             break;
 
         default:
@@ -189,47 +189,47 @@ static void emac_irq_cb(void *arg, uint32_t irq_event, struct bflb_emac_trans_de
 /**
  * @brief EMAC TX completion interrupt callback
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to transmitted packet
+ * @param[in] netdev_msg_pkt Pointer to transmitted packet
  * @param[in] success true if transmission succeeded, false on error
  * @details Releases transmitted packet back to netdev download buffer pool
  */
-static void emac_tx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt, bool success)
+static void emac_tx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt, bool success)
 {
-    if (!priv || !netdev_msg_packt) {
+    if (!priv || !netdev_msg_pkt) {
         LOG_E("Invalid parameters\r\n");
         return;
     }
 
     if (success == false) {
-        LOG_E("EMAC TX error: %p\r\n", netdev_msg_packt);
+        LOG_E("EMAC TX error: %p\r\n", netdev_msg_pkt);
     }
 
-    /* 释放来自 msg 的 frame, 注意这是 dnld 的包 */
-    mr_netdev_dnld_elem_free(priv, netdev_msg_packt);
+    /* Free the frame from dnld pool */
+    mr_netdev_dnld_elem_free(priv, netdev_msg_pkt);
 }
 
 /**
  * @brief Push frame to EMAC hardware TX queue
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to packet to transmit
+ * @param[in] netdev_msg_pkt Pointer to packet to transmit
  * @retval 0 Success (packet queued for transmission)
  * @retval <0 Error (TX queue full or invalid parameters)
  */
-static int emac_tx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+static int emac_tx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     int ret;
     struct bflb_emac_trans_desc_s trans_desc;
 
-    if (!priv || !netdev_msg_packt) {
+    if (!priv || !netdev_msg_pkt) {
         return -1;
     }
 
-    trans_desc.buff_addr = (void *)netdev_msg_packt->data;
-    trans_desc.data_len = MR_NETDEV_MSG_PACKET_GET_DATA_SIZE(netdev_msg_packt);
+    trans_desc.buff_addr = (void *)netdev_msg_pkt->data;
+    trans_desc.data_len = MR_NETDEV_MSG_PACKET_GET_DATA_SIZE(netdev_msg_pkt);
     trans_desc.attr_flag = 0;
     trans_desc.err_status = 0;
 
-    /* 加入到 emac 硬件发送队列 */
+    /* Push to EMAC hardware TX queue */
     ret = bflb_emac_queue_tx_push(g_emac_dev, &trans_desc);
     if (ret < 0) {
         LOG_E("Failed to send TX frame: %d\r\n", ret);
@@ -242,46 +242,46 @@ static int emac_tx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_ms
 /**
  * @brief EMAC RX completion interrupt callback
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to received packet
+ * @param[in] netdev_msg_pkt Pointer to received packet
  * @param[in] success true if reception succeeded, false on error
  * @details Sends received packet to host via netdev upload path if link is up
  *          and device is in RUN state, otherwise drops the packet
  */
-static void emac_rx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt, bool success)
+static void emac_rx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt, bool success)
 {
     int ret;
 
-    if (!priv || !netdev_msg_packt) {
+    if (!priv || !netdev_msg_pkt) {
         return;
     }
 
     if (success == false) {
-        LOG_W("EMAC RX error, dropping frame: %p\r\n", netdev_msg_packt);
+        LOG_W("EMAC RX error, dropping frame: %p\r\n", netdev_msg_pkt);
         goto free_exit;
     }
     if (g_link_up_flag == false) {
-        LOG_W("EMAC RX received but link is down, dropping frame: %p\r\n", netdev_msg_packt);
+        LOG_W("EMAC RX received but link is down, dropping frame: %p\r\n", netdev_msg_pkt);
         goto free_exit;
     }
     if (priv->netdev_status != MR_NETDEV_DSTA_DEVICE_RUN) {
-        LOG_W("EMAC RX received but device not in RUN state, dropping frame: %p\r\n", netdev_msg_packt);
+        LOG_W("EMAC RX received but device not in RUN state, dropping frame: %p\r\n", netdev_msg_pkt);
         goto free_exit;
     }
 
-    /* send netdev_msg_packt */
-    ret = mr_netdev_upld_elem_send(priv, netdev_msg_packt);
+    /* send netdev_msg_pkt */
+    ret = mr_netdev_upld_elem_send(priv, netdev_msg_pkt);
     if (ret < 0) {
-        LOG_E("Failed to send packt\r\n");
+        LOG_E("Failed to send pkt\r\n");
         goto free_exit;
     }
 
     return;
 
 free_exit:
-    /* 释放packt, 注意这是通过 upld_elem_alloc 获取的 upld packet */
-    ret = mr_netdev_upld_elem_free(priv, netdev_msg_packt);
+    /* Free pkt from upld pool allocated by upld_elem_alloc */
+    ret = mr_netdev_upld_elem_free(priv, netdev_msg_pkt);
     if (ret < 0) {
-        LOG_E("Failed to free upld frame packt\r\n");
+        LOG_E("Failed to free upld frame pkt\r\n");
     }
     return;
 }
@@ -289,20 +289,20 @@ free_exit:
 /**
  * @brief Push idle buffer to EMAC hardware RX queue
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to empty buffer to receive into
+ * @param[in] netdev_msg_pkt Pointer to empty buffer to receive into
  * @retval 0 Success (buffer queued for reception)
  * @retval <0 Error (RX queue full or invalid parameters)
  */
-static int emac_rx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+static int emac_rx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     int ret;
     struct bflb_emac_trans_desc_s trans_desc;
 
-    if (!priv || !netdev_msg_packt) {
+    if (!priv || !netdev_msg_pkt) {
         return -1;
     }
 
-    trans_desc.buff_addr = netdev_msg_packt->data;
+    trans_desc.buff_addr = netdev_msg_pkt->data;
     trans_desc.data_len = 0;
     trans_desc.attr_flag = 0;
     trans_desc.err_status = 0;
@@ -402,31 +402,31 @@ static mr_netdev_priv_t *g_netdev_emac_priv = NULL;
 /**
  * @brief NETDEV download output callback
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to download packet from host
+ * @param[in] netdev_msg_pkt Pointer to download packet from host
  * @retval 0 Success (packet pushed to EMAC TX queue)
  * @retval <0 Error (link down or TX queue full)
  * @details Called when packet received from host, pushes to EMAC for transmission
  */
-static int netdev_dnld_output_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+static int netdev_dnld_output_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     if (g_link_up_flag == false) {
         LOG_W("Ethernet link is down, dropping frame\r\n");
         return -1;
     }
 
-    return emac_tx_frame_push(priv, netdev_msg_packt);
+    return emac_tx_frame_push(priv, netdev_msg_pkt);
 }
 
 /**
  * @brief NETDEV upload done callback
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to uploaded packet
+ * @param[in] netdev_msg_pkt Pointer to uploaded packet
  * @retval 0 Success (packet pushed to EMAC RX queue or freed)
  * @retval <0 Error
  * @details Called after packet sent to host, recycles buffer to EMAC RX queue
  *          if link is up and sufficient buffers available for control messages
  */
-static int netdev_upld_done_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt)
+static int netdev_upld_done_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt)
 {
     int ret;
 
@@ -438,13 +438,13 @@ static int netdev_upld_done_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_m
         goto free_exit;
     }
 
-    return emac_rx_frame_push(priv, netdev_msg_packt);
+    return emac_rx_frame_push(priv, netdev_msg_pkt);
 
 free_exit:
-    /* 释放packt, 注意这是通过 upld_elem_alloc 获取的 upld packet */
-    ret = mr_netdev_upld_elem_free(priv, netdev_msg_packt);
+    /* free the pkt from upld_elem_alloc */
+    ret = mr_netdev_upld_elem_free(priv, netdev_msg_pkt);
     if (ret < 0) {
-        LOG_E("Failed to free upld frame packt\r\n");
+        LOG_E("Failed to free upld frame pkt\r\n");
     }
     return ret;
 }
@@ -487,15 +487,15 @@ static int netdev_task_cb(mr_netdev_priv_t *priv, uint32_t *notified_value)
 
     upld_buff_cnt -= NETDEV_EMAC_CMD_FRAME_CNT;
     for (int i = 0; i < upld_buff_cnt; i++) {
-        mr_netdev_msg_t *netdev_msg_packt = NULL;
-        int ret = mr_netdev_upld_elem_alloc(priv, &netdev_msg_packt, 0);
+        mr_netdev_msg_t *netdev_msg_pkt = NULL;
+        int ret = mr_netdev_upld_elem_alloc(priv, &netdev_msg_pkt, 0);
         if (ret < 0) {
             break;
         }
 
-        ret = emac_rx_frame_push(priv, netdev_msg_packt);
+        ret = emac_rx_frame_push(priv, netdev_msg_pkt);
         if (ret < 0) {
-            mr_netdev_upld_elem_free(priv, netdev_msg_packt);
+            mr_netdev_upld_elem_free(priv, netdev_msg_pkt);
             break;
         }
     }

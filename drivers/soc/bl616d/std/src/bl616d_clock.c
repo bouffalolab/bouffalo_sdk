@@ -687,8 +687,8 @@ static inline uint32_t Clock_SF_SEL2_Clk_Mux_Output(uint8_t sel)
         /* wifi pll 120m */
         return Clock_Get_WIFI_PLL_Output(120 * 1000 * 1000);
     } else {
-        /* cpupll div5 clk */
-        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV5);
+        /* wifi pll 48m */
+        return Clock_Get_WIFI_PLL_Output(48 * 1000 * 1000);
     }
 }
 

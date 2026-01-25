@@ -874,6 +874,7 @@ int32_t bflb_get_chip_type(uint8_t *chip_type, uint8_t *chip_version)
         return -1;
     }
 #endif
+    (void)tmp;
     return 0;
 #endif
 }

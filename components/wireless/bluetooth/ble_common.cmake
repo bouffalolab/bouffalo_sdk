@@ -195,39 +195,7 @@ sdk_add_compile_definitions(-DCONFIG_BL_SDK)
 # endif
 sdk_ifndef(CONFIG_EM_16K n)
 sdk_add_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
-# 
-# ifeq ($(CONFIG_BT_MFG),1)
-# CFLAGS += -DCONFIG_BT_MFG
-# ifeq ($(CONFIG_BT_MFG_HCI_CMD),1)
-# CFLAGS   += -DCONFIG_BT_MFG_HCI_CMD
-# endif
-# CONFIG_BT := 1
-# CONFIG_SCO_ESCO := 0
-# CONFIG_PCA := 0
-# CONFIG_RF_EXTRC := 0
-# CONFIG_CSB := 0
-# CONFIG_SNIFF := 0
-# CONFIG_RSWITCH := 0
-# CONFIG_ADV_EXTENSION := 0
-# CONFIG_CIS := 0
-# CONFIG_BIS := 0
-# CONFIG_LE_PWR_CTRL ?= 0
-# endif
-if(CONFIG_BT_MFG)
-	sdk_add_compile_definitions(-DCONFIG_BT_MFG)
-	sdk_add_compile_definitions_ifdef(CONFIG_BT_MFG_HCI_CMD -DCONFIG_BT_MFG_HCI_CMD)
-	set(CONFIG_BT y)
-	set(CONFIG_SCO_ESCO n)
-	set(CONFIG_PCA n)
-	set(CONFIG_RF_EXTRC n)
-	set(CONFIG_CSB n)
-	set(CONFIG_SNIFF n)
-	set(CONFIG_RSWITCH n)
-	set(CONFIG_ADV_EXTENSION n)
-	set(CONFIG_CIS n)
-	set(CONFIG_BIS n)
-	sdk_ifndef(CONFIG_LE_PWR_CTRL n)
-endif()
+
 # 
 # CONFIG_BT ?= 1
 # CONFIG_SCO_ESCO ?= 1
@@ -454,45 +422,7 @@ endif()
 if(NOT CONFIG_DBG_RUN_ON_FPGA)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_SETTINGS -DCONFIG_BT_SETTINGS)
 endif()
-# 
-# ifeq ($(CONFIG_BLE_MFG),1)
-# CFLAGS += -DCONFIG_BLE_MFG
-# ifeq ($(CONFIG_BLE_MFG_HCI_CMD),1)
-# CFLAGS   += -DCONFIG_BLE_MFG_HCI_CMD
-# endif
-# CONFIG_ADV_EXTENSION := 0
-# CONFIG_CIS := 0
-# CONFIG_BIS := 0
-# CONFIG_LE_PWR_CTRL := 0
-# ifeq ($(CONFIG_CHIP_NAME),BL602)
-# else ifeq ($(CONFIG_CHIP_NAME),BL702)
-# else
-# CONFIG_BT_ALLROLES := 0
-# CONFIG_BT_CENTRAL := 0
-# CONFIG_BT_OBSERVER := 0
-# CONFIG_BT_PERIPHERAL := 0
-# CONFIG_BT_BROADCASTER := 0
-# endif
-# endif
-if(CONFIG_BLE_MFG)
-	sdk_add_compile_definitions(-DCONFIG_BLE_MFG)
-	sdk_add_compile_definitions_ifdef(CONFIG_BLE_MFG_HCI_CMD -DCONFIG_BLE_MFG_HCI_CMD)
-	set(CONFIG_ADV_EXTENSION n)
-	set(CONFIG_CIS n)
-	set(CONFIG_BIS n)
-	set(CONFIG_LE_PWR_CTRL n)
-	if("${CHIP}" STREQUAL "bl602")
 
-	elseif(("${CHIP}" STREQUAL "bl702"))
-
-	else()
-		set(CONFIG_BT_ALLROLES n)
-		set(CONFIG_BT_CENTRAL n)
-		set(CONFIG_BT_OBSERVER n)
-		set(CONFIG_BT_PERIPHERAL n)
-		set(CONFIG_BT_BROADCASTER n)
-	endif()
-endif()
 # 
 # ifeq ($(CONFIG_BT_GEN_RANDOM_BY_SW),1)
 # CFLAGS += -DCONFIG_BT_GEN_RANDOM_BY_SW

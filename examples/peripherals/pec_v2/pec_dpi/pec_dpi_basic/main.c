@@ -24,6 +24,7 @@ struct bflb_pec_dpi_s dpi_cfg = {
     .pin_vsync = PEC_DPI_VSYNC_PIN,          /*!< DPI vsync pin */
     .pin_hsync = PEC_DPI_HSYNC_PIN,          /*!< DPI hsync pin */
     .pin_de = PEC_DPI_DE_PIN,                /*!< DPI de pin */
+    .level_pclk = 1,                         /*!< DPI pixel clock level, 0: sample on falling edge, others: sample on rising edge */
     .level_vsync = 0,                        /*!< DPI vsync level in vertical synchronization segment */
     .level_hsync = 0,                        /*!< DPI vsync level in horizontal synchronization segment */
     .level_de = 1,                           /*!< DPI de level when data is enabled */

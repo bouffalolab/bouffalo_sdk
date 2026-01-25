@@ -80,7 +80,7 @@ enum {
  * @param ptr Pointer to mr_netdev_msg_t
  * @return Data size in bytes
  */
-#define MR_NETDEV_MSG_PACKET_GET_DATA_SIZE(ptr)      (ptr->msg_packt.len - (sizeof(mr_netdev_msg_t) - sizeof(mr_msg_t)))
+#define MR_NETDEV_MSG_PACKET_GET_DATA_SIZE(ptr)      (ptr->msg_pkt.len - (sizeof(mr_netdev_msg_t) - sizeof(mr_msg_t)))
 
 /**
  * @brief Set data size for network device message packet
@@ -89,7 +89,7 @@ enum {
  */
 #define MR_NETDEV_MSG_PACKET_SET_DATA_SIZE(ptr, size)                                             \
     do {                                                                                          \
-        ptr->msg_packt.len = (sizeof(mr_netdev_msg_t) - sizeof(mr_msg_t)) + size;                 \
+        ptr->msg_pkt.len = (sizeof(mr_netdev_msg_t) - sizeof(mr_msg_t)) + size;                   \
         MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(ptr)->data_size = sizeof(mr_netdev_msg_t) + size; \
     } while (0)
 
@@ -120,10 +120,10 @@ enum {
  * @details Custom Ethernet packet format with message header, flags, and flow control
  */
 typedef struct {
-    struct mr_msg_packt msg_packt; /**< Message packet header */
+    struct mr_msg_pkt msg_pkt; /**< Message packet header */
 
-    uint8_t reseved[1]; /**< Alignment padding */
-    uint8_t flag;       /**< Packet flag (see MR_NETDEV_FLAG_*) */
+    uint8_t reserved[1]; /**< Alignment padding */
+    uint8_t flag;        /**< Packet flag (see MR_NETDEV_FLAG_*) */
 
     uint8_t credit_update_flag; /**< Credit update flag */
     uint8_t credit_limit_cnt;   /**< Credit limit counter */
@@ -151,31 +151,23 @@ struct mr_netdev_cfg_s {
     /* Upload (device to host) buffer configuration */
     uint16_t upld_frame_size;  /**< Frame buffer size in bytes */
     uint16_t upld_frame_count; /**< Number of frame buffers */
-    void *upld_frame_buff; /**< Frame buffer address (must be non-cacheable, total size = upld_frame_size * upld_frame_count) */
-    uint16_t upld_frame_type; /**< Frame buffer type identifier (for debugging) */
+    void *upld_frame_buff;     /**< Frame buffer address (must be non-cacheable, total size = upld_frame_size * upld_frame_count) */
+    uint16_t upld_frame_type;  /**< Frame buffer type identifier (for debugging) */
 
     /* Flow control configuration */
-    uint8_t
-        dnld_credit_max; /**< Download credit limit (also initial value sent to host during handshake, 0 = no flow control) */
-    uint8_t
-        upld_credit_update_threshold; /**< Threshold for proactive credit update (when current credit - last update > threshold) */
+    uint8_t dnld_credit_max;              /**< Download credit limit (also initial value sent to host during handshake, 0 = no flow control) */
+    uint8_t upld_credit_update_threshold; /**< Threshold for proactive credit update (when current credit - last update > threshold) */
 
     /* Callback functions */
-    int (*dnld_output_cb)(
-        mr_netdev_priv_t *priv,
-        mr_netdev_msg_t
-            *netdev_msg_packt); /**< Download data receive callback (must call mr_tty_dnld_elem_free after use) */
-    int (*upld_done_cb)(
-        mr_netdev_priv_t *priv,
-        mr_netdev_msg_t *netdev_msg_packt); /**< Upload complete callback (optional, auto-freed if not registered) */
-    int (*netdev_event)(mr_netdev_priv_t *priv,
-                        uint32_t event_mask); /**< Event notification callback (optional, e.g., OPEN/CLOSE events) */
-    int (*netdev_reset_cb)(mr_netdev_priv_t *priv); /**< Reset callback (optional) */
+    int (*dnld_output_cb)(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt); /**< Download data receive callback (must call mr_tty_dnld_elem_free after use) */
+    int (*upld_done_cb)(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);   /**< Upload complete callback (optional, auto-freed if not registered) */
+    int (*netdev_event)(mr_netdev_priv_t *priv, uint32_t event_mask);               /**< Event notification callback (optional, e.g., OPEN/CLOSE events) */
+    int (*netdev_reset_cb)(mr_netdev_priv_t *priv);                                 /**< Reset callback (optional) */
 
     int32_t task_stack_size; /**< NETDEV processing task stack size */
     int32_t task_priority;   /**< NETDEV processing task priority */
 
-    uint32_t task_period_max_ms; /**< Max cycle period for processing task */
+    uint32_t task_period_max_ms;                                             /**< Max cycle period for processing task */
     int (*netdev_task_cb)(mr_netdev_priv_t *priv, uint32_t *notified_value); /**< NETDEV task callback */
 
     bool link_up_flag; /**< link up flag */
@@ -222,41 +214,41 @@ mr_netdev_priv_t *mr_netdev_init(mr_netdev_cfg_t *cfg);
 /**
  * @brief Allocate an upload packet buffer
  * @param[in] priv Pointer to network device private structure
- * @param[out] netdev_msg_packt Pointer to store allocated packet address
+ * @param[out] netdev_msg_pkt Pointer to store allocated packet address
  * @param[in] timeout Timeout in milliseconds (0 = no wait, portMAX_DELAY = infinite)
  * @retval 0 Success
  * @retval <0 Error (no available buffers)
  */
-int mr_netdev_upld_elem_alloc(mr_netdev_priv_t *priv, mr_netdev_msg_t **netdev_msg_packt, uint32_t timeout);
+int mr_netdev_upld_elem_alloc(mr_netdev_priv_t *priv, mr_netdev_msg_t **netdev_msg_pkt, uint32_t timeout);
 
 /**
  * @brief Send upload packet to host
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to packet to send
+ * @param[in] netdev_msg_pkt Pointer to packet to send
  * @retval 0 Success (ownership transferred to msg_ctrl)
  * @retval <0 Error (caller must free packet)
  */
-int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt);
+int mr_netdev_upld_elem_send(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);
 
 /**
  * @brief Free upload packet buffer
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to packet to free
+ * @param[in] netdev_msg_pkt Pointer to packet to free
  * @retval 0 Success
  * @retval <0 Error
  */
-int mr_netdev_upld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt);
+int mr_netdev_upld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);
 
 /**
  * @brief Free download packet buffer and update flow control
  * @param[in] priv Pointer to network device private structure
- * @param[in] netdev_msg_packt Pointer to packet to free
+ * @param[in] netdev_msg_pkt Pointer to packet to free
  * @retval 0 Success
  * @retval <0 Error
  * @note This function updates the download credit counter and may trigger
  *       proactive credit update if threshold is reached
  */
-int mr_netdev_dnld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_packt);
+int mr_netdev_dnld_elem_free(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);
 
 /**
  * @brief Update MAC and/or IP address

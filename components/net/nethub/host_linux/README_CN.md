@@ -189,6 +189,21 @@ nethub_host/
 
       ⚠️ **重要提醒**：如果 host 侧启用了 DHCP 服务，将会与 device 侧的 DHCP client 产生冲突，导致网络连接异常。
 
+- 问题 6：虚拟出的网卡名可以更改吗？
+
+  **可以更改**。默认为 `hd_eth%d`，如果想更改为 wlan 开头的（如 `wlan%d`），修改 `kernel/eth_netdev/hd_eth_netdev.h` 中的 `ETH_DRV_NAME` 宏定义即可。
+
+  ```c
+  // kernel/eth_netdev/hd_eth_netdev.h
+  // 默认配置
+  #define ETH_DRV_NAME "hd_eth%d"
+
+  // 修改为 wlan 开头
+  #define ETH_DRV_NAME "wlan%d"
+  ```
+
+  修改后重新编译、重载驱动即可。
+
 ## 5. 待实现功能
 
 - [ ] 热插拔、加载功能（理论已支持，待压测确认）

@@ -107,8 +107,75 @@ int wifi_disconnect_cmd(int argc, char **argv)
     return 0;
 }
 
+#if 0
+void wifi_scan_cmd(int argc, char **argv)
+{
+    int opt, ret;
+    getopt_env_t getopt_env;
+
+    wifi_mgmr_scan_params_t config;
+    memset(&config, 0 , sizeof(wifi_mgmr_scan_params_t));
+
+    utils_al_getopt_init(&getopt_env, 0);
+
+    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "s:c:b:t:p:")) != -1) {
+         switch (opt) {
+             case 's':
+             {
+                 memcpy(config.ssid_array, getopt_env.optarg, MAC_SSID_LEN);
+                 config.ssid_length = strlen(getopt_env.optarg);
+                 fhost_printf("ssid: %s len: %d\r\n", config.ssid_array, config.ssid_length);
+             }
+             break;
+             case 'c':
+             {
+                 utils_al_parse_number_adv(getopt_env.optarg, ',', config.channels, MAX_FIXED_CHANNELS_LIMIT, 10, &config.channels_cnt);
+                 fhost_printf("scan channels: ");
+                 for (int i = 0; i < config.channels_cnt; i++) {
+                     fhost_printf("%d ", config.channels[i]);
+                 }
+             }
+             break;
+             case 'b':
+             {
+                 config.bssid_set_flag = 1;
+                 utils_al_parse_number(getopt_env.optarg, ':', config.bssid, 6, 16);
+                 fhost_printf("bssid: %s, mac:%02X:%02X:%02X:%02X:%02X:%02X\r\n", getopt_env.optarg,
+                          MAC_ADDR_LIST(config.bssid));
+             }
+             break;
+             case 't':
+             {
+                 config.duration = atoi(getopt_env.optarg);
+             }
+             break;
+             case 'p':
+             {
+                 config.probe_cnt = atoi(getopt_env.optarg);
+             }
+             break;
+             default:
+             {
+                 fhost_printf("unknow option: %c\r\n", getopt_env.optopt);
+             }
+         }
+
+    }
+
+    if (wl80211_scan(NULL)) {
+        printf("scan failed \r\n");
+    }
+}
+
+static void wifi_scan_cmd(int argc, char **argv)
+{
+    return;
+}
+#endif
+
 #ifdef CONFIG_SHELL
 #include "shell.h"
 SHELL_CMD_EXPORT_ALIAS(wifi_connect_cmd, wifi_sta_connect, wifi station connect);
 SHELL_CMD_EXPORT_ALIAS(wifi_disconnect_cmd, wifi_sta_disconnect, wifi station disconnect);
+//SHELL_CMD_EXPORT_ALIAS(wifi_scan_cmd, wifi_scan, wifi scan);
 #endif

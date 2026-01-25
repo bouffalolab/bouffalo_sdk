@@ -1,6 +1,6 @@
 #ifndef __VELA_616_WIFI_CONFIG_H__
 #define __VELA_616_WIFI_CONFIG_H__
-
+#include "macsw_default_config.h"
 /*
  * 本文件用于覆盖默认的 config.h 配置。
  * 编译系统应确保此文件在默认 config.h 之后被包含，

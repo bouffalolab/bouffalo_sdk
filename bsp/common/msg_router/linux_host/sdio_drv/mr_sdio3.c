@@ -24,13 +24,25 @@
 #include <linux/mmc/host.h>
 
 #include "mr_sdio_manage.h"
-#include "mr_msg_ctrl.h"
-#include "mr_netdev.h"
-#include "mr_tty.h"
 #include "mr_sdio3.h"
+#include "mr_msg_ctrl.h"
 #include "mr_debugfs.h"
+
+#ifdef CONFIG_MR_NETDEV
+#include "mr_netdev.h"
+#endif
+#ifdef CONFIG_MR_NETLINK
+#include "mr_netlink.h"
+#endif
+#ifdef CONFIG_MR_SPEED_TEST
 #include "mr_speed_test.h"
+#endif
+#ifdef CONFIG_MR_TTY
+#include "mr_tty.h"
+#endif
+#ifdef CONFIG_MR_BOOTROM
 #include "mr_bootrom.h"
+#endif
 
 static int mr_sdio3_info_update(struct mr_sdio_card *card);
 
@@ -207,20 +219,15 @@ static int mr_sdio3_upld_transmit(struct mr_sdio_card *card, struct sdio_trans_d
 
 #if SDIO3_HOST_UPLD_RD_LEN_EN
     /* read frist byte */
-    ret = mr_sdio3_read_custom_reg(card,
-                                   SDIO3_CUSTOM_REG_FUNC_OFFSET(card->func->num) + SDIO3_CUSTOM_REG_FUNC_UPLD_QUEUE +
-                                       (card->curr_upld_out & card->queue_mask) * 2,
+    ret = mr_sdio3_read_custom_reg(card, SDIO3_CUSTOM_REG_FUNC_OFFSET(card->func->num) + SDIO3_CUSTOM_REG_FUNC_UPLD_QUEUE + (card->curr_upld_out & card->queue_mask) * 2,
                                    &reg_temp[0], 1);
     if (ret < 0) {
         goto return_out;
     }
     /* 2-byte mode, read second byte */
     if (reg_temp[0] & 0x01) {
-        ret =
-            mr_sdio3_read_custom_reg(card,
-                                     SDIO3_CUSTOM_REG_FUNC_OFFSET(card->func->num) + SDIO3_CUSTOM_REG_FUNC_UPLD_QUEUE +
-                                         (card->curr_upld_out & card->queue_mask) * 2 + 1,
-                                     &reg_temp[1], 1);
+        ret = mr_sdio3_read_custom_reg(card, SDIO3_CUSTOM_REG_FUNC_OFFSET(card->func->num) + SDIO3_CUSTOM_REG_FUNC_UPLD_QUEUE + (card->curr_upld_out & card->queue_mask) * 2 + 1,
+                                       &reg_temp[1], 1);
         if (ret < 0) {
             goto return_out;
         }
@@ -370,9 +377,7 @@ static int mr_sdio3_dnld_transmit(struct mr_sdio_card *card, struct sdio_trans_d
         }
     }
     /* write reg */
-    ret = mr_sdio3_write_custom_reg(card,
-                                    SDIO3_CUSTOM_REG_FUNC_OFFSET(card->func->num) + SDIO3_CUSTOM_REG_FUNC_DNLD_QUEUE +
-                                        (card->curr_dnld_out & card->queue_mask) * 2,
+    ret = mr_sdio3_write_custom_reg(card, SDIO3_CUSTOM_REG_FUNC_OFFSET(card->func->num) + SDIO3_CUSTOM_REG_FUNC_DNLD_QUEUE + (card->curr_dnld_out & card->queue_mask) * 2,
                                     &dnld_elem, (dnld_elem & 0x01) ? 2 : 1);
     if (ret < 0) {
         SDIO_DRV_ERR(card, "dnld data write_custom_reg error\n");
@@ -724,8 +729,8 @@ static int mr_sdio3_wait_card_ready(struct mr_sdio_card *card, int timeout_ms)
 
         if (card_ready) {
             break;
-        } else if ((ktime_get_boottime() - time_s) / (1000 * 1000) < timeout_ms) {
-            usleep_range(100, 100);
+        } else if (ktime_to_ns(ktime_sub(ktime_get_boottime(), time_s)) < timeout_ms * NSEC_PER_MSEC) {
+            usleep_range(100, 200);
         } else {
             ret = -ETIME;
             goto return_out;
@@ -951,6 +956,14 @@ static void mr_sdio3_remove(struct sdio_func *func)
     }
 #endif
 
+#ifdef CONFIG_MR_NETLINK
+    if (card->netlink) {
+        /* stop netlink */
+        mr_netlink_deinit(card->netlink);
+        card->netlink = NULL;
+    }
+#endif
+
 #ifdef CONFIG_MR_TTY
 #ifdef CONFIG_MR_TTY_CMD
     if (card->tty_msg_cmd) {
@@ -1120,11 +1133,21 @@ static int mr_sdio3_probe(struct sdio_func *func, const struct sdio_device_id *i
     }
 #endif
 
+#ifdef CONFIG_MR_NETLINK
+    /* create netlink */
+    card->netlink = mr_netlink_init(msg_ctrl, MR_MSG_TAG_NETLINK);
+    if (card->netlink == NULL) {
+        SDIO_DRV_ERR(card, "failed to create netlink\n");
+        ret = -ENOMEM;
+        goto msg_ctrl_exit;
+    }
+#endif
+
 #ifdef CONFIG_MR_TTY
 
 #ifdef CONFIG_MR_TTY_CMD
     /* create tty devices */
-    card->tty_msg_cmd = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_CMD, "ttyMR_cmd");
+    card->tty_msg_cmd = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_CMD, "ttyMR_cmd", 0);
     if (card->tty_msg_cmd == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1133,7 +1156,7 @@ static int mr_sdio3_probe(struct sdio_func *func, const struct sdio_device_id *i
 
 #ifdef CONFIG_MR_TTY_USER_1
     /* create tty devices */
-    card->tty_msg_user_1 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_1, "ttyMR_user1");
+    card->tty_msg_user_1 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_1, "ttyMR_user", 1);
     if (card->tty_msg_user_1 == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1142,7 +1165,7 @@ static int mr_sdio3_probe(struct sdio_func *func, const struct sdio_device_id *i
 
 #ifdef CONFIG_MR_TTY_USER_2
     /* create tty devices */
-    card->tty_msg_user_2 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_2, "ttyMR_user2");
+    card->tty_msg_user_2 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_2, "ttyMR_user", 2);
     if (card->tty_msg_user_2 == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1151,7 +1174,7 @@ static int mr_sdio3_probe(struct sdio_func *func, const struct sdio_device_id *i
 
 #ifdef CONFIG_MR_TTY_USER_1
     /* create tty devices */
-    card->tty_msg_user_3 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_3, "ttyMR_user3");
+    card->tty_msg_user_3 = mr_tty_init(msg_ctrl, MR_MSG_TAG_TTY_USER_3, "ttyMR_user", 3);
     if (card->tty_msg_user_3 == NULL) {
         SDIO_DRV_ERR(card, "failed to create tty devices\n");
         goto msg_ctrl_exit;
@@ -1197,7 +1220,7 @@ static const struct sdio_device_id mr_sdio3_ids[] = {
     { SDIO_DEVICE(0x0000, 0x0000) },
     { /* end: all zeroes */ },
 };
-MODULE_DEVICE_TABLE(sdio, mr_sdio3_ids);
+MODULE_DEVICE_TABLE(sdio3, mr_sdio3_ids);
 
 struct sdio_driver mr_sdio3 = {
     .name = "mr_sdio3",

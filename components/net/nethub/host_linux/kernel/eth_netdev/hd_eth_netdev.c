@@ -26,8 +26,6 @@
 #include "hd_msg_ctrl.h"
 #include "hd_debugfs.h"
 
-#define ETH_DRV_NAME "hd_eth"
-
 static int hd_eth_netdev_daemon_thread(void *data);
 
 /**
@@ -782,7 +780,7 @@ struct net_device *hd_sdio_eth_netdev_init(struct hd_msg_ctrl *msg_ctrl, uint8_t
     struct hd_sdio_eth_priv *priv = NULL;
 
     /* Network device initialization, use alloc_netdev and ether_setup, this is the modern way */
-    netdev = alloc_netdev(sizeof(struct hd_sdio_eth_priv), "hd_eth%d", NET_NAME_UNKNOWN, ether_setup);
+    netdev = alloc_netdev(sizeof(struct hd_sdio_eth_priv), ETH_DRV_NAME, NET_NAME_UNKNOWN, ether_setup);
     if (!netdev) {
         pr_err("failed to allocate net_device\n");
         return NULL;

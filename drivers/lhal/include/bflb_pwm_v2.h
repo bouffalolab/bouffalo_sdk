@@ -265,12 +265,22 @@ void bflb_pwm_v2_stop(struct bflb_device_s *dev);
 void bflb_pwm_v2_set_period(struct bflb_device_s *dev, uint16_t period);
 
 /**
- * @brief Get pwm frequcency.
+ * @brief Get pwm frequency.
  *
  * @param [in] dev device handle
- * @return frequcency
+ * @return frequency
  */
-float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev);
+uint32_t bflb_pwm_v2_get_frequency(struct bflb_device_s *dev);
+
+/**
+ * @brief Get pwm duty.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] delta pointer to save delta of threshold
+ * @param [in] period pointer to save period
+ */
+void bflb_pwm_v2_get_duty(struct bflb_device_s *dev, uint8_t ch, uint32_t *delta, uint32_t *period);
 
 /**
  * @brief Config pwm channel.

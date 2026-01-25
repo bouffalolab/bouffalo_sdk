@@ -5,7 +5,9 @@ sdk_library_add_sources(frame_buff_ctrl/bflb_frame_buff_ctrl.c)
 sdk_library_add_sources(msg_ctrl/bflb_msg_ctrl.c)
 sdk_library_add_sources(bflb_eth/transportsdio.c)
 sdk_library_add_sources_ifdef(CONFIG_NETHUB_NETLINK bflb_netlink/bflb_netlink.c)
+sdk_library_add_sources_ifdef(CONFIG_NETHUB_NETLINK bflb_netlink/bflb_netlink_cli.c)
 sdk_library_add_sources(bflb_tty/bflb_tty.c)
+sdk_library_add_sources(bflb_tty/bflb_tty_cli.c)
 
 # include
 sdk_add_include_directories(frame_buff_ctrl)

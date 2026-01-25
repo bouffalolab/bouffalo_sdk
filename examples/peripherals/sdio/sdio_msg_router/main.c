@@ -56,16 +56,28 @@ void start_task(void *param)
         return;
     }
 
+#ifdef CONFIG_MR_SPEED_TEST
     /* Initialize speed test framework */
     speed_test_init(msg_ctrl);
+#endif
 
+#ifdef CONFIG_MR_NETDEV_EMAC
     /* Initialize Ethernet EMAC */
     void netdev_emac_init(mr_msg_ctrl_priv_t * msg_ctrl);
     netdev_emac_init(msg_ctrl);
+#endif
 
+#ifdef CONFIG_MR_NETLINK_CLI
+    /* Initialize Netlink CLI */
+    void netlink_cli_init(mr_msg_ctrl_priv_t * msg_ctrl);
+    netlink_cli_init(msg_ctrl);
+#endif
+
+#ifdef CONFIG_MR_TTY_CLI
     /* Initialize tty cli */
     void tty_cli_init(mr_msg_ctrl_priv_t * msg_ctrl);
     tty_cli_init(msg_ctrl);
+#endif
 
     /* Delete current task */
     vTaskDelete(NULL);

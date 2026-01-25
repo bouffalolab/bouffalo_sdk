@@ -274,7 +274,7 @@ static void a2dp_start_cfm()
           "media_transport",
            4096,
            (k_thread_entry_t)media_thread,
-            K_PRIO_COOP(configMAX_PRIORITIES - 10)
+            K_PRIO_COOP(28)
             );
       media_task_create = true;  
    }

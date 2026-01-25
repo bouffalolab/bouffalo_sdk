@@ -198,6 +198,17 @@ struct ieee80211_dot_d {
     uint8_t channel5G_chan[28];
 };
 
+typedef void (*wl80211_monitor_rx_cb_t)(void *ctx, void *pkt, size_t len, size_t mac_hdr_len, int rssi);
+struct wl80211_monitor_settings {
+    /* channel settings */
+    enum wl80211_chan_width channel_width;
+    uint32_t center_freq1;
+    uint32_t center_freq2;
+
+    void *recv_ctx;
+    wl80211_monitor_rx_cb_t recv;
+};
+
 /* wl80211 global state */
 struct wl80211_global_state {
     const struct ieee80211_dot_d *country;
@@ -207,7 +218,8 @@ struct wl80211_global_state {
     unsigned int associated     : 1;
     unsigned int authenticating : 1;
     unsigned int link_up        : 1;
-    unsigned int ap_started     : 1;
+    unsigned int ap_en          : 1;
+    unsigned int monitor_en     : 1;
 
     /* station settings */
     struct wl80211_connect_params *connect_params, *last_connect_params;
@@ -225,6 +237,12 @@ struct wl80211_global_state {
     /* ap settings */
     uint8_t ap_ssid[33];
     uint8_t ap_password[65];
+    uint8_t ap_chan_band;
+    uint16_t ap_chan_freq;
+    uint16_t ap_beacon_interval;
+    uint8_t ap_hidden_ssid;
+    uint8_t *ap_ie;
+    uint16_t ap_ie_len;
     uint8_t assoc_sta_count;
     struct aid_list_entry aid_list[4];
 };
@@ -253,6 +271,7 @@ enum {
     WL80211_EVT_AP_STARTED,
     WL80211_EVT_AP_STOPPED,
     WL80211_EVT_AP_STA_ADDED,
+    WL80211_EVT_AP_STA_DEL,
 };
 
 // post wifi event in async
@@ -272,6 +291,9 @@ enum {
     WL80211_CTRL_AP_SET_PASSWORD,
     WL80211_CTRL_AP_START,
     WL80211_CTRL_AP_STOP,
+
+    WL80211_CTRL_MONITOR_START,
+    WL80211_CTRL_MONITOR_STOP,
 };
 
 // wl80211 control api
@@ -393,7 +415,8 @@ static inline int wl80211_sta_is_connected(void)
     return wl80211_glb.link_up;
 }
 
-static inline int wl80211_sta_set_ps(int mode) {
+static inline int wl80211_sta_set_ps(int mode)
+{
     return wl80211_cntrl(WL80211_CTRL_STA_SET_PS_MODE, mode);
 }
 
@@ -475,16 +498,33 @@ static inline const char *wl80211_get_country_code(void)
     return wl80211_glb.country->code;
 }
 
-static inline int wl80211_ap_start(struct wl80211_ap_settings *ap_settings) {
+static inline int wl80211_ap_start(struct wl80211_ap_settings *ap_settings)
+{
     return wl80211_cntrl(WL80211_CTRL_AP_START, ap_settings);
 }
 
-static inline int wl80211_ap_stop(void) {
+static inline int wl80211_ap_stop(void)
+{
     return wl80211_cntrl(WL80211_CTRL_AP_STOP);
 }
 
-static inline int wl80211_ap_status(void) {
-    return wl80211_glb.ap_started;
+static inline int wl80211_ap_status(void)
+{
+    return wl80211_glb.ap_en;
 }
 
+static inline int wl80211_monitor_start(struct wl80211_monitor_settings *mon_settings)
+{
+    return wl80211_cntrl(WL80211_CTRL_MONITOR_START, mon_settings);
+}
+
+static inline int wl80211_monitor_stop(void)
+{
+    return wl80211_cntrl(WL80211_CTRL_MONITOR_STOP);
+}
+
+static inline int wl80211_monitor_status(void)
+{
+    return wl80211_glb.monitor_en;
+}
 #endif

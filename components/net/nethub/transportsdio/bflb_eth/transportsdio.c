@@ -12,6 +12,7 @@
 #define FHOST_RX_BUF_CNT 20// fixme
 #else
 #include "fhost.h"
+#define FHOST_RX_BUF_CNT            (MACSW_MAX_BA_RX * CFG_REORD_BUF + 2)
 #endif
 
 #ifdef CONFIG_SDIO3_SOFT_RST_INT_USER

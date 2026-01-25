@@ -257,4 +257,27 @@ int mr_debugfs_register(struct mr_sdio_card *card);
 
 #define TTY_ERR(tty_msg, fmt, args...) pr_err("[%s] " fmt, tty_msg->tty_driver->driver_name, ##args)
 
+/** @} */
+
+/** @defgroup NETLINK_DEBUG_MACROS Netlink Debug Logging Macros
+ * @brief Debug logging macros for Netlink subsystem
+ * @{
+ */
+
+#if (0)
+#define NETLINK_DBG(netlink, fmt, args...) pr_info("[mr_netlink] " fmt, ##args)
+#else
+#define NETLINK_DBG(netlink, fmt, args...)
+#endif
+
+#if (1)
+#define NETLINK_INFO(netlink, fmt, args...) pr_notice("[mr_netlink] " fmt, ##args)
+#else
+#define NETLINK_INFO(netlink, fmt, args...)
+#endif
+
+#define NETLINK_ERR(netlink, fmt, args...) pr_err("[mr_netlink] " fmt, ##args)
+
+/** @} */
+
 #endif //__MR_DEBUGFS_H__

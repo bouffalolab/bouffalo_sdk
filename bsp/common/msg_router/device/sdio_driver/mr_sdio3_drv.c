@@ -22,7 +22,7 @@
 #include "mr_frame_buff_ctrl.h"
 #include "mr_msg_ctrl.h"
 
-#define DBG_TAG "MAIN"
+#define DBG_TAG "MR_SDIO3"
 #include "log.h"
 
 #define SDIO3_FN1_TEST_SIZE (512 * 3)
@@ -374,6 +374,9 @@ static int sdio3_upld_start(mr_frame_elem_t *frame_elem)
 
     if (upld_desc.data_len >= 64) {
         upld_desc.data_len = (upld_desc.data_len + blk_size - 1) & ~(blk_size - 1); /* Align up to blk_size */
+        if (upld_desc.buff_len < upld_desc.data_len) {
+            upld_desc.buff_len = upld_desc.data_len;
+        }
     }
 
     ret = bflb_sdio3_upld_push(sdio3_hd, &upld_desc);

@@ -170,7 +170,7 @@ __attribute__((weak)) void btblecontroller_rf_restore()
 {
 #ifndef CONFIG_DBG_RUN_ON_FPGA
 #if (LE_PDS_ENABLE)
-    #if defined(BL616) || defined(BL616D)
+    #if defined(BL616) || defined(BL616D) || defined(BL616L)
     struct wl_cfg_t *wl_cfg;
 
     #if WL_API_RMEM_EN
@@ -183,8 +183,6 @@ __attribute__((weak)) void btblecontroller_rf_restore()
     wl_lp_init(2412);
     #endif
 
-    #elif defined(BL616L)
-    //616L_todo, Not find definition of struct wl_cfg_t in bl616L fpga
     #endif
 #endif /* LE_PDS_ENABLE */
 #endif
@@ -204,11 +202,8 @@ __attribute__((weak)) int btblecontroller_efuse_read_mac(uint8_t mac[6])
     status = bl_efuse_read_mac(tmp);
     #endif
     #else
-    #if defined(BL616) || defined(BL616D)
+    #if defined(BL616) || defined(BL616D) || defined(BL616L)
     status = mfg_media_read_macaddr_with_lock(tmp, 1);
-    #elif defined(BL616L)
-    //BL616L_todo, BL616D_todo
-    return 1;
     #endif
     #endif //(CONFIG_IOT_SDK)
     mac[0] = tmp[0];

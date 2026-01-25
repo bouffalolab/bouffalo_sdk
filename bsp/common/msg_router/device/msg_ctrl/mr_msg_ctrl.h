@@ -34,6 +34,8 @@ enum {
     MR_MSG_TAG_TTY_USER_2, /**< TTY user message tag */
     MR_MSG_TAG_TTY_USER_3, /**< TTY user message tag */
 
+    MR_MSG_TAG_NETLINK, /**< Netlink message tag */
+
     MR_MSG_TAG_MAX /**< Maximum message tag */
 };
 
@@ -42,7 +44,7 @@ enum {
 /**
  * @brief Message packet header structure
  */
-typedef struct mr_msg_packt {
+typedef struct mr_msg_pkt {
     uint8_t tag;     /**< Message tag for routing */
     uint8_t sub_tag; /**< Message sub-tag */
     uint16_t len;    /**< Message data length */
@@ -78,8 +80,8 @@ struct mr_msg_ctrl_ops_s {
     int (*dev_is_ready)(void);                       /**< Check if device is ready (0=ready, <0=not ready) */
     int (*dev_upld_is_busy)(void);                   /**< Check if upload hardware is busy (0=idle, >0=busy) */
     int (*dev_dnld_is_busy)(void);                   /**< Check if download hardware is busy (0=idle, >0=busy) */
-    int (*dev_upld_start)(mr_frame_elem_t *elem);       /**< Start upload transmission (0=success, <0=error) */
-    int (*dev_dnld_start)(mr_frame_elem_t *elem);       /**< Start download reception (0=success, <0=error) */
+    int (*dev_upld_start)(mr_frame_elem_t *elem);    /**< Start upload transmission (0=success, <0=error) */
+    int (*dev_dnld_start)(mr_frame_elem_t *elem);    /**< Start download reception (0=success, <0=error) */
 };
 
 /**
@@ -94,8 +96,8 @@ struct mr_msg_ctrl_cfg_s {
     /* Download buffer configuration */
     uint16_t dnld_frame_size;  /**< Frame buffer size in bytes (must be > sizeof(mr_msg_t)) */
     uint16_t dnld_frame_count; /**< Number of frame buffers (determines max concurrent downloads) */
-    void *dnld_frame_buff; /**< Frame buffer pool address (must be non-cacheable, aligned, size = dnld_frame_size * dnld_frame_count) */
-    uint16_t dnld_frame_type; /**< Frame buffer type identifier (for debugging) */
+    void *dnld_frame_buff;     /**< Frame buffer pool address (must be non-cacheable, aligned, size = dnld_frame_size * dnld_frame_count) */
+    uint16_t dnld_frame_type;  /**< Frame buffer type identifier (for debugging) */
 
     /* Upload queue configuration */
     uint16_t upld_queue_depth; /**< Upload queue depth (max pending upload messages) */
@@ -104,9 +106,8 @@ struct mr_msg_ctrl_cfg_s {
     int32_t task_stack_size; /**< Processing task stack size in bytes */
     int32_t task_priority;   /**< Processing task priority */
 
-    uint32_t task_period_max_ms; /**< Max wait period when no events pending (milliseconds) */
-    int (*msg_task_cb)(mr_msg_ctrl_priv_t *msg_ctrl,
-                       uint32_t *notified_value); /**< Optional task callback for custom processing (can be NULL) */
+    uint32_t task_period_max_ms;                                                /**< Max wait period when no events pending (milliseconds) */
+    int (*msg_task_cb)(mr_msg_ctrl_priv_t *msg_ctrl, uint32_t *notified_value); /**< Optional task callback for custom processing (can be NULL) */
 };
 
 /**
@@ -152,22 +153,20 @@ mr_msg_ctrl_priv_t *mr_msg_ctrl_init(mr_msg_ctrl_cfg_t *cfg); /**< Initialize me
 int mr_msg_ctrl_deinit(mr_msg_ctrl_priv_t *msg_ctrl);         /**< Deinitialize message controller */
 
 /* Application APIs for data transfer */
-int mr_msg_ctrl_dnld_alloc(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t **frame_elem,
-                           TickType_t xTicksToWait); /**< Allocate download buffer (use with caution) */
-int mr_msg_ctrl_dnld_free(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem); /**< Free download buffer */
-int mr_msg_ctrl_upld_send(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem); /**< Send upload message */
+int mr_msg_ctrl_dnld_alloc(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t **frame_elem, TickType_t xTicksToWait); /**< Allocate download buffer (use with caution) */
+int mr_msg_ctrl_dnld_free(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem);                            /**< Free download buffer */
+int mr_msg_ctrl_upld_send(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem);                            /**< Send upload message */
 
 /* Callback registration */
-int mr_msg_cb_register(mr_msg_ctrl_priv_t *msg_ctrl, uint8_t tag, mr_msg_cb_t dnld_recv_cb, void *dnld_recv_arg,
-                       mr_msg_cb_t upld_send_cb, void *upld_send_arg, mr_msg_cb_t hw_reset_cb,
-                       void *hw_reset_arg);                          /**< Register callbacks for message tag */
+int mr_msg_cb_register(mr_msg_ctrl_priv_t *msg_ctrl, uint8_t tag,
+                       mr_msg_cb_t dnld_recv_cb, void *dnld_recv_arg,
+                       mr_msg_cb_t upld_send_cb, void *upld_send_arg,
+                       mr_msg_cb_t hw_reset_cb, void *hw_reset_arg); /**< Register callbacks for message tag */
 int mr_msg_cb_unregister(mr_msg_ctrl_priv_t *msg_ctrl, uint8_t tag); /**< Unregister callbacks for message tag */
 
 /* Hardware layer callbacks (called by hardware drivers from ISR context) */
-int mr_msg_upld_send_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem,
-                             bool success); /**< Upload complete callback */
-int mr_msg_dnld_recv_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem,
-                             bool success);             /**< Download complete callback */
-int mr_msg_host_reset_cb(mr_msg_ctrl_priv_t *msg_ctrl); /**< Hardware reset callback */
+int mr_msg_upld_send_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success); /**< Upload complete callback */
+int mr_msg_dnld_recv_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success); /**< Download complete callback */
+int mr_msg_host_reset_cb(mr_msg_ctrl_priv_t *msg_ctrl);                                                /**< Hardware reset callback */
 
 #endif /* __MR_MSG_CTRL___ */

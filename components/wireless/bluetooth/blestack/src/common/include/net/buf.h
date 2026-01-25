@@ -14,7 +14,7 @@
 #include <zephyr/types.h>
 #include <misc/util.h>
 #include <zephyr.h>
-#include "../../port/include/config.h"
+#include "port/include/config.h"
 
 #ifdef __cplusplus
 extern "C" {

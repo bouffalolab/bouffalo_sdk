@@ -23,6 +23,7 @@
 #include <linux/skbuff.h>
 
 #include "mr_tty.h"
+#include "mr_msg_ctrl.h"
 #include "mr_debugfs.h"
 
 #define TTY_DRV_NAME "mr_tty"
@@ -31,46 +32,7 @@
 static int mr_tty_daemon_thread(void *data);
 static int mr_tty_upld_recv_cb(struct sk_buff *skb, bool success, void *arg);
 static int mr_tty_dnld_send_cb(struct sk_buff *skb, bool success, void *arg);
-
-/**
- * @brief Update transmit statistics
- * @param[in] priv Private data structure
- * @param[in] packets Packet count: positive=success, negative=error, zero=dropped
- * @param[in] bytes Byte count for successful packets (ignored for errors/drops)
- * @retval None
- * @details Centralized transmit statistics update function
- */
-static inline void mr_tty_update_tx_stats(struct mr_tty_priv *priv, int packets, uint32_t bytes)
-{
-    spin_lock(&priv->stats_lock);
-    if (packets > 0) {
-        priv->tx_packets += packets;
-        priv->tx_bytes += bytes;
-    } else if (packets < 0) {
-        priv->tx_errors += (-packets);
-    }
-    spin_unlock(&priv->stats_lock);
-}
-
-/**
- * @brief Update receive statistics
- * @param[in] priv Private data structure
- * @param[in] packets Packet count: positive=success, negative=error
- * @param[in] bytes Byte count for successful packets (ignored for errors)
- * @retval None
- * @details Centralized receive statistics update function
- */
-static inline void mr_tty_update_rx_stats(struct mr_tty_priv *priv, int packets, uint32_t bytes)
-{
-    spin_lock(&priv->stats_lock);
-    if (packets > 0) {
-        priv->rx_packets += packets;
-        priv->rx_bytes += bytes;
-    } else if (packets < 0) {
-        priv->rx_errors += (-packets);
-    }
-    spin_unlock(&priv->stats_lock);
-}
+static int mr_tty_received_process(struct mr_tty_priv *priv);
 
 /**
  * @brief Update the flow control credit limit
@@ -108,7 +70,17 @@ static int mr_tty_credit_limit_update(struct mr_tty_priv *priv, uint8_t credit_l
 
     /* Wake up TTY layer if credits become available */
     if (should_wake_tty) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+        struct tty_struct *tty = tty_port_tty_get(&priv->port);
+        if (!tty) {
+            TTY_DBG(priv, "TTY port not open\n");
+            return 0;
+        }
+        tty_wakeup(tty);
+        tty_kref_put(tty);
+#else
         tty_port_tty_wakeup(&priv->port);
+#endif
     }
 
     return 0;
@@ -141,6 +113,26 @@ static int mr_tty_credit_get(struct mr_tty_priv *priv)
     return ret;
 }
 
+#if 0
+/**
+ * @brief Query available flow control credits
+ * @param[in] priv Netlink private structure
+ * @return Number of available credits (limit - consumed)
+ * @details This function returns the number of available credits for packet transmission.
+ */
+static int mr_tty_credit_available(struct mr_tty_priv *priv)
+{
+    unsigned long flags;
+    int available;
+
+    spin_lock_irqsave(&priv->credit_lock, flags);
+    available = (int8_t)(priv->credit_limit_cnt - priv->credit_consumed_cnt);
+    spin_unlock_irqrestore(&priv->credit_lock, flags);
+
+    return available;
+}
+#endif
+
 /**
  * @brief Return a flow control credit after failed transmission
  * @param[in] priv TTY private structure
@@ -151,6 +143,7 @@ static int mr_tty_credit_get(struct mr_tty_priv *priv)
 static int mr_tty_credit_put(struct mr_tty_priv *priv)
 {
     unsigned long flags;
+    uint8_t credit_consumed_old;
     bool should_wake_tty = false;
 
     spin_lock_irqsave(&priv->credit_lock, flags);
@@ -160,19 +153,28 @@ static int mr_tty_credit_put(struct mr_tty_priv *priv)
         return 0;
     }
 
-    if (priv->credit_consumed_cnt > 0) {
-        priv->credit_consumed_cnt--;
-        /* Wake up TTY if there are now credits available */
-        if ((int8_t)(priv->credit_limit_cnt - priv->credit_consumed_cnt) > 0) {
-            should_wake_tty = true;
-        }
+    credit_consumed_old = priv->credit_consumed_cnt;
+    priv->credit_consumed_cnt--;
+    /* Wake up TTY if there are now credits available */
+    if (((int8_t)(credit_consumed_old - priv->credit_consumed_cnt) <= 0) &&
+        ((int8_t)(priv->credit_limit_cnt - priv->credit_consumed_cnt) > 0)) {
+        should_wake_tty = true;
     }
-
     spin_unlock_irqrestore(&priv->credit_lock, flags);
 
     /* Wake up TTY layer if credits become available */
     if (should_wake_tty) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+        struct tty_struct *tty = tty_port_tty_get(&priv->port);
+        if (!tty) {
+            TTY_DBG(priv, "TTY port not open\n");
+            return 0;
+        }
+        tty_wakeup(tty);
+        tty_kref_put(tty);
+#else
         tty_port_tty_wakeup(&priv->port);
+#endif
     }
 
     return 0;
@@ -188,30 +190,30 @@ static int mr_tty_credit_put(struct mr_tty_priv *priv)
 static int mr_tty_send_cmd_packet(struct mr_tty_priv *priv, uint8_t flag)
 {
     struct sk_buff *skb;
-    struct mr_tty_msg_packt *tty_msg_packt;
+    struct mr_tty_msg_pkt *tty_msg_pkt;
     int ret;
 
-    skb = dev_alloc_skb(sizeof(struct mr_tty_msg_packt));
+    skb = dev_alloc_skb(sizeof(struct mr_tty_msg_pkt));
     if (!skb) {
         TTY_ERR(priv, "Failed to allocate SKB for command packet\n");
         return -ENOMEM;
     }
 
-    tty_msg_packt = (struct mr_tty_msg_packt *)skb_put(skb, sizeof(struct mr_tty_msg_packt));
+    tty_msg_pkt = (struct mr_tty_msg_pkt *)skb_put(skb, sizeof(struct mr_tty_msg_pkt));
 
-    tty_msg_packt->msg_packt.tag = priv->msg_tag;
-    tty_msg_packt->msg_packt.sub_tag = 0;
-    tty_msg_packt->msg_packt.len = sizeof(struct mr_tty_msg_packt) - sizeof(struct mr_msg_packt);
+    tty_msg_pkt->msg_pkt.tag = priv->msg_tag;
+    tty_msg_pkt->msg_pkt.sub_tag = 0;
+    tty_msg_pkt->msg_pkt.len = sizeof(struct mr_tty_msg_pkt) - sizeof(struct mr_msg_pkt);
 
-    tty_msg_packt->reseved[0] = 0;
-    tty_msg_packt->flag = flag;
-    tty_msg_packt->credit_update_flag = 0;
-    tty_msg_packt->credit_limit_cnt = 0;
+    tty_msg_pkt->reserved[0] = 0;
+    tty_msg_pkt->flag = flag;
+    tty_msg_pkt->credit_update_flag = 0;
+    tty_msg_pkt->credit_limit_cnt = 0;
 
     ret = mr_msg_ctrl_send(priv->msg_ctrl, skb);
     if (ret < 0) {
         TTY_ERR(priv, "Failed to send command packet: flag=0x%02x, ret=%d\n", flag, ret);
-        dev_kfree_skb(skb);
+        dev_kfree_skb_any(skb);
         return ret;
     }
 
@@ -222,21 +224,16 @@ static int mr_tty_send_cmd_packet(struct mr_tty_priv *priv, uint8_t flag)
 /**
  * @brief Process received data packet
  * @param[in] priv TTY private structure
- * @param[in] tty_msg_packt Message packet containing data
+ * @param[in] tty_msg_pkt Message packet containing data
  * @retval 0 Success
  * @details This function processes incoming data packets and inserts them
  *          into the TTY flip buffer for delivery to userspace.
  */
-static int mr_tty_process_data_packet(struct mr_tty_priv *priv, struct mr_tty_msg_packt *tty_msg_packt)
+static int mr_tty_process_data_packet(struct mr_tty_priv *priv, struct mr_tty_msg_pkt *tty_msg_pkt)
 {
     uint16_t data_len;
     int inserted;
     struct tty_struct *tty;
-
-    if (!priv->is_device_registered) {
-        TTY_DBG(priv, "TTY device not registered for data\n");
-        return -ENODEV;
-    }
 
     /* Get TTY struct safely - this will return NULL if device is not open */
     tty = tty_port_tty_get(&priv->port);
@@ -245,7 +242,7 @@ static int mr_tty_process_data_packet(struct mr_tty_priv *priv, struct mr_tty_ms
         return -ENODEV;
     }
 
-    data_len = MR_TTY_GET_DATA_LEN(tty_msg_packt->msg_packt.len);
+    data_len = MR_TTY_GET_DATA_LEN(tty_msg_pkt->msg_pkt.len);
     if (data_len == 0) {
         TTY_DBG(priv, "Received empty data packet\n");
         tty_kref_put(tty);
@@ -253,24 +250,26 @@ static int mr_tty_process_data_packet(struct mr_tty_priv *priv, struct mr_tty_ms
     }
 
     /* Insert received data into TTY flip buffer */
-    inserted = tty_insert_flip_string(&priv->port, tty_msg_packt->data, data_len);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0)
+    inserted = tty_insert_flip_string(tty, tty_msg_pkt->data, data_len);
+#else
+    inserted = tty_insert_flip_string(&priv->port, tty_msg_pkt->data, data_len);
+#endif
     /* Check if all data was inserted */
     if (inserted < data_len) {
         TTY_ERR(priv, "Flip buffer full: requested=%u, inserted=%d, dropped=%d\n", data_len, inserted,
                 data_len - inserted);
-        mr_tty_update_rx_stats(priv, -1, 0); /* Count as error */
     }
 
     /* Push data to TTY layer */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0)
+    tty_flip_buffer_push(tty);
+#else
     tty_flip_buffer_push(&priv->port);
+#endif
 
     /* Release TTY reference */
     tty_kref_put(tty);
-
-    /* Update statistics with actual inserted bytes */
-    if (inserted > 0) {
-        mr_tty_update_rx_stats(priv, 1, inserted);
-    }
 
     TTY_DBG(priv, "Received data: len=%u, inserted=%d\n", data_len, inserted);
     return 0;
@@ -289,35 +288,36 @@ static int mr_tty_process_data_packet(struct mr_tty_priv *priv, struct mr_tty_ms
 static int mr_tty_upld_recv_cb(struct sk_buff *skb, bool success, void *arg)
 {
     struct mr_tty_priv *priv = (struct mr_tty_priv *)arg;
-    struct mr_tty_msg_packt *tty_msg_packt;
+    struct mr_tty_msg_pkt *tty_msg_pkt;
 
-    if (skb->len < sizeof(struct mr_tty_msg_packt)) {
+    if (skb->len < sizeof(struct mr_tty_msg_pkt)) {
         TTY_ERR(priv, "Received packet too small: %u bytes\n", skb->len);
-        mr_tty_update_rx_stats(priv, -1, 0);
-        dev_kfree_skb(skb);
+        dev_kfree_skb_any(skb);
         return 0;
     }
 
-    tty_msg_packt = (struct mr_tty_msg_packt *)skb->data;
+    tty_msg_pkt = (struct mr_tty_msg_pkt *)skb->data;
 
+#if 0
     /* Fast path for data packets in RUN state */
     if (priv->tty_status == MR_TTY_HSTA_DEVICE_RUN &&
-        (tty_msg_packt->flag == MR_TTY_FLAG_UPLD_DATA || tty_msg_packt->flag == MR_TTY_FLAG_CREDIT_UPDATE)) {
+        (tty_msg_pkt->flag == MR_TTY_FLAG_UPLD_DATA || tty_msg_pkt->flag == MR_TTY_FLAG_CREDIT_UPDATE)) {
         /* Update flow control */
-        if (tty_msg_packt->credit_update_flag) {
-            mr_tty_credit_limit_update(priv, tty_msg_packt->credit_limit_cnt);
+        if (tty_msg_pkt->credit_update_flag) {
+            mr_tty_credit_limit_update(priv, tty_msg_pkt->credit_limit_cnt);
         }
 
-        if (tty_msg_packt->flag == MR_TTY_FLAG_UPLD_DATA) {
-            mr_tty_process_data_packet(priv, tty_msg_packt);
+        if (tty_msg_pkt->flag == MR_TTY_FLAG_UPLD_DATA) {
+            mr_tty_process_data_packet(priv, tty_msg_pkt);
         }
 
         dev_kfree_skb_any(skb);
         return 0;
     }
+#endif
 
     /* Queue control packets for daemon thread */
-    skb_queue_tail(&priv->thread_skb_head, skb);
+    skb_queue_tail(&priv->receive_skb_head, skb);
     wake_up_interruptible(&priv->waitq);
 
     return 0;
@@ -334,32 +334,123 @@ static int mr_tty_upld_recv_cb(struct sk_buff *skb, bool success, void *arg)
 static int mr_tty_dnld_send_cb(struct sk_buff *skb, bool success, void *arg)
 {
     struct mr_tty_priv *priv = (struct mr_tty_priv *)arg;
-    struct mr_tty_msg_packt *tty_msg_packt;
+    struct mr_tty_msg_pkt *tty_msg_pkt;
     uint16_t data_len = 0;
 
-    if (!skb || !priv) {
-        return 0;
-    }
-
-    if (skb->len >= sizeof(struct mr_tty_msg_packt)) {
-        tty_msg_packt = (struct mr_tty_msg_packt *)skb->data;
-        if (tty_msg_packt->flag == MR_TTY_FLAG_DNLD_DATA) {
-            data_len = MR_TTY_GET_DATA_LEN(tty_msg_packt->msg_packt.len);
-        }
-    }
+    tty_msg_pkt = (struct mr_tty_msg_pkt *)skb->data;
+    data_len = MR_TTY_GET_DATA_LEN(tty_msg_pkt->msg_pkt.len);
 
     if (success) {
-        if (data_len > 0) {
-            mr_tty_update_tx_stats(priv, 1, data_len);
-        }
-        TTY_DBG(priv, "Packet sent successfully\n");
+        TTY_DBG(priv, "Send completed successfully: len=%u\n", data_len);
     } else {
-        if (data_len > 0) {
-            mr_tty_update_tx_stats(priv, -1, 0);
+        TTY_DBG(priv, "Send failed: len=%u\n", data_len);
+        if (tty_msg_pkt->flag == MR_TTY_FLAG_DNLD_DATA) {
             mr_tty_credit_put(priv);
         }
-        TTY_ERR(priv, "Packet send failed\n");
     }
+
+    dev_kfree_skb_any(skb);
+    return 0;
+}
+
+/**
+ * @brief Process received packets and manage state machine
+ * @param[in] priv TTY private structure
+ * @retval 0 Success
+ * @retval 1 No packet available or skipped (RESET/ERROR state)
+ * @retval 2 Queue empty
+ * @retval 3 State transition to RESET occurred
+ * @details This function processes one packet from the receive queue
+ *          and handles state machine transitions.
+ */
+static int mr_tty_received_process(struct mr_tty_priv *priv)
+{
+    unsigned long flags;
+    struct sk_buff *skb;
+    struct mr_tty_msg_pkt *tty_msg_pkt;
+
+    if (priv->tty_status == MR_TTY_HSTA_RESET || priv->tty_status == MR_TTY_HSTA_ERROR) {
+        /* In RESET or ERROR state, skip processing received packets */
+        return 1;
+    }
+
+    /* Try to get skb for processing (received from device) */
+    skb = skb_dequeue(&priv->receive_skb_head);
+    if (skb == NULL) {
+        return 2;
+    }
+    tty_msg_pkt = (struct mr_tty_msg_pkt *)skb->data;
+
+    /* Anytime receiving DEVICE_RESET or DEVICE_STOP, need to return to initial state */
+    if (tty_msg_pkt->flag == MR_TTY_FLAG_DEVICE_RESET ||
+        tty_msg_pkt->flag == MR_TTY_FLAG_DEVICE_STOP) {
+        /* Hangup any open TTY connections to release user space references immediately */
+        tty_port_hangup(&priv->port);
+
+        /* Change state to reset */
+        priv->tty_status = MR_TTY_HSTA_RESET;
+        dev_kfree_skb_any(skb);
+
+        TTY_INFO(priv, "Received DEVICE_RESET/STOP in state %d, returning to HSTA_RESET\n", priv->tty_status);
+        return 3;
+    }
+
+    /* State machine */
+    switch (priv->tty_status) {
+        case MR_TTY_HSTA_HOST_READY:
+            if (tty_msg_pkt->flag != MR_TTY_FLAG_DEVICE_START) {
+                break;
+            }
+
+            /* Process initial credit limit */
+            if (tty_msg_pkt->credit_update_flag == false || tty_msg_pkt->credit_limit_cnt == 0) {
+                spin_lock_irqsave(&priv->credit_lock, flags);
+                priv->credit_nolimit = true;
+                spin_unlock_irqrestore(&priv->credit_lock, flags);
+                TTY_INFO(priv, "Device Ready! No Credit Limit\n");
+            } else {
+                spin_lock_irqsave(&priv->credit_lock, flags);
+                priv->credit_limit_cnt = tty_msg_pkt->credit_limit_cnt;
+                priv->credit_consumed_cnt = 0;
+                priv->credit_nolimit = false;
+                spin_unlock_irqrestore(&priv->credit_lock, flags);
+                TTY_INFO(priv, "Device Ready! Credit Limit=%u\n", tty_msg_pkt->credit_limit_cnt);
+            }
+
+            /* Device is now ready for communication */
+            priv->tty_status = MR_TTY_HSTA_DEVICE_RUN;
+            break;
+
+        case MR_TTY_HSTA_DEVICE_RUN:
+            if (tty_msg_pkt->flag == MR_TTY_FLAG_UPLD_DATA) {
+                /* Process credit update */
+                if (tty_msg_pkt->credit_update_flag) {
+                    mr_tty_credit_limit_update(priv, tty_msg_pkt->credit_limit_cnt);
+                }
+                /* Process data */
+                mr_tty_process_data_packet(priv, tty_msg_pkt);
+
+            } else if (tty_msg_pkt->flag == MR_TTY_FLAG_CREDIT_UPDATE) {
+                /* Credit update */
+                if (tty_msg_pkt->credit_update_flag) {
+                    mr_tty_credit_limit_update(priv, tty_msg_pkt->credit_limit_cnt);
+                }
+            }
+            break;
+
+        case MR_TTY_HSTA_RESET:
+            break;
+
+        case MR_TTY_HSTA_ERROR:
+            break;
+
+        default:
+            TTY_ERR(priv, "Unknown status: %d\n", priv->tty_status);
+            break;
+    }
+
+    /* Release skb_recv */
+    dev_kfree_skb_any(skb);
 
     return 0;
 }
@@ -374,139 +465,73 @@ static int mr_tty_dnld_send_cb(struct sk_buff *skb, bool success, void *arg)
 static int mr_tty_daemon_thread(void *data)
 {
     int ret;
-    unsigned long flags;
     struct mr_tty_priv *priv = (struct mr_tty_priv *)data;
-    struct sk_buff *skb;
-    struct mr_tty_msg_packt *tty_msg_packt;
 
     TTY_INFO(priv, "TTY daemon thread started\n");
 
+thread_restart:
     ret = mr_tty_send_cmd_packet(priv, MR_TTY_FLAG_HOST_RESET);
     if (ret < 0) {
+        priv->tty_status = MR_TTY_HSTA_ERROR;
         TTY_ERR(priv, "Failed to send HOST_READY command: %d\n", ret);
         goto exit;
     }
-
-    /* Initialize state machine */
     priv->tty_status = MR_TTY_HSTA_RESET;
 
+thread_reset:
+    /* Clear queues */
+    skb_queue_purge(&priv->receive_skb_head);
+    /* Send HOST_READY packet to indicate HOST is ready */
+    ret = mr_tty_send_cmd_packet(priv, MR_TTY_FLAG_HOST_READY);
+    if (ret < 0) {
+        priv->tty_status = MR_TTY_HSTA_ERROR;
+        TTY_ERR(priv, "Failed to send HOST_READY command: %d\n", ret);
+        goto exit;
+    }
+    TTY_INFO(priv, "Host ready, waiting for device start\n");
+    priv->tty_status = MR_TTY_HSTA_HOST_READY;
+
     while (1) {
-        wait_event_interruptible(priv->waitq, !skb_queue_empty(&priv->thread_skb_head) || priv->thread_condition ||
-                                                  kthread_should_stop() || priv->tty_status == MR_TTY_HSTA_RESET);
+        /* Suspend and wait for wake-up for various reasons */
+        wait_event_interruptible(priv->waitq, !skb_queue_empty(&priv->receive_skb_head) ||
+                                                  priv->thread_condition ||
+                                                  kthread_should_stop());
 
         TTY_DBG(priv, "Daemon thread running, current status: %d\n", priv->tty_status);
 
-        if (priv->thread_condition) {
-            msleep(2);
-        }
-
         if (kthread_should_stop()) {
             break;
+        } else if (priv->thread_condition) {
+            usleep_range(500, 1000);
         }
 
-        /* Try to get skb for processing */
-        skb = skb_dequeue(&priv->thread_skb_head);
-        if (skb) {
-            tty_msg_packt = (struct mr_tty_msg_packt *)skb->data;
-        } else {
-            tty_msg_packt = NULL;
+        /* process received packet and handle state machine */
+        while (mr_tty_received_process(priv) == 0) {}
+
+        if (priv->tty_status == MR_TTY_HSTA_RESET) {
+            usleep_range(500, 1000);
+            goto thread_reset;
         }
 
-        /* Anytime receiving DEVICE_RESET, need to return to initial state */
-        if (tty_msg_packt &&
-            (tty_msg_packt->flag == MR_TTY_FLAG_DEVICE_RESET || tty_msg_packt->flag == MR_TTY_FLAG_DEVICE_STOP)) {
-            TTY_ERR(priv, "received DEVICE_RESET in state %d, returning to HSTA_RESET\n", priv->tty_status);
-
-            /* Hangup any open TTY connections to release user space references immediately */
-            if (priv->is_device_registered) {
-                tty_port_hangup(&priv->port);
-            }
-
-            /* Change state to reset */
-            priv->tty_status = MR_TTY_HSTA_RESET;
-
-            dev_kfree_skb(skb);
-            skb = NULL;
-            continue;
-        }
-
-        switch (priv->tty_status) {
-            case MR_TTY_HSTA_RESET:
-                if (tty_msg_packt != NULL) {
-                    break;
-                }
-                /* Reset state, send HOST_READY packet to indicate HOST is ready */
-                ret = mr_tty_send_cmd_packet(priv, MR_TTY_FLAG_HOST_READY);
-                if (ret < 0) {
-                    priv->tty_status = MR_TTY_HSTA_ERROR;
-                } else {
-                    TTY_INFO(priv, "Host ready, waiting for device start\n");
-                    priv->tty_status = MR_TTY_HSTA_HOST_READY;
-                }
-                break;
-
-            case MR_TTY_HSTA_HOST_READY:
-                if (tty_msg_packt == NULL || tty_msg_packt->flag != MR_TTY_FLAG_DEVICE_START) {
-                    break;
-                }
-
-                if (tty_msg_packt->credit_update_flag == false || tty_msg_packt->credit_limit_cnt == 0) {
-                    spin_lock_irqsave(&priv->credit_lock, flags);
-                    priv->credit_nolimit = true;
-                    spin_unlock_irqrestore(&priv->credit_lock, flags);
-                    TTY_INFO(priv, "Device Ready! No Credit Limit\n");
-                } else {
-                    spin_lock_irqsave(&priv->credit_lock, flags);
-                    priv->credit_limit_cnt = tty_msg_packt->credit_limit_cnt;
-                    priv->credit_consumed_cnt = 0;
-                    priv->credit_nolimit = false;
-                    spin_unlock_irqrestore(&priv->credit_lock, flags);
-                    TTY_INFO(priv, "Device Ready! Credit Limit=%u\n", tty_msg_packt->credit_limit_cnt);
-                }
-
-                /* Device is now ready for communication */
-                priv->tty_status = MR_TTY_HSTA_DEVICE_RUN;
-                break;
-
-            case MR_TTY_HSTA_DEVICE_RUN:
-                if (tty_msg_packt == NULL) {
-                    break;
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_UPLD_DATA) {
-                    if (tty_msg_packt->credit_update_flag) {
-                        mr_tty_credit_limit_update(priv, tty_msg_packt->credit_limit_cnt);
-                    }
-                    mr_tty_process_data_packet(priv, tty_msg_packt);
-
-                } else if (tty_msg_packt->flag == MR_TTY_FLAG_CREDIT_UPDATE) {
-                    mr_tty_credit_limit_update(priv, tty_msg_packt->credit_limit_cnt);
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        /* Release skb_recv */
-        if (skb) {
-            dev_kfree_skb_any(skb);
-            skb = NULL;
+        /* If in ERROR state, restart the thread */
+        if (priv->tty_status == MR_TTY_HSTA_ERROR) {
+            usleep_range(10000, 20000);
+            goto thread_restart;
         }
     }
 
 exit:
     if (priv->tty_status != MR_TTY_HSTA_ERROR) {
         ret = mr_tty_send_cmd_packet(priv, MR_TTY_FLAG_HOST_STOP);
-    } else {
-        ret = mr_tty_send_cmd_packet(priv, MR_TTY_FLAG_HOST_RESET);
-    }
-
-    if (ret < 0) {
-        TTY_ERR(priv, "failed to send stop packet: %d\n", ret);
+        if (ret < 0) {
+            TTY_ERR(priv, "failed to send stop packet: %d\n", ret);
+        }
     }
 
     /* Wait for kthread_stop() to be called to avoid premature thread exit */
     while (!kthread_should_stop()) {
         wait_event_interruptible(priv->waitq, kthread_should_stop() || priv->thread_condition);
+        usleep_range(500, 1000);
     }
 
     TTY_INFO(priv, "TTY daemon thread exiting, status: %d\n", priv->tty_status);
@@ -563,12 +588,19 @@ static void mr_tty_close(struct tty_struct *tty, struct file *filp)
  * @retval >0 Number of bytes written
  * @retval 0 No space available (TTY will wait and retry)
  * @retval <0 Error code
+ * @details This function signature differs between kernel versions:
+ * - Linux 6.5: int count parameter
+ * - Linux 6.6+: size_t count parameter
  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
+static int mr_tty_write(struct tty_struct *tty, const unsigned char *buf, int count)
+#else
 static ssize_t mr_tty_write(struct tty_struct *tty, const unsigned char *buf, size_t count)
+#endif
 {
     struct mr_tty_priv *priv = tty->driver_data;
     struct sk_buff *skb;
-    struct mr_tty_msg_packt *tty_msg_packt;
+    struct mr_tty_msg_pkt *tty_msg_pkt;
     size_t data_len;
     int ret;
 
@@ -579,8 +611,8 @@ static ssize_t mr_tty_write(struct tty_struct *tty, const unsigned char *buf, si
         return -EINVAL;
     }
 
-    if (priv->tty_status != MR_TTY_HSTA_DEVICE_RUN) {
-        TTY_DBG(priv, "mr_tty_write: Device not ready, status=%d\n", priv->tty_status);
+    if (priv->tty_status != MR_TTY_HSTA_DEVICE_RUN || !priv->is_open) {
+        TTY_DBG(priv, "mr_tty_write: Device not ready, status=%d, is_open=%d\n", priv->tty_status, priv->is_open);
         return -EAGAIN;
     }
 
@@ -590,29 +622,29 @@ static ssize_t mr_tty_write(struct tty_struct *tty, const unsigned char *buf, si
     }
 
     /* Limit data length */
-    data_len = min(count, (size_t)MR_TTY_MAX_DATA_LEN);
+    data_len = min(count, MR_TTY_MAX_DATA_LEN);
 
     /* Allocate SKB */
-    skb = dev_alloc_skb(sizeof(struct mr_tty_msg_packt) + data_len);
+    skb = dev_alloc_skb(sizeof(struct mr_tty_msg_pkt) + data_len);
     if (!skb) {
         mr_tty_credit_put(priv);
         return -ENOMEM;
     }
 
     /* Build packet */
-    tty_msg_packt = (struct mr_tty_msg_packt *)skb_put(skb, sizeof(struct mr_tty_msg_packt) + data_len);
+    tty_msg_pkt = (struct mr_tty_msg_pkt *)skb_put(skb, sizeof(struct mr_tty_msg_pkt) + data_len);
 
-    tty_msg_packt->msg_packt.tag = priv->msg_tag;
-    tty_msg_packt->msg_packt.sub_tag = 0;
-    tty_msg_packt->msg_packt.len = sizeof(struct mr_tty_msg_packt) - sizeof(struct mr_msg_packt) + data_len;
+    tty_msg_pkt->msg_pkt.tag = priv->msg_tag;
+    tty_msg_pkt->msg_pkt.sub_tag = 0;
+    tty_msg_pkt->msg_pkt.len = sizeof(struct mr_tty_msg_pkt) - sizeof(struct mr_msg_pkt) + data_len;
 
-    tty_msg_packt->reseved[0] = 0;
-    tty_msg_packt->flag = MR_TTY_FLAG_DNLD_DATA;
-    tty_msg_packt->credit_update_flag = 0;
-    tty_msg_packt->credit_limit_cnt = 0;
+    tty_msg_pkt->reserved[0] = 0;
+    tty_msg_pkt->flag = MR_TTY_FLAG_DNLD_DATA;
+    tty_msg_pkt->credit_update_flag = 0;
+    tty_msg_pkt->credit_limit_cnt = 0;
 
     /* Copy data */
-    memcpy(tty_msg_packt->data, buf, data_len);
+    memcpy(tty_msg_pkt->data, buf, data_len);
 
     TTY_DBG(priv, "Sent data: %zu bytes\n", data_len);
 
@@ -621,7 +653,7 @@ static ssize_t mr_tty_write(struct tty_struct *tty, const unsigned char *buf, si
     if (ret < 0) {
         TTY_ERR(priv, "Failed to send data packet: ret=%d\n", ret);
         mr_tty_credit_put(priv);
-        dev_kfree_skb(skb);
+        dev_kfree_skb_any(skb);
         return ret;
     }
 
@@ -632,8 +664,15 @@ static ssize_t mr_tty_write(struct tty_struct *tty, const unsigned char *buf, si
  * @brief TTY write room operation
  * @param[in] tty TTY structure
  * @retval Number of bytes that can be written
+ * @details This function signature differs between kernel versions:
+ * - Linux 5.13: returns int
+ * - Linux 5.14+: returns unsigned int
  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0)
+static int mr_tty_write_room(struct tty_struct *tty)
+#else
 static unsigned int mr_tty_write_room(struct tty_struct *tty)
+#endif
 {
     struct mr_tty_priv *priv = tty->driver_data;
     unsigned long flags;
@@ -664,8 +703,15 @@ static unsigned int mr_tty_write_room(struct tty_struct *tty)
  * @brief TTY chars in buffer operation
  * @param[in] tty TTY structure
  * @retval Number of characters in buffer (always 0 for this implementation)
+ * @details This function signature differs between kernel versions:
+ * - Linux 5.13: returns int
+ * - Linux 5.14+: returns unsigned int
  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0)
+static int mr_tty_chars_in_buffer(struct tty_struct *tty)
+#else
 static unsigned int mr_tty_chars_in_buffer(struct tty_struct *tty)
+#endif
 {
     return 0; // No local buffering
 }
@@ -769,10 +815,11 @@ static const struct tty_port_operations mr_tty_port_ops = {
  * @param[in] msg_ctrl Message control interface
  * @param[in] msg_tag Message tag for routing
  * @param[in] device_name Name of the TTY device to create
+ * @param[in] idx Index of the TTY device
  * @retval Pointer to TTY private structure on success
  * @retval NULL on failure
  */
-struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, char *device_name)
+struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, char *device_name, uint8_t idx)
 {
     struct mr_tty_priv *priv;
     int ret;
@@ -794,18 +841,21 @@ struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, c
 
     /* Initialize synchronization objects */
     spin_lock_init(&priv->credit_lock);
-    spin_lock_init(&priv->stats_lock);
     init_waitqueue_head(&priv->waitq);
 
     /* Initialize SKB queue for daemon thread */
-    skb_queue_head_init(&priv->thread_skb_head);
+    skb_queue_head_init(&priv->receive_skb_head);
 
     /* Initialize TTY port */
     tty_port_init(&priv->port);
     priv->port.ops = &mr_tty_port_ops;
 
     /* Allocate TTY driver */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
+    priv->tty_driver = alloc_tty_driver(1);
+#else
     priv->tty_driver = tty_alloc_driver(1, MR_TTY_FLAGS);
+#endif
     if (IS_ERR(priv->tty_driver)) {
         pr_err("TTY: Failed to allocate TTY driver\n");
         ret = PTR_ERR(priv->tty_driver);
@@ -817,13 +867,17 @@ struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, c
     priv->tty_driver->name = device_name;
     priv->tty_driver->major = MR_TTY_MAJOR;
     priv->tty_driver->minor_start = 0;
+    priv->tty_driver->name_base = idx;
     priv->tty_driver->type = MR_TTY_TYPE;
     priv->tty_driver->subtype = MR_TTY_SUBTYPE;
     priv->tty_driver->init_termios = tty_std_termios;
     priv->tty_driver->driver_state = priv;
-
     tty_set_operations(priv->tty_driver, &mr_tty_ops);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
+    priv->tty_driver->flags = MR_TTY_FLAGS;
+#else
     tty_port_link_device(&priv->port, priv->tty_driver, 0);
+#endif
 
     /* Register TTY driver (but not the device yet) */
     ret = tty_register_driver(priv->tty_driver);
@@ -832,48 +886,53 @@ struct mr_tty_priv *mr_tty_init(struct mr_msg_ctrl *msg_ctrl, uint8_t msg_tag, c
         goto free_tty_driver;
     }
 
+    /* Create network daemon thread */
+    priv->daemon_thread = kthread_create(mr_tty_daemon_thread, priv, "%s_daemon", device_name);
+    if (IS_ERR(priv->daemon_thread)) {
+        pr_err("TTY: Failed to create daemon thread\n");
+        ret = PTR_ERR(priv->daemon_thread);
+        goto unregister_tty;
+    }
+
     /* Register message callbacks */
     ret = mr_msg_cb_register(priv->msg_ctrl, priv->msg_tag, mr_tty_upld_recv_cb, priv, mr_tty_dnld_send_cb, priv);
     if (ret < 0) {
         pr_err("TTY: Failed to register message callbacks: %d\n", ret);
-        goto unregister_tty;
-    }
-
-    /* Start daemon thread */
-    priv->daemon_thread = kthread_run(mr_tty_daemon_thread, priv, "mr_tty_daemon");
-    if (IS_ERR(priv->daemon_thread)) {
-        pr_err("TTY: Failed to create daemon thread\n");
-        ret = PTR_ERR(priv->daemon_thread);
-        goto unregister_callbacks;
+        goto stop_daemon;
     }
 
     /* Register TTY device immediately - it will be available when device is ready */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
+    priv->tty_dev = tty_register_device(priv->tty_driver, 0, NULL);
+#else
     priv->tty_dev = tty_port_register_device(&priv->port, priv->tty_driver, 0, NULL);
+#endif
     if (IS_ERR(priv->tty_dev)) {
         pr_err("TTY: Failed to register TTY device\n");
         ret = PTR_ERR(priv->tty_dev);
         priv->tty_dev = NULL;
-        goto stop_daemon;
+        goto unregister_callbacks;
     }
-    priv->is_device_registered = true;
+
+    wake_up_process(priv->daemon_thread);
 
     TTY_INFO(priv, "TTY driver initialized successfully\n");
     return priv;
 
-stop_daemon:
-    priv->thread_condition = true;
-    wake_up_interruptible(&priv->waitq);
-    kthread_stop(priv->daemon_thread);
-    priv->daemon_thread = NULL;
-
+/* Error cleanup paths */
 unregister_callbacks:
     mr_msg_cb_unregister(priv->msg_ctrl, priv->msg_tag);
+stop_daemon:
+    kthread_stop(priv->daemon_thread);
 unregister_tty:
     tty_unregister_driver(priv->tty_driver);
 free_tty_driver:
     tty_driver_kref_put(priv->tty_driver);
 cleanup_port:
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
+#else
     tty_port_destroy(&priv->port);
+#endif
     kfree(priv);
     return NULL;
 }
@@ -884,8 +943,6 @@ cleanup_port:
  */
 void mr_tty_deinit(struct mr_tty_priv *priv)
 {
-    struct sk_buff *skb;
-
     if (!priv) {
         return;
     }
@@ -895,15 +952,6 @@ void mr_tty_deinit(struct mr_tty_priv *priv)
     /* Unregister message callbacks */
     mr_msg_cb_unregister(priv->msg_ctrl, priv->msg_tag);
 
-    /* Unregister TTY device first if registered */
-    if (priv->is_device_registered) {
-        tty_port_hangup(&priv->port);
-        tty_port_unregister_device(&priv->port, priv->tty_driver, 0);
-
-        priv->is_device_registered = false;
-        priv->tty_dev = NULL;
-    }
-
     /* Stop daemon thread */
     if (priv->daemon_thread) {
         priv->thread_condition = true;
@@ -912,19 +960,24 @@ void mr_tty_deinit(struct mr_tty_priv *priv)
         priv->daemon_thread = NULL;
     }
 
-    /* Unregister TTY driver */
-    TTY_INFO(priv, "Unregistering TTY driver...\n");
-    tty_unregister_driver(priv->tty_driver);
-    TTY_INFO(priv, "Putting TTY driver reference...\n");
-    tty_driver_kref_put(priv->tty_driver);
-
-    /* Cleanup TTY port */
-    tty_port_destroy(&priv->port);
-
-    /* Free pending SKBs */
-    while ((skb = skb_dequeue(&priv->thread_skb_head)) != NULL) {
-        dev_kfree_skb(skb);
+    /* Unregister TTY device first if registered */
+    if (priv->tty_dev) {
+        tty_port_hangup(&priv->port);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0)
+        tty_unregister_device(priv->tty_driver, 0);
+#else
+        tty_port_unregister_device(&priv->port, priv->tty_driver, 0);
+#endif
+        tty_driver_kref_put(priv->tty_driver);
+        tty_unregister_driver(priv->tty_driver);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
+#else
+        tty_port_destroy(&priv->port);
+#endif
+        priv->tty_dev = NULL;
     }
+
+    skb_queue_purge(&priv->receive_skb_head);
 
     /* Free private structure */
     kfree(priv);
