@@ -6,15 +6,8 @@
 #include <FreeRTOS.h>
 #include "semphr.h"
 
-/* Dual-core OTA Flash RPC support (AP core - Master) */
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-#include "rpc/flash_rpc_master.h"
-
-/* Core detection override for simple_rpc */
-int simple_rpc_is_ap_core(void)
-{
-    return (GLB_Get_Core_Type() == GLB_CORE_ID_AP);
-}
+#ifdef CONFIG_IPC
+#include <flash_ops_rpmsg.h>
 #endif
 
 static struct bflb_device_s *uart0;
@@ -22,7 +15,6 @@ extern void shell_init_with_task(struct bflb_device_s *shell);
 
 int main(void)
 {
-    int ch;
     board_init();
     configASSERT((configMAX_PRIORITIES > 4));
     uart0 = bflb_device_get_by_name("uart0");
@@ -30,9 +22,13 @@ int main(void)
     printf("hello world ap:%d\r\n",GLB_Get_Core_Type());
     shell_init_with_task(uart0);
 
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-    flash_rpc_master_init();
-    printf("Flash RPC Master started on AP core\r\n");
+#ifdef CONFIG_IPC
+    printf("[AP] Initializing RPMsg OTA Flash Core...\r\n");
+    int ret = rpmsg_master_init();
+    if (ret != 0) {
+        printf("[AP] RPMsg init failed: %d\r\n", ret);
+        return ret;
+    }
 #endif
 
     vTaskStartScheduler();

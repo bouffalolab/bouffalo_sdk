@@ -38,13 +38,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openthread/logging.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
  * Represents exit codes used when OpenThread exits.
- *
  */
 enum
 {
@@ -82,6 +82,16 @@ enum
      * No response from radio spinel.
      */
     OT_EXIT_RADIO_SPINEL_NO_RESPONSE = 6,
+
+    /**
+     * Invalid state.
+     */
+    OT_EXIT_INVALID_STATE = 7,
+
+    /**
+     * RCP chip reset is not able to be done by OT
+     */
+    OT_EXIT_RCP_RESET_REQUIRED = 8,
 };
 
 /**
@@ -90,7 +100,6 @@ enum
  * @param[in]  aExitCode  An exit code.
  *
  * @returns  A string representation of an exit code.
- *
  */
 const char *otExitCodeToString(uint8_t aExitCode);
 
@@ -100,7 +109,6 @@ const char *otExitCodeToString(uint8_t aExitCode);
  *
  * @param[in]   aCondition  The condition to verify
  * @param[in]   aExitCode   The exit code.
- *
  */
 #define VerifyOrDie(aCondition, aExitCode)                                                         \
     do                                                                                             \
@@ -120,7 +128,6 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * and both records exit status and terminates the program if the error code is unsuccessful.
  *
  * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
- *
  */
 #define SuccessOrDie(aError)             \
     VerifyOrDie(aError == OT_ERROR_NONE, \
@@ -130,7 +137,6 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * Unconditionally both records exit status and terminates the program.
  *
  * @param[in]   aExitCode   The exit code.
- *
  */
 #define DieNow(aExitCode) VerifyOrDie(false, aExitCode)
 
@@ -139,7 +145,6 @@ const char *otExitCodeToString(uint8_t aExitCode);
  *
  * @param[in]   aMessage    The exit message.
  * @param[in]   aExitCode   The exit code.
- *
  */
 #define DieNowWithMessage(aMessage, aExitCode)                                                 \
     do                                                                                         \

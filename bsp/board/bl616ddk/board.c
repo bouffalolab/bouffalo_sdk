@@ -165,6 +165,7 @@ static void peripheral_clock_init(void)
         GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_320M);
 #endif
         GLB_Swap_MCU_SPI_0_MOSI_With_MISO(0);
+        GLB_Swap_MCU_SPI_1_MOSI_With_MISO(0);
     }
 }
 

@@ -882,6 +882,8 @@ BL_Err_Type HBN_Power_On_Xtal_32K(void);
 BL_Err_Type HBN_Power_Off_Xtal_32K(void);
 BL_Err_Type HBN_Keep_On_RC32K(void);
 BL_Err_Type HBN_Power_Off_RC32K(void);
+BL_Err_Type HBN_Set_RC32K_R_Code(uint32_t r_code);
+uint32_t HBN_Get_RC32K_R_Code(void);
 BL_Err_Type HBN_Trim_RC32K(void);
 BL_Err_Type HBN_Trim_Ldo_Soc_Vout(void);
 BL_Err_Type HBN_Trim_Ldo_Aon_Vout(void);

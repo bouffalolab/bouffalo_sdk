@@ -40,7 +40,7 @@
 #include <openthread/srp_client_buffers.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
@@ -49,19 +49,15 @@ namespace Cli {
 
 /**
  * Implements the SRP Client CLI interpreter.
- *
  */
-class SrpClient : private Output
+class SrpClient : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     SrpClient(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
@@ -75,16 +71,12 @@ public:
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
      * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
      * @retval ...                        Error during execution of the CLI command.
-     *
      */
     otError Process(Arg aArgs[]);
 
 private:
-    enum : uint8_t
-    {
-        kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES,
-        kIndentSize       = 4,
-    };
+    static constexpr uint8_t kIndentSize       = 4;
+    static constexpr uint8_t kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES;
 
     using Command = CommandEntry<SrpClient>;
 

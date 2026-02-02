@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -87,6 +84,8 @@ void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
 
     UptimeToString(GetUptime(), writer, /* aIncludeMsec */ true);
 }
+
+uint32_t Uptime::GetUptimeInSeconds(void) const { return MsecToSec(GetUptime()); }
 
 void Uptime::HandleTimer(void)
 {

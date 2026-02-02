@@ -48,15 +48,47 @@ struct wl80211_mac_rx_desc {
 int wl80211_eapol_input(enum wl80211_vif_type vif, uint8_t *payload, size_t len);
 int wl80211_mac_mgmt_input(uint8_t *payload, size_t len);
 int wl80211_mac_disconnect(uint16_t reason_code, uint16_t status_code);
+
+/**
+ * Start WiFi scan (internal MAC layer function)
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Memory allocation failed (malloc scan ops or scan req failed)
+ */
 int wl80211_mac_do_scan(struct wl80211_scan_params *params);
+
+/**
+ * Start WiFi connection (internal MAC layer function)
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Memory allocation failed (malloc ctx or connect_params failed)
+ */
 int wl80211_mac_do_connect(struct wl80211_connect_params *conn_params);
+
 int wl80211_mac_ctrl_port(uint8_t sta_id, int control_port_open);
 int wl80211_mac_set_ps_mode(int enable);
 int wl80211_mac_chan_config_update(uint8_t channel24G_num, const uint8_t *channel24G_chan, uint8_t channel5G_num,
                                    const uint8_t *channel5G_chan);
 struct mac_chan_def *wl80211_mac_chan_get(int freq);
 
+/**
+ * Start AP mode (internal MAC layer function)
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Failed - invalid center_freq1
+ *   -2 : Failed - memory allocation failed
+ *   -3 : Failed - IE length too long
+ */
 int wl80211_mac_start_ap(struct wl80211_ap_settings *ap_settings);
+
+/**
+ * Stop AP mode (internal MAC layer function)
+ *
+ * Return value: 0 on success
+ */
 int wl80211_mac_stop_ap(void);
 int wl80211_mac_ap_set_key(uint8_t key_idx, uint8_t sta_idx, uint8_t *key, uint8_t key_len, uint8_t cipher_suite,
                            bool pairwise);
@@ -77,7 +109,22 @@ void wl80211_mac_ap_disassoc_handler(void *frame_payload, uint32_t frame_length)
 extern wl80211_monitor_rx_cb_t _wl80211_monitor_rx;
 extern void *_wl80211_monitor_rx_ctx;
 
+/**
+ * Start monitor mode (internal MAC layer function)
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Failed - mon_setting is NULL
+ *   -2 : Failed - recv callback is NULL
+ *   -3 : Failed - invalid center_freq1
+ */
 int wl80211_mac_monitor_start(struct wl80211_monitor_settings *mon_setting);
+
+/**
+ * Stop monitor mode (internal MAC layer function)
+ *
+ * Return value: 0 on success
+ */
 int wl80211_mac_monitor_stop(void);
 
 // only for type checker
@@ -94,7 +141,20 @@ void wl80211_mac_rx_free(void *info);
 //////////////////////
 extern const struct me_chan_config_req _macsw_chan_def;
 
+/**
+ * Add VIF (internal function)
+ *
+ * Return value:
+ *   >=0 : VIF index
+ *   -1  : Failed (vif_mgmt_register failed, see vif_mgmt.c for detailed error codes)
+ */
 int _macsw_add_vif(enum mac_vif_type vif_type, uint8_t mac[6]);
+
+/**
+ * Remove VIF (internal function)
+ *
+ * Return value: VIF index on success
+ */
 int _macsw_remove_vif(int vif_idx);
 struct scanu_start_req *_macsw_make_scan_req(struct wl80211_scan_params *params);
 struct me_config_req *_macsw_make_me_config(void);

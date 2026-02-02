@@ -33,14 +33,7 @@
 
 #include "coap_message.hpp"
 
-#include "coap/coap.hpp"
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/instance.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Coap {
@@ -97,7 +90,7 @@ void Message::Finish(void)
 
     if (GetHelpData().mPayloadMarkerSet && (GetHelpData().mHeaderLength == GetLength()))
     {
-        IgnoreError(SetLength(GetLength() - 1));
+        RemoveFooter(sizeof(uint8_t));
     }
 
     WriteBytes(0, &GetHelpData().mHeader, GetOptionStart());
@@ -121,7 +114,6 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
      * If `269 <= aValue`, two-byte extension is used and the value minis 269
      * is written as a 16-bit unsigned integer and `14 (kOption2ByteExtension)`
      * is returned.
-     *
      */
 
     uint8_t rval;
@@ -139,15 +131,19 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
     else
     {
         rval = kOption2ByteExtension;
-        Encoding::BigEndian::WriteUint16(aValue - kOption2ByteExtensionOffset, aBuffer);
+        BigEndian::WriteUint16(aValue - kOption2ByteExtensionOffset, aBuffer);
         aBuffer += sizeof(uint16_t);
     }
 
     return rval;
 }
 
-Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
+Error Message::AppendOptionHeader(uint16_t aNumber, uint16_t aLength)
 {
+    /*
+     * Appends a CoAP Option header field (Option Delta/Length) per RFC 7252.
+     */
+
     Error    error = kErrorNone;
     uint16_t delta;
     uint8_t  header[kMaxOptionHeaderSize];
@@ -167,9 +163,32 @@ Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aVal
     VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength, error = kErrorNoBufs);
 
     SuccessOrExit(error = AppendBytes(header, headerLength));
-    SuccessOrExit(error = AppendBytes(aValue, aLength));
 
     GetHelpData().mOptionLast = aNumber;
+
+exit:
+    return error;
+}
+
+Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
+    SuccessOrExit(error = AppendBytes(aValue, aLength));
+
+    GetHelpData().mHeaderLength = GetLength();
+
+exit:
+    return error;
+}
+
+Error Message::AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const Message &aMessage, uint16_t aOffset)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
+    SuccessOrExit(error = AppendBytesFromMessage(aMessage, aOffset, aLength));
 
     GetHelpData().mHeaderLength = GetLength();
 
@@ -183,7 +202,7 @@ Error Message::AppendUintOption(uint16_t aNumber, uint32_t aValue)
     const uint8_t *value  = &buffer[0];
     uint16_t       length = sizeof(uint32_t);
 
-    Encoding::BigEndian::WriteUint32(aValue, buffer);
+    BigEndian::WriteUint32(aValue, buffer);
 
     while ((length > 0) && (value[0] == 0))
     {
@@ -243,6 +262,24 @@ Error Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) con
     }
 
     *curUriPath = '\0';
+
+exit:
+    return error;
+}
+
+Error Message::AppendUriQueryOptions(const char *aUriQuery)
+{
+    Error       error = kErrorNone;
+    const char *cur   = aUriQuery;
+    const char *end;
+
+    while ((end = StringFind(cur, '&')) != nullptr)
+    {
+        SuccessOrExit(error = AppendOption(kOptionUriQuery, static_cast<uint16_t>(end - cur), cur));
+        cur = end + 1;
+    }
+
+    SuccessOrExit(error = AppendStringOption(kOptionUriQuery, cur));
 
 exit:
     return error;
@@ -328,7 +365,8 @@ exit:
 
 Error Message::ParseHeader(void)
 {
-    Error            error = kErrorNone;
+    Error            error  = kErrorNone;
+    uint16_t         offset = GetOffset();
     Option::Iterator iterator;
 
     OT_ASSERT(GetReserved() >=
@@ -336,10 +374,13 @@ Error Message::ParseHeader(void)
 
     GetHelpData().Clear();
 
-    GetHelpData().mHeaderOffset = GetOffset();
-    IgnoreError(Read(GetHelpData().mHeaderOffset, GetHelpData().mHeader));
+    GetHelpData().mHeaderOffset = offset;
+
+    SuccessOrExit(error = Read(offset, &GetHelpData().mHeader, kMinHeaderLength));
+    offset += kMinHeaderLength;
 
     VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = kErrorParse);
+    SuccessOrExit(error = Read(offset, GetHelpData().mHeader.mToken, GetTokenLength()));
 
     SuccessOrExit(error = iterator.Init(*this));
 
@@ -551,7 +592,7 @@ Error Option::Iterator::ReadOptionValue(uint64_t &aUintValue) const
 
     for (uint16_t pos = 0; pos < mOption.mLength; pos++)
     {
-        aUintValue <<= CHAR_BIT;
+        aUintValue <<= kBitsPerByte;
         aUintValue |= buffer[pos];
     }
 
@@ -592,7 +633,7 @@ Error Option::Iterator::ReadExtendedOptionField(uint16_t &aValue)
         uint16_t value16;
 
         SuccessOrExit(error = Read(sizeof(uint16_t), &value16));
-        value16 = Encoding::BigEndian::HostSwap16(value16);
+        value16 = BigEndian::HostSwap16(value16);
         aValue  = value16 + Message::kOption2ByteExtensionOffset;
     }
     else

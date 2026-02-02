@@ -35,17 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
-#include "thread/mle_types.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -148,7 +138,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     ThreadStatusTlv::MlrStatus status    = ThreadStatusTlv::kMlrSuccess;
     Config                     config;
 
-    uint16_t     addressesOffset, addressesLength;
+    OffsetRange  offsetRange;
     Ip6::Address address;
     Ip6::Address addresses[Ip6AddressesTlv::kMaxAddresses];
     uint8_t      failedAddressNum  = 0;
@@ -176,11 +166,10 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     if (Tlv::Find<ThreadCommissionerSessionIdTlv>(aMessage, commissionerSessionId) == kErrorNone)
     {
-        const MeshCoP::CommissionerSessionIdTlv *commissionerSessionIdTlv = As<MeshCoP::CommissionerSessionIdTlv>(
-            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kCommissionerSessionId));
+        uint16_t localSessionId;
 
-        VerifyOrExit(commissionerSessionIdTlv != nullptr &&
-                         commissionerSessionIdTlv->GetCommissionerSessionId() == commissionerSessionId,
+        VerifyOrExit((Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId) == kErrorNone) &&
+                         (localSessionId == commissionerSessionId),
                      status = ThreadStatusTlv::kMlrGeneralFailure);
 
         hasCommissionerSessionIdTlv = true;
@@ -188,11 +177,10 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     processTimeoutTlv = hasCommissionerSessionIdTlv && (Tlv::Find<ThreadTimeoutTlv>(aMessage, timeout) == kErrorNone);
 
-    VerifyOrExit(Tlv::FindTlvValueOffset(aMessage, Ip6AddressesTlv::kIp6Addresses, addressesOffset, addressesLength) ==
-                     kErrorNone,
+    VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone,
                  error = kErrorParse);
-    VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, status = ThreadStatusTlv::kMlrGeneralFailure);
-    VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
+    VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = ThreadStatusTlv::kMlrGeneralFailure);
+    VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
                  status = ThreadStatusTlv::kMlrGeneralFailure);
 
     if (!processTimeoutTlv)
@@ -203,7 +191,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     }
     else
     {
-        VerifyOrExit(timeout < UINT32_MAX, status = ThreadStatusTlv::kMlrNoPersistent);
+        VerifyOrExit(timeout < NumericLimits<uint32_t>::kMax, status = ThreadStatusTlv::kMlrNoPersistent);
 
         if (timeout != 0)
         {
@@ -220,9 +208,10 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     expireTime = TimerMilli::GetNow() + TimeMilli::SecToMsec(timeout);
 
-    for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
+    while (!offsetRange.IsEmpty())
     {
-        IgnoreError(aMessage.Read(addressesOffset + offset, address));
+        IgnoreError(aMessage.Read(offsetRange, address));
+        offsetRange.AdvanceOffset(sizeof(Ip6::Address));
 
         if (timeout == 0)
         {
@@ -506,7 +495,7 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
     // Do not forward to Backbone if the DUA belongs to a MTD Child (which may have failed in DUA registration)
     VerifyOrExit(Get<NeighborTable>().FindNeighbor(aAddress) == nullptr);
     // Forward to Backbone only if the DUA is resolved to the PBBR's RLOC16
-    VerifyOrExit(Get<AddressResolver>().LookUp(aAddress) == Get<Mle::MleRouter>().GetRloc16());
+    VerifyOrExit(Get<AddressResolver>().LookUp(aAddress) == Get<Mle::Mle>().GetRloc16());
 
     forwardToBackbone = true;
 
@@ -527,7 +516,7 @@ Error Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
 
-    if (aRloc16 != Mac::kShortAddrInvalid)
+    if (aRloc16 != Mle::kInvalidRloc16)
     {
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
@@ -550,7 +539,7 @@ template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Message &aMessage, 
 {
     Error                  error = kErrorNone;
     Ip6::Address           dua;
-    uint16_t               rloc16 = Mac::kShortAddrInvalid;
+    uint16_t               rloc16 = Mle::kInvalidRloc16;
     NdProxyTable::NdProxy *ndProxy;
 
     VerifyOrExit(aMessageInfo.IsHostInterface(), error = kErrorDrop);
@@ -581,9 +570,9 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     bool                     proactive;
     Ip6::Address             dua;
     Ip6::InterfaceIdentifier meshLocalIid;
-    uint16_t                 networkNameOffset, networkNameLength;
+    OffsetRange              offsetRange;
     uint32_t                 timeSinceLastTransaction;
-    uint16_t                 srcRloc16 = Mac::kShortAddrInvalid;
+    uint16_t                 srcRloc16 = Mle::kInvalidRloc16;
 
     VerifyOrExit(aMessageInfo.IsHostInterface(), error = kErrorDrop);
 
@@ -595,9 +584,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, dua));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
     SuccessOrExit(error = Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, timeSinceLastTransaction));
-
-    SuccessOrExit(error =
-                      Tlv::FindTlvValueOffset(aMessage, ThreadTlv::kNetworkName, networkNameOffset, networkNameLength));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, ThreadTlv::kNetworkName, offsetRange));
 
     error = Tlv::Find<ThreadRloc16Tlv>(aMessage, srcRloc16);
     VerifyOrExit(error == kErrorNone || error == kErrorNotFound);
@@ -606,7 +593,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     {
         HandleProactiveBackboneNotification(dua, meshLocalIid, timeSinceLastTransaction);
     }
-    else if (srcRloc16 == Mac::kShortAddrInvalid)
+    else if (srcRloc16 == Mle::kInvalidRloc16)
     {
         HandleDadBackboneAnswer(dua, meshLocalIid);
     }
@@ -626,7 +613,7 @@ Error Manager::SendProactiveBackboneNotification(const Ip6::Address             
                                                  uint32_t                        aTimeSinceLastTransaction)
 {
     return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), aDua, aMeshLocalIid,
-                              aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
+                              aTimeSinceLastTransaction, Mle::kInvalidRloc16);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::MessageInfo      &aQueryMessageInfo,
@@ -664,7 +651,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     SuccessOrExit(error = Tlv::Append<ThreadNetworkNameTlv>(
                       *message, Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString()));
 
-    if (aSrcRloc16 != Mac::kShortAddrInvalid)
+    if (aSrcRloc16 != Mle::kInvalidRloc16)
     {
         SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, aSrcRloc16));
     }
@@ -701,7 +688,7 @@ void Manager::HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::Inter
     {
         Ip6::Address dest;
 
-        dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
+        dest.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
         Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, &dest);
     }
 
@@ -719,7 +706,7 @@ void Manager::HandleExtendedBackboneAnswer(const Ip6::Address             &aDua,
 {
     Ip6::Address dest;
 
-    dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aSrcRloc16);
+    dest.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aSrcRloc16);
     Get<AddressResolver>().SendAddressQueryResponse(aDua, aMeshLocalIid, &aTimeSinceLastTransaction, dest);
 
     LogInfo("HandleExtendedBackboneAnswer: target=%s, mliid=%s, LTT=%lus, rloc16=%04x", aDua.ToString().AsCString(),

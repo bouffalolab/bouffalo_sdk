@@ -135,6 +135,7 @@ elseif("${CHIP}" STREQUAL "bl616d")
         src/bflb_touch_v2.c
         src/bflb_auadc.c
         src/bflb_audac.c
+        src/bflb_multi_core_sync.c
     )
 if((NOT ("${CPU_MODEL}" STREQUAL "a0")))
     sdk_library_add_sources(

@@ -35,13 +35,7 @@
 #define OPENTHREAD_CORE_CONFIG_H_
 
 #include <openthread/config.h>
-
-#define OT_THREAD_VERSION_INVALID 0
-
-#define OT_THREAD_VERSION_1_1 2
-#define OT_THREAD_VERSION_1_2 3
-#define OT_THREAD_VERSION_1_3 4
-#define OT_THREAD_VERSION_1_3_1 5
+#include <openthread/thread.h>
 
 #define OPENTHREAD_CORE_CONFIG_H_IN
 
@@ -51,7 +45,6 @@
  * 1. Project specific header file (`OPENTHREAD_PROJECT_CORE_CONFIG_FILE`)
  * 2. Platform specific header file (`OPENTHREAD_PLATFORM_CORE_CONFIG_FILE`)
  * 3. Default config values as specified by `config/{module}.h`
- *
  */
 
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
@@ -88,14 +81,15 @@
 #include "config/dns_client.h"
 #include "config/dns_dso.h"
 #include "config/dnssd_server.h"
-#include "config/dtls.h"
 #include "config/history_tracker.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
+#include "config/link_metrics_manager.h"
 #include "config/link_quality.h"
 #include "config/link_raw.h"
 #include "config/logging.h"
 #include "config/mac.h"
+#include "config/mdns.h"
 #include "config/mesh_diag.h"
 #include "config/mesh_forwarder.h"
 #include "config/misc.h"
@@ -108,11 +102,14 @@
 #include "config/platform.h"
 #include "config/power_calibration.h"
 #include "config/radio_link.h"
+#include "config/secure_transport.h"
 #include "config/sntp_client.h"
 #include "config/srp_client.h"
 #include "config/srp_server.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"
+#include "config/trel.h"
+#include "config/wakeup.h"
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 

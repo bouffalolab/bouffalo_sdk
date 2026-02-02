@@ -26,7 +26,7 @@ ADV = 500MS: Enter the command "ble\_start\_adv 0 0 0x0320 0x0320" in the comman
 
 ### BLE Benchmark：
 
-The following test data reduced the power of BLE TX. The modification is as follows: Change "pwr\_table\_ble = <13> to pwr\_table\_ble = <0>;" in the file "bsp/board/qcc743\_lp\_dk/config/qcc74x\_factory\_params\_IoTKitA\_auto.dts".
+The following test data reduced the power of BLE TX. The modification is as follows: Change "pwr\_table\_ble = <13> to pwr\_table\_ble = <0>;" in the file "bsp/board/bl616\_dk/config/bl\_factory\_params\_IoTKitA\_auto.dts".
 
 | Mode        | uA   |
 | :---------- | :--- |
@@ -115,7 +115,7 @@ BLE and Wi-Fi dual low power mode, which can maintain Wi-Fi keep-alive while als
 ## USB Host for MSC
 Start usbh msc test with a specified time duration, during which perform write and read operation on a usb msc device.
 
-Please be noticed, the USB Host feature in this demo is only for purpose of Wi-Fi performance verification when USB traffic is on. QCC743 cannot go to sleep once there is a USB device connected, so this demo only works in active mode.
+Please be noticed, the USB Host feature in this demo is only for purpose of Wi-Fi performance verification when USB traffic is on. BL616 cannot go to sleep once there is a USB device connected, so this demo only works in active mode.
 
 ### Build Command
 
@@ -125,7 +125,7 @@ make CONFIG_USBH_MSC=1
 
 ### Test Step
 
-1.Make sure QCC743 is not in sleep mode during this test
+1.Make sure BL616 is not in sleep mode during this test
 
 2.Plug in a usb msc device
 

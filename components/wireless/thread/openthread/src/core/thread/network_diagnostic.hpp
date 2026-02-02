@@ -52,6 +52,10 @@ namespace Utils {
 class MeshDiag;
 }
 
+namespace MeshCoP {
+class TcatAgent;
+}
+
 namespace NetworkDiagnostic {
 
 /**
@@ -67,28 +71,56 @@ class Client;
 
 /**
  * Implements the Network Diagnostic server responding to requests.
- *
  */
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class MeshCoP::TcatAgent;
     friend class Client;
 
 public:
     /**
+     * Callback function pointer to notify a reset request for `kNonPreferredChannels` TLV value.
+     */
+    typedef otThreadNonPreferredChannelsResetCallback NonPreferredChannelsResetCallback;
+
+    /**
      * Initializes the Server.
      *
      * @param[in] aInstance   The OpenThread instance.
-     *
      */
     explicit Server(Instance &aInstance);
+
+    /**
+     * Sets the non-preferred channels value for `kNonPreferredChannels` TLV.
+     *
+     * @param[in] aChannelMask   A channel mask for non-preferred channels.
+     */
+    void SetNonPreferredChannels(uint32_t aChannelMask) { mNonPreferredChannels = aChannelMask; }
+
+    /**
+     * Gets the non-preferred channel mask value for `kNonPreferredChannels` TLV.
+     *
+     * @returns The non-preferred channels as a channel mask.
+     */
+    uint32_t GetNonPreferredChannels(void) const { return mNonPreferredChannels; }
+
+    /**
+     * Sets the callback to notify when a Diagnostic Reset request is received for `kNonPreferredChannels` TLV value.
+     *
+     * @param[in] aCallback   The callback function pointer.
+     * @param[in] aContext    An arbitrary context used with @p aCallback.
+     */
+    void SetNonPreferredChannelsResetCallback(NonPreferredChannelsResetCallback aCallback, void *aContext)
+    {
+        mNonPreferredChannelsResetCallback.Set(aCallback, aContext);
+    }
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     /**
      * Returns the vendor name string.
      *
      * @returns The vendor name string.
-     *
      */
     const char *GetVendorName(void) const { return mVendorName; }
 
@@ -99,7 +131,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the vendor name.
      * @retval kErrorInvalidArgs  @p aVendorName is not valid (too long or not UTF8).
-     *
      */
     Error SetVendorName(const char *aVendorName);
 
@@ -107,7 +138,6 @@ public:
      * Returns the vendor model string.
      *
      * @returns The vendor model string.
-     *
      */
     const char *GetVendorModel(void) const { return mVendorModel; }
 
@@ -118,7 +148,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the vendor model.
      * @retval kErrorInvalidArgs  @p aVendorModel is not valid (too long or not UTF8).
-     *
      */
     Error SetVendorModel(const char *aVendorModel);
 
@@ -126,7 +155,6 @@ public:
      * Returns the vendor software version string.
      *
      * @returns The vendor software version string.
-     *
      */
     const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
 
@@ -137,14 +165,31 @@ public:
      *
      * @retval kErrorNone         Successfully set the vendor sw version.
      * @retval kErrorInvalidArgs  @p aVendorSwVersion is not valid (too long or not UTF8).
-     *
      */
     Error SetVendorSwVersion(const char *aVendorSwVersion);
+
+    /**
+     * Returns the vendor app URL string.
+     *
+     * @returns the vendor app URL string.
+     */
+    const char *GetVendorAppUrl(void) const { return mVendorAppUrl; }
+
+    /**
+     * Sets the vendor app URL string.
+     *
+     * @param[in] aVendorAppUrl     The vendor app URL string
+     *
+     * @retval kErrorNone         Successfully set the vendor app URL.
+     * @retval kErrorInvalidArgs  @p aVendorAppUrl is not valid (too long or not UTF8).
+     */
+    Error SetVendorAppUrl(const char *aVendorAppUrl);
 
 #else
     const char *GetVendorName(void) const { return kVendorName; }
     const char *GetVendorModel(void) const { return kVendorModel; }
     const char *GetVendorSwVersion(void) const { return kVendorSwVersion; }
+    const char *GetVendorAppUrl(void) const { return kVendorAppUrl; }
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 private:
@@ -173,12 +218,17 @@ private:
     static const char kVendorName[];
     static const char kVendorModel[];
     static const char kVendorSwVersion[];
+    static const char kVendorAppUrl[];
 
     Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
     Error AppendMacCounters(Message &aMessage);
     Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);
+#endif
 
 #if OPENTHREAD_MTD
     void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
@@ -193,12 +243,19 @@ private:
     Error       AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
     Error       AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
     Error       AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild);
+    Error       AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
+    Error       AppendEnhancedRoute(Message &aMessage);
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Error       AppendChildTableAsChildTlvs(Message &aMessage);
+    Error       AppendRouterNeighborTlvs(Message &aMessage);
+    Error       AppendChildTableIp6AddressList(Message &aMessage);
+#endif
 
     static void HandleAnswerResponse(void                *aContext,
                                      otMessage           *aMessage,
                                      const otMessageInfo *aMessageInfo,
-                                     Error                aResult);
+                                     otError              aResult);
     void        HandleAnswerResponse(Coap::Message          &aNextAnswer,
                                      Coap::Message          *aResponse,
                                      const Ip6::MessageInfo *aMessageInfo,
@@ -208,16 +265,17 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    Error SetVendorString(char *aDestString, uint16_t kMaxSize, const char *aSrcString);
-
     VendorNameTlv::StringType      mVendorName;
     VendorModelTlv::StringType     mVendorModel;
     VendorSwVersionTlv::StringType mVendorSwVersion;
+    VendorAppUrlTlv::StringType    mVendorAppUrl;
 #endif
 
 #if OPENTHREAD_FTD
     Coap::MessageQueue mAnswerQueue;
 #endif
+    uint32_t                                    mNonPreferredChannels;
+    Callback<NonPreferredChannelsResetCallback> mNonPreferredChannelsResetCallback;
 };
 
 DeclareTmfHandler(Server, kUriDiagnosticGetRequest);
@@ -228,7 +286,6 @@ DeclareTmfHandler(Server, kUriDiagnosticGetAnswer);
 
 /**
  * Implements the Network Diagnostic client sending requests and queries.
- *
  */
 class Client : public InstanceLocator, private NonCopyable
 {
@@ -247,7 +304,6 @@ public:
      * Initializes the Client.
      *
      * @param[in] aInstance   The OpenThread instance.
-     *
      */
     explicit Client(Instance &aInstance);
 
@@ -260,7 +316,6 @@ public:
      * @param[in]  aCount            Number of types in @p aTlvTypes.
      * @param[in]  aCallback         Callback when Network Diagnostic Get response is received (can be NULL).
      * @param[in]  Context           Application-specific context used with @p aCallback.
-     *
      */
     Error SendDiagnosticGet(const Ip6::Address &aDestination,
                             const uint8_t       aTlvTypes[],
@@ -274,7 +329,6 @@ public:
      * @param[in] aDestination  The destination address.
      * @param[in] aTlvTypes     An array of Network Diagnostic TLV types.
      * @param[in] aCount        Number of types in aTlvTypes
-     *
      */
     Error SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
@@ -288,7 +342,6 @@ public:
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
      * @retval kErrorParse      Parsing the next Network Diagnostic failed.
-     *
      */
     static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
 
@@ -296,7 +349,6 @@ public:
      * This method returns the query ID used for the last Network Diagnostic Query command.
      *
      * @returns The query ID used for last query.
-     *
      */
     uint16_t GetLastQueryId(void) const { return mQueryId; }
 
@@ -312,7 +364,7 @@ private:
     static void HandleGetResponse(void                *aContext,
                                   otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
-                                  Error                aResult);
+                                  otError              aResult);
     void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

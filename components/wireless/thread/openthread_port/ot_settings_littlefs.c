@@ -1,7 +1,7 @@
-#include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include <lfs.h>
 #include <lfs_port.h>
@@ -54,7 +54,7 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     /* init namespace */
     ret = lfs_stat(lfs, OPENTHREAD_LFS_NAMESPACE, &stat);
     if (ret == LFS_ERR_OK) {
-        configASSERT(stat.type == LFS_TYPE_DIR);
+        assert(stat.type == LFS_TYPE_DIR);
 
         if (LFS_ERR_OK == lfs_stat(lfs, OPENTHREAD_LFS_WIPE_FLAG, &stat)) {
             otPlatSettingsWipe(aInstance);
@@ -63,7 +63,7 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     }
 
     ret = lfs_mkdir(lfs, OPENTHREAD_LFS_NAMESPACE);
-    configASSERT(ret == LFS_ERR_OK);
+    assert(ret == LFS_ERR_OK);
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
@@ -77,7 +77,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
         return OT_ERROR_NOT_FOUND;
     }
 
-    configASSERT(lfs != NULL);
+    assert(lfs != NULL);
 
     if (aInstance) {
         snprintf(key, OT_MAX_KEY_LEN, "%s/ot-%04x", OPENTHREAD_LFS_NAMESPACE, aKey);
@@ -114,7 +114,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 
     OT_UNUSED_VARIABLE(aInstance);
 
-    configASSERT(lfs != NULL);
+    assert(lfs != NULL);
 
     if (aInstance) {
         snprintf(key, OT_MAX_KEY_LEN, "%s/ot-%04x", OPENTHREAD_LFS_NAMESPACE, aKey);
@@ -176,7 +176,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
     OT_UNUSED_VARIABLE(aInstance);
 
-    configASSERT(lfs != NULL);
+    assert(lfs != NULL);
 
     lfs->cfg->lock(lfs->cfg);
 

@@ -28,9 +28,9 @@
 
 #include "common/appender.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
@@ -39,17 +39,15 @@ namespace ot {
 
 void TestMessage(void)
 {
-    enum : uint16_t
-    {
-        kMaxSize    = (kBufferSize * 3 + 24),
-        kOffsetStep = 101,
-        kLengthStep = 21,
-    };
+    static constexpr uint16_t kMaxSize    = (kBufferSize * 3 + 24);
+    static constexpr uint16_t kOffsetStep = 101;
+    static constexpr uint16_t kLengthStep = 21;
 
     Instance    *instance;
     MessagePool *messagePool;
     Message     *message;
     Message     *message2;
+    Message     *messageCopy;
     uint8_t      writeBuffer[kMaxSize];
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
@@ -66,6 +64,12 @@ void TestMessage(void)
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
     VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    message->SetLinkSecurityEnabled(kWithLinkSecurity);
+    SuccessOrQuit(message->SetPriority(Message::Priority::kPriorityNet));
+    message->SetType(Message::Type::kType6lowpan);
+    message->SetSubType(Message::SubType::kSubTypeJoinerEntrust);
+    message->SetLoopbackToHostAllowed(true);
+    message->SetOrigin(Message::kOriginHostUntrusted);
     SuccessOrQuit(message->SetLength(kMaxSize));
     message->WriteBytes(0, writeBuffer, kMaxSize);
     SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
@@ -73,6 +77,26 @@ void TestMessage(void)
     VerifyOrQuit(message->CompareBytes(0, readBuffer, kMaxSize));
     VerifyOrQuit(message->Compare(0, readBuffer));
     VerifyOrQuit(message->GetLength() == kMaxSize);
+
+    // Verify `Clone()` behavior
+    message->SetOffset(15);
+    messageCopy = message->Clone();
+    VerifyOrQuit(messageCopy->GetOffset() == message->GetOffset());
+    SuccessOrQuit(messageCopy->Read(0, readBuffer, kMaxSize));
+    VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0);
+    VerifyOrQuit(messageCopy->CompareBytes(0, readBuffer, kMaxSize));
+    VerifyOrQuit(messageCopy->Compare(0, readBuffer));
+    VerifyOrQuit(messageCopy->GetLength() == kMaxSize);
+    VerifyOrQuit(messageCopy->GetType() == message->GetType());
+    VerifyOrQuit(messageCopy->GetSubType() == message->GetSubType());
+    VerifyOrQuit(messageCopy->IsLinkSecurityEnabled() == message->IsLinkSecurityEnabled());
+    VerifyOrQuit(messageCopy->GetPriority() == message->GetPriority());
+    VerifyOrQuit(messageCopy->IsLoopbackToHostAllowed() == message->IsLoopbackToHostAllowed());
+    VerifyOrQuit(messageCopy->GetOrigin() == message->GetOrigin());
+    VerifyOrQuit(messageCopy->Compare(0, readBuffer));
+    message->SetOffset(0);
+
+    messageCopy->Free();
 
     for (uint16_t offset = 0; offset < kMaxSize; offset++)
     {
@@ -129,6 +153,32 @@ void TestMessage(void)
 
             VerifyOrQuit(!message->CompareBytes(offset, readBuffer, length));
             VerifyOrQuit(message->CompareBytes(offset, readBuffer, readLength));
+        }
+
+        // Verify `Read()` behavior when requested read length goes beyond available bytes in the message.
+
+        for (uint16_t length = kMaxSize - offset + 1; length <= kMaxSize + 1; length++)
+        {
+            Error error;
+
+            memset(readBuffer, 0, sizeof(readBuffer));
+
+            error = message->Read(offset, readBuffer, length);
+
+            if (length < kMaxSize - offset)
+            {
+                uint16_t readLength = kMaxSize - offset;
+
+                SuccessOrQuit(error);
+                VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], readLength) == 0);
+                VerifyOrQuit(memcmp(&readBuffer[readLength], zeroBuffer, kMaxSize - readLength) == 0,
+                             "read after length");
+            }
+            else
+            {
+                VerifyOrQuit(error == kErrorParse);
+                VerifyOrQuit(memcmp(readBuffer, zeroBuffer, sizeof(readBuffer)) == 0, "Read() updated buffer on error");
+            }
         }
     }
 

@@ -57,4 +57,8 @@ nh_forward_result_t nethub_send_output(nh_skb_t *skb, nhif_type_t dst_type);
  */
 bool nethub_is_initialized(void);
 
+// Fixme: This is a temporary workaround and will be replaced with a more generic API.
+int nethub_update_wifichannel(nhif_type_t dst_type);// NHIF_TYPE_STA NHIF_TYPE_AP
+
 #endif /* _NETHUB_H */
+

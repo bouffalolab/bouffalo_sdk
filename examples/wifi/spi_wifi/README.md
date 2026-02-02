@@ -8,7 +8,7 @@ The hardware wiring diagram between the STM32 HOST and BFLB is shown in the figu
 
 ### Jumper Wires
 
-If you are using the BL616/QCC744 development board, please connect the jumpers as follows：
+If you are using the BL616 development board, please connect the jumpers as follows：
 
 | opt | bflb     | stm32      |
 |---------------|---------------|---------------|
@@ -681,11 +681,11 @@ Notes:
 The TWT feature can only be used when an external crystal oscillator is present.
 If the internal RC is used, the TWT feature will not work.
 
-# Qcc74x Low Power Solution Introduction
+# BL616 Low Power Solution Introduction
 
 ## 1. Overview of Low Power Design
 
-The Qcc74x low power solution uses FreeRTOS's tickless mechanism to achieve low power consumption. When there are no other tasks to run, the system enters the IDLE task and then the hardware's PDS15 low power mode, thereby reducing power consumption. The system can wake up through deep sleep wake-up sources such as GPIO or RTC. The duration of sleep is determined using the tickless mechanism, avoiding the need to wake up at every system tick. When the module is used as a STA, the system will automatically enter sleep mode during idle periods, with sleep duration determined by the system's idle state, the associated AP's DTIM, and Beacon interval.
+The BL616 low power solution uses FreeRTOS's tickless mechanism to achieve low power consumption. When there are no other tasks to run, the system enters the IDLE task and then the hardware's PDS15 low power mode, thereby reducing power consumption. The system can wake up through deep sleep wake-up sources such as GPIO or RTC. The duration of sleep is determined using the tickless mechanism, avoiding the need to wake up at every system tick. When the module is used as a STA, the system will automatically enter sleep mode during idle periods, with sleep duration determined by the system's idle state, the associated AP's DTIM, and Beacon interval.
 
 ## 2. WiFi Power Save Mode
 
@@ -710,9 +710,9 @@ The diagram shows the STA switching between PS mode and Active mode, and the com
 
 In tickless mode, FreeRTOS decides whether to enter low power mode based on task scheduling needs and time constraints. If there are no imminent timers, delays, or other events, the system will enter sleep mode. When a task needs to run, the system will wake up immediately and handle the task.
 
-### Qcc74x Power Saving States
+### BL616 Power Saving States
 
-The Qcc74x can be set to power-saving states based on application scenarios. The Qcc74x has the following power-saving modes:
+The BL616 can be set to power-saving states based on application scenarios. The BL616 has the following power-saving modes:
 
 #### 1. Unconnected State
 
@@ -731,7 +731,7 @@ After entering low power mode, peripherals will lose power. Therefore, after exi
 
 **Introduction:**
 
-After connecting to an AP, the Qcc74x can interact with the AP and enter power save mode. In power save mode, the Qcc74x periodically wakes up to receive beacon frames. When the beacon frame indicates that the connected Qcc74x has buffered data packets, the Qcc74x wakes up and receives the data. After receiving the data, it goes back to sleep. The Qcc74x can configure the DTIM interval for wakeup. The longer the beacon interval, the lower the wakeup frequency. For example, if each beacon interval is 102.4ms, setting DTIM3 means the Qcc74x receives a beacon every 102.4ms * 3. With DTIM10, it receives a beacon every 1.024s.
+After connecting to an AP, the BL616 can interact with the AP and enter power save mode. In power save mode, the BL616 periodically wakes up to receive beacon frames. When the beacon frame indicates that the connected BL616 has buffered data packets, the BL616 wakes up and receives the data. After receiving the data, it goes back to sleep. The BL616 can configure the DTIM interval for wakeup. The longer the beacon interval, the lower the wakeup frequency. For example, if each beacon interval is 102.4ms, setting DTIM3 means the BL616 receives a beacon every 102.4ms * 3. With DTIM10, it receives a beacon every 1.024s.
 
 **Interface Functions:**
 
@@ -751,7 +751,7 @@ The process for using low power mode is as follows:
 3. **Step 3**: Wake up from external conditions or timeout.
 
 
-### Qcc743 Power Consumption Measuremen
+### BL616 Power Consumption Measuremen
 ![wifi_lowpower_kpi.png](./pic/wifi_lowpower_kpi.png)
 
 
@@ -794,12 +794,12 @@ b. Confirm if any tasks are waking up frequently. Enable debug log in `tickless.
 c. Confirm if there is frequent traffic interaction.
 d. Enable debug log in `tickless.c` to identify any events or reasons preventing sleep.
 
-### Qcc743 Sleep And wakeup Timing
+### BL616 Sleep And wakeup Timing
 
 The BL616 receives a beacon indicating that the AP has buffered packets, and then the BL616 wakes up. It takes approximately 4ms to wake up and enter active mode. It then spends another 1.5ms sending null data to inform the AP that the BL616 has exited low power mode and is ready to receive the buffered packets. The wake-up time lasts approximately 10ms or more, depending on the current network environment and whether the AP sends the packets to the BL616 in a timely manner. After about 15ms, the BL616 sends null data to inform the AP that it is going to sleep, and then it enters PDS15 mode. It will wake up every 1024ms (DTIM10) to receive beacons. Each beacon reception takes approximately 3ms.
 ![timing.png](./pic/timing.png)
 
-### Qcc743 Bluetooth Power Consumption Measuremen
+### BL616 Bluetooth Power Consumption Measuremen
 
 Prerequisites for Bluetooth Power Consumption Testing: Prior to measuring the power consumption, ensure that the BL616 has transitioned into its low power state. It is imperative to sever the SPI GPIO and WAKEUP GPIO connections between the STM32 microcontroller and the BL616 device. Measurement should commence only after the power consumption has achieved a stable state.
 ![blelpkpi.png](./pic/blelp.png)

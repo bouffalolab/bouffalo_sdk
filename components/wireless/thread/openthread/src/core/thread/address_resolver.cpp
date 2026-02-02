@@ -33,20 +33,7 @@
 
 #include "address_resolver.hpp"
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/time.hpp"
-#include "mac/mac_types.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -136,7 +123,7 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
         VerifyOrExit(entry->IsLastTransactionTimeValid());
 
         aInfo.mLastTransTime = entry->GetLastTransactionTime();
-        AsCoreType(&aInfo.mMeshLocalEid).SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        AsCoreType(&aInfo.mMeshLocalEid).SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
         AsCoreType(&aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
 
         ExitNow();
@@ -176,7 +163,7 @@ AddressResolver::CacheEntry *AddressResolver::GetEntryAfter(CacheEntry *aPrev, C
     return (aPrev == nullptr) ? aList.GetHead() : aPrev->GetNext();
 }
 
-void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
+void AddressResolver::Remove(uint16_t aRloc16, bool aMatchRouterId)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
 
@@ -214,7 +201,7 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     for (CacheEntryList *list : lists)
     {
         aList = list;
-        entry = aList->FindMatching(aEid, aPrevEntry);
+        entry = aList->FindMatchingWithPrev(aPrevEntry, aEid);
         VerifyOrExit(entry == nullptr);
     }
 
@@ -337,7 +324,7 @@ void AddressResolver::RemoveCacheEntry(CacheEntry     &aEntry,
     LogCacheEntryChange(kEntryRemoved, aReason, aEntry, &aList);
 }
 
-Error AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+Error AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16)
 {
     // This method updates an existing cache entry for the EID (if any).
     // Returns `kErrorNone` if entry is found and successfully updated,
@@ -377,18 +364,19 @@ exit:
     return error;
 }
 
-void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
-                                              Mac::ShortAddress   aRloc16,
-                                              Mac::ShortAddress   aDest)
+void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16, uint16_t aDest)
 {
-    uint16_t          numNonEvictable = 0;
-    CacheEntry       *entry;
-    Mac::ShortAddress macAddress;
+    uint16_t    numNonEvictable = 0;
+    CacheEntry *entry;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
+    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice());
 
 #if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
-    VerifyOrExit(ResolveUsingNetDataServices(aEid, macAddress) != kErrorNone);
+    {
+        uint16_t rloc16;
+
+        VerifyOrExit(ResolveUsingNetDataServices(aEid, rloc16) != kErrorNone);
+    }
 #endif
 
     VerifyOrExit(UpdateCacheEntry(aEid, aRloc16) != kErrorNone);
@@ -396,13 +384,12 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
     // Skip if the `aRloc16` (i.e., the source of the snooped message)
     // is this device or an MTD (minimal) child of the device itself.
 
-    macAddress = Get<Mac::Mac>().GetShortAddress();
-    VerifyOrExit((aRloc16 != macAddress) && !Get<Mle::MleRouter>().IsMinimalChild(aRloc16));
+    VerifyOrExit(!Get<Mle::Mle>().HasRloc16(aRloc16) && !Get<ChildTable>().HasMinimalChild(aRloc16));
 
     // Ensure that the destination of the snooped message is this device
     // or a minimal child of this device.
 
-    VerifyOrExit((aDest == macAddress) || Get<Mle::MleRouter>().IsMinimalChild(aDest));
+    VerifyOrExit(Get<Mle::Mle>().HasRloc16(aDest) || Get<ChildTable>().HasMinimalChild(aDest));
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);
@@ -470,15 +457,15 @@ void AddressResolver::RestartAddressQueries(void)
     }
 }
 
-Mac::ShortAddress AddressResolver::LookUp(const Ip6::Address &aEid)
+uint16_t AddressResolver::LookUp(const Ip6::Address &aEid)
 {
-    Mac::ShortAddress rloc16 = Mac::kShortAddrInvalid;
+    uint16_t rloc16 = Mle::kInvalidRloc16;
 
     IgnoreError(Resolve(aEid, rloc16, /* aAllowAddressQuery */ false));
     return rloc16;
 }
 
-Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery)
+Error AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16, bool aAllowAddressQuery)
 {
     Error           error = kErrorNone;
     CacheEntry     *entry;
@@ -490,6 +477,47 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
 #endif
 
     entry = FindCacheEntry(aEid, list, prev);
+
+    if ((entry != nullptr) && ((list == &mCachedList) || (list == &mSnoopedList)))
+    {
+        bool isFresh;
+
+        list->PopAfter(prev);
+
+        // If the `entry->GetRloc16()` is unreachable (there is no
+        // valid next hop towards it), it may be a stale entry. We
+        // clear the entry to allow new address query to be sent for
+        // it, unless the entry has been recently updated, i.e., we
+        // have recently received an `AddressNotify` for it and its
+        // `FreshnessTimeout` has not expired yet.
+        //
+        // The `FreshnessTimeout` check prevents repeated address
+        // query transmissions when mesh routes are not yet
+        // discovered (e.g., after initial attach) or if there is a
+        // temporary link issue.
+
+        isFresh = (list == &mCachedList) && !entry->IsFreshnessTimeoutZero();
+
+        if (!isFresh && (Get<RouterTable>().GetNextHop(entry->GetRloc16()) == Mle::kInvalidRloc16))
+        {
+            mCacheEntryPool.Free(*entry);
+            entry = nullptr;
+        }
+
+        if (entry != nullptr)
+        {
+            // Push the entry at the head of cached list.
+
+            if (list == &mSnoopedList)
+            {
+                entry->MarkLastTransactionTimeAsInvalid();
+            }
+
+            mCachedList.Push(*entry);
+            aRloc16 = entry->GetRloc16();
+            ExitNow();
+        }
+    }
 
     if (entry == nullptr)
     {
@@ -504,27 +532,10 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
         VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
         entry->SetTarget(aEid);
-        entry->SetRloc16(Mac::kShortAddrInvalid);
+        entry->SetRloc16(Mle::kInvalidRloc16);
         entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
         entry->SetCanEvict(false);
         list = nullptr;
-    }
-
-    if ((list == &mCachedList) || (list == &mSnoopedList))
-    {
-        // Remove the entry from its current list and push it at the
-        // head of cached list.
-
-        list->PopAfter(prev);
-
-        if (list == &mSnoopedList)
-        {
-            entry->MarkLastTransactionTimeAsInvalid();
-        }
-
-        mCachedList.Push(*entry);
-        aRloc16 = entry->GetRloc16();
-        ExitNow();
     }
 
     // Note that if `aAllowAddressQuery` is `false` then the `entry`
@@ -569,25 +580,21 @@ exit:
 
 #if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
 
-Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16)
+Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
     // Tries to resolve `aEid` Network Data DNS/SRP Unicast address
     // service entries.  Returns `kErrorNone` and updates `aRloc16`
     // if successful, otherwise returns `kErrorNotFound`.
 
-    Error                                     error = kErrorNotFound;
-    NetworkData::Service::Manager::Iterator   iterator;
-    NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
+    Error                                   error = kErrorNotFound;
+    NetworkData::Service::Manager::Iterator iterator;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::DnsSrpUnicastType type = NetworkData::Service::kAddrInServerData;
 
     VerifyOrExit(Get<Mle::Mle>().GetDeviceMode().GetNetworkDataType() == NetworkData::kFullSet);
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNone)
+    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone)
     {
-        if (unicastInfo.mOrigin != NetworkData::Service::DnsSrpUnicast::kFromServerData)
-        {
-            continue;
-        }
-
         if (aEid == unicastInfo.mSockAddr.GetAddress())
         {
             aRloc16 = unicastInfo.mRloc16;
@@ -627,7 +634,7 @@ exit:
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aEid))
     {
-        uint16_t selfRloc16 = Get<Mle::MleRouter>().GetRloc16();
+        uint16_t selfRloc16 = Get<Mle::Mle>().GetRloc16();
 
         LogInfo("Extending %s to %s for target %s, rloc16=%04x(self)", UriToString<kUriAddressQuery>(),
                 UriToString<kUriBackboneQuery>(), aEid.ToString().AsCString(), selfRloc16);
@@ -690,6 +697,8 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
     entry->SetRloc16(rloc16);
     entry->SetMeshLocalIid(meshLocalIid);
     entry->SetLastTransactionTime(lastTransactionTime);
+    entry->ResetFreshnessTimeout();
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
 
     list->PopAfter(prev);
     mCachedList.Push(*entry);
@@ -774,9 +783,9 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
 
-    for (const Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
+    for (Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (address.GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
+        if (address.GetAddress() == target && Get<Mle::Mle>().GetMeshLocalEid().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -795,7 +804,7 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
     }
 
 #if OPENTHREAD_FTD
-    meshLocalIid.ConvertToExtAddress(extAddr);
+    extAddr.SetFromIid(meshLocalIid);
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
@@ -811,7 +820,7 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
 
             if (child.RemoveIp6Address(target) == kErrorNone)
             {
-                SuccessOrExit(error = Get<Mle::Mle>().GetLocatorAddress(destination, child.GetRloc16()));
+                destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
 
                 SendAddressError(target, meshLocalIid, &destination);
                 ExitNow();
@@ -845,7 +854,7 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
 
     if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
-        SendAddressQueryResponse(target, Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), nullptr,
+        SendAddressQueryResponse(target, Get<Mle::Mle>().GetMeshLocalEid().GetIid(), nullptr,
                                  aMessageInfo.GetPeerAddr());
         ExitNow();
     }
@@ -894,7 +903,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
-    SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Get<Mle::MleRouter>().GetRloc16()));
+    SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Get<Mle::Mle>().GetRloc16()));
 
     if (aLastTransactionTime != nullptr)
     {
@@ -914,6 +923,15 @@ exit:
 void AddressResolver::HandleTimeTick(void)
 {
     bool continueRxingTicks = false;
+
+    for (CacheEntry &entry : mCachedList)
+    {
+        if (!entry.IsFreshnessTimeoutZero())
+        {
+            entry.DecrementFreshnessTimeout();
+            continueRxingTicks = true;
+        }
+    }
 
     for (CacheEntry &entry : mSnoopedList)
     {
@@ -1073,18 +1091,26 @@ void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
         "removing eid",           // (7) kReasonRemovingEid
     };
 
-    static_assert(0 == kEntryAdded, "kEntryAdded value is incorrect");
-    static_assert(1 == kEntryUpdated, "kEntryUpdated value is incorrect");
-    static_assert(2 == kEntryRemoved, "kEntryRemoved value is incorrect");
+    struct ChangeEnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kEntryAdded);
+        ValidateNextEnum(kEntryUpdated);
+        ValidateNextEnum(kEntryRemoved);
+    };
 
-    static_assert(0 == kReasonQueryRequest, "kReasonQueryRequest value is incorrect");
-    static_assert(1 == kReasonSnoop, "kReasonSnoop value is incorrect");
-    static_assert(2 == kReasonReceivedNotification, "kReasonReceivedNotification value is incorrect");
-    static_assert(3 == kReasonRemovingRouterId, "kReasonRemovingRouterId value is incorrect");
-    static_assert(4 == kReasonRemovingRloc16, "kReasonRemovingRloc16 value is incorrect");
-    static_assert(5 == kReasonReceivedIcmpDstUnreachNoRoute, "kReasonReceivedIcmpDstUnreachNoRoute value is incorrect");
-    static_assert(6 == kReasonEvictingForNewEntry, "kReasonEvictingForNewEntry value is incorrect");
-    static_assert(7 == kReasonRemovingEid, "kReasonRemovingEid value is incorrect");
+    struct ReasonEnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kReasonQueryRequest);
+        ValidateNextEnum(kReasonSnoop);
+        ValidateNextEnum(kReasonReceivedNotification);
+        ValidateNextEnum(kReasonRemovingRouterId);
+        ValidateNextEnum(kReasonRemovingRloc16);
+        ValidateNextEnum(kReasonReceivedIcmpDstUnreachNoRoute);
+        ValidateNextEnum(kReasonEvictingForNewEntry);
+        ValidateNextEnum(kReasonRemovingEid);
+    };
 
     LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
             aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
@@ -1117,7 +1143,8 @@ void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry 
 void AddressResolver::CacheEntry::Init(Instance &aInstance)
 {
     InstanceLocatorInit::Init(aInstance);
-    mNextIndex = kNoNextIndex;
+    mNextIndex        = kNoNextIndex;
+    mFreshnessTimeout = 0;
 }
 
 AddressResolver::CacheEntry *AddressResolver::CacheEntry::GetNext(void)

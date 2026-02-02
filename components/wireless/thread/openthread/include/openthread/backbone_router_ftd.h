@@ -31,13 +31,17 @@
  * @brief
  *  This file defines the OpenThread Backbone Router API (for Thread 1.2 FTD with
  *  `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`).
- *
  */
 
 #ifndef OPENTHREAD_BACKBONE_ROUTER_FTD_H_
 #define OPENTHREAD_BACKBONE_ROUTER_FTD_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/backbone_router.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/netdata.h>
 
@@ -49,12 +53,10 @@ extern "C" {
  * @addtogroup api-backbone-router
  *
  * @{
- *
  */
 
 /**
  * Represents the Backbone Router Status.
- *
  */
 typedef enum
 {
@@ -80,7 +82,6 @@ typedef enum
  * @sa otBackboneRouterGetConfig
  * @sa otBackboneRouterSetConfig
  * @sa otBackboneRouterRegister
- *
  */
 void otBackboneRouterSetEnabled(otInstance *aInstance, bool aEnable);
 
@@ -97,7 +98,6 @@ void otBackboneRouterSetEnabled(otInstance *aInstance, bool aEnable);
  * @sa otBackboneRouterGetConfig
  * @sa otBackboneRouterSetConfig
  * @sa otBackboneRouterRegister
- *
  */
 otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance);
 
@@ -114,7 +114,6 @@ otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance);
  * @sa otBackboneRouterGetState
  * @sa otBackboneRouterSetConfig
  * @sa otBackboneRouterRegister
- *
  */
 void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig);
 
@@ -136,7 +135,6 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
  * @sa otBackboneRouterGetState
  * @sa otBackboneRouterGetConfig
  * @sa otBackboneRouterRegister
- *
  */
 otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
 
@@ -156,7 +154,6 @@ otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterC
  * @sa otBackboneRouterGetState
  * @sa otBackboneRouterGetConfig
  * @sa otBackboneRouterSetConfig
- *
  */
 otError otBackboneRouterRegister(otInstance *aInstance);
 
@@ -166,7 +163,6 @@ otError otBackboneRouterRegister(otInstance *aInstance);
  * @returns The Backbone Router registration jitter value.
  *
  * @sa otBackboneRouterSetRegistrationJitter
- *
  */
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance);
 
@@ -176,7 +172,6 @@ uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance);
  * @param[in]  aJitter the Backbone Router registration jitter value to set.
  *
  * @sa otBackboneRouterGetRegistrationJitter
- *
  */
 void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitter);
 
@@ -188,7 +183,6 @@ void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitte
  *
  * @retval OT_ERROR_NONE       Successfully got the Domain Prefix configuration.
  * @retval OT_ERROR_NOT_FOUND  No Domain Prefix was configured.
- *
  */
 otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig);
 
@@ -204,8 +198,6 @@ otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterCon
  * @param[in] aMlIid    A pointer to the Mesh Local IID. If NULL, respond with @p aStatus for any
  *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.
  * @param[in] aStatus   The status to respond.
- *
- *
  */
 void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance                     *aInstance,
                                                        const otIp6InterfaceIdentifier *aMlIid,
@@ -220,13 +212,11 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance               
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aStatus    The status to respond.
- *
  */
 void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus);
 
 /**
  * Represents the Multicast Listener events.
- *
  */
 typedef enum
 {
@@ -240,7 +230,6 @@ typedef enum
  * @param[in] aContext  The user context pointer.
  * @param[in] aEvent    The Multicast Listener event.
  * @param[in] aAddress  The IPv6 multicast address of the Multicast Listener.
- *
  */
 typedef void (*otBackboneRouterMulticastListenerCallback)(void                                  *aContext,
                                                           otBackboneRouterMulticastListenerEvent aEvent,
@@ -252,7 +241,6 @@ typedef void (*otBackboneRouterMulticastListenerCallback)(void                  
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aCallback  A pointer to the Multicast Listener callback.
  * @param[in] aContext   A user context pointer.
- *
  */
 void otBackboneRouterSetMulticastListenerCallback(otInstance                               *aInstance,
                                                   otBackboneRouterMulticastListenerCallback aCallback,
@@ -269,7 +257,6 @@ void otBackboneRouterSetMulticastListenerCallback(otInstance                    
  *
  * @sa otBackboneRouterMulticastListenerAdd
  * @sa otBackboneRouterMulticastListenerGetNext
- *
  */
 void otBackboneRouterMulticastListenerClear(otInstance *aInstance);
 
@@ -292,7 +279,6 @@ void otBackboneRouterMulticastListenerClear(otInstance *aInstance);
  *
  * @sa otBackboneRouterMulticastListenerClear
  * @sa otBackboneRouterMulticastListenerGetNext
- *
  */
 otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aTimeout);
 
@@ -303,7 +289,6 @@ typedef uint16_t otBackboneRouterMulticastListenerIterator; ///< Used to iterate
 
 /**
  * Represents a Backbone Router Multicast Listener info.
- *
  */
 typedef struct otBackboneRouterMulticastListenerInfo
 {
@@ -327,7 +312,6 @@ typedef struct otBackboneRouterMulticastListenerInfo
  *
  * @sa otBackboneRouterMulticastListenerClear
  * @sa otBackboneRouterMulticastListenerAdd
- *
  */
 otError otBackboneRouterMulticastListenerGetNext(otInstance                                *aInstance,
                                                  otBackboneRouterMulticastListenerIterator *aIterator,
@@ -335,7 +319,6 @@ otError otBackboneRouterMulticastListenerGetNext(otInstance                     
 
 /**
  * Represents the ND Proxy events.
- *
  */
 typedef enum
 {
@@ -350,9 +333,8 @@ typedef enum
  *
  * @param[in] aContext  The user context pointer.
  * @param[in] aEvent    The ND Proxy event.
- * @param[in] aDua      The Domain Unicast Address of the ND Proxy, or `nullptr` if @p aEvent is
+ * @param[in] aDua      The Domain Unicast Address of the ND Proxy, or NULL if @p aEvent is
  *                      `OT_BACKBONE_ROUTER_NDPROXY_CLEARED`.
- *
  */
 typedef void (*otBackboneRouterNdProxyCallback)(void                        *aContext,
                                                 otBackboneRouterNdProxyEvent aEvent,
@@ -364,7 +346,6 @@ typedef void (*otBackboneRouterNdProxyCallback)(void                        *aCo
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aCallback  A pointer to the ND Proxy callback.
  * @param[in] aContext   A user context pointer.
- *
  */
 void otBackboneRouterSetNdProxyCallback(otInstance                     *aInstance,
                                         otBackboneRouterNdProxyCallback aCallback,
@@ -372,7 +353,6 @@ void otBackboneRouterSetNdProxyCallback(otInstance                     *aInstanc
 
 /**
  * Represents the Backbone Router ND Proxy info.
- *
  */
 typedef struct otBackboneRouterNdProxyInfo
 {
@@ -390,7 +370,6 @@ typedef struct otBackboneRouterNdProxyInfo
  *
  * @retval OT_ERROR_NONE       Successfully got the ND Proxy info.
  * @retval OT_ERROR_NOT_FOUND  Failed to find the Domain Unicast Address in the ND Proxy table.
- *
  */
 otError otBackboneRouterGetNdProxyInfo(otInstance                  *aInstance,
                                        const otIp6Address          *aDua,
@@ -398,7 +377,6 @@ otError otBackboneRouterGetNdProxyInfo(otInstance                  *aInstance,
 
 /**
  * Represents the Domain Prefix events.
- *
  */
 typedef enum
 {
@@ -412,8 +390,7 @@ typedef enum
  *
  * @param[in] aContext       The user context pointer.
  * @param[in] aEvent         The Domain Prefix event.
- * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, nullptr otherwise.
- *
+ * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, NULL otherwise.
  */
 typedef void (*otBackboneRouterDomainPrefixCallback)(void                             *aContext,
                                                      otBackboneRouterDomainPrefixEvent aEvent,
@@ -424,7 +401,6 @@ typedef void (*otBackboneRouterDomainPrefixCallback)(void                       
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aCallback  A pointer to the Domain Prefix callback.
  * @param[in] aContext   A user context pointer.
- *
  */
 void otBackboneRouterSetDomainPrefixCallback(otInstance                          *aInstance,
                                              otBackboneRouterDomainPrefixCallback aCallback,
@@ -432,7 +408,6 @@ void otBackboneRouterSetDomainPrefixCallback(otInstance                         
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

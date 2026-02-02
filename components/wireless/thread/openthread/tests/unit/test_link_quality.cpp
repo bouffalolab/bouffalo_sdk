@@ -36,7 +36,7 @@
 
 namespace ot {
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 enum
 {
@@ -114,7 +114,7 @@ void TestLinkQualityData(RssTestData aRssData)
         PrintOutcome(linkInfo);
     }
 
-    VerifyOrQuit(linkInfo.GetLinkQuality() == aRssData.mExpectedLinkQuality);
+    VerifyOrQuit(linkInfo.GetLinkQualityIn() == aRssData.mExpectedLinkQuality);
 }
 
 // Check and verify the raw average RSS value to match the value from GetAverage().

@@ -33,10 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/message.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -52,6 +49,30 @@ void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset) { AsCoreType(aMes
 
 bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage) { return AsCoreType(aMessage).IsLinkSecurityEnabled(); }
 
+bool otMessageIsLoopbackToHostAllowed(const otMessage *aMessage)
+{
+    return AsCoreType(aMessage).IsLoopbackToHostAllowed();
+}
+
+void otMessageSetLoopbackToHostAllowed(otMessage *aMessage, bool aAllowLoopbackToHost)
+{
+    return AsCoreType(aMessage).SetLoopbackToHostAllowed(aAllowLoopbackToHost);
+}
+
+bool otMessageIsMulticastLoopEnabled(otMessage *aMessage) { return AsCoreType(aMessage).GetMulticastLoop(); }
+
+void otMessageSetMulticastLoopEnabled(otMessage *aMessage, bool aEnabled)
+{
+    AsCoreType(aMessage).SetMulticastLoop(aEnabled);
+}
+
+otMessageOrigin otMessageGetOrigin(const otMessage *aMessage) { return MapEnum(AsCoreType(aMessage).GetOrigin()); }
+
+void otMessageSetOrigin(otMessage *aMessage, otMessageOrigin aOrigin)
+{
+    AsCoreType(aMessage).SetOrigin(MapEnum(aOrigin));
+}
+
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 {
     if (aEnabled)
@@ -65,6 +86,11 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 }
 
 int8_t otMessageGetRss(const otMessage *aMessage) { return AsCoreType(aMessage).GetAverageRss(); }
+
+otError otMessageGetThreadLinkInfo(const otMessage *aMessage, otThreadLinkInfo *aLinkInfo)
+{
+    return AsCoreType(aMessage).GetLinkInfo(AsCoreType(aLinkInfo));
+}
 
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {

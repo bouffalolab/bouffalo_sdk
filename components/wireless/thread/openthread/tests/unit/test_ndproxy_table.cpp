@@ -38,11 +38,11 @@
 #include "test_util.h"
 #include "backbone_router/ndproxy_table.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 using namespace ot::BackboneRouter;
 

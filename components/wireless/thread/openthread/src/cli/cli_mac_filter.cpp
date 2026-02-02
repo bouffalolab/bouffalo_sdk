@@ -137,10 +137,49 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
     otError      error = OT_ERROR_NONE;
     otExtAddress extAddr;
 
+    /**
+     * @cli macfilter addr
+     * @code
+     * macfilter addr
+     * Allowlist
+     * 0f6127e33af6b403 : rss -95 (lqi 1)
+     * 0f6127e33af6b402
+     * Done
+     * @endcode
+     * @par
+     * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @par
+     * Provides the following information:
+     * - Current mode of the MAC filter list: Either `AllowList`, `DenyList,` or `Disabled`
+     * - A list of all the extended addresses in the filter. The received signal strength (rss) and
+     *   link quality indicator (lqi) are listed next to the address if these values have been set to be
+     *   different from the default values.
+     * @sa otLinkFilterGetAddressMode
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputFilter(kAddressFilter);
     }
+    /**
+     * @cli macfilter addr add
+     * @code
+     * macfilter addr add 0f6127e33af6b403 -95
+     * Done
+     * @endcode
+     * @code
+     * macfilter addr add 0f6127e33af6b402
+     * Done
+     * @endcode
+     * @cparam macfilter addr add @ca{extaddr} [@ca{rss}]
+     * @par
+     * Is available only when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @par
+     * Adds an IEEE 802.15.4 Extended Address to the MAC filter list.
+     * If you specify the optional `rss` argument, this fixes the received signal strength for messages from the
+     * address. If you do not use the `rss` option, the address will use whatever default value you have set.
+     * If you have not set a default, the signal strength will be the over-air signal.
+     * @sa otLinkFilterAddAddress
+     */
     else if (aArgs[0] == "add")
     {
         SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
@@ -156,11 +195,39 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
             SuccessOrExit(error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss));
         }
     }
+    /**
+     * @cli macfilter addr remove
+     * @code
+     * macfilter addr remove 0f6127e33af6b402
+     * Done
+     * @endcode
+     * @cparam macfilter addr remove @ca{extaddr}
+     * @par
+     * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @par
+     * This command removes the specified extended address from the MAC filter list.
+     * @note No action is performed if the specified extended address does not match an entry in the MAC filter list.
+     * @sa otLinkFilterRemoveAddress
+     */
     else if (aArgs[0] == "remove")
     {
         SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
         otLinkFilterRemoveAddress(GetInstancePtr(), &extAddr);
     }
+    /**
+     * @cli macfilter addr clear
+     * @code
+     * macfilter addr clear
+     * Done
+     * @endcode
+     * @par
+     * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @par
+     * This command clears all the extended addresses from the MAC filter list.
+     * @note This command does not affect entries in the `RssIn` list. That list contains extended addresses where the
+     * `rss` has been set to a fixed value that differs from the default.
+     * @sa otLinkFilterClearAddresses
+     */
     else if (aArgs[0] == "clear")
     {
         otLinkFilterClearAddresses(GetInstancePtr());
@@ -168,9 +235,40 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
     else
     {
         static const char *const kModeCommands[] = {
-            "disable",   // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
+            /**
+             * @cli macfilter addr disable
+             * @code
+             * macfilter addr disable
+             * Done
+             * @endcode
+             * @par
+             * Disables MAC filter modes.
+             */
+            "disable", // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
+            /**
+             * @cli macfilter addr allowlist
+             * @code
+             * macfilter addr allowlist
+             * Done
+             * @endcode
+             * @par
+             * Enables the `allowlist` MAC filter mode, which means that only the MAC addresses in the MAC filter list
+             * will be allowed access.
+             * @sa otLinkFilterSetAddressMode
+             */
             "allowlist", // (1) OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST
-            "denylist",  // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
+            /**
+             * @cli macfilter addr denylist
+             * @code
+             * macfilter addr denylist
+             * Done
+             * @endcode
+             * @par
+             * Enables the `denylist` MAC filter mode, which means that all MAC addresses in the MAC filter list
+             * will be denied access.
+             * @sa otLinkFilterSetAddressMode
+             */
+            "denylist", // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
         };
 
         for (size_t index = 0; index < OT_ARRAY_LENGTH(kModeCommands); index++)
@@ -190,6 +288,26 @@ exit:
     return error;
 }
 
+/**
+ * @cli macfilter rss
+ * @code
+ * macfilter rss
+ * 0f6127e33af6b403 : rss -95 (lqi 1)
+ * Default rss: -50 (lqi 3)
+ * Done
+ * @endcode
+ * @par
+ * Provides the following information:
+ * - Listing of all the extended addresses
+ * where the received signal strength (`rss`) has been set to be different from
+ * the default value. The link quality indicator (`lqi`) is also shown. The `rss`
+ * and `lqi` settings map to each other. If you set one, the value of the other
+ * gets set automatically. This list of addresses is called the `RssIn List`.
+ * Setting either the `rsi` or the `lqi` adds the corresponding extended address
+ * to the `RssIn` list.
+ * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
+ * @sa otLinkFilterGetNextRssIn
+ */
 template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_NONE;
@@ -200,6 +318,32 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
     {
         OutputFilter(kRssFilter);
     }
+    /**
+     * @cli macfilter rss add-lqi
+     * @code
+     * macfilter rss add-lqi * 3
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss add-lqi 0f6127e33af6b404 2
+     * Done
+     * @endcode
+     * @cparam macfilter rss add-lqi @ca{extaddr} @ca{lqi}
+     * To set a default value for the link quality indicator for all received messages,
+     * use the `*` for the `extaddr` argument. The allowed range is 0 to 3.
+     * @par
+     * Adds the specified Extended Address to the `RssIn` list (or modifies an existing address in the `RssIn` list)
+     * and sets the fixed link quality indicator for messages from that address.
+     * The Extended Address
+     * does not necessarily have to be in the `address allowlist/denylist` filter to set the `lqi`.
+     * @note The `RssIn` list contains Extended Addresses whose `lqi` or
+     * received signal strength (`rss`) values have been set to be different from the defaults.
+     * The `lqi` will automatically get converted to a corresponding `rss` value.
+     * @par
+     * This is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @sa otLinkConvertLinkQualityToRss
+     * @sa otLinkFilterSetDefaultRssIn
+     */
     else if (aArgs[0] == "add-lqi")
     {
         uint8_t linkQuality;
@@ -218,6 +362,22 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
         }
     }
+    /**
+     * @cli macfilter rss add
+     * @code
+     * macfilter rss add * -50
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss add 0f6127e33af6b404 -85
+     * Done
+     * @endcode
+     * @cparam macfilter rss add @ca{extaddr} @ca{rss}
+     * To set a default value for the received signal strength for all received messages,
+     * use the `*` for the `extaddr` argument.
+     * @par api_copy
+     * #otLinkFilterAddRssIn
+     */
     else if (aArgs[0] == "add")
     {
         SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
@@ -232,6 +392,23 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
         }
     }
+    /**
+     * @cli macfilter rss remove
+     * @code
+     * macfilter rss remove *
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss remove 0f6127e33af6b404
+     * Done
+     * @endcode
+     * @cparam macfilter rss remove @ca{extaddr}
+     * If you wish to remove the default received signal strength and link quality indicator settings,
+     * use the `*` as the `extaddr`. This unsets the defaults but does not remove
+     * entries from the `RssIn` list.
+     * @par api_copy
+     * #otLinkFilterRemoveRssIn
+     */
     else if (aArgs[0] == "remove")
     {
         if (aArgs[1] == "*")
@@ -244,6 +421,15 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             otLinkFilterRemoveRssIn(GetInstancePtr(), &extAddr);
         }
     }
+    /**
+     * @cli macfilter rss clear
+     * @code
+     * macfilter rss clear
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkFilterClearAllRssIn
+     */
     else if (aArgs[0] == "clear")
     {
         otLinkFilterClearAllRssIn(GetInstancePtr());
@@ -276,6 +462,32 @@ otError MacFilter::Process(Arg aArgs[])
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
+    /**
+     * @cli macfilter
+     * @code
+     * macfilter
+     * Address Mode: Allowlist
+     * 0f6127e33af6b403 : rss -95 (lqi 1)
+     * 0f6127e33af6b402
+     * RssIn List:
+     * 0f6127e33af6b403 : rss -95 (lqi 1)
+     * Default rss: -50 (lqi 3)
+     * Done
+     * @endcode
+     * @par
+     * Provides the following information:
+     * - `Address Mode`: Current mode of the MAC filter: Either `AllowList`, `DenyList,` or `Disabled`
+     * - A list of all the extended addresses in the MAC filter list. The received signal strength (rss) and
+     *   link quality indicator (lqi) are listed next to the address if these values have been set to be
+     *   different from the default values.
+     * - A separate list (`RssIn List`) that shows all the extended addresses where the `rss` has been set to
+     *   be different from the default value.
+     * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
+     * @note An extended address can be in the `RssIn` list without being in the MAC filter list.
+     * @sa otLinkFilterSetAddressMode
+     * @sa otLinkFilterGetNextAddress
+     * @sa otLinkFilterGetNextRssIn
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputFilter(kAddressFilter | kRssFilter);

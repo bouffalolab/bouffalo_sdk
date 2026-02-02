@@ -1263,41 +1263,6 @@ BL_Err_Type HBN_Keep_On_RC32K(void){
 }
 #endif
 
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_Disable(void){
-    return RomDriver_HBN_PIR_Disable();
-}
-#endif
-
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_Enable(void){
-    return RomDriver_HBN_PIR_Enable();
-}
-#endif
-
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_HPF_Sel(uint8_t hpf){
-    return RomDriver_HBN_PIR_HPF_Sel(hpf);
-}
-#endif
-
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_INT_Config(HBN_PIR_INT_CFG_Type *pirIntCfg){
-    return RomDriver_HBN_PIR_INT_Config(pirIntCfg);
-}
-#endif
-
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_LPF_Sel(uint8_t lpf){
-    return RomDriver_HBN_PIR_LPF_Sel(lpf);
-}
-#endif
-
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Pin_WakeUp_Mask(uint8_t maskVal){
     return RomDriver_HBN_Pin_WakeUp_Mask(maskVal);
@@ -1413,20 +1378,6 @@ BL_Err_Type HBN_Set_PDS_Gpio_Keep(uint8_t gpioKeep){
     return RomDriver_HBN_Set_PDS_Gpio_Keep(gpioKeep);
 }
 
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_PIR_Interval(uint16_t interval){
-    return RomDriver_HBN_Set_PIR_Interval(interval);
-}
-#endif
-
-#if 0
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_PIR_Threshold(uint16_t threshold){
-    return RomDriver_HBN_Set_PIR_Threshold(threshold);
-}
-#endif
-
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Set_RTC_Timer(uint8_t delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode){
     return RomDriver_HBN_Set_RTC_Timer(delay,compValLow,compValHigh,compMode);
@@ -1485,16 +1436,6 @@ uint8_t HBN_Get_MCU_Root_CLK_Sel(void){
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint8_t HBN_Get_MCU_XCLK_Sel(void){
     return RomDriver_HBN_Get_MCU_XCLK_Sel();
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint16_t HBN_Get_PIR_Interval(void){
-    return RomDriver_HBN_Get_PIR_Interval();
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint16_t HBN_Get_PIR_Threshold(void){
-    return RomDriver_HBN_Get_PIR_Threshold();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

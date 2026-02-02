@@ -44,58 +44,44 @@
 
 #include <app_init.h>
 
-/* Dual-core OTA Flash RPC support (NP core - Remote) */
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-#include "rpc/flash_rpc_remote.h"
-
-/* Core detection override for simple_rpc - NP core */
-int simple_rpc_is_ap_core(void)
-{
-    return 0; /* NP core always returns 0 (not AP) */
-}
+#ifdef CONFIG_IPC
+#include <flash_ops_rpmsg.h>
 #endif
 
 #define DBG_TAG "MAIN"
 #include "log.h"
 #include "async_event.h"
 
+
+
 struct bflb_device_s *gpio;
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
 
 static struct bflb_device_s *uart1;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
 
-/****************************************************************************
- * Private Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Functions
- ****************************************************************************/
 void wifi_start_firmware_task(void *param)
 {
     LOG_I("Starting wifi ...\r\n");
 
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
-
     wifi_task_create();
 
     LOG_I("Starting fhost ...\r\n");
+
     fhost_init();
 
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-    flash_rpc_remote_init();
-    LOG_I("Flash RPC Remote started on NP core\r\n");
+#ifdef CONFIG_IPC
+    /* RPMsg Flash: Initialize receiver on SLAVE core */
+    LOG_I("Initializing RPMsg Flash receiver on SLAVE core\r\n");
+    int ret = rpmsg_slave_init();
+    if (ret != 0) {
+        LOG_E("RPMsg Flash receiver init failed: %d\r\n", ret);
+        return;
+    }
+    LOG_I("RPMsg Flash receiver initialized\r\n");
 #endif
 
     vTaskDelete(NULL);
@@ -181,7 +167,6 @@ int main(void)
 
     uart1 = bflb_device_get_by_name("uart1");
     shell_init_with_task(uart1);
-
     xTaskCreate(app_wifi_entry, (char *)"init", 2048, NULL, 16, &app_wifi_task);
 
     vTaskStartScheduler();

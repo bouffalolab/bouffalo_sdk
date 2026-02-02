@@ -33,13 +33,7 @@
 
 #include "sub_mac.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#include "mac/mac.hpp"
-#endif
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Mac {

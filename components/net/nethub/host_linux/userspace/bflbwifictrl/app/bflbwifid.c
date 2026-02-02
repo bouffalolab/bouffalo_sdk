@@ -1,5 +1,5 @@
 /**
- * @file bflb_wifid.c
+ * @file bflbwifid.c
  * @brief BFLB WiFi daemon
  */
 
@@ -446,6 +446,74 @@ static void handle_ota(int client_fd, const char *filepath)
     send(client_fd, response, strlen(response), 0);
 }
 
+static void handle_start_ap(int client_fd, const char *ssid, const char *password)
+{
+    int ret;
+    char response[MAX_RESPONSE_LEN];
+
+    if (!ssid || strlen(ssid) == 0) {
+        send(client_fd, "ERROR -4 Missing SSID\nEND\n", 30, 0);
+        return;
+    }
+
+    LOGI("Start AP: %s", ssid);
+
+    /* Prepare AP configuration */
+    bflbwifi_ap_config_t config;
+    memset(&config, 0, sizeof(config));
+    strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
+    if (password) {
+        strncpy(config.pwd, password, sizeof(config.pwd) - 1);
+    } else {
+        config.pwd[0] = '\0';  /* Open network */
+    }
+    config.channel = 11;       /* Default channel */
+    config.enc = WIFI_ENC_WPA2;  /* Default encryption */
+    config.max_conn = 4;       /* Default max connections */
+    config.ssid_hidden = 0;    /* Not hidden */
+
+    /* Call libbflbwifi API */
+    ret = bflbwifi_ap_start(&config, 30000);
+
+    /* Send response */
+    if (ret == 0) {
+        snprintf(response, sizeof(response),
+                "OK AP_STARTED\n"
+                "SSID: %s\n"
+                "Channel: %d\n"
+                "IP: 192.168.4.1\n"
+                "DHCP: 192.168.4.50 - 192.168.4.200\n"
+                "END\n",
+                config.ssid, config.channel);
+    } else {
+        snprintf(response, sizeof(response),
+                "ERROR %d %s\nEND\n",
+                ret, bflbwifi_strerror(ret));
+    }
+
+    send(client_fd, response, strlen(response), 0);
+}
+
+static void handle_stop_ap(int client_fd)
+{
+    int ret;
+    char response[MAX_RESPONSE_LEN];
+
+    LOGI("Stop AP");
+
+    ret = bflbwifi_ap_stop();
+
+    if (ret == 0) {
+        snprintf(response, sizeof(response), "OK AP_STOPPED\nEND\n");
+    } else {
+        snprintf(response, sizeof(response),
+                "ERROR %d %s\nEND\n",
+                ret, bflbwifi_strerror(ret));
+    }
+
+    send(client_fd, response, strlen(response), 0);
+}
+
 static void process_client_command(int client_fd, const char *cmd)
 {
     char cmd_copy[MAX_CMD_LEN];
@@ -523,6 +591,20 @@ static void process_client_command(int client_fd, const char *cmd)
     else if (strcmp(token, "OTA") == 0) {
         char *filepath = strtok(NULL, " ");
         handle_ota(client_fd, filepath);
+    }
+    else if (strcmp(token, "START_AP") == 0) {
+        ssid = strtok(NULL, " ");
+        password = strtok(NULL, " ");
+
+        if (!ssid) {
+            send(client_fd, "ERROR -4 Missing SSID parameter\nEND\n", 42, 0);
+            return;
+        }
+
+        handle_start_ap(client_fd, ssid, password);
+    }
+    else if (strcmp(token, "STOP_AP") == 0) {
+        handle_stop_ap(client_fd);
     }
     else if (strcmp(token, "QUIT") == 0) {
         LOGI("Quit command received");
@@ -646,7 +728,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    /* Initialize libbflb_wifi */
+    /* Initialize libbflbwifi */
     LOGI("Initializing BFLB WiFi...");
 
     /* Set log level to DEBUG for detailed output */

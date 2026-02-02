@@ -179,6 +179,8 @@
 
 #define MBEDTLS_PLATFORM_STD_MEM_HDR "mbedtls_port_bouffalo_sdk.h"
 
+#define MBEDTLS_ECP_ALT_KEEP_ORIGINAL 0
+
 #if defined(CONFIG_MBEDTLS_ECC_USE_HW) && defined(MBEDTLS_ECP_RESTARTABLE)
 #error "ECP Restartable is not implemented with ECP HW acceleration!"
 #endif

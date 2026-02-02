@@ -35,11 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -63,7 +59,7 @@ RadioSelector::RadioSelector(Instance &aInstance)
 
 void RadioSelector::NeighborInfo::PopulateMultiRadioInfo(MultiRadioInfo &aInfo)
 {
-    memset(&aInfo, 0, sizeof(MultiRadioInfo));
+    ClearAllBytes(aInfo);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (GetSupportedRadioTypes().Contains(Mac::kRadioTypeIeee802154))

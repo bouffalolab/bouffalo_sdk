@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #if defined(CONFIG_BL_SDK)
 #include <bflb_mtimer.h>
 #else
@@ -6,10 +8,12 @@
 #include <lmac154.h>
 #include <zb_timer.h>
 
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread_port.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/alarm-micro.h>
 
+#include <FreeRTOS.h>
 #include <timers.h>
 #include <ot_utils_ext.h>
 
@@ -44,7 +48,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
     if (elapseTime < aDt) {
         ret = xTimerChangePeriod( otAlarm_timerHandle, OT_TIMER_MS_TO_TICKS(aDt - elapseTime), 0 );
-        configASSERT(ret == pdPASS);
+        assert(ret == pdPASS);
     }
     else {
         otrNotifyEvent(OT_SYSTEM_EVENT_ALARM_MS_EXPIRED);

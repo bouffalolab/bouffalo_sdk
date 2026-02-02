@@ -768,6 +768,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 		if (debug_print)
 			wpa_dbg(wpa_s, MSG_DEBUG,
 				"   skip - no WPA/RSN proto match");
+		wpa_msg_ctrl(wpa_s, MSG_INFO, AP_STA_ENCRYPTION_TYPE_MISMATCH);
 		return 0;
 	}
 
@@ -779,6 +780,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 	}
 
 	if (!wpa_key_mgmt_wpa(ssid->key_mgmt)) {
+        wpa_msg_ctrl(wpa_s, MSG_INFO, AP_STA_ENCRYPTION_TYPE_MISMATCH);
 		if (debug_print)
 			wpa_dbg(wpa_s, MSG_DEBUG, "   allow in non-WPA/WPA2");
 		return 1;

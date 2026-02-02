@@ -11,6 +11,7 @@
 #include <semphr.h>
 #include <openamp/open_amp.h>
 #include <ipm.h>
+#include <bflb_irq.h>
 #include <stdio.h>
 
 /* Logging */
@@ -19,21 +20,21 @@
 #define LOG_INF(fmt, ...) printf("[RPMSG_INF] " fmt "\r\n", ##__VA_ARGS__)
 
 #ifndef CONFIG_RPMSG_SERVICE_MODE_MASTER
-#define CONFIG_RPMSG_SERVICE_MODE_MASTER        0
+#define CONFIG_RPMSG_SERVICE_MODE_MASTER 0
 #endif
 
 #define MASTER (CONFIG_RPMSG_SERVICE_MODE_MASTER == 1)
 
 #if MASTER
-#define VIRTQUEUE_ID            0
-#define RPMSG_ROLE RPMSG_HOST
+#define VIRTQUEUE_ID 0
+#define RPMSG_ROLE   RPMSG_HOST
 #else
-#define VIRTQUEUE_ID            1
-#define RPMSG_ROLE RPMSG_REMOTE
+#define VIRTQUEUE_ID 1
+#define RPMSG_ROLE   RPMSG_REMOTE
 #endif
 
-#define IPM_TASK_STACK_SIZE    512
-#define IPM_TASK_PRIORITY      (configMAX_PRIORITIES - 1)
+#define IPM_TASK_STACK_SIZE 512
+#define IPM_TASK_PRIORITY   (configMAX_PRIORITIES - 1)
 
 static TaskHandle_t ipm_task_handle = NULL;
 static SemaphoreHandle_t data_sem = NULL;
@@ -43,7 +44,7 @@ static StaticTask_t ipm_task_buffer;
 /* End of configuration defines */
 
 /* IPM device */
-static ipm_device_t ipm_handle;
+ipm_device_t ipm_handle;
 static metal_phys_addr_t shm_physmap[] = { SHM_START_ADDR };
 static struct metal_io_region shm_io;
 
@@ -86,7 +87,7 @@ static void ipc_virtio_notify(struct virtqueue *vq)
 
     uint32_t dummy_data = 0x55005500;
 
-    status = ipm_send(&ipm_handle, 0, 0, &dummy_data, sizeof(dummy_data));
+    status = ipm_send(&ipm_handle, 0, IPC_CHANNEL_RPMSG, &dummy_data, sizeof(dummy_data));
 
     if (status != 0) {
         LOG_ERR("ipm_send failed to notify: %d", status);
@@ -117,18 +118,16 @@ static int sem_take(SemaphoreHandle_t sem, uint32_t ms)
 static int sem_give(SemaphoreHandle_t sem)
 {
     if (xPortIsInsideInterrupt()) {
-        BaseType_t  temp = pdTRUE;
+        BaseType_t temp = pdTRUE;
         xSemaphoreGiveFromISR(sem, &temp);
         portYIELD_FROM_ISR(temp);
-     } else {
+    } else {
         xSemaphoreGive(sem);
-     }
+    }
     return 0;
 }
 
-static void ipm_callback(const struct device *dev,
-                        void *context, uint32_t id,
-                        volatile void *data)
+static void ipm_callback(const struct device *dev, void *context, uint32_t id, volatile void *data)
 {
     (void)dev;
     (void)context;
@@ -151,7 +150,7 @@ static void ipm_task(void *param)
 
 int rpmsg_backend_init(struct metal_io_region **io, struct virtio_device *vdev)
 {
-    int32_t                  err;
+    int32_t err;
     struct metal_init_params metal_params = METAL_INIT_DEFAULTS;
 
     data_sem = xSemaphoreCreateCounting(1, 0);
@@ -163,14 +162,13 @@ int rpmsg_backend_init(struct metal_io_region **io, struct virtio_device *vdev)
     ipc_virtio_set_status(NULL, 0);
 #endif
     /* Create IPM task */
-    ipm_task_handle = xTaskCreateStatic(
-        ipm_task,                    /* Task function */
-        "ipm_task",                  /* Task name */
-        IPM_TASK_STACK_SIZE,         /* Stack size */
-        NULL,                        /* Parameter */
-        IPM_TASK_PRIORITY,           /* Priority */
-        ipm_task_stack,              /* Static stack */
-        &ipm_task_buffer             /* Task control block */
+    ipm_task_handle = xTaskCreateStatic(ipm_task,            /* Task function */
+                                        "ipm_task",          /* Task name */
+                                        IPM_TASK_STACK_SIZE, /* Stack size */
+                                        NULL,                /* Parameter */
+                                        IPM_TASK_PRIORITY,   /* Priority */
+                                        ipm_task_stack,      /* Static stack */
+                                        &ipm_task_buffer     /* Task control block */
     );
 
     if (!ipm_task_handle) {
@@ -238,4 +236,3 @@ int rpmsg_backend_init(struct metal_io_region **io, struct virtio_device *vdev)
 
     return 0;
 }
-

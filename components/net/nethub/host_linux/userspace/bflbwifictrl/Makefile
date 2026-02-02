@@ -19,7 +19,7 @@ OBJS = $(SRCS:.c=.o)
 LIB = libbflbwifi.a
 
 # Example programs
-EXAMPLE_SRCS = examples/test_bflb_wifi.c
+EXAMPLE_SRCS = examples/test_bflbwifi.c
 EXAMPLE = examples/test_bflbwifi
 
 # App directory

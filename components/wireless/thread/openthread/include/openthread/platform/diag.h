@@ -30,16 +30,17 @@
  * @file
  * @brief
  *   This file defines the platform diag interface.
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_DIAG_H_
 #define OPENTHREAD_PLATFORM_DIAG_H_
 
-#include <stddef.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -53,12 +54,10 @@ extern "C" {
  *   This module includes the platform abstraction for diagnostics features.
  *
  * @{
- *
  */
 
 /**
  * Defines the gpio modes.
- *
  */
 typedef enum
 {
@@ -67,33 +66,40 @@ typedef enum
 } otGpioMode;
 
 /**
- * Processes a factory diagnostics command line.
+ * Pointer to callback to output platform diag messages.
  *
- * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
- * output buffer.
+ * @param[in]  aFormat     The format string.
+ * @param[in]  aArguments  The format string arguments.
+ * @param[out] aContext    A pointer to the user context.
+ */
+typedef void (*otPlatDiagOutputCallback)(const char *aFormat, va_list aArguments, void *aContext);
+
+/**
+ * Sets the platform diag output callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aCallback   A pointer to a function that is called on outputting diag messages.
+ * @param[in]  aContext    A pointer to the user context.
+ */
+void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext);
+
+/**
+ * Processes a factory diagnostics command line.
  *
  * @param[in]   aInstance       The OpenThread instance for current request.
  * @param[in]   aArgsLength     The number of arguments in @p aArgs.
  * @param[in]   aArgs           The arguments of diagnostics command line.
- * @param[out]  aOutput         The diagnostics execution result.
- * @param[in]   aOutputMaxLen   The output buffer size.
  *
  * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
  * @retval  OT_ERROR_NONE               The command is successfully process.
  * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
- *
  */
-otError otPlatDiagProcess(otInstance *aInstance,
-                          uint8_t     aArgsLength,
-                          char       *aArgs[],
-                          char       *aOutput,
-                          size_t      aOutputMaxLen);
+otError otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[]);
 
 /**
  * Enables/disables the factory diagnostics mode.
  *
  * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
- *
  */
 void otPlatDiagModeSet(bool aMode);
 
@@ -101,7 +107,6 @@ void otPlatDiagModeSet(bool aMode);
  * Indicates whether or not factory diagnostics mode is enabled.
  *
  * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
- *
  */
 bool otPlatDiagModeGet(void);
 
@@ -109,7 +114,6 @@ bool otPlatDiagModeGet(void);
  * Sets the channel to use for factory diagnostics.
  *
  * @param[in]  aChannel  The channel value.
- *
  */
 void otPlatDiagChannelSet(uint8_t aChannel);
 
@@ -117,7 +121,6 @@ void otPlatDiagChannelSet(uint8_t aChannel);
  * Sets the transmit power to use for factory diagnostics.
  *
  * @param[in]  aTxPower  The transmit power value.
- *
  */
 void otPlatDiagTxPowerSet(int8_t aTxPower);
 
@@ -127,7 +130,6 @@ void otPlatDiagTxPowerSet(int8_t aTxPower);
  * @param[in]   aInstance   The OpenThread instance for current request.
  * @param[in]   aFrame      The received radio frame.
  * @param[in]   aError      The received radio frame status.
- *
  */
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
@@ -135,7 +137,6 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
  * Processes the alarm event.
  *
  * @param[in]   aInstance   The OpenThread instance for current request.
- *
  */
 void otPlatDiagAlarmCallback(otInstance *aInstance);
 
@@ -150,7 +151,6 @@ void otPlatDiagAlarmCallback(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported.
  * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled or @p aGpio is not configured as output.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
- *
  */
 otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
 
@@ -165,7 +165,6 @@ otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported or @p aValue is NULL.
  * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled or @p aGpio is not configured as input.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
- *
  */
 otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
 
@@ -180,7 +179,6 @@ otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio or @p aMode is not supported.
  * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
- *
  */
 otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode);
 
@@ -196,7 +194,6 @@ otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode);
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported or @p aMode is NULL.
  * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
- *
  */
 otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode);
 
@@ -210,7 +207,6 @@ otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode);
  * @retval OT_ERROR_NONE             Successfully set the raw power setting.
  * @retval OT_ERROR_INVALID_ARGS     The @p aRawPowerSetting is NULL or the @p aRawPowerSettingLength is too long.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
- *
  */
 otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
                                           const uint8_t *aRawPowerSetting,
@@ -229,7 +225,6 @@ otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
  *                                   @aRawPowerSettingLength is too short.
  * @retval OT_ERROR_NOT_FOUND        The raw power setting is not set.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
- *
  */
 otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
                                           uint8_t    *aRawPowerSetting,
@@ -243,7 +238,6 @@ otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
  *
  * @retval OT_ERROR_NONE             Successfully enabled/disabled the raw power setting.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
- *
  */
 otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable);
 
@@ -256,7 +250,6 @@ otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable
  * @retval OT_ERROR_NONE             Successfully enabled/disabled .
  * @retval OT_ERROR_INVALID_STATE    The radio was not in the Receive state.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
- *
  */
 otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable);
 
@@ -269,7 +262,6 @@ otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable);
  * @retval OT_ERROR_NONE             Successfully enabled/disabled.
  * @retval OT_ERROR_INVALID_STATE    The radio was not in the Receive state.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented.
- *
  */
 otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable);
 
@@ -289,7 +281,6 @@ otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable);
  *                                    @p aRawPowerSettingLength is NULL or @aRawPowerSettingLength is too short.
  * @retval  OT_ERROR_NOT_FOUND        The power settings for the @p aChannel was not found.
  * @retval  OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
- *
  */
 otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
                                         uint8_t     aChannel,
@@ -300,7 +291,6 @@ otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -34,76 +34,36 @@
 #ifndef LWIP_HDR_LWIPOPTS_H__
 #define LWIP_HDR_LWIPOPTS_H__
 
-#include "arch/sys_arch.h"
-
-#define LWIP_NETIF_API           1
-
-/**
- * NO_SYS==1: Provides VERY minimal functionality. Otherwise,
- * use lwIP facilities.
- */
-#define NO_SYS 0
-
-/**
- * LWIP_TCPIP_CORE_LOCKING, lwip thread safe protect options
- */
-#define LWIP_TCPIP_CORE_LOCKING          1
-#define LWIP_TCPIP_CORE_LOCKING_INPUT    0
-
-#ifdef __cplusplus
-extern "C" sys_mutex_t lock_tcpip_core;
-extern "C" int sys_is_inside_interrupt(void);
-extern "C" int sys_mutex_is_locked(sys_mutex_t *mutex);
-extern "C" int sys_current_is_tcpip(void);
-#else
-extern sys_mutex_t lock_tcpip_core;
-extern int sys_is_inside_interrupt(void);
-extern int sys_mutex_is_locked(sys_mutex_t *mutex);
-extern int sys_current_is_tcpip(void);
-#endif
-
-#define LWIP_ASSERT_CORE_LOCKED()       \
-do {\
-   if(lock_tcpip_core && (sys_is_inside_interrupt() || !sys_mutex_is_locked(&lock_tcpip_core))) {\
-      printf("api must call with lwip core lock %s: %d\r\n", __FILE__, __LINE__); \
-      asm("ebreak");\
-   }\
-} while(0)
-
 /* ---------- OTBR options ---------- */
-// #define OTBR_LOCK_TCPIP_CORE()         
-// #define OTBR_UNLOCK_TCPIP_CORE()       
-#define OTBR_LOCK_TCPIP_CORE()         LOCK_TCPIP_CORE()
-#define OTBR_UNLOCK_TCPIP_CORE()       UNLOCK_TCPIP_CORE()
-
-#define OTBR_MAX_RIO_ROUTE 20
-#define OTBR_RIO_TIMEOUT 0xffffffff / (1000 * 4)
+#define OTBR_MAX_RIO_ROUTE             20
+#define OTBR_RIO_TIMEOUT               0xffffffff / (1000 * 4)
 
 /* ---------- Memory options ---------- */
-#define MEM_ALIGNMENT 4
-#define MEM_SIZE (20 * 1024)
-#define MEMP_NUM_PBUF   26
-#define MEMP_NUM_NETBUF 16
-#define MEMP_NUM_UDP_PCB 20
-#define MEMP_NUM_TCP_PCB 10
-#define MEMP_NUM_TCP_PCB_LISTEN 5
-#define MEMP_NUM_SYS_TIMEOUT            (LWIP_NUM_SYS_TIMEOUT_INTERNAL + OTBR_MAX_RIO_ROUTE)
+#define MEM_ALIGNMENT                  4
+#define MEM_SIZE                       (20 * 1024)
+#define MEMP_NUM_PBUF                  26
+#define MEMP_NUM_NETBUF                16
+#define MEMP_NUM_NETCONN               16
+#define MEMP_NUM_UDP_PCB               20
+#define MEMP_NUM_TCP_PCB               10
+#define MEMP_NUM_TCP_PCB_LISTEN        5
+#define MEMP_NUM_SYS_TIMEOUT           (LWIP_NUM_SYS_TIMEOUT_INTERNAL + OTBR_MAX_RIO_ROUTE)
 
-/*
-   ---------- LOOPIF options ----------
-*/
-#define LWIP_HAVE_LOOPIF           1
+/* ---------- LOOPIF options ---------- */
+#define LWIP_HAVE_LOOPIF               1
+#define LWIP_NETIF_LOOPBACK            1
+#define LWIP_LOOPBACK_MAX_PBUFS        0
 
 /* ---------- IPv4 options ---------- */
-#define LWIP_IPV4 1
-#define IP_FORWARD 1
-#define IP_NAPT 1
+#define LWIP_IPV4                      1
+#define IP_FORWARD                     1
+#define IP_NAPT                        1
 
 /* ---------- IPv6 options ---------- */
-#define LWIP_IPV6 1
-#define LWIP_IPV6_SCOPES 0
-#define LWIP_IPV6_FORWARD 1
-#define LWIP_IPV6_NUM_ADDRESSES 20
+#define LWIP_IPV6                      1
+#define LWIP_IPV6_SCOPES               0
+#define LWIP_IPV6_FORWARD              1
+#define LWIP_IPV6_NUM_ADDRESSES        20
 
 /* ---------- Pbuf options ---------- */
 #define PBUF_POOL_SIZE (TCP_WND / TCP_MSS)
@@ -118,25 +78,20 @@ do {\
 /* ---------- DHCPv6 options ---------- */
 #define LWIP_IPV6_DHCP6 1
 
-/* ---------- UDP options ---------- */
-#define LWIP_UDP 1
-#define UDP_TTL  255
-
 /* ---------- DNS options ---------- */
 #define LWIP_DNS                        1
 #define LWIP_DNS_SECURE                 0
+#define LWIP_DNS_SERVER                 0
 
 /* ---------- Multi-cast options ---- */
-#define LWIP_IGMP               1
-#define LWIP_IPV6_MLD           1
-#define MEMP_NUM_MLD6_GROUP 300
-#define LWIP_MULTICAST_PING 1
+#define LWIP_IGMP                      1
+#define LWIP_IPV6_MLD                  1
+#define MEMP_NUM_MLD6_GROUP            300
+#define LWIP_MULTICAST_PING            1
+#define LWIP_MULTICAST_TX_OPTIONS      1
+#define LWIP_BROADCAST_PING            1
 
-#define LWIP_RAW                        1
-
-/* ---------- Statistics options ---------- */
-#define LWIP_STATS               1
-#define LWIP_STATS_DISPLAY       0
+#define LWIP_RAW                       1
 
 #define LWIP_TIMEVAL_PRIVATE      0 // use sys/time.h for struct timeval
 
@@ -153,11 +108,13 @@ extern int *__errno(void);
 /* LWIP_NETIF_LINK_CALLBACK==1: Support a callback function from an interface
  * whenever the link changes (i.e., link down)
  */
-#define LWIP_NETIF_LINK_CALLBACK 1
-
+#define LWIP_NETIF_LINK_CALLBACK       1
 #define LWIP_NETIF_STATUS_CALLBACK     1
 #define LWIP_NETIF_API                 1
 #define LWIP_NETIF_EXT_STATUS_CALLBACK 1
+#define LWIP_NETIF_API                 1
+#define LWIP_NETIF_HOSTNAME            1
+
 /*
    --------------------------------------
    ---------- Checksum options ----------
@@ -204,10 +161,6 @@ extern int *__errno(void);
    ---------- Sequential layer options ----------
    ----------------------------------------------
 */
-/**
- * LWIP_NETCONN==1: Enable Netconn API (require to use api_lib.c)
- */
-#define LWIP_NETCONN 1
 
 /*
    ------------------------------------
@@ -217,11 +170,7 @@ extern int *__errno(void);
 #define LWIP_SOCKET 1
 #define LWIP_SOCKET_MAX_MEMBERSHIPS 300
 
-/*
-   ---------------------------------------
-   ---------- Hook options ---------------
-   ---------------------------------------
-*/
+/* ---------- Hook options --------------- */
 #define LWIP_HOOK_FILENAME "otbr_lwip_hooks.h"
 
 /*
@@ -229,7 +178,9 @@ extern int *__errno(void);
    ---------- Lwip Debug options ----------
    ----------------------------------------
 */
-#define LWIP_DEBUG       LWIP_DBG_OFF
+#define LWIP_STATS               1
+#define LWIP_STATS_DISPLAY       0
+#define LWIP_DEBUG       
 #define SYS_DEBUG        LWIP_DBG_OFF
 #define TIMERS_DEBUG     LWIP_DBG_OFF
 #define ETHARP_DEBUG     LWIP_DBG_OFF
@@ -282,6 +233,7 @@ extern int *__errno(void);
 #define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[size] __attribute__((aligned(4)))
 
 #define LWIP_DNS_SERVER                                  0
+#define BL_IP_FORWARD                                    0
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */
 

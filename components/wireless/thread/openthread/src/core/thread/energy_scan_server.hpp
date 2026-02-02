@@ -40,6 +40,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -49,7 +50,6 @@ namespace ot {
 
 /**
  * Implements handling Energy Scan Requests.
- *
  */
 class EnergyScanServer : public InstanceLocator, private NonCopyable
 {
@@ -59,7 +59,6 @@ class EnergyScanServer : public InstanceLocator, private NonCopyable
 public:
     /**
      * Initializes the object.
-     *
      */
     explicit EnergyScanServer(Instance &aInstance);
 

@@ -76,6 +76,8 @@
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
 
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
+
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                   0
 #define configMAX_CO_ROUTINE_PRIORITIES         (2)
@@ -108,8 +110,6 @@ header file. */
 void vApplicationMallocFailedHook(void);
 void vAssertCalled(void);
 
-#include <stdio.h>
-
 #define configASSERT(x)                        \
     if ((x) == 0) {                            \
         printf("file [%s]\r\n", __FILE__);     \
@@ -118,9 +118,12 @@ void vAssertCalled(void);
         printf("%s\r\n", (const char *)(#x));  \
         vAssertCalled();                       \
     }
+
 #if (configUSE_TICKLESS_IDLE != 0)
 void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
 #endif
+
 // #define portUSING_MPU_WRAPPERS
+
 #endif /* FREERTOS_CONFIG_H */

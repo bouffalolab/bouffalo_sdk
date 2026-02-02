@@ -1,19 +1,20 @@
-# Add common include directories (used by both RPC and wifi_ota)
+# Include directories
 sdk_add_include_directories(../partition)
-
-# Add partition component (required by flash operations and wifi_ota)
+sdk_add_include_directories(include)
+sdk_add_include_directories(../ipc_rpmsg_ops)
+# Common source files
 sdk_library_add_sources(../partition/partition.c)
-
-# Add wifi_ota component when FHOST is enabled (all WiFi demos)
-if(CONFIG_FHOST)
-    # Add source files to utils libraries
+if(CONFIG_LWIP)
     sdk_library_add_sources(src/wifi_ota.c)
     sdk_library_add_sources(src/wifi_ota_shell.c)
-
-    # Add include directories
-    sdk_add_include_directories(include)
-    sdk_add_include_directories(src)
-
-    # Set compile definitions for this component
-    sdk_add_compile_definitions(-DWIFI_OTA_BUFFER_SIZE=512)
+endif()
+if(CONFIG_IPC)
+    sdk_add_include_directories(../../ipc/ipm)
+    if(CONFIG_RPMSG_SERVICE_MODE_MASTER)
+        sdk_library_add_sources(../ipc_rpmsg_ops/flash_ops_rpmsg/flash_ops_rpmsg_master.c)
+        sdk_library_add_sources(../ipc_rpmsg_ops/rpmsg_master_init.c)
+    else()
+        sdk_library_add_sources(../ipc_rpmsg_ops/flash_ops_rpmsg/flash_ops_rpmsg_slave.c)
+        sdk_library_add_sources(../ipc_rpmsg_ops/rpmsg_slave_init.c)
+    endif()
 endif()

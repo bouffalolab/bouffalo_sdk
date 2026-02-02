@@ -4,15 +4,6 @@
 #include "shell.h"
 #include "bflb_flash.h"
 
-/* Dual-core OTA support: Use RPC for Flash operations on NP core */
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-#include "rpc/flash_rpc_remote.h"
-#define bflb_flash_erase flash_rpc_erase
-#define bflb_flash_write flash_rpc_write
-#define bflb_flash_read  flash_rpc_read
-#endif
-
-// External declaration for OTA state
 extern bool g_ota_initialized;
 extern bool g_ota_in_progress;
 
@@ -83,29 +74,6 @@ int cmd_wifi_ota_start(int argc, char **argv)
 }
 
 /**
- * @brief Shell command handler for wifi_ota_status
- * @param argc Argument count
- * @param argv Argument vector
- * @return int 0 on success
- */
-int cmd_wifi_ota_status(int argc, char **argv)
-{
-    if (!g_ota_initialized) {
-        printf("WiFi OTA component: Not initialized\r\n");
-    } else {
-        printf("WiFi OTA component: Initialized\r\n");
-    }
-
-    if (g_ota_in_progress) {
-        printf("OTA Status: In progress\r\n");
-    } else {
-        printf("OTA Status: Idle\r\n");
-    }
-
-    return 0;
-}
-
-/**
  * @brief Shell command handler for wifi_ota_info
  * @param argc Argument count
  * @param argv Argument vector
@@ -132,5 +100,4 @@ int cmd_wifi_ota_info(int argc, char **argv)
 
 // Register shell commands
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ota_start, wifi_ota_start, Start WiFi OTA update);
-SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ota_status, wifi_ota_status, Show OTA status);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ota_info, wifi_ota_info, Show OTA partition info);

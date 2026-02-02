@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-enum otbrError
+typedef enum
 {
     OTBR_ERROR_NONE               = 0, ///< No error.
 
@@ -25,7 +25,7 @@ enum otbrError
     OTBR_ERROR_INVALID_STATE      = -13, ///< The target isn't in a valid state.
     OTBR_ERROR_INFRA_LINK_CHANGED = -14, ///< The infrastructure link is changed.
     OTBR_ERROR_NO_MEM             = -15, ///< No memory available.
-};
+} otbrError_t;
 
 #ifdef __cplusplus
 }

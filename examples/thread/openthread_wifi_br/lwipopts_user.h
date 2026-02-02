@@ -32,10 +32,11 @@
 #ifndef LWIP_HDR_LWIPOPTS_H__
 #define LWIP_HDR_LWIPOPTS_H__
 
-#define LWIP_NETIF_API     1
-#define LWIP_DEBUG         1
-#define LWIP_STATS_DISPLAY 1
-#define SOCKETS_DEBUG      LWIP_DBG_OFF
+/* ---------- DEBUG options ---------- */
+#define LWIP_NETIF_API     	1
+#define LWIP_DEBUG         	1
+#define LWIP_STATS_DISPLAY 	1
+#define SOCKETS_DEBUG      	LWIP_DBG_OFF
 #ifdef BL616_DHCP_DEBUG
 #define DHCP_DEBUG LWIP_DBG_ON
 #else
@@ -45,7 +46,6 @@
 #define ICMP_DEBUG                    LWIP_DBG_OFF
 #define UDP_DEBUG                     LWIP_DBG_OFF
 #define ETHARP_DEBUG                  LWIP_DBG_OFF
-
 #define PBUF_DEBUG                    LWIP_DBG_OFF
 
 #define TCPIP_MBOX_SIZE               64
@@ -114,12 +114,12 @@
 #define LWIP_NETIF_HOSTNAME     1
 
 /* ---------- Socket options ---------- */
-#define LWIP_SOCKET 1
-#define LWIP_SOCKET_MAX_MEMBERSHIPS 300
-#define LWIP_SO_RCVTIMEO          1
-#define LWIP_SO_SNDTIMEO          1
-#define SO_REUSE                  1
-#define LWIP_TCP_KEEPALIVE        1
+#define LWIP_SOCKET 				1
+#define LWIP_SOCKET_MAX_MEMBERSHIPS	300
+#define LWIP_SO_RCVTIMEO          	1
+#define LWIP_SO_SNDTIMEO          	1
+#define SO_REUSE                  	1
+#define LWIP_TCP_KEEPALIVE			1
 
 /* ---------- LOOPIF options ---------- */
 #define LWIP_HAVE_LOOPIF              1
@@ -127,15 +127,15 @@
 #define LWIP_LOOPBACK_MAX_PBUFS       0
 
 /* ---------- IPv4 options ---------- */
-#define LWIP_IPV4 1
+#define LWIP_IPV4					1
 #define IP_FORWARD 1
 #define IP_NAPT 1
 
 /* ---------- IPv6 options ---------- */
-#define LWIP_IPV6 1
-#define LWIP_IPV6_SCOPES 0
-#define LWIP_IPV6_FORWARD 1
-#define LWIP_IPV6_NUM_ADDRESSES 20
+#define LWIP_IPV6 						1
+#define LWIP_IPV6_SCOPES 				0
+#define LWIP_IPV6_FORWARD 				1
+#define LWIP_IPV6_NUM_ADDRESSES 		20
 
 /* ---------- ICMP options ---------- */
 #define LWIP_ICMP 1
@@ -152,22 +152,22 @@
 #define LWIP_DNS_SERVER                 0
 
 /* ---------- Multi-cast options ---- */
-#define LWIP_IGMP               1
-#define LWIP_IPV6_MLD           1
-#define MEMP_NUM_MLD6_GROUP 300
-#define LWIP_MULTICAST_PING 1
-#define LWIP_MULTICAST_TX_OPTIONS 1
-#define LWIP_BROADCAST_PING           1
+#define LWIP_IGMP               		1
+#define LWIP_IPV6_MLD           		1
+#define MEMP_NUM_MLD6_GROUP 			300
+#define LWIP_MULTICAST_PING				1
+#define LWIP_MULTICAST_TX_OPTIONS 		1
+#define LWIP_BROADCAST_PING           	1
 
 
-#define LWIP_NETIF_STATUS_CALLBACK    1
-#define LWIP_NETIF_EXT_STATUS_CALLBACK 1
-#define LWIP_NETIF_LINK_CALLBACK 1
+#define LWIP_NETIF_STATUS_CALLBACK		1
+#define LWIP_NETIF_EXT_STATUS_CALLBACK 	1
+#define LWIP_NETIF_LINK_CALLBACK 		1
+
+/* ---------- Hook options --------------- */
+#define LWIP_HOOK_FILENAME "otbr_lwip_hooks.h"
 
 /* ---------- OTBR options ---------- */
-#define OTBR_LOCK_TCPIP_CORE()
-#define OTBR_UNLOCK_TCPIP_CORE()
-
 #define OTBR_MAX_RIO_ROUTE 20
 #define OTBR_RIO_TIMEOUT 0xffffffff / (1000 * 4)
 
@@ -191,5 +191,7 @@ extern int *__errno(void);
 #define LWIP_NETIF_TX_SINGLE_PBUF 1
 #endif
 #define LWIP_RAND()                                      ((u32_t)random())
+#define BL_IP_FORWARD                                    0
+#define BL_ENABLE_PACKET_SOCKET                          0
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

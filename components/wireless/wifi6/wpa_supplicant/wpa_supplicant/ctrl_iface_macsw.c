@@ -90,6 +90,7 @@ static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
 
     if (!strncmp(txt, "State###", sizeof("State###")-1) ||
         !strncmp(txt, "CTRL-EVENT-NETWORK-NOT-FOUND", sizeof("CTRL-EVENT-NETWORK-NOT-FOUND")-1) ||
+        !strncmp(txt, "AP-STA-ENCRYPTION-TYPE-MISMATCH", sizeof("AP-STA-ENCRYPTION-TYPE-MISMATCH")-1) ||
         !strncmp(txt, "WPS-SUCCESS", sizeof("WPS-SUCCESS")-1) ||
         !strncmp(txt, "CTRL-EVENT-CONNECTED", sizeof("CTRL-EVENT-CONNECTED")-1)) {
 

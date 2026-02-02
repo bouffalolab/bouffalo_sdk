@@ -3397,18 +3397,41 @@ BL_Err_Type GLB_UART_Sig_Swap_Set(uint8_t group, uint8_t swap)
 /****************************************************************************/ /**
  * @brief  swap SPI0 MOSI with MISO
  *
- * @param  newState: ENABLE or DISABLE
+ * @param  enable: ENABLE or DISABLE
  *
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(BL_Fun_Type newState)
+BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(uint8_t enable)
 {
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_PARM_CFG0);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_SPI_0_SWAP, newState);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_SPI_0_SWAP, enable);
     BL_WR_REG(GLB_BASE, GLB_PARM_CFG0, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  swap SPI1 MOSI with MISO
+ *
+ * @param  enable: ENABLE or DISABLE
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Swap_MCU_SPI_1_MOSI_With_MISO(uint8_t enable)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_HW_RSV3);
+    if (enable) {
+        tmpVal |= (1 << 30);
+    } else {
+        tmpVal &= ~(1 << 30);
+    }
+    BL_WR_REG(GLB_BASE, GLB_HW_RSV3, tmpVal);
 
     return SUCCESS;
 }

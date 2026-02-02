@@ -123,52 +123,57 @@
 
 #endif // __APPLE__
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
 
 namespace ot {
 namespace Posix {
 
-HdlcInterface::HdlcInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
-    : mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mReceiveFrameBuffer(aFrameBuffer)
+const char HdlcInterface::kLogModuleName[] = "HdlcIntface";
+
+HdlcInterface::HdlcInterface(const Url::Url &aRadioUrl)
+    : mReceiveFrameCallback(nullptr)
+    , mReceiveFrameContext(nullptr)
+    , mReceiveFrameBuffer(nullptr)
     , mSockFd(-1)
     , mBaudRate(0)
-    , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
-    , mRadioUrl(nullptr)
+    , mHdlcDecoder()
+    , mRadioUrl(aRadioUrl)
 {
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
-    mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
+    mInterfaceMetrics.mRcpInterfaceType = kSpinelInterfaceTypeHdlc;
 }
 
-otError HdlcInterface::Init(const Url::Url &aRadioUrl)
+otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrDie(stat(aRadioUrl.GetPath(), &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(stat(mRadioUrl.GetPath(), &st) == 0, OT_EXIT_ERROR_ERRNO);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aRadioUrl);
-        VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
+        mSockFd = OpenFile(mRadioUrl);
+        VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aRadioUrl);
-        VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
+        mSockFd = ForkPty(mRadioUrl);
+        VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aRadioUrl.GetPath());
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        LogCrit("Radio file '%s' not supported", mRadioUrl.GetPath());
+        ExitNow(error = OT_ERROR_FAILED);
     }
 
-    mRadioUrl = &aRadioUrl;
+    mHdlcDecoder.Init(aFrameBuffer, HandleHdlcFrame, this);
+    mReceiveFrameCallback = aCallback;
+    mReceiveFrameContext  = aCallbackContext;
+    mReceiveFrameBuffer   = &aFrameBuffer;
 
 exit:
     return error;
@@ -176,7 +181,14 @@ exit:
 
 HdlcInterface::~HdlcInterface(void) { Deinit(); }
 
-void HdlcInterface::Deinit(void) { CloseFile(); }
+void HdlcInterface::Deinit(void)
+{
+    CloseFile();
+
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mReceiveFrameBuffer   = nullptr;
+}
 
 void HdlcInterface::Read(void)
 {
@@ -271,8 +283,8 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct VirtualTimeEvent event;
 
-    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
-    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
+    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / OT_US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % OT_US_PER_S);
 
     virtualTimeSendSleepEvent(&timeout);
     virtualTimeReceiveEvent(&event);
@@ -292,8 +304,8 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
-    timeout.tv_sec = static_cast<time_t>(aTimeoutUs / US_PER_S);
-    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
+    timeout.tv_sec = static_cast<time_t>(aTimeoutUs / OT_US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % OT_US_PER_S);
 
     fd_set read_fds;
     fd_set error_fds;
@@ -380,7 +392,7 @@ otError HdlcInterface::WaitForWritable(void)
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
     uint64_t       now     = otPlatTimeGet();
-    uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
+    uint64_t       end     = now + kMaxWaitTime * OT_US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
     int            rval;
@@ -420,8 +432,8 @@ otError HdlcInterface::WaitForWritable(void)
         {
             uint64_t remain = end - now;
 
-            timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
-            timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+            timeout.tv_sec  = static_cast<time_t>(remain / OT_US_PER_S);
+            timeout.tv_usec = static_cast<suseconds_t>(remain % OT_US_PER_S);
         }
         else
         {
@@ -452,9 +464,8 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         struct termios tios;
         const char    *value;
         speed_t        speed;
-
-        int      stopBit  = 1;
-        uint32_t baudrate = 115200;
+        uint8_t        stopBit  = 1;
+        uint32_t       baudrate = 460800;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -479,10 +490,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             }
         }
 
-        if ((value = aRadioUrl.GetValue("uart-stop")) != nullptr)
-        {
-            stopBit = atoi(value);
-        }
+        IgnoreError(aRadioUrl.ParseUint8("uart-stop", stopBit));
 
         switch (stopBit)
         {
@@ -497,10 +505,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             break;
         }
 
-        if ((value = aRadioUrl.GetValue("uart-baudrate")))
-        {
-            baudrate = static_cast<uint32_t>(atoi(value));
-        }
+        IgnoreError(aRadioUrl.ParseUint32("uart-baudrate", baudrate));
 
         switch (baudrate)
         {
@@ -591,9 +596,24 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
 
         mBaudRate = baudrate;
 
-        if (aRadioUrl.GetValue("uart-flow-control") != nullptr)
+        if (aRadioUrl.HasParam("uart-flow-control"))
         {
             tios.c_cflag |= CRTSCTS;
+        }
+        else if (aRadioUrl.HasParam("uart-init-deassert"))
+        {
+            // When flow control is disabled, deassert DTR and RTS on init
+#ifndef __APPLE__
+            int flags;
+#endif
+
+            tios.c_cflag &= ~(CRTSCTS);
+
+#ifndef __APPLE__
+            // Deassert DTR and RTS
+            flags = TIOCM_DTR | TIOCM_RTS;
+            VerifyOrExit(ioctl(fd, TIOCMBIC, &flags) != -1, perror("tiocmbic"));
+#endif
         }
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
@@ -696,21 +716,26 @@ void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 
 void HdlcInterface::HandleHdlcFrame(otError aError)
 {
+    VerifyOrExit((mReceiveFrameCallback != nullptr) && (mReceiveFrameBuffer != nullptr));
+
     mInterfaceMetrics.mTransferredFrameCount++;
 
     if (aError == OT_ERROR_NONE)
     {
         mInterfaceMetrics.mRxFrameCount++;
-        mInterfaceMetrics.mRxFrameByteCount += mReceiveFrameBuffer.GetLength();
+        mInterfaceMetrics.mRxFrameByteCount += mReceiveFrameBuffer->GetLength();
         mInterfaceMetrics.mTransferredValidFrameCount++;
         mReceiveFrameCallback(mReceiveFrameContext);
     }
     else
     {
         mInterfaceMetrics.mTransferredGarbageFrameCount++;
-        mReceiveFrameBuffer.DiscardFrame();
-        otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
+        mReceiveFrameBuffer->DiscardFrame();
+        LogWarn("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
+
+exit:
+    return;
 }
 
 otError HdlcInterface::ResetConnection(void)
@@ -718,23 +743,23 @@ otError HdlcInterface::ResetConnection(void)
     otError  error = OT_ERROR_NONE;
     uint64_t end;
 
-    if (mRadioUrl->GetValue("uart-reset") != nullptr)
+    if (mRadioUrl.HasParam("uart-reset"))
     {
-        usleep(static_cast<useconds_t>(kRemoveRcpDelay) * US_PER_MS);
+        usleep(static_cast<useconds_t>(kRemoveRcpDelay) * OT_US_PER_MS);
         CloseFile();
 
-        end = otPlatTimeGet() + kResetTimeout * US_PER_MS;
+        end = otPlatTimeGet() + kResetTimeout * OT_US_PER_MS;
         do
         {
-            mSockFd = OpenFile(*mRadioUrl);
+            mSockFd = OpenFile(mRadioUrl);
             if (mSockFd != -1)
             {
                 ExitNow();
             }
-            usleep(static_cast<useconds_t>(kOpenFileDelay) * US_PER_MS);
+            usleep(static_cast<useconds_t>(kOpenFileDelay) * OT_US_PER_MS);
         } while (end > otPlatTimeGet());
 
-        otLogCritPlat("Failed to reopen UART connection after resetting the RCP device.");
+        LogCrit("Failed to reopen UART connection after resetting the RCP device.");
         error = OT_ERROR_FAILED;
     }
 
@@ -744,4 +769,4 @@ exit:
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE

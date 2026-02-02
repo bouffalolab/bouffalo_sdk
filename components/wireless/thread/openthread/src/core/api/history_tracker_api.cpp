@@ -35,11 +35,7 @@
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#include <openthread/history_tracker.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "utils/history_tracker.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -132,6 +128,19 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateExternalRouteHistory(AsCoreType(aIterator),
                                                                                           *aEntryAge);
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentEpskcEventHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateEpskcEventHistory(AsCoreType(aIterator),
+                                                                                       *aEntryAge);
+}
+#endif
 
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {

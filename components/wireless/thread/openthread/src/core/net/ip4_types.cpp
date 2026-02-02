@@ -32,7 +32,9 @@
  */
 
 #include "ip4_types.hpp"
-#include "ip6_address.hpp"
+
+#include "common/numeric_limits.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Ip4 {
@@ -59,6 +61,17 @@ Error Address::FromString(const char *aString, char aTerminatorChar)
 
     VerifyOrExit(*cur == aTerminatorChar);
     error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Address::ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aIp6Address.IsIp4Mapped(), error = kErrorParse);
+    SetBytes(&aIp6Address.GetBytes()[12]);
 
 exit:
     return error;
@@ -92,7 +105,7 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
     OT_ASSERT(Ip6::Prefix::IsValidNat64PrefixLength(aPrefixLength));
 
-    ip6Index = aPrefixLength / CHAR_BIT;
+    ip6Index = aPrefixLength / kBitsPerByte;
 
     for (uint8_t &i : mFields.m8)
     {
@@ -107,7 +120,7 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
 void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
 {
-    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (HostSwap32(aHost) & aCidr.HostMask());
+    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (BigEndian::HostSwap32(aHost) & aCidr.HostMask());
 }
 
 void Address::ToString(StringWriter &aWriter) const
@@ -199,6 +212,122 @@ Error Header::ParseFrom(const Message &aMessage)
 
 exit:
     return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Headers
+
+Error Headers::ParseFrom(const Message &aMessage)
+{
+    Error error = kErrorParse;
+
+    Clear();
+
+    SuccessOrExit(mIp4Header.ParseFrom(aMessage));
+
+    switch (mIp4Header.GetProtocol())
+    {
+    case kProtoUdp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mUdp));
+        break;
+    case kProtoTcp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mTcp));
+        break;
+    case kProtoIcmp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mIcmp));
+        break;
+    default:
+        break;
+    }
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+uint16_t Headers::GetSourcePort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetSourcePort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetSourcePort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+uint16_t Headers::GetDestinationPort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetDestinationPort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetDestinationPort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+void Headers::SetDestinationPort(uint16_t aDstPort)
+{
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        mHeader.mUdp.SetDestinationPort(aDstPort);
+        break;
+
+    case kProtoTcp:
+        mHeader.mTcp.SetDestinationPort(aDstPort);
+        break;
+
+    default:
+        break;
+    }
+}
+
+uint16_t Headers::GetChecksum(void) const
+{
+    uint16_t checksum = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        checksum = mHeader.mUdp.GetChecksum();
+        break;
+
+    case kProtoTcp:
+        checksum = mHeader.mTcp.GetChecksum();
+        break;
+
+    case kProtoIcmp:
+        checksum = mHeader.mIcmp.GetChecksum();
+        break;
+
+    default:
+        break;
+    }
+
+    return checksum;
 }
 
 } // namespace Ip4

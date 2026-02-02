@@ -53,10 +53,12 @@
  * @defgroup api-net                  IPv6 Networking
  * @{
  *
+ * @defgroup api-ble-secure           BLE Secure
  * @defgroup api-dns                  DNS
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
+ * @defgroup api-mdns                 Multicast DNS
  * @defgroup api-nat64                NAT64
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
@@ -153,11 +155,11 @@
  * @}
  *
  * @defgroup api-sntp                 SNTP
+ * @defgroup api-verhoeff-checksum    Verhoeff Checksum
  *
  * @}
  *
  * @}
- *
  */
 
 /**
@@ -168,14 +170,19 @@
  * @{
  *
  * @defgroup plat-alarm               Alarm
+ * @defgroup plat-ble                 BLE
  * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-dns                 DNS - Platform
+ * @defgroup plat-dns-sd              DNS-SD (mDNS)
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
+ * @defgroup plat-infra-if            Infrastructure Interface
  * @defgroup plat-logging             Logging - Platform
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous
+ * @defgroup plat-mdns                Multicast DNS
+ * @defgroup plat-multipan            Multipan
  * @defgroup plat-otns                Network Simulator
  * @defgroup plat-radio               Radio
  * @defgroup plat-settings            Settings
@@ -183,8 +190,6 @@
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
  * @defgroup plat-trel                TREL - Platform
- * @defgroup plat-infra-if            Infrastructure Interface
  *
  * @}
- *
  */

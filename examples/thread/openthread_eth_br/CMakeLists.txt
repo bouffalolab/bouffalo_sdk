@@ -3,18 +3,18 @@ cmake_minimum_required(VERSION 3.15)
 
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
-sdk_add_compile_definitions(-DCONFIG_OTBR_REST=${CONFIG_OTBR_REST})
+sdk_add_compile_definitions(-DWL_NIC=0)
 
-if(CONFIG_LMAC154_LOG)
-sdk_add_compile_definitions(-DAPP_PRINT=lmac154_log)
-else()
-sdk_add_compile_definitions(-DAPP_PRINT=printf)
+get_target_property(SDK_INTF_LIB_LINK_OPTIONS sdk_intf_lib INTERFACE_LINK_OPTIONS)
+list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS -nostartfiles)
+if(CONFIG_NEWLIB_STANDARD)
+    list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS --specs=nano.specs)
 endif()
-sdk_add_compile_definitions(-DCONFIG_LMAC154_LOG=${CONFIG_LMAC154_LOG})
 
-if (CONFIG_SHELL AND CONFIG_LMAC154_CMD) 
-sdk_add_compile_definitions(-DCONFIG_LMAC154_CMD=1)
-endif()
+set_target_properties(sdk_intf_lib PROPERTIES INTERFACE_LINK_OPTIONS "")
+foreach(item ${SDK_INTF_LIB_LINK_OPTIONS})
+    sdk_add_link_options(${item})
+endforeach()
 
 sdk_add_include_directories(.)
 

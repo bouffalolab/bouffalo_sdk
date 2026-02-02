@@ -5,17 +5,12 @@
 extern "C" {
 #endif
 
-#include <FreeRTOS.h>
-#include <portmacro.h>
-#include <task.h>
-
-#include <openthread-core-config.h>
 #include <openthread/thread.h>
 #include <openthread/logging.h>
 
 #define VERSION_OT_SRC_MAJOR 1
-#define VERSION_OT_SRC_MINOR 6
-#define VERSION_OT_SRC_PATCH 21
+#define VERSION_OT_SRC_MINOR 7
+#define VERSION_OT_SRC_PATCH 1
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 
@@ -399,7 +394,7 @@ void otrAppProcess(ot_system_event_t sevent);
  * @return None
  *
 *******************************************************************************/
-#define OT_APP_NOTIFY_ISR(ebit)             otrNotifyEvent(ebit & OT_SYSTEM_EVENT_APP)
+#define OT_APP_NOTIFY_ISR(ebit)             otrNotifyEvent(ebit & OT_SYSTEM_EVENT_APP_MASK)
 
 
 /****************************************************************************//**
@@ -412,7 +407,7 @@ void otrAppProcess(ot_system_event_t sevent);
  * @return None
  *
 *******************************************************************************/
-#define OT_APP_NOTIFY(ebit)                 otrNotifyEvent(ebit & OT_SYSTEM_EVENT_APP)
+#define OT_APP_NOTIFY(ebit)                 otrNotifyEvent(ebit & OT_SYSTEM_EVENT_APP_MASK)
 
 /****************************************************************************//**
  * @brief  An interface for nxspi to notify rxd ready.

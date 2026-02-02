@@ -33,14 +33,7 @@
 
 #include "ip6_mpl.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
-#include "common/random.hpp"
-#include "common/serial_number.hpp"
-#include "net/ip6.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -52,7 +45,7 @@ Mpl::Mpl(Instance &aInstance)
     , mRetransmissionTimer(aInstance)
 #endif
 {
-    memset(mSeedSet, 0, sizeof(mSeedSet));
+    ClearAllBytes(mSeedSet);
 }
 
 void MplOption::Init(SeedIdLength aSeedIdLength)
@@ -76,7 +69,7 @@ void MplOption::Init(SeedIdLength aSeedIdLength)
 
 void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
 {
-    if (aAddress == Get<Mle::Mle>().GetMeshLocal16())
+    if (aAddress == Get<Mle::Mle>().GetMeshLocalRloc())
     {
         // Seed ID can be elided when `aAddress` is RLOC.
         aOption.Init(MplOption::kSeedIdLength0);
@@ -90,14 +83,14 @@ void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
     aOption.SetSequence(mSequence++);
 }
 
-Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool aIsOutbound, bool &aReceive)
+Error Mpl::ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive)
 {
     Error     error;
     MplOption option;
 
     // Read the min size bytes first, then check the expected
     // `SeedIdLength` and read the full `MplOption` if needed.
-    SuccessOrExit(error = aMessage.Read(aOffset, &option, MplOption::kMinSize));
+    SuccessOrExit(error = aMessage.Read(aOffsetRange, &option, MplOption::kMinSize));
 
     switch (option.GetSeedIdLength())
     {
@@ -108,7 +101,7 @@ Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAd
         break;
 
     case MplOption::kSeedIdLength2:
-        SuccessOrExit(error = aMessage.Read(aOffset, option));
+        SuccessOrExit(error = aMessage.Read(aOffsetRange, option));
         break;
 
     case MplOption::kSeedIdLength8:
@@ -122,10 +115,10 @@ Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAd
     if (error == kErrorNone)
     {
 #if OPENTHREAD_FTD
-        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence(), aIsOutbound);
+        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence());
 #endif
     }
-    else if (aIsOutbound)
+    else if (!aMessage.IsOriginThreadNetif())
     {
         aReceive = false;
         // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
@@ -311,9 +304,9 @@ void Mpl::HandleTimeTick(void)
 
 #if OPENTHREAD_FTD
 
-uint8_t Mpl::GetTimerExpirations(void) const
+uint8_t Mpl::DetermineMaxRetransmissions(void) const
 {
-    uint8_t timerExpirations = 0;
+    uint8_t maxRetx = 0;
 
     switch (Get<Mle::Mle>().GetRole())
     {
@@ -322,19 +315,19 @@ uint8_t Mpl::GetTimerExpirations(void) const
         break;
 
     case Mle::kRoleChild:
-        timerExpirations = kChildTimerExpirations;
+        maxRetx = kChildRetransmissions;
         break;
 
     case Mle::kRoleRouter:
     case Mle::kRoleLeader:
-        timerExpirations = kRouterTimerExpirations;
+        maxRetx = kRouterRetransmissions;
         break;
     }
 
-    return timerExpirations;
+    return maxRetx;
 }
 
-void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
+void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence)
 {
     Error    error       = kErrorNone;
     Message *messageCopy = nullptr;
@@ -349,19 +342,26 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     interval = kDataMessageInterval;
 #endif
 
-    VerifyOrExit(GetTimerExpirations() > 0);
+    VerifyOrExit(DetermineMaxRetransmissions() > 0);
     VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
 
-    if (!aIsOutbound)
+    if (aMessage.IsOriginThreadNetif())
     {
         IgnoreError(aMessage.Read(Header::kHopLimitFieldOffset, hopLimit));
         VerifyOrExit(hopLimit-- > 1, error = kErrorDrop);
         messageCopy->Write(Header::kHopLimitFieldOffset, hopLimit);
     }
 
+    // If the message originates from Thread Netif (i.e., it was
+    // received over Thread radio), set the `mTransmissionCount` to
+    // zero. Otherwise, the message originates from the host and will
+    // be forwarded by `Ip6` to the Thread mesh, so the message itself
+    // will be the first transmission and we set `mTransmissionCount`
+    // to one.
+
     metadata.mSeedId            = aSeedId;
     metadata.mSequence          = aSequence;
-    metadata.mTransmissionCount = aIsOutbound ? 1 : 0;
+    metadata.mTransmissionCount = aMessage.IsOriginThreadNetif() ? 0 : 1;
     metadata.mIntervalOffset    = 0;
     metadata.GenerateNextTransmissionTime(TimerMilli::GetNow(), interval);
 
@@ -376,87 +376,75 @@ exit:
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    TimeMilli now      = TimerMilli::GetNow();
-    TimeMilli nextTime = now.GetDistantFuture();
-    Metadata  metadata;
+    NextFireTime nextTime;
 
     for (Message &message : mBufferedMessageSet)
     {
+        Metadata metadata;
+        Message *messageCopy;
+        uint8_t  maxRetx;
+
         metadata.ReadFrom(message);
 
-        if (now < metadata.mTransmissionTime)
+        if (nextTime.GetNow() < metadata.mTransmissionTime)
         {
-            nextTime = Min(nextTime, metadata.mTransmissionTime);
+            nextTime.UpdateIfEarlier(metadata.mTransmissionTime);
+            continue;
+        }
+
+        metadata.mTransmissionCount++;
+
+        maxRetx = DetermineMaxRetransmissions();
+
+        if (metadata.mTransmissionCount > maxRetx)
+        {
+            // If the number of tx already exceeds the limit, remove
+            // the message. This situation can potentially happen on
+            // a device role change, which then updates the max MPL
+            // retx.
+
+            mBufferedMessageSet.DequeueAndFree(message);
+            continue;
+        }
+
+        if (metadata.mTransmissionCount < maxRetx)
+        {
+            metadata.GenerateNextTransmissionTime(nextTime.GetNow(), kDataMessageInterval);
+            metadata.UpdateIn(message);
+
+            nextTime.UpdateIfEarlier(metadata.mTransmissionTime);
+
+            messageCopy = message.Clone();
         }
         else
         {
-            uint8_t timerExpirations = GetTimerExpirations();
+            // This is the last retx of message, we can use the
+            // `message` directly.
 
-            // Update the number of transmission timer expirations.
-            metadata.mTransmissionCount++;
+            mBufferedMessageSet.Dequeue(message);
+            messageCopy = &message;
+        }
 
-            if (metadata.mTransmissionCount < timerExpirations)
+        if (messageCopy != nullptr)
+        {
+            if (metadata.mTransmissionCount > 1)
             {
-                Message *messageCopy = message.Clone(message.GetLength() - sizeof(Metadata));
+                // Mark all transmissions after the first one as "MPL
+                // retx". This is used to decide whether to send this
+                // message to the device's sleepy children.
 
-                if (messageCopy != nullptr)
-                {
-                    if (metadata.mTransmissionCount > 1)
-                    {
-                        messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
-                    }
-
-                    Get<Ip6>().EnqueueDatagram(*messageCopy);
-                }
-
-                metadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
-                metadata.UpdateIn(message);
-
-                nextTime = Min(nextTime, metadata.mTransmissionTime);
+                messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
             }
-            else
-            {
-                mBufferedMessageSet.Dequeue(message);
 
-                if (metadata.mTransmissionCount == timerExpirations)
-                {
-                    if (metadata.mTransmissionCount > 1)
-                    {
-                        message.SetSubType(Message::kSubTypeMplRetransmission);
-                    }
-
-                    metadata.RemoveFrom(message);
-                    Get<Ip6>().EnqueueDatagram(message);
-                }
-                else
-                {
-                    // Stop retransmitting if the number of timer expirations is already exceeded.
-                    message.Free();
-                }
-            }
+            metadata.RemoveFrom(*messageCopy);
+            messageCopy->SetLoopbackToHostAllowed(true);
+            messageCopy->SetOrigin(Message::kOriginHostTrusted);
+            Get<Ip6>().EnqueueDatagram(*messageCopy);
         }
     }
 
-    if (nextTime < now.GetDistantFuture())
-    {
-        mRetransmissionTimer.FireAt(nextTime);
-    }
+    mRetransmissionTimer.FireAt(nextTime);
 }
-
-void Mpl::Metadata::ReadFrom(const Message &aMessage)
-{
-    uint16_t length = aMessage.GetLength();
-
-    OT_ASSERT(length >= sizeof(*this));
-    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
-}
-
-void Mpl::Metadata::RemoveFrom(Message &aMessage) const
-{
-    SuccessOrAssert(aMessage.SetLength(aMessage.GetLength() - sizeof(*this)));
-}
-
-void Mpl::Metadata::UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
 
 void Mpl::Metadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
 {

@@ -18,6 +18,7 @@
 #ifdef CFG_IPV6
 #include "lwip/tcpip.h"
 #include "lwip/ip_addr.h"
+#include "lwip/ip6_addr.h"
 #endif
 #include "macsw.h"
 

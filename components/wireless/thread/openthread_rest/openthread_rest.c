@@ -4,6 +4,7 @@
 #include <lwip/err.h>
 #include <lwip/ip6_addr.h>
 #include <lwip/timeouts.h>
+#include <lwip/pbuf.h>
 
 #include <openthread/border_agent.h>
 #include <openthread/border_router.h>
@@ -30,7 +31,7 @@
 
 #define VERSION_STRING_HELPER(x, y, z) #x "." #y "." #z
 #define VERSION_STRING(x, y, z) VERSION_STRING_HELPER(x, y, z)
-#define VERSION_REST_STRING VERSION_STRING(VERSION_OT_UTILS_MAJOR, VERSION_OT_UTILS_MINOR, VERSION_OT_UTILS_PATCH)
+#define VERSION_REST_STRING VERSION_STRING(VERSION_OT_BR_MAJOR, VERSION_OT_BR_MINOR, VERSION_OT_BR_PATCH)
 
 #define HTTP_SERVER_CONTENT_TYPE_JSON \
 "Server: bflb-otbr/" VERSION_REST_STRING "\r\n"\
@@ -1255,8 +1256,7 @@ static int openthread_rest_put_dataset_raw (http_accept_type_t accept_type, void
     if (errorOt == OT_ERROR_NOT_FOUND) {
         VerifyOrExit(otDatasetCreateNewNetwork(otrGetInstance(), &dataset) == OT_ERROR_NONE, 
                      resp_state = http_resp_state_internal_server_error);
-        VerifyOrExit(otDatasetConvertToTlvs(&dataset, &datasetTlvs) == OT_ERROR_NONE, 
-                     resp_state = http_resp_state_internal_server_error);
+        otDatasetConvertToTlvs(&dataset, &datasetTlvs);
         resp_state = http_resp_state_created;
     }
 

@@ -330,7 +330,7 @@ void *kmalloc(size_t size, uint32_t flags)
     if (ptr) {
         LOG_D("Allocated %zu bytes at %p\r\n", size, ptr);
     } else {
-        LOG_W("Failed to allocate %zu bytes\r\n", size);
+        LOG_D("Failed to allocate %zu bytes\r\n", size);
     }
 
     return ptr;
@@ -450,13 +450,13 @@ void *krealloc(void *ptr, size_t newsize)
     } else {
         /* Allocator realloc failed */
         manager->stats.total_malloc_failures++;
-        LOG_W("Allocator realloc failed for %zu bytes\r\n", newsize);
+        LOG_D("Allocator realloc failed for %zu bytes\r\n", newsize);
     }
 #else
     if (new_ptr) {
         LOG_D("Allocator realloc succeeded: %p -> %p, size: %zu\r\n", ptr, new_ptr, newsize);
     } else {
-        LOG_W("Allocator realloc failed for %zu bytes\r\n", newsize);
+        LOG_D("Allocator realloc failed for %zu bytes\r\n", newsize);
     }
 #endif
 

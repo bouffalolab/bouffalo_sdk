@@ -42,6 +42,7 @@
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
+#include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 
 namespace ot {
@@ -53,7 +54,6 @@ namespace Storage {
 
 /**
  * Defines the key types.
- *
  */
 enum KeyType : uint8_t
 {
@@ -65,7 +65,6 @@ enum KeyType : uint8_t
 
 /**
  * Defines the key algorithms.
- *
  */
 enum KeyAlgorithm : uint8_t
 {
@@ -84,7 +83,6 @@ constexpr uint8_t kUsageVerifyHash = OT_CRYPTO_KEY_USAGE_VERIFY_HASH; ///< Key U
 
 /**
  * Defines the key storage types.
- *
  */
 enum StorageType : uint8_t
 {
@@ -94,18 +92,91 @@ enum StorageType : uint8_t
 
 /**
  * This datatype represents the key reference.
- *
  */
 typedef otCryptoKeyRef KeyRef;
 
-constexpr KeyRef kInvalidKeyRef               = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
-constexpr KeyRef kNetworkKeyRef               = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1;
-constexpr KeyRef kPskcRef                     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2;
-constexpr KeyRef kActiveDatasetNetworkKeyRef  = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 3;
-constexpr KeyRef kActiveDatasetPskcRef        = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 4;
-constexpr KeyRef kPendingDatasetNetworkKeyRef = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 5;
-constexpr KeyRef kPendingDatasetPskcRef       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 6;
-constexpr KeyRef kEcdsaRef                    = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 7;
+constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+/**
+ * Manages and selects the `KeyRef` values.
+ */
+class KeyRefManager : public InstanceLocator
+{
+public:
+    /**
+     * Represents difference `KeyRef` types.
+     */
+    enum Type : uint8_t
+    {
+        kNetworkKey               = 1,
+        kPskc                     = 2,
+        kActiveDatasetNetworkKey  = 3,
+        kActiveDatasetPskc        = 4,
+        kPendingDatasetNetworkKey = 5,
+        kPendingDatasetPskc       = 6,
+        kEcdsa                    = 7,
+    };
+
+    /**
+     * Initializes the `KeyRefManager`.
+     *
+     * @param[in]  aInstance     A reference to the OpenThread instance.
+     */
+    explicit KeyRefManager(Instance &aInstance)
+        : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        , mExtraOffset(0)
+#endif
+    {
+    }
+
+    /**
+     * Determines the `KeyRef` to use for a given `Type`.
+     *
+     * @param[in] aType  The key ref type.
+     *
+     * @returns The `KeyRef` associated with @p aType.
+     */
+    KeyRef KeyRefFor(Type aType)
+    {
+        KeyRef keyRef = kPsaItsNvmOffset + aType;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        keyRef += mExtraOffset;
+#endif
+        return keyRef;
+    }
+
+    /**
+     * Delete all the persistent keys.
+     */
+    void DestroyPersistentKeys(void);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    static constexpr uint32_t kKeyRefExtraOffset = 32; ///< Recommended extra offset to use.
+
+    /**
+     * Sets the additional `KeyRef` offset value to use when determining the `KeyRef`s.
+     *
+     * This is intended for when `MULTIPLE_INSTANCE_ENABLE` is enabled to ensure different `ot::Instance`s use
+     * different `KeyRef` value ranges.
+     *
+     * @param[in] aOffset  The offset value.
+     */
+    void SetKeyRefExtraOffset(uint32_t aOffset) { mExtraOffset = aOffset; }
+#endif
+
+private:
+    static constexpr KeyRef kPsaItsNvmOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    uint32_t mExtraOffset;
+#endif
+};
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
  * Determine if a given `KeyRef` is valid or not.
@@ -114,7 +185,6 @@ constexpr KeyRef kEcdsaRef                    = OPENTHREAD_CONFIG_PSA_ITS_NVM_OF
  *
  * @retval TRUE   If @p aKeyRef is valid.
  * @retval FALSE  If @p aKeyRef is not valid.
- *
  */
 inline bool IsKeyRefValid(KeyRef aKeyRef) { return (aKeyRef < kInvalidKeyRef); }
 
@@ -132,7 +202,6 @@ inline bool IsKeyRefValid(KeyRef aKeyRef) { return (aKeyRef < kInvalidKeyRef); }
  * @retval kErrorNone          Successfully imported the key.
  * @retval kErrorFailed        Failed to import the key.
  * @retval kErrorInvalidArgs   @p aKey was set to `nullptr`.
- *
  */
 inline Error ImportKey(KeyRef        &aKeyRef,
                        KeyType        aKeyType,
@@ -158,7 +227,6 @@ inline Error ImportKey(KeyRef        &aKeyRef,
  * @retval kErrorNone          Successfully exported  @p aKeyRef.
  * @retval kErrorFailed        Failed to export @p aKeyRef.
  * @retval kErrorInvalidArgs   @p aBuffer was `nullptr`.
- *
  */
 inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t &aKeyLen)
 {
@@ -169,7 +237,6 @@ inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size
  * Destroy a key stored in PSA ITS.
  *
  * @param[in]   aKeyRef   The key ref to be removed.
- *
  */
 inline void DestroyKey(KeyRef aKeyRef)
 {
@@ -186,15 +253,8 @@ inline void DestroyKey(KeyRef aKeyRef)
  *
  * @retval true                 Key Ref passed has a key associated in PSA.
  * @retval false                Key Ref passed is invalid and has no key associated in PSA.
- *
  */
 inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
-
-/**
- * Delete all the persistent keys stored in PSA ITS.
- *
- */
-void DestroyPersistentKeys(void);
 
 } // namespace Storage
 
@@ -205,7 +265,6 @@ void DestroyPersistentKeys(void);
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
  * or a `KeyRef` (if `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled).
- *
  */
 class Key : public otCryptoKey, public Clearable<Key>
 {
@@ -215,7 +274,6 @@ public:
      *
      * @param[in] aKeyBytes   A pointer to buffer containing the key.
      * @param[in] aKeyLength  The key length (number of bytes in @p aKeyBytes).
-     *
      */
     void Set(const uint8_t *aKeyBytes, uint16_t aKeyLength)
     {
@@ -230,7 +288,6 @@ public:
      * method returns `nullptr`.
      *
      * @returns The pointer to the byte array containing the key, or `nullptr` if the `Key` represents a `KeyRef`
-     *
      */
     const uint8_t *GetBytes(void) const { return mKey; }
 
@@ -242,7 +299,6 @@ public:
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`), or zero if `Key` represents a
      *          `keyRef`.
-     *
      */
     uint16_t GetLength(void) const { return mKeyLength; }
 
@@ -252,7 +308,6 @@ public:
      *
      * @retval TRUE  The `Key` represents a `KeyRef`
      * @retval FALSE The `Key` represents a literal key.
-     *
      */
     bool IsKeyRef(void) const { return (mKey == nullptr); }
 
@@ -262,7 +317,6 @@ public:
      * MUST be used when `IsKeyRef()` returns `true`, otherwise its behavior is undefined.
      *
      * @returns The `KeyRef` associated with `Key`.
-     *
      */
     Storage::KeyRef GetKeyRef(void) const { return mKeyRef; }
 
@@ -270,7 +324,6 @@ public:
      * Sets the `Key` as a `KeyRef`.
      *
      * @param[in] aKeyRef   The `KeyRef` to set from.
-     *
      */
     void SetAsKeyRef(Storage::KeyRef aKeyRef)
     {
@@ -290,7 +343,6 @@ public:
      *
      * @retval kErrorNone    Successfully extracted the key, @p aKeyBuffer and @p aKeyLength are updated.
      * @retval kErrorNoBufs  Key does not fit in @p aKeyBuffer (extracted key length is larger than @p aKeyLength).
-     *
      */
     Error ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const;
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -298,7 +350,6 @@ public:
 
 /**
  * Represents a literal key derived from a `Key`.
- *
  */
 class LiteralKey : public Clearable<LiteralKey>, private NonCopyable
 {
@@ -312,7 +363,6 @@ public:
      * a `KeyRef` then the literal key is extracted. In this case, the extracted key MUST be smaller than `kMaxSize`.
      *
      * @param[in] aKey   The key to convert from.
-     *
      */
     explicit LiteralKey(const Key &aKey);
 
@@ -320,7 +370,6 @@ public:
      * Gets the pointer to the byte array containing the literal key.
      *
      * @returns The pointer to the byte array containing the literal key.
-     *
      */
     const uint8_t *GetBytes(void) const { return mKey; }
 
@@ -328,7 +377,6 @@ public:
      * Gets the key length.
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`).
-     *
      */
     uint16_t GetLength(void) const { return mLength; }
 

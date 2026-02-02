@@ -33,6 +33,7 @@
 #include "hd_sdio_manage.h"
 #include "hd_debugfs.h"
 
+#define CONFIG_SDIO_DNLD_ZEROCOPY       (0)
 /**
  * @brief Lock SDIO management structure for thread safety
  * @param[in] sdio_manage Pointer to SDIO management structure
@@ -80,7 +81,12 @@ static int hd_sdio_dnld_polling(struct hd_sdio_manage *sdio_manage)
         return true;
     }
 
+#if CONFIG_SDIO_DNLD_ZEROCOPY
     dnld_desc.buff = skb->data;
+#else
+    memcpy(sdio_manage->dnld_trans_buf, skb->data, skb->len);
+    dnld_desc.buff = sdio_manage->dnld_trans_buf;
+#endif
     dnld_desc.data_len = skb->len;
     dnld_desc.buff_len = sdio_manage->sdio_card->dnld_max_size;
 

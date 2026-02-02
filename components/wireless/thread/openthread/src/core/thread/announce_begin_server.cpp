@@ -33,18 +33,7 @@
 
 #include "announce_begin_server.hpp"
 
-#include <openthread/platform/radio.h>
-
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -71,7 +60,7 @@ void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Message &aMessage, 
     uint16_t period;
 
     VerifyOrExit(aMessage.IsPostRequest());
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
 
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMessage, count));
     SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));

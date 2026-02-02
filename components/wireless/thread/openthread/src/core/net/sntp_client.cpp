@@ -31,14 +31,7 @@
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "net/udp6.hpp"
-#include "thread/thread_netif.hpp"
+#include "instance/instance.hpp"
 
 /**
  * @file
@@ -51,7 +44,7 @@ namespace Sntp {
 RegisterLogModule("SntpClnt");
 
 Client::Client(Instance &aInstance)
-    : mSocket(aInstance)
+    : mSocket(aInstance, *this)
     , mRetransmissionTimer(aInstance)
     , mUnixEra(0)
 {
@@ -61,8 +54,8 @@ Error Client::Start(void)
 {
     Error error;
 
-    SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Bind(0));
 
 exit:
     return error;
@@ -193,7 +186,7 @@ exit:
     if (error != kErrorNone)
     {
         FreeMessage(messageCopy);
-        LogWarn("Failed to send SNTP request: %s", ErrorToString(error));
+        LogWarnOnError(error, "send SNTP request");
     }
 }
 
@@ -227,8 +220,7 @@ void Client::FinalizeSntpTransaction(Message             &aQuery,
 
 void Client::HandleRetransmissionTimer(void)
 {
-    TimeMilli        now      = TimerMilli::GetNow();
-    TimeMilli        nextTime = now.GetDistantFuture();
+    NextFireTime     nextTime;
     QueryMetadata    queryMetadata;
     Ip6::MessageInfo messageInfo;
 
@@ -236,7 +228,7 @@ void Client::HandleRetransmissionTimer(void)
     {
         queryMetadata.ReadFrom(message);
 
-        if (now >= queryMetadata.mTransmissionTime)
+        if (nextTime.GetNow() >= queryMetadata.mTransmissionTime)
         {
             if (queryMetadata.mRetransmissionCount >= kMaxRetransmit)
             {
@@ -247,7 +239,7 @@ void Client::HandleRetransmissionTimer(void)
 
             // Increment retransmission counter and timer.
             queryMetadata.mRetransmissionCount++;
-            queryMetadata.mTransmissionTime = now + kResponseTimeout;
+            queryMetadata.mTransmissionTime = nextTime.GetNow() + kResponseTimeout;
             queryMetadata.UpdateIn(message);
 
             // Retransmit
@@ -258,18 +250,10 @@ void Client::HandleRetransmissionTimer(void)
             SendCopy(message, messageInfo);
         }
 
-        nextTime = Min(nextTime, queryMetadata.mTransmissionTime);
+        nextTime.UpdateIfEarlier(queryMetadata.mTransmissionTime);
     }
 
-    if (nextTime < now.GetDistantFuture())
-    {
-        mRetransmissionTimer.FireAt(nextTime);
-    }
-}
-
-void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Client *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
+    mRetransmissionTimer.FireAt(nextTime);
 }
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

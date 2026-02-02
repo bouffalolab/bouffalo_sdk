@@ -297,19 +297,43 @@ enum {
 };
 
 // wl80211 control api
-// return 0 : ok, negative : fail
+// Return value: 0 on success, negative value on error
 int wl80211_cntrl(int cmd, ...);
 
+/**
+ * Start WiFi scan
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Country not set
+ *   -2 : Scan not allowed in monitor mode
+ */
 static inline int wl80211_scan(struct wl80211_scan_params *param)
 {
     return wl80211_cntrl(WL80211_CTRL_SCAN, param);
 }
 
+/**
+ * Connect to WiFi AP as STA
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Connect not allowed in monitor mode
+ *   -2 : Connect already in progress
+ *   -3 : Invalid SSID
+ *   -4 : Invalid channel
+ *   -5 : Invalid IE parameter
+ */
 static inline int wl80211_sta_connect(struct wl80211_connect_params *param)
 {
     return wl80211_cntrl(WL80211_CTRL_STA_CONNECT, param);
 }
 
+/**
+ * Disconnect from WiFi AP
+ *
+ * Return value: 0 on success
+ */
 static inline int wl80211_sta_disconnect(void)
 {
     return wl80211_cntrl(WL80211_CTRL_STA_DISCONNECT);
@@ -415,11 +439,23 @@ static inline int wl80211_sta_is_connected(void)
     return wl80211_glb.link_up;
 }
 
+/**
+ * Set STA power save mode
+ *
+ * Return value: 0 on success, negative value on error
+ */
 static inline int wl80211_sta_set_ps(int mode)
 {
     return wl80211_cntrl(WL80211_CTRL_STA_SET_PS_MODE, mode);
 }
 
+/**
+ * Get STA connection BSSID
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : STA not connected
+ */
 static inline int wl80211_sta_get_bssid(uint8_t bssid[6])
 {
     if (!wl80211_sta_is_connected()) {
@@ -431,6 +467,13 @@ static inline int wl80211_sta_get_bssid(uint8_t bssid[6])
     return 0;
 }
 
+/**
+ * Get STA connection channel
+ *
+ * Return value:
+ *   >=0 : Channel number
+ *   -1  : STA not connected
+ */
 static inline int wl80211_sta_get_channel(void)
 {
     if (!wl80211_sta_is_connected()) {
@@ -441,6 +484,13 @@ static inline int wl80211_sta_get_channel(void)
     return wl80211_glb.last_connect_params->channel;
 }
 
+/**
+ * Get STA association ID
+ *
+ * Return value:
+ *   >=0 : AID
+ *   -1  : STA not connected
+ */
 static inline int wl80211_sta_get_aid(void)
 {
     if (!wl80211_sta_is_connected()) {
@@ -450,6 +500,13 @@ static inline int wl80211_sta_get_aid(void)
     return wl80211_glb.aid;
 }
 
+/**
+ * Get STA connection SSID
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : STA not connected
+ */
 static inline int wl80211_sta_get_ssid(char ssid[33])
 {
     if (!wl80211_sta_is_connected()) {
@@ -461,6 +518,13 @@ static inline int wl80211_sta_get_ssid(char ssid[33])
     return 0;
 }
 
+/**
+ * Get STA connection password
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : STA not connected
+ */
 static inline int wl80211_sta_get_password(char password[65])
 {
     if (!wl80211_sta_is_connected()) {
@@ -472,6 +536,11 @@ static inline int wl80211_sta_get_password(char password[65])
     return 0;
 }
 
+/**
+ * Get STA PMK
+ *
+ * Return value: 0 on success, -1 on failure (not implemented)
+ */
 static inline int wl80211_sta_get_pmk(void)
 {
     // TODO
@@ -483,12 +552,18 @@ static inline const struct ieee80211_dot_d *wl80211_get_country(void)
     return wl80211_glb.country;
 }
 
-// wl80211 set country code api
-// return 0 : ok, negative : fail
+/**
+ * Set WiFi country code
+ *
+ * Return value: 0 on success, negative value on error
+ */
 int wl80211_set_country_code(const char *country_code);
 
-// wl80211 get country code api
-// return 0 : ok, negative : fail
+/**
+ * Get WiFi country code
+ *
+ * Return value: country code string, or NULL if not set
+ */
 static inline const char *wl80211_get_country_code(void)
 {
     if (!wl80211_glb.country) {
@@ -498,31 +573,71 @@ static inline const char *wl80211_get_country_code(void)
     return wl80211_glb.country->code;
 }
 
+/**
+ * Start AP mode
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : AP mode already enabled
+ *   -2 : AP not allowed in monitor mode
+ *   -3 : Failed to start AP (VIF creation failed)
+ */
 static inline int wl80211_ap_start(struct wl80211_ap_settings *ap_settings)
 {
     return wl80211_cntrl(WL80211_CTRL_AP_START, ap_settings);
 }
 
+/**
+ * Stop AP mode
+ *
+ * Return value: 0 on success
+ */
 static inline int wl80211_ap_stop(void)
 {
     return wl80211_cntrl(WL80211_CTRL_AP_STOP);
 }
 
+/**
+ * Get AP mode status
+ *
+ * Return value: 1 if AP enabled, 0 otherwise
+ */
 static inline int wl80211_ap_status(void)
 {
     return wl80211_glb.ap_en;
 }
 
+/**
+ * Start monitor mode
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Monitor mode already enabled
+ *   -2 : Monitor not allowed while AP enabled
+ *   -3 : Failed to create monitor VIF
+ */
 static inline int wl80211_monitor_start(struct wl80211_monitor_settings *mon_settings)
 {
     return wl80211_cntrl(WL80211_CTRL_MONITOR_START, mon_settings);
 }
 
+/**
+ * Stop monitor mode
+ *
+ * Return value:
+ *   0  : Success
+ *   -1 : Failed to restore STA VIF after monitor stop
+ */
 static inline int wl80211_monitor_stop(void)
 {
     return wl80211_cntrl(WL80211_CTRL_MONITOR_STOP);
 }
 
+/**
+ * Get monitor mode status
+ *
+ * Return value: 1 if monitor enabled, 0 otherwise
+ */
 static inline int wl80211_monitor_status(void)
 {
     return wl80211_glb.monitor_en;

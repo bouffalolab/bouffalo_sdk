@@ -41,12 +41,15 @@ static void print_usage(const char *prog_name)
     fprintf(stderr, "  version                        Show version\n");
     fprintf(stderr, "  reboot                         Reboot WiFi module\n");
     fprintf(stderr, "  ota <file.bin>                 OTA firmware upgrade\n");
+    fprintf(stderr, "  start_ap <ssid> [password]     Start SoftAP\n");
+    fprintf(stderr, "  stop_ap                        Stop SoftAP\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Examples:\n");
     fprintf(stderr, "  %s connect_ap myssid\n", prog_name);
     fprintf(stderr, "  %s connect_ap myssid mypassword\n", prog_name);
     fprintf(stderr, "  %s scan\n", prog_name);
     fprintf(stderr, "  %s status\n", prog_name);
+    fprintf(stderr, "  %s start_ap myap mypassword\n", prog_name);
 }
 
 static int connect_to_daemon(void)
@@ -302,6 +305,63 @@ static int cmd_ota(int argc, char *argv[])
     }
 }
 
+static int cmd_start_ap(int argc, char *argv[])
+{
+    char cmd[MAX_CMD_LEN];
+    char response[MAX_RESPONSE_LEN];
+
+    if (argc < 3) {
+        fprintf(stderr, "Error: Missing SSID\n");
+        fprintf(stderr, "Usage: %s start_ap <ssid> [password]\n", argv[0]);
+        return -1;
+    }
+
+    const char *ssid = argv[2];
+    const char *password = (argc >= 4) ? argv[3] : "";
+
+    printf("Starting SoftAP '%s'...\n", ssid);
+
+    /* Construct command */
+    if (strlen(password) > 0) {
+        snprintf(cmd, sizeof(cmd), "START_AP %s %s\n", ssid, password);
+    } else {
+        snprintf(cmd, sizeof(cmd), "START_AP %s\n", ssid);
+    }
+
+    /* Send command */
+    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+        return -1;
+    }
+
+    /* Parse and display response */
+    printf("%s", response);
+
+    /* Check if successful */
+    if (strncmp(response, "OK", 2) == 0) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+static int cmd_stop_ap(int argc, char *argv[])
+{
+    (void)argc;
+    (void)argv;
+    char cmd[] = "STOP_AP\n";
+    char response[MAX_RESPONSE_LEN];
+
+    printf("Stopping SoftAP...\n");
+
+    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+        return -1;
+    }
+
+    printf("%s", response);
+
+    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+}
+
 /* ========== Main Function ========== */
 
 int main(int argc, char *argv[])
@@ -354,6 +414,12 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(command, "ota") == 0) {
         ret = cmd_ota(argc, argv);
+    }
+    else if (strcmp(command, "start_ap") == 0) {
+        ret = cmd_start_ap(argc, argv);
+    }
+    else if (strcmp(command, "stop_ap") == 0) {
+        ret = cmd_stop_ap(argc, argv);
     }
     else {
         fprintf(stderr, "Error: Unknown command: %s\n\n", command);

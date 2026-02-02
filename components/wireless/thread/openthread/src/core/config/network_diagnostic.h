@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Network Diagnostics.
- *
  */
 
 #ifndef CONFIG_NETWORK_DIAGNOSTIC_H_
 #define CONFIG_NETWORK_DIAGNOSTIC_H_
 
 /**
+ * @addtogroup config-network-diagnostic
+ *
+ * @brief
+ *   This module includes configuration variables for Network Diagnostics.
+ *
+ * @{
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
  *
  * Specifies the default Vendor Name string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME ""
@@ -49,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
  *
  * Specifies the default Vendor Model string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL ""
@@ -59,10 +65,18 @@
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
  *
  * Specifies the default Vendor SW Version string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION ""
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL
+ *
+ * Specifies the default Vendor App URL string.
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL ""
 #endif
 
 /**
@@ -77,9 +91,14 @@
  * config can be used to add API to change Vendor Name, Model, and SW Version at run-time. In this case, the strings in
  * `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_*` are treated as the default values (used when OT stack is initialized).
  *
+ * Enabled by default for reference devices, when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is defined.
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE 0
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #endif
+
+/**
+ * @}
+ */
 
 #endif // CONFIG_NETWORK_DIAGNOSTIC_H_

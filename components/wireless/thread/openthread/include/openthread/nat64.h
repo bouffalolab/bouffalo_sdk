@@ -35,8 +35,14 @@
 #ifndef OPENTHREAD_NAT64_H_
 #define OPENTHREAD_NAT64_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,7 +55,6 @@ extern "C" {
  * only available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
  *
  * @{
- *
  */
 
 #define OT_IP4_ADDRESS_SIZE 4 ///< Size of an IPv4 address (bytes)
@@ -58,7 +63,6 @@ extern "C" {
  * @struct otIp4Address
  *
  * Represents an IPv4 address.
- *
  */
 OT_TOOL_PACKED_BEGIN
 struct otIp4Address
@@ -72,7 +76,6 @@ struct otIp4Address
 
 /**
  * Represents an IPv4 address.
- *
  */
 typedef struct otIp4Address otIp4Address;
 
@@ -80,7 +83,6 @@ typedef struct otIp4Address otIp4Address;
  * @struct otIp4Cidr
  *
  * Represents an IPv4 CIDR block.
- *
  */
 typedef struct otIp4Cidr
 {
@@ -90,7 +92,6 @@ typedef struct otIp4Cidr
 
 /**
  * Represents the counters for NAT64.
- *
  */
 typedef struct otNat64Counters
 {
@@ -102,7 +103,6 @@ typedef struct otNat64Counters
 
 /**
  * Represents the counters for the protocols supported by NAT64.
- *
  */
 typedef struct otNat64ProtocolCounters
 {
@@ -114,7 +114,6 @@ typedef struct otNat64ProtocolCounters
 
 /**
  * Packet drop reasons.
- *
  */
 typedef enum otNat64DropReason
 {
@@ -128,7 +127,6 @@ typedef enum otNat64DropReason
 
 /**
  * Represents the counters of dropped packets due to errors when handling NAT64 packets.
- *
  */
 typedef struct otNat64ErrorCounters
 {
@@ -145,7 +143,6 @@ typedef struct otNat64ErrorCounters
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[out] aCounters A pointer to an `otNat64Counters` where the counters of NAT64 translator will be placed.
- *
  */
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters);
 
@@ -156,7 +153,6 @@ void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounter
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[out] aCounters A pointer to an `otNat64Counters` where the counters of NAT64 translator will be placed.
- *
  */
 void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCounters);
 
@@ -165,15 +161,23 @@ void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCount
  *
  * @note The counters will be reset for each mapping session even for the same address pair. Applications can use `mId`
  * to identify different sessions to calculate the packets correctly.
- *
  */
 typedef struct otNat64AddressMapping
 {
-    uint64_t mId; ///< The unique id for a mapping session.
+    uint64_t     mId;  ///< The unique id for a mapping session.
+    otIp4Address mIp4; ///< The IPv4 address of the mapping.
+    otIp6Address mIp6; ///< The IPv6 address of the mapping.
 
-    otIp4Address mIp4;             ///< The IPv4 address of the mapping.
-    otIp6Address mIp6;             ///< The IPv6 address of the mapping.
-    uint32_t     mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
+    /** The source port or ICMP ID of the mapping. Used when
+     *  OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE is true.
+     */
+    uint16_t mSrcPortOrId;
+
+    /** The translated port or ICMP ID of the mapping. Used when
+     *  OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE is true.
+     */
+    uint16_t mTranslatedPortOrId;
+    uint32_t mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
 
     otNat64ProtocolCounters mCounters;
 } otNat64AddressMapping;
@@ -185,7 +189,6 @@ typedef struct otNat64AddressMapping
  * accessed or used by caller.
  *
  * Before using an iterator, it MUST be initialized using `otNat64AddressMappingIteratorInit()`.
- *
  */
 typedef struct otNat64AddressMappingIterator
 {
@@ -201,7 +204,6 @@ typedef struct otNat64AddressMappingIterator
  *
  * @param[in]  aInstance  The OpenThread instance.
  * @param[out] aIterator  A pointer to the iterator to initialize.
- *
  */
 void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator);
 
@@ -220,7 +222,6 @@ void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMapp
  * @retval OT_ERROR_NONE       Successfully found the next NAT64 address mapping info (@p aMapping was successfully
  *                             updated).
  * @retval OT_ERROR_NOT_FOUND  No subsequent NAT64 address mapping info was found.
- *
  */
 otError otNat64GetNextAddressMapping(otInstance                    *aInstance,
                                      otNat64AddressMappingIterator *aIterator,
@@ -228,7 +229,6 @@ otError otNat64GetNextAddressMapping(otInstance                    *aInstance,
 
 /**
  * States of NAT64.
- *
  */
 typedef enum
 {
@@ -249,7 +249,6 @@ typedef enum
  * @retval OT_NAT64_STATE_NOT_RUNNING NAT64 translator is enabled, but the translator is not configured with a valid
  *                                    NAT64 prefix and a CIDR.
  * @retval OT_NAT64_STATE_ACTIVE      NAT64 translator is enabled, and is translating packets.
- *
  */
 otNat64State otNat64GetTranslatorState(otInstance *aInstance);
 
@@ -268,7 +267,6 @@ otNat64State otNat64GetTranslatorState(otInstance *aInstance);
  *                                    priority.
  * @retval OT_NAT64_STATE_ACTIVE      NAT64 prefix manager is enabled, and is publishing NAT64 prefix to the Thread
  *                                    network.
- *
  */
 otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
 
@@ -289,9 +287,8 @@ otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
  *
  * @sa otNat64GetTranslatorState
  * @sa otNat64GetPrefixManagerState
- *
  */
-void otNat64SetEnabled(otInstance *aInstance, bool aEnable);
+void otNat64SetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Allocate a new message buffer for sending an IPv4 message to the NAT64 translator.
@@ -310,7 +307,6 @@ void otNat64SetEnabled(otInstance *aInstance, bool aEnable);
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
  * @sa otNat64Send
- *
  */
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
@@ -331,11 +327,24 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
  * @retval  OT_ERROR_INVALID_ARGS   The given CIDR is not a valid IPv4 CIDR for NAT64.
  * @retval  OT_ERROR_NONE           Successfully set the CIDR for NAT64.
  *
- * @sa otBorderRouterSend
- * @sa otBorderRouterSetReceiveCallback
- *
+ * @sa otNat64Send
+ * @sa otNat64SetReceiveIp4Callback
  */
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
+
+/**
+ * Clears the CIDR used when setting the source address of the outgoing translated IPv4 packets.
+ *
+ * Is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ *
+ * @note This function can be called at any time, but the NAT64 translator will be reset and all existing sessions
+ * will be expired when clearing the configured CIDR.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @sa otNat64SetIp4Cidr
+ */
+void otNat64ClearIp4Cidr(otInstance *aInstance);
 
 /**
  * Translates an IPv4 datagram to an IPv6 datagram and sends via the Thread interface.
@@ -353,7 +362,6 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
  * @retval OT_ERROR_NO_ROUTE                No route to host.
  * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
- *
  */
 otError otNat64Send(otInstance *aInstance, otMessage *aMessage);
 
@@ -364,7 +372,6 @@ otError otNat64Send(otInstance *aInstance, otMessage *aMessage);
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
  *                       freed by the receiver of the callback after it is processed.
  * @param[in]  aContext  A pointer to application-specific context.
- *
  */
 typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
 
@@ -374,8 +381,7 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv4 datagram is received or
  *                               NULL to disable the callback.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
- *
+ * @param[in]  aContext          A pointer to application-specific context.
  */
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
 
@@ -386,7 +392,6 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[out] aCidr             A pointer to an otIp4Cidr. Where the CIDR will be filled.
- *
  */
 otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
 
@@ -398,7 +403,6 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
  *
  * @retval TRUE   The two IPv4 addresses are the same.
  * @retval FALSE  The two IPv4 addresses are not the same.
- *
  */
 bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond);
 
@@ -412,9 +416,30 @@ bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond
  * @param[in]  aPrefixLength  The prefix length to use for IPv4/IPv6 translation.
  * @param[in]  aIp6Address    A pointer to an IPv6 address.
  * @param[out] aIp4Address    A pointer to output the IPv4 address.
- *
  */
 void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
+
+/**
+ * Extracts the IPv4 address from a given IPv4-mapped IPv6 address.
+ *
+ * An IPv4-mapped IPv6 address consists of an 80-bit prefix of zeros, the next 16 bits set to ones, and the remaining,
+ * least-significant 32 bits contain the IPv4 address, e.g., `::ffff:192.0.2.128` representing `192.0.2.128`.
+ *
+ * @param[in]  aIp6Address  An IPv6 address to extract IPv4 from.
+ * @param[out] aIp4Address  An IPv4 address to output the extracted address.
+ *
+ * @retval OT_ERROR_NONE   Extracted the IPv4 address successfully. @p aIp4Address is updated.
+ * @retval OT_ERROR_PARSE  The @p aIp6Address does not follow the IPv4-mapped IPv6 address format.
+ */
+otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
+
+/**
+ * Converts a given IP4 address to an IPv6 address following the IPv4-mapped IPv6 address format.
+ *
+ * @param[in]  aIp4Address  An IPv4 address to convert.
+ * @param[out] aIp6Address  An IPv6 address to set.
+ */
+void otIp4ToIp4MappedIp6Address(const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
 
 #define OT_IP4_ADDRESS_STRING_SIZE 17 ///< Length of 000.000.000.000 plus a suffix NUL
 
@@ -427,9 +452,8 @@ void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6A
  * truncated but the outputted string is always null-terminated.
  *
  * @param[in]  aAddress  A pointer to an IPv4 address (MUST NOT be NULL).
- * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
  * @param[in]  aSize     The size of @p aBuffer (in bytes).
- *
  */
 void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t aSize);
 
@@ -443,7 +467,6 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
  *
  * @retval OT_ERROR_NONE          Successfully parsed the string.
  * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
- *
  */
 otError otIp4CidrFromString(const char *aString, otIp4Cidr *aCidr);
 
@@ -457,9 +480,8 @@ otError otIp4CidrFromString(const char *aString, otIp4Cidr *aCidr);
  * truncated but the outputted string is always null-terminated.
  *
  * @param[in]  aCidr     A pointer to an IPv4 CIDR (MUST NOT be NULL).
- * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
  * @param[in]  aSize     The size of @p aBuffer (in bytes).
- *
  */
 void otIp4CidrToString(const otIp4Cidr *aCidr, char *aBuffer, uint16_t aSize);
 
@@ -471,7 +493,6 @@ void otIp4CidrToString(const otIp4Cidr *aCidr, char *aBuffer, uint16_t aSize);
  *
  * @retval OT_ERROR_NONE          Successfully parsed the string.
  * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
- *
  */
 otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
 
@@ -485,13 +506,11 @@ otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
  *
  * @returns  OT_ERROR_NONE           Successfully synthesized the IPv6 address from NAT64 prefix and IPv4 address.
  * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
- *
  */
 otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

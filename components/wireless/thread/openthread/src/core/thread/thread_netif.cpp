@@ -33,17 +33,7 @@
 
 #include "thread_netif.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/encoding.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
-#include "net/ip6.hpp"
-#include "net/netif.hpp"
-#include "net/udp6.hpp"
-#include "thread/mle.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -59,7 +49,7 @@ void ThreadNetif::Up(void)
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     Get<Mac::Mac>().SetEnabled(true);
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Start());
 #endif
     Get<MeshForwarder>().Start();
@@ -67,7 +57,7 @@ void ThreadNetif::Up(void)
     mIsUp = true;
 
     SubscribeAllNodesMulticast();
-    IgnoreError(Get<Mle::MleRouter>().Enable());
+    IgnoreError(Get<Mle::Mle>().Enable());
     IgnoreError(Get<Tmf::Agent>().Start());
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     IgnoreError(Get<Dns::ServiceDiscovery::Server>().Start());
@@ -97,11 +87,8 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     Get<Dns::ServiceDiscovery::Server>().Stop();
 #endif
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
-    Get<Tmf::SecureAgent>().Stop();
-#endif
     IgnoreError(Get<Tmf::Agent>().Stop());
-    IgnoreError(Get<Mle::MleRouter>().Disable());
+    IgnoreError(Get<Mle::Mle>().Disable());
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
     UnsubscribeAllRoutersMulticast();
@@ -109,7 +96,7 @@ void ThreadNetif::Down(void)
 
     mIsUp = false;
     Get<MeshForwarder>().Stop();
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Stop());
 #endif
     Get<Notifier>().Signal(kEventThreadNetifStateChanged);

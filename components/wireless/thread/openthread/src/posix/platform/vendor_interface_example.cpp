@@ -33,9 +33,10 @@
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
 
 #include "vendor_interface.hpp"
+#include "common/code_utils.hpp"
 #include "common/new.hpp"
 
 namespace ot {
@@ -44,29 +45,19 @@ using ot::Spinel::SpinelInterface;
 
 /**
  * Defines the vendor implementation object.
- *
  */
 class VendorInterfaceImpl
 {
 public:
-    explicit VendorInterfaceImpl(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void                                 *aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
-        : mReceiveFrameCallback(aCallback)
-        , mReceiveFrameContext(aCallbackContext)
-        , mRxFrameBuffer(aFrameBuffer)
+    explicit VendorInterfaceImpl(const Url::Url &aRadioUrl)
+        : mRadioUrl(aRadioUrl)
     {
-        OT_UNUSED_VARIABLE(mReceiveFrameCallback);
-        OT_UNUSED_VARIABLE(mReceiveFrameContext);
-        OT_UNUSED_VARIABLE(mRxFrameBuffer);
     }
 
     // TODO: Add vendor code (add methods and/or member variables).
 
 private:
-    SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void                                 *mReceiveFrameContext;
-    SpinelInterface::RxFrameBuffer       &mRxFrameBuffer;
+    const Url::Url &mRadioUrl;
 };
 
 // ----------------------------------------------------------------------------
@@ -75,19 +66,19 @@ private:
 
 static OT_DEFINE_ALIGNED_VAR(sVendorInterfaceImplRaw, sizeof(VendorInterfaceImpl), uint64_t);
 
-VendorInterface::VendorInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void                                 *aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
+VendorInterface::VendorInterface(const Url::Url &aRadioUrl)
 {
-    new (&sVendorInterfaceImplRaw) VendorInterfaceImpl(aCallback, aCallbackContext, aFrameBuffer);
+    new (&sVendorInterfaceImplRaw) VendorInterfaceImpl(aRadioUrl);
     OT_UNUSED_VARIABLE(sVendorInterfaceImplRaw);
 }
 
 VendorInterface::~VendorInterface(void) { Deinit(); }
 
-otError VendorInterface::Init(const Url::Url &aRadioUrl)
+otError VendorInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
-    OT_UNUSED_VARIABLE(aRadioUrl);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aCallbackContext);
+    OT_UNUSED_VARIABLE(aFrameBuffer);
 
     // TODO: Implement vendor code here.
 
@@ -150,4 +141,4 @@ const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void) const
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE

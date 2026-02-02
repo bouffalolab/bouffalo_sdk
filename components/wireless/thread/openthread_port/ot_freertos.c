@@ -1,7 +1,12 @@
+#include <assert.h>
+
+#include <FreeRTOS.h>
+#include <semphr.h>
+
+#include <lmac154.h>
+
 #include <openthread_port.h>
 #include <openthread/tasklet.h>
-
-#include <semphr.h>
 #include <ot_radio_trx.h>
 #include <ot_utils_ext.h>
 
@@ -126,7 +131,7 @@ void otSysProcessDrivers(otInstance *aInstance)
 void otrStackInit(void)
 {
     ot_instance = otInstanceInitSingle();
-    configASSERT(ot_instance);
+    assert(ot_instance);
 }
 
 #if defined(CFG_PDS_ENABLE)
@@ -173,7 +178,8 @@ static void otrStackTask(void *p_arg)
 void otrStart(otRadio_opt_t opt)
 {
     ot_extLock = xSemaphoreCreateMutex();
-    configASSERT(ot_extLock != NULL);
+    assert(ot_extLock != NULL);
 
-    xTaskCreate(otrStackTask, "threadTask", OT_TASK_SIZE, (void *)((uint32_t)opt.byte), 15, &ot_taskHandle);
+    xTaskCreate(otrStackTask, "threadTask", OT_TASK_SIZE, (void *)((uint32_t)opt.byte), 
+                OT_TASK_PRORITY, &ot_taskHandle);
 }

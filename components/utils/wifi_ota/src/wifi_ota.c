@@ -21,31 +21,22 @@
  ****************************************************************************/
 #include "wifi_ota_internal.h"
 #include "wifi_ota.h"
-#include "bflb_mtimer.h"
-#include "fhost_api.h"
 #include "bflb_flash.h"
+#include "bflb_multi_core_sync.h"
 #include "partition.h"
 #include "bl_sys.h"
 
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-#include "rpc/flash_rpc_remote.h"
-
-#define bflb_flash_erase flash_rpc_erase
-#define bflb_flash_write flash_rpc_write
-#define bflb_flash_read  flash_rpc_read
+#ifdef CONFIG_IPC
+#include <flash_ops_rpmsg.h>
 #endif
 
 #define DBG_TAG "OTA"
 #include "log.h"
 
-/*  Global configuration and state */
 bool g_ota_initialized = false;
 bool g_ota_in_progress = false;
 static uint8_t *g_recv_buffer = NULL;
 
-/****************************************************************************
- * Private Function Prototypes
- ****************************************************************************/
 static pt_table_id_type wifi_ota_init_partition(pt_table_stuff_config pt_table_stuff[2]);
 
 static int wifi_ota_prepare_flash(pt_table_id_type active_id, pt_table_stuff_config pt_table_stuff[],
@@ -65,9 +56,6 @@ static int wifi_ota_update_partition_table(pt_table_id_type active_id, pt_table_
 
 static void wifi_ota_cleanup(int sock, bool free_buffer);
 
-/****************************************************************************
- * OTA Header Check Function
- ****************************************************************************/
 int wifi_ota_check_header(ota_header_t *ota_header, uint32_t *ota_len, int *use_xz)
 {
     char str[33];
@@ -112,19 +100,27 @@ int wifi_ota_check_header(ota_header_t *ota_header, uint32_t *ota_len, int *use_
     return 0;
 }
 
-/****************************************************************************
- * Partition Initialization
- ****************************************************************************/
 static pt_table_id_type wifi_ota_init_partition(pt_table_stuff_config pt_table_stuff[2])
 {
     pt_table_id_type active_id;
 
-    LOG_I("Initializing partition table...\r\n");
+    LOG_I("Initializing partition table\r\n");
 
-    LOG_I("Flash init done, setting flash operations...\r\n");
+    /* Set flash operations based on configuration */
+#ifdef CONFIG_IPC
+#ifdef CONFIG_RPMSG_SERVICE_MODE_MASTER
+    /* AP Core: Use bflb_flash_mcs_* with suspend/resume */
+    pt_table_set_flash_operation(bflb_flash_erase_mcs, bflb_flash_write_mcs, bflb_flash_read_mcs);
+#else
+    /* NP Core: Use RPMsg to communicate with AP */
+    pt_table_set_flash_operation(bflb_flash_erase_rpmsg, bflb_flash_write_rpmsg, bflb_flash_read_rpmsg);
+#endif
+#else
+    /* Single-core mode: Direct flash operations */
     pt_table_set_flash_operation(bflb_flash_erase, bflb_flash_write, bflb_flash_read);
+#endif
 
-    LOG_I("Getting active partition...\r\n");
+    LOG_I("Getting active partition\r\n");
     active_id = pt_table_get_active_partition_need_lock(pt_table_stuff);
     if (PT_TABLE_ID_INVALID == active_id) {
         LOG_E("No valid PT\r\n");
@@ -137,9 +133,6 @@ static pt_table_id_type wifi_ota_init_partition(pt_table_stuff_config pt_table_s
     return active_id;
 }
 
-/****************************************************************************
- * Flash Preparation
- ****************************************************************************/
 static int wifi_ota_prepare_flash(pt_table_id_type active_id, pt_table_stuff_config pt_table_stuff[],
                                   wifi_ota_context_t *ctx)
 {
@@ -177,9 +170,6 @@ static int wifi_ota_prepare_flash(pt_table_id_type active_id, pt_table_stuff_con
     return OTA_OK;
 }
 
-/****************************************************************************
- * Server Connection
- ****************************************************************************/
 static int wifi_ota_connect_server(const char *server_ip, const char *server_port, int *sock)
 {
     struct sockaddr_in remote_addr;
@@ -226,7 +216,7 @@ static int wifi_ota_connect_server(const char *server_ip, const char *server_por
         }
 
         if (retry < max_retry - 1) {
-            LOG_I("Retrying in %d ms...\r\n", retry_delay_ms);
+            LOG_I("Retrying in %d ms\r\n", retry_delay_ms);
             vTaskDelay(retry_delay_ms);
         }
     }
@@ -239,9 +229,6 @@ static int wifi_ota_connect_server(const char *server_ip, const char *server_por
     return OTA_OK;
 }
 
-/****************************************************************************
- * Download OTA Header
- ****************************************************************************/
 static int wifi_ota_download_header(int sock, uint32_t *bin_size, uint8_t sha256_img[32], int *use_xz,
                                     unsigned int *p_buffer_offset)
 {
@@ -318,16 +305,20 @@ static int wifi_ota_download_firmware(int sock, uint32_t ota_addr, uint32_t bin_
             if (buffer_offset > 0) {
                 LOG_I("Will Write %u to 0x%08X left %u.\r\n", buffer_offset, ota_addr + flash_offset,
                       (bin_size - total_cnt) + buffer_offset);
-                bflb_l1c_dcache_clean_range(g_recv_buffer, buffer_offset);
-#ifdef CONFIG_MBEDTLS_V3
-                ret = mbedtls_sha256_update(&ctx_sha256, g_recv_buffer, buffer_offset);
+                mbedtls_sha256_update(&ctx_sha256, g_recv_buffer, buffer_offset);
+                /* Write data to flash based on configuration */
+#ifdef CONFIG_IPC
+#ifdef CONFIG_RPMSG_SERVICE_MODE_MASTER
+                /* AP Core: Direct flash write with suspend/resume */
+                ret = bflb_flash_write_mcs((ota_addr + flash_offset), g_recv_buffer, buffer_offset);
 #else
-                ret = mbedtls_sha256_update_ret(&ctx_sha256, g_recv_buffer, buffer_offset);
+                /* NP Core: Write via RPMsg */
+                ret = bflb_flash_write_rpmsg((ota_addr + flash_offset), g_recv_buffer, buffer_offset);
 #endif
-                if (ret != 0) {
-                    LOG_E("sha256 update fail! %d\r\n", ret);
-                }
+#else
+                /* Single-core mode: Direct flash write */
                 ret = bflb_flash_write((ota_addr + flash_offset), g_recv_buffer, buffer_offset);
+#endif
                 if (ret != 0) {
                     LOG_E("flash write fail! %d\r\n", ret);
                     ret = OTA_ERR_FLASH;
@@ -350,7 +341,7 @@ static int wifi_ota_download_firmware(int sock, uint32_t ota_addr, uint32_t bin_
         return ret;
     }
 
-    LOG_I("Download complete, total=%u, verifying SHA256...\r\n", total_cnt);
+    LOG_I("Download complete, total=%u, verifying SHA256\r\n", total_cnt);
 
     mbedtls_sha256_finish(&ctx_sha256, sha256_result);
     mbedtls_sha256_free(&ctx_sha256);
@@ -377,13 +368,14 @@ static int wifi_ota_download_firmware(int sock, uint32_t ota_addr, uint32_t bin_
 /****************************************************************************
  * Update Partition Table and Reboot
  ****************************************************************************/
+
 static int wifi_ota_update_partition_table(pt_table_id_type active_id, pt_table_stuff_config pt_table_stuff[],
                                            const wifi_ota_context_t *ctx)
 {
     int ret;
     pt_table_entry_config pt_fw_entry = ctx->entry;
 
-    LOG_I("Updating partition table...\r\n");
+    LOG_I("Updating partition table\r\n");
     LOG_I("active_id=%d, bin_size=%lu\r\n", active_id, ctx->bin_size);
 
     pt_fw_entry.len = ctx->bin_size;
@@ -391,6 +383,10 @@ static int wifi_ota_update_partition_table(pt_table_id_type active_id, pt_table_
     pt_fw_entry.age++;
 
     LOG_I("new active_index=%u, age=%u\r\n", pt_fw_entry.active_index, pt_fw_entry.age);
+    LOG_I("target_table_id=%d (writing to %s)\r\n", !active_id, (!active_id == 0) ? "PT0" : "PT1");
+    LOG_I("source pt_table age before write: %u\r\n", pt_table_stuff[active_id].pt_table.age);
+
+    LOG_I("About to call pt_table_update_entry\r\n");
 
     ret = pt_table_update_entry(!active_id, &pt_table_stuff[active_id], &pt_fw_entry);
     if (ret != 0) {
@@ -399,23 +395,22 @@ static int wifi_ota_update_partition_table(pt_table_id_type active_id, pt_table_
     }
 
     LOG_I("Partition table updated successfully\r\n");
-    LOG_I("Rebooting...\r\n");
-
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-    flash_rpc_reboot();
+    LOG_I("Rebooting\r\n");
+#ifdef CONFIG_IPC
+#ifdef CONFIG_RPMSG_SERVICE_MODE_MASTER
+    bflb_sys_reboot_mcs();
+#else
+    bflb_reboot_rpmsg();
+#endif
 #else
     bl_sys_reset_por();
 #endif
-
     while (1)
         ;
 
     return OTA_OK;
 }
 
-/****************************************************************************
- * Cleanup Resources
- ****************************************************************************/
 static void wifi_ota_cleanup(int sock, bool free_buffer)
 {
     if (sock >= 0) {
@@ -481,9 +476,20 @@ int wifi_ota_start_update(const char *server_ip, const char *server_port)
         goto cleanup;
     }
 
-    /* 6. Erase target flash area */
-    LOG_I("Erasing flash with size %lu...\r\n", ctx.bin_size);
+    /* 6. Download firmware data and verify (choose mode based on config) */
+    LOG_I("Erasing flash with size %lu\r\n", ctx.bin_size);
+#ifdef CONFIG_IPC
+#ifdef CONFIG_RPMSG_SERVICE_MODE_MASTER
+    /* AP Core: Erase flash with suspend/resume */
+    ret = bflb_flash_erase_mcs(ctx.ota_addr, ctx.bin_size);
+#else
+    /* NP Core: Erase via RPMsg */
+    ret = bflb_flash_erase_rpmsg(ctx.ota_addr, ctx.bin_size);
+#endif
+#else
+    /* Single-core mode: Direct flash erase */
     ret = bflb_flash_erase(ctx.ota_addr, ctx.bin_size);
+#endif
     if (ret != 0) {
         LOG_E("flash erase fail! %d\r\n", ret);
         ret = OTA_ERR_FLASH;
@@ -491,18 +497,19 @@ int wifi_ota_start_update(const char *server_ip, const char *server_port)
     }
     LOG_I("Done\r\n");
 
-    /* 7. Download firmware data and verify */
-    LOG_I("Starting firmware download...\r\n");
+    /* Download firmware data and verify */
+    LOG_I("Starting firmware download\r\n");
     ret = wifi_ota_download_firmware(sock, ctx.ota_addr, ctx.bin_size, sha256_img, buffer_offset);
     if (ret != OTA_OK) {
         LOG_E("Firmware download failed with ret=%d\r\n", ret);
         goto cleanup;
     }
     LOG_I("Firmware download completed successfully\r\n");
+
     closesocket(sock);
     sock = -1;
 
-    /* 8. Update partition table and reboot */
+    /* Update partition table and reboot */
     ret = wifi_ota_update_partition_table(active_id, pt_table_stuff, &ctx);
 
 cleanup:
@@ -515,9 +522,6 @@ cleanup:
     return ret;
 }
 
-/****************************************************************************
- * Public API: Initialize WiFi OTA
- ****************************************************************************/
 int wifi_ota_init(void)
 {
     int ret;
@@ -527,23 +531,10 @@ int wifi_ota_init(void)
         return 0;
     }
 
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-    LOG_I("Initializing Flash RPC...\r\n");
-    ret = flash_rpc_remote_init();
-    if (ret != 0) {
-        LOG_E("Flash RPC init failed, ret=%d\r\n", ret);
-        return ret;
-    }
-    LOG_I("Flash RPC initialized successfully\r\n");
-#endif
-
     g_ota_initialized = true;
     return 0;
 }
 
-/****************************************************************************
- * Public API: Deinitialize WiFi OTA
- ****************************************************************************/
 void wifi_ota_deinit(void)
 {
     if (!g_ota_initialized) {

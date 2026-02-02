@@ -33,14 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/ip6.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "net/ip4_types.hpp"
-#include "net/ip6_headers.hpp"
-#include "thread/network_data_leader.hpp"
-#include "utils/slaac_address.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -75,6 +68,11 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
     return AsCoreType(aInstance).Get<ThreadNetif>().GetUnicastAddresses().GetHead();
 }
 
+bool otIp6HasUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().HasUnicastAddress(AsCoreType(aAddress));
+}
+
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
 {
     return AsCoreType(aInstance).Get<ThreadNetif>().AddExternalUnicastAddress(AsCoreType(aAddress));
@@ -100,19 +98,9 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
     return AsCoreType(aInstance).Get<ThreadNetif>().UnsubscribeExternalMulticast(AsCoreType(aAddress));
 }
 
-bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<ThreadNetif>().IsMulticastPromiscuousEnabled();
-}
-
-void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
-{
-    AsCoreType(aInstance).Get<ThreadNetif>().SetMulticastPromiscuous(aEnabled);
-}
-
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
-    AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveDatagramCallback(aCallback, aCallbackContext);
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveCallback(aCallback, aCallbackContext);
 }
 
 void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallback, void *aCallbackContext)
@@ -132,8 +120,14 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    return AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage),
-                                                         OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    otError error;
+
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
+
+exit:
+    return error;
 }
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
@@ -238,8 +232,8 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
                                         otIp6RegisterMulticastListenersCallback aCallback,
                                         void                                   *aContext)
 {
-    return AsCoreType(aInstance).Get<MlrManager>().RegisterMulticastListeners(aAddresses, aAddressNum, aTimeout,
-                                                                              aCallback, aContext);
+    return AsCoreType(aInstance).Get<MlrManager>().RegisterMulticastListeners(AsCoreTypePtr(aAddresses), aAddressNum,
+                                                                              aTimeout, aCallback, aContext);
 }
 #endif
 
@@ -272,7 +266,7 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
 
 otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().SetMeshLocalIid(AsCoreType(aIid));
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetMeshLocalIid(AsCoreType(aIid));
 }
 
 #endif

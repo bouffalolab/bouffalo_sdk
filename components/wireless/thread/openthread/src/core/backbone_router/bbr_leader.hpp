@@ -39,6 +39,7 @@
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #include <openthread/backbone_router.h>
+#include <openthread/backbone_router_ftd.h>
 #include <openthread/ip6.h>
 
 #include "coap/coap.hpp"
@@ -46,6 +47,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -68,22 +70,22 @@ static_assert(kParentAggregateDelay > 1, "kParentAggregateDelay should be larger
 
 /**
  * Represents Domain Prefix changes.
- *
  */
 enum DomainPrefixEvent : uint8_t
 {
-    kDomainPrefixAdded,     ///< Domain Prefix Added.
-    kDomainPrefixRemoved,   ///< Domain Prefix Removed.
-    kDomainPrefixRefreshed, ///< Domain Prefix Changed.
-    kDomainPrefixUnchanged, ///< Domain Prefix did not change.
+    kDomainPrefixAdded     = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED,   ///< Domain Prefix Added.
+    kDomainPrefixRemoved   = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, ///< Domain Prefix Removed.
+    kDomainPrefixRefreshed = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, ///< Domain Prefix Changed.
+    kDomainPrefixUnchanged,                                            ///< Domain Prefix did not change.
 };
 
 /**
  * Implements the basic Primary Backbone Router service operations.
- *
  */
 class Leader : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     // Primary Backbone Router Service state or state change.
     enum State : uint8_t
@@ -101,21 +103,13 @@ public:
      * Initializes the `Leader`.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Leader(Instance &aInstance);
 
     /**
      * Resets the cached Primary Backbone Router.
-     *
      */
     void Reset(void);
-
-    /**
-     * Updates the cached Primary Backbone Router if any when new network data is available.
-     *
-     */
-    void Update(void);
 
     /**
      * Gets the Primary Backbone Router in the Thread Network.
@@ -124,7 +118,6 @@ public:
      *
      * @retval kErrorNone          Successfully got the Primary Backbone Router information.
      * @retval kErrorNotFound      No Backbone Router in the Thread Network.
-     *
      */
     Error GetConfig(Config &aConfig) const;
 
@@ -135,15 +128,13 @@ public:
      *
      * @retval kErrorNone          Successfully got the Backbone Router Service ID.
      * @retval kErrorNotFound      Backbone Router service doesn't exist.
-     *
      */
     Error GetServiceId(uint8_t &aServiceId) const;
 
     /**
      * Gets the short address of the Primary Backbone Router.
      *
-     * @returns short address of Primary Backbone Router, or Mac::kShortAddrInvalid if no Primary Backbone Router.
-     *
+     * @returns short address of Primary Backbone Router, or Mle::kInvalidRloc16 if no Primary Backbone Router.
      */
     uint16_t GetServer16(void) const { return mConfig.mServer16; }
 
@@ -152,15 +143,13 @@ public:
      *
      * @retval TRUE   If there is Primary Backbone Router.
      * @retval FALSE  If there is no Primary Backbone Router.
-     *
      */
-    bool HasPrimary(void) const { return mConfig.mServer16 != Mac::kShortAddrInvalid; }
+    bool HasPrimary(void) const { return mConfig.mServer16 != Mle::kInvalidRloc16; }
 
     /**
      * Gets the Domain Prefix in the Thread Network.
      *
      * @retval A pointer to the Domain Prefix or nullptr if there is no Domain Prefix.
-     *
      */
     const Ip6::Prefix *GetDomainPrefix(void) const
     {
@@ -172,7 +161,6 @@ public:
      *
      * @retval TRUE   If there is Domain Prefix.
      * @retval FALSE  If there is no Domain Prefix.
-     *
      */
     bool HasDomainPrefix(void) const { return (mDomainPrefix.GetLength() > 0); }
 
@@ -183,11 +171,11 @@ public:
      *
      * @retval true  @p aAddress is a Domain Unicast Address.
      * @retval false @p aAddress is not a Domain Unicast Address.
-     *
      */
     bool IsDomainUnicast(const Ip6::Address &aAddress) const;
 
 private:
+    void HandleNotifierEvents(Events aEvents);
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

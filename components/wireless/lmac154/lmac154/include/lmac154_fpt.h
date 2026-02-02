@@ -15,19 +15,7 @@ typedef enum {
     LMAC154_FPT_RESULT_BUSY         = 3
 } lmac154_fptResult_t;
 
-typedef union {
-    struct {
-        uint32_t isExist:1;
-        uint32_t isFramePended:1;
-        uint32_t nbrIdx:7;
-        uint32_t isSearchDone:1;
-        uint32_t unused:22;
-    } bf;
-
-    uint32_t word;
-
-} lmac154_fptSearchResult_t;
-
+void lmac154_setFramePendingSourceMatch(bool isEnable);
 
 /****************************************************************************//**
  * @brief  Set frame pending table mode
@@ -42,9 +30,9 @@ void lmac154_setFramePendingMode(lmac154_fptMode_t mode);
 /****************************************************************************//**
  * @brief  Get frame pending table mode
  *
- * @param  mode: frame pending table working mode
+ * @param  None 
  *
- * @return None
+ * @return lmac154_fptMode_t
  *
 *******************************************************************************/
 lmac154_fptMode_t lmac154_getFramePendingMode(void);
@@ -52,11 +40,34 @@ lmac154_fptMode_t lmac154_getFramePendingMode(void);
 /****************************************************************************//**
  * @brief  Get frame pending table result when receive a packet
  *
- * @param  tout, timeout to get result with macro second unit
+ * @param  tout: timeout to do frame pending table search
  * 
- * @return Result
+ * @param  isFramePended: whether frame pending is set for searched on received packet
+ * 
+ * @return int: return the index of neighbor table if matched; else, return -1
  *
 *******************************************************************************/
-lmac154_fptSearchResult_t lmac154_framePendingResult(uint32_t tout);
+int lmac154_framePendingResult(uint32_t tout, bool * isFramePended);
 
+#if defined BL616D
+/****************************************************************************//**
+ * @brief  Set frame pending bit result if neighbor search fails
+ *
+ * @param  bFramePending, frame pending bit, true by default.
+ * 
+ * @return None
+ *
+*******************************************************************************/
+void lmac154_setFramePendingBitIfNeighborSearchFails(bool bFramePending);
+
+/****************************************************************************//**
+ * @brief  Get frame pending bit result if neighbor search fails
+ *
+ * @param  None
+ * 
+ * @return True, if neighbor search fails.
+ *
+*******************************************************************************/
+bool lmac154_getFramePendingBitIfNeighborSearchFails(void);
+#endif
 #endif

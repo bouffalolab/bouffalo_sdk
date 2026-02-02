@@ -131,18 +131,6 @@ static void wifi_free_after_cb(frame_elem_t *frame_elem, void *arg)
 }
 
 /**
- * @brief Update WiFi connection status
- * @param[in] priv Pointer to WiFi private structure
- * @retval true WiFi is connected
- * @retval false WiFi is disconnected
- */
-static bool wifi_connection_state_update(struct wifi_wifista_priv *priv)
-{
-    /* Connection status is now controlled externally through linkup/linkdown interface */
-    return priv->wifi_connected;
-}
-
-/**
  * @brief WiFi TX complete callback, directly releases frame
  * @param[in] priv Pointer to WiFi private structure
  * @param[in] frame_elem Pointer to frame element
@@ -448,18 +436,12 @@ static void wifi_proc_task(void *arg)
 
     /* Initial state */
     priv->wifi_status = BL_WIFI_DSTA_IDLE;
-    priv->wifi_connected = false;
+    priv->wifi_connected = true;// default link
 
     while (!priv->stop_requested) {
         /* Wait */
         if (msg_dnld_recv_suspend) {
             ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10));
-        }
-
-        /* update WiFi connection status */
-        if (bflb_mtimer_get_time_ms() - wifi_update_ms > 100) {
-            wifi_connection_state_update(priv);
-            wifi_update_ms = bflb_mtimer_get_time_ms();
         }
 
         /* get msg recv frame*/
@@ -644,7 +626,7 @@ int transportsdio_init(wifi_wifista_priv_t *ctx, bflb_msg_ctrl_t *msg_ctrl, uint
     priv->msg_tag = msg_tag;
     priv->wifi_status = BL_WIFI_DSTA_IDLE;
     priv->stop_requested = false;
-    priv->wifi_connected = false;
+    priv->wifi_connected = true;
     priv->wifi_send_frame = NULL;
     priv->wifi_recv_frame = NULL;
     priv->flow_control_enabled = true;
@@ -799,19 +781,6 @@ int transportsdio_stop(void)
 }
 
 /**
- * @brief Get WiFi connection status
- * @retval true WiFi is connected
- * @retval false WiFi is disconnected
- */
-bool transportsdio_link_status(void)
-{
-    if (g_wifi_priv) {
-        return g_wifi_priv->wifi_connected;
-    }
-    return false;
-}
-
-/**
  * @brief Set WiFi send frame callback function
  * @param[in] send_func WiFi send frame function pointer
  */
@@ -831,60 +800,6 @@ void transportsdio_set_wifi_recv_cb(int (*recv_func)(struct wifi_wifista_priv *,
     if (g_wifi_priv) {
         g_wifi_priv->wifi_recv_frame = recv_func;
     }
-}
-
-/**
- * @brief WiFi connection establishment callback interface - actively called after WiFi connection success
- * @details When WiFi connection succeeds, call this interface to notify device that WiFi is connected
- * @retval 0 Success
- * @retval <0 Error code
- */
-int transportsdio_linkup(void)
-{
-    if (!g_wifi_priv) {
-        EXAMPLE_ERR("WiFi device not initialized\r\n");
-        return -1;
-    }
-
-    if (g_wifi_priv->wifi_connected) {
-        LOG_W("WiFi already connected\r\n");
-        return 0;
-    }
-
-    g_wifi_priv->wifi_connected = true;
-    EXAMPLE_INFO("WiFi linkup - connection established\r\n");
-
-    /* Wake up processing task to handle connection status change immediately */
-    wifi_proc_task_wakeup(g_wifi_priv);
-
-    return 0;
-}
-
-/**
- * @brief WiFi connection disconnection callback interface - actively called when WiFi disconnects
- * @details When WiFi connection is lost, call this interface to notify device that WiFi is disconnected
- * @retval 0 Success
- * @retval <0 Error code
- */
-int transportsdio_linkdown(void)
-{
-    if (!g_wifi_priv) {
-        EXAMPLE_ERR("WiFi device not initialized\r\n");
-        return -1;
-    }
-
-    if (!g_wifi_priv->wifi_connected) {
-        LOG_W("WiFi already disconnected\r\n");
-        return 0;
-    }
-
-    g_wifi_priv->wifi_connected = false;
-    EXAMPLE_INFO("WiFi linkdown - connection lost\r\n");
-
-    /* Wake up processing task to handle connection status change immediately */
-    wifi_proc_task_wakeup(g_wifi_priv);
-
-    return 0;
 }
 
 /**

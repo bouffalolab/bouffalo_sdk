@@ -42,7 +42,7 @@
 
 #include <openthread/coap_secure.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
@@ -53,19 +53,15 @@ namespace Cli {
 
 /**
  * Implements the CLI CoAP Secure server and client.
- *
  */
-class CoapSecure : private Output
+class CoapSecure : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
@@ -79,18 +75,14 @@ public:
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
      * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
      * @retval ...                        Error during execution of the CLI command.
-     *
      */
     otError Process(Arg aArgs[]);
 
 private:
-    enum
-    {
-        kMaxUriLength   = 32,
-        kMaxBufferSize  = 16,
-        kPskMaxLength   = 32,
-        kPskIdMaxLength = 32
-    };
+    static constexpr uint16_t kMaxUriLength   = 32;
+    static constexpr uint16_t kMaxBufferSize  = 16;
+    static constexpr uint8_t  kPskMaxLength   = 32;
+    static constexpr uint8_t  kPskIdMaxLength = 32;
 
     using Command = CommandEntry<CoapSecure>;
 
@@ -106,6 +98,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
+    otError ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *));
 
     void Stop(void);
 
@@ -141,8 +134,8 @@ private:
     void        DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
-    static void HandleConnected(bool aConnected, void *aContext);
-    void        HandleConnected(bool aConnected);
+    static void HandleConnectEvent(otCoapSecureConnectEvent aEvent, void *aContext);
+    void        HandleConnectEvent(otCoapSecureConnectEvent aEvent);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     otCoapBlockwiseResource mResource;

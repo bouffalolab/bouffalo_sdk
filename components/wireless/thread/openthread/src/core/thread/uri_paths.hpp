@@ -42,7 +42,6 @@ namespace ot {
 
 /**
  * Represents Thread URIs.
- *
  */
 enum Uri : uint8_t
 {
@@ -58,6 +57,7 @@ enum Uri : uint8_t
     kUriBackboneQuery,          ///< Backbone Query ("b/bq")
     kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
     kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
+    kUriActiveReplace,          ///< MGMT_ACTIVE_REPLACE ("c/ar")
     kUriActiveSet,              ///< MGMT_ACTIVE_SET ("c/as")
     kUriCommissionerKeepAlive,  ///< Commissioner Keep Alive ("c/ca")
     kUriCommissionerGet,        ///< MGMT_COMMISSIONER_GET ("c/cg")
@@ -94,7 +94,6 @@ enum Uri : uint8_t
  * @param[in] aUri   A URI.
  *
  * @returns The path string for @p aUri.
- *
  */
 const char *PathForUri(Uri aUri);
 
@@ -104,7 +103,6 @@ const char *PathForUri(Uri aUri);
  * @param[in] aPath    A path string.
  *
  * @returns The URI associated with @p aPath or `kUriUnknown` if no match is found.
- *
  */
 Uri UriFromPath(const char *aPath);
 
@@ -114,7 +112,6 @@ Uri UriFromPath(const char *aPath);
  * @tparam kUri   The URI to convert to string.
  *
  * @returns The string representation of @p kUri.
- *
  */
 template <Uri kUri> const char *UriToString(void);
 
@@ -131,6 +128,7 @@ template <> const char *UriToString<kUriBackboneMlr>(void);
 template <> const char *UriToString<kUriBackboneQuery>(void);
 template <> const char *UriToString<kUriAnnounceBegin>(void);
 template <> const char *UriToString<kUriActiveGet>(void);
+template <> const char *UriToString<kUriActiveReplace>(void);
 template <> const char *UriToString<kUriActiveSet>(void);
 template <> const char *UriToString<kUriCommissionerKeepAlive>(void);
 template <> const char *UriToString<kUriCommissionerGet>(void);

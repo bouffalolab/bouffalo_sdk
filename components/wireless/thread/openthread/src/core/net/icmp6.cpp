@@ -33,14 +33,7 @@
 
 #include "icmp6.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
-#include "net/checksum.hpp"
-#include "net/ip6.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -99,7 +92,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
     MessageInfo       messageInfoLocal;
     Message          *message = nullptr;
     Header            icmp6Header;
-    Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
+    Message::Settings settings(kWithLinkSecurity, Message::kPriorityNet);
 
     if (aHeaders.GetIpProto() == kProtoIcmp6)
     {
@@ -153,7 +146,7 @@ exit:
     return error;
 }
 
-bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
+bool Icmp::ShouldHandleEchoRequest(const Address &aAddress)
 {
     bool rval = false;
 
@@ -163,13 +156,16 @@ bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
         rval = false;
         break;
     case OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY:
-        rval = !aMessageInfo.GetSockAddr().IsMulticast();
+        rval = !aAddress.IsMulticast();
         break;
     case OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY:
-        rval = aMessageInfo.GetSockAddr().IsMulticast();
+        rval = aAddress.IsMulticast();
         break;
     case OT_ICMP6_ECHO_HANDLER_ALL:
         rval = true;
+        break;
+    case OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY:
+        rval = aAddress.GetIid().IsLocator();
         break;
     }
 
@@ -184,8 +180,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     MessageInfo replyMessageInfo;
     uint16_t    dataOffset;
 
-    // always handle Echo Request destined for RLOC or ALOC
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo.GetSockAddr()));
 
     LogInfo("Received Echo Request");
 

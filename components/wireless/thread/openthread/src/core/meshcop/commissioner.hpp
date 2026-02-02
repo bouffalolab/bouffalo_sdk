@@ -50,9 +50,9 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/announce_begin_client.hpp"
-#include "meshcop/dtls.hpp"
 #include "meshcop/energy_scan_client.hpp"
 #include "meshcop/panid_query_client.hpp"
+#include "meshcop/secure_transport.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include "thread/key_manager.hpp"
@@ -63,6 +63,10 @@ namespace ot {
 
 namespace MeshCoP {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "Commissioner feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class Commissioner : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
@@ -71,7 +75,6 @@ class Commissioner : public InstanceLocator, private NonCopyable
 public:
     /**
      * Type represents the Commissioner State.
-     *
      */
     enum State : uint8_t
     {
@@ -82,7 +85,6 @@ public:
 
     /**
      * Type represents Joiner Event.
-     *
      */
     enum JoinerEvent : uint8_t
     {
@@ -97,138 +99,9 @@ public:
     typedef otCommissionerJoinerCallback JoinerCallback; ///< Joiner state change callback function pointer type.
 
     /**
-     * Represents a Commissioning Dataset.
-     *
-     */
-    class Dataset : public otCommissioningDataset, public Clearable<Dataset>
-    {
-    public:
-        /**
-         * Indicates whether or not the Border Router RLOC16 Locator is set in the Dataset.
-         *
-         * @returns TRUE if Border Router RLOC16 Locator is set, FALSE otherwise.
-         *
-         */
-        bool IsLocatorSet(void) const { return mIsLocatorSet; }
-
-        /**
-         * Gets the Border Router RLOC16 Locator in the Dataset.
-         *
-         * MUST be used when Locator is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Border Router RLOC16 Locator in the Dataset.
-         *
-         */
-        uint16_t GetLocator(void) const { return mLocator; }
-
-        /**
-         * Sets the Border Router RLOCG16 Locator in the Dataset.
-         *
-         * @param[in] aLocator  A Locator.
-         *
-         */
-        void SetLocator(uint16_t aLocator)
-        {
-            mIsLocatorSet = true;
-            mLocator      = aLocator;
-        }
-
-        /**
-         * Indicates whether or not the Session ID is set in the Dataset.
-         *
-         * @returns TRUE if Session ID is set, FALSE otherwise.
-         *
-         */
-        bool IsSessionIdSet(void) const { return mIsSessionIdSet; }
-
-        /**
-         * Gets the Session ID in the Dataset.
-         *
-         * MUST be used when Session ID is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Session ID in the Dataset.
-         *
-         */
-        uint16_t GetSessionId(void) const { return mSessionId; }
-
-        /**
-         * Sets the Session ID in the Dataset.
-         *
-         * @param[in] aSessionId  The Session ID.
-         *
-         */
-        void SetSessionId(uint16_t aSessionId)
-        {
-            mIsSessionIdSet = true;
-            mSessionId      = aSessionId;
-        }
-
-        /**
-         * Indicates whether or not the Steering Data is set in the Dataset.
-         *
-         * @returns TRUE if Steering Data is set, FALSE otherwise.
-         *
-         */
-        bool IsSteeringDataSet(void) const { return mIsSteeringDataSet; }
-
-        /**
-         * Gets the Steering Data in the Dataset.
-         *
-         * MUST be used when Steering Data is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Steering Data in the Dataset.
-         *
-         */
-        const SteeringData &GetSteeringData(void) const { return AsCoreType(&mSteeringData); }
-
-        /**
-         * Returns a reference to the Steering Data in the Dataset to be updated by caller.
-         *
-         * @returns A reference to the Steering Data in the Dataset.
-         *
-         */
-        SteeringData &UpdateSteeringData(void)
-        {
-            mIsSteeringDataSet = true;
-            return AsCoreType(&mSteeringData);
-        }
-
-        /**
-         * Indicates whether or not the Joiner UDP port is set in the Dataset.
-         *
-         * @returns TRUE if Joiner UDP port is set, FALSE otherwise.
-         *
-         */
-        bool IsJoinerUdpPortSet(void) const { return mIsJoinerUdpPortSet; }
-
-        /**
-         * Gets the Joiner UDP port in the Dataset.
-         *
-         * MUST be used when Joiner UDP port is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Joiner UDP port in the Dataset.
-         *
-         */
-        uint16_t GetJoinerUdpPort(void) const { return mJoinerUdpPort; }
-
-        /**
-         * Sets the Joiner UDP Port in the Dataset.
-         *
-         * @param[in] aJoinerUdpPort  The Joiner UDP Port.
-         *
-         */
-        void SetJoinerUdpPort(uint16_t aJoinerUdpPort)
-        {
-            mIsJoinerUdpPortSet = true;
-            mJoinerUdpPort      = aJoinerUdpPort;
-        }
-    };
-
-    /**
      * Initializes the Commissioner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Commissioner(Instance &aInstance);
 
@@ -242,7 +115,6 @@ public:
      * @retval kErrorNone           Successfully started the Commissioner service.
      * @retval kErrorAlready        Commissioner is already started.
      * @retval kErrorInvalidState   Device is not currently attached to a network.
-     *
      */
     Error Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext);
 
@@ -251,7 +123,6 @@ public:
      *
      * @retval kErrorNone     Successfully stopped the Commissioner service.
      * @retval kErrorAlready  Commissioner is already stopped.
-     *
      */
     Error Stop(void) { return Stop(kSendKeepAliveToResign); }
 
@@ -259,7 +130,6 @@ public:
      * Returns the Commissioner Id.
      *
      * @returns The Commissioner Id.
-     *
      */
     const char *GetId(void) const { return mCommissionerId; }
 
@@ -271,13 +141,11 @@ public:
      * @retval kErrorNone           Successfully set the Commissioner Id.
      * @retval kErrorInvalidArgs    Given name is too long.
      * @retval kErrorInvalidState   The commissioner is active and id cannot be changed.
-     *
      */
     Error SetId(const char *aId);
 
     /**
      * Clears all Joiner entries.
-     *
      */
     void ClearJoiners(void);
 
@@ -290,7 +158,6 @@ public:
      * @retval kErrorNone          Successfully added the Joiner.
      * @retval kErrorNoBufs        No buffers available to add the Joiner.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error AddJoinerAny(const char *aPskd, uint32_t aTimeout) { return AddJoiner(nullptr, nullptr, aPskd, aTimeout); }
 
@@ -304,7 +171,6 @@ public:
      * @retval kErrorNone          Successfully added the Joiner.
      * @retval kErrorNoBufs        No buffers available to add the Joiner.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error AddJoiner(const Mac::ExtAddress &aEui64, const char *aPskd, uint32_t aTimeout)
     {
@@ -321,7 +187,6 @@ public:
      * @retval kErrorNone          Successfully added the Joiner.
      * @retval kErrorNoBufs        No buffers available to add the Joiner.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error AddJoiner(const JoinerDiscerner &aDiscerner, const char *aPskd, uint32_t aTimeout)
     {
@@ -336,7 +201,6 @@ public:
      *
      * @retval kErrorNone       Successfully get the Joiner info.
      * @retval kErrorNotFound   Not found next Joiner.
-     *
      */
     Error GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
 
@@ -348,7 +212,6 @@ public:
      * @retval kErrorNone          Successfully added the Joiner.
      * @retval kErrorNotFound      The Joiner entry accepting any Joiner was not found.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error RemoveJoinerAny(uint32_t aDelay) { return RemoveJoiner(nullptr, nullptr, aDelay); }
 
@@ -361,7 +224,6 @@ public:
      * @retval kErrorNone          Successfully added the Joiner.
      * @retval kErrorNotFound      The Joiner specified by @p aEui64 was not found.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error RemoveJoiner(const Mac::ExtAddress &aEui64, uint32_t aDelay)
     {
@@ -377,7 +239,6 @@ public:
      * @retval kErrorNone          Successfully added the Joiner.
      * @retval kErrorNotFound      The Joiner specified by @p aEui64 was not found.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error RemoveJoiner(const JoinerDiscerner &aDiscerner, uint32_t aDelay)
     {
@@ -388,7 +249,6 @@ public:
      * Gets the Provisioning URL.
      *
      * @returns A pointer to char buffer containing the URL string.
-     *
      */
     const char *GetProvisioningUrl(void) const { return mProvisioningUrl; }
 
@@ -399,7 +259,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the Provisioning URL.
      * @retval kErrorInvalidArgs  @p aProvisioningUrl is invalid (too long).
-     *
      */
     Error SetProvisioningUrl(const char *aProvisioningUrl);
 
@@ -407,7 +266,6 @@ public:
      * Returns the Commissioner Session ID.
      *
      * @returns The Commissioner Session ID.
-     *
      */
     uint16_t GetSessionId(void) const { return mSessionId; }
 
@@ -415,7 +273,6 @@ public:
      * Indicates whether or not the Commissioner role is active.
      *
      * @returns TRUE if the Commissioner role is active, FALSE otherwise.
-     *
      */
     bool IsActive(void) const { return mState == kStateActive; }
 
@@ -423,7 +280,6 @@ public:
      * Indicates whether or not the Commissioner role is disabled.
      *
      * @returns TRUE if the Commissioner role is disabled, FALSE otherwise.
-     *
      */
     bool IsDisabled(void) const { return mState == kStateDisabled; }
 
@@ -431,7 +287,6 @@ public:
      * Gets the Commissioner State.
      *
      * @returns The Commissioner State.
-     *
      */
     State GetState(void) const { return mState; }
 
@@ -444,7 +299,6 @@ public:
      * @retval kErrorNone          Send MGMT_COMMISSIONER_GET successfully.
      * @retval kErrorNoBufs        Insufficient buffer space to send.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
     Error SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
 
@@ -458,15 +312,13 @@ public:
      * @retval kErrorNone          Send MGMT_COMMISSIONER_SET successfully.
      * @retval kErrorNoBufs        Insufficient buffer space to send.
      * @retval kErrorInvalidState  Commissioner service is not started.
-     *
      */
-    Error SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+    Error SendMgmtCommissionerSetRequest(const CommissioningDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * Returns a reference to the AnnounceBeginClient instance.
      *
      * @returns A reference to the AnnounceBeginClient instance.
-     *
      */
     AnnounceBeginClient &GetAnnounceBeginClient(void) { return mAnnounceBegin; }
 
@@ -474,7 +326,6 @@ public:
      * Returns a reference to the EnergyScanClient instance.
      *
      * @returns A reference to the EnergyScanClient instance.
-     *
      */
     EnergyScanClient &GetEnergyScanClient(void) { return mEnergyScan; }
 
@@ -482,15 +333,8 @@ public:
      * Returns a reference to the PanIdQueryClient instance.
      *
      * @returns A reference to the PanIdQueryClient instance.
-     *
      */
     PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
-
-    /**
-     * Applies the Mesh Local Prefix.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
 
 private:
     static constexpr uint32_t kPetitionAttemptDelay = 5;  // COMM_PET_ATTEMPT_DELAY (seconds)
@@ -552,30 +396,30 @@ private:
     static void HandleMgmtCommissionerSetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  Error                aResult);
+                                                  otError              aResult);
     void        HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
                                                   Error                   aResult);
     static void HandleMgmtCommissionerGetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  Error                aResult);
+                                                  otError              aResult);
     void        HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
                                                   Error                   aResult);
     static void HandleLeaderPetitionResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
-    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+                                             otError              aResult);
+    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleLeaderKeepAliveResponse(void                *aContext,
                                               otMessage           *aMessage,
                                               const otMessageInfo *aMessageInfo,
                                               Error                aResult);
     void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleSecureAgentConnected(bool aConnected, void *aContext);
-    void        HandleSecureAgentConnected(bool aConnected);
+    static void HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext);
+    void        HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -622,8 +466,8 @@ private:
 
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
-    char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
-    char mCommissionerId[CommissionerIdTlv::kMaxLength + 1];
+    ProvisioningUrlTlv::StringType mProvisioningUrl;
+    CommissionerIdTlv::StringType  mCommissionerId;
 
     State mState;
 
@@ -639,7 +483,6 @@ DeclareTmfHandler(Commissioner, kUriJoinerFinalize);
 
 DefineMapEnum(otCommissionerState, MeshCoP::Commissioner::State);
 DefineMapEnum(otCommissionerJoinerEvent, MeshCoP::Commissioner::JoinerEvent);
-DefineCoreType(otCommissioningDataset, MeshCoP::Commissioner::Dataset);
 
 } // namespace ot
 

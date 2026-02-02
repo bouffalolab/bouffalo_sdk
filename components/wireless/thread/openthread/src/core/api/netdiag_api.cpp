@@ -33,10 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/netdiag.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -89,6 +86,11 @@ const char *otThreadGetVendorSwVersion(otInstance *aInstance)
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorSwVersion();
 }
 
+const char *otThreadGetVendorAppUrl(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorAppUrl();
+}
+
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
 {
@@ -104,4 +106,26 @@ otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwV
 {
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorSwVersion(aVendorSwVersion);
 }
+
+otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorAppUrl(aVendorAppUrl);
+}
 #endif
+
+void otThreadSetNonPreferredChannels(otInstance *aInstance, otChannelMask aChannelMask)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannels(aChannelMask);
+}
+
+otChannelMask otThreadGetNonPreferredChannels(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetNonPreferredChannels();
+}
+
+void otThreadSetNonPreferredChannelsResetCallback(otInstance                               *aInstance,
+                                                  otThreadNonPreferredChannelsResetCallback aCallback,
+                                                  void                                     *aContext)
+{
+    AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannelsResetCallback(aCallback, aContext);
+}

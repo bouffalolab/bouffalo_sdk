@@ -33,10 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/netdata.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -104,14 +101,19 @@ otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
                                                                                      AsCoreType(aContextInfo));
 }
 
+void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningDataset *aDataset)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetCommissioningDataset(AsCoreType(aDataset));
+}
+
 uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);
 }
 
 uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kStableSubset);
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderData().GetDataVersion(NetworkData::kStableSubset);
 }
 
 otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64)

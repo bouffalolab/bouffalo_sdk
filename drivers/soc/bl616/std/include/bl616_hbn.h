@@ -58,34 +58,6 @@ extern "C" {
  *  @{
  */
 
-/**
- *  @brief HBN PIR interrupt configuration type definition
- */
-typedef struct
-{
-    uint8_t lowIntEn;  /*!< Low will trigger interrupt */
-    uint8_t highIntEn; /*!< High will trigger interrupt */
-} HBN_PIR_INT_CFG_Type;
-
-/** @defgroup HBN PIR low pass filter type definition
-  * @{
-  */
-#define HBN_PIR_LPF_DIV1             (0) /*!< HBN PIR lpf div 1 */
-#define HBN_PIR_LPF_DIV2             (1) /*!< HBN PIR lpf div 2 */
-/**
-  * @}
-  */
-
-/** @defgroup HBN PIR high pass filter type definition
-  * @{
-  */
-#define HBN_PIR_HPF_METHOD0          (0) /*!< HBN PIR hpf calc method 0, 1-z^-1 */
-#define HBN_PIR_HPF_METHOD1          (1) /*!< HBN PIR hpf calc method 1, 1-z^-2 */
-#define HBN_PIR_HPF_METHOD2          (2) /*!< HBN PIR hpf calc method 2, 1-z^-3 */
-/**
-  * @}
-  */
-
 /** @defgroup HBN flash pad pu pd type
   * @{
   */
@@ -184,7 +156,6 @@ typedef struct
 #define HBN_INT_GPIO18               (2)  /*!< HBN interrupt type: GPIO18 */
 #define HBN_INT_GPIO19               (3)  /*!< HBN interrupt type: GPIO19 */
 #define HBN_INT_RTC                  (16) /*!< HBN interrupt type: RTC */
-#define HBN_INT_PIR                  (17) /*!< HBN interrupt type: PIR */
 #define HBN_INT_BOD                  (18) /*!< HBN interrupt type: BOD */
 #define HBN_INT_ACOMP0               (20) /*!< HBN interrupt type: ACOMP0 */
 #define HBN_INT_ACOMP1               (22) /*!< HBN interrupt type: ACOMP1 */
@@ -247,11 +218,10 @@ typedef struct
 /** @defgroup HBN OUT1 interrupt type definition
   * @{
   */
-#define HBN_OUT1_INT_PIR                              (0) /*!< HBN out 1 interrupt type: PIR */
-#define HBN_OUT1_INT_BOD                              (1) /*!< HBN out 1 interrupt type: BOD */
-#define HBN_OUT1_INT_ACOMP0                           (2) /*!< HBN out 1 interrupt type: ACOMP0 */
-#define HBN_OUT1_INT_ACOMP1                           (3) /*!< HBN out 1 interrupt type: ACOMP1 */
-#define HBN_OUT1_INT_MAX                              (4) /*!< MAX */
+#define HBN_OUT1_INT_BOD                              (0) /*!< HBN out 1 interrupt type: BOD */
+#define HBN_OUT1_INT_ACOMP0                           (1) /*!< HBN out 1 interrupt type: ACOMP0 */
+#define HBN_OUT1_INT_ACOMP1                           (2) /*!< HBN out 1 interrupt type: ACOMP1 */
+#define HBN_OUT1_INT_MAX                              (3) /*!< MAX */
 /**
   * @}
   */
@@ -328,19 +298,6 @@ typedef struct
  *  @{
  */
 
-/** @defgroup  HBN_PIR_LPF_TYPE
- *  @{
- */
-#define IS_HBN_PIR_LPF_TYPE(type) (((type) == HBN_PIR_LPF_DIV1) || \
-                                   ((type) == HBN_PIR_LPF_DIV2))
-
-/** @defgroup  HBN_PIR_HPF_TYPE
- *  @{
- */
-#define IS_HBN_PIR_HPF_TYPE(type) (((type) == HBN_PIR_HPF_METHOD0) || \
-                                   ((type) == HBN_PIR_HPF_METHOD1) || \
-                                   ((type) == HBN_PIR_HPF_METHOD2))
-
 /** @defgroup  HBN_FLASH_PAD_PULL_TYPE
  *  @{
  */
@@ -412,7 +369,6 @@ typedef struct
                                ((type) == HBN_INT_GPIO18) || \
                                ((type) == HBN_INT_GPIO19) || \
                                ((type) == HBN_INT_RTC) ||    \
-                               ((type) == HBN_INT_PIR) ||    \
                                ((type) == HBN_INT_BOD) ||    \
                                ((type) == HBN_INT_ACOMP0) || \
                                ((type) == HBN_INT_ACOMP1))
@@ -463,8 +419,7 @@ typedef struct
 /** @defgroup  HBN_OUT1_INT_TYPE
  *  @{
  */
-#define IS_HBN_OUT1_INT_TYPE(type) (((type) == HBN_OUT1_INT_PIR) ||    \
-                                    ((type) == HBN_OUT1_INT_BOD) ||    \
+#define IS_HBN_OUT1_INT_TYPE(type) (((type) == HBN_OUT1_INT_BOD) ||    \
                                     ((type) == HBN_OUT1_INT_ACOMP0) || \
                                     ((type) == HBN_OUT1_INT_ACOMP1) || \
                                     ((type) == HBN_OUT1_INT_MAX))
@@ -605,15 +560,6 @@ void HBN_Enable(uint32_t aGPIOIeCfg, uint8_t ldoLevel, uint8_t hbnLevel, uint8_t
 BL_Err_Type HBN_Reset(void);
 /*----------*/
 BL_Err_Type HBN_Set_GPADC_CLK_Sel(uint8_t clkSel);
-BL_Err_Type HBN_PIR_Enable(void);
-BL_Err_Type HBN_PIR_Disable(void);
-BL_Err_Type HBN_PIR_INT_Config(HBN_PIR_INT_CFG_Type *pirIntCfg);
-BL_Err_Type HBN_PIR_LPF_Sel(uint8_t lpf);
-BL_Err_Type HBN_PIR_HPF_Sel(uint8_t hpf);
-BL_Err_Type HBN_Set_PIR_Threshold(uint16_t threshold);
-uint16_t HBN_Get_PIR_Threshold(void);
-BL_Err_Type HBN_Set_PIR_Interval(uint16_t interval);
-uint16_t HBN_Get_PIR_Interval(void);
 /*----------*/
 BL_Sts_Type HBN_Get_BOD_OUT_State(void);
 BL_Err_Type HBN_Set_BOD_Config(uint8_t enable, uint8_t threshold, uint8_t mode);

@@ -11,7 +11,7 @@
 #include <bl702l_hbn.h>
 #include <bl702l_sys.h>
 #endif
-
+#include <lmac154.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <shell.h>

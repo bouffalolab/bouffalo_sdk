@@ -42,13 +42,18 @@ set(COMMON_SOURCES
     cli_dns.cpp
     cli_history.cpp
     cli_joiner.cpp
+    cli_link_metrics.cpp
     cli_mac_filter.cpp
+    cli_mdns.cpp
+    cli_mesh_diag.cpp
     cli_network_data.cpp
-    cli_output.cpp
+    cli_ping.cpp
     cli_srp_client.cpp
     cli_srp_server.cpp
+    cli_tcat.cpp
     cli_tcp.cpp
     cli_udp.cpp
+    cli_utils.cpp
 )
 
 set(OT_CLI_VENDOR_EXTENSION "" CACHE STRING "Path to CMake file to define and link cli vendor extension")

@@ -47,6 +47,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "meshcop/border_agent.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -57,6 +58,7 @@
 #include "thread/router_table.hpp"
 
 namespace ot {
+
 namespace Utils {
 
 #ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
@@ -70,7 +72,6 @@ namespace Utils {
 
 /**
  * Implements History Tracker.
- *
  */
 class HistoryTracker : public InstanceLocator, private NonCopyable
 {
@@ -82,19 +83,21 @@ class HistoryTracker : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_FTD
     friend class ot::RouterTable;
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    friend class ot::MeshCoP::BorderAgent;
+    friend class ot::MeshCoP::BorderAgent::EphemeralKeyManager;
+#endif
 
 public:
     /**
      * This constant specifies the maximum age of entries which is 49 days (value in msec).
      *
      * Entries older than the max age will give this value as their age.
-     *
      */
     static constexpr uint32_t kMaxAge = OT_HISTORY_TRACKER_MAX_AGE;
 
     /**
      * This constant specifies the recommend string size to represent an entry age
-     *
      */
     static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
 
@@ -102,13 +105,11 @@ public:
      * This constants specified no next hop.
      *
      * Used for `mNextHop` in `RouteInfo` structure.
-     *
      */
     static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
 
     /**
      * Represents an iterator to iterate through a history list.
-     *
      */
     class Iterator : public otHistoryTrackerIterator
     {
@@ -120,7 +121,6 @@ public:
          *
          * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
          * the beginning of the list.
-         *
          */
         void Init(void) { ResetEntryNumber(), SetInitTime(); }
 
@@ -140,12 +140,14 @@ public:
     typedef otHistoryTrackerRouterInfo           RouterInfo;           ///< Router info.
     typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
     typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
+#endif
 
     /**
      * Initializes the `HistoryTracker`.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit HistoryTracker(Instance &aInstance);
 
@@ -159,7 +161,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `NetworkInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const NetworkInfo *IterateNetInfoHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -176,7 +177,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `UnicastAddress` entry or `nullptr` if no more entries in the list.
-     *
      */
     const UnicastAddressInfo *IterateUnicastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -193,7 +193,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MulticastAddress` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MulticastAddressInfo *IterateMulticastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -210,7 +209,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MessageInfo *IterateRxHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -227,7 +225,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MessageInfo *IterateTxHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -254,6 +251,13 @@ public:
         return mExternalRouteHistory.Iterate(aIterator, aEntryAge);
     }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    const EpskcEvent *IterateEpskcEventHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mEpskcEventHistory.Iterate(aIterator, aEntryAge);
+    }
+#endif
+
     /**
      * Converts a given entry age to a human-readable string.
      *
@@ -266,7 +270,6 @@ public:
      * @param[in]  aEntryAge The entry age (duration in msec).
      * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
      * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_ADDRESS_STRING_SIZE`.
-     *
      */
     static void EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
 
@@ -286,13 +289,14 @@ private:
     static constexpr uint16_t kRouterListSize        = OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE;
     static constexpr uint16_t kOnMeshPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE;
     static constexpr uint16_t kExternalRouteListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE;
+    static constexpr uint16_t kEpskcEventListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
     static constexpr AddressEvent kAddressAdded   = OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED;
     static constexpr AddressEvent kAddressRemoved = OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED;
 
-    static constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid;
+    static constexpr uint16_t kInvalidRloc16 = Mle::kInvalidRloc16;
 
     typedef otHistoryTrackerNeighborEvent NeighborEvent;
 
@@ -312,6 +316,27 @@ private:
 
     static constexpr NetDataEvent kNetDataEntryAdded   = OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED;
     static constexpr NetDataEvent kNetDataEntryRemoved = OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#define DefineEpskcEvent(aName, aPublicEnumName) \
+    static constexpr EpskcEvent kEpskc##aName = OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_##aPublicEnumName
+
+    DefineEpskcEvent(Activated, ACTIVATED);
+    DefineEpskcEvent(Connected, CONNECTED);
+    DefineEpskcEvent(Petitioned, PETITIONED);
+    DefineEpskcEvent(RetrievedActiveDataset, RETRIEVED_ACTIVE_DATASET);
+    DefineEpskcEvent(RetrievedPendingDataset, RETRIEVED_PENDING_DATASET);
+    DefineEpskcEvent(KeepAlive, KEEP_ALIVE);
+    DefineEpskcEvent(DeactivatedLocalClose, DEACTIVATED_LOCAL_CLOSE);
+    DefineEpskcEvent(DeactivatedRemoteClose, DEACTIVATED_REMOTE_CLOSE);
+    DefineEpskcEvent(DeactivatedSessionError, DEACTIVATED_SESSION_ERROR);
+    DefineEpskcEvent(DeactivatedSessionTimeout, DEACTIVATED_SESSION_TIMEOUT);
+    DefineEpskcEvent(DeactivatedMaxAttempts, DEACTIVATED_MAX_ATTEMPTS);
+    DefineEpskcEvent(DeactivatedEpskcTimeout, DEACTIVATED_EPSKC_TIMEOUT);
+    DefineEpskcEvent(DeactivatedUnknown, DEACTIVATED_UNKNOWN);
+
+#undef DefineEpskcEvent
+#endif
 
     class Timestamp
     {
@@ -385,6 +410,7 @@ private:
         Entry       *AddNewEntry(void) { return nullptr; }
         void         AddNewEntry(const Entry &) {}
         const Entry *Iterate(Iterator &, uint32_t &) const { return nullptr; }
+        void         UpdateAgedEntries(void) {}
         void         RemoveAgedEntries(void) {}
     };
 
@@ -421,6 +447,9 @@ private:
     void RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix);
     void RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute);
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    void RecordEpskcEvent(EpskcEvent aEvent);
+#endif
 
     using TrackerTimer = TimerMilliIn<HistoryTracker, &HistoryTracker::HandleTimer>;
 
@@ -433,6 +462,9 @@ private:
     EntryList<RouterInfo, kRouterListSize>                  mRouterHistory;
     EntryList<OnMeshPrefixInfo, kOnMeshPrefixListSize>      mOnMeshPrefixHistory;
     EntryList<ExternalRouteInfo, kExternalRouteListSize>    mExternalRouteHistory;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    EntryList<EpskcEvent, kEpskcEventListSize> mEpskcEventHistory;
+#endif
 
     TrackerTimer mTimer;
 

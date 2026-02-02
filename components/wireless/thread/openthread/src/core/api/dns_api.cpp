@@ -33,9 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/dns_client.h>
-
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
 using namespace ot;
@@ -254,5 +252,39 @@ otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
+otError otDnsClientQueryRecord(otInstance             *aInstance,
+                               uint16_t                aRecordType,
+                               const char             *aFirstLabel,
+                               const char             *aNextLabels,
+                               otDnsRecordCallback     aCallback,
+                               void                   *aContext,
+                               const otDnsQueryConfig *aConfig)
+{
+    AssertPointerIsNotNull(aNextLabels);
+
+    return AsCoreType(aInstance).Get<Dns::Client>().QueryRecord(aRecordType, aFirstLabel, aNextLabels, aCallback,
+                                                                aContext, AsCoreTypePtr(aConfig));
+}
+
+otError otDnsRecordResponseGetQueryName(const otDnsRecordResponse *aResponse,
+                                        char                      *aNameBuffer,
+                                        uint16_t                   aNameBufferSize)
+{
+    AssertPointerIsNotNull(aNameBuffer);
+
+    return AsCoreType(aResponse).GetQueryName(aNameBuffer, aNameBufferSize);
+}
+
+otError otDnsRecordResponseGetRecordInfo(const otDnsRecordResponse *aResponse,
+                                         uint16_t                   aIndex,
+                                         otDnsRecordInfo           *aRecordInfo)
+{
+    return AsCoreType(aResponse).GetRecordInfo(aIndex, AsCoreType(aRecordInfo));
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

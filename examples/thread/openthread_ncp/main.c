@@ -1,13 +1,17 @@
+#include <FreeRTOS.h>
+#include <task.h>
 
 #if defined(BL616)
 #include "rfparam_adapter.h"
 #endif
 
+#include <bl_sys.h>
 #include <bflb_mtd.h>
-#if defined (CONFIG_LITTLEFS)
-#include <easyflash.h>
-#endif
 
+#include <lmac154.h>
+#include <zb_timer.h>
+
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread_port.h>
 #include <openthread/ncp.h>
 
@@ -25,24 +29,19 @@ void otrInitUser(otInstance * instance)
 void vApplicationTickHook( void )
 {
 #ifdef BL616
-    lmac154_monitor();
+    lmac154_monitor(10000);
 #endif
 }
 
 int main(void)
 {
     otRadio_opt_t opt;
-    
-#if !defined(BL702L)
+
     bl_sys_rstinfo_init();
-#endif
 
     board_ncp_init();
 
     bflb_mtd_init();
-#if defined (CONFIG_LITTLEFS)
-    easyflash_init();
-#endif
 
     configASSERT((configMAX_PRIORITIES > 4));
 

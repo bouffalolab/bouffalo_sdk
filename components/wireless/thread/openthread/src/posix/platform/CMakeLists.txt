@@ -45,6 +45,13 @@ if(OT_DAEMON)
     set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 endif()
 
+if(OT_MULTIPAN_RCP)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+    )
+endif()
+
+
 option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" ON)
 if(OT_POSIX_INSTALL_EXTERNAL_ROUTES)
     target_compile_definitions(ot-posix-config
@@ -77,10 +84,24 @@ if (OT_POSIX_SECURE_SETTINGS)
     )
 endif()
 
-set(OT_POSIX_CONFIG_RCP_BUS "" CACHE STRING "RCP bus type")
-if(OT_POSIX_CONFIG_RCP_BUS)
+option(OT_POSIX_RCP_HDLC_BUS "enable RCP HDLC bus" OFF)
+if(OT_POSIX_RCP_HDLC_BUS)
     target_compile_definitions(ot-posix-config
-        INTERFACE "OPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_${OT_POSIX_CONFIG_RCP_BUS}"
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE=1"
+    )
+endif()
+
+option(OT_POSIX_RCP_SPI_BUS "enable RCP SPI bus" OFF)
+if(OT_POSIX_RCP_SPI_BUS)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE=1"
+    )
+endif()
+
+option(OT_POSIX_RCP_VENDOR_BUS "enable RCP vendor bus" OFF)
+if(OT_POSIX_RCP_VENDOR_BUS)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE=1"
     )
 endif()
 
@@ -103,8 +124,9 @@ endif()
 
 add_library(openthread-posix
     alarm.cpp
-    backbone.cpp
     backtrace.cpp
+    ble.cpp
+    configuration.cpp
     config_file.cpp
     daemon.cpp
     entropy.cpp
@@ -113,18 +135,22 @@ add_library(openthread-posix
     infra_if.cpp
     logging.cpp
     mainloop.cpp
+    mdns_socket.cpp
     memory.cpp
     misc.cpp
     multicast_routing.cpp
     netif.cpp
     power.cpp
-    power_updater.cpp
     radio.cpp
     radio_url.cpp
+    rcp_caps_diag.cpp
     resolver.cpp
     settings.cpp
+    settings_file.cpp
+    spinel_manager.cpp
     spi_interface.cpp
     system.cpp
+    tmp_storage.cpp
     trel.cpp
     udp.cpp
     utils.cpp
@@ -140,6 +166,7 @@ target_link_libraries(openthread-posix
         openthread-cli-ftd
         openthread-ftd
         openthread-hdlc
+        openthread-radio-spinel
         openthread-spinel-rcp
         openthread-url
         ot-config-ftd
@@ -149,20 +176,13 @@ target_link_libraries(openthread-posix
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
 )
 
-option(OT_TARGET_OPENWRT "enable openthread posix for OpenWRT" OFF)
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT OT_TARGET_OPENWRT)
-    target_compile_definitions(ot-posix-config
-        INTERFACE "OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE=1"
-    )
-    target_link_libraries(openthread-posix PRIVATE anl)
-endif()
-
 target_compile_definitions(openthread-posix
     PUBLIC
         ${OT_PUBLIC_DEFINES}
     PRIVATE
         OPENTHREAD_FTD=1
         OPENTHREAD_MTD=0
+        OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-posix PRIVATE
@@ -174,12 +194,14 @@ target_include_directories(openthread-posix PRIVATE
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    ${OT_SPINEL_VENDOR_HOOK_SOURCE_DIR}
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 
 add_executable(ot-posix-test-settings
     settings.cpp
+    settings_file.cpp
 )
 target_compile_definitions(ot-posix-test-settings
     PRIVATE -DSELF_TEST=1 -DOPENTHREAD_CONFIG_LOG_PLATFORM=0
@@ -189,6 +211,7 @@ target_include_directories(ot-posix-test-settings
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/src/include
         ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 add_test(NAME ot-posix-test-settings COMMAND ot-posix-test-settings)

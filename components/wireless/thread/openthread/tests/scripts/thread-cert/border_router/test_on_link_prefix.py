@@ -126,7 +126,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
         logging.info("ROUTER1 addrs: %r", router1.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
 
         host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
         self.assertTrue(router1.ping(host_on_link_addr))
@@ -166,10 +166,10 @@ class MultiThreadNetworks(thread_cert.TestCase):
         # but don't remove the external routes for the radvd on-link prefix
         # immediately, because the SLAAC addresses are still valid.
 
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 1)
 
         br2_on_link_prefix = br2.get_br_on_link_prefix()
 
@@ -187,20 +187,6 @@ class MultiThreadNetworks(thread_cert.TestCase):
             self.assertTrue(host.ping(router1_omr_addr, backbone=True, interface=host_on_link_addr))
 
         host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
-
-        # Wait 30 seconds for the radvd `ON_LINK_PREFIX` to be invalidated
-        # and make sure that Thread devices in both networks can't reach
-        # the on-link address.
-        self.simulator.go(30)  # Valid Lifetime of radvd PIO is set to 60 seconds.
-        self.assertEqual(len(host.get_matched_ula_addresses(ON_LINK_PREFIX)), 0)
-        self.assertFalse(router1.ping(host_on_link_addr))
-        self.assertFalse(host.ping(router1_omr_addr, backbone=True, interface=host_on_link_addr))
-        self.assertFalse(router2.ping(host_on_link_addr))
-        self.assertFalse(host.ping(router2_omr_addr, backbone=True, interface=host_on_link_addr))
-
-        # Verify connectivity between the two networks.
-        self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-        self.assertTrue(router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
 
 
 if __name__ == '__main__':

@@ -38,27 +38,23 @@
 
 #include <openthread/netdata.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
 
 /**
  * Implements the Network Data CLI.
- *
  */
-class NetworkData : private Output
+class NetworkData : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * This constant specifies the string size for representing Network Data prefix/route entry flags.
      *
      * BorderRouter (OnMeshPrefix) TLV uses `uint16_t` for its flags and ExternalRoute uses `uint8_t`, though some of
      * the bits are not currently used and reserved for future, so 17 chars string (16 flags plus null char at end of
      * string) covers current and future flags.
-     *
      */
     static constexpr uint16_t kFlagsStringSize = 17;
 
@@ -69,7 +65,6 @@ public:
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
@@ -83,7 +78,6 @@ public:
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
      * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
      * @retval ...                        Error during execution of the CLI command.
-     *
      */
     otError Process(Arg aArgs[]);
 
@@ -91,7 +85,6 @@ public:
      * Outputs the prefix config.
      *
      * @param[in]  aConfig  The prefix config.
-     *
      */
     void OutputPrefix(const otBorderRouterConfig &aConfig);
 
@@ -99,7 +92,6 @@ public:
      * Outputs the route config.
      *
      * @param[in]  aConfig  The route config.
-     *
      */
     void OutputRoute(const otExternalRouteConfig &aConfig);
 
@@ -107,7 +99,6 @@ public:
      * Outputs the service config.
      *
      * @param[in]  aConfig  The service config.
-     *
      */
     void OutputService(const otServiceConfig &aConfig);
 
@@ -116,7 +107,6 @@ public:
      *
      * @param[in]  aConfig  The prefix config.
      * @param[out] aString  The string to populate from @a Config flags.
-     *
      */
     static void PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString);
 
@@ -125,12 +115,13 @@ public:
      *
      * @param[in]  aConfig  The route config.
      * @param[out] aString  The string to populate from @a Config flags.
-     *
      */
     static void RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString);
 
 private:
     using Command = CommandEntry<NetworkData>;
+
+    static constexpr uint16_t kAnyRloc16 = 0xffff;
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
@@ -138,11 +129,9 @@ private:
     otError GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal);
     otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
 
+    void    OutputContext(const otLowpanContextInfo &aConfig);
     otError OutputBinary(bool aLocal);
-    void    OutputPrefixes(bool aLocal);
-    void    OutputRoutes(bool aLocal);
-    void    OutputServices(bool aLocal);
-    void    OutputLowpanContexts(bool aLocal);
+    void    OutputNetworkData(bool aLocal, uint16_t aRloc16);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     static void HandleNetdataFull(void *aContext) { static_cast<NetworkData *>(aContext)->HandleNetdataFull(); }

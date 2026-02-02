@@ -49,7 +49,7 @@
 #endif
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/time.hpp"
 
 namespace ot {
@@ -57,19 +57,15 @@ namespace Cli {
 
 /**
  * Implements a CLI-based TCP example.
- *
  */
-class TcpExample : private Output
+class TcpExample : private Utils
 {
 public:
-    using Arg = Utils::CmdLineParser::Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
@@ -83,7 +79,6 @@ public:
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
      * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
      * @retval ...                        Error during execution of the CLI command.
-     *
      */
     otError Process(Arg aArgs[]);
 
@@ -96,7 +91,8 @@ private:
     void    CompleteBenchmark(void);
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    bool ContinueTLSHandshake(void);
+    void PrepareTlsHandshake(void);
+    bool ContinueTlsHandshake(void);
 #endif
 
     static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
@@ -138,6 +134,7 @@ private:
 
     bool mInitialized;
     bool mEndpointConnected;
+    bool mEndpointConnectedFastOpen;
     bool mSendBusy;
     bool mUseCircularSendBuffer;
     bool mUseTls;

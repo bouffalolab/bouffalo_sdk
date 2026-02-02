@@ -106,6 +106,10 @@
 #endif
 #endif
 
+#ifdef CONFIG_IPV6
+#define LWIP_IPV6                 1
+#endif
+
 #ifndef CONFIG_WL80211
 #define LWIP_HOOK_FILENAME        "lwiphooks.h"
 #endif

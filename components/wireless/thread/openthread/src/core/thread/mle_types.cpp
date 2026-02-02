@@ -37,6 +37,7 @@
 #include "common/code_utils.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mle {
@@ -72,7 +73,7 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
 //---------------------------------------------------------------------------------------------------------------------
 // DeviceProperties
 
-#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 DeviceProperties::DeviceProperties(void)
 {
@@ -99,10 +100,14 @@ uint8_t DeviceProperties::CalculateLeaderWeight(void) const
         kPowerExternalUnstableInc, // (3) kPowerSupplyExternalUnstable
     };
 
-    static_assert(0 == kPowerSupplyBattery, "kPowerSupplyBattery value is incorrect");
-    static_assert(1 == kPowerSupplyExternal, "kPowerSupplyExternal value is incorrect");
-    static_assert(2 == kPowerSupplyExternalStable, "kPowerSupplyExternalStable value is incorrect");
-    static_assert(3 == kPowerSupplyExternalUnstable, "kPowerSupplyExternalUnstable value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kPowerSupplyBattery);
+        ValidateNextEnum(kPowerSupplyExternal);
+        ValidateNextEnum(kPowerSupplyExternalStable);
+        ValidateNextEnum(kPowerSupplyExternalUnstable);
+    };
 
     uint8_t     weight      = kBaseWeight;
     PowerSupply powerSupply = MapEnum(mPowerSupply);
@@ -135,7 +140,7 @@ uint8_t DeviceProperties::CalculateLeaderWeight(void) const
     return weight;
 }
 
-#endif // #if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RouterIdSet
@@ -160,17 +165,19 @@ void TxChallenge::GenerateRandom(void) { IgnoreError(Random::Crypto::Fill(*this)
 //---------------------------------------------------------------------------------------------------------------------
 // RxChallenge
 
-Error RxChallenge::ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+Error RxChallenge::ReadFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
 {
-    Error error = kErrorNone;
+    Error       error       = kErrorNone;
+    OffsetRange offsetRange = aOffsetRange;
 
     Clear();
 
-    aLength = Min<uint16_t>(aLength, kMaxSize);
-    VerifyOrExit(kMinSize <= aLength, error = kErrorParse);
+    offsetRange.ShrinkLength(kMaxSize);
 
-    SuccessOrExit(error = aMessage.Read(aOffset, mArray.GetArrayBuffer(), aLength));
-    mArray.SetLength(static_cast<uint8_t>(aLength));
+    VerifyOrExit(offsetRange.Contains(kMinSize), error = kErrorParse);
+
+    SuccessOrExit(error = aMessage.Read(offsetRange, mArray.GetArrayBuffer(), offsetRange.GetLength()));
+    mArray.SetLength(static_cast<uint8_t>(offsetRange.GetLength()));
 
 exit:
     return error;
@@ -193,11 +200,15 @@ const char *RoleToString(DeviceRole aRole)
         "leader",   // (4) kRoleLeader
     };
 
-    static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
-    static_assert(kRoleDetached == 1, "kRoleDetached value is incorrect");
-    static_assert(kRoleChild == 2, "kRoleChild value is incorrect");
-    static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
-    static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kRoleDisabled);
+        ValidateNextEnum(kRoleDetached);
+        ValidateNextEnum(kRoleChild);
+        ValidateNextEnum(kRoleRouter);
+        ValidateNextEnum(kRoleLeader);
+    };
 
     return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }

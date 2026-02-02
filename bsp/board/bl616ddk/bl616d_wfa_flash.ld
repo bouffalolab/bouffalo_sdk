@@ -59,7 +59,7 @@ SECTIONS
     {
         LONG(0x42464c42);
         LONG(0x46524556);
-        KEEP (*(.qcc74xverinf))
+        KEEP (*(.verinf))
         LONG(0x42464c42);
         LONG(0x46524556);
         KEEP (*(.verinfo))
@@ -202,10 +202,10 @@ SECTIONS
         _bt_l2cap_br_fixed_chan_list_end = .;
 
         . = ALIGN(4);
-        __qcc74xlog_tags_start__ = .;
-        *(.qcc74xlog_tags_array)
+        __log_tags_start__ = .;
+        *(.log_tags_array)
         . = ALIGN(4);
-        __qcc74xlog_tags_end__ = .;
+        __log_tags_end__ = .;
         __ram_data_end__ = .;
     } > ram_memory
 
@@ -389,7 +389,6 @@ SECTIONS
         KEEP (*(.init_array))
         __init_array_end = .;
 
-        /* _dump_sections for qcc74x_coredump.c*/
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
         LONG(ORIGIN(ram_memory) + (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache)));
@@ -405,7 +404,6 @@ SECTIONS
         LONG(0x28010000); /* bt memory */
         LONG(0xffffffff);
         LONG(0xffffffff);
-        /* _dump_sections for qcc74x_coredump.c*/
 
         . = ALIGN(4);
         __text_code_end__ = .;

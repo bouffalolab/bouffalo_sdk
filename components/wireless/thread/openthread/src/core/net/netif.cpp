@@ -33,12 +33,7 @@
 
 #include "netif.hpp"
 
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
-#include "net/ip6.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -52,7 +47,6 @@ namespace Ip6 {
  * All or a portion of the chain is appended to the end of `mMulticastAddresses` linked-list. If the interface is
  * subscribed to all-routers multicast addresses (using `SubscribeAllRoutersMulticast()`) then all the five entries
  * are appended. Otherwise only the last three are appended.
- *
  */
 
 // "ff03::fc"
@@ -85,7 +79,6 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMulticastPromiscuous(false)
 {
 }
 
@@ -253,6 +246,7 @@ void Netif::SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAdd
         info.mPrefixLength = kMulticastPrefixLength;
         info.mScope        = aAddress.GetAddress().GetScope();
         info.mPreferred    = false;
+        info.mMeshLocal    = false;
 
         mAddressCallback.Invoke(&info, aEvent);
     }
@@ -333,7 +327,7 @@ Error Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     MulticastAddress *entry;
     MulticastAddress *prev;
 
-    entry = mMulticastAddresses.FindMatching(aAddress, prev);
+    entry = mMulticastAddresses.FindMatchingWithPrev(prev, aAddress);
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     VerifyOrExit(IsMulticastAddressExternal(*entry), error = kErrorRejected);
@@ -365,6 +359,11 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
 
 void Netif::AddUnicastAddress(UnicastAddress &aAddress)
 {
+    if (aAddress.mMeshLocal)
+    {
+        aAddress.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+    }
+
     SuccessOrExit(mUnicastAddresses.Add(aAddress));
     SignalUnicastAddressChange(kAddressAdded, aAddress);
 
@@ -372,10 +371,24 @@ exit:
     return;
 }
 
-void Netif::RemoveUnicastAddress(const UnicastAddress &aAddress)
+void Netif::RemoveUnicastAddress(UnicastAddress &aAddress)
 {
     SuccessOrExit(mUnicastAddresses.Remove(aAddress));
+    aAddress.mSrpRegistered = false;
     SignalUnicastAddressChange(kAddressRemoved, aAddress);
+
+exit:
+    return;
+}
+
+void Netif::UpdatePreferredFlagOn(UnicastAddress &aAddress, bool aPreferred)
+{
+    VerifyOrExit(HasUnicastAddress(aAddress));
+    VerifyOrExit(aAddress.mPreferred != aPreferred);
+
+    SignalUnicastAddressChange(kAddressRemoved, aAddress);
+    aAddress.mPreferred = aPreferred;
+    SignalUnicastAddressChange(kAddressAdded, aAddress);
 
 exit:
     return;
@@ -396,6 +409,10 @@ void Netif::SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress
 
     Get<Notifier>().Signal(event);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Get<Srp::Client>().HandleUnicastAddressEvent(aEvent, aAddress);
+#endif
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordAddressEvent(aEvent, aAddress);
 #endif
@@ -408,6 +425,7 @@ void Netif::SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress
         info.mPrefixLength = aAddress.mPrefixLength;
         info.mScope        = aAddress.GetScope();
         info.mPreferred    = aAddress.mPreferred;
+        info.mMeshLocal    = aAddress.mMeshLocal;
 
         mAddressCallback.Invoke(&info, aEvent);
     }
@@ -424,7 +442,7 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
 
     if (entry != nullptr)
     {
-        VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorAlready);
+        VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorInvalidArgs);
 
         entry->mPrefixLength  = aAddress.mPrefixLength;
         entry->mAddressOrigin = aAddress.mAddressOrigin;
@@ -433,13 +451,16 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
         ExitNow();
     }
 
-    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = kErrorInvalidArgs);
+    VerifyOrExit(!aAddress.GetAddress().IsLinkLocalUnicast(), error = kErrorInvalidArgs);
 
     entry = mExtUnicastAddressPool.Allocate();
     VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
-    *entry       = aAddress;
-    entry->mRloc = false;
+    *entry                = aAddress;
+    entry->mRloc          = false;
+    entry->mMeshLocal     = false;
+    entry->mSrpRegistered = false;
+
     mUnicastAddresses.Push(*entry);
     SignalUnicastAddressChange(kAddressAdded, *entry);
 
@@ -453,7 +474,7 @@ Error Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     UnicastAddress *entry;
     UnicastAddress *prev;
 
-    entry = mUnicastAddresses.FindMatching(aAddress, prev);
+    entry = mUnicastAddresses.FindMatchingWithPrev(prev, aAddress);
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorRejected);
@@ -490,22 +511,47 @@ bool Netif::IsUnicastAddressExternal(const UnicastAddress &aAddress) const
     return mExtUnicastAddressPool.IsPoolEntry(aAddress);
 }
 
+void Netif::ApplyNewMeshLocalPrefix(void)
+{
+    for (UnicastAddress &address : mUnicastAddresses)
+    {
+        if (address.mMeshLocal)
+        {
+            SignalUnicastAddressChange(kAddressRemoved, address);
+            address.mSrpRegistered = false;
+            address.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+            SignalUnicastAddressChange(kAddressAdded, address);
+        }
+    }
+
+    for (MulticastAddress &address : mMulticastAddresses)
+    {
+        if (Get<Mle::Mle>().IsMulticastAddressMeshLocalPrefixBased(address))
+        {
+            SignalMulticastAddressChange(kAddressRemoved, address, kOriginThread);
+            address.GetAddress().SetMulticastNetworkPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+            SignalMulticastAddressChange(kAddressAdded, address, kOriginThread);
+        }
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // Netif::UnicastAddress
 
-void Netif::UnicastAddress::InitAsThreadOrigin(bool aPreferred)
+void Netif::UnicastAddress::InitAsThreadOrigin(void)
 {
     Clear();
     mPrefixLength  = NetworkPrefix::kLength;
     mAddressOrigin = kOriginThread;
-    mPreferred     = aPreferred;
+    mPreferred     = true;
     mValid         = true;
 }
 
-void Netif::UnicastAddress::InitAsThreadOriginRealmLocalScope(void)
+void Netif::UnicastAddress::InitAsThreadOriginMeshLocal(void)
 {
     InitAsThreadOrigin();
     SetScopeOverride(Address::kRealmLocalScope);
+    mMeshLocal = true;
 }
 
 void Netif::UnicastAddress::InitAsThreadOriginGlobalScope(void)

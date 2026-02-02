@@ -53,12 +53,10 @@ namespace Ip6 {
  *   This module includes definitions for MPL.
  *
  * @{
- *
  */
 
 /**
  * Implements MPL header generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class MplOption : public Option
@@ -69,7 +67,6 @@ public:
 
     /**
      * MPL Seed Id Lengths.
-     *
      */
     enum SeedIdLength : uint8_t
     {
@@ -85,7 +82,6 @@ public:
      * The @p aSeedIdLength MUST be either `kSeedIdLength0` or `kSeedIdLength2`. Other values are not supported.
      *
      * @param[in] aSeedIdLength   The MPL Seed Id Length.
-     *
      */
     void Init(SeedIdLength aSeedIdLength);
 
@@ -93,7 +89,6 @@ public:
      * Returns the MPL Seed Id Length value.
      *
      * @returns The MPL Seed Id Length value.
-     *
      */
     SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
 
@@ -102,19 +97,16 @@ public:
      *
      * @retval TRUE   If the MPL M flag is set.
      * @retval FALSE  If the MPL M flag is not set.
-     *
      */
     bool IsMaxFlagSet(void) const { return (mControl & kMaxFlag) != 0; }
 
     /**
      * Clears the MPL M flag.
-     *
      */
     void ClearMaxFlag(void) { mControl &= ~kMaxFlag; }
 
     /**
      * Sets the MPL M flag.
-     *
      */
     void SetMaxFlag(void) { mControl |= kMaxFlag; }
 
@@ -122,7 +114,6 @@ public:
      * Returns the MPL Sequence value.
      *
      * @returns The MPL Sequence value.
-     *
      */
     uint8_t GetSequence(void) const { return mSequence; }
 
@@ -130,7 +121,6 @@ public:
      * Sets the MPL Sequence value.
      *
      * @param[in]  aSequence  The MPL Sequence value.
-     *
      */
     void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
 
@@ -138,17 +128,15 @@ public:
      * Returns the MPL Seed Id value.
      *
      * @returns The MPL Seed Id value.
-     *
      */
-    uint16_t GetSeedId(void) const { return HostSwap16(mSeedId); }
+    uint16_t GetSeedId(void) const { return BigEndian::HostSwap16(mSeedId); }
 
     /**
      * Sets the MPL Seed Id value.
      *
      * @param[in]  aSeedId  The MPL Seed Id value.
-     *
      */
-    void SetSeedId(uint16_t aSeedId) { mSeedId = HostSwap16(aSeedId); }
+    void SetSeedId(uint16_t aSeedId) { mSeedId = BigEndian::HostSwap16(aSeedId); }
 
 private:
     static constexpr uint8_t kSeedIdLengthMask = 3 << 6;
@@ -161,7 +149,6 @@ private:
 
 /**
  * Implements MPL message processing.
- *
  */
 class Mpl : public InstanceLocator, private NonCopyable
 {
@@ -172,7 +159,6 @@ public:
      * Initializes the MPL object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Mpl(Instance &aInstance);
 
@@ -181,7 +167,6 @@ public:
      *
      * @param[in]  aOption   A reference to the MPL header to initialize.
      * @param[in]  aAddress  A reference to the IPv6 Source Address.
-     *
      */
     void InitOption(MplOption &aOption, const Address &aAddress);
 
@@ -191,27 +176,24 @@ public:
      * MPL Seed it allows to send the first MPL Data Message directly, then sets up Trickle
      * timer expirations for subsequent retransmissions.
      *
-     * @param[in]  aMessage    A reference to the message.
-     * @param[in]  aOffset     The offset in @p aMessage to read the MPL option.
-     * @param[in]  aAddress    A reference to the IPv6 Source Address.
-     * @param[in]  aIsOutbound TRUE if this message was locally generated, FALSE otherwise.
-     * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
-     *                         go through the receiving process again, untouched otherwise.
+     * @param[in]  aMessage      A reference to the message.
+     * @param[in]  aOffsetRange  The offset range in @p aMessage to read the MPL option.
+     * @param[in]  aAddress      A reference to the IPv6 Source Address.
+     * @param[out] aReceive      Set to FALSE if the MPL message is a duplicate and must not
+     *                           go through the receiving process again, untouched otherwise.
      *
      * @retval kErrorNone  Successfully processed the MPL option.
      * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
-     *
      */
-    Error ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool aIsOutbound, bool &aReceive);
+    Error ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive);
 
 #if OPENTHREAD_FTD
     /**
-     * Returns a reference to the buffered message set.
+     * Retrieves information about the message queue containing buffered message set.
      *
-     * @returns A reference to the buffered message set.
-     *
+     * @param[out] aQueueInfo    A `MessageQueue::Info` to populate with info about the queue.
      */
-    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
+    void GetBufferedMessageSetInfo(MessageQueue::Info &aQueueInfo) { mBufferedMessageSet.GetInfo(aQueueInfo); }
 #endif
 
 private:
@@ -234,16 +216,12 @@ private:
     uint8_t   mSequence;
 
 #if OPENTHREAD_FTD
-    static constexpr uint8_t kChildTimerExpirations  = 0; // MPL retransmissions for Children.
-    static constexpr uint8_t kRouterTimerExpirations = 2; // MPL retransmissions for Routers.
+    static constexpr uint8_t kChildRetransmissions  = 0; // MPL retransmissions for Children.
+    static constexpr uint8_t kRouterRetransmissions = 2; // MPL retransmissions for Routers.
 
-    struct Metadata
+    struct Metadata : public Message::FooterData<Metadata>
     {
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage);
-        void  RemoveFrom(Message &aMessage) const;
-        void  UpdateIn(Message &aMessage) const;
-        void  GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
+        void GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
 
         TimeMilli mTransmissionTime;
         uint16_t  mSeedId;
@@ -252,9 +230,9 @@ private:
         uint8_t   mIntervalOffset;
     };
 
-    uint8_t GetTimerExpirations(void) const;
+    uint8_t DetermineMaxRetransmissions(void) const;
     void    HandleRetransmissionTimer(void);
-    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
+    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence);
 
     using RetxTimer = TimerMilliIn<Mpl, &Mpl::HandleRetransmissionTimer>;
 
@@ -265,7 +243,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Ip6

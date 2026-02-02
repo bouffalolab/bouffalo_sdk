@@ -37,8 +37,7 @@
 
 #include <openthread/network_time.h>
 
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -53,7 +52,7 @@ otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeri
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
     AsCoreType(aInstance).Get<TimeSync>().SetTimeSyncPeriod(aTimeSyncPeriod);
 
@@ -70,7 +69,7 @@ otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXtalThres
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
     AsCoreType(aInstance).Get<TimeSync>().SetXtalThreshold(aXtalThreshold);
 

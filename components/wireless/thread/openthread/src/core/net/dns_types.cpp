@@ -33,17 +33,10 @@
 
 #include "dns_types.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Dns {
-
-using ot::Encoding::BigEndian::HostSwap16;
 
 Error Header::SetRandomMessageId(void)
 {
@@ -100,6 +93,76 @@ Error Header::ResponseCodeToError(Response aResponse)
     }
 
     return error;
+}
+
+bool Name::Matches(const char *aFirstLabel, const char *aLabels, const char *aDomain) const
+{
+    bool matches = false;
+
+    VerifyOrExit(!IsEmpty());
+
+    if (IsFromCString())
+    {
+        const char *namePtr = mString;
+
+        if (aFirstLabel != nullptr)
+        {
+            matches = CompareAndSkipLabels(namePtr, aFirstLabel, kLabelSeparatorChar);
+            VerifyOrExit(matches);
+        }
+
+        if (aLabels != nullptr)
+        {
+            matches = CompareAndSkipLabels(namePtr, aLabels, kLabelSeparatorChar);
+            VerifyOrExit(matches);
+        }
+
+        matches = CompareAndSkipLabels(namePtr, aDomain, kNullChar);
+    }
+    else
+    {
+        uint16_t offset = mOffset;
+
+        if (aFirstLabel != nullptr)
+        {
+            SuccessOrExit(CompareLabel(*mMessage, offset, aFirstLabel));
+        }
+
+        if (aLabels != nullptr)
+        {
+            SuccessOrExit(CompareMultipleLabels(*mMessage, offset, aLabels));
+        }
+
+        SuccessOrExit(CompareName(*mMessage, offset, aDomain));
+        matches = true;
+    }
+
+exit:
+    return matches;
+}
+
+bool Name::CompareAndSkipLabels(const char *&aNamePtr, const char *aLabels, char aExpectedNextChar)
+{
+    // Compares `aNamePtr` to the label string `aLabels` followed by
+    // the `aExpectedNextChar`(using case-insensitive match). Upon
+    // successful comparison, `aNamePtr` is advanced to point after
+    // the matched portion.
+
+    bool     matches = false;
+    uint16_t len     = StringLength(aLabels, kMaxNameSize);
+
+    VerifyOrExit(len < kMaxNameSize);
+
+    VerifyOrExit(StringStartsWith(aNamePtr, aLabels, kStringCaseInsensitiveMatch));
+    aNamePtr += len;
+
+    VerifyOrExit(*aNamePtr == aExpectedNextChar);
+    aNamePtr++;
+
+    matches = true;
+
+exit:
+    return matches;
 }
 
 Error Name::AppendTo(Message &aMessage) const
@@ -244,7 +307,7 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
 
     OT_ASSERT(aOffset < kPointerLabelTypeUint16);
 
-    value = HostSwap16(aOffset | kPointerLabelTypeUint16);
+    value = BigEndian::HostSwap16(aOffset | kPointerLabelTypeUint16);
 
     ExitNow(error = aMessage.Append(value));
 
@@ -366,6 +429,27 @@ Error Name::CompareLabel(const Message &aMessage, uint16_t &aOffset, const char 
     SuccessOrExit(error = iterator.GetNextLabel());
     VerifyOrExit(iterator.CompareLabel(aLabel, kIsSingleLabel), error = kErrorNotFound);
     aOffset = iterator.mNextLabelOffset;
+
+exit:
+    return error;
+}
+
+Error Name::CompareMultipleLabels(const Message &aMessage, uint16_t &aOffset, const char *aLabels)
+{
+    Error         error;
+    LabelIterator iterator(aMessage, aOffset);
+
+    while (true)
+    {
+        SuccessOrExit(error = iterator.GetNextLabel());
+        VerifyOrExit(iterator.CompareLabel(aLabels, !kIsSingleLabel), error = kErrorNotFound);
+
+        if (*aLabels == kNullChar)
+        {
+            aOffset = iterator.mNextLabelOffset;
+            ExitNow();
+        }
+    }
 
 exit:
     return error;
@@ -528,9 +612,10 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
-            nextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
-            VerifyOrExit(nextLabelOffset < mNextLabelOffset, error = kErrorParse);
+            nextLabelOffset = mMessage.GetOffset() + (BigEndian::HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            VerifyOrExit(nextLabelOffset < mMinLabelOffset, error = kErrorParse);
             mNextLabelOffset = nextLabelOffset;
+            mMinLabelOffset  = nextLabelOffset;
 
             // Go back through the `while(true)` loop to get the next label.
         }
@@ -649,7 +734,11 @@ Error Name::ExtractLabels(const char *aName, const char *aSuffixName, char *aLab
     nameLength -= (suffixLength + 1);
     VerifyOrExit(nameLength < aLabelsSize, error = kErrorNoBufs);
 
-    memcpy(aLabels, aName, nameLength);
+    if (aLabels != aName)
+    {
+        memmove(aLabels, aName, nameLength);
+    }
+
     aLabels[nameLength] = kNullChar;
     error               = kErrorNone;
 
@@ -714,6 +803,15 @@ exit:
 bool Name::IsSameDomain(const char *aDomain1, const char *aDomain2)
 {
     return IsSubDomainOf(aDomain1, aDomain2) && IsSubDomainOf(aDomain2, aDomain1);
+}
+
+void ResourceRecord::UpdateRecordLengthInMessage(Message &aMessage, uint16_t aOffset)
+{
+    ResourceRecord record;
+
+    IgnoreError(aMessage.Read(aOffset, record));
+    record.SetLength(aMessage.GetLength() - aOffset - sizeof(ResourceRecord));
+    aMessage.Write(aOffset, record);
 }
 
 Error ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
@@ -938,6 +1036,200 @@ exit:
     return error;
 }
 
+const ResourceRecord::DataRecipe *ResourceRecord::FindDataRecipeFor(uint16_t aRecordType)
+{
+    static constexpr DataRecipe kRecipes[] = {
+        {kTypeNs, 0, 1, 0},
+        {kTypeCname, 0, 1, 0},
+        {kTypeSoa, 0, 2, 5 * sizeof(uint32_t)}, // mname, rname, followed by five 32-bit values.
+        {kTypePtr, 0, 1, 0},
+        {kTypeMx, sizeof(uint16_t), 1, 0},    // `preference` 16-bit field, exchange name [RFC 1035]
+        {kTypeRp, 0, 2, 0},                   /// `mbox-dname` `txt-dname` [RFC 1183]
+        {kTypeAfsdb, sizeof(uint16_t), 1, 0}, // `sub-type` 16-bit field, host name [RFC 1183]
+        {kTypeRt, sizeof(uint16_t), 1, 0},    // `preference` 16-bit field, host name [RFC 1183]
+        {kTypePx, sizeof(uint16_t), 2, 0},    // `preference` 16-bit field, two names [RFC 2163]
+        {kTypeSrv, sizeof(SrvRecord) - sizeof(ResourceRecord), 1, 0},
+        {kTypeKx, sizeof(uint16_t), 1, 0}, // `preference` 16-bit field, name [RFC 2230]
+        {kTypeDname, 0, 1, 0},
+        {kTypeNsec, 0, 1, NsecRecord::TypeBitMap::kMinSize},
+    };
+
+    static_assert(BinarySearch::IsSorted(kRecipes), "kRecipes is not sorted");
+
+    return BinarySearch::Find(aRecordType, kRecipes);
+}
+
+Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg)
+{
+    // Reads the `ResourceRecord` header to identify the record type
+    // and uses a predefined recipe to parse the record data.
+
+    Error             error;
+    ResourceRecord    record;
+    const DataRecipe *recipe;
+    uint16_t          startOffset;
+    uint16_t          remainingLength;
+
+    SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
+    aOffset += sizeof(ResourceRecord);
+
+    recipe = FindDataRecipeFor(record.GetType());
+
+    if (recipe == nullptr)
+    {
+        aDataMsg.Free();
+        error = kErrorNone;
+        ExitNow();
+    }
+
+    aDataMsg.Reset(aMessage.Get<MessagePool>().Allocate(Message::kTypeOther));
+    VerifyOrExit(!aDataMsg.IsNull(), error = kErrorNoBufs);
+
+    startOffset = aOffset;
+
+    // Check and copy the prefix bytes in the record data.
+
+    VerifyOrExit(record.GetLength() >= recipe->mNumPrefixBytes, error = kErrorParse);
+    SuccessOrExit(error = aDataMsg->AppendBytesFromMessage(aMessage, aOffset, recipe->mNumPrefixBytes));
+    aOffset += recipe->mNumPrefixBytes;
+
+    // Read and decompress embedded DNS names in the record data.
+
+    for (uint8_t numNames = 0; numNames < recipe->mNumNames; numNames++)
+    {
+        Name name(aMessage, aOffset);
+
+        // ParseName() updates `aOffset` to point to the byte after
+        // the end of name field.
+
+        SuccessOrExit(error = Name::ParseName(aMessage, aOffset));
+        SuccessOrExit(error = name.AppendTo(*aDataMsg));
+    }
+
+    // Determine the remaining length after the names in the record
+    // data. Ensure we have at least `mMinNumSuffixBytes` and copy
+    // them into `aDataMsg`.
+
+    VerifyOrExit(aOffset - startOffset <= record.GetLength(), error = kErrorParse);
+    remainingLength = record.GetLength() - (aOffset - startOffset);
+
+    VerifyOrExit(remainingLength >= recipe->mMinNumSuffixBytes, error = kErrorParse);
+
+    SuccessOrExit(error = aDataMsg->AppendBytesFromMessage(aMessage, aOffset, remainingLength));
+
+exit:
+    return error;
+}
+
+Error ResourceRecord::AppendTranslatedRecordDataTo(Message                       &aMessage,
+                                                   uint16_t                       aRecordType,
+                                                   const Data<kWithUint16Length> &aData,
+                                                   const char                    *aOriginalDomain,
+                                                   uint16_t                       aTranslatedDomainOffset)
+{
+    Error             error  = kErrorNone;
+    const DataRecipe *recipe = FindDataRecipeFor(aRecordType);
+    OwnedPtr<Message> dataMsg;
+    uint16_t          offset;
+    uint16_t          remainingLength;
+
+    if (recipe == nullptr)
+    {
+        error = aMessage.AppendData(aData);
+        ExitNow();
+    }
+
+    dataMsg.Reset(aMessage.Get<MessagePool>().Allocate(Message::kTypeOther));
+    VerifyOrExit(dataMsg != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = dataMsg->AppendData(aData));
+
+    // Append the prefix bytes in the record data.
+
+    offset = 0;
+    SuccessOrExit(error = aMessage.AppendBytesFromMessage(*dataMsg, offset, recipe->mNumPrefixBytes));
+    offset += recipe->mNumPrefixBytes;
+
+    // Translate and append the embedded DNS names
+
+    for (uint8_t numNames = 0; numNames < recipe->mNumNames; numNames++)
+    {
+        Name::LabelBuffer label;
+        uint8_t           labelLength;
+        uint16_t          labelOffset;
+
+        // Read labels one by one and append them to `aMessage`.
+        // First, check if the remaining labels match the original
+        // domain name and if so, append the translated domain name
+        // (as a compressed pointer label) instead.
+
+        labelOffset = offset;
+
+        while (true)
+        {
+            uint16_t compareOffset = labelOffset;
+
+            if (Name::CompareName(*dataMsg, compareOffset, aOriginalDomain) == kErrorNone)
+            {
+                SuccessOrExit(error = Name::AppendPointerLabel(aTranslatedDomainOffset, aMessage));
+                break;
+            }
+
+            labelLength = sizeof(label);
+            error       = Name::ReadLabel(*dataMsg, labelOffset, label, labelLength);
+
+            if (error == kErrorNotFound)
+            {
+                // Reached end of the label
+                break;
+            }
+
+            SuccessOrExit(error);
+
+            SuccessOrExit(error = Name::AppendLabel(label, aMessage));
+        }
+
+        // Parse name and update `offset` to the end of name field.
+        SuccessOrExit(error = Name::ParseName(*dataMsg, offset));
+    }
+
+    // Append the extra bytes after the name(s).
+
+    VerifyOrExit(offset <= dataMsg->GetLength(), error = kErrorParse);
+    remainingLength = dataMsg->GetLength() - offset;
+
+    VerifyOrExit(remainingLength >= recipe->mMinNumSuffixBytes, error = kErrorParse);
+    SuccessOrExit(error = aMessage.AppendBytesFromMessage(*dataMsg, offset, remainingLength));
+
+exit:
+    return error;
+}
+
+ResourceRecord::TypeInfoString ResourceRecord::TypeToString(uint16_t aRecordType)
+{
+    static constexpr Stringify::Entry kRecordTypeTable[] = {
+        {kTypeA, "A"},     {kTypeNs, "NS"},       {kTypeCname, "CNAME"}, {kTypeSoa, "SOA"},     {kTypePtr, "PTR"},
+        {kTypeMx, "MX"},   {kTypeTxt, "TXT"},     {kTypeRp, "RP"},       {kTypeAfsdb, "AFSDB"}, {kTypeRt, "RT"},
+        {kTypeSig, "SIG"}, {kTypeKey, "KEY"},     {kTypePx, "PX"},       {kTypeAaaa, "AAAA"},   {kTypeSrv, "SRV"},
+        {kTypeKx, "KX"},   {kTypeDname, "DNAME"}, {kTypeOpt, "OPT"},     {kTypeNsec, "NSEC"},   {kTypeAny, "ANY"},
+    };
+
+    static_assert(Stringify::IsSorted(kRecordTypeTable), "kRecordTypeTable is not sorted");
+
+    TypeInfoString string;
+    const char    *lookupResult = Stringify::Lookup(aRecordType, kRecordTypeTable, nullptr);
+
+    if (lookupResult != nullptr)
+    {
+        string.Append("%s", lookupResult);
+    }
+    else
+    {
+        string.Append("RR:%u", aRecordType);
+    }
+
+    return string;
+}
+
 void TxtEntry::Iterator::Init(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
     SetTxtData(aTxtData);
@@ -953,7 +1245,7 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
     const char *cur;
     char       *keyBuffer = GetKeyBuffer();
 
-    static_assert(sizeof(mChar) == TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
+    static_assert(sizeof(mChar) >= TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
 
     VerifyOrExit(GetTxtData() != nullptr, error = kErrorParse);
 
@@ -985,9 +1277,9 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
                 ExitNow();
             }
 
-            if (index >= kMaxKeyLength)
+            if (index >= sizeof(mChar) - 1)
             {
-                // The key is larger than recommended max key length.
+                // The key is larger than supported key string length.
                 // In this case, we return the full encoded string in
                 // `mValue` and `mValueLength` and set `mKey` to
                 // `nullptr`.
@@ -1093,6 +1385,24 @@ Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Ap
     {
         error = aAppender.Append<uint8_t>(0);
     }
+
+exit:
+    return error;
+}
+
+Error TxtDataEncoder::AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength)
+{
+    return TxtEntry(aKey, reinterpret_cast<const uint8_t *>(aBuffer), aLength).AppendTo(mAppender);
+}
+
+Error TxtDataEncoder::AppendStringEntry(const char *aKey, const char *aStringValue)
+{
+    Error    error;
+    uint16_t length = StringLength(aStringValue, kMaxStringEntryLength + 1);
+
+    VerifyOrExit(length <= kMaxStringEntryLength, error = kErrorInvalidArgs);
+
+    error = AppendBytesEntry(aKey, aStringValue, length);
 
 exit:
     return error;
@@ -1259,6 +1569,36 @@ bool TxtRecord::VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength, bool
 
 exit:
     return valid;
+}
+
+void NsecRecord::TypeBitMap::AddType(uint16_t aType)
+{
+    if ((aType >> 8) == mBlockNumber)
+    {
+        uint8_t  type  = static_cast<uint8_t>(aType & 0xff);
+        uint8_t  index = (type / kBitsPerByte);
+        uint16_t mask  = (0x80 >> (type % kBitsPerByte));
+
+        mBitmaps[index] |= mask;
+        mBitmapLength = Max<uint8_t>(mBitmapLength, index + 1);
+    }
+}
+
+bool NsecRecord::TypeBitMap::ContainsType(uint16_t aType) const
+{
+    bool     contains = false;
+    uint8_t  type     = static_cast<uint8_t>(aType & 0xff);
+    uint8_t  index    = (type / kBitsPerByte);
+    uint16_t mask     = (0x80 >> (type % kBitsPerByte));
+
+    VerifyOrExit((aType >> 8) == mBlockNumber);
+
+    VerifyOrExit(index < mBitmapLength);
+
+    contains = (mBitmaps[index] & mask);
+
+exit:
+    return contains;
 }
 
 } // namespace Dns

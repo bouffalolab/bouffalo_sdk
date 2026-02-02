@@ -33,12 +33,7 @@
 
 #include "link_quality.hpp"
 
-#include <stdio.h>
-
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -116,22 +111,27 @@ exit:
 
 void LqiAverager::Add(uint8_t aLqi)
 {
-    uint8_t count;
+    uint8_t  count;
+    uint16_t newAverage;
 
-    if (mCount < UINT8_MAX)
+    if (mCount < NumericLimits<uint8_t>::kMax)
     {
         mCount++;
     }
 
     count = Min(static_cast<uint8_t>(1 << kCoeffBitShift), mCount);
 
-    mAverage = static_cast<uint8_t>(((mAverage * (count - 1)) + aLqi) / count);
+    newAverage = mAverage;
+    newAverage = (newAverage * (count - 1) + aLqi) / count;
+
+    mAverage = static_cast<uint8_t>(newAverage);
 }
 
 void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Clear();
-    SetLinkQuality(kLinkQuality0);
+    SetLinkQualityIn(kLinkQuality0);
+    SetLinkQualityOut(kLinkQuality0);
     mLastRss = Radio::kInvalidRssi;
 
     mFrameErrorRate.Clear();
@@ -148,12 +148,12 @@ void LinkQualityInfo::AddRss(int8_t aRss)
 
     if (mRssAverager.HasAverage())
     {
-        oldLinkQuality = GetLinkQuality();
+        oldLinkQuality = GetLinkQualityIn();
     }
 
     SuccessOrExit(mRssAverager.Add(aRss));
 
-    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(), oldLinkQuality));
+    SetLinkQualityIn(CalculateLinkQuality(GetLinkMargin(), oldLinkQuality));
 
 exit:
     return;
@@ -169,7 +169,7 @@ LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
     InfoString string;
 
     string.Append("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(), GetLastRss(),
-                  GetLinkQuality());
+                  GetLinkQualityIn());
 
     return string;
 }
@@ -226,10 +226,14 @@ uint8_t CostForLinkQuality(LinkQuality aLinkQuality)
         kCostForLinkQuality3, // Link cost for `kLinkQuality3` (3).
     };
 
-    static_assert(kLinkQuality0 == 0, "kLinkQuality0 is invalid");
-    static_assert(kLinkQuality1 == 1, "kLinkQuality1 is invalid");
-    static_assert(kLinkQuality2 == 2, "kLinkQuality2 is invalid");
-    static_assert(kLinkQuality3 == 3, "kLinkQuality3 is invalid");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kLinkQuality0);
+        ValidateNextEnum(kLinkQuality1);
+        ValidateNextEnum(kLinkQuality2);
+        ValidateNextEnum(kLinkQuality3);
+    };
 
     uint8_t cost = Mle::kMaxRouteCost;
 

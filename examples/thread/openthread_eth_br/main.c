@@ -11,10 +11,6 @@
 #include "eth_phy.h"
 #include "ephy_general.h"
 
-#if defined(CONFIG_LITTLEFS)
-#include <easyflash.h>
-#endif
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
@@ -32,11 +28,13 @@
 
 #include <lmac154.h>
 
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread/thread.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/cli.h>
 #include <openthread_port.h>
 #include <openthread_br.h>
+#include <otbr_rtos_lwip.h>
 #if CONFIG_OTBR_REST
 #include <openthread_rest.h>
 #endif
@@ -65,16 +63,13 @@ extern void shell_init_with_task(struct bflb_device_s *shell);
 void vApplicationTickHook( void )
 {
 #ifdef BL616
-    lmac154_monitor();
-#endif
-#if CONFIG_LMAC154_LOG
-    lmac154_logs_output();
+    lmac154_monitor(10000);
 #endif
 }
 
-struct netif *otbr_getInfraNetif(void)
+otbr_lwip_netif_type_t otbr_getInfraNetif(void)
 {
-    return &gnetif;
+    return (otbr_lwip_netif_type_t)&gnetif;
 }
 
 static void netif_status_callback(struct netif *netif)
@@ -215,19 +210,19 @@ int main(void)
 {
     otRadio_opt_t opt;
     
-#if !defined(BL702L)
     bl_sys_rstinfo_init();
-#endif
 
     board_init();
+
+    uart0 = bflb_device_get_by_name("uart0");
+    shell_init_with_task(uart0);
+
+    __libc_init_array();
 
     /* emac gpio init */
     board_emac_gpio_init();
 
     bflb_mtd_init();
-#if defined(CONFIG_LITTLEFS)
-    easyflash_init();
-#endif
 
 #if defined(BL616)
     /* Init rf */
@@ -236,15 +231,6 @@ int main(void)
         return 0;
     }
 #endif
-
-    __libc_init_array();
-
-#if CONFIG_LMAC154_LOG
-    lmac154_log_init();
-#endif
-
-    uart0 = bflb_device_get_by_name("uart0");
-    shell_init_with_task(uart0);
 
     memset(otbr_getThreadNetif(), 0, sizeof(struct netif));
 

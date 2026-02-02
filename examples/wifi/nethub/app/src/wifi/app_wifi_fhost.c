@@ -29,18 +29,12 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
         } break;
         case CODE_WIFI_ON_CONNECTED: {
-#if CONFIG_ATMODULE_TTY
-            transportsdio_linkup();
-#endif
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
         } break;
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
-#if CONFIG_ATMODULE_TTY
-            transportsdio_linkdown();
-#endif
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
         } break;
         case CODE_WIFI_ON_AP_STARTED: {

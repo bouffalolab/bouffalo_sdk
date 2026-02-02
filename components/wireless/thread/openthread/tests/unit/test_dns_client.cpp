@@ -39,9 +39,10 @@
 
 #include "common/arg_macros.hpp"
 #include "common/array.hpp"
-#include "common/instance.hpp"
+#include "common/clearable.hpp"
 #include "common/string.hpp"
 #include "common/time.hpp"
+#include "instance/instance.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE && OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE &&                 \
     OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE && OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && \
@@ -208,7 +209,7 @@ void InitTest(void)
     otOperationalDatasetTlvs datasetTlvs;
 
     SuccessOrQuit(otDatasetCreateNewNetwork(sInstance, &dataset));
-    SuccessOrQuit(otDatasetConvertToTlvs(&dataset, &datasetTlvs));
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
     SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
@@ -224,6 +225,8 @@ void InitTest(void)
 
 void FinalizeTest(void)
 {
+    AdvanceTime(30 * 1000);
+
     SuccessOrQuit(otIp6SetEnabled(sInstance, false));
     SuccessOrQuit(otThreadSetEnabled(sInstance, false));
     // Make sure there is no message/buffer leak
@@ -235,17 +238,20 @@ void FinalizeTest(void)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-static const char kHostName[]     = "elden";
-static const char kHostFullName[] = "elden.default.service.arpa.";
+static const char kHostName[]        = "elden";
+static const char kHostFullName[]    = "elden.default.service.arpa.";
+static const char kNonExistingName[] = "noname.nodomain.";
 
-static const char kService1Name[]     = "_srv._udp";
-static const char kService1FullName[] = "_srv._udp.default.service.arpa.";
-static const char kInstance1Label[]   = "srv-instance";
+static const char kService1Name[]      = "_srv._udp";
+static const char kService1FullName[]  = "_srv._udp.default.service.arpa.";
+static const char kInstance1Label[]    = "srv-instance";
+static const char kInstance1FullName[] = "srv-instance._srv._udp.default.service.arpa.";
 
 static const char kService2Name[]            = "_game._udp";
 static const char kService2FullName[]        = "_game._udp.default.service.arpa.";
 static const char kService2SubTypeFullName[] = "_best._sub._game._udp.default.service.arpa.";
 static const char kInstance2Label[]          = "last-ninja";
+static const char kInstance2FullName[]       = "last-ninja._game._udp.default.service.arpa.";
 
 void PrepareService1(Srp::Client::Service &aService)
 {
@@ -351,14 +357,72 @@ const char *ServiceModeToString(Dns::Client::QueryConfig::ServiceMode aMode)
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+static constexpr uint16_t kMaxAddresses = 10;
+
+struct AddressInfo
+{
+    void Reset(void) { ClearAllBytes(*this); }
+
+    uint16_t          mCallbackCount;
+    Error             mError;
+    Dns::Name::Buffer mHostName;
+    Ip6::Address      mHostAddresses[kMaxAddresses];
+    uint8_t           mNumHostAddresses;
+};
+
+static AddressInfo sAddressInfo;
+
+void AddressCallback(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
+{
+    const Dns::Client::AddressResponse &response = AsCoreType(aResponse);
+
+    Log("AddressCallback");
+    Log("   Error: %s", ErrorToString(aError));
+
+    VerifyOrQuit(aContext == sInstance);
+
+    sAddressInfo.mCallbackCount++;
+    sAddressInfo.mError = aError;
+
+    SuccessOrExit(aError);
+
+    SuccessOrQuit(response.GetHostName(sAddressInfo.mHostName, sizeof(sAddressInfo.mHostName)));
+    Log("   HostName: %s", sAddressInfo.mHostName);
+
+    for (uint16_t index = 0;; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        VerifyOrQuit(index < kMaxAddresses);
+
+        error = response.GetAddress(index, sAddressInfo.mHostAddresses[index], ttl);
+
+        if (error == kErrorNotFound)
+        {
+            sAddressInfo.mNumHostAddresses = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+
+        Log("  %2u) %s ttl:%lu", index + 1, sAddressInfo.mHostAddresses[index].ToString().AsCString(), ToUlong(ttl));
+    }
+
+exit:
+    return;
+}
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 struct BrowseInfo
 {
     void Reset(void) { mCallbackCount = 0; }
 
-    uint16_t mCallbackCount;
-    Error    mError;
-    char     mServiceName[Dns::Name::kMaxNameSize];
-    uint16_t mNumInstances;
+    uint16_t          mCallbackCount;
+    Error             mError;
+    Dns::Name::Buffer mServiceName;
+    uint16_t          mNumInstances;
 };
 
 static BrowseInfo sBrowseInfo;
@@ -382,8 +446,8 @@ void BrowseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *
 
     for (uint16_t index = 0;; index++)
     {
-        char  instLabel[Dns::Name::kMaxLabelSize];
-        Error error;
+        Dns::Name::LabelBuffer instLabel;
+        Error                  error;
 
         error = response.GetServiceInstance(index, instLabel, sizeof(instLabel));
 
@@ -421,7 +485,7 @@ struct ResolveServiceInfo
     uint16_t                 mCallbackCount;
     Error                    mError;
     Dns::Client::ServiceInfo mInfo;
-    char                     mNameBuffer[Dns::Name::kMaxNameSize];
+    Dns::Name::Buffer        mNameBuffer;
     uint8_t                  mTxtBuffer[kMaxTxtBuffer];
     Ip6::Address             mHostAddresses[kMaxHostAddresses];
     uint8_t                  mNumHostAddresses;
@@ -432,8 +496,8 @@ static ResolveServiceInfo sResolveServiceInfo;
 void ServiceCallback(otError aError, const otDnsServiceResponse *aResponse, void *aContext)
 {
     const Dns::Client::ServiceResponse &response = AsCoreType(aResponse);
-    char                                instLabel[Dns::Name::kMaxLabelSize];
-    char                                serviceName[Dns::Name::kMaxNameSize];
+    Dns::Name::LabelBuffer              instLabel;
+    Dns::Name::Buffer                   serviceName;
 
     Log("ServiceCallback");
     Log("   Error: %s", ErrorToString(aError));
@@ -479,6 +543,221 @@ exit:
     return;
 }
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+static constexpr uint16_t kMaxRecords = 16;
+
+struct QueryRecordInfo
+{
+    struct Record : public Dns::Client::RecordInfo
+    {
+        static constexpr uint16_t kMaxRecordDataSize = 500;
+
+        void Init(void)
+        {
+            ClearAllBytes(*this);
+            mNameBuffer     = mName;
+            mNameBufferSize = sizeof(mName);
+            mDataBuffer     = mData;
+            mDataBufferSize = sizeof(mData);
+        }
+
+        uint8_t mData[kMaxRecordDataSize];
+        char    mName[Dns::Name::kMaxNameSize];
+    };
+
+    void Reset(void) { memset(this, 0, sizeof(*this)); };
+
+    uint16_t mCallbackCount;
+    Error    mError;
+    char     mQueryName[Dns::Name::kMaxNameSize];
+    Record   mRecords[kMaxRecords];
+    uint16_t mNumRecords;
+};
+
+static QueryRecordInfo sQueryRecordInfo;
+
+void RecordCallback(otError aError, const otDnsRecordResponse *aResponse, void *aContext)
+{
+    static constexpr uint16_t kMaxStringSize = 400;
+
+    const Dns::Client::RecordResponse &response = AsCoreType(aResponse);
+
+    Log("RecordCallback");
+    Log("   Error: %s", ErrorToString(aError));
+
+    VerifyOrQuit(aContext == sInstance);
+
+    sQueryRecordInfo.mCallbackCount++;
+    sQueryRecordInfo.mError      = aError;
+    sQueryRecordInfo.mNumRecords = 0;
+
+    SuccessOrExit(aError);
+
+    SuccessOrQuit(response.GetQueryName(sQueryRecordInfo.mQueryName, sizeof(sQueryRecordInfo.mQueryName)));
+    Log("   QueryName: %s", sQueryRecordInfo.mQueryName);
+
+    for (uint8_t index = 0; index < kMaxRecords; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        sQueryRecordInfo.mRecords[index].Init();
+
+        error = response.GetRecordInfo(index, sQueryRecordInfo.mRecords[index]);
+
+        if (error == kErrorNotFound)
+        {
+            sQueryRecordInfo.mNumRecords = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+    }
+
+    Log("   NumRecords: %u", sQueryRecordInfo.mNumRecords);
+
+    for (uint16_t index = 0; index < sQueryRecordInfo.mNumRecords; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+        String<kMaxStringSize>         string;
+        uint16_t                       rrType;
+
+        string.AppendHexBytes(record.mDataBuffer, record.mDataBufferSize);
+        rrType = record.mRecordType;
+
+        Log("   Record %u", index);
+        Log("      Name: %s", record.mNameBuffer);
+        Log("      Type: %u (%s)", rrType, Dns::ResourceRecord::TypeToString(rrType).AsCString());
+        Log("      Data: %s", string.AsCString());
+    }
+
+exit:
+    return;
+}
+
+void ValidateSrvRecordData(const QueryRecordInfo::Record &aRecord, const char *aFullHostName)
+{
+    // Validate that the read SRV record data contains
+    // the uncompressed host name.
+
+    Message *data   = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    uint16_t offset = sizeof(Dns::SrvRecord) - sizeof(Dns::ResourceRecord);
+
+    VerifyOrQuit(data != nullptr);
+    SuccessOrQuit(data->AppendBytes(aRecord.mDataBuffer, aRecord.mRecordLength));
+
+    SuccessOrQuit(Dns::Name::CompareName(*data, offset, aFullHostName));
+    VerifyOrQuit(offset == data->GetLength());
+
+    data->Free();
+}
+
+void ValidatePtrRecordData(const QueryRecordInfo::Record &aRecord, const char *aFullInstanceName)
+{
+    // Validate that the read PTR record data contains
+    // the uncompressed service instance name.
+
+    Message *data   = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    uint16_t offset = 0;
+
+    VerifyOrQuit(data != nullptr);
+    SuccessOrQuit(data->AppendBytes(aRecord.mDataBuffer, aRecord.mRecordLength));
+
+    SuccessOrQuit(Dns::Name::CompareName(*data, offset, aFullInstanceName));
+    VerifyOrQuit(offset == data->GetLength());
+
+    data->Free();
+}
+
+void ValidateSoaRecordData(const QueryRecordInfo::Record &aRecord, const char *aServerName)
+{
+    static constexpr uint32_t kSoaSerial  = 0;
+    static constexpr uint32_t kSoaRefresh = 7200;
+    static constexpr uint32_t kSoaRetry   = 3600;
+    static constexpr uint32_t kSoaExpire  = 86400;
+    static constexpr uint32_t kSoaMinimum = 10;
+
+    uint16_t          offset;
+    Message          *message;
+    Dns::Name::Buffer name;
+
+    VerifyOrQuit(StringMatch(aRecord.mNameBuffer, "default.service.arpa."));
+    VerifyOrQuit(aRecord.mRecordType == Dns::ResourceRecord::kTypeSoa);
+    VerifyOrQuit(aRecord.mTtl == 7200);
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    VerifyOrQuit(aRecord.mRecordLength == aRecord.mDataBufferSize);
+    SuccessOrQuit(message->AppendBytes(aRecord.mDataBuffer, aRecord.mDataBufferSize));
+
+    // Validate the SOA record data.
+
+    offset = 0;
+
+    // MNAME field:
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    VerifyOrQuit(StringMatch(name, aServerName, kStringCaseInsensitiveMatch));
+
+    // RNAME: must be "postmaster.default.service.arpa."
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    SuccessOrQuit(Dns::Name::StripName(name, "default.service.arpa."));
+    VerifyOrQuit(StringMatch(name, "postmaster"));
+
+    // SERIAL
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaSerial)));
+    offset += sizeof(uint32_t);
+
+    // REFRESH
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaRefresh)));
+    offset += sizeof(uint32_t);
+
+    // RETRY
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaRetry)));
+    offset += sizeof(uint32_t);
+
+    // EXPIRE
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaExpire)));
+    offset += sizeof(uint32_t);
+
+    // MINIMUM
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaMinimum)));
+    offset += sizeof(uint32_t);
+
+    VerifyOrQuit(offset == message->GetLength());
+
+    message->Free();
+}
+
+void ValidateNsRecordData(const QueryRecordInfo::Record &aRecord, const char *aServerName)
+{
+    uint16_t          offset;
+    Message          *message;
+    Dns::Name::Buffer name;
+
+    VerifyOrQuit(StringMatch(aRecord.mNameBuffer, "default.service.arpa."));
+    VerifyOrQuit(aRecord.mRecordType == Dns::ResourceRecord::kTypeNs);
+    VerifyOrQuit(aRecord.mTtl == 7200);
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    VerifyOrQuit(aRecord.mRecordLength == aRecord.mDataBufferSize);
+    SuccessOrQuit(message->AppendBytes(aRecord.mDataBuffer, aRecord.mDataBufferSize));
+
+    // Validate the NS data
+
+    offset = 0;
+
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    VerifyOrQuit(StringMatch(name, aServerName, kStringCaseInsensitiveMatch));
+
+    VerifyOrQuit(offset == message->GetLength());
+
+    message->Free();
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 void TestDnsClient(void)
@@ -495,20 +774,39 @@ void TestDnsClient(void)
         Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize,
     };
 
-    Array<Ip6::Address, kNumAddresses> addresses;
-    Srp::Server                       *srpServer;
-    Srp::Client                       *srpClient;
-    Srp::Client::Service               service1;
-    Srp::Client::Service               service2;
-    Dns::Client                       *dnsClient;
-    Dns::Client::QueryConfig           queryConfig;
-    Dns::ServiceDiscovery::Server     *dnsServer;
-    uint16_t                           heapAllocations;
+    Array<Ip6::Address, kNumAddresses>      addresses;
+    NetworkData::ExternalRouteConfig        routeConfig;
+    Srp::Server                            *srpServer;
+    Srp::Client                            *srpClient;
+    Srp::Client::Service                    service1;
+    Srp::Client::Service                    service2;
+    Dns::Client                            *dnsClient;
+    Dns::Client::QueryConfig                queryConfig;
+    Dns::ServiceDiscovery::Server          *dnsServer;
+    Dns::ServiceDiscovery::Server::Counters oldServerCounters;
+    Dns::ServiceDiscovery::Server::Counters newServerCounters;
+    uint16_t                                heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDnsClient");
 
     InitTest();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Add a route prefix (with NAT64 flag) to network data");
+
+    routeConfig.Clear();
+    SuccessOrQuit(AsCoreType(&routeConfig.mPrefix.mPrefix).FromString("64:ff9b::"));
+    routeConfig.mPrefix.mLength = 96;
+    routeConfig.mPreference     = NetworkData::kRoutePreferenceMedium;
+    routeConfig.mNat64          = true;
+    routeConfig.mStable         = true;
+
+    SuccessOrQuit(otBorderRouterAddRoute(sInstance, &routeConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Add addresses on Thread netif");
 
     for (const char *addrString : kAddresses)
     {
@@ -578,6 +876,317 @@ void TestDnsClient(void)
 
     VerifyOrQuit(dnsClient->GetDefaultConfig().GetServiceMode() ==
                  Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveAddress()`
+
+    sAddressInfo.Reset();
+    Log("ResolveAddress(%s)", kHostFullName);
+    SuccessOrQuit(dnsClient->ResolveAddress(kHostFullName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    SuccessOrQuit(sAddressInfo.mError);
+    VerifyOrQuit(sAddressInfo.mNumHostAddresses == GetArrayLength(kAddresses));
+
+    for (uint8_t index = 0; index < sAddressInfo.mNumHostAddresses; index++)
+    {
+        VerifyOrQuit(addresses.Contains(sAddressInfo.mHostAddresses[index]));
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveAddress()` for an invalid (non-existing) name
+
+    sAddressInfo.Reset();
+    Log("ResolveAddress(%s)", kNonExistingName);
+    SuccessOrQuit(dnsClient->ResolveAddress(kNonExistingName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    VerifyOrQuit(sAddressInfo.mError == kErrorNotFound);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveIp4Address()`
+
+    sAddressInfo.Reset();
+    Log("ResolveIp4Address(%s)", kHostFullName);
+    SuccessOrQuit(dnsClient->ResolveIp4Address(kHostFullName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    SuccessOrQuit(sAddressInfo.mError);
+    VerifyOrQuit(sAddressInfo.mNumHostAddresses == 0);
+
+    sAddressInfo.Reset();
+    Log("ResolveIp4Address(%s)", "badname");
+    SuccessOrQuit(dnsClient->ResolveIp4Address("badname", AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    VerifyOrQuit(sAddressInfo.mError != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for host name and KEY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for KEY RR", kHostFullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, kHostName, "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kHostFullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for misc RR", kHostFullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeCname, kHostName, "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for host name and ANY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for ANY RR", kHostFullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeAny, kHostName, "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 3);
+
+    for (uint8_t index = 0; index < 3; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(StringMatch(record.mNameBuffer, kHostFullName));
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+        VerifyOrQuit(record.mTtl > 0);
+
+        if (record.mRecordType == Dns::ResourceRecord::kTypeKey)
+        {
+            VerifyOrQuit(record.mRecordLength == sizeof(Dns::Ecdsa256KeyRecord));
+            VerifyOrQuit(record.mDataBufferSize == sizeof(Dns::Ecdsa256KeyRecord));
+        }
+        else if (record.mRecordType == Dns::ResourceRecord::kTypeAaaa)
+        {
+            VerifyOrQuit(record.mRecordLength == sizeof(Ip6::Address));
+            VerifyOrQuit(addresses.Contains(*reinterpret_cast<const Ip6::Address *>(record.mDataBuffer)));
+        }
+        else
+        {
+            // Unexpected record type.
+            VerifyOrQuit(false);
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for service instance name and KEY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for KEY RR", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kInstance1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for misc RR", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeCname, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for service instance name and SRV record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for SRV record", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSrv, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 4);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kInstance1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeSrv);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sQueryRecordInfo.mRecords[0].mRecordLength);
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    ValidateSrvRecordData(sQueryRecordInfo.mRecords[0], kHostFullName);
+
+    // Validate the records in additional data (TXT and two AAAA).
+
+    for (uint8_t index = 1; index < 4; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(record.mRecordLength > 0);
+        VerifyOrQuit(record.mTtl > 0);
+        VerifyOrQuit(record.mDataBufferSize == record.mRecordLength);
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAdditional);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeTxt:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kInstance1FullName));
+            break;
+        case Dns::ResourceRecord::kTypeAaaa:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kHostFullName));
+            VerifyOrQuit(record.mRecordLength == sizeof(Ip6::Address));
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for service instance name and ANY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for ANY record", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeAny, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 3);
+
+    for (uint8_t index = 1; index < 3; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(StringMatch(record.mNameBuffer, kInstance1FullName));
+        VerifyOrQuit(record.mRecordLength > 0);
+        VerifyOrQuit(record.mTtl > 0);
+        VerifyOrQuit(record.mDataBufferSize == record.mRecordLength);
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeKey:
+        case Dns::ResourceRecord::kTypeTxt:
+        case Dns::ResourceRecord::kTypeSrv:
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for PTR record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for PTR record", kService1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypePtr, "_srv", "_udp.default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 5);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kService1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypePtr);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sQueryRecordInfo.mRecords[0].mRecordLength);
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    ValidatePtrRecordData(sQueryRecordInfo.mRecords[0], kInstance1FullName);
+
+    // Validate the records in additional data (SRV, TXT and two AAAA).
+
+    for (uint8_t index = 1; index < 5; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(record.mRecordLength > 0);
+        VerifyOrQuit(record.mTtl > 0);
+        VerifyOrQuit(record.mDataBufferSize == record.mRecordLength);
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAdditional);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeSrv:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kInstance1FullName));
+            ValidateSrvRecordData(record, kHostFullName);
+            break;
+        case Dns::ResourceRecord::kTypeTxt:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kInstance1FullName));
+            break;
+        case Dns::ResourceRecord::kTypeAaaa:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kHostFullName));
+            VerifyOrQuit(record.mRecordLength == sizeof(Ip6::Address));
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for service name and ANY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for ANY record", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeAny, "_srv", "_udp.default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(StringMatch(sQueryRecordInfo.mRecords[0].mNameBuffer, kService1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypePtr);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sQueryRecordInfo.mRecords[0].mRecordLength);
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for sub-type service name and ANY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for ANY record", kService2SubTypeFullName);
+
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeAny, "_best",
+                                         "_sub._game._udp.default.service.arpa.", RecordCallback, sInstance));
+    AdvanceTime(100);
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(StringMatch(sQueryRecordInfo.mRecords[0].mNameBuffer, kService2SubTypeFullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypePtr);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sQueryRecordInfo.mRecords[0].mRecordLength);
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate DNS Client `Browse()`
@@ -669,8 +1278,8 @@ void TestDnsClient(void)
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
-    Log("Set TestMode on server to only accept single question");
-    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeSingleQuestionOnly);
+    Log("Set TestMode on server to reject multi-question queries and send error");
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeRejectMultiQuestionQuery);
 
     Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
         ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
@@ -701,6 +1310,48 @@ void TestDnsClient(void)
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
     VerifyOrQuit(sResolveServiceInfo.mError != kErrorNone);
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    Log("Set TestMode on server to ignore multi-question queries (send no response)");
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeIgnoreMultiQuestionQuery);
+
+    Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(
+        dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, &queryConfig));
+
+    AdvanceTime(10 * 1000); // Wait longer than client response timeout.
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveServiceInfo.mError);
+
+    // Use `kServiceModeSrvTxt` and check that server does ignore two questions.
+
+    Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxt));
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxt);
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(
+        dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, &queryConfig));
+
+    // Wait for the client to time out after exhausting all retry attempts, and
+    // ensure that a `kErrorResponseTimeout` error is reported.
+
+    AdvanceTime(45 * 1000);
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    VerifyOrQuit(sResolveServiceInfo.mError == kErrorResponseTimeout);
 
     dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
 
@@ -830,13 +1481,15 @@ void TestDnsClient(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Set TestMode on server to not include any RR in additional section AND to only accept single question");
     dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection +
-                           Dns::ServiceDiscovery::Server::kTestModeSingleQuestionOnly);
+                           Dns::ServiceDiscovery::Server::kTestModeRejectMultiQuestionQuery);
 
     Log("ResolveServiceAndHostAddress(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
         ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
 
     queryConfig.Clear();
     queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    oldServerCounters = dnsServer->GetCounters();
 
     sResolveServiceInfo.Reset();
     SuccessOrQuit(dnsClient->ResolveServiceAndHostAddress(kInstance1Label, kService1FullName, ServiceCallback,
@@ -862,6 +1515,55 @@ void TestDnsClient(void)
     {
         VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
     }
+
+    newServerCounters = dnsServer->GetCounters();
+
+    Log("Validate (using server counter) that client first tried to query SRV/TXT together and failed");
+    Log("and then send separate queries (for SRV, TXT and AAAA)");
+    Log("  Total : %2u -> %2u", oldServerCounters.GetTotalQueries(), newServerCounters.GetTotalQueries());
+    Log("  Failed: %2u -> %2u", oldServerCounters.GetTotalFailedQueries(), newServerCounters.GetTotalFailedQueries());
+
+    VerifyOrQuit(newServerCounters.GetTotalFailedQueries() == 1 + oldServerCounters.GetTotalFailedQueries());
+    VerifyOrQuit(newServerCounters.GetTotalQueries() == 4 + oldServerCounters.GetTotalQueries());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Resolve service again now using `kServiceModeSrvTxtOptimize` as default config");
+    Log("Client should already know that server is not capable of handling multi-question query");
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    dnsClient->SetDefaultConfig(queryConfig);
+
+    Log("ResolveService(%s,%s)", kInstance1Label, kService1FullName);
+
+    oldServerCounters = dnsServer->GetCounters();
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, nullptr));
+
+    AdvanceTime(100);
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveServiceInfo.mError);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+    VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+
+    newServerCounters = dnsServer->GetCounters();
+
+    Log("Client should already know that server is not capable of handling multi-question query");
+    Log("Check server counters to validate that client did send separate queries for TXT and SRV");
+    Log("  Total : %2u -> %2u", oldServerCounters.GetTotalQueries(), newServerCounters.GetTotalQueries());
+    Log("  Failed: %2u -> %2u", oldServerCounters.GetTotalFailedQueries(), newServerCounters.GetTotalFailedQueries());
+
+    VerifyOrQuit(newServerCounters.GetTotalFailedQueries() == oldServerCounters.GetTotalFailedQueries());
+    VerifyOrQuit(newServerCounters.GetTotalQueries() == 2 + oldServerCounters.GetTotalQueries());
 
     dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
 
@@ -908,12 +1610,415 @@ void TestDnsClient(void)
     Log("End of TestDnsClient");
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+Dns::Name::Buffer sLastSubscribeName;
+Dns::Name::Buffer sLastUnsubscribeName;
+
+void QuerySubscribe(void *aContext, const char *aFullName)
+{
+    uint16_t length = StringLength(aFullName, Dns::Name::kMaxNameSize);
+
+    Log("QuerySubscribe(%s)", aFullName);
+
+    VerifyOrQuit(aContext == sInstance);
+    VerifyOrQuit(length < Dns::Name::kMaxNameSize);
+    strcpy(sLastSubscribeName, aFullName);
+}
+
+void QueryUnsubscribe(void *aContext, const char *aFullName)
+{
+    uint16_t length = StringLength(aFullName, Dns::Name::kMaxNameSize);
+
+    Log("QueryUnsubscribe(%s)", aFullName);
+
+    VerifyOrQuit(aContext == sInstance);
+    VerifyOrQuit(length < Dns::Name::kMaxNameSize);
+    strcpy(sLastUnsubscribeName, aFullName);
+}
+
+void TestDnssdServerProxyCallback(void)
+{
+    Srp::Server                   *srpServer;
+    Srp::Client                   *srpClient;
+    Dns::Client                   *dnsClient;
+    Dns::ServiceDiscovery::Server *dnsServer;
+    otDnssdServiceInstanceInfo     instanceInfo;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDnssdServerProxyCallback");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+    dnsClient = &sInstance->Get<Dns::Client>();
+    dnsServer = &sInstance->Get<Dns::ServiceDiscovery::Server>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Set the query subscribe/unsubscribe callbacks on server
+
+    dnsServer->SetQueryCallbacks(QuerySubscribe, QueryUnsubscribe, sInstance);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService1FullName);
+    SuccessOrQuit(dnsClient->Browse(kService1FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService1FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Invoke subscribe callback");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance1FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService1FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService1FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    Log("Invoke subscribe callback for wrong name");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance1FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService1FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Invoke subscribe callback for correct name");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance2FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService2FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    Log("Do not invoke subscribe callback and let query to timeout");
+
+    // Query timeout is set to 6 seconds
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    AdvanceTime(2000);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 0);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Do not invoke subscribe callback and stop server");
+
+    dnsServer->Stop();
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    VerifyOrQuit(sBrowseInfo.mError != kErrorNone);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestDnssdServerProxyCallback");
+}
+
+void TestDnssdSoaNsResponse(void)
+{
+    Srp::Server      *srpServer;
+    Srp::Client      *srpClient;
+    Dns::Client      *dnsClient;
+    Dns::Name::Buffer serverName;
+    StringWriter      writer(serverName, sizeof(serverName));
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDnssdSoaNsResponse");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+    dnsClient = &sInstance->Get<Dns::Client>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    writer.Append("otDNS%s.default.service.arpa.", sInstance->Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("SOA Query");
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        sQueryRecordInfo.Reset();
+
+        // First iteration: Query for `default.service.arpa.` directly, and
+        // validate that we see the SOA record in the Answer section.
+        // Second iteration: Query for `myhost.default.service.arpa.`, and
+        // validate that we see the SOA record in the Authority section.
+
+        if (iter == 0)
+        {
+            Log("QueryRecord(%s) for SOA RR", "default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSoa, "default", "service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+        else
+        {
+            Log("QueryRecord(%s) for SOA RR", "myhost.default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSoa, "myhost", "default.service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+
+        AdvanceTime(100);
+        VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+        SuccessOrQuit(sQueryRecordInfo.mError);
+        VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+        if (iter == 0)
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+        }
+        else
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "myhost.default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAuthority);
+        }
+
+        ValidateSoaRecordData(sQueryRecordInfo.mRecords[0], serverName);
+
+        AdvanceTime(1000);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("NS Query");
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        sQueryRecordInfo.Reset();
+
+        // First iteration: Query for `default.service.arpa.` directly and
+        // validate that we see the NS response in the Answer section. Second
+        // iteration: Query for `myhost.default.service.arpa.` and validate
+        // that we see the SOA record instead in the Authority section in
+        // the response.
+
+        if (iter == 0)
+        {
+            Log("QueryRecord(%s) for NS RR", "default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeNs, "default", "service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+        else
+        {
+            Log("QueryRecord(%s) for NS RR", "myhost.default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeNs, "myhost", "default.service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+
+        AdvanceTime(100);
+        VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+        SuccessOrQuit(sQueryRecordInfo.mError);
+        VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+        if (iter == 0)
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+            ValidateNsRecordData(sQueryRecordInfo.mRecords[0], serverName);
+        }
+        else
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "myhost.default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAuthority);
+            ValidateSoaRecordData(sQueryRecordInfo.mRecords[0], serverName);
+        }
+
+        AdvanceTime(1000);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sQueryRecordInfo.Reset();
+
+    Log("QueryRecord(%s) for ANY RR", "default.service.arpa.");
+    SuccessOrQuit(
+        dnsClient->QueryRecord(Dns::ResourceRecord::kTypeAny, "default", "service.arpa.", RecordCallback, sInstance));
+
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 2);
+
+    VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+
+    for (uint8_t index = 0; index < 2; index++)
+    {
+        QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeSoa:
+            ValidateSoaRecordData(record, serverName);
+            break;
+        case Dns::ResourceRecord::kTypeNs:
+            ValidateNsRecordData(record, serverName);
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+
+        AdvanceTime(1000);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sAddressInfo.Reset();
+    Log("ResolveAddress(%s)", serverName);
+    SuccessOrQuit(dnsClient->ResolveAddress(serverName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount >= 1);
+    SuccessOrQuit(sAddressInfo.mError);
+    VerifyOrQuit(sAddressInfo.mHostAddresses[0] == sInstance->Get<Mle::Mle>().GetMeshLocalEid());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestDnssdSoaNsResponse");
+}
+
 #endif // ENABLE_DNS_TEST
 
 int main(void)
 {
 #if ENABLE_DNS_TEST
     TestDnsClient();
+    TestDnssdServerProxyCallback();
+    TestDnssdSoaNsResponse();
     printf("All tests passed\n");
 #else
     printf("DNS_CLIENT or DSNSSD_SERVER feature is not enabled\n");

@@ -11,11 +11,21 @@
 #include <bflb_dma.h>
 #include "netbus_tty.h"
 
+#define NETBUS_TTY_DEBUG (0)
+
 int netbus_tty_dnld(netbus_tty_ctx_t *pctx, uint8_t *data, uint32_t data_size)
 {
     //return data_size;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     int res;
+
+#if NETBUS_TTY_DEBUG
+    printf("----> dnld[%d] ", data_size);
+    for (int i = 0; i < data_size; i++) {
+        printf("%02X ", data[i]);
+    }
+    printf("\r\n");
+#endif
 
     // FIXME: only support AT
     if (xPortIsInsideInterrupt()) {
@@ -26,6 +36,7 @@ int netbus_tty_dnld(netbus_tty_ctx_t *pctx, uint8_t *data, uint32_t data_size)
     } else {
         res = xStreamBufferSend(pctx->rxbuf, data, data_size, 0);// fixme
     }
+
     return res;
 }
 
@@ -68,6 +79,18 @@ int netbus_tty_send(netbus_tty_ctx_t *pctx, const uint8_t *p_data, uint32_t len,
 	}
     bflb_tty_upld_send(p_data, len);
     xSemaphoreGive(pctx->w_mutex);
+
+#if NETBUS_TTY_DEBUG
+    uint8_t *data = (uint8_t *)p_data;
+    uint32_t data_size = len;
+
+    printf("<---- upld[%d] ", data_size);
+    for (int i = 0; i < data_size; i++) {
+        printf("%02X ", data[i]);
+    }
+    printf("\r\n");
+#endif
+
 #endif
 }
 

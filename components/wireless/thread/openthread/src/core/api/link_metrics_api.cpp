@@ -34,10 +34,8 @@
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-#include <openthread/link_metrics.h>
 
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -54,7 +52,6 @@ otError otLinkMetricsQuery(otInstance                 *aInstance,
                                                                      AsCoreTypePtr(aLinkMetricsFlags));
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 otError otLinkMetricsConfigForwardTrackingSeries(otInstance                       *aInstance,
                                                  const otIp6Address               *aDestination,
                                                  uint8_t                           aSeriesId,
@@ -97,6 +94,31 @@ otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
     LinkMetrics::Initiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::Initiator>();
 
     return initiator.SendLinkProbe(AsCoreType(aDestination), aSeriesId, aLength);
+}
+
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+bool otLinkMetricsManagerIsEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().IsEnabled();
+}
+
+void otLinkMetricsManagerSetEnabled(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().SetEnabled(aEnable);
+}
+
+otError otLinkMetricsManagerGetMetricsValueByExtAddr(otInstance          *aInstance,
+                                                     const otExtAddress  *aExtAddress,
+                                                     otLinkMetricsValues *aLinkMetricsValues)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aExtAddress != nullptr && aLinkMetricsValues != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    error = AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().GetLinkMetricsValueByExtAddr(
+        AsCoreType(aExtAddress), AsCoreType(aLinkMetricsValues));
+exit:
+    return error;
 }
 #endif
 

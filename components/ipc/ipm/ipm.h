@@ -19,83 +19,53 @@ extern "C" {
 #include <string.h>
 #include <bflb_ipc.h>
 
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-#include <hardware/bl616d.h>
-#endif
-
 typedef struct {
     struct bflb_device_s *ipc;
     void *data;
 } ipm_device_t;
 
-/* Ringbuffer configuration */
-#define RB_ENTRY_SIZE     512 /* Size per ringbuffer entry */
-#define RB_MAX_ENTRIES    8   /* Number of entries (must be power of 2) */
-#define RB_INDEX_MASK     (RB_MAX_ENTRIES - 1)
+/* Global IPM handle defined in rpmsg_backend.c */
+extern ipm_device_t ipm_handle;
 
-/* IPM message IDs */
-#define IPM_ID_FLASH_CMD  1 /* NP -> AP: Flash operation command */
-#define IPM_ID_FLASH_RESP 2 /* AP -> NP: Flash operation response */
+#define IPC_SYNC_SUSPEND_CMD 0x01
+#define IPC_SYNC_RESUME_CMD  0x02
+#define IPC_SYNC_SUSPEND_ACK 0x11
+#define IPC_SYNC_RESUME_ACK  0x12
 
-/* Ringbuffer entry structure */
-typedef struct {
-    volatile uint32_t len;                          /* Data length */
-    uint8_t data[RB_ENTRY_SIZE - sizeof(uint32_t)]; /* Data payload */
-} ringbuffer_entry_t;
+#define IPC_CHANNEL_RPMSG    0
+#define IPC_CHANNEL_MCS      1
 
-typedef struct {
-    volatile uint32_t head; /* Consumer read pointer */
-    volatile uint32_t tail; /* Producer write pointer */
-    ringbuffer_entry_t entries[RB_MAX_ENTRIES];
-} ringbuffer_t;
-
-/* XRAM ringbuffer pointers (fixed addresses in BL616D XRAM)
- * - A0 version: 0x210C8000
- * - B0+ version: 0x210C0000
- */
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-#define XRAM_AP2NP_RINGBUF ((volatile ringbuffer_t *)(BL616D_XRAM_BASE + 0x0000))
-#define XRAM_NP2AP_RINGBUF ((volatile ringbuffer_t *)(BL616D_XRAM_BASE + 0x2000))
-#endif
-
-/****************************************************************************
- * Simple RPC API (only for BL616D dual-core WiFi OTA)
- ****************************************************************************/
-
-#ifdef CONFIG_WIFI_OTA_DUAL_CORE
-/**
- * @brief Initialize simple RPC layer
+/*
+ * @brief Send a sync command to the other core
  *
- * Initializes IPM device for interrupt notification.
- * Ringbuffers are in XRAM at fixed addresses (no dynamic allocation).
- *
- * @return 0 on success, negative on error
+ * @param cmd_code Command code (IPC_SYNC_SUSPEND_CMD, IPC_SYNC_RESUME_CMD, IPC_SYNC_SUSPEND_ACK, IPC_SYNC_RESUME_ACK)
+ * @retval 0 On success
+ * @retval -1 On error
  */
-int simple_rpc_init(void);
+int ipc_sync_send(uint16_t cmd_code);
 
-/**
- * @brief Send data to remote core via XRAM ringbuffer
+/*
+ * @brief Send a sync command and wait for ACK
  *
- * @param data Pointer to data to send
- * @param len Length of data (max RB_ENTRY_SIZE)
- * @return 0 on success, -EBUSY if ringbuffer full, -EAGAIN if not ready
+ * @param cmd_code Command code (IPC_SYNC_SUSPEND_CMD, IPC_SYNC_RESUME_CMD)
+ * @param expected_ack Expected ACK value (IPC_SYNC_SUSPEND_ACK or IPC_SYNC_RESUME_ACK)
+ * @param timeout_ms Timeout in milliseconds
+ * @retval 0 On success
+ * @retval -1 On timeout
+ * @retval -2 On wrong ACK
  */
-int simple_rpc_send(const uint8_t *data, uint32_t len);
+int ipc_sync_send_wait_ack(uint16_t cmd_code, uint16_t expected_ack, uint32_t timeout_ms);
 
-/**
- * @brief Receive data from remote core (non-blocking)
+/*
+ * @brief IPC interrupt handler for sync commands
  *
- * @param data Buffer to store received data
- * @param len Pointer to store actual received length
- * @param timeout_ms Timeout in milliseconds (unused, for API compatibility)
- * @return 0 on success, -EAGAIN if no data available
+ * This function is called from ipm_isr to handle sync commands.
+ * It processes suspend/resume commands and sends ACK responses.
+ *
+ * @retval 1 Interrupt handled internally, don't call driver callback
+ * @retval 0 Not handled, call driver callback
  */
-int simple_rpc_recv(uint8_t *data, uint32_t *len);
-#endif /* CONFIG_WIFI_OTA_DUAL_CORE */
-
-/****************************************************************************
- * IPM Driver API
- ****************************************************************************/
+int ipc_sync_isr(void);
 
 /**
  * @typedef ipm_callback_t
@@ -150,9 +120,7 @@ typedef void (*ipm_callback_t)(ipm_device_t *ipmdev, void *user_data, uint32_t i
  *                   or the device isn't an outbound IPM channel.
  * @retval 0         On success.
  */
-int ipm_send(ipm_device_t *ipmdev, int wait, uint32_t id,
-               const void *data, int size);
-
+int ipm_send(ipm_device_t *ipmdev, int wait, uint32_t id, const void *data, int size);
 
 /**
  * @brief Register a callback function for incoming messages.
@@ -162,8 +130,7 @@ int ipm_send(ipm_device_t *ipmdev, int wait, uint32_t id,
  * @param user_data Application-specific data pointer which will be passed
  *        to the callback function when executed.
  */
-void ipm_register_callback(ipm_device_t *ipmdev,
-                     ipm_callback_t cb, void *user_data);
+void ipm_register_callback(ipm_device_t *ipmdev, ipm_callback_t cb, void *user_data);
 
 /**
  * @brief Return the maximum number of bytes possible in an outbound message.
@@ -209,8 +176,6 @@ int ipm_set_enabled(ipm_device_t *ipmdev, int enable);
  * "active" and unacknowledged until later code (presumably in thread
  * mode) calls ipm_complete().
  *
- * This function is, obviously, a noop on drivers without async
- * support.
  *
  * @param ipmdev Driver instance pointer.
  */

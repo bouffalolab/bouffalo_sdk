@@ -1,42 +1,39 @@
-#include <bflb_irq.h>
-#include <bflb_uart.h>
+#include <FreeRTOS.h>
+#include <task.h>
 
+#if defined(BL616) || defined(BL616L)
 #include <rfparam_adapter.h>
+#endif
+
 #include <bl_sys.h>
 #include <bflb_wdg.h>
 #include <bflb_mtd.h>
-#if defined (CONFIG_LITTLEFS)
-#include <easyflash.h>
-#endif
-#include <log.h>
 
-#include <FreeRTOS.h>
-#include <task.h>
-#include <timers.h>
+#include <log.h>
 
 #include <lmac154.h>
 
 #include <lwip/tcpip.h>
 #include <lwip/dhcp6.h>
 
-#if __has_include("bl_fw_api.h")
-#include <bl_fw_api.h>
-#else
-#include <export/bl_fw_api.h>
-#endif
-#include "fhost_api.h"
+#include <fhost.h>
 #include <wifi_mgmr_ext.h>
 #include <wifi_mgmr.h>
 
+#include <rfparam_adapter.h>
+#include <bl_sys.h>
+#include <bflb_mtd.h>
+
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread/thread.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/platform/settings.h>
 #include <openthread/cli.h>
 #include <openthread_port.h>
 #include <openthread_br.h>
+#include <otbr_rtos_lwip.h>
 #include <ot_utils_ext.h>
-
-#include <coex.h>
+#include <openthread_rest.h>
 
 #include "board.h"
 #include "shell.h"
@@ -45,18 +42,12 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-#define WIFI_STACK_SIZE  (1536)
-#define TASK_PRIORITY_FW (16)
-
-#define THREAD_CHANNEL      15
-#define THREAD_PANID        0x6677
-#define THREAD_EXTPANID     {0x11, 0x11, 0x11, 0x11, 0x22, 0x22, 0x22, 0x22}
-#define THREAD_NETWORK_KEY  {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
+#define OT_APP_NOTIFY_WIFI_INIT_EVENT   0x01000000
+#define OT_APP_NOTIFY_WIFI_IP_EVENT     0x02000000
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
 static struct bflb_device_s *uart0;
 
 static char otbr_wifi_ssid[33];
@@ -70,14 +61,12 @@ extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
 static void netif_status_callback(struct netif *netif);
 static void otr_start_default(void);
+static void app_start_otr(void);
 
 void vApplicationTickHook( void )
 {
 #ifdef BL616
-    lmac154_monitor();
-#endif
-#if CONFIG_LMAC154_LOG
-    lmac154_logs_output();
+    lmac154_monitor(10000);
 #endif
 }
 
@@ -99,9 +88,6 @@ void wifi_start_firmware_task(void *param)
     otPlatSettingsGet(NULL, 0xff02, 0, (uint8_t *)otbr_wifi_pass, &valueLength);
     printf("Load Wi-Fi AP SSID & password [%s]:[%s]\r\n", otbr_wifi_ssid, otbr_wifi_pass);
 
-    coex_init();
-    wifi_mgmr_coex_enable(1);
-
     memset(otbr_getThreadNetif(), 0, sizeof(struct netif));
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
@@ -122,10 +108,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
             wifi_mgmr_task_start();
 
-            if (strlen(otbr_wifi_ssid) > 0) {
-                int iret = wifi_mgmr_sta_quickconnect(otbr_wifi_ssid, otbr_wifi_pass, 0, 0);
-                LOG_I("[APP] [EVT] connect AP [%s]:[%s] with result %d\r\n", otbr_wifi_ssid, otbr_wifi_pass, iret);
-            }
+            app_start_otr();
 
             netif_set_status_callback(fhost_to_net_if(0), netif_status_callback);
         } break;
@@ -144,6 +127,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
             LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+            OT_APP_NOTIFY(OT_APP_NOTIFY_WIFI_IP_EVENT);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
@@ -166,9 +150,35 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
     }
 }
 
-struct netif * otbr_getInfraNetif(void)
+otbr_lwip_netif_type_t otbr_getInfraNetif(void)
 {
-    return fhost_to_net_if(0);
+    return (otbr_lwip_netif_type_t)fhost_to_net_if(0);
+}
+
+void otrAppProcess(ot_system_event_t sevent) 
+{
+    if (OT_APP_NOTIFY_WIFI_INIT_EVENT & sevent) {
+        wifi_mgmr_sta_coex_enable();
+        int iret = wifi_mgmr_sta_coex_duty_set(30);
+        if (iret != 0) {
+            LOG_E("Failed to set coexistence duty cycle with error code: %d\r\n", iret);
+            return;
+        }
+
+        if (strlen(otbr_wifi_ssid) > 0) {
+            int iret = wifi_mgmr_sta_quickconnect(otbr_wifi_ssid, otbr_wifi_pass, 0, 0);
+            LOG_I("[APP] [EVT] connect AP [%s]:[%s] with result %d\r\n", otbr_wifi_ssid, otbr_wifi_pass, iret);
+        }
+    }
+
+    if (OT_APP_NOTIFY_WIFI_IP_EVENT & sevent) {
+        wifi_mgmr_sta_autoconnect_enable();
+
+        if (false == otIp6IsEnabled(otrGetInstance())) {
+            otIp6SetEnabled(otrGetInstance(), true);
+            otThreadSetEnabled(otrGetInstance(), true);
+        }
+    }
 }
 
 static void netif_status_callback(struct netif *netif)
@@ -216,8 +226,6 @@ static void netif_status_callback(struct netif *netif)
         if (isIPv4AddressAssigned) {
             wifi_mgmr_sta_ps_enter();
             wifi_mgmr_sta_autoconnect_enable();
-            int wifi_mgmr_sta_connect_ind_stat_get(wifi_mgmr_connect_ind_stat_info_t *wifi_mgmr_ind_stat);
-
 
             if (otrGetInstance()) {
                 if (false == otIp6IsEnabled(otrGetInstance())) {
@@ -228,25 +236,6 @@ static void netif_status_callback(struct netif *netif)
                 }
 
                 otbr_instance_routing_init();
-            }
-            else {
-                otRadio_opt_t opt;
-
-                opt.byte = 0;
-
-                opt.bf.isCoexEnable = true;
-                opt.bf.isFtd = true;
-                #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-                opt.bf.isLinkMetricEnable = true;
-                #endif
-                #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                opt.bf.isCSLReceiverEnable = true;
-                #endif
-                #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-                opt.bf.isTimeSyncEnable = true;
-                #endif
-
-                otrStart(opt);
             }
 
             if (strlen(otbr_wifi_ssid) == 0) {
@@ -287,56 +276,66 @@ void otr_start_default(void)
 
 void otrInitUser(otInstance * instance)
 {
-    ot_coexist_event_init();
     otAppCliInit((otInstance * )instance);
     otr_start_default();
     otbr_netif_init();
     otbr_nat64_init(OPENTHREAD_OTBR_CONFIG_NAT64_CIDR);
 
 #if LWIP_NETIF_HOSTNAME
-    netif_set_hostname(otbr_getInfraNetif(), otbr_hostname());
+    netif_set_hostname((struct netif *)otbr_getInfraNetif(), otbr_hostname());
 #endif
 
-    if (false == otIp6IsEnabled(otrGetInstance())) {
-        otIp6SetEnabled(otrGetInstance(), true);
-        otThreadSetEnabled(otrGetInstance(), true);
-    }
+    OT_APP_NOTIFY(OT_APP_NOTIFY_WIFI_INIT_EVENT);
+}
+
+void app_start_otr(void) 
+{
+    otRadio_opt_t opt;
+
+    opt.byte = 0;
+
+    opt.bf.isCoexEnable = true;
+    opt.bf.isFtd = true;
+    #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    opt.bf.isLinkMetricEnable = true;
+    #endif
+    #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    opt.bf.isCSLReceiverEnable = true;
+    #endif
+    #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    opt.bf.isTimeSyncEnable = true;
+    #endif
+
+    otrStart(opt);
 }
 
 int main(void)
 {
-
-#if !defined(BL702L)
+#if defined(BL616)
     bl_sys_rstinfo_init();
 #endif
 
     board_init();
 
-    bflb_mtd_init();
-#if defined (CONFIG_LITTLEFS)
-    easyflash_init();
-#endif
+    uart0 = bflb_device_get_by_name("uart0");
+    shell_init_with_task(uart0);
 
-#if defined(BL616) || defined(BL616L)
-    /* Init rf */
+    __libc_init_array();
+
+    bflb_mtd_init();
+
+#if defined(BL616)
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return 0;
     }
 #endif
 
-    __libc_init_array();
-
-#if CONFIG_LMAC154_LOG
-    lmac154_log_init();
-#endif
-
-    uart0 = bflb_device_get_by_name("uart0");
-    shell_init_with_task(uart0);
-
     /* WiFi and LWIP init */
     tcpip_init(NULL, NULL);
     xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
+
+    openthread_httpd_init(8081);
 
     puts("[OS] Starting OS Scheduler...\r\n");
     vTaskStartScheduler();

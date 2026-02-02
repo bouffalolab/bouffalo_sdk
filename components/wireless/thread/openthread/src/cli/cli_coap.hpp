@@ -40,26 +40,22 @@
 
 #include <openthread/coap.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
 
 /**
  * Implements the CLI CoAP server and client.
- *
  */
-class Coap : private Output
+class Coap : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
@@ -73,16 +69,12 @@ public:
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
      * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
      * @retval ...                        Error during execution of the CLI command.
-     *
      */
     otError Process(Arg aArgs[]);
 
 private:
-    enum
-    {
-        kMaxUriLength  = 32,
-        kMaxBufferSize = 16
-    };
+    static constexpr uint16_t kMaxUriLength  = 32;
+    static constexpr uint16_t kMaxBufferSize = 16;
 
     using Command = CommandEntry<Coap>;
 

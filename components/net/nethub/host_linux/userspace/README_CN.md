@@ -18,7 +18,7 @@
 cd bflbwifictrl
 make
 
-# 启动守护进程
+# 启动守护进程(/dev/ttyHD*或者 /dev/ttyACM*)
 sudo ./app/bflbwifid -p /dev/ttyACM1
 
 # 使用 CLI 工具

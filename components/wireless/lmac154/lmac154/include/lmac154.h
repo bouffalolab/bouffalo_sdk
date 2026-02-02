@@ -2,15 +2,18 @@
 #define __LMAC154_H__
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 
 #define VERSION_LMAC154_MAJOR 1
-#define VERSION_LMAC154_MINOR 6
-#define VERSION_LMAC154_PATCH 17
+#define VERSION_LMAC154_MINOR 7
+#define VERSION_LMAC154_PATCH 1
 
 // #define VERSION_LMAC154_SRC_EXTRA_INFO "customer-1"
+
+#ifndef CONFIG_LMAC154_DBG
+#define CONFIG_LMAC154_DBG 0
+#endif
 
 typedef void (*lmac154_isr_t)(void);
 
@@ -75,11 +78,13 @@ typedef enum {
 }lmac154_frame_type_t;
 
 typedef enum {
-    LMAC154_RF_PWR_OFF        = 0,
-    LMAC154_RF_STATE_RX       = 1,
-    LMAC154_RF_STATE_RX_DOING = 2,
-    LMAC154_RF_STATE_TX       = 3,
-    LMAC154_RF_STATE_IDLE     = 4,
+    LMAC154_RF_STATE_RX_TRIG        = 1,
+    LMAC154_RF_STATE_RX             = 2,
+    LMAC154_RF_STATE_RX_DOING       = 3,
+    LMAC154_RF_STATE_ACK_DOING      = 4,
+    LMAC154_RF_STATE_TX             = 5,
+    LMAC154_RF_STATE_CSMA           = 6,
+    LMAC154_RF_STATE_IDLE           = 7,
 }lmac154_rf_state_t;
 
 typedef enum {
@@ -118,13 +123,11 @@ typedef enum {
     LMAC154_TX_STATUS_TX_ABORTED  = 2,
     LMAC154_TX_STATUS_HW_ERROR    = 3,
     LMAC154_TX_STATUS_DELAY_ERROR = 4,
+    LMAC154_TX_STATUS_NO_ACK      = 5,
+    LMAC154_TX_STATUS_ACKED       = 6,
+    LMAC154_TX_STATUS_CCA_FAILED  = 7,
+    LMAC154_TX_STATUS_MAX         = 8,
 }lmac154_tx_status_t;
-
-typedef enum {
-    LMAC154_EVENT_TIME_RX_START = 0,
-    LMAC154_EVENT_TIME_RX_END   = 1,
-    LMAC154_EVENT_TIME_TX_END   = 4,
-}lmac154_eventTimeType_t;
 
 typedef enum {
     LMAC154_RX_REJECT_CRC_ERR            = 0x00000001, // will reject packets that CRC check error
@@ -163,6 +166,42 @@ typedef enum {
     lmac154_addr_info_panid_ext_addr     = lmac154_addr_info_panid | lmac154_addr_info_ext_addr,
 } lmac154_addr_info_t;
 
+typedef struct { 
+    uint8_t         rx_length;
+    uint8_t         nbr_idx;
+    uint16_t        rx_error;
+    uint8_t         is_tx_acking:1;
+    uint8_t         is_enh_ack_requested:1;
+    uint8_t         is_frame_pended:1;
+    uint8_t         is_rx_buf:1;
+    uint8_t         channel;
+    int8_t          rssi;
+    int8_t          lqi;
+    uint32_t *      rx_buf[2];
+    uint64_t        rx_timestamp;
+} lmac154_receiveInfo_t;
+
+typedef void (*lmac154_txDoneCallback_t)(lmac154_tx_status_t, uint32_t *, uint32_t);
+typedef uint32_t * (*lmac154_rxDoneCallback_t)(lmac154_receiveInfo_t *, uint32_t *);
+
+typedef struct __lmac154_txParam { 
+    uint32_t *                  pkt;
+    uint32_t                    pkt_length:8;
+    uint32_t                    tx_channel:4;
+    uint32_t                    resume_channel:4;
+    uint32_t                    csma_ca_max_backoff:4;
+    uint32_t                    is_cca:1;
+    uint32_t                    is_ack_required:1;
+    uint32_t                    is_enh_ack_required:1;
+    uint32_t                    is_tx_doing:1;
+    uint32_t                    is_last_tx:1;
+    uint32_t                    unused1:7;
+    uint32_t                    unused2;
+    uint32_t                    base_time;
+    uint32_t                    delay_time;
+    lmac154_txDoneCallback_t    tx_done_cb;
+    struct __lmac154_txParam *  next;
+} lmac154_txParam_t;
 
 #define LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK       (7)
 #define LMAC154_FRAME_CONTROL_FRAME_TYPE_DATA       (1)
@@ -198,6 +237,7 @@ typedef enum {
 
 #define LMAC154_FRAME_IS_ACK_REQ(x)                 (((x) & LMAC154_FRAME_ACK_REQUEST_MASK) == LMAC154_FRAME_ACK_REQUEST_MASK)
 #define LMAC154_FRAME_IS_PANID_COMPRESSED(x)        (((x) & LMAC154_FRAME_PANID_COMPRESSION) == LMAC154_FRAME_PANID_COMPRESSION)
+#define LMAC154_FRAME_IS_SEQ_SUPPURESS(x)           (((x) & LMAC154_FRAME_SEQ_SUPPURESS_MASK) == LMAC154_FRAME_SEQ_SUPPURESS)
 
 
 #define LMAC154_FRAME_IS_FRAME_2015(x)              (((x) & LMAC154_FRAME_VERSION_MASK) == LMAC154_FRAME_VERSION_2015)
@@ -254,26 +294,26 @@ typedef enum {
 *******************************************************************************/
 void lmac154_init(void);
 
-
 /****************************************************************************//**
- * @brief  Enable MAC 15.4 feature for 2015 version
+ * @brief  Enable MAC 15.4 2015 standard feature
  *
- * @param  None
+ * @param  isEnable, enable to use 2015 standard feature
  *
  * @return None
  *
 *******************************************************************************/
-void lmac154_enable2015Feature(void);
+void lmac154_setStd2015(bool isEnable);
 
 /****************************************************************************//**
- * @brief  Disable MAC 15.4 feature for 2015 version
+ * @brief  Enable MAC 15.4 2015 standard feature with extra configuration
  *
- * @param  None
+ * @param  isEnable, enable to use 2015 standard feature
  *
  * @return None
  *
 *******************************************************************************/
-void lmac154_disable2015Feature(void);
+void lmac154_setStd2015Extra(bool isEnable);
+
 
 /****************************************************************************//**
  * @brief  Enable second stack for dual stack
@@ -321,15 +361,13 @@ uint32_t lmac154_isDisabled(void);
 
 /****************************************************************************//**
  * @brief  Monitor the hardware state
- *         Call this function periodically (1ms recommended) if needed
  *
- * @param  None
+ * @param  monitor_timeout, monitor timeout in ms
  *
- * @return None
+ * @return monitor result
  *
 *******************************************************************************/
-void lmac154_monitor(void);
-
+int lmac154_monitor(uint32_t monitor_timeout);
 
 /****************************************************************************//**
  * @brief  Get the lmac154 interrupt handler for interrupt registration of M154_IRQn
@@ -340,7 +378,30 @@ void lmac154_monitor(void);
  *
 *******************************************************************************/
 lmac154_isr_t lmac154_getInterruptHandler(void);
-lmac154_isr_t lmac154_get2015InterruptHandler(void);
+
+
+/****************************************************************************//**
+ * @brief  Register rx done event callback and get m154 irq handler
+ *
+ * @param  stack_rxDoneCallback, frame received with destination panid on stack 1
+ *
+ * @return The m154 irq handler
+ *
+*******************************************************************************/
+lmac154_isr_t lmac154_registerEventCallback(lmac154_rxDoneCallback_t stack_rxDoneCallback);
+
+/****************************************************************************//**
+ * @brief  Register rx done event callback and get m154 irq handler
+ *
+ * @param  stack1_rxDoneCallback, frame received with destination panid on stack 1
+ * 
+ * @param  stack2_rxDoneCallback, frame received with destination panid on stack 2
+ *
+ * @return The m154 irq handler
+ *
+*******************************************************************************/
+lmac154_isr_t lmac154_registerEventDualCallbacks(lmac154_rxDoneCallback_t stack1_rxDoneCallback,
+                                                 lmac154_rxDoneCallback_t stack2_rxDoneCallback);
 
 /****************************************************************************//**
  * @brief  Get the version number
@@ -410,6 +471,15 @@ uint32_t lmac154_isRxPromiscuousModeEnabled(void);
 *******************************************************************************/
 void lmac154_enableRx(void);
 
+/****************************************************************************//**
+ * @brief  try to force enable rx
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+void lmac154_forceEnableRX(void);
 
 /****************************************************************************//**
  * @brief  Disable RX (default disabled)
@@ -469,35 +539,30 @@ void lmac154_triggerTx(uint8_t *DataPtr, uint8_t length, uint8_t csma);
 
 
 /****************************************************************************//**
- * @brief  Trigger TX with tx time specified
+ * @brief  Trigger TX with paramter, which is required critical section protection
  *
- * @param  DataPtr: pointer to data buffer
- * @param  length: data length in bytes
- * @param  csma_cca: 0: without CSMA, 1: with CSMA/CCA
- * @param  baseTimeUs: the base time us for delay tx trigger
- * @param  delayUs: the delay time from baseTimeUs to tx trigger
+ * @param  txParam: paramter to trigger tx
  *
  * @return 0 is Success
  *
 *******************************************************************************/
-int lmac154_triggerTxDelay(uint8_t *DataPtr, uint32_t length, uint32_t csma_cca, 
-    uint64_t baseTimeUs, uint32_t delayUs);
+int lmac154_triggerParamTx(lmac154_txParam_t * txParam);
 
 /****************************************************************************//**
- * @brief  File MPDU data after tx trigger requested when lmac154_triggerTx or 
- *         lmac154_triggerTxDelay without data specified.
+ * @brief  Write TX ack frame to mpdu buffer to send in lmac154_receivedEvent 
+ *         with isEnhAckExpected true.
  *
- * @param  DataPtr: pointer to data buffer
- * @param  length: data length in bytes
+ * @param  ack_frame: pointer to data buffer of ack frame
+ * @param  ack_frame_length: data length in bytes
  *
  * @return 0 is Success
  *
 *******************************************************************************/
-uint32_t lmac154_postFillMPDU(uint8_t *DataPtr, uint32_t length);
+int lmac154_writeTxAckFrame(uint8_t *ack_frame, int ack_frame_length);
 
 /****************************************************************************//**
- * @brief  File MPDU data after tx trigger requested when lmac154_triggerTx or 
- *         lmac154_triggerTxDelay without data specified.
+ * @brief  File MPDU data after tx trigger requested when lmac154_triggerParamTx
+ *         is called with time specified
  *
  * @param  DataPtr: pointer to data buffer
  * @param  length: data length in bytes
@@ -530,7 +595,6 @@ void lmac154_runTxCM(void);
 *******************************************************************************/
 void lmac154_runTxCW(void);
 #endif
-
 
 /****************************************************************************//**
  * @brief  Reset tx state machine
@@ -894,7 +958,7 @@ void lmac154_setRxAcceptPolicy(lmac154_rx_accept_policy_t policy);
 *******************************************************************************/
 lmac154_rx_accept_policy_t lmac154_getRxAcceptPolicy(void);
 
-
+#ifdef BL702
 /****************************************************************************//**
  * @brief  Set external PA
  *         Restriction: txpin % 5 != rxpin % 5
@@ -905,8 +969,8 @@ lmac154_rx_accept_policy_t lmac154_getRxAcceptPolicy(void);
  * @return None
  *
 *******************************************************************************/
-void lmac154_setExtPA(uint8_t txpin, uint8_t rxpin);
-
+void lmac154_setExtPA(uint32_t txpin, uint32_t rxpin);
+#endif
 
 /****************************************************************************//**
  * @brief  Get RF state
@@ -920,7 +984,7 @@ lmac154_rf_state_t lmac154_getRFState(void);
 
 
 /****************************************************************************//**
- * @brief  Enable the coexistence of 802.15.4 and BLE wireless modules (default disabled)
+ * @brief  Enable the coexistence of zigbee and other wireless modules (default disabled)
  *
  * @param  None
  *
@@ -1238,17 +1302,14 @@ void lmac154_setMaxCsmaBackoff(uint8_t maxBackoff);
 *******************************************************************************/
 void lmac154_setTxRxTransTime(uint8_t timeInUs);
 
-/****************************************************************************//**
- * @brief  Get event timestamps
- *
- * @param  type: event timestamp type
- *
- * @return timestamp
- *
-*******************************************************************************/
-uint64_t lmac154_getEventTimeUs(lmac154_eventTimeType_t type);
+uint64_t lmac154_get_current_timestamp(void);
+uint64_t lmac154_get_rx_start_timestamp(void);
+uint64_t lmac154_get_rx_done_timestamp(void);
+uint64_t lmac154_get_tx_done_timestamp(void);
 
-void lmac154_fptSetMaxNum(uint8_t shortAddrNum, uint8_t longAddrNum);
+#if defined (BL702) || defined (BL702L) || defined (BL616)
+bool lmac154_fptSetMaxNum(uint32_t shortAddrNum, uint32_t longAddrNum);
+#endif
 
 /****************************************************************************//**
  * @brief  Run AES CCM
@@ -1322,7 +1383,6 @@ lmac154_fpt_status_t lmac154_fptSetLongAddrPending(uint8_t *ladr, uint8_t pendin
 *******************************************************************************/
 lmac154_fpt_status_t lmac154_fptGetShortAddrPending(uint16_t sadr, uint8_t *pending);
 
-
 /****************************************************************************//**
  * @brief  Get the corresponding frame pending bit of the long address in the frame pending table
  *
@@ -1333,7 +1393,6 @@ lmac154_fpt_status_t lmac154_fptGetShortAddrPending(uint16_t sadr, uint8_t *pend
  *
 *******************************************************************************/
 lmac154_fpt_status_t lmac154_fptGetLongAddrPending(uint8_t *ladr, uint8_t *pending);
-
 
 /****************************************************************************//**
  * @brief  Remove the key-value pair {sadr: pending} from the frame pending table
@@ -1366,7 +1425,7 @@ lmac154_fpt_status_t lmac154_fptRemoveLongAddr(uint8_t *ladr);
  * @return None
  *
 *******************************************************************************/
-void lmac154_fpt_GetShortAddrList(void *list, uint8_t *entry_num);
+void lmac154_fptGetShortAddrList(void *list, uint8_t *entry_num);
 
 
 /****************************************************************************//**
@@ -1460,7 +1519,7 @@ void lmac154_ackFrameEvent(uint8_t ack_received, uint8_t *rx_buf, uint8_t len);
 
 /****************************************************************************//**
  * @brief  Rx Done Event
- *         Will be raised when a frame is received
+ *         Will be raised when a frame is received on lmac154_getInterruptHandler used
  *
  * @param  rx_buf: pointer to rx buffer
  * @param  rx_len: received mpdu length in bytes (crc included)
@@ -1469,7 +1528,7 @@ void lmac154_ackFrameEvent(uint8_t ack_received, uint8_t *rx_buf, uint8_t len);
  * @return None
  *
 *******************************************************************************/
-void lmac154_rxDoneEvent(uint8_t *rx_buf, uint8_t rx_len, uint8_t crc_fail);
+void lmac154_rxDoneEvent(uint8_t *rx_buf, uint8_t rx_len, uint32_t crc_fail);
 
 /****************************************************************************//**
  * @brief  Rx Start Event
@@ -1532,12 +1591,6 @@ void lmac154_rxMhrEvent(uint8_t *rx_buf, uint8_t rx_len, uint8_t pkt_len);
  *
 *******************************************************************************/
 void lmac154_rxSecMhrEvent(uint8_t *rx_buf, uint8_t rx_len, uint8_t pkt_len);
-
-#if CONFIG_LMAC154_LOG
-void lmac154_log_init(void);
-void lmac154_log(const char *format, ...);
-void lmac154_logs_output(void);
-#endif
 
 /****************************************************************************//**
  * @brief  Parse IEEE 802.15.4 frame to get memory address of destination PAN ID 

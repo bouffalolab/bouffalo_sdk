@@ -3,11 +3,12 @@
 #include <openthread/platform/settings.h>
 #include <openthread_port.h>
 #include <openthread_br.h>
+#include <otbr_rtos_lwip.h>
 #include <shell.h>
 
 static void cmd_ifconfig(int argc, char **argv)
 {
-    struct netif  * netif = otbr_getInfraNetif();
+    struct netif  * netif = (struct netif  *)otbr_getInfraNetif();
     ip6_addr_t    * ip6addr;
 
     printf("Infra net interface: %s\r\n", netif->flags & NETIF_FLAG_UP ? "UP": "DOWN");

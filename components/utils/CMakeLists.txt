@@ -84,7 +84,10 @@ sdk_library_add_sources(async_event/async_event.c async_event/rtos_al.c)
 sdk_add_include_directories(async_event)
 endif()
 
-# wifi_ota (when FHOST is enabled - for all WiFi demos)
-if(CONFIG_FHOST)
+if(CONFIG_RPMSG_SERVICE)
+sdk_add_include_directories(ipc_rpmsg_ops/flash_ops_rpmsg)
+endif()
+
+if(CONFIG_BFLB_OTA)
 add_subdirectory(wifi_ota)
 endif()

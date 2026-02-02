@@ -41,12 +41,17 @@
  *----------------------------------------------------------*/
 #include "stdio.h"
 
+#if defined(BL602) || defined(BL702) || defined(BL702L)
+#define configMTIME_BASE_ADDRESS    (0x02000000UL + 0xBFF8UL)
+#define configMTIMECMP_BASE_ADDRESS (0x02000000UL + 0x4000UL)
+#else
 #if __riscv_xlen == 64
 #define configMTIME_BASE_ADDRESS    (0)
 #define configMTIMECMP_BASE_ADDRESS ((0xE4000000UL) + 0x4000UL)
 #else
 #define configMTIME_BASE_ADDRESS    ((0xE0000000UL) + 0xBFF8UL)
 #define configMTIMECMP_BASE_ADDRESS ((0xE0000000UL) + 0x4000UL)
+#endif
 #endif
 
 #define configSUPPORT_STATIC_ALLOCATION         1
@@ -89,6 +94,7 @@
 #ifndef uartPRIMARY_PRIORITY
 #define uartPRIMARY_PRIORITY (configMAX_PRIORITIES - 3)
 #endif
+
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet         1
@@ -125,6 +131,13 @@ void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
 #endif
 
-// #define portUSING_MPU_WRAPPERS
+/* Enable TLS */
+// #define config_ENABLE_OS_TLS_SWITCH
+#ifdef config_ENABLE_OS_TLS_SWITCH
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
+#else
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
+#endif
 
 #endif /* FREERTOS_CONFIG_H */

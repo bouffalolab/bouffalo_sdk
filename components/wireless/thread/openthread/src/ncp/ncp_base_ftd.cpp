@@ -50,7 +50,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 #include "meshcop/commissioner.hpp"
 #endif
@@ -117,7 +117,7 @@ void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 exit:
     return;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 
 void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry)
 {
@@ -189,6 +189,21 @@ exit:
         mUpdateChangedPropsTask.Post();
     }
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+void NcpBase::HandleBorderAgentMeshCoPServiceChanged(void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleBorderAgentMeshCoPServiceChanged();
+}
+
+void NcpBase::HandleBorderAgentMeshCoPServiceChanged(void)
+{
+    mChangedPropsSet.AddProperty(SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE);
+    mUpdateChangedPropsTask.Post();
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Handlers
@@ -1402,6 +1417,312 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_STATE>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t infraIfIndex;
+    bool     isInfraRunning;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(infraIfIndex));
+    SuccessOrExit(error = mDecoder.ReadBool(isInfraRunning));
+
+    mInfraIfAddrCount = 0;
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        const otIp6Address *addr;
+
+        SuccessOrExit(error = mDecoder.ReadIp6Address(addr));
+        SuccessOrExit(error = InfraIfAddAddress(*addr));
+    }
+
+    if (infraIfIndex != mInfraIfIndex)
+    {
+        mInfraIfIndex = infraIfIndex;
+        IgnoreError(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ false));
+        SuccessOrExit(error = otBorderRoutingInit(mInstance, mInfraIfIndex, isInfraRunning));
+        SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
+    }
+    else
+    {
+        SuccessOrExit(error = otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, isInfraRunning));
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_RECV_ICMP6>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    uint32_t            infraIfIndex;
+    const otIp6Address *address;
+    const uint8_t      *icmp6Data = nullptr;
+    uint16_t            len;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(infraIfIndex));
+    VerifyOrExit(mInfraIfIndex == infraIfIndex, error = OT_ERROR_DROP);
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadData(icmp6Data, len));
+
+    // Currently the ICMP6 messages can only be ND messages.
+    otPlatInfraIfRecvIcmp6Nd(mInstance, infraIfIndex, address, icmp6Data, len);
+
+exit:
+    return error;
+}
+
+otError NcpBase::InfraIfAddAddress(const otIp6Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mInfraIfAddrCount < kMaxInfraIfAddrs, error = OT_ERROR_NO_BUFS);
+    memcpy(&mInfraIfAddrs[mInfraIfAddrCount++], &aAddress, sizeof(aAddress));
+exit:
+    return error;
+}
+
+bool NcpBase::InfraIfContainsAddress(const otIp6Address &aAddress)
+{
+    bool result = false;
+
+    for (uint8_t i = 0; i < mInfraIfAddrCount; i++)
+    {
+        if (memcmp(&mInfraIfAddrs[i], &aAddress, sizeof(aAddress)) == 0)
+        {
+            result = true;
+            break;
+        }
+    }
+    return result;
+}
+
+bool NcpBase::InfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    return aInfraIfIndex == mInfraIfIndex && InfraIfContainsAddress(*aAddress);
+}
+
+otError NcpBase::InfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                    const otIp6Address *aDestAddress,
+                                    const uint8_t      *aBuffer,
+                                    uint16_t            aBufferLength)
+{
+    otError error  = OT_ERROR_NONE;
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_INFRA_IF_SEND_ICMP6));
+    SuccessOrExit(error = mEncoder.WriteUint32(aInfraIfIndex));
+    SuccessOrExit(error = mEncoder.WriteIp6Address(*aDestAddress));
+    SuccessOrExit(error = mEncoder.WriteDataWithLen(aBuffer, aBufferLength));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_SERVER_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+    otSrpServerSetEnabled(mInstance, enable);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_SERVER_ENABLED>(void)
+{
+    otSrpServerState srpServerState = otSrpServerGetState(mInstance);
+
+    return mEncoder.WriteBool(srpServerState != OT_SRP_SERVER_STATE_DISABLED);
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+    otSrpServerSetAutoEnableMode(mInstance, enable);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE>(void)
+{
+    return mEncoder.WriteBool(otSrpServerIsAutoEnableMode(mInstance));
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
+#if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
+                                otPlatDnssdRequestId        aRequestId,
+                                otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aHost, aRequestId, aCallback, /* aRegister */ true);
+}
+
+void NcpBase::DnssdUnregisterHost(const otPlatDnssdHost      *aHost,
+                                  otPlatDnssdRequestId        aRequestId,
+                                  otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aHost, aRequestId, aCallback, /* aRegister */ false);
+}
+
+void NcpBase::DnssdRegisterService(const otPlatDnssdService   *aService,
+                                   otPlatDnssdRequestId        aRequestId,
+                                   otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aService, aRequestId, aCallback, /* aRegister */ true);
+}
+
+void NcpBase::DnssdUnregisterService(const otPlatDnssdService   *aService,
+                                     otPlatDnssdRequestId        aRequestId,
+                                     otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aService, aRequestId, aCallback, /* aRegister */ false);
+}
+
+void NcpBase::DnssdRegisterKey(const otPlatDnssdKey       *aKey,
+                               otPlatDnssdRequestId        aRequestId,
+                               otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aKey, aRequestId, aCallback, /* aRegister */ true);
+}
+
+void NcpBase::DnssdUnregisterKey(const otPlatDnssdKey       *aKey,
+                                 otPlatDnssdRequestId        aRequestId,
+                                 otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aKey, aRequestId, aCallback, /* aRegister */ false);
+}
+
+otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t state;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(state));
+
+    if (state != mDnssdState)
+    {
+        mDnssdState = static_cast<otPlatDnssdState>(state);
+        otPlatDnssdStateHandleStateChange(mInstance);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>(void)
+{
+    otError                     error = OT_ERROR_NONE;
+    otPlatDnssdRequestId        requestId;
+    uint8_t                     result;
+    otPlatDnssdRegisterCallback callback = nullptr;
+    const uint8_t              *context;
+    uint16_t                    contextLen;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(result));
+    SuccessOrExit(error = mDecoder.ReadUint32(requestId));
+    SuccessOrExit(error = mDecoder.ReadData(context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
+    callback(mInstance, requestId, static_cast<otError>(result));
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE>(void)
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderAgentMeshCoPServiceTxtData txtData;
+
+    SuccessOrExit(error = otBorderAgentGetMeshCoPServiceTxtData(mInstance, &txtData));
+    SuccessOrExit(error = mEncoder.WriteBool(otBorderAgentIsActive(mInstance)));
+    SuccessOrExit(error = mEncoder.WriteUint16(otBorderAgentGetUdpPort(mInstance)));
+    SuccessOrExit(error = mEncoder.WriteData(txtData.mData, txtData.mLength));
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BACKBONE_ROUTER_STATE>(void)
+{
+    otBackboneRouterState state = otBackboneRouterGetState(mInstance);
+
+    return mEncoder.WriteUint8(static_cast<uint8_t>(state));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BACKBONE_ROUTER_ENABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+    if (enable)
+    {
+        otBackboneRouterSetMulticastListenerCallback(mInstance, HandleBackboneRouterMulticastListenerEvent, this);
+    }
+    else
+    {
+        otBackboneRouterSetMulticastListenerCallback(mInstance, nullptr, nullptr);
+    }
+#endif
+    otBackboneRouterSetEnabled(mInstance, enable);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+void NcpBase::HandleBackboneRouterMulticastListenerEvent(void                                  *aContext,
+                                                         otBackboneRouterMulticastListenerEvent aEvent,
+                                                         const otIp6Address                    *aAddress)
+{
+    static_cast<NcpBase *>(aContext)->HandleBackboneRouterMulticastListenerEvent(aEvent, aAddress);
+}
+
+void NcpBase::HandleBackboneRouterMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
+                                                         const otIp6Address                    *aAddress)
+{
+    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t cmd    = aEvent == OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED ? SPINEL_CMD_PROP_VALUE_INSERTED
+                                                                                    : SPINEL_CMD_PROP_VALUE_REMOVED;
+    VerifyOrExit(aAddress != nullptr);
+
+    SuccessOrExit(mEncoder.BeginFrame(header, cmd));
+    SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER));
+    SuccessOrExit(mEncoder.WriteIp6Address(*aAddress));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 } // namespace Ncp
 } // namespace ot

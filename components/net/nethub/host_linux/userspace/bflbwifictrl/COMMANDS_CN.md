@@ -42,6 +42,33 @@
 ```
 → `AT+RST`
 
+### 启动 SoftAP
+```bash
+# Open 网络
+./bflbwifictrl start_ap <ssid>
+
+# 加密网络
+./bflbwifictrl start_ap <ssid> <password>
+```
+→ 按顺序执行以下命令：
+```
+AT+CWMODE=2
+AT+CIPAP="192.168.4.1","192.168.4.1","255.255.255.0"
+AT+CWDHCPS=1,3,"192.168.4.50","192.168.4.200"
+AT+CWSAP="<ssid>","<password>",11,4,4,0
+```
+**说明**：
+- 默认通道：11
+- 默认加密：WPA2
+- AP IP：192.168.4.1
+- DHCP 范围：192.168.4.50 - 192.168.4.200
+
+### 停止 SoftAP
+```bash
+./bflbwifictrl stop_ap
+```
+→ `AT+CWMODE=0` (切换到 IDLE 模式)
+
 ### OTA 固件升级
 ```bash
 ./bflbwifictrl ota <firmware.bin>

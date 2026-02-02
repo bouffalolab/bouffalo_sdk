@@ -31,13 +31,13 @@ typedef struct _mdns_discover_param {
     void * arg2;
 } mdns_discover_param_t;
 
-otbrError WiFiDnssdPublishService(const char * aHostName, const char *aInstanceName, const char *aServiceType, const char *aProtocol, 
+otbrError_t WiFiDnssdPublishService(const char * aHostName, const char *aInstanceName, const char *aServiceType, const char *aProtocol, 
     int aPort, txt_item_t *aTxtItems, int aTxtItemNum, const char **aSubTypes, int aSubTypesNum);
 
-otbrError WiFiDnssdRemoveServices();
+otbrError_t WiFiDnssdRemoveServices();
 
-otbrError WiFiDnssdBrowse(const char * aType, const char *aProtocol, enum lwip_ip_addr_type aAddrType, mdns_result_callback_t aCallback, 
+otbrError_t WiFiDnssdBrowse(const char * aType, const char *aProtocol, enum lwip_ip_addr_type aAddrType, mdns_result_callback_t aCallback, 
     uint32_t aTimeout, int aMaxResult, void * arg1, void *arg2);
 
-otbrError WiFiDnssdResolve(const char * aInstanceName, const char *aType, const char * aProtocol, mdns_result_callback_t aCallback, 
+otbrError_t WiFiDnssdResolve(const char * aInstanceName, const char *aType, const char * aProtocol, mdns_result_callback_t aCallback, 
     uint32_t aTimeout, int aMaxResult, void * arg1, void * arg2);

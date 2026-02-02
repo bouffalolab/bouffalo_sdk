@@ -54,17 +54,24 @@ namespace ot {
  *   This module includes definitions for OpenThread String class.
  *
  * @{
- *
  */
 
 /**
  * Represents comparison mode when matching strings.
- *
  */
 enum StringMatchMode : uint8_t
 {
     kStringExactMatch,           ///< Exact match of characters.
     kStringCaseInsensitiveMatch, ///< Case insensitive match (uppercase and lowercase characters are treated as equal).
+};
+
+/**
+ * Represents string encoding check when copying string.
+ */
+enum StringEncodingCheck : uint8_t
+{
+    kStringNoEncodingCheck,   ///< Do not check the string encoding.
+    kStringCheckUtf8Encoding, ///< Validate that string follows UTF-8 encoding.
 };
 
 static constexpr char kNullChar = '\0'; ///< null character.
@@ -75,9 +82,8 @@ static constexpr char kNullChar = '\0'; ///< null character.
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
  *
- * @returns The number of characters that precede the terminating null character or @p aMaxLength, whichever is
- *          smaller.
- *
+ * @returns The number of characters that precede the terminating null character or @p aMaxLength,
+ *          whichever is smaller. `0` if @p aString is `nullptr`.
  */
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 
@@ -88,7 +94,6 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength);
  * @param[in] aChar       A char to search for in the string.
  *
  * @returns The pointer to first occurrence of the @p aChar in @p aString, or `nullptr` if cannot be found.
- *
  */
 const char *StringFind(const char *aString, char aChar);
 
@@ -101,7 +106,6 @@ const char *StringFind(const char *aString, char aChar);
  *
  * @returns The pointer to first match of the @p aSubString in @p aString (using comparison @p aMode), or `nullptr` if
  *          cannot be found.
- *
  */
 const char *StringFind(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
@@ -114,7 +118,6 @@ const char *StringFind(const char *aString, const char *aSubString, StringMatchM
  *
  * @retval TRUE   If @p aString starts with @p aPrefixString.
  * @retval FALSE  If @p aString does not start with @p aPrefixString.
- *
  */
 bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatchMode aMode = kStringExactMatch);
 
@@ -126,7 +129,6 @@ bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatc
  *
  * @retval TRUE   If @p aString ends with character @p aChar.
  * @retval FALSE  If @p aString does not end with character @p aChar.
- *
  */
 bool StringEndsWith(const char *aString, char aChar);
 
@@ -139,9 +141,19 @@ bool StringEndsWith(const char *aString, char aChar);
  *
  * @retval TRUE   If @p aString ends with sub-string @p aSubString.
  * @retval FALSE  If @p aString does not end with sub-string @p aSubString.
- *
  */
 bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
+
+/**
+ * Checks whether or not two null-terminated strings match exactly.
+ *
+ * @param[in] aFirstString   A pointer to the first string.
+ * @param[in] aSecondString  A pointer to the second string.
+ *
+ * @retval TRUE   If @p aFirstString matches @p aSecondString.
+ * @retval FALSE  If @p aFirstString does not match @p aSecondString.
+ */
+bool StringMatch(const char *aFirstString, const char *aSecondString);
 
 /**
  * Checks whether or not two null-terminated strings match.
@@ -152,9 +164,43 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
  *
  * @retval TRUE   If @p aFirstString matches @p aSecondString using match mode @p aMode.
  * @retval FALSE  If @p aFirstString does not match @p aSecondString using match mode @p aMode.
- *
  */
-bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
+bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode);
+
+/**
+ * Copies a string into a given target buffer with a given size if it fits.
+ *
+ * @param[out] aTargetBuffer  A pointer to the target buffer to copy into.
+ * @param[out] aTargetSize    The size (number of characters) in @p aTargetBuffer array.
+ * @param[in]  aSource        A pointer to null-terminated string to copy from. Can be `nullptr` which treated as "".
+ * @param[in]  aEncodingCheck Specifies the encoding format check (e.g., UTF-8) to perform.
+ *
+ * @retval kErrorNone         The @p aSource fits in the given buffer. @p aTargetBuffer is updated.
+ * @retval kErrorInvalidArgs  The @p aSource does not fit in the given buffer.
+ * @retval kErrorParse        The @p aSource does not follow the encoding format specified by @p aEncodingCheck.
+ */
+Error StringCopy(char *TargetBuffer, uint16_t aTargetSize, const char *aSource, StringEncodingCheck aEncodingCheck);
+
+/**
+ * Copies a string into a given target buffer with a given size if it fits.
+ *
+ * @tparam kSize  The size of buffer.
+ *
+ * @param[out] aTargetBuffer  A reference to the target buffer array to copy into.
+ * @param[in]  aSource        A pointer to null-terminated string to copy from. Can be `nullptr` which treated as "".
+ * @param[in]  aEncodingCheck Specifies the encoding format check (e.g., UTF-8) to perform.
+ *
+ * @retval kErrorNone         The @p aSource fits in the given buffer. @p aTargetBuffer is updated.
+ * @retval kErrorInvalidArgs  The @p aSource does not fit in the given buffer.
+ * @retval kErrorParse        The @p aSource does not follow the encoding format specified by @p aEncodingCheck.
+ */
+template <uint16_t kSize>
+Error StringCopy(char (&aTargetBuffer)[kSize],
+                 const char         *aSource,
+                 StringEncodingCheck aEncodingCheck = kStringNoEncodingCheck)
+{
+    return StringCopy(aTargetBuffer, kSize, aSource, aEncodingCheck);
+}
 
 /**
  * Parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
@@ -172,7 +218,6 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
  *
  * @retval kErrorNone   Successfully parsed the number from string. @p aString and @p aUint8 are updated.
  * @retval kErrorParse  Failed to parse the number from @p aString, or parsed number is larger than @p aMaxValue.
- *
  */
 Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue);
 
@@ -191,7 +236,6 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue)
  *
  * @retval kErrorNone   Successfully parsed the number from string. @p aString and @p aUint8 are updated.
  * @retval kErrorParse  Failed to parse the number from @p aString, or parsed number is out of range.
- *
  */
 Error StringParseUint8(const char *&aString, uint8_t &aUint8);
 
@@ -199,7 +243,6 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8);
  * Converts all uppercase letter characters in a given string to lowercase.
  *
  * @param[in,out] aString   A pointer to the string to convert.
- *
  */
 void StringConvertToLowercase(char *aString);
 
@@ -207,7 +250,6 @@ void StringConvertToLowercase(char *aString);
  * Converts all lowercase letter characters in a given string to uppercase.
  *
  * @param[in,out] aString   A pointer to the string to convert.
- *
  */
 void StringConvertToUppercase(char *aString);
 
@@ -219,7 +261,6 @@ void StringConvertToUppercase(char *aString);
  * @param[in] aChar   The character to convert
  *
  * @returns The character converted to lowercase.
- *
  */
 char ToLowercase(char aChar);
 
@@ -231,17 +272,67 @@ char ToLowercase(char aChar);
  * @param[in] aChar   The character to convert
  *
  * @returns The character converted to uppercase.
- *
  */
 char ToUppercase(char aChar);
 
 /**
- * Coverts a boolean to "yes" or "no" string.
+ * Checks whether a given character is an uppercase letter ('A'-'Z').
+ *
+ * @param[in] aChar   The character to check.
+ *
+ * @retval TRUE    @p aChar is an uppercase letter.
+ * @retval FALSE   @p aChar is not an uppercase letter.
+ */
+bool IsUppercase(char aChar);
+
+/**
+ * Checks whether a given character is a lowercase letter ('a'-'z').
+ *
+ * @param[in] aChar   The character to check.
+ *
+ * @retval TRUE    @p aChar is a lowercase letter.
+ * @retval FALSE   @p aChar is not a lowercase letter.
+ */
+bool IsLowercase(char aChar);
+
+/**
+ * Checks whether a given character is a digit character ('0'-'9').
+ *
+ * @param[in] aChar   The character to check.
+ *
+ * @retval TRUE    @p aChar is a digit character.
+ * @retval FALSE   @p aChar is not a digit character.
+ */
+bool IsDigit(char aChar);
+
+/**
+ * Parse a given digit character to its numeric value.
+ *
+ * @param[in]  aDigitChar   The digit character to parse.
+ * @param[out] aValue       A reference to return the parsed value on success.
+ *
+ * @retval kErrorNone            Successfully parsed the digit, @p aValue is updated.
+ * @retval kErrorInvalidArgs     @p aDigitChar is not a valid digit character.
+ */
+Error ParseDigit(char aDigitChar, uint8_t &aValue);
+
+/**
+ * Parse a given hex digit character ('0'-'9', 'A'-'F', or 'a'-'f') to its numeric value.
+ *
+ * @param[in]  aHexChar     The hex digit character to parse.
+ * @param[out] aValue       A reference to return the parsed value on success.
+ *
+ * @retval kErrorNone            Successfully parsed the digit, @p aValue is updated.
+ * @retval kErrorInvalidArgs     @p aHexChar is not a valid hex digit character.
+ */
+Error ParseHexDigit(char aHexChar, uint8_t &aValue);
+
+/**
+ * Converts a boolean to "yes" or "no" string.
  *
  * @param[in] aBool  A boolean value to convert.
  *
  * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
- *
  */
 const char *ToYesNo(bool aBool);
 
@@ -253,7 +344,6 @@ const char *ToYesNo(bool aBool);
  *
  * @retval TRUE   The sequence is a valid UTF-8 string.
  * @retval FALSE  The sequence is not a valid UTF-8 string.
- *
  */
 bool IsValidUtf8String(const char *aString);
 
@@ -266,7 +356,6 @@ bool IsValidUtf8String(const char *aString);
  *
  * @retval TRUE   The sequence is a valid UTF-8 string.
  * @retval FALSE  The sequence is not a valid UTF-8 string.
- *
  */
 bool IsValidUtf8String(const char *aString, size_t aLength);
 
@@ -281,7 +370,6 @@ bool IsValidUtf8String(const char *aString, size_t aLength);
  *
  * @retval TRUE  If first string is strictly before second string (alphabetical order).
  * @retval FALSE If first string is not strictly before second string (alphabetical order).
- *
  */
 inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 {
@@ -292,7 +380,6 @@ inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 
 /**
  * Implements writing to a string buffer.
- *
  */
 class StringWriter
 {
@@ -302,7 +389,6 @@ public:
      *
      * @param[in] aBuffer  A pointer to the char buffer to write into.
      * @param[in] aSize    The size of @p aBuffer.
-     *
      */
     StringWriter(char *aBuffer, uint16_t aSize);
 
@@ -310,7 +396,6 @@ public:
      * Clears the string writer.
      *
      * @returns The string writer.
-     *
      */
     StringWriter &Clear(void);
 
@@ -321,7 +406,6 @@ public:
      *
      * @retval  true    The output is truncated.
      * @retval  false   The output is not truncated.
-     *
      */
     bool IsTruncated(void) const { return mLength >= mSize; }
 
@@ -331,7 +415,6 @@ public:
      * Similar to `strlen()` the length does not include the null character at the end of the string.
      *
      * @returns The string length.
-     *
      */
     uint16_t GetLength(void) const { return mLength; }
 
@@ -339,7 +422,6 @@ public:
      * Returns the size (number of chars) in the buffer.
      *
      * @returns The size of the buffer.
-     *
      */
     uint16_t GetSize(void) const { return mSize; }
 
@@ -350,7 +432,6 @@ public:
      * @param[in] ...        Arguments for the format specification.
      *
      * @returns The string writer.
-     *
      */
     StringWriter &Append(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
@@ -361,7 +442,6 @@ public:
      * @param[in] aArgs      Arguments for the format specification (as `va_list`).
      *
      * @returns The string writer.
-     *
      */
     StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
 
@@ -372,19 +452,24 @@ public:
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
      *
      * @returns The string writer.
-     *
      */
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
 
     /**
-     * Converts all uppercase letter characters in the string to lowercase.
+     * Appends a given character a given number of times.
      *
+     * @param[in] aChar    The character to append.
+     * @param[in] aCount   Number of times to append @p aChar.
+     */
+    StringWriter &AppendCharMultipleTimes(char aChar, uint16_t aCount);
+
+    /**
+     * Converts all uppercase letter characters in the string to lowercase.
      */
     void ConvertToLowercase(void) { StringConvertToLowercase(mBuffer); }
 
     /**
      * Converts all lowercase letter characters in the string to uppercase.
-     *
      */
     void ConvertToUppercase(void) { StringConvertToUppercase(mBuffer); }
 
@@ -396,7 +481,6 @@ private:
 
 /**
  * Defines a fixed-size string.
- *
  */
 template <uint16_t kSize> class String : public StringWriter
 {
@@ -405,7 +489,6 @@ template <uint16_t kSize> class String : public StringWriter
 public:
     /**
      * Initializes the string as empty.
-     *
      */
     String(void)
         : StringWriter(mBuffer, sizeof(mBuffer))
@@ -416,7 +499,6 @@ public:
      * Returns the string as a null-terminated C string.
      *
      * @returns The null-terminated C string.
-     *
      */
     const char *AsCString(void) const { return mBuffer; }
 
@@ -427,14 +509,12 @@ private:
 /**
  * Provides helper methods to convert from a set of `uint16_t` values (e.g., a non-sequential `enum`) to
  * string using binary search in a lookup table.
- *
  */
 class Stringify : public BinarySearch
 {
 public:
     /**
      * Represents a entry in the lookup table.
-     *
      */
     class Entry
     {
@@ -466,7 +546,6 @@ public:
      * @param[in] aNotFound  A C string to return if @p aKey was not found in the table.
      *
      * @returns The associated string with @p aKey in @p aTable if found, or @p aNotFound otherwise.
-     *
      */
     template <uint16_t kLength>
     static const char *Lookup(uint16_t aKey, const Entry (&aTable)[kLength], const char *aNotFound = "unknown")
@@ -481,7 +560,6 @@ public:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

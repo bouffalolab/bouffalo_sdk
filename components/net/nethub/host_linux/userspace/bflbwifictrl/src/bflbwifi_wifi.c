@@ -526,6 +526,17 @@ int bflbwifi_ap_start(bflbwifi_ap_config_t *config, int timeout_ms)
         return E_ERR_INVALID_PARAM;
     }
 
+    /* Validate SSID and password length */
+    if (strlen(config->ssid) > 32) {
+        BFLB_LOGE("SSID too long: %zu > 32", strlen(config->ssid));
+        return E_ERR_INVALID_PARAM;
+    }
+
+    if (strlen(config->pwd) > 64) {
+        BFLB_LOGE("Password too long: %zu > 64", strlen(config->pwd));
+        return E_ERR_INVALID_PARAM;
+    }
+
     /* Validate timeout parameter */
     if (timeout_ms < 0) {
         BFLB_LOGE("Invalid timeout: %d", timeout_ms);
@@ -539,35 +550,53 @@ int bflbwifi_ap_start(bflbwifi_ap_config_t *config, int timeout_ms)
 
     BFLB_LOGI("Starting SoftAP: %s...", config->ssid);
 
-    /* Construct AT+CWSAP command */
-    snprintf(cmd, sizeof(cmd),
-             "AT+CWSAP=\"%s\",\"%s\",%d,%u",
-             config->ssid, config->pwd, config->channel, config->enc);
-
-    /* Send configuration command */
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    /* Step 1: Set to AP mode (AT+CWMODE=2) */
+    BFLB_LOGI("Step 1: Setting AP mode...");
+    ret = bflbwifi_tty_send_command_sync("AT+CWMODE=2", 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Failed to configure AP");
+        BFLB_LOGE("Failed to set AP mode");
         return E_ERR_TTY_FAIL;
     }
 
-    /* Set max connections and hidden SSID */
-    /* Note: Simplified here, may need adjustment based on AT command format */
-    if (config->max_conn > 0 || config->ssid_hidden) {
-        /* TODO: Set max connections and hidden SSID based on specific AT commands */
+    /* Step 2: Set AP IP address (AT+CIPAP) */
+    BFLB_LOGI("Step 2: Setting AP IP address...");
+    snprintf(cmd, sizeof(cmd), "AT+CIPAP=\"192.168.4.1\",\"192.168.4.1\",\"255.255.255.0\"");
+    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    if (ret != CMD_RESP_OK) {
+        BFLB_LOGE("Failed to set AP IP address");
+        return E_ERR_TTY_FAIL;
     }
 
-    /* AP mode is started through set_mode */
-    ret = bflbwifi_set_mode(WIFI_MODE_AP);
-    if (ret != 0) {
-        BFLB_LOGE("Failed to set AP mode");
-        return ret;
+    /* Step 3: Configure DHCP server (AT+CWDHCPS) */
+    BFLB_LOGI("Step 3: Configuring DHCP server...");
+    snprintf(cmd, sizeof(cmd), "AT+CWDHCPS=1,3,\"192.168.4.50\",\"192.168.4.200\"");
+    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    if (ret != CMD_RESP_OK) {
+        BFLB_LOGE("Failed to configure DHCP server");
+        return E_ERR_TTY_FAIL;
     }
 
-    /* Wait for AP to start */
-    /* Status check logic can be added here */
+    /* Step 4: Configure SoftAP parameters (AT+CWSAP) */
+    BFLB_LOGI("Step 4: Configuring SoftAP parameters...");
+    /* AT+CWSAP="ssid","password",channel,enc,max_conn,hidden */
+    snprintf(cmd, sizeof(cmd), "AT+CWSAP=\"%s\",\"%s\",%d,%u,%d,%d",
+             config->ssid,
+             config->pwd,
+             config->channel > 0 ? config->channel : 11,
+             config->enc,
+             config->max_conn > 0 ? config->max_conn : 4,
+             config->ssid_hidden ? 1 : 0);
 
-    BFLB_LOGI("SoftAP started: %s", config->ssid);
+    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    if (ret != CMD_RESP_OK) {
+        BFLB_LOGE("Failed to configure SoftAP");
+        return E_ERR_TTY_FAIL;
+    }
+
+    /* Update mode state */
+    bflbwifi_state_set_mode(WIFI_MODE_AP);
+
+    BFLB_LOGI("SoftAP started successfully: %s", config->ssid);
 
     return 0;
 }

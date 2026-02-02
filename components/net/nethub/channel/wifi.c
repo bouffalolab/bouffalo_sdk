@@ -52,6 +52,7 @@
 /* NETHUB statistics global variable */
 nethub_statistics_t g_nethub_stats = {0};
 
+int g_wifichannel_issta = 1;
 
 #ifdef CONFIG_WL80211
 #else
@@ -220,7 +221,7 @@ static int eth_input_filter(void *pkt)
 // ========================================= filter =========================================
 
 // ========================================= dnld  =========================================
-/* Note: 
+/* Note:
  * sizeof(trans_desc_t) must < 32 Bytes to avoid memory corruption
  * when fhost_tx_desc_tag content is modified during tx process
  * */
@@ -281,7 +282,7 @@ static void sta_input_dnld_custom_free(struct pbuf *p)
     //printf("dnmsg->free_cb:%p, dnmsg->ctx:%p, dnmsg->cb_arg:%p\r\n",
     //    dnmsg->free_cb, dnmsg->ctx, dnmsg->cb_arg);
 }
-static int sta_input_dnld(nh_skb_t *skb, void *arg)
+static int sta_input_dnld(nh_skb_t *skb, void *arg, uint8_t issta)
 {
     trans_desc_t *trans_desc = NULL;
     /* Statistics: Total processed packets increase */
@@ -313,7 +314,7 @@ static int sta_input_dnld(nh_skb_t *skb, void *arg)
 #if DEBUG_DUMP_WIFITX_ENABLE
     USER_INFO(" ---2 %s, line:%d, head:%p, pld:%p\r\n", __func__, __LINE__, trans_desc, trans_desc->pbuf.pbuf.payload);
 #endif
-    sta_input_portwifi_eth_tx((struct pbuf *)trans_desc, 1);
+    sta_input_portwifi_eth_tx((struct pbuf *)trans_desc, issta);
 #endif // end DEBUG_BYPASS_WIFI_TX
     return 0;
 }
@@ -421,12 +422,26 @@ static nh_forward_result_t _sta_input_callback(nh_skb_t *skb, void *arg)
     return NH_FORWARD_CONTINUE;
 }
 
+int nethub_update_wifichannel(nhif_type_t dst_type)// NHIF_TYPE_STA NHIF_TYPE_AP
+{
+    if (dst_type == NHIF_TYPE_STA) {
+        g_wifichannel_issta = 1;
+    } else if (dst_type == NHIF_TYPE_AP) {
+        g_wifichannel_issta = 0;
+    } else {
+        return -1;
+    }
+
+    return 0;
+}
+
 /* STA interface output callback */
 static nh_forward_result_t _sta_output_callback(nh_skb_t *skb, void *arg)
 {
     NH_UNUSED(arg);  /* Avoid unused parameter warning */
     //USER_DBG("@%p: %d\r\n\r\n", skb->data, skb->len);
-    sta_input_dnld(skb, arg);
+
+    sta_input_dnld(skb, arg, g_wifichannel_issta);
     return NH_FORWARD_CONTINUE;
 }
 

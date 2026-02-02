@@ -945,12 +945,8 @@ void HBN_OUT0_IRQ(void)
 
 void ATTR_TCM_SECTION HBN_OUT1_IRQ(void)
 {
-    /* PIR */
-    if (SET == HBN_Get_INT_State(HBN_INT_PIR)) {
-        HBN_Clear_IRQ(HBN_INT_PIR);
-    }
     /* BOR */
-    else if (SET == HBN_Get_INT_State(HBN_INT_BOD)) {
+    if (SET == HBN_Get_INT_State(HBN_INT_BOD)) {
         HBN_Clear_IRQ(HBN_INT_BOD);
         pm_irq_callback(PM_HBN_BOD_WAKEUP_EVENT);
     }

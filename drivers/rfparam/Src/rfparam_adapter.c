@@ -718,8 +718,13 @@ void wireless_config_init(struct wl_param_t *hw_param) {}
 int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
 {
 #if defined(BL616D)
+#if defined(WL_API_RMEM_EN) && WL_API_RMEM_EN
+    wl_cfg = wl_cfg_get((uint8_t *)WL_API_RMEM_ADDR);
+#else
     static uint32_t ram[2048];
     wl_cfg = wl_cfg_get((uint8_t*)ram);
+#endif
+
     wl_cfg->capcode_get = rfparam_get_capcode;
     wl_cfg->capcode_set = rfparam_set_capcode;
     wl_cfg->param_load = NULL; // rfparam_load;

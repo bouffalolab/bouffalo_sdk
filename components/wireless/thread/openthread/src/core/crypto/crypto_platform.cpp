@@ -51,12 +51,12 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/new.hpp"
 #include "config/crypto.h"
 #include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "crypto/storage.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 using namespace Crypto;
@@ -71,7 +71,7 @@ using namespace Crypto;
 #define OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 #endif
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 static mbedtls_ctr_drbg_context sCtrDrbgContext;
 static mbedtls_entropy_context  sEntropyContext;
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
@@ -110,7 +110,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesSetKey(otCryptoContext *aContext, const otCr
     VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_aes_context), error = kErrorFailed);
 
     context = static_cast<mbedtls_aes_context *>(aContext->mContext);
-    VerifyOrExit((mbedtls_aes_setkey_enc(context, key.GetBytes(), (key.GetLength() * CHAR_BIT)) == 0),
+    VerifyOrExit((mbedtls_aes_setkey_enc(context, key.GetBytes(), (key.GetLength() * kBitsPerByte)) == 0),
                  error = kErrorFailed);
 
 exit:
@@ -147,7 +147,7 @@ exit:
     return error;
 }
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 // HMAC implementations
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext)
@@ -660,11 +660,99 @@ exit:
 
 #endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#endif // #if !OPENTHREAD_RADIO
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_FTD
+
+OT_TOOL_WEAK otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
+                                                   uint16_t       aPasswordLen,
+                                                   const uint8_t *aSalt,
+                                                   uint16_t       aSaltLen,
+                                                   uint32_t       aIterationCounter,
+                                                   uint16_t       aKeyLen,
+                                                   uint8_t       *aKey)
+{
+#if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
+    const size_t kBlockSize = MBEDTLS_CMAC_MAX_BLOCK_SIZE;
+#else
+    const size_t kBlockSize = MBEDTLS_CIPHER_BLKSIZE_MAX;
+#endif
+    uint8_t  prfInput[OT_CRYPTO_PBDKF2_MAX_SALT_SIZE + 4]; // Salt || INT(), for U1 calculation
+    long     prfOne[kBlockSize / sizeof(long)];
+    long     prfTwo[kBlockSize / sizeof(long)];
+    long     keyBlock[kBlockSize / sizeof(long)];
+    uint32_t blockCounter = 0;
+    uint8_t *key          = aKey;
+    uint16_t keyLen       = aKeyLen;
+    uint16_t useLen       = 0;
+    Error    error        = kErrorNone;
+    int      ret;
+
+    OT_ASSERT(aSaltLen <= sizeof(prfInput));
+    memcpy(prfInput, aSalt, aSaltLen);
+    OT_ASSERT(aIterationCounter % 2 == 0);
+    aIterationCounter /= 2;
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    // limit iterations to avoid OSS-Fuzz timeouts
+    aIterationCounter = 2;
+#endif
+
+    while (keyLen)
+    {
+        ++blockCounter;
+        prfInput[aSaltLen + 0] = static_cast<uint8_t>(blockCounter >> 24);
+        prfInput[aSaltLen + 1] = static_cast<uint8_t>(blockCounter >> 16);
+        prfInput[aSaltLen + 2] = static_cast<uint8_t>(blockCounter >> 8);
+        prfInput[aSaltLen + 3] = static_cast<uint8_t>(blockCounter);
+
+        // Calculate U_1
+        ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, prfInput, aSaltLen + 4,
+                                       reinterpret_cast<uint8_t *>(keyBlock));
+        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+
+        // Calculate U_2
+        ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(keyBlock), kBlockSize,
+                                       reinterpret_cast<uint8_t *>(prfOne));
+        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+
+        for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
+        {
+            keyBlock[j] ^= prfOne[j];
+        }
+
+        for (uint32_t i = 1; i < aIterationCounter; ++i)
+        {
+            // Calculate U_{2 * i - 1}
+            ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfOne),
+                                           kBlockSize, reinterpret_cast<uint8_t *>(prfTwo));
+            VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+            // Calculate U_{2 * i}
+            ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfTwo),
+                                           kBlockSize, reinterpret_cast<uint8_t *>(prfOne));
+            VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+
+            for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
+            {
+                keyBlock[j] ^= prfOne[j] ^ prfTwo[j];
+            }
+        }
+
+        useLen = Min(keyLen, static_cast<uint16_t>(kBlockSize));
+        memcpy(key, keyBlock, useLen);
+        key += useLen;
+        keyLen -= useLen;
+    }
+
+exit:
+    return error;
+}
+
+#endif // #if OPENTHREAD_FTD
 
 #elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 OT_TOOL_WEAK otError otPlatCryptoEcdsaGenerateKey(otPlatCryptoEcdsaKeyPair *aKeyPair)
@@ -707,84 +795,29 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *a
 }
 #endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#endif // #if !OPENTHREAD_RADIO
-
-#endif // #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
-
-//---------------------------------------------------------------------------------------------------------------------
-// APIs to be used in "hybrid" mode by every OPENTHREAD_CONFIG_CRYPTO_LIB variant until full PSA support is ready
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_FTD
 
-OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
-                                                uint16_t       aPasswordLen,
-                                                const uint8_t *aSalt,
-                                                uint16_t       aSaltLen,
-                                                uint32_t       aIterationCounter,
-                                                uint16_t       aKeyLen,
-                                                uint8_t       *aKey)
+OT_TOOL_WEAK otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
+                                                   uint16_t       aPasswordLen,
+                                                   const uint8_t *aSalt,
+                                                   uint16_t       aSaltLen,
+                                                   uint32_t       aIterationCounter,
+                                                   uint16_t       aKeyLen,
+                                                   uint8_t       *aKey)
 {
-    const size_t kBlockSize = MBEDTLS_CIPHER_BLKSIZE_MAX;
-    uint8_t      prfInput[OT_CRYPTO_PBDKF2_MAX_SALT_SIZE + 4]; // Salt || INT(), for U1 calculation
-    long         prfOne[kBlockSize / sizeof(long)];
-    long         prfTwo[kBlockSize / sizeof(long)];
-    long         keyBlock[kBlockSize / sizeof(long)];
-    uint32_t     blockCounter = 0;
-    uint8_t     *key          = aKey;
-    uint16_t     keyLen       = aKeyLen;
-    uint16_t     useLen       = 0;
+    OT_UNUSED_VARIABLE(aPassword);
+    OT_UNUSED_VARIABLE(aPasswordLen);
+    OT_UNUSED_VARIABLE(aSalt);
+    OT_UNUSED_VARIABLE(aSaltLen);
+    OT_UNUSED_VARIABLE(aIterationCounter);
+    OT_UNUSED_VARIABLE(aKeyLen);
+    OT_UNUSED_VARIABLE(aKey);
 
-    OT_ASSERT(aSaltLen <= sizeof(prfInput));
-    memcpy(prfInput, aSalt, aSaltLen);
-    OT_ASSERT(aIterationCounter % 2 == 0);
-    aIterationCounter /= 2;
-
-#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    // limit iterations to avoid OSS-Fuzz timeouts
-    aIterationCounter = 2;
-#endif
-
-    while (keyLen)
-    {
-        ++blockCounter;
-        prfInput[aSaltLen + 0] = static_cast<uint8_t>(blockCounter >> 24);
-        prfInput[aSaltLen + 1] = static_cast<uint8_t>(blockCounter >> 16);
-        prfInput[aSaltLen + 2] = static_cast<uint8_t>(blockCounter >> 8);
-        prfInput[aSaltLen + 3] = static_cast<uint8_t>(blockCounter);
-
-        // Calculate U_1
-        mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, prfInput, aSaltLen + 4,
-                                 reinterpret_cast<uint8_t *>(keyBlock));
-
-        // Calculate U_2
-        mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(keyBlock), kBlockSize,
-                                 reinterpret_cast<uint8_t *>(prfOne));
-
-        for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
-        {
-            keyBlock[j] ^= prfOne[j];
-        }
-
-        for (uint32_t i = 1; i < aIterationCounter; ++i)
-        {
-            // Calculate U_{2 * i - 1}
-            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfOne), kBlockSize,
-                                     reinterpret_cast<uint8_t *>(prfTwo));
-            // Calculate U_{2 * i}
-            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfTwo), kBlockSize,
-                                     reinterpret_cast<uint8_t *>(prfOne));
-
-            for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
-            {
-                keyBlock[j] ^= prfOne[j] ^ prfTwo[j];
-            }
-        }
-
-        useLen = Min(keyLen, static_cast<uint16_t>(kBlockSize));
-        memcpy(key, keyBlock, useLen);
-        key += useLen;
-        keyLen -= useLen;
-    }
+    return OT_ERROR_NOT_CAPABLE;
 }
 
 #endif // #if OPENTHREAD_FTD
+
+#endif // #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS

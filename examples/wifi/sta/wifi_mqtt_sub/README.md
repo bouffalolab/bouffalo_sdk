@@ -1,64 +1,125 @@
-# wifi6 tcp case
+# WiFi MQTT Subscriber Example
 
+This example demonstrates how to subscribe to MQTT topics over a WiFi connection using Bouffalo SDK. It supports both plain TCP and TLS (MQTTS) connections.
 
-## Support CHIP
+## Features
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL602             |        |
-|BL616/BL618       |        |
+- MQTT v3.1.1 protocol support
+- WiFi station mode connectivity
+- TLS/MQTTS support using mbedTLS (optional)
+- Shell command interface for easy testing
+- Non-blocking socket I/O with FreeRTOS
+- Configurable MQTT broker, port, and topic
 
-## Compile
+## Supported Chips
 
-- BL602
+| CHIP    | Board      | Remark |
+|:-------:|:----------:|:------:|
+| BL602   | bl602dk    |        |
+| BL616   | bl616dk    |        |
+| BL618   | bl618dk    |        |
 
+## Build
+
+### BL602
 ```bash
 make CHIP=bl602 BOARD=bl602dk
 ```
 
-- BL616/BL618
-
+### BL616/BL618
 ```bash
 make CHIP=bl616 BOARD=bl616dk
+```
+
+### Using Ninja
+```bash
+make ninja CHIP=bl616 BOARD=bl616dk
 ```
 
 ## Flash
 
 ```bash
-make flash COMX=xxx ## xxx is your com name
+make flash CHIP=bl616 COMX=/dev/ttyUSB0
 ```
 
-## How use wifi mqtt sub test
+## Configuration
 
-1. Find some mqtt server or your deployed a mqtt server first. This case default used `test.mosquitto.org:1883` server test; or used EMQX mqtt public server test.
-2. Use mqtt client to test if the server is working. You can install `MQTTBox` on windows for testing, you can install it from Microsoft Store. Or use EMQX's online mqtt client for testing.
-3. If the server works fine, then you can continue with the next test.
-4. connect your WiFi.
-5. connect MQTT server. command like `mqtt_sub` or `mqtt_sub <server domain name or server ip> <server port> <topic>`
+### TLS/SSL Support
+To enable MQTT over TLS (MQTTS), uncomment the following line in `CMakeLists.txt`:
+```cmake
+sdk_add_compile_options(-DMQTT_USE_MBEDTLS)
+```
 
-Log:
+### Default CA Certificate
+For TLS connections, update the `test_ca_crt` in `wifi_mqtt_sub.c` with your broker's CA certificate.
+
+## Usage
+
+### Prerequisites
+
+1. Find or deploy an MQTT broker server
+2. Test the server with an MQTT client (e.g., MQTTBox, EMQX online client)
+
+### Shell Commands
 
 ```bash
-bouffalolab />wifi_sta_connect BL_TEST 12345678
+# Connect to WiFi first
+wifi_sta_connect <SSID> <PASSWORD>
+
+# Subscribe with default settings (test.mosquitto.org:1883, topic: bl618)
+mqtt_sub
+
+# Subscribe with custom broker
+mqtt_sub <broker_address> <port> <topic>
+```
+
+### Example Log Output
+
+#### Using test.mosquitto.org (default)
+```bash
+bouffalolab />wifi_sta_connect MyNetwork MyPassword
 bouffalolab />mqtt_sub
-bouffalolab />mqtt_sub listening for 'bl618' messages.
+bouffalolab />Addr:test.mosquitto.org  Port:1883  Topic:bl618
+mqtt_sub listening for 'bl618' messages.
 Press CTRL-C to exit.
-Received publish('bl618'): {"hello mqtt"}
 Received publish('bl618'): {"hello mqtt"}
 Received publish('bl618'): {"hello mqtt"}
 mqtt_sub disconnecting from test.mosquitto.org
 ^C
 ```
 
-use broker.emqx.io mqtt public server test log:
+#### Using broker.emqx.io
 ```bash
-bouffalolab />wifi_sta_connect BL_TEST 12345678
-bouffalolab />mqtt_sub broker.emqx.io 1883 bl618
-bouffalolab />mqtt_sub listening for 'bl618' messages.
+bouffalolab />wifi_sta_connect MyNetwork MyPassword
+bouffalolab />mqtt_sub broker.emqx.io 1883 mytopic
+bouffalolab />Addr:broker.emqx.io  Port:1883  Topic:mytopic
+mqtt_sub listening for 'mytopic' messages.
 Press CTRL-C to exit.
-Received publish('bl618'):  {"hello mqtt"}
-Received publish('bl618'):  {"hello mqtt"}
+Received publish('mytopic'): {"hello mqtt"}
 mqtt_sub disconnecting from broker.emqx.io
 ^C
 ```
 
+## Code Structure
+
+| File            | Description                                  |
+|:----------------|:---------------------------------------------|
+| `main.c`        | Application entry point, WiFi initialization |
+| `wifi_mqtt_sub.c` | MQTT client implementation, shell commands   |
+| `FreeRTOSConfig.h` | FreeRTOS configuration                      |
+| `lwipopts_user.h` | lwIP network stack configuration            |
+| `mbedtls_sample_config.h` | mbedTLS configuration              |
+
+## Dependencies
+
+- **FreeRTOS**: Real-time operating system
+- **lwIP**: TCP/IP stack
+- **mbedTLS**: TLS/SSL library (optional, for MQTTS)
+- **MQTT-C**: MQTT client library
+
+## Notes
+
+- Ensure WiFi is connected before running `mqtt_sub`
+- Press CTRL-C to exit the subscription
+- The client uses clean session mode
+- Default QoS level is 0 (at most once)

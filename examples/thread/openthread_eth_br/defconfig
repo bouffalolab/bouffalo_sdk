@@ -1,7 +1,7 @@
 # Components
 CONFIG_NEWLIB                =n
 CONFIG_NEWLIB_STANDARD       =n
-CONFIG_BFLB_LOG                 =n
+CONFIG_BFLB_LOG				 =n
 CONFIG_FREERTOS              =y
 CONFIG_POSIX                 =n
 CONFIG_TLSF                  =y
@@ -18,7 +18,6 @@ CONFIG_VSNPRINTF_NANO        =y
 CONFIG_VSNPRINTF_FLOAT       =n
 CONFIG_VSNPRINTF_FLOAT_EX    =n
 CONFIG_VSNPRINTF_LONG_LONG   =y
-CONFIG_COREDUMP              =y
 
 # mbedtls
 CONFIG_MBEDTLS               =y
@@ -30,8 +29,8 @@ CONFIG_MBEDTLS_SHA256_USE_HW =y
 CONFIG_MBEDTLS_SHA512_USE_HW =y
 
 # ethernet
-CONFIG_BSP_ETH_PHY          =y
-CONFIG_BSP_LWIP_NETIF_EMAC      =y
+CONFIG_BSP_ETH_PHY			 =y
+CONFIG_BSP_LWIP_NETIF_EMAC	 =y
 
 # thread
 CONFIG_LMAC154               =y
@@ -39,3 +38,4 @@ CONFIG_THREAD                =y
 
 CONFIG_OTBR                  =y
 CONFIG_IPV6                  =y
+CONFIG_COREDUMP              =y

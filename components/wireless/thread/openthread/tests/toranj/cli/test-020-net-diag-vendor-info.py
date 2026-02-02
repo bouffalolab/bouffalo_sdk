@@ -68,17 +68,22 @@ VENDOR_NAME_TLV = 25
 VENDOR_MODEL_TLV = 26
 VENDOR_SW_VERSION_TLV = 27
 THREAD_STACK_VERSION_TLV = 28
+MLE_COUNTERS_TLV = 34
+VENDOR_APP_URL = 35
+NON_PREFERRED_CHANNELS_TLV = 36
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check setting vendor name, model, ans sw version
 
 r1.set_vendor_name('nest')
 r1.set_vendor_model('marble')
-r1.set_vendor_sw_version('ot-1.3.1')
+r1.set_vendor_sw_version('ot-1.4')
+r1.set_vendor_app_url('https://example.com/vendor-app')
 
 verify(r1.get_vendor_name() == 'nest')
 verify(r1.get_vendor_model() == 'marble')
-verify(r1.get_vendor_sw_version() == 'ot-1.3.1')
+verify(r1.get_vendor_sw_version() == 'ot-1.4')
+verify(r1.get_vendor_app_url() == 'https://example.com/vendor-app')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check invalid names (too long)
@@ -125,6 +130,8 @@ except cli.CliError as e:
 
 verify(errored)
 
+r2.set_vendor_app_url("https://example.com/vendor-app")
+
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Perform net diag query
 
@@ -152,6 +159,13 @@ verify(len(result) == 2)
 verify(result[1].startswith("Vendor SW Version:"))
 verify(result[1].split(':')[1].strip() == r1.get_vendor_sw_version())
 
+# Get vendor app URL (TLV 35)
+
+result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_APP_URL)
+verify(len(result) == 2)
+verify(result[1].startswith("Vendor App URL:"))
+verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_app_url())
+
 # Get thread stack version (TLV 30)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, THREAD_STACK_VERSION_TLV)
@@ -162,8 +176,8 @@ verify(r1.get_version().startswith(result[1].split(':', 1)[1].strip()))
 # Get all three TLVs (now from `r1`)
 
 result = r1.cli('networkdiagnostic get', r2_rloc, VENDOR_NAME_TLV, VENDOR_MODEL_TLV, VENDOR_SW_VERSION_TLV,
-                THREAD_STACK_VERSION_TLV)
-verify(len(result) == 5)
+                THREAD_STACK_VERSION_TLV, VENDOR_APP_URL)
+verify(len(result) == 6)
 for line in result[1:]:
     if line.startswith("Vendor Name:"):
         verify(line.split(':')[1].strip() == r2.get_vendor_name())
@@ -171,10 +185,49 @@ for line in result[1:]:
         verify(line.split(':')[1].strip() == r2.get_vendor_model())
     elif line.startswith("Vendor SW Version:"):
         verify(line.split(':')[1].strip() == r2.get_vendor_sw_version())
+    elif line.startswith("Vendor App URL:"):
+        verify(line.split(':', 1)[1].strip() == r2.get_vendor_app_url())
     elif line.startswith("Thread Stack Version:"):
         verify(r2.get_version().startswith(line.split(':', 1)[1].strip()))
     else:
         verify(False)
+
+result = r2.cli('networkdiagnostic get', r1_rloc, MLE_COUNTERS_TLV)
+verify(result[1].startswith("MLE Counters:"))
+
+# Test Non-preferred Channels TLV
+
+
+def verify_non_preferred_channels_query_result(mask):
+    r1.cli('networkdiagnostic nonpreferredchannels', mask)
+    result = r1.cli('networkdiagnostic nonpreferredchannels')
+    verify(len(result) == 1)
+    verify(int(result[0], 16) == mask)
+
+
+result = r1.cli('networkdiagnostic nonpreferredchannels')
+verify(len(result) == 1)
+verify(int(result[0], 16) == 0)
+
+verify_non_preferred_channels_query_result(0)
+
+mask = 1 << 26  # channel 26
+
+r1.cli('networkdiagnostic nonpreferredchannels', mask)
+result = r1.cli('networkdiagnostic nonpreferredchannels')
+verify(len(result) == 1)
+verify(int(result[0], 16) == mask)
+
+verify_non_preferred_channels_query_result(mask)
+
+mask = 0
+
+r1.cli('networkdiagnostic nonpreferredchannels', mask)
+result = r1.cli('networkdiagnostic nonpreferredchannels')
+verify(len(result) == 1)
+verify(int(result[0], 16) == mask)
+
+verify_non_preferred_channels_query_result(mask)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

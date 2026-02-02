@@ -35,7 +35,7 @@
 
 #include <stdint.h>
 
-#include "common/encoding.hpp"
+#include "lib/utils/endian.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -124,7 +124,6 @@ namespace Spinel {
 
 /**
  * Defines a SPI frame.
- *
  */
 class SpiFrame
 {
@@ -138,7 +137,6 @@ public:
      * Initializes an `SpiFrame` instance.
      *
      * @param[in] aBuffer     Pointer to buffer containing the frame.
-     *
      */
     explicit SpiFrame(uint8_t *aBuffer)
         : mBuffer(aBuffer)
@@ -149,7 +147,6 @@ public:
      * Gets a pointer to data portion in the SPI frame skipping the header.
      *
      * @returns  A pointer to data in the SPI frame.
-     *
      */
     uint8_t *GetData(void) { return mBuffer + kHeaderSize; }
 
@@ -159,7 +156,6 @@ public:
      * In a valid frame the flag byte should contain the pattern bits.
      *
      * @returns TRUE if the frame is valid, FALSE otherwise.
-     *
      */
     bool IsValid(void) const { return ((mBuffer[kIndexFlagByte] & kFlagPatternMask) == kFlagPattern); }
 
@@ -167,7 +163,6 @@ public:
      * Indicates whether or not the "RST" bit is set.
      *
      * @returns TRUE if the "RST" bit is set, FALSE otherwise.
-     *
      */
     bool IsResetFlagSet(void) const { return ((mBuffer[kIndexFlagByte] & kFlagReset) == kFlagReset); }
 
@@ -175,7 +170,6 @@ public:
      * Sets the "flag byte" field in the SPI frame header.
      *
      * @param[in] aResetFlag     The status of reset flag (TRUE to set the flag, FALSE to clear flag).
-     *
      */
     void SetHeaderFlagByte(bool aResetFlag) { mBuffer[kIndexFlagByte] = kFlagPattern | (aResetFlag ? kFlagReset : 0); }
 
@@ -183,7 +177,6 @@ public:
      * Gets the "flag byte" field in the SPI frame header.
      *
      * @returns  The flag byte.
-     *
      */
     uint8_t GetHeaderFlagByte(void) const { return mBuffer[kIndexFlagByte]; }
 
@@ -193,20 +186,18 @@ public:
      * "accept len" specifies number of bytes the sender of the SPI frame can receive.
      *
      * @param[in] aAcceptLen    The accept length in bytes.
-     *
      */
     void SetHeaderAcceptLen(uint16_t aAcceptLen)
     {
-        Encoding::LittleEndian::WriteUint16(aAcceptLen, mBuffer + kIndexAcceptLen);
+        Lib::Utils::LittleEndian::WriteUint16(aAcceptLen, mBuffer + kIndexAcceptLen);
     }
 
     /**
      * Gets the "accept len" field in the SPI frame header.
      *
      * @returns  The accept length in bytes.
-     *
      */
-    uint16_t GetHeaderAcceptLen(void) const { return Encoding::LittleEndian::ReadUint16(mBuffer + kIndexAcceptLen); }
+    uint16_t GetHeaderAcceptLen(void) const { return Lib::Utils::LittleEndian::ReadUint16(mBuffer + kIndexAcceptLen); }
 
     /**
      * Sets the "data len" field in the SPI frame header.
@@ -214,17 +205,18 @@ public:
      * "Data len" specifies number of data bytes in the transmitted SPI frame.
      *
      * @param[in] aDataLen    The data length in bytes.
-     *
      */
-    void SetHeaderDataLen(uint16_t aDataLen) { Encoding::LittleEndian::WriteUint16(aDataLen, mBuffer + kIndexDataLen); }
+    void SetHeaderDataLen(uint16_t aDataLen)
+    {
+        Lib::Utils::LittleEndian::WriteUint16(aDataLen, mBuffer + kIndexDataLen);
+    }
 
     /**
      * Gets the "data len" field in the SPI frame header.
      *
      * @returns  The data length in bytes.
-     *
      */
-    uint16_t GetHeaderDataLen(void) const { return Encoding::LittleEndian::ReadUint16(mBuffer + kIndexDataLen); }
+    uint16_t GetHeaderDataLen(void) const { return Lib::Utils::LittleEndian::ReadUint16(mBuffer + kIndexDataLen); }
 
 private:
     enum

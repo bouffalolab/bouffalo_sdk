@@ -9,6 +9,7 @@ CROSS_COMPILE ?= riscv64-unknown-elf-
 OT_NCP ?= 1
 OT_FTD ?= 1
 
+# add custom cmake definition
 cmake_definition+=-DOT_NCP=${OT_NCP}
 ifneq ($(OT_NCP), 1)
   cmake_definition+=-DOT_FTD=${OT_FTD}

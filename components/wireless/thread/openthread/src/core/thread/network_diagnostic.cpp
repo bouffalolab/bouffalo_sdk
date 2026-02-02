@@ -33,23 +33,7 @@
 
 #include "network_diagnostic.hpp"
 
-#include "coap/coap_message.hpp"
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
-#include "mac/mac.hpp"
-#include "net/netif.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/version.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -60,21 +44,25 @@ namespace NetworkDiagnostic {
 const char Server::kVendorName[]      = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME;
 const char Server::kVendorModel[]     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL;
 const char Server::kVendorSwVersion[] = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION;
+const char Server::kVendorAppUrl[]    = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL;
 
 //---------------------------------------------------------------------------------------------------------------------
 // Server
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mNonPreferredChannels(0)
 {
     static_assert(sizeof(kVendorName) <= sizeof(VendorNameTlv::StringType), "VENDOR_NAME is too long");
     static_assert(sizeof(kVendorModel) <= sizeof(VendorModelTlv::StringType), "VENDOR_MODEL is too long");
     static_assert(sizeof(kVendorSwVersion) <= sizeof(VendorSwVersionTlv::StringType), "VENDOR_SW_VERSION is too long");
+    static_assert(sizeof(kVendorAppUrl) <= sizeof(VendorAppUrlTlv::StringType), "VENDOR_APP_URL is too long");
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     memcpy(mVendorName, kVendorName, sizeof(kVendorName));
     memcpy(mVendorModel, kVendorModel, sizeof(kVendorModel));
     memcpy(mVendorSwVersion, kVendorSwVersion, sizeof(kVendorSwVersion));
+    memcpy(mVendorAppUrl, kVendorAppUrl, sizeof(kVendorAppUrl));
 #endif
 }
 
@@ -82,39 +70,25 @@ Server::Server(Instance &aInstance)
 
 Error Server::SetVendorName(const char *aVendorName)
 {
-    return SetVendorString(mVendorName, sizeof(mVendorName), aVendorName);
+    return StringCopy(mVendorName, aVendorName, kStringCheckUtf8Encoding);
 }
 
 Error Server::SetVendorModel(const char *aVendorModel)
 {
-    return SetVendorString(mVendorModel, sizeof(mVendorModel), aVendorModel);
+    return StringCopy(mVendorModel, aVendorModel, kStringCheckUtf8Encoding);
 }
 
 Error Server::SetVendorSwVersion(const char *aVendorSwVersion)
 {
-    return SetVendorString(mVendorSwVersion, sizeof(mVendorSwVersion), aVendorSwVersion);
+    return StringCopy(mVendorSwVersion, aVendorSwVersion, kStringCheckUtf8Encoding);
 }
 
-Error Server::SetVendorString(char *aDestString, uint16_t kMaxSize, const char *aSrcString)
+Error Server::SetVendorAppUrl(const char *aVendorAppUrl)
 {
-    Error    error = kErrorInvalidArgs;
-    uint16_t length;
-
-    VerifyOrExit(aSrcString != nullptr);
-
-    length = StringLength(aSrcString, kMaxSize);
-    VerifyOrExit(length < kMaxSize);
-
-    VerifyOrExit(IsValidUtf8String(aSrcString));
-
-    memcpy(aDestString, aSrcString, length + 1);
-    error = kErrorNone;
-
-exit:
-    return error;
+    return StringCopy(mVendorAppUrl, aVendorAppUrl, kStringCheckUtf8Encoding);
 }
 
-#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+#endif
 
 void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
 {
@@ -123,9 +97,9 @@ void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::Me
         aMessageInfo.SetMulticastLoop(true);
     }
 
-    if (aDestination.IsLinkLocal() || aDestination.IsLinkLocalMulticast())
+    if (aDestination.IsLinkLocalUnicastOrMulticast())
     {
-        aMessageInfo.SetSockAddr(Get<Mle::MleRouter>().GetLinkLocalAddress());
+        aMessageInfo.SetSockAddr(Get<Mle::Mle>().GetLinkLocalAddress());
     }
     else
     {
@@ -178,7 +152,7 @@ Error Server::AppendChildTable(Message &aMessage)
     Error    error = kErrorNone;
     uint16_t count;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsRouterOrLeader());
+    VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
 
     count = Min(Get<ChildTable>().GetNumChildren(Child::kInStateValid), kMaxChildEntries);
 
@@ -223,6 +197,112 @@ Error Server::AppendChildTable(Message &aMessage)
 exit:
     return error;
 }
+
+Error Server::AppendEnhancedRoute(Message &aMessage)
+{
+    Error                 error = kErrorNone;
+    Tlv                   tlv;
+    Mle::RouterIdSet      routerIdSet;
+    EnhancedRouteTlvEntry entry;
+
+    VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
+
+    Get<RouterTable>().GetRouterIdSet(routerIdSet);
+
+    tlv.SetType(Tlv::kEnhancedRoute);
+    tlv.SetLength(sizeof(Mle::RouterIdSet) + routerIdSet.GetNumberOfAllocatedIds() * sizeof(entry));
+
+    SuccessOrExit(error = aMessage.Append(tlv));
+    SuccessOrExit(error = aMessage.Append(routerIdSet));
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        if (!routerIdSet.Contains(routerId))
+        {
+            continue;
+        }
+
+        if (Get<Mle::Mle>().MatchesRouterId(routerId))
+        {
+            entry.InitAsSelf();
+        }
+        else
+        {
+            entry.InitFrom(*Get<RouterTable>().FindRouterById(routerId));
+        }
+
+        SuccessOrExit(error = aMessage.Append(entry));
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+Error Server::AppendChildTableAsChildTlvs(Message &aMessage)
+{
+    Error    error = kErrorNone;
+    ChildTlv childTlv;
+
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        childTlv.InitFrom(child);
+
+        SuccessOrExit(error = childTlv.AppendTo(aMessage));
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    childTlv.InitAsEmpty();
+    SuccessOrExit(error = childTlv.AppendTo(aMessage));
+
+exit:
+    return error;
+}
+
+Error Server::AppendRouterNeighborTlvs(Message &aMessage)
+{
+    Error             error = kErrorNone;
+    RouterNeighborTlv neighborTlv;
+
+    for (Router &router : Get<RouterTable>())
+    {
+        if (router.IsStateValid())
+        {
+            neighborTlv.InitFrom(router);
+            SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
+        }
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    neighborTlv.InitAsEmpty();
+    SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
+
+exit:
+    return error;
+}
+
+Error Server::AppendChildTableIp6AddressList(Message &aMessage)
+{
+    Error error = kErrorNone;
+    Tlv   tlv;
+
+    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        SuccessOrExit(error = AppendChildIp6AddressListTlv(aMessage, child));
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    tlv.SetType(Tlv::kChildIp6AddressList);
+    tlv.SetLength(0);
+    SuccessOrExit(error = aMessage.Append(tlv));
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #endif // OPENTHREAD_FTD
 
 Error Server::AppendMacCounters(Message &aMessage)
@@ -230,7 +310,7 @@ Error Server::AppendMacCounters(Message &aMessage)
     MacCountersTlv       tlv;
     const otMacCounters &counters = Get<Mac::Mac>().GetCounters();
 
-    memset(&tlv, 0, sizeof(tlv));
+    ClearAllBytes(tlv);
 
     tlv.Init();
     tlv.SetIfInUnknownProtos(counters.mRxOther);
@@ -249,23 +329,65 @@ Error Server::AppendMacCounters(Message &aMessage)
 
 Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t endOffset;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRequest, Tlv::kTypeList, offset, endOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
 
-    for (; offset < endOffset; offset++)
+    while (!offsetRange.IsEmpty())
     {
         uint8_t tlvType;
 
-        SuccessOrExit(error = aRequest.Read(offset, tlvType));
+        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
+        offsetRange.AdvanceOffset(sizeof(tlvType));
         SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
     }
 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
+{
+    Error error = kErrorNone;
+
+    while (!aOffsetRange.IsEmpty())
+    {
+        uint8_t tlvType;
+
+        SuccessOrExit(error = aRequest.Read(aOffsetRange, tlvType));
+        aOffsetRange.AdvanceOffset(sizeof(uint8_t));
+
+#if OPENTHREAD_FTD
+        switch (tlvType)
+        {
+        case ChildTlv::kType:
+            SuccessOrExit(error = AppendChildTableAsChildTlvs(aResponse));
+            break;
+
+        case ChildIp6AddressListTlv::kType:
+            SuccessOrExit(error = AppendChildTableIp6AddressList(aResponse));
+            break;
+
+        case RouterNeighborTlv::kType:
+            SuccessOrExit(error = AppendRouterNeighborTlvs(aResponse));
+            break;
+
+        default:
+            SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
+            break;
+        }
+
+#elif OPENTHREAD_MTD
+        SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
+#endif
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 {
@@ -278,20 +400,29 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kAddress16:
-        error = Tlv::Append<Address16Tlv>(aMessage, Get<Mle::MleRouter>().GetRloc16());
+        error = Tlv::Append<Address16Tlv>(aMessage, Get<Mle::Mle>().GetRloc16());
         break;
 
     case Tlv::kMode:
-        error = Tlv::Append<ModeTlv>(aMessage, Get<Mle::MleRouter>().GetDeviceMode().Get());
+        error = Tlv::Append<ModeTlv>(aMessage, Get<Mle::Mle>().GetDeviceMode().Get());
         break;
+
+    case Tlv::kEui64:
+    {
+        Mac::ExtAddress eui64;
+
+        Get<Radio>().GetIeeeEui64(eui64);
+        error = Tlv::Append<Eui64Tlv>(aMessage, eui64);
+        break;
+    }
 
     case Tlv::kVersion:
         error = Tlv::Append<VersionTlv>(aMessage, kThreadVersion);
         break;
 
     case Tlv::kTimeout:
-        VerifyOrExit(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
-        error = Tlv::Append<TimeoutTlv>(aMessage, Get<Mle::MleRouter>().GetTimeout());
+        VerifyOrExit(!Get<Mle::Mle>().IsRxOnWhenIdle());
+        error = Tlv::Append<TimeoutTlv>(aMessage, Get<Mle::Mle>().GetTimeout());
         break;
 
     case Tlv::kLeaderData:
@@ -299,7 +430,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         LeaderDataTlv tlv;
 
         tlv.Init();
-        tlv.Set(Get<Mle::MleRouter>().GetLeaderData());
+        tlv.Set(Get<Mle::Mle>().GetLeaderData());
         error = tlv.AppendTo(aMessage);
         break;
     }
@@ -317,6 +448,15 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         error = AppendMacCounters(aMessage);
         break;
 
+    case Tlv::kMleCounters:
+    {
+        MleCountersTlv tlv;
+
+        tlv.Init(Get<Mle::Mle>().GetCounters());
+        error = tlv.AppendTo(aMessage);
+        break;
+    }
+
     case Tlv::kVendorName:
         error = Tlv::Append<VendorNameTlv>(aMessage, GetVendorName());
         break;
@@ -327,6 +467,10 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
     case Tlv::kVendorSwVersion:
         error = Tlv::Append<VendorSwVersionTlv>(aMessage, GetVendorSwVersion());
+        break;
+
+    case Tlv::kVendorAppUrl:
+        error = Tlv::Append<VendorAppUrlTlv>(aMessage, GetVendorAppUrl());
         break;
 
     case Tlv::kThreadStackVersion:
@@ -340,17 +484,23 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
         tlv.Init();
 
-        for (uint8_t page = 0; page < static_cast<uint8_t>(sizeof(Radio::kSupportedChannelPages) * CHAR_BIT); page++)
+        for (uint8_t page : Radio::kSupportedChannelPages)
         {
-            if (Radio::kSupportedChannelPages & (1 << page))
-            {
-                tlv.GetChannelPages()[length++] = page;
-            }
+            tlv.GetChannelPages()[length++] = page;
         }
 
         tlv.SetLength(length);
         error = tlv.AppendTo(aMessage);
 
+        break;
+    }
+
+    case Tlv::kNonPreferredChannels:
+    {
+        MeshCoP::ChannelMaskTlv::Value value;
+
+        MeshCoP::ChannelMaskTlv::PrepareValue(value, mNonPreferredChannels, /* aIncludeZeroPageMasks */ true);
+        error = Tlv::AppendTlv(aMessage, Tlv::kNonPreferredChannels, value.mData, value.mLength);
         break;
     }
 
@@ -361,7 +511,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         ConnectivityTlv tlv;
 
         tlv.Init();
-        Get<Mle::MleRouter>().FillConnectivityTlv(tlv);
+        Get<Mle::Mle>().FillConnectivityTlv(tlv);
         error = tlv.AppendTo(aMessage);
         break;
     }
@@ -376,6 +526,10 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
     }
 
+    case Tlv::kEnhancedRoute:
+        error = AppendEnhancedRoute(aMessage);
+        break;
+
     case Tlv::kChildTable:
         error = AppendChildTable(aMessage);
         break;
@@ -384,7 +538,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
     {
         uint32_t maxTimeout;
 
-        SuccessOrExit(Get<Mle::MleRouter>().GetMaxChildTimeout(maxTimeout));
+        SuccessOrExit(Get<Mle::Mle>().GetMaxChildTimeout(maxTimeout));
         error = Tlv::Append<MaxChildTimeoutTlv>(aMessage, maxTimeout);
         break;
     }
@@ -527,9 +681,7 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
     Coap::Message *answer;
     Error          error;
     AnswerInfo     info;
-    uint16_t       offset;
-    uint16_t       length;
-    uint16_t       endOffset;
+    OffsetRange    offsetRange;
     AnswerTlv      answerTlv;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
@@ -541,14 +693,14 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
 
     SuccessOrExit(error = AllocateAnswer(answer, info));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequest, Tlv::kTypeList, offset, length));
-    endOffset = offset + length;
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
 
-    for (; offset < endOffset; offset++)
+    while (!offsetRange.IsEmpty())
     {
         uint8_t tlvType;
 
-        SuccessOrExit(error = aRequest.Read(offset, tlvType));
+        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
+        offsetRange.AdvanceOffset(sizeof(tlvType));
 
         switch (tlvType)
         {
@@ -635,7 +787,10 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
     }
 }
 
-void Server::HandleAnswerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
+void Server::HandleAnswerResponse(void                *aContext,
+                                  otMessage           *aMessage,
+                                  const otMessageInfo *aMessageInfo,
+                                  otError              aResult)
 {
     Coap::Message *nextAnswer = static_cast<Coap::Message *>(aContext);
 
@@ -738,16 +893,20 @@ exit:
     return error;
 }
 
-Error Server::AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild)
+Error Server::AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild)
 {
     Error                       error      = kErrorNone;
-    uint16_t                    numIp6Addr = 0;
+    uint16_t                    numIp6Addr = aChild.GetIp6Addresses().GetLength();
     ChildIp6AddressListTlvValue tlvValue;
+    Ip6::Address                mlEid;
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    if (aChild.GetMeshLocalIp6Address(mlEid) == kErrorNone)
     {
-        OT_UNUSED_VARIABLE(address);
         numIp6Addr++;
+    }
+    else
+    {
+        mlEid.Clear();
     }
 
     VerifyOrExit(numIp6Addr > 0);
@@ -773,7 +932,12 @@ Error Server::AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &
 
     SuccessOrExit(error = aAnswer.Append(tlvValue));
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    if (!mlEid.IsUnspecified())
+    {
+        SuccessOrExit(error = aAnswer.Append(mlEid));
+    }
+
+    for (const Ip6::Address &address : aChild.GetIp6Addresses())
     {
         SuccessOrExit(error = aAnswer.Append(address));
     }
@@ -835,6 +999,10 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage,
 
         case Tlv::kMleCounters:
             Get<Mle::Mle>().ResetCounters();
+            break;
+
+        case Tlv::kNonPreferredChannels:
+            mNonPreferredChannelsResetCallback.InvokeIfSet();
             break;
 
         default:
@@ -936,7 +1104,7 @@ exit:
     return error;
 }
 
-void Client::HandleGetResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
+void Client::HandleGetResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
     static_cast<Client *>(aContext)->HandleGetResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
                                                        aResult);
@@ -998,6 +1166,51 @@ static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDi
     aNetworkDiagRoute.mIdSequence = aRouteTlv.GetRouterIdSequence();
 }
 
+static Error ParseEnhancedRoute(const Message &aMessage, uint16_t aOffset, otNetworkDiagEnhRoute &aNetworkDiagEnhRoute)
+{
+    Error            error;
+    OffsetRange      offsetRange;
+    Tlv              tlv;
+    Mle::RouterIdSet routerIdSet;
+    uint8_t          index;
+
+    SuccessOrExit(error = aMessage.Read(aOffset, tlv));
+
+    VerifyOrExit(!tlv.IsExtended(), error = kErrorParse);
+    VerifyOrExit(tlv.GetType() == Tlv::kEnhancedRoute, error = kErrorParse);
+
+    aOffset += sizeof(tlv);
+    offsetRange.Init(aOffset, tlv.GetLength());
+
+    SuccessOrExit(error = aMessage.Read(offsetRange, routerIdSet));
+    offsetRange.AdvanceOffset(sizeof(routerIdSet));
+
+    index = 0;
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        EnhancedRouteTlvEntry entry;
+
+        if (!routerIdSet.Contains(routerId))
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = aMessage.Read(offsetRange, entry));
+        offsetRange.AdvanceOffset(sizeof(entry));
+
+        aNetworkDiagEnhRoute.mRouteData[index].mRouterId = routerId;
+        entry.Parse(aNetworkDiagEnhRoute.mRouteData[index]);
+
+        index++;
+    }
+
+    aNetworkDiagEnhRoute.mRouteCount = index;
+
+exit:
+    return error;
+}
+
 static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
 {
     aMacCounters.mIfInUnknownProtos  = aMacCountersTlv.GetIfInUnknownProtos();
@@ -1018,9 +1231,8 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
     while (offset < aMessage.GetLength())
     {
-        bool     skipTlv = false;
-        uint16_t valueOffset;
-        uint16_t tlvLength;
+        bool        skipTlv = false;
+        OffsetRange valueOffsetRange;
         union
         {
             Tlv         tlv;
@@ -1032,13 +1244,11 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         if (tlv.IsExtended())
         {
             SuccessOrExit(error = aMessage.Read(offset, extTlv));
-            valueOffset = offset + sizeof(ExtendedTlv);
-            tlvLength   = extTlv.GetLength();
+            valueOffsetRange.Init(offset + sizeof(ExtendedTlv), extTlv.GetLength());
         }
         else
         {
-            valueOffset = offset + sizeof(Tlv);
-            tlvLength   = tlv.GetLength();
+            valueOffsetRange.Init(offset + sizeof(Tlv), tlv.GetLength());
         }
 
         VerifyOrExit(offset + tlv.GetSize() <= aMessage.GetLength(), error = kErrorParse);
@@ -1090,6 +1300,10 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             break;
         }
 
+        case Tlv::kEnhancedRoute:
+            SuccessOrExit(error = ParseEnhancedRoute(aMessage, offset, aTlvInfo.mData.mEnhRoute));
+            break;
+
         case Tlv::kLeaderData:
         {
             LeaderDataTlv leaderDataTlv;
@@ -1105,9 +1319,9 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             static_assert(sizeof(aTlvInfo.mData.mNetworkData.m8) >= NetworkData::NetworkData::kMaxSize,
                           "NetworkData array in `otNetworkDiagTlv` is too small");
 
-            VerifyOrExit(tlvLength <= NetworkData::NetworkData::kMaxSize, error = kErrorParse);
-            aTlvInfo.mData.mNetworkData.mCount = static_cast<uint8_t>(tlvLength);
-            aMessage.ReadBytes(valueOffset, aTlvInfo.mData.mNetworkData.m8, tlvLength);
+            VerifyOrExit(valueOffsetRange.GetLength() <= NetworkData::NetworkData::kMaxSize, error = kErrorParse);
+            aTlvInfo.mData.mNetworkData.mCount = static_cast<uint8_t>(valueOffsetRange.GetLength());
+            aMessage.ReadBytes(valueOffsetRange, aTlvInfo.mData.mNetworkData.m8);
             break;
 
         case Tlv::kIp6AddressList:
@@ -1116,7 +1330,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             Ip6::Address *addrEntry      = AsCoreTypePtr(&aTlvInfo.mData.mIp6AddrList.mList[0]);
             uint8_t      &addrCount      = aTlvInfo.mData.mIp6AddrList.mCount;
 
-            VerifyOrExit((tlvLength % Ip6::Address::kSize) == 0, error = kErrorParse);
+            VerifyOrExit((valueOffsetRange.GetLength() % Ip6::Address::kSize) == 0, error = kErrorParse);
 
             // `TlvInfo` has a fixed array for IPv6 addresses. If there
             // are more addresses in the message, we read and return as
@@ -1124,13 +1338,12 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
             addrCount = 0;
 
-            while ((tlvLength > 0) && (addrCount < addrListLength))
+            while (!valueOffsetRange.IsEmpty() && (addrCount < addrListLength))
             {
-                SuccessOrExit(error = aMessage.Read(valueOffset, *addrEntry));
+                SuccessOrExit(error = aMessage.Read(valueOffsetRange, *addrEntry));
                 addrCount++;
                 addrEntry++;
-                valueOffset += Ip6::Address::kSize;
-                tlvLength -= Ip6::Address::kSize;
+                valueOffsetRange.AdvanceOffset(Ip6::Address::kSize);
             }
 
             break;
@@ -1170,7 +1383,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             ChildInfo *childInfo       = &aTlvInfo.mData.mChildTable.mTable[0];
             uint8_t   &childCount      = aTlvInfo.mData.mChildTable.mCount;
 
-            VerifyOrExit((tlvLength % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
+            VerifyOrExit((valueOffsetRange.GetLength() % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
 
             // `TlvInfo` has a fixed array Child Table entries. If there
             // are more entries in the message, we read and return as
@@ -1178,11 +1391,11 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
             childCount = 0;
 
-            while ((tlvLength > 0) && (childCount < childInfoLength))
+            while (!valueOffsetRange.IsEmpty() && (childCount < childInfoLength))
             {
                 ChildTableEntry entry;
 
-                SuccessOrExit(error = aMessage.Read(valueOffset, entry));
+                SuccessOrExit(error = aMessage.Read(valueOffsetRange, entry));
 
                 childInfo->mTimeout     = entry.GetTimeout();
                 childInfo->mLinkQuality = entry.GetLinkQuality();
@@ -1191,21 +1404,25 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
                 childCount++;
                 childInfo++;
-                tlvLength -= sizeof(ChildTableEntry);
-                valueOffset += sizeof(ChildTableEntry);
+                valueOffsetRange.AdvanceOffset(sizeof(ChildTableEntry));
             }
 
             break;
         }
 
         case Tlv::kChannelPages:
-            aTlvInfo.mData.mChannelPages.mCount =
-                static_cast<uint8_t>(Min(tlvLength, GetArrayLength(aTlvInfo.mData.mChannelPages.m8)));
-            aMessage.ReadBytes(valueOffset, aTlvInfo.mData.mChannelPages.m8, aTlvInfo.mData.mChannelPages.mCount);
+            aTlvInfo.mData.mChannelPages.mCount = static_cast<uint8_t>(
+                Min(valueOffsetRange.GetLength(), GetArrayLength(aTlvInfo.mData.mChannelPages.m8)));
+            aMessage.ReadBytes(valueOffsetRange.GetOffset(), aTlvInfo.mData.mChannelPages.m8,
+                               aTlvInfo.mData.mChannelPages.mCount);
             break;
 
         case Tlv::kMaxChildTimeout:
             SuccessOrExit(error = Tlv::Read<MaxChildTimeoutTlv>(aMessage, offset, aTlvInfo.mData.mMaxChildTimeout));
+            break;
+
+        case Tlv::kEui64:
+            SuccessOrExit(error = Tlv::Read<Eui64Tlv>(aMessage, offset, AsCoreType(&aTlvInfo.mData.mEui64)));
             break;
 
         case Tlv::kVersion:
@@ -1224,9 +1441,18 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             SuccessOrExit(error = Tlv::Read<VendorSwVersionTlv>(aMessage, offset, aTlvInfo.mData.mVendorSwVersion));
             break;
 
+        case Tlv::kVendorAppUrl:
+            SuccessOrExit(error = Tlv::Read<VendorAppUrlTlv>(aMessage, offset, aTlvInfo.mData.mVendorAppUrl));
+            break;
+
         case Tlv::kThreadStackVersion:
             SuccessOrExit(error =
                               Tlv::Read<ThreadStackVersionTlv>(aMessage, offset, aTlvInfo.mData.mThreadStackVersion));
+            break;
+
+        case Tlv::kNonPreferredChannels:
+            SuccessOrExit(error = MeshCoP::ChannelMaskTlv::ParseValue(aMessage, valueOffsetRange,
+                                                                      aTlvInfo.mData.mNonPreferredChannels));
             break;
 
         default:

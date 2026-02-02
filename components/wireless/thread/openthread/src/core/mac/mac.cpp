@@ -35,24 +35,10 @@
 
 #include <stdio.h>
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
-#include "mac/mac_frame.hpp"
-#include "radio/radio.hpp"
-#include "thread/child_table.hpp"
-#include "thread/link_quality.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/topology.hpp"
+#include "instance/instance.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mac {
@@ -75,6 +61,9 @@ Mac::Mac(Instance &aInstance)
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWakeupListenEnabled(false)
+#endif
     , mOperation(kOperationIdle)
     , mPendingOperations(0)
     , mBeaconSequence(Random::NonCrypto::GetUint8())
@@ -94,8 +83,15 @@ Mac::Mac(Instance &aInstance)
 #endif
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    , mIsCslEnabled(false)
+    , mIsCslCapable(false)
     , mCslChannel(0)
     , mCslPeriod(0)
+#endif
+    , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWakeupListenInterval(kDefaultWedListenInterval)
+    , mWakeupListenDuration(kDefaultWedListenDuration)
 #endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
@@ -124,6 +120,9 @@ Mac::Mac(Instance &aInstance)
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
+#if OPENTHREAD_FTD
+    SetAlternateShortAddress(kShortAddrInvalid);
+#endif
 
     mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
 }
@@ -186,7 +185,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
     if (aScanChannels == 0)
     {
-        aScanChannels = GetSupportedChannelMask().GetMask();
+        aScanChannels = mSupportedChannelMask.GetMask();
     }
 
     mScanChannelMask.SetMask(aScanChannels);
@@ -203,12 +202,15 @@ bool Mac::IsInTransmitState(void) const
     case kOperationTransmitDataDirect:
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
 #endif
-#endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+#endif
         retval = true;
         break;
 
@@ -233,7 +235,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
     uint16_t             payloadLength;
 #endif
 
-    memset(&aResult, 0, sizeof(ActiveScanResult));
+    ClearAllBytes(aResult);
 
     VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
 
@@ -339,6 +341,10 @@ void Mac::PerformEnergyScan(void)
     }
     else
     {
+        if (!mRxOnWhenIdle)
+        {
+            mLinks.Receive(mScanChannel);
+        }
         error = mLinks.EnergyScan(mScanChannel, mScanDuration);
     }
 
@@ -409,7 +415,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 #endif
     }
 
-    mLinks.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
+    mLinks.SetRxOnWhenIdle(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 
 exit:
@@ -419,6 +425,9 @@ exit:
 Error Mac::SetPanChannel(uint8_t aChannel)
 {
     Error error = kErrorNone;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    bool isPanChannelChanged = (mPanChannel != aChannel);
+#endif
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
@@ -431,7 +440,10 @@ Error Mac::SetPanChannel(uint8_t aChannel)
     mRadioChannel = mPanChannel;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    UpdateCsl();
+    if ((mCslChannel == 0) && isPanChannelChanged)
+    {
+        UpdateCslParameters();
+    }
 #endif
 
     UpdateIdleMode();
@@ -469,7 +481,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
+    newMask.Intersect(mSupportedChannelMask);
     IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
@@ -504,6 +516,7 @@ void Mac::RequestIndirectFrameTransmission(void)
 exit:
     return;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 void Mac::RequestCslFrameTransmission(uint32_t aDelay)
@@ -518,7 +531,17 @@ exit:
     return;
 }
 #endif
-#endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Mac::RequestWakeupFrameTransmission(void)
+{
+    VerifyOrExit(IsEnabled());
+    StartOperation(kOperationTransmitWakeup);
+
+exit:
+    return;
+}
+#endif
 
 Error Mac::RequestDataPollTransmission(void)
 {
@@ -562,7 +585,7 @@ void Mac::UpdateIdleMode(void)
         }
 #endif
     }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl))
     {
         mTimer.FireAt(mCslTxFireTime);
@@ -571,13 +594,6 @@ void Mac::UpdateIdleMode(void)
 
     if (shouldSleep)
     {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (IsCslEnabled())
-        {
-            mLinks.CslSample();
-            ExitNow();
-        }
-#endif
         mLinks.Sleep();
         LogDebg("Idle mode: Radio sleeping");
     }
@@ -640,7 +656,13 @@ void Mac::PerformNextOperation(void)
     {
         mOperation = kOperationWaitingForData;
     }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    else if (IsPending(kOperationTransmitWakeup))
+    {
+        mOperation = kOperationTransmitWakeup;
+    }
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
     {
         mOperation = kOperationTransmitDataCsl;
@@ -706,11 +728,14 @@ void Mac::PerformNextOperation(void)
     case kOperationTransmitDataDirect:
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
 #endif
-#endif
     case kOperationTransmitPoll:
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+#endif
         BeginTransmit();
         break;
 
@@ -732,17 +757,18 @@ void Mac::FinishOperation(void)
 
 TxFrame *Mac::PrepareBeaconRequest(void)
 {
-    TxFrame  &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
-    Addresses addrs;
-    PanIds    panIds;
+    TxFrame      &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame::Info frameInfo;
 
-    addrs.mSource.SetNone();
-    addrs.mDestination.SetShort(kShortAddrBroadcast);
-    panIds.SetDestination(kShortAddrBroadcast);
+    frameInfo.mAddrs.mSource.SetNone();
+    frameInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
+    frameInfo.mPanIds.SetDestination(kShortAddrBroadcast);
 
-    frame.InitMacHeader(Frame::kTypeMacCmd, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+    frameInfo.mType      = Frame::kTypeMacCmd;
+    frameInfo.mCommandId = Frame::kMacCmdBeaconRequest;
+    frameInfo.mVersion   = Frame::kVersion2003;
 
-    IgnoreError(frame.SetCommandId(Frame::kMacCmdBeaconRequest));
+    frameInfo.PrepareHeadersIn(frame);
 
     LogInfo("Sending Beacon Request");
 
@@ -751,10 +777,9 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame  *frame;
-    Beacon   *beacon = nullptr;
-    Addresses addrs;
-    PanIds    panIds;
+    TxFrame      *frame;
+    TxFrame::Info frameInfo;
+    Beacon       *beacon = nullptr;
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
@@ -768,11 +793,14 @@ TxFrame *Mac::PrepareBeacon(void)
     frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
 #endif
 
-    addrs.mSource.SetExtended(GetExtAddress());
-    panIds.SetSource(mPanId);
-    addrs.mDestination.SetNone();
+    frameInfo.mAddrs.mSource.SetExtended(GetExtAddress());
+    frameInfo.mPanIds.SetSource(mPanId);
+    frameInfo.mAddrs.mDestination.SetNone();
 
-    frame->InitMacHeader(Frame::kTypeBeacon, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+    frameInfo.mType    = Frame::kTypeBeacon;
+    frameInfo.mVersion = Frame::kVersion2003;
+
+    frameInfo.PrepareHeadersIn(*frame);
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
@@ -897,8 +925,17 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     case Frame::kKeyIdMode2:
     {
-        const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
+        uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        if (aFrame.IsWakeupFrame())
+        {
+            // Just set the key source here, further security processing will happen in SubMac
+            BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
+            aFrame.SetKeySource(keySource);
+            ExitNow();
+        }
+#endif
         aFrame.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
@@ -1000,6 +1037,7 @@ void Mac::BeginTransmit(void)
             frame->SetSequence(mDataSequence++);
         }
         break;
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
@@ -1017,7 +1055,15 @@ void Mac::BeginTransmit(void)
         break;
 
 #endif
-#endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+        frame = Get<WakeupTxScheduler>().PrepareWakeupFrame(txFrames);
+        VerifyOrExit(frame != nullptr);
+        frame->SetChannel(mWakeupChannel);
+        frame->SetRxChannelAfterTxDone(mRadioChannel);
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -1129,9 +1175,13 @@ void Mac::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
     }
 
     // Only track the CCA success rate for frame transmissions
-    // on the PAN channel.
+    // on the PAN channel or the CSL channel.
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if ((aChannel == mPanChannel) || (IsCslEnabled() && (aChannel == mCslChannel)))
+#else
     if (aChannel == mPanChannel)
+#endif
     {
         if (mCcaSampleCount < kMaxCcaSampleCount)
         {
@@ -1303,8 +1353,14 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
                 ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
                 ProcessCsl(*aAckFrame, dstAddr);
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+                if (!mRxOnWhenIdle && aFrame.HasCslIe())
+                {
+                    Get<DataPollSender>().ResetKeepAliveTimer();
+                }
 #endif
             }
         }
@@ -1418,7 +1474,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         PerformNextOperation();
         break;
 
-#if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
@@ -1430,6 +1485,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
         break;
 #endif
+
+#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
         mCounters.mTxData++;
 
@@ -1450,6 +1507,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         PerformNextOperation();
         break;
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+        FinishOperation();
+        PerformNextOperation();
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -1488,7 +1552,7 @@ void Mac::HandleTimer(void)
             }
 #endif
         }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         else if (IsPending(kOperationTransmitDataCsl))
         {
             PerformNextOperation();
@@ -1587,8 +1651,27 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = &mMode2KeyMaterial;
-        extAddress = &AsCoreType(&sMode2ExtAddress);
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (aFrame.IsWakeupFrame())
+        {
+            uint32_t sequence;
+
+            // TODO: Avoid generating a new key if a wake-up frame was recently received already
+
+            IgnoreError(aFrame.GetKeyId(keyid));
+            sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
+            VerifyOrExit(((sequence & 0x7f) + 1) == keyid, error = kErrorSecurity);
+
+            macKey     = (sequence == keyManager.GetCurrentKeySequence()) ? mLinks.GetCurrentMacKey(aFrame)
+                                                                          : &keyManager.GetTemporaryMacKey(sequence);
+            extAddress = &aSrcAddr.GetExtended();
+        }
+        else
+#endif
+        {
+            macKey     = &mMode2KeyMaterial;
+            extAddress = &AsCoreType(&sMode2ExtAddress);
+        }
         break;
 
     default:
@@ -1603,6 +1686,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         {
             aNeighbor->SetKeySequence(keySequence);
             aNeighbor->SetMleFrameCounter(0);
+            aNeighbor->GetLinkFrameCounters().Reset();
         }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1625,7 +1709,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
         if (keySequence > keyManager.GetCurrentKeySequence())
         {
-            keyManager.SetCurrentKeySequence(keySequence);
+            keyManager.SetCurrentKeySequence(keySequence, KeyManager::kApplySwitchGuard | KeyManager::kResetGuardTimer);
         }
     }
 
@@ -1652,6 +1736,8 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());
+
+    SuccessOrExit(aAckFrame.ValidatePsdu());
 
     IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
     VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
@@ -1733,13 +1819,41 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
+Error Mac::FilterDestShortAddress(ShortAddress aDestAddress) const
+{
+    Error error = kErrorNone;
+
+    if (aDestAddress == GetShortAddress())
+    {
+        ExitNow();
+    }
+
+#if OPENTHREAD_FTD
+    if ((GetAlternateShortAddress() != kShortAddrInvalid) && (aDestAddress == GetAlternateShortAddress()))
+    {
+        ExitNow();
+    }
+#endif
+
+    if (mRxOnWhenIdle && (aDestAddress == kShortAddrBroadcast))
+    {
+        ExitNow();
+    }
+
+    error = kErrorDestinationAddressFiltered;
+
+exit:
+    return error;
+}
+
 void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 {
     Address   srcaddr;
     Address   dstaddr;
     PanId     panid;
     Neighbor *neighbor;
-    Error     error = aError;
+    Error     error            = aError;
+    bool      isFrameValidated = false;
 
     mCounters.mRxTotal++;
 
@@ -1750,6 +1864,8 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     // Ensure we have a valid frame before attempting to read any contents of
     // the buffer received from the radio.
     SuccessOrExit(error = aFrame->ValidatePsdu());
+
+    isFrameValidated = true;
 
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
@@ -1762,12 +1878,11 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         break;
 
     case Address::kTypeShort:
-        VerifyOrExit((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress(),
-                     error = kErrorDestinationAddressFiltered);
+        SuccessOrExit(error = FilterDestShortAddress(dstaddr.GetShort()));
 
 #if OPENTHREAD_FTD
         // Allow multicasts from neighbor routers if FTD
-        if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
+        if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::Mle>().IsFullThreadDevice())
         {
             neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcaddr);
         }
@@ -1852,7 +1967,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         ExitNow();
     }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ProcessCsl(*aFrame, srcaddr);
 #endif
 
@@ -1967,6 +2082,12 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         mCounters.mRxData++;
         break;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case Frame::kTypeMultipurpose:
+        SuccessOrExit(error = HandleWakeupFrame(*aFrame));
+        OT_FALL_THROUGH;
+#endif
+
     default:
         mCounters.mRxOther++;
         ExitNow();
@@ -1981,7 +2102,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        LogFrameRxFailure(aFrame, error);
+        LogFrameRxFailure(isFrameValidated ? aFrame : nullptr, error);
 
         switch (error)
         {
@@ -2022,11 +2143,35 @@ exit:
             break;
         }
     }
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrame->GetRadioType() == kRadioTypeTrel)
+#endif
+    {
+        if (error == kErrorNone)
+        {
+            // If the received frame is using TREL and is successfully
+            // processed, check for any discrepancy between the socket
+            // address of the received TREL packet and the information
+            // saved in the corresponding TREL peer, and signal this to
+            // the platform layer.
+            //
+            // If the frame used link security and was successfully
+            // processed, we allow the `Peer` entry socket information
+            // to be updated directly.
+
+            Get<Trel::Link>().CheckPeerAddrOnRxSuccess(aFrame->GetSecurityEnabled()
+                                                           ? Trel::Link::kAllowPeerSockAddrUpdate
+                                                           : Trel::Link::kDisallowPeerSockAddrUpdate);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 }
 
 void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)
 {
-    LinkQuality oldLinkQuality = aNeighbor.GetLinkInfo().GetLinkQuality();
+    LinkQuality oldLinkQuality = aNeighbor.GetLinkInfo().GetLinkQualityIn();
 
     aNeighbor.GetLinkInfo().AddRss(aRxFrame.GetRssi());
 
@@ -2038,7 +2183,7 @@ void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)
     // quality gets changed.
 
     VerifyOrExit(Get<Mle::Mle>().IsChild() && (&aNeighbor == &Get<Mle::Mle>().GetParent()));
-    VerifyOrExit(aNeighbor.GetLinkInfo().GetLinkQuality() != oldLinkQuality);
+    VerifyOrExit(aNeighbor.GetLinkInfo().GetLinkQualityIn() != oldLinkQuality);
     Get<Notifier>().Signal(kEventParentLinkQualityChanged);
 
 exit:
@@ -2095,9 +2240,24 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     mShouldDelaySleep = false;
 #endif
 
-    mLinks.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
+    mLinks.SetRxOnWhenIdle(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 }
+
+Error Mac::SetRegion(uint16_t aRegionCode)
+{
+    Error       error;
+    ChannelMask oldMask = mSupportedChannelMask;
+
+    SuccessOrExit(error = Get<Radio>().SetRegion(aRegionCode));
+    mSupportedChannelMask.SetMask(Get<Radio>().GetSupportedChannelMask());
+    IgnoreError(Get<Notifier>().Update(oldMask, mSupportedChannelMask, kEventSupportedChannelMaskChanged));
+
+exit:
+    return error;
+}
+
+Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio>().GetRegion(aRegionCode); }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
@@ -2130,7 +2290,7 @@ const uint32_t *Mac::GetIndirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
 }
 #endif
 
-void Mac::ResetRetrySuccessHistogram() { memset(&mRetryHistogram, 0, sizeof(mRetryHistogram)); }
+void Mac::ResetRetrySuccessHistogram() { ClearAllBytes(mRetryHistogram); }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
 uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin(GetNoiseFloor(), aRss); }
@@ -2151,25 +2311,33 @@ const char *Mac::OperationToString(Operation aOperation)
         "WaitingForData",     // (6) kOperationWaitingForData
 #if OPENTHREAD_FTD
         "TransmitDataIndirect", // (7) kOperationTransmitDataIndirect
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         "TransmitDataCsl", // (8) kOperationTransmitDataCsl
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        "TransmitWakeup", // kOperationTransmitWakeup
 #endif
     };
 
-    static_assert(kOperationIdle == 0, "kOperationIdle value is incorrect");
-    static_assert(kOperationActiveScan == 1, "kOperationActiveScan value is incorrect");
-    static_assert(kOperationEnergyScan == 2, "kOperationEnergyScan value is incorrect");
-    static_assert(kOperationTransmitBeacon == 3, "kOperationTransmitBeacon value is incorrect");
-    static_assert(kOperationTransmitDataDirect == 4, "kOperationTransmitDataDirect value is incorrect");
-    static_assert(kOperationTransmitPoll == 5, "kOperationTransmitPoll value is incorrect");
-    static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
+    struct OperationChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kOperationIdle);
+        ValidateNextEnum(kOperationActiveScan);
+        ValidateNextEnum(kOperationEnergyScan);
+        ValidateNextEnum(kOperationTransmitBeacon);
+        ValidateNextEnum(kOperationTransmitDataDirect);
+        ValidateNextEnum(kOperationTransmitPoll);
+        ValidateNextEnum(kOperationWaitingForData);
 #if OPENTHREAD_FTD
-    static_assert(kOperationTransmitDataIndirect == 7, "kOperationTransmitDataIndirect value is incorrect");
+        ValidateNextEnum(kOperationTransmitDataIndirect);
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kOperationTransmitDataCsl == 8, "TransmitDataCsl value is incorrect");
+        ValidateNextEnum(kOperationTransmitDataCsl);
 #endif
-#endif
+    };
 
     return kOperationStrings[aOperation];
 }
@@ -2204,12 +2372,9 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
 
 void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const
 {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && OPENTHREAD_CONFIG_MULTI_RADIO
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
     if (aFrame.GetRadioType() == kRadioTypeIeee802154)
-#elif OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (true)
-#else
-    if (false)
 #endif
     {
         uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
@@ -2218,10 +2383,22 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
         LogInfo("Frame tx attempt %u/%u failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
                 aFrame.ToInfoString().AsCString());
     }
-    else
+#else
+    OT_UNUSED_VARIABLE(aRetryCount);
+    OT_UNUSED_VARIABLE(aWillRetx);
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrame.GetRadioType() == kRadioTypeTrel)
+#endif
     {
-        LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        if (Get<Trel::Interface>().IsEnabled())
+        {
+            LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        }
     }
+#endif
 }
 
 void Mac::LogBeacon(const char *aActionText) const { LogInfo("%s Beacon", aActionText); }
@@ -2257,38 +2434,104 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Mac::UpdateCsl(void)
+void Mac::SetCslCapable(bool aIsCslCapable)
 {
-    uint16_t period  = IsCslEnabled() ? GetCslPeriod() : 0;
-    uint8_t  channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
+    VerifyOrExit(mIsCslCapable != aIsCslCapable);
+    mIsCslCapable = aIsCslCapable;
+    UpdateCslState();
 
-    if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
-                         &Get<Mle::Mle>().GetParent().GetExtAddress()))
-    {
-        if (Get<Mle::Mle>().IsChild())
-        {
-            Get<DataPollSender>().RecalculatePollPeriod();
-
-            if (period != 0)
-            {
-                Get<Mle::Mle>().ScheduleChildUpdateRequest();
-            }
-        }
-
-        UpdateIdleMode();
-    }
+exit:
+    return;
 }
 
 void Mac::SetCslChannel(uint8_t aChannel)
 {
+    VerifyOrExit(mCslChannel != aChannel);
     mCslChannel = aChannel;
-    UpdateCsl();
+    UpdateCslParameters();
+
+exit:
+    return;
 }
 
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
-    mCslPeriod = aPeriod;
-    UpdateCsl();
+    bool shouldUpdateCslState;
+
+    VerifyOrExit(mCslPeriod != aPeriod);
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (IsWakeupListenEnabled() && aPeriod != 0)
+    {
+        IgnoreError(SetWakeupListenEnabled(false));
+        LogWarn("Disabling wake-up frame listening due to CSL period change");
+    }
+#endif
+
+    // A CSL period value of 0 means that the CSL is disabled.
+    shouldUpdateCslState = ((mCslPeriod == 0) != (aPeriod == 0));
+    mCslPeriod           = aPeriod;
+
+    if (shouldUpdateCslState)
+    {
+        UpdateCslState();
+    }
+    else
+    {
+        UpdateCslParameters();
+    }
+
+exit:
+    return;
+}
+
+void Mac::UpdateCslState(void)
+{
+    // This method will enable/disable CSL when the CSL state (enabled/disabled) is changed. Otherwise, nothing to do.
+    bool isCslEnabled = mIsCslCapable && (mCslPeriod > 0);
+
+    VerifyOrExit(mIsCslEnabled != isCslEnabled);
+
+    mIsCslEnabled = isCslEnabled;
+
+    if (mIsCslEnabled)
+    {
+        UpdateCslParameters();
+        // Request the Mac to enter sleep state.
+        UpdateIdleMode();
+    }
+    else
+    {
+        // The platform API `otPlatRadioEnableCsl()` description says that disable CSL by setting the CSL period to 0.
+        // However, this description does not say whether the parameter `aExtAddr` can be set to nullptr or how to set
+        // the `aExtAddr` when the CSL is disabled. Here, an empty ExtAddress is set to meet the API requirement.
+        ExtAddress extAddress;
+
+        extAddress.Fill(0);
+        mLinks.SetCslParams(0, 0, kShortAddrInvalid, extAddress);
+    }
+
+    LogInfo("CSL receiver is %s", mIsCslEnabled ? "enabled" : "disabled");
+
+exit:
+    return;
+}
+
+void Mac::UpdateCslParameters(void)
+{
+    // This method will set all CSL parameters when the CSL is enabled. Otherwise, nothing to do.
+    uint8_t cslChannel;
+
+    VerifyOrExit(mIsCslEnabled);
+
+    cslChannel = GetCslChannel() ? GetCslChannel() : mPanChannel;
+    mLinks.SetCslParams(GetCslPeriod(), cslChannel, Get<Mle::Mle>().GetParent().GetRloc16(),
+                        Get<Mle::Mle>().GetParent().GetExtAddress());
+    Get<DataPollSender>().RecalculatePollPeriod();
+    Get<Mle::Mle>().ScheduleChildUpdateRequest();
+
+exit:
+    return;
 }
 
 uint32_t Mac::GetCslPeriodInMsec(void) const
@@ -2300,48 +2543,47 @@ uint32_t Mac::CslPeriodToUsec(uint16_t aPeriodInTenSymbols)
 {
     return static_cast<uint32_t>(aPeriodInTenSymbols) * kUsPerTenSymbols;
 }
-
-bool Mac::IsCslEnabled(void) const { return !Get<Mle::Mle>().IsRxOnWhenIdle() && IsCslCapable(); }
-
-bool Mac::IsCslCapable(void) const { return (GetCslPeriod() > 0) && IsCslSupported(); }
-
-bool Mac::IsCslSupported(void) const
-{
-    return Get<Mle::MleRouter>().IsChild() && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
-}
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
 void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
-    const uint8_t *cur;
-    Child         *child;
-    const CslIe   *csl;
+    CslNeighbor *neighbor = nullptr;
+    const CslIe *csl;
 
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
 
-    cur = aFrame.GetHeaderIe(CslIe::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
+    csl = aFrame.GetCslIe();
+    VerifyOrExit(csl != nullptr);
 
-    child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
-    VerifyOrExit(child != nullptr);
+#if OPENTHREAD_FTD
+    neighbor = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
+#else
+    OT_UNUSED_VARIABLE(aSrcAddr);
+#endif
 
-    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
-    child->SetCslPeriod(csl->GetPeriod());
-    child->SetCslPhase(csl->GetPhase());
-    child->SetCslSynchronized(true);
-    child->SetCslLastHeard(TimerMilli::GetNow());
-    child->SetLastRxTimestamp(aFrame.GetTimestamp());
+    VerifyOrExit(neighbor != nullptr);
+
+    VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
+
+    neighbor->SetCslPeriod(csl->GetPeriod());
+    neighbor->SetCslPhase(csl->GetPhase());
+    neighbor->SetCslSynchronized(true);
+    neighbor->SetCslLastHeard(TimerMilli::GetNow());
+    neighbor->SetLastRxTimestamp(aFrame.GetTimestamp());
     LogDebg("Timestamp=%lu Sequence=%u CslPeriod=%u CslPhase=%u TransmitPhase=%u",
             ToUlong(static_cast<uint32_t>(aFrame.GetTimestamp())), aFrame.GetSequence(), csl->GetPeriod(),
-            csl->GetPhase(), child->GetCslPhase());
+            csl->GetPhase(), neighbor->GetCslPhase());
 
+#if OPENTHREAD_FTD
     Get<CslTxScheduler>().Update();
+#endif
 
 exit:
     return;
 }
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
@@ -2372,6 +2614,153 @@ void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
     UpdateIdleMode();
 }
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+Error Mac::SetWakeupChannel(uint8_t aChannel)
+{
+    Error error = kErrorNone;
+
+    if (aChannel == 0)
+    {
+        mWakeupChannel = GetPanChannel();
+        ExitNow();
+    }
+
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
+    mWakeupChannel = aChannel;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    UpdateWakeupListening();
+#endif
+
+exit:
+    return error;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mac::GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const
+{
+    aInterval = mWakeupListenInterval;
+    aDuration = mWakeupListenDuration;
+}
+
+Error Mac::SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aDuration >= kMinWakeupListenDuration, error = kErrorInvalidArgs);
+    VerifyOrExit(aInterval > aDuration, error = kErrorInvalidArgs);
+
+    mWakeupListenInterval = aInterval;
+    mWakeupListenDuration = aDuration;
+    UpdateWakeupListening();
+
+exit:
+    return error;
+}
+
+Error Mac::SetWakeupListenEnabled(bool aEnable)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aEnable && GetCslPeriod() > 0)
+    {
+        LogWarn("Cannot enable wake-up frame listening while CSL is enabled");
+        ExitNow(error = kErrorInvalidState);
+    }
+#endif
+
+    if (aEnable == mWakeupListenEnabled)
+    {
+        LogInfo("Listening for wake up frames was already %s", aEnable ? "started" : "stopped");
+        ExitNow();
+    }
+
+    mWakeupListenEnabled = aEnable;
+    UpdateWakeupListening();
+
+    LogInfo("Listening for wake up frames %s: chan:%u, addr:%s", aEnable ? "started" : "stopped", mWakeupChannel,
+            GetExtAddress().ToString().AsCString());
+
+exit:
+    return error;
+}
+
+void Mac::UpdateWakeupListening(void)
+{
+    uint8_t channel = mWakeupChannel ? mWakeupChannel : mPanChannel;
+
+    mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWakeupListenInterval, mWakeupListenDuration, channel);
+}
+
+Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
+{
+    Error               error = kErrorNone;
+    const ConnectionIe *connectionIe;
+    uint32_t            rvTimeUs;
+    uint64_t            rvTimestampUs;
+    uint32_t            attachDelayMs;
+    uint64_t            radioNowUs;
+    uint8_t             retryInterval;
+    uint8_t             retryCount;
+
+    VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
+    connectionIe  = aFrame.GetConnectionIe();
+    retryInterval = connectionIe->GetRetryInterval();
+    retryCount    = connectionIe->GetRetryCount();
+    VerifyOrExit(retryInterval > 0 && retryCount > 0, error = kErrorInvalidArgs);
+
+    radioNowUs    = otPlatRadioGetNow(&GetInstance());
+    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
+    rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
+
+    if (rvTimestampUs > radioNowUs + kCslRequestAhead)
+    {
+        attachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
+        attachDelayMs = attachDelayMs / 1000;
+    }
+    else
+    {
+        attachDelayMs = 0;
+    }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    {
+        uint32_t frameCounter;
+
+        IgnoreError(aFrame.GetFrameCounter(frameCounter));
+        LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
+                ToUlong(rvTimeUs), retryCount, retryInterval);
+    }
+#endif
+
+    // Stop receiving more wake up frames
+    IgnoreError(SetWakeupListenEnabled(false));
+
+    // TODO: start MLE attach process with the WC
+    OT_UNUSED_VARIABLE(attachDelayMs);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
+{
+    uint32_t busSpeed     = Get<Radio>().GetBusSpeed();
+    uint32_t trasnferTime = 0;
+
+    if (busSpeed != 0)
+    {
+        trasnferTime = DivideAndRoundUp<uint32_t>(aFrameSize * kBitsPerByte * Time::kOneSecondInUsec, busSpeed);
+    }
+
+    trasnferTime += Get<Radio>().GetBusLatency();
+
+    return trasnferTime;
+}
 
 } // namespace Mac
 } // namespace ot

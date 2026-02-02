@@ -36,9 +36,12 @@
 #define OPENTHREAD_NCP_H_
 
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,7 +54,6 @@ extern "C" {
  *   This module includes functions that control the Thread stack's execution.
  *
  * @{
- *
  */
 
 /**
@@ -61,13 +63,11 @@ extern "C" {
  * @param[in]  aBufLength  A length of the output data stored in the buffer.
  *
  * @returns                Number of bytes processed by the callback.
- *
  */
 typedef int (*otNcpHdlcSendCallback)(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
  * Is called after NCP send finished.
- *
  */
 void otNcpHdlcSendDone(void);
 
@@ -76,7 +76,6 @@ void otNcpHdlcSendDone(void);
  *
  * @param[in]  aBuf        A pointer to a buffer.
  * @param[in]  aBufLength  The length of the data stored in the buffer.
- *
  */
 void otNcpHdlcReceive(const uint8_t *aBuf, uint16_t aBufLength);
 
@@ -85,15 +84,22 @@ void otNcpHdlcReceive(const uint8_t *aBuf, uint16_t aBufLength);
  *
  * @param[in]  aInstance        The OpenThread instance structure.
  * @param[in]  aSendCallback    The function pointer used to send NCP data.
- *
  */
 void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSendCallback);
+
+/**
+ * Initialize the NCP based on HDLC framing.
+ *
+ * @param[in]  aInstances       The OpenThread instance pointers array.
+ * @param[in]  aCount           Number of elements in the array.
+ * @param[in]  aSendCallback    The function pointer used to send NCP data.
+ */
+void otNcpHdlcInitMulti(otInstance **aInstance, uint8_t aCount, otNcpHdlcSendCallback aSendCallback);
 
 /**
  * Initialize the NCP based on SPI framing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- *
  */
 void otNcpSpiInit(otInstance *aInstance);
 
@@ -144,7 +150,6 @@ void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
  * @param[in] aCount      Number of bytes to peek or poke.
  *
  * @returns  TRUE to allow peek/poke of the given memory region, FALSE otherwise.
- *
  */
 typedef bool (*otNcpDelegateAllowPeekPoke)(uint32_t aAddress, uint16_t aCount);
 
@@ -156,14 +161,12 @@ typedef bool (*otNcpDelegateAllowPeekPoke)(uint32_t aAddress, uint16_t aCount);
  *
  * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
  * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
- *
  */
 void otNcpRegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                     otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -33,8 +33,6 @@
 
 #include "aes_ccm.hpp"
 
-#include <limits.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -248,7 +246,7 @@ void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode
     }
 }
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 void AesCcm::Payload(Message &aMessage, uint16_t aOffset, uint16_t aLength, Mode aMode)
 {
     Message::MutableChunk chunk;
@@ -285,7 +283,7 @@ void AesCcm::GenerateNonce(const Mac::ExtAddress &aAddress,
     memcpy(aNonce, aAddress.m8, sizeof(Mac::ExtAddress));
     aNonce += sizeof(Mac::ExtAddress);
 
-    Encoding::BigEndian::WriteUint32(aFrameCounter, aNonce);
+    BigEndian::WriteUint32(aFrameCounter, aNonce);
     aNonce += sizeof(uint32_t);
 
     aNonce[0] = aSecurityLevel;

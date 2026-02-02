@@ -14,6 +14,7 @@ void zb_timer_cfg_us(uint64_t init_time);
 uint32_t zb_timer_get_current_time(void);
 uint64_t zb_timer_get_current_time_us(void);
 uint32_t zb_timer_get_remaining_time(uint8_t ch);
+uint32_t zb_timer_get_target_time(uint8_t ch);
 void zb_timer_start(uint8_t ch, uint32_t target_time, zb_timer_cb_t cb);
 void* zb_timer_stop(uint8_t ch);
 void zb_timer_store(void);

@@ -29,16 +29,13 @@
 /**
  * @file
  *   This file implements OTNS utilities.
- *
  */
 
 #include "otns.hpp"
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {
@@ -166,11 +163,9 @@ void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("EmitCoapSend failed: %s", ErrorToString(error));
-    }
+    LogWarnOnError(error, "EmitCoapSend");
 }
 
 void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -183,10 +178,7 @@ void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo
     EmitStatus("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("EmitCoapReceive failed: %s", ErrorToString(error));
-    }
+    LogWarnOnError(error, "EmitCoapReceive");
 }
 
 void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -200,10 +192,7 @@ void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6:
                uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
                ErrorToString(aError));
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("EmitCoapSendFailure failed: %s", ErrorToString(error));
-    }
+    LogWarnOnError(error, "EmitCoapSendFailure");
 }
 
 } // namespace Utils

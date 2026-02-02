@@ -809,6 +809,13 @@ struct net_device *hd_sdio_eth_netdev_init(struct hd_msg_ctrl *msg_ctrl, uint8_t
         return NULL;
     }
 
+    /* Open network device, compatible with API change before/after Linux 5.10.0 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+    ret = dev_open(netdev, NULL);
+#else
+    ret = dev_open(netdev);
+#endif
+
     return netdev;
 }
 
@@ -832,5 +839,9 @@ void hd_sdio_eth_netdev_deinit(struct net_device *netdev)
     ETH_NETDEV_INFO(priv, "deinitializing net_device %s\n", netdev->name);
 
     unregister_netdev(netdev);
+
+    /* Close network device before unregistering */
+    dev_close(netdev);
+
     free_netdev(netdev);
 }

@@ -27,6 +27,7 @@
 #include "at_base_config.h"
 #include "at_wifi_config.h"
 #include "at_net_main.h"
+#include "at_wifi_main.h"
 #include "at_net_config.h"
 #include "at_through.h"
 #include "at_port.h"

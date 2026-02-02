@@ -1331,6 +1331,44 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_Off_RC32K(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  Set RC3K R_CODE
+ *
+ * @param  r_code
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_RC32K_R_Code(uint32_t r_code)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_CAL_AON, r_code);
+    BL_WR_REG(HBN_BASE, HBN_RC32K_0, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Get RC3K R_CODE
+ *
+ * @param  NULL
+ *
+ * @return r_code
+ *
+*******************************************************************************/
+uint32_t ATTR_CLOCK_SECTION HBN_Get_RC32K_R_Code(void)
+{
+    uint32_t tmpVal;
+    uint32_t r_code;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_0);
+    r_code = BL_GET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_CAL_AON);
+
+    return r_code;
+}
+
+/****************************************************************************/ /**
  * @brief  Trim RC32K
  *
  * @param  None

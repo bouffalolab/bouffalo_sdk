@@ -3,12 +3,15 @@
 
 #include "mm.h"
 
+#define DBG_TAG "LIBC"
+#include "log.h"
+
 /*****************************************************************************
 * @brief        allocates space (disable)
-* 
+*
 * @param[in]    reent       pointer to reentrant struct
 * @param[in]    incr        bytes of increment
-* 
+*
 * @retval void*             pointer to allocated memory
 *****************************************************************************/
 void *_sbrk_r(struct _reent *reent, ptrdiff_t incr)
@@ -19,10 +22,10 @@ void *_sbrk_r(struct _reent *reent, ptrdiff_t incr)
 
 /*****************************************************************************
 * @brief        allocate memory
-* 
+*
 * @param[in]    reent       pointer to reentrant struct
 * @param[in]    size        bytes of allocated memory
-* 
+*
 * @retval void*             pointer to allocated memory
 *****************************************************************************/
 void *_malloc_r(struct _reent *reent, size_t size)
@@ -33,6 +36,7 @@ void *_malloc_r(struct _reent *reent, size_t size)
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
+        LOG_W("Failed to allocate %zu bytes\r\n", size);
     }
 
     return mem;
@@ -40,11 +44,11 @@ void *_malloc_r(struct _reent *reent, size_t size)
 
 /*****************************************************************************
 * @brief        reallocate memory
-* 
+*
 * @param[in]    reent       pointer to reentrant struct
 * @param[in]    old         pointer to old allocated memory
 * @param[in]    newlen      bytes of new allocated memory
-* 
+*
 * @retval void*             pointer to new allocated memory
 *****************************************************************************/
 void *_realloc_r(struct _reent *reent, void *old, size_t newlen)
@@ -55,6 +59,7 @@ void *_realloc_r(struct _reent *reent, void *old, size_t newlen)
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
+        LOG_W("Failed to reallocate %zu bytes\r\n", newlen);
     }
 
     return mem;
@@ -62,11 +67,11 @@ void *_realloc_r(struct _reent *reent, void *old, size_t newlen)
 
 /*****************************************************************************
 * @brief        allocate and zero memory
-* 
+*
 * @param[in]    reent       pointer to reentrant struct
-* @param[in]    nmenb       
-* @param[in]    size        
-* 
+* @param[in]    nmenb
+* @param[in]    size
+*
 * @retval void*             pointer to allocated memory
 *****************************************************************************/
 void *_calloc_r(struct _reent *reent, size_t nmenb, size_t size)
@@ -77,6 +82,7 @@ void *_calloc_r(struct _reent *reent, size_t nmenb, size_t size)
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
+        LOG_W("Failed to allocate %zu bytes\r\n", size);
     }
 
     return mem;
@@ -84,11 +90,11 @@ void *_calloc_r(struct _reent *reent, size_t nmenb, size_t size)
 
 /*****************************************************************************
 * @brief        allocate aligned memory
-* 
+*
 * @param[in]    reent       pointer to reentrant struct
 * @param[in]    align       align bytes
 * @param[in]    size        bytes of allocated memory
-* 
+*
 * @retval void*             pointer to new allocated memory
 *****************************************************************************/
 void *_memalign_r(struct _reent *reent, size_t align, size_t size)
@@ -99,6 +105,7 @@ void *_memalign_r(struct _reent *reent, size_t align, size_t size)
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
+        LOG_W("Failed to allocate %zu bytes\r\n", size);
     }
 
     return mem;
@@ -106,10 +113,10 @@ void *_memalign_r(struct _reent *reent, size_t align, size_t size)
 
 /*****************************************************************************
 * @brief        free memory
-* 
+*
 * @param[in]    reent       pointer to reentrant struct
 * @param[in]    addr        pointer to allocated memory
-* 
+*
 *****************************************************************************/
 void _free_r(struct _reent *reent, void *addr)
 {

@@ -6,7 +6,11 @@
 #include "at_ota.h"
 #include "at_pal.h"
 
+#ifdef BL616D
+#define OTA_PARTITION_NAME_TYPE_FW    "FW0"
+#else
 #define OTA_PARTITION_NAME_TYPE_FW    "FW"
+#endif
 #define OTA_UPGRADE_RETRY 1
 #define OTA_DEBUG_IMG 0
 #define OTA_ERASE_BLOCK_SIZE (4*1024)
@@ -15,10 +19,10 @@ static int at_ota_erase(at_ota_handle_t handle, uint32_t offset, uint32_t len)
 {
     uint32_t start_index, end_index, index;
     int ret;
-    
+
     start_index = offset / OTA_ERASE_BLOCK_SIZE;
     end_index = (offset + len - 1) / OTA_ERASE_BLOCK_SIZE;
-    
+
     for (index = start_index; index <= end_index; index++) {
         if (index / 32 >= handle->sector_erased_size) {
             printf("index error:%d sector_size:%d\r\n", index, handle->sector_erased_size);
@@ -33,7 +37,7 @@ static int at_ota_erase(at_ota_handle_t handle, uint32_t offset, uint32_t len)
             handle->sector_erased[index / 32] |= (1U << (index % 32));
         }
     }
-    
+
     return 0;
 }
 
@@ -41,7 +45,7 @@ static int ota_upgrade_slice(at_ota_handle_t handle, uint32_t offset, char *buf,
 {
     int ret = 0;
     uint32_t retry;
-    
+
 #if (!CONFIG_AT_FAST_OTA)
     ret = at_ota_erase(handle, offset, slice_size);
     if (ret) {
@@ -83,7 +87,7 @@ static int ota_upgrade_slice(at_ota_handle_t handle, uint32_t offset, char *buf,
             printf("flash check fail! 0x%08x\r\n", offset);
             while(1);
         }
-#endif 
+#endif
     }
     return 0;
 }
@@ -178,7 +182,7 @@ at_ota_handle_t at_ota_start(at_ota_header_t *ota_header)
     ota_handle->active_addr = ota_handle->pt_fw_entry.start_address[ota_handle->pt_fw_entry.active_index];
     ota_handle->part_size = ota_handle->pt_fw_entry.max_len[!ota_handle->pt_fw_entry.active_index];
     memcpy(ota_handle->sha256_img, ota_header->u.s.sha256, sizeof(ota_handle->sha256_img));
-    
+
     if (ota_handle->part_size < ota_handle->file_size) {
         printf("[OTA] file_size overflow:0x%08x part_size:0x%08x\r\n", ota_handle->file_size, ota_handle->part_size);
         goto _fail;
@@ -193,7 +197,7 @@ at_ota_handle_t at_ota_start(at_ota_header_t *ota_header)
     memset(ota_handle->sector_erased, 0, 4 * ota_handle->sector_erased_size);
 
     printf("[OTA] [TEST] activeIndex is %u, use OTA address=%08x part_size=%08x\r\n", ota_handle->pt_fw_entry.active_index, (unsigned int)ota_handle->ota_addr, ota_handle->part_size);
-    
+
     utils_sha256_init(&ota_handle->ctx_sha256);
     utils_sha256_starts(&ota_handle->ctx_sha256);
 
@@ -220,7 +224,7 @@ int at_ota_update(at_ota_handle_t handle, uint32_t offset, uint8_t *buf, uint32_
         printf("[OTA] file_size overflow file_size:%d total_size:%d!!!!!!\r\n", handle->part_size, handle->total_size);
         return -1;
     }
-   
+
     if (handle->file_size < buf_len + handle->total_size) {
         printf("[OTA] file_size overflow file_size:%d total_size:%d buf_len:%d!!!!!!\r\n", handle->file_size, handle->total_size, buf_len);
         buf_len = handle->file_size - handle->total_size;
@@ -252,7 +256,7 @@ int at_ota_finish(at_ota_handle_t handle, uint8_t check_hash, uint8_t reboot)
         printf("[OTA] file_size error file_size:%d total_size:%d\r\n", handle->file_size, handle->total_size);
         return -1;
     }
-   
+
     if (check_hash) {
         utils_sha256_finish(&handle->ctx_sha256, handle->sha256_result);
         if (memcmp(handle->sha256_img, handle->sha256_result, sizeof(handle->sha256_img))) {

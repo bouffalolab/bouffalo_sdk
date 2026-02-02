@@ -31,9 +31,10 @@
  *   This file includes definitions for the HDLC interface to radio (RCP).
  */
 
-#ifndef POSIX_APP_HDLC_INTERFACE_HPP_
-#define POSIX_APP_HDLC_INTERFACE_HPP_
+#ifndef OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_
+#define OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_
 
+#include "logger.hpp"
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
@@ -46,24 +47,21 @@ namespace Posix {
 
 /**
  * Defines an HDLC interface to the Radio Co-processor (RCP)
- *
  */
-class HdlcInterface : public ot::Spinel::SpinelInterface
+class HdlcInterface : public ot::Spinel::SpinelInterface, public Logger<HdlcInterface>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Initializes the object.
      *
-     * @param[in] aCallback         Callback on frame received
-     * @param[in] aCallbackContext  Callback context
-     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
-     *
+     * @param[in] aRadioUrl  RadioUrl parsed from radio url.
      */
-    HdlcInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
+    HdlcInterface(const Url::Url &aRadioUrl);
 
     /**
      * This destructor deinitializes the object.
-     *
      */
     ~HdlcInterface(void);
 
@@ -72,18 +70,18 @@ public:
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     * @param[in]  aRadioUrl          RadioUrl parsed from radio url.
+     * @param[in] aCallback         Callback on frame received
+     * @param[in] aCallbackContext  Callback context
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
-     * @retval OT_ERROR_NONE          The interface is initialized successfully
-     * @retval OT_ERROR_ALREADY       The interface is already initialized.
-     * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
-     *
+     * @retval OT_ERROR_NONE       The interface is initialized successfully
+     * @retval OT_ERROR_ALREADY    The interface is already initialized.
+     * @retval OT_ERROR_FAILED     Failed to initialize the interface.
      */
-    otError Init(const Url::Url &aRadioUrl);
+    otError Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * Deinitializes the interface to the RCP.
-     *
      */
     void Deinit(void);
 
@@ -99,7 +97,6 @@ public:
      * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
      * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
-     *
      */
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
@@ -110,7 +107,6 @@ public:
      *
      * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
-     *
      */
     otError WaitForFrame(uint64_t aTimeoutUs);
 
@@ -118,7 +114,6 @@ public:
      * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]   aMainloopContext  A pointer to the mainloop context containing fd_sets.
-     *
      */
     void UpdateFdSet(void *aMainloopContext);
 
@@ -126,7 +121,6 @@ public:
      * Performs radio driver processing.
      *
      * @param[in]   aMainloopContext  A pointer to the mainloop context containing fd_sets.
-     *
      */
     void Process(const void *aMainloopContext);
 
@@ -134,7 +128,6 @@ public:
      * Returns the bus speed between the host and the radio.
      *
      * @returns   Bus speed in bits/second.
-     *
      */
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
@@ -143,7 +136,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
-     *
      */
     otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
@@ -151,14 +143,26 @@ public:
      * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
-     *
      */
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
+
+    /**
+     * Indicates whether or not the given interface matches this interface name.
+     *
+     * @param[in] aInterfaceName A pointer to the interface name.
+     *
+     * @retval TRUE   The given interface name matches this interface name.
+     * @retval FALSE  The given interface name doesn't match this interface name.
+     */
+    static bool IsInterfaceNameMatch(const char *aInterfaceName)
+    {
+        static const char kInterfaceName[] = "spinel+hdlc";
+        return (strncmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
+    }
 
 private:
     /**
      * Is called when RCP is reset to recreate the connection with it.
-     *
      */
     otError ResetConnection(void);
 
@@ -167,7 +171,6 @@ private:
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
      * `aCallback` object from constructor) to pass the received frame to be processed.
-     *
      */
     void Read(void);
 
@@ -177,7 +180,6 @@ private:
      *
      * @retval OT_ERROR_NONE   Socket is writable.
      * @retval OT_ERROR_FAILED Socket did not become writable within `kMaxWaitTime`.
-     *
      */
     otError WaitForWritable(void);
 
@@ -192,7 +194,6 @@ private:
      *
      * @retval OT_ERROR_NONE    Frame was written successfully.
      * @retval OT_ERROR_FAILED  Failed to write due to socket not becoming writable within `kMaxWaitTime`.
-     *
      */
     otError Write(const uint8_t *aFrame, uint16_t aLength);
 
@@ -204,7 +205,6 @@ private:
      *
      * @param[in] aBuffer  A pointer to buffer containing data.
      * @param[in] aLength  The length (number of bytes) in the buffer.
-     *
      */
     void Decode(const uint8_t *aBuffer, uint16_t aLength);
 
@@ -223,7 +223,6 @@ private:
 
     /**
      * Closes file associated with the file descriptor.
-     *
      */
     void CloseFile(void);
 
@@ -242,12 +241,12 @@ private:
 
     ReceiveFrameCallback mReceiveFrameCallback;
     void                *mReceiveFrameContext;
-    RxFrameBuffer       &mReceiveFrameBuffer;
+    RxFrameBuffer       *mReceiveFrameBuffer;
 
     int             mSockFd;
     uint32_t        mBaudRate;
     Hdlc::Decoder   mHdlcDecoder;
-    const Url::Url *mRadioUrl;
+    const Url::Url &mRadioUrl;
 
     otRcpInterfaceMetrics mInterfaceMetrics;
 
@@ -258,4 +257,5 @@ private:
 
 } // namespace Posix
 } // namespace ot
-#endif // POSIX_APP_HDLC_INTERFACE_HPP_
+
+#endif // OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_

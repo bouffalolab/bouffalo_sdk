@@ -38,6 +38,9 @@
 #if CONFIG_ATMODULE_NETWORK
 #include "at_net_config.h"
 #endif
+#ifdef CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO
+#include <nethub.h>
+#endif
 #define DBG_TAG "MAIN"
 #include "log.h"
 
@@ -94,17 +97,17 @@ int at_wifi_sta_ip4_addr_get(uint32_t *addr, uint32_t *mask, uint32_t *gw, uint3
     }
 
     if (addr) {
-        *addr = ip4_addr_get_u32(&netif->ip_addr);
+        *addr = ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr));
     }
     if (mask) {
-        *mask = ip4_addr_get_u32(&netif->netmask);
+        *mask = ip4_addr_get_u32(ip_2_ip4(&netif->netmask));
     }
     if (gw) {
-        *gw   = ip4_addr_get_u32(&netif->gw);
+        *gw   = ip4_addr_get_u32(ip_2_ip4(&netif->gw));
     }
     if (dns) {
         ip_addr_t *dns_addr = dns_getserver(0);
-        *dns  = ip4_addr_get_u32(dns_addr);
+        *dns  = ip4_addr_get_u32(ip_2_ip4(dns_addr));
     }
 
     return 0;
@@ -734,6 +737,13 @@ int at_wifi_set_mode(void)
                 wifiopt_sta_connect();
             }
         }
+    }
+#endif
+#if defined(CONFIG_ATMODULE_WIFI_AP) && defined(CONFIG_ATMODULE_WIFI_STA) && defined (CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO)
+    if(at_wifi_config->wifi_mode == WIFI_STATION_MODE) {
+        nethub_update_wifichannel(NHIF_TYPE_STA);
+    } else if(at_wifi_config->wifi_mode == WIFI_SOFTAP_MODE) {
+        nethub_update_wifichannel(NHIF_TYPE_AP);
     }
 #endif
     if (at_wifi_config->wifi_mode == WIFI_DISABLE) {

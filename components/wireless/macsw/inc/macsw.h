@@ -4147,6 +4147,10 @@ __INLINE uint16_t mac_ie_len(uint32_t addr)
 #define WLAN_FW_AUTH_OR_ASSOC_RESPONSE_CFM_FAILURE               24
 #define WLAN_FW_REASSOCIATE_STARING                              25
 #define WLAN_FW_CONNECT_PARAMS_ERROR                             26
+#define WLAN_FW_DEAUTH_BEFORE_4WAY2                              27
+#define WLAN_FW_AP_STA_ENCRYPTION_TYPE_MISMATCH                  28
+
+#define WLAN_FW_INVALID_CODE  0xFF
 
 /*--------------------------------------------------------------------*/
 /* AP Mode Status Codes - these codes are used in bouffalolab fw actions      */

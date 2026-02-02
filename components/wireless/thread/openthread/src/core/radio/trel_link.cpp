@@ -34,11 +34,7 @@
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Trel {
@@ -54,10 +50,12 @@ Link::Link(Instance &aInstance)
     , mTxTasklet(aInstance)
     , mTimer(aInstance)
     , mInterface(aInstance)
+    , mPeerTable(aInstance)
+    , mPeerDiscoverer(aInstance)
 {
-    memset(&mTxFrame, 0, sizeof(mTxFrame));
-    memset(&mRxFrame, 0, sizeof(mRxFrame));
-    memset(mAckFrameBuffer, 0, sizeof(mAckFrameBuffer));
+    ClearAllBytes(mTxFrame);
+    ClearAllBytes(mRxFrame);
+    ClearAllBytes(mAckFrameBuffer);
 
     mTxFrame.mPsdu = &mTxPacketBuffer[kMaxHeaderSize];
     mTxFrame.SetLength(0);
@@ -218,13 +216,13 @@ void Link::BeginTransmit(void)
     {
         uint16_t fcf = Mac::Frame::kTypeAck;
 
-        if (!Get<Mle::MleRouter>().IsRxOnWhenIdle())
+        if (!Get<Mle::Mle>().IsRxOnWhenIdle())
         {
             fcf |= kFcfFramePending;
         }
 
         // Prepare the ack frame (FCF followed by sequence number)
-        Encoding::LittleEndian::WriteUint16(fcf, mAckFrameBuffer);
+        LittleEndian::WriteUint16(fcf, mAckFrameBuffer);
         mAckFrameBuffer[sizeof(fcf)] = mTxFrame.GetSequence();
 
         mRxFrame.mPsdu    = mAckFrameBuffer;
@@ -279,20 +277,20 @@ void Link::HandleTimer(void)
     // router/leader during a partition merge, so it is always treated
     // as a neighbor.
 
-    switch (Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::kRoleDisabled:
         break;
 
     case Mle::kRoleDetached:
     case Mle::kRoleChild:
-        HandleTimer(Get<Mle::MleRouter>().GetParent());
+        HandleTimer(Get<Mle::Mle>().GetParent());
 
         OT_FALL_THROUGH;
 
     case Mle::kRoleRouter:
     case Mle::kRoleLeader:
-        HandleTimer(Get<Mle::MleRouter>().GetParentCandidate());
+        HandleTimer(Get<Mle::Mle>().GetParentCandidate());
         break;
     }
 }
@@ -318,7 +316,7 @@ exit:
     return;
 }
 
-void Link::ProcessReceivedPacket(Packet &aPacket)
+void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr)
 {
     Header::Type type;
 
@@ -345,6 +343,9 @@ void Link::ProcessReceivedPacket(Packet &aPacket)
 
     // Drop packets originating from same device.
     VerifyOrExit(aPacket.GetHeader().GetSource() != Get<Mac::Mac>().GetExtAddress());
+
+    mRxPacketSenderAddr = aSockAddr;
+    mRxPacketPeer       = Get<PeerTable>().FindMatching(aPacket.GetHeader().GetSource());
 
     if (type != Header::kTypeBroadcast)
     {
@@ -375,10 +376,44 @@ void Link::ProcessReceivedPacket(Packet &aPacket)
     mRxFrame.mInfo.mRxInfo.mLqi                   = OT_RADIO_LQI_NONE;
     mRxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
+    // As the received frame is processed by the MAC or MLE layers,
+    // `CheckPeerAddrOnRxSuccess()` may be called with different modes,
+    // depending on whether the frame passes receive security checks
+    // at either the MAC or MLE layers, allowing or disallowing peer
+    // socket address to be updated from received TREL packet info.
+
     Get<Mac::Mac>().HandleReceivedFrame(&mRxFrame, kErrorNone);
 
 exit:
-    return;
+    mRxPacketPeer = nullptr;
+}
+
+void Link::CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode)
+{
+    Ip6::SockAddr prevSockAddr;
+
+    VerifyOrExit(mState != kStateDisabled);
+
+    VerifyOrExit(mRxPacketPeer != nullptr);
+
+    prevSockAddr = mRxPacketPeer->GetSockAddr();
+    VerifyOrExit(prevSockAddr != mRxPacketSenderAddr);
+
+    LogNote("Peer %s rx sock-addr differs the previously saved one",
+            mRxPacketPeer->GetExtAddress().ToString().AsCString());
+    LogNote("    Rcvd sock-addr:%s", mRxPacketSenderAddr.ToString().AsCString());
+    LogNote("    Prev sock-addr:%s", prevSockAddr.ToString().AsCString());
+
+    if (aMode == kAllowPeerSockAddrUpdate)
+    {
+        LogNote("Updating the peer sock-addr to the newly received");
+        mRxPacketPeer->UpdateSockAddrBasedOnRx(mRxPacketSenderAddr);
+    }
+
+    mPeerDiscoverer.NotifyPeerSocketAddressDifference(prevSockAddr, mRxPacketSenderAddr);
+
+exit:
+    mRxPacketPeer = nullptr;
 }
 
 void Link::HandleAck(Packet &aAckPacket)
@@ -415,6 +450,8 @@ void Link::HandleAck(Packet &aAckPacket)
         VerifyOrExit(!neighbor->IsStateInvalid());
 
     } while (ackError == kErrorNoAck);
+
+    CheckPeerAddrOnRxSuccess(kDisallowPeerSockAddrUpdate);
 
 exit:
     return;
@@ -460,7 +497,7 @@ void Link::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadExtPanIdChanged))
     {
-        mInterface.HandleExtPanIdChange();
+        mPeerDiscoverer.HandleExtPanIdChange();
     }
 }
 
@@ -475,10 +512,14 @@ const char *Link::StateToString(State aState)
         "Transmit", // (3) kStateTransmit
     };
 
-    static_assert(0 == kStateDisabled, "kStateDisabled value is incorrect");
-    static_assert(1 == kStateSleep, "kStateSleep value is incorrect");
-    static_assert(2 == kStateReceive, "kStateReceive value is incorrect");
-    static_assert(3 == kStateTransmit, "kStateTransmit value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateDisabled);
+        ValidateNextEnum(kStateSleep);
+        ValidateNextEnum(kStateReceive);
+        ValidateNextEnum(kStateTransmit);
+    };
 
     return kStateStrings[aState];
 }

@@ -27,13 +27,16 @@
  */
 
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
+#include "instance/instance.hpp"
 #include "net/checksum.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip4_types.hpp"
 #include "net/udp6.hpp"
+#include "utils/verhoeff_checksum.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
@@ -50,7 +53,7 @@ uint16_t CalculateChecksum(const void *aBuffer, uint16_t aLength)
 
     while (aLength >= sizeof(uint16_t))
     {
-        sum += Encoding::BigEndian::ReadUint16(bytes);
+        sum += BigEndian::ReadUint16(bytes);
         bytes += sizeof(uint16_t);
         aLength -= sizeof(uint16_t);
     }
@@ -101,8 +104,8 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
 
     data.mPseudoHeader.mSource        = aSource;
     data.mPseudoHeader.mDestination   = aDestination;
-    data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap32(aIpProto);
-    data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap32(payloadLength);
+    data.mPseudoHeader.mProtocol      = BigEndian::HostSwap32(aIpProto);
+    data.mPseudoHeader.mPayloadLength = BigEndian::HostSwap32(payloadLength);
 
     SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength));
 
@@ -140,8 +143,8 @@ uint16_t CalculateChecksum(const Ip4::Address &aSource,
 
     data.mPseudoHeader.mSource        = aSource;
     data.mPseudoHeader.mDestination   = aDestination;
-    data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap16(aIpProto);
-    data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap16(payloadLength);
+    data.mPseudoHeader.mProtocol      = BigEndian::HostSwap16(aIpProto);
+    data.mPseudoHeader.mPayloadLength = BigEndian::HostSwap16(payloadLength);
 
     SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength));
 
@@ -160,7 +163,7 @@ void CorruptMessage(Message &aMessage)
 
     SuccessOrQuit(aMessage.Read(byteOffset, byte));
 
-    bitOffset = Random::NonCrypto::GetUint8InRange(0, CHAR_BIT);
+    bitOffset = Random::NonCrypto::GetUint8InRange(0, kBitsPerByte);
 
     byte ^= (1 << bitOffset);
 
@@ -466,6 +469,62 @@ public:
     }
 };
 
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
+void TestVerhoeffChecksum(void)
+{
+    static constexpr uint16_t kMaxStringSize = 50;
+
+    const char *kExamples[] = {"307318421", "487300178", "123455672", "0",   "15",
+                               "999999994", "000000001", "100000000", "2363"};
+
+    const char *kInvalidFormats[] = {
+        "307 318421",
+        "307318421 ",
+        " 307318421",
+        "ABCDE",
+    };
+
+    char string[kMaxStringSize];
+    char checksum;
+    char expectedChecksum;
+
+    printf("\nVerhoeffChecksum\n");
+
+    for (const char *example : kExamples)
+    {
+        uint16_t length = StringLength(example, kMaxStringSize - 1);
+
+        memcpy(string, example, length + 1);
+
+        printf("- \"%s\"\n", string);
+
+        SuccessOrQuit(Utils::VerhoeffChecksum::Validate(string));
+
+        expectedChecksum = string[length - 1];
+
+        string[length - 1] = (expectedChecksum == '0') ? '9' : (expectedChecksum - 1);
+        VerifyOrQuit(Utils::VerhoeffChecksum::Validate(string) == kErrorFailed);
+
+        string[length - 1] = '\0';
+        SuccessOrQuit(Utils::VerhoeffChecksum::Calculate(string, checksum));
+        VerifyOrQuit(checksum == expectedChecksum);
+
+        string[length - 1] = expectedChecksum == '0' ? '9' : (expectedChecksum - 1);
+    }
+
+    printf("\nInvalid format:\n");
+
+    for (const char *example : kInvalidFormats)
+    {
+        printf("- \"%s\"\n", example);
+        VerifyOrQuit(Utils::VerhoeffChecksum::Validate(example) == kErrorInvalidArgs);
+        VerifyOrQuit(Utils::VerhoeffChecksum::Calculate(example, checksum) == kErrorInvalidArgs);
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
 } // namespace ot
 
 int main(void)
@@ -476,6 +535,10 @@ int main(void)
     ot::TestTcp4MessageChecksum();
     ot::TestUdp4MessageChecksum();
     ot::TestIcmp4MessageChecksum();
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+    ot::TestVerhoeffChecksum();
+#endif
+
     printf("All tests passed\n");
     return 0;
 }

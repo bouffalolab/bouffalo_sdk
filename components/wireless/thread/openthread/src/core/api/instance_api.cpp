@@ -36,10 +36,8 @@
 #include <openthread/instance.h>
 #include <openthread/platform/misc.h>
 
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
 #include "common/new.hpp"
-#include "radio/radio.hpp"
+#include "instance/instance.hpp"
 
 #if !defined(OPENTHREAD_BUILD_DATETIME)
 #ifdef __ANDROID__
@@ -58,6 +56,17 @@
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+otInstance *otInstanceInitMultiple(uint8_t aIdx)
+{
+    Instance *instance;
+
+    instance = Instance::InitMultiple(aIdx);
+
+    return instance;
+}
+uint8_t otInstanceGetIndex(otInstance *aInstance) { return Instance::GetIdx(AsCoreTypePtr(aInstance)); }
+#endif // OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     Instance *instance;
@@ -85,6 +94,10 @@ bool otInstanceIsInitialized(otInstance *aInstance)
 void otInstanceFinalize(otInstance *aInstance) { AsCoreType(aInstance).Finalize(); }
 
 void otInstanceReset(otInstance *aInstance) { AsCoreType(aInstance).Reset(); }
+
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+otError otInstanceResetToBootloader(otInstance *aInstance) { return AsCoreType(aInstance).ResetToBootloader(); }
+#endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 uint64_t otInstanceGetUptime(otInstance *aInstance) { return AsCoreType(aInstance).Get<Uptime>().GetUptime(); }

@@ -329,212 +329,6 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_GPADC_CLK_Sel(uint8_t clkSel)
 }
 
 /****************************************************************************/ /**
- * @brief  Enable HBN PIR
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_PIR_Enable(void)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_CFG);
-    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PIR_EN);
-    BL_WR_REG(HBN_BASE, HBN_PIR_CFG, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Disable HBN PIR
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_PIR_Disable(void)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_CFG);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_PIR_EN);
-    BL_WR_REG(HBN_BASE, HBN_PIR_CFG, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Config HBN PIR interrupt
- *
- * @param  pirIntCfg: HBN PIR interrupt configuration
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_PIR_INT_Config(HBN_PIR_INT_CFG_Type *pirIntCfg)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-    uint32_t bit4 = 0;
-    uint32_t bit5 = 0;
-    uint32_t bitVal = 0;
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_CFG);
-
-    /* low trigger interrupt */
-    if (pirIntCfg->lowIntEn == ENABLE) {
-        bit5 = 0;
-    } else {
-        bit5 = 1;
-    }
-
-    /* high trigger interrupt */
-    if (pirIntCfg->highIntEn == ENABLE) {
-        bit4 = 0;
-    } else {
-        bit4 = 1;
-    }
-
-    bitVal = bit4 | (bit5 << 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIR_DIS, bitVal);
-    BL_WR_REG(HBN_BASE, HBN_PIR_CFG, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Select HBN PIR low pass filter
- *
- * @param  lpf: HBN PIR low pass filter selection, this parameter can be one of the following values:
- *           @arg HBN_PIR_LPF_DIV1
- *           @arg HBN_PIR_LPF_DIV2
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_PIR_LPF_Sel(uint8_t lpf)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-
-    CHECK_PARAM(IS_HBN_PIR_LPF_TYPE(lpf));
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_CFG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIR_LPF_SEL, lpf);
-    BL_WR_REG(HBN_BASE, HBN_PIR_CFG, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Select HBN PIR high pass filter
- *
- * @param  hpf: HBN PIR high pass filter selection, this parameter can be one of the following values:
- *           @arg HBN_PIR_HPF_METHOD0
- *           @arg HBN_PIR_HPF_METHOD1
- *           @arg HBN_PIR_HPF_METHOD2
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_PIR_HPF_Sel(uint8_t hpf)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-
-    CHECK_PARAM(IS_HBN_PIR_HPF_TYPE(hpf));
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_CFG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIR_HPF_SEL, hpf);
-    BL_WR_REG(HBN_BASE, HBN_PIR_CFG, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Set HBN PIR threshold value
- *
- * @param  threshold: HBN PIR threshold value
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_Set_PIR_Threshold(uint16_t threshold)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-
-    CHECK_PARAM((threshold <= 0x3FFF));
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_VTH);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIR_VTH, threshold);
-    BL_WR_REG(HBN_BASE, HBN_PIR_VTH, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Get HBN PIR threshold value
- *
- * @param  None
- *
- * @return HBN PIR threshold value
- *
-*******************************************************************************/
-uint16_t HBN_Get_PIR_Threshold(void)
-{
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_VTH);
-
-    return BL_GET_REG_BITS_VAL(tmpVal, HBN_PIR_VTH);
-}
-
-/****************************************************************************/ /**
- * @brief  Set HBN PIR interval value
- *
- * @param  interval: HBN PIR interval value
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_Set_PIR_Interval(uint16_t interval)
-{
-#ifndef BOOTROM
-    uint32_t tmpVal;
-
-    CHECK_PARAM((interval <= 0xFFF));
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_INTERVAL);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIR_INTERVAL, interval);
-    BL_WR_REG(HBN_BASE, HBN_PIR_INTERVAL, tmpVal);
-#endif
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Get HBN PIR interval value
- *
- * @param  None
- *
- * @return HBN PIR interval value
- *
-*******************************************************************************/
-uint16_t HBN_Get_PIR_Interval(void)
-{
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_PIR_INTERVAL);
-
-    return BL_GET_REG_BITS_VAL(tmpVal, HBN_PIR_INTERVAL);
-}
-
-/****************************************************************************/ /**
  * @brief  get HBN bod out state
  *
  * @param  None
@@ -1921,7 +1715,6 @@ BL_Err_Type HBN_GPIO_INT_Disable(void)
  *           @arg HBN_INT_GPIO18
  *           @arg HBN_INT_GPIO19
  *           @arg HBN_INT_RTC
- *           @arg HBN_INT_PIR
  *           @arg HBN_INT_BOD
  *           @arg HBN_INT_ACOMP0
  *           @arg HBN_INT_ACOMP1
@@ -1967,7 +1760,6 @@ uint8_t HBN_Get_Pin_Wakeup_Mode(void)
  *           @arg HBN_INT_GPIO18
  *           @arg HBN_INT_GPIO19
  *           @arg HBN_INT_RTC
- *           @arg HBN_INT_PIR
  *           @arg HBN_INT_BOD
  *           @arg HBN_INT_ACOMP0
  *           @arg HBN_INT_ACOMP1
@@ -2324,7 +2116,6 @@ BL_Err_Type HBN_Out0_Callback_Install(uint8_t intType, intCallback_Type *cbFun)
  * @brief  HBN out1 install interrupt callback
  *
  * @param  intType: HBN out1 interrupt type, this parameter can be one of the following values:
- *           @arg HBN_OUT1_INT_PIR
  *           @arg HBN_OUT1_INT_BOD
  *           @arg HBN_OUT1_INT_ACOMP0
  *           @arg HBN_OUT1_INT_ACOMP1
@@ -2488,13 +2279,6 @@ void HBN_OUT0_IRQHandler(void)
 #ifndef BFLB_USE_HAL_DRIVER
 void HBN_OUT1_IRQHandler(void)
 {
-    /* PIR */
-    if (SET == HBN_Get_INT_State(HBN_INT_PIR)) {
-        HBN_Clear_IRQ(HBN_INT_PIR);
-        if (hbnInt1CbfArra[HBN_OUT1_INT_PIR] != NULL) {
-            hbnInt1CbfArra[HBN_OUT1_INT_PIR]();
-        }
-    }
     /* BOD */
     if (SET == HBN_Get_INT_State(HBN_INT_BOD)) {
         HBN_Clear_IRQ(HBN_INT_BOD);

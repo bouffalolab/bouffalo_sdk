@@ -35,8 +35,8 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -120,8 +120,8 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
     //     2. All Domain BBRs (Link-Local scope)
     //     3. A Backbone Link-Local address
     // The source must be a Backbone Link-local address.
-    return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocal() &&
-            (dst.IsLinkLocal() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
+    return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocalUnicast() &&
+            (dst.IsLinkLocalUnicast() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
              dst == Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress()));
 }
 

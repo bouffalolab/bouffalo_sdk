@@ -67,7 +67,6 @@
 
 /**
  * Represents an opaque (and empty) type for a response to an address resolution DNS query.
- *
  */
 struct otDnsAddressResponse
 {
@@ -77,7 +76,6 @@ struct otDnsAddressResponse
 
 /**
  * Represents an opaque (and empty) type for a response to browse (service instance enumeration) DNS query.
- *
  */
 struct otDnsBrowseResponse
 {
@@ -85,13 +83,23 @@ struct otDnsBrowseResponse
 
 /**
  * Represents an opaque (and empty) type for a response to service inst resolution DNS query.
- *
  */
 struct otDnsServiceResponse
 {
 };
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
+/**
+ * Represents an opaque (and empty) type for a response to arbitrary record DNS query.
+ */
+struct otDnsRecordResponse
+{
+};
+
+#endif
 
 namespace ot {
 
@@ -103,7 +111,6 @@ namespace Dns {
 
 /**
  * Implements DNS client.
- *
  */
 class Client : public InstanceLocator, private NonCopyable
 {
@@ -114,7 +121,6 @@ class Client : public InstanceLocator, private NonCopyable
 public:
     /**
      * Represents a DNS query configuration (e.g., server address, response wait timeout, etc).
-     *
      */
     class QueryConfig : public otDnsQueryConfig, public Clearable<QueryConfig>
     {
@@ -123,7 +129,6 @@ public:
     public:
         /**
          * Type represents the "Recursion Desired" (RD) flag in a `otDnsQueryConfig`.
-         *
          */
         enum RecursionFlag : uint8_t
         {
@@ -135,7 +140,6 @@ public:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         /**
          * Type represents the NAT64 mode.
-         *
          */
         enum Nat64Mode : uint8_t
         {
@@ -147,7 +151,6 @@ public:
 
         /**
          * Type represents the service resolution mode.
-         *
          */
         enum ServiceMode : uint8_t
         {
@@ -161,7 +164,6 @@ public:
 
         /**
          * Type represents the DNS transport protocol selection.
-         *
          */
         enum TransportProto : uint8_t
         {
@@ -172,7 +174,6 @@ public:
 
         /**
          * This is the default constructor for `QueryConfig` object.
-         *
          */
         QueryConfig(void) = default;
 
@@ -180,7 +181,6 @@ public:
          * Gets the server socket address (IPv6 address and port number).
          *
          * @returns The server socket address.
-         *
          */
         const Ip6::SockAddr &GetServerSockAddr(void) const
         {
@@ -191,7 +191,6 @@ public:
          * Gets the wait time to receive response from server (in msec).
          *
          * @returns The timeout interval in msec.
-         *
          */
         uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
 
@@ -199,7 +198,6 @@ public:
          * Gets the maximum number of query transmit attempts before reporting failure.
          *
          * @returns The maximum number of query transmit attempts.
-         *
          */
         uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
 
@@ -207,7 +205,6 @@ public:
          * Gets the recursion flag indicating whether the server can resolve the query recursively or not.
          *
          * @returns The recursion flag.
-         *
          */
         RecursionFlag GetRecursionFlag(void) const { return static_cast<RecursionFlag>(mRecursionFlag); }
 
@@ -216,7 +213,6 @@ public:
          * Gets the NAT64 mode.
          *
          * @returns The NAT64 mode.
-         *
          */
         Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
 #endif
@@ -224,7 +220,6 @@ public:
          * Gets the service resolution mode.
          *
          * @returns The service resolution mode.
-         *
          */
         ServiceMode GetServiceMode(void) const { return static_cast<ServiceMode>(mServiceMode); }
 
@@ -232,7 +227,6 @@ public:
          * Gets the transport protocol.
          *
          * @returns The transport protocol.
-         *
          */
         TransportProto GetTransportProto(void) const { return static_cast<TransportProto>(mTransportProto); };
 
@@ -279,19 +273,39 @@ public:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     /**
      * Provides info for a DNS service instance.
-     *
      */
     typedef otDnsServiceInfo ServiceInfo;
 #endif
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+    /**
+     * Provides info for a DNS record in a query response.
+     */
+    class RecordInfo : public otDnsRecordInfo
+    {
+    public:
+        /**
+         * Represents a section in a DNS response.
+         */
+        enum RecordSection : uint8_t
+        {
+            kSectionAnswer     = OT_DNS_SECTION_ANSWER,     ///< Answer section.
+            kSectionAuthority  = OT_DNS_SECTION_AUTHORITY,  ///< Authority section.
+            kSectionAdditional = OT_DNS_SECTION_ADDITIONAL, ///< Additional section.
+        };
+    };
+#endif
+
     /**
      * Represents a DNS query response.
-     *
      */
     class Response : public otDnsAddressResponse,
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
                      public otDnsBrowseResponse,
                      public otDnsServiceResponse,
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+                     public otDnsRecordResponse,
 #endif
                      public Clearable<Response>
     {
@@ -323,6 +337,9 @@ public:
         Error ReadServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
         Error ReadTxtRecord(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
 #endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+        Error ReadRecordInfo(uint16_t aIndex, RecordInfo &aRecordInfo) const;
+#endif
         void PopulateFrom(const Message &aMessage);
 
         Instance      *mInstance;              // The OpenThread instance.
@@ -331,6 +348,8 @@ public:
         Response      *mNext;                  // The next response when we have related queries.
         uint16_t       mAnswerOffset;          // Answer section offset in `mMessage`.
         uint16_t       mAnswerRecordCount;     // Number of records in answer section.
+        uint16_t       mAuthorityOffset;       // Authority section offset in `mMessage`.
+        uint16_t       mAuthorityRecordCount;  // Number of records in authority section.
         uint16_t       mAdditionalOffset;      // Additional data section offset in `mMessage`.
         uint16_t       mAdditionalRecordCount; // Number of records in additional data section.
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -345,13 +364,11 @@ public:
     /**
      * Represents the function pointer callback which is called when a DNS response for an address resolution
      * query is received.
-     *
      */
     typedef otDnsAddressCallback AddressCallback;
 
     /**
      * Represents an address resolution query DNS response.
-     *
      */
     class AddressResponse : public Response
     {
@@ -368,7 +385,6 @@ public:
          *
          * @retval kErrorNone    The host name was read successfully.
          * @retval kErrorNoBufs  The name does not fit in @p aNameBuffer.
-         *
          */
         Error GetHostName(char *aNameBuffer, uint16_t aNameBufferSize) const
         {
@@ -392,7 +408,6 @@ public:
          * @retval kErrorNotFound      No address record at @p aIndex.
          * @retval kErrorParse         Could not parse the records.
          * @retval kErrorInvalidState  No NAT64 prefix (applicable only when NAT64 is allowed).
-         *
          */
         Error GetAddress(uint16_t aIndex, Ip6::Address &aAddress, uint32_t &aTtl) const;
 
@@ -407,13 +422,11 @@ public:
     /**
      * Represents the function pointer callback which is called when a response for a browse (service
      * instance enumeration) DNS query is received.
-     *
      */
     typedef otDnsBrowseCallback BrowseCallback;
 
     /**
      * Represents a browse (service instance enumeration) DNS response.
-     *
      */
     class BrowseResponse : public Response
     {
@@ -430,7 +443,6 @@ public:
          *
          * @retval kErrorNone    The host name was read successfully.
          * @retval kErrorNoBufs  The name does not fit in @p aNameBuffer.
-         *
          */
         Error GetServiceName(char *aNameBuffer, uint16_t aNameBufferSize) const
         {
@@ -456,7 +468,6 @@ public:
          * @retval kErrorNoBufs       The name does not fit in @p aNameBuffer.
          * @retval kErrorNotFound     No service instance record at @p aIndex.
          * @retval kErrorParse        Could not parse the records.
-         *
          */
         Error GetServiceInstance(uint16_t aIndex, char *aLabelBuffer, uint8_t aLabelBufferSize) const;
 
@@ -483,7 +494,6 @@ public:
          * @retval kErrorNotFound     Could not find a matching SRV record for @p aInstanceLabel.
          * @retval kErrorNoBufs       The host name and/or the TXT data could not fit in given buffers.
          * @retval kErrorParse        Could not parse the records.
-         *
          */
         Error GetServiceInfo(const char *aInstanceLabel, ServiceInfo &aServiceInfo) const;
 
@@ -504,7 +514,6 @@ public:
          * @retval kErrorNone       The address was read successfully.
          * @retval kErrorNotFound   No address record for @p aHostname at @p aIndex.
          * @retval kErrorParse      Could not parse the records.
-         *
          */
         Error GetHostAddress(const char *aHostName, uint16_t aIndex, Ip6::Address &aAddress, uint32_t &aTtl) const;
 
@@ -515,13 +524,11 @@ public:
     /**
      * Represents the function pointer callback which is called when a response for a service instance
      * resolution DNS query is received.
-     *
      */
     typedef otDnsServiceCallback ServiceCallback;
 
     /**
      * Represents a service instance resolution DNS response.
-     *
      */
     class ServiceResponse : public Response
     {
@@ -541,7 +548,6 @@ public:
          *
          * @retval kErrorNone    The service instance name was read successfully.
          * @retval kErrorNoBufs  Either the label or name does not fit in the given buffers.
-         *
          */
         Error GetServiceName(char    *aLabelBuffer,
                              uint8_t  aLabelBufferSize,
@@ -566,7 +572,6 @@ public:
          * @retval kErrorNotFound     Could not find a matching SRV record.
          * @retval kErrorNoBufs       The host name and/or TXT data could not fit in the given buffers.
          * @retval kErrorParse        Could not parse the records in the @p aResponse.
-         *
          */
         Error GetServiceInfo(ServiceInfo &aServiceInfo) const;
 
@@ -587,18 +592,85 @@ public:
          * @retval kErrorNone       The address was read successfully.
          * @retval kErrorNotFound   No address record for @p aHostname at @p aIndex.
          * @retval kErrorParse      Could not parse the records.
-         *
          */
         Error GetHostAddress(const char *aHostName, uint16_t aIndex, Ip6::Address &aAddress, uint32_t &aTtl) const;
     };
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
+    /**
+     * Represents the function pointer callback which is called when a DNS response for a DNS query response
+     * is received.
+     */
+    typedef otDnsRecordCallback RecordCallback;
+
+    /**
+     * Represents a record query response.
+     */
+    class RecordResponse : public Response
+    {
+        friend class Client;
+
+    public:
+        /**
+         * Gets the query name associated with a record DNS query.
+         *
+         * MUST only be used from `RecordCallback`.
+         *
+         * @param[out] aNameBuffer       A buffer to char array to output the name.
+         * @param[in]  aNameBufferSize   The size of @p aNameBuffer.
+         *
+         * @retval kErrorNone    The host name was read successfully.
+         * @retval kErrorNoBufs  The name does not fit in @p aNameBuffer.
+         */
+        Error GetQueryName(char *aNameBuffer, uint16_t aNameBufferSize) const
+        {
+            return GetName(aNameBuffer, aNameBufferSize);
+        }
+
+        /**
+         * Gets the record data from a DNS query response.
+         *
+         * MUST only be used from `RecordCallback`.
+         *
+         * The response may include multiple records. @p aIndex can be used to iterate through the list. Index zero gets
+         * the first record and so on. When we reach the end of the list, `kErrorNotFound` is returned.
+         *
+         * Upon successful retrieval (`kErrorNone`):
+         * - `mRecordLength` is set to the actual length of the record's data.
+         * - The data is copied into `mDataBuffer` (if not `NULL`) up to its capacity specified by `mDataBufferSize`.
+         * - `mDataBufferSize` is then updated to reflect the number of bytes actually written into `mDataBuffer`.
+         *
+         * If the retrieved record type is PTR (12), CNAME (5), DNAME (39), NS (2), or SRV (33), the record data in the
+         * received response contains a DNS name which may use DNS name compression. For these specific record types,
+         * the record data is first decompressed such that it contains the full uncompressed DNS name. This
+         * decompressed data is then provided in `mDataBuffer`, and `mRecordDataLength` will indicate the length of
+         * this decompressed data. For all other record types, the record data is read and provided as it appears in
+         * the received response message.
+         *
+         * @param[in]  aIndex            The record index to retrieve.
+         * @param[out] aRecordInfo       A reference to a `RecordInfo` struct to populate from the read record.
+         *
+         * @retval kErrorNone            The record data was read successfully.
+         * @retval kErrorNotFound        No record in @p aResponse at @p aIndex.
+         * @retval kErrorParse           Could not parse the records.
+         * @retval kErrorNoBufs          The name does not fit in the provided `mNameBufferSize` in @p aRecordInfo, or
+         *                               failed to allocate buffer to decompress a DNS name (for PTR, SRV, CNAME).
+         */
+        Error GetRecordInfo(uint16_t aIndex, RecordInfo &aRecordInfo) const
+        {
+            return ReadRecordInfo(aIndex, aRecordInfo);
+        }
+    };
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
     /**
      * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Client(Instance &aInstance);
 
@@ -607,13 +679,11 @@ public:
      *
      * @retval kErrorNone     Successfully started the DNS client.
      * @retval kErrorAlready  The socket is already open.
-     *
      */
     Error Start(void);
 
     /**
      * Stops the DNS client.
-     *
      */
     void Stop(void);
 
@@ -621,7 +691,6 @@ public:
      * Gets the current default query config being used by DNS client.
      *
      * @returns The current default query config.
-     *
      */
     const QueryConfig &GetDefaultConfig(void) const { return mDefaultConfig; }
 
@@ -629,7 +698,6 @@ public:
      * Sets the default query config.
      *
      * @param[in] aQueryConfig   The new default query config.
-     *
      */
     void SetDefaultConfig(const QueryConfig &aQueryConfig);
 
@@ -639,7 +707,6 @@ public:
      * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
      * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
      * etc. (see `config/dns_client.h` for all related config options).
-     *
      */
     void ResetDefaultConfig(void);
 
@@ -659,7 +726,6 @@ public:
      * @retval kErrorNoBufs         Failed to allocate retransmission data.
      * @retval kErrorInvalidArgs    The host name is not valid format.
      * @retval kErrorInvalidState   Cannot send query since Thread interface is not up.
-     *
      */
     Error ResolveAddress(const char        *aHostName,
                          AddressCallback    aCallback,
@@ -686,7 +752,6 @@ public:
      * @retval kErrorNoBufs         Failed to allocate retransmission data.
      * @retval kErrorInvalidArgs    The host name is not valid format or NAT64 is not enabled in config.
      * @retval kErrorInvalidState   Cannot send query since Thread interface is not up, or there is no NAT64 prefix.
-     *
      */
     Error ResolveIp4Address(const char        *aHostName,
                             AddressCallback    aCallback,
@@ -710,7 +775,6 @@ public:
      *
      * @retval kErrorNone       Query sent successfully. @p aCallback will be invoked to report the status.
      * @retval kErrorNoBufs     Insufficient buffer to prepare and send query.
-     *
      */
     Error Browse(const char        *aServiceName,
                  BrowseCallback     aCallback,
@@ -733,7 +797,6 @@ public:
      * @retval kErrorNone         Query sent successfully. @p aCallback will be invoked to report the status.
      * @retval kErrorNoBufs       Insufficient buffer to prepare and send query.
      * @retval kErrorInvalidArgs  @p aInstanceLabel is `nullptr`.
-     *
      */
     Error ResolveService(const char          *aInstanceLabel,
                          const char          *aServiceName,
@@ -759,7 +822,6 @@ public:
      * @retval kErrorNone         Query sent successfully. @p aCallback will be invoked to report the status.
      * @retval kErrorNoBufs       Insufficient buffer to prepare and send query.
      * @retval kErrorInvalidArgs  @p aInstanceLabel is `nullptr` or the @p aConfig is invalid.
-     *
      */
     Error ResolveServiceAndHostAddress(const char        *aInstanceLabel,
                                        const char        *aServiceName,
@@ -769,8 +831,36 @@ public:
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+    /**
+     * Sends a DNS query for a given record type and name.
+     *
+     * The @p aConfig can be `nullptr`. In this case the default config (from `GetDefaultConfig()`) will be used as
+     * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero).
+     * The unspecified fields are then replaced by the values from the default config.
+     *
+     * @param[in] aRecordType   The resource record type (RRType) to query.
+     * @param[in] aFirstLabel   The first label of the name to be queried (can be NULL if not needed).
+     * @param[in] aNextLabels   The next labels of the name to be queried (MUST NOT be NULL).
+     * @param[in] aCallback     A function pointer that shall be called on response reception or time-out.
+     * @param[in] aContext      A pointer to arbitrary context information used with @p aCallback.
+     * @param[in] aConfig       A pointer to the config to use for this query (or NULL for default config).
+     *
+     * @retval kErrorNone          Query sent successfully. @p aCallback will be invoked to report the outcome.
+     * @retval kErrorNoBufs        Insufficient buffer to prepare and send query.
+     * @retval kErrorInvalidState  Cannot send query since Thread interface is not up.
+     */
+    Error QueryRecord(uint16_t           aRecordType,
+                      const char        *aFirstLabel,
+                      const char        *aNextLabels,
+                      RecordCallback     aCallback,
+                      void              *aContext,
+                      const QueryConfig *aConfig = nullptr);
+#endif
+
 private:
-    static constexpr uint16_t kMaxCnameAliasNameChanges = 40;
+    static constexpr uint16_t kMaxCnameAliasNameChanges     = 40;
+    static constexpr uint8_t  kLimitedQueryServersArraySize = 3;
 
     enum QueryType : uint8_t
     {
@@ -783,6 +873,9 @@ private:
         kServiceQuerySrvTxt, // Service instance resolution both SRV and TXT records.
         kServiceQuerySrv,    // Service instance resolution SRV record only.
         kServiceQueryTxt,    // Service instance resolution TXT record only.
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+        kRecordQuery,
 #endif
         kNoQuery,
     };
@@ -804,6 +897,9 @@ private:
         BrowseCallback  mBrowseCallback;
         ServiceCallback mServiceCallback;
 #endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+        RecordCallback mRecordCallback;
+#endif
     };
 
     typedef MessageQueue QueryList; // List of queries.
@@ -820,9 +916,12 @@ private:
         QueryConfig mConfig;
         uint8_t     mTransmissionCount;
         bool        mShouldResolveHostAddr;
-        Query      *mMainQuery;
-        Query      *mNextQuery;
-        Message    *mSavedResponse;
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+        uint16_t mRecordType; // Used only when `mQueryType == kRecordQuery`
+#endif
+        Query   *mMainQuery;
+        Query   *mNextQuery;
+        Message *mSavedResponse;
         // Followed by the name (service, host, instance) encoded as a `Dns::Name`.
     };
 
@@ -834,12 +933,13 @@ private:
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
     Query      &FindMainQuery(Query &aQuery);
     Error       SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
+    uint16_t    DetermineQuestionRecordType(const QueryInfo &aInfo) const;
     void        FinalizeQuery(Query &aQuery, Error aError);
     void        FinalizeQuery(Response &Response, Error aError);
     static void GetQueryTypeAndCallback(const Query &aQuery, QueryType &aType, Callback &aCallback, void *&aContext);
     Error       AppendNameFromQuery(const Query &aQuery, Message &aMessage);
     Query      *FindQueryById(uint16_t aMessageId);
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMsgInfo);
     void        ProcessResponse(const Message &aResponseMessage);
     Error       ParseResponse(const Message &aResponseMessage, Query *&aQuery, Error &aResponseError);
     bool        CanFinalizeQuery(Query &aQuery);
@@ -849,7 +949,7 @@ private:
     void        HandleTimer(void);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    Error ReplaceWithIp4Query(Query &aQuery);
+    Error ReplaceWithIp4Query(Query &aQuery, const Message &aResponseMessage);
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     Error Resolve(const char        *aInstanceLabel,
@@ -858,6 +958,9 @@ private:
                   void              *aContext,
                   const QueryConfig *aConfig,
                   bool               aShouldResolveHostAddr);
+    void  CheckAndUpdateServiceMode(QueryConfig &aConfig, const QueryConfig *aRequestConfig) const;
+    void  RecordServerAsLimitedToSingleQuestion(const Ip6::Address &aServerAddress);
+    void  RecordServerAsCapableOfMultiQuestions(const Ip6::Address &aServerAddress);
     Error ReplaceWithSeparateSrvTxtQueries(Query &aQuery);
     void  ResolveHostAddressIfNeeded(Query &aQuery, const Message &aResponseMessage);
 #endif
@@ -890,23 +993,12 @@ private:
     void  PrepareTcpMessage(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 
-    static const uint8_t         kQuestionCount[];
-    static const uint16_t *const kQuestionRecordTypes[];
-
-    static const uint16_t kIp6AddressQueryRecordTypes[];
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    static const uint16_t kIp4AddressQueryRecordTypes[];
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static const uint16_t kBrowseQueryRecordTypes[];
-    static const uint16_t kServiceQueryRecordTypes[];
-#endif
-
     static constexpr uint16_t kUdpQueryMaxSize = 512;
 
-    using RetryTimer = TimerMilliIn<Client, &Client::HandleTimer>;
+    using RetryTimer   = TimerMilliIn<Client, &Client::HandleTimer>;
+    using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
-    Ip6::Udp::Socket mSocket;
+    ClientSocket mSocket;
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     Ip6::Tcp::Endpoint mEndpoint;
@@ -924,6 +1016,7 @@ private:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     bool mUserDidSetDefaultAddress;
 #endif
+    Array<Ip6::Address, kLimitedQueryServersArraySize> mLimitedQueryServers;
 };
 
 } // namespace Dns
@@ -934,6 +1027,11 @@ DefineCoreType(otDnsAddressResponse, Dns::Client::AddressResponse);
 DefineCoreType(otDnsBrowseResponse, Dns::Client::BrowseResponse);
 DefineCoreType(otDnsServiceResponse, Dns::Client::ServiceResponse);
 DefineCoreType(otDnsServiceInfo, Dns::Client::ServiceInfo);
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+DefineCoreType(otDnsRecordResponse, Dns::Client::RecordResponse);
+DefineCoreType(otDnsRecordInfo, Dns::Client::RecordInfo);
+DefineMapEnum(otDnsRecordSection, Dns::Client::RecordInfo::RecordSection);
 #endif
 
 } // namespace ot

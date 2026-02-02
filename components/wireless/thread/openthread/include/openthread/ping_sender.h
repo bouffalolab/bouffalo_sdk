@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_PING_SENDER_H_
 #define OPENTHREAD_PING_SENDER_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
@@ -52,12 +53,10 @@ extern "C" {
  *   This file includes the OpenThread API for the ping sender module.
  *
  * @{
- *
  */
 
 /**
  * Represents a ping reply.
- *
  */
 typedef struct otPingSenderReply
 {
@@ -70,7 +69,6 @@ typedef struct otPingSenderReply
 
 /**
  * Represents statistics of a ping request.
- *
  */
 typedef struct otPingSenderStatistics
 {
@@ -87,7 +85,6 @@ typedef struct otPingSenderStatistics
  *
  * @param[in] aReply      A pointer to a `otPingSenderReply` containing info about the received ping reply.
  * @param[in] aContext    A pointer to application-specific context.
- *
  */
 typedef void (*otPingSenderReplyCallback)(const otPingSenderReply *aReply, void *aContext);
 
@@ -97,13 +94,11 @@ typedef void (*otPingSenderReplyCallback)(const otPingSenderReply *aReply, void 
  * @param[in] aStatistics      A pointer to a `otPingSenderStatistics` containing info about the received ping
  *                             statistics.
  * @param[in] aContext         A pointer to application-specific context.
- *
  */
 typedef void (*otPingSenderStatisticsCallback)(const otPingSenderStatistics *aStatistics, void *aContext);
 
 /**
  * Represents a ping request configuration.
- *
  */
 typedef struct otPingSenderConfig
 {
@@ -120,6 +115,7 @@ typedef struct otPingSenderConfig
                                   ///< Zero to use default.
     uint8_t mHopLimit;            ///< Hop limit (used if `mAllowZeroHopLimit` is false). Zero for default.
     bool    mAllowZeroHopLimit;   ///< Indicates whether hop limit is zero.
+    bool    mMulticastLoop;       ///< Allow looping back pings to multicast address that device is subscribed to.
 } otPingSenderConfig;
 
 /**
@@ -132,7 +128,6 @@ typedef struct otPingSenderConfig
  * @retval OT_ERROR_BUSY           Could not start since busy with a previous ongoing ping request.
  * @retval OT_ERROR_INVALID_ARGS   The @p aConfig contains invalid parameters (e.g., ping interval is too long).
 
- *
  */
 otError otPingSenderPing(otInstance *aInstance, const otPingSenderConfig *aConfig);
 
@@ -140,13 +135,11 @@ otError otPingSenderPing(otInstance *aInstance, const otPingSenderConfig *aConfi
  * Stops an ongoing ping.
  *
  * @param[in] aInstance            A pointer to an OpenThread instance.
- *
  */
 void otPingSenderStop(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

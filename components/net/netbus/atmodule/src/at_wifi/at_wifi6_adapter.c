@@ -214,6 +214,9 @@ int at_wifi_mgmr_ap_start(at_wifi_mgmr_ap_params_t *config)
     // Convert adapter params to wifi_mgmr params
     wifi_mgmr_ap_params_t wifi_config;
 
+    memset(&wifi_config, 0, sizeof(wifi_mgmr_ap_params_t));
+    wifi_config.use_ipcfg = true; // hardcode
+
     wifi_config.ssid = config->ssid;
     wifi_config.key = config->key;
     wifi_config.hidden_ssid = config->hidden_ssid;

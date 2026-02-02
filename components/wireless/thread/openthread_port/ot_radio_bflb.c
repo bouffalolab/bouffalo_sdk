@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdio.h>
-#include <string.h>
-
 #include CHIP_HDR
 #include CHIP_GLB_HDR
 #include <bflb_mtimer.h>
@@ -37,16 +33,43 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[6] = flash_id & 0xff;
 }
 
-uint64_t otPlatRadioGetNow(otInstance *aInstance)
-{
-    return bflb_mtimer_get_time_us();
-}
-
 otError otPlatRadioEnable(otInstance *aInstance) 
 {
-    ot_radioEnable();
-    
-    bflb_irq_attach(M154_INT_IRQn, (irq_callback)lmac154_get2015InterruptHandler(), NULL);
+    uint32_t tag;
+
+    lmac154_setStd2015Extra(true);
+    lmac154_setTxRetry(0);
+    lmac154_fptClear();
+
+    /** AIFS + preamble len + sfd + phy header + phy payload; currently, consider 42 as max enh-ack frame length */
+    lmac154_setEnhAckWaitTime((LMAC154_AIFS + 10 + (6 + 42) * 2) << LMAC154_US_PER_SYMBOL_BITS);
+    lmac154_setRxStateWhenIdle(true);
+
+    if (otRadioVar_ptr->opt.bf.isCoexEnable) {
+        lmac154_enableCoex();
+    }
+    else {
+        lmac154_disableCoex();
+    }
+#if defined (BL702L)
+    lmac154_setTxRxTransTime(0xA0);
+#endif
+#if defined (BL702L) && defined (BL616)
+    if (otRadioVar_ptr->opt.bf.isFtd) {
+        lmac154_setFramePendingMode(LMAC154_FPT_ANY);
+    }
+    else {
+        lmac154_setFramePendingMode(LMAC154_FPT_DATAREQ);
+    }
+#endif
+
+    tag = otrEnterCrit();
+    zb_timer_cfg(bflb_mtimer_get_time_us() >> LMAC154_US_PER_SYMBOL_BITS);
+    otrExitCrit(tag);
+
+    bflb_irq_attach(M154_INT_IRQn, 
+                    (irq_callback)lmac154_registerEventCallback(ot_radioRxDoneCallback), 
+                    NULL);
     bflb_irq_enable(M154_INT_IRQn);
 
     return OT_ERROR_NONE;
@@ -56,28 +79,6 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     bflb_irq_disable(M154_INT_IRQn);
     lmac154_disableRx();
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel) 
-{
-    uint8_t ch = lmac154_getChannel();
-
-#if (OPENTHREAD_FTD) || (OPENTHREAD_MTD)
-    if (lmac154_isRxStateWhenIdle() != otThreadGetLinkMode(aInstance).mRxOnWhenIdle) {
-        lmac154_setRxStateWhenIdle(otThreadGetLinkMode(aInstance).mRxOnWhenIdle);
-    }
-#endif
-
-    if (ch != (aChannel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN)) {
-
-        lmac154_disableRx();
-
-        lmac154_setChannel(aChannel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN);
-    }
-
-    lmac154_enableRx();
 
     return OT_ERROR_NONE;
 }

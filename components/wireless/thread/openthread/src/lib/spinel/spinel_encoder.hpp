@@ -38,6 +38,7 @@
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
+#include <openthread/platform/radio.h>
 
 #include "spinel.h"
 #include "spinel_buffer.hpp"
@@ -47,7 +48,6 @@ namespace Spinel {
 
 /**
  * Defines a spinel encoder.
- *
  */
 class Encoder
 {
@@ -56,7 +56,6 @@ public:
      * Initializes a `Encoder` object.
      *
      * @param[in] aNcpBuffer   A reference to a `Spinel::Buffer` where the frames are written.
-     *
      */
     explicit Encoder(Spinel::Buffer &aNcpBuffer)
         : mNcpBuffer(aNcpBuffer)
@@ -75,7 +74,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully started a new frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to start a new frame.
-     *
      */
     otError BeginFrame(Spinel::Buffer::Priority aPriority);
 
@@ -93,7 +91,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully started a new frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to start a new frame.
-     *
      */
     otError BeginFrame(uint8_t aHeader, unsigned int aCommand);
 
@@ -116,7 +113,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully started a new frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to start a new frame.
-     *
      */
     otError BeginFrame(uint8_t aHeader, unsigned int aCommand, spinel_prop_key_t aKey);
 
@@ -133,7 +129,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully updated the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to update the frame.
-     *
      */
     otError OverwriteWithLastStatusError(spinel_status_t aStatus);
 
@@ -152,7 +147,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully ended the input frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add message.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError EndFrame(void);
 
@@ -170,7 +164,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given byte to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteBool(bool aBool) { return mNcpBuffer.InFrameFeedByte(aBool ? 0x01 : 0x00); }
 
@@ -188,7 +181,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteUint8(uint8_t aUint8) { return mNcpBuffer.InFrameFeedByte(aUint8); }
 
@@ -206,7 +198,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteInt8(int8_t aInt8) { return WriteUint8(static_cast<uint8_t>(aInt8)); }
 
@@ -224,7 +215,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteUint16(uint16_t aUint16);
 
@@ -242,7 +232,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteInt16(int16_t aInt16) { return WriteUint16(static_cast<uint16_t>(aInt16)); }
 
@@ -260,7 +249,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteUint32(uint32_t aUint32);
 
@@ -278,7 +266,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteInt32(int32_t aInt32) { return WriteUint32(static_cast<uint32_t>(aInt32)); }
 
@@ -296,7 +283,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteUint64(uint64_t aUint64);
 
@@ -314,7 +300,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteInt64(int64_t aInt64) { return WriteUint64(static_cast<uint64_t>(aInt64)); }
 
@@ -332,7 +317,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteUintPacked(unsigned int aUint);
 
@@ -350,7 +334,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given address to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the IP address.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteIp6Address(const spinel_ipv6addr_t &aIp6Addr) { return WriteIp6Address(aIp6Addr.bytes); }
 
@@ -368,7 +351,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given address to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the IP address.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteIp6Address(const otIp6Address &aIp6Addr) { return WriteIp6Address(aIp6Addr.mFields.m8); }
 
@@ -386,7 +368,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given address to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the IP address.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteIp6Address(const uint8_t *aIp6AddrBuf) { return WriteData(aIp6AddrBuf, sizeof(spinel_ipv6addr_t)); }
 
@@ -404,7 +385,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the EUI64 value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteEui64(const spinel_eui64_t &aEui64) { return WriteEui64(aEui64.bytes); }
 
@@ -422,7 +402,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the EUI64 value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteEui64(const otExtAddress &aExtAddress) { return WriteEui64(aExtAddress.m8); }
 
@@ -440,7 +419,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the EUI64 value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteEui64(const uint8_t *aEui64) { return WriteData(aEui64, sizeof(spinel_eui64_t)); }
 
@@ -458,7 +436,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the EUI48 value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteEui48(const spinel_eui48_t &aEui48) { return WriteEui48(aEui48.bytes); }
 
@@ -476,7 +453,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the EUI48 value.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteEui48(const uint8_t *aEui48) { return WriteData(aEui48, sizeof(spinel_eui48_t)); }
 
@@ -494,7 +470,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given string to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the string.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteUtf8(const char *aUtf8);
 
@@ -513,7 +488,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given data to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the byte.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteData(const uint8_t *aData, uint16_t aDataLen) { return mNcpBuffer.InFrameFeedData(aData, aDataLen); }
 
@@ -535,7 +509,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given data to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the byte.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen);
 
@@ -561,7 +534,6 @@ public:
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the message.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
      * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is nullptr.
-     *
      */
     otError WriteMessage(otMessage *aMessage) { return mNcpBuffer.InFrameFeedMessage(aMessage); }
 #endif
@@ -585,7 +557,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given data to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the byte.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WritePacked(const char *aPackFormat, ...);
 
@@ -608,7 +579,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given data to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the byte.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError WriteVPacked(const char *aPackFormat, va_list aArgs);
 
@@ -629,7 +599,6 @@ public:
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to open the struct.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame or if we reached
      *                                  the maximum number of nested open structures.
-     *
      */
     otError OpenStruct(void);
 
@@ -657,7 +626,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully saved current write position in @p aPosition.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     *
      */
     otError SavePosition(void);
 
@@ -672,9 +640,13 @@ public:
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
      * @retval OT_ERROR_INVALID_ARGS    The saved position is not valid (does not belong to same input frame), or
      *                                  the input frame has an added `otMessage`.
-     *
      */
     otError ResetToSaved(void);
+
+    /**
+     * Clear NCP buffer on reset command.
+     */
+    void ClearNcpBuffer(void);
 
 private:
     enum

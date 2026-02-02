@@ -39,7 +39,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -69,7 +69,7 @@ otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterC
 
 otError otBackboneRouterRegister(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(true /* Force registration */);
+    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(BackboneRouter::Local::kForceRegistration);
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)

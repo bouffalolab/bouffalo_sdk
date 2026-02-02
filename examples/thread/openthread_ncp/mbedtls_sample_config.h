@@ -152,6 +152,8 @@
 #define MBEDTLS_ECP_ALT
 #define MBEDTLS_USE_HW
 
+#define MBEDTLS_ECP_ALT_KEEP_ORIGINAL 0
+
 #include "mbedtls/check_config.h"
 
 #endif /* MBEDTLS_CONFIG_H */

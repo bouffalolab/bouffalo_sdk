@@ -353,6 +353,7 @@ static int hd_tty_dnld_send_cb(struct sk_buff *skb, bool success, void *arg)
         }
         TTY_ERR(priv, "Packet send failed\n");
     }
+    dev_kfree_skb_any(skb);
 
     return 0;
 }

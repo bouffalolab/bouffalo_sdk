@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
-#include <openthread/srp_server.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -90,6 +87,18 @@ void otSrpServerSetAutoEnableMode(otInstance *aInstance, bool aEnabled)
 bool otSrpServerIsAutoEnableMode(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Srp::Server>().IsAutoEnableMode();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+otError otSrpServerEnableFastStartMode(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().EnableFastStartMode();
+}
+
+bool otSrpServerIsFastStartModeEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().IsFastStartModeEnabled();
 }
 #endif
 

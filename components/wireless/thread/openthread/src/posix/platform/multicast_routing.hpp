@@ -31,7 +31,7 @@
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,18 +39,21 @@
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/openthread-system.h>
 
+#include "logger.hpp"
+#include "mainloop.hpp"
 #include "platform-posix.h"
 #include "core/common/non_copyable.hpp"
 #include "core/net/ip6_address.hpp"
 #include "lib/url/url.hpp"
-#include "posix/platform/mainloop.hpp"
 
 namespace ot {
 namespace Posix {
 
-class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
+class MulticastRoutingManager : public Mainloop::Source, public Logger<MulticastRoutingManager>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[];
+
     explicit MulticastRoutingManager()
 
         : mLastExpireTime(0)
@@ -58,6 +61,7 @@ public:
     {
     }
 
+    bool IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void SetUp(void);
     void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
@@ -110,7 +114,6 @@ private:
     void    Remove(const Ip6::Address &aAddress);
     void    UpdateMldReport(const Ip6::Address &aAddress, bool isAdd);
     bool    HasMulticastListener(const Ip6::Address &aAddress) const;
-    bool    IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void    InitMulticastRouterSock(void);
     void    FinalizeMulticastRouterSock(void);
     void    ProcessMulticastRouterMessages(void);
@@ -140,6 +143,6 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #endif // OT_POSIX_PLATFORM_MULTICAST_ROUTING_HPP_

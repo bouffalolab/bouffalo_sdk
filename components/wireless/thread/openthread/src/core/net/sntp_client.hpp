@@ -50,11 +50,8 @@
 namespace ot {
 namespace Sntp {
 
-using ot::Encoding::BigEndian::HostSwap32;
-
 /**
  * Implements SNTP client.
- *
  */
 class Client : private NonCopyable
 {
@@ -65,7 +62,6 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Client(Instance &aInstance);
 
@@ -81,7 +77,6 @@ public:
      * Stops the SNTP client.
      *
      * @retval kErrorNone  Successfully stopped the SNTP client.
-     *
      */
     Error Stop(void);
 
@@ -89,7 +84,6 @@ public:
      * Returns the unix era number.
      *
      * @returns The unix era number.
-     *
      */
     uint32_t GetUnixEra(void) const { return mUnixEra; }
 
@@ -97,7 +91,6 @@ public:
      * Sets the unix era number.
      *
      * @param[in]  aUnixEra  The unix era number.
-     *
      */
     void SetUnixEra(uint32_t aUnixEra) { mUnixEra = aUnixEra; }
 
@@ -111,7 +104,6 @@ public:
      * @retval kErrorNone         Successfully sent SNTP query.
      * @retval kErrorNoBufs       Failed to allocate retransmission data.
      * @retval kErrorInvalidArgs  Invalid arguments supplied.
-     *
      */
     Error Query(const otSntpQuery *aQuery, ResponseHandler aHandler, void *aContext);
 
@@ -142,7 +134,7 @@ private:
         uint8_t GetFlags(void) const { return mFlags; }
         void    SetFlags(uint8_t aFlags) { mFlags = aFlags; }
 
-        Mode GetMode(void) const { return static_cast<Mode>((mFlags & kModeMask) >> kModeOffset); }
+        Mode GetMode(void) const { return static_cast<Mode>(ReadBits<uint8_t, kModeMask>(mFlags)); }
 
         uint8_t GetStratum(void) const { return mStratum; }
         void    SetStratum(uint8_t aStratum) { mStratum = aStratum; }
@@ -153,40 +145,70 @@ private:
         uint8_t GetPrecision(void) const { return mPrecision; }
         void    SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
 
-        uint32_t GetRootDelay(void) const { return HostSwap32(mRootDelay); }
-        void     SetRootDelay(uint32_t aRootDelay) { mRootDelay = HostSwap32(aRootDelay); }
+        uint32_t GetRootDelay(void) const { return BigEndian::HostSwap32(mRootDelay); }
+        void     SetRootDelay(uint32_t aRootDelay) { mRootDelay = BigEndian::HostSwap32(aRootDelay); }
 
-        uint32_t GetRootDispersion(void) const { return HostSwap32(mRootDispersion); }
-        void     SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = HostSwap32(aRootDispersion); }
+        uint32_t GetRootDispersion(void) const { return BigEndian::HostSwap32(mRootDispersion); }
+        void SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = BigEndian::HostSwap32(aRootDispersion); }
 
-        uint32_t GetReferenceId(void) const { return HostSwap32(mReferenceId); }
-        void     SetReferenceId(uint32_t aReferenceId) { mReferenceId = HostSwap32(aReferenceId); }
+        uint32_t GetReferenceId(void) const { return BigEndian::HostSwap32(mReferenceId); }
+        void     SetReferenceId(uint32_t aReferenceId) { mReferenceId = BigEndian::HostSwap32(aReferenceId); }
 
         char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
 
-        uint32_t GetReferenceTimestampSeconds(void) const { return HostSwap32(mReferenceTimestampSeconds); }
-        void SetReferenceTimestampSeconds(uint32_t aTimestamp) { mReferenceTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetReferenceTimestampSeconds(void) const { return BigEndian::HostSwap32(mReferenceTimestampSeconds); }
+        void     SetReferenceTimestampSeconds(uint32_t aTimestamp)
+        {
+            mReferenceTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetReferenceTimestampFraction(void) const { return HostSwap32(mReferenceTimestampFraction); }
-        void SetReferenceTimestampFraction(uint32_t aFraction) { mReferenceTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetReferenceTimestampFraction(void) const
+        {
+            return BigEndian::HostSwap32(mReferenceTimestampFraction);
+        }
+        void SetReferenceTimestampFraction(uint32_t aFraction)
+        {
+            mReferenceTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
-        uint32_t GetOriginateTimestampSeconds(void) const { return HostSwap32(mOriginateTimestampSeconds); }
-        void SetOriginateTimestampSeconds(uint32_t aTimestamp) { mOriginateTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetOriginateTimestampSeconds(void) const { return BigEndian::HostSwap32(mOriginateTimestampSeconds); }
+        void     SetOriginateTimestampSeconds(uint32_t aTimestamp)
+        {
+            mOriginateTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetOriginateTimestampFraction(void) const { return HostSwap32(mOriginateTimestampFraction); }
-        void SetOriginateTimestampFraction(uint32_t aFraction) { mOriginateTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetOriginateTimestampFraction(void) const
+        {
+            return BigEndian::HostSwap32(mOriginateTimestampFraction);
+        }
+        void SetOriginateTimestampFraction(uint32_t aFraction)
+        {
+            mOriginateTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
-        uint32_t GetReceiveTimestampSeconds(void) const { return HostSwap32(mReceiveTimestampSeconds); }
-        void     SetReceiveTimestampSeconds(uint32_t aTimestamp) { mReceiveTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetReceiveTimestampSeconds(void) const { return BigEndian::HostSwap32(mReceiveTimestampSeconds); }
+        void     SetReceiveTimestampSeconds(uint32_t aTimestamp)
+        {
+            mReceiveTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetReceiveTimestampFraction(void) const { return HostSwap32(mReceiveTimestampFraction); }
-        void     SetReceiveTimestampFraction(uint32_t aFraction) { mReceiveTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetReceiveTimestampFraction(void) const { return BigEndian::HostSwap32(mReceiveTimestampFraction); }
+        void     SetReceiveTimestampFraction(uint32_t aFraction)
+        {
+            mReceiveTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
-        uint32_t GetTransmitTimestampSeconds(void) const { return HostSwap32(mTransmitTimestampSeconds); }
-        void SetTransmitTimestampSeconds(uint32_t aTimestamp) { mTransmitTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetTransmitTimestampSeconds(void) const { return BigEndian::HostSwap32(mTransmitTimestampSeconds); }
+        void     SetTransmitTimestampSeconds(uint32_t aTimestamp)
+        {
+            mTransmitTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetTransmitTimestampFraction(void) const { return HostSwap32(mTransmitTimestampFraction); }
-        void SetTransmitTimestampFraction(uint32_t aFraction) { mTransmitTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetTransmitTimestampFraction(void) const { return BigEndian::HostSwap32(mTransmitTimestampFraction); }
+        void     SetTransmitTimestampFraction(uint32_t aFraction)
+        {
+            mTransmitTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
     private:
         static constexpr uint8_t kNtpVersion    = 4;                      // Current NTP version.
@@ -214,17 +236,8 @@ private:
         uint32_t mTransmitTimestampFraction;  // Fraction part of above value.
     } OT_TOOL_PACKED_END;
 
-    class QueryMetadata
+    struct QueryMetadata : public Message::FooterData<QueryMetadata>
     {
-    public:
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage)
-        {
-            IgnoreError(aMessage.Read(aMessage.GetLength() - sizeof(*this), *this));
-        }
-
-        void UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
-
         uint32_t                  mTransmitTimestamp;   // Time at client when request departed for server
         Callback<ResponseHandler> mResponseHandler;     // Response handler callback
         TimeMilli                 mTransmissionTime;    // Time when the timer should shoot for this message
@@ -244,14 +257,12 @@ private:
     void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
 
     void HandleRetransmissionTimer(void);
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    using RetxTimer    = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
+    using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
-    using RetxTimer = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
-
-    Ip6::Udp::Socket mSocket;
-
+    ClientSocket mSocket;
     MessageQueue mPendingQueries;
     RetxTimer    mRetransmissionTimer;
 

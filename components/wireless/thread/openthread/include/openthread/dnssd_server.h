@@ -35,10 +35,11 @@
 #ifndef OPENTHREAD_DNSSD_SERVER_H_
 #define OPENTHREAD_DNSSD_SERVER_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/dns.h>
-#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -52,7 +53,6 @@ extern "C" {
  *   This module includes APIs for DNS-SD server.
  *
  * @{
- *
  */
 
 /**
@@ -78,7 +78,6 @@ extern "C" {
  *
  * @sa otDnssdQueryHandleDiscoveredServiceInstance
  * @sa otDnssdQueryHandleDiscoveredHost
- *
  */
 typedef void (*otDnssdQuerySubscribeCallback)(void *aContext, const char *aFullName);
 
@@ -96,19 +95,16 @@ typedef void (*otDnssdQuerySubscribeCallback)(void *aContext, const char *aFullN
  * @param[in] aContext      A pointer to the application-specific context.
  * @param[in] aFullName     The null-terminated full service name (e.g. "_ipps._tcp.default.service.arpa."), or
  *                          full service instance name (e.g. "OpenThread._ipps._tcp.default.service.arpa.").
- *
  */
 typedef void (*otDnssdQueryUnsubscribeCallback)(void *aContext, const char *aFullName);
 
 /**
  * This opaque type represents a DNS-SD query.
- *
  */
 typedef void otDnssdQuery;
 
 /**
  * Represents information of a discovered service instance for a DNS-SD query.
- *
  */
 typedef struct otDnssdServiceInstanceInfo
 {
@@ -126,7 +122,6 @@ typedef struct otDnssdServiceInstanceInfo
 
 /**
  * Represents information of a discovered host for a DNS-SD query.
- *
  */
 typedef struct otDnssdHostInfo
 {
@@ -137,7 +132,6 @@ typedef struct otDnssdHostInfo
 
 /**
  * Specifies a DNS-SD query type.
- *
  */
 typedef enum
 {
@@ -148,19 +142,31 @@ typedef enum
 } otDnssdQueryType;
 
 /**
- * Contains the counters of DNS-SD server.
+ * Represents the count of queries, responses, failures handled by upstream DNS server.
  *
+ * Requires `OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE`.
+ */
+typedef struct otUpstreamDnsCounters
+{
+    uint32_t mQueries;   ///< The number of queries forwarded.
+    uint32_t mResponses; ///< The number of responses forwarded.
+    uint32_t mFailures;  ///< The number of upstream DNS failures.
+} otUpstreamDnsCounters;
+
+/**
+ * Contains the counters of DNS-SD server.
  */
 typedef struct otDnssdCounters
 {
-    uint32_t mSuccessResponse;        ///< The number of successful responses
-    uint32_t mServerFailureResponse;  ///< The number of server failure responses
-    uint32_t mFormatErrorResponse;    ///< The number of format error responses
-    uint32_t mNameErrorResponse;      ///< The number of name error responses
-    uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses
-    uint32_t mOtherResponse;          ///< The number of other responses
-
-    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server
+    uint32_t              mSuccessResponse;        ///< The number of successful responses.
+    uint32_t              mServerFailureResponse;  ///< The number of server failure responses.
+    uint32_t              mFormatErrorResponse;    ///< The number of format error responses.
+    uint32_t              mNameErrorResponse;      ///< The number of name error responses.
+    uint32_t              mNotImplementedResponse; ///< The number of 'not implemented' responses.
+    uint32_t              mOtherResponse;          ///< The number of other responses.
+    uint32_t              mResolvedBySrp;          ///< The number of queries resolved by the local SRP server.
+    otUpstreamDnsCounters mUpstreamDnsCounters;    ///< The number of queries, responses,
+                                                   ///< failures handled by upstream DNS server.
 } otDnssdCounters;
 
 /**
@@ -175,7 +181,6 @@ typedef struct otDnssdCounters
  * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
  * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
  * @param[in] aContext      A pointer to the application-specific context.
- *
  */
 void otDnssdQuerySetCallbacks(otInstance                     *aInstance,
                               otDnssdQuerySubscribeCallback   aSubscribe,
@@ -193,7 +198,6 @@ void otDnssdQuerySetCallbacks(otInstance                     *aInstance,
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aServiceFullName  The null-terminated full service name.
  * @param[in] aInstanceInfo     A pointer to the discovered service instance information.
- *
  */
 void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aInstance,
                                                  const char                 *aServiceFullName,
@@ -209,7 +213,6 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aIn
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aHostFullName     The null-terminated full host name.
  * @param[in] aHostInfo         A pointer to the discovered service instance information.
- *
  */
 void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo);
 
@@ -220,7 +223,6 @@ void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFu
  * @param[in] aQuery            The query pointer. Pass NULL to get the first query.
  *
  * @returns  A pointer to the query or NULL if no more queries.
- *
  */
 const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery);
 
@@ -231,7 +233,6 @@ const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuer
  * @param[out]  aNameOutput       The name output buffer, which should be `OT_DNS_MAX_NAME_SIZE` bytes long.
  *
  * @returns The DNS-SD query type.
- *
  */
 otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE]);
 
@@ -241,7 +242,6 @@ otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*a
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  * @returns  A pointer to the counters of the DNS-SD server.
- *
  */
 const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
 
@@ -256,7 +256,6 @@ const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
  * @sa otPlatDnsStartUpstreamQuery
  * @sa otPlatDnsCancelUpstreamQuery
  * @sa otPlatDnsUpstreamQueryDone
- *
  */
 void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled);
 
@@ -270,13 +269,11 @@ void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled);
  * @retval     FALSE      If the DNSSD server will not forward DNS queries.
  *
  * @sa otDnssdUpstreamQuerySetEnabled
- *
  */
 bool otDnssdUpstreamQueryIsEnabled(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

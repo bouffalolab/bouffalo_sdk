@@ -1,27 +1,10 @@
 sdk_generate_library()
 
 add_subdirectory(openthread_port)
-add_subdirectory(openthread_utils)
 if (DEFINED OT_NCP)
   add_subdirectory(openthread_ncp)
 endif()
-sdk_add_subdirectory_ifdef(CONFIG_OTBR openthread_br)
 sdk_add_subdirectory_ifdef(CONFIG_OTBR_REST openthread_rest)
-
-get_target_property(SDK_INTF_LIB_LINK_OPTIONS sdk_intf_lib INTERFACE_LINK_OPTIONS)
-list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS -nostartfiles)
-if(CONFIG_NEWLIB_STANDARD)
-    list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS --specs=nano.specs)
-endif()
-
-set_target_properties(sdk_intf_lib PROPERTIES INTERFACE_LINK_OPTIONS "")
-foreach(item ${SDK_INTF_LIB_LINK_OPTIONS})
-    sdk_add_link_options(${item})
-endforeach()
-
-if (CONFIG_MATTER)
-  sdk_add_high_prior_compile_options(-fno-short-enums)
-endif()
 
 if (DEFINED OT_NCP AND OT_CLI)
   message(FATAL_ERROR "OT_NCP can't be defined with OT_CLI set true.")
@@ -52,6 +35,8 @@ if (DEFINED OT_SERIAL_LINE_SIZE)
   sdk_add_compile_definitions(-DOT_SERIAL_LINE_SIZE=${OT_SERIAL_LINE_SIZE})
 endif()
 
+sdk_add_private_compile_definitions(-DOPENTHREAD_PLATFORM_NEXUS=0)
+
 set(PROJECT_SOURCE_DIR openthread)
 
 set(CLI_SOURCES
@@ -65,22 +50,24 @@ set(CLI_SOURCES
     cli_dns.cpp
     cli_history.cpp
     cli_joiner.cpp
+    cli_link_metrics.cpp
     cli_mac_filter.cpp
+    cli_mdns.cpp
+    cli_mesh_diag.cpp
     cli_network_data.cpp
-    cli_output.cpp
+    cli_ping.cpp
     cli_srp_client.cpp
     cli_srp_server.cpp
+    cli_tcat.cpp
     cli_tcp.cpp
     cli_udp.cpp
-)
-
-set(CORE_INCLUDES
-    ${PROJECT_SOURCE_DIR}/src/core
+    cli_utils.cpp
 )
 
 set(CORE_SOURCES
     api/backbone_router_api.cpp
     api/backbone_router_ftd_api.cpp
+    api/ble_secure_api.cpp
     api/border_agent_api.cpp
     api/border_router_api.cpp
     api/border_routing_api.cpp
@@ -109,6 +96,7 @@ set(CORE_SOURCES
     api/link_metrics_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp
+    api/mdns_api.cpp
     api/mesh_diag_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
@@ -133,6 +121,7 @@ set(CORE_SOURCES
     api/thread_ftd_api.cpp
     api/trel_api.cpp
     api/udp_api.cpp
+    api/verhoeff_checksum_api.cpp
     backbone_router/backbone_tmf.cpp
     backbone_router/bbr_leader.cpp
     backbone_router/bbr_local.cpp
@@ -146,7 +135,7 @@ set(CORE_SOURCES
     coap/coap_secure.cpp
     common/appender.cpp
     common/binary_search.cpp
-    common/crc16.cpp
+    common/crc.cpp
     common/data.cpp
     common/error.cpp
     common/frame_builder.cpp
@@ -154,10 +143,10 @@ set(CORE_SOURCES
     common/heap.cpp
     common/heap_data.cpp
     common/heap_string.cpp
-    common/instance.cpp
     common/log.cpp
     common/message.cpp
     common/notifier.cpp
+    common/offset_range.cpp
     common/preference.cpp
     common/random.cpp
     common/settings.cpp
@@ -177,6 +166,7 @@ set(CORE_SOURCES
     crypto/sha256.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
+    instance/instance.cpp
     mac/channel_mask.cpp
     mac/data_poll_handler.cpp
     mac/data_poll_sender.cpp
@@ -184,19 +174,21 @@ set(CORE_SOURCES
     mac/mac.cpp
     mac/mac_filter.cpp
     mac/mac_frame.cpp
+    mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    mac/sub_mac_csl_receiver.cpp
+    mac/sub_mac_wed.cpp
+    mac/wakeup_tx_scheduler.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
     meshcop/commissioner.cpp
     meshcop/dataset.cpp
-    meshcop/dataset_local.cpp
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp
-    meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
     meshcop/extended_panid.cpp
     meshcop/joiner.cpp
@@ -206,14 +198,18 @@ set(CORE_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
+    meshcop/secure_transport.cpp
+    meshcop/tcat_agent.cpp
     meshcop/timestamp.cpp
     net/checksum.cpp
     net/dhcp6_client.cpp
     net/dhcp6_server.cpp
+    net/dhcp6_types.cpp
     net/dns_client.cpp
     net/dns_dso.cpp
     net/dns_platform.cpp
     net/dns_types.cpp
+    net/dnssd.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp
     net/ip4_types.cpp
@@ -222,27 +218,33 @@ set(CORE_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/mdns.cpp
     net/nat64_translator.cpp
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
     net/sntp_client.cpp
     net/socket.cpp
+    net/srp_advertising_proxy.cpp
     net/srp_client.cpp
     net/srp_server.cpp
     net/tcp6.cpp
     net/tcp6_ext.cpp
     net/udp6.cpp
+    radio/ble_secure.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     radio/trel_interface.cpp
     radio/trel_link.cpp
     radio/trel_packet.cpp
+    radio/trel_peer.cpp
+    radio/trel_peer_discoverer.cpp
     thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/anycast_locator.cpp
+    thread/child.cpp
     thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
@@ -259,10 +261,11 @@ set(CORE_SOURCES
     thread/mesh_forwarder_ftd.cpp
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
-    thread/mle_router.cpp
+    thread/mle_ftd.cpp
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
+    thread/neighbor.cpp
     thread/neighbor_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
@@ -277,19 +280,22 @@ set(CORE_SOURCES
     thread/network_diagnostic_tlvs.cpp
     thread/panid_query_server.cpp
     thread/radio_selector.cpp
+    thread/router.cpp
     thread/router_table.cpp
     thread/src_match_controller.cpp
+    thread/thread_link_info.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
     thread/tmf.cpp
-    thread/topology.cpp
     thread/uri_paths.cpp
+    thread/version.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/history_tracker.cpp
     utils/jam_detector.cpp
+    utils/link_metrics_manager.cpp
     utils/mesh_diag.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp
@@ -297,6 +303,7 @@ set(CORE_SOURCES
     utils/power_calibration.cpp
     utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
+    utils/verhoeff_checksum.cpp
 )
 
 set(RADIO_CORE_SOURCES
@@ -310,7 +317,6 @@ set(RADIO_CORE_SOURCES
     common/binary_search.cpp
     common/error.cpp
     common/frame_builder.cpp
-    common/instance.cpp
     common/log.cpp
     common/random.cpp
     common/string.cpp
@@ -322,11 +328,15 @@ set(RADIO_CORE_SOURCES
     crypto/crypto_platform.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
+    instance/instance.cpp
     mac/link_raw.cpp
     mac/mac_frame.cpp
+    mac/mac_header_ie.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    mac/sub_mac_csl_receiver.cpp
+    mac/sub_mac_wed.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
@@ -341,6 +351,7 @@ set(PLATFORM_SOURCES
 
 set(TCPLP_SOURCES
     bsdtcp/cc/cc_newreno.c
+    bsdtcp/tcp_fastopen.c
     bsdtcp/tcp_input.c
     bsdtcp/tcp_output.c
     bsdtcp/tcp_reass.c
@@ -359,8 +370,9 @@ set(EXAMPLE_CLI_SOURCES
 )
 
 sdk_add_include_directories(${PROJECT_SOURCE_DIR}/include)
-sdk_add_include_directories(${PROJECT_SOURCE_DIR}/src)
 sdk_add_include_directories(${PROJECT_SOURCE_DIR}/src/core)
+sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/src)
+sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/src/include)
 
 if (OT_CLI)
   foreach(source_file ${CLI_SOURCES})
@@ -381,13 +393,13 @@ else()
   sdk_add_private_compile_definitions(-Dtcp_output=tcp_output_ot)
   sdk_add_private_compile_definitions(-Dtcp_close=tcp_close_ot)
 
-  sdk_add_include_directories(${PROJECT_SOURCE_DIR}/third_party/tcplp)
+  sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/third_party/tcplp)
   foreach(source_file ${TCPLP_SOURCES})
     sdk_library_add_sources(${PROJECT_SOURCE_DIR}/third_party/tcplp/${source_file})
   endforeach()
 endif()
 
-sdk_add_include_directories(${PROJECT_SOURCE_DIR}/src/lib/platform)
+sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/src/lib/platform)
 foreach(source_file ${PLATFORM_SOURCES})
   sdk_library_add_sources(${PROJECT_SOURCE_DIR}/src/lib/platform/${source_file})
 endforeach()

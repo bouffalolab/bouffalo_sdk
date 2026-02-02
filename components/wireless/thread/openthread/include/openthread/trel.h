@@ -30,15 +30,19 @@
  * @file
  * @brief
  *  This file defines the OpenThread TREL (Thread Radio Encapsulation Link) APIs for Thread Over Infrastructure.
- *
  */
 
 #ifndef OPENTHREAD_TREL_H_
 #define OPENTHREAD_TREL_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/dataset.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/trel.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,12 +57,10 @@ extern "C" {
  *   The functions in this module require `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` to be enabled.
  *
  * @{
- *
  */
 
 /**
  * Represents a TREL peer.
- *
  */
 typedef struct otTrelPeer
 {
@@ -69,9 +71,8 @@ typedef struct otTrelPeer
 
 /**
  * Represents an iterator for iterating over TREL peer table entries.
- *
  */
-typedef uint16_t otTrelPeerIterator;
+typedef const void *otTrelPeerIterator;
 
 /**
  * Enables or disables TREL operation.
@@ -88,7 +89,6 @@ typedef uint16_t otTrelPeerIterator;
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnable    A boolean to enable/disable the TREL operation.
- *
  */
 void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
 
@@ -99,7 +99,6 @@ void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
  *
  * @retval TRUE if the TREL operation is enabled.
  * @retval FALSE if the TREL operation is disabled.
- *
  */
 bool otTrelIsEnabled(otInstance *aInstance);
 
@@ -108,7 +107,6 @@ bool otTrelIsEnabled(otInstance *aInstance);
  *
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aIterator   The iterator to initialize.
- *
  */
 void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator);
 
@@ -119,9 +117,17 @@ void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator
  * @param[in] aIterator   The iterator. MUST be initialized.
  *
  * @returns A pointer to the next `otTrelPeer` entry or `NULL` if no more entries in the table.
- *
  */
 const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *aIterator);
+
+/**
+ * Returns the number of TREL peers.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  The number of TREL peers.
+ */
+uint16_t otTrelGetNumberOfPeers(otInstance *aInstance);
 
 /**
  * Sets the filter mode (enables/disables filtering).
@@ -134,7 +140,6 @@ const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *a
  *
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aFiltered   TRUE to enable filter mode, FALSE to disable filter mode.
- *
  */
 void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable);
 
@@ -145,13 +150,41 @@ void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable);
  *
  * @retval TRUE if the TREL filter mode is enabled.
  * @retval FALSE if the TREL filter mode is disabled.
- *
  */
 bool otTrelIsFilterEnabled(otInstance *aInstance);
 
 /**
- * @}
+ * Represents a group of TREL related counters.
+ */
+typedef otPlatTrelCounters otTrelCounters;
+
+/**
+ * Gets the TREL counters.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  A pointer to the TREL counters.
+ */
+const otTrelCounters *otTrelGetCounters(otInstance *aInstance);
+
+/**
+ * Resets the TREL counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ */
+void otTrelResetCounters(otInstance *aInstance);
+
+/**
+ * Gets the UDP port of the TREL interface.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns UDP port of the TREL interface.
+ */
+uint16_t otTrelGetUdpPort(otInstance *aInstance);
+
+/**
+ * @}
  */
 
 #ifdef __cplusplus

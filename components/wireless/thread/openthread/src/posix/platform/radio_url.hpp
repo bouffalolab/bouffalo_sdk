@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_RADIO_URL_HPP_
-#define POSIX_PLATFORM_RADIO_URL_HPP_
+#ifndef OT_POSIX_PLATFORM_RADIO_URL_HPP_
+#define OT_POSIX_PLATFORM_RADIO_URL_HPP_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +41,6 @@ namespace Posix {
 
 /**
  * Implements the radio URL processing.
- *
  */
 class RadioUrl : public ot::Url::Url
 {
@@ -50,9 +49,20 @@ public:
      * Initializes the object.
      *
      * @param[in]   aUrl    The null-terminated URL string.
-     *
      */
-    RadioUrl(const char *aUrl);
+    explicit RadioUrl(const char *aUrl) { Init(aUrl); };
+
+    /**
+     * Initializes the radio URL.
+     *
+     * @param[in]   aUrl    The null-terminated URL string.
+     */
+    void Init(const char *aUrl);
+
+    RadioUrl(const RadioUrl &)            = delete;
+    RadioUrl(RadioUrl &&)                 = delete;
+    RadioUrl &operator=(const RadioUrl &) = delete;
+    RadioUrl &operator=(RadioUrl &&)      = delete;
 
 private:
     enum
@@ -65,4 +75,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_RADIO_URL_HPP_
+#endif // OT_POSIX_PLATFORM_RADIO_URL_HPP_

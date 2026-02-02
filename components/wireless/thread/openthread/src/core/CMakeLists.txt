@@ -33,6 +33,7 @@ set(COMMON_INCLUDES
 set(COMMON_SOURCES
     api/backbone_router_api.cpp
     api/backbone_router_ftd_api.cpp
+    api/ble_secure_api.cpp
     api/border_agent_api.cpp
     api/border_router_api.cpp
     api/border_routing_api.cpp
@@ -61,6 +62,7 @@ set(COMMON_SOURCES
     api/link_metrics_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp
+    api/mdns_api.cpp
     api/mesh_diag_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
@@ -85,6 +87,7 @@ set(COMMON_SOURCES
     api/thread_ftd_api.cpp
     api/trel_api.cpp
     api/udp_api.cpp
+    api/verhoeff_checksum_api.cpp
     backbone_router/backbone_tmf.cpp
     backbone_router/bbr_leader.cpp
     backbone_router/bbr_local.cpp
@@ -98,7 +101,7 @@ set(COMMON_SOURCES
     coap/coap_secure.cpp
     common/appender.cpp
     common/binary_search.cpp
-    common/crc16.cpp
+    common/crc.cpp
     common/data.cpp
     common/error.cpp
     common/frame_builder.cpp
@@ -106,10 +109,10 @@ set(COMMON_SOURCES
     common/heap.cpp
     common/heap_data.cpp
     common/heap_string.cpp
-    common/instance.cpp
     common/log.cpp
     common/message.cpp
     common/notifier.cpp
+    common/offset_range.cpp
     common/preference.cpp
     common/random.cpp
     common/settings.cpp
@@ -129,6 +132,7 @@ set(COMMON_SOURCES
     crypto/sha256.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
+    instance/instance.cpp
     mac/channel_mask.cpp
     mac/data_poll_handler.cpp
     mac/data_poll_sender.cpp
@@ -136,19 +140,21 @@ set(COMMON_SOURCES
     mac/mac.cpp
     mac/mac_filter.cpp
     mac/mac_frame.cpp
+    mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    mac/sub_mac_csl_receiver.cpp
+    mac/sub_mac_wed.cpp
+    mac/wakeup_tx_scheduler.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
     meshcop/commissioner.cpp
     meshcop/dataset.cpp
-    meshcop/dataset_local.cpp
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp
-    meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
     meshcop/extended_panid.cpp
     meshcop/joiner.cpp
@@ -158,14 +164,18 @@ set(COMMON_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
+    meshcop/secure_transport.cpp
+    meshcop/tcat_agent.cpp
     meshcop/timestamp.cpp
     net/checksum.cpp
     net/dhcp6_client.cpp
     net/dhcp6_server.cpp
+    net/dhcp6_types.cpp
     net/dns_client.cpp
     net/dns_dso.cpp
     net/dns_platform.cpp
     net/dns_types.cpp
+    net/dnssd.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp
     net/ip4_types.cpp
@@ -174,27 +184,33 @@ set(COMMON_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/mdns.cpp
     net/nat64_translator.cpp
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
     net/sntp_client.cpp
     net/socket.cpp
+    net/srp_advertising_proxy.cpp
     net/srp_client.cpp
     net/srp_server.cpp
     net/tcp6.cpp
     net/tcp6_ext.cpp
     net/udp6.cpp
+    radio/ble_secure.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     radio/trel_interface.cpp
     radio/trel_link.cpp
     radio/trel_packet.cpp
+    radio/trel_peer.cpp
+    radio/trel_peer_discoverer.cpp
     thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/anycast_locator.cpp
+    thread/child.cpp
     thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
@@ -211,10 +227,11 @@ set(COMMON_SOURCES
     thread/mesh_forwarder_ftd.cpp
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
-    thread/mle_router.cpp
+    thread/mle_ftd.cpp
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
+    thread/neighbor.cpp
     thread/neighbor_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
@@ -229,19 +246,22 @@ set(COMMON_SOURCES
     thread/network_diagnostic_tlvs.cpp
     thread/panid_query_server.cpp
     thread/radio_selector.cpp
+    thread/router.cpp
     thread/router_table.cpp
     thread/src_match_controller.cpp
+    thread/thread_link_info.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
     thread/tmf.cpp
-    thread/topology.cpp
     thread/uri_paths.cpp
+    thread/version.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/history_tracker.cpp
     utils/jam_detector.cpp
+    utils/link_metrics_manager.cpp
     utils/mesh_diag.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp
@@ -249,6 +269,7 @@ set(COMMON_SOURCES
     utils/power_calibration.cpp
     utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
+    utils/verhoeff_checksum.cpp
 )
 
 set(RADIO_COMMON_SOURCES
@@ -262,7 +283,6 @@ set(RADIO_COMMON_SOURCES
     common/binary_search.cpp
     common/error.cpp
     common/frame_builder.cpp
-    common/instance.cpp
     common/log.cpp
     common/random.cpp
     common/string.cpp
@@ -274,11 +294,15 @@ set(RADIO_COMMON_SOURCES
     crypto/crypto_platform.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
+    instance/instance.cpp
     mac/link_raw.cpp
     mac/mac_frame.cpp
+    mac/mac_header_ie.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    mac/sub_mac_csl_receiver.cpp
+    mac/sub_mac_wed.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp

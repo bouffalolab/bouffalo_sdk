@@ -44,7 +44,6 @@
 
 /**
  * Diagnostics mode variables.
- *
  */
 static bool sDiagMode = false;
 
@@ -57,6 +56,13 @@ static otGpioMode sGpioMode  = OT_GPIO_MODE_INPUT;
 static bool       sGpioValue = false;
 static uint8_t    sRawPowerSetting[OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE];
 static uint16_t   sRawPowerSettingLength = 0;
+
+void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aContext);
+}
 
 void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
 

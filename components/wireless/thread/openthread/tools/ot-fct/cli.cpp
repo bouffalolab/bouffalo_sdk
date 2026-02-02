@@ -55,7 +55,7 @@ otError Cli::GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Po
     otError error = OT_ERROR_NOT_FOUND;
     char    value[kMaxValueSize];
     char   *domain;
-    char   *psave = nullptr;
+    char   *psave;
 
     while (mProductConfigFile.Get(kKeyTargetPower, aIterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
@@ -76,11 +76,10 @@ otError Cli::GetNextDomain(int &aIterator, Power::Domain &aDomain)
     otError error = OT_ERROR_NOT_FOUND;
     char    value[kMaxValueSize];
     char   *str;
-    char   *psave = nullptr;
 
     while (mProductConfigFile.Get(kKeyRegionDomainMapping, aIterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
-        if ((str = strtok_r(value, kCommaDelimiter, &psave)) == nullptr)
+        if ((str = strtok(value, kCommaDelimiter)) == nullptr)
         {
             continue;
         }
@@ -89,7 +88,6 @@ otError Cli::GetNextDomain(int &aIterator, Power::Domain &aDomain)
         break;
     }
 
-exit:
     return error;
 }
 
@@ -124,8 +122,6 @@ otError Cli::ProcessRegionDomainTable(Utils::CmdLineParser::Arg aArgs[])
     otError error    = OT_ERROR_NONE;
     int     iterator = 0;
     char    value[kMaxValueSize];
-    char   *domain;
-    char   *psave;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
@@ -211,7 +207,6 @@ otError Cli::ProcessCalibrationTable(Utils::CmdLineParser::Arg aArgs[])
         char                  *subString;
         uint8_t                channel;
         Power::CalibratedPower calibratedPower;
-        char                  *psave = nullptr;
 
         for (Utils::CmdLineParser::Arg *arg = &aArgs[1]; !arg->IsEmpty(); arg++)
         {
@@ -220,12 +215,12 @@ otError Cli::ProcessCalibrationTable(Utils::CmdLineParser::Arg aArgs[])
                 arg++;
                 VerifyOrExit(!arg->IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-                subString = strtok_r(arg->GetCString(), kCommaDelimiter, &psave);
+                subString = strtok(arg->GetCString(), kCommaDelimiter);
                 VerifyOrExit(subString != nullptr, error = OT_ERROR_PARSE);
                 SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(subString, channel));
                 calibratedPower.SetChannelStart(channel);
 
-                subString = strtok_r(NULL, kCommaDelimiter, &psave);
+                subString = strtok(NULL, kCommaDelimiter);
                 VerifyOrExit(subString != nullptr, error = OT_ERROR_PARSE);
                 SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(subString, channel));
                 calibratedPower.SetChannelEnd(channel);
@@ -279,7 +274,7 @@ exit:
 void Cli::ProcessCommand(Utils::CmdLineParser::Arg aArgs[])
 {
     otError error = OT_ERROR_NOT_FOUND;
-    int     i;
+    size_t  i;
 
     for (i = 0; i < (sizeof(sCommands) / sizeof(sCommands[0])); i++)
     {
@@ -290,7 +285,6 @@ void Cli::ProcessCommand(Utils::CmdLineParser::Arg aArgs[])
         }
     }
 
-exit:
     AppendErrorResult(error);
 }
 

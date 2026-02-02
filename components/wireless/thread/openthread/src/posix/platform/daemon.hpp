@@ -31,23 +31,29 @@
 #include "openthread-posix-config.h"
 
 #include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
+
+#include "logger.hpp"
+#include "mainloop.hpp"
 
 namespace ot {
 namespace Posix {
 
-class Daemon : public Mainloop::Source, private NonCopyable
+class Daemon : public Mainloop::Source, public Logger<Daemon>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[];
+
     static Daemon &Get(void);
 
     void SetUp(void);
     void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
+    int  OutputFormatV(const char *aFormat, va_list aArguments);
 
 private:
-    int  OutputFormatV(const char *aFormat, va_list aArguments);
+    int  OutputFormat(const char *aFormat, ...);
+    void createListenSocketOrDie(void);
     void InitializeSessionSocket(void);
 
     int mListenSocket  = -1;

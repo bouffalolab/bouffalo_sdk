@@ -385,7 +385,7 @@ static void log_debug_buffer(const char *desc, const uint8_t *buffer_ptr, int bu
 
         for (j = 0; i < buffer_len && j < SOCKET_DEBUG_BYTES_PER_LINE; i++, j++)
         {
-            snprintf(dump_string + j * 3, SOCKET_DEBUG_BYTES_PER_LINE * 3 + 1 - j * 3, "%02X ", buffer_ptr[i]);
+            sprintf(dump_string + j * 3, "%02X ", buffer_ptr[i]);
         }
 
         syslog(force ? LOG_WARNING : LOG_DEBUG, "%s: %s%s", desc, dump_string, (i < buffer_len) ? " ..." : "");
@@ -1522,7 +1522,7 @@ int main(int argc, char *argv[])
         {NULL, 0, NULL, 0},
     };
 
-    memcpy(prog, argv[0], sizeof(prog) - 1);
+    strncpy(prog, argv[0], sizeof(prog) - 1);
     prog[sizeof(prog) - 1] = 0;
 
     if (argc < 2)
@@ -1735,7 +1735,7 @@ int main(int argc, char *argv[])
         {
             char spi_path[64];
 
-            memcpy(spi_path, argv[optind], sizeof(spi_path) - 1);
+            strncpy(spi_path, argv[optind], sizeof(spi_path) - 1);
             spi_path[sizeof(spi_path) - 1] = 0;
             syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, spi_path, strerror(errno));
             exit(EXIT_FAILURE);

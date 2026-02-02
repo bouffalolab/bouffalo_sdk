@@ -34,7 +34,6 @@
 #include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,22 +64,20 @@
 #endif
 #include <common/code_utils.hpp>
 #include <lib/platform/exit_code.h>
+#include <lib/platform/reset_util.h>
+#include <lib/spinel/coprocessor_type.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/misc.h>
-
-#include "lib/platform/reset_util.h"
 
 /**
  * Initializes NCP app.
  *
  * @param[in]  aInstance    A pointer to the OpenThread instance.
- *
  */
 void otAppNcpInit(otInstance *aInstance);
 
 /**
  * Deinitializes NCP app.
- *
  */
 void otAppNcpUpdate(otSysMainloopContext *aContext);
 
@@ -88,7 +85,6 @@ void otAppNcpUpdate(otSysMainloopContext *aContext);
  * Updates the file descriptor sets with file descriptors used by console.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
- *
  */
 void otAppNcpProcess(const otSysMainloopContext *aContext);
 
@@ -96,13 +92,11 @@ void otAppNcpProcess(const otSysMainloopContext *aContext);
  * Initializes CLI app.
  *
  * @param[in]  aInstance    A pointer to the OpenThread instance.
- *
  */
 void otAppCliInit(otInstance *aInstance);
 
 /**
  * Deinitializes CLI app.
- *
  */
 void otAppCliDeinit(void);
 
@@ -110,7 +104,6 @@ void otAppCliDeinit(void);
  * Updates the file descriptor sets with file descriptors used by console.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
- *
  */
 void otAppCliUpdate(otSysMainloopContext *aMainloop);
 
@@ -118,7 +111,6 @@ void otAppCliUpdate(otSysMainloopContext *aMainloop);
  * Performs console driver processing.
  *
  * @param[in]    aMainloop      A pointer to the mainloop context.
- *
  */
 void otAppCliProcess(const otSysMainloopContext *aMainloop);
 
@@ -132,7 +124,6 @@ typedef struct PosixConfig
 
 /**
  * Defines the argument return values.
- *
  */
 enum
 {
@@ -180,7 +171,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
-#ifdef __linux__
+#ifdef SIGRTMIN
     fprintf(aStream,
             "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
             "                                  Use +N for relative value to SIGRTMIN, and use N for absolute value.\n");
@@ -198,7 +189,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
-#ifdef __linux__
+#ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
 
@@ -253,7 +244,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
-#ifdef __linux__
+#ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
             if (optarg[0] == '+')
             {
@@ -264,7 +255,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
                 aConfig->mPlatformConfig.mRealTimeSignal = atoi(optarg);
             }
             break;
-#endif // __linux__
+#endif
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -276,12 +267,14 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 
     for (; optind < aArgCount; optind++)
     {
-        VerifyOrDie(aConfig->mPlatformConfig.mRadioUrlNum < OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mRadioUrls),
+        VerifyOrDie(aConfig->mPlatformConfig.mCoprocessorUrls.mNum <
+                        OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mCoprocessorUrls.mUrls),
                     OT_EXIT_INVALID_ARGUMENTS);
-        aConfig->mPlatformConfig.mRadioUrls[aConfig->mPlatformConfig.mRadioUrlNum++] = aArgVector[optind];
+        aConfig->mPlatformConfig.mCoprocessorUrls.mUrls[aConfig->mPlatformConfig.mCoprocessorUrls.mNum++] =
+            aArgVector[optind];
     }
 
-    if (aConfig->mPlatformConfig.mRadioUrlNum == 0)
+    if (aConfig->mPlatformConfig.mCoprocessorUrls.mNum == 0)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
@@ -298,6 +291,12 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     instance = otSysInit(&aConfig->mPlatformConfig);
     VerifyOrDie(instance != NULL, OT_EXIT_FAILURE);
     syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
+
+    if (aConfig->mPlatformConfig.mCoprocessorType != OT_COPROCESSOR_RCP)
+    {
+        printf("Only RCP is supported by posix app now!\n");
+        exit(OT_EXIT_FAILURE);
+    }
 
     if (aConfig->mPrintRadioVersion)
     {
@@ -381,7 +380,10 @@ int main(int argc, char *argv[])
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     otAppCliInit(instance);
 #endif
+
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE || OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
     IgnoreError(otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance));
+#endif
 
     while (true)
     {

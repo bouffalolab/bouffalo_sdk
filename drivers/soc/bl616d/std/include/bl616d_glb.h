@@ -2133,7 +2133,8 @@ BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Config_SDIO_Host_Reset_System(uint8_t enable);
 /*----------*/
 BL_Err_Type GLB_UART_Sig_Swap_Set(uint8_t group, uint8_t swap);
-BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(BL_Fun_Type newState);
+BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(uint8_t enable);
+BL_Err_Type GLB_Swap_MCU_SPI_1_MOSI_With_MISO(uint8_t enable);
 BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(uint8_t mod);
 BL_Err_Type GLB_Set_SFlash_IO_PARM(uint8_t selEmbedded, uint8_t swapIo3Io0, uint8_t swapIo2Cs);
 BL_Err_Type GLB_Set_SFlash2_IO_PARM(uint8_t swapIo3Io0);

@@ -33,16 +33,7 @@
 
 #include "energy_scan_server.hpp"
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -63,12 +54,11 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
 template <>
 void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    uint8_t                 count;
-    uint16_t                period;
-    uint16_t                scanDuration;
-    uint32_t                mask;
-    MeshCoP::Tlv            tlv;
-    MeshCoP::ChannelMaskTlv channelMaskTlv;
+    uint8_t      count;
+    uint16_t     period;
+    uint16_t     scanDuration;
+    uint32_t     mask;
+    MeshCoP::Tlv tlv;
 
     VerifyOrExit(aMessage.IsPostRequest());
 
@@ -76,15 +66,13 @@ void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const 
     SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));
     SuccessOrExit(Tlv::Find<MeshCoP::ScanDurationTlv>(aMessage, scanDuration));
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
 
     FreeMessage(mReportMessage);
     mReportMessage = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriEnergyReport);
     VerifyOrExit(mReportMessage != nullptr);
 
-    channelMaskTlv.Init();
-    channelMaskTlv.SetChannelMask(mask);
-    SuccessOrExit(channelMaskTlv.AppendTo(*mReportMessage));
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*mReportMessage, mask));
 
     tlv.SetType(MeshCoP::Tlv::kEnergyList);
     SuccessOrExit(mReportMessage->Append(tlv));
@@ -201,14 +189,16 @@ void EnergyScanServer::SendReport(void)
 
 exit:
     FreeMessageOnError(mReportMessage, error);
-    MeshCoP::LogError("send scan results", error);
+    LogWarnOnError(error, "send scan results");
     mReportMessage = nullptr;
 }
 
 void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
+    uint16_t borderAgentRloc;
+
     if (aEvents.Contains(kEventThreadNetdataChanged) && (mReportMessage != nullptr) &&
-        Get<NetworkData::Leader>().GetCommissioningData() == nullptr)
+        Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc) != kErrorNone)
     {
         mReportMessage->Free();
         mReportMessage = nullptr;

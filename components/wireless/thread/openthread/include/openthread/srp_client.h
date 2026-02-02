@@ -35,7 +35,12 @@
 #ifndef OPENTHREAD_SRP_CLIENT_H_
 #define OPENTHREAD_SRP_CLIENT_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/dns.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -49,12 +54,10 @@ extern "C" {
  *   This module includes functions that control SRP client behavior.
  *
  * @{
- *
  */
 
 /**
  * Specifies an SRP client item (service or host info) state.
- *
  */
 typedef enum
 {
@@ -70,7 +73,6 @@ typedef enum
 
 /**
  * Represents an SRP client host info.
- *
  */
 typedef struct otSrpClientHostInfo
 {
@@ -99,7 +101,6 @@ typedef struct otSrpClientHostInfo
  * SRP client will re-use the lease interval value for key lease interval as well. For example, if in service `mLease`
  * is explicitly set to 2 days and `mKeyLease` is set to zero and default key lease is set to 1 day, then when
  * registering this service, the requested key lease for this service is also set to 2 days.
- *
  */
 typedef struct otSrpClientService
 {
@@ -171,7 +172,6 @@ typedef struct otSrpClientService
  *                              the list is empty.
  * @param[in] aRemovedServices  The head of linked-list containing all removed services. NULL if the list is empty.
  * @param[in] aContext          A pointer to an arbitrary context (provided when callback was registered).
- *
  */
 typedef void (*otSrpClientCallback)(otError                    aError,
                                     const otSrpClientHostInfo *aHostInfo,
@@ -190,7 +190,6 @@ typedef void (*otSrpClientCallback)(otError                    aError,
  * @param[in] aServerSockAddr   A non-NULL pointer indicates SRP server was started and pointer will give the
  *                              selected server socket address. A NULL pointer indicates SRP server was stopped.
  * @param[in] aContext          A pointer to an arbitrary context (provided when callback was registered).
- *
  */
 typedef void (*otSrpClientAutoStartCallback)(const otSockAddr *aServerSockAddr, void *aContext);
 
@@ -201,7 +200,7 @@ typedef void (*otSrpClientAutoStartCallback)(const otSockAddr *aServerSockAddr, 
  *
  *  - The SRP client is started - `otSrpClientStart()` is called.
  *  - Host name is set - `otSrpClientSetHostName()` is called.
- *  - At least one host IPv6 address is set - `otSrpClientSetHostName()` is called.
+ *  - At least one host IPv6 address is set - `otSrpClientSetHostAddresses()` is called.
  *  - At least one service is added - `otSrpClientAddService()` is called.
  *
  * It does not matter in which order these functions are called. When all conditions are met, the SRP client will
@@ -217,7 +216,6 @@ typedef void (*otSrpClientAutoStartCallback)(const otSockAddr *aServerSockAddr, 
  *                             socket address and callback.
  * @retval OT_ERROR_BUSY       SRP client is busy running with a different socket address.
  * @retval OT_ERROR_FAILED     Failed to open/connect the client's UDP socket.
- *
  */
 otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAddr);
 
@@ -228,7 +226,6 @@ otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAdd
  * and/or list of services. It marks all services to be added/removed again once the client is (re)started.
  *
  * @param[in] aInstance       A pointer to the OpenThread instance.
- *
  */
 void otSrpClientStop(otInstance *aInstance);
 
@@ -238,7 +235,6 @@ void otSrpClientStop(otInstance *aInstance);
  * @param[in] aInstance       A pointer to the OpenThread instance.
  *
  * @returns TRUE if the SRP client is running, FALSE otherwise.
- *
  */
 bool otSrpClientIsRunning(otInstance *aInstance);
 
@@ -251,7 +247,6 @@ bool otSrpClientIsRunning(otInstance *aInstance);
  * @param[in] aInstance       A pointer to the OpenThread instance.
  *
  * @returns A pointer to the SRP server's socket address (is always non-NULL).
- *
  */
 const otSockAddr *otSrpClientGetServerAddress(otInstance *aInstance);
 
@@ -264,7 +259,6 @@ const otSockAddr *otSrpClientGetServerAddress(otInstance *aInstance);
  * @param[in] aInstance   A pointer to the OpenThread instance.
  * @param[in] aCallback   The callback to notify of events and changes. Can be NULL if not needed.
  * @param[in] aContext    An arbitrary context used with @p aCallback.
- *
  */
 void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback, void *aContext);
 
@@ -305,7 +299,6 @@ void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback
  * @param[in] aInstance   A pointer to the OpenThread instance.
  * @param[in] aCallback   A callback to notify when client is auto-started/stopped. Can be NULL if not needed.
  * @param[in] aContext    A context to be passed when invoking @p aCallback.
- *
  */
 void otSrpClientEnableAutoStartMode(otInstance *aInstance, otSrpClientAutoStartCallback aCallback, void *aContext);
 
@@ -320,7 +313,6 @@ void otSrpClientEnableAutoStartMode(otInstance *aInstance, otSrpClientAutoStartC
  * Note that a call to `otSrpClientStop()` will also disable the auto-start mode.
  *
  * @param[in] aInstance   A pointer to the OpenThread instance.
- *
  */
 void otSrpClientDisableAutoStartMode(otInstance *aInstance);
 
@@ -332,7 +324,6 @@ void otSrpClientDisableAutoStartMode(otInstance *aInstance);
  * @param[in] aInstance   A pointer to the OpenThread instance.
  *
  * @returns TRUE if the auto-start mode is enabled, FALSE otherwise.
- *
  */
 bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance);
 
@@ -347,7 +338,6 @@ bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance);
  * @param[in] aInstance  A pointer to the OpenThread instance.
  *
  * @returns The TTL (in seconds).
- *
  */
 uint32_t otSrpClientGetTtl(otInstance *aInstance);
 
@@ -360,7 +350,6 @@ uint32_t otSrpClientGetTtl(otInstance *aInstance);
  * @param[in] aInstance   A pointer to the OpenThread instance.
  * @param[in] aTtl        The TTL (in seconds). If value is zero or greater than lease interval, the TTL is set to the
  *                        lease interval.
- *
  */
 void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl);
 
@@ -375,7 +364,6 @@ void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl);
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *
  * @returns The lease interval (in seconds).
- *
  */
 uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance);
 
@@ -390,7 +378,6 @@ uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance);
  * @param[in] aInstance   A pointer to the OpenThread instance.
  * @param[in] aInterval   The lease interval (in seconds). If zero, the default value specified by
  *                        `OPENTHREAD_CONFIG_SRP_CLIENT_DEFAULT_LEASE` would be used.
- *
  */
 void otSrpClientSetLeaseInterval(otInstance *aInstance, uint32_t aInterval);
 
@@ -405,7 +392,6 @@ void otSrpClientSetLeaseInterval(otInstance *aInstance, uint32_t aInterval);
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *
  * @returns The key lease interval (in seconds).
- *
  */
 uint32_t otSrpClientGetKeyLeaseInterval(otInstance *aInstance);
 
@@ -420,7 +406,6 @@ uint32_t otSrpClientGetKeyLeaseInterval(otInstance *aInstance);
  * @param[in] aInstance    A pointer to the OpenThread instance.
  * @param[in] aInterval    The key lease interval (in seconds). If zero, the default value specified by
  *                         `OPENTHREAD_CONFIG_SRP_CLIENT_DEFAULT_KEY_LEASE` would be used.
- *
  */
 void otSrpClientSetKeyLeaseInterval(otInstance *aInstance, uint32_t aInterval);
 
@@ -430,7 +415,6 @@ void otSrpClientSetKeyLeaseInterval(otInstance *aInstance, uint32_t aInterval);
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *
  * @returns A pointer to host info structure.
- *
  */
 const otSrpClientHostInfo *otSrpClientGetHostInfo(otInstance *aInstance);
 
@@ -453,17 +437,16 @@ const otSrpClientHostInfo *otSrpClientGetHostInfo(otInstance *aInstance);
  * @retval OT_ERROR_NONE            The host name label was set successfully.
  * @retval OT_ERROR_INVALID_ARGS    The @p aName is NULL.
  * @retval OT_ERROR_INVALID_STATE   The host name is already set and registered with the server.
- *
  */
 otError otSrpClientSetHostName(otInstance *aInstance, const char *aName);
 
 /**
  * Enables auto host address mode.
  *
- * When enabled host IPv6 addresses are automatically set by SRP client using all the unicast addresses on Thread netif
- * excluding all link-local and mesh-local addresses. If there is no valid address, then Mesh Local EID address is
- * added. The SRP client will automatically re-register when/if addresses on Thread netif are updated (new addresses
- * are added or existing addresses are removed).
+ * When enabled host IPv6 addresses are automatically set by SRP client using all the preferred unicast addresses on
+ * Thread netif excluding all link-local and mesh-local addresses. If there is no preferred address, then Mesh Local
+ * EID address is added. The SRP client will automatically re-register when/if addresses on Thread netif are updated
+ * (new addresses are added or existing addresses are removed or marked as non-preferred).
  *
  * The auto host address mode can be enabled before start or during operation of SRP client except when the host info
  * is being removed (client is busy handling a remove request from an call to `otSrpClientRemoveHostAndServices()` and
@@ -474,7 +457,6 @@ otError otSrpClientSetHostName(otInstance *aInstance, const char *aName);
  *
  * @retval OT_ERROR_NONE            Successfully enabled auto host address mode.
  * @retval OT_ERROR_INVALID_STATE   Host is being removed and therefore cannot enable auto host address mode.
- *
  */
 otError otSrpClientEnableAutoHostAddress(otInstance *aInstance);
 
@@ -503,7 +485,6 @@ otError otSrpClientEnableAutoHostAddress(otInstance *aInstance);
  *                                  will be called to report the status of registering addresses with server.
  * @retval OT_ERROR_INVALID_ARGS    The address list is invalid (e.g., must contain at least one address).
  * @retval OT_ERROR_INVALID_STATE   Host is being removed and therefore cannot change host address.
- *
  */
 otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *aIp6Addresses, uint8_t aNumAddresses);
 
@@ -530,7 +511,6 @@ otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *a
  *                                called to report the status.
  * @retval OT_ERROR_ALREADY       A service with the same service and instance names is already in the list.
  * @retval OT_ERROR_INVALID_ARGS  The service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
- *
  */
 otError otSrpClientAddService(otInstance *aInstance, otSrpClientService *aService);
 
@@ -551,7 +531,6 @@ otError otSrpClientAddService(otInstance *aInstance, otSrpClientService *aServic
  * @retval OT_ERROR_NONE       The removal of service started successfully. The `otSrpClientCallback` will be called to
  *                             report the status.
  * @retval OT_ERROR_NOT_FOUND  The service could not be found in the list.
- *
  */
 otError otSrpClientRemoveService(otInstance *aInstance, otSrpClientService *aService);
 
@@ -571,7 +550,6 @@ otError otSrpClientRemoveService(otInstance *aInstance, otSrpClientService *aSer
  *
  * @retval OT_ERROR_NONE       The @p aService is deleted successfully. It can be reclaimed and re-used immediately.
  * @retval OT_ERROR_NOT_FOUND  The service could not be found in the list.
- *
  */
 otError otSrpClientClearService(otInstance *aInstance, otSrpClientService *aService);
 
@@ -581,7 +559,6 @@ otError otSrpClientClearService(otInstance *aInstance, otSrpClientService *aServ
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *
  * @returns A pointer to the head of linked-list of all services or NULL if the list is empty.
- *
  */
 const otSrpClientService *otSrpClientGetServices(otInstance *aInstance);
 
@@ -614,7 +591,6 @@ const otSrpClientService *otSrpClientGetServices(otInstance *aInstance);
  * @retval OT_ERROR_NONE       The removal of host info and services started successfully. The `otSrpClientCallback`
  *                             will be called to report the status.
  * @retval OT_ERROR_ALREADY    The host info is already removed.
- *
  */
 otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyLease, bool aSendUnregToServer);
 
@@ -625,7 +601,6 @@ otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyL
  * function clears all the info immediately without any interaction with the server.
  *
  * @param[in] aInstance        A pointer to the OpenThread instance.
- *
  */
 void otSrpClientClearHostAndServices(otInstance *aInstance);
 
@@ -639,7 +614,6 @@ void otSrpClientClearHostAndServices(otInstance *aInstance);
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *
  * @returns The domain name string.
- *
  */
 const char *otSrpClientGetDomainName(otInstance *aInstance);
 
@@ -661,7 +635,6 @@ const char *otSrpClientGetDomainName(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE            The domain name label was set successfully.
  * @retval OT_ERROR_INVALID_STATE   The host info is already registered with server.
- *
  */
 otError otSrpClientSetDomainName(otInstance *aInstance, const char *aName);
 
@@ -671,7 +644,6 @@ otError otSrpClientSetDomainName(otInstance *aInstance, const char *aName);
  * @param[in] aItemState  An item state.
  *
  * @returns A string representation of @p aItemState.
- *
  */
 const char *otSrpClientItemStateToString(otSrpClientItemState aItemState);
 
@@ -689,7 +661,6 @@ const char *otSrpClientItemStateToString(otSrpClientItemState aItemState);
  *
  * @param[in] aInstance  A pointer to the OpenThread instance.
  * @param[in] aEnabled   TRUE to enable, FALSE to disable the "service key record inclusion" mode.
- *
  */
 void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled);
 
@@ -701,13 +672,11 @@ void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled)
  * @param[in] aInstance     A pointer to the OpenThread instance.
  *
  * @returns TRUE if "service key record inclusion" mode is enabled, FALSE otherwise.
- *
  */
 bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

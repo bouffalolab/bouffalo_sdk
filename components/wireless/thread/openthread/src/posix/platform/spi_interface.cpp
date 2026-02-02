@@ -54,7 +54,9 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+#include "common/code_utils.hpp"
+
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
 #include <linux/gpio.h>
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
@@ -62,10 +64,13 @@
 namespace ot {
 namespace Posix {
 
-SpiInterface::SpiInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
-    : mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mRxFrameBuffer(aFrameBuffer)
+const char SpiInterface::kLogModuleName[] = "SpiIntface";
+
+SpiInterface::SpiInterface(const Url::Url &aRadioUrl)
+    : mReceiveFrameCallback(nullptr)
+    , mReceiveFrameContext(nullptr)
+    , mRxFrameBuffer(nullptr)
+    , mRadioUrl(aRadioUrl)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
     , mIntGpioValueFd(-1)
@@ -90,7 +95,7 @@ void SpiInterface::ResetStates(void)
     mSpiSlaveDataLen      = 0;
     memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
-    mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
+    mInterfaceMetrics.mRcpInterfaceType = kSpinelInterfaceTypeSpi;
 }
 
 otError SpiInterface::HardwareReset(void)
@@ -107,7 +112,7 @@ otError SpiInterface::HardwareReset(void)
     return OT_ERROR_NONE;
 }
 
-otError SpiInterface::Init(const Url::Url &aRadioUrl)
+otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
     const char *spiGpioIntDevice;
     const char *spiGpioResetDevice;
@@ -119,75 +124,45 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
-    const char *value;
 
-    spiGpioIntDevice   = aRadioUrl.GetValue("gpio-int-device");
-    spiGpioResetDevice = aRadioUrl.GetValue("gpio-reset-device");
-    if (!spiGpioIntDevice || !spiGpioResetDevice)
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
+    spiGpioIntDevice   = mRadioUrl.GetValue("gpio-int-device");
+    spiGpioResetDevice = mRadioUrl.GetValue("gpio-reset-device");
 
-    if ((value = aRadioUrl.GetValue("gpio-int-line")))
-    {
-        spiGpioIntLine = static_cast<uint8_t>(atoi(value));
-    }
-    else
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    if ((value = aRadioUrl.GetValue("gpio-reset-line")))
-    {
-        spiGpioResetLine = static_cast<uint8_t>(atoi(value));
-    }
-    else
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    if ((value = aRadioUrl.GetValue("spi-mode")))
-    {
-        spiMode = static_cast<uint8_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-speed")))
-    {
-        spiSpeed = static_cast<uint32_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-reset-delay")))
-    {
-        spiResetDelay = static_cast<uint32_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-cs-delay")))
-    {
-        spiCsDelay = static_cast<uint16_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-align-allowance")))
-    {
-        spiAlignAllowance = static_cast<uint8_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-small-packet")))
-    {
-        spiSmallPacketSize = static_cast<uint8_t>(atoi(value));
-    }
-
-    VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
+    VerifyOrDie(spiGpioIntDevice, OT_EXIT_INVALID_ARGUMENTS);
+    SuccessOrDie(mRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
+    VerifyOrDie(mRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint16("spi-cs-delay", spiCsDelay) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint8("spi-align-allowance", spiAlignAllowance) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint8("spi-small-packet", spiSmallPacketSize) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_INVALID_ARGUMENTS);
 
     mSpiResetDelay      = spiResetDelay;
     mSpiCsDelayUs       = spiCsDelay;
     mSpiSmallPacketSize = spiSmallPacketSize;
     mSpiAlignAllowance  = spiAlignAllowance;
 
-    if (spiGpioIntDevice != nullptr)
+    InitIntPin(spiGpioIntDevice, spiGpioIntLine);
+
+    if (spiGpioResetDevice)
     {
-        // If the interrupt pin is not set, SPI interface will use polling mode.
-        InitIntPin(spiGpioIntDevice, spiGpioIntLine);
+        SuccessOrDie(mRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
+        InitResetPin(spiGpioResetDevice, spiGpioResetLine);
     }
     else
     {
-        otLogNotePlat("SPI interface enters polling mode.");
+        LogNote("gpio-reset-device is not given.");
     }
 
-    InitResetPin(spiGpioResetDevice, spiGpioResetLine);
-    InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
+    InitSpiDev(mRadioUrl.GetPath(), spiMode, spiSpeed);
+
+    mReceiveFrameCallback = aCallback;
+    mReceiveFrameContext  = aCallbackContext;
+    mRxFrameBuffer        = &aFrameBuffer;
 
     return OT_ERROR_NONE;
 }
@@ -213,6 +188,10 @@ void SpiInterface::Deinit(void)
         close(mIntGpioValueFd);
         mIntGpioValueFd = -1;
     }
+
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mRxFrameBuffer        = nullptr;
 }
 
 int SpiInterface::SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel)
@@ -276,7 +255,7 @@ void SpiInterface::InitResetPin(const char *aCharDev, uint8_t aLine)
     char label[] = "SOC_THREAD_RESET";
     int  fd;
 
-    otLogDebgPlat("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
+    LogDebg("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
     VerifyOrDie(aCharDev != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -290,7 +269,7 @@ void SpiInterface::InitIntPin(const char *aCharDev, uint8_t aLine)
     char label[] = "THREAD_SOC_INT";
     int  fd;
 
-    otLogDebgPlat("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
+    LogDebg("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
     VerifyOrDie(aCharDev != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -305,7 +284,7 @@ void SpiInterface::InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed)
     const uint8_t wordBits = kSpiBitsPerWord;
     int           fd;
 
-    otLogDebgPlat("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
+    LogDebg("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
 
     VerifyOrDie((aPath != nullptr) && (aMode <= kSpiModeMax), OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aPath, O_RDWR | O_CLOEXEC)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -328,6 +307,8 @@ exit:
 
 void SpiInterface::TriggerReset(void)
 {
+    VerifyOrDie(mResetGpioValueFd >= 0, OT_EXIT_RCP_RESET_REQUIRED);
+
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);
 
@@ -336,7 +317,7 @@ void SpiInterface::TriggerReset(void)
     // Set Reset pin to high level.
     SetGpioValue(mResetGpioValueFd, 1);
 
-    otLogNotePlat("Triggered hardware reset");
+    LogNote("Triggered hardware reset");
 }
 
 uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
@@ -344,7 +325,7 @@ uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t a
     uint8_t       *start = aSpiRxFrameBuffer;
     const uint8_t *end   = aSpiRxFrameBuffer + aAlignAllowance;
 
-    for (; start != end && start[0] == 0xff; start++)
+    for (; start != end && ((start[0] == 0xff) || (start[0] == 0x00)); start++)
         ;
 
     aSkipLength = static_cast<uint16_t>(start - aSpiRxFrameBuffer);
@@ -413,6 +394,8 @@ otError SpiInterface::PushPullSpi(void)
     Spinel::SpiFrame txFrame(mSpiTxFrameBuffer);
     uint16_t         skipAlignAllowanceLength;
 
+    VerifyOrExit((mReceiveFrameCallback != nullptr) && (mRxFrameBuffer != nullptr), error = OT_ERROR_INVALID_STATE);
+
     if (mInterfaceMetrics.mTransferredValidFrameCount == 0)
     {
         // Set the reset flag to indicate to our slave that we are coming up from scratch.
@@ -457,13 +440,13 @@ otError SpiInterface::PushPullSpi(void)
     txFrame.SetHeaderAcceptLen(spiTransferBytes);
 
     // Set skip length to make MultiFrameBuffer to reserve a space in front of the frame buffer.
-    SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(kSpiFrameHeaderSize));
+    SuccessOrExit(error = mRxFrameBuffer->SetSkipLength(kSpiFrameHeaderSize));
 
     // Check whether the remaining frame buffer has enough space to store the data to be received.
-    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
+    VerifyOrExit(mRxFrameBuffer->GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
 
     // Point to the start of the reserved buffer.
-    spiRxFrameBuffer = mRxFrameBuffer.GetFrame() - kSpiFrameHeaderSize;
+    spiRxFrameBuffer = mRxFrameBuffer->GetFrame() - kSpiFrameHeaderSize;
 
     // Set the total number of bytes to be transmitted.
     spiTransferBytes += kSpiFrameHeaderSize + mSpiAlignAllowance;
@@ -473,28 +456,28 @@ otError SpiInterface::PushPullSpi(void)
 
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("PushPullSpi:DoSpiTransfer: errno=%s", strerror(errno));
+        LogCrit("PushPullSpi:DoSpiTransfer: errno=%s", strerror(errno));
 
         // Print out a helpful error message for a common error.
         if ((mSpiCsDelayUs != 0) && (errno == EINVAL))
         {
-            otLogWarnPlat("SPI ioctl failed with EINVAL. Try adding `--spi-cs-delay=0` to command line arguments.");
+            LogWarn("SPI ioctl failed with EINVAL. Try adding `--spi-cs-delay=0` to command line arguments.");
         }
 
         LogStats();
         DieNow(OT_EXIT_FAILURE);
     }
 
-    // Account for misalignment (0xFF bytes at the start)
+    // Account for misalignment (0xFF or 0x00 bytes at the start)
     spiRxFrame = GetRealRxFrameStart(spiRxFrameBuffer, mSpiAlignAllowance, skipAlignAllowanceLength);
 
     {
         Spinel::SpiFrame rxFrame(spiRxFrame);
 
-        otLogDebgPlat("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
-                      txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
-        otLogDebgPlat("spi_transfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
-                      rxFrame.GetHeaderAcceptLen(), rxFrame.GetHeaderDataLen());
+        LogDebg("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
+                txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
+        LogDebg("spi_transfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
+                rxFrame.GetHeaderAcceptLen(), rxFrame.GetHeaderDataLen());
 
         slaveHeader = rxFrame.GetHeaderFlagByte();
         if ((slaveHeader == 0xFF) || (slaveHeader == 0x00))
@@ -505,11 +488,11 @@ otError SpiInterface::PushPullSpi(void)
                 // Device is off or in a bad state. In some cases may be induced by flow control.
                 if (mSpiSlaveDataLen == 0)
                 {
-                    otLogDebgPlat("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
+                    LogDebg("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
                 }
                 else
                 {
-                    otLogWarnPlat("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
+                    LogWarn("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
                 }
 
                 mSpiUnresponsiveFrameCount++;
@@ -519,8 +502,8 @@ otError SpiInterface::PushPullSpi(void)
                 // Header is full of garbage
                 mInterfaceMetrics.mTransferredGarbageFrameCount++;
 
-                otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1],
-                              spiRxFrame[2], spiRxFrame[3], spiRxFrame[4]);
+                LogWarn("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
+                        spiRxFrame[3], spiRxFrame[4]);
                 otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
                 otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
             }
@@ -538,8 +521,8 @@ otError SpiInterface::PushPullSpi(void)
             mSpiTxRefusedCount++;
             mSpiSlaveDataLen = 0;
 
-            otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
-                          spiRxFrame[3], spiRxFrame[4]);
+            LogWarn("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
+                    spiRxFrame[3], spiRxFrame[4]);
             otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
             otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
 
@@ -552,7 +535,7 @@ otError SpiInterface::PushPullSpi(void)
         {
             mSlaveResetCount++;
 
-            otLogNotePlat("Slave did reset (%" PRIu64 " resets so far)", mSlaveResetCount);
+            LogNote("Slave did reset (%" PRIu64 " resets so far)", mSlaveResetCount);
             LogStats();
         }
 
@@ -565,9 +548,9 @@ otError SpiInterface::PushPullSpi(void)
             successfulExchanges++;
 
             // Set the skip length to skip align bytes and SPI frame header.
-            SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
+            SuccessOrExit(error = mRxFrameBuffer->SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
             // Set the received frame length.
-            SuccessOrExit(error = mRxFrameBuffer.SetLength(rxFrame.GetHeaderDataLen()));
+            SuccessOrExit(error = mRxFrameBuffer->SetLength(rxFrame.GetHeaderDataLen()));
 
             // Upper layer will free the frame buffer.
             discardRxFrame = false;
@@ -589,6 +572,8 @@ otError SpiInterface::PushPullSpi(void)
             mInterfaceMetrics.mTxFrameCount++;
             mInterfaceMetrics.mTxFrameByteCount += mSpiTxPayloadSize;
 
+            // Clear tx buffer after usage
+            memset(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], 0, mSpiTxPayloadSize);
             mSpiTxIsReady      = false;
             mSpiTxPayloadSize  = 0;
             mSpiTxRefusedCount = 0;
@@ -614,22 +599,18 @@ otError SpiInterface::PushPullSpi(void)
 exit:
     if (discardRxFrame)
     {
-        mRxFrameBuffer.DiscardFrame();
+        mRxFrameBuffer->DiscardFrame();
     }
 
     return error;
 }
 
-bool SpiInterface::CheckInterrupt(void)
-{
-    return (mIntGpioValueFd >= 0) ? (GetGpioValue(mIntGpioValueFd) == kGpioIntAssertState) : true;
-}
+bool SpiInterface::CheckInterrupt(void) { return (GetGpioValue(mIntGpioValueFd) == kGpioIntAssertState); }
 
 void SpiInterface::UpdateFdSet(void *aMainloopContext)
 {
-    struct timeval        timeout        = {kSecPerDay, 0};
-    struct timeval        pollingTimeout = {0, kSpiPollPeriodUs};
-    otSysMainloopContext *context        = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
+    struct timeval        timeout = {kSecPerDay, 0};
+    otSysMainloopContext *context = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
 
     assert(context != nullptr);
 
@@ -640,31 +621,23 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
         timeout.tv_usec = 0;
     }
 
-    if (mIntGpioValueFd >= 0)
+    if (context->mMaxFd < mIntGpioValueFd)
     {
-        if (context->mMaxFd < mIntGpioValueFd)
-        {
-            context->mMaxFd = mIntGpioValueFd;
-        }
-
-        if (CheckInterrupt())
-        {
-            // Interrupt pin is asserted, set the timeout to be 0.
-            timeout.tv_sec  = 0;
-            timeout.tv_usec = 0;
-            otLogDebgPlat("UpdateFdSet(): Interrupt.");
-        }
-        else
-        {
-            // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
-            // read set.
-            FD_SET(mIntGpioValueFd, &context->mReadFdSet);
-        }
+        context->mMaxFd = mIntGpioValueFd;
     }
-    else if (timercmp(&pollingTimeout, &timeout, <))
+
+    if (CheckInterrupt())
     {
-        // In this case we don't have an interrupt, so we revert to SPI polling.
-        timeout = pollingTimeout;
+        // Interrupt pin is asserted, set the timeout to be 0.
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
+        LogDebg("UpdateFdSet(): Interrupt.");
+    }
+    else
+    {
+        // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
+        // read set.
+        FD_SET(mIntGpioValueFd, &context->mReadFdSet);
     }
 
     if (mSpiTxRefusedCount)
@@ -695,7 +668,7 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
         {
             // To avoid printing out this message over and over, we only print it out once the refused count is at two
             // or higher when we actually have something to send the slave. And then, we only print it once.
-            otLogInfoPlat("Slave is rate limiting transactions");
+            LogInfo("Slave is rate limiting transactions");
 
             mDidPrintRateLimitLog = true;
         }
@@ -704,7 +677,7 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
         {
             // Ua-oh. The slave hasn't given us a chance to send it anything for over thirty frames. If this ever
             // happens, print out a warning to the logs.
-            otLogWarnPlat("Slave seems stuck.");
+            LogWarn("Slave seems stuck.");
         }
         else if (mSpiTxRefusedCount == kSpiTxRefuseExitCount)
         {
@@ -734,7 +707,7 @@ void SpiInterface::Process(const void *aMainloopContext)
     {
         struct gpioevent_data event;
 
-        otLogDebgPlat("Process(): Interrupt.");
+        LogDebg("Process(): Interrupt.");
 
         // Read event data to clear interrupt.
         VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -762,8 +735,8 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
         int                  ret;
 
         context.mMaxFd           = -1;
-        context.mTimeout.tv_sec  = static_cast<time_t>((end - now) / US_PER_S);
-        context.mTimeout.tv_usec = static_cast<suseconds_t>((end - now) % US_PER_S);
+        context.mTimeout.tv_sec  = static_cast<time_t>((end - now) / OT_US_PER_S);
+        context.mTimeout.tv_usec = static_cast<suseconds_t>((end - now) % OT_US_PER_S);
 
         FD_ZERO(&context.mReadFdSet);
         FD_ZERO(&context.mWriteFdSet);
@@ -822,23 +795,22 @@ exit:
 void SpiInterface::LogError(const char *aString)
 {
     OT_UNUSED_VARIABLE(aString);
-    otLogWarnPlat("%s: %s", aString, strerror(errno));
+    LogWarn("%s: %s", aString, strerror(errno));
 }
 
 void SpiInterface::LogStats(void)
 {
-    otLogInfoPlat("INFO: SlaveResetCount=%" PRIu64, mSlaveResetCount);
-    otLogInfoPlat("INFO: SpiDuplexFrameCount=%" PRIu64, mSpiDuplexFrameCount);
-    otLogInfoPlat("INFO: SpiUnresponsiveFrameCount=%" PRIu64, mSpiUnresponsiveFrameCount);
-    otLogInfoPlat("INFO: TransferredFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredFrameCount);
-    otLogInfoPlat("INFO: TransferredValidFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredValidFrameCount);
-    otLogInfoPlat("INFO: TransferredGarbageFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredGarbageFrameCount);
-    otLogInfoPlat("INFO: RxFrameCount=%" PRIu64, mInterfaceMetrics.mRxFrameCount);
-    otLogInfoPlat("INFO: RxFrameByteCount=%" PRIu64, mInterfaceMetrics.mRxFrameByteCount);
-    otLogInfoPlat("INFO: TxFrameCount=%" PRIu64, mInterfaceMetrics.mTxFrameCount);
-    otLogInfoPlat("INFO: TxFrameByteCount=%" PRIu64, mInterfaceMetrics.mTxFrameByteCount);
+    LogInfo("INFO: SlaveResetCount=%" PRIu64, mSlaveResetCount);
+    LogInfo("INFO: SpiDuplexFrameCount=%" PRIu64, mSpiDuplexFrameCount);
+    LogInfo("INFO: SpiUnresponsiveFrameCount=%" PRIu64, mSpiUnresponsiveFrameCount);
+    LogInfo("INFO: TransferredFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredFrameCount);
+    LogInfo("INFO: TransferredValidFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredValidFrameCount);
+    LogInfo("INFO: TransferredGarbageFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredGarbageFrameCount);
+    LogInfo("INFO: RxFrameCount=%" PRIu64, mInterfaceMetrics.mRxFrameCount);
+    LogInfo("INFO: RxFrameByteCount=%" PRIu64, mInterfaceMetrics.mRxFrameByteCount);
+    LogInfo("INFO: TxFrameCount=%" PRIu64, mInterfaceMetrics.mTxFrameCount);
+    LogInfo("INFO: TxFrameByteCount=%" PRIu64, mInterfaceMetrics.mTxFrameByteCount);
 }
 } // namespace Posix
 } // namespace ot
-
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE

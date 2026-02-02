@@ -56,7 +56,7 @@ class PartitionId(int):
 class NetifIdentifier(IntEnum):
     """Represents a network interface identifier."""
     UNSPECIFIED = 0
-    THERAD = 1
+    THREAD = 1
     BACKBONE = 2
 
 
@@ -117,6 +117,22 @@ class Ip6Prefix(ipaddress.IPv6Network):
     def __eq__(self, other):
         if isinstance(other, str):
             other = ipaddress.IPv6Network(other)
+
+        return super().__eq__(other)
+
+    def __repr__(self):
+        return self.compressed
+
+    def __hash__(self):
+        return super().__hash__()
+
+
+class Ip4Addr(ipaddress.IPv4Address):
+    """Represents an IPv4 address."""
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            other = ipaddress.IPv4Address(other)
 
         return super().__eq__(other)
 

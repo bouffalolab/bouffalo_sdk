@@ -1,4 +1,7 @@
 
+#include <FreeRTOS.h>
+#include <task.h>
+
 #if defined (BL616)
 #include <rfparam_adapter.h>
 #endif
@@ -6,13 +9,13 @@
 #include <bl_sys.h>
 
 #include <bflb_mtd.h>
-#if defined (CONFIG_LITTLEFS)
-#include <easyflash.h>
-#endif
-
 #include <lmac154.h>
 #include <zb_timer.h>
+#if CONFIG_LMAC154_DBG
+#include <lmac154_dbg.h>
+#endif
 
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread_port.h>
 #include <openthread/cli.h>
 
@@ -75,27 +78,24 @@ void otrInitUser(otInstance * instance)
 void vApplicationTickHook( void )
 {
 #ifdef BL616
-    lmac154_monitor();
+    lmac154_monitor(10000);
 #endif
-#if CONFIG_LMAC154_LOG
-    lmac154_logs_output();
+#if CONFIG_LMAC154_DBG
+    lmac154_dbg_output();
 #endif
 }
 
 int main(void)
 {
     otRadio_opt_t opt;
-    
-#if !defined(BL702L)
+
+#if defined BL616 || defined BL702
     bl_sys_rstinfo_init();
 #endif
 
     board_init();
-    
+
     bflb_mtd_init();
-#if defined (CONFIG_LITTLEFS)
-    easyflash_init();
-#endif
 
     configASSERT((configMAX_PRIORITIES > 4));
 
@@ -108,8 +108,8 @@ int main(void)
     
     __libc_init_array();
 
-#if CONFIG_LMAC154_LOG
-    lmac154_log_init();
+#if CONFIG_LMAC154_DBG
+    lmac154_dbg_trace_init();
 #endif
 
     uart0 = bflb_device_get_by_name("uart0");
@@ -134,6 +134,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     opt.bf.isCSLReceiverEnable = true;
 #endif
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     opt.bf.isTimeSyncEnable = true;
 #endif

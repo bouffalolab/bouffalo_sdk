@@ -33,8 +33,7 @@
 
 #include "thread/tmf.hpp"
 
-#include "common/locator_getters.hpp"
-#include "net/ip6_types.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Tmf {
@@ -42,18 +41,18 @@ namespace Tmf {
 //----------------------------------------------------------------------------------------------------------------------
 // MessageInfo
 
-void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16()); }
+void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::Mle>().GetMeshLocalRloc()); }
 
-Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
+void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
 {
     SetSockAddrToRloc();
-    return Get<Mle::MleRouter>().GetLeaderAloc(GetPeerAddr());
+    Get<Mle::Mle>().GetLeaderAloc(GetPeerAddr());
 }
 
-Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderRloc(void)
+void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderRloc(void)
 {
     SetSockAddrToRloc();
-    return Get<Mle::MleRouter>().GetLeaderAddress(GetPeerAddr());
+    Get<Mle::Mle>().GetLeaderRloc(GetPeerAddr());
 }
 
 void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
@@ -65,8 +64,7 @@ void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
 void MessageInfo::SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16)
 {
     SetSockAddrToRloc();
-    SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    GetPeerAddr().GetIid().SetLocator(aRloc16);
+    GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
 }
 
 void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
@@ -85,7 +83,7 @@ Agent::Agent(Instance &aInstance)
     SetResourceHandler(&HandleResource);
 }
 
-Error Agent::Start(void) { return Coap::Start(kUdpPort, Ip6::kNetifThread); }
+Error Agent::Start(void) { return Coap::Start(kUdpPort, Ip6::kNetifThreadInternal); }
 
 template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
@@ -129,9 +127,10 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 #if OPENTHREAD_FTD
         Case(kUriAddressQuery, AddressResolver);
         Case(kUriAddressNotify, AddressResolver);
-        Case(kUriAddressSolicit, Mle::MleRouter);
-        Case(kUriAddressRelease, Mle::MleRouter);
+        Case(kUriAddressSolicit, Mle::Mle);
+        Case(kUriAddressRelease, Mle::Mle);
         Case(kUriActiveSet, MeshCoP::ActiveDatasetManager);
+        Case(kUriActiveReplace, MeshCoP::ActiveDatasetManager);
         Case(kUriPendingSet, MeshCoP::PendingDatasetManager);
         Case(kUriLeaderPetition, MeshCoP::Leader);
         Case(kUriLeaderKeepAlive, MeshCoP::Leader);
@@ -208,9 +207,9 @@ bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address 
 
     VerifyOrExit(aDestPort == kUdpPort);
 
-    if (aSourceAddress.IsLinkLocal())
+    if (aSourceAddress.IsLinkLocalUnicast())
     {
-        isTmf = aDestAddress.IsLinkLocal() || aDestAddress.IsLinkLocalMulticast();
+        isTmf = aDestAddress.IsLinkLocalUnicastOrMulticast();
         ExitNow();
     }
 
@@ -271,13 +270,32 @@ Message::Priority Agent::DscpToPriority(uint8_t aDscp)
     return priority;
 }
 
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 SecureAgent::SecureAgent(Instance &aInstance)
-    : Coap::CoapSecure(aInstance)
+    : Coap::Dtls::Transport(aInstance, kNoLinkSecurity)
+    , Coap::SecureSession(aInstance, static_cast<Coap::Dtls::Transport &>(*this))
 {
+    SetAcceptCallback(&HandleDtlsAccept, this);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     SetResourceHandler(&HandleResource);
+#endif
 }
+
+MeshCoP::SecureSession *SecureAgent::HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return static_cast<SecureAgent *>(aContext)->HandleDtlsAccept();
+}
+
+Coap::SecureSession *SecureAgent::HandleDtlsAccept(void)
+{
+    return IsSessionInUse() ? nullptr : static_cast<Coap::SecureSession *>(this);
+}
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
                                  const char             *aUriPath,
@@ -289,47 +307,21 @@ bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
 
 bool SecureAgent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    bool didHandle = true;
+    bool didHandle = false;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
-        break
-
-    switch (uri)
+    if (uri == kUriJoinerFinalize)
     {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-        Case(kUriJoinerFinalize, MeshCoP::Commissioner);
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-        Case(kUriCommissionerPetition, MeshCoP::BorderAgent);
-        Case(kUriCommissionerKeepAlive, MeshCoP::BorderAgent);
-        Case(kUriRelayTx, MeshCoP::BorderAgent);
-        Case(kUriCommissionerGet, MeshCoP::BorderAgent);
-        Case(kUriCommissionerSet, MeshCoP::BorderAgent);
-        Case(kUriActiveGet, MeshCoP::BorderAgent);
-        Case(kUriActiveSet, MeshCoP::BorderAgent);
-        Case(kUriPendingGet, MeshCoP::BorderAgent);
-        Case(kUriPendingSet, MeshCoP::BorderAgent);
-        Case(kUriProxyTx, MeshCoP::BorderAgent);
-#endif
-
-    default:
-        didHandle = false;
-        break;
+        Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMessage, aMessageInfo);
+        didHandle = true;
     }
-
-#undef Case
 
     return didHandle;
 }
 
-#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
+#endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 } // namespace Tmf
 } // namespace ot

@@ -347,4 +347,8 @@ extern const mm_allocator_t g_tlsf_allocator;
 /* Global manager instance - the only global variable */
 extern mem_manager_t g_mem_manager;
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* __MM_H */

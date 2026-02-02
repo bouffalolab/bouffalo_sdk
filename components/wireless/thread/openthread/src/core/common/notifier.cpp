@@ -33,12 +33,7 @@
 
 #include "notifier.hpp"
 
-#include "border_router/routing_manager.hpp"
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -48,51 +43,27 @@ Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTask(aInstance)
 {
-    for (ExternalCallback &callback : mExternalCallbacks)
-    {
-        callback.Clear();
-    }
 }
 
-Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
+Error Notifier::RegisterCallback(StateChangedCallback aCallback, void *aContext)
 {
-    Error             error          = kErrorNone;
-    ExternalCallback *unusedCallback = nullptr;
+    Error            error = kErrorNone;
+    ExternalCallback newCallback;
 
-    VerifyOrExit(aCallback != nullptr);
-
-    for (ExternalCallback &callback : mExternalCallbacks)
-    {
-        VerifyOrExit(!callback.Matches(aCallback, aContext), error = kErrorAlready);
-
-        if (!callback.IsSet() && (unusedCallback == nullptr))
-        {
-            unusedCallback = &callback;
-        }
-    }
-
-    VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
-
-    unusedCallback->Set(aCallback, aContext);
+    newCallback.Set(aCallback, aContext);
+    VerifyOrExit(!mExternalCallbacks.Contains(newCallback), error = kErrorAlready);
+    error = mExternalCallbacks.PushBack(newCallback);
 
 exit:
     return error;
 }
 
-void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
+void Notifier::RemoveCallback(StateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != nullptr);
+    ExternalCallback callbackToRemove;
 
-    for (ExternalCallback &callback : mExternalCallbacks)
-    {
-        if (callback.Matches(aCallback, aContext))
-        {
-            callback.Clear();
-        }
-    }
-
-exit:
-    return;
+    callbackToRemove.Set(aCallback, aContext);
+    mExternalCallbacks.Remove(callbackToRemove);
 }
 
 void Notifier::Signal(Event aEvent)
@@ -127,6 +98,18 @@ void Notifier::EmitEvents(void)
     // Emit events to core internal modules
 
     Get<Mle::Mle>().HandleNotifierEvents(events);
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    Get<BackboneRouter::Leader>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+    Get<Dhcp6::Server>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+    Get<NeighborDiscovery::Agent>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+    Get<Dhcp6::Client>().HandleNotifierEvents(events);
+#endif
     Get<EnergyScanServer>().HandleNotifierEvents(events);
 #if OPENTHREAD_FTD
     Get<MeshCoP::JoinerRouter>().HandleNotifierEvents(events);
@@ -180,11 +163,18 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    Get<Srp::Server>().HandleNotifierEvents(events);
+#endif
+
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
     // The `NetworkData::Publisher` is notified last (e.g., after SRP
     // client) to allow other modules to request changes to what is
     // being published (if needed).
     Get<NetworkData::Publisher>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+    Get<Utils::LinkMetricsManager>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
@@ -207,7 +197,7 @@ void Notifier::LogEvents(Events aEvents) const
     bool                           didLog   = false;
     String<kFlagsStringBufferSize> string;
 
-    for (uint8_t bit = 0; bit < sizeof(Events::Flags) * CHAR_BIT; bit++)
+    for (uint8_t bit = 0; bit < BitSizeOf(Events::Flags); bit++)
     {
         VerifyOrExit(flags != 0);
 

@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for History Tracker module.
- *
  */
 
 #ifndef CONFIG_HISTORY_TRACKER_H_
 #define CONFIG_HISTORY_TRACKER_H_
 
 /**
+ * @addtogroup config-history-tracker
+ *
+ * @brief
+ *   This module includes configuration variables for History Tracker.
+ *
+ * @{
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
  *
  * Define as 1 to enable History Tracker module.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE 0
@@ -51,7 +58,6 @@
  * Specifies the maximum number of entries in Network Info (role, mode, partition ID, RLOC16) history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE 32
@@ -63,7 +69,6 @@
  * Specifies the maximum number of entries in unicast IPv6 address history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE 20
@@ -75,7 +80,6 @@
  * Specifies the maximum number of entries in multicast IPv6 address history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_MULTICAST_ADDRESS_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_MULTICAST_ADDRESS_LIST_SIZE 20
@@ -87,7 +91,6 @@
  * Specifies the maximum number of entries in RX history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any RX history.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE 32
@@ -99,7 +102,6 @@
  * Specifies the maximum number of entries in TX history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any TX history.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE 32
@@ -109,7 +111,6 @@
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_EXCLUDE_THREAD_CONTROL_MESSAGES
  *
  * Define as 1 to exclude Thread Control message (e.g., MLE, TMF) from TX and RX history.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_EXCLUDE_THREAD_CONTROL_MESSAGES
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_EXCLUDE_THREAD_CONTROL_MESSAGES 1
@@ -121,7 +122,6 @@
  * Specifies the maximum number of entries in neighbor table history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any neighbor table history.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE 64
@@ -133,7 +133,6 @@
  * Specifies the maximum number of entries in router table history list.
  *
  * Can be set to zero to configure History Tracker module not to collect any router table history.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE 256
@@ -145,7 +144,6 @@
  * Specifies the maximum number of entries in Network Data On Mesh Prefix history list.
  *
  * Can be set to zero to configure History Tracker module not to collect prefix info.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE 32
@@ -157,10 +155,24 @@
  * Specifies the maximum number of entries in Network Data External Route history list.
  *
  * Can be set to zero to configure History Tracker module not to collect route info.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE 32
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE
+ *
+ * Specifies the maximum number of entries in Border Agent ePSKc history list.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any ePSKc journey info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE 64
+#endif
+
+/**
+ * @}
+ */
 
 #endif // CONFIG_HISTORY_TRACKER_H_

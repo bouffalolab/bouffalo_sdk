@@ -35,8 +35,7 @@
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -52,7 +51,7 @@ Leader::Leader(Instance &aInstance)
 void Leader::Reset(void)
 {
     // Invalid server short address indicates no available Backbone Router service in the Thread Network.
-    mConfig.mServer16 = Mac::kShortAddrInvalid;
+    mConfig.mServer16 = Mle::kInvalidRloc16;
 
     // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
     mDomainPrefix.SetLength(0);
@@ -75,8 +74,7 @@ Error Leader::GetServiceId(uint8_t &aServiceId) const
     Error error = kErrorNone;
 
     VerifyOrExit(HasPrimary(), error = kErrorNotFound);
-    error = Get<NetworkData::Service::Manager>().GetServiceId<NetworkData::Service::BackboneRouter>(
-        /* aServerStable */ true, aServiceId);
+    error = Get<NetworkData::Service::Manager>().GetBackboneRouterServiceId(aServiceId);
 
 exit:
     return error;
@@ -108,12 +106,16 @@ const char *Leader::StateToString(State aState)
         "Unchanged",       //  (5) kStateUnchanged
     };
 
-    static_assert(0 == kStateNone, "kStateNone value is incorrect");
-    static_assert(1 == kStateAdded, "kStateAdded value is incorrect");
-    static_assert(2 == kStateRemoved, "kStateRemoved value is incorrect");
-    static_assert(3 == kStateToTriggerRereg, "kStateToTriggerRereg value is incorrect");
-    static_assert(4 == kStateRefreshed, "kStateRefreshed value is incorrect");
-    static_assert(5 == kStateUnchanged, "kStateUnchanged value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateNone);
+        ValidateNextEnum(kStateAdded);
+        ValidateNextEnum(kStateRemoved);
+        ValidateNextEnum(kStateToTriggerRereg);
+        ValidateNextEnum(kStateRefreshed);
+        ValidateNextEnum(kStateUnchanged);
+    };
 
     return kStateStrings[aState];
 }
@@ -127,20 +129,27 @@ const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
         "Unchanged", // (3) kDomainPrefixUnchanged
     };
 
-    static_assert(0 == kDomainPrefixAdded, "kDomainPrefixAdded value is incorrect");
-    static_assert(1 == kDomainPrefixRemoved, "kDomainPrefixRemoved value is incorrect");
-    static_assert(2 == kDomainPrefixRefreshed, "kDomainPrefixRefreshed value is incorrect");
-    static_assert(3 == kDomainPrefixUnchanged, "kDomainPrefixUnchanged value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kDomainPrefixAdded);
+        ValidateNextEnum(kDomainPrefixRemoved);
+        ValidateNextEnum(kDomainPrefixRefreshed);
+        ValidateNextEnum(kDomainPrefixUnchanged);
+    };
 
     return kEventStrings[aEvent];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void Leader::Update(void)
+void Leader::HandleNotifierEvents(Events aEvents)
 {
-    UpdateBackboneRouterPrimary();
-    UpdateDomainPrefixConfig();
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        UpdateBackboneRouterPrimary();
+        UpdateDomainPrefixConfig();
+    }
 }
 
 void Leader::UpdateBackboneRouterPrimary(void)
@@ -152,11 +161,11 @@ void Leader::UpdateBackboneRouterPrimary(void)
 
     if (config.mServer16 != mConfig.mServer16)
     {
-        if (config.mServer16 == Mac::kShortAddrInvalid)
+        if (config.mServer16 == Mle::kInvalidRloc16)
         {
             state = kStateRemoved;
         }
-        else if (mConfig.mServer16 == Mac::kShortAddrInvalid)
+        else if (mConfig.mServer16 == Mle::kInvalidRloc16)
         {
             state = kStateAdded;
         }
@@ -166,7 +175,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
             state = kStateToTriggerRereg;
         }
     }
-    else if (config.mServer16 == Mac::kShortAddrInvalid)
+    else if (config.mServer16 == Mle::kInvalidRloc16)
     {
         // If no Primary all the time.
         state = kStateNone;
@@ -185,7 +194,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     }
 
     // Restrain the range of MLR timeout to be always valid
-    if (config.mServer16 != Mac::kShortAddrInvalid)
+    if (config.mServer16 != Mle::kInvalidRloc16)
     {
         uint32_t origTimeout = config.mMlrTimeout;
 

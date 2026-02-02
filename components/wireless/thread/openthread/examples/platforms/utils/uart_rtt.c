@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements the RTT implementation of the uart API.
- *
  */
 
 #include <stdint.h>
@@ -40,11 +39,11 @@
 #include <utils/code_utils.h>
 #include <openthread/error.h>
 
+#if OPENTHREAD_UART_RTT_ENABLE
+
 #include "SEGGER_RTT.h"
 #include "uart.h"
 #include "uart_rtt.h"
-
-#if OPENTHREAD_UART_RTT_ENABLE
 
 static bool sUartInitialized = false;
 static bool sUartPendingUp   = false;
