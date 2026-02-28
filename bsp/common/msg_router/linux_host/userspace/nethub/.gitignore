@@ -1,0 +1,26 @@
+# Build outputs
+output/
+*.o
+*.a
+*.ko
+
+# Executables
+bflbwifictrl/app/bflbwifid
+bflbwifictrl/app/bflbwifictrl
+virtualchan/nethub_vchan_app
+
+# Runtime files
+*.log
+*.pid
+/tmp/*.sock
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Debug files
+core*
+*.core

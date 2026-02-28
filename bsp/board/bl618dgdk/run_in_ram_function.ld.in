@@ -1,0 +1,2102 @@
+*(.text.interrupt0_handler)
+*(.text.interrupt1_handler)
+*(.text.interrupt_entry)
+
+*(
+.text.trigger_tpc_end
+.text.trigger_tpc_end.*
+.text.tpc_corr_set
+.text.tpc_corr_set.*
+.text.tpc_corr_get
+.text.tpc_corr_get.*
+)
+
+*(
+.text.txl_clear_protection
+)
+
+*(
+.rodata.TX_HE_106_TONE_TO_MIN_SEP
+.rodata.TX_HE_26_TONE_TO_MIN_SEP
+.rodata.TX_HE_52_TONE_TO_MIN_SEP
+.rodata.TX_HE_ER_RU106_RATE_TO_32US_LEN
+.rodata.TX_HE_ER_RU106_RATE_TO_MIN_SEP
+.rodata.TX_HE_RATE_TO_32US_LEN
+.rodata.TX_HE_RATE_TO_MIN_SEP
+.rodata.fragb2b1_to_bitmap_len
+.rodata.ru_1us_tables
+.rodata.TX_VHT_RATE_TO_32US_LEN
+.rodata.txl_cfm_evt_bit
+.rodata.TX_VHT_RATE_TO_MIN_SEP
+.rodata.mac_aci2ac
+.rodata.mac_tid2ac
+)
+*(
+.text.txl_vht_idx_to_32us_len_get
+.text.txl_vht_idx_to_1us_len_get
+.text.txl_fill_bar
+.text.txl_agg_he_tb_prep_for_cat
+.text.txl_agg_set_uph
+.text.txl_ampdu_constraints_get
+.text.txl_agg_is_int_or_mgt
+.text.txl_agg_split
+.text.txl_he_txop_dur_rtscts_thres_apply
+.text.txl_he_idx_to_32us_len_get
+.text.txl_he_idx_to_1us_len_get
+.text.txl_he_er_ru106_idx_to_32us_len_get
+.text.txl_he_er_ru106_idx_to_1us_len_get
+.text.txl_he_tb_ppdu_chain
+.text.txl_he_tb_send_qos_null
+.text.txl_he_tb_free_done
+.text.ke_evt_set
+.text.txl_he_trigger_push
+.text.txl_he_mu_edca_blocked
+.text.rxl_rxcntrl_frame
+.text.co_list_cnt
+.text.hal_machw_disable_int
+.text.txl_ba_push
+.text.trpc_get_default_power_idx
+.text.txl_agg_he_tb_prep
+.text.txl_agg_change_to_singleton
+.text.co_list_push_back
+.text.macif_buffered_get
+.text.rxl_frame_release
+.text.wl_wlan_power_cfg_get
+.text.txl_he_txop_dur_rtscts_thres_ampdu_check
+.text.rxl_rxdesc_ready_for_processing
+.text.rxl_immediate_frame_get
+.text.txl_cfm_push
+.text.txl_he_decode_m_ba
+.text.co_list_pop_front
+.text.txl_agg_check_saved_agg_desc
+.text.txl_he_txop_dur_rtscts_thres_mpdu_check
+.text.txl_cntrl_halt_ac
+.text.co_list_push_front
+.text.co_list_extract
+.text.txl_he_tb_prot_trigger
+.text.txl_agg_reconfig_ampdu
+.text.txl_agg_bw_drop_handle
+.text.txl_agg_mpdu_nb_delims
+.text.co_list_insert_after
+.text.txl_prot_trigger
+.text.interrupt1_handler
+.text.tpc_get_vif_tx_power_vs_rate
+.text.txl_he_ampdu_param_get
+.text.txl_frame_cfm
+)
+*(
+.rodata.TX_HE_106_TONE_TO_MIN_SEP
+.rodata.TX_HE_26_TONE_TO_MIN_SEP
+.rodata.TX_HE_52_TONE_TO_MIN_SEP
+.rodata.TX_HE_RATE_TO_32US_LEN
+.rodata.TX_HE_RATE_TO_MIN_SEP
+.rodata.fragb2b1_to_bitmap_len
+.rodata.ru_1us_tables
+.rodata.txl_cfm_evt_bit
+.rodata.mac_aci2ac
+)
+*(
+.text.txl_fill_bar
+.text.txl_he_txop_dur_rtscts_thres_apply
+.text.txl_he_idx_to_1us_len_get
+.text.txl_he_tb_ampdu_mpdu_transmit_trigger
+.text.txl_he_set_new_edca_head
+.text.txl_he_restart_edca
+.text.txl_he_mu_edca_timer
+.text.txl_he_mu_edca_start
+.text.txl_he_tb_mpdu_transmit_trigger
+.text.mm_timer_hw_set
+.text.cmp_abs_time
+.text.txl_agg_finish
+.text.ke_evt_set
+.text.txl_he_trigger_push
+.text.txl_agg_check
+.text.rxl_rxcntrl_frame
+.text.co_list_cnt
+.text.hal_machw_disable_int
+.text.txl_ba_push
+.text.trpc_get_default_power_idx
+.text.co_list_push_back
+.text.txl_he_tb_transmit_trigger
+.text.rxl_frame_release
+.text.wl_wlan_power_cfg_get
+.text.txl_he_txop_dur_rtscts_thres_ampdu_check
+.text.rxl_rxdesc_ready_for_processing
+.text.rxl_immediate_frame_get
+.text.txl_cfm_push
+.text.txl_he_decode_m_ba
+.text.co_list_pop_front
+.text.txl_he_txop_dur_rtscts_thres_mpdu_check
+.text.co_list_extract
+.text.txl_agg_release
+.text.txl_he_tb_transmit_cancelled
+.text.txl_cntrl_newhead
+.text.txl_transmit_trigger
+.text.mm_timer_set
+.text.co_list_insert
+.text.tpc_get_vif_tx_power_vs_rate
+.text.txl_frame_cfm
+.text.txl_frame_exchange_chain
+)
+
+/* cache function for tg */
+
+*(
+.text.txl_vht_idx_to_32us_len_get
+.text.txl_vht_idx_to_1us_len_get
+.text.txl_fill_bar
+.text.txl_agg_he_tb_prep_for_cat
+.text.txl_agg_set_uph
+.text.txl_ampdu_constraints_get
+.text.txl_agg_is_int_or_mgt
+.text.txl_agg_split
+.text.txl_he_txop_dur_rtscts_thres_apply
+.text.txl_he_idx_to_32us_len_get
+.text.txl_he_idx_to_1us_len_get
+.text.txl_he_er_ru106_idx_to_32us_len_get
+.text.txl_he_er_ru106_idx_to_1us_len_get
+.text.txl_he_tb_ppdu_chain
+.text.txl_he_tb_send_qos_null
+.text.txl_he_tb_free_done
+.text.ke_evt_set
+.text.txl_he_trigger_push
+.text.txl_he_mu_edca_blocked
+.text.rxl_rxcntrl_frame
+.text.co_list_cnt
+.text.hal_machw_disable_int
+.text.txl_ba_push
+.text.trpc_get_default_power_idx
+.text.txl_agg_he_tb_prep
+.text.txl_agg_change_to_singleton
+.text.co_list_push_back
+.text.macif_buffered_get
+.text.rxl_frame_release
+.text.wl_wlan_power_cfg_get
+.text.txl_he_txop_dur_rtscts_thres_ampdu_check
+.text.rxl_rxdesc_ready_for_processing
+.text.rxl_immediate_frame_get
+.text.txl_cfm_push
+.text.txl_he_decode_m_ba
+.text.co_list_pop_front
+.text.txl_agg_check_saved_agg_desc
+.text.txl_he_txop_dur_rtscts_thres_mpdu_check
+.text.txl_cntrl_halt_ac
+.text.co_list_push_front
+.text.co_list_extract
+.text.txl_he_tb_prot_trigger
+.text.txl_agg_reconfig_ampdu
+.text.txl_agg_bw_drop_handle
+.text.txl_agg_mpdu_nb_delims
+.text.co_list_insert_after
+.text.txl_prot_trigger
+.text.tpc_get_vif_tx_power_vs_rate
+.text.txl_he_ampdu_param_get
+.text.txl_frame_cfm
+)
+
+*(
+.rodata.TX_TIMEOUT
+.rodata.tx_agg_desc_array
+.rodata.tx_agg_desc_cnt
+.rodata.TX_HE_ER_RU106_RATE_TO_32US_LEN
+.rodata.TX_HE_ER_RU106_RATE_TO_MIN_SEP
+.rodata.TX_HE_RATE_TO_32US_LEN
+.rodata.TX_HE_RATE_TO_MIN_SEP
+.rodata.TASK_DESC
+.rodata.rxu_cntrl_rfc1042_hdr
+.rodata.sbox_t
+.rodata.x_time2_sbox_t
+.rodata.x_time3_sbox_t
+.rodata.llc_bridge_tunnel_hdr
+.rodata.TX_VHT_RATE_TO_32US_LEN
+.rodata.twt_default_handler
+.rodata.scanu_default_handler
+.rodata.agcmem
+.rodata.mac_id2rate
+.rodata.sm_default_state
+.rodata.memp_NETCONN
+.rodata.scanu_scanning
+.rodata.bam_default_state
+.rodata.memp_NETBUF
+.rodata.me_default_handler
+.rodata.memp_TCPIP_MSG_API
+.rodata.mm_default_handler
+.rodata.memp_TCP_SEG
+.rodata.twt_default_state
+.rodata.memp_pools
+.rodata.mac_ac2aci
+.rodata.nx_txdesc_cnt
+.rodata.bam_default_handler
+.rodata.memp_PBUF
+.rodata.scanu_state_handler
+.rodata.memp_PBUF_POOL
+.rodata.mac_ac2uapsd
+.rodata.memp_TCP_PCB
+.rodata.memp_RAW_PCB
+.rodata.scanu_idle
+.rodata.memp_NETDB
+.rodata.llc_rfc1042_hdr
+.rodata.scan_default_handler
+.rodata.sm_default_handler
+.rodata.mac_addr_bcst
+.rodata.memp_REASSDATA
+.rodata.me_default_state
+.rodata.memp_TCP_PCB_LISTEN
+.rodata.memp_SYS_TIMEOUT
+.rodata.rxv2macrate
+.rodata.mm_state_handler
+.rodata.TX_VHT_RATE_TO_MIN_SEP
+.rodata.rcon_t
+.rodata.scanu_default_state
+.rodata.mac_tid2ac
+.rodata.scan_default_state
+.rodata.memp_UDP_PCB
+.rodata.mm_default_state
+)
+
+*(
+.text.phy_hw_set_channel.constprop.0.isra.0
+.text.rf_pri_txcal_w2reg
+.text.rf_pri_pwr_table_w2reg
+.text.prvIsQueueEmpty
+.text.prvCopyDataToQueue
+.text.prvCopyDataFromQueue
+.text.prvUnlockQueue
+.text.prvAddCurrentTaskToDelayedList
+.text.prvResetNextTaskUnblockTime
+.text.fhost_tx_get_txq
+.text.fhost_tx_del_txq_from_sched
+.text.fhost_tx_add_txq_to_sched.isra.0
+.text.fhost_tx_schedule
+.text.do_memp_free_pool
+.text.txl_payload_handle.isra.0
+.text.txl_vht_idx_to_32us_len_get
+.text.txl_vht_idx_to_1us_len_get
+.text.txl_fill_bar
+.text.txl_ampdu_constraints_get
+.text.txl_he_txop_dur_rtscts_thres_apply
+.text.txl_he_idx_to_32us_len_get
+.text.txl_he_idx_to_1us_len_get
+.text.txl_he_er_ru106_idx_to_32us_len_get
+.text.txl_he_er_ru106_idx_to_1us_len_get
+.text.txl_he_set_new_edca_head
+.text.txl_he_restart_edca
+.text.txl_he_trig_time
+.text.rxl_amsdu_subframe_len_get
+.text.rxl_payload_transfer
+.text.rxl_go_to_last_rbd.constprop.0
+.text.sta_mgmt_entry_init
+.text.vif_mgmt_bcn_wait_to_evt
+.text.vif_mgmt_bcn_to_evt
+.text.mm_ap_tbtt_move_cb
+.text.mm_ap_probe_cfm
+.text.mm_cfg_rssi_req_handler
+.text.mm_set_ps_options_req_handler
+.text.mm_set_txop_rts_thres_req_handler
+.text.mm_set_bss_color_req_handler
+.text.mm_set_ps_mode_req_handler
+.text.mm_tim_update_req_handler
+.text.mm_bcn_change_req_handler
+.text.mm_remain_on_channel_req_handler
+.text.mm_chan_ctxt_unlink_req_handler
+.text.mm_ba_del_req_handler
+.text.mm_sta_del_req_handler
+.text.mm_sta_add_req_handler
+.text.mm_key_del_req_handler
+.text.mm_key_add_req_handler
+.text.mm_set_power_req_handler
+.text.mm_force_idle_req_handler
+.text.mm_set_uora_req_handler
+.text.mm_set_mu_edca_req_handler
+.text.mm_set_edca_req_handler
+.text.mm_reset_req_handler
+.text.mm_version_req_handler
+.text.mm_start_req_handler
+.text.mm_hw_config_handler
+.text.mm_set_idle_req_handler
+.text.mm_timer_hw_set
+.text.cmp_abs_time
+.text.mm_tim_update_proceed
+.text.mm_bcn_transmitted
+.text.mm_bcn_update
+.text.ke_timer_hw_set
+.text.cmp_abs_time
+.text.cmp_timer_id
+.text.cmp_dest_id
+.text.mac_ext_ie_find
+.text.td_timer_end
+.text.mm_raw_send_req_handler
+.text.cfm_raw_send
+.text.me_data_path_flushed_ind_handler
+.text.me_set_control_port_req_handler
+.text.me_config_monitor_req_handler
+.text.me_rc_set_rate_req_handler
+.text.me_param_req_handler
+.text.me_rc_stats_req_handler
+.text.me_traffic_ind_req_handler
+.text.me_chan_config_req_handler
+.text.mm_set_ps_mode_cfm_handler
+.text.mm_set_idle_cfm_handler
+.text.me_set_ps_disable_req_handler
+.text.me_set_active_req_handler
+.text.me_sta_add_req_handler
+.text.me_config_req_handler
+.text.me_sta_del_req_handler
+.text.me_set_ps_mode_req_handler
+.text.michael_block
+.text.me_data_path_flushed_ind_handler
+.text.sm_ft_auth_rsp_handler
+.text.sm_retry_connect_start_ind_handler
+.text.rxu_mgt_ind_handler
+.text.mm_chan_ctxt_unlink_cfm_handler
+.text.mm_sta_del_cfm_handler
+.text.mm_bss_param_setting_handler
+.text.me_set_ps_disable_cfm_handler
+.text.sm_fix_lowrate_connect_req_handler
+.text.sm_rc_req_timeout_handler
+.text.me_set_active_cfm_handler
+.text.mm_connection_loss_ind_handler
+.text.sm_rsp_timeout_ind_handler
+.text.sm_connect_req_handler
+.text.sm_deauth_timeout_ind_handler
+.text.sm_external_auth_required_rsp_handler
+.text.mm_set_vif_state_cfm_handler
+.text.sm_disconnect_req_handler
+.text.mm_sta_add_cfm_handler
+.text.sm_bss_config_init
+.text.sm_bss_config_push
+.text.sm_frame_with_rsp_send.constprop.0
+.text.sm_frame_tx_cfm_handler
+.text.sm_delete_resources
+.text.sm_disconnect_finish
+.text.sm_deauth_cfm
+.text.sm_connect_ind_withdeauth_cfm
+.text.mm_chan_ctxt_unlink_cfm_handler
+.text.mm_set_vif_state_cfm_handler
+.text.me_set_ps_disable_cfm_handler
+.text.mm_bss_param_setting_handler
+.text.mm_bcn_change_cfm_handler
+.text.me_set_active_cfm_handler
+.text.rxu_mgt_ind_handler
+.text.rxu_upload_cfm
+.text.rxu_cntrl_protected_handle
+.text.rxu_cntrl_check_pn
+.text.rxu_cntrl_duplicate_check
+.text.rxu_cntrl_mic_check
+.text.rxu_cntrl_desc_prepare
+.text.rxu_cntrl_defrag_timeout_cb
+.text.rxu_msdu_upload_and_indicate
+.text.rxu_cntrl_reord_fwd
+.text.rxu_cntrl_reord_flush
+.text.rxu_cntrl_reord_timeout_cb
+.text.rxu_mpdu_upload_and_indicate
+.text.rxu_cntrl_spurious_check
+.text.rxu_mgt_frame_check
+.text.txu_cntrl_sec_hdr_append
+.text.txu_cntrl_sechdr_len_compute
+.text.rxu_mgt_ind_handler
+.text.bam_del_ba_idx_handler
+.text.mm_ba_add_cfm_handler
+.text.mm_ba_del_cfm_handler
+.text.bam_activity_timeout_ind_handler
+.text.bam_add_ba_rsp_timeout_ind_handler
+.text.bam_baw_index_compute
+.text.bam_baw_index_compute_opt
+.text.bam_set_baw_state
+.text.bam_delba_status_cfm
+.text.twt_action_frame_prepare
+.text.twt_save_ind_req_type
+.text.twt_schedule_next_sp
+.text.twt_wake_up
+.text.twt_min_wake_dur_exp
+.text.twt_send_setup_ind
+.text.twt_teardown_req_handler
+.text.twt_setup_req_handler
+.text.rxu_mgt_ind_handler
+.text.aes_encrypt_block
+.text.aes_cmac_shift_sub_key
+.text.me_build_add_ba_req
+.text.txl_agg_finish
+.text.me_add_ie_ssid
+.text.hal_machw_tsf_read
+.text.ps_init
+.text.me_sta_add_cfm_alloc
+.text.mac_ie_csa_find
+.text.macif_tx_evt
+.text.td_sta_reset
+.text.me_update_buffer_control
+.text.mm_hw_info_set
+.text.phy_get_ntx
+.text.txl_cfm_init
+.text.mac_paid_gid_ap_compute
+.text.mm_ba_agmt_rx_exists
+.text.rxu_cntrl_frame_handle
+.text.crm_init
+.text.phy_mu_mimo_rx_supported
+.text.vTaskPlaceOnEventList
+.text.vTaskInternalSetTimeOutState
+.text.bam_send_air_action_frame
+.text.vTaskSuspendAll
+.text.sm_get_rsnie_pmkid_count
+.text.mac_ie_ecsa_find
+.text.sm_assoc_done
+.text.me_vht_bandwidth_parse
+.text.rtos_wifi_task_resume
+.text.rxu_cntrl_reord_create
+.text.chan_tbtt_updated
+.text.macif_rx_desc_upload
+.text.ke_msg_send
+.text.mm_sta_tbtt
+.text.mm_sec_machwaddr_wr
+.text.mac_ie_he_capa_find
+.text.xQueueIsQueueEmptyFromISR
+.text.sm_assoc_rsp_handler
+.text.xTaskGetSchedulerState
+.text.macif_kmsg_fwd
+.text.phy_get_rf_gain_capab
+.text.bba_pd_loop
+.text.bam_delete_ba_agg
+.text.mac_cipher_suite_value
+.text.ke_evt_set
+.text.mm_timer_init
+.text.mac_ie_sec_chnl_offset_find
+.text.rf_pri_optimize
+.text.me_11n_nss_max
+.text.uxListRemove
+.text.rxu_cntrl_defrag_free_by_sta_idx
+.text.rf_pri_set_channel_lp_pwr_comp
+.text.mac_ie_he_oper_find
+.text.phy_get_channel
+.text.ps_traffic_status_update
+.text.me_extract_ht_capa
+.text.rxl_mpdu_copy
+.text.txl_frame_push_force
+.text.txl_agg_check
+.text.vif_mgmt_set_ap_bcn_int
+.text.ps_check_frame
+.text.txl_cfm_flush
+.text.vif_mgmt_unregister
+.text.mac_ie_op_mode_notif_find
+.text.rtos_mutex_lock
+.text.rf_pri_get_rcal_code
+.text.chan_is_on_operational_channel
+.text.bam_baw_init
+.text.bam_send_del_ba_agg
+.text.sm_connect_ind
+.text.xTaskGetTickCount
+.text.rf_pri_set_channel_total_pwr_comp
+.text.me_freq_to_chan_def
+.text.me_init
+.text.tx_txdesc_get
+.text.me_extract_edca_params
+.text.xTaskPriorityInherit
+.text.hal_machw_monitor_mode
+.text.rxu_stat_desc_check
+.text.phy_get_nrx
+.text.fhost_tx_get_hw_desc_pointers
+.text.sm_bss_list_empty_check
+.text.txl_reset
+.text.mac_ie_ds_find
+.text.ke_msg_free
+.text.ke_timer_clear
+.text.bam_rx_active
+.text.mm_tbtt_compute
+.text.me_add_ie_op_mode
+.text.mac_ie_wmm_param_find
+.text.me_build_deauthenticate
+.text.xTaskGenericNotify
+.text.bam_send_mm_ba_del_req
+.text.ke_state_get
+.text.mm_back_to_host_idle
+.text.mac_ie_uora_find
+.text.bba_set_pd_gain
+.text.twt_check_end_of_sp
+.text.mm_hw_ap_info_set
+.text.txl_he_reset
+.text.twt_sp_end
+.text.co_list_cnt
+.text.td_pck_ind
+.text.hal_machw_reset
+.text.uxQueueMessagesWaiting
+.text.rtos_free
+.text.txl_he_uora_param_set
+.text.mem_free
+.text.txl_agg_init
+.text.hal_machw_disable_int
+.text.txl_cntrl_flush_ac
+.text.me_extract_country_reg
+.text.ke_timer_reset
+.text.ke_msg_save
+.text.mm_bcn_init_vif
+.text.chan_ctxt_add
+.text.me_extract_vht_capa
+.text.trpc_update_power
+.text.tx_txdesc_init
+.text.phy_bfmee_supported
+.text.twt_get_flows
+.text.ps_check_beacon
+.text.vTaskSwitchContext
+.text.bam_start_activity_timer
+.text.phy_ldpc_tx_supported
+.text.me_init_rate
+.text.vApplicationStackOverflowHook
+.text.ke_queue_extract
+.text.txl_he_tb_enable
+.text.ps_update_tx_wait_period
+.text.memp_free
+.text.sta_mgmt_send_postponed_frame
+.text.mm_tim_update
+.text.me_traffic_ind_req_set_uapsd
+.text.rf_pri_update_param
+.text.me_legacy_rate_lowest_rate_get
+.text.xTaskCheckForTimeOut
+.text.trpc_get_default_power_idx
+.text.ke_timer_set
+.text.xTaskResumeAll
+.text.hal_machw_search_addr
+.text.trpc_update_vs_channel
+.text.me_sta_del
+.text.me_rate_translate
+.text.me_extract_mu_edca_params
+.text.sm_ft_auth_over_air_start
+.text.fhost_cntrl_write_msg
+.text.me_build_del_ba
+.text.ke_msg_forward_and_change_id
+.text.mac_vsie_find
+.text.macif_rx_buf_ind
+.text.sm_connect_ind_withdeauth
+.text.txl_he_htc_get
+.text.mm_env_max_ampdu_duration_set
+.text.rf_pri_set_bandwidth
+.text.txl_cntrl_inc_pck_cnt
+.text.txl_frame_send_null_frame
+.text.xTaskRemoveFromEventList
+.text.net_al_tx_cfm
+.text.phy_vht_supported
+.text.me_11ac_mcs_max
+.text.sm_auth_send
+.text.chan_scan_req
+.text.macif_rx_buf_get
+.text.mm_ap_tbtt_move
+.text.co_list_push_back
+.text.mac_ie_non_txed_bssid_capa_find
+.text.vif_mgmt_bcn_recv
+.text.tx_txdesc_release
+.text.me_sta_bw_nss_max_upd
+.text.macif_buffered_get
+.text.txu_cntrl_push
+.text.mac_ie_ssid_find
+.text.xQueueGenericSendFromISR
+.text.chan_is_tx_allowed
+.text.mm_bcn_init
+.text.vif_mgmt_bcn_to_prog
+.text.mm_sta_del
+.text.txu_cntrl_repush
+.text.txu_cntrl_frame_build
+.text.rxl_frame_release
+.text.hal_machw_tsf_move
+.text.rfc_config_bandwidth
+.text.mac_ie_multi_bssid_index_find
+.text.sm_ft_auth_over_air_end
+.text.sta_mgmt_init
+.text.bam_delete_all_ba_agg
+.text.macif_tx_data_ind
+.text.bam_get_task_to_process_tx
+.text.mac_ie_power_constraint_find
+.text.wl_logger
+.text.txu_cntrl_protect_mgmt_frame
+.text.chan_bcn_detect_start
+.text.ps_check_tx_frame
+.text.txl_frame_send_qosnull_frame
+.text.me_init_bcmc_rate
+.text.sys_mutex_lock
+.text.wl_wlan_power_cfg_get
+.text.bam_get_avail_task
+.text.me_send_data_flushed_ind
+.text.rxl_mpdu_transfer
+.text.txl_he_txop_dur_rtscts_thres_ampdu_check
+.text.rxl_rxdesc_ready_for_processing
+.text.chan_raw_send_req
+.text.mm_sec_machwaddr_del
+.text.txu_cntrl_cfm
+.text.txl_frame_get
+.text.phy_get_nss
+.text.txl_he_init
+.text.me_extract_uora_params
+.text.phy_set_group_id_info
+.text.mm_hw_ap_info_reset
+.text.co_list_insert_after_fast
+.text.vTaskGenericNotifyGiveFromISR
+.text.chan_tbtt_start
+.text.ps_uapsd_set
+.text.mm_ba_agmt_tx_exists
+.text.ke_state_set
+.text.me_legacy_ridx_min
+.text.me_bw_check
+.text.sm_bss_config_send
+.text.macif_tx_cfm_push
+.text.co_list_pop_front
+.text.mac_ie_rsn_find
+.text.me_mic_init
+.text.rxu_cntrl_reord_delete
+.text.crm_get_mac_freq
+.text.sm_disconnect_continue
+.text.platform_malloc
+.text.rtos_queue_read
+.text.rf_pri_set_temp_comp
+.text.mac_ie_vht_oper_find
+.text.rxu_cntrl_init
+.text.txl_agg_set_ampdu_protection
+.text.mac_akm_suite_value
+.text.wl_wlan_bb_post_proc
+.text.mac_ie_mu_edca_find
+.text.wl_wlan_bb_reset
+.text.me_get_ampdu_params
+.text.chan_ctxt_unlink
+.text.twt_send_teardown_frame
+.text.me_extract_he_capa
+.text.mac_ie_vht_capa_find
+.text.rxl_rxdesc_get
+.text.vTaskMissedYield
+.text.txl_he_txop_dur_rtscts_thres_mpdu_check
+.text.mm_sec_key_new_cookie
+.text.me_extract_he_oper
+.text.crm_mdm_reset
+.text.bam_search_task_wt_highest_inactivity_time
+.text.mac_ie_sub_non_txed_bssid_find
+.text.txl_cntrl_push
+.text.me_build_associate_req
+.text.rtos_mutex_unlock
+.text.bam_send_mm_ba_add_req
+.text.ps_schedule_td_timer
+.text.pbuf_free
+.text.twt_send_setup_frame
+.text.sta_mgmt_add_key
+.text.me_build_bss_color_reg
+.text.macif_rx_buf_check
+.text.me_traffic_ind_req_len
+.text.fhost_tx_cfm_push
+.text.phy_get_rf_gain_idx
+.text.sm_external_auth_start
+.text.mm_check_rssi
+.text.mm_sta_add
+.text.sm_disconnect_start
+.text.twt_get_flow
+.text.bba_loop
+.text.me_traffic_ind_req_alloc
+.text.td_set_detect_timer
+.text.rtos_queue_write
+.text.td_init
+.text.phy_set_channel
+.text.macif_kmsg_push_t
+.text.tpc_update_tx_power
+.text.txl_frame_init
+.text.sys_arch_protect
+.text.rc2_config_rxgain
+.text.rf_pri_set_channel_pwr_comp
+.text.ps_check_tx_wait_period
+.text.fhost_tx_ps_cleanup_timer_stop
+.text.chan_roc_req
+.text.phy_get_channel_switch_dur
+.text.vAssertCalled
+.text.co_list_insert_before
+.text.txl_buffer_init
+.text.vListInsert
+.text.mm_init
+.text.wl_wlan_bb_pre_proc
+.text.txl_amsdu_get_min_mcs
+.text.macif_max_api_msg_len
+.text.mac_ie_ext_cap_find
+.text.net_buf_tx_free
+.text.sm_assoc_req_send
+.text.txl_cntrl_halt_ac
+.text.hal_machw_idle_req
+.text.bam_tx_cfm
+.text.chan_bcn_to_evt
+.text.bba_reset
+.text.mac_ie_find
+.text.twt_delete_flow
+.text.macif_tx_cfm_start
+.text.rtos_task_notify
+.text.ke_timer_active
+.text.mac_ie_wide_bw_chnl_find
+.text.me_legacy_ridx_max
+.text.mm_check_beacon
+.text.mm_sec_machwkey_wr
+.text.co_list_push_front
+.text.txl_frame_release
+.text.ps_set_mode
+.text.phy_init
+.text.rxu_cntrl_monitor_pm
+.text.txl_frame_send_proper_null_frame
+.text.xTaskIncrementTick
+.text.co_list_extract
+.text.xQueueSemaphoreTake
+.text.ke_msg_alloc
+.text.sm_auth_start
+.text.chan_init
+.text.bam_flush_baw
+.text.mac_ie_country_find
+.text.sta_mgmt_del_key
+.text.co_list_init
+.text.rxl_init
+.text.bba_rssi_correction
+.text.bba_init
+.text.crm_clk_set
+.text.twt_handle_action_frame
+.text.fhost_rx_buf_push
+.text.phy_get_version
+.text.me_build_add_ba_rsp
+.text.vif_mgmt_get_single_sta_vif
+.text.mm_send_connection_loss_ind
+.text.xTaskPriorityDisinherit
+.text.phy_get_antenna_set
+.text.phy_set_aid
+.text.me_mic_calc
+.text.txl_he_start_trigger_scheduler
+.text.mac_ie_ht_oper_find
+.text.tpc_update_frame_tx_power
+.text.txl_agg_push_mpdu
+.text.mac_ie_multi_bssid_find
+.text.me_traffic_ind_req_set_sta_idx
+.text.hal_machw_init
+.text.udelay
+.text.platform_free
+.text.co_crc32
+.text.rxl_reset
+.text.txl_cntrl_newhead
+.text.chan_ctxt_del
+.text.sm_add_chan_ctx
+.text.trpc_init
+.text.me_mic_end
+.text.txl_he_tb_config
+.text.phy_get_bw
+.text.pvTaskIncrementMutexHeldCount
+.text.txl_he_mu_edca_param_set
+.text.vif_mgmt_bcn_wait_to_prog
+.text.bam_param_sta_info_tab_reset
+.text.sys_arch_unprotect
+.text.td_reset
+.text.mac_ie_mgmt_mic_find
+.text.sm_get_bss_params
+.text.txl_agg_reset
+.text.me_set_sta_ht_vht_param
+.text.mac_paid_gid_sta_compute
+.text.vif_mgmt_init
+.text.bam_init
+.text.me_beacon_check
+.text.td_cfm_set_timer
+.text.ke_task_sm_activating
+.text.sys_arch_sem_wait
+.text.sm_sa_query_handler
+.text.sm_set_bss_param
+.text.mm_no_idle_stop
+.text.txl_he_bsr_compute
+.text.mac_ie_wpa_find
+.text.me_extract_rate_set
+.text.rxu_cntrl_get_pm
+.text.txl_cntrl_init
+.text.xQueueReceiveFromISR
+.text.mac_ie_ext_rates_find
+.text.twt_init
+.text.txl_cntrl_push_int
+.text.rxl_mpdu_isr
+.text.vif_mgmt_set_bssid_mask
+.text.sta_mgmt_register
+.text.me_add_ie_supp_rates
+.text.td_pck_ps_ind
+.text.mm_send_csa_traffic_ind
+.text.chan_ctxt_link_monitor
+.text.sm_tx_deauth_operation
+.text.wait_us
+.text.vif_mgmt_del_key
+.text.mm_active
+.text.vTaskEnterCritical
+.text.txl_frame_prepare
+.text.txl_hwdesc_config_post
+.text.rxl_mpdu_partial_transfer
+.text.ke_msg_send_basic
+.text.rtos_queue_is_empty
+.text.vif_mgmt_switch_channel
+.text.txl_frame_send_he_trigger
+.text.sm_external_auth_end
+.text.txl_agg_mpdu_nb_delims
+.text.ke_msg_discard
+.text.mm_timer_set
+.text.rxl_cntrl_evt
+.text.bba_ce_update_capcode
+.text.sm_join_bss
+.text.rxl_hwdesc_monitor
+.text.me_extract_csa
+.text.fhost_tx_release_buf
+.text.chan_is_on_channel
+.text.mm_no_idle_start
+.text.sta_mgmt_unregister
+.text.rfc_config_channel
+.text.phy_he_supported
+.text.co_list_insert
+.text.me_11ac_nss_max
+.text.rxl_hwdesc_init
+.text.td_set_rx_ps_thres
+.text.tpc_set_vif_tx_power
+.text.dma_push
+.text.sm_auth_handler
+.text.me_add_ie_ext_supp_rates
+.text.vif_mgmt_resources_init_before_connect
+.text.mm_bcn_transmit
+.text.txl_cntrl_push_int_force
+.text.td_pack_tim_ind
+.text.me_11ax_mcs_max
+.text.chan_ctxt_update
+.text.me_build_capability
+.text.mm_sec_machwkey_del
+.text.vif_mgmt_register
+.text.vTaskPriorityDisinheritAfterTimeout
+.text.me_extract_power_constraint
+.text.tpc_update_vif_tx_power
+.text.mac_ie_ht_capa_find
+.text.mm_sec_keydump
+.text.vif_mgmt_send_postponed_frame
+.text.macif_kmsg_push
+.text.xQueueGenericSend
+.text.sm_init
+.text.hal_machw_stop
+.text.bba_ce_loop
+.text.packet_send_test
+.text.txu_cntrl_mgmt_mic_pbd_append
+.text.bam_get_task_to_process_rx
+.text.me_add_ie_vht_capa
+.text.mm_timer_clear
+.text.txl_cntrl_tx_check
+.text.tpc_get_vif_tx_power_vs_rate
+.text.txl_he_ampdu_param_get
+.text.txl_frame_init_desc
+.text.mm_bcn_change
+.text.phy_stop
+.text.mac_ie_rates_find
+.text.txl_frame_push
+.text.tpc_get_vif_tx_prot_power_vs_rate
+.text.mm_force_idle_req
+.text.txl_frame_cfm
+.text.me_init_chan
+.text.bam_delete_complete
+.text.xQueueReceive
+.text.sm_external_auth_in_progress
+.text.me_traffic_ind_req_set_tx_avail
+.text.sys_mutex_unlock
+.text.raw_send_set_channel_request
+.text.macif_tx_cfm_done
+.text.bam_check_ba_agg
+.text.me_build_authenticate
+.text.ke_evt_clear
+.text.txl_frame_exchange_chain
+.text.me_add_ie_he_capa
+.text.sm_scan_bss
+.text.co_list_remove
+.text.td_start
+.text.me_legacy_rate_bitfield_build
+.text.me_rate_bitfield_vht_build
+.text.rxl_mpdu_free
+.text.sm_deauth_handler
+.text.me_add_ie_ht_capa
+.text.txl_he_tb_disable
+.text.vif_mgmt_add_key
+.text.ps_check_bcmc
+.text.chan_update_tx_power
+.text.chan_ctxt_link
+.text.txl_cntrl_set_timeout
+.text.mac_ie_erp_find
+.text.vTaskExitCritical
+.text.txl_frame_evt
+.text.mm_env_init
+.text.co_list_find
+.text.tpc_get_vif_tx_power
+)
+*(
+.rodata.fhost_tx_ac2tid
+.rodata.memp_NETCONN
+.rodata.memp_NETBUF
+.rodata.memp_TCPIP_MSG_API
+.rodata.memp_TCP_SEG
+.rodata.memp_pools
+.rodata.memp_PBUF
+.rodata.memp_PBUF_POOL
+.rodata.memp_TCP_PCB
+.rodata.memp_RAW_PCB
+.rodata.memp_NETDB
+.rodata.memp_REASSDATA
+.rodata.memp_TCP_PCB_LISTEN
+.rodata.memp_SYS_TIMEOUT
+.rodata.mac_tid2ac
+.rodata.memp_UDP_PCB
+)
+*(
+.text.prvIsQueueEmpty
+.text.prvCopyDataToQueue
+.text.prvUnlockQueue
+.text.prvAddCurrentTaskToDelayedList
+.text.prvResetNextTaskUnblockTime
+.text.fhost_tx_get_txq
+.text.fhost_tx_del_txq_from_sched
+.text.fhost_tx_add_txq_to_sched.isra.0
+.text.fhost_tx_schedule
+.text.do_memp_free_pool
+.text.pbuf_add_header_impl
+.text.mm_timer_hw_set
+.text.cmp_abs_time
+.text.me_sta_add_cfm_alloc
+.text.vTaskPlaceOnEventList
+.text.net_buf_tx_all_shram
+.text.vTaskInternalSetTimeOutState
+.text.vTaskSuspendAll
+.text.net_al_tx_req
+.text.rtos_wifi_task_resume
+.text.ke_msg_send
+.text.xTaskGetSchedulerState
+.text.macif_kmsg_fwd
+.text.net_if_output
+.text.ke_evt_set
+.text.uxListRemove
+.text.rtos_mutex_lock
+.text.xTaskGetTickCount
+.text.xTaskPriorityInherit
+.text.fhost_tx_req_do
+.text.xTaskGenericNotify
+.text.rtos_free
+.text.mem_free
+.text.vTaskSwitchContext
+.text.vApplicationStackOverflowHook
+.text.pbuf_remove_header
+.text.memp_free
+.text.me_traffic_ind_req_set_uapsd
+.text.xTaskCheckForTimeOut
+.text.xTaskResumeAll
+.text.fhost_cntrl_write_msg
+.text.mac_vif_get_active
+.text.macif_rx_buf_ind
+.text.fhost_tx_req
+.text.xTaskRemoveFromEventList
+.text.co_list_push_back
+.text.tx_desc_init_for_fhost
+.text.mac_vif_get_index
+.text.xQueueGenericSendFromISR
+.text.macif_tx_data_ind
+.text.pbuf_ref
+.text.sys_mutex_lock
+.text.vTaskGenericNotifyGiveFromISR
+.text.co_list_pop_front
+.text.pbuf_header
+.text.platform_malloc
+.text.mac_vif_get_type
+.text.vTaskMissedYield
+.text.rtos_mutex_unlock
+.text.fhost_tx_start
+.text.pbuf_free
+.text.me_traffic_ind_req_len
+.text.me_traffic_ind_req_alloc
+.text.rtos_queue_write
+.text.macif_kmsg_push_t
+.text.sys_arch_protect
+.text.vAssertCalled
+.text.vListInsert
+.text.net_buf_tx_free
+.text.rtos_task_notify
+.text.xTaskIncrementTick
+.text.co_list_extract
+.text.xQueueSemaphoreTake
+.text.fhost_rx_buf_push
+.text.xTaskPriorityDisinherit
+.text.me_traffic_ind_req_set_sta_idx
+.text.pvTaskIncrementMutexHeldCount
+.text.sys_arch_unprotect
+.text.inline_hal_machw_time
+.text.sys_arch_sem_wait
+.text.vTaskEnterCritical
+.text.vif_mgmt_get_staid
+.text.fhost_tx_get_staid
+.text.mm_timer_set
+.text.net_if_vif_info
+.text.fhost_tx_release_buf
+.text.co_list_insert
+.text.vTaskPriorityDisinheritAfterTimeout
+.text.macif_kmsg_push
+.text.xQueueGenericSend
+.text.mm_timer_clear
+.text.net_buf_tx_info
+.text.me_traffic_ind_req_set_tx_avail
+.text.sys_mutex_unlock
+.text.vTaskExitCritical
+)
+*(
+.rodata.TX_TIMEOUT
+.rodata.tx_agg_desc_array
+.rodata.tx_agg_desc_cnt
+.rodata.TX_HE_ER_RU106_RATE_TO_32US_LEN
+.rodata.TX_HE_ER_RU106_RATE_TO_MIN_SEP
+.rodata.TX_HE_RATE_TO_32US_LEN
+.rodata.TX_HE_RATE_TO_MIN_SEP
+.rodata.TASK_DESC
+.rodata.rxu_cntrl_rfc1042_hdr
+.rodata.sbox_t
+.rodata.x_time2_sbox_t
+.rodata.x_time3_sbox_t
+.rodata.llc_bridge_tunnel_hdr
+.rodata.TX_VHT_RATE_TO_32US_LEN
+.rodata.twt_default_handler
+.rodata.agcmem
+.rodata.mac_id2rate
+.rodata.sm_default_state
+.rodata.memp_NETCONN
+.rodata.bam_default_state
+.rodata.memp_NETBUF
+.rodata.me_default_handler
+.rodata.memp_TCPIP_MSG_API
+.rodata.mm_default_handler
+.rodata.memp_TCP_SEG
+.rodata.twt_default_state
+.rodata.memp_pools
+.rodata.mac_ac2aci
+.rodata.nx_txdesc_cnt
+.rodata.bam_default_handler
+.rodata.memp_PBUF
+.rodata.memp_PBUF_POOL
+.rodata.mac_ac2uapsd
+.rodata.memp_TCP_PCB
+.rodata.memp_RAW_PCB
+.rodata.memp_NETDB
+.rodata.llc_rfc1042_hdr
+.rodata.sm_default_handler
+.rodata.mac_addr_bcst
+.rodata.memp_REASSDATA
+.rodata.me_default_state
+.rodata.memp_TCP_PCB_LISTEN
+.rodata.memp_SYS_TIMEOUT
+.rodata.rxv2macrate
+.rodata.mm_state_handler
+.rodata.TX_VHT_RATE_TO_MIN_SEP
+.rodata.rcon_t
+.rodata.mac_tid2ac
+.rodata.memp_UDP_PCB
+.rodata.mm_default_state
+)
+*(
+.text.phy_hw_set_channel.constprop.0.isra.0
+.text.rf_pri_txcal_w2reg
+.text.rf_pri_pwr_table_w2reg
+.text.prvIsQueueEmpty
+.text.prvCopyDataToQueue
+.text.prvCopyDataFromQueue
+.text.prvUnlockQueue
+.text.prvAddCurrentTaskToDelayedList
+.text.prvResetNextTaskUnblockTime
+.text.fhost_tx_get_txq
+.text.fhost_tx_del_txq_from_sched
+.text.fhost_tx_add_txq_to_sched.isra.0
+.text.fhost_tx_schedule
+.text.do_memp_free_pool
+.text.txl_payload_handle.isra.0
+.text.txl_vht_idx_to_32us_len_get
+.text.txl_vht_idx_to_1us_len_get
+.text.txl_fill_bar
+.text.txl_ampdu_constraints_get
+.text.txl_he_txop_dur_rtscts_thres_apply
+.text.txl_he_idx_to_32us_len_get
+.text.txl_he_idx_to_1us_len_get
+.text.txl_he_er_ru106_idx_to_32us_len_get
+.text.txl_he_er_ru106_idx_to_1us_len_get
+.text.txl_he_set_new_edca_head
+.text.txl_he_restart_edca
+.text.txl_he_trig_time
+.text.rxl_amsdu_subframe_len_get
+.text.rxl_payload_transfer
+.text.rxl_go_to_last_rbd.constprop.0
+.text.sta_mgmt_entry_init
+.text.vif_mgmt_bcn_wait_to_evt
+.text.vif_mgmt_bcn_to_evt
+.text.mm_ap_tbtt_move_cb
+.text.mm_ap_probe_cfm
+.text.mm_cfg_rssi_req_handler
+.text.mm_set_ps_options_req_handler
+.text.mm_set_txop_rts_thres_req_handler
+.text.mm_set_bss_color_req_handler
+.text.mm_set_ps_mode_req_handler
+.text.mm_tim_update_req_handler
+.text.mm_bcn_change_req_handler
+.text.mm_remain_on_channel_req_handler
+.text.mm_chan_ctxt_unlink_req_handler
+.text.mm_ba_del_req_handler
+.text.mm_sta_del_req_handler
+.text.mm_sta_add_req_handler
+.text.mm_key_del_req_handler
+.text.mm_key_add_req_handler
+.text.mm_set_power_req_handler
+.text.mm_force_idle_req_handler
+.text.mm_set_uora_req_handler
+.text.mm_set_mu_edca_req_handler
+.text.mm_set_edca_req_handler
+.text.mm_reset_req_handler
+.text.mm_version_req_handler
+.text.mm_start_req_handler
+.text.mm_hw_config_handler
+.text.mm_set_idle_req_handler
+.text.mm_timer_hw_set
+.text.cmp_abs_time
+.text.mm_tim_update_proceed
+.text.mm_bcn_transmitted
+.text.mm_bcn_update
+.text.ke_timer_hw_set
+.text.cmp_abs_time
+.text.cmp_timer_id
+.text.cmp_dest_id
+.text.mac_ext_ie_find
+.text.ps_tx_timer_handle
+.text.ps_uapsd_timer_handle
+.text.ps_dpsm_update
+.text.ps_disable_cfm
+.text.ps_enable_cfm
+.text.ps_check_tx_status
+.text.td_timer_end
+.text.mm_raw_send_req_handler
+.text.scan_raw_send_req_handler
+.text.scan_cancel_req_handler
+.text.mm_scan_channel_end_ind_handler
+.text.mm_scan_channel_end_early_handler
+.text.mm_scan_channel_start_ind_handler
+.text.scan_start_req_handler
+.text.scan_probe_req_handler
+.text.cfm_raw_send
+.text.me_data_path_flushed_ind_handler
+.text.me_set_control_port_req_handler
+.text.me_config_monitor_req_handler
+.text.me_rc_set_rate_req_handler
+.text.me_param_req_handler
+.text.me_rc_stats_req_handler
+.text.me_traffic_ind_req_handler
+.text.me_chan_config_req_handler
+.text.mm_set_ps_mode_cfm_handler
+.text.mm_set_idle_cfm_handler
+.text.me_set_ps_disable_req_handler
+.text.me_set_active_req_handler
+.text.me_sta_add_req_handler
+.text.me_config_req_handler
+.text.me_sta_del_req_handler
+.text.me_set_ps_mode_req_handler
+.text.michael_block
+.text.me_data_path_flushed_ind_handler
+.text.sm_ft_auth_rsp_handler
+.text.sm_retry_connect_start_ind_handler
+.text.rxu_mgt_ind_handler
+.text.mm_chan_ctxt_unlink_cfm_handler
+.text.mm_sta_del_cfm_handler
+.text.mm_bss_param_setting_handler
+.text.me_set_ps_disable_cfm_handler
+.text.sm_fix_lowrate_connect_req_handler
+.text.sm_rc_req_timeout_handler
+.text.scanu_start_cfm_handler
+.text.me_set_active_cfm_handler
+.text.mm_connection_loss_ind_handler
+.text.sm_rsp_timeout_ind_handler
+.text.scanu_join_cfm_handler
+.text.sm_connect_req_handler
+.text.sm_deauth_timeout_ind_handler
+.text.sm_external_auth_required_rsp_handler
+.text.mm_set_vif_state_cfm_handler
+.text.sm_disconnect_req_handler
+.text.mm_sta_add_cfm_handler
+.text.sm_bss_config_init
+.text.sm_bss_config_push
+.text.sm_frame_with_rsp_send.constprop.0
+.text.sm_frame_tx_cfm_handler
+.text.sm_delete_resources
+.text.sm_disconnect_finish
+.text.sm_deauth_cfm
+.text.sm_connect_ind_withdeauth_cfm
+.text.mm_chan_ctxt_unlink_cfm_handler
+.text.mm_set_vif_state_cfm_handler
+.text.me_set_ps_disable_cfm_handler
+.text.mm_bss_param_setting_handler
+.text.mm_bcn_change_cfm_handler
+.text.me_set_active_cfm_handler
+.text.scanu_get_scan_result_req_handler
+.text.scanu_start_req_handler
+.text.scanu_join_req_handler
+.text.rxu_mgt_ind_handler
+.text.scan_start_cfm_handler
+.text.scan_done_ind_handler
+.text.scanu_is_scanned_ssid
+.text.rxu_upload_cfm
+.text.rxu_cntrl_protected_handle
+.text.rxu_cntrl_check_pn
+.text.rxu_cntrl_duplicate_check
+.text.rxu_cntrl_mic_check
+.text.rxu_cntrl_desc_prepare
+.text.rxu_cntrl_defrag_timeout_cb
+.text.rxu_msdu_upload_and_indicate
+.text.rxu_cntrl_reord_fwd
+.text.rxu_cntrl_reord_flush
+.text.rxu_cntrl_reord_timeout_cb
+.text.rxu_mpdu_upload_and_indicate
+.text.rxu_cntrl_spurious_check
+.text.rxu_mgt_frame_check
+.text.txu_cntrl_sec_hdr_append
+.text.txu_cntrl_sechdr_len_compute
+.text.rxu_mgt_ind_handler
+.text.bam_del_ba_idx_handler
+.text.mm_ba_add_cfm_handler
+.text.mm_ba_del_cfm_handler
+.text.bam_activity_timeout_ind_handler
+.text.bam_add_ba_rsp_timeout_ind_handler
+.text.bam_baw_index_compute
+.text.bam_baw_index_compute_opt
+.text.bam_set_baw_state
+.text.bam_delba_status_cfm
+.text.rxu_mgt_ind_handler
+.text.aes_encrypt_block
+.text.aes_cmac_shift_sub_key
+.text.is_cck_group
+.text.me_build_add_ba_req
+.text.txl_agg_finish
+.text.me_add_ie_ssid
+.text.hal_machw_tsf_read
+.text.ps_init
+.text.me_sta_add_cfm_alloc
+.text.mac_ie_csa_find
+.text.td_sta_reset
+.text.me_update_buffer_control
+.text.mm_hw_info_set
+.text.phy_get_ntx
+.text.txl_cfm_init
+.text.mac_paid_gid_ap_compute
+.text.mm_ba_agmt_rx_exists
+.text.rxu_cntrl_frame_handle
+.text.crm_init
+.text.phy_mu_mimo_rx_supported
+.text.vTaskPlaceOnEventList
+.text.vTaskInternalSetTimeOutState
+.text.bam_send_air_action_frame
+.text.vTaskSuspendAll
+.text.sm_get_rsnie_pmkid_count
+.text.mac_ie_ecsa_find
+.text.sm_assoc_done
+.text.me_vht_bandwidth_parse
+.text.rtos_wifi_task_resume
+.text.rxu_cntrl_reord_create
+.text.macif_rx_desc_upload
+.text.ke_msg_send
+.text.mm_sta_tbtt
+.text.mm_sec_machwaddr_wr
+.text.mac_ie_he_capa_find
+.text.xQueueIsQueueEmptyFromISR
+.text.scan_terminate_channel_request
+.text.sm_assoc_rsp_handler
+.text.xTaskGetSchedulerState
+.text.macif_kmsg_fwd
+.text.phy_get_rf_gain_capab
+.text.bba_pd_loop
+.text.bam_delete_ba_agg
+.text.mac_cipher_suite_value
+.text.ke_evt_set
+.text.mm_timer_init
+.text.mac_ie_sec_chnl_offset_find
+.text.rf_pri_optimize
+.text.me_11n_nss_max
+.text.uxListRemove
+.text.rxu_cntrl_defrag_free_by_sta_idx
+.text.rf_pri_set_channel_lp_pwr_comp
+.text.chan_scan_terminate
+.text.mac_ie_he_oper_find
+.text.phy_get_channel
+.text.ps_traffic_status_update
+.text.me_extract_ht_capa
+.text.rxl_mpdu_copy
+.text.txl_frame_push_force
+.text.txl_agg_check
+.text.vif_mgmt_set_ap_bcn_int
+.text.ps_check_frame
+.text.txl_cfm_flush
+.text.vif_mgmt_unregister
+.text.mac_ie_op_mode_notif_find
+.text.rtos_mutex_lock
+.text.rf_pri_get_rcal_code
+.text.scanu_frame_handler
+.text.chan_is_on_operational_channel
+.text.bam_baw_init
+.text.bam_send_del_ba_agg
+.text.sm_connect_ind
+.text.xTaskGetTickCount
+.text.rf_pri_set_channel_total_pwr_comp
+.text.scan_init
+.text.me_freq_to_chan_def
+.text.me_init
+.text.me_extract_edca_params
+.text.scanu_cached_scanresult_clear_dst
+.text.xTaskPriorityInherit
+.text.hal_machw_monitor_mode
+.text.rxu_stat_desc_check
+.text.phy_get_nrx
+.text.sm_bss_list_empty_check
+.text.txl_reset
+.text.mac_ie_ds_find
+.text.ke_msg_free
+.text.ke_timer_clear
+.text.bam_rx_active
+.text.mm_tbtt_compute
+.text.me_add_ie_op_mode
+.text.mac_ie_wmm_param_find
+.text.me_build_deauthenticate
+.text.xTaskGenericNotify
+.text.bam_send_mm_ba_del_req
+.text.ke_state_get
+.text.mm_back_to_host_idle
+.text.mac_ie_uora_find
+.text.bba_set_pd_gain
+.text.twt_check_end_of_sp
+.text.mm_hw_ap_info_set
+.text.txl_he_reset
+.text.twt_sp_end
+.text.co_list_cnt
+.text.td_pck_ind
+.text.hal_machw_reset
+.text.uxQueueMessagesWaiting
+.text.rtos_free
+.text.txl_he_uora_param_set
+.text.mem_free
+.text.txl_agg_init
+.text.hal_machw_disable_int
+.text.scan_get_scan_duration
+.text.txl_cntrl_flush_ac
+.text.me_extract_country_reg
+.text.ke_timer_reset
+.text.ke_msg_save
+.text.mm_bcn_init_vif
+.text.chan_ctxt_add
+.text.me_extract_vht_capa
+.text.trpc_update_power
+.text.tx_txdesc_init
+.text.phy_bfmee_supported
+.text.twt_get_flows
+.text.ps_check_beacon
+.text.vTaskSwitchContext
+.text.bam_start_activity_timer
+.text.phy_ldpc_tx_supported
+.text.me_init_rate
+.text.vApplicationStackOverflowHook
+.text.ke_queue_extract
+.text.txl_he_tb_enable
+.text.ps_update_tx_wait_period
+.text.memp_free
+.text.sta_mgmt_send_postponed_frame
+.text.mm_tim_update
+.text.me_traffic_ind_req_set_uapsd
+.text.rf_pri_update_param
+.text.me_legacy_rate_lowest_rate_get
+.text.xTaskCheckForTimeOut
+.text.trpc_get_default_power_idx
+.text.ke_timer_set
+.text.xTaskResumeAll
+.text.hal_machw_search_addr
+.text.trpc_update_vs_channel
+.text.me_sta_del
+.text.me_rate_translate
+.text.me_extract_mu_edca_params
+.text.sm_ft_auth_over_air_start
+.text.fhost_cntrl_write_msg
+.text.me_build_del_ba
+.text.ke_msg_forward_and_change_id
+.text.mac_vsie_find
+.text.macif_rx_buf_ind
+.text.sm_connect_ind_withdeauth
+.text.txl_he_htc_get
+.text.mm_env_max_ampdu_duration_set
+.text.rf_pri_set_bandwidth
+.text.txl_cntrl_inc_pck_cnt
+.text.txl_frame_send_null_frame
+.text.xTaskRemoveFromEventList
+.text.net_al_tx_cfm
+.text.phy_vht_supported
+.text.me_11ac_mcs_max
+.text.sm_auth_send
+.text.chan_scan_req
+.text.macif_rx_buf_get
+.text.mm_ap_tbtt_move
+.text.co_list_push_back
+.text.mac_ie_non_txed_bssid_capa_find
+.text.vif_mgmt_bcn_recv
+.text.tx_txdesc_release
+.text.me_sta_bw_nss_max_upd
+.text.macif_buffered_get
+.text.txu_cntrl_push
+.text.mac_ie_ssid_find
+.text.xQueueGenericSendFromISR
+.text.chan_is_tx_allowed
+.text.mm_bcn_init
+.text.vif_mgmt_bcn_to_prog
+.text.mm_sta_del
+.text.txu_cntrl_repush
+.text.txu_cntrl_frame_build
+.text.rxl_frame_release
+.text.hal_machw_tsf_move
+.text.rfc_config_bandwidth
+.text.mac_ie_multi_bssid_index_find
+.text.sm_ft_auth_over_air_end
+.text.sta_mgmt_init
+.text.bam_delete_all_ba_agg
+.text.macif_tx_data_ind
+.text.bam_get_task_to_process_tx
+.text.mac_ie_power_constraint_find
+.text.wl_logger
+.text.txu_cntrl_protect_mgmt_frame
+.text.chan_bcn_detect_start
+.text.ps_check_tx_frame
+.text.txl_frame_send_qosnull_frame
+.text.me_init_bcmc_rate
+.text.sys_mutex_lock
+.text.wl_wlan_power_cfg_get
+.text.bam_get_avail_task
+.text.scanu_init
+.text.me_send_data_flushed_ind
+.text.rxl_mpdu_transfer
+.text.txl_he_txop_dur_rtscts_thres_ampdu_check
+.text.rxl_rxdesc_ready_for_processing
+.text.chan_raw_send_req
+.text.mm_sec_machwaddr_del
+.text.scanu_search_by_bssid
+.text.txu_cntrl_cfm
+.text.txl_frame_get
+.text.phy_get_nss
+.text.txl_he_init
+.text.me_extract_uora_params
+.text.phy_set_group_id_info
+.text.mm_hw_ap_info_reset
+.text.co_list_insert_after_fast
+.text.vTaskGenericNotifyGiveFromISR
+.text.chan_tbtt_start
+.text.ps_uapsd_set
+.text.mm_ba_agmt_tx_exists
+.text.ke_state_set
+.text.me_legacy_ridx_min
+.text.me_bw_check
+.text.sm_bss_config_send
+.text.macif_tx_cfm_push
+.text.co_list_pop_front
+.text.mac_ie_rsn_find
+.text.me_mic_init
+.text.rxu_cntrl_reord_delete
+.text.crm_get_mac_freq
+.text.sm_disconnect_continue
+.text.platform_malloc
+.text.rtos_queue_read
+.text.rf_pri_set_temp_comp
+.text.mac_ie_vht_oper_find
+.text.scan_probe_req_tx
+.text.scan_set_channel_request
+.text.rxu_cntrl_init
+.text.txl_agg_set_ampdu_protection
+.text.mac_akm_suite_value
+.text.wl_wlan_bb_post_proc
+.text.mac_ie_mu_edca_find
+.text.wl_wlan_bb_reset
+.text.me_get_ampdu_params
+.text.chan_ctxt_unlink
+.text.twt_send_teardown_frame
+.text.me_extract_he_capa
+.text.mac_ie_vht_capa_find
+.text.rxl_rxdesc_get
+.text.vTaskMissedYield
+.text.txl_he_txop_dur_rtscts_thres_mpdu_check
+.text.mm_sec_key_new_cookie
+.text.me_extract_he_oper
+.text.crm_mdm_reset
+.text.bam_search_task_wt_highest_inactivity_time
+.text.mac_ie_sub_non_txed_bssid_find
+.text.txl_cntrl_push
+.text.me_build_associate_req
+.text.rtos_mutex_unlock
+.text.bam_send_mm_ba_add_req
+.text.ps_schedule_td_timer
+.text.pbuf_free
+.text.twt_send_setup_frame
+.text.sta_mgmt_add_key
+.text.me_build_bss_color_reg
+.text.macif_rx_buf_check
+.text.me_traffic_ind_req_len
+.text.fhost_tx_cfm_push
+.text.phy_get_rf_gain_idx
+.text.sm_external_auth_start
+.text.mm_check_rssi
+.text.mm_sta_add
+.text.sm_disconnect_start
+.text.twt_get_flow
+.text.bba_loop
+.text.me_traffic_ind_req_alloc
+.text.td_set_detect_timer
+.text.rtos_queue_write
+.text.td_init
+.text.phy_set_channel
+.text.macif_kmsg_push_t
+.text.tpc_update_tx_power
+.text.txl_frame_init
+.text.sys_arch_protect
+.text.rc2_config_rxgain
+.text.rf_pri_set_channel_pwr_comp
+.text.ps_check_tx_wait_period
+.text.fhost_tx_ps_cleanup_timer_stop
+.text.chan_roc_req
+.text.phy_get_channel_switch_dur
+.text.vAssertCalled
+.text.co_list_insert_before
+.text.txl_buffer_init
+.text.vListInsert
+.text.scan_ie_download
+.text.mm_init
+.text.wl_wlan_bb_pre_proc
+.text.txl_amsdu_get_min_mcs
+.text.macif_max_api_msg_len
+.text.mac_ie_ext_cap_find
+.text.net_buf_tx_free
+.text.sm_assoc_req_send
+.text.txl_cntrl_halt_ac
+.text.hal_machw_idle_req
+.text.bam_tx_cfm
+.text.bba_reset
+.text.mac_ie_find
+.text.twt_delete_flow
+.text.macif_tx_cfm_start
+.text.rtos_task_notify
+.text.ke_timer_active
+.text.mac_ie_wide_bw_chnl_find
+.text.me_legacy_ridx_max
+.text.mm_check_beacon
+.text.mm_sec_machwkey_wr
+.text.co_list_push_front
+.text.txl_frame_release
+.text.ps_set_mode
+.text.phy_init
+.text.rxu_cntrl_monitor_pm
+.text.txl_frame_send_proper_null_frame
+.text.xTaskIncrementTick
+.text.co_list_extract
+.text.scanu_confirm
+.text.xQueueSemaphoreTake
+.text.ke_msg_alloc
+.text.sm_auth_start
+.text.bam_flush_baw
+.text.mac_ie_country_find
+.text.sta_mgmt_del_key
+.text.co_list_init
+.text.rxl_init
+.text.bba_rssi_correction
+.text.bba_init
+.text.crm_clk_set
+.text.twt_handle_action_frame
+.text.fhost_rx_buf_push
+.text.phy_get_version
+.text.me_build_add_ba_rsp
+.text.vif_mgmt_get_single_sta_vif
+.text.mm_send_connection_loss_ind
+.text.xTaskPriorityDisinherit
+.text.phy_get_antenna_set
+.text.phy_set_aid
+.text.me_mic_calc
+.text.txl_he_start_trigger_scheduler
+.text.mac_ie_ht_oper_find
+.text.tpc_update_frame_tx_power
+.text.txl_agg_push_mpdu
+.text.mac_ie_multi_bssid_find
+.text.me_traffic_ind_req_set_sta_idx
+.text.hal_machw_init
+.text.udelay
+.text.platform_free
+.text.co_crc32
+.text.rxl_reset
+.text.txl_cntrl_newhead
+.text.sm_add_chan_ctx
+.text.trpc_init
+.text.me_mic_end
+.text.txl_he_tb_config
+.text.phy_get_bw
+.text.pvTaskIncrementMutexHeldCount
+.text.txl_he_mu_edca_param_set
+.text.vif_mgmt_bcn_wait_to_prog
+.text.scanu_search_by_ssid
+.text.bam_param_sta_info_tab_reset
+.text.scan_get_chan
+.text.sys_arch_unprotect
+.text.td_reset
+.text.mac_ie_mgmt_mic_find
+.text.sm_get_bss_params
+.text.txl_agg_reset
+.text.me_set_sta_ht_vht_param
+.text.mac_paid_gid_sta_compute
+.text.vif_mgmt_init
+.text.bam_init
+.text.me_beacon_check
+.text.td_cfm_set_timer
+.text.ke_task_sm_activating
+.text.sys_arch_sem_wait
+.text.sm_sa_query_handler
+.text.sm_set_bss_param
+.text.mm_no_idle_stop
+.text.txl_he_bsr_compute
+.text.mac_ie_wpa_find
+.text.me_extract_rate_set
+.text.rxu_cntrl_get_pm
+.text.txl_cntrl_init
+.text.xQueueReceiveFromISR
+.text.mac_ie_ext_rates_find
+.text.twt_init
+.text.txl_cntrl_push_int
+.text.rxl_mpdu_isr
+.text.vif_mgmt_set_bssid_mask
+.text.sta_mgmt_register
+.text.me_add_ie_supp_rates
+.text.td_pck_ps_ind
+.text.mm_send_csa_traffic_ind
+.text.sm_tx_deauth_operation
+.text.wait_us
+.text.vif_mgmt_del_key
+.text.mm_active
+.text.vTaskEnterCritical
+.text.txl_frame_prepare
+.text.txl_hwdesc_config_post
+.text.rxl_mpdu_partial_transfer
+.text.ke_msg_send_basic
+.text.rtos_queue_is_empty
+.text.vif_mgmt_switch_channel
+.text.txl_frame_send_he_trigger
+.text.sm_external_auth_end
+.text.scanu_find_result
+.text.txl_agg_mpdu_nb_delims
+.text.scanu_cached_scanresult_clear
+.text.ke_msg_discard
+.text.mm_timer_set
+.text.rxl_cntrl_evt
+.text.bba_ce_update_capcode
+.text.sm_join_bss
+.text.rxl_hwdesc_monitor
+.text.me_extract_csa
+.text.fhost_tx_release_buf
+.text.mm_no_idle_start
+.text.sta_mgmt_unregister
+.text.rfc_config_channel
+.text.phy_he_supported
+.text.co_list_insert
+.text.me_11ac_nss_max
+.text.rxl_hwdesc_init
+.text.td_set_rx_ps_thres
+.text.tpc_set_vif_tx_power
+.text.dma_push
+.text.sm_auth_handler
+.text.me_add_ie_ext_supp_rates
+.text.vif_mgmt_resources_init_before_connect
+.text.scanu_scan_next
+.text.mm_bcn_transmit
+.text.txl_cntrl_push_int_force
+.text.td_pack_tim_ind
+.text.me_11ax_mcs_max
+.text.chan_ctxt_update
+.text.me_build_capability
+.text.mm_sec_machwkey_del
+.text.vif_mgmt_register
+.text.vTaskPriorityDisinheritAfterTimeout
+.text.me_extract_power_constraint
+.text.tpc_update_vif_tx_power
+.text.mac_ie_ht_capa_find
+.text.mm_sec_keydump
+.text.vif_mgmt_send_postponed_frame
+.text.macif_kmsg_push
+.text.xQueueGenericSend
+.text.sm_init
+.text.hal_machw_stop
+.text.bba_ce_loop
+.text.packet_send_test
+.text.txu_cntrl_mgmt_mic_pbd_append
+.text.bam_get_task_to_process_rx
+.text.me_add_ie_vht_capa
+.text.mm_timer_clear
+.text.txl_cntrl_tx_check
+.text.tpc_get_vif_tx_power_vs_rate
+.text.txl_he_ampdu_param_get
+.text.txl_frame_init_desc
+.text.mm_bcn_change
+.text.phy_stop
+.text.mac_ie_rates_find
+.text.txl_frame_push
+.text.tpc_get_vif_tx_prot_power_vs_rate
+.text.mm_force_idle_req
+.text.txl_frame_cfm
+.text.me_init_chan
+.text.bam_delete_complete
+.text.xQueueReceive
+.text.sm_external_auth_in_progress
+.text.me_traffic_ind_req_set_tx_avail
+.text.sys_mutex_unlock
+.text.raw_send_set_channel_request
+.text.scanu_start
+.text.macif_tx_cfm_done
+.text.bam_check_ba_agg
+.text.me_build_authenticate
+.text.ke_evt_clear
+.text.txl_frame_exchange_chain
+.text.me_add_ie_he_capa
+.text.sm_scan_bss
+.text.co_list_remove
+.text.td_start
+.text.me_legacy_rate_bitfield_build
+.text.me_rate_bitfield_vht_build
+.text.rxl_mpdu_free
+.text.sm_deauth_handler
+.text.me_add_ie_ht_capa
+.text.txl_he_tb_disable
+.text.vif_mgmt_add_key
+.text.ps_check_bcmc
+.text.txl_cntrl_set_timeout
+.text.mac_ie_erp_find
+.text.vTaskExitCritical
+.text.txl_frame_evt
+.text.mm_env_init
+.text.co_list_find
+.text.tpc_get_vif_tx_power
+)
+    *(
+    .text.prvCopyDataToQueue
+    .text.prvUnlockQueue
+    .text.prvAddCurrentTaskToDelayedList
+    .text.prvResetNextTaskUnblockTime
+    .text.vTaskPlaceOnEventList
+    .text.vTaskInternalSetTimeOutState
+    .text.vTaskSuspendAll
+    .text.macif_rx_desc_upload
+    .text.xTaskGetSchedulerState
+    .text.rxl_dma_evt
+    .text.uxListRemove
+    .text.vTaskSwitchContext
+    .text.vApplicationStackOverflowHook
+    .text.xTaskCheckForTimeOut
+    .text.xTaskResumeAll
+    .text.xTaskRemoveFromEventList
+    .text.xQueueGenericSendFromISR
+    .text.rxl_frame_release
+    .text.co_list_pop_front
+    .text.vTaskMissedYield
+    .text.rtos_queue_write
+    .text.vAssertCalled
+    .text.vListInsert
+    .text.xTaskIncrementTick
+    .text.xTaskPriorityDisinherit
+    .text.vTaskEnterCritical
+    .text.xQueueGenericSend
+    .text.ke_evt_clear
+    .text.vTaskExitCritical
+    )
+    *(
+    .text.ke_evt_set
+    .text.rxl_dma_int_handler
+    )
+    *(
+    .text.ke_evt_set
+    .text.rxl_mpdu_isr
+    )
+    *(
+    .rodata.memp_NETCONN
+    .rodata.memp_NETBUF
+    .rodata.memp_TCPIP_MSG_API
+    .rodata.memp_TCP_SEG
+    .rodata.memp_pools
+    .rodata.memp_PBUF
+    .rodata.ip_addr_broadcast
+    .rodata.memp_PBUF_POOL
+    .rodata.memp_TCP_PCB
+    .rodata.ethzero
+    .rodata.memp_RAW_PCB
+    .rodata.memp_NETDB
+    .rodata.memp_REASSDATA
+    .rodata.ethbroadcast
+    .rodata.memp_TCP_PCB_LISTEN
+    .rodata.memp_SYS_TIMEOUT
+    .rodata.ip_addr_any
+    .rodata.memp_UDP_PCB
+    )
+    *(
+    .text.prvIsQueueEmpty
+    .text.prvCopyDataToQueue
+    .text.prvUnlockQueue
+    .text.prvAddCurrentTaskToDelayedList
+    .text.prvResetNextTaskUnblockTime
+    .text.icmp_send_response
+    .text.ip_reass_dequeue_datagram
+    .text.ip_reass_free_complete_datagram
+    .text.ip_reass_remove_oldest_datagram
+    .text.ip4_input_accept
+    .text.do_memp_malloc_pool
+    .text.do_memp_free_pool
+    .text.pbuf_free_ooseq_callback
+    .text.pbuf_add_header_impl
+    .text.sys_timeout_abs
+    .text.icmp_dest_unreach
+    .text.os_memcpy
+    .text.os_zalloc
+    .text.ip4_output_if
+    .text.vTaskPlaceOnEventList
+    .text.vTaskInternalSetTimeOutState
+    .text.vTaskSuspendAll
+    .text.os_free
+    .text.xTaskGetSchedulerState
+    .text.pbuf_header_force
+    .text.uxListRemove
+    .text.ip4_output_if_src
+    .text.vQueueUnregisterQueue
+    .text.netif_loop_output
+    .text.netif_get_by_index
+    .text.rtos_semaphore_create
+    .text.os_malloc
+    .text.tcpip_try_callback
+    .text.rtos_malloc
+    .text.ip4_frag
+    .text.xTaskGetTickCount
+    .text.tcpip_inpkt
+    .text.xTaskPriorityInherit
+    .text.pbuf_alloc_reference
+    .text.vPortFree
+    .text.inet_chksum
+    .text.rtos_free
+    .text.mem_free
+    .text.vTaskSwitchContext
+    .text.vApplicationStackOverflowHook
+    .text.pbuf_remove_header
+    .text.pbuf_split_64k
+    .text.memp_free
+    .text.net_eth_receive
+    .text.xTaskCheckForTimeOut
+    .text.sys_mbox_valid
+    .text.uxQueueMessagesWaitingFromISR
+    .text.xTaskResumeAll
+    .text.udp_input
+    .text.icmp_time_exceeded
+    .text.ip4_input
+    .text.xQueueCreateCountingSemaphore
+    .text.ip4_reass
+    .text.xQueueGenericReset
+    .text.xTaskRemoveFromEventList
+    .text.ip4_route
+    .text.xQueueGenericSendFromISR
+    .text.sys_timeout
+    .text.vApplicationMallocFailedHook
+    .text.inet_chksum_pseudo
+    .text.pbuf_ref
+    .text.sys_mutex_lock
+    .text.vQueueDelete
+    .text.lwip_standard_chksum
+    .text.vListInitialise
+    .text.ip4_addr_isbroadcast_u32
+    .text.xQueueGenericCreate
+    .text.icmp_input
+    .text.vTaskMissedYield
+    .text.pbuf_alloc
+    .text.memp_malloc
+    .text.pbuf_free
+    .text.rtos_queue_write
+    .text.sys_now
+    .text.sys_arch_protect
+    .text.vAssertCalled
+    .text.vListInsert
+    .text.rtos_queue_cnt
+    .text.raw_input
+    .text.tcpip_input
+    .text.xTaskIncrementTick
+    .text.xQueueSemaphoreTake
+    .text.inet_chksum_pbuf
+    .text.xTaskPriorityDisinherit
+    .text.pvPortMalloc
+    .text.pvTaskIncrementMutexHeldCount
+    .text.udp_bind
+    .text.sys_arch_unprotect
+    .text.rtos_queue_delete
+    .text.sys_arch_sem_wait
+    .text.ethernet_input
+    .text.ethernet_output
+    .text.sys_mbox_trypost
+    .text.netif_poll
+    .text.vTaskEnterCritical
+    .text.lwip_htons
+    .text.pbuf_cat
+    .text.mem_trim
+    .text.lwip_htonl
+    .text.pbuf_realloc
+    .text.vTaskPriorityDisinheritAfterTimeout
+    .text.pbuf_add_header
+    .text.xQueueGenericSend
+    .text.os_memset
+    .text.pbuf_clen
+    .text.pbuf_chain
+    .text.pbuf_copy_partial
+    .text.ip_chksum_pseudo
+    .text.sys_mutex_unlock
+    .text.pbuf_copy
+    .text.vTaskExitCritical
+    .text.mem_malloc
+    .text.udp_sendto_if_src
+    )
+    *(
+    .rodata.memp_NETCONN
+    .rodata.memp_NETBUF
+    .rodata.memp_TCPIP_MSG_API
+    .rodata.memp_TCP_SEG
+    .rodata.memp_pools
+    .rodata.memp_PBUF
+    .rodata.memp_PBUF_POOL
+    .rodata.memp_TCP_PCB
+    .rodata.memp_RAW_PCB
+    .rodata.memp_NETDB
+    .rodata.memp_REASSDATA
+    .rodata.memp_TCP_PCB_LISTEN
+    .rodata.memp_SYS_TIMEOUT
+    .rodata.ip_addr_any
+    .rodata.memp_UDP_PCB
+    )
+    *(
+    .text.prvIsQueueEmpty
+    .text.prvCopyDataToQueue
+    .text.prvUnlockQueue
+    .text.prvAddCurrentTaskToDelayedList
+    .text.prvResetNextTaskUnblockTime
+    .text.icmp_send_response
+    .text.ip_reass_dequeue_datagram
+    .text.ip_reass_free_complete_datagram
+    .text.ip_reass_remove_oldest_datagram
+    .text.ip4_input_accept
+    .text.do_memp_malloc_pool
+    .text.do_memp_free_pool
+    .text.pbuf_free_ooseq_callback
+    .text.pbuf_add_header_impl
+    .text.sys_timeout_abs
+    .text.tcpip_tcp_timer
+    .text.icmp_dest_unreach
+    .text.ip4_output_if
+    .text.vTaskPlaceOnEventList
+    .text.vTaskInternalSetTimeOutState
+    .text.vTaskSuspendAll
+    .text.xTaskGetSchedulerState
+    .text.pbuf_header_force
+    .text.uxListRemove
+    .text.ip4_output_if_src
+    .text.netif_loop_output
+    .text.netif_get_by_index
+    .text.tcpip_try_callback
+    .text.ip4_frag
+    .text.xTaskGetTickCount
+    .text.xTaskPriorityInherit
+    .text.pbuf_alloc_reference
+    .text.inet_chksum
+    .text.mem_free
+    .text.pbuf_remove_header
+    .text.pbuf_split_64k
+    .text.memp_free
+    .text.xTaskCheckForTimeOut
+    .text.sys_mbox_valid
+    .text.xTaskResumeAll
+    .text.udp_input
+    .text.icmp_time_exceeded
+    .text.ip4_input
+    .text.ip4_reass
+    .text.xTaskRemoveFromEventList
+    .text.ip4_route
+    .text.sys_timeout
+    .text.inet_chksum_pseudo
+    .text.pbuf_ref
+    .text.sys_mutex_lock
+    .text.lwip_standard_chksum
+    .text.ip4_addr_isbroadcast_u32
+    .text.icmp_input
+    .text.vTaskMissedYield
+    .text.pbuf_alloc
+    .text.memp_malloc
+    .text.pbuf_free
+    .text.sys_now
+    .text.sys_arch_protect
+    .text.vAssertCalled
+    .text.vListInsert
+    .text.raw_input
+    .text.xTaskIncrementTick
+    .text.xQueueSemaphoreTake
+    .text.inet_chksum_pbuf
+    .text.xTaskPriorityDisinherit
+    .text.pvTaskIncrementMutexHeldCount
+    .text.sys_arch_unprotect
+    .text.sys_arch_sem_wait
+    .text.sys_mbox_trypost
+    .text.netif_poll
+    .text.vTaskEnterCritical
+    .text.lwip_htons
+    .text.pbuf_cat
+    .text.mem_trim
+    .text.lwip_htonl
+    .text.pbuf_realloc
+    .text.vTaskPriorityDisinheritAfterTimeout
+    .text.pbuf_add_header
+    .text.xQueueGenericSend
+    .text.pbuf_clen
+    .text.pbuf_copy_partial
+    .text.ip_chksum_pseudo
+    .text.sys_mutex_unlock
+    .text.pbuf_copy
+    .text.vTaskExitCritical
+    .text.mem_malloc
+    )
+    *(
+    .rodata.TX_HE_106_TONE_TO_MIN_SEP
+    .rodata.TX_HE_26_TONE_TO_MIN_SEP
+    .rodata.TX_HE_52_TONE_TO_MIN_SEP
+    .rodata.TX_HE_RATE_TO_32US_LEN
+    .rodata.TX_HE_RATE_TO_MIN_SEP
+    .rodata.fragb2b1_to_bitmap_len
+    .rodata.ru_1us_tables
+    .rodata.txl_cfm_evt_bit
+    .rodata.mac_aci2ac
+    )
+    *(
+    .text.txl_fill_bar
+    .text.txl_he_txop_dur_rtscts_thres_apply
+    .text.txl_he_idx_to_1us_len_get
+    .text.txl_he_tb_ampdu_mpdu_transmit_trigger
+    .text.txl_he_set_new_edca_head
+    .text.txl_he_restart_edca
+    .text.txl_he_mu_edca_timer
+    .text.txl_he_mu_edca_start
+    .text.txl_he_tb_mpdu_transmit_trigger
+    .text.mm_timer_hw_set
+    .text.cmp_abs_time
+    .text.txl_agg_finish
+    .text.txl_agg_check_rtscts_retry_limit
+    .text.ke_evt_set
+    .text.txl_he_trigger_push
+    .text.txl_agg_check
+    .text.rxl_rxcntrl_frame
+    .text.co_list_cnt
+    .text.hal_machw_disable_int
+    .text.txl_ba_push
+    .text.trpc_get_default_power_idx
+    .text.co_list_push_back
+    .text.txl_he_tb_transmit_trigger
+    .text.rxl_frame_release
+    .text.wl_wlan_power_cfg_get
+    .text.txl_he_txop_dur_rtscts_thres_ampdu_check
+    .text.rxl_rxdesc_ready_for_processing
+    .text.rxl_immediate_frame_get
+    .text.txl_cfm_push
+    .text.txl_he_decode_m_ba
+    .text.co_list_pop_front
+    .text.txl_agg_check_saved_agg_desc
+    .text.txl_he_txop_dur_rtscts_thres_mpdu_check
+    .text.co_list_extract
+    .text.txl_agg_release
+    .text.txl_he_tb_transmit_cancelled
+    .text.txl_cntrl_newhead
+    .text.txl_transmit_trigger
+    .text.mm_timer_set
+    .text.co_list_insert
+    .text.tpc_get_vif_tx_power_vs_rate
+    .text.txl_frame_cfm
+    .text.txl_frame_exchange_chain
+    )
+

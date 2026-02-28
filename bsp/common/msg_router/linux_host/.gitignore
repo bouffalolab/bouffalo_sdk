@@ -1,0 +1,28 @@
+# Build outputs
+**/*.ko
+**/*.mod
+**/*.mod.c
+**/*.mod.o
+**/*.o
+**/*.a
+**/.*.cmd
+**/Module.symvers
+**/modules.order
+**/.tmp_versions/
+**/built-in.a
+**/built-in.o
+
+# Editor files
+**/*~
+**/*.swp
+**/*.swo
+**/.vscode/
+**/.idea/
+**/*.sublime-*
+
+# Debug files
+**/core*
+**/*.core
+**/*.log
+**/tags
+**/TAGS
