@@ -30,7 +30,7 @@ int bflb_pec_interrupt_init(struct bflb_device_s *dev)
     cfg.thresh_fifo_rx = 4;                            /*!< threshold of RX FIFO for interrupt and DMA, 0~15 if no join, 0~31 if tx_join_rx */
     bflb_pec_init(dev, &cfg);
 
-#if defined(BL616L)
+#if defined(BL616CL)
     if (dev->sub_idx == 1) {
         mem += PEC_MEMORY_SIZE_0;
     }

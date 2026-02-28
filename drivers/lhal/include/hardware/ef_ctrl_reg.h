@@ -175,7 +175,7 @@
 
 
 /* 0x80C : ef_if_0_manual, 606P and 808 manual config is the same but not need witch clock */
-#if defined(BL702) || defined(BL602) || defined(BL702L) || defined(BL606P) || defined(BL808)
+#if defined(BL702) || defined(BL602) || defined(BL702L)  
 #define EF_CTRL_EF_IF_0_MANUAL_OFFSET        (0x80C)
 #define EF_CTRL_EF_IF_A                      EF_CTRL_EF_IF_A
 #define EF_CTRL_EF_IF_A_POS                  (0U)
@@ -226,7 +226,7 @@
 /* 0x80C : ef_if_0_manual_0 */
 #define EF_CTRL_EF_IF_0_MANUAL_0_OFFSET      (0x80C)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 #define EF_CTRL_EF_IF_A                      EF_CTRL_EF_IF_A
 #define EF_CTRL_EF_IF_A_POS                  (0U)
 #define EF_CTRL_EF_IF_A_LEN                  (10U)
@@ -258,7 +258,7 @@
 #define EF_CTRL_EF_IF_A_LEN                  (12U)
 #define EF_CTRL_EF_IF_A_MASK                 (((1U << EF_CTRL_EF_IF_A_LEN) - 1) << EF_CTRL_EF_IF_A_POS)
 #define EF_CTRL_EF_IF_A_UMASK                (~(((1U << EF_CTRL_EF_IF_A_LEN) - 1) << EF_CTRL_EF_IF_A_POS))
-#endif /* end of #if defined(BL616L) */
+#endif /* end of #if defined(BL616CL) */
 
 #define EF_CTRL_EF_IF_PD                     EF_CTRL_EF_IF_PD
 #define EF_CTRL_EF_IF_PD_POS                 (18U)
@@ -297,7 +297,7 @@
 #define EF_CTRL_EF_IF_PROT_CODE_MANUAL_UMASK (~(((1U << EF_CTRL_EF_IF_PROT_CODE_MANUAL_LEN) - 1) << EF_CTRL_EF_IF_PROT_CODE_MANUAL_POS))
 #endif
 
-#if defined(BL606P) || defined(BL808) || defined(BL616D)
+#if  defined(BL618DG)
 /* 0x900 : ef_if_ctrl_1 */
 #define EF_CTRL_EF_IF_CTRL_1_OFFSET      (0x900)
 #define EF_CTRL_EF_IF_1_BUSY             EF_CTRL_EF_IF_1_BUSY

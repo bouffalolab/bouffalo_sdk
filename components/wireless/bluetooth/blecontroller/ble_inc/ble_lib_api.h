@@ -30,13 +30,10 @@ void ble_rf_set_tx_channel(uint16_t tx_channel);
 void ble_controller_disable_adv_random_delay(bool disable);
 
 #if defined(CONFIG_BLE_MFG)
-enum
-{
-    BLE_TEST_TX                  = 0x00,
-    BLE_TEST_RX,
-    BLE_TEST_RXTX,
-    BLE_TEST_END
-};
+#define BLE_TEST_TX     0x00
+#define BLE_TEST_RX     0x01
+#define BLE_TEST_RXTX   0x02
+#define BLE_TEST_END    0x03
 
 ///HCI LE Receiver Test Command parameters structure
 struct le_rx_test_cmd
@@ -52,7 +49,7 @@ struct le_tx_test_cmd
     uint8_t        tx_freq;
     ///TX test data length
     uint8_t        test_data_len;
-    ///TX test payload type - see enum
+    ///TX test payload type 
     uint8_t        pk_payload_type;
 };
 
@@ -73,7 +70,7 @@ struct le_enhanced_tx_test_cmd
     uint8_t        tx_freq;
     ///TX test data length
     uint8_t        test_data_len;
-    ///TX test payload type - see enum
+    ///TX test payload type
     uint8_t        pk_payload_type;
     ///TX PHY for Rx test
     uint8_t        tx_phy;

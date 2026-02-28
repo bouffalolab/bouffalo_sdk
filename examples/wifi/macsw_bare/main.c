@@ -56,8 +56,8 @@
 /* for get mac address */
 #if defined(BL616)
 #include <bl616_mfg_media.h>
-#elif defined(BL616L)
-#include <bl616l_mfg_media.h>
+#elif defined(BL616CL)
+#include <bl616cl_mfg_media.h>
 #endif
 
 #include "wifi_mgmr.h"
@@ -122,7 +122,7 @@ static void async_event_loop_wake(void)
         wait = 0;
     }
 
-    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
+    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, 0, wait);
     configASSERT(xReturn == pdPASS);
 }
 
@@ -227,27 +227,46 @@ int macsw_stop_ap_cmd(int argc, char **argv)
     return 0;
 }
 
-static void wifi_scan_cmd(int argc, char **argv)
+static uint32_t monitor_rx_count = 0;
+static TaskHandle_t mon_dump_tsk = NULL;
+static void wl80211_monitor_rx(void *ctx, void *pkt, size_t len, size_t mac_hdr_len, int rssi)
 {
-    if (wl80211_scan(NULL)) {
-        printf("wl80211_scan failed\n");
-    }
-    return;
+    monitor_rx_count++;
 }
 
-static void wl80211_monitor_rx(void *ctx, void *pkt, size_t len, size_t mac_hdr_len, int rssi) {
-    printf("%s:%d\n", __func__, __LINE__);
+static void monitor_rx_count_dump(void *param)
+{
+    while (wl80211_monitor_status()) {
+        printf("monitor rx count: %u\n", monitor_rx_count);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+    printf("monitor rx dump exit\n");
+    mon_dump_tsk = NULL;
+    vTaskDelete(NULL);
 }
 
 static void wifi_monitor_start_cmd(int argc, char **argv)
 {
     struct wl80211_monitor_settings mon_settings;
+    int ret;
+    if (argc < 2) {
+        printf("usage: %s <freq>\n", argv[0]);
+        return;
+    }
+
     mon_settings.channel_width = WL80211_CHAN_WIDTH_20;
-    mon_settings.center_freq1 = 2412;
+    mon_settings.center_freq1 = atoi(argv[1]);
     mon_settings.recv = wl80211_monitor_rx;
 
-    if (wl80211_monitor_start(&mon_settings)) {
-        printf("wl80211 monitor start failed\n");
+    printf("freq: %d\n", mon_settings.center_freq1);
+
+    if ((ret = wl80211_monitor_start(&mon_settings))) {
+        printf("wl80211 monitor start failed:%d\n", ret);
+    } else {
+        monitor_rx_count = 0;
+        if (!mon_dump_tsk) {
+            xTaskCreate(monitor_rx_count_dump, "monitor_rx_dump", 512, NULL, 10, &mon_dump_tsk);
+        }
     }
     return;
 }
@@ -268,4 +287,82 @@ SHELL_CMD_EXPORT_ALIAS(macsw_stop_ap_cmd, macsw_stop_ap, macsw stop ap.);
 SHELL_CMD_EXPORT_ALIAS(wifi_monitor_start_cmd, monitor_start, monitor start.);
 SHELL_CMD_EXPORT_ALIAS(wifi_monitor_stop_cmd, monitor_stop, monitor stop.);
 
-SHELL_CMD_EXPORT_ALIAS(wifi_scan_cmd, wifi_scan, wifi scan);
+/**
+ * Test command for wl80211_inject_frame
+ *
+ * This demonstrates frame injection - sending a fully constructed 802.11 frame
+ * that bypasses the WiFi protocol stack.
+ *
+ * Usage: inject_frame_test <freq>
+ * Example: inject_frame_test 2437  (inject test frame on channel 6)
+ */
+static void wifi_inject_frame_test_cmd(int argc, char **argv)
+{
+    if (argc < 2) {
+        printf("usage: %s <freq_in_mhz>\n", argv[0]);
+        printf("example: %s 2437  (channel 6)\n", argv[0]);
+        printf("\nNote: This injects a raw 802.11 frame bypassing the protocol stack.\n");
+        printf("The test frame is a simple management frame template.\n");
+        printf("Requires STA VIF to be available (not in monitor mode).\n");
+        return;
+    }
+
+    struct wl80211_inject_frame_params params;
+    uint16_t freq = atoi(argv[1]);
+
+    /* Test 802.11 management frame (complete with MAC header)
+     * Note: In real use, you would construct a proper 802.11 frame with
+     * correct frame control, duration, addresses, sequence number, etc.
+     */
+    uint8_t test_frame[] = {
+        /* Frame Control (2 bytes) - Management frame */
+        0x00, 0x00,
+        /* Duration (2 bytes) */
+        0x00, 0x00,
+        /* Destination Address (6 bytes) - broadcast */
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        /* Source Address (6 bytes) - test MAC */
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
+        /* BSSID (6 bytes) - test MAC */
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
+        /* Sequence Control (2 bytes) */
+        0x00, 0x00,
+        /* Frame Body (test payload) */
+        0xDE, 0xAD, 0xBE, 0xEF
+    };
+
+    /* Set up injection parameters */
+    params.frame = test_frame;
+    params.len = sizeof(test_frame);
+    params.freq = freq;
+    params.cb = NULL;
+    params.opaque = NULL;
+
+    printf("Injecting raw 802.11 frame on freq %d MHz (len=%zu)\n", freq, sizeof(test_frame));
+    printf("Note: This bypasses the WiFi protocol stack.\n");
+
+    int ret = wl80211_inject_frame(&params);
+
+    if (ret == 0) {
+        printf("wl80211_inject_frame succeeded\n");
+    } else {
+        printf("wl80211_inject_frame failed: %d\n", ret);
+        if (ret == -1) {
+            printf("  Error: Invalid parameters or VIF creation failed\n");
+        } else if (ret == -2) {
+            printf("  Error: Monitor mode active (injection not allowed)\n");
+        } else if (ret == -4) {
+            printf("  Error: Invalid frequency\n");
+        } else if (ret == -7) {
+            printf("  Error: Memory allocation failed\n");
+        } else if (ret == -10) {
+            printf("  Error: MACSW rejected request\n");
+        } else {
+            printf("  Error: Unknown error\n");
+        }
+    }
+
+    return;
+}
+
+SHELL_CMD_EXPORT_ALIAS(wifi_inject_frame_test_cmd, inject_frame_test, inject raw 802.11 frame test);

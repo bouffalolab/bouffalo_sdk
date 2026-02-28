@@ -56,7 +56,7 @@ static eth_phy_init_cfg_t phy_cfg = {
 static struct bflb_emac_config_s emac_cfg = {
     .mac_addr = { MAC_ADDR_NUM_0, MAC_ADDR_NUM_1, MAC_ADDR_NUM_2, MAC_ADDR_NUM_3, MAC_ADDR_NUM_4, MAC_ADDR_NUM_5 },
     .clk_internal_mode = false,
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
     .md_clk_div = 79,
 #else
     .md_clk_div = 39,

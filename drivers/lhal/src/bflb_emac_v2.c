@@ -3535,7 +3535,7 @@ int bflb_emac_v2_bd_tx_enqueue(struct bflb_device_s *dev, uint32_t flags, uint32
         arch_memcpy_fast((void *)(uintptr_t)(txdesc->buffer1), data_in, length1);
     }
 #ifdef EMAC_V2_DO_FLUSH_DATA
-#if defined(BL628) || defined(BL616D)
+#if  defined(BL618DG)
     bflb_l1c_dcache_clean_range((void *)txdesc->buffer1, length1);
 #endif
 #endif
@@ -4064,7 +4064,7 @@ int bflb_emac_bd_ctrl_clean(struct bflb_device_s *dev)
 }
 
 #if 0
-#if defined(BL628) || defined(BL616D)
+#if  defined(BL618DG)
 /**
  * @brief bflb emac phy register read
  *

@@ -4,8 +4,8 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include "ipm.h"
-#if defined(BL616D)
-#include "bl616d_glb.h"
+#if defined(BL618DG)
+#include "bl618dg_glb.h"
 
 #define IPC_MASTER_REG_ADDR      0x20040008
 #define IPC_SLAVE_REG_ADDR       0x2004000c

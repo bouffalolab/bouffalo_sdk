@@ -74,7 +74,7 @@
 #define EMAC_PAD      (1 << 15U)
 #define EMAC_RECSMALL (1 << 16U)
 #define EMAC_RMII_EN  (1 << 17U)
-#if defined(BL616L)||defined(BL616D)
+#if defined(BL616CL)||defined(BL618DG)
 #define EMAC_100M     (1 << 18U)
 #endif
 

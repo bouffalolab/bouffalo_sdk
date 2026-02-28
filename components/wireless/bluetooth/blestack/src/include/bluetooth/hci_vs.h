@@ -133,7 +133,7 @@ struct bt_hci_cp_vs_set_scan_req_reports {
 } __packed;
 #endif //BFLB_BLE
 
-#if defined(BL616) || defined(BL702L) || defined(BL616D)
+#if defined(BL616) || defined(BL702L) || defined(BL618DG)
 #define BT_HCI_OP_VS_SET_TX_PWR             BT_OP(BT_OGF_VS, 0x0073)
 #else
 #define BT_HCI_OP_VS_SET_TX_PWR             BT_OP(BT_OGF_VS, 0x0061)
@@ -143,7 +143,7 @@ struct bt_hci_cp_vs_set_tx_pwr {
 }__packed;
 
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
 #define BT_HCI_OP_VS_SET_BD_ADDR             BT_OP(BT_OGF_VS, 0x0074)
 #else
 #define BT_HCI_OP_VS_SET_BD_ADDR             BT_OP(BT_OGF_VS, 0x0062)

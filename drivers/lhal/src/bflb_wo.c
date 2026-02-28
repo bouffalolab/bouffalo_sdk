@@ -43,7 +43,7 @@ void bflb_wo_init(struct bflb_device_s *dev, struct bflb_wo_cfg_s *cfg)
     regval &= ~GLB_CR_GPIO_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG142_OFFSET);
 
-#if defined(BL616L)
+#if defined(BL616CL)
     /* config divider */
     regval = getreg32(reg_base + GLB_GPIO_CFG145_OFFSET);
     regval &= ~GLB_CR_IO_TOG_CNT_DIV_VAL_MASK;
@@ -318,7 +318,7 @@ void bflb_wo_uart_init(struct bflb_device_s *dev, uint32_t baudrate, uint8_t pin
 {
     struct bflb_wo_cfg_s cfg;
 
-#if defined(BL616L)
+#if defined(BL616CL)
     cfg.clk_div = 1;
 #endif
     if (baudrate == 0) {
@@ -331,7 +331,7 @@ void bflb_wo_uart_init(struct bflb_device_s *dev, uint32_t baudrate, uint8_t pin
     cfg.code0_first_level = 1;
     cfg.code1_first_level = 1;
     cfg.idle_level = 1;
-#if defined(BL616L)
+#if defined(BL616CL)
     cfg.fifo_threshold = 8;
 #else
     cfg.fifo_threshold = 64;

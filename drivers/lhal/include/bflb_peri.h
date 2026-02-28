@@ -77,7 +77,7 @@
 #define BFLB_PERIPHERAL_PDS                    (42)
 #endif
 
-#if defined(BL808)
+#if 0
 #define BFLB_PERIPHERAL_CPU                    (0)
 #define BFLB_PERIPHERAL_SDU0                   (1)
 #define BFLB_PERIPHERAL_SEC0                   (2)
@@ -171,7 +171,7 @@
 #define BFLB_PERIPHERAL_USB                    (33)
 #endif
 
-#if defined(BL606P)
+#if 0
 #define BFLB_PERIPHERAL_CPU                    (0)
 #define BFLB_PERIPHERAL_SDU0                   (1)
 #define BFLB_PERIPHERAL_SEC0                   (2)
@@ -226,7 +226,7 @@
 #define BFLB_PERIPHERAL_DISPLAY                (51)
 #endif
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define BFLB_PERIPHERAL_CPU                    (0)
 #define BFLB_PERIPHERAL_SDU0                   (1)
 #define BFLB_PERIPHERAL_SEC0                   (2)
@@ -285,7 +285,7 @@
 #define BFLB_PERIPHERAL_PWM1                   (55)
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 #define BFLB_PERIPHERAL_CPU                    (0)
 #define BFLB_PERIPHERAL_SDU0                   (1)
 #define BFLB_PERIPHERAL_SEC0                   (2)

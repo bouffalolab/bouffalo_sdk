@@ -11,10 +11,10 @@
 
 #if defined(BL616)
 #include "bl616_glb.h"
-#elif defined(BL616L)
-#include "bl616l_glb.h"
-#elif defined(BL616D)
-#include "bl616d_glb.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
+#elif defined(BL618DG)
+#include "bl618dg_glb.h"
 #endif
 
 #include "board.h"
@@ -210,12 +210,6 @@ static int sdio3_driver_init(mr_msg_ctrl_priv_t *msg_ctrl)
     LOG_I("sdio3_driver_init\r\n");
 
     /* Enable SDIO clock */
-#if defined(BL628)
-    bflb_glb_per_clock_ungate(GLB_AHB_CLOCK_SDU);
-    bflb_glb_per_clock_ungate(GLB_AHB_CLOCK_USB20_SDU);
-    bflb_glb_per_clock_ungate(GLB_AHB_CLOCK_USB_SDIO);
-#endif
-
     /* Initialize SDIO GPIO */
     board_sdio_gpio_init();
 

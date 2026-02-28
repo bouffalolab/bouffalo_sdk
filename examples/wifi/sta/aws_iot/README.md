@@ -3,9 +3,9 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616/BL618D      |        |
+| CHIP         | Remark |
+|:------------:|:------:|
+| BL616/BL618D |        |
 
 ## Compile
 

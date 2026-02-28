@@ -6,7 +6,7 @@
 #include "mac_types.h"
 #include "macsw.h"
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define MAX_FIXED_CHANNELS_LIMIT (42)
 #else
 #define MAX_FIXED_CHANNELS_LIMIT (14)
@@ -47,6 +47,8 @@
 #define  CODE_WIFI_ON_GOT_IP6           25
 #define  CODE_WIFI_ON_LOST_IP           26
 #define  CODE_WIFI_ON_LOST_IP6          27
+#define  CODE_WIFI_ON_GOT_IP_TIMEOUT    28
+#define  CODE_WIFI_ON_GOT_IP_ABORT      29
 #define  CODE_WIFI_ON_SCAN_DONE_CONNECTING  31
 
 #define WIFI_EVENT_BEACON_IND_AUTH_OPEN            0
@@ -143,6 +145,7 @@ typedef struct wifi_mgmr_sniffer_item {
  *  freq1    : Frequency of AP
  *  freq2    : Frequency of AP (You can specify up to two frequencies on which AP will be scanned.)
  *  use_dhcp : Whether to use the dhcp server which provided by AP
+ *  dhcp_timeout_event_only : 0 legacy (disconnect/reconnect), 1 timeout event only
  */
 typedef struct wifi_mgmr_sta_connect_params {
     char ssid[MGMR_SSID_LEN];
@@ -159,6 +162,9 @@ typedef struct wifi_mgmr_sta_connect_params {
     uint16_t freq2;
     uint8_t pmf_cfg;
     uint8_t use_dhcp;
+    // 0: legacy disconnect/reconnect on DHCP timeout (default)
+    // 1: report DHCP timeout event only
+    uint8_t dhcp_timeout_event_only;
     // listen_interval to monitor AP beacon
     // range:[1, 100]
     uint8_t listen_interval;
@@ -514,6 +520,16 @@ int wifi_mgmr_sta_ip_set(uint32_t ip, uint32_t mask, uint32_t gw, uint32_t dns);
  * return 0 on success or -1 on error
  */
 int wifi_sta_ip4_addr_get(uint32_t *addr, uint32_t *mask, uint32_t *gw, uint32_t *dns);
+
+/**
+ * Start dhcp client on STA interface
+ * IF STA interface is not connected, just return -1
+ *
+ * @param to_ms Timeout in ms to obtain IP (0 uses WIFI_STA_DHCPC_TIMEOUT_MS_DEFAULT)
+ *
+ * return 0 on success or others on error
+ */
+int wifi_sta_dhcp_client_start(uint32_t to_ms);
 
 #if MACSW_FHOST_MONITOR
 /**
@@ -1496,14 +1512,14 @@ uint8_t wifi_mgmr_get_channelnum_24G(void);
 * This function validates whether a given channel number is allowed for use
 * in the current regulatory domain (country code). It checks:
 * - 2.4GHz band channels (1-14 typically)
-* - 5GHz band channels (conditionally for BL616D platform)
+* - 5GHz band channels (conditionally for BL618DG platform)
 *
 * @param channel The WiFi channel number to validate
 * @return int
 *   - 0: Channel is valid for current regulatory domain
 *   - -1: Channel is invalid or not allowed
 *
-* @note For 5GHz channels (BL616D), country-specific validation is not yet implemented (TODO)
+* @note For 5GHz channels (BL618DG), country-specific validation is not yet implemented (TODO)
 */
 int wifi_mgmr_channel_valid_check(uint16_t channel);
 #endif

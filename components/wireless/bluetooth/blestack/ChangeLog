@@ -1,4 +1,10 @@
 # Changes
+## 2026-02-10
+1. [blestack] Add CONFIG_BT_ATT_PREPARE_COUNT configuration option to make ATT prepare count configurable (0-64 range) with validation in both build system and compile-time checks.
+
+## 2026-02-03
+1. SPP Performance Enhancement: Increased MTU 1021 bytes and optimized L2CAP buffer configuration for transmission efficiency improvement.
+
 ## 2026-01-20
 1.[blestack]: standardize include paths in blestack headers.
 
@@ -24,7 +30,7 @@
 1. [blestack]remove easyflash4 for bouffalo sdk.
 
 ## 2025-10-10
-1. [blestack]support set tx power and set bdaddr command on bl616d platform.
+1. [blestack]support set tx power and set bdaddr command on bl618dg platform.
 
 ## 2025-09-24
 1. [blestack]Use common config a macro for Bouffalo_SDK.
@@ -51,7 +57,7 @@
 1. [blestack] Add GATT API parameter invalid check.
 
 ## 2025-07-02
-1. [blestack] support ble stack on bl616d platform.
+1. [blestack] support ble stack on bl618dg platform.
 2. [blestack] Optimize ble debug monitor, replace "BT_WARN" by "putchar" to avoid stack overflow.
 
 ## 2025-06-16

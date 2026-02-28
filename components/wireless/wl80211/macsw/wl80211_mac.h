@@ -5,7 +5,7 @@
 #include "macsw.h"
 
 /* global variable */
-extern uint8_t wl80211_mac_vif[WL80211_VIF_MAX];
+extern int8_t wl80211_mac_vif[WL80211_VIF_MAX];
 
 struct macsw_tx_desc {
     /// Information provided by Host
@@ -42,12 +42,16 @@ struct wl80211_mac_rx_desc {
     /// must be just after !!!
     struct rx_info info;
     /// Payload buffer space - must be after rx_info  !!!
-    uint32_t payload[CO_ALIGN4_HI(RX_MAX_AMSDU_SUBFRAME_LEN + 1) / sizeof(uint32_t)];
+    uint32_t payload[];
 };
 
-int wl80211_eapol_input(enum wl80211_vif_type vif, uint8_t *payload, size_t len);
-int wl80211_mac_mgmt_input(uint8_t *payload, size_t len);
+int wl80211_mac_rx_buffer_init(size_t payload_len);
+
+int wl80211_eapol_input(uint8_t vif_type, uint8_t *payload, size_t len);
+int wl80211_mac_mgmt_input(uint8_t vif, uint8_t *payload, size_t len);
 int wl80211_mac_disconnect(uint16_t reason_code, uint16_t status_code);
+void wl80211_mac_sta_deauth_handler(uint8_t *payload, uint32_t len);
+void wl80211_mac_sta_disassoc_handler(uint8_t *payload, uint32_t len);
 
 /**
  * Start WiFi scan (internal MAC layer function)
@@ -127,11 +131,19 @@ int wl80211_mac_monitor_start(struct wl80211_monitor_settings *mon_setting);
  */
 int wl80211_mac_monitor_stop(void);
 
+/**
+ * Inject raw 802.11 frame (internal implementation)
+ *
+ * @param params Frame injection parameters
+ * @return 0 on success, negative value on error
+ */
+int wl80211_mac_inject_frame(struct wl80211_inject_frame_params *params);
+
 // only for type checker
 struct wl80211_tx_header;
 #define WL80211_MAC_TX_FLAG_MGMT 0x1
-int wl80211_mac_tx(enum wl80211_vif_type vif, struct wl80211_tx_header *desc, unsigned int flags, struct iovec *seg,
-                   int seg_cnt, void *txdone_cb, void *opaque);
+int wl80211_mac_tx(uint8_t vif_type, struct wl80211_tx_header *desc, unsigned int flags, struct iovec *seg, int seg_cnt,
+                   void *txdone_cb, void *opaque);
 
 void wl80211_mac_rx_free(void *info);
 
@@ -148,7 +160,7 @@ extern const struct me_chan_config_req _macsw_chan_def;
  *   >=0 : VIF index
  *   -1  : Failed (vif_mgmt_register failed, see vif_mgmt.c for detailed error codes)
  */
-int _macsw_add_vif(enum mac_vif_type vif_type, uint8_t mac[6]);
+int _macsw_add_vif(uint8_t type, uint8_t mac[6]);
 
 /**
  * Remove VIF (internal function)
@@ -167,4 +179,5 @@ void *_ap_get_wpa_sm(uint8_t *mac);
 int _external_auth_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 int _ap_start_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 int _sta_add_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int _credits_update_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 #endif

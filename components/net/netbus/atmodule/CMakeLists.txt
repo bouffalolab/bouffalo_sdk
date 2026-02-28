@@ -64,6 +64,7 @@ sdk_add_compile_definitions_ifdef(CONFIG_ATMODULE_MQTT           -DMQTT_USE_CUST
 sdk_add_compile_definitions_ifdef(CONFIG_LPAPP                   -DCONFIG_ATMODULE_LP=1)
 # Low Power Mode: need CFG_BL_WIFI_PS_ENABLE to avoid PSM_EVENT redefinition in at_pwr_cmd.c
 sdk_add_compile_definitions_ifdef(CONFIG_LPAPP                   -DCFG_BL_WIFI_PS_ENABLE)
+sdk_add_compile_definitions_ifdef(CONFIG_WIFI4                   -DAT_RECONNECT_STACK=384)
 sdk_add_compile_definitions(-DCONFIG_CHIP_CPUNAME="${BOARD}")
 
 # transport choice

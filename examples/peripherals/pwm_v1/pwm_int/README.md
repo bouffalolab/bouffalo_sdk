@@ -3,11 +3,11 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL602/BL604       |        |
-|BL702/BL704/BL706 |        |
-|BL702L/BL704L     |        |
+| CHIP              | Remark |
+|:-----------------:|:------:|
+| BL602/BL604       |        |
+| BL702/BL704/BL706 |        |
+| BL702L/BL704L     |        |
 
 ## Compile
 

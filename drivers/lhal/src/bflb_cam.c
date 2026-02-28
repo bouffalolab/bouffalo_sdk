@@ -5,13 +5,13 @@
 #include "bflb_clock.h"
 #endif
 
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
 #define CAM_FRONT_BASE 0x20050000
 #endif
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_FRONT_BASE 0x20040000
 #endif
-#if defined(BL808)
+#if 0
 #define CAM_FRONT_BASE 0x30010000
 #endif
 
@@ -34,11 +34,11 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #if !defined(BL702)
     uint32_t threshold;
 #endif
-#if defined(BL808) || defined(BL616D)
+#if  defined(BL618DG)
     uint32_t tmpval;
 #endif
 
-#if defined(BL808)
+#if 0
     if (config->input_source) {
         tmpval = 0x15;
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_PIX_DATA_CTRL_OFFSET);
@@ -59,7 +59,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
     reg_base = dev->reg_base;
     putreg32(config->output_bufaddr, reg_base + CAM_DVP2AXI_ADDR_START_OFFSET);
     putreg32(config->resolution_y << 16 | config->resolution_x, reg_base + CAM_DVP2AXI_FRAM_EXM_OFFSET);
-#if !defined(BL616D)
+#if !defined(BL618DG)
     putreg32(data_mode, reg_base + CAM_DVP_DEBUG_OFFSET);
 #endif
 
@@ -84,16 +84,16 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
         resolution_y = (regval & 0xffff) - (regval >> 16 & 0xffff);
     }
 
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
     putreg32(0, CAM_FRONT_BASE + CAM_FRONT_DVP2BUS_SRC_SEL_1_OFFSET);
-#elif defined(BL616D)
+#elif defined(BL618DG)
     regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
     regval &= ~(dev->idx == 0 ? CAM_FRONT_REG_D2XA_IN_SEL_MASK : CAM_FRONT_REG_D2XB_IN_SEL_MASK);
     putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
 #endif
 
 #if !defined(BL702)
-#if defined(BL808)
+#if 0
     if (config->input_source != CAM_INPUT_SOURCE_CSI) {
 #endif
 
@@ -118,7 +118,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
         regval &= ~CAM_FRONT_RG_DVPAS_FIFO_TH_MASK;
         regval |= threshold << CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT;
         putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-#if defined(BL808)
+#if 0
     }
 #endif
 #endif
@@ -127,19 +127,19 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
     frame_size = resolution_x * resolution_y * 2;
     regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
     if (config->with_mjpeg) {
-#if defined(BL616D)
+#if defined(BL618DG)
         regval |= CAM_REG_WRAP_MODE;
 #else
         regval &= ~CAM_REG_SW_MODE;
 #endif
     } else {
-#if defined(BL616D)
+#if defined(BL618DG)
         regval &= ~CAM_REG_WRAP_MODE;
 #else
         regval |= CAM_REG_SW_MODE;
 #endif
     }
-#if defined(BL616D) && !defined(CPU_MODEL_A0)
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
     regval |= CAM_REG_HW_MODE_FWRAP;
 #endif
 #if defined(BL702)
@@ -151,7 +151,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #endif
     switch (config->input_format) {
         case CAM_INPUT_FORMAT_YUV422_YUYV:
-#if defined(BL808)
+#if 0
             if (config->output_format >= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888 &&
                 config->output_format <= CAM_OUTPUT_FORMAT_RGB888_TO_RGBA8888) {
                 tmpval = 0x23;
@@ -188,7 +188,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
                     break;
                 }
             }
-#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#elif defined(BL618DG) && !defined(CPU_MODEL_A0)
             if (config->output_format >= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888 &&
                 config->output_format <= CAM_OUTPUT_FORMAT_RGB888_TO_RGBA8888) {
                 tmpval = getreg32(CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
@@ -249,9 +249,9 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #endif
                 data_mode = 4;
                 frame_size = resolution_x * resolution_y / 2;
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
                 putreg32(1, CAM_FRONT_BASE + CAM_FRONT_DVP2BUS_SRC_SEL_1_OFFSET);
-#elif defined(BL616D)
+#elif defined(BL618DG)
                 tmpval = getreg32(CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
                 tmpval &= ~(dev->idx == 0 ? CAM_FRONT_REG_D2XA_IN_SEL_MASK : CAM_FRONT_REG_D2XB_IN_SEL_MASK);
                 putreg32(tmpval, CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
@@ -260,7 +260,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
             break;
 
         case CAM_INPUT_FORMAT_YUV422_UYVY:
-#if defined(BL808)
+#if 0
             if (config->output_format >= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888 &&
                 config->output_format <= CAM_OUTPUT_FORMAT_RGB888_TO_RGBA8888) {
                 bflb_cam_feature_control(dev, CAM_CMD_INVERSE_YUYV2UYVY, true);
@@ -298,7 +298,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
                     break;
                 }
             }
-#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#elif defined(BL618DG) && !defined(CPU_MODEL_A0)
             if (config->output_format >= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888 &&
                 config->output_format <= CAM_OUTPUT_FORMAT_RGB888_TO_RGBA8888) {
                 bflb_cam_feature_control(dev, CAM_CMD_INVERSE_YUYV2UYVY, true);
@@ -360,9 +360,9 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #endif
                 data_mode = 4;
                 frame_size = resolution_x * resolution_y / 2;
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
                 putreg32(1, CAM_FRONT_BASE + CAM_FRONT_DVP2BUS_SRC_SEL_1_OFFSET);
-#elif defined(BL616D)
+#elif defined(BL618DG)
                 tmpval = getreg32(CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
                 tmpval &= ~(dev->idx == 0 ? CAM_FRONT_REG_D2XA_IN_SEL_MASK : CAM_FRONT_REG_D2XB_IN_SEL_MASK);
                 putreg32(tmpval, CAM_FRONT_BASE + CAM_FRONT_DVP_MUX_SEL_REG_OFFSET);
@@ -420,7 +420,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
             break;
     }
 #if !defined(BL702)
-#if defined(BL616D)
+#if defined(BL618DG)
 #if defined(CPU_MODEL_A0)
     if (config->output_format != CAM_OUTPUT_FORMAT_YUV420_UV) {
         putreg32(resolution_y << CAM_REG_FRAME_HEIGHT_SHIFT | (frame_size / resolution_y / 8),
@@ -500,7 +500,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
             frame_size = frame_size >> 6;
             break;
     }
-#if defined(BL616D)
+#if defined(BL618DG)
     tmpval = getreg32(reg_base + CAM_DVP2AXI_FRAME_BCNT_OFFSET);
     tmpval &= CAM_REG_FRAME_WIDTH_X8_MASK;
 #if defined(CPU_MODEL_A0)
@@ -517,7 +517,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
     putreg32(frame_size, reg_base + CAM_DVP2AXI_FRAME_BCNT_0_OFFSET);
 #endif
 
-#if defined(BL808)
+#if 0
     if (dev->idx < 4) {
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_DVP2BUS_SRC_SEL_1_OFFSET);
         regval &= ~(0x3f << (dev->idx * 8));
@@ -534,13 +534,13 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
     bflb_cam_int_mask(dev, CAM_INTMASK_FIFO_OVERWRITE, true);
 
 #if !defined(BL702)
-#if defined(BL616D)
+#if defined(BL618DG)
     regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
     regval |= CAM_FRONT_CR_DVP_S2P_EN;
     putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
 #endif
 
-#if defined(BL808)
+#if 0
     if (config->input_source == 0) {
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
         regval |= CAM_FRONT_RG_DVPAS_ENABLE;
@@ -653,7 +653,7 @@ void bflb_cam_pop_one_frame(struct bflb_device_s *dev)
 #if defined(BL702)
     putreg32(3, dev->reg_base + CAM_DVP_FRAME_FIFO_POP_OFFSET);
 #else
-#if !defined(BL616D)
+#if !defined(BL618DG)
     putreg32(1, dev->reg_base + CAM_DVP_FRAME_FIFO_POP_OFFSET);
 #endif
 #endif
@@ -670,7 +670,7 @@ uint8_t bflb_cam_get_frame_count(struct bflb_device_s *dev)
 
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + CAM_DVP_STATUS_AND_ERROR_OFFSET);
-#if defined(BL616D)
+#if defined(BL618DG)
     return ((regval >> 12) & 1);
 #else
     regval &= CAM_FRAME_VALID_CNT_MASK;
@@ -691,7 +691,7 @@ uint32_t bflb_cam_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
 #if defined(BL702)
     return (getreg32(reg_base + CAM_FRAME_BYTE_CNT0_0_OFFSET));
 #else
-#if defined(BL616D)
+#if defined(BL618DG)
     *pic = (uint8_t *)(uintptr_t)getreg32(reg_base + CAM_DVP2AXI_ADDR_START_OFFSET);
     reg_base = getreg32(reg_base + CAM_DVP2AXI_FRAME_BCNT_OFFSET);
 #if defined(CPU_MODEL_A0)
@@ -723,7 +723,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
-#if defined(BL616D)
+#if defined(BL618DG)
     uint32_t pixel_byte;
 #endif
 
@@ -769,7 +769,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + CAM_DVP2AXI_MISC_OFFSET);
             break;
 
-#if !defined(BL616D)
+#if !defined(BL618DG)
         case CAM_CMD_GET_FRAME_ID:
             /* Get frame id */
             *(uint16_t *)arg = getreg32(reg_base + CAM_FRAME_ID_STS01_OFFSET) & 0xffff;
@@ -781,7 +781,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             /* Wrap to output buffer start address, only effective in mjpeg mode, arg use ENABLE or DISABLE */
             regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
             if (arg) {
-#if defined(BL616D)
+#if defined(BL618DG)
                 regval |= CAM_REG_WRAP_MODE;
 #if !defined(CPU_MODEL_A0)
                 regval |= CAM_REG_HW_MODE_FWRAP;
@@ -790,7 +790,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 regval |= CAM_REG_HW_MODE_FWRAP;
 #endif
             } else {
-#if defined(BL616D)
+#if defined(BL618DG)
                 regval &= ~CAM_REG_WRAP_MODE;
 #if !defined(CPU_MODEL_A0)
                 regval &= ~CAM_REG_HW_MODE_FWRAP;
@@ -818,7 +818,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 
 #if !defined(BL702)
-#if !defined(BL616D)
+#if !defined(BL618DG)
         case CAM_CMD_FRAME_ID_RESET:
             /* Reset frame id */
             regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_ISP_ID_YUV_OFFSET);
@@ -851,7 +851,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
         case CAM_CMD_INVERSE_YUYV2UYVY:
             /* If image sensor output format is YUYV, it will be changed to UYVY */
-#if defined(BL616D)
+#if defined(BL618DG)
             regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
             if (arg) {
                 regval |= CAM_FRONT_CR_DVP_S2P_DA_ORDER;
@@ -884,7 +884,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(arg, reg_base + CAM_DVP2AXI_ADDR_START_OFFSET);
             break;
 
-#if defined(BL616D)
+#if defined(BL618DG)
         case CAM_CMD_SET_PIXEL_SIZE:
             /* arg[31:16]: pixel height, arg[15:0]: pixel width */
             regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);

@@ -72,13 +72,13 @@
 #define MJPEG_START_ADDR3_OFFSET                                (0x98)/* mjpeg_start_addr3 */
 #define MJPEG_BIT_CNT3_OFFSET                                   (0x9C)/* mjpeg_bit_cnt3 */
 #define MJPEG_Q_ENC_OFFSET                                      (0x100)/* mjpeg_q_enc */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_KICK_DONE_DELAY_OFFSET                            (0x104)/* mjpeg delay count when kick encode done to generate kick interrupt */
 #endif
 #define MJPEG_FRAME_ID_10_OFFSET                                (0x110)/* mjpeg_frame_id_10 */
 #define MJPEG_FRAME_ID_32_OFFSET                                (0x114)/* mjpeg_frame_id_32 */
 #define MJPEG_DEBUG_OFFSET                                      (0x1F0)/* mjpeg_debug */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_SW_USAGE_OFFSET                                   (0x1F8)/* mjpeg_sw_usage */
 #define MJPEG_HW_VERSION_OFFSET                                 (0x1F8)/* mjpeg_hw_version */
 #endif
@@ -99,19 +99,19 @@
 #define MJPEG_REG_W_XLEN_MASK                                   (0x7<<MJPEG_REG_W_XLEN_SHIFT)
 #define MJPEG_REG_YUV_MODE_SHIFT                                (12U)
 #define MJPEG_REG_YUV_MODE_MASK                                 (0x3<<MJPEG_REG_YUV_MODE_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_REG_KICK_DONE_STS_EN                              (1<<14U)
 #endif
 #define MJPEG_REG_MJPEG_HW_FRAME_SHIFT                          (24U)
 #define MJPEG_REG_MJPEG_HW_FRAME_MASK                           (0x3f<<MJPEG_REG_MJPEG_HW_FRAME_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_KICK_UPDATE_ADDR                                  (1<<30U)
 #endif
 
 /* 0x4 : mjpeg_control_2 */
 #define MJPEG_REG_SW_FRAME_SHIFT                                (0U)
 #define MJPEG_REG_SW_FRAME_MASK                                 (0x1f<<MJPEG_REG_SW_FRAME_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_REG_INT_KICK_CLR                                  (1<<5U)
 #endif
 #define MJPEG_REG_SW_KICK                                       (1<<6U)
@@ -168,14 +168,14 @@
 #define MJPEG_REG_FRAME_CNT_TRGR_INT_MASK                       (0x1f<<MJPEG_REG_FRAME_CNT_TRGR_INT_SHIFT)
 #define MJPEG_REG_INT_IDLE_EN                                   (1<<21U)
 #define MJPEG_STS_IDLE_INT                                      (1<<22U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_STS_KICK_INT                                      (1<<23U)
 #endif
 #define MJPEG_FRAME_VALID_CNT_SHIFT                             (24U)
 #define MJPEG_FRAME_VALID_CNT_MASK                              (0x1f<<MJPEG_FRAME_VALID_CNT_SHIFT)
 #define MJPEG_REG_INT_SWAP_EN                                   (1<<29U)
 #define MJPEG_STS_SWAP_INT                                      (1<<30U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_REG_INT_KICK_EN                                   (1<<31U)
 #endif
 
@@ -314,7 +314,7 @@
 #define MJPEG_REG_Q_SRAM_SW                                     (1<<24U)
 #define MJPEG_STS_Q_SRAM_ENC                                    (1<<25U)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0X104 : mjpeg kick done delay */
 #define MJPEG_KICK_DONE_DELAY_SHIFT                             (0U)
 #define MJPEG_KICK_DONE_DELAY_MASK                              (0xfff<<MJPEG_KICK_DONE_DELAY_SHIFT)
@@ -341,7 +341,7 @@
 #define MJPEG_REG_ID_LATCH_HBLK_SHIFT                           (8U)
 #define MJPEG_REG_ID_LATCH_HBLK_MASK                            (0xf<<MJPEG_REG_ID_LATCH_HBLK_SHIFT)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x1F8 : mjpeg_sw_usage and mjpeg_hw_version */
 #define MJPEG_SW_USAGE_SHIFT                                    (0U)
 #define MJPEG_SW_USAGE_MASK                                     (0xffffff<<MJPEG_SW_USAGE_SHIFT)

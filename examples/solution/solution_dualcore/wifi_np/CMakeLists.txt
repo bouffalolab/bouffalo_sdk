@@ -22,7 +22,7 @@ endif()
 file(GLOB_RECURSE lv_sources "${CMAKE_CURRENT_SOURCE_DIR}/app/src/lv_demos/*.c")
 file(GLOB_RECURSE coremark_sources "${CMAKE_CURRENT_SOURCE_DIR}/app/src/coremark/*.c")
 
-set(BOARD_BASE_PATH  ${BL_SDK_BASE}/bsp/board/bl616ddk)
+set(BOARD_BASE_PATH  ${BL_SDK_BASE}/bsp/board/bl618dgdk)
 
 target_sources(app PRIVATE
                 app/src/sample/app_sample.c
@@ -32,7 +32,7 @@ target_sources(app PRIVATE
                 ${lv_sources}
                 ${coremark_sources})
 
-add_subdirectory(${BOARD_BASE_PATH} bl616ddk)
+add_subdirectory(${BOARD_BASE_PATH} bl618dgdk)
 
 #sdk_add_compile_options(
 #    -O2

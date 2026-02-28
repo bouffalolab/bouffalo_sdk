@@ -183,7 +183,7 @@ void usbh_video_dma_init(void)
     usb_dma_cfg.dst_req = DMA_REQUEST_NONE;
     usb_dma_cfg.src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
     usb_dma_cfg.dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
-#if defined(BL616L)
+#if defined(BL616CL)
     usb_dma_cfg.src_burst_count = DMA_BURST_INCR16;
     usb_dma_cfg.dst_burst_count = DMA_BURST_INCR16;
 #else

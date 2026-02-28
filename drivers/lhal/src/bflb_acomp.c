@@ -5,9 +5,9 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define ACOMP_BASE ((uint32_t)0x4000f000)
-#elif defined(BL616) || defined(BL616L) || defined(BL606P) || defined(BL808)
+#elif defined(BL616) || defined(BL616CL)  
 #define ACOMP_BASE ((uint32_t)0x2000f000)
-#elif defined(BL628)
+#elif 0
 #define ACOMP_BASE ((uint32_t)0x2008f000)
 #endif
 
@@ -199,7 +199,7 @@ int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
     } else {
         return -1;
     }
-#elif defined(BL616) || defined(BL616L)
+#elif defined(BL616) || defined(BL616CL)
     if (pin == GPIO_PIN_20) {
         *channel = AON_ACOMP_CHAN_ADC0;
     } else if (pin == GPIO_PIN_19) {
@@ -219,7 +219,7 @@ int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
     } else {
         return -1;
     }
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
     if (pin == GPIO_PIN_17) {
         *channel = AON_ACOMP_CHAN_ADC0;
     } else if (pin == GPIO_PIN_5) {
@@ -311,7 +311,7 @@ int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
     } else {
         return -1;
     }
-#elif defined(BL616) || defined(BL616L)
+#elif defined(BL616) || defined(BL616CL)
     if (channel == AON_ACOMP_CHAN_ADC0) {
         *pin = GPIO_PIN_20;
     } else if (channel == AON_ACOMP_CHAN_ADC1) {
@@ -331,7 +331,7 @@ int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
     } else {
         return -1;
     }
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
     if (channel == AON_ACOMP_CHAN_ADC0) {
         *pin = GPIO_PIN_17;
     } else if (channel == AON_ACOMP_CHAN_ADC1) {

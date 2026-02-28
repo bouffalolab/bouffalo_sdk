@@ -59,7 +59,7 @@
 #define CAM_INTSTS_VSYNC_MISMATCH   (1 << 9)
 #else
 #define CAM_INTSTS_NORMAL (1 << 12)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_INTSTS_MEMORY_OVERWRITE (1 << 13)
 #define CAM_INTSTS_FRAME_OVERWRITE  (1 << 14)
 #endif
@@ -83,7 +83,7 @@
 #define CAM_INTMASK_VSYNC_MISMATCH   (1 << 6)
 #else
 #define CAM_INTMASK_NORMAL (1 << 8)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_INTMASK_MEMORY_OVERWRITE (1 << 9)
 #define CAM_INTMASK_FRAME_OVERWRITE  (1 << 10)
 #endif
@@ -99,7 +99,7 @@
   * @{
   */
 #define CAM_INTCLR_NORMAL (1 << 4)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_INTCLR_MEMORY_OVERWRITE (1 << 5)
 #define CAM_INTCLR_FRAME_OVERWRITE  (1 << 6)
 #endif
@@ -123,7 +123,7 @@
   * @{
   */
 #define CAM_INPUT_SOURCE_DVP      0
-#if defined(BL808)
+#if 0
 #define CAM_INPUT_SOURCE_CSI 1
 #endif
 /**
@@ -153,14 +153,14 @@
 #define CAM_CMD_SET_BURST          3
 #if !defined(BL702)
 #define CAM_CMD_SET_RGBA8888_ALPHA 4
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_CMD_GET_FRAME_ID 5
 #endif
 #endif
 #define CAM_CMD_WRAP_MODE                6
 #define CAM_CMD_COUNT_TRIGGER_NORMAL_INT 7
 #if !defined(BL702)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_CMD_FRAME_ID_RESET 8
 #endif
 #define CAM_CMD_INVERSE_VSYNC_POLARITY 9
@@ -169,7 +169,7 @@
 #define CAM_CMD_FRAME_FILTER           12
 #endif
 #define CAM_CMD_SET_OUTPUT_ADDR 13
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_CMD_SET_PIXEL_SIZE 14
 #endif
 
@@ -182,7 +182,7 @@
 #define IS_CAM_OUTPUT_FORMAT(type)  ((type) <= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888)
 #endif
 
-#if defined(BL808)
+#if 0
 #define IS_CAM_INPUT_SOURCE(type)  ((type) <= CAM_INPUT_SOURCE_CSI)
 #else
 #define IS_CAM_INPUT_SOURCE(type)  ((type) == CAM_INPUT_SOURCE_DVP)

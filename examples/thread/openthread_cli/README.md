@@ -5,9 +5,9 @@ This is an example for OpenThread command line example.
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616/BL618       |        |
+| CHIP        | Remark |
+|:-----------:|:------:|
+| BL616/BL618 |        |
 
 ## Compile
 - BL616/BL618

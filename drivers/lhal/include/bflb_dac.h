@@ -36,14 +36,14 @@
   * @{
   */
 /* output Voltage (0.2V~1.8V) = (1.8V-0.2V) * digital_val/x + 0.2V
- * x = 1024 (BL602/BL702/BL808), x = 4096(BL616)
-*/
+ * x = 1024 (BL602/BL702), x = 4096(BL616/BL618)
+ */
 
 #define DAC_VREF_INTERNAL 0
 
 /* output Voltage (0.1vref~0.9vref) = (0.9vref-0.1vref) * digital_val/x + 0.1vref 
  *
- * x = 1024 (BL602/BL702/BL808), x = 4096(BL616)
+ * x = 1024 (BL602/BL702), x = 4096(BL616/BL618)
  * 
  * BL702/BL704/BL706 using GPIO7
  * BL616/BL618 using GPIO28

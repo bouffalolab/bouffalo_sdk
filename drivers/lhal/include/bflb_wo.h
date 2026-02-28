@@ -30,8 +30,8 @@
 /**
  * @brief WO configuration structure
  *
-#if defined(BL616L)
- * @param clk_div           WO clock divider, should be less than 0xFFFF, only available for BL616L
+#if defined(BL616CL)
+ * @param clk_div           WO clock divider, should be less than 0xFFFF, only available for BL616CL
 #endif
  * @param code_total_cnt    WO total count of one period, should be less than 512
  * @param code0_first_cnt   WO first phase count of code0, should be less than 256
@@ -43,7 +43,7 @@
  * @param mode              WO mode setting, use @ref WO_MODE
  */
 struct bflb_wo_cfg_s {
-#if defined(BL616L)
+#if defined(BL616CL)
     uint16_t clk_div;
 #endif
     uint16_t code_total_cnt;

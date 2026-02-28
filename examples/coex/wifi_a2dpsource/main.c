@@ -53,13 +53,10 @@
 #include "btble_lib_api.h"
 #include "bl616_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #include "btble_lib_api.h"
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL808)
-#include "btble_lib_api.h"
-#include "bl808_glb.h"
 #endif
 
 #include "ble_cli_cmds.h"
@@ -137,6 +134,16 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
             void mm_sec_keydump();
             mm_sec_keydump();
         } break;
+        #ifdef CODE_WIFI_ON_GOT_IP_ABORT
+        case CODE_WIFI_ON_GOT_IP_ABORT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_ABORT\r\n", __func__);
+        } break;
+        #endif
+        #ifdef CODE_WIFI_ON_GOT_IP_TIMEOUT
+        case CODE_WIFI_ON_GOT_IP_TIMEOUT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_TIMEOUT\r\n", __func__);
+        } break;
+        #endif
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
             LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());

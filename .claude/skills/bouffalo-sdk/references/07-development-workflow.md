@@ -193,14 +193,14 @@ make CHIP=bl616 BOARD=bl616dk
 make ninja CHIP=bl616 BOARD=bl616dk
 ```
 
-### 多核芯片（BL808、BL606P）
+### 多核芯片（BL618DG）
 
 ```bash
-# M0核心
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
+# AP核心
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 
-# D0核心
-make CHIP=bl808 BOARD=bl808dk CPU_ID=d0
+# NP核心
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
 ```
 
 ## 配置管理
@@ -252,11 +252,11 @@ make flash CHIP=bl616 COMX=/dev/ttyUSB0
 ### 多核芯片烧录
 
 ```bash
-# M0核心
-make flash CHIP=bl808 CPU_ID=m0 COMX=/dev/ttyUSB0
+# AP核心
+make flash CHIP=bl618dg CPU_ID=ap COMX=/dev/ttyUSB0
 
-# D0核心
-make flash CHIP=bl808 CPU_ID=d0 COMX=/dev/ttyUSB0
+# NP核心
+make flash CHIP=bl618dg CPU_ID=np COMX=/dev/ttyUSB0
 ```
 
 ### 波特率设置

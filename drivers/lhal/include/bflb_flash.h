@@ -38,15 +38,15 @@
 #define FLASH_XIP_BASE (0x23000000)
 #elif defined(BL616)
 #define FLASH_XIP_BASE (0xA0000000)
-#elif defined(BL628) || defined(BL616L)
+#elif  defined(BL616CL)
 #define FLASH_XIP_BASE (0x80000000)
-#elif defined(BL616D) 
+#elif defined(BL618DG) 
 #if defined(CPU_MODEL_A0)
 #define FLASH_XIP_BASE (0x80000000)
 #else
 #define FLASH_XIP_BASE (0xb0000000)
 #endif
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
 #define FLASH_XIP_BASE (0x58000000)
 #endif
 
@@ -86,7 +86,7 @@ uint32_t bflb_flash_get_jedec_id(void);
  */
 uint32_t bflb_flash_get_size(void);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
 /**
  * @brief get flash2 size
  *

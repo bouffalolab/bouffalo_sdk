@@ -7,7 +7,7 @@
 #include "bl616_l1c.h"
 #endif
 
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
 #define UART_NAME                  "uart1"
 #define UART_BAUDRATE              2000000
 #define UART_TXD_PIN               27
@@ -16,7 +16,7 @@
 #define UART_RTS_PIN               30
 #endif
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define UART_NAME                  "uart1"
 #define UART_BAUDRATE              2000000
 #define UART_TXD_PIN               27
@@ -245,7 +245,7 @@ void btble_dma_uart_write(uint8_t *data, uint32_t len)
 
     while(bflb_dma_channel_isbusy(dma_tx));
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
     bflb_l1c_dcache_clean_all();
 #endif
 

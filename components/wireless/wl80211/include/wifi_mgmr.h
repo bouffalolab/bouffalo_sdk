@@ -2,6 +2,7 @@
 #define _WIFI_MGMR_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /* WiFi async event */
 #define EV_WIFI                                      ((uintptr_t)wifi_mgmr_init)
@@ -223,7 +224,9 @@ int wifi_mgmr_get_country_code(char *country_code);
 int wifi_mgmr_sta_ip_set(uint32_t ip, uint32_t mask, uint32_t gw, uint32_t dns);
 /* Print scan list to console (not implemented, returns -1) */
 int wifi_mgmr_sta_scanlist(void);
-/* Disable automatic reconnection (not implemented, returns -1) */
+/* Enable automatic reconnection (stub for compatibility) */
+int wifi_mgmr_sta_autoconnect_enable(void);
+/* Disable automatic reconnection (stub for compatibility) */
 int wifi_mgmr_sta_autoconnect_disable(void);
 
 /* AP Mode Management */

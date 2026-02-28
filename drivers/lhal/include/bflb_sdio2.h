@@ -69,7 +69,7 @@
 #endif
 
 /* support sdio2 soft reset */
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
 #define SDIO2_SOFT_RST_INT_SUP (1)
 #define SDIO2_SOFT_RST_IRQ_NUM (19)
 #endif

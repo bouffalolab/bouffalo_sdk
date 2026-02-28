@@ -22,7 +22,7 @@ struct bflb_device_s *gpio;
 #define TIMER_CAPTURE_PIN                         GPIO_PIN_1
 
 #define GPIO_PULSE_CREATE_PIN                     GPIO_PIN_3
-/* for bl616: GPIO20 ADC CH0, for bl616d: SWGPIO20*/
+/* for bl616: GPIO20 ADC CH0, for bl618dg: SWGPIO20*/
 #define GPIO_FOR_INT_PIN                          GPIO_PIN_20
 #define TEST_FOR_INT_DELAY_PIN                    GPIO_PIN_27
 
@@ -108,7 +108,7 @@ void acomp_init()
     bflb_irq_attach(HBN_OUT1_IRQn, (void *)hbn_acomp_irq_handler_cb, NULL);
     bflb_irq_enable(HBN_OUT1_IRQn);
 }
-#elif defined(BL616D)
+#elif defined(BL618DG)
 void gpio_isr(uint8_t pin)
 {
     struct timer_capture_event_info *event_info = &event_infos[toatl_timer_capture_event % PULSE_RECORD_COUNT_MAX];
@@ -265,7 +265,7 @@ int main(void)
     pulse_init();
 #if defined(BL616)
     acomp_init();
-#elif defined(BL616D)
+#elif defined(BL618DG)
     gpio_init();
 #endif
     timer_capture_init();

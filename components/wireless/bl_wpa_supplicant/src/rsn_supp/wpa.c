@@ -2527,6 +2527,8 @@ void wpa_clear_4way_handshake_timer(void)
 
 void wpa_reg_diag_tlv_cb(void* tlv_pack)
 {
+#ifdef DEBUG_PRINT
     printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
+#endif
     gWpaSm.tlv_pack_cb = (WPA_TLV_PACK_CB)tlv_pack;
 }

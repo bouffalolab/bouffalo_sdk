@@ -26,6 +26,16 @@ CONFIG_MBEDTLS_SHA512_USE_HW =n
 # wifi
 CONFIG_WIFI_IPERF =y
 
+
+# Message Router
+CONFIG_BSP_MR               =y
+CONFIG_MR_SDIO_DRIVER       =y
+CONFIG_MR_SDIO_QUEUE_DEPTH  =4
+
+CONFIG_MR_NETDEV            =y
+CONFIG_MR_TTY               =y
+CONFIG_MR_VIRTUALCHAN       =y
+
 #CONFIG_IPV6               =y
 CONFIG_NETBUS             =y
 CONFIG_NETHUB             =y
@@ -41,7 +51,7 @@ CONFIG_ATMODULE_WIFI_STA  =y
 CONFIG_ATMODULE_WIFI_AP   =y
 CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO =y
 
-ifeq ($(CHIP),bl616d)
+ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI             =n
     # enable hotplug
     CONFIG_SDIO3_SOFT_RST_INT_USER =y

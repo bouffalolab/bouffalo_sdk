@@ -31,7 +31,7 @@
   * @{
   */
 #define MJPEG_INTSTS_ONE_FRAME     (1 << 4)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_INTSTS_KICK_DONE     (1 << 23)
 #endif
 #define MJPEG_INTSTS_SWAP          (1 << 30)
@@ -43,7 +43,7 @@
   * @{
   */
 #define MJPEG_INTCLR_ONE_FRAME     (1 << 8)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_INTCLR_KICK_DONE     (1 << 5)
 #endif
 #define MJPEG_INTCLR_SWAP          (1 << 13)
@@ -56,7 +56,7 @@
   */
 #define MJPEG_CMD_SET_INPUTADDR0                               0x00
 #define MJPEG_CMD_SET_INPUTADDR1                               0x01
-#if defined(BL616L)
+#if defined(BL616CL)
 #define MJPEG_CMD_SET_KICK_DONE_DELAY                          0x02
 #define MJPEG_CMD_UPDATE_KICK_ADDR                             0x03
 #define MJPEG_CMD_READ_HW_VERSION                              0x04
@@ -171,7 +171,7 @@ void bflb_mjpeg_kick(struct bflb_device_s *dev);
  */
 void bflb_mjpeg_tcint_mask(struct bflb_device_s *dev, bool mask);
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /**
  * @brief Enable or disable mjpeg kick done interrupt.
  *

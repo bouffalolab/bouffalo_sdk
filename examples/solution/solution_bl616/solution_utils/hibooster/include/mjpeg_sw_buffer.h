@@ -22,7 +22,7 @@ typedef struct mjpeg_sw_fifo_item {
 } mjpeg_sw_fifo_item_t;
 
 #define MJPEG_SW_FIFO_CAP 4
-#ifdef BL808
+#if 0
 #define MJPEG_SW_FIFO_ITEM_PAYLOAD_SIZE_MAX (1 * 1024 * 1024)
 #else
 #define MJPEG_SW_FIFO_ITEM_PAYLOAD_SIZE_MAX (1 * 200 * 1024)

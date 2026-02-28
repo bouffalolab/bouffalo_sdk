@@ -10,16 +10,10 @@
 #include "bl702l_lp.h"
 #elif defined(BL616)
 #include "bl616_lp.h"
-#elif defined(BL606P)
-#include "bl606p_lp.h"
-#elif defined(BL808)
-#include "bl808_lp.h"
-#elif defined(BL628)
-#include "bl628_lp.h"
-#elif defined(BL616L)
-#include "bl616l_lp.h"
-#elif defined(BL616D)
-#include "bl616d_lp.h"
+#elif defined(BL616CL)
+#include "bl616cl_lp.h"
+#elif defined(BL618DG)
+#include "bl618dg_lp.h"
 #endif
 
 #ifdef SHARED_FUNC_EN

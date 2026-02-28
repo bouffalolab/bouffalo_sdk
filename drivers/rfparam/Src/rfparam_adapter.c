@@ -7,14 +7,14 @@
 #include "bl616_hbn.h"
 #endif
 
-#if defined(BL616D)
-#include "bl616d_aon.h"
-#include "bl616d_hbn.h"
+#if defined(BL618DG)
+#include "bl618dg_aon.h"
+#include "bl618dg_hbn.h"
 #endif
 
-#if defined(BL616L)
-#include "bl616l_aon.h"
-#include "bl616l_hbn.h"
+#if defined(BL616CL)
+#include "bl616cl_aon.h"
+#include "bl616cl_hbn.h"
 #endif
 
 #define DBG_TAG "rfparam"
@@ -347,7 +347,7 @@ void rfparam_get_capcode(uint8_t *capcode_in, uint8_t *capcode_out)
 void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out)
 {
     uint32_t tmpVal = 0;
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
     tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CORE0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, capcode_in);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, capcode_out);
@@ -693,7 +693,11 @@ int8_t rfparam_load(struct wl_param_t *param)
 
 struct wl_cfg_t *rfparam_cfg_get()
 {
+#if defined(BL618DG)
+    return wl_cfg;
+#else
     return g_rfparam_cfg;
+#endif
 }
 
 uint32_t rfparam_tlv_base_addr_get()
@@ -701,7 +705,7 @@ uint32_t rfparam_tlv_base_addr_get()
     return g_tlv_base_addr;
 }
 
-#if defined(BL616D)
+#if defined(BL618DG)
 void wireless_config_init(struct wl_param_t *hw_param) {}
 #endif
 
@@ -717,7 +721,7 @@ void wireless_config_init(struct wl_param_t *hw_param) {}
 *******************************************************************************/
 int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
 {
-#if defined(BL616D)
+#if defined(BL618DG)
 #if defined(WL_API_RMEM_EN) && WL_API_RMEM_EN
     wl_cfg = wl_cfg_get((uint8_t *)WL_API_RMEM_ADDR);
 #else
@@ -734,6 +738,7 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
     wl_cfg->log_level = 0;
     wl_cfg->log_printf = NULL;
     wl_cfg->param.xtalfreq_hz = 40*1000*1000; //xtal_value;
+    wl_cfg->param.country_code = 'C' | ('N' << 8);// country_code CN
     for (int i = 0; i < sizeof(wl_cfg->param.pwrtarget.pwr_11b)/sizeof(wl_cfg->param.pwrtarget.pwr_11b[0]); i++)
     {
         wl_cfg->param.pwrtarget.pwr_11b[i] = 10;

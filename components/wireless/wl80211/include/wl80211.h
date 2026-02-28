@@ -9,6 +9,7 @@
 #include <sys/tree.h>
 
 #define INVARIANTS
+#define COMPAT_WIFI_MGMR
 
 #ifndef container_of
 #define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
@@ -19,11 +20,15 @@
 
 #define ALIGN4_HI(val) (((val) + 3) & ~3)
 
+#if defined(__NuttX__)
+#include <sys/uio.h>
+#elif !defined(IOVEC_DEFINED)
 #define IOVEC_DEFINED
 struct iovec {
     void *iov_base;
     size_t iov_len;
 };
+#endif
 
 struct wl80211_scan_ap_ind {
     char ssid[33];
@@ -142,8 +147,8 @@ struct wl80211_connect_params {
 
     uint8_t channel;
 
-    enum wl80211_auth_type auth_type;
-    enum wl80211_mfp mfp;
+    uint8_t auth_type; // ref @ enum wl80211_auth_type
+    uint8_t mfp;       // ref @ enum wl80211_mfp
 
     const uint8_t *ie;
     uint16_t ie_len;
@@ -176,15 +181,15 @@ struct wl80211_ap_settings {
     uint8_t password[65];
 
     /* channel settings */
-    enum wl80211_chan_width channel_width;
+    uint8_t channel_width; // ref @ enum wl80211_chan_width
     uint32_t center_freq1;
     uint32_t center_freq2;
-    uint32_t channel_flags; // @ enum ieee80211_channel_flags
+    uint32_t channel_flags; // ref @ enum ieee80211_channel_flags
     unsigned int max_power;
 
     /* ap settings */
     unsigned int beacon_interval;
-    enum wl80211_auth_type auth_type;
+    uint8_t auth_type; // ref @ enum wl80211_auth_type
     const uint8_t *ie;
     uint16_t ie_len;
     uint32_t flags;
@@ -215,6 +220,7 @@ struct wl80211_global_state {
 
     /* global status */
     unsigned int scanning       : 1;
+    unsigned int connecting     : 1;
     unsigned int associated     : 1;
     unsigned int authenticating : 1;
     unsigned int link_up        : 1;
@@ -249,14 +255,14 @@ struct wl80211_global_state {
 extern struct wl80211_global_state wl80211_glb;
 
 /* Input callback function type */
-typedef int (*wl80211_input_cb_t)(void *prv, enum wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
+typedef int (*wl80211_input_cb_t)(void *prv, uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_len,
                                   uint32_t status);
 
 void wl80211_init(void);
 int wl80211_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
-void wl80211_tcpip_input(enum wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);
-int wl80211_output_raw(enum wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
+void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);
+int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
                        void *opaque);
 
 /* Input callback registration interface - allows external modules to register receive callback */
@@ -294,6 +300,8 @@ enum {
 
     WL80211_CTRL_MONITOR_START,
     WL80211_CTRL_MONITOR_STOP,
+
+    WL80211_CTRL_INJECT_FRAME,
 };
 
 // wl80211 control api
@@ -339,7 +347,7 @@ static inline int wl80211_sta_disconnect(void)
     return wl80211_cntrl(WL80211_CTRL_STA_DISCONNECT);
 }
 
-static inline int _channel_to_freq(enum wl80211_phy_band band, int channel)
+static inline int _channel_to_freq(uint8_t band, int channel) // ref @ enum wl80211_phy_band
 {
     if ((band == WL80211_BAND_2G4) && (channel >= 1) && (channel <= 14)) {
         if (channel == 14) {
@@ -354,7 +362,7 @@ static inline int _channel_to_freq(enum wl80211_phy_band band, int channel)
     return 0;
 }
 
-static inline int _freq_to_channel(enum wl80211_phy_band band, int freq)
+static inline int _freq_to_channel(uint8_t band, int freq) // ref @ enum wl80211_phy_band
 {
     if ((band == WL80211_BAND_2G4) && (freq >= 2412) && (freq <= 2484)) {
         if (freq == 2484) {
@@ -641,5 +649,50 @@ static inline int wl80211_monitor_stop(void)
 static inline int wl80211_monitor_status(void)
 {
     return wl80211_glb.monitor_en;
+}
+
+/**
+ * Frame injection parameters
+ */
+struct wl80211_inject_frame_params {
+    void *frame;        /**< Complete 802.11 frame buffer */
+    uint16_t len;       /**< Frame length in bytes */
+    uint16_t freq;      /**< Channel frequency in MHz */
+    void (*cb)(void *); /**< Optional completion callback */
+    void *opaque;       /**< User data for callback */
+};
+
+/**
+ * Inject a raw 802.11 frame on a specified channel (bypasses protocol stack)
+ *
+ * This function bypasses the WiFi protocol stack and directly transmits a user-constructed
+ * 802.11 frame on the specified channel. Unlike wl80211_output_raw() which processes frames
+ * through the protocol stack, this function requires the caller to provide a complete 802.11
+ * frame with all fields properly set.
+ *
+ * Key differences from wl80211_output_raw():
+ * - Caller must construct complete 802.11 MAC header (including RA, TA, sequence number)
+ * - Caller specifies target channel via frequency parameter
+ * - No automatic rate/power selection (uses MACSW defaults)
+ * - Direct hardware-level frame injection
+ * - Suitable for custom management frames, testing, and protocol development
+ *
+ * Prerequisites:
+ * - WL80211_VIF_STA must exist (created automatically if needed)
+ * - Frequency must be valid (2.4GHz: 2412-2484 MHz, 5GHz: 5005-5885 MHz)
+ * - Frame buffer is copied to WRAM internally for hardware compatibility
+ *
+ * @param params Frame injection parameters
+ *
+ * @return 0 on success, negative value on error:
+ *         -1 : Invalid parameters or VIF creation failed
+ *         -2 : Monitor mode active (frame injection not allowed)
+ *         -4 : Invalid frequency
+ *         -7 : Memory allocation failed
+ *         -10: MACSW rejected the request
+ */
+static inline int wl80211_inject_frame(struct wl80211_inject_frame_params *params)
+{
+    return wl80211_cntrl(WL80211_CTRL_INJECT_FRAME, params);
 }
 #endif

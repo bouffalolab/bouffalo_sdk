@@ -3,7 +3,7 @@
 
 struct bflb_device_s *pec_pwm0;
 struct bflb_device_s *pec_pwm1;
-#if !defined(BL616L)
+#if !defined(BL616CL)
 struct bflb_device_s *pec_pwm2;
 struct bflb_device_s *pec_pwm3;
 #endif
@@ -22,7 +22,7 @@ struct bflb_pec_pwm_s pwm1_cfg = {
     .inverse = 1,           /*!< toggle pin level */
 };
 
-#if !defined(BL616L)
+#if !defined(BL616CL)
 struct bflb_pec_pwm_s pwm2_cfg = {
     .mem = 0,               /*!< memory address of first instruction */
     .div = 2,               /*!< divisor, N = div + 1 */
@@ -46,7 +46,7 @@ int main(void)
     printf("pec_pwm0 = 0x%08lX\r\n", pec_pwm0);
     pec_pwm1 = bflb_device_get_by_name("pec_sm1");
     printf("pec_pwm1 = 0x%08lX\r\n", pec_pwm1);
-#if !defined(BL616L)
+#if !defined(BL616CL)
     pec_pwm2 = bflb_device_get_by_name("pec_sm2");
     printf("pec_pwm2 = 0x%08lX\r\n", pec_pwm2);
     pec_pwm3 = bflb_device_get_by_name("pec_sm3");
@@ -55,13 +55,13 @@ int main(void)
 
     bflb_pec_pwm_init(pec_pwm0, &pwm0_cfg);
     bflb_pec_pwm_init(pec_pwm1, &pwm1_cfg);
-#if !defined(BL616L)
+#if !defined(BL616CL)
     bflb_pec_pwm_init(pec_pwm2, &pwm2_cfg);
     bflb_pec_pwm_init(pec_pwm3, &pwm3_cfg);
 #endif
     bflb_pec_pwm_start(pec_pwm0, 8, 13);
     bflb_pec_pwm_start(pec_pwm1, 5, 4);
-#if !defined(BL616L)
+#if !defined(BL616CL)
     bflb_pec_pwm_start(pec_pwm2, 18, 27);
     bflb_pec_pwm_start(pec_pwm3, 20, 10);
 #endif

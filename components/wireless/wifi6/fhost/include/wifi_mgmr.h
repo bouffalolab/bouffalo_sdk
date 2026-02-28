@@ -23,7 +23,6 @@ struct wlan_netif {
     int started;
     int set;
     uint8_t mac[6];
-    uint8_t dhcp_started;
 };
 
 typedef struct wifi_mgmr_sta_basic_info {

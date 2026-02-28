@@ -20,6 +20,7 @@
 #include <board.h>
 #include <msp_fs.h>
 #include <avutil/vol_scale.h>
+#include <bflb_audac.h>
 
 #include "app_player.h"
 #include "app_player_mixer.h"
@@ -213,8 +214,12 @@ static int cli_player_proc(int argc, char **argv)
                 return -1;
             }
             printf("digigain set:%.1f\n", digigain);
-            AUPWM_SetMute(0);
-            AUPWM_SetVolume((uint16_t)(digigain * 2 + 512));
+
+            struct bflb_device_s *audac_dev = bflb_device_get_by_name("audac");
+            if (audac_dev) {
+                bflb_audac_feature_control(audac_dev, AUDAC_CMD_SET_MUTE, false);
+                bflb_audac_feature_control(audac_dev, AUDAC_CMD_SET_VOLUME_VAL, (size_t)((int16_t)(digigain * 2)));
+            }
         } else {
             printf("digigain:error\n");
         }

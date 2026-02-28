@@ -107,7 +107,7 @@ def check_commit_message(commit_msg, api_key):
     regex_pattern = re.compile(
         r'^'
         r'\[(fix|refactor|feat|improve)\]'  # Group 1: Action type
-        r'(?:\[(BLXXX|BL602|BL702|BL808|BL606P|BL616|BL616L|BL616D|BL702L)\])+'  # Group 2+: Chip models (one or more)
+        r'(?:\[(BLXXX|BL602|BL702|BL616|BL616CL|BL618DG|BL702L)\])+'  # Group 2+: Chip models (one or more)
         r'\[('
         r'Docs|Tools|CI|'                                   # Documentation and tools CI
         r'Linkscript|Makefile|Build|Arch|'                  # Build system

@@ -18,23 +18,19 @@
 #endif
 #endif
 
-#if defined(BL616D)
-#include "bl616d_glb.h"
+#if defined(BL618DG)
+#include "bl618dg_glb.h"
 #ifndef CONFIG_DBG_RUN_ON_FPGA
 #include "wl_api.h"
 #endif
-#include "bl616d_pds.h"
+#include "bl618dg_pds.h"
 #endif
 
-#if defined(BL616L)
-#include "bl616l_glb.h"
-#include "bl616l_pds.h"
+#if defined(BL616CL)
+#include "bl616cl_glb.h"
+#include "bl616cl_pds.h"
 #include "wl_api.h"
 #endif
-
-#if defined(BL808)
-#include "bl808_glb.h"
-#endif 
 
 #if defined(BL702L)
 #include "bl702l_glb.h"
@@ -170,7 +166,7 @@ __attribute__((weak)) void btblecontroller_rf_restore()
 {
 #ifndef CONFIG_DBG_RUN_ON_FPGA
 #if (LE_PDS_ENABLE)
-    #if defined(BL616) || defined(BL616D) || defined(BL616L)
+    #if defined(BL616) || defined(BL618DG) || defined(BL616CL)
     struct wl_cfg_t *wl_cfg;
 
     #if WL_API_RMEM_EN
@@ -202,7 +198,7 @@ __attribute__((weak)) int btblecontroller_efuse_read_mac(uint8_t mac[6])
     status = bl_efuse_read_mac(tmp);
     #endif
     #else
-    #if defined(BL616) || defined(BL616D) || defined(BL616L)
+    #if defined(BL616) || defined(BL618DG) || defined(BL616CL)
     status = mfg_media_read_macaddr_with_lock(tmp, 1);
     #endif
     #endif //(CONFIG_IOT_SDK)
@@ -215,7 +211,7 @@ __attribute__((weak)) int btblecontroller_efuse_read_mac(uint8_t mac[6])
     return status;
 }
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
 __attribute__((weak)) void btblecontroller_software_btdm_reset()
 {
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_BTDM);
@@ -258,7 +254,7 @@ __attribute__((weak)) int btblecontroller_printf(const char *fmt, ...)
     return 0;
 }
 
-#if defined(BL702L) || defined(BL616) || defined(BL616D)
+#if defined(BL702L) || defined(BL616) || defined(BL618DG)
 __attribute__((weak)) void btblecontroller_sys_reset(void)
 {
     __disable_irq();

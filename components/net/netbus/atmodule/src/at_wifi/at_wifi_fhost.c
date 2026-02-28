@@ -16,6 +16,18 @@
 #include <timers.h>
 #include "wifi_mgmr.h"
 #include "at_wifi_main.h"
+#ifndef CONFIG_WL80211
+#include "fhost.h"
+#endif
+#include "at_main.h"
+
+/* External function declarations */
+extern int wifi_mgmr_task_start(void);
+extern int fhost_init(void);
+extern int at_module_init(void);
+extern net_al_if_t fhost_to_net_if(uint8_t fhost_vif_idx);
+extern int wifi_mgmr_init(void *conf);
+extern int at_wifi_main_init(void);
 
 int wifi_mgmr_sta_mac_set(uint8_t mac[6])
 {

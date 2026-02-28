@@ -39,7 +39,7 @@
 #if defined LCD_DBI_GC9307
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -80,7 +80,7 @@
 #elif defined LCD_DBI_ILI9488
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -121,7 +121,7 @@
 #elif defined LCD_DBI_ILI9486
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -162,7 +162,7 @@
 #elif defined LCD_DBI_ILI9341
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -203,7 +203,7 @@
 #elif defined LCD_DBI_JD9853
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -244,7 +244,7 @@
 #elif defined LCD_DBI_NT35510
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -285,7 +285,7 @@
 #elif defined LCD_DBI_ST7796
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -326,7 +326,7 @@
 #elif defined LCD_DBI_ST77926
 
     /* Selecting interface type, more configuration of peripherals comes later
-        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080), QSPI; (support chips: bl616, bl606p, bl808),
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080), QSPI; (support chips: bl616, bl618dg, bl618dg),
     */
     #define LCD_DBI_INTERFACE_TYPE 1
 
@@ -367,8 +367,8 @@
 #elif defined LCD_DPI_GC9503V
 
     /* Selecting DPI working mode
-        1: DPI peripheral (support: bl808)
-        2: PEC simulation (support: bl616, bl628)
+        1: DPI peripheral (support: bl618dg)
+        2: PEC simulation (support: bl616, bl618dg)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 
@@ -404,8 +404,8 @@
 #elif defined LCD_DPI_ST7701S
 
     /* Selecting DPI working mode
-        1: DPI peripheral (support: bl808)
-        2: PEC simulation (support: bl616, bl628)
+        1: DPI peripheral (support: bl618dg)
+        2: PEC simulation (support: bl616, bl618dg)
     */
     #define LCD_DPI_INTERFACE_TYPE 2
 
@@ -435,8 +435,8 @@
 #elif defined LCD_DPI_ILI9488
 
     /* Selecting DPI working mode
-        1: DPI peripheral (support: bl808)
-        2: PEC simulation (support: bl616, bl628)
+        1: DPI peripheral (support: bl618dg)
+        2: PEC simulation (support: bl616, bl618dg)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 
@@ -460,8 +460,8 @@
 #elif defined LCD_DPI_STANDARD
 
     /* Selecting DPI working mode
-        1: DPI peripheral (support: bl808)
-        2: PEC simulation (support: bl616, bl628)
+        1: DPI peripheral (support: bl618dg)
+        2: PEC simulation (support: bl616, bl618dg)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 

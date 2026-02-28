@@ -73,16 +73,6 @@ static int bflb_sys_isxipaddr(uint32_t addr)
     }
     return 0;
 }
-#elif defined(BL808)
-int bflb_sys_isxipaddr(uint32_t addr)
-{
-    //XXX is 0xD000_0000 Address Range is really used
-    if ( ((addr & 0xFF000000) == 0x58000000) || ((addr & 0xFF000000) == 0x5C000000) ||
-         ((addr & 0xFF000000) == 0xD8000000) || ((addr & 0xFF000000) == 0xDC000000)) {
-        return 1;
-    }
-    return 0;
-}
 #endif
 
 void bflb_mtd_init(void)

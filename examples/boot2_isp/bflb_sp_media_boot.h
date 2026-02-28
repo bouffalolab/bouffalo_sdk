@@ -73,10 +73,10 @@ extern uint32_t g_anti_rollback_flag[3];
 #ifdef CHIP_BL808
 #define BFLB_SP_APP_VERSION_MAX                  (128)
 #endif
-#ifdef CHIP_BL616L
+#ifdef CHIP_BL616CL
 #define BFLB_SP_APP_VERSION_MAX                  (32)
 #endif
-#ifdef CHIP_BL616D
+#ifdef CHIP_BL618DG
 #define BFLB_SP_APP_VERSION_MAX                  (128)
 #endif
 

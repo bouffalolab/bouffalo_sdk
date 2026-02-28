@@ -72,7 +72,7 @@ void app_main_entry(void *arg)
     /* Init bt */
     app_bt_init();
 
-#if (defined CONFIG_CODEC_USE_I2S_RX) || (defined CONFIG_CODEC_USE_I2S_TX) || (defined CONFIG_CODEC_USE_ES8388)
+#if CONFIG_CODEC_USE_I2S_RX
     extern msp_i2s_port_init(void);
     msp_i2s_port_init();
 #endif

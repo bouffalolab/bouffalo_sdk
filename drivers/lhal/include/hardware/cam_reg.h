@@ -108,7 +108,7 @@
 
 /* 0x0 : dvp2axi_configue */
 #define CAM_REG_DVP_ENABLE (1 << 0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_WRAP_MODE (1 << 1U)
 #else
 #define CAM_REG_SW_MODE (1 << 1U)
@@ -123,7 +123,7 @@
 #endif
 #define CAM_REG_DVP_MODE_SHIFT (8U)
 #define CAM_REG_DVP_MODE_MASK  (0x7 << CAM_REG_DVP_MODE_SHIFT)
-#if !defined(BL616D) || !defined(CPU_MODEL_A0)
+#if !defined(BL618DG) || !defined(CPU_MODEL_A0)
 #define CAM_REG_HW_MODE_FWRAP (1 << 11U)
 #endif
 #define CAM_REG_DROP_EN   (1 << 12U)
@@ -139,7 +139,7 @@
 #define CAM_REG_DVP_DATA_MODE_MASK  (0x7 << CAM_REG_DVP_DATA_MODE_SHIFT)
 #define CAM_REG_DVP_DATA_BSEL       (1 << 19U)
 #endif
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_REG_DVP_PIX_CLK_CG (1 << 20U)
 #endif
 #if !defined(BL702)
@@ -154,7 +154,7 @@
 #define CAM_REG_ADDR_START_MASK      (0xffffffff << CAM_REG_ADDR_START_SHIFT)
 
 /* 0x8 : dvp2axi_mem_bcnt */
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_STRIDE_WIDTH_X8_SHIFT (0U)
 #if defined(CPU_MODEL_A0)
 #define CAM_REG_STRIDE_WIDTH_X8_MASK (0x3fff << CAM_REG_STRIDE_WIDTH_X8_SHIFT)
@@ -214,18 +214,18 @@
 #define CAM_REG_INT_HCNT_EN              (1 << 6U)
 #define CAM_REG_INT_VCNT_EN              (1 << 7U)
 #define CAM_REG_INT_NORMAL_EN            (1 << 8U)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_REG_INT_MEM_EN   (1 << 9U)
 #define CAM_REG_INT_FRAME_EN (1 << 10U)
 #endif
 #define CAM_REG_INT_FIFO_EN (1 << 11U)
 #define CAM_STS_NORMAL_INT  (1 << 12U)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_STS_MEM_INT   (1 << 13U)
 #define CAM_STS_FRAME_INT (1 << 14U)
 #endif
 #define CAM_STS_FIFO_INT (1 << 15U)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_FRAME_VALID_CNT_SHIFT (16U)
 #define CAM_FRAME_VALID_CNT_MASK  (0x1f << CAM_FRAME_VALID_CNT_SHIFT)
 #endif
@@ -236,12 +236,12 @@
 #define CAM_ST_BUS_WAIT  (1 << 26U)
 #define CAM_ST_BUS_FLSH  (1 << 27U)
 #define CAM_AXI_IDLE     (1 << 28U)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_ST_DVP_IDLE (1 << 29U)
 #endif
 
 /* 0x10 : dvp2axi_frame_bcnt */
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_FRAME_WIDTH_X8_SHIFT (0U)
 #if defined(CPU_MODEL_A0)
 #define CAM_REG_FRAME_WIDTH_X8_MASK (0x3fff << CAM_REG_FRAME_WIDTH_X8_SHIFT)
@@ -257,14 +257,14 @@
 #endif
 
 /* 0x14 : dvp_frame_fifo_pop */
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_RFIFO_POP (1 << 0U)
 #endif
 #if defined(BL702)
 #define CAM_RFIFO_POP_1 (1 << 1U)
 #endif
 #define CAM_REG_INT_NORMAL_CLR (1 << 4U)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define CAM_REG_INT_MEM_CLR   (1 << 5U)
 #define CAM_REG_INT_FRAME_CLR (1 << 6U)
 #endif
@@ -277,7 +277,7 @@
 #define CAM_REG_INT_FRAME_CLR_1  (1 << 18U)
 #define CAM_REG_INT_FIFO_CLR_1   (1 << 19U)
 #endif
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_CR_SW_SHD (1 << 16U)
 #endif
 
@@ -304,7 +304,7 @@
 /* 0x1C : dvp2axi_frame_period */
 #define CAM_REG_FRAME_PERIOD_SHIFT (0U)
 #define CAM_REG_FRAME_PERIOD_MASK  (0x1f << CAM_REG_FRAME_PERIOD_SHIFT)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_STS_FRAME_PERIOD_N_SHIFT (8U)
 #define CAM_STS_FRAME_PERIOD_N_MASK  (0x1f << CAM_STS_FRAME_PERIOD_N_SHIFT)
 #endif
@@ -318,13 +318,13 @@
 
 /* 0x30 : dvp2axi_hsync_crop */
 #define CAM_REG_HSYNC_ACT_END_SHIFT (0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_HSYNC_ACT_END_MASK (0x3fff << CAM_REG_HSYNC_ACT_END_SHIFT)
 #else
 #define CAM_REG_HSYNC_ACT_END_MASK (0xffff << CAM_REG_HSYNC_ACT_END_SHIFT)
 #endif
 #define CAM_REG_HSYNC_ACT_START_SHIFT (16U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_HSYNC_ACT_START_MASK (0x3fff << CAM_REG_HSYNC_ACT_START_SHIFT)
 #else
 #define CAM_REG_HSYNC_ACT_START_MASK (0xffff << CAM_REG_HSYNC_ACT_START_SHIFT)
@@ -332,13 +332,13 @@
 
 /* 0x34 : dvp2axi_vsync_crop */
 #define CAM_REG_VSYNC_ACT_END_SHIFT (0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_VSYNC_ACT_END_MASK (0x3fff << CAM_REG_VSYNC_ACT_END_SHIFT)
 #else
 #define CAM_REG_VSYNC_ACT_END_MASK (0xffff << CAM_REG_VSYNC_ACT_END_SHIFT)
 #endif
 #define CAM_REG_VSYNC_ACT_START_SHIFT (16U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_VSYNC_ACT_START_MASK (0x3fff << CAM_REG_VSYNC_ACT_START_SHIFT)
 #else
 #define CAM_REG_VSYNC_ACT_START_MASK (0xffff << CAM_REG_VSYNC_ACT_START_SHIFT)
@@ -346,19 +346,19 @@
 
 /* 0x38 : dvp2axi_fram_exm */
 #define CAM_REG_TOTAL_HCNT_SHIFT (0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_TOTAL_HCNT_MASK (0x3fff << CAM_REG_TOTAL_HCNT_SHIFT)
 #else
 #define CAM_REG_TOTAL_HCNT_MASK (0xffff << CAM_REG_TOTAL_HCNT_SHIFT)
 #endif
 #define CAM_REG_TOTAL_VCNT_SHIFT (16U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_REG_TOTAL_VCNT_MASK (0x3fff << CAM_REG_TOTAL_VCNT_SHIFT)
 #else
 #define CAM_REG_TOTAL_VCNT_MASK (0xffff << CAM_REG_TOTAL_VCNT_SHIFT)
 #endif
 
-#if !defined(BL616D)
+#if !defined(BL618DG)
 /* 0x40 : frame_start_addr0 */
 #define CAM_FRAME_START_ADDR_0_SHIFT (0U)
 #define CAM_FRAME_START_ADDR_0_MASK  (0xffffffff << CAM_FRAME_START_ADDR_0_SHIFT)

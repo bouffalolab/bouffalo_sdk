@@ -83,7 +83,7 @@ int sdh_host_init(struct sdh_host_s *host)
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_EXT_SDH);
     host->clk_src_hz = 96000000 / 8;
     host->sdh_div = 1;
-#elif defined(BL616L)
+#elif defined(BL616CL)
     /* clock en */
     GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 7);
     PERIPHERAL_CLOCK_SDH_ENABLE();
@@ -91,23 +91,7 @@ int sdh_host_init(struct sdh_host_s *host)
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
     host->clk_src_hz = 96000000 / 8;
     host->sdh_div = 1;
-#elif defined(BL808) || defined(BL606P)
-    /* clock en */
-    GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 7);
-    PERIPHERAL_CLOCK_SDH_ENABLE();
-    /* sdh reset */
-    GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
-    host->clk_src_hz = 96000000 / 8;
-    host->sdh_div = 1;
-#elif defined(BL628)
-    /* clock en */
-    bflb_glb_set_sdh_clk(true, GLB_SDH_CLK_WIFIPLL_96M, 0);
-    PERIPHERAL_CLOCK_SDH_ENABLE();
-    /* sdh reset */
-    bflb_glb_ahb_mcu_software_reset(GLB_AHB_MCU_SW_EXT_SDH);
-    host->clk_src_hz = 96000000;
-    host->sdh_div = 1;
-#elif defined(BL616D)
+#elif defined(BL618DG)
     /* clock en */
     GLB_Set_SDH_CLK(true, GLB_SDH_CLK_WIFIPLL_96M, 0);
     PERIPHERAL_CLOCK_SDH_ENABLE();
@@ -146,13 +130,9 @@ int sdh_host_deinit(struct sdh_host_s *host)
     /* disable sdh */
 #if defined(BL616)
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_EXT_SDH);
-#elif defined(BL616L)
+#elif defined(BL616CL)
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
-#elif defined(BL606P) || defined(BL808)
-    GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
-#elif defined(BL628)
-    bflb_glb_ahb_mcu_software_reset(GLB_AHB_MCU_SW_EXT_SDH);
-#elif defined(BL616D)
+#elif defined(BL618DG)
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_EXT_SDH);
 #endif
 

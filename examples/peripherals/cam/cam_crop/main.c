@@ -50,7 +50,7 @@ int main(void)
     cam_config.output_bufsize = CAM_OUTPUT_BUFFER_SIZE;
 
     bflb_cam_init(cam0, &cam_config);
-#if defined(BL616D)
+#if defined(BL618DG)
     bflb_cam_int_mask(cam0, CAM_INTMASK_NORMAL, false);
 #endif
     bflb_cam_start(cam0);
@@ -58,7 +58,7 @@ int main(void)
     for (i = 0; i < CAM_FRAME_COUNT_USE; i++) {
         while (bflb_cam_get_frame_count(cam0) == 0) {}
         pic_size = bflb_cam_get_frame_info(cam0, &pic);
-#if defined(BL616D)
+#if defined(BL618DG)
         bflb_cam_int_clear(cam0, CAM_INTCLR_NORMAL);
 #else
         bflb_cam_pop_one_frame(cam0);

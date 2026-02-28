@@ -34,7 +34,8 @@ enum {
     MR_MSG_TAG_TTY_USER_2, /**< TTY user message tag */
     MR_MSG_TAG_TTY_USER_3, /**< TTY user message tag */
 
-    MR_MSG_TAG_NETLINK, /**< Netlink message tag */
+    MR_MSG_TAG_NETLINK,    /**< Netlink message tag */
+    MR_MSG_TAG_VIRTUALCHAN, /**< Virtualchan message tag */
 
     MR_MSG_TAG_MAX /**< Maximum message tag */
 };

@@ -14,6 +14,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include "at_pal.h"
+#include "utils_hex.h"
 
 #include <lwip/tcpip.h>
 #include <lwip/netdb.h>
@@ -30,9 +31,20 @@
 #include "at_wifi_config.h"
 #include "at_wifi_main.h"
 #include "at_wifi_mgmr.h"
+#include "at_port.h"
 
 #include "at_net_main.h"
-#include "at_net_config.h"
+#include "at_config.h"
+
+#ifndef CONFIG_WL80211
+#include "rtos_al.h"
+#endif
+
+/* 函数声明 */
+extern void at_scan_dump(uint32_t timeout);
+extern int at_wifi_sta_ip4_addr_get(uint32_t *ip, uint32_t *mask, uint32_t *gw, uint32_t *dns);
+extern int at_wifi_mgmr_scan_ap_all(void *env, void *arg, void *cb);
+extern int at_config_delete(const char *key);
 
 #define AT_WIFI_CMD_PRINTF AT_CMD_PRINTF
 
@@ -70,7 +82,7 @@ static int get_mac_from_string(char *string, uint8_t mac[6])
     return -1;
 }
 
-static int at_query_cmd_wifisp(int argc, const char **argv)
+static int __attribute__((unused)) at_query_cmd_wifisp(int argc, const char **argv)
 {
     if (!at_wifi_config) {
         AT_WIFI_CMD_PRINTF("[AT_WIFI_CMD] Error: at_wifi_config is NULL\r\n");
@@ -80,7 +92,7 @@ static int at_query_cmd_wifisp(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-static int at_setup_cmd_wifisp(int argc, const char **argv)
+static int __attribute__((unused)) at_setup_cmd_wifisp(int argc, const char **argv)
 {
     if (!at_wifi_config) {
         AT_WIFI_CMD_PRINTF("[AT_WIFI_CMD] Error: at_wifi_config is NULL\r\n");
@@ -293,7 +305,7 @@ static int at_query_cmd_cipsta(int argc, const char **argv)
     at_response_string("+CIPSTA:%s:\"%s\"\r\n", "gateway", ip4addr_ntoa(&gwaddr));
     at_response_string("+CIPSTA:%s:\"%s\"\r\n", "netmask", ip4addr_ntoa(&maskaddr));
     at_response_string("+CIPSTA:%s:\"%s\"\r\n", "dns", ip4addr_ntoa(&dns));
-#if CONFIG_ATMODULE_NETWORK && LWIP_IPV6
+#if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK) && LWIP_IPV6
     if (at_net_config->ipv6_enable) {
         struct netif *nif = (struct netif *)at_wifi_netif_get(AT_WIFI_VIF_STA);
 
@@ -320,7 +332,6 @@ static int at_setup_cmd_cipsta(int argc, const char **argv)
     int gateway_valid = 0;
     int netmask_valid = 0;
     uint32_t ipaddr, dnsaddr, gwaddr, maskaddr = IP_SET_ADDR(255, 255, 255, 0);
-    int state;
 
     AT_CMD_PARSE_STRING(0, ip, sizeof(ip));
     AT_CMD_PARSE_OPT_STRING(1, gateway, sizeof(gateway), gateway_valid);
@@ -387,7 +398,7 @@ static int at_scan_wifi(uint8_t *channels, uint16_t channel_num, uint8_t mac[6],
     }
     if (ssid) {
         scan_cfg.ssid_length = strlen(ssid);
-        strlcpy(scan_cfg.ssid_array, ssid, sizeof(scan_cfg.ssid_array));
+        strlcpy((char *)scan_cfg.ssid_array, ssid, sizeof(scan_cfg.ssid_array));
     }
     if (mac) {
         scan_cfg.bssid_set_flag = 1;
@@ -647,9 +658,9 @@ static int at_setup_cmd_cwlap(int argc, const char **argv)
     AT_WIFI_CMD_PRINTF("scan_mode = %d, scan_time = %d\r\n", scan_mode, scan_time);
 
     if (scan_channels != 0) {
-        ret = at_scan_wifi(&scan_channels, 1, mac_valid?mac_addr:NULL, ssid_valid?ssid:NULL, scan_mode, scan_time);
+        ret = at_scan_wifi(&scan_channels, 1, mac_valid?(uint8_t *)mac_addr:NULL, ssid_valid?(char *)ssid:NULL, scan_mode, scan_time);
     } else {
-        ret = at_scan_wifi(NULL, 0, mac_valid?mac_addr:NULL, ssid_valid?ssid:NULL, scan_mode, scan_time);
+        ret = at_scan_wifi(NULL, 0, mac_valid?(uint8_t *)mac_addr:NULL, ssid_valid?(char *)ssid:NULL, scan_mode, scan_time);
     }
     if (ret != 0) {
         g_scan_filter_mac_flag = 0;
@@ -879,7 +890,6 @@ static int at_exe_cmd_cwqif(int argc, const char **argv)
 {
     int i;
     at_wifi_mgmr_sta_basic_info_t sta_info;
-    uint8_t sta_cnt;
 
     if (at_wifi_config->wifi_mode != WIFI_SOFTAP_MODE && at_wifi_config->wifi_mode != WIFI_AP_STA_MODE) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_OP_ERROR);
@@ -907,7 +917,7 @@ static int at_query_cmd_cipap(int argc, const char **argv)
     at_response_string("+CIPAP:%s:\"%s\"\r\n", "ip", ip4addr_ntoa(&ipaddr));
     at_response_string("+CIPAP:%s:\"%s\"\r\n", "gateway", ip4addr_ntoa(&gwaddr));
     at_response_string("+CIPAP:%s:\"%s\"\r\n", "netmask", ip4addr_ntoa(&maskaddr));
-#if CONFIG_ATMODULE_NETWORK && LWIP_IPV6
+#if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK) && LWIP_IPV6
     if (at_net_config->ipv6_enable) {
         struct netif *nif = (struct netif *)at_wifi_netif_get(AT_WIFI_VIF_AP);
 

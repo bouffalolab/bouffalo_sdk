@@ -50,7 +50,7 @@
 #define DMA_RAWINTTCSTATUS_OFFSET    (0x14) /* DMA_RawIntTCStatus */
 #define DMA_RAWINTERRORSTATUS_OFFSET (0x18) /* DMA_RawIntErrorStatus */
 #define DMA_ENBLDCHNS_OFFSET         (0x1C) /* DMA_EnbldChns */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define DMA_SOFTBREQ_0_OFFSET        (0x20) /* DMA_SoftBReq_0 */
 #define DMA_SOFTBREQ_1_OFFSET        (0x24) /* DMA_SoftBReq_1 */
 #define DMA_SOFTSREQ_0_OFFSET        (0x28) /* DMA_SoftSReq_0 */
@@ -113,7 +113,7 @@
 #define DMA_ENABLEDCHANNELS_SHIFT (0U)
 #define DMA_ENABLEDCHANNELS_MASK  (0xff << DMA_ENABLEDCHANNELS_SHIFT)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x20 : DMA_SoftBReq */
 #define DMA_SOFTBREQ_0_SHIFT (0U)
 #define DMA_SOFTBREQ_0_MASK  (0xffffffff << DMA_SOFTBREQ_0_SHIFT)
@@ -225,7 +225,7 @@
 #else
 #define DMA_SWIDTH_MASK        (0x3 << DMA_SWIDTH_SHIFT)
 #endif
-#if defined(BL616L)
+#if defined(BL616CL)
 #define DMA_LLI_VALID          (1 << 20U)
 #endif
 #define DMA_DWIDTH_SHIFT       (21U)
@@ -244,7 +244,7 @@
 #define DMA_I                  (1 << 31U)
 
 /* 0x110 : DMA_CxConfig */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define DMA_E                   (1 << 0U)
 #define DMA_SRCPERIPHERAL_SHIFT (1U)
 #define DMA_SRCPERIPHERAL_MASK  (0x3f << DMA_SRCPERIPHERAL_SHIFT)

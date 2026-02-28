@@ -349,7 +349,7 @@
         #address-cells = <1>;
         #size-cells = <1>;
         brd {
-            country_code = <86>;
+            country_code = "CN";
         };
     };
 };

@@ -132,8 +132,9 @@ uint32_t ping(char *target_name, uint16_t interval, uint16_t size, uint32_t coun
     uint32_t send_times;
     uint32_t recv_times;
     uint32_t recv_start_tick;
+#if LWIP_DNS && LWIP_SOCKET
     struct addrinfo hint, *res = NULL;
-    struct sockaddr_in *h = NULL;
+#endif
     struct in_addr ina;
 
     send_times = 0;
@@ -144,15 +145,22 @@ uint32_t ping(char *target_name, uint16_t interval, uint16_t size, uint32_t coun
         size = PING_DATA_SIZE;
     }
 
+#if LWIP_DNS && LWIP_SOCKET
     memset(&hint, 0, sizeof(hint));
     /* convert URL to IP */
     if (lwip_getaddrinfo(target_name, NULL, &hint, &res) != 0) {
         printf("ping: unknown host %s\n\r", target_name);
         return -1;
     }
-    memcpy(&h, &res->ai_addr, sizeof(struct sockaddr_in *));
-    memcpy(&ina, &h->sin_addr, sizeof(ina));
+    ina = ((struct sockaddr_in *)res->ai_addr)->sin_addr;
     lwip_freeaddrinfo(res);
+#else
+    /* DNS APIs are unavailable when LWIP_DNS=0, only dotted-decimal IPv4 is supported. */
+    if (inet_aton(target_name, &ina) == 0) {
+        printf("ping: unknown host %s (DNS disabled)\n\r", target_name);
+        return -1;
+    }
+#endif
     if (inet_aton(inet_ntoa(ina), &target_addr) == 0) {
         printf("ping: unknown host %s\n\r", target_name);
         return -1;

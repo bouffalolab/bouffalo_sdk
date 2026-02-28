@@ -2,6 +2,7 @@
 #define __AT_FS_H__
 
 #include <stdio.h>
+#include <sys/stat.h>
 
 typedef void *at_dir_t;
 

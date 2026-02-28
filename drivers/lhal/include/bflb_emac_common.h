@@ -3,7 +3,7 @@
 
 #include "bflb_core.h"
 
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
 #define EMAC_SPEED_10M_SUPPORT (1)
 #else
 #define EMAC_SPEED_10M_SUPPORT (0)

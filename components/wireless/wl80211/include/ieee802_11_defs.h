@@ -2540,12 +2540,12 @@ enum he_reg_info_6ghz_ap_type {
     HE_REG_INFO_6GHZ_AP_TYPE_MAX = HE_REG_INFO_6GHZ_AP_TYPE_INDOOR_SP,
 };
 
-static inline bool he_reg_is_indoor(enum he_reg_info_6ghz_ap_type type)
+static inline bool he_reg_is_indoor(uint8_t type) // ref @ enum he_reg_info_6ghz_ap_type
 {
     return type == HE_REG_INFO_6GHZ_AP_TYPE_INDOOR || type == HE_REG_INFO_6GHZ_AP_TYPE_INDOOR_SP;
 }
 
-static inline bool he_reg_is_sp(enum he_reg_info_6ghz_ap_type type)
+static inline bool he_reg_is_sp(uint8_t type) // ref @ enum he_reg_info_6ghz_ap_type
 {
     return type == HE_REG_INFO_6GHZ_AP_TYPE_SP || type == HE_REG_INFO_6GHZ_AP_TYPE_INDOOR_SP;
 }

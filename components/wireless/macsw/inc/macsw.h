@@ -1281,9 +1281,10 @@ struct me_ldpc_config_param
 /// Structure containing the parameters of the @ref ME_PARAM_REQ message
 struct me_param_req
 {
-    /// Indicates the param ID
-    enum ME_PARAM_ID_E id;
-    enum ME_PARAM_CMD_E cmd;//GET or SET.
+    /// Indicates the param ID (ref @ enum ME_PARAM_ID_E)
+    uint8_t id;
+    /// GET or SET command (ref @ enum ME_PARAM_CMD_E)
+    uint8_t cmd;
     /// payload of the param. Max is 32 Bytes
     uint8_t value[50];//GET or SET through value
 };
@@ -2264,8 +2265,8 @@ struct me_config_req
     bool ant_div_on;
     /// Boolean indicating if Dynamic PS mode shall be used or not
     bool dpsm;
-    /// Indicates whether AMSDU shall be forced or not
-    enum amsdu_tx amsdu_tx;
+    /// Indicates whether AMSDU shall be forced or not (ref @ enum amsdu_tx)
+    uint8_t amsdu_tx;
     #ifdef CFG_LPM
     /// Chip version
     uint8_t chip_version;
@@ -4147,10 +4148,11 @@ __INLINE uint16_t mac_ie_len(uint32_t addr)
 #define WLAN_FW_AUTH_OR_ASSOC_RESPONSE_CFM_FAILURE               24
 #define WLAN_FW_REASSOCIATE_STARING                              25
 #define WLAN_FW_CONNECT_PARAMS_ERROR                             26
-#define WLAN_FW_DEAUTH_BEFORE_4WAY2                              27
+#define WLAN_FW_DEAUTH_IN_4WAY                                   27
 #define WLAN_FW_AP_STA_ENCRYPTION_TYPE_MISMATCH                  28
+#define WLAN_FW_SAE_CONFIRM_FAIL                                 29
+#define WLAN_FW_SAE_COMMIT_FAIL                                  30
 
-#define WLAN_FW_INVALID_CODE  0xFF
 
 /*--------------------------------------------------------------------*/
 /* AP Mode Status Codes - these codes are used in bouffalolab fw actions      */
@@ -4208,7 +4210,7 @@ void *sta_getp_mac_addr(void *p);
 void *vif_info_get_vif(int index);
 uint8_t vif_mgmt_get_staid(const void *mac_vif, const struct mac_addr *sta_addr);
 
-enum mac_vif_type mac_vif_get_type(void *macif);
+uint8_t mac_vif_get_type(void *macif); // ref @ enum mac_vif_type
 uint8_t mac_vif_get_index(void *macif);
 uint8_t mac_vif_get_sta_ap_id(void *macif);
 uint16_t mac_vif_get_bcn_int(void *macif);

@@ -14,13 +14,10 @@
 #include "btble_lib_api.h"
 #include "bl616_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #include "btble_lib_api.h"
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL808)
-#include "btble_lib_api.h"
-#include "bl808_glb.h"
 #endif
 
 #include "ble_cli_cmds.h"

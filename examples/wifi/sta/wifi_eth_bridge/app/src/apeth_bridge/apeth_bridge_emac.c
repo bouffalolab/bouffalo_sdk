@@ -80,7 +80,7 @@ emac_ops_t s_emac_ops = {
     .emac_cfgdef = {
         .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
         .clk_internal_mode = false,
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
         .md_clk_div = 79,
 #else
         .md_clk_div = 39,

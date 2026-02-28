@@ -13,7 +13,7 @@
 
 #if defined(CPU_AP)
 #include "incbin.h"
-INCBIN(mini_sys, "../../examples/peripherals/ipc/ipc_thrcore/ipc_ap_lp/build/build_out/ipc_trig_bl616d_lp.bin");
+INCBIN(mini_sys, "../../examples/peripherals/ipc/ipc_thrcore/ipc_ap_lp/build/build_out/ipc_trig_bl618dg_lp.bin");
 #endif
 
 struct bflb_device_s *np_ipc;

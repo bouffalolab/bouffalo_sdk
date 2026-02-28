@@ -84,11 +84,11 @@ make CHIP=bl602 BOARD=bl602dk
 #### 多核芯片构建
 
 ```bash
-# BL808 M0核心
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
+# AP核心
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 
-# BL808 D0核心
-make CHIP=bl808 BOARD=bl808dk CPU_ID=d0
+# NP核心
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
 ```
 
 #### 使用Ninja
@@ -108,9 +108,9 @@ make clean
 
 | 参数 | 说明 | 示例 |
 |-----|------|------|
-| CHIP | 芯片类型 | bl616, bl602, bl808 |
-| BOARD | 开发板 | bl616dk, bl602dk, bl808dk |
-| CPU_ID | 核心ID（多核芯片） | m0, d0 |
+| CHIP | 芯片类型 | bl616, bl602, bl618dg |
+| BOARD | 开发板 | bl616dk, bl602dk, bl618dgdk |
+| CPU_ID | 核心ID（多核芯片） | ap, np |
 | COMX | 串口 | COM5, /dev/ttyUSB0 |
 | BAUDRATE | 波特率 | 2000000 |
 

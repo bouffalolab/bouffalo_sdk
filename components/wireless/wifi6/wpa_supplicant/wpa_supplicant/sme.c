@@ -784,6 +784,12 @@ static void sme_send_authentication(struct wpa_supplicant *wpa_s,
 		params.auth_data = wpabuf_head(resp);
 		params.auth_data_len = wpabuf_len(resp);
 		wpa_s->sme.sae.state = start ? SAE_COMMITTED : SAE_CONFIRMED;
+        if (start) {
+	        wpa_msg_ctrl(wpa_s, MSG_INFO, "SAE-COMMITTED");
+        } else {
+	        wpa_msg_ctrl(wpa_s, MSG_INFO, "SAE-CONFIRMED");
+        }
+
 	}
 #endif /* CONFIG_SAE */
 
@@ -1094,6 +1100,7 @@ static int sme_external_auth_send_sae_commit(struct wpa_supplicant *wpa_s,
 	}
 
 	wpa_s->sme.sae.state = SAE_COMMITTED;
+	wpa_msg_ctrl(wpa_s, MSG_INFO, "SAE-COMMITTED");
 	buf = wpabuf_alloc(4 + SAE_COMMIT_MAX_LEN + wpabuf_len(resp));
 	if (!buf) {
 		wpabuf_free(resp);
@@ -1171,6 +1178,7 @@ static void sme_external_auth_send_sae_confirm(struct wpa_supplicant *wpa_s,
 	}
 
 	wpa_s->sme.sae.state = SAE_CONFIRMED;
+	wpa_msg_ctrl(wpa_s, MSG_INFO, "SAE-CONFIRMED");
 	buf = wpabuf_alloc(4 + SAE_CONFIRM_MAX_LEN + wpabuf_len(resp));
 	if (!buf) {
 		wpa_printf(MSG_DEBUG, "SAE: Auth Confirm buf alloc failure");
@@ -1462,6 +1470,7 @@ static int sme_sae_auth(struct wpa_supplicant *wpa_s, u16 auth_transaction,
 		if (sae_check_confirm(&wpa_s->sme.sae, data, len) < 0)
 			return -1;
 		wpa_s->sme.sae.state = SAE_ACCEPTED;
+	    wpa_msg_ctrl(wpa_s, MSG_INFO, "SAE-ACCEPTED");
 		sae_clear_temp_data(&wpa_s->sme.sae);
 
 		if (external) {

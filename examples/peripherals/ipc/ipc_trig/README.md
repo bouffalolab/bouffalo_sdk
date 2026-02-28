@@ -3,14 +3,14 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616D            |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
 
 ## Compile
 
-- BL616D
+- BL618DG
 
 ```
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=xx #xx can be ap np lp
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=xx #xx can be ap np lp
 ```

@@ -3,9 +3,9 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL702/BL702/BL706 |        |
+| CHIP              | Remark |
+|:-----------------:|:------:|
+| BL702/BL702/BL706 |        |
 
 ## Compile
 

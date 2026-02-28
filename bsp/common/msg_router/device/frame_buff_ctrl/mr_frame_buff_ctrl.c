@@ -22,7 +22,7 @@
 
 /**
  * @brief Simple flexible memory block management
- * 
+ *
  * Each memory block header saves descriptor information.
  * Uses FreeRTOS Queue for memory block pool management.
  */
@@ -267,6 +267,11 @@ int mr_frame_queue_free_elem(mr_frame_elem_t *frame_elem)
 {
     int ret;
     mr_frame_queue_ctrl_t *ctrl = frame_elem->frame_ctrl;
+
+    if (!ctrl) {
+        LOG_E("frame elem has no ctrl: %p\r\n", frame_elem);
+        return -1;
+    }
 
     if (ctrl->before_free_cb) {
         ctrl->before_free_cb(frame_elem, ctrl->before_free_cb_arg);

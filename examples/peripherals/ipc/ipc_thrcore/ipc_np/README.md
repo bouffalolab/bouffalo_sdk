@@ -2,15 +2,15 @@
 
 ## Overview
 
-This example is used on tri-core platforms such as the BL616D to demonstrate the IPC (Inter-Core Communication) mechanism between NP and AP and LP.
+This example is used on tri-core platforms such as the BL618DG to demonstrate the IPC (Inter-Core Communication) mechanism between NP and AP and LP.
 Note: This project must be used in conjunction with the ipc_ap_lp project to program to the three cores of AP/LP/NP respectively for full triple core communication and interrupt response.
 
 ## How to use example
 
 1. Separate compilation and burning of ipc_ap_lp items to AP/LP cores, and ipc_np projects to NP cores:
-    AP：make flash CHIP=bl616d COMX=COMxx CPU_ID=ap
-    LP：make flash CHIP=bl616d COMX=COMxx CPU_ID=ap
-    NP: make flash CHIP=bl616d COMX=COMxx CPU_ID=np
+    AP：make flash CHIP=bl618dg COMX=COMxx CPU_ID=ap
+    LP：make flash CHIP=bl618dg COMX=COMxx CPU_ID=lp
+    NP: make flash CHIP=bl618dg COMX=COMxx CPU_ID=np
 
 2. Shell command trigger IPC:
 AP: ap_trigger_lp <value> This value ranges from 65536-4294901760.
@@ -24,16 +24,16 @@ NP: np_trigger_ap <value> This vlaue ranges from 0-65535.
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616D            |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
 
 ## Compile
 
-- BL616D
+- BL618DG
 
 ```
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=xx #xx can be ap np lp
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=xx #xx can be ap np lp
 ```
 
 ## Flash

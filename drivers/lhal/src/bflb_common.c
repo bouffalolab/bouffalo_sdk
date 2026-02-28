@@ -21,13 +21,13 @@
 #define ANTI_ROLLBACK_ENABLE_POS           (13)
 #define ANTI_ROLLBACK_BOOT2_VERSION_OFFSET (0x4C)
 #define ANTI_ROLLBACK_APP_VERSION_OFFSET   (0x04)
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define ANTI_ROLLBACK_ENABLE_OFFSET        (0x7c)
 #define ANTI_ROLLBACK_ENABLE_MASK          (0x01)
 #define ANTI_ROLLBACK_ENABLE_POS           (12)
 #define ANTI_ROLLBACK_BOOT2_VERSION_OFFSET (0x64)
 #define ANTI_ROLLBACK_APP_VERSION_OFFSET   (0xE0)
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define ANTI_ROLLBACK_ENABLE_OFFSET        (0x00)
 #define ANTI_ROLLBACK_ENABLE_MASK          (0x01)
 #define ANTI_ROLLBACK_ENABLE_POS           (9)
@@ -41,7 +41,7 @@
 #define BFLB_BOOT2_IMG_OFFSET 8 * 1024
 #endif
 
-#if defined(BL616) || defined(BL702L) || defined(BL616D) || defined(BL616L)
+#if defined(BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
 #if !defined(CONFIG_BOOT2)
 #define COMPILE_TIME __DATE__ " " __TIME__
 static const char ver_name[4] __attribute__ ((section(".verinfo"))) = "app";
@@ -217,7 +217,7 @@ void *bflb_get_no_cache_addr(const void *addr)
 
     return (void *)addr;
 }
-#elif defined(BL616L) || defined(BL628)
+#elif defined(BL616CL) 
 bool bflb_check_cache_addr(const void *addr)
 {
     uintptr_t a = (uintptr_t)addr;
@@ -247,7 +247,7 @@ void *bflb_get_no_cache_addr(const void *addr)
 
     return (void *)addr;
 }
-#elif defined(BL616D) && defined(CPU_MODEL_A0)
+#elif defined(BL618DG) && defined(CPU_MODEL_A0)
 bool bflb_check_cache_addr(const void *addr)
 {
     uintptr_t a = (uintptr_t)addr;
@@ -277,7 +277,7 @@ void *bflb_get_no_cache_addr(const void *addr)
 
     return (void *)addr;
 }
-#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#elif defined(BL618DG) && !defined(CPU_MODEL_A0)
 bool bflb_check_cache_addr(const void *addr)
 {
     uintptr_t a = (uintptr_t)addr;
@@ -306,7 +306,7 @@ void *bflb_get_no_cache_addr(const void *addr)
 
     return (void *)addr;
 }
-#elif (defined(BL808) || defined(BL606P)) && defined(CPU_M0)
+#elif (0 ) && defined(CPU_M0)
 bool bflb_check_cache_addr(const void *addr)
 {
     uintptr_t a = (uintptr_t)addr;
@@ -333,7 +333,7 @@ void *bflb_get_no_cache_addr(const void *addr)
 }
 #endif
 
-#if (defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)) && !defined(CPU_LP)
+#if (defined(BL616) || defined(BL616CL) || defined(BL618DG)   ) && !defined(CPU_LP)
 bool bflb_check_cache_addr_aligned(uintptr_t addr)
 {
 #ifdef romapi_bflb_check_cache_addr_aligned
@@ -470,7 +470,7 @@ __WEAK int32_t bflb_get_app_version_from_efuse(uint8_t *version)
 #ifdef romapi_bflb_get_app_version_from_efuse
     return romapi_bflb_get_app_version_from_efuse(version);
 #else
-#if defined(BL616) || defined(BL702L) || defined(BL616D) || defined(BL616L)
+#if defined(BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
     uint32_t otp_ef_boot2_anti_rollback_en = 0;
     uint32_t tmpVal;
 
@@ -486,14 +486,14 @@ __WEAK int32_t bflb_get_app_version_from_efuse(uint8_t *version)
         return 1;
     }
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
     uint32_t version_low_low = 0;
     uint32_t version_low = 0;
     uint32_t version_high = 0;
     uint32_t version_high_high = 0;
 #if defined(BL616)
     uint32_t value[8];
-#elif defined(BL616D)
+#elif defined(BL618DG)
     uint32_t value[4];
 #endif
     /* read efuse value */
@@ -504,7 +504,7 @@ __WEAK int32_t bflb_get_app_version_from_efuse(uint8_t *version)
     version_low = value[1] | value[5];
     version_high = value[2] | value[6];
     version_high_high = value[3] | value[7];
-#elif defined(BL616D)
+#elif defined(BL618DG)
     /* get real version from efuse */
     version_low_low = value[0];
     version_low = value[1];
@@ -535,7 +535,7 @@ __WEAK int32_t bflb_get_app_version_from_efuse(uint8_t *version)
         *version = BFLB_COMMON_UINT32_BIT_LEN - __builtin_clz(version_low_low);
         return 0;
     }
-#elif defined(BL702L) || defined(BL616L)
+#elif defined(BL702L) || defined(BL616CL)
     uint32_t value[2];
     uint32_t version_low = 0;
     uint32_t version_high = 0;
@@ -572,7 +572,7 @@ __WEAK int32_t bflb_set_app_version_to_efuse(uint8_t version)
 #ifdef romapi_bflb_set_app_version_to_efuse
     return romapi_bflb_set_app_version_to_efuse(version);
 #else
-#if defined(BL616) || defined(BL702L) || defined(BL616D) || defined(BL616L)
+#if defined(BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
     uint8_t version_old;
     uint32_t tmpVal;
 
@@ -591,14 +591,14 @@ __WEAK int32_t bflb_set_app_version_to_efuse(uint8_t version)
         return 0;
     }
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
     uint32_t version_low_low = 0;
     uint32_t version_low = 0;
     uint32_t version_high = 0;
     uint32_t version_high_high = 0;
 #if defined(BL616)
     uint32_t value[8];
-#elif defined(BL616D)
+#elif defined(BL618DG)
     uint32_t value[4];
 #endif
 
@@ -616,7 +616,7 @@ __WEAK int32_t bflb_set_app_version_to_efuse(uint8_t version)
     value[1] = value[5] = version_low;
     value[2] = value[6] = version_high;
     value[3] = value[7] = version_high_high;
-#elif defined(BL616D)
+#elif defined(BL618DG)
     value[0] = version_low_low;
     value[1] = version_low;
     value[2] = version_high;
@@ -624,7 +624,7 @@ __WEAK int32_t bflb_set_app_version_to_efuse(uint8_t version)
 #endif
     /* write efuse value */
     bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_APP_VERSION_OFFSET, value, sizeof(value) / 4, 1);
-#elif defined(BL702L) || defined(BL616L)
+#elif defined(BL702L) || defined(BL616CL)
     uint32_t value[2];
     uint32_t version_low = 0;
     uint32_t version_high = 0;
@@ -657,7 +657,7 @@ __WEAK int32_t bflb_get_boot2_version_from_efuse(uint8_t *version)
 #ifdef romapi_bflb_get_boot2_version_from_efuse
     return romapi_bflb_get_boot2_version_from_efuse(version);
 #else
-#if defined(BL616) || defined(BL702L) || defined(BL616D) || defined(BL616L)
+#if defined(BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
     uint32_t otp_ef_boot2_anti_rollback_en = 0;
     uint32_t tmpVal;
 
@@ -673,12 +673,12 @@ __WEAK int32_t bflb_get_boot2_version_from_efuse(uint8_t *version)
         return 1;
     }
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
     uint32_t version_high = 0;
     uint32_t version_low = 0;
 #if defined(BL616)
     uint32_t value[4];
-#elif defined(BL616D)
+#elif defined(BL618DG)
     uint32_t value[2];
 #endif
 
@@ -688,7 +688,7 @@ __WEAK int32_t bflb_get_boot2_version_from_efuse(uint8_t *version)
     /* get real version from efuse */
     version_low = value[0] | value[2];
     version_high = value[1] | value[3];
-#elif defined(BL616D)
+#elif defined(BL618DG)
     /* get real version from efuse */
     version_low = value[0];
     version_high = value[1];
@@ -706,7 +706,7 @@ __WEAK int32_t bflb_get_boot2_version_from_efuse(uint8_t *version)
         return 0;
     }
 
-#elif defined(BL702L) || defined(BL616L)
+#elif defined(BL702L) || defined(BL616CL)
     uint32_t value[1];
 
     /* read efuse value */
@@ -731,7 +731,7 @@ __WEAK int32_t bflb_set_boot2_version_to_efuse(uint8_t version)
 #ifdef romapi_bflb_set_boot2_version_to_efuse
     return romapi_bflb_set_boot2_version_to_efuse(version);
 #else
-#if defined(BL616) || defined(BL702L) || defined(BL616D) || defined(BL616L)
+#if defined(BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
     uint8_t version_old;
     uint32_t tmpVal;
 
@@ -750,12 +750,12 @@ __WEAK int32_t bflb_set_boot2_version_to_efuse(uint8_t version)
         return 0;
     }
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
     uint32_t version_high = 0;
     uint32_t version_low = 0;
 #if defined(BL616)
     uint32_t value[4];
-#elif defined(BL616D)
+#elif defined(BL618DG)
     uint32_t value[2];
 #endif
 
@@ -767,14 +767,14 @@ __WEAK int32_t bflb_set_boot2_version_to_efuse(uint8_t version)
 #if defined(BL616)
     value[0] = value[2] = version_low;
     value[1] = value[3] = version_high;
-#elif defined(BL616D)
+#elif defined(BL618DG)
     value[0] = version_low;
     value[1] = version_high;
 #endif
     /* write efuse value */
     bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_BOOT2_VERSION_OFFSET, value, sizeof(value) / 4, 1);
 
-#elif defined(BL702L) || defined(BL616L)
+#elif defined(BL702L) || defined(BL616CL)
     uint32_t value[1];
 
     if (version > BFLB_COMMON_UINT32_BIT_LEN) {
@@ -806,8 +806,8 @@ __WEAK int32_t bflb_get_boot2_info_from_flash(bflb_verinf_t *version)
  *
  * @param  chip_type: chip type pointer，the chip type can be one of the following values:
  *           @arg BFLB_CHIP_TYPE_BL616
- *           @arg BFLB_CHIP_TYPE_BL616D
- *           @arg BFLB_CHIP_TYPE_BL616L
+ *           @arg BFLB_CHIP_TYPE_BL618DG
+ *           @arg BFLB_CHIP_TYPE_BL616CL
  *           @arg BFLB_CHIP_TYPE_BL602
  *           @arg BFLB_CHIP_TYPE_BL702
  *           @arg BFLB_CHIP_TYPE_BL702L
@@ -837,26 +837,26 @@ int32_t bflb_get_chip_type(uint8_t *chip_type, uint8_t *chip_version)
     } else {
         return -1;
     }
-#elif defined(BL616D)
+#elif defined(BL618DG)
     tmp = *(uint32_t *)(0x60f60000 + 0x22800);
     if (tmp == 0x0616d002) {
-        *chip_type = BFLB_CHIP_TYPE_BL616D;
+        *chip_type = BFLB_CHIP_TYPE_BL618DG;
         *chip_version = 0x02;
     } else if (tmp == 0x0616d001) {
-        *chip_type = BFLB_CHIP_TYPE_BL616D;
+        *chip_type = BFLB_CHIP_TYPE_BL618DG;
         *chip_version = 0x11;
     } else {
         return -1;
     }
-#elif defined(BL616L)
+#elif defined(BL616CL)
     tmp = *(uint32_t *)(0x90000000 + 0x20000);
     if (tmp == 0x0616a001) {
-        *chip_type = BFLB_CHIP_TYPE_BL616L;
+        *chip_type = BFLB_CHIP_TYPE_BL616CL;
         *chip_version = 0x11;
     } else {
         tmp = *(uint32_t *)(0x90000000 + 0x18800);
         if (tmp == 0x0616a002) {
-            *chip_type = BFLB_CHIP_TYPE_BL616L;
+            *chip_type = BFLB_CHIP_TYPE_BL616CL;
             *chip_version = 0x02;
         } else {
             return -1;

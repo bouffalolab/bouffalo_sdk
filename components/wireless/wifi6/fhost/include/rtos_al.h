@@ -154,7 +154,7 @@ void rtos_heap_info(int *total_size, int *free_size, int *min_free_size);
  */
 int rtos_task_create(rtos_task_fct func,
                      const char * const name,
-                     enum rtos_task_id task_id,
+                     uint8_t task_id, // ref @ enum rtos_task_id
                      const uint16_t stack_depth,
                      void * const params,
                      rtos_prio prio,

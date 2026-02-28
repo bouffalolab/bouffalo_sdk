@@ -6,10 +6,19 @@
 #include <timers.h>
 #include <shell.h>
 #include "wifi_mgmr_ext.h"
+#include "wifi_mgmr.h"
+#include "fhost.h"
 #include "async_event.h"
 #include "log.h"
+#include "at_main.h"
 
 extern void app_atmodule_init(void);
+
+/* External function declarations */
+extern int wifi_mgmr_task_start(void);
+extern int fhost_init(void);
+extern int at_module_init(void);
+
 static bool wifi_init_done = 0;
 
 
@@ -32,6 +41,16 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
         case CODE_WIFI_ON_CONNECTED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
         } break;
+        #ifdef CODE_WIFI_ON_GOT_IP_ABORT
+        case CODE_WIFI_ON_GOT_IP_ABORT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_ABORT\r\n", __func__);
+        } break;
+        #endif
+        #ifdef CODE_WIFI_ON_GOT_IP_TIMEOUT
+        case CODE_WIFI_ON_GOT_IP_TIMEOUT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_TIMEOUT\r\n", __func__);
+        } break;
+        #endif
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;

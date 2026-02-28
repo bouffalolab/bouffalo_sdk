@@ -308,7 +308,7 @@ int32_t ATTR_TCM_SECTION bflb_sp_boot2_set_encrypt(uint8_t index, boot2_image_co
         if (len != 0) {
             aes_enabled = 1;
             if (g_boot_img_cfg->basic_cfg.xts_mode) {
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)
                 bflb_sf_ctrl_disable_wrap_access(0);
                 bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_XTS_MODE);
                 bflb_sf_ctrl_aes_xts_set_key_be(index, NULL, (g_boot_img_cfg->basic_cfg.encrypt_type - 1));
@@ -320,7 +320,7 @@ int32_t ATTR_TCM_SECTION bflb_sp_boot2_set_encrypt(uint8_t index, boot2_image_co
                                        g_boot_img_cfg->basic_cfg.aes_region_lock /*lock*/);
 #endif
             } else {
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)
                 bflb_sf_ctrl_disable_wrap_access(1);
                 bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_CTR_MODE);
 #endif

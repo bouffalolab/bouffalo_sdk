@@ -56,8 +56,8 @@ struct wpa_macsw_driver_itf_data {
 	struct wpa_macsw_driver_data *gdrv;
 	// Index, at FHOST level, of the interface
 	int fhost_vif_idx;
-	// Initial interface type
-	enum mac_vif_type vif_init_type;
+	// Initial interface type (ref @ enum mac_vif_type)
+	uint8_t vif_init_type;
 	// List of scan results
 	struct dl_list scan_res;
 	// Driver status

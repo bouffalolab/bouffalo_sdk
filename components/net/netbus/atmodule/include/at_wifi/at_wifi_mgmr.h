@@ -134,6 +134,12 @@ int at_wifi_mgmr_sta_scan_ap_all(void *env, void *arg, void (*cb)(void *, void *
 int at_wifi_mgmr_ap_sta_info_get(at_wifi_mgmr_sta_basic_info_t *sta_info, int index);
 int at_wifi_mgmr_ap_sta_delete(int sta_idx);
 
+// WiFi MAC address management
+int at_wifi_mgmr_ap_mac_get(uint8_t mac[6]);
+int at_wifi_mgmr_ap_mac_set(uint8_t mac[6]);
+int at_wifi_mgmr_sta_mac_get(uint8_t mac[6]);
+int at_wifi_mgmr_sta_mac_set(uint8_t mac[6]);
+
 // WiFi country and channel management
 void at_wifi_mgmr_get_country_code(char *country_code);
 int at_wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24g_cnt, uint8_t *c5g_cnt);

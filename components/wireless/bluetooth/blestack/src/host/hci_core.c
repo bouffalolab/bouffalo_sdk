@@ -7863,7 +7863,7 @@ int8_t bt_get_tx_pwr(void)
 #endif
 
 
-#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL702L) || defined(BL616)
 int bt_le_throughput_calc(bool enable, u8_t interval)
 {
     struct bt_hci_cp_vs_le_throughput_calc set_param;

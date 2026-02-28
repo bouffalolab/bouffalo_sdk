@@ -14,7 +14,7 @@
 #include "at_main.h"
 #include "at_core.h"
 
-static int at_query_cmd_userram(int argc, const char **argv)
+static int __attribute__((unused)) at_query_cmd_userram(int argc, const char **argv)
 {
     if (argv == NULL) {
         AT_CMD_PRINTF("[AT_USER] Error: argv is NULL\r\n");
@@ -24,7 +24,7 @@ static int at_query_cmd_userram(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-static int at_setup_cmd_userram(int argc, const char **argv)
+static int __attribute__((unused)) at_setup_cmd_userram(int argc, const char **argv)
 {
     if (argv == NULL) {
         AT_CMD_PRINTF("[AT_USER] Error: argv is NULL\r\n");

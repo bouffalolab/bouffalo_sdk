@@ -13,8 +13,8 @@ This component supports two build modes:
 ### SDK Build Mode (Default)
 Uses precompiled libraries from `lib/` directory:
 - `libwl80211_bl616.a` - BL616 chip
-- `libwl80211_bl616d.a` - BL616DK board
-- `libwl80211_bl616l.a` - BL616L chip
+- `libwl80211_bl618dg.a` - BL618DGDK board
+- `libwl80211_bl616cl.a` - BL616CL chip
 
 The `bouffalo.mk` makefile defines the component integration:
 - **Public includes**: `include/` (exported to project level)
@@ -184,6 +184,376 @@ When shell component is included, WiFi CLI commands are available via `wifi_mgmr
 - `wifi_sta_connect` - Connect to AP
 - `wifi_sta_disconnect` - Disconnect
 - `wifi_scan` - Scan for networks
+- `wifi_info` - Display WiFi connection information
+- `wifi_ap_start` - Start AP mode
+- `wifi_ap_stop` - Stop AP mode
+- `wifi_sta_list` - List connected STAs (AP mode)
+- `wifi_sta_autoconnect_enable` - Enable auto reconnect
+- `wifi_sta_autoconnect_disable` - Disable auto reconnect
+- `wifi_country_code_set` - Set regulatory country code
+
+---
+
+## wl80211 CLI Compatibility with fhost
+
+### Design Goal
+**Purpose:** Maintain CLI command compatibility between wl80211 (BL616/BL618) and fhost (WiFi6) implementations to ensure automated test scripts work across both platforms.
+
+### User Directives
+1. "你需要参考fhost版本的wifi_scan命令，在wl80211版本上来实现同样的cli命令功能"
+2. "并且保持命令的打印和fhost版本的api一致（因为要兼容自动化测试脚本）"
+3. "注意wl80211版本下不可以调用fhost的API"
+4. "增加wifi_info命令，要求打印一致"
+5. "在接下来的工作中，把你掌握的指导性的信息（包括我的指令以及代码设计思路和目的）记录在wl80211下面的CLAUDE.md中，随时更新，随时阅读"
+
+### Implementation Strategy
+
+#### Key Differences Between Platforms
+| Aspect | fhost (WiFi6) | wl80211 (BL616) |
+|--------|---------------|-----------------|
+| Print function | `fhost_printf()` | `wl80211_printf()` / `printf()` |
+| getopt API | `utils_al_getopt()` | `utils_getopt()` |
+| Parse functions | `utils_al_parse_number_adv()` | `utils_parse_number_adv()` |
+| Command export | Inline in fhost | Via `wifi_mgmr_cli.c` + `main.c` |
+
+#### Files Modified
+1. **`wifi_mgmr_cli.c`** - WiFi manager CLI commands library
+   - **All WiFi CLI commands are centralized in this file**
+   - Contains CLI command implementations and SHELL_CMD_EXPORT_ALIAS macros
+   - Commands are conditionally compiled with `CONFIG_SHELL`
+
+2. **`examples/wifi/macsw_bare/main.c`** - Application entry point
+   - Does NOT contain WiFi CLI commands (all moved to wifi_mgmr_cli.c)
+   - Only contains application-specific commands (macsw_*, monitor_*)
+
+### Implemented Commands
+
+#### wifi_scan Command
+**Location:** `main.c:wifi_scan_cmd()`
+
+**Implementation:**
+```c
+static void wifi_scan_cmd(int argc, char **argv)
+{
+    int opt, ret;
+    getopt_env_t getopt_env;
+    wifi_mgmr_scan_params_t config;
+    memset(&config, 0, sizeof(wifi_mgmr_scan_params_t));
+    utils_getopt_init(&getopt_env, 0);
+
+    while ((opt = utils_getopt(&getopt_env, argc, argv, "s:c:b:t:p:")) >= 0) {
+        switch (opt) {
+        case 's': // SSID filter
+            memcpy(config.ssid_array, getopt_env.optarg, MGMR_SSID_LEN);
+            config.ssid_length = strlen(getopt_env.optarg);
+            printf("ssid: %s len: %d\r\n", config.ssid_array, config.ssid_length);
+            break;
+        case 'c': // Channel list (comma-separated)
+            utils_parse_number_adv(getopt_env.optarg, ',', config.channels,
+                                   MAX_FIXED_CHANNELS_LIMIT, 10, &config.channels_cnt);
+            printf("scan channels: ");
+            for (int i = 0; i < config.channels_cnt; i++) {
+                printf("%d ", config.channels[i]);
+            }
+            printf("\r\n");
+            break;
+        case 'b': // BSSID filter
+            config.bssid_set_flag = 1;
+            utils_parse_number(getopt_env.optarg, ':', config.bssid, 6, 16);
+            printf("bssid: %s, mac:%02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                    getopt_env.optarg, MAC_ADDR_LIST(config.bssid));
+            break;
+        case 't': // Duration
+            config.duration = atoi(getopt_env.optarg);
+            break;
+        case 'p': // Probe count
+            config.probe_cnt = atoi(getopt_env.optarg);
+            break;
+        }
+    }
+    ret = wifi_mgmr_sta_scan(&config);
+    if (ret < 0) {
+        printf("scan failed\r\n");
+    }
+}
+```
+
+**Usage:**
+```bash
+wifi_scan                    # Scan all channels
+wifi_scan -s MyNetwork       # Scan for specific SSID
+wifi_scan -c 1,6,11          # Scan specific channels
+wifi_scan -b AA:BB:CC:DD:EE:FF  # Scan for specific BSSID
+wifi_scan -t 100 -p 2        # Set duration and probe count
+```
+
+#### wifi_info Command
+**Location:** `main.c:wifi_info_cmd()`
+
+**Implementation:**
+```c
+static void wifi_info_cmd(int argc, char **argv)
+{
+    wifi_mgmr_connect_ind_stat_info_t wifi_mgmr_ind_stat = {0};
+
+    printf("\r\n");
+    printf("STA Information:\r\n");
+    printf("-------------------------------------\r\n");
+    wifi_mgmr_sta_connect_ind_stat_get(&wifi_mgmr_ind_stat);
+    printf("-------------------------------------\r\n");
+}
+```
+
+**Output Format (when connected):**
+```
+STA Information:
+-------------------------------------
+Connected
+ssid:            MyNetwork
+passphr:         ********
+bssid:           AA:BB:CC:DD:EE:FF
+aid:             1
+channel:         6
+band:            2.4G
+security:        3
+-------------------------------------
+```
+
+**Output Format (when disconnected):**
+```
+STA Information:
+-------------------------------------
+No Connect
+-------------------------------------
+```
+
+### Print Format Compatibility
+
+The `wifi_mgmr_sta_info_dump()` function in `wifi_mgmr.c` already produces fhost-compatible output:
+- Uses same field names and order
+- Same password masking ("********" for secured, "Open" for open networks)
+- Same format for BSSID (uppercase hex with colons)
+- Same band display ("2.4G" or "5G")
+
+#### wifi_sta_autoconnect_enable/disable Commands
+
+**Location:** `wifi_mgmr_cli.c:wifi_sta_autoconnect_enable_cmd()`, `wifi_sta_autoconnect_disable_cmd()`
+
+**Usage:**
+```bash
+wifi_sta_autoconnect_enable
+wifi_sta_autoconnect_disable
+```
+
+**Output:**
+```
+Enable Auto Reconnect
+Disable Auto Reconnect
+```
+
+### Autoconnect Implementation (Updated 2026-01-28)
+
+**Design Decision:** Per user directive "不要在 wl80211_glb 中添加 disable_autoconnect 标志，把这个功能放在wifi_mgmr层中", the autoconnect functionality is implemented in the wifi_mgmr layer rather than the driver layer.
+
+**Implementation Details:**
+
+1. **State Management** (`wifi_mgmr.c:29`):
+   ```c
+   static int wifi_mgmr_disable_autoconnect = 1;  /* Default: disabled */
+   ```
+
+2. **Disconnect Event Handler** - Uses async_event instead of creating new task:
+   ```c
+   case WL80211_EVT_STA_DISCONNECTED:
+       connect_ind_dump((ev->value >> 16) & 0xFF, ev->value & 0xFF);
+       async_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0);
+       handler = disconnect_tsk;
+       /* Trigger autoconnect event if enabled */
+       if (!wifi_mgmr_disable_autoconnect && wl80211_glb.last_connect_params) {
+           async_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
+       }
+       break;
+   ```
+
+3. **Reconnect Event Handler** (`wifi_mgmr.c`):
+   ```c
+   case CODE_WIFI_CMD_RECONNECT: {
+       if (!wifi_mgmr_disable_autoconnect && wl80211_glb.last_connect_params) {
+           wl80211_printf("Autoconnect: Reconnecting to %s\r\n",
+                          wl80211_glb.last_connect_params->ssid);
+           wl80211_sta_connect(wl80211_glb.last_connect_params);
+       }
+   } break;
+   ```
+
+4. **Enable/Disable Functions** (`wifi_mgmr.c`):
+   ```c
+   int wifi_mgmr_sta_autoconnect_enable(void)
+   {
+       wifi_mgmr_disable_autoconnect = 0;
+       wl80211_printf("Enable Auto Reconnect\r\n");
+       return 0;
+   }
+
+   int wifi_mgmr_sta_autoconnect_disable(void)
+   {
+       wifi_mgmr_disable_autoconnect = 1;
+       wl80211_printf("Disable Auto Reconnect\r\n");
+       return 0;
+   }
+   ```
+
+**Key Features:**
+- Uses `wl80211_glb.last_connect_params` to retrieve saved connection parameters
+- Uses async_event system for non-blocking reconnection (no task creation overhead)
+- Checks both autoconnect state and saved parameters before reconnecting
+- Default state is disabled (requires explicit enable)
+
+#### wifi_country_code_set Command
+**Location:** `main.c:wifi_country_code_set_cmd()`
+
+**Usage:**
+```bash
+wifi_country_code_set CN
+wifi_country_code_set US
+wifi_country_code_set JP
+```
+
+**Output:**
+```
+Success: Country code set to CN
+```
+
+#### wifi_ap_start Command
+
+**Location:** `wifi_mgmr_cli.c:wifi_ap_start_cmd()`
+
+**Usage:**
+```bash
+# Open AP (no password)
+wifi_ap_start -s MyAP
+
+# Encrypted AP (with password)
+wifi_ap_start -s MyAP -k mypassword
+
+# With optional channel
+wifi_ap_start -s MyAP -k mypassword -c 6
+```
+
+**Output:**
+```
+Starting AP: SSID=MyAP, Open
+or
+Starting AP: SSID=MyAP, Password=***
+```
+
+**Parameters:**
+- `-s <ssid>` - AP SSID (required)
+- `-k <password>` - AP password (optional, WPA2-PSK if provided)
+- `-c <channel>` - WiFi channel 1-14 (optional, default 11)
+
+**Default Settings:**
+- Channel: 11
+- Channel width: 20MHz
+- Beacon interval: 100
+- TX power: 0x14
+
+#### wifi_ap_stop Command
+
+**Location:** `wifi_mgmr_cli.c:wifi_ap_stop_cmd()`
+
+**Usage:**
+```bash
+wifi_ap_stop
+```
+
+**Output:**
+```
+AP stopped
+```
+
+#### wifi_sta_list Command
+
+**Location:** `wifi_mgmr_cli.c:wifi_sta_list_cmd()`
+
+**Usage:**
+```bash
+wifi_sta_list
+```
+
+**Output (when STAs are connected):**
+```
+AP Station List:
+========================================
+STA 1:
+  MAC: AA:BB:CC:DD:EE:FF
+  AID: 1
+  sta_idx: 1
+STA 2:
+  MAC: 11:22:33:44:55:66
+  AID: 2
+  sta_idx: 2
+Total: 2 station(s)
+========================================
+```
+
+**Output (when no STAs connected):**
+```
+AP Station List:
+========================================
+No stations connected
+========================================
+```
+
+**Output (when AP mode is not enabled):**
+```
+AP mode is not enabled
+```
+
+**Implementation Details:**
+- Uses `wl80211_glb.aid_list[4]` array to get connected STA information
+- Each entry contains: MAC address, AID, sta_idx, and used flag
+- Maximum 4 STAs can be connected simultaneously
+
+
+### API Modifications
+
+The following modifications were made to `wifi_mgmr.c` and `wifi_mgmr.h`:
+
+#### wifi_mgmr.c Changes
+1. **Added autoconnect state variable** - `wifi_mgmr_disable_autoconnect` (default: disabled)
+2. **Modified `WL80211_EVT_STA_DISCONNECTED` handler** - Posts `CODE_WIFI_CMD_RECONNECT` event when enabled
+3. **Added `CODE_WIFI_CMD_RECONNECT` event handler** - Performs reconnection using saved parameters
+4. **Implemented `wifi_mgmr_sta_autoconnect_enable()`** - Enables autoconnect by setting flag to 0
+5. **Implemented `wifi_mgmr_sta_autoconnect_disable()`** - Disables autoconnect by setting flag to 1
+6. **Fixed `wifi_mgmr_get_country_code()`** - Fixed return type (was returning NULL instead of -1)
+
+#### wifi_mgmr.h Changes
+1. **Added declaration** for `wifi_mgmr_sta_autoconnect_enable()`
+2. **Updated comments** for autoconnect functions - No longer marked as stub
+
+### Build Verification
+
+**Primary Build Command:**
+```bash
+make -C examples/wifi/macsw_bare CHIP=bl616l BOARD=bl616ldk
+```
+
+**Status:** ✅ Compiles successfully
+
+### Important Notes
+
+1. **SHELL_CMD_EXPORT_ALIAS Conflicts**: Do not export the same command symbol in both `wifi_mgmr_cli.c` and `main.c`. The implementation should live in `main.c` while `wifi_mgmr_cli.c` provides the shared function definitions.
+
+2. **API Compatibility**: wl80211 cannot call fhost-specific APIs. Use only wl80211 APIs from `wifi_mgmr.h`.
+
+3. **Print Functions**: Use `printf()` in main.c instead of `wl80211_printf()` for consistency.
+
+4. **Macro Definitions**: Add `MAC_ADDR_LIST` macro to main.c for BSSID formatting.
+
+5. **Test Script Compatibility**: The output format must match fhost exactly for automated test scripts to work correctly.
+
+---
 
 ## Important Notes
 
@@ -800,3 +1170,141 @@ The net80211 softmac codebase now compiles successfully. The next phase would be
 2. Runtime functionality testing
 3. Performance optimization
 4. Memory usage analysis
+
+---
+
+## Work Log (2026-01-28)
+
+### Session Summary
+
+Completed implementation of WiFi autoconnect functionality in the wifi_mgmr layer per user directive: "不要在 wl80211_glb 中添加 disable_autoconnect 标志，把这个功能放在wifi_mgmr层中".
+
+### Completed Tasks
+
+1. **Autoconnect Implementation** ✅
+   - Added `wifi_mgmr_disable_autoconnect` static state variable in wifi_mgmr layer
+   - Created `wifi_mgmr_sta_autoconnect_task()` FreeRTOS task for non-blocking reconnection
+   - Implemented `wifi_mgmr_sta_autoconnect_enable()` and `wifi_mgmr_sta_autoconnect_disable()` functions
+   - Modified `WL80211_EVT_STA_DISCONNECTED` event handler to trigger autoconnect when enabled
+   - Uses existing `wl80211_glb.last_connect_params` for saved connection parameters
+
+2. **Build Verification** ✅
+   - Verified build with: `make -C examples/wifi/macsw_bare CHIP=bl616l BOARD=bl616ldk`
+   - Build completed successfully
+
+3. **Documentation Update** ✅
+   - Updated CLAUDE.md to reflect actual autoconnect implementation (no longer stub)
+   - Added detailed implementation documentation with code snippets
+   - Updated API Modifications section
+
+### Files Modified
+
+1. `components/wireless/wl80211/wifi_mgmr.c`
+   - Line 29: Added `wifi_mgmr_disable_autoconnect` state variable
+   - Lines 228-230: Modified disconnect event handler to post reconnect event (optimized - no task creation)
+   - Lines 275-281: Added `CODE_WIFI_CMD_RECONNECT` event handler for reconnection
+   - Lines 744-756: Implemented enable/disable functions
+
+**Optimization (2026-01-28):**
+- Replaced xTaskCreate with async_post_event to avoid task creation overhead
+- User feedback: "必须要在重连的时候创建一个新的task吗？" led to optimization using existing event system
+
+2. `components/wireless/wl80211/include/wifi_mgmr.h`
+   - Added declaration for `wifi_mgmr_sta_autoconnect_enable()`
+
+3. `components/wireless/wl80211/CLAUDE.md`
+   - Updated autoconnect documentation with actual implementation details
+   - Updated API Modifications section
+
+---
+
+## Work Log (2026-01-28 - Session 2)
+
+### Session Summary
+
+Added AP mode CLI commands (`wifi_ap_start` and `wifi_ap_stop`) compatible with fhost version.
+
+### Completed Tasks
+
+1. **wifi_ap_start Command** ✅
+   - Supports open AP: `wifi_ap_start -s <ssid>`
+   - Supports encrypted AP: `wifi_ap_start -s <ssid> -k <password>`
+   - Optional channel parameter: `-c <channel>`
+   - Uses wl80211 driver API directly
+
+2. **wifi_ap_stop Command** ✅
+   - Stops AP mode
+   - Simple command without parameters
+
+3. **Build Verification** ✅
+   - Verified build with: `make -C examples/wifi/macsw_bare CHIP=bl616l BOARD=bl616ldk`
+   - Build completed successfully
+
+4. **Documentation Update** ✅
+   - Added command documentation to CLAUDE.md
+   - Updated CLI Commands section
+
+### Files Modified
+
+1. `components/wireless/wl80211/wifi_mgmr_cli.c`
+   - Added `wifi_ap_start_cmd()` function (lines 230-290)
+   - Added `wifi_ap_stop_cmd()` function (lines 292-302)
+   - Added SHELL_CMD_EXPORT_ALIAS macros for both commands
+
+2. `components/wireless/wl80211/CLAUDE.md`
+   - Updated CLI Commands section to list new commands
+   - Added detailed documentation for wifi_ap_start and wifi_ap_stop commands
+
+### Command Details
+
+**wifi_ap_start:**
+- Required: `-s <ssid>` for SSID
+- Optional: `-k <password>` for WPA2-PSK encryption
+- Optional: `-c <channel>` for channel selection (1-14)
+- Defaults: channel 11, 20MHz width, beacon interval 100
+
+**wifi_ap_stop:**
+- Stops AP mode
+- No parameters required
+
+---
+
+## Work Log (2026-01-28 - Session 3)
+
+### Session Summary
+
+Added `wifi_sta_list` command for AP mode to display connected stations list.
+
+### Completed Tasks
+
+1. **wifi_sta_list Command** ✅
+   - Lists all connected STAs in AP mode
+   - Shows MAC address, AID, and sta_idx for each STA
+   - Checks AP mode status before displaying
+   - Uses `wl80211_glb.aid_list[4]` array
+
+2. **Build Verification** ✅
+   - Verified build with: `make -C examples/wifi/macsw_bare CHIP=bl616l BOARD=bl616ldk`
+   - Build completed successfully
+
+3. **Documentation Update** ✅
+   - Added command documentation to CLAUDE.md
+   - Updated CLI Commands section
+
+### Files Modified
+
+1. `components/wireless/wl80211/wifi_mgmr_cli.c`
+   - Added `wifi_sta_list_cmd()` function (lines 304-342)
+   - Added SHELL_CMD_EXPORT_ALIAS macro
+
+2. `components/wireless/wl80211/CLAUDE.md`
+   - Updated CLI Commands section
+   - Added detailed documentation for wifi_sta_list command
+
+### Command Details
+
+**wifi_sta_list:**
+- No parameters required
+- Displays up to 4 connected STAs
+- Shows: MAC address, AID, sta_idx
+- Handles cases: AP not enabled, no STAs connected

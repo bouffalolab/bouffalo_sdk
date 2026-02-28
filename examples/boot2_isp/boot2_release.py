@@ -16,16 +16,12 @@ release_list = [
 [r'make clean;make CHIP=bl702            BOARD=bl702dk CONFIG_DEBUG=y',"bl702","debug"],
 [r'make clean;make CHIP=bl702l CPU_ID=m0 BOARD=bl702ldk CONFIG_DEBUG=n',"bl702l","release"],
 [r'make clean;make CHIP=bl702l CPU_ID=m0 BOARD=bl702ldk CONFIG_DEBUG=y',"bl702l","debug"],
-[r'make clean;make CHIP=bl808  CPU_ID=m0 BOARD=bl808dk CONFIG_DEBUG=n',"bl808","release"],
-[r'make clean;make CHIP=bl808  CPU_ID=m0 BOARD=bl808dk CONFIG_DEBUG=y',"bl808","debug"],
-[r'make clean;make CHIP=bl606p CPU_ID=m0 BOARD=bl606pdk CONFIG_DEBUG=n',"bl606p","release"],
-[r'make clean;make CHIP=bl606p CPU_ID=m0 BOARD=bl606pdk CONFIG_DEBUG=y',"bl606p","debug"],
 [r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk CONFIG_ANTI_ROLLBACK=y CONFIG_DEBUG=n',"bl616","release"],
 [r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk CONFIG_ANTI_ROLLBACK=y CONFIG_DEBUG=y',"bl616","debug"],
-[r'make clean;make CHIP=bl616d CPU_ID=ap BOARD=bl616ddk CONFIG_DEBUG=n',"bl616d","release"],
-[r'make clean;make CHIP=bl616d CPU_ID=ap BOARD=bl616ddk CONFIG_DEBUG=y',"bl616d","debug"],
-[r'make clean;make CHIP=bl616l BOARD=bl616ldk CONFIG_DEBUG=n',"bl616l","release"],
-[r'make clean;make CHIP=bl616l BOARD=bl616ldk CONFIG_DEBUG=y',"bl616l","debug"],
+[r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CONFIG_DEBUG=n',"bl618dg","release"],
+[r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CONFIG_DEBUG=y',"bl618dg","debug"],
+[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=n',"bl616cl","release"],
+[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=y',"bl616cl","debug"],
 ]
 
 def zipDir(dirpath,outFullName):

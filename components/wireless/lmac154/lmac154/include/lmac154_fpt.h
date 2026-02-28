@@ -49,7 +49,7 @@ lmac154_fptMode_t lmac154_getFramePendingMode(void);
 *******************************************************************************/
 int lmac154_framePendingResult(uint32_t tout, bool * isFramePended);
 
-#if defined BL616D
+#if defined BL618DG
 /****************************************************************************//**
  * @brief  Set frame pending bit result if neighbor search fails
  *

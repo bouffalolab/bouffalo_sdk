@@ -139,7 +139,7 @@
  */
 struct bflb_ir_tx_config_s {
     uint8_t tx_mode;
-#if defined(BL616D)
+#if defined(BL618DG)
     uint16_t data_bits;
 #else
     uint8_t data_bits;

@@ -3,24 +3,24 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616D/BL618D     |        |
-|BL616L/BL618L     |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
+| BL616CL |        |
 
 ## Compile
 
-- BL616D/BL618D
+- BL618DG
 
 ```
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=np
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
 ```
 
-- BL616L/BL618L
+- BL616CL
 
 ```
-make CHIP=bl616l BOARD=bl616ldk
+make CHIP=bl616cl BOARD=bl616cldk
 ```
 
 ## Flash

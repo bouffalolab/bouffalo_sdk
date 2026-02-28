@@ -11,6 +11,12 @@
 #include <board_rf.h>
 #include <shell.h>
 
+#include "bflb_core.h"
+#include "bflb_mtimer.h"
+#include "bflb_uart.h"
+
+#include <app_usbwifi.h>
+
 #define INIT_STACK_SIZE    (2048)
 #define INIT_TASK_PRIORITY (16)
 

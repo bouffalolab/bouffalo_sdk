@@ -93,7 +93,7 @@ void ipc_host_init(struct ipc_host_env_tag *env,
     env->ipc_e2amsg_bufsz = sizeof(struct ipc_e2a_msg);
 #endif
 
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     // Initialize the pointers to the tx buffer
     env->txbuf = shared_env_ptr->txbuf;
 #endif
@@ -275,7 +275,7 @@ static void ipc_host_dbg_handler(struct ipc_host_env_tag *env)
     REG_SW_CLEAR_PROFILING(env->pthis, SW_PROF_IRQ_E2A_DBG);
 }
 
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
 volatile struct txbuf_host *ipc_host_txbuf_get(struct ipc_host_env_tag *env)
 {
     for (uint8_t i = 0; i < NX_TXDESC_CNT0; i++)

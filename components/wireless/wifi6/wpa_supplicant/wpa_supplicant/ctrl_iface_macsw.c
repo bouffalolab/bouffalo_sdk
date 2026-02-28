@@ -31,8 +31,8 @@ struct wpa_macsw_driver_itf_data {
     struct wpa_macsw_driver_data *gdrv;
     // Index, at FHOST level, of the interface
     int fhost_vif_idx;
-    // Initial interface type
-    enum mac_vif_type vif_init_type;
+    // Initial interface type (ref @ enum mac_vif_type)
+    uint8_t vif_init_type;
     // List of scan results
     struct dl_list scan_res;
     // Driver status
@@ -92,6 +92,13 @@ static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
         !strncmp(txt, "CTRL-EVENT-NETWORK-NOT-FOUND", sizeof("CTRL-EVENT-NETWORK-NOT-FOUND")-1) ||
         !strncmp(txt, "AP-STA-ENCRYPTION-TYPE-MISMATCH", sizeof("AP-STA-ENCRYPTION-TYPE-MISMATCH")-1) ||
         !strncmp(txt, "WPS-SUCCESS", sizeof("WPS-SUCCESS")-1) ||
+        !strncmp(txt, "STA-RX-EAPOL1)", sizeof("STA-RX-EAPOL1")-1) ||
+        !strncmp(txt, "STA-TX-EAPOL2)", sizeof("STA-TX-EAPOL2")-1) ||
+        !strncmp(txt, "STA-RX-EAPOL3)", sizeof("STA-RX-EAPOL3")-1) ||
+        !strncmp(txt, "STA-TX-EAPOL4)", sizeof("STA-TX-EAPOL4")-1) ||
+        !strncmp(txt, "SAE-COMMITTED", sizeof("SAE-COMMITTED")-1) ||
+        !strncmp(txt, "SAE-CONFIRMED", sizeof("SAE-CONFIRMED")-1) ||
+        !strncmp(txt, "SAE-ACCEPTED", sizeof("SAE-ACCEPTED")-1) ||
         !strncmp(txt, "CTRL-EVENT-CONNECTED", sizeof("CTRL-EVENT-CONNECTED")-1)) {
 
         cmd = rtos_calloc(1, sizeof(struct cfgmacsw_status_code_print));

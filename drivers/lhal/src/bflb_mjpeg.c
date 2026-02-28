@@ -325,7 +325,7 @@ void bflb_mjpeg_kick_run(struct bflb_device_s *dev, uint16_t kick_count)
     regval &= ~MJPEG_REG_SW_KICK_HBLK_MASK;
     regval |= (kick_count << MJPEG_REG_SW_KICK_HBLK_SHIFT);
     putreg32(regval, reg_base + MJPEG_YUV_MEM_SW_OFFSET);
-#if defined(BL616L)
+#if defined(BL616CL)
     regval = getreg32(reg_base + MJPEG_KICK_DONE_DELAY_OFFSET);
     regval &= ~MJPEG_KICK_INT_BLOCK_NUM_MASK;
     regval |= (kick_count << MJPEG_KICK_INT_BLOCK_NUM_SHIFT);
@@ -405,7 +405,7 @@ void bflb_mjpeg_tcint_mask(struct bflb_device_s *dev, bool mask)
 #endif
 }
 
-#if defined(BL616L)
+#if defined(BL616CL)
 void bflb_mjpeg_kickint_mask(struct bflb_device_s *dev, bool mask)
 {
 #ifdef romapi_bflb_mjpeg_kickint_mask
@@ -492,7 +492,7 @@ uint32_t bflb_mjpeg_get_intstatus(struct bflb_device_s *dev)
     reg_base = dev->reg_base;
 
     regval = getreg32(reg_base + MJPEG_CONTROL_3_OFFSET);
-#if defined(BL616L)
+#if defined(BL616CL)
     regval &= (0x400000f0 | MJPEG_STS_KICK_INT);
 #else
     regval &= 0x400000f0;
@@ -512,7 +512,7 @@ void bflb_mjpeg_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 
     reg_base = dev->reg_base;
 
-#if defined(BL616L)
+#if defined(BL616CL)
     if (int_clear & MJPEG_INTCLR_KICK_DONE) {
         regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
         regval |= MJPEG_INTCLR_KICK_DONE;
@@ -812,7 +812,7 @@ int bflb_mjpeg_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case MJPEG_CMD_SET_INPUTADDR1:
             putreg32(arg, reg_base + MJPEG_UV_FRAME_ADDR_OFFSET);
             break;
-#if defined(BL616L)
+#if defined(BL616CL)
         case MJPEG_CMD_SET_KICK_DONE_DELAY:
             regval = getreg32(reg_base + MJPEG_KICK_DONE_DELAY_OFFSET);
             regval &= ~MJPEG_KICK_DONE_DELAY_MASK;

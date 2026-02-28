@@ -35,7 +35,11 @@
 #include "at_wifi_main.h"
 #include "at_net_main.h"
 #include "at_wifi_mgmr.h"
-#if CONFIG_ATMODULE_NETWORK
+
+/* Function declarations */
+extern struct netif *at_wifi_netif_get(uint8_t vif_idx);
+extern ip_addr_t *dns_getserver(u8_t numdns);
+#if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK)
 #include "at_net_config.h"
 #endif
 #ifdef CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO
@@ -47,15 +51,20 @@
 #define AT_WIFI_MAIN_PRINTF AT_CMD_PRINTF
 
 #define AT_WIFI_SUPPORT_STORE_CHANNEL
-
+#ifndef AT_RECONNECT_STACK
+#define AT_RECONNECT_STACK 256
+#endif
+#ifdef CONFIG_ATMODULE_WIFI_AP
 static void wifi_ap_update_sta_ip(uint8_t mac[6], uint32_t ip);
+static int wifi_ap_get_sta_ip(uint8_t mac[6], uint32_t *ip);
+#endif
 
 //static wifi_interface_t g_wifi_sta_interface = NULL;
 //static wifi_interface_t g_wifi_ap_interface = NULL;
 static int g_wifi_sta_is_connected = 0;
-static int g_wifi_sta_use_dhcp = 0;
+static int __attribute__((unused)) g_wifi_sta_use_dhcp = 0;
 static int g_wifi_sta_disconnect_reason = 0;
-static int g_wifi_sniffer_is_start = 0;
+static int __attribute__((unused)) g_wifi_sniffer_is_start = 0;
 static int g_wifi_ap_is_start = 0;
 static int g_wifi_reconnect_disable = 0;
 
@@ -78,8 +87,6 @@ struct wifi_ap_sta_info
 };
 
 struct wifi_ap_sta_info g_wifi_ap_sta_info[AT_WIFI_MAX_STA_NUM];
-
-static int wifi_ap_get_sta_ip(uint8_t mac[6], uint32_t *ip);
 
 static void wifiopt_sta_disconnect(int force)
 {
@@ -116,7 +123,7 @@ int at_wifi_sta_ip4_addr_get(uint32_t *addr, uint32_t *mask, uint32_t *gw, uint3
 void wifiopt_sta_connect(void)
 {
 
-#if CONFIG_ATMODULE_NETWORK
+#if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK)
     ip_addr_t ip_zero;
     ip_addr_set_zero(&ip_zero);
 
@@ -134,11 +141,11 @@ void wifiopt_sta_connect(void)
 
     int pmf_cfg = 1;
 
-    char *pmk = at_wifi_config->sta_info.pmk;
+    char * __attribute__((unused)) pmk = at_wifi_config->sta_info.pmk;
     uint16_t freq = at_wifi_config->sta_info.freq;
     uint8_t *bssid = at_wifi_config->sta_info.bssid;
-    uint16_t listen_interval = (uint16_t)at_wifi_config->sta_info.listen_interval;
-    uint32_t flags = 0;
+    uint16_t __attribute__((unused)) listen_interval = (uint16_t)at_wifi_config->sta_info.listen_interval;
+    uint32_t __attribute__((unused)) flags = 0;
     char *hostname = at_wifi_config->hostname;
     int dhcp_en = (int)at_wifi_config->dhcp_state.bit.sta_dhcp;
     uint32_t ip = at_wifi_config->sta_ip.ip;
@@ -158,14 +165,14 @@ void wifiopt_sta_connect(void)
     } else {
         snprintf(bssid_str, sizeof(bssid_str), "%02x:%02x:%02x:%02x:%02x:%02x",
                 bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
-        bssid = bssid_str;
+        bssid = (uint8_t *)bssid_str;
     }
 
     if (!dhcp_en) {
         at_wifi_mgmr_sta_ip_set(ip, mask, gateway, 0);
     }
 
-#if (CONFIG_IPV6 && CONFIG_ATMODULE_NETWORK)
+#if defined(CONFIG_IPV6) && (CONFIG_IPV6) && defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK)
     if (at_net_config->ipv6_enable) {
         wifi_sta_ipv6_enable(1);
     }
@@ -178,10 +185,10 @@ void wifiopt_sta_connect(void)
     }
 #ifdef CONFIG_ATMODULE_WIFI_ANTENNA_CTL
     if (antenna_hal_is_static_div_enabled()) {
-        return wifi_sta_antenna_connect(ssid, psk, bssid, at_wifi_config->sta_info.wep_en?"WEP":NULL, pmf_cfg, freq, freq, dhcp_en);
+        return wifi_sta_antenna_connect(ssid, psk, (const char *)bssid, at_wifi_config->sta_info.wep_en?"WEP":NULL, pmf_cfg, freq, freq, dhcp_en);
     }
 #endif
-    at_wifi_mgmr_sta_connect(ssid, psk, bssid, at_wifi_config->sta_info.wep_en?"WEP":NULL, pmf_cfg, freq, freq, dhcp_en);
+    at_wifi_mgmr_sta_connect(ssid, psk, (const char *)bssid, at_wifi_config->sta_info.wep_en?"WEP":NULL, pmf_cfg, freq, freq, dhcp_en);
 }
 
 static int wifiopt_ap_stop(int force)
@@ -207,7 +214,8 @@ static int wifi_ap_start(void)
     if (at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
         int sta_channel;
         if (at_wifi_mgmr_sta_channel_get(&sta_channel) == 0) {
-            at_wifi_config->ap_info.channel = sta_channel;
+            if (sta_channel >= 1 && sta_channel <= 14)
+                at_wifi_config->ap_info.channel = sta_channel;
             AT_WIFI_MAIN_PRINTF("Set AP channel to %d\r\n", sta_channel);
         }
     }
@@ -418,7 +426,7 @@ static void wifi_sta_enable_reconnect(int enable)
     if ((at_wifi_config->reconn_cfg.interval_second > 0) && (at_wifi_config->reconn_cfg.repeat_count > 0)) {
         g_wifi_reconnect_disable = 0;
         if (!task) {
-            xTaskCreate(reconnect_event, (char*)"reconnect", 256, &task, 15, &task);
+            xTaskCreate(reconnect_event, (char*)"reconnect", AT_RECONNECT_STACK, &task, 15, &task);
         }
     }
 }
@@ -624,6 +632,26 @@ void at_wifi_event_notify(void *private_data, uint32_t code)
                     ||  at_base_config->sysmsg_cfg.bit.link_state_msg
                    ) {
                     if (at_wifi_config->wevt_enable) {
+#if (defined(CONFIG_MR_TTY) || defined(CONFIG_MR_VIRTUALCHAN))
+                        ip4_addr_t ipaddr = {0}, gwaddr = {0}, maskaddr = {0}, dns = {0};
+                        char ipaddr_str[IP4ADDR_STRLEN_MAX];
+                        char gwaddr_str[IP4ADDR_STRLEN_MAX];
+                        char maskaddr_str[IP4ADDR_STRLEN_MAX];
+                        char dnsaddr_str[IP4ADDR_STRLEN_MAX];
+                        at_wifi_sta_ip4_addr_get(&ipaddr.addr, &maskaddr.addr, &gwaddr.addr, &dns.addr);
+
+                        ip4addr_ntoa_r(&ipaddr, ipaddr_str, IP4ADDR_STRLEN_MAX);
+                        ip4addr_ntoa_r(&gwaddr, gwaddr_str, IP4ADDR_STRLEN_MAX);
+                        ip4addr_ntoa_r(&maskaddr, maskaddr_str, IP4ADDR_STRLEN_MAX);
+                        ip4addr_ntoa_r(&dns, dnsaddr_str, IP4ADDR_STRLEN_MAX);
+                        printf("--------------------- IP:%s,gw:%s,mask:%s,dns:%s -------------------\r\n",
+                            ipaddr_str, gwaddr_str,
+                            maskaddr_str, dnsaddr_str);
+
+                        at_response_string("+CW:GOTIP,IP:%s,gw:%s,mask:%s,dns:%s\r\n",
+                            ipaddr_str, gwaddr_str,
+                            maskaddr_str, dnsaddr_str);
+#else
                         at_response_string("+CW:GOTIP\r\n");
 
                         if (at_base_config->sysmsg_cfg.syslog){
@@ -635,12 +663,13 @@ void at_wifi_event_notify(void *private_data, uint32_t code)
                             at_response_string("Mask:\"%s\"\r\n", ip4addr_ntoa(&maskaddr));
                             at_response_string("DNS:\"%s\"\r\n", ip4addr_ntoa(&dns));
                         }
+#endif
                     }
                 }
 
                 g_wifi_sta_disconnect_reason = 0;
             }
-#if CONFIG_ATMODULE_NETWORK
+#if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK)
             at_net_dns_load();
 #endif
         }
@@ -780,6 +809,8 @@ int at_wifi_ap_start(void)
 #ifdef CONFIG_ATMODULE_WIFI_AP
     wifiopt_ap_stop(0);
     return wifi_ap_start();
+#else
+    return 0;
 #endif
 }
 
@@ -788,6 +819,7 @@ int at_wifi_ap_stop(void)
     return 0;
 }
 
+#ifdef CONFIG_ATMODULE_WIFI_AP
 int at_wifi_ap_get_sta_ip(uint8_t *mac, char *ip, uint32_t ipbuf_size, int check_flag)
 {
     uint32_t ip_addr;
@@ -810,6 +842,7 @@ int at_wifi_ap_get_sta_ip(uint8_t *mac, char *ip, uint32_t ipbuf_size, int check
     strlcpy(ip, ip4addr_ntoa(&ipaddr), ipbuf_size);
     return 0;
 }
+#endif
 
 int at_wifi_stop(void)
 {
@@ -821,7 +854,7 @@ int at_wifi_stop(void)
 
 int at_wifi_hostname_set(char *hostname)
 {
-#if CONFIG_ATMODULE_NETWORK && LWIP_NETIF_HOSTNAME
+#if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK) && LWIP_NETIF_HOSTNAME
     struct netif *netif = at_wifi_netif_get(AT_WIFI_VIF_STA);
     if (netif) {
         netif_set_hostname(netif, hostname);
@@ -855,6 +888,7 @@ int at_wifi_main_init(void)
 
     if (at_wifi_config->wifi_mode == WIFI_STATION_MODE || at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
         if (at_wifi_config->auto_conn == WIFI_AUTOCONN_ENABLE) {
+            at_wifi_sta_set_reconnect();
             wifiopt_sta_connect();
         }
     }

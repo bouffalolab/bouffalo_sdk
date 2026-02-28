@@ -1,12 +1,12 @@
 #include "bflb_timer.h"
 #include "bflb_gpio.h"
 #include "hardware/timer_reg.h"
-#if defined(BL616L)
-#include "bl616l_glb.h"
+#if defined(BL616CL)
+#include "bl616cl_glb.h"
 #elif defined(BL616)
 #include "bl616_glb.h"
-#elif defined(BL616D)
-#include "bl616d_glb.h"
+#elif defined(BL618DG)
+#include "bl618dg_glb.h"
 #endif
 
 void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s *config)
@@ -270,7 +270,7 @@ int bflb_timer_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     return romapi_bflb_timer_feature_control(dev, cmd, arg);
 #else
     int ret = 0;
-#if defined(BL616L)
+#if defined(BL616CL)
     uint32_t reg_base;
     uint32_t regval;
 
@@ -278,7 +278,7 @@ int bflb_timer_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 #endif
 
     switch (cmd) {
-#if defined(BL616L)
+#if defined(BL616CL)
         /* Select compare id to send dma request, arg use @ref TIMER_DMA_COMP_ID */
         case TIMER_CMD_DMA_REQUEST_SET_COMPARE_ID:
             regval = getreg32(reg_base + TIMER_TIER0_OFFSET + 4 * dev->idx);
@@ -418,7 +418,7 @@ int bflb_timer_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 #endif
 }
 
-#if defined(BL616L)
+#if defined(BL616CL)
 void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config)
 {
 #ifdef romapi_bflb_timer_capture_init
@@ -576,7 +576,7 @@ int bflb_timer_capture_get_pulsewidth(struct bflb_timer_capture_value_s *gpio_la
     return 0;
 #endif
 }
-#elif defined(BL616) || defined(BL616D)
+#elif defined(BL616) || defined(BL618DG)
 void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config)
 {
 #ifdef romapi_bflb_timer_capture_init

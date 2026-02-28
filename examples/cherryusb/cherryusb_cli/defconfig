@@ -16,7 +16,7 @@ CONFIG_CHERRYUSB_DEVICE_AUDIO =y
 CONFIG_CHERRYUSB_DEVICE_VIDEO =y
 
 # ecm and rndis are supported only on some chips
-ifneq (,$(filter $(CHIP),bl702 bl616 bl616l))
+ifneq (,$(filter $(CHIP),bl702 bl616 bl616cl))
     CONFIG_CHERRYUSB_DEVICE_CDC_RNDIS =y
     CONFIG_CHERRYUSB_DEVICE_CDC_ECM =y
     # Enable the E-PHY support for USB Ethernet Class
@@ -46,4 +46,5 @@ endif
 ifeq ($(CONFIG_CHERRYUSB_HOST_CDC_ECM),y)
     CONFIG_LWIP     =y
     CONFIG_IPERF    =y
+    CONFIG_PING     =y
 endif

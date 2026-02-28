@@ -42,7 +42,7 @@
 
 /* Register offsets *********************************************************/
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_FRONT_MM_MISC_CTRL_OFFSET     (0x0)  /* mm_misc_ctrl */
 #define CAM_FRONT_CONFIG_OFFSET           (0x4)  /* config */
 #define CAM_FRONT_DVP_AS_REGB_OFFSET      (0x8)  /* dvp_as_regb */
@@ -65,12 +65,12 @@
 #else
 #define CAM_FRONT_CONFIG_OFFSET            (0x0) /* config */
 #define CAM_FRONT_DVP2BUS_SRC_SEL_1_OFFSET (0x8) /* dvp2bus_src_sel_1 */
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
 #define CAM_FRONT_SNSR_CTRL_OFFSET  (0xC)  /* snsr_ctrl */
 #define CAM_FRONT_EMI_MISC_OFFSET   (0x10) /* emi_misc */
 #define CAM_FRONT_ISP_ID_YUV_OFFSET (0x14) /* isp_id_yuv */
 #endif
-#if defined(BL808)
+#if 0
 #define CAM_FRONT_PIX_DATA_CTRL_OFFSET     (0x4)   /* pix_data_ctrl */
 #define CAM_FRONT_DVP2BUS_SRC_SEL_2_OFFSET (0x14)  /* dvp2bus_src_sel_2 */
 #define CAM_FRONT_ISP_ID_YUV_OFFSET        (0x28)  /* isp_id_yuv */
@@ -88,7 +88,7 @@
 
 /* Register Bitfield definitions *****************************************************/
 
-#if defined(BL616D)
+#if defined(BL618DG)
 /* 0x0 : mm_misc_ctrl */
 #define CAM_FRONT_REG_FORCE_VSYNC_SH      (1 << 0U)
 #define CAM_FRONT_CR_DVP_S2P_HS_INV       (1 << 1U)
@@ -104,7 +104,7 @@
 #define CAM_FRONT_RG_DVPAS_ENABLE (1 << 0U)
 #define CAM_FRONT_RG_DVPAS_HS_INV (1 << 1U)
 #define CAM_FRONT_RG_DVPAS_VS_INV (1 << 2U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define CAM_FRONT_CR_TG_EN_AS               (1 << 3U)
 #define CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT    (4U)
 #define CAM_FRONT_RG_DVPAS_FIFO_TH_MASK     (0xfff << CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT)
@@ -116,7 +116,7 @@
 #define CAM_FRONT_RG_DVPAS_FIFO_TH_MASK  (0x7ff << CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT)
 #endif
 
-#if defined(BL616D)
+#if defined(BL618DG)
 /* 0x8 : dvp_as_regb */
 #define CAM_FRONT_CR_ACT_PIXEL_WIDTH_AS_SHIFT (0U)
 #define CAM_FRONT_CR_ACT_PIXEL_WIDTH_AS_MASK  (0xffff << CAM_FRONT_CR_ACT_PIXEL_WIDTH_AS_SHIFT)
@@ -242,7 +242,7 @@
 #endif
 #endif
 
-#if defined(BL808)
+#if 0
 /* 0x4 : pix_data_ctrl */
 #define CAM_FRONT_REG_PIX_DATA_CTRL_SHIFT    (0U)
 #define CAM_FRONT_REG_PIX_DATA_CTRL_MASK     (0xfff << CAM_FRONT_REG_PIX_DATA_CTRL_SHIFT)
@@ -329,7 +329,7 @@
 #define CAM_FRONT_RG_Y2RA_MTX_22_MASK        (0xfff << CAM_FRONT_RG_Y2RA_MTX_22_SHIFT)
 #endif
 
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
 /* 0x8 : dvp2bus_src_sel_1 */
 #define CAM_FRONT_RG_D2X_DVP_SEL       (1 << 0U)
 
@@ -343,7 +343,7 @@
 #define CAM_FRONT_REG_SF_HARB_MODE     (1 << 4U)
 #endif
 
-#if !defined(BL616D)
+#if !defined(BL618DG)
 /* 0x14 : isp_id_yuv */
 #define CAM_FRONT_REG_YUV_IDGEN_RST            (1 << 0U)
 #define CAM_FRONT_REG_YUV_IDGEN_EDGE           (1 << 1U)

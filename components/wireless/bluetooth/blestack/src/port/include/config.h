@@ -149,6 +149,8 @@
 #ifndef CONFIG_BT_RX_BUF_LEN
 #if defined(CONFIG_BT_BREDR)
 #define CONFIG_BT_RX_BUF_LEN 680 //CONFIG_BT_L2CAP_RX_MTU + 4 + 4
+#elif defined(CONFIG_BT_SPP)
+#define CONFIG_BT_RX_BUF_LEN 1015
 #else
 #define CONFIG_BT_RX_BUF_LEN 255 //108 //76
 #endif
@@ -207,13 +209,13 @@
 #ifndef CONFIG_BT_L2CAP_TX_MTU
 #ifdef CONFIG_BT_SMP
 #if defined(CONFIG_BT_A2DP_SOURCE)
-#define CONFIG_BT_L2CAP_TX_MTU 680
+#define CONFIG_BT_L2CAP_TX_MTU 672
 #else
 #define CONFIG_BT_L2CAP_TX_MTU 247 //96 //65
 #endif
 #else
 #if defined(CONFIG_BT_A2DP_SOURCE)
-#define CONFIG_BT_L2CAP_TX_MTU 680
+#define CONFIG_BT_L2CAP_TX_MTU 672
 #else
 #define CONFIG_BT_L2CAP_TX_MTU 247 //96 //65
 #endif
@@ -247,7 +249,9 @@
 #define CONFIG_BT_ATT_PREPARE_COUNT 0
 #endif
 #endif
-
+#if (CONFIG_BT_ATT_PREPARE_COUNT < 0 || CONFIG_BT_ATT_PREPARE_COUNT > 64)
+    #error "Validate CONFIG_BT_ATT_PREPARE_COUNT range (0-64)."
+#endif
 /**
 *  CONFIG_BLUETOOTH_SMP:Eable the Security Manager Protocol
 *  (SMP), making it possible to pair devices over LE
@@ -618,7 +622,17 @@
 
 #if defined(CONFIG_BT_BREDR)
 #define CONFIG_BT_PAGE_TIMEOUT 0x2000 //5.12s
+#if defined(CONFIG_BT_SPP)
+/* 
+ * 1007 (L2CAP RX MTU) + 4 bytes (L2CAP basic header) = 1011 bytes,
+ * which is below the maximum user payload of a single 3-DH5 packet (1021 bytes).
+ * This guarantees that one L2CAP PDU can always fit into a single 3-DH5 packet
+ * without baseband fragmentation.
+ */
+#define CONFIG_BT_L2CAP_RX_MTU 1007
+#else
 #define CONFIG_BT_L2CAP_RX_MTU 672
+#endif
 
 #ifndef CONFIG_BT_RFCOMM_TX_STACK_SIZE
 #define CONFIG_BT_RFCOMM_TX_STACK_SIZE  1024

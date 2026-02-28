@@ -3,7 +3,7 @@ BL_SDK_BASE ?= $(abspath  ./../../../..)
 
 export BL_SDK_BASE
 
-BOARD ?= bl616ldk
+BOARD ?= bl616cldk
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
 

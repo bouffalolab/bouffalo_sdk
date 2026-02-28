@@ -9,7 +9,7 @@ CONFIG_LITTLEFS  =y
 # Enable HTTPD for web server
 CONFIG_HTTPD=y
 
-ifeq ($(CHIP),bl616d)
+ifeq ($(CHIP),bl618dg)
 CONFIG_OVERRIDE_PTFILE =partition_cfg_4M.toml
 endif
 

@@ -309,7 +309,7 @@ int8_t bt_get_tx_pwr(void);
 #endif
 int bt_le_read_chan_map(struct bt_conn *conn, struct bt_hci_rp_le_read_chan_map *rsp_buf);
 
-#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL702L) || defined(BL616)
 int bt_le_throughput_calc(bool enable, u8_t interval);
 int bt_le_set_conn_window(u8_t percentage);
 #endif

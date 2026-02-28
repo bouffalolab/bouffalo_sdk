@@ -8,7 +8,7 @@ The nethub example supports the device running the network protocol stack simult
 
 |       Chip        | Notes |
 |:-----------------:|:-----:|
-| bl616/bl618/bl616l |       |
+| bl616/bl618/bl616cl |       |
 
 ## Device Compilation and Flashing
 
@@ -24,11 +24,11 @@ make CHIP=bl616 BOARD=bl616dk
 make flash CHIP=bl616 COMX=/dev/ttyUSB0
 ```
 
-### bl616l Series
+### bl616cl Series
 
 ```bash
-make CHIP=bl616l BOARD=bl616ldk
-make flash CHIP=bl616l COMX=/dev/ttyUSB0
+make CHIP=bl616cl BOARD=bl616cldk
+make flash CHIP=bl616cl COMX=/dev/ttyUSB0
 ```
 
 ## How to Perform USB WiFi STA Testing

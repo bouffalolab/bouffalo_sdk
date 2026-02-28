@@ -16,11 +16,11 @@ Nethub is a dual-stack solution example with host support, supporting multiple i
 
 Note: **√** means supported; **×** means not supported; **○** means supported but not tested.
 
-| Interface Type | bl616/bl618 | bl616d/bl618d/bl619d | bl616L  |
-|:--------------:|:-----------:|:----------------------:|:-------:|
-| SDIO           |    √(sdio2) |        √(sdio3)        |  √(sdio2)   |
-| USB            | In Development |      In Development   |  In Development |
-| SPI            | In Development |      In Development   |  In Development |
+| Interface Type | BL616/bl618    | BL618DG                | BL616CL         |
+|:--------------:|:--------------:|:----------------------:|:---------------:|
+| SDIO           |    √(sdio2)    |        √(sdio3)        |  √(sdio2)       |
+| USB            | In Development |      In Development    |  In Development |
+| SPI            | In Development |      In Development    |  In Development |
 
 ## Build Instructions
 
@@ -35,22 +35,22 @@ Example:
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-### bl616d Series
+### bl618dg Series
 
 ```bash
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 ## Hardware GPIO Configuration
 
-| Function Pin | bl616/bl618 | bl616d/bl618d/bl619d | bl616L  |
-|:------------:|:-----------:|:--------------------:|:-------:|
-| SDIO_DAT2    |   GPIO10    | GPIO43               | GPIO6  |
-| SDIO_DAT3    |   GPIO11    | GPIO44               | GPIO7  |
-| SDIO_CMD     |   GPIO12    | GPIO45               | GPIO8  |
-| SDIO_CLK     |   GPIO13    | GPIO46               | GPIO9  |
-| SDIO_DATA0   |   GPIO14    | GPIO47               | GPIO10 |
-| SDIO_DATA1   |   GPIO15    | GPIO48               | GPIO11 |
+| Function Pin | BL616/BL618 | BL618DG | BL616CL |
+|:------------:|:-----------:|:-------:|:-------:|
+| SDIO_DAT2    |   GPIO10    | GPIO43  | GPIO6   |
+| SDIO_DAT3    |   GPIO11    | GPIO44  | GPIO7   |
+| SDIO_CMD     |   GPIO12    | GPIO45  | GPIO8   |
+| SDIO_CLK     |   GPIO13    | GPIO46  | GPIO9   |
+| SDIO_DATA0   |   GPIO14    | GPIO47  | GPIO10  |
+| SDIO_DATA1   |   GPIO15    | GPIO48  | GPIO11  |
 
 ## Flash Instructions
 
@@ -67,13 +67,7 @@ make flash CHIP=bl616 COMX=/dev/ttyUSB0
 
 ## System Architecture and Host Manual
 
-For detailed system architecture description and host-side usage manual, please refer to: [components/net/nethub/host_linux/README.md](../../components/net/nethub/host_linux/README.md)
-
-### Quick Links
-
-- **[Software Architecture and Features](../../components/net/nethub/host_linux/README.md#1-software-architecture-and-features)** - Learn about the overall architecture of host drivers and device control
-- **[Quick Start](../../components/net/nethub/host_linux/README.md#2-quick-start)** - Guide on compilation, driver loading, and network configuration
-- **[Notes and FAQ](../../components/net/nethub/host_linux/README.md#3-notes-and-frequently-asked-questions)** - Key information on interfaces, DHCP configuration, packet filtering, etc.
+For detailed system architecture description and host-side usage manual, please refer to: [Nethub User Manual](https://docs.bouffalolab.com/index.php?title=NethubUserManual)
 
 ### Important Notes
 

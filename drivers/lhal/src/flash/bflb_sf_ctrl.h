@@ -48,25 +48,25 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_SF_CTRL_BASE      ((uint32_t)0x4000B000)
-#elif defined(BL606P) || defined(BL808) || defined(BL616) || defined(BL616L)
+#elif  defined(BL616) || defined(BL616CL)
 #define BFLB_SF_CTRL_BASE      ((uint32_t)0x2000b000)
-#elif defined(BL628) || defined(BL616D)
+#elif  defined(BL618DG)
 #define BFLB_SF_CTRL_BASE      ((uint32_t)0x20082000)
 #endif
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_FLASH_XIP_BASE    (0x23000000)
 #define BFLB_FLASH_XIP_END     (0x23000000 + 16 * 1024 * 1024)
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define BFLB_FLASH_XIP_BASE    (0x58000000)
 #define BFLB_FLASH_XIP_END     (0x58000000 + 64 * 1024 * 1024)
 #elif defined(BL616)
 #define BFLB_FLASH_XIP_BASE    (0xA0000000)
 #define BFLB_FLASH_XIP_END     (0xA0000000 + 64 * 1024 * 1024)
-#elif defined(BL628) || defined(BL616L)
+#elif  defined(BL616CL)
 #define BFLB_FLASH_XIP_BASE    (0x80000000)
 #define BFLB_FLASH_XIP_END     (0x80000000 + 64 * 1024 * 1024)
-#elif defined(BL616D) 
+#elif defined(BL618DG) 
 #if defined(CPU_MODEL_A0)
 #define BFLB_FLASH_XIP_BASE    (0x80000000)
 #define BFLB_FLASH_XIP_END     (0x80000000 + 64 * 1024 * 1024)
@@ -76,12 +76,12 @@
 #endif
 #endif
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #ifndef CONFIG_DISABLE_SBUS2_ENABLE_SUPPORT
 #define BFLB_SF_CTRL_SBUS2_ENABLE
 #endif
 #endif
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)  
 #define BFLB_SF_CTRL_32BITS_ADDR_ENABLE
 #define BFLB_SF_CTRL_AES_XTS_ENABLE
 #endif
@@ -104,7 +104,7 @@
 /**
  *  @brief Serial flash config pin select type definition
  */
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #define SF_IO_EMB_SWAP_IO3IO0                           0x0  /*!< SF select embedded flash swap io3 with io0 */
 #define SF_IO_EMB_SWAP_IO3IO0_IO2CS                     0x1  /*!< SF select embedded flash swap io3 with io0 and io2 with cs */
 #define SF_IO_EMB_SWAP_NONE                             0x2  /*!< SF select embedded flash no swap */
@@ -120,7 +120,7 @@
 #define SF_IO_EMB_SWAP_IO3IO0_IO2CS_AND_SF2             0x35 /*!< SF select embedded flash swap io3 with io0、io2 with cs and SF2 use gpio4-9 */
 #define SF_IO_EMB_SWAP_NONE_AND_SF2                     0x36 /*!< SF select embedded flash no swap and SF2 use gpio4-9 */
 #define SF_IO_EMB_SWAP_IO2CS_AND_SF2                    0x37 /*!< SF select embedded flash swap io2 with cs and SF2 use gpio4-9 */
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
 #define SF_IO_EMB_SWAP_IO0_IO3                          0x0  /*!< SF select embedded flash swap io0 with io3 */
 #define SF_IO_EMB_SWAP_DUAL_IO0_IO3                     0x1  /*!< SF select embedded flash swap dual io0 with io3 */
 #define SF_IO_EMB_SWAP_NONE                             0x2  /*!< SF select embedded flash no swap */
@@ -332,7 +332,7 @@ struct sf_ctrl_psram_cfg {
  *  @brief SF Ctrl cmds configuration structure type definition
  */
 struct sf_ctrl_cmds_cfg {
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)  
     uint8_t ack_latency;                 /*!< SF Ctrl ack latency cycles */
     uint8_t cmds_core_en;                /*!< SF Ctrl cmds core enable */
 #endif
@@ -394,7 +394,7 @@ struct bflb_sf_ctrl_io_cs_clk_delay_cfg {
 #define NOR_FLASH_CTRL_BUF_SIZE     256
 #define NAND_FLASH_CTRL_BUF_SIZE    512
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #define IS_SF_CTRL_PIN_SELECT(type) (((type) == SF_IO_EMB_SWAP_IO3IO0) ||                           \
                                      ((type) == SF_IO_EMB_SWAP_IO3IO0_IO2CS) ||                     \
                                      ((type) == SF_IO_EMB_SWAP_NONE) ||                             \
@@ -410,7 +410,7 @@ struct bflb_sf_ctrl_io_cs_clk_delay_cfg {
                                      ((type) == SF_IO_EMB_SWAP_IO3IO0_IO2CS_AND_SF2) ||             \
                                      ((type) == SF_IO_EMB_SWAP_NONE_AND_SF2) ||                     \
                                      ((type) == SF_IO_EMB_SWAP_IO2CS_AND_SF2))
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
 #define IS_SF_CTRL_PIN_SELECT(type) (((type) == SF_IO_EMB_SWAP_IO0_IO3) ||                  \
                                      ((type) == SF_IO_EMB_SWAP_DUAL_IO0_IO3) ||             \
                                      ((type) == SF_IO_EMB_SWAP_NONE) ||                     \

@@ -53,10 +53,10 @@
 #define SPI_FIFO_CONFIG_1_OFFSET (0x84) /* spi_fifo_config_1 */
 #define SPI_FIFO_WDATA_OFFSET    (0x88) /* spi_fifo_wdata */
 #define SPI_FIFO_RDATA_OFFSET    (0x8C) /* spi_fifo_rdata */
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define SPI_BACKUP_IO_EN_OFFSET (0xFC) /* backup_io_en */
 #endif
-#if defined(BL616L)
+#if defined(BL616CL)
 #define SPI_SW_USAGE_OFFSET      (0xF8)/* spi_sw_usage */
 #define SPI_HW_VERSION_OFFSET    (0xF8)/* spi_hw_version */
 #endif
@@ -78,7 +78,7 @@
 #define SPI_CR_SPI_DEG_EN           (1 << 11U)
 #define SPI_CR_SPI_DEG_CNT_SHIFT    (12U)
 #define SPI_CR_SPI_DEG_CNT_MASK     (0xf << SPI_CR_SPI_DEG_CNT_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define SPI_CR_SPI_S_TRANS_DATA_EDGE_SEL (1 << 31U)
 #endif
 
@@ -124,13 +124,13 @@
 
 /* 0x18 : spi_rxd_ignr */
 #define SPI_CR_SPI_RXD_IGNR_P_SHIFT (0U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define SPI_CR_SPI_RXD_IGNR_P_MASK  (0xffff << SPI_CR_SPI_RXD_IGNR_P_SHIFT)
 #else
 #define SPI_CR_SPI_RXD_IGNR_P_MASK  (0x1f << SPI_CR_SPI_RXD_IGNR_P_SHIFT)
 #endif
 #define SPI_CR_SPI_RXD_IGNR_S_SHIFT (16U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define SPI_CR_SPI_RXD_IGNR_S_MASK  (0xffff << SPI_CR_SPI_RXD_IGNR_S_SHIFT)
 #else
 #define SPI_CR_SPI_RXD_IGNR_S_MASK  (0x1f << SPI_CR_SPI_RXD_IGNR_S_SHIFT)
@@ -156,7 +156,7 @@
 #define SPI_TX_FIFO_CNT_MASK (0x7 << SPI_TX_FIFO_CNT_SHIFT)
 #elif defined(BL702L)
 #define SPI_TX_FIFO_CNT_MASK (0x1f << SPI_TX_FIFO_CNT_SHIFT)
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define SPI_TX_FIFO_CNT_MASK (0x3f << SPI_TX_FIFO_CNT_SHIFT)
 #endif
 #define SPI_RX_FIFO_CNT_SHIFT (8U)
@@ -164,7 +164,7 @@
 #define SPI_RX_FIFO_CNT_MASK (0x7 << SPI_RX_FIFO_CNT_SHIFT)
 #elif defined(BL702L)
 #define SPI_RX_FIFO_CNT_MASK (0x1f << SPI_RX_FIFO_CNT_SHIFT)
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define SPI_RX_FIFO_CNT_MASK (0x3f << SPI_RX_FIFO_CNT_SHIFT)
 #endif
 #define SPI_TX_FIFO_TH_SHIFT (16U)
@@ -172,7 +172,7 @@
 #define SPI_TX_FIFO_TH_MASK (0x3 << SPI_TX_FIFO_TH_SHIFT)
 #elif defined(BL702L)
 #define SPI_TX_FIFO_TH_MASK (0xf << SPI_TX_FIFO_TH_SHIFT)
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define SPI_TX_FIFO_TH_MASK (0x1f << SPI_TX_FIFO_TH_SHIFT)
 #endif
 #define SPI_RX_FIFO_TH_SHIFT (24U)
@@ -180,7 +180,7 @@
 #define SPI_RX_FIFO_TH_MASK (0x3 << SPI_RX_FIFO_TH_SHIFT)
 #elif defined(BL702L)
 #define SPI_RX_FIFO_TH_MASK (0xf << SPI_RX_FIFO_TH_SHIFT)
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define SPI_RX_FIFO_TH_MASK (0x1f << SPI_RX_FIFO_TH_SHIFT)
 #endif
 
@@ -192,7 +192,7 @@
 #define SPI_FIFO_RDATA_SHIFT (0U)
 #define SPI_FIFO_RDATA_MASK  (0xffffffff << SPI_FIFO_RDATA_SHIFT)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0xF8 : spi_sw_usage and spi_hw_version */
 #define SPI_SW_USAGE_SHIFT   (0U)
 #define SPI_SW_USAGE_MASK    (0xffffff << SPI_SW_USAGE_SHIFT)
@@ -200,7 +200,7 @@
 #define SPI_HW_VERSION_MASK  (0xff << SPI_HW_VERSION_SHIFT)
 #endif
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /* 0xFC : backup_io_en */
 #define SPI_BACKUP_IO_EN (1 << 0U)
 #endif

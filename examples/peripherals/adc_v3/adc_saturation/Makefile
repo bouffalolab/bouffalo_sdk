@@ -4,7 +4,7 @@ BL_SDK_BASE ?= $(abspath  ./../../../..)
 export BL_SDK_BASE
 
 CPU_ID ?= ap
-BOARD ?= bl616ddk
+BOARD ?= bl618dgdk
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
 

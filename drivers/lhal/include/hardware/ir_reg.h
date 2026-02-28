@@ -42,7 +42,7 @@
 
 /* Register offsets *********************************************************/
 
-#if !defined(BL616) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL616CL)
 #define IRTX_CONFIG_OFFSET      (0x0)  /* irtx_config */
 #define IRTX_INT_STS_OFFSET     (0x4)  /* irtx_int_sts */
 #if defined(BL602) || defined(BL702)
@@ -88,7 +88,7 @@
 #else
 #define IR_FIFO_CONFIG_0_OFFSET (0x80) /* ir_fifo_config_0 */
 #define IR_FIFO_CONFIG_1_OFFSET (0x84) /* ir_fifo_config_1 */
-#if !defined(BL616) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL616CL)
 #define IR_FIFO_WDATA_OFFSET    (0x88) /* ir_fifo_wdata */
 #endif
 #if !defined(BL702L)
@@ -98,7 +98,7 @@
 
 /* Register Bitfield definitions *****************************************************/
 
-#if !defined(BL616) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL616CL)
 /* 0x0 : irtx_config */
 #define IR_CR_IRTX_EN                   (1 << 0U)
 #define IR_CR_IRTX_OUT_INV              (1 << 1U)
@@ -120,7 +120,7 @@
 #define IR_CR_IRTX_FRM_FRAME_SIZE_SHIFT (14U)
 #define IR_CR_IRTX_FRM_FRAME_SIZE_MASK  (0x3 << IR_CR_IRTX_FRM_FRAME_SIZE_SHIFT)
 #define IR_CR_IRTX_DATA_NUM_SHIFT       (16U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define IR_CR_IRTX_DATA_NUM_MASK        (0xffff << IR_CR_IRTX_DATA_NUM_SHIFT)
 #else
 #define IR_CR_IRTX_DATA_NUM_MASK        (0x7f << IR_CR_IRTX_DATA_NUM_SHIFT)
@@ -270,7 +270,7 @@
 
 /* 0x50 : irrx_data_count */
 #define IR_STS_IRRX_DATA_CNT_SHIFT (0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define IR_STS_IRRX_DATA_CNT_MASK  (0xffff << IR_STS_IRRX_DATA_CNT_SHIFT)
 #else
 #define IR_STS_IRRX_DATA_CNT_MASK  (0x7f << IR_STS_IRRX_DATA_CNT_SHIFT)
@@ -286,7 +286,7 @@
 #endif
 
 /* 0x80 : ir_fifo_config_0 */
-#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616CL)
 #define IRTX_DMA_EN          (1 << 0U)
 #define IR_TX_FIFO_CLR       (1 << 2U)
 #endif
@@ -297,7 +297,7 @@
 #define IR_RX_FIFO_CLR       (1 << 3U)
 #endif
 #endif
-#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616CL)
 #define IR_TX_FIFO_OVERFLOW  (1 << 4U)
 #define IR_TX_FIFO_UNDERFLOW (1 << 5U)
 #endif
@@ -312,7 +312,7 @@
 #endif
 
 /* 0x84 : ir_fifo_config_1 */
-#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616CL)
 #define IR_TX_FIFO_CNT_SHIFT (0U)
 #define IR_TX_FIFO_CNT_MASK  (0x7 << IR_TX_FIFO_CNT_SHIFT)
 #endif
@@ -324,7 +324,7 @@
 #endif
 #define IR_RX_FIFO_CNT_MASK  (0x7f << IR_RX_FIFO_CNT_SHIFT)
 #endif
-#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616CL)
 #define IR_TX_FIFO_TH_SHIFT  (16U)
 #define IR_TX_FIFO_TH_MASK   (0x3 << IR_TX_FIFO_TH_SHIFT)
 #endif
@@ -333,7 +333,7 @@
 #define IR_RX_FIFO_TH_MASK   (0x3f << IR_RX_FIFO_TH_SHIFT)
 #endif
 
-#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL602) && !defined(BL702) && !defined(BL616CL)
 /* 0x88 : ir_fifo_wdata */
 #define IR_TX_FIFO_WDATA_SHIFT (0U)
 #define IR_TX_FIFO_WDATA_MASK  (0xffffffff << IR_TX_FIFO_WDATA_SHIFT)

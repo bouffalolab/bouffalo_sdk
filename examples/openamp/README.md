@@ -19,7 +19,7 @@ make
 - BL61xD
 
 ```bash
-make CHIP=BL616D flash COMX=xxx ## xxx is your com name
+make CHIP=BL618DG flash COMX=xxx ## xxx is your com name
 ```
 
 ## 说明

@@ -1,17 +1,14 @@
 # Bouffalolab LHAL Release v1.6.0
 
-- [feat][usb][bl808] emove usb driver for bl808
-- [fix][BL616][BL616L][AudioDAC] Fix the audioDAC data format configuration error.
+- [fix][BL616][BL616CL][AudioDAC] Fix the audioDAC data format configuration error.
 - [fix][BLXXX][Build] modify (void*) calc to (uint8_t*) calc
 - [fix]fix CMakeLists.txt of bflb_sec_gmac
 - [improve][BL616][ADC][SPI][USB] sync code from zephyr sdk
 - [improve][BL616][Security] Add support for app rollback prevention
-- [improve][BL808][Build] Fix BL808 compile warning
 
 
 # Bouffalolab LHAL Release v1.5.0
 
-- [fix][dbi] support dbi for bl808
 - [fix][clk] add CLOKOUT function for BL702L
 - [fix][rtc] fix rtc error
 - [fix][adc] fix adc diff mode
@@ -39,9 +36,8 @@
 - [fix][GPIO] add GPIO_FUNC_GPIO define
 - [fix][flash] fix flash secreg port error
 - [fix][mjpeg] fix INVERSE_YUYV2UYVY function
-- [fix][ir] fix ir compiler error and efuse warning, add pka lib for bl70x,bl808
+- [fix][ir] fix ir compiler error and efuse warning, add pka lib for bl70x
 - [fix][gpio] fix all chips GPIO number error
-- [fix][gpio] fix bl808 GPIO_PIN_MAX error
 - [fix][romapi] fix romapi in flash secreg_port
 - [fix][devicetable] fix bootrom use device table as ram instead of const issue
 - [fix][sf_ctrl] fix sf_trl not support software key issue
@@ -172,7 +168,6 @@ Change Log Since v1.2.0 Release
 - [fix] fix romapi return and input
 - [update][cam] move some configs into feature control
 - [update][common] remove crc32 table
-- [fix] remove some flash cfg for bl808 boot2
 - [update] remove platform dma reg
 - [fix][auadc] fix romapi name
 - [update][adc] add adc clear fifo cmd
@@ -192,7 +187,6 @@ Change Log Since v1.2.0 Release
 Change Log Since v1.1.0 Release
 
 - [update] change device string with macros
-- [fix] modify flash cfg for reduce bl808 boot2 code size
 - [update] add assert for init api
 - [update] fix  BFLG to BFLB, add callapi content
 - [feat] add bflb name macros

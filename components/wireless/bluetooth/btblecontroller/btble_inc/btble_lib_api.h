@@ -33,12 +33,6 @@ struct btblecontroller_resource_conf{
     uint8_t ble_acl_buf_nb_tx;
 };
 
-typedef enum{
-    BTBLE_IN_ACTIVE_STATE,
-    BTBLE_IN_SLEEP_STATE,
-    BTBLE_IN_WAKEUP_ONGOING_STATE
-}btble_controller_state;
-
 //This API is only used in ble only mode without iso/cte to configure ble resource when CONFIG_BLE_RES_DYNAMIC_CONF is enabled
 //and shall be called before btble_controller_init.
 void btble_controller_resource_config(struct btblecontroller_resource_conf *conf);
@@ -57,26 +51,13 @@ void btble_controller_deinit(void);
 int32_t btble_controller_sleep(int32_t max_sleep_cycles);
 void btble_controller_sleep_restore();
 
+#define BTBLE_IN_ACTIVE_STATE 0
+#define BTBLE_IN_SLEEP_STATE 1
+#define BTBLE_IN_WAKEUP_ONGOING_STATE 2
 //The return value is an instantaneous state that may change rapidly.
-btble_controller_state btble_controller_get_state(void);
+uint8_t btble_controller_get_state(void);
 
-#if defined(CONFIG_BT_RESET)
 void btble_controller_reset(void);
-#endif
-
-/**
- * @brief BLE event types for priority configuration
- */
-typedef enum {
-  BLE_EVENT_CONNECT_IND_TX_RX       = 0,  /**< Connection indication transmission/reception on primary advertising channels */
-  BLE_EVENT_LLCP_MESSAGE            = 1,  /**< LLCP BLE messages */
-  BLE_EVENT_DATA_CHANNEL_TX         = 2,  /**< Data channel transmission BLE messages */
-  BLE_EVENT_INITIATING_SCANNING     = 3,  /**< Initiating/Extended initiating (scanning) on primary advertising channels */
-  BLE_EVENT_ACTIVE_SCANNING         = 4,  /**< Active scanning/Extended active scanning on primary advertising channels */
-  BLE_EVENT_CONNECTABLE_ADV         = 5,  /**< Connectable advertising/Extended advertising on primary advertising channels */
-  BLE_EVENT_NON_CONNECTABLE_ADV     = 6,  /**< Non-connectable advertising/Extended advertising on primary advertising channels */
-  BLE_EVENT_PASSIVE_SCANNING        = 7   /**< Passive scanning/Extended passive scanning on primary advertising channels */
-} ble_event_mask_t;
 
 /**
  * @brief BLE event priority configuration limits
@@ -84,7 +65,17 @@ typedef enum {
 #define BLE_EVENT_PRIORITY_MIN        0    /**< Minimum priority value */
 #define BLE_EVENT_PRIORITY_MAX        15   /**< Maximum priority value */
 #define BLE_EVENT_PRIORITY_INVALID    0xFFFFFFFF /**< Invalid priority return value */
-
+/**
+ * @brief BLE event types for priority configuration
+ */
+#define BLE_EVENT_CONNECT_IND_TX_RX   0   /**< Connection indication transmission/reception on primary advertising channels */
+#define BLE_EVENT_LLCP_MESSAGE        1   /**< LLCP BLE messages */
+#define BLE_EVENT_DATA_CHANNEL_TX     2   /**< Data channel transmission BLE messages */
+#define BLE_EVENT_INITIATING_SCANNING 3   /**< Initiating/Extended initiating (scanning) on primary advertising channels */
+#define BLE_EVENT_ACTIVE_SCANNING     4   /**< Active scanning/Extended active scanning on primary advertising channels */
+#define BLE_EVENT_CONNECTABLE_ADV     5   /**< Connectable advertising/Extended advertising on primary advertising channels */
+#define BLE_EVENT_NON_CONNECTABLE_ADV 6   /**< Non-connectable advertising/Extended advertising on primary advertising channels */
+#define BLE_EVENT_PASSIVE_SCANNING    7   /**< Passive scanning/Extended passive scanning on primary advertising channels */
 /**
  * @brief Get the priority of a specific BLE event
  * 
@@ -95,8 +86,7 @@ typedef enum {
  *       The returned value may differ from the previously set priority due to the controller's 
  *       internal scheduling mechanism. Higher values indicate higher priority.
 */
-uint32_t btble_controller_get_event_priority(ble_event_mask_t event);
-
+uint32_t btble_controller_get_event_priority(uint8_t event);
 /**
  * @brief Set the priority for a specific BLE event
  * 
@@ -108,7 +98,8 @@ uint32_t btble_controller_get_event_priority(ble_event_mask_t event);
  *       The set priority value may be modified by the controller's internal scheduling mechanism
  *       to optimize overall system performance.
  */
-int btble_controller_set_event_priority(ble_event_mask_t event, uint8_t priority);
+int btble_controller_set_event_priority(uint8_t event, uint8_t priority);
+
 
 /* key: 32 bytes ecdh private key. This key shall be malloced and passed to btblecontroller_set_private_key api,
  * and when encrypt is done shall call btblecontroller_del_private_key to delete key and then free malloced key.*/

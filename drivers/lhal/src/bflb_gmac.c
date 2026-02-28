@@ -3460,7 +3460,7 @@ int bflb_gmac_bd_tx_enqueue(struct bflb_device_s *dev, uint32_t flags, uint32_t 
         arch_memcpy_fast((void *)(uintptr_t)(txdesc->buffer1), data_in, length1);
     }
 #ifdef GMAC_DO_FLUSH_DATA
-#if defined(BL628) || defined(BL616D)
+#if  defined(BL618DG)
     bflb_l1c_dcache_invalidate_range((void *)txdesc->buffer1, length1);
 #endif
 #endif
@@ -3785,7 +3785,7 @@ int bflb_gmac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     return ret;
 }
 
-#if defined(BL628) || defined(BL616D)
+#if  defined(BL618DG)
 /**
  * @brief bflb emac phy register read
  *

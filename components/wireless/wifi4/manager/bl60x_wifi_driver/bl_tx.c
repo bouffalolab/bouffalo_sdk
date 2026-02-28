@@ -185,7 +185,7 @@ static void bl_tx_push(struct bl_sta* sta, struct txdesc_host *txdesc_host, void
     memset((void*)txdesc_host->pad_txdesc, 0, sizeof(txdesc_host->pad_txdesc));
     host = &(((struct txdesc_upper*)txdesc_host->pad_txdesc)->host);
 
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     struct txbuf_host *txbuf = (struct txbuf_host*)ptxbuf;
     if ((void*)txhdr->p != (void*)txbuf)
     {
@@ -223,7 +223,7 @@ static void bl_tx_push(struct bl_sta* sta, struct txdesc_host *txdesc_host, void
     /*
      * Buffer transfer and descriptor tranform
      */
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     /* Get right buffer pointer */
     struct bl_txhdr *new_bl_txhdr = NULL;
     uint16_t len = 0;
@@ -337,7 +337,7 @@ int bl_tx_cfm(void *pthis, void *host_id)
      *    b. groupcast, MUST DESC_DONE_TX_BIT, return (1), other to c.
      *    c. return (0)
      */
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     /* Host_id is txdesc_host->eth_packet */
     void *buf = ((struct txbuf_host*)host_id)->buf;
     txhdr = (struct bl_txhdr*)(buf + RWNX_HWTXHDR_ALIGN_PADS((uint32_t)buf));
@@ -397,7 +397,7 @@ int bl_tx_cfm(void *pthis, void *host_id)
     custom_cfm = txhdr->custom_cfm;
 
     /* Release buf */
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     ipc_host_txbuf_free((struct txbuf_host *)host_id);
 #else
     pbuf_free(p);
@@ -495,7 +495,7 @@ void bl_tx_try_flush(int param, struct ke_tx_fc *tx_fc_field)
                     break;
                 }
 
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
                 /* Get txbuf_host */
                 txbuf = (struct txbuf_host *)ipc_host_txbuf_get(wifi_hw.ipc_env);
                 if (!txbuf)
@@ -511,7 +511,7 @@ void bl_tx_try_flush(int param, struct ke_tx_fc *tx_fc_field)
                 bflb_os_exit_critical();
                 if (!txhdr)
                 {
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
                     ipc_host_txbuf_free(txbuf);
 #endif
                     break;

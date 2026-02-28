@@ -14,11 +14,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "bflb_sdio_drv.h"
-#include "bflb_msg_ctrl.h"
-#include "bflb_frame_buff_ctrl.h"
-#include "bflb_tty.h"
-#include <transportsdio.h>
 #include <netpacket_filter.h>
 #include <lwip/pbuf.h>
 #include "lwip/netif.h"

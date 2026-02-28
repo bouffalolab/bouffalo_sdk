@@ -93,7 +93,7 @@ int emac_test_init(void)
     struct bflb_emac_config_s emac_cfg = {
         .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
         .clk_internal_mode = false,
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
         .md_clk_div = 79,
 #else
         .md_clk_div = 39,
@@ -103,7 +103,7 @@ int emac_test_init(void)
     };
 
     /* emac init */
-#ifdef BL616D
+#ifdef BL618DG
     emacx = bflb_device_get_by_name(BFLB_NAME_EMAC_V2_1);
 #else
     emacx = bflb_device_get_by_name(BFLB_NAME_EMAC0);
@@ -158,7 +158,7 @@ int emac_test_init(void)
         bflb_emac_feature_control(emacx, EMAC_CMD_SET_FULL_DUPLEX, false);
     }
     if (speed_mode == EPHY_SPEED_MODE_10M_HALF_DUPLEX || speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
-#ifdef BL616D
+#ifdef BL618DG
         bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_10M, NULL);
 #else
         LOG_E("10M speed not supported!!!!\r\n");
@@ -299,7 +299,7 @@ int main(void)
 {
     board_init();
     /* emac gpio init */
-#ifdef BL616D
+#ifdef BL618DG
     board_emac1_gpio_init();
 #else
     board_emac_gpio_init();

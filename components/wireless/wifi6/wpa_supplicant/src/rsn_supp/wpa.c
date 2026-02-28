@@ -577,6 +577,7 @@ int wpa_supplicant_send_2_of_4(struct wpa_sm *sm, const unsigned char *dst,
 	os_memcpy(reply->key_nonce, nonce, WPA_NONCE_LEN);
 
 	wpa_dbg(sm->ctx->msg_ctx, MSG_DEBUG, "WPA: Sending EAPOL-Key 2/4");
+	wpa_msg_ctrl(sm->ctx->msg_ctx, MSG_INFO, STA_TX_EAPOL2);
 	return wpa_eapol_key_send(sm, ptk, ver, dst, ETH_P_EAPOL, rbuf, rlen,
 				  key_mic);
 }
@@ -1652,6 +1653,7 @@ int wpa_supplicant_send_4_of_4(struct wpa_sm *sm, const unsigned char *dst,
 	WPA_PUT_BE16(key_mic + mic_len, 0);
 
 	wpa_dbg(sm->ctx->msg_ctx, MSG_DEBUG, "WPA: Sending EAPOL-Key 4/4");
+	wpa_msg_ctrl(sm->ctx->msg_ctx, MSG_INFO, STA_TX_EAPOL4);
 	return wpa_eapol_key_send(sm, ptk, ver, dst, ETH_P_EAPOL, rbuf, rlen,
 				  key_mic);
 }
@@ -2713,10 +2715,12 @@ int wpa_sm_rx_eapol(struct wpa_sm *sm, const u8 *src_addr,
 		}
 		if (key_info & (WPA_KEY_INFO_MIC |
 				WPA_KEY_INFO_ENCR_KEY_DATA)) {
+	        wpa_msg_ctrl(sm->ctx->msg_ctx, MSG_INFO, STA_RX_EAPOL3);
 			/* 3/4 4-Way Handshake */
 			wpa_supplicant_process_3_of_4(sm, key, ver, key_data,
 						      key_data_len);
 		} else {
+	        wpa_msg_ctrl(sm->ctx->msg_ctx, MSG_INFO, STA_RX_EAPOL1);
 			/* 1/4 4-Way Handshake */
 			wpa_supplicant_process_1_of_4(sm, src_addr, key,
 						      ver, key_data,

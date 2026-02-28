@@ -19,17 +19,24 @@
 #include "at_core.h"
 #include "at_port.h"
 #include "at_base_config.h"
+#include "at_pal.h"
 #include "bflb_adc.h"
 #include "bflb_boot2.h"
 #include "partition.h"
 #include "bflb_flash.h"
 #include "bflb_gpio.h"
+#include "bflb_ef_ctrl.h"
+#include "bflb_efuse.h"
+#include "bl_sys.h"
 #include "at_ota.h"
 #include "at_through.h"
 #include "bflb_adc.h"
 #include "at_fs.h"
+#include "at_wifi/at_wifi_main.h"
 #include <sys/fcntl.h>
 #include <at_main.h>
+
+extern uint32_t kfree_size(void);
 
 #define AT_FS_TYPE_LFS        0 // default littlefs
 
@@ -71,8 +78,8 @@ static int at_exe_cmd_rst(int argc, const char **argv)
 static int at_exe_cmd_gmr(int argc, const char **argv)
 {
     char *outbuf = NULL;
-    char **ctx = NULL;
-    char *version = NULL;
+    const char **ctx = NULL;
+    const char *version = NULL;
     uint32_t core_version;
     char core_compile_time[32];
     char *strver = NULL;
@@ -90,7 +97,7 @@ static int at_exe_cmd_gmr(int argc, const char **argv)
 
     snprintf(outbuf, outbuf_len, "AT version:%d.%d.%d.%d(%s)\r\n", AT_CMD_GET_VERSION(core_version), core_compile_time);
 
-    while ((version = bl_sys_version(&ctx))) {
+    while ((version = bl_sys_version((const char ***)&ctx))) {
         strver = NULL;
         if (strstr(version, "SW image:")) {
             strver = strdup(version);
@@ -115,7 +122,7 @@ static int at_query_cmd_cmd(int argc, const char **argv)
 {
     int i, n = 0;
     int t, q, s, e;
-    at_cmd_struct *cmds;
+    const at_cmd_struct *cmds;
     char outbuf[64];
 
     memset(outbuf, 0, sizeof(outbuf));
@@ -382,7 +389,7 @@ static int at_query_temp(int argc, const char **argv)
 }
 #endif
 
-static int str_to_hex(const char* hex_buffer, int nbytes, char* bin_buffer)
+static int __attribute__((unused)) str_to_hex(const char* hex_buffer, int nbytes, char* bin_buffer)
 {
     for (int i = 0; i < nbytes; i++) {
         char hex_pair[3] = {hex_buffer[i*2], hex_buffer[i*2 + 1], '\0'};
@@ -396,7 +403,7 @@ static int str_to_hex(const char* hex_buffer, int nbytes, char* bin_buffer)
     return 0;
 }
 
-static int hex_to_str(const char* bin_buffer, int nbytes, char* hex_out, int hex_out_size)
+static int __attribute__((unused)) hex_to_str(const char* bin_buffer, int nbytes, char* hex_out, int hex_out_size)
 {
     int pos = 0;
     for (int i = 0; i < nbytes; i++) {
@@ -409,7 +416,7 @@ static int hex_to_str(const char* bin_buffer, int nbytes, char* hex_out, int hex
     return 0;
 }
 
-static int at_setup_efuse_write(int argc, const char **argv)
+static int __attribute__((unused)) at_setup_efuse_write(int argc, const char **argv)
 {
     int nbytes = 0, word = 0;
     char addr[12] = {0};
@@ -449,6 +456,7 @@ static int at_setup_efuse_write(int argc, const char **argv)
     return AT_RESULT_CODE_SEND_OK;
 }
 
+#ifdef CONFIG_ATMODULE_FLASH
 static int at_setup_efuse_write_hex(int argc, const char **argv)
 {
     int nbytes = 0, word = 0;
@@ -498,7 +506,9 @@ static int at_setup_efuse_write_hex(int argc, const char **argv)
 
     return AT_RESULT_CODE_SEND_OK;
 }
+#endif
 
+#if defined(CONFIG_ATMODULE_EFUSE) && (CONFIG_ATMODULE_EFUSE)
 static int at_setup_efuse_read(int argc, const char **argv)
 {
     int nbytes = 0, word = 0;
@@ -610,7 +620,9 @@ static int at_setup_efuse_write_cfm(int argc, const char **argv)
 
     return AT_RESULT_CODE_OK;
 }
+#endif
 
+#ifdef CONFIG_ATMODULE_FLASH
 static int at_setup_flash_write(int argc, const char **argv)
 {
     int nbytes = 0;
@@ -822,7 +834,9 @@ static int at_setup_flash_erase(int argc, const char **argv)
     }
     return AT_RESULT_CODE_OK;
 }
+#endif
 
+#ifdef CONFIG_ATMODULE_GPIO
 static int at_setup_gpio_output(int argc, const char **argv)
 {
     int pin, pull_state, cfgset;
@@ -926,6 +940,7 @@ static int at_setup_gpio_analog_input(int argc, const char **argv)
 
     return AT_RESULT_CODE_OK;
 }
+#endif
 
 static int at_query_part(int argc, const char **argv)
 {
@@ -960,7 +975,7 @@ struct ota_buf {
     uint8_t buf[0];
 };
 
-static int ota_start_process(int id, void *arg)
+static void ota_start_process(int id, void *arg)
 {
     int ota = (int)arg;
 
@@ -969,12 +984,11 @@ static int ota_start_process(int id, void *arg)
         g_ota_handle = NULL;
         g_ota_recv_total = 0;
     }
-    return 0;
 }
 
-static int ota_trans_process(int id, void *arg)
+static void ota_trans_process(int id, void *arg)
 {
-    struct ota_buf *buffer = (uint8_t *)arg;
+    struct ota_buf *buffer = (struct ota_buf *)arg;
     int head_offset = 0;
 
     if (!g_ota_handle) {
@@ -1005,16 +1019,16 @@ static int ota_trans_process(int id, void *arg)
             buffer[0], buffer[1], buffer[2], buffer[3]);
 
     xSemaphoreGive(buffer->ota_sem);
-    return 0;
+    return;
 
 _fail:
     g_ota_handle = NULL;
     g_ota_recv_total = 0;
     xSemaphoreGive(buffer->ota_sem);
-    return 0;
+    return;
 }
 
-static int ota_finish_process(int id, void *arg)
+static void ota_finish_process(int id, void *arg)
 {
     AT_CMD_PRINTF("ota_recv_total:%d \r\n", g_ota_recv_total);
     g_ota_recv_total = 0;
@@ -1022,12 +1036,11 @@ static int ota_finish_process(int id, void *arg)
     if (at_ota_finish(g_ota_handle, 1, 0) != 0) {
         at_ota_abort(g_ota_handle);
         g_ota_handle = NULL;
-        return 0;
+        return;
     }
     vTaskDelay(pdMS_TO_TICKS(100));
     at_wifi_sta_disconnect();
     bl_sys_reset_por();
-    return 0;
 }
 
 static int at_query_ota_start(int argc, const char **argv)
@@ -1479,7 +1492,7 @@ static const at_cmd_struct at_base_cmd[] = {
 #ifdef CONFIG_ATMODULE_CHIP_VBAT
     {"+VBAT",           at_query_vbat, NULL, NULL, 0, 0},
 #endif
-#if CONFIG_ATMODULE_EFUSE
+#if defined(CONFIG_ATMODULE_EFUSE) && (CONFIG_ATMODULE_EFUSE)
     {"+EFUSE-W",        NULL, at_setup_efuse_write, NULL, 2, 3},
     {"+EFUSE-R",        NULL, at_setup_efuse_read, NULL, 2, 3},
     {"+EFUSE-CFM",      NULL, NULL, at_setup_efuse_write_cfm, 0, 0},

@@ -39,12 +39,37 @@
 #include "at_wifi_config.h"
 #include "at_wifi_mgmr.h"
 
+/* Function declarations for wifi_mgmr functions */
+extern int wifi_mgmr_ap_mac_set(uint8_t mac[6]);
+extern int wifi_mgmr_sta_mac_set(uint8_t mac[6]);
+
 #define DBG_TAG "WIFI_ADAPTER"
 #include "log.h"
 
 #define AT_WIFI_ADAPTER_PRINTF AT_CMD_PRINTF
 
 // WiFi Adapter Wrapper Functions
+
+// WiFi MAC address management
+int at_wifi_mgmr_ap_mac_get(uint8_t mac[6])
+{
+    return wifi_mgmr_ap_mac_get(mac);
+}
+
+int at_wifi_mgmr_ap_mac_set(uint8_t mac[6])
+{
+    return wifi_mgmr_ap_mac_set(mac);
+}
+
+int at_wifi_mgmr_sta_mac_get(uint8_t mac[6])
+{
+    return wifi_mgmr_sta_mac_get(mac);
+}
+
+int at_wifi_mgmr_sta_mac_set(uint8_t mac[6])
+{
+    return wifi_mgmr_sta_mac_set(mac);
+}
 
 #ifdef CONFIG_ATMODULE_WIFI_STA
 int at_wifi_mgmr_sta_state_get(void)
@@ -157,7 +182,8 @@ int at_wifi_mgmr_scan_get_cipher(uint8_t cipher)
 
 int at_wifi_mgmr_scan_ap_all(void *env, void *arg, void (*cb)(void *, void *, at_wifi_mgmr_scan_item_t *))
 {
-    return wifi_mgmr_scan_ap_all(env, arg, cb);
+    /* Create a wrapper callback to convert between struct types */
+    return wifi_mgmr_scan_ap_all(env, arg, (void (*)(void *, void *, struct wifi_mgmr_scan_item *))cb);
 }
 
 int at_wifi_mgmr_sta_disconnect(void)

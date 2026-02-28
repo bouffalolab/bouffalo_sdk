@@ -248,7 +248,7 @@ int bflb_sdio3_deinit(struct bflb_device_s *dev)
     bflb_irq_disable(dev->irq_num);
 
 #if 0
-#if defined(BL628)
+#if 0
     /* hw reset */
     extern void bflb_glb_ahb_mcu_software_reset(uint8_t swrst);
     bflb_glb_ahb_mcu_software_reset(45); /* GLB_AHB_MCU_SW_SDU */

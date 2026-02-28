@@ -15,7 +15,7 @@ ifeq ($(CHIP),bl602)
     CONFIG_ROMAPI =y
     CONFIG_BL_SDK =y
     CONFIG_BFLB_OTA =y
-else ifeq ($(CHIP),bl616l)
+else ifeq ($(CHIP),bl616cl)
     CONFIG_BTBLECONTROLLER_LIB =m2s1
     CONFIG_BT_MESH =y
     CONFIG_BT_MESH_PROVISIONER =y
@@ -42,6 +42,6 @@ endif
 
 CONFIG_BT_STACK_CLI =y
 
-ifeq ($(CHIP),bl616d)
+ifeq ($(CHIP),bl618dg)
 CONFIG_OVERRIDE_PTFILE =cfg_4M.toml
 endif

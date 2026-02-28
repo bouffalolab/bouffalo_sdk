@@ -84,7 +84,7 @@
 #define TIMER_GPIO_LAT2_OFFSET  (0xC8) /* GPIO Latch Value2 */
 #define TIMER_TCDR_FORCE_OFFSET (0xCC) /* Timer Division Force */
 #endif
-#if defined(BL616L)
+#if defined(BL616CL)
 #define TIMER_GPIO_LAT3_OFFSET  (0xD0) /* GPIO Latch Value3 */
 #define TIMER_GPIO_LAT4_OFFSET  (0xD4) /* GPIO Latch Value4 */
 #define TIMER_HW_VERSION_OFFSET (0xF0) /* Timer Hardware Version */
@@ -158,7 +158,7 @@
 #define TIMER_TIER0_0 (1 << 0U)
 #define TIMER_TIER0_1 (1 << 1U)
 #define TIMER_TIER0_2 (1 << 2U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define TIMER_GPIO_LAT_IRQ_EN   (1 << 3U)
 #define TIMER0_DMA_REQ_EN_SHIFT (4U)
 #define TIMER0_DMA_REQ_EN_MASK  (0x7 << TIMER0_DMA_REQ_EN_SHIFT)
@@ -168,7 +168,7 @@
 #define TIMER_TIER1_0 (1 << 0U)
 #define TIMER_TIER1_1 (1 << 1U)
 #define TIMER_TIER1_2 (1 << 2U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define TIMER1_DMA_REQ_EN_SHIFT (4U)
 #define TIMER1_DMA_REQ_EN_MASK  (0x7 << TIMER0_DMA_REQ_EN_SHIFT)
 #endif
@@ -209,7 +209,7 @@
 #define TIMER_TCLR0_0 (1 << 0U)
 #define TIMER_TCLR0_1 (1 << 1U)
 #define TIMER_TCLR0_2 (1 << 2U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define TIMER_GPIO_LAT_IRQ_CLR (1 << 3U)
 #endif
 
@@ -284,7 +284,7 @@
 #define TIMER0_GPIO_INV    (1 << 5U)
 #define TIMER1_GPIO_INV    (1 << 6U)
 #define TIMER_WDT_GPIO_INV (1 << 7U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define TIMER_GPIO_LAT_DET_MODE (1 << 8U)
 #endif
 #define TIMER_GPIO_LAT_OK  (1 << 31U)
@@ -303,7 +303,7 @@
 #define TIMER_WCDR_FORCE  (1 << 4U)
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0xD0 : GPIO Latch Value3 */
 #define TIMER_GPIO_LAT3_SHIFT (0U)
 #define TIMER_GPIO_LAT3_MASK  (0xffffffff << TIMER_GPIO_LAT3_SHIFT)

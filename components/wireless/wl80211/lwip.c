@@ -29,7 +29,7 @@ _Static_assert(sizeof(struct rx_info) >= sizeof(struct pbuf_custom), "pbuf_custo
 // FIXME
 extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
 
-void wl80211_tcpip_input(enum wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
+void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_len,
                          uint32_t status /* enum rx_status_bits */)
 {
     struct pbuf_custom *pc;
@@ -58,8 +58,8 @@ void wl80211_tcpip_input(enum wl80211_vif_type vif, void *rxhdr, void *buf, uint
     assert(p != NULL);
     assert(p->ref > 0);
 
-    assert(vif2netif[vif].input != NULL);
-    if (vif2netif[vif].input(p, &vif2netif[vif])) {
+    assert(vif2netif[vif_type].input != NULL);
+    if (vif2netif[vif_type].input(p, &vif2netif[vif_type])) {
         pbuf_free(p);
     }
 }
@@ -128,7 +128,7 @@ static void pbuf_custom_raw_free(struct pbuf_custom *pc)
     mem_free(p);
 }
 
-int wl80211_output_raw(enum wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
+int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
                        void *opaque)
 {
     struct pbuf *p;
@@ -166,11 +166,38 @@ int wl80211_output_raw(enum wl80211_vif_type vif, void *buffer, uint16_t len, un
     /* get tx desc */
     txhdr = (void *)ALIGN4_HI((uint32_t)p->payload);
 
-    if (wl80211_mac_tx(vif, txhdr, flags, txseg, 1, pbuf_free, p)) {
+    if (wl80211_mac_tx(vif_type, txhdr, flags, txseg, 1, pbuf_free, p)) {
         pbuf_free(p);
         return -3;
     } else {
         return 0;
+    }
+}
+
+/**
+ * Allocate memory in WRAM region (WiFi RAM)
+ *
+ * This function allocates memory from the WiFi RAM (WRAM) region using lwIP's
+ * memory management. WRAM is required for WiFi hardware to access packet buffers.
+ *
+ * @param size Size of memory to allocate in bytes
+ * @return Pointer to allocated memory, or NULL on failure
+ */
+void *wl80211_platform_malloc_wram(size_t size)
+{
+    /* Use lwIP's mem_malloc which allocates from WRAM heap */
+    return mem_malloc(size);
+}
+
+/**
+ * Free memory allocated from WRAM region
+ *
+ * @param ptr Pointer to memory allocated by wl80211_platform_malloc_wram
+ */
+void wl80211_platform_free_wram(void *ptr)
+{
+    if (ptr) {
+        mem_free(ptr);
     }
 }
 
@@ -202,8 +229,8 @@ static err_t wl80211_netif_init(struct netif *net_if)
 
     if (0 == mfg_media_read_macaddr_with_lock((uint8_t *)net_if->hwaddr, 1)) {}
 
-    wl80211_printf("mac addr: %02X:%02X:%02X:%02X:%02X:%02X\r\n", net_if->hwaddr[0], net_if->hwaddr[1], net_if->hwaddr[2],
-           net_if->hwaddr[3], net_if->hwaddr[4], net_if->hwaddr[5]);
+    wl80211_printf("mac addr: %02X:%02X:%02X:%02X:%02X:%02X\r\n", net_if->hwaddr[0], net_if->hwaddr[1],
+                   net_if->hwaddr[2], net_if->hwaddr[3], net_if->hwaddr[4], net_if->hwaddr[5]);
 
     // hwaddr is updated in net_if_add
     net_if->mtu = 1500;
@@ -229,6 +256,7 @@ int wl80211_lwip_init(void)
     return 0;
 }
 
+#ifdef COMPAT_WIFI_MGMR
 /* wifi_mgmr lwip porting  */
 
 #include "wifi_mgmr.h"
@@ -286,10 +314,10 @@ void _wifi_mgmr_ip_got_dump(void)
     extern size_t kfree_size(void);
     wl80211_printf("Memory left is %d Bytes\r\n", kfree_size());
     wl80211_printf("[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n", netif->num, netif->name[0],
-           netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4],
-           netif->hwaddr[5], netif->ip_addr.addr & 0xff, (netif->ip_addr.addr >> 8) & 0xff,
-           (netif->ip_addr.addr >> 16) & 0xff, (netif->ip_addr.addr >> 24) & 0xff,
-           32 - __builtin_clz(netif->netmask.addr), state, connected);
+                   netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3],
+                   netif->hwaddr[4], netif->hwaddr[5], netif->ip_addr.addr & 0xff, (netif->ip_addr.addr >> 8) & 0xff,
+                   (netif->ip_addr.addr >> 16) & 0xff, (netif->ip_addr.addr >> 24) & 0xff,
+                   32 - __builtin_clz(netif->netmask.addr), state, connected);
 }
 
 void _wifi_mgmr_ap_start_dhcpd(void)
@@ -302,7 +330,8 @@ void _wifi_mgmr_ap_stop_dhcpd(void)
 {
     wl80211_printf("stop dhcpd\n");
 
-    extern err_t dhcp_server_stop(struct netif *netif);
+    extern err_t dhcp_server_stop(struct netif * netif);
     dhcpd_clear_dns_server(&vif2netif[WL80211_VIF_AP]);
     dhcp_server_stop(&vif2netif[WL80211_VIF_AP]);
 }
+#endif

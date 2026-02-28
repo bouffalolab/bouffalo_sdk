@@ -11,9 +11,9 @@ OTBR with Ethernet infrastructure does't have above two limitations.
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616/BL618       |        |
+| CHIP        | Remark |
+|:-----------:|:------:|
+| BL616/BL618 |        |
 
 ## Compile
 

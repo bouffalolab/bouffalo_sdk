@@ -3,16 +3,16 @@
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #include <risc-v/e24/clic.h>
 #else
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
 #include <csi_core.h>
 #else
 #include <nmsis_core.h>
 #endif
 #endif
 
-#if defined(BL616D)
-#include "bl616d_irq.h"
-#include "bl616d_glb.h"
+#if defined(BL618DG)
+#include "bl618dg_irq.h"
+#include "bl618dg_glb.h"
 #endif
 
 #ifndef BL_IOT_SDK
@@ -65,15 +65,15 @@ ATTR_TCM_SECTION void bflb_irq_restore(uintptr_t flags)
 #endif
 }
 
-#if (defined(BL616D) && defined(CPU_LP))
-void bl616d_level2_irq_handler(int irq, void *arg0)
+#if (defined(BL618DG) && defined(CPU_LP))
+void bl618dg_level2_irq_handler(int irq, void *arg0)
 {
     struct bflb_irq_info_s *vector;
     uint64_t level2_irq_state = 0;
 
     level2_irq_state = GLB_Get_NP2MINI_Interrupt_Status();
 
-    const uint32_t base = BL616D_IRQ_LEVEL2_BASE + 1;
+    const uint32_t base = BL618DG_IRQ_LEVEL2_BASE + 1;
     while (level2_irq_state) {
         uint32_t i = __builtin_ctzll(level2_irq_state);
         level2_irq_state &= ~(1UL << i);
@@ -95,10 +95,10 @@ int bflb_irq_attach(int irq, irq_callback isr, void *arg)
         return -EINVAL;
     }
 #ifndef BL_IOT_SDK
-#if (defined(BL616D) && defined(CPU_LP))
-    if (irq >= BL616D_IRQ_LEVEL2_BASE) {
-        g_irqvector[BL616D_IRQ_LEVEL2_BASE].handler = bl616d_level2_irq_handler;
-        g_irqvector[BL616D_IRQ_LEVEL2_BASE].arg = arg;
+#if (defined(BL618DG) && defined(CPU_LP))
+    if (irq >= BL618DG_IRQ_LEVEL2_BASE) {
+        g_irqvector[BL618DG_IRQ_LEVEL2_BASE].handler = bl618dg_level2_irq_handler;
+        g_irqvector[BL618DG_IRQ_LEVEL2_BASE].arg = arg;
     }
 #endif
     g_irqvector[irq].handler = isr;
@@ -130,18 +130,18 @@ void bflb_irq_enable(int irq)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     putreg8(1, CLIC_HART0_BASE + CLIC_INTIE_OFFSET + irq);
 #else
-#if (defined(BL808) || defined(BL606P)) && defined(CPU_D0)
+#if (0 ) && defined(CPU_D0)
     if (csi_vic_get_prio(irq) == 0) {
         csi_vic_set_prio(irq, 1);
     }
 #endif
-#if (defined(BL616D) && defined(CPU_LP))
-    if (irq >= BL616D_IRQ_LEVEL2_BASE) {
-        csi_vic_enable_irq(BL616D_IRQ_LEVEL2_BASE);
+#if (defined(BL618DG) && defined(CPU_LP))
+    if (irq >= BL618DG_IRQ_LEVEL2_BASE) {
+        csi_vic_enable_irq(BL618DG_IRQ_LEVEL2_BASE);
     } else {
         csi_vic_enable_irq(irq);
     }
-#elif (defined(BL616D) && !defined(CPU_MODEL_A0))
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0))
     __ECLIC_EnableIRQ(irq);
 #else
     csi_vic_enable_irq(irq);
@@ -158,13 +158,13 @@ void bflb_irq_disable(int irq)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     putreg8(0, CLIC_HART0_BASE + CLIC_INTIE_OFFSET + irq);
 #else
-#if (defined(BL616D) && defined(CPU_LP))
-    if (irq >= BL616D_IRQ_LEVEL2_BASE) {
-        csi_vic_disable_irq(BL616D_IRQ_LEVEL2_BASE);
+#if (defined(BL618DG) && defined(CPU_LP))
+    if (irq >= BL618DG_IRQ_LEVEL2_BASE) {
+        csi_vic_disable_irq(BL618DG_IRQ_LEVEL2_BASE);
     } else {
         csi_vic_disable_irq(irq);
     }
-#elif (defined(BL616D) && !defined(CPU_MODEL_A0))
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0))
     __ECLIC_DisableIRQ(irq);
 #else
     csi_vic_disable_irq(irq);
@@ -181,13 +181,13 @@ void bflb_irq_set_pending(int irq)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     putreg8(1, CLIC_HART0_BASE + CLIC_INTIP_OFFSET + irq);
 #else
-#if (defined(BL616D) && defined(CPU_LP))
-    if (irq >= BL616D_IRQ_LEVEL2_BASE) {
-        csi_vic_set_pending_irq(BL616D_IRQ_LEVEL2_BASE);
+#if (defined(BL618DG) && defined(CPU_LP))
+    if (irq >= BL618DG_IRQ_LEVEL2_BASE) {
+        csi_vic_set_pending_irq(BL618DG_IRQ_LEVEL2_BASE);
     } else {
         csi_vic_set_pending_irq(irq);
     }
-#elif (defined(BL616D) && !defined(CPU_MODEL_A0))
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0))
     __ECLIC_SetPendingIRQ(irq);
 #else
     csi_vic_set_pending_irq(irq);
@@ -204,13 +204,13 @@ void bflb_irq_clear_pending(int irq)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     putreg8(0, CLIC_HART0_BASE + CLIC_INTIP_OFFSET + irq);
 #else
-#if (defined(BL616D) && defined(CPU_LP))
-    if (irq >= BL616D_IRQ_LEVEL2_BASE) {
-        csi_vic_clear_pending_irq(BL616D_IRQ_LEVEL2_BASE);
+#if (defined(BL618DG) && defined(CPU_LP))
+    if (irq >= BL618DG_IRQ_LEVEL2_BASE) {
+        csi_vic_clear_pending_irq(BL618DG_IRQ_LEVEL2_BASE);
     } else {
         csi_vic_clear_pending_irq(irq);
     }
-#elif (defined(BL616D) && !defined(CPU_MODEL_A0))
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0))
     __ECLIC_ClearPendingIRQ(irq);
 #else
     csi_vic_clear_pending_irq(irq);
@@ -228,7 +228,7 @@ void bflb_irq_set_nlbits(uint8_t nlbits)
     uint8_t clicCfg = getreg8(CLIC_HART0_BASE + CLIC_CFG_OFFSET);
     putreg8((clicCfg & 0xe1) | ((nlbits & 0xf) << 1), CLIC_HART0_BASE + CLIC_CFG_OFFSET);
 #else
-#if (defined(BL616D) && !defined(CPU_MODEL_A0) && !defined(CPU_LP))
+#if (defined(BL618DG) && !defined(CPU_MODEL_A0) && !defined(CPU_LP))
     __ECLIC_SetCfgNlbits(nlbits);
 #else
 #if !defined(CPU_D0)
@@ -252,13 +252,13 @@ void bflb_irq_set_priority(int irq, uint8_t preemptprio, uint8_t subprio)
     uint8_t clicIntCfg = getreg8(CLIC_HART0_BASE + CLIC_INTCFG_OFFSET + irq);
     putreg8((clicIntCfg & 0xf) | (preemptprio << (8 - nlbits)) | ((subprio & (0xf >> nlbits)) << 4), CLIC_HART0_BASE + CLIC_INTCFG_OFFSET + irq);
 #else
-#if (defined(BL616D) && defined(CPU_LP))
-    if (irq >= BL616D_IRQ_LEVEL2_BASE) {
-        csi_vic_set_prio(BL616D_IRQ_LEVEL2_BASE, preemptprio);
+#if (defined(BL618DG) && defined(CPU_LP))
+    if (irq >= BL618DG_IRQ_LEVEL2_BASE) {
+        csi_vic_set_prio(BL618DG_IRQ_LEVEL2_BASE, preemptprio);
     } else {
         csi_vic_set_prio(irq, preemptprio);
     }
-#elif (defined(BL616D) && !defined(CPU_MODEL_A0))
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0))
     __ECLIC_SetLevelIRQ(irq, preemptprio);
     __ECLIC_SetPriorityIRQ(irq, subprio);
 #else

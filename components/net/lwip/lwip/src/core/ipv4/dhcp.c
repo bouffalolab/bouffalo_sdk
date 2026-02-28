@@ -1227,11 +1227,12 @@ static void dhcp_bind_netif_addr(struct netif *netif, const ip4_addr_t *ipaddr, 
 {
     netif->addr_ext.arp_for_us_disable = 0;
 
-    if(netif->addr_ext.dhcp_qc_callback && !ip4_addr_cmp(netif_ip4_addr(netif), ipaddr)) {
+    if(!ip4_addr_cmp(netif_ip4_addr(netif), ipaddr)) {
         netif_set_addr(netif, ipaddr, sn_mask, gw_addr);
+    }
+
+    if(netif->addr_ext.dhcp_qc_callback) {
         netif->addr_ext.dhcp_qc_callback(netif);
-    } else {
-        netif_set_addr(netif, ipaddr, sn_mask, gw_addr);
     }
 }
 static void

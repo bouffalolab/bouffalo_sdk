@@ -23,7 +23,7 @@ else
     endif
 endif
 
-ifeq ($(CHIP),bl616d)
+ifeq ($(CHIP),bl618dg)
     CONFIG_WRAM_FOR_AP_SIZE = 0x28000
 endif
 

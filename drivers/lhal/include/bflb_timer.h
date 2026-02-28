@@ -48,7 +48,7 @@
   * @}
   */
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /** @defgroup TIMER_DMA_COMP_ID timer dma request compare id definition
   * @{
   */
@@ -70,7 +70,7 @@
   * @}
   */
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /** @defgroup TIMER_GPIO_PULSE_INT_MODE timer gpio pulse measure interrupt trigger mode definition
   * @{
   */
@@ -81,7 +81,7 @@
   */
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /** @defgroup TIMER_GPIO_PULSE_VALUE timer gpio pulse value definition
   * @{
   */
@@ -94,7 +94,7 @@
   */
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /** @defgroup TIMER_CMD timer feature control cmd definition
   * @{
   */
@@ -155,7 +155,7 @@ struct bflb_timer_config_s {
     uint32_t preload_val;
 };
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /**
  * @brief TIMER capture configuration structure
  *
@@ -183,7 +183,7 @@ struct bflb_timer_capture_value_s {
     uint32_t gpio_lat3;
     uint32_t gpio_lat4;
 };
-#elif defined(BL616) || defined(BL616D)
+#elif defined(BL616) || defined(BL618DG)
 /**
  * @brief TIMER capture configuration structure
  *
@@ -299,7 +299,7 @@ void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no);
  */
 int bflb_timer_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /**
  * @brief Initialize the timer capture feature.
  *
@@ -340,7 +340,7 @@ int bflb_timer_capture_get_latch_value(struct bflb_device_s *dev, struct bflb_ti
  * @return The calculated pulse width, or 0 if the pulse width cannot be determined.
  */
 int bflb_timer_capture_get_pulsewidth(struct bflb_timer_capture_value_s *gpio_lat);
-#elif defined(BL616) || defined(BL616D)
+#elif defined(BL616) || defined(BL618DG)
 /**
  * @brief Initialize the timer capture feature.
  *

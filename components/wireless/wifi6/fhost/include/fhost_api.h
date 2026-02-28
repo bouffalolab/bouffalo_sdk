@@ -568,9 +568,9 @@ struct fhost_vif_ap_cfg
      */
     int dtim_period;
     /**
-     * AP operation mode (may be silently changed if not supported)
+     * AP operation mode (may be silently changed if not supported) (ref @ enum fhost_ap_mode)
      */
-    enum fhost_ap_mode mode;
+    uint8_t mode;
     /**
      * Bit field of Authentication and Key Management (@ref mac_akm_suite)
      * Supported combination are:\n
@@ -659,9 +659,9 @@ struct fhost_vif_ap_cfg
 struct fhost_vif_cfg
 {
     /**
-     * Identify which part of the union has been updated
+     * Identify which part of the union has been updated (ref @ enum mac_vif_type)
      */
-    enum mac_vif_type cfg_type;
+    uint8_t cfg_type;
     union {
         /**
          * Configuration if @p cfg_type == VIF_STA
@@ -789,7 +789,7 @@ int fhost_get_vif_state(int fvif_idx);
  * @return 0 on success and <0 if any error occurred.
  ****************************************************************************************
  */
-int fhost_set_vif_type(rtos_queue resp_queue, int fvif_idx, enum mac_vif_type type,
+int fhost_set_vif_type(rtos_queue resp_queue, int fvif_idx, uint8_t type, // ref @ enum mac_vif_type
                        bool p2p);
 
 /**

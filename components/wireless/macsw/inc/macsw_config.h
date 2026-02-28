@@ -50,7 +50,7 @@
 
 #define CFG_RAW_SEND_ENABLE
 
-#ifdef BL616L
+#ifdef BL616CL
 #define CFG_PLATFORM_DMA_ENABLE 0
 #else
 #define CFG_PLATFORM_DMA_ENABLE 1

@@ -4,7 +4,7 @@
 #include "hardware/raster2block_reg.h"
 #include "hardware/block2raster_reg.h"
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define MM_MISC_BASE      ((uint32_t)0x20040000)
 #define DVP2SRAM0_BASE    ((uint32_t)0x20048000)
 #define DVP2SRAM1_BASE    ((uint32_t)0x20049000)

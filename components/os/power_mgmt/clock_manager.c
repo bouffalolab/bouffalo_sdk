@@ -9,12 +9,12 @@
 #if defined(BL616)
 #include "bl616_glb.h"
 #include "bl616_aon.h"
-#elif defined(BL616L)
-#include "bl616l_glb.h"
-#include "bl616l_aon.h"
-#elif defined(BL616D)
-#include "bl616d_glb.h"
-#include "bl616d_aon.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
+#include "bl616cl_aon.h"
+#elif defined(BL618DG)
+#include "bl618dg_glb.h"
+#include "bl618dg_aon.h"
 #endif
 #include "bflb_mtimer.h"
 #include "clock_manager.h"

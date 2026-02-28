@@ -1,8 +1,8 @@
 #include "bflb_l1c.h"
 #include "bflb_core.h"
 
-#if (defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)) && !defined(CPU_LP)
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if (defined(BL616) || defined(BL616CL) || defined(BL618DG)   ) && !defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
 #include "csi_core.h"
 void bflb_l1c_icache_enable(void)
 {

@@ -5,7 +5,7 @@ int bflb_pec_memory_size_check(struct bflb_device_s *dev, uint8_t start, uint16_
 {
     uint8_t mem;
 
-#if defined(BL616L)
+#if defined(BL616CL)
     if (dev->sub_idx == 0) {
         mem = start;
         if (mem + size > PEC_MEMORY_SIZE_0) {

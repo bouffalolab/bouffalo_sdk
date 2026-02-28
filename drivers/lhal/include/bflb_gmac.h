@@ -1873,7 +1873,7 @@ int bflb_gmac_phy_reg_write(struct bflb_device_s *dev, uint16_t phy_reg, uint16_
  */
 int bflb_gmac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
-#if defined(BL628) || defined(BL616D)
+#if  defined(BL618DG)
 /**
  * @brief bflb emac phy register read
  *

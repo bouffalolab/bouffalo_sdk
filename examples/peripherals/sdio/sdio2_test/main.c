@@ -4,8 +4,8 @@
 
 #if defined(BL616)
 #include "bl616_glb.h"
-#elif defined(BL616L)
-#include "bl616l_glb.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
 #endif
 
 #include "board.h"
@@ -155,7 +155,7 @@ void sdio2_test(void)
 
 #if defined(BL616)
     GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_USB20_SDU);
-#elif defined(BL616L)
+#elif defined(BL616CL)
     GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_SDU);
 #elif defined(BL602)
 #endif

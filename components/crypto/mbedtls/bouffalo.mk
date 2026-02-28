@@ -7,14 +7,14 @@ endif
 ifeq ($(CONFIG_CHIP_NAME),BL616)
 CFLAGS += -DBL616
 endif
+ifeq ($(CONFIG_CHIP_NAME),BL616CL)
+CFLAGS += -DBL616CL
+endif
+ifeq ($(CONFIG_CHIP_NAME),BL618DG)
+CFLAGS += -DBL618DG
+endif
 ifeq ($(CONFIG_CHIP_NAME),BL702)
 CFLAGS += -DBL702
-endif
-ifeq ($(CONFIG_CHIP_NAME),BL808)
-CFLAGS += -DBL808
-endif
-ifeq ($(CONFIG_CHIP_NAME),BL606P)
-CFLAGS += -DBL606P
 endif
 
 ## These include paths would be exported to project level

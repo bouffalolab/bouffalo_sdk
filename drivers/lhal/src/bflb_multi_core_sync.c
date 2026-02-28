@@ -2,8 +2,8 @@
 #include <stdio.h>
 #ifdef CONFIG_IPC
 #include "ipm.h"
-#if defined(BL616D)
-#include "bl616d_sys.h"
+#if defined(BL618DG)
+#include "bl618dg_sys.h"
 #endif
 
 int bflb_flash_erase_mcs(uint32_t erase_addr, uint32_t len)

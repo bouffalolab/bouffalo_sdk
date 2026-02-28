@@ -30,7 +30,7 @@ CONFIG_VSNPRINTF_LONG_LONG    =y
 #CONFIG_MBEDTLS_SHA512_USE_HW =y
 CONFIG_MACSW_SELECT                  = default
 
-ifeq ($(CHIP),bl616d)
+ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI            =n
     CONFIG_DUALCORE_DISABLE  =y
     CONFIG_WRAM_FOR_AP_SIZE   = 0x50000

@@ -930,6 +930,20 @@ uint32_t Ring_Buffer_Get_Empty_Length(Ring_Buffer_Type *rbType)
     return (rbType->size - len);
 }
 
+
+/****************************************************************************/ /**
+ * @brief  Get size of ring buffer function
+ *
+ * @param  rbType: Ring buffer type structure pointer
+ *
+ * @return Size of ring buffer
+ *
+*******************************************************************************/
+uint32_t Ring_Buffer_Get_Size(Ring_Buffer_Type *rbType)
+{
+    return rbType->size;
+}
+
 /****************************************************************************/ /**
  * @brief  Get ring buffer status function
  *

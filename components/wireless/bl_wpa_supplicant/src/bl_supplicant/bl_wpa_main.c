@@ -159,8 +159,10 @@ void wpa_neg_complete(uint8_t sta_idx) {
 }
 
 bool wpa_attach(void) {
+#ifdef DEBUG_PRINT
   printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__,
          __LINE__);
+#endif
   bool ret = true;
   ret = wpa_sm_init();
   return ret;
@@ -168,8 +170,10 @@ bool wpa_attach(void) {
 
 bool wpa_ap_rx_eapol(void *hapd_data, void *sm_data, u8 *data,
                      size_t data_len) {
+#ifdef DEBUG_PRINT
   printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__,
          __LINE__);
+#endif
   struct hostapd_data *hapd = (struct hostapd_data *)hapd_data;
   struct wpa_state_machine *sm = (struct wpa_state_machine *)sm_data;
 
@@ -183,8 +187,10 @@ bool wpa_ap_rx_eapol(void *hapd_data, void *sm_data, u8 *data,
 }
 
 bool wpa_deattach(void) {
+#ifdef DEBUG_PRINT
   printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__,
          __LINE__);
+#endif
   wpa_sm_deinit();
   return true;
 }
@@ -255,8 +261,10 @@ int wpa_parse_wpa_ie_wrapper(const uint8_t *wpa_ie, size_t wpa_ie_len,
 }
 
 static void wpa_sta_disconnected_cb(uint8_t reason_code) {
+#ifdef DEBUG_PRINT
   printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__,
          __LINE__);
+#endif
   switch (reason_code) {
   default:
     wpa_sm_set_state(WPA_DISCONNECTED);

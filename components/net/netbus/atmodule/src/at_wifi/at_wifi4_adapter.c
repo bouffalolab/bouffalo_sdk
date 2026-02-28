@@ -129,6 +129,7 @@ int at_wifi_mgmr_ap_state_get(void)
 
 int at_wifi_mgmr_sta_connect(const char *ssid, const char *key, const char *bssid, const char *akm_str, uint8_t pmf_cfg, uint16_t freq1, uint16_t freq2, uint8_t use_dhcp)
 {
+    wifi_mgmr_sta_autoconnect_disable();
     return wifi_mgmr_sta_connect_mid(wifi_mgmr_sta_enable(), ssid, strlen(key)?key:NULL, NULL, bssid, 0, 0, use_dhcp, WIFI_CONNECT_DEFAULT);
 }
 
@@ -252,7 +253,12 @@ int at_wifi_mgmr_sta_autoconnect_disable(void)
 
 int at_wifi_mgmr_ap_stop(void)
 {
-    return wifi_mgmr_ap_stop(NULL);
+    int state = 0;
+    wifi_mgmr_state_get(&state);
+    if (state == WIFI_STATE_WITH_AP_IDLE || state == WIFI_STATE_WITH_AP_CONNECTING ||
+        state == WIFI_STATE_WITH_AP_CONNECTED_IP_GETTING || state == WIFI_STATE_WITH_AP_CONNECTED_IP_GOT)
+        return wifi_mgmr_ap_stop(NULL);
+    return 0;
 }
 
 int at_wifi_mgmr_ap_start(at_wifi_mgmr_ap_params_t *config)
@@ -335,6 +341,27 @@ int at_wifi_mgmr_state_get(void)
         break;
     }
     return AT_WIFI_STATE_STA_DISCONNECTED;
+}
+
+// WiFi MAC address management
+int at_wifi_mgmr_ap_mac_get(uint8_t mac[6])
+{
+    return wifi_mgmr_ap_mac_get(mac);
+}
+
+int at_wifi_mgmr_ap_mac_set(uint8_t mac[6])
+{
+    return wifi_mgmr_ap_mac_set(mac);
+}
+
+int at_wifi_mgmr_sta_mac_get(uint8_t mac[6])
+{
+    return wifi_mgmr_sta_mac_get(mac);
+}
+
+int at_wifi_mgmr_sta_mac_set(uint8_t mac[6])
+{
+    return wifi_mgmr_sta_mac_set(mac);
 }
 
 // WiFi utility functions

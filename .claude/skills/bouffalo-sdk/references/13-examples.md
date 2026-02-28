@@ -216,7 +216,7 @@ int main(void)
 
 **示例：**
 - `pwm_v1/` - PWM v1 (BL602/BL702)
-- `pwm_v2/` - PWM v2 (BL616/BL808)
+- `pwm_v2/` - PWM v2 (BL616/BL618DG)
 
 **PWM v2示例：**
 ```c

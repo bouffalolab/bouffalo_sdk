@@ -1,19 +1,12 @@
+= Release 1.3.7 =
+Released: 2026-02
 
-= Release 1.3.5 =
-Released: 2025-12
+== FlashCube ==
 Features:
-1. add CRC32 verification for the a1 chip efuse burning command on bl616d and bl616l
-2. add support for Roku requirements: when enabled, do not manipulate DTR/RTS during burning
-3. add chip version (A0 or A1) detection
-4. add a one-directory packaged version
-
-Changes:
-1. display a warning when no config file is selected for burning
+1. rename chipname
 
 Bug Fixes:
-1. fix the bug related to RAM burning
-2. fix the ECDH bug
-
+None
 
 = Release 1.3.3 =
 Released: 2025-09

@@ -60,5 +60,14 @@ bool nethub_is_initialized(void);
 // Fixme: This is a temporary workaround and will be replaced with a more generic API.
 int nethub_update_wifichannel(nhif_type_t dst_type);// NHIF_TYPE_STA NHIF_TYPE_AP
 
+
+
+typedef int (*nethub_ctrlpath_callback_t)(void *ctx, uint8_t *data, uint32_t data_size);
+
+// ctrl path
+int nethub_ctrlpath_upld_send(uint8_t *data_buff, uint32_t data_size);
+int nethub_ctrlpath_dnld_register(nethub_ctrlpath_callback_t dnld_cb, void *cbpri_arg);
+
+
 #endif /* _NETHUB_H */
 

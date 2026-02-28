@@ -14,11 +14,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "bflb_sdio_drv.h"
-#include "bflb_msg_ctrl.h"
-#include "bflb_frame_buff_ctrl.h"
-#include "bflb_tty.h"
-#include <transportsdio.h>
+//#include "bflb_sdio_drv.h"
+//#include "bflb_msg_ctrl.h"
+//#include "bflb_frame_buff_ctrl.h"
+//#include "bflb_tty.h"
+//#include <transportsdio.h>
 #include <netpacket_filter.h>
 #include <lwip/pbuf.h>
 #include "lwip/netif.h"
@@ -38,8 +38,9 @@
 #define DEBUG_BYPASS_WIFI_TX     (0)// 1-not send to wifi fw. 0-normal
 #define DEBUG_BYPASS_WIFI_RX     (0)// 1-not send to wifi fw. 0-normal
 
-#define DEBUG_DUMP_WIFITX_ENABLE (0)// 1-dump wifi tx data. 0-not dump wifi tx data
-#define DEBUG_DUMP_WIFIRX_ENABLE (0)// 1-dump wifi tx data. 0-not dump wifi tx data
+#define DEBUG_DUMP_WIFITX_ENABLE  (0)// 1-dump wifi tx data. 0-not dump wifi tx data
+#define DEBUG_DUMP_WIFITX2_ENABLE (0)// 1-dump wifi tx data. 0-not dump wifi tx data
+#define DEBUG_DUMP_WIFIRX_ENABLE  (0)// 1-dump wifi tx data. 0-not dump wifi tx data
 
 /* Debug output for example program */
 #define USER_DBG(fmt, ...)     //printf("[WiFi] " fmt, ##__VA_ARGS__)
@@ -230,6 +231,13 @@ typedef struct _trans_desc {
     void (*free_cb)(void *arg);             // 4
     void *cb_arg;                           // 4
 } trans_desc_t;
+
+
+void user_cfm_cb(uint32_t frame_id, bool acknowledged, void *arg)
+{
+    //printf("    %s -------------\r\n", __FUNCTION__);
+}
+
 // For channel dnld
 static int sta_input_portwifi_eth_tx(struct pbuf *msg, bool is_sta)
 {
@@ -251,13 +259,13 @@ static int sta_input_portwifi_eth_tx(struct pbuf *msg, bool is_sta)
     	return -1;
     }
 
-#if DEBUG_DUMP_WIFITX_ENABLE
+#if DEBUG_DUMP_WIFITX2_ENABLE
     void nethub_dumpbuf(uint8_t *str, uint8_t *buf, int len);
     nethub_dumpbuf("txstart", (uint8_t *)((uint32_t)p + 448), 32);
 #endif
 
-    if (0 != fhost_tx_start(net_if, p, NULL, NULL)) {
-        USER_DBG("%s:%d fhost_tx_start return error! so drop.\r\n", __func__, __LINE__);
+    if (0 != fhost_tx_start(net_if, p, user_cfm_cb, NULL)) {
+        printf("%s:%d fhost_tx_start return error! so drop.\r\n", __func__, __LINE__);
         /* Statistics: Consumer 2 - drop due to tx failure */
         g_nethub_stats.dnld_consumer_tx_fail++;
         g_nethub_stats.dnld_total_dropped++;
@@ -266,13 +274,16 @@ static int sta_input_portwifi_eth_tx(struct pbuf *msg, bool is_sta)
         /* tx success, successful processing statistics */
         g_nethub_stats.dnld_total_success++;
     }
+
     return 0;
 }
 static void sta_input_dnld_custom_free(struct pbuf *p)
 {
     trans_desc_t *dnmsg = (trans_desc_t *)p;
 #if DEBUG_DUMP_WIFITX_ENABLE
-    USER_INFO("%s dnld free p:%p, real_cb:%p, real_ctx:%p, real_arg:%p\r\n\r\n", __func__, p, dnmsg->free_cb, dnmsg->ctx, dnmsg->cb_arg);
+    printf("        %s dnld free p:%p, real_cb:%p, real_arg:%p\r\n\r\n", __func__, p, dnmsg->free_cb, dnmsg->cb_arg);
+#endif
+#if DEBUG_DUMP_WIFITX2_ENABLE
     void nethub_dumpbuf(uint8_t *str, uint8_t *buf, int len);
     nethub_dumpbuf("txdone", (uint8_t *)((uint32_t)p + 448), 32);
 #endif
@@ -282,6 +293,19 @@ static void sta_input_dnld_custom_free(struct pbuf *p)
     //printf("dnmsg->free_cb:%p, dnmsg->ctx:%p, dnmsg->cb_arg:%p\r\n",
     //    dnmsg->free_cb, dnmsg->ctx, dnmsg->cb_arg);
 }
+
+
+/** Frame buffer header room size in bytes */
+#define FRAME_BUFF_ELEM_OFFSET      (0)
+#define FRAME_BUFF_ELEM_SIZE        (32)
+#define FRAME_BUFF_PBUFCUSTOM       (32)
+#define FRAME_BUFF_HWDESCTAG        (388)
+#define FRAME_BUFF_MSGSTRUCT_OFFSET (FRAME_BUFF_ELEM_SIZE+FRAME_BUFF_PBUFCUSTOM+FRAME_BUFF_HWDESCTAG)// 452
+#define FRAME_BUFF_MSGSTRUCT        (8)
+#define FRAME_BUFF_PAYLOAD_OFFSET   (FRAME_BUFF_MSGSTRUCT_OFFSET+FRAME_BUFF_MSGSTRUCT)               // 460
+#define FRAME_BUFF_PAYLOAD          (1536)
+#define FRAME_BUFF_TOTALSIZE        (FRAME_BUFF_PAYLOAD_OFFSET+FRAME_BUFF_PAYLOAD)                      // 1996
+
 static int sta_input_dnld(nh_skb_t *skb, void *arg, uint8_t issta)
 {
     trans_desc_t *trans_desc = NULL;
@@ -289,12 +313,12 @@ static int sta_input_dnld(nh_skb_t *skb, void *arg, uint8_t issta)
     g_nethub_stats.dnld_total_packets++;
 
 #if DEBUG_BYPASS_WIFI_TX
-    skb->free_cb(skb->cb_priv, skb->cb_arg);
+    skb->free_cb(skb->cb_arg);
 #else
 #if DEBUG_DUMP_WIFITX_ENABLE
-    USER_INFO(" ---1 %s, line:%d, skb->data:%p, skb->len:%d, skb->cb_arg:%p\r\n", __func__, __LINE__, skb->data, skb->len, skb->cb_arg);
+    USER_INFO(" ---1 dnld %s, line:%d, skb->data:%p, skb->len:%d, skb->cb_arg:%p\r\n", __func__, __LINE__, skb->data, skb->len, skb->cb_arg);
 #endif
-    trans_desc = (trans_desc_t *)((uintptr_t)skb->cb_arg + FRAME_BUFF_ELEM_SIZE);
+    trans_desc = (trans_desc_t *)((uintptr_t)skb->cb_arg);
     trans_desc->free_cb = skb->free_cb;
     trans_desc->cb_arg = skb->cb_arg;
 
@@ -309,10 +333,10 @@ static int sta_input_dnld(nh_skb_t *skb, void *arg, uint8_t issta)
     trans_desc->pbuf.custom_free_function = sta_input_dnld_custom_free;
 
 #if DEBUG_STA_LOG_ENABLE
-    _dump_pbuf("<--- Send ", &trans_desc->pbuf.pbuf);
+    _dump_pbuf("  <-- Send ", &trans_desc->pbuf.pbuf);
 #endif
 #if DEBUG_DUMP_WIFITX_ENABLE
-    USER_INFO(" ---2 %s, line:%d, head:%p, pld:%p\r\n", __func__, __LINE__, trans_desc, trans_desc->pbuf.pbuf.payload);
+    USER_INFO(" ---2 dnld %s, line:%d, head:%p, pld:%p\r\n", __func__, __LINE__, trans_desc, trans_desc->pbuf.pbuf.payload);
 #endif
     sta_input_portwifi_eth_tx((struct pbuf *)trans_desc, issta);
 #endif // end DEBUG_BYPASS_WIFI_TX
@@ -350,7 +374,7 @@ static void *eth_input_hook_upld(bool is_sta, void *pkt, void *arg)
     }
 
 #if DEBUG_STA_LOG_ENABLE
-    _dump_pbuf("---> Recv ", p);
+    _dump_pbuf("==> Recv ", p);
 #endif
 
     filter_action = eth_input_filter(p);
@@ -382,7 +406,7 @@ static void *eth_input_hook_upld(bool is_sta, void *pkt, void *arg)
         upld_custom_free(p);
 #else
 #if DEBUG_STA_LOG_ENABLE
-        _dump_pbuf("     To host", p);
+        _dump_pbuf("  ==> To host", p);
 #endif
         result = nethub_process_input(&skb, NHIF_TYPE_STA);
         if (result == NH_FORWARD_STOP) {

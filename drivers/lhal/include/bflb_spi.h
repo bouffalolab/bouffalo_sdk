@@ -14,10 +14,10 @@
 #if defined(BL602) || defined(BL702)
 #define SPI_FIFO_WORD_NUM_MAX           4
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 0
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define SPI_FIFO_BYTE_NUM_MAX           32
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 1
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG) 
 #define SPI_FIFO_BYTE_NUM_MAX           32
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 1
 #elif defined(BL702L)
@@ -120,7 +120,7 @@
 #define SPI_CMD_GET_BYTE_ORDER       (0x0F)
 #define SPI_CMD_SET_DEGLITCH_CNT     (0x10)
 #define SPI_CMD_SET_CS_DISABLE       (0x11)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define SPI_CMD_SLAVE_FAST_MODE_EN   (0x12)
 #define SPI_CMD_READ_HW_VERSION      (0x13)
 #define SPI_CMD_READ_SW_USAGE        (0x14)

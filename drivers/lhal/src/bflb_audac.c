@@ -2,7 +2,7 @@
 #include "hardware/audac_reg.h"
 #include "hardware/dac_reg.h"
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define GLB_BASE ((uint32_t)0x20000000)
 #endif
 

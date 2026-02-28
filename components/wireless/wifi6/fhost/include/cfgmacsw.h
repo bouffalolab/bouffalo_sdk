@@ -335,8 +335,8 @@ struct fhost_me_config_req
     bool ant_div_on;
     /// Boolean indicating if Dynamic PS mode shall be used or not
     bool dpsm;
-    /// Indicates whether AMSDU shall be forced or not
-    enum amsdu_tx amsdu_tx;
+    /// Indicates whether AMSDU shall be forced or not (ref @ enum amsdu_tx)
+    uint8_t amsdu_tx;
     #ifdef CFG_LPM
     /// chip_version
     uint8_t chip_version;
@@ -735,8 +735,8 @@ struct cfgmacsw_set_vif_type {
     struct cfgmacsw_msg_hdr hdr;
     /// Index of the FHOST vif
     int fhost_vif_idx;
-    /// Type to set on the interface
-    enum mac_vif_type type;
+    /// Type to set on the interface (ref @ enum mac_vif_type)
+    uint8_t type;
     /// Is a P2P vif (only read if type is VIF_STA or VIF_AP)
     bool p2p;
 };
@@ -1088,9 +1088,10 @@ enum CFGMACSW_ME_PARAM_CMD_E {
 struct cfgmacsw_me_param {
     /// header
     struct cfgmacsw_msg_hdr hdr;
-    /// me param
-    enum CFGMACSW_ME_PARAM_ID_E id;
-    enum CFGMACSW_ME_PARAM_CMD_E cmd;// GET or SET
+    /// me param id (ref @ enum CFGMACSW_ME_PARAM_ID_E)
+    uint8_t id;
+    /// GET or SET command (ref @ enum CFGMACSW_ME_PARAM_CMD_E)
+    uint8_t cmd;
     uint8_t data[50];
 };
 
@@ -1098,9 +1099,10 @@ struct cfgmacsw_me_param {
 struct cfgmacsw_me_param_resp {
     /// header
     struct cfgmacsw_msg_hdr hdr;
-    /// me param
-    enum CFGMACSW_ME_PARAM_ID_E id;
-    enum CFGMACSW_ME_PARAM_CMD_E cmd;// GET or SET
+    /// me param id (ref @ enum CFGMACSW_ME_PARAM_ID_E)
+    uint8_t id;
+    /// GET or SET command (ref @ enum CFGMACSW_ME_PARAM_CMD_E)
+    uint8_t cmd;
     uint8_t data[50];
 };
 

@@ -151,3 +151,8 @@ if((NOT CONFIG_NEWLIB) OR (NOT CONFIG_NEWLIB_STANDARD))
     # use custom apis first, if not exist, then use builtin apis
     sdk_add_compile_options(-fno-builtin)
 endif()
+
+if(CONFIG_STDATOMIC)
+    # add atomic
+    sdk_library_add_sources(stdatomic.c)
+endif()

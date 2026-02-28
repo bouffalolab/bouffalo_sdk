@@ -124,6 +124,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- DHCP options ---------- */
 #define LWIP_DHCP                1
+#define LWIP_DNS                 1
 
 /* ---------- UDP options ---------- */
 #define LWIP_UDP                 1
@@ -205,6 +206,7 @@ extern int *__errno(void);
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
 #define LWIP_SOCKET                                      1
+#define LWIP_RAW                                         1
 
 /* ---------------- httpd options --------------- */
 #define HTTPD_USE_CUSTOM_FSDATA                          0
@@ -267,6 +269,7 @@ extern int *__errno(void);
 #define TCPIP_THREAD_NAME                                "TCP/IP"
 #define TCPIP_THREAD_STACKSIZE                           1024
 #define TCPIP_MBOX_SIZE                                  200
+#define DEFAULT_RAW_RECVMBOX_SIZE                        32
 #define DEFAULT_UDP_RECVMBOX_SIZE                        200
 #define DEFAULT_TCP_RECVMBOX_SIZE                        200
 #define DEFAULT_ACCEPTMBOX_SIZE                          200
@@ -277,6 +280,7 @@ extern int *__errno(void);
 #define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[LWIP_MEM_ALIGN_BUFFER(size)]
 
 #define LWIP_DNS_SERVER                                  0
+#define LWIP_RAND()                                      ((u32_t)random())
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */
 

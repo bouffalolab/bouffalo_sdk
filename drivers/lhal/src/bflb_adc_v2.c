@@ -5,7 +5,7 @@
 #define ADC_GPIP_BASE  ((uint32_t)0x20002000)
 #define ADC_GPIP2_BASE ((uint32_t)0x20002400)
 
-#if defined(BL616L_VERSION_A0)
+#if defined(BL616CL_VERSION_A0)
 volatile uint32_t tsen_offset = 1500;
 #else
 volatile uint32_t tsen_offset;
@@ -71,7 +71,7 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
         regval &= ~GLB_GPADC1_DIFF_MODE;
         regval |= GLB_GPADC1_NEG_GND;
     }
-#if defined(BL616L_VERSION_A0)
+#if defined(BL616CL_VERSION_A0)
     if (config->vref == ADC_VREF_INTERNAL_1P25) {
 #else
     if (config->vref == ADC_VREF_EXTERNAL_1P25) {

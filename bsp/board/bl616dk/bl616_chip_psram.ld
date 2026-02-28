@@ -17,7 +17,8 @@ ENTRY(__start)
 StackSize    = 0x1000; /*  4KB */
 HeapMinSize  = 0x1000; /*  4KB */
 psram_heap_min_size = 0x1000;
-__EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
+/* Use EM_SIZE from CMake configuration, fallback to 32K if not defined */
+__EM_SIZE = DEFINED(__LD_CONFIG_EM_SIZE) ? (__LD_CONFIG_EM_SIZE * 1024) : 0K;
 wifi_ram_max_size = DEFINED(wifi_main) ? (160K -  __EM_SIZE): 32K;
 
 remain_wifi_ram = 160K - wifi_ram_max_size - __EM_SIZE;
@@ -405,7 +406,6 @@ SECTIONS
       _sshram = . ;
       *(SHAREDRAMIPC)
       *(SHAREDRAM)
-      _eshram = . ;
       *ipc_shared.o(COMMON)
       *sdu_shared.o(COMMON)
       *hal_desc.o(COMMON)
@@ -416,6 +416,7 @@ SECTIONS
       *mfp_bip.o(COMMON)
       *me_mic.o(COMMON)
       *(.wifi_ram*)
+      _eshram = . ;
       . = ALIGN(16);
     } > ram_wifi
 

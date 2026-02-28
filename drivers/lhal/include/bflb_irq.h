@@ -115,8 +115,8 @@ void bflb_irq_set_nlbits(uint8_t nlbits);
 void bflb_irq_set_priority(int irq, uint8_t preemptprio, uint8_t subprio);
 
 
-#if (defined(BL616D) && defined(CPU_LP))
-void bl616d_level2_irq_handler(int irq, void *arg0);
+#if (defined(BL618DG) && defined(CPU_LP))
+void bl618dg_level2_irq_handler(int irq, void *arg0);
 #endif
 
 #ifdef __cplusplus

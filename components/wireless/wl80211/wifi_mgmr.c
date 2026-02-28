@@ -9,14 +9,15 @@
 #include "supplicant_api.h"
 #include "wl80211_platform.h"
 
+#ifdef COMPAT_WIFI_MGMR
 #include "wifi_mgmr.h"
 
 #if !defined(__NuttX__)
 #include "async_event.h"
 #endif
 
-#define DBG_TAG "WIFI_MGMR"
-#include "log.h"
+/* Autoconnect state */
+static int wifi_mgmr_disable_autoconnect = 1; /* Default: disabled */
 
 #if !defined(__NuttX__)
 extern void *_wifi_mgmr_sta_start_dhcpc(void);
@@ -43,6 +44,10 @@ static void start_dhcp_tsk(void)
 static void disconnect_tsk(void)
 {
     _wifi_mgmr_sta_stop_dhcpc();
+    if (!wifi_mgmr_disable_autoconnect && wl80211_glb.last_connect_params) {
+        wl80211_printf("Autoconnect: Reconnecting to %s\r\n", wl80211_glb.last_connect_params->ssid);
+        wl80211_sta_connect(wl80211_glb.last_connect_params);
+    }
 }
 
 static void start_dhcpd_tsk(void)
@@ -78,6 +83,14 @@ static void dump_scan_result(void)
         total++;
     }
 
+    wl80211_printf("cached scan list\r\n");
+    wl80211_printf("*********************************************************************"
+                   "*******************************\r\n");
+
+    if (total == 0) {
+        goto _RET;
+    }
+
     rssi_sorted = calloc(total, sizeof(struct wl80211_scan_result_item *));
     assert(rssi_sorted);
 
@@ -89,10 +102,6 @@ static void dump_scan_result(void)
     }
 
     qsort(rssi_sorted, total, sizeof(void *), cmp_rssi_desc);
-
-    wl80211_printf("cached scan list\r\n");
-    wl80211_printf("*********************************************************************"
-           "*******************************\r\n");
 
     for (i = 0; i < total; i++) {
         n = rssi_sorted[i];
@@ -147,37 +156,30 @@ static void dump_scan_result(void)
         }
 
         wl80211_printf("index[%02d]: channel %3u, bssid %02X:%02X:%02X:%02X:%02X:%02X, "
-               "rssi %3d, ppm abs:rel %3d : %3d, wps %2d, mode %6s, auth %20s, "
-               "cipher:%12s, SSID %s\r\n",
-               i, n->channel, n->bssid[0], n->bssid[1], n->bssid[2], n->bssid[3], n->bssid[4], n->bssid[5], n->rssi, 0,
-               0, !!(n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPS), wifi_mgmr_mode_to_str(n->mode),
-               wifi_mgmr_auth_to_str(auth), wifi_mgmr_cipher_to_str(cipher), n->ssid);
+                       "rssi %3d, ppm abs:rel %3d : %3d, wps %2d, mode %6s, auth %20s, "
+                       "cipher:%12s, SSID %s\r\n",
+                       i, n->channel, n->bssid[0], n->bssid[1], n->bssid[2], n->bssid[3], n->bssid[4], n->bssid[5],
+                       n->rssi, 0, 0, !!(n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPS),
+                       wifi_mgmr_mode_to_str(n->mode), wifi_mgmr_auth_to_str(auth), wifi_mgmr_cipher_to_str(cipher),
+                       n->ssid);
 
         if (n->ssid) {
             free((void *)n->ssid);
         }
         free(n);
     }
+    free(rssi_sorted);
+
+_RET:
     wl80211_printf("index[%02d]: empty\r\n", total);
     wl80211_printf("---------------------------------------------------------------------"
-           "-------------------------------\r\n");
-
-    free(rssi_sorted);
+                   "-------------------------------\r\n");
 }
 
 #if !defined(__NuttX__)
-static void evt_handler_wrapper(void (*handler)(void))
-{
-    assert(handler != NULL);
-    handler();
-
-    vTaskDelete(NULL);
-}
-
 static void wl80211_event_handler(async_input_event_t ev, void *priv)
 {
     void (*handler)(void) = NULL;
-    uint16_t stack_size = 265;
 
     switch (ev->code) {
         case WL80211_EVT_STA_CONNECTED:
@@ -206,11 +208,11 @@ static void wl80211_event_handler(async_input_event_t ev, void *priv)
             async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STOPPED, 0);
             handler = stop_dhcpd_tsk;
             break;
-
     }
 
+    void rtos_start_evt_task(void (*handler)(void));
     if (handler != NULL) {
-        xTaskCreate((void *)evt_handler_wrapper, "evt", stack_size, handler, 20, NULL);
+        rtos_start_evt_task(handler);
     }
 }
 
@@ -218,41 +220,43 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
 {
     switch (ev->code) {
         case CODE_WIFI_ON_INIT_DONE: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
         } break;
         case CODE_WIFI_ON_SCAN_DONE: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
             wifi_mgmr_sta_scanlist();
         } break;
         case CODE_WIFI_ON_CONNECTED: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
             void mm_sec_keydump(void);
             mm_sec_keydump();
         } break;
         case CODE_WIFI_ON_GOT_IP: {
             _wifi_mgmr_ip_got_dump();
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+        } break;
+        case CODE_WIFI_CMD_RECONNECT: {
         } break;
         case CODE_WIFI_ON_AP_STARTED: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
         } break;
         case CODE_WIFI_ON_AP_STOPPED: {
-            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
+            wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
         } break;
         case CODE_WIFI_ON_AP_STA_ADD: {
-            LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
+            wl80211_printf("[APP] [EVT] [AP] [ADD] %lld\r\n", rtos_now(0));
         } break;
         case CODE_WIFI_ON_AP_STA_DEL: {
-            LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
+            wl80211_printf("[APP] [EVT] [AP] [DEL] %lld\r\n", rtos_now(0));
         } break;
         default: {
-            LOG_I("[APP] [EVT] Unknown code %u \r\n", ev->code);
+            wl80211_printf("[APP] [EVT] Unknown code %u \r\n", ev->code);
         }
     }
 }
@@ -318,7 +322,7 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
         if (ssid_len <= 0 || ssid_len > MGMR_SSID_LEN) {
             return -1;
         }
-        strcpy((char *)conn_params.ssid, ssid);
+        strlcpy((char *)conn_params.ssid, ssid, 32);
     } else {
         return -1;
     }
@@ -328,7 +332,7 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
         if ((key_len < 8 && key_len != 5 && key_len != 0) || (key_len > MGMR_KEY_LEN)) {
             return -1;
         }
-        strcpy((char *)conn_params.password, key);
+        strlcpy((char *)conn_params.password, key, 64);
     }
 
     if (bssid) {
@@ -418,8 +422,9 @@ void wifi_mgmr_sta_info_dump(wifi_mgmr_connect_ind_stat_info_t *connection_info)
     wl80211_printf("ssid:            %s\r\n", connection_info->ssid);
     // fix show error when using wps
     wl80211_printf("passphr:         %s\r\n", (passphr_len || connection_info->security) ? "********" : "Open");
-    wl80211_printf("bssid:           %02X:%02X:%02X:%02X:%02X:%02X\r\n", connection_info->bssid[0], connection_info->bssid[1],
-           connection_info->bssid[2], connection_info->bssid[3], connection_info->bssid[4], connection_info->bssid[5]);
+    wl80211_printf("bssid:           %02X:%02X:%02X:%02X:%02X:%02X\r\n", connection_info->bssid[0],
+                   connection_info->bssid[1], connection_info->bssid[2], connection_info->bssid[3],
+                   connection_info->bssid[4], connection_info->bssid[5]);
     wl80211_printf("aid:             %d\r\n", connection_info->aid);
     wl80211_printf("channel:         %d\r\n", connection_info->channel);
     wl80211_printf("band:            %s\r\n", (connection_info->chan_band) ? "5G" : "2.4G");
@@ -708,9 +713,18 @@ int wifi_mgmr_sta_scanlist(void)
     return -1;
 }
 
+int wifi_mgmr_sta_autoconnect_enable(void)
+{
+    wifi_mgmr_disable_autoconnect = 0;
+    wl80211_printf("Enable Auto Reconnect\r\n");
+    return 0;
+}
+
 int wifi_mgmr_sta_autoconnect_disable(void)
 {
-    return -1;
+    wifi_mgmr_disable_autoconnect = 1;
+    wl80211_printf("Disable Auto Reconnect\r\n");
+    return 0;
 }
 
 uint16_t wifi_mgmr_sta_info_status_code_get(void)
@@ -728,8 +742,14 @@ int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint
     const struct ieee80211_dot_d *country;
     country = wl80211_get_country();
     assert(country != NULL);
-    *c24G_cnt = country->channel24G_num;
-    *c5G_cnt = country->channel5G_num;
+
+    if (c24G_cnt != NULL) {
+        *c24G_cnt = country->channel24G_num;
+    }
+
+    if (c5G_cnt != NULL) {
+        *c5G_cnt = country->channel5G_num;
+    }
 
     return 0;
 }
@@ -755,7 +775,7 @@ int wifi_mgmr_get_country_code(char *country_code)
 {
     const char *c = wl80211_get_country_code();
     if (!c) {
-        return NULL;
+        return -1;
     }
     memcpy(country_code, c, 3); // XXX
     return 0;
@@ -917,3 +937,4 @@ int wifi_mgmr_mac_str_to_addr(const char *str, uint8_t addr[])
 
     return 0;
 }
+#endif /* COMPAT_WIFI_MGMR */

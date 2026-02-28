@@ -18,7 +18,8 @@ StackSize    = 0x1000; /*  4KB */
 HeapMinSize  = 0x1000; /*  4KB */
 psram_min_size = 0x1000;
 
-__EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
+/* Use EM_SIZE from CMake configuration, fallback to 32K if not defined */
+__EM_SIZE = DEFINED(__LD_CONFIG_EM_SIZE) ? (__LD_CONFIG_EM_SIZE * 1024) : 0K;
 __RFTLV_SIZE_OFFSET = 1K;
 __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */

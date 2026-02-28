@@ -14,7 +14,7 @@ extern "C" {
 /** @addtogroup EF_CTRL
   * @{
   */
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
 #define EF_CTRL_SF_AES_NONE (0) /*!< No AES */
 #define EF_CTRL_SF_AES_128  (1) /*!< AES 128 */
 #define EF_CTRL_SF_AES_192  (2) /*!< AES 192 */
@@ -168,7 +168,7 @@ uint8_t bflb_ef_ctrl_get_trim_parity(uint32_t val, uint8_t len);
  */
 int bflb_ef_ctrl_busy(struct bflb_device_s *dev);
 
-#if defined(BL616D) && !defined(CPU_MODEL_A0)
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  Check efuse region1 busy status
  *

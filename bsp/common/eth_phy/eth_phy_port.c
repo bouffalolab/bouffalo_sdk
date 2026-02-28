@@ -4,9 +4,9 @@
 
 #include "eth_phy_port.h"
 
-#if defined(BL616) || defined(BL616L) || defined(BL702) || defined(BL808)
+#if defined(BL616) || defined(BL616CL) || defined(BL702)
 #define EMAC_DEVICE_NAME BFLB_NAME_EMAC0
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define EMAC_DEVICE_NAME BFLB_NAME_EMAC_V2_1
 #endif
 static struct bflb_device_s *emac_dev = NULL;

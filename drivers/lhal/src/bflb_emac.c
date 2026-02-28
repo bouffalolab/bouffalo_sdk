@@ -68,7 +68,7 @@ int bflb_emac_init(struct bflb_device_s *dev, const struct bflb_emac_config_s *c
 
     reg_base = dev->reg_base;
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
 #define GLB_EMAC_CLK_OUT_ADDRESS (0x20000390)
 #define GLB_UNGATE_CFG2_ADDRESS  (0x20000588)
 #define GLB_SWRST_CFG0_OFFSET    (0x20000540)
@@ -616,7 +616,7 @@ int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
         case EMAC_CMD_SET_MAC_RX_CLK_INVERT:
             /* MAC RX clock invert. Default: ref_clk_out mode: true, ref_clk_in mode: false */
             regval = getreg32(GLB_EMAC_CLK_OUT_ADDRESS);

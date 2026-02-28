@@ -36,9 +36,9 @@
 #ifndef __SDH_REG_H__
 #define __SDH_REG_H__
 
-#if defined(BL616) || defined(BL616L) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL616CL)  
 #define SDH_STD_V3
-#elif defined(BL616D) || defined(BL628)
+#elif defined(BL618DG) 
 #define SDH_STD_V3_SMIH
 #endif
 

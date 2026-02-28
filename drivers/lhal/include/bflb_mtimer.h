@@ -59,7 +59,7 @@ uint64_t bflb_mtimer_get_time_us(void);
  */
 uint64_t bflb_mtimer_get_time_ms(void);
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /**
  * @brief Set the value of mtimer.
  *

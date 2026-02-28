@@ -82,6 +82,16 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         case CODE_WIFI_ON_MGMR_DONE:
             xTaskCreate(ap_start_task, "ap", 1024, NULL, 15, NULL);
             break;
+        #ifdef CODE_WIFI_ON_GOT_IP_ABORT
+        case CODE_WIFI_ON_GOT_IP_ABORT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_ABORT\r\n", __func__);
+        } break;
+        #endif
+        #ifdef CODE_WIFI_ON_GOT_IP_TIMEOUT
+        case CODE_WIFI_ON_GOT_IP_TIMEOUT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_TIMEOUT\r\n", __func__);
+        } break;
+        #endif
         case CODE_WIFI_ON_GOT_IP:
             web_config_notify_result(1);
             break;

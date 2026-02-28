@@ -269,7 +269,7 @@ typedef int ssize_t;
  * or more portable:\n
  * \#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u32_t variable_name[(size + sizeof(u32_t) - 1) / sizeof(u32_t)]
  */
-#if defined(BL616) || defined(BL616L) || defined(BL616D)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #ifndef LWIP_DECLARE_MEMORY_ALIGNED
 #define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[LWIP_MEM_ALIGN_BUFFER(size)] __attribute__((section("SHAREDRAM")))
 #endif

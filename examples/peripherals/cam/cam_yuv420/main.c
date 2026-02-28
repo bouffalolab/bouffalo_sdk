@@ -55,7 +55,7 @@ int main(void)
     }
     bflb_cam_init(cam1_uv, &cam_config);
 
-#if defined(BL616D)
+#if defined(BL618DG)
     bflb_cam_int_mask(cam0_y, CAM_INTMASK_NORMAL, false);
     bflb_cam_int_mask(cam1_uv, CAM_INTMASK_NORMAL, false);
 #endif
@@ -67,7 +67,7 @@ int main(void)
         while (bflb_cam_get_frame_count(cam0_y) == 0 || bflb_cam_get_frame_count(cam1_uv) == 0) {}
         pic_size_y = bflb_cam_get_frame_info(cam0_y, &pic_y);
         pic_size_uv = bflb_cam_get_frame_info(cam1_uv, &pic_uv);
-#if defined(BL616D)
+#if defined(BL618DG)
         bflb_cam_int_clear(cam0_y, CAM_INTCLR_NORMAL);
         bflb_cam_int_clear(cam1_uv, CAM_INTCLR_NORMAL);
 #else

@@ -50,7 +50,7 @@ static struct bflb_device_s *gpio;
 #define GPIO_FUNC_CAM_N   "F_CAM"
 #define GPIO_FUNC_SDU_N   "F_SDU"
 #define GPIO_FUNC_PWM0_N  "F_PWM0"
-#elif defined(BL628)
+#elif defined(BL618DG)
 #define GPIO_FUNC_SDH_N  "F_SDH"
 #define GPIO_FUNC_SPI0_N "F_SPI0"
 #define GPIO_FUNC_I2S_N  "F_I2S"
@@ -74,12 +74,6 @@ static struct bflb_device_s *gpio;
 #define GPIO_UART_FUNC_UART1_CTS_N "UF_UART1_CTS"
 #define GPIO_UART_FUNC_UART1_TX_N  "UF_UART1_TX"
 #define GPIO_UART_FUNC_UART1_RX_N  "UF_UART1_RX"
-#if defined(BL808) || defined(BL606P)
-#define GPIO_UART_FUNC_UART2_RTS_N "UF_UART2_RTS"
-#define GPIO_UART_FUNC_UART2_CTS_N "UF_UART2_CTS"
-#define GPIO_UART_FUNC_UART2_TX_N  "UF_UART2_TX"
-#define GPIO_UART_FUNC_UART2_RX_N  "UF_UART2_RX"
-#endif
 
 static int gpio_init(lua_State *L)
 {
@@ -183,7 +177,7 @@ static const luaL_Reg l_gpio_lib[] = {
     { GPIO_FUNC_CAM_N, NULL },
     { GPIO_FUNC_SDU_N, NULL },
     { GPIO_FUNC_PWM0_N, NULL },
-#elif defined(BL628)
+#elif defined(BL618DG)
     { GPIO_FUNC_SDH_N, NULL },
     { GPIO_FUNC_SPI0_N, NULL },
     { GPIO_FUNC_I2S_N, NULL },
@@ -258,7 +252,7 @@ LUAMOD_API int luaopen_llib_gpio(lua_State *L)
     lua_setfield(L, -2, GPIO_FUNC_SDU_N);
     lua_pushinteger(L, GPIO_FUNC_PWM0);
     lua_setfield(L, -2, GPIO_FUNC_PWM0_N);
-#elif defined(BL628)
+#elif defined(BL618DG)
     lua_pushinteger(L, GPIO_FUNC_SDH);
     lua_setfield(L, -2, GPIO_FUNC_SDH_N);
     lua_pushinteger(L, GPIO_FUNC_SPI0);
@@ -304,17 +298,6 @@ LUAMOD_API int luaopen_llib_gpio(lua_State *L)
     lua_setfield(L, -2, GPIO_UART_FUNC_UART1_TX_N);
     lua_pushinteger(L, GPIO_UART_FUNC_UART1_RX);
     lua_setfield(L, -2, GPIO_UART_FUNC_UART1_RX_N);
-
-#if defined(BL808) || defined(BL606P)
-    lua_pushinteger(L, GPIO_UART_FUNC_UART2_RTS);
-    lua_setfield(L, -2, GPIO_UART_FUNC_UART2_RTS_N);
-    lua_pushinteger(L, GPIO_UART_FUNC_UART2_CTS);
-    lua_setfield(L, -2, GPIO_UART_FUNC_UART2_CTS_N);
-    lua_pushinteger(L, GPIO_UART_FUNC_UART2_TX);
-    lua_setfield(L, -2, GPIO_UART_FUNC_UART2_TX_N);
-    lua_pushinteger(L, GPIO_UART_FUNC_UART2_RX);
-    lua_setfield(L, -2, GPIO_UART_FUNC_UART2_RX_N);
-#endif
 
     return 1;
 }

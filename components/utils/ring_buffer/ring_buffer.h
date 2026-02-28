@@ -113,6 +113,7 @@ uint32_t Ring_Buffer_Peek(Ring_Buffer_Type *rbType, uint8_t *data, uint32_t leng
 uint32_t Ring_Buffer_Peek_Byte(Ring_Buffer_Type *rbType, uint8_t *data);
 uint32_t Ring_Buffer_Get_Length(Ring_Buffer_Type *rbType);
 uint32_t Ring_Buffer_Get_Empty_Length(Ring_Buffer_Type *rbType);
+uint32_t Ring_Buffer_Get_Size(Ring_Buffer_Type *rbType);
 Ring_Buffer_Status_Type Ring_Buffer_Get_Status(Ring_Buffer_Type *rbType);
 
 /**

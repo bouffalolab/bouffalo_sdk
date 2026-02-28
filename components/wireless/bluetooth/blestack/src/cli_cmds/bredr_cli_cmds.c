@@ -56,6 +56,7 @@
 #define BT_A2DP_CLI(func) static void a2dp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #define BT_AVRCP_CLI(func) static void avrcp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #define BT_HFP_CLI(func) static void hfp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#define BT_SPP_CLI(func) static void spp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #endif
 #define 		PASSKEY_MAX  		0xF423F
 struct bt_br_discovery_result result[10] = { 0 };
@@ -1865,16 +1866,29 @@ BT_HFP_CLI(hf_disconnect)
 
 #endif
 #if defined(CONFIG_BT_SPP)
+static uint8_t spp_test_buffer[1024];
 BT_SPP_CLI(send)
 {
     int err = 0;
-    uint8_t test_data[10] = {0x01, 0x02, 0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a};
+    uint16_t len = 0;
+
+    get_uint16_from_string(&argv[1], &len);
+
+    if (len == 0 || len > 1024) {
+        printf("Invalid length. Must be 1-1024.\n");
+        return;
+    }
+
+    for (uint16_t i = 0; i < len; i++) {
+        spp_test_buffer[i] = (i + 1) & 0xFF;
+    }
+
     if(!default_conn){
         printf("Not connected.\n");
         return;
     }
     
-    err=bt_spp_send(test_data,10);
+    err=bt_spp_send(spp_test_buffer,len);
     if(err)
         printf("bt spp send err:%d\r\n", err);
     else

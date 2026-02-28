@@ -54,7 +54,7 @@ int main(void)
     struct bflb_timer_config_s cfg0;
     cfg0.counter_mode = TIMER_COUNTER_MODE_PROLOAD; /* preload when match occur */
     cfg0.clock_source = TIMER_CLKSRC_XTAL;
-    cfg0.clock_div = 39; /* for bl616/bl808/bl606p is 39, for bl702 is 31 */
+    cfg0.clock_div = 39; /* for bl616/bl618dg/bl618dg is 39, for bl702 is 31 */
     cfg0.trigger_comp_id = TEST_TIMER_COMP_ID;
     cfg0.comp0_val = 64000; /* match value 0  */
     cfg0.comp1_val = 0xFFFFFFFF; /* match value 1 */
@@ -64,7 +64,7 @@ int main(void)
     struct bflb_timer_config_s cfg1;
     cfg1.counter_mode = TIMER_COUNTER_MODE_PROLOAD;
     cfg1.clock_source = TIMER_CLKSRC_XTAL;
-    cfg1.clock_div = 39; /* for bl616/bl808/bl606p is 39, for bl702 is 31 */
+    cfg1.clock_div = 39; /* for bl616/bl618dg/bl618dg is 39, for bl702 is 31 */
     cfg1.trigger_comp_id = TEST_TIMER_COMP_ID;
     cfg1.comp0_val = 1000000; /* match value 0  */
     cfg1.comp1_val = 1500000; /* match value 1 */

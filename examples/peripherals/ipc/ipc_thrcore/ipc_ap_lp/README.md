@@ -2,13 +2,13 @@
 
 ## Overview
 
-This example demonstrates the inter-core (IPC) mechanism between the three cores (AP/LP/NP) of the BL616D, including IPC channel initialization, interrupt enablement, cross-core interrupt triggering and response, and shell command interaction.
+This example demonstrates the inter-core (IPC) mechanism between the three cores (AP/LP/NP) of the BL618DG, including IPC channel initialization, interrupt enablement, cross-core interrupt triggering and response, and shell command interaction.
 
 ## How to use example
 
 1. Compile the AP and LP (NP engineering if NP is required) firmware separately and burn them to the corresponding core:
-    AP：make flash CHIP=bl616d COMX=COMxx CPU_ID=ap
-    LP：make flash CHIP=bl616d COMX=COMxx CPU_ID=ap
+    AP：make flash CHIP=bl618dg COMX=COMxx CPU_ID=ap
+    LP：make flash CHIP=bl618dg COMX=COMxx CPU_ID=lp
 When you want to compile the AP, you need to comment out 15-16 lines of the code first, when you want to compile the LP, you need to compile the LP first, 15-16 lines do not need to comment, then compile the AP, and then download.If you want to do a triple core test, then you need to compile ipc_np download examples.
 
 
@@ -22,16 +22,16 @@ LP: lp_trigger_ap <value> This value ranges from 0-65535.
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616D            |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
 
 ## Compile
 
-- BL616D
+- BL618DG
 
 ```
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=xx #xx can be ap np lp
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=xx #xx can be ap np lp
 ```
 
 ## Flash

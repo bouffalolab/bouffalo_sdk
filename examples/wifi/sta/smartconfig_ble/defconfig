@@ -30,7 +30,7 @@ ifeq ($(CHIP),bl616)
     CONFIG_COEX_TDMA_NONE      =2
 endif
 
-ifeq ($(CHIP),bl616d)
+ifeq ($(CHIP),bl618dg)
 CONFIG_OVERRIDE_PTFILE =partition_cfg_4M.toml
 endif
 

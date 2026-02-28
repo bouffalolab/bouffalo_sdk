@@ -16,6 +16,7 @@ void cmd_wifi_sniffer_on(int argc, char *argv[]);
 void cmd_wifi_sniffer_off(int argc, char *argv[]);
 #endif
 void cmd_wifi_state_get(int argc, char *argv[]);
+void cmd_wifi_sta_dhcp_client_start(int argc, char **argv);
 void cmd_wifi_sta_rssi_get(int argc, char *argv[]);
 void cmd_wifi_sta_channel_get(int argc, char *argv[]);
 void cmd_wifi_sta_ssid_passphr_get(int argc, char *argv[]);

@@ -725,7 +725,7 @@ void wifi_sta_info_cmd(int argc, char **argv)
     wifi_mgmr_get_country_code(country_code);
     wifi_sta_ip4_addr_get(&addr.addr, &mask.addr, &gw.addr, &dns.addr);
     wifi_mgmr_sta_rssi_get(&rssi);
-#ifndef BL616D
+#ifndef BL618DG
     wifi_mgmr_tpc_pwr_get(&power_table);
 #endif
     fhost_printf("================================================================\r\n");
@@ -1077,6 +1077,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sniffer_on, wifi_sniffer_on, wifi sniffer on);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sniffer_off, wifi_sniffer_off, wifi sniffer off);
 #endif
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_state_get, wifi_state, get wifi state);
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_dhcp_client_start, wifi_sta_dhcp, wifi station dhcp client start);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_rssi_get, wifi_sta_rssi, get wifi sya rssi);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_channel_get, wifi_sta_channel, get wifi channel);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_ssid_passphr_get, wifi_sta_ssid_passphr_get, get wifi ssid password);

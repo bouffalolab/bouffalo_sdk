@@ -110,7 +110,7 @@
   */
 #define ADC_CMD_CLR_FIFO          0x00
 #define ADC_CMD_VBAT_EN           0x01
-#if defined(BL808) || defined(BL606P) || defined(BL628) || defined(BL616) || defined(BL702L)
+#if  defined(BL616) || defined(BL702L)
 #define ADC_CMD_TRIG_BY_PWM       0x02
 #endif
 /**

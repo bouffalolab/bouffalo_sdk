@@ -19,7 +19,7 @@ __UNUSED static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t sl
 
     reg_base = dev->reg_base;
 
-#if defined(BL616L)
+#if defined(BL616CL)
     regval = getreg32(reg_base + I2C_CONFIG_1_OFFSET);
 #else
     regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
@@ -31,7 +31,7 @@ __UNUSED static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t sl
     } else {
         regval &= ~I2C_CR_I2C_SUB_ADDR_EN;
     }
-#if defined(BL616L)
+#if defined(BL616CL)
     putreg32(regval, reg_base + I2C_CONFIG_1_OFFSET);
 #else
     putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
@@ -100,14 +100,14 @@ static inline void bflb_i2c_set_datalen(struct bflb_device_s *dev, uint16_t data
 
     reg_base = dev->reg_base;
 
-#if defined(BL616D)
+#if defined(BL618DG)
     regval = getreg32(reg_base + I2C_PKT_LEN_OFFSET);
 #else
     regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
 #endif
     regval &= ~I2C_CR_I2C_PKT_LEN_MASK;
     regval |= ((data_len - 1) << I2C_CR_I2C_PKT_LEN_SHIFT) & I2C_CR_I2C_PKT_LEN_MASK;
-#if defined(BL616D)
+#if defined(BL618DG)
     putreg32(regval, reg_base + I2C_PKT_LEN_OFFSET);
 #else
     putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
@@ -503,9 +503,9 @@ int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, in
             subaddr_size = 0;
             bflb_i2c_addr_config(dev, msgs[i].addr, msgs[i].buffer, subaddr_size, is_addr_10bit);
         }
-#if defined(BL616L)
+#if defined(BL616CL)
         if (msgs[i].length > 1024) {
-#elif defined(BL616D)
+#elif defined(BL618DG)
         if (msgs[i].length > 4096) {
 #else
         if (msgs[i].length > 256) {
@@ -668,7 +668,7 @@ int bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             timing->stop_phase2 = (regval & I2C_CR_I2C_PRD_P_PH_2_MASK) >> I2C_CR_I2C_PRD_P_PH_2_SHIFT;
             timing->stop_phase3 = (regval & I2C_CR_I2C_PRD_P_PH_3_MASK) >> I2C_CR_I2C_PRD_P_PH_3_SHIFT;
             break;
-#if defined(BL616L)
+#if defined(BL616CL)
         case I2C_CMD_SET_TIMEOUT_VALUE:
             regval = getreg32(reg_base + I2C_FIFO_CONFIG_0_OFFSET);
             regval &= ~I2C_CR_I2C_M_TO_POP_VALUE_MASK;

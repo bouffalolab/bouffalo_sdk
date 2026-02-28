@@ -379,7 +379,7 @@ bflb_timer_start(timer);
 ### 特性
 
 - PWM v1 (BL602/BL702)
-- PWM v2 (BL616/BL808)
+- PWM v2 (BL616/BL618DG)
 - 多路独立输出
 - 可配置频率、占空比
 
@@ -398,7 +398,7 @@ bflb_pwm_v1_set_duty(pwm, 0, 500);  // 50%
 bflb_pwm_v1_start(pwm);
 ```
 
-### PWM v2 (BL616/BL808)
+### PWM v2 (BL616/BL618DG)
 
 ```c
 #include "bflb_pwm_v2.h"

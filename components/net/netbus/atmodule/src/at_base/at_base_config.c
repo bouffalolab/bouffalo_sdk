@@ -20,6 +20,7 @@
 #include "bflb_adc.h"
 #include "at_config.h"
 #include "at_base_config.h"
+#include "at_pal.h"
 
 base_config *at_base_config = NULL;
 
@@ -42,7 +43,7 @@ int at_base_config_init(void)
     }
 #endif
 
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     if (!at_config_read(AT_CONFIG_KEY_SYS_MSG, &at_base_config->sysmsg_cfg, sizeof(base_sysmsg_cfg))) {
         at_base_config->sysmsg_cfg.bit.quit_throughput_msg = 0;
         at_base_config->sysmsg_cfg.bit.link_msg_type = 0;
@@ -58,7 +59,7 @@ int at_base_config_init(void)
 
 int at_base_config_save(const char *key)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     if (!at_base_config || !key) {
         AT_CMD_PRINTF("Invalid arguments to at_base_config_save\r\n");
         return -1;
@@ -72,7 +73,7 @@ int at_base_config_save(const char *key)
 
 int at_base_config_default(void)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     at_config_delete(AT_CONFIG_KEY_SYS_MSG);
 #endif
     return 0;

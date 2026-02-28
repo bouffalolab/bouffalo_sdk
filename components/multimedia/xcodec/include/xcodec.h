@@ -18,6 +18,9 @@ extern "C"
 
 #include <xutils/mringbuffer.h>
 
+#define AUDIO_ALIGNMENT_MASK (0x001f)
+#define AUDIO_ALIGNMENT_BYTES (32)
+
 typedef enum {
     XCODEC_OK          =  0,
     XCODEC_ERROR       = -1,
@@ -54,6 +57,16 @@ typedef enum {
     XCODEC_EVENT_ERROR_UNDERFLOW             = 5U,  ///< Fifo underflow error
     XCODEC_EVENT_ERROR                       = 6U,  ///< The device has a hardware error
 } xcodec_event_t;
+
+typedef enum {
+    BL_EVENT_NODE_READ_COMPLETE        = 0U,  ///< A peroid data read completed
+    BL_EVENT_NODE_WRITE_COMPLETE       = 1U,  ///< A peroid data write completed
+    BL_EVENT_WRITE_BUFFER_EMPTY          = 2U,  ///< Fifo is empty
+    BL_EVENT_READ_BUFFER_FULL            = 3U,  ///< Fifo is full
+    BL_EVENT_ERROR_OVERFLOW              = 4U,  ///< Fifo overflow error
+    BL_EVENT_ERROR_UNDERFLOW             = 5U,  ///< Fifo underflow error
+    BL_EVENT_ERROR                       = 6U,  ///< The device has a hardware error
+} audio_codec_event_t;
 
 struct xcodec;
 typedef struct xcodec xcodec_t;

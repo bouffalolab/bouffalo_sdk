@@ -20,11 +20,6 @@
 //#define DEBUG_PRINT
 //#define WPS_DEBUG
 
-//XXX TODO remove bl606p
-#if defined(CFG_CHIP_BL606P) || defined(CFG_CHIP_BL808)
-#define USE_MBEDTLS_CRYPTO
-#endif
-
 // TODO sync with FULLMAC config
 #define CONFIG_AUTHENTICATOR_MAX_STA 4
 #define CONFIG_IEEE80211W

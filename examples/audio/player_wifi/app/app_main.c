@@ -30,7 +30,7 @@ void app_main_entry(void *arg)
         return 0;
     }
 
-#if CONFIG_CODEC_USE_I2S_RX || CONFIG_CODEC_USE_I2S_TX
+#if CONFIG_CODEC_USE_I2S
     extern msp_i2s_port_init(void);
     msp_i2s_port_init();
 #endif

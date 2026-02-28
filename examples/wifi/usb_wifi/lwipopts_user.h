@@ -90,7 +90,7 @@
 #endif
 #endif
 
-#if CONFIG_IPV6
+#ifdef CONFIG_IPV6
 #define LWIP_IPV6 1
 #endif 
 
@@ -107,6 +107,7 @@
 
 #define LWIP_DHCP                 1
 #define LWIP_DNS                  1
+#define LWIP_DNS_SERVER           0
 #define LWIP_SO_RCVTIMEO          1
 #define LWIP_SO_SNDTIMEO          1
 #define SO_REUSE                  1

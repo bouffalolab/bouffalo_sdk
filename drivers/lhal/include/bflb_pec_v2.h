@@ -9,7 +9,7 @@
 #define PEC_STS_TIMEOUT          (2)
 #define PEC_STS_SM_INVALID       (3)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PEC_SM_MAX               (2)
 #define PEC_FIFO_DEEPTH          (8)
 #define PEC_MEMORY_SIZE_0        (128)

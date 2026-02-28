@@ -634,7 +634,7 @@ if("${CHIP}" STREQUAL "bl702l")
 # endif
 endif()
 # 
-# ifeq ($(CONFIG_CHIP_NAME),BL616) //bl808 add for bouffalosdk
+# ifeq ($(CONFIG_CHIP_NAME),BL616)
 # ifeq ($(PRIV_CONFIG_GEN_BLE),ble1m0s1bredr0)
 # CONFIG_BT_BREDR := 0
 # CONFIG_BLE_PDS := 1
@@ -657,7 +657,7 @@ endif()
 # CONFIG_CTE := 0
 # CONFIG_LE_PWR_CTRL := 0
 # endif
-if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl808") OR ("${CHIP}" STREQUAL "bl616d"))
+if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl618dg"))
 	if("${PRIV_CONFIG_GEN_BLE}" STREQUAL "ble1m0s1bredr0")
 		_check_conflict(CONFIG_BT_BREDR n)
 		_check_conflict(CONFIG_BLE_PDS y)
@@ -1026,7 +1026,7 @@ if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl808") OR ("${CHIP}" ST
 	endif()
 endif()
 
-if(("${CHIP}" STREQUAL "bl616l"))
+if(("${CHIP}" STREQUAL "bl616cl"))
 	if("${PRIV_CONFIG_GEN_BLE}" STREQUAL "wlanif")
 		_check_conflict(CONFIG_FREERTOS_DISABLE y)
 		_check_conflict(CONFIG_BLE_HOST_DISABLE y)
@@ -1123,4 +1123,9 @@ if(("${CHIP}" STREQUAL "bl616l"))
 		_check_conflict(CONFIG_CTE n)
 		_check_conflict(CONFIG_LE_PWR_CTRL n)
 	endif()
+endif()
+
+# Pass EM_SIZE to linker script
+if(DEFINED CONFIG_EM_SIZE)
+	sdk_add_link_options("-Wl,--defsym,__LD_CONFIG_EM_SIZE=${CONFIG_EM_SIZE}")
 endif()

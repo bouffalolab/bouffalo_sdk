@@ -16,10 +16,10 @@
 
 #if defined(BL616)
 #include <bl616_mfg_media.h>
-#elif defined(BL616L)
-#include <bl616l_mfg_media.h>
-#elif defined(BL616D)
-#include <bl616d_mfg_media.h>
+#elif defined(BL616CL)
+#include <bl616cl_mfg_media.h>
+#elif defined(BL618DG)
+#include <bl618dg_mfg_media.h>
 #endif
 
 #ifdef LP_APP
@@ -309,7 +309,7 @@ void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
     return;
 }
 
-void platform_hook_prevent_sleep(enum PSM_EVENT event, uint8_t prevent)
+void platform_hook_prevent_sleep(uint32_t event, uint8_t prevent)
 {
     if (prevent) {
         bl_pm_event_bit_set(event);

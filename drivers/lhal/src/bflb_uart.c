@@ -81,7 +81,7 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
         tx_cfg &= ~UART_CR_UTX_CTS_EN;
     }
 
-#if !defined(BL616L) && !defined(BL616D)
+#if !defined(BL616CL) && !defined(BL618DG)
     rx_cfg &= ~UART_CR_URX_DEG_EN;
 #endif
 
@@ -99,7 +99,7 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
     putreg32(regval, reg_base + UART_SW_MODE_OFFSET);
 #endif
     regval = getreg32(reg_base + UART_DATA_CONFIG_OFFSET);
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
     regval &= ~UART_CR_URX_DEG_EN;
 #endif
     regval &= ~UART_CR_UART_BIT_INV;
@@ -691,7 +691,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 #endif
         case UART_CMD_SET_DEGLITCH_CNT:
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
             rx_tmp = getreg32(reg_base + UART_DATA_CONFIG_OFFSET);
 #else
             rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
@@ -702,7 +702,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 rx_tmp |= (arg << UART_CR_URX_DEG_CNT_SHIFT) & UART_CR_URX_DEG_CNT_MASK;
                 rx_tmp |= UART_CR_URX_DEG_EN;
             }
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
             putreg32(rx_tmp, reg_base + UART_DATA_CONFIG_OFFSET);
 #else
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
@@ -897,7 +897,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             rx_tmp |= (arg << UART_RX_FIFO_TH_SHIFT) & UART_RX_FIFO_TH_MASK;
             putreg32(rx_tmp, reg_base + UART_FIFO_CONFIG_1_OFFSET);
             break;
-#if defined(BL616L)
+#if defined(BL616CL)
         case UART_CMD_READ_HW_VERSION:
             tmp = getreg32(reg_base + UART_HW_VERSION_OFFSET);
             ret = (tmp & UART_HW_VERSION_MASK) >> UART_HW_VERSION_SHIFT;

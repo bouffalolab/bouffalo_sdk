@@ -2882,7 +2882,7 @@ __UNUSED static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
  *  @{
  */
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL602) || defined(BL702) || defined(BL702L)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)   || defined(BL602) || defined(BL702) || defined(BL702L)
 /**
  * @brief Error type definition
  */
@@ -2894,14 +2894,14 @@ typedef enum {
     NORESC = 4   /* no resource or resource temperary unavailable */
 } BL_Err_Type;
 #endif
-#if defined(BL808) || defined(BL606P)
+#if 0 
 extern BL_Err_Type GLB_Set_Flash_IO_PARM(uint8_t sel_embedded, uint8_t swap);
-#elif defined(BL616) || defined(BL616L) || defined(BL616D)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)
 extern BL_Err_Type GLB_Set_SFlash_IO_PARM(uint8_t sel_embedded, uint8_t swapIo3Io0, uint8_t swapIo2Cs);
 extern BL_Err_Type GLB_Set_SFlash2_IO_PARM(uint8_t swapIo3Io0);
 #elif defined(BL702L)
 extern BL_Err_Type GLB_Set_Embedded_FLash_IO_PARM(uint8_t reverse, uint8_t swapIo3Io0, uint8_t swapIo2Cs);
-#elif defined(BL628)
+#elif 0
 extern void bflb_glb_set_sflash_io_parm(uint8_t sel_embedded, uint8_t swap_io3_io0, uint8_t swap_io2_cs);
 extern void bflb_glb_set_sflash2_io_parm(uint8_t swap_io3_io0);
 #elif defined(BL602)
@@ -3018,7 +3018,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
         gpio_pins[3] = BFLB_EXTFLASH_DATA10_GPIO;
         gpio_pins[4] = BFLB_EXTFLASH_DATA20_GPIO;
         gpio_pins[5] = BFLB_EXTFLASH_DATA30_GPIO;
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
     } else if (ext_flash_pin == 1) {
         gpio_pins[0] = BFLB_EXTFLASH_CLK1_GPIO;
         gpio_pins[1] = BFLB_EXTFLASH_CS1_GPIO;
@@ -3089,7 +3089,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin)
         gpio_pins[3] = BFLB_EXTFLASH_DATA10_GPIO;
         gpio_pins[4] = BFLB_EXTFLASH_DATA20_GPIO;
         gpio_pins[5] = BFLB_EXTFLASH_DATA30_GPIO;
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
     } else if (ext_flash_pin == 1) {
         gpio_pins[0] = BFLB_EXTFLASH_CLK1_GPIO;
         gpio_pins[1] = BFLB_EXTFLASH_CS1_GPIO;
@@ -3139,7 +3139,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin)
  *  @{
  */
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
 /****************************************************************************/ /**
  * @brief  Init flash GPIO according to flash Pin config
  *
@@ -3161,7 +3161,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t 
 
     if (restore_default) {
         /* Set Default first */
-#if defined(BL628)
+#if 0
         bflb_glb_set_sflash_io_parm(1, 1, 0);
 #else
         GLB_Set_SFlash_IO_PARM(1, 1, 0);
@@ -3195,7 +3195,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t 
     swap_io3_io0 = ((flash_pin_cfg >> 1) & 1);
     swap_io3_io0 = (!swap_io3_io0);
     swap_io2_cs = ((flash_pin_cfg >> 0) & 1);
-#if defined(BL628)
+#if 0
     bflb_glb_set_sflash_io_parm(sel_embedded, swap_io3_io0, swap_io2_cs);
 #else
     GLB_Set_SFlash_IO_PARM(sel_embedded, swap_io3_io0, swap_io2_cs);
@@ -3205,7 +3205,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t 
     return 0;
 #endif
 }
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
 /****************************************************************************/ /**
  * @brief  Init flash GPIO according to flash Pin config
  *
@@ -3454,9 +3454,9 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash2_gpio(uint8_t swap)
     return romapi_bflb_sf_cfg_init_flash2_gpio(swap);
 #else
     bflb_sf_cfg_init_ext_flash_gpio(0);
-#if defined(BL628)
+#if 0
     bflb_glb_set_sflash2_io_parm(swap);
-#elif defined(BL616) || defined(BL616L) || defined(BL616D)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)
     GLB_Set_SFlash2_IO_PARM(swap);
 #endif
 
@@ -3512,7 +3512,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
     if (auto_scan) {
         flash_pin = 0;
         do {
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
             if (!IS_SF_CTRL_PIN_SELECT(flash_pin)) {
                 flash_pin++;
                 continue;
@@ -3541,7 +3541,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
                 }
                 bflb_sf_cfg_init_flash_gpio(flash_pin, restore_default);
             }
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
             if (flash_pin > SF_IO_EMB_SWAP_NONE_DUAL_IO0_AND_EXT_SF2) {
                 jedec_id = 0;
                 break;
@@ -3634,7 +3634,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
 #endif
 }
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /****************************************************************************/ /**
  * @brief  Identify one flash patch
  *
@@ -3708,7 +3708,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock(uint32_t flash_id, spi_
 #endif
 }
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628) || defined(BL606P) || defined(BL808) || defined(BL702L)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)    || defined(BL702L)
 /****************************************************************************/ /**
  * @brief  Get flash config according to flash ID patch
  *
@@ -3728,7 +3728,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, 
 }
 #endif
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
 /****************************************************************************/ /**
  * @brief  SF Cfg flash init
  *
@@ -3773,7 +3773,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
     swap_io3_io0 = ((sel >> 1) & 1);
     swap_io3_io0 = (!swap_io3_io0);
     swap_io2_cs = ((sel >> 0) & 1);
-#if defined(BL628)
+#if 0
     bflb_glb_set_sflash_io_parm(sel_embedded, swap_io3_io0, swap_io2_cs);
 #else
     GLB_Set_SFlash_IO_PARM(sel_embedded, swap_io3_io0, swap_io2_cs);
@@ -3862,7 +3862,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_c
 #endif
 }
 #endif
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
 /****************************************************************************/ /**
  * @brief  SF Cfg flash init
  *

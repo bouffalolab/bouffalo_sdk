@@ -4,7 +4,7 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define ADC_GPIP_BASE ((uint32_t)0x40002000)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616)   
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
 #endif
 
@@ -914,7 +914,7 @@ int bflb_adc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
             }
             break;
-#if defined(BL808) || defined(BL606P) || defined(BL628) || defined(BL616) || defined(BL702L)
+#if  defined(BL616) || defined(BL702L)
         case ADC_CMD_TRIG_BY_PWM:
             regval = getreg32(reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
             if (arg) {

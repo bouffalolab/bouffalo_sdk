@@ -10,7 +10,7 @@
 #include "bflb_gpio.h"
 #include "bflb_l1c.h"
 
-#if defined (BL606P) || defined (BL628) ||defined(BL702L) || defined(BL702) || defined(BL808)
+#if defined(BL702L) || defined(BL702)
 #include "board.h"
 #else
 #include "board_gpio.h"
@@ -23,7 +23,7 @@
 #define LCD_DBI_DMA_LLI_NUM (DBI_DBI_DATA_SIZE_MAX / 4 / 4064 + 1)
 
 /* clock frequency limit */
-#if (defined(BL616L) || defined(BL616D))
+#if (defined(BL616CL) || defined(BL618DG))
 /* Bus clock: 160M */
 #if (LCD_DBI_WORK_MODE == 3) /* typeB */
 #define LCD_DBI_CLOCK_LIMIT (54 * 1000 * 1000)
@@ -163,7 +163,7 @@ int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
 
     /* get dma dev */
     dbi_dma_hd = bflb_device_get_by_name(LCD_DBI_DMA_NAME);
-#if defined(BL616L)
+#if defined(BL616CL)
     if (dbi_dma_hd->sub_idx < 6) {
         /* ch0~ch1: 64Byte, ch2~ch5: 32Byte, ch6~ch7: 16Byte */
         dbi_cfg.tx_fifo_threshold = 7;

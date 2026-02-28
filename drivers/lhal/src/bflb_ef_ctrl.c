@@ -4,15 +4,15 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_EF_CTRL_BASE ((uint32_t)0x40007000)
-#elif defined(BL616) || defined(BL616L) || defined(BL808) || defined(BL606P)
+#elif defined(BL616) || defined(BL616CL)  
 #define BFLB_EF_CTRL_BASE ((uint32_t)0x20056000)
-#elif defined(BL628) || defined(BL616D)
+#elif  defined(BL618DG)
 #define BFLB_EF_CTRL_BASE ((uint32_t)0x2000C000)
 #endif
 
 #define EF_CTRL_EFUSE_CTRL_PROTECT (0xbf << 8)
 #define EF_CTRL_OP_MODE_AUTO 0
-#if defined(BL616L)
+#if defined(BL616CL)
 #define EF_CTRL_PARA_DFT 1
 #define EF_CTRL_EFUSE_CYCLE_PROTECT (0xbf << 24)
 #else
@@ -27,19 +27,19 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define EF_CTRL_EFUSE_R0_SIZE 128
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define EF_CTRL_EFUSE_R0_SIZE 128
 #define EF_CTRL_EFUSE_R1_SIZE 128
-#elif defined(BL616) || defined(BL628)
+#elif defined(BL616) 
 #define EF_CTRL_EFUSE_R0_SIZE 512
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #if defined(CPU_MODEL_A0)
 #define EF_CTRL_EFUSE_R0_SIZE 256
 #else
 #define EF_CTRL_EFUSE_R0_SIZE 256
 #define EF_CTRL_EFUSE_R1_SIZE 256
 #endif
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define EF_CTRL_EFUSE_R0_SIZE 128
 #else
 #define EF_CTRL_EFUSE_R0_SIZE 128
@@ -53,11 +53,11 @@ extern void bflb_efuse_switch_cpu_clock_save(void);
 extern void bflb_efuse_switch_cpu_clock_restore(void);
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 extern void AON_LDO18_IO_Switch_Efuse(uint8_t enable);
 #define bflb_power_on_efuse()  AON_LDO18_IO_Switch_Efuse(1)
 #define bflb_power_off_efuse() AON_LDO18_IO_Switch_Efuse(0)
-#elif defined(BL616D)
+#elif defined(BL618DG)
 extern void AON_Set_Switch_For_Efuse(uint8_t enable);
 #define bflb_power_on_efuse()  AON_Set_Switch_For_Efuse(1);
 #define bflb_power_off_efuse()  AON_Set_Switch_For_Efuse(0);
@@ -98,7 +98,7 @@ int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
 #endif
 }
 
-#if defined(BL616D) && !defined(CPU_MODEL_A0)
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  Check efuse region1 busy status
  *
@@ -138,7 +138,7 @@ __UNUSED static int ATTR_TCM_SECTION bflb_ef_ctrl_update_para(struct bflb_device
 #ifdef romapi_bflb_ef_ctrl_update_para
     return bflb_ef_ctrl_update_para(dev);
 #else
-#if defined(BL616L)
+#if defined(BL616CL)
     bflb_ef_ctrl_para_t para = {
         .pd_1st = 0x03,  /*!< stable */
         .pd_cs_s = 0x30, /*!< >500ns */
@@ -782,7 +782,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
         arch_memcpy4(pefuse_start, pword, region1_count);
 
         if (program) {
-#if defined(BL616D) && !defined(CPU_MODEL_A0)
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
             bflb_power_on_efuse();
             bflb_ef_ctrl_program_efuse_r1(dev);
             while (bflb_ef_ctrl_busy_r1(dev) == 1) {

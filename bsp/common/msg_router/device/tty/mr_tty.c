@@ -108,7 +108,7 @@ static int msg_upld_send_done_cb(mr_frame_elem_t *frame_elem, void *arg)
     }
 
     mr_tty_msg_t *tty_msg_pkt = MR_TTY_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
-    if (priv->tty_cfg.upld_done_cb) {
+    if (tty_msg_pkt->flag == MR_TTY_FLAG_UPLD_DATA && priv->tty_cfg.upld_done_cb) {
         /* User-defined callback */
         ret = priv->tty_cfg.upld_done_cb(priv, tty_msg_pkt);
     } else {

@@ -42,13 +42,13 @@
 
 /* Register offsets *********************************************************/
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 #define GLB_GPIO_CFG0_OFFSET                                    (0x8C4)/* gpio_cfg0 */
 #define GLB_GPIO_CFG142_OFFSET                                  (0xAFC)/* gpio_cfg142 */
 #define GLB_GPIO_CFG143_OFFSET                                  (0xB00)/* gpio_cfg143 */
 #define GLB_GPIO_CFG144_OFFSET                                  (0xB04)/* gpio_cfg144 */
 #endif
-#if defined(BL616L)
+#if defined(BL616CL)
 #define GLB_GPIO_CFG145_OFFSET                                  (0xB08)/* gpio_cfg145 */
 #endif
 
@@ -115,7 +115,7 @@
 #define GLB_GPIO_TX_DATA_TO_FIFO_SHIFT                          (0U)
 #define GLB_GPIO_TX_DATA_TO_FIFO_MASK                           (0xffff<<GLB_GPIO_TX_DATA_TO_FIFO_SHIFT)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0xB08 : gpio_cfg145 */
 #define GLB_CR_IO_TOG_CNT_DIV_VAL_SHIFT                         (0U)
 #define GLB_CR_IO_TOG_CNT_DIV_VAL_MASK                          (0xffff<<GLB_CR_IO_TOG_CNT_DIV_VAL_SHIFT)

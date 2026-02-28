@@ -2,9 +2,9 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|bl616/bl618       |        |
+| CHIP        | Remark |
+|:-----------:|:------:|
+| bl616/bl618 |        |
 
 ## Compile
 

@@ -11,21 +11,21 @@
   * @{
   */
 
-#if defined(BL616) || defined(BL616D)
+#if defined(BL616) || defined(BL618DG)
 #define DBI_QSPI_SUPPORT        1
 #define DBI_YUV_SUPPORT         1
 #define DBI_WRITE_DATA_BYTE_MAX 256
 #define DBI_READ_DATA_BYTE_MAX  8
 #define DBI_FIFO_NUM_MAX        8
 
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define DBI_QSPI_SUPPORT        1
 #define DBI_YUV_SUPPORT         1
 #define DBI_WRITE_DATA_BYTE_MAX 256
 #define DBI_READ_DATA_BYTE_MAX  8
 #define DBI_FIFO_NUM_MAX        16
 
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define DBI_QSPI_SUPPORT        0
 #define DBI_YUV_SUPPORT         0
 #define DBI_WRITE_DATA_BYTE_MAX 4

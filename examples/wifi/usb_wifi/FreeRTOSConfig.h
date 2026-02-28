@@ -76,7 +76,7 @@
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
-// #define configUSE_TICKLESS_IDLE                 0
+#define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
 #define portasmHAS_F_EXTENSION                  1
 
@@ -148,5 +148,12 @@ extern void tickless_debug_who_wake_me(const char *name, TickType_t ticks);
 #endif
 
 // #define portUSING_MPU_WRAPPERS
+
+/* Enable TLS */
+#define config_ENABLE_OS_TLS_SWITCH
+#ifdef config_ENABLE_OS_TLS_SWITCH
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
+#endif
 
 #endif /* FREERTOS_CONFIG_H */

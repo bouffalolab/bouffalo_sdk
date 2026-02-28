@@ -3,16 +3,12 @@
 #include "bl702_clock.h"
 #elif defined(BL702L)
 #include "bl702l_clock.h"
-#elif defined(BL606P)
-#include "bl606p_clock.h"
-#elif defined(BL808)
-#include "bl808_clock.h"
 #elif defined(BL616)
 #include "bl616_clock.h"
-#elif defined(BL616L)
-#include "bl616l_clock.h"
-#elif defined(BL616D)
-#include "bl616d_clock.h"
+#elif defined(BL616CL)
+#include "bl616cl_clock.h"
+#elif defined(BL618DG)
+#include "bl618dg_clock.h"
 #endif
 
 /****************************************************************************/ /**
@@ -66,4 +62,3 @@ int bflb_peripheral_clock_status_get(uint8_t peri)
     return bflb_peripheral_clock_status_get_by_id(peri);
 #endif
 }
-

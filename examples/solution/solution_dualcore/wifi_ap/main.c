@@ -1,6 +1,6 @@
 #include "bflb_mtimer.h"
 #include "board.h"
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 #include "bflb_uart.h"
 #include "shell.h"
 #include <FreeRTOS.h>

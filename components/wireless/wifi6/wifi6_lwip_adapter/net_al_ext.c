@@ -37,8 +37,11 @@ int net_al_ext_get_vif_ip(int fvif_idx, struct net_al_ext_ip_addr_cfg *cfg)
 {
     return -1;
 }
-void net_al_ext_dhcp_connect(void)
+int net_al_ext_dhcp_connect(int is_api, uint32_t to_ms)
 {
+    (void)is_api;
+    (void)to_ms;
+    return -1;
 }
 void net_al_ext_dhcp_disconnect(void)
 {
@@ -48,6 +51,11 @@ int net_dhcpd_start(net_al_if_t net_if, int start, int limit)
     return -1
 }
 #else
+
+static ip4_addr_t saved_ip_addr = {IPADDR_ANY};
+static ip4_addr_t saved_ip_mask = {IPADDR_ANY};
+static ip4_addr_t saved_ip_gw = {IPADDR_ANY};
+static int dhcp_renew_ok = 0;
 
 /**
  * @brief Re-enable Wi-Fi PS mode for coex time-division
@@ -211,31 +219,39 @@ static int fhost_dhcp_stop(net_al_if_t net_if)
     return 0;
 }
 
-static int fhost_dhcp_start(net_al_if_t net_if, uint32_t to_ms)
+static int net_quick_dhcp_restore(net_al_if_t net_if);
+
+static int fhost_dhcp_start(net_al_if_t net_if, uint32_t to_ms, uint32_t from_api)
 {
     uint32_t start_ms;
     bool coex_prot_acquired = false;
     int ret = 0;
+    int dhcp_renew = 0;
 
     if (wifi_mgmr_sta_coex_status_get()) {
         coex_prot_acquired = (coex_protect_acquire(COEX_PROT_DHCP) == 0);
     }
 
     // Run DHCP client
-    if (net_dhcp_start(net_if))
-    {
-        printf("Failed to start DHCP");
-        ret = DHCPC_START_FAILED;
-        goto out;
+    if (!from_api && wifiMgmr.sta_connect_param.quick_connect) {
+        dhcp_renew_ok = 0;
+        dhcp_renew = net_quick_dhcp_restore(net_if);
+    } else {
+        if (net_dhcp_start(net_if))
+        {
+            printf("Failed to start DHCP");
+            ret = DHCPC_START_FAILED;
+            goto out;
+        }
     }
 
     start_ms = rtos_now(false);
     stop_dhcpc = 0;
-    while ((net_dhcp_address_obtained(net_if)) &&
+    while ((dhcp_renew ? (!dhcp_renew_ok) : (net_dhcp_address_obtained(net_if))) &&
           (rtos_now(false) - start_ms < to_ms) &&
           (!stop_dhcpc))
     {
-        rtos_task_suspend(100);
+        rtos_task_suspend(dhcp_renew ? 50 : 100);
     }
 
     if (stop_dhcpc) {
@@ -244,7 +260,7 @@ static int fhost_dhcp_start(net_al_if_t net_if, uint32_t to_ms)
         goto out;
     }
 
-    if (net_dhcp_address_obtained(net_if))
+    if (dhcp_renew ? (!dhcp_renew_ok) : (net_dhcp_address_obtained(net_if)))
     {
         printf("DHCP start timeout");
         fhost_dhcp_stop(net_if);
@@ -295,7 +311,6 @@ int net_al_ext_set_vif_ip(int fvif_idx, struct net_al_ext_ip_addr_cfg *cfg)
         case IP_ADDR_NONE:
             // clear current IP address
             fhost_dhcp_stop(net_if);
-            wifiMgmr.wlan_sta.dhcp_started = 0;
             net_if_set_ip(net_if, 0, 0, 0);
             stop_dhcpc = 1;
             return 0;
@@ -303,7 +318,6 @@ int net_al_ext_set_vif_ip(int fvif_idx, struct net_al_ext_ip_addr_cfg *cfg)
             // To be safe
             net_if_enable_arp_for_us(net_if);
             fhost_dhcp_stop(net_if);
-            wifiMgmr.wlan_sta.dhcp_started = 0;
             net_if_set_ip(net_if, cfg->ipv4.addr, cfg->ipv4.mask, cfg->ipv4.gw);
             if (cfg->ipv4.dns)
                 net_set_dns(cfg->ipv4.dns);
@@ -311,18 +325,9 @@ int net_al_ext_set_vif_ip(int fvif_idx, struct net_al_ext_ip_addr_cfg *cfg)
                 net_get_dns(&cfg->ipv4.dns);
             break;
         case IP_ADDR_DHCP_CLIENT:
-            if (0 == wifiMgmr.wlan_sta.dhcp_started)
-            {
-                ret = fhost_dhcp_start(net_if, cfg->dhcp.to_ms);
-                if (ret)
-                {
-                    return ret;
-                }
-                else
-                {
-                    wifiMgmr.wlan_sta.dhcp_started = 1;
-                }
-            }
+            ret = fhost_dhcp_start(net_if, cfg->dhcp.to_ms, cfg->dhcp.from_api);
+            if (ret)
+                return ret;
             net_if_get_ip(net_if, &(cfg->ipv4.addr), &(cfg->ipv4.mask), &(cfg->ipv4.gw));
             net_get_dns(&cfg->ipv4.dns);
             printf("{FVIF-%d} ip=I4 gw=I4", fvif_idx);
@@ -416,12 +421,22 @@ static int show_ip(uint8_t fhost_vif_idx)
     return 0;
 }
 
-static int wifi_sta_dhcpc_start(uint8_t fhost_vif_idx)
+struct dhcp_task_cfg {
+    uint32_t to_ms;
+    int from_api;
+};
+
+static int wifi_sta_dhcpc_start(uint8_t fhost_vif_idx, uint32_t to_ms, int from_api)
 {
     struct net_al_ext_ip_addr_cfg ip_cfg;
+    bool dhcp_timeout_event_only = wifiMgmr.sta_connect_param.dhcp_timeout_event_only ? true : false;
     ip_cfg.mode = IP_ADDR_DHCP_CLIENT;
     ip_cfg.default_output = true;
-    ip_cfg.dhcp.to_ms = 15000;
+    if (to_ms == 0) {
+        to_ms = WIFI_STA_DHCPC_TIMEOUT_MS_DEFAULT;
+    }
+    ip_cfg.dhcp.to_ms = to_ms;
+    ip_cfg.dhcp.from_api = from_api;
     int ret = 0;
 
     ret = net_al_ext_set_vif_ip(fhost_vif_idx, &ip_cfg);
@@ -430,31 +445,50 @@ static int wifi_sta_dhcpc_start(uint8_t fhost_vif_idx)
         if (ret != DHCPC_START_ABORT) {
             if (ret == DHCPC_START_TIMEOUT) {
                 printf("dhcpc obtain ip failed\n");
+                if (dhcp_timeout_event_only) {
+                    platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP_TIMEOUT, 0);
+                } else {
+                    if (!wifiMgmr.disable_autoreconnect) {
+                        wifi_mgmr_sta_connect(&wifiMgmr.sta_connect_param);
+                    } else {
+                        wifi_sta_disconnect();
+                    }
+                }
             } else {
                 printf("dhcpc start error, ret is %d\n", ret);
-            }
-            if (!wifiMgmr.disable_autoreconnect) {
-                wifi_mgmr_sta_connect(&wifiMgmr.sta_connect_param);
-            } else {
-                wifi_sta_disconnect();
+                if (!dhcp_timeout_event_only) {
+                    if (!wifiMgmr.disable_autoreconnect) {
+                        wifi_mgmr_sta_connect(&wifiMgmr.sta_connect_param);
+                    } else {
+                        wifi_sta_disconnect();
+                    }
+                }
             }
         } else {
             printf("dhcpc start abort\n");
+            platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP_ABORT, 0);
         }
-        PLATFORM_HOOK(prevent_sleep, PSM_EVENT_CONNECT, 0);
+
+        // always clear saved_ip_addr
+        ip4_addr_set_any(&saved_ip_addr);
+        ip4_addr_set_any(&saved_ip_mask);
+        ip4_addr_set_any(&saved_ip_gw);
         return -1;
-    } else {
-        show_ip(fhost_vif_idx);
-        PLATFORM_HOOK(prevent_sleep, PSM_EVENT_CONNECT, 0);
-        if(wifi_mgmr_sta_connect_params_get() & LOW_RATE_CONNECT) {
-            wifi_mgmr_rate_config_sta(0xFFFF);
-        }
+    }
+
+    show_ip(fhost_vif_idx);
+    if(!from_api && (wifi_mgmr_sta_connect_params_get() & LOW_RATE_CONNECT)) {
+        wifi_mgmr_rate_config_sta(0xFFFF);
     }
     return 0;
 }
 
 static RTOS_TASK_FCT(fhost_wpa_connected_task) {
-    wifi_sta_dhcpc_start(MGMR_VIF_STA);
+    struct dhcp_task_cfg *cfg = (struct dhcp_task_cfg *)env;
+    uint32_t to_ms = cfg ? cfg->to_ms : WIFI_STA_DHCPC_TIMEOUT_MS_DEFAULT;
+    int dhcp_from_api = cfg ? cfg->from_api : 0;
+
+    wifi_sta_dhcpc_start(MGMR_VIF_STA, to_ms, dhcp_from_api);
 
     rtos_task_delete(NULL);
 }
@@ -542,15 +576,11 @@ int net_al_dhcpd_stop(net_al_if_t net_if)
     return 0;
 }
 
-static ip4_addr_t saved_ip_addr = {IPADDR_ANY};
-static ip4_addr_t saved_ip_mask = {IPADDR_ANY};
-static ip4_addr_t saved_ip_gw = {IPADDR_ANY};
-
 static void qc_callback(struct netif *net_if)
 {
     inet_if_t *nif = (inet_if_t *)net_if;
 
-    printf("[quick_connect] dhcp bind new ip callback\r\n"
+    printf("[quick_connect] dhcp bind ip callback\r\n"
             "  IP: %s\r\n", ip4addr_ntoa(netif_ip4_addr(nif)));
     printf("  MK: %s\r\n", ip4addr_ntoa(netif_ip4_netmask(nif)));
     printf("  GW: %s\r\n", ip4addr_ntoa(netif_ip4_gw(nif)));
@@ -558,10 +588,10 @@ static void qc_callback(struct netif *net_if)
     ip4_addr_copy(saved_ip_addr, *netif_ip4_addr(nif));
     ip4_addr_copy(saved_ip_mask, *netif_ip4_netmask(nif));
     ip4_addr_copy(saved_ip_gw, *netif_ip4_gw(nif));
-    platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
+    dhcp_renew_ok = 1;
 }
 
-static void net_quick_dhcp_restore(net_al_if_t net_if)
+static int net_quick_dhcp_restore(net_al_if_t net_if)
 {
     inet_if_t *nif = (inet_if_t *)net_if;
     struct addr_ext ext;
@@ -574,12 +604,13 @@ static void net_quick_dhcp_restore(net_al_if_t net_if)
 
     if (!ip4_addr_isany_val(saved_ip_addr)) {
         netifapi_netif_set_addr(nif, &saved_ip_addr, &saved_ip_mask, &saved_ip_gw);
-        platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
-        /* already get ip */
+        // already got ip
         netifapi_dhcp_renew(nif);
+        return 1;
     } else {
         /* start dhcp */
         netifapi_dhcp_start(nif);
+        return 0;
     }
 }
 
@@ -644,22 +675,40 @@ static void net_al_create_ip6_linklocal_address(int ipv6_enable)
 }
 #endif
 
-void net_al_ext_dhcp_connect(void)
+int net_al_ext_dhcp_connect(int is_api, uint32_t to_ms)
 {
     net_al_if_t net_if = fhost_to_net_if(MGMR_VIF_STA);
+    static struct dhcp_task_cfg cfg = {0};
+    void *env = &cfg;
 
 #if !LWIP_TCPIP_CORE_LOCKING
     #error To do add netif msg call
 #endif
-    if (wifiMgmr.sta_connect_param.use_dhcp) {
-        net_if_disable_arp_for_us(net_if);
-        if (wifiMgmr.sta_connect_param.quick_connect) {
-            net_quick_dhcp_restore(net_if);
-        } else {
-            printf("start dhcping ... \r\n");
-            rtos_task_create(fhost_wpa_connected_task, "fhost_wpa_connected_task",
-                             WPA_CONNECTED_TASK, 512, NULL, fhost_wpa_priority, NULL);
+    if (wifiMgmr.sta_connect_param.use_dhcp || is_api) {
+        /* check whether dhcp is already ongoing */
+        if (rtos_task_get_handle("wifi_dhcpc") != NULL) {
+            printf("already dhcping ...\n");
+            return -1;
         }
+
+        if (to_ms == 0) {
+            to_ms = WIFI_STA_DHCPC_TIMEOUT_MS_DEFAULT;
+        }
+        cfg.to_ms = to_ms;
+        cfg.from_api = is_api;
+
+        /* disable arp */
+        net_if_disable_arp_for_us(net_if);
+
+        /* start dhcp */
+        printf("start dhcping ... \r\n");
+        if (rtos_task_create(fhost_wpa_connected_task, "wifi_dhcpc",
+                            WPA_CONNECTED_TASK, 512, env, fhost_wpa_priority, NULL)) {
+            printf("start dhcping failed\n");
+            return -2;
+        }
+
+        return 0;
     }
 
 #ifdef CFG_IPV6
@@ -667,6 +716,7 @@ void net_al_ext_dhcp_connect(void)
     net_al_create_ip6_linklocal_address(1);
 #endif
 #endif
+    return -3;
 }
 
 int net_al_set_ipv6_enable(int enable)

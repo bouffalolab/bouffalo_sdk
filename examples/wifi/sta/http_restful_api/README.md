@@ -3,9 +3,9 @@
 
 ## Support CHIP
 
-|      CHIP               | Remark |
-|:-----------------------:|:------:|
-|BL602/BL616/BL618/BL616d |        |
+| CHIP                      | Remark |
+|:-------------------------:|:------:|
+| BL602/BL616/BL618/BL618DG |        |
 
 ## Compile
 
@@ -20,10 +20,10 @@ eg:
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- BL616d
+- BL618DG
 
 ```bash
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap CONFIG_ROMAPI=n
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CONFIG_ROMAPI=n
 ```
 
 ## Flash

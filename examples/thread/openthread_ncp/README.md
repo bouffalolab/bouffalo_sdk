@@ -9,9 +9,9 @@ This is an example for OpenThread NCP and RCP example.
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616/BL618       |        |
+| CHIP        | Remark |
+|:-----------:|:------:|
+| BL616/BL618 |        |
 
 ## Compile
 

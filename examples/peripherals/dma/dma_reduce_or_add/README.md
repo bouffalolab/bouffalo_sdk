@@ -3,14 +3,13 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL702/BL704/BL706 |        |
-|BL702L/BL704L     |        |
-|BL616/BL618       |        |
-|BL808             | D0 has no irq in dma0~dma1, should use dma2       |
-|BL616D            |        |
-|BL616L/BL618L     |        |
+| CHIP              | Remark |
+|:-----------------:|:------:|
+| BL702/BL704/BL706 |        |
+| BL702L/BL704L     |        |
+| BL616/BL618       |        |
+| BL618DG           |        |
+| BL616CL           |        |
 
 ## Compile
 
@@ -32,24 +31,17 @@ make CHIP=bl702l BOARD=bl702ldk
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- BL808
+- BL618DG
 
 ```
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
-make CHIP=bl808 BOARD=bl808dk CPU_ID=d0
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
 ```
 
-- BL616D
+- BL616CL
 
 ```
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=np
-```
-
-- BL616L/BL618L
-
-```
-make CHIP=bl616l BOARD=bl616ldk
+make CHIP=bl616cl BOARD=bl616cldk
 ```
 
 ## Flash

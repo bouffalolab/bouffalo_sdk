@@ -5,7 +5,7 @@
 #define USER_UNUSED(a) ((void)(a))
 
 #define PARTITION_MAGIC                 (0x54504642)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define PARTITION_FW0_PART_NAME          "FW0"
 #define PARTITION_FW1_PART_NAME          "FW1"
 #ifdef CPU_AP

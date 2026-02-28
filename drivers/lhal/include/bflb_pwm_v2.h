@@ -58,7 +58,7 @@
   * @}
   */
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /** @defgroup PWM_COUNTER_MODE pwm counter mode definition
   * @{
   */
@@ -132,7 +132,7 @@
   * @}
   */
 
-#if defined(BL808) || defined(BL606P)
+#if 0 
 /** @defgroup PWM_IO_SEL_1 pwm io select 1 definition
   * @{
   */
@@ -152,7 +152,7 @@
 #define PWM_CMD_SET_SW_BRAKE_ENABLE    (0x04)
 #define PWM_CMD_SET_STOP_ON_REPT       (0x05)
 #define PWM_CMD_SET_REPT_COUNT         (0x06)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PWM_CMD_UPDATE_DISABLE         (0x07)
 #define PWM_CMD_UPDATE_ENABLE          (0x08)
 #define PWM_CMD_UPDATE_GENERATE        (0x09)
@@ -160,9 +160,9 @@
 #define PWM_CMD_READ_SW_USAGE          (0x0B)
 #define PWM_CMD_WRITE_SW_USAGE         (0x0C)
 #endif
-#if defined(BL808) || defined(BL606P) || defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #define PWM_CMD_IO_SEL                 (0x0D)
-#if defined(BL808) || defined(BL606P)
+#if 0 
 #define PWM_CMD_IO_SEL_1               (0x0E)
 #endif
 #endif
@@ -171,7 +171,7 @@
   */
 
 // clang-format off
-#if defined(BL616L)
+#if defined(BL616CL)
 #define IS_PWM_COUNTER_MODE(type)   (((type) == PWM_COUNTER_MODE_UP) || \
                                     ((type) == PWM_COUNTER_MODE_CENTER_ALIGNED))
 #endif
@@ -215,7 +215,7 @@ struct bflb_pwm_v2_channel_config_s {
  * @param period     PWM period count, should be in 2~65535
  */
 struct bflb_pwm_v2_config_s {
-#if defined(BL616L)
+#if defined(BL616CL)
     uint8_t counter_mode;
 #endif
     uint8_t clk_source;

@@ -223,7 +223,7 @@ struct ipc_a2e_msg
 
 // Indexes are defined in the MIB shared structure
 
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
 struct txbuf_host
 {
     uint32_t flag;
@@ -238,7 +238,7 @@ struct ipc_shared_env_tag
     /// Host buffer address for the TX payload descriptor pattern
     volatile uint32_t  pattern_addr;
 
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     /// Array of TX buffer
     struct txbuf_host txbuf[NX_TXDESC_CNT0];
 #endif

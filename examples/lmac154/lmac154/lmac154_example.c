@@ -13,9 +13,9 @@
 #elif defined(BL616)
 #include "bl616.h"
 #include "bl616_glb.h"
-#elif defined(BL616D)
-#include "bl616d.h"
-#include "bl616d_glb.h"
+#elif defined(BL618DG)
+#include "bl618dg.h"
+#include "bl618dg_glb.h"
 #endif
 #include "bflb_irq.h"
 

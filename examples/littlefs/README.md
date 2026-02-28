@@ -3,14 +3,13 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL602/BL604       |        |
-|BL702/BL704/BL706 |        |
-|BL702L/BL704L     |        |
-|BL616/BL618       |        |
-|BL808             |        |
-|BL628             |        |
+| CHIP              | Remark |
+|:-----------------:|:------:|
+| BL602/BL604       |        |
+| BL702/BL704/BL706 |        |
+| BL702L/BL704L     |        |
+| BL616/BL618       |        |
+| BL618DG           |        |
 
 
 ## Compile
@@ -39,17 +38,11 @@ make CHIP=bl702l BOARD=bl702ldk
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- BL808
+- BL618DG
 
 ```
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
-make CHIP=bl808 BOARD=bl808dk CPU_ID=d0
-```
-
-- BL628
-
-```
-make CHIP=bl628 BOARD=bl628dk
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
 ```
 
 ## Flash

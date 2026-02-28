@@ -113,7 +113,7 @@ enum fhost_vif_raw_state {
 
 
 /// WPA event message callback type
-typedef void (*fhost_wpa_cb_t) (int fhost_vif_idx, enum fhost_wpa_event event,
+typedef void (*fhost_wpa_cb_t) (int fhost_vif_idx, uint8_t event, // ref @ enum fhost_wpa_event
                                 void *event_params, void *arg);
 
 /// Vif index to use for global command/events
@@ -170,7 +170,7 @@ int fhost_wpa_remove_vif(int fhost_vif_idx);
  * @return current WPA state for the interface
  ****************************************************************************************
  */
-enum fhost_wpa_state fhost_wpa_get_state(int fhost_vif_idx);
+uint8_t fhost_wpa_get_state(int fhost_vif_idx); // ref @ enum fhost_wpa_state
 
 /**
  ****************************************************************************************
@@ -227,7 +227,7 @@ int fhost_wpa_cb_unregister(int fhost_vif_idx, fhost_wpa_cb_t cb_func);
  * @return 0 on success and != 0 if error occured.
  ****************************************************************************************
  */
-int fhost_wpa_send_event(enum fhost_wpa_event event, void *param, int param_len,
+int fhost_wpa_send_event(uint8_t event, void *param, int param_len, // ref @ enum fhost_wpa_event
                          int fhost_vif_idx);
 
 /**

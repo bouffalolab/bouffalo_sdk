@@ -89,7 +89,7 @@
 
 #define IS_MJDEC_RESOLUTION(type)   (!((type) % 8))
 
-#if defined(BL808)
+#if 0
 #define IS_MJDEC_QUALITY(type)   ((((type) > 0) && ((type) <= 75)) || ((type) == 100))
 #endif
 
@@ -118,7 +118,7 @@ struct bflb_mjdec_config_s {
     uint32_t output_bufaddr1;
 };
 
-#if defined(BL616D)
+#if defined(BL618DG)
 /**
  * @brief MJDEC DHT configuration structure
  *
@@ -156,7 +156,7 @@ struct bflb_mjdec_dht_s {
 extern "C" {
 #endif
 
-#if defined(BL616D)
+#if defined(BL618DG)
 /**
  * @brief Set DQT from JPEG specification 
  *

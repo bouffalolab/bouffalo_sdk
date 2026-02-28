@@ -2,43 +2,32 @@ sdk_generate_library()
 
 sdk_add_include_directories(
     include
-    src/bl616/drv
     )
 
 sdk_add_private_include_directories(
-    src/bl616/codec
-    src/bl616/drv
-    src/bl616/port
+    src/bl/codec
     )
 
-if (CONFIG_CODEC_USE_ES8388)
+if (CONFIG_CODEC_USE_I2S)
 sdk_library_add_sources(
-    src/bl616/codec/codec_es8388_input.c
-    src/bl616/codec/codec_es8388_output.c
+    src/bl/codec/codec_i2s_input.c
+    src/bl/codec/codec_i2s_output.c
     )
-elseif(CONFIG_CODEC_EBABLE_HFP)
+elseif(CONFIG_CODEC_ENABLE_HFP)
 sdk_library_add_sources(
-    src/bl616/codec/codec_hfp.c
+    src/bl/codec/codec_hfp.c
     )
 else()
 sdk_library_add_sources(
-    src/bl616/codec/codec_input.c
-    src/bl616/codec/codec_output.c
+    src/bl/codec/codec_auadc_input.c
+    src/bl/codec/codec_audac_output.c
     )
 endif()
 
 sdk_library_add_sources(
-    src/bl616/codec/codec_debug.c
-    src/bl616/codec/codec_eqdrc.c
-    src/bl616/codec/codec_volume.c
-    src/bl616/codec/xcodec.c
-    src/bl616/drv/msp_bl616_auadc.c
-    src/bl616/drv/msp_bl616_aupwm.c
-    src/bl616/drv/msp_bl616_dma.c
-    src/bl616/drv/msp_bl616_glb.c
-    src/bl616/drv/msp_bl616_glb_gpio.c
-    src/bl616/port/msp_sys.c
-    src/bl616/codec/test/test_output.c
+    src/bl/codec/codec_debug.c
+    src/bl/codec/codec_eqdrc.c
+    src/bl/codec/xcodec.c
     )
 
 sdk_add_private_compile_options(--save-temps)

@@ -109,3 +109,9 @@ if(CONFIG_BSP_AUDIO_CODEC)
     sdk_add_include_directories(audio_codec)
 endif()
 
+if(CONFIG_BSP_AUDIO_PLAYER)
+    target_sources(app PRIVATE audio_player/wave_player.c)
+    target_sources(app PRIVATE audio_player/mp3_player.c)
+    sdk_add_include_directories(audio_player)
+endif()
+

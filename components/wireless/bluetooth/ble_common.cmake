@@ -27,23 +27,6 @@ if("${CHIP}" STREQUAL "bl702")
 #	sdk_add_compile_definitions(-DBL702)
 endif()
 # 
-# ifeq ($(CONFIG_CHIP_NAME),BL606P)
-# CFLAGS   += -DBL606P
-# CONFIG_BT_RESET=0
-# endif
-if("${CHIP}" STREQUAL "bl606p")
-#	sdk_add_compile_definitions(-DBL606P)
-	set(CONFIG_BT_RESET, n)
-endif()
-# 
-# ifeq ($(CONFIG_CHIP_NAME),BL808)
-# CFLAGS   += -DBL808
-# CONFIG_BT_RESET=0
-# endif
-if("${CHIP}" STREQUAL "bl808")
-#	sdk_add_compile_definitions(-DBL808)
-	set(CONFIG_BT_RESET, n)
-endif()
 # 
 # ifeq ($(CONFIG_CHIP_NAME),BL616)
 # CFLAGS   += -DBL616
@@ -53,23 +36,15 @@ if("${CHIP}" STREQUAL "bl616")
 #	sdk_add_compile_definitions(-DBL616)
 	set(CONFIG_BT_RESET, n)
 endif()
-# ifeq ($(CONFIG_CHIP_NAME),BL616D)
-# CFLAGS   += -DBL616D
+# ifeq ($(CONFIG_CHIP_NAME),BL618DG)
+# CFLAGS   += -DBL618DG
 # CONFIG_BT_RESET=0
 # endif
-if("${CHIP}" STREQUAL "bl616d")
-#	sdk_add_compile_definitions(-DBL616D)
+if("${CHIP}" STREQUAL "bl618dg")
+#	sdk_add_compile_definitions(-DBL618DG)
 	set(CONFIG_BT_RESET, n)
 endif()
 # 
-# ifeq ($(CONFIG_CHIP_NAME),BL808)
-# CFLAGS   += -DBL808
-# CONFIG_BT_RESET=0
-# endif
-if("${CHIP}" STREQUAL "bl808")
-#	sdk_add_compile_definitions(-DBL808)
-	set(CONFIG_BT_RESET, n)
-endif()
 # 
 # ifeq ($(CONFIG_CHIP_NAME),BL702L)
 # CFLAGS   += -DBL702L
@@ -299,6 +274,7 @@ sdk_ifndef(CONFIG_DISABLE_BT_HOST_PRIVACY y)
 sdk_ifndef(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL n)
 sdk_ifndef(CONFIG_BT_GATT_CLIENT y)
 sdk_ifndef(CONFIG_BT_DATA_LEN_UPDATE y)
+sdk_ifndef(CONFIG_BT_ATT_PREPARE_COUNT 0)
 sdk_ifndef(CONFIG_BT_MESH n)
 sdk_ifndef(CONFIG_BT_MESH_MODEL n)
 # ifeq ($(CONFIG_BT_MESH),1)
@@ -658,6 +634,18 @@ sdk_add_compile_definitions_ifdef(CONFIG_AUTO_PTS -DCONFIG_AUTO_PTS)
 #CFLAGS += -DCONFIG_DYNAMIC_GATTS
 #endif
 sdk_add_compile_definitions_ifdef(CONFIG_DYNAMIC_GATTS -DCONFIG_DYNAMIC_GATTS)
+
+if(NOT CONFIG_BT_STACK_PTS)
+# Validate CONFIG_BT_ATT_PREPARE_COUNT range (0-64)
+if(CONFIG_BT_ATT_PREPARE_COUNT GREATER 64)
+    message(FATAL_ERROR "CONFIG_BT_ATT_PREPARE_COUNT must be <= 64, but got ${CONFIG_BT_ATT_PREPARE_COUNT}")
+endif()
+if(CONFIG_BT_ATT_PREPARE_COUNT LESS 0)
+    message(FATAL_ERROR "CONFIG_BT_ATT_PREPARE_COUNT must be >= 0, but got ${CONFIG_BT_ATT_PREPARE_COUNT}")
+endif()
+sdk_add_compile_definitions(-DCONFIG_BT_ATT_PREPARE_COUNT=${CONFIG_BT_ATT_PREPARE_COUNT})
+endif()
+
 # 
 # ##########################################
 # ############## BLE MESH ##################

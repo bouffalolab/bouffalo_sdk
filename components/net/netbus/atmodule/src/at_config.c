@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
 #include <easyflash.h>
 #endif
 
@@ -19,7 +19,7 @@
     
 int at_config_read(const char *key, void *config, int len)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     size_t ret, value_len;
 
     memset(config, 0, len);
@@ -36,7 +36,7 @@ int at_config_read(const char *key, void *config, int len)
 
 int at_config_write(const char *key, void *config, int len)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     ef_set_env_blob(key, config, len);
 #endif
     return 1;
@@ -44,7 +44,7 @@ int at_config_write(const char *key, void *config, int len)
 
 int at_config_delete(const char *key)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     ef_del_env(key);
 #endif
     return 0;

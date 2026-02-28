@@ -249,6 +249,27 @@ void board_timer_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
+void board_audio_pll_config_for_rate(unsigned int samplerate_hz)
+{
+    switch (samplerate_hz) {
+        case 8000:
+        case 16000:
+        case 32000:
+        case 48000:
+        case 96000:
+            GLB_Config_AUDIO_PLL_To_491P52M();
+            break;
+        case 11025:
+        case 22050:
+        case 44100:
+            GLB_Config_AUDIO_PLL_To_451P58M();
+            break;
+        default:
+            GLB_Config_AUDIO_PLL_To_491P52M();
+            break;
+    }
+}
+
 void board_i2s_codec_gpio_init(void)
 {
     struct bflb_device_s *gpio;
@@ -266,7 +287,6 @@ void board_i2s_codec_gpio_init(void)
 
     GLB_Config_AUDIO_PLL_To_491P52M();
     GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
-
     /*!< output MCLK,
         Will change the clock source of i2s,
         It needs to be called before i2s is initialized

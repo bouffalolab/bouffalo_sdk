@@ -3,16 +3,16 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL628             |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
 
 ## Compile
 
-- BL628
+- BL618DG
 
 ```
-make CHIP=bl628 BOARD=bl628dk
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 ## Flash

@@ -8,7 +8,7 @@ file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/demos/*.c")
 sdk_add_include_directories(.)
 target_sources(app PRIVATE ${sources})
 sdk_set_main_file(main.c)
-sdk_set_linker_script_macro(bl616d_common_lvgl.ld)
+sdk_set_linker_script_macro(bl618dg_common_lvgl.ld)
 
 # Add DPI manager source files
 target_sources(app PRIVATE dpi_manager.c)

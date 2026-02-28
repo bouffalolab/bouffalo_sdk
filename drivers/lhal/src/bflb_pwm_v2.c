@@ -44,7 +44,7 @@ void bflb_pwm_v2_init(struct bflb_device_s *dev, const struct bflb_pwm_v2_config
         regval |= (2 << PWM_REG_CLK_SEL_SHIFT);
     } else {
     }
-#if defined(BL616L)
+#if defined(BL616CL)
     if (config->counter_mode == PWM_COUNTER_MODE_CENTER_ALIGNED) {
         regval |= PWM_CENTER_ALIGNED_EN;
     } else {
@@ -485,7 +485,7 @@ int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + PWM_MC0_CONFIG0_OFFSET);
             break;
 
-#if defined(BL616L)
+#if defined(BL616CL)
         case PWM_CMD_UPDATE_DISABLE:
             regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
             regval |= PWM_UPDATE_DISABLE;
@@ -533,7 +533,7 @@ int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, PWM_IO_SEL_ADDR - 0x10);
             break;
 #endif
-#if defined(BL808) || defined(BL606P) || defined(BL628) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616CL) || defined(BL618DG)
         case PWM_CMD_IO_SEL:
             regval = getreg32(PWM_IO_SEL_ADDR);
             if (arg == PWM_IO_SEL_DIFF_END) {
@@ -543,7 +543,7 @@ int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, PWM_IO_SEL_ADDR);
             break;
-#if defined(BL808) || defined(BL606P)
+#if 0 
         case PWM_CMD_IO_SEL_1:
             regval = getreg32(PWM_IO_SEL_ADDR);
             if (arg == PWM_IO_SEL_1_BREAK) {

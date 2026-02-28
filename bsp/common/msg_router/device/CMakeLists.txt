@@ -7,8 +7,8 @@ sdk_add_include_directories(msg_ctrl)
 sdk_library_add_sources(msg_ctrl/mr_msg_ctrl.c)
 
 if(CONFIG_MR_SDIO_DRIVER)
-    set(SDIO2_LIMITED_CHIPS "bl616" "bl616l")
-    set(SDIO3_LIMITED_CHIPS "bl616d")
+    set(SDIO2_LIMITED_CHIPS "bl616" "bl616cl")
+    set(SDIO3_LIMITED_CHIPS "bl618dg")
 
     sdk_add_include_directories(sdio_driver)
     if("${CHIP}" IN_LIST SDIO2_LIMITED_CHIPS)
@@ -47,6 +47,12 @@ if(CONFIG_MR_NETLINK)
     if(CONFIG_MR_NETLINK_CLI)
         sdk_library_add_sources(netlink/mr_netlink_cli.c)
     endif()
+endif()
+
+if(CONFIG_MR_VIRTUALCHAN)
+    sdk_add_include_directories(virtualchan)
+    sdk_library_add_sources(virtualchan/mr_virtualchan.c)
+    sdk_library_add_sources(virtualchan/mr_virtualchan.c)
 endif()
 
 if(CONFIG_MR_SPEED_TEST)

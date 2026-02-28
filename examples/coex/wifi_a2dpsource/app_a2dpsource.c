@@ -11,9 +11,6 @@
 #include "btble_lib_api.h"
 #include "bl616_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL808)
-#include "btble_lib_api.h"
-#include "bl808_glb.h"
 #endif
 
 #include "hci_driver.h"

@@ -86,10 +86,10 @@ typedef enum {
 #endif
 #define BIT_ISSET(data, bit)      ((data) & BIT(bit))
 
-#if CONFIG_AT_DEBUG_ENABLE
-#define AT_CMD_PRINTF printf 
+#if defined(CONFIG_AT_DEBUG_ENABLE) && (CONFIG_AT_DEBUG_ENABLE)
+#define AT_CMD_PRINTF printf
 #else
-#define AT_CMD_PRINTF  
+#define AT_CMD_PRINTF(...)
 #endif 
 
 #define AT_CMD_DATA_SEND(s,len) at->device_ops.write_data((uint8_t *)(s), len)

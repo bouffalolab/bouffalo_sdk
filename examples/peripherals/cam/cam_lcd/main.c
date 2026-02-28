@@ -254,7 +254,7 @@ int main(void)
     }
 
     bflb_cam_init(cam0, &cam_config);
-#if defined(BL616D)
+#if defined(BL618DG)
     bflb_cam_int_mask(cam0, CAM_INTMASK_NORMAL, false);
 #endif
     bflb_cam_start(cam0);
@@ -272,7 +272,7 @@ int main(void)
         lcd_draw_picture_nonblocking(0, 0, lcd_max_x, lcd_max_y, (void *)display_buffer);
         while (lcd_draw_is_busy()) {}
 
-#if defined(BL616D)
+#if defined(BL618DG)
         bflb_cam_int_clear(cam0, CAM_INTCLR_NORMAL);
 #else
         bflb_cam_pop_one_frame(cam0);

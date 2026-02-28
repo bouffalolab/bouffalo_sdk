@@ -3,7 +3,7 @@ BL_SDK_BASE ?= $(abspath  ./../../../..)
 
 export BL_SDK_BASE
 
-CHIP ?= bl606p
+CHIP ?= bl618dg
 BOARD ?= bl606pdk
 CPU_ID ?= m0
 CROSS_COMPILE ?= riscv64-unknown-elf-

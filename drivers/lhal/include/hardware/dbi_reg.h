@@ -191,7 +191,7 @@
 #define DBI_FIFO_FORMAT_MASK        (0x7 << DBI_FIFO_FORMAT_SHIFT)
 
 /* 0x84 : dbi_fifo_config_1 */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define DBI_TX_FIFO_CNT_SHIFT       (0U)
 #define DBI_TX_FIFO_CNT_MASK        (0x1f << DBI_TX_FIFO_CNT_SHIFT)
 #define DBI_TX_FIFO_TH_SHIFT        (16U)

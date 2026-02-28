@@ -19,6 +19,7 @@ static netbus_usb_cdc_t *g_usb_cdc = NULL;
 
 int at_port_init(void)
 {
+    extern netbus_usb_cdc_t *netbus_usb_cdc_init(void);
     if (!g_usb_cdc) {
         g_usb_cdc = netbus_usb_cdc_init();
     }

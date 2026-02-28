@@ -73,7 +73,7 @@
 #define UART_FIFO_CONFIG_1_OFFSET (0x84) /* uart_fifo_config_1 */
 #define UART_FIFO_WDATA_OFFSET    (0x88) /* uart_fifo_wdata */
 #define UART_FIFO_RDATA_OFFSET    (0x8C) /* uart_fifo_rdata */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define UART_HW_VERSION_OFFSET (0x90) /* uart_hw_version */
 #define UART_SW_USAGE_OFFSET   (0x90) /* uart_sw_usage */
 #endif
@@ -127,7 +127,7 @@
 #endif
 #define UART_CR_URX_BIT_CNT_D_SHIFT (8U)
 #define UART_CR_URX_BIT_CNT_D_MASK  (0x7 << UART_CR_URX_BIT_CNT_D_SHIFT)
-#if !defined(BL616L) && !defined(BL616D)
+#if !defined(BL616CL) && !defined(BL618DG)
 #define UART_CR_URX_DEG_EN          (1 << 11U)
 #define UART_CR_URX_DEG_CNT_SHIFT   (12U)
 #define UART_CR_URX_DEG_CNT_MASK    (0xf << UART_CR_URX_DEG_CNT_SHIFT)
@@ -143,12 +143,12 @@
 
 /* 0xC : data_config */
 #define UART_CR_UART_BIT_INV      (1 << 0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define UART_CR_URX_DEG_EN        (1 << 1U)
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define UART_CR_URX_DEG_EN        (1 << 7U)
 #endif
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
 #define UART_CR_URX_DEG_CNT_SHIFT (8U)
 #define UART_CR_URX_DEG_CNT_MASK  (0xff << UART_CR_URX_DEG_CNT_SHIFT)
 #endif
@@ -166,9 +166,9 @@
 #endif
 
 /* 0x18 : urx_rto_timer */
-#if !defined(BL616L)
+#if !defined(BL616CL)
 #define UART_CR_URX_RTO_VALUE_SHIFT (0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define UART_CR_URX_RTO_VALUE_MASK  (0xffff << UART_CR_URX_RTO_VALUE_SHIFT)
 #else
 #define UART_CR_URX_RTO_VALUE_MASK  (0xff << UART_CR_URX_RTO_VALUE_SHIFT)
@@ -389,7 +389,7 @@
 #define UART_FIFO_RDATA_SHIFT (0U)
 #define UART_FIFO_RDATA_MASK  (0xff << UART_FIFO_RDATA_SHIFT)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x90 : uart_version */
 #define UART_SW_USAGE_SHIFT   (0U)
 #define UART_SW_USAGE_MASK    (0xffffff << UART_SW_USAGE_SHIFT)

@@ -4,7 +4,7 @@
 
 #define DIVIDE_ROUND(a, b) ((2 * a + b) / (2 * b))
 
-#if !defined(BL616) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL616CL)
 void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s *config)
 {
 #ifdef romapi_bflb_ir_tx_init
@@ -265,7 +265,7 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint32_t length
     uint32_t pwval = 0;
     uint32_t i, j;
 
-#if defined(BL616D)
+#if defined(BL618DG)
     if (length > 65536) {
         length = 65536;
     }
@@ -277,7 +277,7 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint32_t length
 
 #if defined(BL602) || defined(BL702)
     count = (length + 7) / 8;
-#elif defined(BL616D)
+#elif defined(BL618DG)
     count = (length + 1) / 2;
 #else
     count = (length + 3) / 4;
@@ -337,7 +337,7 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint32_t length
     for (i = 0; i < count; i++) {
         pwval = 0;
 
-#if defined(BL616D)
+#if defined(BL618DG)
         if ((i < count - 1) || (length % 2 == 0)) {
             /* Put every two pulse width together as a 32-bit value to tx fifo */
             for (j = 0; j < 2; j++) {
@@ -742,12 +742,12 @@ int bflb_ir_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     return romapi_bflb_ir_feature_control(dev, cmd, arg);
 #else
     int ret = 0;
-#if !defined(BL616) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL616CL)
     uint32_t regval;
 #endif
 
     switch (cmd) {
-#if !defined(BL616) && !defined(BL616L)
+#if !defined(BL616) && !defined(BL616CL)
         case IR_CMD_SWM_SET_DATA_LEN:
             regval = getreg32(dev->reg_base + IRTX_CONFIG_OFFSET);
             regval &= ~IR_CR_IRTX_DATA_NUM_MASK;

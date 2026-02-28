@@ -123,7 +123,7 @@ int main(void)
     config.swap_enable = true;
     config.resolution_x = X;
     config.resolution_y = Y;
-#if defined(BL616D) && !defined(CPU_MODEL_A0)
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
     config.head_size = header_skip;
 #else
     if (header_skip & 0x7) {
@@ -148,7 +148,7 @@ int main(void)
     bflb_irq_attach(mjdec->irq_num, mjdec_isr, NULL);
     bflb_irq_enable(mjdec->irq_num);
     bflb_mjdec_start(mjdec);
-#if defined(BL616D) && !defined(CPU_MODEL_A0)
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
     bflb_mjdec_push_jpeg(mjdec, jpeg_buffer);
 #else
     if (header_skip & 0x7) {

@@ -208,7 +208,6 @@ void at_cmd_syslog(uint32_t error)
 
 int at_cmd_register(const at_cmd_struct *cmds, int num_cmds)
 {
-    int i;
     int err;
 
     if (!at || !num_cmds) {
@@ -224,7 +223,6 @@ int at_cmd_register(const at_cmd_struct *cmds, int num_cmds)
 
 int at_cmd_unregister(const at_cmd_struct *cmds, int num_cmds)
 {
-    int i;
     int err;
 
     if (!at) {
@@ -242,7 +240,7 @@ static const at_cmd_struct *at_cmd_lookup(char *name)
 {
     int i = 0;
     int n = 0;
-    at_cmd_struct *cmds;
+    const at_cmd_struct *cmds;
 
     while (i < AT_CMD_MAX_NUM && n < at->num_commands) {
 

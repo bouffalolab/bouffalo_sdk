@@ -35,10 +35,11 @@
 #define configUSE_MALLOC_FAILED_HOOK                1
 #define configUSE_APPLICATION_TASK_TAG              1
 #define configUSE_COUNTING_SEMAPHORES               1
-#define configGENERATE_RUN_TIME_STATS               0
+#define configGENERATE_RUN_TIME_STATS               1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION     1
 #define configUSE_TICKLESS_IDLE                     0
 #define configUSE_POSIX_ERRNO                       1
+#define configRUN_TIME_COUNTER_TYPE                 uint64_t
 
 #define configUSE_CO_ROUTINES                       0
 #define configMAX_CO_ROUTINE_PRIORITIES             (2)
@@ -69,6 +70,7 @@ void vApplicationMallocFailedHook(void);
 void vAssertCalled(void);
 
 #include <stdio.h>
+#include <stdint.h>
 
 #define configASSERT(x)                        \
     if ((x) == 0) {                            \
@@ -83,5 +85,9 @@ void vAssertCalled(void);
 void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
 #endif
+
+extern uint64_t bflb_mtimer_get_time_us(void);
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ((void)0)
+#define portGET_RUN_TIME_COUNTER_VALUE()         bflb_mtimer_get_time_us()
 
 #endif /* FREERTOS_CONFIG_H */

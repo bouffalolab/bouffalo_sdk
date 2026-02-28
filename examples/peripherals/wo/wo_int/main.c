@@ -58,7 +58,7 @@ int main(void)
     while (flag_end == 0);
 
     bflb_wo_disable(wo);
-#if defined(BL616L)
+#if defined(BL616CL)
     bflb_wo_push_fifo(wo, data_write_arr, 16);
 #else
     bflb_wo_push_fifo(wo, data_write_arr, 128);

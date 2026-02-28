@@ -33,7 +33,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
 /* User Trap Registers */
 
 #define CSR_USTATUS        0x000

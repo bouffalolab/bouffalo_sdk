@@ -57,7 +57,7 @@ enum wifi_5g_channel_bit_t {
 #define WIFI_5G_BITMAP_GET(bmp, chan_enum)   (((bmp)[(chan_enum) / 8] >> ((chan_enum) % 8)) & 1)
 
 /* Channel number to enum conversion function */
-static inline enum wifi_5g_channel_bit_t wifi_5g_chan_to_enum(uint8_t channel) {
+static inline uint8_t wifi_5g_chan_to_enum(uint8_t channel) { // ref @ enum wifi_5g_channel_bit_t
     switch (channel) {
         case 36:  return WIFI_CHANNEL_36;
         case 40:  return WIFI_CHANNEL_40;
@@ -92,7 +92,7 @@ static inline enum wifi_5g_channel_bit_t wifi_5g_chan_to_enum(uint8_t channel) {
 }
 
 /* Enum to channel number conversion function */
-static inline uint8_t wifi_5g_enum_to_chan(enum wifi_5g_channel_bit_t chan_enum) {
+static inline uint8_t wifi_5g_enum_to_chan(uint8_t chan_enum) { // ref @ enum wifi_5g_channel_bit_t
     const uint8_t channel_map[] = {
         36, 40, 44, 48, 52, 56, 60, 64,  /* UNII-1/2A */
         100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,  /* UNII-2C */

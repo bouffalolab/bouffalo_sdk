@@ -12,11 +12,15 @@
 
 #include <bflb_irq.h>
 #include <bflb_mtd.h>
+#include <easyflash.h>
 
 #include <rfparam_adapter.h>
 
 #define DBG_TAG "MAIN"
 #include <log.h>
+
+/* External function declarations */
+extern int app_wifi_init(void);
 
 int app_usbwifi_init(void)
 {

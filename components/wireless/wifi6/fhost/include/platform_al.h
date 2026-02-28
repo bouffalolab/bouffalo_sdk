@@ -83,7 +83,7 @@ void platform_hook_beacon(uint32_t rhd,uint32_t tim_offset,bcn_param_t* param) _
 * @brief hook for prevent sleep
 ****************************************************************************************
 */
-void platform_hook_prevent_sleep(enum PSM_EVENT event, uint8_t prevent) __attribute__((weak));
+void platform_hook_prevent_sleep(uint32_t event, uint8_t prevent) __attribute__((weak)); // ref @ enum PSM_EVENT
 
 /**
 ****************************************************************************************

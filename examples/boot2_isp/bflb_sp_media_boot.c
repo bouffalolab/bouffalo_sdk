@@ -390,8 +390,8 @@ int32_t bflb_sp_mediaboot_parse_one_group_xz(boot2_image_config *boot_img_cfg, u
             }
             addr+=sizeof(boot_aes_config);
         }
-        g_boot2_parse_xz_image_status = 1;
 #endif
+        g_boot2_parse_xz_image_status = 1;
     } else {
         if (boot_img_cfg->basic_cfg.no_segment) {
             /* Flash image */

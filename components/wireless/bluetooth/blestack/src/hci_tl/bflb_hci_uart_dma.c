@@ -348,7 +348,7 @@ static int32_t hci_uart_write(uint8_t *buf, uint32_t nbytes)
 
   while(bflb_dma_channel_isbusy(dma_tx));
 
-  #if defined(BL616) || defined(BL616D)
+  #if defined(BL616) || defined(BL618DG)
   bflb_l1c_dcache_clean_all();
   #endif
 

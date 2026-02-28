@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/errno.h>
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
 #include <risc-v/csr.h>
 #endif
 #include <risc-v/riscv_arch.h>
@@ -32,8 +32,8 @@
   */
 
 #if !defined(BL602) && !defined(BL702) && !defined(BL702L) &&  \
-    !defined(BL616) && !defined(BL616L) && !defined(BL616D) && \
-    !defined(BL606P) && !defined(BL808) && !defined(BL628)
+    !defined(BL616) && !defined(BL616CL) && !defined(BL618DG) && \
+    !0 && !0 && !0
 #error please define a supported chip
 #endif
 
@@ -49,13 +49,13 @@
 #define BFLB_PSRAM_BASE 0x24000000
 #elif defined(BL616)
 #define BFLB_PSRAM_BASE 0xA8000000
-#elif defined(BL808)
+#elif 0
 #define BFLB_PSRAM_BASE 0x50000000
-#elif defined(BL606P)
+#elif 0
 #define BFLB_PSRAM_BASE 0x54000000
-#elif (defined(BL616D) && defined(CPU_MODEL_A0)) || defined(BL616L)
+#elif (defined(BL618DG) && defined(CPU_MODEL_A0)) || defined(BL616CL)
 #define BFLB_PSRAM_BASE 0x88000000
-#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#elif defined(BL618DG) && !defined(CPU_MODEL_A0)
 #define BFLB_PSRAM_BASE 0xB8000000
 #endif
 

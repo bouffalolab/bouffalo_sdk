@@ -2,13 +2,13 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616d            |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
 
 ## Compile
 
-- BL616d
+- BL618DG
 
 ```bash
 make
@@ -16,9 +16,9 @@ make
 
 ## Flash
 
-- BL616d
+- BL618DG
 
 ```bash
-make CHIP=bl616d flash COMX=xxx ## xxx is your com name
+make CHIP=bl618dg flash COMX=xxx ## xxx is your com name
 ```
 

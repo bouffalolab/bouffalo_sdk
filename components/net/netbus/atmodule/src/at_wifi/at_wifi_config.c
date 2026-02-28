@@ -19,6 +19,10 @@
 #include "at_wifi_config.h"
 #include "at_wifi_main.h"
 #include "at_pal.h"
+#include "at_wifi_mgmr.h"
+
+extern int at_wifi_mgmr_ap_mac_get(uint8_t mac[6]);
+extern int at_wifi_mgmr_sta_mac_get(uint8_t mac[6]);
 
 wifi_config *at_wifi_config = NULL;
 
@@ -42,19 +46,19 @@ int at_wifi_config_init(void)
 
     at_wifi_config->netmode = 1;
     at_wifi_config->wevt_enable = 1;
-    wifi_mgmr_ap_mac_get(at_wifi_config->ap_mac.addr);
-    wifi_mgmr_sta_mac_get(at_wifi_config->sta_mac.addr);
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+    at_wifi_mgmr_ap_mac_get(at_wifi_config->ap_mac.addr);
+    at_wifi_mgmr_sta_mac_get(at_wifi_config->sta_mac.addr);
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     if (!at_config_read(AT_CONFIG_KEY_WIFI_AP_MAC, &at_wifi_config->ap_mac.addr, sizeof(wifi_mac_addr))) {
-        wifi_mgmr_ap_mac_get(at_wifi_config->ap_mac.addr);
+        at_wifi_mgmr_ap_mac_get(at_wifi_config->ap_mac.addr);
     } else {
-        wifi_mgmr_mac_set(&at_wifi_config->ap_mac.addr);
+        at_wifi_mgmr_ap_mac_set(at_wifi_config->ap_mac.addr);
     }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_STA_MAC, &at_wifi_config->sta_mac.addr, sizeof(wifi_mac_addr))) {
-        wifi_mgmr_sta_mac_get(at_wifi_config->sta_mac.addr);
+        at_wifi_mgmr_sta_mac_get(at_wifi_config->sta_mac.addr);
     } else {
         //TODO: AP/STA MAC neet to be different?
-        wifi_mgmr_mac_set(&at_wifi_config->sta_mac.addr);
+        at_wifi_mgmr_sta_mac_set(at_wifi_config->sta_mac.addr);
     }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_MODE, &at_wifi_config->wifi_mode, sizeof(wifi_work_mode))) {
         at_wifi_config->wifi_mode = WIFI_DISABLE;
@@ -130,7 +134,7 @@ int at_wifi_config_init(void)
 
 int at_wifi_config_save(const char *key)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     if (!key || !at_wifi_config) {
         printf("[WIFI_CONFIG] Error: null key or config\r\n");
         return -1;
@@ -178,7 +182,7 @@ int at_wifi_config_save(const char *key)
 
 int at_wifi_config_default(void)
 {
-#if CONFIG_ATMODULE_CONFIG_STORAGE
+#if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
     at_config_delete(AT_CONFIG_KEY_WIFI_AP_MAC);
     at_config_delete(AT_CONFIG_KEY_WIFI_STA_MAC);
     at_config_delete(AT_CONFIG_KEY_WIFI_MODE);

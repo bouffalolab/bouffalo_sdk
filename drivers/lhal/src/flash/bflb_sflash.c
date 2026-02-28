@@ -48,9 +48,9 @@
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x4000B700)
 #elif defined(BL702L)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x4000B600)
-#elif defined(BL606P) || defined(BL808) || defined(BL616) || defined(BL616L)
+#elif  defined(BL616) || defined(BL616CL)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x2000b600)
-#elif defined(BL628) || defined(BL616D)
+#elif  defined(BL618DG)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x20082600)
 #endif
 
@@ -108,7 +108,7 @@ void ATTR_TCM_SECTION bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_
 }
 #else
 __WEAK
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)  
 void ATTR_TCM_SECTION bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg,
                                        const struct sf_ctrl_bank2_cfg *p_bank2_cfg)
 {

@@ -113,8 +113,10 @@ static bl_err_t wpa3_build_sae_confirm(void) {
 }
 
 void bl_wpa3_free_sae_data(void) {
+#ifdef DEBUG_PRINT
   printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__,
          __LINE__);
+#endif
   if (g_sae_commit) {
     wpabuf_free(g_sae_commit);
     g_sae_commit = NULL;

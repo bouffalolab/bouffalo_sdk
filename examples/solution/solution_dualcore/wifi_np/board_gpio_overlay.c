@@ -1,7 +1,7 @@
 
 #include "board_gpio.h"
 #include "bflb_gpio.h"
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 
 void board_np_console_gpio_init(void)
 {

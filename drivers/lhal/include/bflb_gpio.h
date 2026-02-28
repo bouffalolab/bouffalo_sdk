@@ -21,11 +21,8 @@
  * BL706  : GPIO0 ~ GPIO31
  * BL702L : GPIO0 ~ GPIO2, GPIO7 ~ GPIO11, GPIO14 ~ GPIO18, GPIO22 ~ GPIO28, GPIO30 ~ GPIO31
  * BL704L:  GPIO0 ~ GPIO3, GPIO7 ~ GPIO31
- * BL606P : GPIO0 ~ GPIO5, GPIO11 ~ GPIO12, GPIO16 ~ GPIO21, GPIO24 ~ GPIO28, GPIO34 ~ GPIO41
  * BL616  : GPIO0 ~ GPIO3, GPIO10 ~ GPIO17, GPIO20 ~ GPIO22, GPIO27 ~ GPIO30
  * BL618  : GPIO0 ~ GPIO34
- * BL808C : GPIO0 ~ GPIO23, GPIO34 ~ GPIO45
- * BL808D : GPIO0 ~ GPIO8, GPIO11 ~ GPIO41
  *
  */
 
@@ -77,7 +74,7 @@
 #define GPIO_PIN_36     36
 #define GPIO_PIN_37     37
 #define GPIO_PIN_MAX    38
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define GPIO_PIN_23     23
 #define GPIO_PIN_24     24
 #define GPIO_PIN_25     25
@@ -134,7 +131,7 @@
 #define GPIO_PIN_36     36
 #define GPIO_PIN_37     37
 #define GPIO_PIN_MAX    38
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define GPIO_PIN_23     23
 #define GPIO_PIN_24     24
 #define GPIO_PIN_25     25
@@ -166,7 +163,7 @@
 #define GPIO_PIN_51     51
 #define GPIO_PIN_52     52
 #define GPIO_PIN_MAX    53
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define GPIO_PIN_23     23
 #define GPIO_PIN_24     24
 #define GPIO_PIN_25     25
@@ -182,7 +179,7 @@
 #define GPIO_PIN_35     35
 #define GPIO_PIN_36     36
 #define GPIO_PIN_MAX    37
-#elif defined(BL628)
+#elif 0
 #define GPIO_PIN_23     23
 #define GPIO_PIN_24     24
 #define GPIO_PIN_25     25
@@ -227,7 +224,7 @@
 #define GPIO_FUNC_PWM1    (8 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_KEYSCAN (13 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG    (14 << GPIO_FUNC_SHIFT)
-#elif defined(BL616) || defined(BL616L)
+#elif defined(BL616) || defined(BL616CL)
 #define GPIO_FUNC_SDH       (0 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0      (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2S       (3 << GPIO_FUNC_SHIFT)
@@ -239,7 +236,7 @@
 #define GPIO_FUNC_GPIO      (11 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SDU       (12 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_PWM0      (16 << GPIO_FUNC_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define GPIO_FUNC_SPI1      (20 << GPIO_FUNC_SHIFT)
 #endif
 #define GPIO_FUNC_DBI_B     (22 << GPIO_FUNC_SHIFT)
@@ -247,11 +244,11 @@
 #define GPIO_FUNC_DBI_QSPI  (24 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_AUDAC_PWM (25 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG      (26 << GPIO_FUNC_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define GPIO_FUNC_PEC       (27 << GPIO_FUNC_SHIFT)
 #endif
 #define GPIO_FUNC_CLKOUT    (31 << GPIO_FUNC_SHIFT)
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define GPIO_FUNC_SDH     (0 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0    (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2S     (3 << GPIO_FUNC_SHIFT)
@@ -273,7 +270,7 @@
 #define GPIO_FUNC_JTAG_M0 (26 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG_D0 (27 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_CLKOUT  (31 << GPIO_FUNC_SHIFT)
-#elif defined(BL628)
+#elif 0
 #define GPIO_FUNC_SDH     (0 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0    (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2S     (3 << GPIO_FUNC_SHIFT)
@@ -292,7 +289,7 @@
 #define GPIO_FUNC_DBI_C   (23 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG_M0 (26 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_CLKOUT  (31 << GPIO_FUNC_SHIFT)
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define GPIO_FUNC_SDH       (0 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI       (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0      (1 << GPIO_FUNC_SHIFT)
@@ -383,7 +380,7 @@
 #define GPIO_UART_FUNC_UART1_CTS 5
 #define GPIO_UART_FUNC_UART1_TX  6
 #define GPIO_UART_FUNC_UART1_RX  7
-#if defined(BL808) || defined(BL606P) || defined(BL616D) || defined(BL616L)
+#if  defined(BL618DG) || defined(BL616CL)
 #define GPIO_UART_FUNC_UART2_RTS 8
 #define GPIO_UART_FUNC_UART2_CTS 9
 #define GPIO_UART_FUNC_UART2_TX  10
@@ -422,7 +419,7 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset);
  */
 void bflb_gpio_deinit(struct bflb_device_s *dev, uint8_t pin);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief Set gpio pin function.
  *
@@ -440,7 +437,7 @@ void bflb_gpio_output_value_mode_enable(struct bflb_device_s *dev, uint8_t pin);
  */
 void bflb_gpio_pin0_31_output(struct bflb_device_s *dev, uint32_t value);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief Write gpio32-63 output value.
  *
@@ -466,7 +463,7 @@ void bflb_gpio_set(struct bflb_device_s *dev, uint8_t pin);
  */
 void bflb_gpio_pin0_31_set(struct bflb_device_s *dev, uint32_t value);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief set gpio32-63 pin with bitmap.
  *
@@ -492,7 +489,7 @@ void bflb_gpio_reset(struct bflb_device_s *dev, uint8_t pin);
  */
 void bflb_gpio_pin0_31_reset(struct bflb_device_s *dev, uint32_t value);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief reset gpio32-63 pin with bitmap.
  *
@@ -519,7 +516,7 @@ bool bflb_gpio_read(struct bflb_device_s *dev, uint8_t pin);
  */
 uint32_t bflb_gpio_pin0_31_read(struct bflb_device_s *dev);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief Read level from gpio pin 32~63.
  *
@@ -564,7 +561,7 @@ bool bflb_gpio_get_intstatus(struct bflb_device_s *dev, uint8_t pin);
  */
 uint32_t bflb_gpio_get_intstatus_pin0_31(struct bflb_device_s *dev);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief Get gpio32-63 pin interrupt status.
  *
@@ -582,7 +579,7 @@ uint32_t bflb_gpio_get_intstatus_pin32_63(struct bflb_device_s *dev);
  */
 void bflb_gpio_int_clear_pin0_31(struct bflb_device_s *dev, uint32_t pins);
 
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
 /**
  * @brief clear gpio32-63 interrupt status with bitmap.
  *

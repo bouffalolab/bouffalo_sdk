@@ -55,7 +55,7 @@
 #define PWM_MC0_INT_MASK_OFFSET  (0x64) /* pwm_mc0_int_mask */
 #define PWM_MC0_INT_CLEAR_OFFSET (0x68) /* pwm_mc0_int_clear */
 #define PWM_MC0_INT_EN_OFFSET    (0x6C) /* pwm_mc0_int_en */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PWM_SW_USAGE_OFFSET      (0x7C)/* pwm_sw_usage */
 #define PWM_HW_VERSION_OFFSET    (0x7C)/* pwm_hw_version */
 #endif
@@ -71,7 +71,7 @@
 /* 0x40 : pwm_mc0_config0 */
 #define PWM_CLK_DIV_SHIFT     (0U)
 #define PWM_CLK_DIV_MASK      (0xffff << PWM_CLK_DIV_SHIFT)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PWM_UPDATE_DISABLE    (1 << 16U)
 #define PWM_UPDATE_GENERATE   (1 << 17U)
 #define PWM_CENTER_ALIGNED_EN (1 << 18U)
@@ -214,7 +214,7 @@
 #define PWM_CR_PWM_BRK_EN  (1 << 9U)
 #define PWM_CR_PWM_REPT_EN (1 << 10U)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x7C : pwm_sw_usage and pwm_hw_version */
 #define PWM_SW_USAGE_SHIFT   (0U)
 #define PWM_SW_USAGE_MASK    (0xffffff << PWM_SW_USAGE_SHIFT)

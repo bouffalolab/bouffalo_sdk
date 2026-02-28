@@ -27,7 +27,9 @@
 
 void *hostap_init(wifi_ap_parm_t *parm)
 {
+#ifdef DEBUG_PRINT
     printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
+#endif
     struct wifi_ssid *ssid = &parm->ssid;
     struct hostapd_data *hapd = NULL;
     struct wpa_auth_config *auth_conf;
@@ -123,7 +125,9 @@ void *hostap_init(wifi_ap_parm_t *parm)
 
 bool hostap_deinit(void *data)
 {
+#ifdef DEBUG_PRINT
     printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
+#endif
     struct hostapd_data *hapd = (struct hostapd_data *)data;
 
     if (hapd == NULL) {

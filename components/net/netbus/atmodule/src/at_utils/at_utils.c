@@ -80,7 +80,7 @@ void *utils_memp_malloc(utils_memp_pool_t *pool)
         pool->pool_size++;
         pat = (uint32_t *)&node->next;
         *pat = UTILS_MEMP_ALLOCED_NODE_PATTERN;
-        return (void *)node + sizeof(struct utils_memp_node);
+        return (void *)((char *)node + sizeof(struct utils_memp_node));
     } else {
         return NULL;
     }
@@ -92,7 +92,7 @@ int utils_memp_free(utils_memp_pool_t *pool, void *node)
         return -1;
     }
     struct utils_memp_node *utils_memp_node;
-    node = node - sizeof(struct utils_memp_node);
+    node = (void *)((char *)node - sizeof(struct utils_memp_node));
     uint32_t *pat;
     int diff;
 
@@ -102,7 +102,7 @@ int utils_memp_free(utils_memp_pool_t *pool, void *node)
     if (!(node >= pool->first_node && node <= pool->last_node)) {
         return -1;
     }
-    diff = node - pool->first_node;
+    diff = (char *)node - (char *)pool->first_node;
     if (diff % pool->padded_node_size) {
         return -1;
     }

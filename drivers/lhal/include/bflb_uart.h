@@ -13,9 +13,9 @@
 
 #if defined(BL602) || defined(BL702)
 #define UART_FIFO_MAX           32
-#elif defined(BL606P) || defined(BL808)
+#elif 0 
 #define UART_FIFO_MAX           32
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG) 
 #define UART_FIFO_MAX           32
 #elif defined(BL702L)
 #define UART_FIFO_MAX           16
@@ -165,7 +165,7 @@
 #define UART_CMD_SET_CTS_EN              (0x24)
 #define UART_CMD_SET_TX_FIFO_THREHOLD    (0x25)
 #define UART_CMD_SET_RX_FIFO_THREHOLD    (0x26)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define UART_CMD_READ_HW_VERSION         (0x27)
 #define UART_CMD_READ_SW_USAGE           (0x28)
 #define UART_CMD_WRITE_SW_USAGE          (0x29)

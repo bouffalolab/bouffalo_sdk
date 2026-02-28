@@ -21,7 +21,7 @@
  *
  */
 #include "bflb_mtimer.h"
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 #include "board.h"
 #include "bflb_l1c.h"
 #include "bflb_wdg.h"

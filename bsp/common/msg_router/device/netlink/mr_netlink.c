@@ -107,7 +107,7 @@ static int msg_upld_send_done_cb(mr_frame_elem_t *frame_elem, void *arg)
     }
 
     mr_netlink_msg_t *netlink_msg_pkt = MR_NETLINK_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
-    if (priv->netlink_cfg.upld_done_cb) {
+    if (netlink_msg_pkt->flag == MR_NETLINK_FLAG_UPLD_DATA && priv->netlink_cfg.upld_done_cb) {
         /* User-defined callback */
         ret = priv->netlink_cfg.upld_done_cb(priv, netlink_msg_pkt);
     } else {

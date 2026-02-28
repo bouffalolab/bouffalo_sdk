@@ -2,8 +2,8 @@
 #include "bflb_gpio.h"
 #include "bflb_sdio3.h"
 
-#if defined(BL628)
-#include "bl628_glb.h"
+#if defined(BL618DG)
+#include "bl618dg_glb.h"
 #endif
 
 #include "board.h"
@@ -257,7 +257,7 @@ void sdio3_test(void)
     bool func1_ready = false;
     bool func2_ready = false;
 
-#if defined(BL628)
+#if defined(BL618DG)
     bflb_glb_per_clock_ungate(GLB_AHB_CLOCK_SDU);
     bflb_glb_per_clock_ungate(GLB_AHB_CLOCK_USB20_SDU);
     bflb_glb_per_clock_ungate(GLB_AHB_CLOCK_USB_SDIO);

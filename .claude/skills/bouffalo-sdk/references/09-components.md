@@ -503,7 +503,7 @@ void partition_example(void)
 
 **特性：**
 - 核间通信
-- 支持多核芯片（BL808）
+- 支持多核芯片（BL618DG）
 - 基于共享内存
 
 **使用：**
@@ -531,7 +531,7 @@ void rpmsg_init(void)
 ```kconfig
 config CONFIG_OPENAMP
     bool "Enable OpenAMP"
-    depends on BL808 || BL606P
+    depends on BL618DG
 ```
 
 ## Shell组件

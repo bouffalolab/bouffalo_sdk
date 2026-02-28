@@ -170,7 +170,7 @@ struct sflash_sec_reg_cfg
 extern "C" {
 #endif
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)  
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg, const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
 #else
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg);

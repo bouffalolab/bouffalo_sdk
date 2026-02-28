@@ -4,7 +4,7 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define GLB_SPI_MODE_ADDRESS 0x40000080
-#elif defined(BL606P) || defined(BL808) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628)
+#elif  defined(BL616) || defined(BL616CL) || defined(BL618DG) 
 #define GLB_SPI_MODE_ADDRESS 0x20000510
 #endif
 
@@ -26,7 +26,7 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
     uint32_t regval;
     uint32_t div;
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #if defined(CPU_MODEL_A0)
     if(dev->idx == 1) {
 #else
@@ -44,7 +44,7 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
 
     /* GLB select master or slave mode */
     regval = getreg32(GLB_SPI_MODE_ADDRESS);
-#if defined(BL616L)
+#if defined(BL616CL)
     if (config->role == SPI_ROLE_MASTER) {
         if (dev->idx == 0) {
             regval |= (1 << 12);
@@ -58,7 +58,7 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
             regval &= ~(1 << 16);
         }
     }
-#elif defined(BL616D)
+#elif defined(BL618DG)
     if (config->role == SPI_ROLE_MASTER) {
         if (dev->idx == 0) {
             regval |= (1 << 12);
@@ -156,7 +156,7 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
     regval &= ~SPI_CR_SPI_FRAME_SIZE_MASK;
     regval |= (config->data_width - 1) << SPI_CR_SPI_FRAME_SIZE_SHIFT;
 
-#if defined(BL616L)
+#if defined(BL616CL)
     /* not fast mode in slave role, MISO modify edge is different from sample edge */
     regval |= SPI_CR_SPI_S_TRANS_DATA_EDGE_SEL;
 #endif
@@ -856,7 +856,7 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
             break;
 
-#if defined(BL616L)
+#if defined(BL616CL)
         case SPI_CMD_SLAVE_FAST_MODE_EN:
             regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
             if (arg) {

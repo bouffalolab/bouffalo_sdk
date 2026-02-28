@@ -239,7 +239,7 @@ static void coex_tdma_tmr_init(void)
     // Default timer config
     coex_env.cfg.counter_mode    = TIMER_COUNTER_MODE_UP;      /* up when match occur */
     coex_env.cfg.clock_source    = TIMER_CLKSRC_XTAL;          /* timer clk = XCLK/(div + 1 )*/
-    coex_env.cfg.clock_div       = 39;                         /* for bl616/bl808/bl606p is 39, for bl702 is 31 */
+    coex_env.cfg.clock_div       = 39;                         /* for bl616/bl618dg/bl618dg is 39, for bl702 is 31 */
     coex_env.cfg.trigger_comp_id = TIMER_COMP_ID_0;
     coex_env.cfg.comp0_val       = 0xFFFFFFFF;                 /* match value 0 */
     coex_env.cfg.comp1_val       = 0xFFFFFFFF;                 /* match value 1 */

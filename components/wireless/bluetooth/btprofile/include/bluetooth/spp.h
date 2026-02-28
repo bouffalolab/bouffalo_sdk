@@ -23,7 +23,7 @@ struct spp_callback_t {
 int bt_spp_init(void);
 int bt_spp_connect(struct bt_conn *conn);
 int bt_spp_disconnect(struct bt_conn *conn);
-int bt_spp_send(uint8_t *buf_data,uint8_t length);
+int bt_spp_send(uint8_t *buf_data,uint16_t length);
 void spp_cb_register(struct spp_callback_t *cb);
 
 #ifdef __cplusplus

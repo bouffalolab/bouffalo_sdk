@@ -85,23 +85,6 @@ typedef struct {
 #define WPA_KEY_MGMT_IEEE8021X_SUITE_B     BIT(16)
 #define WPA_KEY_MGMT_IEEE8021X_SUITE_B_192 BIT(17)
 
-#define WLAN_CAPABILITY_ESS BIT(0)
-#define WLAN_CAPABILITY_IBSS BIT(1)
-#define WLAN_CAPABILITY_CF_POLLABLE BIT(2)
-#define WLAN_CAPABILITY_CF_POLL_REQUEST BIT(3)
-#define WLAN_CAPABILITY_PRIVACY BIT(4)
-#define WLAN_CAPABILITY_SHORT_PREAMBLE BIT(5)
-#define WLAN_CAPABILITY_PBCC BIT(6)
-#define WLAN_CAPABILITY_CHANNEL_AGILITY BIT(7)
-#define WLAN_CAPABILITY_SPECTRUM_MGMT BIT(8)
-#define WLAN_CAPABILITY_QOS BIT(9)
-#define WLAN_CAPABILITY_SHORT_SLOT_TIME BIT(10)
-#define WLAN_CAPABILITY_APSD BIT(11)
-#define WLAN_CAPABILITY_RADIO_MEASUREMENT BIT(12)
-#define WLAN_CAPABILITY_DSSS_OFDM BIT(13)
-#define WLAN_CAPABILITY_DELAYED_BLOCK_ACK BIT(14)
-#define WLAN_CAPABILITY_IMM_BLOCK_ACK BIT(15)
-
 typedef enum {
     NONE_AUTH = 0x01,
     WPA_AUTH_UNSPEC = 0x02,
@@ -170,7 +153,7 @@ typedef struct {
     uint8_t mac[ETH_ALEN];
     uint8_t bssid[ETH_ALEN];
     struct wifi_ssid ssid;
-    sec_proto_t proto;
+    uint8_t proto; // ref @ enum sec_proto_t
     uint16_t key_mgmt;
     uint8_t pairwise_cipher;
     uint8_t group_cipher;
@@ -184,8 +167,8 @@ typedef struct {
     uint8_t vif_idx;
     uint8_t mac[ETH_ALEN];
     struct wifi_ssid ssid;
-    wifi_auth_mode_t auth_mode;
-    wifi_cipher_type_t pairwise_cipher;
+    uint8_t auth_mode;  // ref @ enum wifi_auth_mode_t
+    uint8_t pairwise_cipher;  // ref @ enum wifi_cipher_type_t
     char passphrase[64 + 1];
 } wifi_ap_parm_t;
 

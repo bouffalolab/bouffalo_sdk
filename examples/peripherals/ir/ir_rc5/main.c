@@ -1,11 +1,11 @@
 #include "bflb_ir.h"
 #include "board.h"
 
-#if defined(BL602) || defined(BL702) || defined(BL808) || defined(BL702L) || defined(BL616D)
+#if defined(BL602) || defined(BL702) || defined(BL702L) || defined(BL618DG)
 #define TEST_IR_TX
 #endif
 
-#if defined(BL602) || defined(BL702) || defined(BL808) || defined(BL616) || defined(BL616D) || defined(BL616L)
+#if defined(BL602) || defined(BL702) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
 #define TEST_IR_RX
 #endif
 

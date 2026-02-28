@@ -3,14 +3,14 @@
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #include <risc-v/e24/clic.h>
 #else
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
 #include <csi_core.h>
 #else
 #include <nmsis_core.h>
 #endif
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* MCU_MISC reg */
 #define BFLB_MISC_BASE                      (0x20009000)
 #define MCU_MISC_MCU_E907_RTC_LOAD_L_OFFSET (0x08)
@@ -30,7 +30,7 @@ static void systick_isr(int irq, void *arg)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     *(volatile uint64_t *)(CLIC_CTRL_BASE + CLIC_MTIMECMP_OFFSET) += current_set_ticks;
 #else
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
     csi_coret_config(current_set_ticks, 7);
 #else
     SysTimer_SetCompareValue(SysTimer_GetCompareValue() + current_set_ticks);
@@ -48,7 +48,7 @@ void bflb_mtimer_config(uint64_t ticks, void (*interruptfun)(void))
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     *(volatile uint64_t *)(CLIC_CTRL_BASE + CLIC_MTIMECMP_OFFSET) = (*(volatile uint64_t *)(CLIC_CTRL_BASE + CLIC_MTIME_OFFSET)) + ticks;
 #else
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
     csi_coret_config_use(ticks, 7);
 #else
     SysTimer_SetCompareValue(SysTimer_GetLoadValue() + ticks);
@@ -69,7 +69,7 @@ uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us(void)
 #ifdef romapi_bflb_mtimer_get_time_us
     return romapi_bflb_mtimer_get_time_us();
 #else
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
     volatile uint32_t timeout = 0;
     volatile uint64_t tmp_low, tmp_high, tmp_low1, tmp_high1;
 
@@ -175,7 +175,7 @@ void ATTR_TCM_SECTION bflb_mtimer_delay_ms(uint32_t time)
 #endif
 }
 
-#if defined(BL616L)
+#if defined(BL616CL)
 void ATTR_TCM_SECTION bflb_mtimer_set_val(uint64_t val)
 {
     putreg32((val & 0xFFFFFFFF), (BFLB_MISC_BASE + MCU_MISC_MCU_E907_RTC_LOAD_L_OFFSET));

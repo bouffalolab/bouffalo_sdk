@@ -1592,7 +1592,9 @@ static int wpa_sm_step(struct wpa_state_machine *sm)
 
 bool wpa_ap_join(void **sm, uint8_t *mac, uint8_t *wpa_ie, uint8_t wpa_ie_len)
 {
+#ifdef DEBUG_PRINT
     printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
+#endif
     struct hostapd_data *hapd = (struct hostapd_data*)bl_wifi_get_hostap_private_internal();
     struct wpa_state_machine **wpa_sm;
     struct wpa_state_machine *wpa_sm_new;
@@ -1630,7 +1632,9 @@ bool wpa_ap_join(void **sm, uint8_t *mac, uint8_t *wpa_ie, uint8_t wpa_ie_len)
 
 void wpa_ap_sta_associated(void *wpa_sm, uint8_t sta_idx)
 {
+#ifdef DEBUG_PRINT
     printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
+#endif
     struct hostapd_data *hapd = (struct hostapd_data*)bl_wifi_get_hostap_private_internal();
     struct wpa_state_machine *sm = (struct wpa_state_machine *)wpa_sm;
 
@@ -1645,7 +1649,9 @@ void wpa_ap_sta_associated(void *wpa_sm, uint8_t sta_idx)
 
 bool wpa_ap_remove(void *sm)
 {
+#ifdef DEBUG_PRINT
     printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
+#endif
     struct wpa_state_machine *wpa_sm;
     if (!sm) return false;
 

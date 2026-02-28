@@ -6,7 +6,6 @@ sdk_add_compile_options(
 -fdata-sections
 -fmessage-length=0
 -fstrict-volatile-bitfields
--fshort-enums
 -MMD
 -Wall
 -Wchar-subscripts
@@ -46,6 +45,10 @@ $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
 -save-temps=obj
 )
 
+if(NOT DEFINED CONFIG_NO_SHORT_ENUMS)
+sdk_add_compile_options(-fshort-enums)
+endif()
+
 sdk_add_link_options(
 -Wl,--cref
 -Wl,--gc-sections
@@ -58,7 +61,7 @@ sdk_add_link_options(
 -Wl,--print-memory-usage
 )
 
-if(("${CHIP}" STREQUAL "bl616d") AND (NOT("${CPU_MODEL}" STREQUAL "a0")) AND (NOT("${CPU_ID}" STREQUAL "lp")))
+if(("${CHIP}" STREQUAL "bl618dg") AND (NOT("${CPU_MODEL}" STREQUAL "a0")) AND (NOT("${CPU_ID}" STREQUAL "lp")))
 sdk_add_link_options(-Wl,--no-warn-rwx-segments)
 endif()
 

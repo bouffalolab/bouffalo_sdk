@@ -309,7 +309,7 @@
 
 /* 0x140 : se_aes_0_key_sel */
 #define SEC_ENG_SE_AES_0_KEY_SEL_SHIFT (0U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define SEC_ENG_SE_AES_0_KEY_SEL_MASK  (0x7 << SEC_ENG_SE_AES_0_KEY_SEL_SHIFT)
 #else
 #define SEC_ENG_SE_AES_0_KEY_SEL_MASK  (0x3 << SEC_ENG_SE_AES_0_KEY_SEL_SHIFT)

@@ -162,7 +162,7 @@
   * @}
   */
 
-#elif defined(BL616L)
+#elif defined(BL616CL)
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
@@ -232,7 +232,7 @@
   * @}
   */
 
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
@@ -307,7 +307,7 @@
   * @}
   */
 
-#elif defined(BL628)
+#elif 0
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
@@ -357,7 +357,7 @@
   * @}
   */
 
-#elif defined(BL616D)
+#elif defined(BL618DG)
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
@@ -486,7 +486,7 @@
 
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /** @defgroup DMA_LLI_MUTEX dma lli mutex definition
   * @{
   */
@@ -510,7 +510,7 @@
 #define DMA_CMD_GET_LLI_DSTADDR       (0x07)
 #define DMA_CMD_GET_LLI_CONTROL       (0x08)
 #define DMA_CMD_GET_LLI_COUNT         (0x09)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define DMA_CMD_SET_LLI_MUTEX        (0x0a)
 #define DMA_CMD_GET_LLI_MUTEX_STATUS (0x0b)
 #define DMA_CMD_READ_HW_VERSION      (0x0c)
@@ -518,6 +518,8 @@
 #define DMA_CMD_WRITE_SW_USAGE       (0x0e)
 #endif
 #define DMA_CMD_GET_TRANSFER_PENDING (0x0f)
+#define DMA_CMD_SET_RESUME           (0x10)
+#define DMA_CMD_SET_SUSPEND          (0x11)
 /**
   * @}
   */
@@ -694,7 +696,7 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev,
                                 struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t max_lli_count,
                                 struct bflb_dma_channel_lli_transfer_s *transfer, uint32_t count);
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /**
  * @brief Insert dma channel lli node.
  *

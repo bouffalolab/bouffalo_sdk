@@ -89,7 +89,7 @@ struct ipc_host_env_tag
     // Store the size of the Rx Data buffers
     uint32_t rx_bufsz;
 #endif
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
     // Pointer to the different TX buffer
     struct txbuf_host *txbuf;
 #endif
@@ -146,7 +146,7 @@ void ipc_host_init(struct ipc_host_env_tag *env,
 int ipc_host_msg_push(struct ipc_host_env_tag *env, void *msg_buf, uint16_t len);
 uint32_t ipc_host_get_status(struct ipc_host_env_tag *env);
 uint32_t ipc_host_get_rawstatus(struct ipc_host_env_tag *env);
-#if defined(CFG_CHIP_BL808) || defined(CFG_CHIP_BL606P)
+#if 0
 void ipc_host_txbuf_free(struct txbuf_host *buf);
 volatile struct txbuf_host *ipc_host_txbuf_get(struct ipc_host_env_tag *env);
 #endif

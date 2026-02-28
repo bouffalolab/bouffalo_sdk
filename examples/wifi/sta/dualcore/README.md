@@ -2,13 +2,13 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616d            |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL618DG |        |
 
 ## Compile
 
-- BL616d
+- BL618DG
 
 ```bash
 make
@@ -16,10 +16,10 @@ make
 
 ## Flash
 
-- BL616d
+- BL618DG
 
 ```bash
-make CHIP=bl616d flash COMX=xxx ## xxx is your com name
+make CHIP=bl618dg flash COMX=xxx ## xxx is your com name
 ```
 
 ## Generate OTA File
@@ -29,22 +29,22 @@ After building, run the following command from this directory:
 ```bash
 SDK_BASE=$(cd ../../../.. && pwd) && \
 $SDK_BASE/tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc-ubuntu \
-  --chipname=bl616d \
-  --imgfile=build/wifi_bl616d.bin \
+  --chipname=bl618dg \
+  --imgfile=build/wifi_bl618dg.bin \
   --appkeys=shared \
   --brdcfgdir=$SDK_BASE/bsp/board/bl616dk/config
 ```
 
-The OTA file will be generated at: `build/wifi_bl616d.bin.ota`
+The OTA file will be generated at: `build/wifi_bl618dg.bin.ota`
 
 ## Output Files
 
 | File | Description |
 |------|-------------|
-| `build/wifi_bl616d.bin` | Combined firmware binary (AP + NP) |
-| `build/wifi_bl616d.bin.ota` | OTA firmware file with header |
-| `build/wifi_bl616d.xz` | Compressed firmware |
-| `build/wifi_bl616d.xz.ota` | OTA compressed firmware |
+| `build/wifi_bl618dg.bin` | Combined firmware binary (AP + NP) |
+| `build/wifi_bl618dg.bin.ota` | OTA firmware file with header |
+| `build/wifi_bl618dg.xz` | Compressed firmware |
+| `build/wifi_bl618dg.xz.ota` | OTA compressed firmware |
 
 ## OTA File Format
 

@@ -44,7 +44,7 @@
 
 #define I2C_CONFIG_OFFSET        (0x0)  /* i2c_config */
 #define I2C_INT_STS_OFFSET       (0x4)  /* i2c_int_sts */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_CONFIG_1_OFFSET      (0x8)  /* i2c_config_1 */
 #else
 #define I2C_SUB_ADDR_OFFSET      (0x8)  /* i2c_sub_addr */
@@ -53,10 +53,10 @@
 #define I2C_PRD_START_OFFSET     (0x10) /* i2c_prd_start */
 #define I2C_PRD_STOP_OFFSET      (0x14) /* i2c_prd_stop */
 #define I2C_PRD_DATA_OFFSET      (0x18) /* i2c_prd_data */
-#if defined(BL616D)
+#if defined(BL618DG)
 #define I2C_PKT_LEN_OFFSET       (0x1C) /* i2c_pkt_len */
 #endif
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_SUB_ADDR_OFFSET       (0x1C)  /* i2c_sub_addr */
 #define I2C_SUB_ADDR_3_0_OFFSET   (0x1C)  /* i2c_sub_addr_3_0 */
 #define I2C_SUB_ADDR_7_4_OFFSET   (0x20)  /* i2c_sub_addr_7_4 */
@@ -67,7 +67,7 @@
 #define I2C_FIFO_CONFIG_1_OFFSET (0x84) /* i2c_fifo_config_1 */
 #define I2C_FIFO_WDATA_OFFSET    (0x88) /* i2c_fifo_wdata */
 #define I2C_FIFO_RDATA_OFFSET    (0x8C) /* i2c_fifo_rdata */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_SW_USAGE_OFFSET      (0x90)/* i2c_sw_usage */
 #define I2C_HW_VERSION_OFFSET    (0x90)/* i2c_hw_version */
 #endif
@@ -79,20 +79,20 @@
 #define I2C_CR_I2C_PKT_DIR           (1 << 1U)
 #define I2C_CR_I2C_DEG_EN            (1 << 2U)
 #define I2C_CR_I2C_SCL_SYNC_EN       (1 << 3U)
-#if !defined(BL616L)
+#if !defined(BL616CL)
 #define I2C_CR_I2C_SUB_ADDR_EN       (1 << 4U)
 #define I2C_CR_I2C_SUB_ADDR_BC_SHIFT (5U)
 #define I2C_CR_I2C_SUB_ADDR_BC_MASK  (0x3 << I2C_CR_I2C_SUB_ADDR_BC_SHIFT)
 #endif
-#if defined(BL616) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628) || defined(BL702L)
+#if defined(BL616) || defined(BL618DG)    || defined(BL702L)
 #define I2C_CR_I2C_10B_ADDR_EN    (1 << 7U)
 #define I2C_CR_I2C_SLV_ADDR_SHIFT (8U)
 #define I2C_CR_I2C_SLV_ADDR_MASK  (0x3ff << I2C_CR_I2C_SLV_ADDR_SHIFT)
-#if !defined(BL616D)
+#if !defined(BL618DG)
 #define I2C_CR_I2C_PKT_LEN_SHIFT  (20U)
 #define I2C_CR_I2C_PKT_LEN_MASK   (0xff << I2C_CR_I2C_PKT_LEN_SHIFT)
 #endif
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define I2C_CR_I2C_10B_ADDR_EN    (1 << 7U)
 #define I2C_CR_I2C_SLV_ADDR_SHIFT (8U)
 #define I2C_CR_I2C_SLV_ADDR_MASK  (0x3ff << I2C_CR_I2C_SLV_ADDR_SHIFT)
@@ -115,7 +115,7 @@
 #define I2C_NAK_INT         (1 << 3U)
 #define I2C_ARB_INT         (1 << 4U)
 #define I2C_FER_INT         (1 << 5U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_TO_INT          (1 << 6U)
 #define I2C_CR_I2C_TO_INT   (1 << 7U)
 #endif
@@ -125,11 +125,11 @@
 #define I2C_CR_I2C_NAK_MASK (1 << 11U)
 #define I2C_CR_I2C_ARB_MASK (1 << 12U)
 #define I2C_CR_I2C_FER_MASK (1 << 13U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_CR_I2C_TO_MASK  (1 << 14U)
 #endif
 #define I2C_CR_I2C_END_CLR  (1 << 16U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_CR_I2C_TO_CLR   (1 << 18U)
 #endif
 #define I2C_CR_I2C_NAK_CLR  (1 << 19U)
@@ -140,11 +140,11 @@
 #define I2C_CR_I2C_NAK_EN   (1 << 27U)
 #define I2C_CR_I2C_ARB_EN   (1 << 28U)
 #define I2C_CR_I2C_FER_EN   (1 << 29U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_CR_I2C_TO_EN    (1 << 30U)
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x8 : i2c_config_1 */
 #define I2C_CR_I2C_SUB_ADDR_EN       (1 << 0U)
 #define I2C_CR_I2C_SUB_ADDR_BC_SHIFT (1U)
@@ -195,13 +195,13 @@
 #define I2C_CR_I2C_PRD_D_PH_3_SHIFT (24U)
 #define I2C_CR_I2C_PRD_D_PH_3_MASK  (0xff << I2C_CR_I2C_PRD_D_PH_3_SHIFT)
 
-#if defined(BL616D)
+#if defined(BL618DG)
 /* 0x1C : i2c_pkt_len */
 #define I2C_CR_I2C_PKT_LEN_SHIFT (0U)
 #define I2C_CR_I2C_PKT_LEN_MASK  (0xfff << I2C_CR_I2C_PKT_LEN_SHIFT)
 #endif
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x1C : i2c_sub_addr_3_0 */
 #define I2C_CR_I2C_SUB_ADDR_B0_SHIFT (0U)
 #define I2C_CR_I2C_SUB_ADDR_B0_MASK  (0xff << I2C_CR_I2C_SUB_ADDR_B0_SHIFT)
@@ -252,7 +252,7 @@
 #define I2C_TX_FIFO_UNDERFLOW (1 << 5U)
 #define I2C_RX_FIFO_OVERFLOW  (1 << 6U)
 #define I2C_RX_FIFO_UNDERFLOW (1 << 7U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define I2C_CR_I2C_M_TO_POP_VALUE_SHIFT (12U)
 #define I2C_CR_I2C_M_TO_POP_VALUE_MASK  (0xfffff << I2C_CR_I2C_M_TO_POP_VALUE_SHIFT)
 #endif
@@ -273,7 +273,7 @@
 #define I2C_FIFO_RDATA_SHIFT (0U)
 #define I2C_FIFO_RDATA_MASK  (0xffffffff << I2C_FIFO_RDATA_SHIFT)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x90 : i2c_sw_usage and i2c_hw_version */
 #define I2C_SW_USAGE_SHIFT   (0U)
 #define I2C_SW_USAGE_MASK    (0xffffff << I2C_SW_USAGE_SHIFT)

@@ -4,7 +4,7 @@ BL_SDK_BASE ?= $(abspath  ./../../..)
 export BL_SDK_BASE
 
 BOARD ?= ${CHIP}dk
-ifeq ($(CHIP), bl616d)
+ifeq ($(CHIP), bl618dg)
 	CPU_ID ?= ap
 endif
 

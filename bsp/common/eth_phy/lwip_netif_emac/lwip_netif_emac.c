@@ -29,9 +29,9 @@
 #define DBG_TAG "LWIP_EMAC"
 #include "log.h"
 
-#if defined(BL616) || defined(BL616L) || defined(BL702) || defined(BL808)
+#if defined(BL616) || defined(BL616CL) || defined(BL702)
 #define EMAC_DEVICE_NAME BFLB_NAME_EMAC0
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define EMAC_DEVICE_NAME BFLB_NAME_EMAC_V2_0
 #endif
 
@@ -86,7 +86,7 @@ static eth_phy_init_cfg_t phy_cfg = {
 static struct bflb_emac_config_s emac_cfg = {
     .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
     .clk_internal_mode = false,
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
     .md_clk_div = 79,
 #else
     .md_clk_div = 39,

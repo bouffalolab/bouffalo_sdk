@@ -13,33 +13,25 @@
 #include "bl616_psram.h"
 #endif
 
-#if defined(BL616L)
-#include "bl616l_common.h"
-#include "bl616l_glb.h"
+#if defined(BL616CL)
+#include "bl616cl_common.h"
+#include "bl616cl_glb.h"
 // #include "bl616_sec_eng.h"
-#include "bl616l_tzc_sec.h"
-#include "bl616l_psram.h"
+#include "bl616cl_tzc_sec.h"
+#include "bl616cl_psram.h"
 #endif
 
-#if defined(BL616D)
-#include "bl616d_common.h"
-#include "bl616d_glb.h"
+#if defined(BL618DG)
+#include "bl618dg_common.h"
+#include "bl618dg_glb.h"
 // #include "bl606p_sec_eng.h"
-#include "bl616d_psram.h"
-#endif
-
-#if defined(BL606P)
-#include "bl606p_common.h"
-#include "bl606p_glb.h"
-// #include "bl606p_sec_eng.h"
-#include "bl606p_psram.h"
+#include "bl618dg_psram.h"
 #endif
 
 #define UHS_PSRAM_ADDR       (0x50000000)
-#define BL606P_X8_PSRAM_ADDR (0x54000000)
 #define BL616_X8_PSRAM_ADDR  (0xA8000000)
-#define BL616L_X8_PSRAM_ADDR (0x88000000)
-#define BL616D_X8_PSRAM_ADDR (0x88000000)
+#define BL616CL_X8_PSRAM_ADDR (0x88000000)
+#define BL618DG_X8_PSRAM_ADDR (0x88000000)
 #define MEMTESTER_M0
 // #define MEMTESTER_D0
 
@@ -66,20 +58,14 @@ int main(void)
     char memsuffix = 'B';
     /* --------------- stress test --------------- */
     semc_test_config_t testConfig;
-#if defined(BL808)
-    testConfig.baseAddr = UHS_PSRAM_ADDR;
-    testConfig.dramFreq = Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMA) / 1000000;
-#elif defined(BL606P)
-    testConfig.baseAddr = BL606P_X8_PSRAM_ADDR;
-    testConfig.dramFreq = Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMB) / 1000000;
-#elif defined(BL616)
+#if defined(BL616)
     testConfig.baseAddr = BL616_X8_PSRAM_ADDR;
     testConfig.dramFreq = Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMB) / 1000000;
-#elif defined(BL616L)
-    testConfig.baseAddr = BL616L_X8_PSRAM_ADDR;
+#elif defined(BL616CL)
+    testConfig.baseAddr = BL616CL_X8_PSRAM_ADDR;
     testConfig.dramFreq = Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMB) / 1000000;
-#elif defined(BL616D)
-    testConfig.baseAddr = BL616D_X8_PSRAM_ADDR;
+#elif defined(BL618DG)
+    testConfig.baseAddr = BL618DG_X8_PSRAM_ADDR;
     testConfig.dramFreq = Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMB) / 1000000;
 #endif
     testConfig.testSize = 0;
@@ -95,7 +81,7 @@ int main(void)
         printf("This chip has no psram, please disable CONFIG_PSRAM\r\n");
         while (1) {}
     }
-#if defined(BL808)
+#if 0
     switch (device_info.psram_info) {
         case 2:
             testConfig.testSize = 32 * 1024 * 1024;

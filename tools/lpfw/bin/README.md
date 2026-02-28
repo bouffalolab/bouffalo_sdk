@@ -34,10 +34,10 @@ Submodule Information:
 -966b71fd5c2d05e56e0bff3bb1d0634e6037c137 ../../../drivers/soc/bl606p/std
 -f910c86e6083dee8946203ca9d582c2c91ebd169 ../../../drivers/soc/bl616/phyrf
 -f3a088b134cf11c8c4ad6e36442db49128cd70cc ../../../drivers/soc/bl616/std
--975fb76395ab2e213d8023252621c6fd6cfbc495 ../../../drivers/soc/bl616d/phyrf
--3d264e32a24a0ee75fa91cc3e4ae3b0a894dadfe ../../../drivers/soc/bl616d/std
--a2b4e571de539f4d257bb62ebd4fd639deb4697f ../../../drivers/soc/bl616l/phyrf
--cfd14ae582b635d2bae19589a4bf2be9a7e7b207 ../../../drivers/soc/bl616l/std
+-975fb76395ab2e213d8023252621c6fd6cfbc495 ../../../drivers/soc/bl618dg/phyrf
+-3d264e32a24a0ee75fa91cc3e4ae3b0a894dadfe ../../../drivers/soc/bl618dg/std
+-a2b4e571de539f4d257bb62ebd4fd639deb4697f ../../../drivers/soc/bl616cl/phyrf
+-cfd14ae582b635d2bae19589a4bf2be9a7e7b207 ../../../drivers/soc/bl616cl/std
 -cefe8a6b28383ca405cec0d75785dcb07548c709 ../../../drivers/soc/bl628/std
 -d929f1aaee7579ec832fcf1b5bcbfe2fc4302d5d ../../../drivers/soc/bl702/phyrf
 -662cb2b5c5b8abaa2962d5d2c967ae558e3f89de ../../../drivers/soc/bl702/std

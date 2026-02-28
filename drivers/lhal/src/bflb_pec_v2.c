@@ -378,12 +378,12 @@ uint8_t bflb_pec_is_stalled(struct bflb_device_s *dev)
 void bflb_pec_mem_write(struct bflb_device_s *dev, uint8_t addr, uint32_t instr)
 {
     uint32_t reg_base;
-#if defined(BL616L)
+#if defined(BL616CL)
     uint32_t regval;
 #endif
 
     reg_base = dev->reg_base;
-#if defined(BL616L)
+#if defined(BL616CL)
     /* enable system bus access */
     putreg32(0x428A2F98, reg_base + 8);
     regval = getreg32(reg_base + PEC_MEM_CFG_OFFSET);
@@ -392,7 +392,7 @@ void bflb_pec_mem_write(struct bflb_device_s *dev, uint8_t addr, uint32_t instr)
 #endif
     /* write instruction */
     putreg32(instr, reg_base + PEC_MEM_OFFSET + addr * sizeof(uint32_t));
-#if defined(BL616L)
+#if defined(BL616CL)
     /* enable state machine hardware access */
     regval = getreg32(reg_base + PEC_MEM_CFG_OFFSET);
     regval &= ~(PEC_MEM_SM0_BUS_ACCESS << dev->sub_idx);
@@ -414,12 +414,12 @@ void bflb_pec_mem_write(struct bflb_device_s *dev, uint8_t addr, uint32_t instr)
 void bflb_pec_mem_write_multi(struct bflb_device_s *dev, uint8_t addr, uint32_t *instr, uint16_t len)
 {
     uint32_t reg_base;
-#if defined(BL616L)
+#if defined(BL616CL)
     uint32_t regval;
 #endif
 
     reg_base = dev->reg_base;
-#if defined(BL616L)
+#if defined(BL616CL)
     /* enable system bus access */
     regval = getreg32(reg_base + PEC_MEM_CFG_OFFSET);
     regval |= (PEC_MEM_SM0_BUS_ACCESS << dev->sub_idx);
@@ -429,7 +429,7 @@ void bflb_pec_mem_write_multi(struct bflb_device_s *dev, uint8_t addr, uint32_t 
     for (uint16_t i = 0; i < len; i++) {
         putreg32(instr[i], reg_base + PEC_MEM_OFFSET + (addr + i) * sizeof(uint32_t));
     }
-#if defined(BL616L)
+#if defined(BL616CL)
     /* enable hardware access */
     regval = getreg32(reg_base + PEC_MEM_CFG_OFFSET);
     regval &= ~(PEC_MEM_SM0_BUS_ACCESS << dev->sub_idx);
@@ -450,19 +450,19 @@ uint32_t bflb_pec_mem_read(struct bflb_device_s *dev, uint8_t addr)
 {
     uint32_t reg_base;
     uint32_t instruction;
-#if defined(BL616L)
+#if defined(BL616CL)
     uint32_t regval;
 #endif
 
     reg_base = dev->reg_base;
-#if defined(BL616L)
+#if defined(BL616CL)
     /* enable system bus access */
     regval = getreg32(reg_base + PEC_MEM_CFG_OFFSET);
     regval |= (PEC_MEM_SM0_BUS_ACCESS << dev->sub_idx);
     putreg32(regval, reg_base + PEC_MEM_CFG_OFFSET);
 #endif
     instruction = getreg32(reg_base + PEC_MEM_OFFSET + addr * sizeof(uint32_t));
-#if defined(BL616L)
+#if defined(BL616CL)
     /* enable hardware access */
     regval = getreg32(reg_base + PEC_MEM_CFG_OFFSET);
     regval &= ~(PEC_MEM_SM0_BUS_ACCESS << dev->sub_idx);
@@ -931,7 +931,7 @@ uint8_t bflb_pec_fifo_get_deepth_tx(struct bflb_device_s *dev)
     if (regval & PEC_CR_SM_FIFO_TX_JOIN_RX) {
         return 0;
     } else if (regval & PEC_CR_SM_FIFO_RX_JOIN_TX) {
-#if defined(BL616L)
+#if defined(BL616CL)
         if (dev->sub_idx == 0) {
             return (PEC_FIFO_DEEPTH * 4 + PEC_FIFO_DEEPTH * 2);
         } else {
@@ -943,7 +943,7 @@ uint8_t bflb_pec_fifo_get_deepth_tx(struct bflb_device_s *dev)
         } else {
             return PEC_FIFO_DEEPTH;
         }
-#elif defined(BL616D)
+#elif defined(BL618DG)
         return (2 * PEC_FIFO_DEEPTH);
     } else {
         return PEC_FIFO_DEEPTH;
@@ -969,7 +969,7 @@ uint8_t bflb_pec_fifo_get_deepth_rx(struct bflb_device_s *dev)
     if (regval & PEC_CR_SM_FIFO_RX_JOIN_TX) {
         return 0;
     } else if (regval & PEC_CR_SM_FIFO_TX_JOIN_RX) {
-#if defined(BL616L)
+#if defined(BL616CL)
         if (dev->sub_idx == 0) {
             return (PEC_FIFO_DEEPTH * 4 + PEC_FIFO_DEEPTH * 2);
         } else {
@@ -981,7 +981,7 @@ uint8_t bflb_pec_fifo_get_deepth_rx(struct bflb_device_s *dev)
         } else {
             return PEC_FIFO_DEEPTH;
         }
-#elif defined(BL616D)
+#elif defined(BL618DG)
         return (2 * PEC_FIFO_DEEPTH);
     } else {
         return PEC_FIFO_DEEPTH;

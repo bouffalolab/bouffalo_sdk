@@ -8,9 +8,9 @@ struct bflb_sec_irq_callback {
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x40004000)
-#elif defined(BL616) || defined(BL616L) || defined(BL606P) || defined(BL808)
+#elif defined(BL616) || defined(BL616CL)  
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x20004000)
-#elif defined(BL628) || defined(BL616D)
+#elif  defined(BL618DG)
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x20080000)
 #endif
 
@@ -146,7 +146,7 @@ void bflb_sec_irq_attach(uint8_t sec_type, void (*callback)(void *arg), void *ar
     bflb_irq_enable(28);
     bflb_irq_enable(29);
     bflb_irq_enable(30);
-#elif (defined(BL606P) || defined(BL808)) && (defined(CPU_M0) || defined(CPU_LP))
+#elif (0 ) && (defined(CPU_M0) || defined(CPU_LP))
     bflb_irq_attach(25, sec_eng_isr, NULL);
     bflb_irq_attach(26, sec_eng_isr, NULL);
     bflb_irq_attach(27, sec_eng_isr, NULL);
@@ -155,7 +155,7 @@ void bflb_sec_irq_attach(uint8_t sec_type, void (*callback)(void *arg), void *ar
     bflb_irq_enable(26);
     bflb_irq_enable(27);
     bflb_irq_enable(28);
-#elif defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG) 
     bflb_irq_attach(25, sec_eng_isr, NULL);
     bflb_irq_attach(26, sec_eng_isr, NULL);
     bflb_irq_attach(27, sec_eng_isr, NULL);

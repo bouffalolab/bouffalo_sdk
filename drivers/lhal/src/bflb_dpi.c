@@ -2,7 +2,7 @@
 #include "hardware/mm_misc_reg.h"
 #include "hardware/dvp_tsrc_reg.h"
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define DTSRC_BASE ((uint32_t)0x20045000)
 #else
 #error "not support dpi"

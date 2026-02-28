@@ -60,7 +60,7 @@ __UNUSED static void bflb_mjdec_set_framesize(struct bflb_device_s *dev, uint16_
     putreg32(regval, reg_base + MJDEC_JDEC_FRAME_SIZE_OFFSET);
 }
 
-#if defined(BL616D)
+#if defined(BL618DG)
 void bflb_mjdec_set_dqt_from_spec(struct bflb_device_s *dev, uint8_t (*yy)[8], uint8_t (*uv)[8])
 {
 #ifdef romapi_bflb_mjdec_set_dqt_from_spec
@@ -489,7 +489,7 @@ uint8_t bflb_mjdec_set_dht_from_header(struct bflb_device_s *dev, uint8_t *heade
 
 #endif
 
-#if defined(BL808) || defined(BL606P)
+#if 0 
 void bflb_mjdec_set_dqt_from_quality(struct bflb_device_s *dev, uint8_t quality)
 {
     LHAL_PARAM_ASSERT(IS_MJDEC_QUALITY(quality));

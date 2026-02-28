@@ -1,6 +1,6 @@
 if(CONFIG_GEN_ROM)
-    if((${CHIP} STREQUAL "bl616l"))
-        add_subdirectory(rom_btblecontroller_bl616l_A0)
+    if((${CHIP} STREQUAL "bl616cl"))
+        add_subdirectory(rom_btblecontroller_bl616cl_A0)
     endif()
 else()
     include(${CMAKE_CURRENT_SOURCE_DIR}/ble_common.cmake)

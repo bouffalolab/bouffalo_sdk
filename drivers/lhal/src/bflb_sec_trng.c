@@ -11,9 +11,9 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x40004000)
-#elif defined(BL616) || defined(BL616L) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL616CL)   
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x20004000)
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x20080000)
 #endif
 

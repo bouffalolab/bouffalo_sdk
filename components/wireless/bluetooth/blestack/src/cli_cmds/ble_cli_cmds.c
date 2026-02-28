@@ -37,11 +37,13 @@
 static struct k_thread ble_cli_task_h;
 static struct k_fifo ble_cli_queue;
 
+#if defined(CONFIG_BT_OBSERVER)
 // BLE scan statistics variables
 static bool g_scan_stats_mode = false;  // Statistics mode flag
 static uint32_t g_scan_count = 0;       // Count of scanned devices
 static uint32_t g_last_stats_time = 0;  // Last time statistics were printed
 static const uint32_t SCAN_STATS_INTERVAL_MS = 10000; // 10 seconds
+#endif
 
 typedef enum{
     CLI_MSG_ENABLE_ADV,
@@ -135,7 +137,7 @@ BLE_CLI(connect_test_psm);
 #endif
 BLE_CLI(read_rssi);
 BLE_CLI(unpair);
-#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL702L) || defined(BL616)
 BLE_CLI(ble_throughput_calc);
 #endif
 #endif
@@ -269,7 +271,7 @@ BLE_CLI(le_test_end);
         [Conn Interval Max: 0x0006-0C80; e.g.0030] \
         [Conn Latency: 0x0000-01f3; e.g.0004] \
         [Supervision Timeout: 0x000A-0C80; e.g.0010]);
-#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL702L) || defined(BL616)
     SHELL_CMD_EXPORT_ALIAS(blecli_ble_throughput_calc, ble_set_throughput_calc, ble set throughputcalc \
         Parameter:[enable];[duration]);
 #endif
@@ -436,7 +438,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     [Conn Interval Max,0x0006-0C80,e.g.0030]\r\n\
     [Conn Latency,0x0000-01f3,e.g.0004]\r\n\
     [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_send_l2cap_conn_param_update_req},
-    #if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+    #if defined(BL702L) || defined(BL616)
     {"ble_set_throughput_calc", "ble set throughputcalc\r\nParameter [enable]\r\n [duration]\r\n", blecli_ble_throughput_calc},
     #endif
     #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
@@ -1816,7 +1818,7 @@ BLE_CLI(read_rssi)
     }
 }
 
-#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL702L) || defined(BL616)
 BLE_CLI(ble_throughput_calc)
 {  
     int err;

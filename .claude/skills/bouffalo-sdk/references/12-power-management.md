@@ -450,34 +450,17 @@ void power_test(void)
 
 ## 多核电源管理
 
-### BL808多核管理
+### BL618dg双核管理
 
 ```c
-void multi_core_pm(void)
-{
-    // M0核心进入睡眠
-    if (get_core_id() == CORE_M0) {
-        bflb_pm_deep_sleep();
-    }
-
-    // D0核心继续运行（用于WiFi）
-    if (get_core_id() == CORE_D0) {
-        // 保持WiFi运行
-    }
-}
-```
-
-### BL616双核管理
-
-```c
-void bl616_pm(void)
+void bl618dg_pm(void)
 {
     // LP核心处理低功耗任务
     if (get_core_id() == CORE_LP) {
         bflb_pm_deep_sleep();
     }
 
-    // M0核心正常运行
+    // ap核心正常运行
 }
 ```
 

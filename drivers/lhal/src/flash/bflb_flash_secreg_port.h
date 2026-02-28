@@ -63,9 +63,9 @@
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x4000B700)
 #elif defined(BL702L)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x4000B600)
-#elif defined(BL606P) || defined(BL808) || defined(BL616) || defined(BL616L)
+#elif  defined(BL616) || defined(BL616CL)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x2000B600)
-#elif defined(BL628) || defined(BL616D)
+#elif  defined(BL618DG)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x20082600)
 #endif
 

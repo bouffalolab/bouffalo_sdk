@@ -37,9 +37,9 @@
  * EMAC Hardware Layer
  *****************************************************************************/
 
-#if defined(BL616) || defined(BL616L) || defined(BL702) || defined(BL808)
+#if defined(BL616) || defined(BL616CL) || defined(BL702)
 #define EMAC_DEVICE_NAME BFLB_NAME_EMAC0
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define EMAC_DEVICE_NAME BFLB_NAME_EMAC_V2_1
 #endif
 
@@ -58,7 +58,7 @@ static volatile int g_speed_mode = 0;
 static struct bflb_emac_config_s g_emac_cfg = {
     .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
     .clk_internal_mode = false,
-#if defined(BL616L) || defined(BL616D)
+#if defined(BL616CL) || defined(BL618DG)
     .md_clk_div = 79,
 #else
     .md_clk_div = 39,
@@ -335,7 +335,7 @@ static int emac_phy_init(void)
     }
 
     /* gpio init */
-#if defined(BL616D)
+#if defined(BL618DG)
     if (g_emac_dev->idx == 1) {
         board_emac1_gpio_init();
     } else

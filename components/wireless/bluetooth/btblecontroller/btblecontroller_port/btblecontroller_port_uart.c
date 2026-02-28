@@ -42,14 +42,14 @@
 #endif
 #endif
 
-#if defined(BL616) || defined(BL616L)
+#if defined(BL616) || defined(BL616CL)
 #define UART_TXD_PIN               27
 #define UART_RXD_PIN               28
 #define UART_CTS_PIN               29
 #define UART_RTS_PIN               30
 #endif
 
-#if defined(BL616D)
+#if defined(BL618DG)
 #define UART_TXD_PIN               27
 #define UART_RXD_PIN               28
 #define UART_CTS_PIN               25

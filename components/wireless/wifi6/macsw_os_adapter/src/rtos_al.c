@@ -125,7 +125,7 @@ rtos_task_t rtos_task_get_handle(const char *task_name)
 
 int rtos_task_create(rtos_task_fct func,
                      const char * const name,
-                     enum rtos_task_id task_id,
+                     uint8_t task_id,
                      const uint16_t stack_depth,
                      void * const params,
                      rtos_prio prio,

@@ -16,7 +16,7 @@ nethub 是一个带有 host 的方案支持双栈方案示例，支持多种 int
 
 说明：**√** 表示支持；**×** 表示不支持；**○ ** 表示支持但未测试。
 
-|   接口类型   | bl616/bl618 | bl616d/bl618d/bl619d | bl616L  |
+|   接口类型    | BL616/BL618 |   BL618DG            | BL616CL  |
 |:------------:|:-----------:|:--------------------:|:-------:|
 |  SDIO        |    √(sdio2) |        √(sdio3)      |    √(sdio2)   |
 |  USB         |     开发中  |           开发中     |  开发中 |
@@ -24,7 +24,7 @@ nethub 是一个带有 host 的方案支持双栈方案示例，支持多种 int
 
 ## 硬件GPIO相关
 
-| 功能引脚     | bl616/bl618 | bl616d/bl618d/bl619d | bl616L  |
+| 功能引脚     | BL616/BL618 |   BL618DG            | BL616CL  |
 |:------------:|:-----------:|:--------------------:|:-------:|
 | SDIO_DAT2    |   GPIO10    | GPIO43               | GPIO6  |
 | SDIO_DAT3    |   GPIO11    | GPIO44               | GPIO7  |
@@ -46,10 +46,10 @@ make CHIP=<芯片名称> BOARD=<开发板名称>
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-### bl616d 系列
+### bl618dg 系列
 
 ```bash
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 ## 烧录指南
@@ -67,10 +67,4 @@ make flash CHIP=bl616 COMX=/dev/ttyUSB0
 
 ## 系统架构和 host 使用手册
 
-系统架构说明和 host 端使用手册请参考：[components/net/nethub/host_linux/README_CN.md](../../components/net/nethub/host_linux/README_CN.md)
-
-#### 重要注意事项
-
-⚠️ **DHCP 配置**：当前方案 DHCP client 运行在 device 侧，host 侧必须采用静态 IP 配置，且需确保 host 侧和 device 侧使用相同的 IP 地址。
-
-
+系统架构说明和 host 端使用手册请参考：[Nethub 用户手册](https://docs.bouffalolab.com/index.php?title=NethubUserManual)

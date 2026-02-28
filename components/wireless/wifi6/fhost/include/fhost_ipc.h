@@ -149,7 +149,7 @@ int fhost_ipc_parse_mac_addr(const char *str, struct mac_addr *addr);
  * @param[in] sep    Whether to print separator first
  ****************************************************************************************
  */
-void fhost_ipc_print_akm(enum mac_akm_suite suite, bool sep);
+void fhost_ipc_print_akm(uint8_t suite, bool sep); // ref @ enum mac_akm_suite
 
 /**
  ****************************************************************************************
@@ -159,7 +159,7 @@ void fhost_ipc_print_akm(enum mac_akm_suite suite, bool sep);
  * @param[in] sep    Whether to print separator first
  ****************************************************************************************
  */
-void fhost_ipc_print_cipher(enum mac_cipher_suite suite, bool sep);
+void fhost_ipc_print_cipher(uint16_t suite, bool sep); // ref @ enum mac_cipher_suite
 
 /**
  ****************************************************************************************

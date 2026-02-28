@@ -189,8 +189,37 @@ void rtos_timeouts_start(unsigned int delay);
  ****************************************************************************************
  */
 
-int platform_get_mac(enum wl80211_vif_type vif, uint8_t mac[6]);
+int platform_get_mac(uint8_t vif_type, uint8_t mac[6]); // ref @ enum wl80211_vif_type
 int platform_feature_index(void);
 #define WL80211_FEATURE(feat) (wl80211_platform_feature[platform_feature_index()].feat)
+
+/*
+ ****************************************************************************************
+ * WRAM MEMORY ALLOCATION FUNCTIONS
+ ****************************************************************************************
+ */
+
+/**
+ * @brief Allocate memory in WRAM (WiFi RAM) region
+ *
+ * Allocates memory from the WiFi RAM (WRAM) region. WRAM is required for
+ * WiFi hardware DMA access to packet buffers. This function uses lwIP's
+ * memory management internally.
+ *
+ * @param[in] size Size of memory to allocate in bytes
+ * @return Pointer to allocated memory, or NULL on failure
+ *
+ * @note Memory allocated by this function MUST be freed using wl80211_platform_free_wram()
+ */
+void *wl80211_platform_malloc_wram(size_t size);
+
+/**
+ * @brief Free memory allocated from WRAM region
+ *
+ * Frees memory that was allocated by wl80211_platform_malloc_wram().
+ *
+ * @param[in] ptr Pointer to memory to free (can be NULL)
+ */
+void wl80211_platform_free_wram(void *ptr);
 
 #endif /* _WL80211_PLATFORM_H_ */

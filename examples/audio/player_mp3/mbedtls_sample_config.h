@@ -68,8 +68,8 @@
 #define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
 
-//XXX TODO remove bl606p
-#if defined(CFG_CHIP_BL606P) || defined(CFG_CHIP_BL808)
+//XXX TODO remove bl618dg
+#if defined(CFG_CHIP_BL618DG) || defined(CFG_CHIP_BL618DG)
 #define MBEDTLS_PKCS5_C
 #endif
 #define MBEDTLS_PKCS1_V15

@@ -34,7 +34,7 @@ struct bflb_pec_uart_tx_s uart_tx_cfg = {
 };
 
 struct bflb_pec_uart_rx_s uart_rx_cfg = {
-#if defined(BL616L)
+#if defined(BL616CL)
     .mem = 0,                        /*!< memory address of first instruction */
 #else
     .mem = 128,                      /*!< memory address of first instruction */

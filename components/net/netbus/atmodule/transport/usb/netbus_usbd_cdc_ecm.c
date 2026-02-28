@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdint.h>
 
@@ -22,6 +21,7 @@
 
 #include "bflb_mtimer.h"
 #include "bflb_emac.h"
+#include <bflb_clock.h>
 
 #include "usbd_core.h"
 #include "usbd_cdc.h"
@@ -41,9 +41,16 @@
 #include <fhost.h>
 #endif
 #include "netbus_usbd_cdc_acm.h"
+#include "wifi_mgmr_ext.h"
 
 #define DBG_TAG "USBECM"
 #include "log.h"
+
+/* External function declarations */
+extern int wifi_mgmr_sta_mac_get(uint8_t mac[6]);
+#ifndef CONFIG_WL80211
+extern int fhost_tx_start(struct netif *net_if, struct pbuf *p, void *payload, void *data);
+#endif
 
 #define CONFIG_BYPASS_TX    (0)
 #define CONFIG_BYPASS_TX2   (0)
@@ -235,7 +242,7 @@ static void cdc_ecm_macaddr_init(void)
     extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
     mfg_media_read_macaddr_with_lock(wlan_mac, 1);
 #else
-    wifi_mgmr_sta_mac_get(wlan_mac);
+    wifi_mgmr_sta_mac_get((uint8_t *)wlan_mac);
 #endif
 
     //wifi_mgmr_sta_mac_get(wlan_mac);
@@ -244,7 +251,7 @@ static void cdc_ecm_macaddr_init(void)
 
     ecm_print("cdc_ecm_macaddr_init: %s\r\n", mac_addr);
 
-    char *mac = &cdc_ecm_descriptor[0x12 + 0x9 + CDC_ECM_DESCRIPTOR_LEN + CDC_ACM_DESCRIPTOR_LEN + 4 + 0x14 + 0x2E + 0x16 + 2];
+    char *mac = (char *)&cdc_ecm_descriptor[0x12 + 0x9 + CDC_ECM_DESCRIPTOR_LEN + CDC_ACM_DESCRIPTOR_LEN + 4 + 0x14 + 0x2E + 0x16 + 2];
     for (int i = 0; i < 12; i++) {
         *(mac + (2*i)) = mac_addr[i];
     }
@@ -373,7 +380,6 @@ err_t _wl80211_output(wl80211_vif_type vif, struct pbuf *buf)
 int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
 {
     struct pbuf *p = (struct pbuf *)msg;
-    int res = 0;
 #ifdef CONFIG_WL80211
     struct netif *net_if;
     struct netif *net_if_sta, *net_if_ap;
@@ -434,20 +440,18 @@ int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
 #ifdef CONFIG_WL80211
     if (0 != _wl80211_output(is_sta ? WL80211_VIF_STA : WL80211_VIF_AP, p)) {
 #else
-    if (0 != fhost_tx_start(net_if, p, NULL, NULL)) {
+    if (0 != fhost_tx_start((struct netif *)net_if, p, NULL, NULL)) {
 #endif
         //printf("  tx error.\r\n");
-        res = -1;
     }
     pbuf_free(p);
-    return res;
+    return 0;
 }
 
-int usb_dn_task(void *arg)
+void usb_dn_task(void *arg)
 {
     BaseType_t result;
     int ret;
-    struct pbuf *p;
 
     while (1) {
         g_usbecm.dbg_dntask_mode = 1;
@@ -455,13 +459,13 @@ int usb_dn_task(void *arg)
         result = xQueueReceive(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY);
         if (result != pdPASS) {
             printf("result:%d\r\n", result);
-            return -2;  // Timeout or error in receiving the message
+            return;  // Timeout or error in receiving the message
         }
 
         // init pbuf
         g_usbecm.dbg_dntask_mode = 2;
         g_usbecm.dnmsg->pbuf.custom_free_function = custom_free;
-        p = pbuf_alloced_custom(PBUF_RAW_TX, TX_PBUF_FRAME_LEN,
+        pbuf_alloced_custom(PBUF_RAW_TX, TX_PBUF_FRAME_LEN,
                 (PBUF_ALLOC_FLAG_DATA_CONTIGUOUS | PBUF_TYPE_ALLOC_SRC_MASK_STD_HEAP),
                 &g_usbecm.dnmsg->pbuf, g_usbecm.dnmsg->payload_buf, TX_PBUF_PAYLOAD_LEN);
 
@@ -491,7 +495,7 @@ int usb_dn_task(void *arg)
     }
 }
 
-int usb_up_task(void *arg)
+void usb_up_task(void *arg)
 {
     BaseType_t result;
 
@@ -500,7 +504,7 @@ int usb_up_task(void *arg)
         result = xQueueReceive(g_usbecm.upvq, &g_usbecm.upmsg, portMAX_DELAY);
         if (result != pdPASS) {
             printf("result:%d\r\n", result);
-            return -2;  // Timeout or error in receiving the message
+            return;  // Timeout or error in receiving the message
         }
 
         g_usbecm.dbg_uptask_mode = 2;
@@ -515,7 +519,7 @@ int usb_up_task(void *arg)
         g_usbecm.dbg_uptask_loop_cnt++;
     }
 
-    return 0;
+    return;
 }
 
 int dual_stack_peer_input(void *pkt, void *arg)

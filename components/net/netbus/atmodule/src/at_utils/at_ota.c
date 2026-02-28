@@ -5,8 +5,9 @@
 #include <bflb_flash.h>
 #include "at_ota.h"
 #include "at_pal.h"
+#include "bl_sys.h"
 
-#ifdef BL616D
+#ifdef BL618DG
 #define OTA_PARTITION_NAME_TYPE_FW    "FW0"
 #else
 #define OTA_PARTITION_NAME_TYPE_FW    "FW"
@@ -46,7 +47,7 @@ static int ota_upgrade_slice(at_ota_handle_t handle, uint32_t offset, char *buf,
     int ret = 0;
     uint32_t retry;
 
-#if (!CONFIG_AT_FAST_OTA)
+#if !defined(CONFIG_AT_FAST_OTA) || !(CONFIG_AT_FAST_OTA)
     ret = at_ota_erase(handle, offset, slice_size);
     if (ret) {
         printf("erase failed\r\n");
@@ -56,14 +57,14 @@ static int ota_upgrade_slice(at_ota_handle_t handle, uint32_t offset, char *buf,
 
     for (retry = 0; retry < OTA_UPGRADE_RETRY; retry++) {
 
-        ret = bflb_flash_write((handle->ota_addr + offset), buf, slice_size);
+        ret = bflb_flash_write((handle->ota_addr + offset), (uint8_t *)buf, slice_size);
 
         if (ret != 0) {
             printf("flash write fail! %d\r\n", ret);
             return -1;
         }
 
-#if (!CONFIG_AT_FAST_OTA)
+#if !defined(CONFIG_AT_FAST_OTA) || !(CONFIG_AT_FAST_OTA)
         ret = bflb_flash_read((handle->ota_addr + offset), handle->check_buf, slice_size);
         if (ret != 0) {
             printf("flash read fail! %d\r\n", ret);
@@ -92,7 +93,7 @@ static int ota_upgrade_slice(at_ota_handle_t handle, uint32_t offset, char *buf,
     return 0;
 }
 
-static int _check_ota_header(at_ota_header_t *ota_header, uint32_t *ota_len, int *use_xz)
+static int _check_ota_header(at_ota_header_t *ota_header, uint32_t *ota_len, uint8_t *use_xz)
 {
     char str[33]; //assume max segment size
     int i;
@@ -201,7 +202,7 @@ at_ota_handle_t at_ota_start(at_ota_header_t *ota_header)
     utils_sha256_init(&ota_handle->ctx_sha256);
     utils_sha256_starts(&ota_handle->ctx_sha256);
 
-#if CONFIG_AT_FAST_OTA
+#if defined(CONFIG_AT_FAST_OTA) && (CONFIG_AT_FAST_OTA)
     at_ota_erase(ota_handle, 0, ota_handle->part_size);
 #endif
     return ota_handle;
@@ -232,7 +233,7 @@ int at_ota_update(at_ota_handle_t handle, uint32_t offset, uint8_t *buf, uint32_
 
     for (write_size = 0; write_size < buf_len; write_size += OTA_SLICE_SIZE) {
         slice_size = (buf_len - write_size < OTA_SLICE_SIZE)?(buf_len - write_size):OTA_SLICE_SIZE;
-        ret = ota_upgrade_slice(handle, offset + write_size, buf, slice_size);
+        ret = ota_upgrade_slice(handle, offset + write_size, (char *)buf, slice_size);
         if (ret != 0) {
             return ret;
         }

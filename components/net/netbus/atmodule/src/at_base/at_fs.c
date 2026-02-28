@@ -2,6 +2,7 @@
 #include <reent.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include "at_fs.h"

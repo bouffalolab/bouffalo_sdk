@@ -11,9 +11,9 @@
   * @{
   */
 
-#if defined(BL616) || defined(BL616L) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL616CL)  
 #define SDH_STD_V3
-#elif defined(BL616D) || defined(BL628)
+#elif defined(BL618DG) 
 #define SDH_STD_V3_SMIH
 #endif
 
@@ -90,7 +90,7 @@
  * |   1  |   1  | Link descriptor | Link to another descriptor                                        |
  * |------|------|-----------------|-------------------------------------------------------------------|
  */
-#if defined(BL606P) || defined(BL808)
+#if 0 
 #define USDHC_ADMA2_ADDRESS_ALIGN (8)
 #define USDHC_ADMA2_LENGTH_ALIGN  (4)
 #else

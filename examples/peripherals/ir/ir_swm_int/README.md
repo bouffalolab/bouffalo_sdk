@@ -3,11 +3,11 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark                |
-|:----------------:|:---------------------:|
-|BL616             | Only support rx       |
-|BL616L            | Only support rx       |
-|BL616D            |                       |
+| CHIP    | Remark          |
+|:-------:|:---------------:|
+| BL616   | Only support rx |
+| BL616CL | Only support rx |
+| BL618DG |                 |
 
 ## Compile
 
@@ -17,16 +17,16 @@
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- BL616L
+- BL616CL
 
 ```
-make CHIP=bl616l BOARD=bl616ldk
+make CHIP=bl616cl BOARD=bl616cldk
 ```
 
-- BL616D
+- BL618DG
 
 ```
-make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 ## Flash

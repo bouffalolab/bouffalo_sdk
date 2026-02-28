@@ -12,13 +12,10 @@
 #include "btble_lib_api.h"
 #include "bl616_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #include "btble_lib_api.h"
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 #include "rfparam_adapter.h"
-#elif defined(BL808)
-#include "btble_lib_api.h"
-#include "bl808_glb.h"
 #endif
 
 #include "hci_driver.h"
@@ -416,7 +413,7 @@ int main(void)
     /* ble stack need easyflash kv */
     easyflash_init();
 
-#if defined(BL616)||defined(BL616D)||defined(BL602)
+#if defined(BL616)||defined(BL618DG)||defined(BL602)
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");

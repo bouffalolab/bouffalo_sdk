@@ -36,8 +36,8 @@
 
 #include "bflb_sf_ctrl.h"
 #include "hardware/sf_ctrl_reg.h"
-#if defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)
-#if !defined(BL616D) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
+#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
 #include "csi_core.h"
 #else
 #include <nmsis_core.h>
@@ -950,7 +950,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_wrap_queue_value(void)
 #endif
 }
 
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL808) || defined(BL606P)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)  
 /****************************************************************************/ /**
  * @brief  SF Ctrl set cmds config
  *
@@ -1146,7 +1146,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
     reg_base = BFLB_SF_CTRL_BASE;
 
     regval = getreg32(reg_base + SF_CTRL_2_OFFSET);
-#if defined(BL628) || defined(BL616) || defined(BL616L) || defined(BL616D)
+#if  defined(BL616) || defined(BL616CL) || defined(BL618DG)
     if (sel <= SF_IO_EXT_SF3 || sel == SF_IO_EXT_SF2) {
         /* Single flash mode, disable bank2 */
         regval &= ~SF_CTRL_SF_IF_BK2_EN;
@@ -1165,7 +1165,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
         regval |= SF_CTRL_SF_IF_BK2_MODE;
         regval &= ~SF_CTRL_SF_IF_PAD_SEL_MASK;
     }
-#elif defined(BL808) || defined(BL606P)
+#elif 0 
     if (sel <= SF_IO_EXT_SF2) {
         /* Single flash mode, disable bank2 */
         regval &= ~SF_CTRL_SF_IF_BK2_EN;

@@ -2,18 +2,18 @@
 #include "bflb_rtc.h"
 #include "board.h"
 
-#if defined (BL616L) || defined (BL616D)
-#if defined (BL616L)
-#include "bl616l_hbn.h"
-#elif defined(BL616D)
-#include "bl616d_hbn.h"
+#if defined (BL616CL) || defined (BL618DG)
+#if defined (BL616CL)
+#include "bl616cl_hbn.h"
+#elif defined(BL618DG)
+#include "bl618dg_hbn.h"
 #endif
 #endif
 
 struct bflb_device_s *rtc;
 struct bflb_tm g_time;
 
-#if defined (BL616L) || defined (BL616D)
+#if defined (BL616CL) || defined (BL618DG)
 
 #define BL_PDS_CNT_TO_US(cnt) ((cnt) * 15625 / 512)  /* cnt / 32768 * 1000000 */
 
@@ -147,7 +147,7 @@ int main(void)
 
     bflb_rtc_set_time(rtc, 0);
 
-#if defined (BL616L) || defined (BL616D)
+#if defined (BL616CL) || defined (BL618DG)
     HBN_Trim_RC32K();
     rc32k_fine_trim();
 #endif

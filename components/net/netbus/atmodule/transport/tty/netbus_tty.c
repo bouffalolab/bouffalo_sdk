@@ -11,6 +11,8 @@
 #include <bflb_dma.h>
 #include "netbus_tty.h"
 
+#include <nethub.h>
+
 #define NETBUS_TTY_DEBUG (0)
 
 int netbus_tty_dnld(netbus_tty_ctx_t *pctx, uint8_t *data, uint32_t data_size)
@@ -21,6 +23,10 @@ int netbus_tty_dnld(netbus_tty_ctx_t *pctx, uint8_t *data, uint32_t data_size)
 
 #if NETBUS_TTY_DEBUG
     printf("----> dnld[%d] ", data_size);
+    if (data_size > 1500) {
+        printf("err\r\n");
+        return 0;
+    }
     for (int i = 0; i < data_size; i++) {
         printf("%02X ", data[i]);
     }
@@ -42,42 +48,44 @@ int netbus_tty_dnld(netbus_tty_ctx_t *pctx, uint8_t *data, uint32_t data_size)
 
 int netbus_tty_init(netbus_tty_ctx_t *pctx, uint32_t txbuf_size, uint32_t rxbuf_size)
 {
-	// pctx->txbuf   = xStreamBufferCreate(txbuf_size, 1);
-	pctx->rxbuf   = xStreamBufferCreate(rxbuf_size, 1);
-	pctx->w_mutex = xSemaphoreCreateMutex();
+    // pctx->txbuf   = xStreamBufferCreate(txbuf_size, 1);
+    pctx->rxbuf   = xStreamBufferCreate(rxbuf_size, 1);
+    pctx->w_mutex = xSemaphoreCreateMutex();
 
-	bflb_tty_dnld_register(netbus_tty_dnld, pctx);
-	return 0;
+    //	bflb_tty_dnld_register(netbus_tty_dnld, pctx);
+    nethub_ctrlpath_dnld_register((nethub_ctrlpath_callback_t)netbus_tty_dnld, pctx);
+    return 0;
 }
 
 int netbus_tty_send(netbus_tty_ctx_t *pctx, const uint8_t *p_data, uint32_t len, uint32_t timeout)
 {
     //return len;
 #if 0
-	int ret = 0;
-	int send_len = 0;
-	uint32_t remain_len = len;
-	struct bflb_device_s *pdev = bflb_device_get_by_name(pctx->config->name);
+    int ret = 0;
+    int send_len = 0;
+    uint32_t remain_len = len;
+    struct bflb_device_s *pdev = bflb_device_get_by_name(pctx->config->name);
 
-	if (xSemaphoreTake(pctx->w_mutex, timeout) != pdTRUE) {
-		return -1;
-	}
-	while (remain_len) {
-		ret = xStreamBufferSend(pctx->txbuf, p_data + send_len, remain_len, timeout);
-		if (ret <= 0) {
-			break;
-		}
-		send_len += ret;
-		remain_len -= ret;
-		bflb_uart_txint_mask(pdev, false);
-	}
-	xSemaphoreGive(pctx->w_mutex);
-	return send_len;
+    if (xSemaphoreTake(pctx->w_mutex, timeout) != pdTRUE) {
+        return -1;
+    }
+    while (remain_len) {
+        ret = xStreamBufferSend(pctx->txbuf, p_data + send_len, remain_len, timeout);
+        if (ret <= 0) {
+            break;
+        }
+        send_len += ret;
+        remain_len -= ret;
+        bflb_uart_txint_mask(pdev, false);
+    }
+    xSemaphoreGive(pctx->w_mutex);
+    return send_len;
 #else
     if (xSemaphoreTake(pctx->w_mutex, timeout) != pdTRUE) {
-		return -1;
-	}
-    bflb_tty_upld_send(p_data, len);
+        return -1;
+    }
+    //bflb_tty_upld_send(p_data, len);
+    nethub_ctrlpath_upld_send((uint8_t *)p_data, len);
     xSemaphoreGive(pctx->w_mutex);
 
 #if NETBUS_TTY_DEBUG
@@ -92,17 +100,18 @@ int netbus_tty_send(netbus_tty_ctx_t *pctx, const uint8_t *p_data, uint32_t len,
 #endif
 
 #endif
+    return len;
 }
 
 int netbus_tty_receive(netbus_tty_ctx_t *pctx, uint8_t *p_buffer, uint32_t buf_len, uint32_t timeout)
 {
-	return xStreamBufferReceive(pctx->rxbuf, p_buffer, buf_len, timeout);
+    return xStreamBufferReceive(pctx->rxbuf, p_buffer, buf_len, timeout);
 }
 
 int netbus_tty_deinit(netbus_tty_ctx_t *ctx)
 {
-	// vStreamBufferDelete(ctx->txbuf);
-	vStreamBufferDelete(ctx->rxbuf);
-	vSemaphoreDelete(ctx->w_mutex);
-	return 0;
+    // vStreamBufferDelete(ctx->txbuf);
+    vStreamBufferDelete(ctx->rxbuf);
+    vSemaphoreDelete(ctx->w_mutex);
+    return 0;
 }

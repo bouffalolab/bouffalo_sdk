@@ -30,7 +30,7 @@
 #include "bflb_mtimer.h"
 #endif
 
-#if defined (BL606P) || defined (BL628) ||defined(BL702L) || defined(BL702) || defined(BL808)
+#if defined(BL702L) || defined(BL702)
 #include "board.h"
 #else
 #include "board_gpio.h"

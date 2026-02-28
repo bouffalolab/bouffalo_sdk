@@ -4,9 +4,9 @@ Please refer to document [Introduction](./openthread_wifi_br/Introduction.md) fo
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616/BL618       |        |
+| CHIP        | Remark |
+|:-----------:|:------:|
+| BL616/BL618 |        |
 
 ## Compile
 

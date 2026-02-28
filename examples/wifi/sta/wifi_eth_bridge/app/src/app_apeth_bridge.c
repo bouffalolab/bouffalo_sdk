@@ -73,6 +73,16 @@ extern int hostrouter_init(void);
             void mm_sec_keydump();
             mm_sec_keydump();
         } break;
+        #ifdef CODE_WIFI_ON_GOT_IP_ABORT
+        case CODE_WIFI_ON_GOT_IP_ABORT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_ABORT\r\n", __func__);
+        } break;
+        #endif
+        #ifdef CODE_WIFI_ON_GOT_IP_TIMEOUT
+        case CODE_WIFI_ON_GOT_IP_TIMEOUT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_TIMEOUT\r\n", __func__);
+        } break;
+        #endif
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
             LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());

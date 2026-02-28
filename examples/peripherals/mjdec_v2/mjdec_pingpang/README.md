@@ -3,16 +3,16 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616L            |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL616CL |        |
 
 ## Compile
 
-- BL616L
+- BL616CL
 
 ```
-make CHIP=bl616l BOARD=bl616ldk
+make CHIP=bl616cl BOARD=bl616cldk
 ```
 
 ## Flash

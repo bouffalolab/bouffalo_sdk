@@ -9,7 +9,6 @@
 
 #include "rfparam_adapter.h"
 
-#include <transportsdio.h>
 #include <nethub.h>
 #include <nhsdiowifi.h>
 

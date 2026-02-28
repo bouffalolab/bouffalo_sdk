@@ -1,7 +1,7 @@
 SDK_DEMO_PATH ?= $(abspath .)
 BL_SDK_BASE ?= $(abspath  ./../../../)
 
-CHIP ?= bl616d
+CHIP ?= bl618dg
 BUILD_DIR ?= build
 APP_NAME = wifi
 

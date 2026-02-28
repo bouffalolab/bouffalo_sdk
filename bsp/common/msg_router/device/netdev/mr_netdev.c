@@ -112,7 +112,7 @@ static int msg_upld_send_done_cb(mr_frame_elem_t *frame_elem, void *arg)
     }
 
     mr_netdev_msg_t *netdev_msg_pkt = MR_NETDEV_FRAME_ELEM_TO_MSG_PACKET_ADDR(frame_elem);
-    if (priv->netdev_cfg.upld_done_cb) {
+    if (netdev_msg_pkt->flag == MR_NETDEV_FLAG_UPLD_DATA && priv->netdev_cfg.upld_done_cb) {
         /* User-defined callback */
         ret = priv->netdev_cfg.upld_done_cb(priv, netdev_msg_pkt);
     } else {
@@ -207,7 +207,6 @@ static void netdev_proc_task(void *arg)
 
     /* 初始状态 */
     priv->netdev_status = MR_NETDEV_DSTA_IDLE;
-    priv->netdev_cfg.link_up_flag = false;
 
     while (!priv->stop_requested) {
         /* Wait for notification or timeout */

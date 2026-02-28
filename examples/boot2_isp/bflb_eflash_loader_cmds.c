@@ -101,7 +101,7 @@ static ATTR_TCM_CONST_SECTION const struct eflash_loader_cmd_cfg_t eflash_loader
 #endif
 
 #if BFLB_SP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH
-    /* for bl702,bl808,bl606p,bl618, etc. */
+    /* for bl702,bl618dg,bl618dg,bl618, etc. */
     { BFLB_EFLASH_LOADER_CMD_RESET, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_reset },
     { BFLB_EFLASH_LOADER_CMD_FLASH_ERASE, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_erase_flash },
     { BFLB_EFLASH_LOADER_CMD_FLASH_WRITE, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_write_flash },

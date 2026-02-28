@@ -3,11 +3,10 @@
 
 ## Support CHIP
 
-|      CHIP        | Remark |
-|:----------------:|:------:|
-|BL616/BL618       |        |
-|BL808             |  Only for M0 CPU      |
-|BL628             |        |
+| CHIP        | Remark |
+|:-----------:|:------:|
+| BL616/BL618 |        |
+| BL618DG     |        |
 
 ## Compile
 
@@ -17,16 +16,10 @@
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- BL808
+- BL618DG
 
 ```
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
-```
-
-- BL628
-
-```
-make CHIP=bl628 BOARD=bl628dk
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 ## Flash

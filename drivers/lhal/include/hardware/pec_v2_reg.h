@@ -107,7 +107,7 @@
 #define PEC_HW_RESV_OFFSET                                      (0x3F0)/* Reserved register for hardware */
 #define PEC_SW_RESV_OFFSET                                      (0x3F4)/* Reserved register for software */
 
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PEC_DEGLITCH_0_OFFSET                                   (0x230)/* deglitch config register for group 0 */
 #define PEC_DEGLITCH_1_OFFSET                                   (0x234)/* deglitch config register for group 1 */
 #define PEC_DEGLITCH_2_OFFSET                                   (0x238)/* deglitch config register for group 2 */
@@ -208,7 +208,7 @@
 #define PEC_CR_SM_IN_BASE_4_MASK                               (0x3f<<PEC_CR_SM_IN_BASE_4_SHIFT)
 
 /* 0x5C ：State machine fifo threshold control and level status register */
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PEC_ST_SM_TX_LEVEL_SHIFT                               (0U)
 #define PEC_ST_SM_TX_LEVEL_MASK                                (0x7f<<PEC_ST_SM_TX_LEVEL_SHIFT)
 #define PEC_ST_SM_RX_LEVEL_SHIFT                               (8U)
@@ -217,7 +217,7 @@
 #define PEC_CR_SM_TXF_THR_MASK                                 (0x7f<<PEC_CR_SM_TXF_THR_SHIFT)
 #define PEC_CR_SM_RXF_THR_SHIFT                                (24U)
 #define PEC_CR_SM_RXF_THR_MASK                                 (0x7f<<PEC_CR_SM_RXF_THR_SHIFT)
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define PEC_ST_SM_TX_LEVEL_SHIFT                               (0U)
 #define PEC_ST_SM_TX_LEVEL_MASK                                (0x3f<<PEC_ST_SM_TX_LEVEL_SHIFT)
 #define PEC_ST_SM_RX_LEVEL_SHIFT                               (6U)
@@ -232,7 +232,7 @@
 #define PEC_ST_INTR_SM_RXF_RDY                                 (1<<0U)
 #define PEC_ST_INTR_SM_TXF_RDY                                 (1<<4U)
 
-#if defined(BL616L)
+#if defined(BL616CL)
 /* 0x3F8 : Config instruction memory access privilege */
 #define PEC_MEM_SM0_BUS_ACCESS                                 (1<<0U)
 #define PEC_MEM_SM1_BUS_ACCESS                                 (1<<1U)

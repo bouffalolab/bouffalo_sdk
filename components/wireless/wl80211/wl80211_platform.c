@@ -27,8 +27,14 @@ const struct platform_feature wl80211_platform_feature[] = { { 2, 1, 1 }, { 1, 0
 #error "Incorrect reordering buffer size"
 #endif
 
-const unsigned int wl80211_rx_buf_mem_len = (MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2);
-struct wl80211_mac_rx_desc wl80211_rx_buf_mem[(MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2)] __SHAREDRAM;
+// for station/ap mode
+#define WL80211_RX_DESC_MPDU_LEN  (sizeof(struct wl80211_mac_rx_desc) + CO_ALIGN4_HI(RX_MAX_AMSDU_SUBFRAME_LEN + 1))
+// for monitor mode
+#define WL80211_RX_DESC_AMSDU_LEN (sizeof(struct wl80211_mac_rx_desc) + CO_ALIGN4_HI(MACSW_CONFIG(MACSW_MAX_AMSDU_RX)))
+
+#define WL80211_RX_BUF_MEM_LEN    ((MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2) * WL80211_RX_DESC_MPDU_LEN)
+const unsigned int wl80211_rx_buf_mem_len = WL80211_RX_BUF_MEM_LEN;
+uint32_t wl80211_rx_buf_mem[CO_ALIGN4_HI(WL80211_RX_BUF_MEM_LEN) / sizeof(uint32_t)] __SHAREDRAM;
 
 uint32_t rtos_ms2tick(int ms)
 {
@@ -175,6 +181,25 @@ void rtos_timeouts_start(unsigned int delay)
     xTimerChangePeriod(timeout_tmr, delay, portMAX_DELAY);
 }
 
+#ifdef COMPAT_WIFI_MGMR
+static void evt_handler_wrapper(void (*handler)(void))
+{
+    assert(handler != NULL);
+    handler();
+
+    vTaskDelete(NULL);
+}
+
+void rtos_start_evt_task(void (*handler)(void))
+{
+    if (!handler) {
+        return;
+    }
+
+    xTaskCreate((void *)evt_handler_wrapper, "evt", 256, handler, 20, NULL);
+}
+#endif
+
 /**
 ****************************************************************************************
 * @brief Post event
@@ -188,15 +213,16 @@ void wl80211_post_event(int code1, int code2)
 // platform feature set index
 int platform_feature_index(void)
 {
-#if defined(BL616D)
+#if defined(BL618DG)
     return 0;
-#elif defined(BL616L) || defined(BL616)
+#elif defined(BL616CL) || defined(BL616)
     return 1;
 #endif
 }
 
-int platform_get_mac(enum wl80211_vif_type vif, uint8_t mac[6]) {
-    (void)vif;
+int platform_get_mac(uint8_t vif_type, uint8_t mac[6])
+{
+    (void)vif_type;
     return mfg_media_read_macaddr_with_lock((uint8_t *)mac, 1);
 }
 
@@ -210,3 +236,38 @@ int wl80211_printf(const char *fmt, ...)
 
     return ret;
 }
+
+/*
+ ****************************************************************************************
+ * CLI COMMAND REGISTRATION (Platform-Specific)
+ ****************************************************************************************
+ */
+
+#if defined(CONFIG_SHELL) && defined(COMPAT_WIFI_MGMR)
+#include "shell.h"
+
+/* Forward declarations of CLI command functions from wifi_mgmr_cli.c */
+extern int wifi_connect_cmd(int argc, char **argv);
+extern int wifi_disconnect_cmd(int argc, char **argv);
+extern void wifi_scan_cmd(int argc, char **argv);
+extern void wifi_info_cmd(int argc, char **argv);
+extern void wifi_sta_autoconnect_enable_cmd(int argc, char **argv);
+extern void wifi_sta_autoconnect_disable_cmd(int argc, char **argv);
+extern void wifi_country_code_set_cmd(int argc, char **argv);
+extern void wifi_ap_start_cmd(int argc, char **argv);
+extern void wifi_ap_stop_cmd(int argc, char **argv);
+extern void wifi_sta_list_cmd(int argc, char **argv);
+
+/* CLI command exports - automatically registered when shell component is enabled */
+SHELL_CMD_EXPORT_ALIAS(wifi_connect_cmd, wifi_sta_connect, wifi station connect);
+SHELL_CMD_EXPORT_ALIAS(wifi_disconnect_cmd, wifi_sta_disconnect, wifi station disconnect);
+SHELL_CMD_EXPORT_ALIAS(wifi_scan_cmd, wifi_scan, wifi scan);
+SHELL_CMD_EXPORT_ALIAS(wifi_info_cmd, wifi_info, wifi info);
+SHELL_CMD_EXPORT_ALIAS(wifi_sta_autoconnect_enable_cmd, wifi_sta_autoconnect_enable, wifi sta enable autoconnect);
+SHELL_CMD_EXPORT_ALIAS(wifi_sta_autoconnect_disable_cmd, wifi_sta_autoconnect_disable, wifi sta disable autoconnect);
+SHELL_CMD_EXPORT_ALIAS(wifi_country_code_set_cmd, wifi_country_code_set, wifi set country code);
+SHELL_CMD_EXPORT_ALIAS(wifi_ap_start_cmd, wifi_ap_start, wifi ap start);
+SHELL_CMD_EXPORT_ALIAS(wifi_ap_stop_cmd, wifi_ap_stop, wifi ap stop);
+SHELL_CMD_EXPORT_ALIAS(wifi_sta_list_cmd, wifi_sta_list, wifi ap sta list);
+
+#endif /* CONFIG_SHELL */

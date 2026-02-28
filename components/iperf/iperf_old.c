@@ -19,9 +19,7 @@
 
 #define IPERF_PORT_LOCAL    5002
 #define IPERF_PORT          5001
-#if defined(CFG_CHIP_BL808)
-#define IPERF_BUFSZ         (16 * 1300)
-#elif defined(CFG_CHIP_BL606P)
+#if defined(CFG_CHIP_BL618DG)
 #define IPERF_BUFSZ         (16 * 1300)
 #else
 #define IPERF_BUFSZ         (4 * 1300)

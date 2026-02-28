@@ -21,9 +21,8 @@ Flash (代码存储，XIP）
 | BL602/BL604 | 2MB | 320KB | - |
 | BL702/BL704/BL706 | 2MB | 320KB | - |
 | BL616/BL618 | 4MB | 640KB | √ |
-| BL616D | 4MB | 640KB | √ |
-| BL616L | 2MB | 320KB | √ |
-| BL808 | 16MB | 8MB | √ |
+| BL618DG | 4MB | 640KB | √ |
+| BL616CL | 2MB | 320KB | √ |
 
 ## 内存管理方案
 
@@ -221,7 +220,7 @@ config CONFIG_FLASH_KEY
 ```kconfig
 config CONFIG_PSRAM
     bool "Enable PSRAM"
-    default y if BL616 || BL808
+    default y if BL616 || BL618DG
 
 config CONFIG_PSRAM_SIZE
     int "PSRAM size (MB)"

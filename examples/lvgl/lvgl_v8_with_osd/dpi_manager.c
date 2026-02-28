@@ -21,7 +21,7 @@
  *
  */
 
-#include "bl616d_glb.h"
+#include "bl618dg_glb.h"
 #include "dpi_manager.h"
 #include "bflb_dpi.h"
 #include "bflb_mjdec.h"

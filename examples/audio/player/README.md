@@ -139,19 +139,19 @@ tydb.exe record web 0.0.0.0:8090 ./
 
 To initiate audio recording transmission from the device side, `<dest_ip>` represents the IP address of the target PC:
 
-* Single-channel audio recording (Supported on BL616/8 and BL606P platforms):
+* Single-channel audio recording (Supported on BL616/8 platforms):
 
 ```bash
 bouffalolab />record start ws://<dest_ip>:8090 16k_16bit_1ch.pcm 1
 ```
 
-* Three-channel audio recording (Currently supported only on BL606P platform):
+* Three-channel audio recording (Currently supported only on TBD platform):
 
 ```bash
 bouffalolab />record start ws://<dest_ip>:8090 16k_16bit_3ch.pcm 3
 ```
 
-* Five-channel audio recording (Currently supported only on BL606P platform):
+* Five-channel audio recording (Currently supported only on TBD platform):
 
 ```bash
 bouffalolab />record start ws://<dest_ip>:8090 16k_16bit_5ch.pcm 5

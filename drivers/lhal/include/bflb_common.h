@@ -129,7 +129,7 @@ void *bflb_get_no_cache_addr(const void *addr);
 
 #endif
 
-#if (defined(BL616) || defined(BL616L) || defined(BL616D) || defined(BL606P) || defined(BL808) || defined(BL628)) && !defined(CPU_LP)
+#if (defined(BL616) || defined(BL616CL) || defined(BL618DG)   ) && !defined(CPU_LP)
 bool bflb_check_cache_addr_aligned(uintptr_t addr);
 #else
 #define bflb_check_cache_addr_aligned(addr)  (true)
@@ -152,8 +152,8 @@ typedef struct
   * @{
   */
 #define BFLB_CHIP_TYPE_BL616                                      (0)
-#define BFLB_CHIP_TYPE_BL616D                                     (1)
-#define BFLB_CHIP_TYPE_BL616L                                     (2)
+#define BFLB_CHIP_TYPE_BL618DG                                     (1)
+#define BFLB_CHIP_TYPE_BL616CL                                     (2)
 #define BFLB_CHIP_TYPE_BL602                                      (3)
 #define BFLB_CHIP_TYPE_BL702                                      (4)
 #define BFLB_CHIP_TYPE_BL702L                                     (5)

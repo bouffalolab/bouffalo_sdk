@@ -6,9 +6,9 @@ This is a Wi-Fi & BLE coexistence example.
 
 ## Support CHIP
 
-|CHIP|Remark|
-| :---: | :----: |
-|BL602||
+| CHIP  | Remark |
+|:-----:|:------:|
+| BL602 |        |
 
 ## Compile
 

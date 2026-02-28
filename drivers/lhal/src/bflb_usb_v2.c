@@ -11,13 +11,13 @@
 // #define CONFIG_USB_PINGPONG_ENABLE
 // #define CONFIG_USB_TRIPLE_ENABLE
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)  
 #define BFLB_USB_BASE           ((uint32_t)0x20072000)
 #define BFLB_PDS_BASE           ((uint32_t)0x2000E000)
 #define BFLB_USB_IRQ_NUM        37
 #define PDS_USB_CTL_OFFSET      (0x500) /* usb_ctl */
 #define PDS_USB_PHY_CTRL_OFFSET (0x504) /* usb_phy_ctrl */
-#elif defined(BL616L)
+#elif defined(BL616CL)
 #define BFLB_USB_BASE            ((uint32_t)0x20072000)
 #define BFLB_PDS_BASE            ((uint32_t)0x2000E000)
 #define BFLB_USB_IRQ_NUM         37
@@ -26,7 +26,7 @@
 #define PDS_USB_PHY1_CTRL_OFFSET (0x508) /* usb_phy1_ctrl */
 #define PDS_USB_PHY2_CTRL_OFFSET (0x50C) /* usb_phy2_ctrl */
 #define PDS_USB_PHY3_CTRL_OFFSET (0x510) /* usb_phy3_ctrl */
-#elif defined(BL616D)
+#elif defined(BL618DG)
 #define BFLB_USB_BASE            ((uint32_t)0x20087000)
 #define BFLB_PDS_BASE            ((uint32_t)0x2008E000)
 #define BFLB_USB_IRQ_NUM         19
@@ -37,7 +37,7 @@
 #define PDS_USB_PHY3_CTRL_OFFSET (0x510) /* usb_phy3_ctrl */
 #endif
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)  
 /* 0x500 : usb_ctl */
 #define PDS_REG_USB_SW_RST_N         (1 << 0U)
 #define PDS_REG_USB_EXT_SUSP_N       (1 << 1U)
@@ -56,10 +56,10 @@
 #define PDS_REG_PU_USB20_PSW         (1 << 6U)
 #endif
 
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
 /* 0x500 : usb_ctl */
 #define PDS_REG_USB_SW_RST_N (1 << 0U)
-#if defined(BL616D)
+#if defined(BL618DG)
 #define PDS_REG_USB_IDDIG (1 << 1U)
 #endif
 #define PDS_REG_USB_L1_WAKEUP            (1 << 2U)
@@ -69,7 +69,7 @@
 #define PDS_REG_USB_VBUS_VALID_FROM_GPIO (1 << 6U)
 #define PDS_REG_USB_LP_MODE_UCLK_DISABLE (1 << 7U)
 #define PDS_REG_USB_EXIT_SUSPEND_N       (1 << 8U)
-#if defined(BL616L)
+#if defined(BL616CL)
 #define PDS_REG_USB_IDDIG (1 << 16U)
 #endif
 #define PDS_REG_PU_USB20_PSW              (1 << 31U)
@@ -96,7 +96,7 @@ static void bflb_usb_phy_init(void)
 {
     uint32_t regval;
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)  
     /* USB_PHY_CTRL[3:2] reg_usb_phy_xtlsel=0                             */
     /* 2000e504 = 0x40; #100; USB_PHY_CTRL[6] reg_pu_usb20_psw=1 (VCC33A) */
     /* 2000e504 = 0x41; #500; USB_PHY_CTRL[0] reg_usb_phy_ponrst=1        */
@@ -141,7 +141,7 @@ static void bflb_usb_phy_init(void)
 
     bflb_mtimer_delay_ms(2);
 
-#elif defined(BL616D) || defined(BL616L)
+#elif defined(BL618DG) || defined(BL616CL)
 
     regval = getreg32(BFLB_PDS_BASE + PDS_USB_CTL_OFFSET);
     regval |= PDS_REG_PU_USB20_PSW;
@@ -262,7 +262,7 @@ uint8_t usbh_get_port_speed(const uint8_t port)
 #define USB_FIFO_F1 1
 #define USB_FIFO_F2 2
 #define USB_FIFO_F3 3
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
 #define USB_FIFO_F4 4
 #define USB_FIFO_F5 5
 #define USB_FIFO_F6 6
@@ -277,12 +277,12 @@ uint8_t usbh_get_port_speed(const uint8_t port)
 #define USB_VDMA_DIR_FIFO2MEM 0
 #define USB_VDMA_DIR_MEM2FIFO 1
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)  
 #define USB_MAX_EP_WITH_EP0     5
 #define USB_MAX_EP_EXCLUDE_EP0  4
 #define USB_NUM_BIDIR_ENDPOINTS 5
 #endif
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
 #define USB_MAX_EP_WITH_EP0     9
 #define USB_MAX_EP_EXCLUDE_EP0  8
 #define USB_NUM_BIDIR_ENDPOINTS 9
@@ -777,7 +777,7 @@ int usb_dc_init(uint8_t busid)
     /* enable vdma cmplt and error irq in source group3 */
     regval = 0xffffffff;
     regval &= ~(USB_MVDMA_CMPLT_CXF |
-#if (defined(BL616D) || defined(BL616L))
+#if (defined(BL618DG) || defined(BL616CL))
                 USB_MVDMA_CMPLT_F4 |
                 USB_MVDMA_CMPLT_F5 |
                 USB_MVDMA_CMPLT_F6 |
@@ -861,7 +861,7 @@ int usb_dc_deinit(uint8_t busid)
     regval |= USB_UNPLUG;
     putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)  
     regval = getreg32(BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
     regval &= ~PDS_REG_USB_PHY_XTLSEL_MASK;
     putreg32(regval, BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
@@ -944,11 +944,11 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
 
     uint8_t ep_idx = USB_EP_GET_IDX(ep_addr);
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616)  
     if ((ep_idx > 4) && (ep_idx < 9)) {
         return 0;
     }
-#elif defined(BL616D) || defined(BL616L)
+#elif defined(BL618DG) || defined(BL616CL)
     if ((ep_idx > 8) && (ep_idx < 16)) {
         return 0;
     }
@@ -972,7 +972,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
         if (USB_GET_MAXPACKETSIZE(ep->wMaxPacketSize) > 512) {
             bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
             bflb_usb_set_ep_fifomap(2, USB_FIFO_F2);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_ep_fifomap(3, USB_FIFO_F4);
             bflb_usb_set_ep_fifomap(4, USB_FIFO_F6);
 #endif
@@ -981,7 +981,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             bflb_usb_set_fifo_epmap(USB_FIFO_F1, 1, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F2, 2, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F3, 2, USB_FIFO_DIR_BID);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_fifo_epmap(USB_FIFO_F4, 3, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F5, 3, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F6, 4, USB_FIFO_DIR_BID);
@@ -993,7 +993,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             } else if (ep_idx == 2) {
                 bflb_usb_fifo_config(USB_FIFO_F2, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 1, true);
                 bflb_usb_fifo_config(USB_FIFO_F3, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 1, false);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             } else if (ep_idx == 3) {
                 bflb_usb_fifo_config(USB_FIFO_F4, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 1, true);
                 bflb_usb_fifo_config(USB_FIFO_F5, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 1, false);
@@ -1009,7 +1009,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             bflb_usb_set_ep_fifomap(2, USB_FIFO_F1);
             bflb_usb_set_ep_fifomap(3, USB_FIFO_F2);
             bflb_usb_set_ep_fifomap(4, USB_FIFO_F3);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_ep_fifomap(5, USB_FIFO_F4);
             bflb_usb_set_ep_fifomap(6, USB_FIFO_F5);
             bflb_usb_set_ep_fifomap(7, USB_FIFO_F6);
@@ -1020,7 +1020,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             bflb_usb_set_fifo_epmap(USB_FIFO_F1, 2, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F2, 3, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F3, 4, USB_FIFO_DIR_BID);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_fifo_epmap(USB_FIFO_F4, 5, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F5, 6, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F6, 7, USB_FIFO_DIR_BID);
@@ -1034,7 +1034,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
                 bflb_usb_fifo_config(USB_FIFO_F2, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 1, true);
             } else if (ep_idx == 4) {
                 bflb_usb_fifo_config(USB_FIFO_F3, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 1, true);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             } else if (ep_idx == 5) {
                 bflb_usb_fifo_config(USB_FIFO_F4, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 1, true);
             } else if (ep_idx == 6) {
@@ -1056,7 +1056,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             bflb_usb_set_fifo_epmap(USB_FIFO_F1, 1, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F2, 1, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F3, 1, USB_FIFO_DIR_BID);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_fifo_epmap(USB_FIFO_F4, 2, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F5, 2, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F6, 2, USB_FIFO_DIR_BID);
@@ -1067,7 +1067,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
                 bflb_usb_fifo_config(USB_FIFO_F1, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 2, false);
                 bflb_usb_fifo_config(USB_FIFO_F2, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 2, false);
                 bflb_usb_fifo_config(USB_FIFO_F3, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 2, false);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             } else if (ep_idx == 2) {
                 bflb_usb_fifo_config(USB_FIFO_F4, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 2, true);
                 bflb_usb_fifo_config(USB_FIFO_F5, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 1024, 2, false);
@@ -1080,7 +1080,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
         } else {
             bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
             bflb_usb_set_ep_fifomap(2, USB_FIFO_F2);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_ep_fifomap(3, USB_FIFO_F4);
             bflb_usb_set_ep_fifomap(4, USB_FIFO_F6);
 #endif
@@ -1088,7 +1088,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             bflb_usb_set_fifo_epmap(USB_FIFO_F1, 1, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F2, 2, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F3, 2, USB_FIFO_DIR_BID);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             bflb_usb_set_fifo_epmap(USB_FIFO_F4, 3, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F5, 3, USB_FIFO_DIR_BID);
             bflb_usb_set_fifo_epmap(USB_FIFO_F6, 4, USB_FIFO_DIR_BID);
@@ -1100,7 +1100,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
             } else if (ep_idx == 2) {
                 bflb_usb_fifo_config(USB_FIFO_F2, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 2, true);
                 bflb_usb_fifo_config(USB_FIFO_F3, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 2, false);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
             } else if (ep_idx == 3) {
                 bflb_usb_fifo_config(USB_FIFO_F4, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 2, true);
                 bflb_usb_fifo_config(USB_FIFO_F5, USB_GET_ENDPOINT_TYPE(ep->bmAttributes), 512, 2, false);
@@ -1338,7 +1338,7 @@ void USBD_IRQHandler(uint8_t busid)
                 bflb_usb_reset_fifo(USB_FIFO_F1);
                 bflb_usb_reset_fifo(USB_FIFO_F2);
                 bflb_usb_reset_fifo(USB_FIFO_F3);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
                 bflb_usb_reset_fifo(USB_FIFO_F4);
                 bflb_usb_reset_fifo(USB_FIFO_F5);
                 bflb_usb_reset_fifo(USB_FIFO_F6);
@@ -1378,7 +1378,7 @@ void USBD_IRQHandler(uint8_t busid)
                 bflb_usb_reset_fifo(USB_FIFO_F1);
                 bflb_usb_reset_fifo(USB_FIFO_F2);
                 bflb_usb_reset_fifo(USB_FIFO_F3);
-#if defined(BL616D) || defined(BL616L)
+#if defined(BL618DG) || defined(BL616CL)
                 bflb_usb_reset_fifo(USB_FIFO_F4);
                 bflb_usb_reset_fifo(USB_FIFO_F5);
                 bflb_usb_reset_fifo(USB_FIFO_F6);
