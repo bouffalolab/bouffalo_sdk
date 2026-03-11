@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Build OpenThread RCP + BLE HCI controller combo image.
+# - Thread RCP: spinel over uart0
+# - BLE HCI: controller over uart1 (uarthci profile)
+
+CHIP="${CHIP:-bl616}"
+BOARD="${BOARD:-${CHIP}dk}"
+JOBS="${JOBS:-4}"
+
+options="CHIP=${CHIP} BOARD=${BOARD} OT_NCP=0"
+options+=" CONFIG_BLUETOOTH=y"
+options+=" CONFIG_BTBLECONTROLLER_LIB=uarthci"
+
+mkdir -p build_out
+make ${options} -j"${JOBS}" 2>&1 | tee build_out/make_rcp_blehci.log

@@ -9,9 +9,10 @@
 
 #if defined(BL616) || defined(BL616CL)
 #define UART_NAME                  "uart1"
-#define UART_BAUDRATE              2000000
-#define UART_TXD_PIN               27
-#define UART_RXD_PIN               28
+#define UART_BAUDRATE              115200
+/* BL61X_dev_kit bring-up: use BL618 GPIO14/GPIO15 for BLE HCI UART1. */
+#define UART_TXD_PIN               14
+#define UART_RXD_PIN               15
 #define UART_CTS_PIN               29
 #define UART_RTS_PIN               30
 #endif
@@ -37,11 +38,8 @@
 #define DMA_RX_NAME                "dma0_ch2"
 #define DMA_TX_NAME                "dma0_ch3"
 
-#if defined(BL702L)
+/* Quick bring-up mode: align with BL702 demo transport and use 2-wire HCI UART (TX/RX only). */
 #define UART_FLOW_CTRL_ENABLE      0
-#else
-#define UART_FLOW_CTRL_ENABLE      1
-#endif
 
 #define UART_RX_DMA_BUF_SIZE       2048
 

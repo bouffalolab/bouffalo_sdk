@@ -14,6 +14,10 @@
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread_port.h>
 #include <openthread/ncp.h>
+#if defined(CONFIG_BLUETOOTH)
+#include "btble_lib_api.h"
+extern void btble_uart_init(uint8_t uartid);
+#endif
 
 #include "board.h"
 
@@ -60,7 +64,11 @@ int main(void)
 
     opt.byte = 0;
 
+#if defined(CONFIG_BLUETOOTH)
+    opt.bf.isCoexEnable = true;
+#else
     opt.bf.isCoexEnable = false;
+#endif
 #if OPENTHREAD_FTD
     opt.bf.isFtd = true;
 #endif
@@ -76,6 +84,10 @@ int main(void)
 #endif
 
     otrStart(opt);
+#if defined(CONFIG_BLUETOOTH)
+    btble_uart_init(1);
+    btble_controller_init(configMAX_PRIORITIES - 1);
+#endif
 
     puts("[OS] Starting OS Scheduler...\r\n");
     vTaskStartScheduler();

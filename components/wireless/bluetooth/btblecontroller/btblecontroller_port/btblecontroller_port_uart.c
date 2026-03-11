@@ -43,10 +43,11 @@
 #endif
 
 #if defined(BL616) || defined(BL616CL)
-#define UART_TXD_PIN               27
-#define UART_RXD_PIN               28
-#define UART_CTS_PIN               29
-#define UART_RTS_PIN               30
+/* BL61X_dev_kit bring-up: use BL618 GPIO14/GPIO15 for BLE HCI UART1. */
+#define UART_TXD_PIN               14
+#define UART_RXD_PIN               15
+#define UART_CTS_PIN               25
+#define UART_RTS_PIN               26
 #endif
 
 #if defined(BL618DG)

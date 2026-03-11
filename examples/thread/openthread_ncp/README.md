@@ -24,6 +24,16 @@ This is an example for OpenThread NCP and RCP example.
         ```shell
         make CHIP=bl616 BOARD=bl616dk OT_NCP=0
         ```
+
+    - Build for OpenThread RCP + BLE HCI controller example
+        ```shell
+        ./genotrcp_blehci
+        ```
+
+        Equivalent command:
+        ```shell
+        make CHIP=bl616 BOARD=bl616dk OT_NCP=0 CONFIG_BLUETOOTH=y CONFIG_BTBLECONTROLLER_LIB=uarthci
+        ```
     
     - Build for OpenThread NCP example with FTD
         ```shell
@@ -154,4 +164,9 @@ Since `ot-br-posix` uses UART baud-rate 115200 by default, it needs change `/etc
 # Options to pass to otbr-agent
 OTBR_AGENT_OPTS="-I wpan0 -B wlp4s0 spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800 trel://wlp4s0"
 OTBR_NO_AUTO_ATTACH=0
+```
+
+When using RCP + BLE HCI combo image, Linux host needs one extra UART for BLE HCI and attaches it as a BlueZ HCI device, for example:
+```shell
+sudo btattach -B /dev/ttyUSB1 -S 2000000 -P h4
 ```
