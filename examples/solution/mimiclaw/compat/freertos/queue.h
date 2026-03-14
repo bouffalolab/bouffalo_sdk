@@ -1,0 +1,6 @@
+#ifndef MIMICLAW_COMPAT_FREERTOS_QUEUE_H
+#define MIMICLAW_COMPAT_FREERTOS_QUEUE_H
+
+#include <queue.h>
+
+#endif

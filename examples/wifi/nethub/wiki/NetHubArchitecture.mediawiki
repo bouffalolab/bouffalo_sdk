@@ -1,0 +1,159 @@
+= NetHub 架构说明 =
+
+本文档面向需要理解模块边界和 API 的开发者。
+
+== 1. 当前架构结论 ==
+
+* 当前物理主路径是 '''SDIO'''
+* <code>USB / SPI</code> 目前仍保留 backend 骨架，不作为当前推荐 bringup 路径
+* device 侧 Wi-Fi backend 支持 <code>fhost / wl80211</code>
+* 控制通道和 <code>USER virtual channel</code> 都是当前 host link 上的逻辑通道，不是独立物理接口
+* host 控制 backend 运行时二选一：<code>tty</code> 或 <code>vchan</code>
+
+== 2. 功能视角架构图 ==
+
+<syntaxhighlight lang="text">
+Host
+  |
+  | network data / control payload / USER payload
+  v
+Host Link (current main path: SDIO)
+  |
+  +-- Data Channel   <--> nethub data bridge
+  +-- Control Channel <-> nethub ctrlpath <-> ATModule
+  +-- USER VCHAN      <-> nethub vchan user path
+  |
+  v
+Device
+  |
+  +-- nethub
+  |    +-- data bridge
+  |    +-- hard-coded Wi-Fi RX filter
+  |    +-- active Wi-Fi selector (STA / AP)
+  |    +-- ctrlpath
+  |    +-- virtual channel
+  |
+  +-- Wi-Fi backend (fhost / wl80211) + lwIP
+</syntaxhighlight>
+
+从功能上看，<code>nethub</code> 主要做 4 件事：
+
+* 维护 <code>Wi-Fi <-> HostLink</code> 的数据桥接
+* 用硬编码 filter 决定报文是 <code>local</code>、<code>host</code>、还是 <code>both</code>
+* 维护当前生效的 Wi-Fi 通道选择 <code>STA / AP</code>
+* 在同一 host link 上提供控制通道和可选的 <code>USER virtual channel</code>
+
+== 3. 技术/API 视角架构图 ==
+
+<syntaxhighlight lang="text">
+Application
+  |
+  +-- device public API
+  |    +-- nethub.h
+  |    +-- nethub_vchan.h
+  |    +-- nethub_filter.h
+  |
+  +-- host public API
+       +-- bflbwifi.h
+       +-- virtualchan/nethub_vchan.h
+
+device side
+  nethub_bootstrap()
+    -> profile select
+    -> endpoint register
+    -> hub lifecycle
+    -> Wi-Fi bridge
+    -> host backend (current main path: sdio)
+
+host side
+  bflbwifictrl
+    -> IPC
+    -> bflbwifid
+    -> libbflbwifi
+    -> channel facade
+       +-- tty backend
+       +-- vchan backend
+    -> mr_sdio.ko + msg_router
+</syntaxhighlight>
+
+== 4. Device 侧公共接口 ==
+
+头文件：
+
+* <code>components/net/nethub/include/nethub.h</code>
+* <code>components/net/nethub/include/nethub_vchan.h</code>
+* <code>components/net/nethub/include/nethub_filter.h</code>
+
+核心 API：
+
+* <code>nethub_bootstrap()</code>
+* <code>nethub_shutdown()</code>
+* <code>nethub_get_status()</code>
+* <code>nethub_set_active_wifi_channel()</code>
+* <code>nethub_ctrl_upld_send()</code>
+* <code>nethub_ctrl_dnld_register()</code>
+* <code>nethub_vchan_user_send()</code>
+* <code>nethub_vchan_user_recv_register()</code>
+* <code>nethub_set_wifi_rx_filter()</code>
+
+边界说明：
+
+* <code>nethub_ctrl_*</code> 对应 host link 上的逻辑控制通道
+* <code>nethub_vchan_user_*</code> 对应 host link 上的逻辑 <code>USER</code> 通道
+* <code>nethub_set_wifi_rx_filter()</code> 用于完全替换内建 Wi-Fi RX filter，必须在 <code>nethub_bootstrap()</code> 前调用
+
+== 5. Host 侧公共接口 ==
+
+头文件：
+
+* <code>bsp/common/msg_router/linux_host/userspace/nethub/bflbwifictrl/include/bflbwifi.h</code>
+* <code>bsp/common/msg_router/linux_host/userspace/nethub/virtualchan/nethub_vchan.h</code>
+
+控制面能力：
+
+* <code>bflbwifi_ctrl_config_init()</code>
+* <code>bflbwifi_ctrl_config_use_tty()</code>
+* <code>bflbwifi_ctrl_config_use_vchan()</code>
+* <code>bflbwifi_init_ex()</code>
+* <code>bflbwifi_get_ctrl_status()</code>
+* <code>bflbwifi_sta_connect()</code>
+* <code>bflbwifi_sta_disconnect()</code>
+* <code>bflbwifi_sta_get_state()</code>
+* <code>bflbwifi_scan()</code>
+* <code>bflbwifi_get_version()</code>
+* <code>bflbwifi_restart()</code>
+* <code>bflbwifi_ota_upgrade()</code>
+* <code>bflbwifi_ap_start()</code>
+* <code>bflbwifi_ap_stop()</code>
+
+USER virtual channel 能力：
+
+* <code>nethub_vchan_init()</code>
+* <code>nethub_vchan_deinit()</code>
+* <code>nethub_vchan_user_send()</code>
+* <code>nethub_vchan_user_register_callback()</code>
+* <code>nethub_vchan_get_state_snapshot()</code>
+* <code>nethub_vchan_register_link_event_callback()</code>
+
+== 6. 关键数据流 ==
+
+=== 6.1 connect_ap ===
+
+# 用户执行 <code>bflbwifictrl connect_ap &lt;ssid&gt; &lt;password&gt;</code>
+# CLI 通过本地 IPC 把命令发给 <code>bflbwifid</code>
+# daemon 调用 <code>libbflbwifi</code>
+# <code>libbflbwifi</code> 通过 <code>tty</code> 或 <code>vchan</code> backend 下发控制消息
+# device 侧 <code>ATModule</code> 执行 Wi-Fi 控制
+# device 侧上报响应和状态，host 侧刷新状态并返回结果
+
+=== 6.2 数据面 ===
+
+# host 网络流量进入 <code>mr_eth0</code>
+# kernel/msg_router 通过 SDIO 与 device 通信
+# device 侧 <code>nethub</code> 把 host data 转给当前 active Wi-Fi
+# Wi-Fi RX 包经过 <code>nethub</code> filter 判断后，决定是本地处理、发给 host，还是两边都处理
+
+== 7. 推荐阅读顺序 ==
+
+* 首次 bringup：[[NetHubQuickBringup|NetHub 快速上手]]
+* 理解 <code>USER</code> 通道：[[NetHubVirtualChannel|NetHub USER Virtual Channel]]

@@ -1,0 +1,35 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_BFLB_LOG =y
+CONFIG_PSRAM = y
+CONFIG_PSRAM_COPY_CODE =n
+
+# websocket client
+CONFIG_MULTIMEDIA =y
+CONFIG_XWEBSOCKET =y
+CONFIG_HTTP =y
+CONFIG_HTTP_CLIENT =y
+CONFIG_HTTP_PARSER =y
+CONFIG_HTTP_PARSER_URL =y
+CONFIG_BSP_AUDIO_CODEC =y
+CONFIG_BSP_AUDIO_PLAYER =y
+CONFIG_PVMP3DEC =y
+
+# storage for key/device config
+CONFIG_PARTITION =y
+CONFIG_BFLB_MTD =y
+CONFIG_LITTLEFS =y
+
+# SD card file backend for tool_files (/sd/*)
+CONFIG_FATFS =y
+CONFIG_FATFS_SDH_SDCARD =y
+CONFIG_BSP_SDH_SD =y
+
+# Use software ECC for broader TLS curve compatibility (wss public servers).
+CONFIG_MBEDTLS_ECC_USE_HW =n
+
+# Broaden ECP curve support for public WSS endpoints.
+# Base wifi defconfig enables only secp256r1.
+CONFIG_MBEDTLS_ECP_DP_SECP384R1_ENABLED =y
+CONFIG_MBEDTLS_ECP_DP_SECP521R1_ENABLED =y
+CONFIG_MBEDTLS_ECP_DP_CURVE25519_ENABLED =y

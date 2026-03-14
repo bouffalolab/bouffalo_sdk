@@ -1,0 +1,6 @@
+#ifndef MIMICLAW_COMPAT_FREERTOS_H
+#define MIMICLAW_COMPAT_FREERTOS_H
+
+#include <FreeRTOS.h>
+
+#endif

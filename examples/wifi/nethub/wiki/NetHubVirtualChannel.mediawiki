@@ -1,0 +1,149 @@
+= NetHub USER Virtual Channel =
+
+本文档描述 NetHub 的 <code>USER virtual channel</code> 用法。
+
+== 1. 概念 ==
+
+<code>USER virtual channel</code> 是承载在当前 host link 上的逻辑消息通道。
+
+它不是独立物理接口，而是复用当前的 <code>SDIO / USB / SPI</code> 链路，把不同类型的数据拆分到不同逻辑通道中。
+
+当前常用类型：
+
+* <code>USER</code>
+** 客户或应用层私有数据
+* <code>AT</code>
+** host 控制面数据
+* <code>SYSTEM</code>
+** 系统内部协调消息
+
+客户集成时，通常只需要关注 <code>USER</code> 类型。
+
+== 2. bringup 前提 ==
+
+使用前建议确认：
+
+* device 侧已编入 <code>CONFIG_NETHUB=y</code>
+* device 侧已编入 <code>CONFIG_MR_VIRTUALCHAN=y</code>
+* host 侧已经加载 <code>mr_sdio.ko</code>
+* host 与 device 的底层链路已经正常工作
+
+补充说明：
+
+* <code>USER</code> 通道和控制通道是并列关系
+* 如果 host 控制面本身走 <code>vchan</code>，它使用的是 <code>AT</code> 类型
+* 客户私有消息建议固定使用 <code>USER</code> 类型
+
+== 3. Device 侧接口 ==
+
+头文件：
+
+* <code>components/net/nethub/include/nethub_vchan.h</code>
+
+常用接口：
+
+<syntaxhighlight lang="c">
+int nethub_vchan_user_send(const void *data, uint16_t len);
+int nethub_vchan_user_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg);
+</syntaxhighlight>
+
+== 4. Host 侧接口 ==
+
+头文件：
+
+* <code>bsp/common/msg_router/linux_host/userspace/nethub/virtualchan/nethub_vchan.h</code>
+
+=== 4.1 初始化与清理 ===
+
+<syntaxhighlight lang="c">
+int nethub_vchan_init(void);
+int nethub_vchan_deinit(void);
+</syntaxhighlight>
+
+=== 4.2 USER 通道 ===
+
+<syntaxhighlight lang="c">
+typedef void (*nethub_vchan_recv_callback_t)(const void *data, size_t len);
+
+int nethub_vchan_user_send(const void *data, size_t len);
+int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
+</syntaxhighlight>
+
+=== 4.3 可选状态查询 ===
+
+如果需要判断当前 virtual channel 是否 ready，可选使用：
+
+<syntaxhighlight lang="c">
+typedef struct {
+    nethub_vchan_link_state_t link_state;
+    nethub_vchan_host_state_t host_state;
+} nethub_vchan_state_snapshot_t;
+
+int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
+</syntaxhighlight>
+
+常用判断：
+
+* <code>link_state == NETHUB_VCHAN_LINK_UP</code>
+** 表示链路已可收发
+* <code>host_state == NETHUB_VCHAN_HOST_STATE_DEVICE_RUN</code>
+** 表示 host 侧已经和 device 完成握手
+
+=== 4.4 可选链路事件回调 ===
+
+如果应用希望在链路 up/down 时被动收到通知，可选注册：
+
+<syntaxhighlight lang="c">
+int nethub_vchan_register_link_event_callback(
+    nethub_vchan_link_event_callback_t callback,
+    void *user_data);
+</syntaxhighlight>
+
+== 5. 典型使用顺序 ==
+
+# <code>nethub_vchan_init()</code>
+# <code>nethub_vchan_user_register_callback()</code>
+# <code>nethub_vchan_user_send()</code>
+# 使用完成后调用 <code>nethub_vchan_deinit()</code>
+
+示例：
+
+<syntaxhighlight lang="c">
+#include <stdio.h>
+#include <string.h>
+
+#include "nethub_vchan.h"
+
+static void user_rx_cb(const void *data, size_t len)
+{
+    printf("recv USER data: %.*s\n", (int)len, (const char *)data);
+}
+
+int main(void)
+{
+    const char *msg = "hello from host";
+
+    if (nethub_vchan_init() != 0) {
+        return -1;
+    }
+
+    nethub_vchan_user_register_callback(user_rx_cb);
+    nethub_vchan_user_send(msg, strlen(msg));
+
+    nethub_vchan_deinit();
+    return 0;
+}
+</syntaxhighlight>
+
+== 6. 限制与注意事项 ==
+
+* 单次消息最大长度为 <code>1500</code> 字节
+* <code>USER</code> 通道是消息包语义，不是流式字节流
+* 使用前必须保证内核模块已经加载
+* 如果 device 侧未启用 <code>CONFIG_MR_VIRTUALCHAN</code>，host 侧 <code>USER</code> 通道无法工作
+* 如果同时使用 host 控制面和 <code>USER</code> 通道，客户私有数据不要复用 <code>AT</code> 类型
+
+== 7. 相关页面 ==
+
+* [[NetHubQuickBringup|NetHub 快速上手]]
+* [[NetHubArchitecture|NetHub 架构说明]]
