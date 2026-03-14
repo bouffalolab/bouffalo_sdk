@@ -69,7 +69,7 @@
 /* @todo: which includes are really needed? */
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls/certs.h"
 #endif
 #include "mbedtls/x509.h"
@@ -82,11 +82,11 @@
 #include "mbedtls/ssl_cache.h"
 #include <string.h>
 
-#ifdef CONFIG_MBEDTLS_V3
-extern int mbedtls_ssl_flush_output(mbedtls_ssl_context *ssl);
-#else
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls/ssl_internal.h" /* to call mbedtls_flush_output after ERR_MEM */
 #define MBEDTLS_PRIVATE(mem) mem
+#else
+extern int mbedtls_ssl_flush_output(mbedtls_ssl_context *ssl);
 #endif
 
 #ifndef ALTCP_MBEDTLS_ENTROPY_PTR
@@ -683,10 +683,10 @@ altcp_tls_create_config(int is_server, int have_cert, int have_pkey, int have_ca
   struct altcp_tls_config *conf;
   mbedtls_x509_crt *mem;
 
-#ifdef CONFIG_MBEDTLS_V3
-  if (TCP_WND < MBEDTLS_SSL_IN_CONTENT_LEN) {
-#else
+#ifdef CONFIG_MBEDTLS_V2
   if (TCP_WND < MBEDTLS_SSL_MAX_CONTENT_LEN) {
+#else
+  if (TCP_WND < MBEDTLS_SSL_IN_CONTENT_LEN) {
 #endif
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG|LWIP_DBG_LEVEL_SERIOUS,
       ("altcp_tls: TCP_WND is smaller than the RX decryption buffer, connection RX might stall!\n"));
@@ -787,10 +787,10 @@ altcp_tls_create_config_server_privkey_cert(const u8_t *privkey, size_t privkey_
     altcp_mbedtls_free_config(conf);
     return NULL;
   }
-#ifdef CONFIG_MBEDTLS_V3
-  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len, NULL, NULL);
-#else
+#ifdef CONFIG_MBEDTLS_V2
   ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len);
+#else
+  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len, NULL, NULL);
 #endif
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_public_key failed: %d\n", ret));
@@ -871,10 +871,10 @@ altcp_tls_create_config_client_2wayauth(const u8_t *ca, size_t ca_len, const u8_
   }
 
   mbedtls_pk_init(conf->pkey);
-#ifdef CONFIG_MBEDTLS_V3
-  ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len, NULL, NULL);
-#else
+#ifdef CONFIG_MBEDTLS_V2
   ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len);
+#else
+  ret = mbedtls_pk_parse_key(conf->pkey, privkey, privkey_len, privkey_pass, privkey_pass_len, NULL, NULL);
 #endif
   if (ret != 0) {
     LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_key failed: %d 0x%x", ret, -1*ret));

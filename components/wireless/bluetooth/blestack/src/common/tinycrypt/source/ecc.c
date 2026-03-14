@@ -52,8 +52,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <tinycrypt/include/tinycrypt/ecc.h>
-#include "ecc_platform_specific.h"
+#include <tinycrypt/ecc.h>
+#include "tinycrypt/ecc_platform_specific.h"
 #include <string.h>
 
 /* IMPORTANT: Make sure a cryptographically-secure PRNG is set and the platform

@@ -14,6 +14,10 @@ extern "C" {
  *      INCLUDES
  *********************/
 
+#include "../../lv_conf_internal.h"
+
+#if LV_USE_NUTTX && LV_USE_PROFILER && LV_USE_PROFILER_BUILTIN
+
 /*********************
  *      DEFINES
  *********************/
@@ -27,10 +31,14 @@ extern "C" {
  **********************/
 
 void lv_nuttx_profiler_init(void);
+void lv_nuttx_profiler_set_file(const char * file);
+void lv_nuttx_profiler_deinit(void);
 
 /**********************
  *      MACROS
  **********************/
+
+#endif /*LV_USE_NUTTX && LV_USE_PROFILER && LV_USE_PROFILER_BUILTIN*/
 
 #ifdef __cplusplus
 } /*extern "C"*/

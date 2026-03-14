@@ -242,4 +242,21 @@ config APP_LINK_WITH_MBEDTLS
 	  disabled if the include paths for MBEDTLS are causing aliasing
 	  issues for 'app'.
 
+config X509_CERTIFICATE_BUNDLE
+	bool "X.509 Certificate Bundle"
+	depends on MBEDTLS
+	help
+	  Enable X.509 certificate bundle for TLS verification.
+	  When enabled, a bundle of trusted root CA certificates will be
+	  embedded in the firmware and automatically attached to SSL
+	  connections for certificate verification.
+
+config CRT_BUNDLE_MAX_CERTS
+	int "Maximum certificates in bundle"
+	depends on X509_CERTIFICATE_BUNDLE
+	default 200
+	help
+	  Maximum number of certificates allowed in the X.509 certificate bundle.
+	  If the actual bundle contains more certificates, initialization will fail.
+
 endif # MBEDTLS

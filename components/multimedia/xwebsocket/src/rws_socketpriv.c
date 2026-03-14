@@ -34,6 +34,10 @@
 #define	WSAEWOULDBLOCK      EAGAIN
 #define	WSAEINPROGRESS      EINPROGRESS
 
+#ifdef CONFIG_MBEDTLS_V2
+#define MBEDTLS_PRIVATE(member) member
+#endif
+
 #define TAG "RWS_PRIV"
 
 static const char * k_rws_socket_min_http_ver = "1.1";
@@ -1176,7 +1180,11 @@ int rws_ssl_conn(rws_socket s)
             goto exit;
         }
 
+#ifdef CONFIG_MBEDTLS_V2
         ret = mbedtls_pk_parse_key(&ssl->pkey, (const unsigned char *)s->client_pk, s->client_pk_len, NULL, 0);
+#else
+        ret = mbedtls_pk_parse_key(&ssl->pkey, (const unsigned char *)s->client_pk, s->client_pk_len, NULL, 0, NULL, NULL);
+#endif
         if (ret != 0) {
             DBG("failed! mbedtls_pk_parse_key returned -0x%x.", -ret);
             goto exit;
@@ -1228,7 +1236,7 @@ int rws_ssl_conn(rws_socket s)
     mbedtls_ssl_conf_read_timeout(&ssl->ssl_conf, s->read_timeout == 0 ? READ_TIMEOUT_MS : s->read_timeout);
 
     // TODO: add customerization encryption algorithm
-    memcpy(&ssl->profile, ssl->ssl_conf.cert_profile, sizeof(mbedtls_x509_crt_profile));
+    memcpy(&ssl->profile, ssl->ssl_conf.MBEDTLS_PRIVATE(cert_profile), sizeof(mbedtls_x509_crt_profile));
     ssl->profile.allowed_mds = ssl->profile.allowed_mds | MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_MD5);
     mbedtls_ssl_conf_cert_profile(&ssl->ssl_conf, &ssl->profile);
 

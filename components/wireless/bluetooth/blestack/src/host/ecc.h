@@ -1,6 +1,7 @@
 /* ecc.h - ECDH helpers */
 
 #include <zephyr/types.h>
+#include <tinycrypt/ecc.h>
 
 /*
  * Copyright (c) 2016 Intel Corporation

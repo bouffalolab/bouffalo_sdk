@@ -3,7 +3,7 @@
  * @brief BFLB WiFi module external API interface
  *
  * Usage flow:
- * 1. bflbwifi_init() - Initialize the module
+ * 1. bflbwifi_init_ex() or legacy bflbwifi_init() - Initialize the module
  * 2. Call various APIs for operations
  * 3. bflbwifi_deinit() - Clean up resources
  */
@@ -20,6 +20,13 @@ extern "C" {
 #endif
 
 /* ========== Data Structure Definitions ========== */
+
+/* Control backend type definitions */
+#define BFLBWIFI_CTRL_BACKEND_NONE  ((uint8_t)0u)
+#define BFLBWIFI_CTRL_BACKEND_TTY   ((uint8_t)1u)
+#define BFLBWIFI_CTRL_BACKEND_VCHAN ((uint8_t)2u)
+
+#define BFLBWIFI_CTRL_TTY_BAUDRATE_DEFAULT 115200
 
 /**
  * @brief WiFi Station state
@@ -79,27 +86,51 @@ typedef struct {
 } bflbwifi_ap_info_t;
 
 /**
- * @brief Station connection information (internal use, contains complete information)
+ * @brief Active STA connection information snapshot
  */
 typedef struct {
-    char ssid[32 + 1];       /* Current connected SSID */
-    char bssid[18];          /* Current connected BSSID */
-    uint8_t channel;         /* Current channel */
-    int8_t rssi;             /* Current signal strength */
-    char ip[16];             /* IP address */
-    char gateway[16];        /* Gateway */
-    char netmask[16];        /* Subnet mask */
-    char dns[16];            /* DNS server */
-    bflbwifi_enc_t enc;      /* Encryption mode */
+    char ssid[32 + 1];
+    char bssid[18];
+    uint8_t channel;
+    int8_t rssi;
+    char ip[16];
+    char gateway[16];
+    char netmask[16];
+    char dns[16];
+    bflbwifi_enc_t enc;
 } bflbwifi_sta_connection_info_t;
 
 /**
- * @brief Connected station information in AP mode (for API)
+ * @brief Control path configuration
  */
 typedef struct {
-    char mac[18];            /* Station MAC address */
-    char ip[16];             /* Station IP address */
-} bflbwifi_sta_info_t;
+    uint8_t ctrl_backend;    /* BFLBWIFI_CTRL_BACKEND_* */
+    const char *dev_path;    /* TTY device path, ignored by VCHAN backend */
+    int baudrate;            /* TTY baudrate, ignored by VCHAN backend */
+} bflbwifi_ctrl_config_t;
+
+/**
+ * @brief Control backend link state definitions
+ */
+typedef uint8_t bflbwifi_ctrl_link_state_t;
+
+#define BFLBWIFI_CTRL_LINK_DISCONNECTED ((bflbwifi_ctrl_link_state_t)0u)
+#define BFLBWIFI_CTRL_LINK_CONNECTED    ((bflbwifi_ctrl_link_state_t)1u)
+
+/**
+ * @brief Control backend runtime status snapshot
+ *
+ * This structure describes the host-side control transport only. It does not
+ * imply WiFi association state on the device.
+ */
+typedef struct {
+    uint8_t ctrl_backend;                     /* BFLBWIFI_CTRL_BACKEND_* */
+    bflbwifi_ctrl_link_state_t link_state;    /* BFLBWIFI_CTRL_LINK_* */
+    bool link_events_supported;               /* Backend can report disconnect/reconnect */
+    bool rx_thread_ctl_supported;             /* Backend supports RX pause/resume */
+    bool raw_fd_supported;                    /* Backend exposes a raw fd for OTA */
+    bool ota_in_progress;                     /* OTA session is currently active */
+} bflbwifi_ctrl_status_t;
 
 /* ========== Error Code Definitions ========== */
 
@@ -117,7 +148,8 @@ typedef struct {
     X(E_ERR_NOT_INITIALIZED, -9, "Module not initialized") \
     X(E_ERR_NOT_SUPPORTED, -10, "Operation not supported") \
     X(E_ERR_BUFFER_TOO_SMALL, -11, "Buffer too small") \
-    X(E_ERR_BUSY, -12, "Device busy")
+    X(E_ERR_BUSY, -12, "Device busy") \
+    X(E_ERR_BACKEND_DOWN, -13, "Control backend unavailable")
 
 /**
  * @brief Error codes
@@ -138,14 +170,68 @@ const char* bflbwifi_strerror(int err);
 /* ========== Initialization and Cleanup ========== */
 
 /**
- * @brief Initialize BFLB WiFi module
+ * @brief Initialize a control backend configuration with neutral defaults
+ * @param cfg Configuration structure to reset
+ */
+void bflbwifi_ctrl_config_init(bflbwifi_ctrl_config_t *cfg);
+
+/**
+ * @brief Configure a control backend configuration for TTY transport
+ * @param cfg Configuration structure
+ * @param dev_path TTY device path
+ * @param baudrate TTY baudrate, or 0 to use BFLBWIFI_CTRL_TTY_BAUDRATE_DEFAULT
+ * @return 0 for success, negative error code for failure
+ */
+int bflbwifi_ctrl_config_use_tty(bflbwifi_ctrl_config_t *cfg, const char *dev_path, int baudrate);
+
+/**
+ * @brief Configure a control backend configuration for virtual channel transport
+ * @param cfg Configuration structure
+ * @return 0 for success, negative error code for failure
+ */
+int bflbwifi_ctrl_config_use_vchan(bflbwifi_ctrl_config_t *cfg);
+
+/**
+ * @brief Initialize BFLB WiFi module using the legacy TTY shorthand
  * @param tty_dev TTY device path (e.g. "/dev/ttyUSB0")
- * @param baudrate Baud rate (e.g. 115200)
+ * @param baudrate Baud rate, or 0 to use BFLBWIFI_CTRL_TTY_BAUDRATE_DEFAULT
  * @return 0 for success, negative error code for failure
  *
  * @note This function will open TTY device and start receive thread
+ * @note Prefer bflbwifi_init_ex() for new integrations
  */
 int bflbwifi_init(const char *tty_dev, int baudrate);
+
+/**
+ * @brief Initialize BFLB WiFi module with explicit control backend configuration
+ * @param cfg Control backend configuration
+ * @return 0 for success, negative error code for failure
+ *
+ * @note Prefer preparing cfg with bflbwifi_ctrl_config_init() and
+ *       bflbwifi_ctrl_config_use_tty()/bflbwifi_ctrl_config_use_vchan()
+ */
+int bflbwifi_init_ex(const bflbwifi_ctrl_config_t *cfg);
+
+/**
+ * @brief Get a snapshot of the current control backend runtime status
+ * @param status Output status structure
+ * @return 0 for success, negative error code for failure
+ */
+int bflbwifi_get_ctrl_status(bflbwifi_ctrl_status_t *status);
+
+/**
+ * @brief Convert control backend identifier to string
+ * @param ctrl_backend BFLBWIFI_CTRL_BACKEND_*
+ * @return Backend name string
+ */
+const char *bflbwifi_ctrl_backend_name(uint8_t ctrl_backend);
+
+/**
+ * @brief Convert control backend link state to string
+ * @param link_state BFLBWIFI_CTRL_LINK_*
+ * @return Link state string
+ */
+const char *bflbwifi_ctrl_link_state_name(bflbwifi_ctrl_link_state_t link_state);
 
 /**
  * @brief Clean up BFLB WiFi module
@@ -173,12 +259,6 @@ int bflbwifi_restart(void);
 int bflbwifi_ota_upgrade(const char *filepath);
 
 /**
- * @brief Check if OTA is in progress
- * @return true if OTA in progress, false otherwise
- */
-bool bflbwifi_is_ota_in_progress(void);
-
-/**
  * @brief Get firmware version information
  * @param buf Output buffer
  * @param len Buffer size
@@ -189,15 +269,18 @@ int bflbwifi_get_version(char *buf, size_t len);
 /* ========== Station Mode API ========== */
 
 /**
- * @brief Connect to AP
+ * @brief Connect to an AP using station mode
  * @param config Station configuration parameters
  * @param timeout_ms Timeout in milliseconds, 0 means using default 30 seconds
  * @return 0 for success, negative error code for failure
  *
+ * @note This API ensures station mode is selected before connecting
+ * @note This API attempts to enable station DHCP client before connecting
  * @note This function will block until connection succeeds or fails
- * @note After successful connection, status can be obtained via bflbwifi_sta_get_state()
+ * @note After successful connection, status can be obtained via
+ *       bflbwifi_sta_get_state() and bflbwifi_sta_get_connection_info()
  */
-int bflbwifi_sta_connect(bflbwifi_sta_config_t *config, int timeout_ms);
+int bflbwifi_sta_connect(const bflbwifi_sta_config_t *config, int timeout_ms);
 
 /**
  * @brief Disconnect from AP
@@ -211,6 +294,13 @@ int bflbwifi_sta_disconnect(void);
  * @return 0 for success, negative error code for failure
  */
 int bflbwifi_sta_get_state(bflbwifi_sta_state_t *state);
+
+/**
+ * @brief Query cached STA connection information
+ * @param info Output parameter
+ * @return 0 for success, negative error code for failure
+ */
+int bflbwifi_sta_get_connection_info(bflbwifi_sta_connection_info_t *info);
 
 /**
  * @brief Scan nearby APs
@@ -232,94 +322,13 @@ int bflbwifi_scan(bflbwifi_ap_info_t *ap_list, int max_count, int *actual_count,
  * @param timeout_ms Timeout in milliseconds, 0 means using default 30 seconds
  * @return 0 for success, negative error code for failure
  */
-int bflbwifi_ap_start(bflbwifi_ap_config_t *config, int timeout_ms);
+int bflbwifi_ap_start(const bflbwifi_ap_config_t *config, int timeout_ms);
 
 /**
  * @brief Stop SoftAP
  * @return 0 for success, negative error code for failure
  */
 int bflbwifi_ap_stop(void);
-
-/**
- * @brief Configure AP DHCP server IP address range
- * @param start_ip Start IP (e.g. "192.168.4.10")
- * @param end_ip End IP (e.g. "192.168.4.20")
- * @param lease_min Lease time (in minutes)
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_ap_set_dhcp_range(const char *start_ip, const char *end_ip, int lease_min);
-
-/**
- * @brief Query list of stations connected to SoftAP
- * @param sta_list Output buffer (allocated by caller)
- * @param max_count Buffer size
- * @param actual_count Output parameter: actual number of stations
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_ap_get_sta_list(bflbwifi_sta_info_t *sta_list, int max_count, int *actual_count);
-
-/**
- * @brief Disconnect specified station
- * @param mac Station MAC address
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_ap_disconnect_sta(const char *mac);
-
-/* ========== Internal API (for implementation, not exposed externally) ========== */
-
-/**
- * @brief WiFi working mode (internal use)
- */
-typedef enum {
-    WIFI_MODE_IDLE = 0,      /* Idle mode: WiFi RF off */
-    WIFI_MODE_STA,           /* Station mode: connect to AP as client */
-    WIFI_MODE_AP,            /* SoftAP mode: act as hotspot */
-    WIFI_MODE_STA_AP,        /* AP+STA mixed mode */
-} bflbwifi_mode_t;
-
-/**
- * @brief Set WiFi working mode (internal API)
- * @param mode Working mode
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_set_mode(bflbwifi_mode_t mode);
-
-/**
- * @brief Query current WiFi working mode (internal API)
- * @param mode Output parameter
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_get_mode(bflbwifi_mode_t *mode);
-
-/**
- * @brief Query Station connection information (internal API)
- * @param info Output parameter
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_get_sta_connection_info(bflbwifi_sta_connection_info_t *info);
-
-/**
- * @brief Configure Station DHCP client (internal API)
- * @param enable true=enable DHCP, false=disable (use static IP)
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_set_station_dhcpc(bool enable);
-
-/**
- * @brief Set static IP address (internal API)
- * @param ip IP address (e.g. "192.168.1.100")
- * @param gateway Gateway (e.g. "192.168.1.1")
- * @param netmask Subnet mask (e.g. "255.255.255.0")
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_set_static_ip(const char *ip, const char *gateway, const char *netmask);
-
-/**
- * @brief Configure SoftAP parameters (internal API)
- * @param config AP configuration
- * @return 0 for success, negative error code for failure
- */
-int bflbwifi_ap_config(const bflbwifi_ap_config_t *config);
 
 #ifdef __cplusplus
 }

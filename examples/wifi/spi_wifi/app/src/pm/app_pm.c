@@ -683,7 +683,6 @@ int app_pm_init(void)
 #endif
 
     app_clock_init();
-    app_atmodule_init();
 
     return 0;
 }

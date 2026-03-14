@@ -30,8 +30,16 @@ ifeq ($(HAVE_READLINE),1)
     LDFLAGS += $(READLINE_LIBS)
 endif
 
+# Library name
+LIB = libnethub_vchan.a
+
 # Default target
-all: $(TARGET)
+all: $(TARGET) $(LIB)
+
+# Build static library
+$(LIB): nethub_vchan.o
+	ar rcs $@ $<
+	@echo "Build complete: $@"
 
 # Build executable
 $(TARGET): $(OBJS)
@@ -44,7 +52,7 @@ $(TARGET): $(OBJS)
 
 # Clean build artifacts
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) $(LIB)
 
 # Install to system
 install: $(TARGET)

@@ -60,6 +60,7 @@
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM   1 /* 1 support decompress, 0 not support */
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH 0 /* 1 support decompress, 0 not support */
 #define HAL_BOOT2_SUPPORT_SIGN_ENCRYPT        1 /* 1 support sign and encrypt, 0 not support */
+#define HAL_BOOT2_SUPPORT_SIGN_SHA384         0 /* 1 support SHA384 sign, 0 not support */
 
 #define HAL_BOOT2_CPU_GROUP_MAX     1
 #define HAL_BOOT2_CPU_MAX           1
@@ -230,7 +231,7 @@ typedef struct
 
     uint8_t aes_iv[16 + 4]; //iv in boot header
 
-    uint8_t eckye_x[HAL_BOOT2_ECC_KEYXSIZE];  //ec key in boot header
+    uint8_t eckey_x[HAL_BOOT2_ECC_KEYXSIZE];  //ec key in boot header
     uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE];  //ec key in boot header
     uint8_t eckey_x2[HAL_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
     uint8_t eckey_y2[HAL_BOOT2_ECC_KEYYSIZE]; //ec key in boot header

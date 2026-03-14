@@ -28,7 +28,7 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-struct lv_draw_image_sup_t {
+struct _lv_draw_image_sup_t {
     lv_color_t alpha_color;
     const lv_color32_t * palette;
     uint32_t palette_size   : 9;
@@ -42,24 +42,28 @@ struct lv_draw_image_sup_t {
 /**
  * Can be used by draw units to handle the decoding and
  * prepare everything for the actual image rendering
- * @param draw_unit     pointer to a draw unit
+ * @param t             pointer to a draw task
  * @param draw_dsc      the draw descriptor of the image
  * @param coords        the absolute coordinates of the image
  * @param draw_core_cb  a callback to perform the actual rendering
+ * @param decoder_args  the args passed to image decoders, or NULL for defaults
  */
-void lv_draw_image_normal_helper(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc,
-                                 const lv_area_t * coords, lv_draw_image_core_cb draw_core_cb);
+void lv_draw_image_normal_helper(lv_draw_task_t * t, const lv_draw_image_dsc_t * draw_dsc,
+                                 const lv_area_t * coords, lv_draw_image_core_cb draw_core_cb,
+                                 const lv_image_decoder_args_t * decoder_args);
 
 /**
  * Can be used by draw units for TILED images to handle the decoding and
  * prepare everything for the actual image rendering
- * @param draw_unit     pointer to a draw unit
+ * @param t             pointer to a draw task
  * @param draw_dsc      the draw descriptor of the image
  * @param coords        the absolute coordinates of the image
  * @param draw_core_cb  a callback to perform the actual rendering
+ * @param decoder_args  the args passed to image decoders, or NULL for defaults
  */
-void lv_draw_image_tiled_helper(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc,
-                                const lv_area_t * coords, lv_draw_image_core_cb draw_core_cb);
+void lv_draw_image_tiled_helper(lv_draw_task_t * t, const lv_draw_image_dsc_t * draw_dsc,
+                                const lv_area_t * coords, lv_draw_image_core_cb draw_core_cb,
+                                const lv_image_decoder_args_t * decoder_args);
 
 /**
  * Get the area of a rectangle if its rotated and scaled

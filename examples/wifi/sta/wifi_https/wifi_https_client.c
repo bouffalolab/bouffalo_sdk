@@ -156,20 +156,26 @@ static void https_client_task_entry(void *arg)
     req.url              = url;
     req.protocol         = "HTTP/1.1";
     req.response         = response_cb;
-//	req.ca_pem           = ca_cert;
-//	req.ca_len           = sizeof(ca_cert);
+    req.ca_pem           = NULL;  /* Use cert_bundle from firmware if CONFIG_X509_CERTIFICATE_BUNDLE is enabled */
+    req.ca_len           = 0;
+#ifdef CONFIG_TLS_MUTUAL_AUTH
     req.client_cert_pem  = own_cert;
     req.client_cert_len  = sizeof(own_cert);
     req.client_key_pem   = private_cert;
     req.client_key_len   = sizeof(private_cert);
+#endif
     req.buffer_size      = 4096;
 
     ret = https_client_request(&req, 8*1000, "IPv4 GET");
     if (ret < 0) {
-        printf("http_client get request fail ret:%d\r\n", ret);
+        printf("Http client get request fail ret:%d\r\n", ret);
     } else {
         printf("Http client GET request server success\r\n");
     }
+
+    /* Add delay to allow WiFi layer to recover */
+    /* some web server don't allow quickly access */
+    vTaskDelay(pdMS_TO_TICKS(10000));
 
     memset(&req, 0, sizeof(req));
 
@@ -179,17 +185,19 @@ static void https_client_task_entry(void *arg)
     req.payload_cb       = payload_cb;
     req.header_fields    = headers;
     req.response         = response_cb;
-//	req.ca_pem           = ca_cert;
-//	req.ca_len           = sizeof(ca_cert);
+    req.ca_pem           = NULL;  /* Use cert_bundle from firmware if CONFIG_X509_CERTIFICATE_BUNDLE is enabled */
+    req.ca_len           = 0;
+#ifdef CONFIG_TLS_MUTUAL_AUTH
     req.client_cert_pem  = own_cert;
     req.client_cert_len  = sizeof(own_cert);
     req.client_key_pem   = private_cert;
     req.client_key_len   = sizeof(private_cert);
+#endif
     req.buffer_size      = 4096;
 
     ret = https_client_request(&req, 8*1000, "IPv4 POST");
     if (ret < 0) {
-        printf("http_client post request fail ret:%d\r\n", ret);
+        printf("Http client post request fail ret:%d\r\n", ret);
     } else {
         printf("Http client POST request server success\r\n");
     }

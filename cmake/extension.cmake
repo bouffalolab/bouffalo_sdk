@@ -262,6 +262,7 @@ macro(project name)
 
   set(HEX_FILE ${build_dir}/${proj_name}.hex)
   set(BIN_FILE ${build_dir}/${proj_name}.bin)
+  set(ELF_FILE ${build_dir}/${proj_name}.elf)
   set(MAP_FILE ${build_dir}/${proj_name}.map)
   set(ASM_FILE ${build_dir}/${proj_name}.asm)
 

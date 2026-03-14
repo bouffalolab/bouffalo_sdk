@@ -14,9 +14,9 @@ sdk_add_include_directories(include/at_pwr)
 
 sdk_library_add_sources(src/at_base/at_base_cmd.c)
 sdk_library_add_sources(src/at_base/at_base_config.c)
-sdk_library_add_sources_ifdef(CONFIG_ATMODULE_BLUETOOTH src/at_ble/at_ble_cmd.c)
-sdk_library_add_sources_ifdef(CONFIG_ATMODULE_BLUETOOTH src/at_ble/at_ble_config.c)
-sdk_library_add_sources_ifdef(CONFIG_ATMODULE_BLUETOOTH src/at_ble/at_ble_main.c)
+sdk_library_add_sources_ifdef(CONFIG_BLUETOOTH_APP src/at_ble/at_ble_cmd.c)
+sdk_library_add_sources_ifdef(CONFIG_BLUETOOTH_APP src/at_ble/at_ble_config.c)
+sdk_library_add_sources_ifdef(CONFIG_BLUETOOTH_APP src/at_ble/at_ble_main.c)
 if(CONFIG_ATMODULE_HTTP AND CONFIG_ATMODULE_NETWORK)
 sdk_library_add_sources(src/at_http/at_http_cmd.c)
 sdk_library_add_sources(src/at_http/at_httpc_main.c)
@@ -66,6 +66,7 @@ sdk_add_compile_definitions_ifdef(CONFIG_LPAPP                   -DCONFIG_ATMODU
 sdk_add_compile_definitions_ifdef(CONFIG_LPAPP                   -DCFG_BL_WIFI_PS_ENABLE)
 sdk_add_compile_definitions_ifdef(CONFIG_WIFI4                   -DAT_RECONNECT_STACK=384)
 sdk_add_compile_definitions(-DCONFIG_CHIP_CPUNAME="${BOARD}")
-
+sdk_add_compile_definitions_ifdef(CONFIG_BLUETOOTH_APP           -DCONFIG_ATMODULE_BLUETOOTH=1)
+sdk_add_compile_definitions_ifdef(CONFIG_BLUETOOTH_APP           -DCONFIG_BLE_HOST_CHECK=1)
 # transport choice
 add_subdirectory(transport)

@@ -53,7 +53,7 @@ sdk_add_include_directories(
 	src/common/include/zephyr
 	src/common/include/misc
 	# src/common/include/toolchain
-	src/common/tinycrypt/include/tinycrypt
+	src/common/tinycrypt/include
 	src/hci_onchip
 	src/host
 	src/include/bluetooth

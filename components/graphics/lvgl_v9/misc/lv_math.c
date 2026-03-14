@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file lv_math.c
  *
  */
@@ -391,6 +391,16 @@ uint16_t lv_atan2(int x, int y)
 int64_t lv_pow(int64_t base, int8_t exp)
 {
     int64_t result = 1;
+
+    /* Handle negative exponent: base^(-exp) = 1/(base^exp) */
+    /* In integer arithmetic, this is 0 for base > 1 */
+    if(exp < 0) {
+        if(base == 0) return 0;  /* 0^(-n) is undefined, return 0 */
+        if(base == 1) return 1;  /* 1^(-n) = 1 */
+        if(base == -1) return (exp & 1) ? -1 : 1;  /* (-1)^(-n) alternates */
+        return 0;  /* For all other cases, result is < 1, so 0 */
+    }
+
     while(exp) {
         if(exp & 1)
             result *= base;
@@ -403,6 +413,8 @@ int64_t lv_pow(int64_t base, int8_t exp)
 
 int32_t lv_map(int32_t x, int32_t min_in, int32_t max_in, int32_t min_out, int32_t max_out)
 {
+    if(max_in == min_in) return min_out; /*Avoid division by zero later*/
+
     if(max_in >= min_in && x >= max_in) return max_out;
     if(max_in >= min_in && x <= min_in) return min_out;
 

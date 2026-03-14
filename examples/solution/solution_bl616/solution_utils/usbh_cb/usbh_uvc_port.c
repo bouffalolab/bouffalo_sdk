@@ -61,11 +61,11 @@ void usbh_voide_iso_buff_get(struct uvc_iso_buff_s *uvc_iso_buff)
 volatile bool uvc_frame_flag = false;
 static struct usbh_videoframe uvc_frame = { 0 };
 
-#if (CONFIG_SOLUTION_FUNC_UVC_JPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_JPEG)
 #define USBH_UVC_FORMAT USBH_VIDEO_FORMAT_MJPEG
 #define IMG_FRAME_CTRL  g_jpeg_frame_ctrl
 static jpeg_frame_t queue_frame = { 0 };
-#elif (CONFIG_SOLUTION_FUNC_UVC_YUYV)
+#elif IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_YUYV)
 #define USBH_UVC_FORMAT USBH_VIDEO_FORMAT_UNCOMPRESSED
 #define IMG_FRAME_CTRL  g_yuyv_frame_ctrl
 static pyuyv_frame_t queue_frame = { 0 };
@@ -137,11 +137,11 @@ ATTR_FAST_RAM_SECTION int usbh_uvc_frame_send(struct usbh_videoframe *frame)
 
     UVC_INFO("send frame id %d\r\n", queue_frame.elem_base.frame_id);
 
-#if (CONFIG_SOLUTION_FUNC_UVC_JPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_JPEG)
     queue_frame.data_size = frame->frame_size;
     /* cache */
     bflb_l1c_dcache_invalidate_range(queue_frame.elem_base.frame_addr, frame->frame_size);
-#elif (CONFIG_SOLUTION_FUNC_UVC_YUYV)
+#elif IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_YUYV)
     queue_frame.x_start = 0;
     queue_frame.y_start = 0;
     queue_frame.x_end = CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH - 1;

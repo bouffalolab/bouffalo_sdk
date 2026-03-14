@@ -1,5 +1,7 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
-CONFIG_BACKTRACE   =y
 CONFIG_HTTP        =y
 CONFIG_HTTP_CLIENT =y
+
+# Enable X.509 certificate bundle for TLS verification
+CONFIG_X509_CERTIFICATE_BUNDLE=y

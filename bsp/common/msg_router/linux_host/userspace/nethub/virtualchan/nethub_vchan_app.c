@@ -22,30 +22,13 @@
 #define VERSION "1.0"
 
 /* Command list for auto-completion */
-static const char *commands[] = {
-    "send",
-    "test",
-    "status",
-    "help",
-    "quit",
-    "exit",
-    NULL
-};
+static const char *commands[] = { "send", "test", "status", "help", "quit", "exit", NULL };
 
 /* Data type list for send command completion */
-static const char *data_types[] = {
-    "system",
-    "user",
-    "at",
-    NULL
-};
+static const char *data_types[] = { "system", "user", "at", NULL };
 
 /* Test subcommand list for test command completion */
-static const char *test_subcmds[] = {
-    "flow",
-    "mtu",
-    NULL
-};
+static const char *test_subcmds[] = { "flow", "mtu", NULL };
 
 #ifdef HAVE_READLINE
 /**
@@ -132,7 +115,7 @@ static char **nethub_vchan_completion(const char *text, int start, int end)
 {
     char **matches = NULL;
 
-    (void)end;  /* Unused */
+    (void)end; /* Unused */
 
     /* Complete command name at start of line */
     if (start == 0) {
@@ -168,13 +151,17 @@ static char **nethub_vchan_completion(const char *text, int start, int end)
 /**
  * @brief Convert data type to string
  */
-static const char* data_type_to_str(uint8_t data_type)
+static const char *data_type_to_str(uint8_t data_type)
 {
     switch (data_type) {
-        case NETHUB_VCHAN_DATA_TYPE_SYSTEM: return "SYSTEM";
-        case NETHUB_VCHAN_DATA_TYPE_USER:   return "USER";
-        case NETHUB_VCHAN_DATA_TYPE_AT:     return "AT";
-        default:                          return "UNKNOWN";
+        case NETHUB_VCHAN_DATA_TYPE_SYSTEM:
+            return "SYSTEM";
+        case NETHUB_VCHAN_DATA_TYPE_USER:
+            return "USER";
+        case NETHUB_VCHAN_DATA_TYPE_AT:
+            return "AT";
+        default:
+            return "UNKNOWN";
     }
 }
 
@@ -271,6 +258,10 @@ static void show_status(void)
 {
     int tx_packets, tx_dropped, rx_packets, rx_dropped, pending_queue;
     int nl_rx_packets, nl_tx_packets, nl_tx_dropped;
+    nethub_vchan_state_snapshot_t snapshot = {
+        .link_state = NETHUB_VCHAN_LINK_DOWN,
+        .host_state = NETHUB_VCHAN_HOST_STATE_UNKNOWN,
+    };
 
     /* Read kernel ↔ device statistics from sysfs */
     tx_packets = read_sysfs_stat("tx_packets");
@@ -284,23 +275,22 @@ static void show_status(void)
     nl_tx_packets = read_sysfs_stat("nl_tx_packets");
     nl_tx_dropped = read_sysfs_stat("nl_tx_dropped");
 
-    printf("Connection: Active\n");
+    if (nethub_vchan_get_state_snapshot(&snapshot) != 0) {
+        snapshot.link_state = NETHUB_VCHAN_LINK_DOWN;
+        snapshot.host_state = NETHUB_VCHAN_HOST_STATE_UNKNOWN;
+    }
+
+    printf("Connection: %s\n", nethub_vchan_link_state_name(snapshot.link_state));
+    printf("Host State: %s\n", nethub_vchan_host_state_name(snapshot.host_state));
     printf("\n");
     printf("[Kernel ↔ Device via SDIO/USB]\n");
-    printf("  TX: %d packets (dropped: %d)\n",
-           tx_packets >= 0 ? tx_packets : 0,
-           tx_dropped >= 0 ? tx_dropped : 0);
-    printf("  RX: %d packets (dropped: %d)\n",
-           rx_packets >= 0 ? rx_packets : 0,
-           rx_dropped >= 0 ? rx_dropped : 0);
-    printf("  Pending Queue: %d packets\n",
-           pending_queue >= 0 ? pending_queue : 0);
+    printf("  TX: %d packets (dropped: %d)\n", tx_packets >= 0 ? tx_packets : 0, tx_dropped >= 0 ? tx_dropped : 0);
+    printf("  RX: %d packets (dropped: %d)\n", rx_packets >= 0 ? rx_packets : 0, rx_dropped >= 0 ? rx_dropped : 0);
+    printf("  Pending Queue: %d packets\n", pending_queue >= 0 ? pending_queue : 0);
     printf("\n");
     printf("[Kernel ↔ Userspace via Netlink]\n");
-    printf("  RX from userspace: %d packets\n",
-           nl_rx_packets >= 0 ? nl_rx_packets : 0);
-    printf("  TX to userspace: %d packets (dropped: %d)\n",
-           nl_tx_packets >= 0 ? nl_tx_packets : 0,
+    printf("  RX from userspace: %d packets\n", nl_rx_packets >= 0 ? nl_rx_packets : 0);
+    printf("  TX to userspace: %d packets (dropped: %d)\n", nl_tx_packets >= 0 ? nl_tx_packets : 0,
            nl_tx_dropped >= 0 ? nl_tx_dropped : 0);
 }
 
@@ -314,8 +304,9 @@ static void handle_send(char *args)
     char *data = args;
     char *type_str = NULL;
     size_t len;
-    uint8_t data_type = NETHUB_VCHAN_DATA_TYPE_USER;  /* Default to user type */
-
+    uint8_t data_type = NETHUB_VCHAN_DATA_TYPE_USER; /* Default to user type */
+    char *send_buffer = NULL;
+    size_t send_len = 0;
     if (!args) {
         printf("Usage: send [type] <string>\n");
         printf("Types: system, user, at (default: user)\n");
@@ -354,13 +345,50 @@ static void handle_send(char *args)
         printf("Types: system, user, at (default: user)\n");
         return;
     }
+    /* For AT type, append \r\n if not already present */
+    if (data_type == NETHUB_VCHAN_DATA_TYPE_AT) {
+        size_t data_len = strlen(data);
+        int has_crlf = 0;
+
+        /* Check if data already ends with \r\n */
+        if (data_len >= 2) {
+            if (data[data_len - 2] == '\r' && data[data_len - 1] == '\n') {
+                has_crlf = 1;
+            }
+        }
+
+        if (has_crlf) {
+            /* Already has \r\n, use original data */
+            send_buffer = data;
+            send_len = data_len;
+        } else {
+            /* Append \r\n */
+            send_buffer = malloc(data_len + 3); /* +2 for \r\n, +1 for null terminator */
+            if (!send_buffer) {
+                printf("Error: Memory allocation failed\n");
+                return;
+            }
+            memcpy(send_buffer, data, data_len);
+            send_buffer[data_len] = '\r';
+            send_buffer[data_len + 1] = '\n';
+            send_buffer[data_len + 2] = '\0';
+            send_len = data_len + 2;
+        }
+    } else {
+        /* For non-AT types, use original data */
+        send_buffer = data;
+        send_len = len;
+    }
 
     /* Call send interface */
-    int ret = nethub_vchan_send(data_type, data, len);
+    int ret = nethub_vchan_send(data_type, send_buffer, send_len);
     if (ret > 0) {
         printf("Sent %d bytes (type=%s)\n", ret, data_type_to_str(data_type));
     } else {
         printf("Send failed (ret=%d)\n", ret);
+    }
+    if (send_buffer != data) {
+        free(send_buffer);
     }
 }
 
@@ -437,7 +465,7 @@ static void handle_test(char *args)
             int ret = nethub_vchan_send(NETHUB_VCHAN_DATA_TYPE_USER, buffer, (int)size);
             if (ret < 0) {
                 failed_count++;
-                if (failed_count <= 10) {  /* Only print first 10 errors */
+                if (failed_count <= 10) { /* Only print first 10 errors */
                     printf("[FLOW_TEST] Warning: Failed to send packet %u (ret=%d)\n", i, ret);
                 }
             } else {
@@ -446,14 +474,14 @@ static void handle_test(char *args)
 
             /* Print progress every 100 packets */
             if ((i + 1) % 100 == 0) {
-                printf("[FLOW_TEST] Progress: %u/%u packets sent (%.1f%%)\n",
-                       i + 1, count, ((i + 1) * 100.0) / (double)count);
+                printf("[FLOW_TEST] Progress: %u/%u packets sent (%.1f%%)\n", i + 1, count,
+                       ((i + 1) * 100.0) / (double)count);
                 fflush(stdout);
             }
 
             /* Small delay to avoid overwhelming */
             if ((i + 1) % 10 == 0) {
-                usleep(1000);  /* 1ms */
+                usleep(1000); /* 1ms */
             }
         }
 
@@ -464,10 +492,10 @@ static void handle_test(char *args)
         printf("========================================\n");
         printf("[FLOW_TEST] Send test completed\n");
         printf("[FLOW_TEST] Total packets:   %u\n", count);
-        printf("[FLOW_TEST] Sent successfully: %u packets (%.2f%%)\n",
-               success_count, (success_count * 100.0) / (double)count);
-        printf("[FLOW_TEST] Failed:          %u packets (%.2f%%)\n",
-               failed_count, (failed_count * 100.0) / (double)count);
+        printf("[FLOW_TEST] Sent successfully: %u packets (%.2f%%)\n", success_count,
+               (success_count * 100.0) / (double)count);
+        printf("[FLOW_TEST] Failed:          %u packets (%.2f%%)\n", failed_count,
+               (failed_count * 100.0) / (double)count);
         printf("[FLOW_TEST] Total bytes:     %u bytes\n", success_count * size);
         printf("========================================\n");
         printf("[FLOW_TEST] Please check device output to verify reception\n");
@@ -538,7 +566,7 @@ static void command_loop(void)
 
     /* Initialize history */
     using_history();
-    stifle_history(100);  /* Limit history to 100 entries */
+    stifle_history(100); /* Limit history to 100 entries */
 
     /* Try to load history from file (optional, skip if fails) */
     /* read_history("/tmp/.nethub_vchan_history"); */
@@ -626,7 +654,7 @@ static void command_loop(void)
  */
 int main(int argc, char *argv[])
 {
-    (void)argc;  /* Unused parameters */
+    (void)argc; /* Unused parameters */
     (void)argv;
     int ret;
 

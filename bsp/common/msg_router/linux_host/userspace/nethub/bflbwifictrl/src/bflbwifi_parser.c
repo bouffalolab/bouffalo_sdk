@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #include "../include/bflbwifi_log.h"
-#include "../include/bflbwifi.h"
+#include "bflbwifi_internal.h"
 
 /* URC type definitions */
 typedef enum {
@@ -204,6 +204,29 @@ static int parse_wifi_error(const char *line)
     return 0;
 }
 
+static int parse_cwjap_error_code(const char *line, int *error_code)
+{
+    const char *value;
+    char tail[2];
+    int parsed_error;
+
+    if (!line || !error_code || strncmp(line, "+CWJAP:", 7) != 0) {
+        return -1;
+    }
+
+    value = line + 7;
+    if (strchr(value, ',') != NULL || strchr(value, '"') != NULL) {
+        return -1;
+    }
+
+    if (sscanf(value, "%d%1s", &parsed_error, tail) != 1) {
+        return -1;
+    }
+
+    *error_code = parsed_error;
+    return 0;
+}
+
 /**
  * @brief Parse MAC address (AP mode station information)
  * @param line Input line, e.g.: +CW:STA_CONNECTED "18:b9:05:ed:59:cc"
@@ -246,6 +269,7 @@ static int parse_mac(const char *line, char *mac)
 /* Forward declarations */
 void bflbwifi_state_handle_urc(int type, const char *line);
 void bflbwifi_state_handle_cwjap(const char *line);
+void bflbwifi_state_handle_cwjap_error(int error_code);
 
 /**
  * @brief Handle received data line
@@ -265,7 +289,13 @@ void bflbwifi_parser_process_line(const char *line, void *user_data)
 
     /* Special handling: +CWJAP response (not URC, but needs to update connection information) */
     if (strncmp(line, "+CWJAP:", 7) == 0) {
-        /* Notify state manager to handle +CWJAP response */
+        int error_code;
+
+        if (parse_cwjap_error_code(line, &error_code) == 0) {
+            bflbwifi_state_handle_cwjap_error(error_code);
+            return;
+        }
+
         bflbwifi_state_handle_cwjap(line);
         return;
     }

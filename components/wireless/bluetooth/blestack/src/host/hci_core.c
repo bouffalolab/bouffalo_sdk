@@ -33,8 +33,8 @@
 #include "keys.h"
 #include "monitor.h"
 #include "hci_core.h"
-#include "hci_ecc.h"
 #include "ecc.h"
+#include "hci_ecc.h"
 
 #include "conn_internal.h"
 #include "l2cap_internal.h"

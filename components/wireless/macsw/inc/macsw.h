@@ -4152,6 +4152,10 @@ __INLINE uint16_t mac_ie_len(uint32_t addr)
 #define WLAN_FW_AP_STA_ENCRYPTION_TYPE_MISMATCH                  28
 #define WLAN_FW_SAE_CONFIRM_FAIL                                 29
 #define WLAN_FW_SAE_COMMIT_FAIL                                  30
+#define WLAN_FW_4WAY_HANDSHAKE_NO_EAPOL1                         31
+#define WLAN_FW_4WAY_HANDSHAKE_EAPOL2_SEND_FAILED                32
+#define WLAN_FW_4WAY_HANDSHAKE_EAPOL3_TIMEOUT                    33
+#define WLAN_FW_4WAY_HANDSHAKE_EAPOL4_SEND_FAILED                34
 
 
 /*--------------------------------------------------------------------*/

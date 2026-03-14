@@ -282,7 +282,7 @@ typedef struct
 
     uint8_t aes_iv[16 + 4]; //iv in boot header
 
-    uint8_t eckye_x[HAL_BOOT2_ECC_KEYXSIZE];  //ec key in boot header
+    uint8_t eckey_x[HAL_BOOT2_ECC_KEYXSIZE];  //ec key in boot header
     uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE];  //ec key in boot header
     uint8_t eckey_x2[HAL_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
     uint8_t eckey_y2[HAL_BOOT2_ECC_KEYYSIZE]; //ec key in boot header

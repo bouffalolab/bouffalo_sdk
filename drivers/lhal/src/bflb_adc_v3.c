@@ -5,10 +5,13 @@
 #if defined(BL618DG)
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
 #define ADC_AON_BASE  ((uint32_t)0x2008F000)
+#define ADC_COUNTS    (2)
 #else
 #error "Please select correct chip that support adc_v3"
 #endif
 
+volatile float coe[ADC_COUNTS];
+volatile int32_t offset[ADC_COUNTS];
 #if defined(BL618DG_VERSION_A0)
 volatile uint32_t tsen_offset = 2400;
 #else
@@ -117,9 +120,8 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     } else {
         regval |= (2 << AON_GPADC1_CHOP_MODE_SHIFT); /* Vref AZ and PGA chop */
     }
-#if defined(BL618DG_VERSION_A0)
-    regval |= (16 << AON_GPADC1_VREF_TRIM_SHIFT);
-#endif
+    regval |= (bflb_efuse_get_adc_vref_trim(dev) << AON_GPADC1_VREF_TRIM_SHIFT);
+
     if (config->differential_mode) {
         regval |= AON_GPADC1_DIFF_MODE;
         regval &= ~AON_GPADC1_NEG_GND;
@@ -176,6 +178,9 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     } else {
         putreg32(0xF002, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
     }
+
+    offset[dev->idx] = bflb_efuse_get_adc_offset_trim(dev);
+    coe[dev->idx] = bflb_efuse_get_adc_gain_trim(dev);
 #endif
 }
 
@@ -965,6 +970,9 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].pos_chan = (buffer[i] >> 20) & 0xF;
             result[i].neg_chan = (buffer[i] >> 16) & 0xF;
             conv_result = buffer[i] & 0xFFFF;
+            conv_result += offset[dev->idx] / 2;
+            conv_result /= coe[dev->idx];
+            conv_result = (conv_result > 0xFFFF) ? 0xFFFF : conv_result;
             if (resolution == ADC_RESOLUTION_12B) {
                 result[i].value = conv_result >> 4;
                 result[i].millivolt = result[i].value * ref / 4096;
@@ -997,6 +1005,9 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             }
 
             conv_result = conv_result & 0xFFFF;
+            conv_result += offset[dev->idx];
+            conv_result /= coe[dev->idx];
+            conv_result = (conv_result > 0x7FFF) ? 0x7FFF : conv_result;
             if (resolution == ADC_RESOLUTION_12B) {
                 result[i].value = conv_result >> 4;
                 result[i].millivolt = result[i].value * ref / 2048;

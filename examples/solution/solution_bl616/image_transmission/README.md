@@ -12,7 +12,19 @@
 - BL616/BL618
 
 ```
-make CHIP=bl616 BOARD=bl616dk
+ make CHIP=bl616 BOARD=bl616dk_solution
+```
+
+- BL616CL
+
+```
+ make CHIP=bl616cl BOARD=bl616cldk_solution
+```
+
+- BL618DG
+
+```
+ make CHIP=bl618dg BOARD=bl618dgdk_solution CPU_ID=ap
 ```
 
 ## Flash

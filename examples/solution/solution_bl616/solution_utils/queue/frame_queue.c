@@ -15,7 +15,7 @@
 #define FRAME_BUFFER_ATTR ATTR_NOINIT_PSRAM_SECTION __ALIGNED(32)
 
 /******************* yuyv frame  **********************/
-#if (CONFIG_SOLUTION_QUEUE_YUYV)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV)
 
 #if (YUYV_FRAME_SHARE_EN)
 FRAME_BUFFER_ATTR uint8_t picture_frame_buffer[1][YUYV_FRAME_SIZE]; /* YUYV raw data */
@@ -59,7 +59,7 @@ int yuyv_frame_ctrl_init(void)
 
 /******************** jpeg frame **********************/
 
-#if (CONFIG_SOLUTION_QUEUE_MJPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG)
 
 FRAME_BUFFER_ATTR uint8_t jpeg_frame_buffer[MJPEG_FRAME_NUM][MJPEG_FRAME_SIZE]; /* Multi buffer queue */
 
@@ -93,7 +93,7 @@ int jpeg_frame_ctrl_init(void)
 #endif
 
 /******************* audio input frame  **********************/
-#if (CONFIG_SOLUTION_QUEUE_AUDIO_IN)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_AUDIO_IN)
 
 FRAME_BUFFER_ATTR uint8_t auadc_frame_buffer[AUDIO_IN_FRAME_NUM][AUDIO_IN_FRAME_SIZE]; /* Multi buffer queue */
 
@@ -128,7 +128,7 @@ int auadc_in_frame_ctrl_init(void)
 #endif
 
 /******************* audio output frame  **********************/
-#if (CONFIG_SOLUTION_QUEUE_AUDIO_OUT)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_AUDIO_OUT)
 
 FRAME_BUFFER_ATTR uint8_t audac_frame_buffer[AUDIO_OUT_FRAME_NUM][AUDIO_OUT_FRAME_SIZE]; /* Multi buffer queue */
 
@@ -169,7 +169,7 @@ int frame_ctrl_init_all(void)
 
     printf("frame_ctrl_init_all\r\n");
 
-#if (CONFIG_SOLUTION_QUEUE_YUYV)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV)
     ret = yuyv_frame_ctrl_init();
     if (ret < 0) {
         return ret;
@@ -177,7 +177,7 @@ int frame_ctrl_init_all(void)
 
 #endif
 
-#if (CONFIG_SOLUTION_QUEUE_MJPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG)
     ret = jpeg_frame_ctrl_init();
     if (ret < 0) {
         return ret;
@@ -185,14 +185,14 @@ int frame_ctrl_init_all(void)
 
 #endif
 
-#if (CONFIG_SOLUTION_QUEUE_AUDIO_IN)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_AUDIO_IN)
     ret = auadc_in_frame_ctrl_init();
     if (ret < 0) {
         return ret;
     }
 #endif
 
-#if (CONFIG_SOLUTION_QUEUE_AUDIO_OUT)
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_AUDIO_OUT)
     ret = auadc_out_frame_ctrl_init();
     if (ret < 0) {
         return ret;

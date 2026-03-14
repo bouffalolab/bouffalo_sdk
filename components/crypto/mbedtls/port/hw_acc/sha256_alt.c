@@ -35,13 +35,13 @@
 #include "mbedtls/platform.h"
 #include "sec_mutex.h"
 
-#ifdef CONFIG_MBEDTLS_V3
-#define SHA256_VALIDATE_RET(cond)
-#define SHA256_VALIDATE(cond)
-#else
+#ifdef CONFIG_MBEDTLS_V2
 #define SHA256_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
 #define SHA256_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+#else
+#define SHA256_VALIDATE_RET(cond)
+#define SHA256_VALIDATE(cond)
 #endif
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_link_ctx_s link_ctx_temp;
@@ -100,18 +100,19 @@ int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha256_starts( mbedtls_sha256_context *ctx,
-                            int is224 )
-{
-    return mbedtls_sha256_starts_ret( ctx, is224 );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha256_starts( mbedtls_sha256_context *ctx,
                             int is224 )
 {
     mbedtls_sha256_starts_ret( ctx, is224 );
 }
+#else
+int mbedtls_sha256_starts( mbedtls_sha256_context *ctx,
+                            int is224 )
+{
+    return mbedtls_sha256_starts_ret( ctx, is224 );
+}
+
 #endif
 #endif
 
@@ -140,19 +141,19 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha256_update( mbedtls_sha256_context *ctx,
-                            const unsigned char *input,
-                            size_t ilen )
-{
-    return mbedtls_sha256_update_ret( ctx, input, ilen );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha256_update( mbedtls_sha256_context *ctx,
                             const unsigned char *input,
                             size_t ilen )
 {
     mbedtls_sha256_update_ret( ctx, input, ilen );
+}
+#else
+int mbedtls_sha256_update( mbedtls_sha256_context *ctx,
+                            const unsigned char *input,
+                            size_t ilen )
+{
+    return mbedtls_sha256_update_ret( ctx, input, ilen );
 }
 #endif
 #endif
@@ -176,17 +177,17 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha256_finish( mbedtls_sha256_context *ctx,
-                            unsigned char output[32] )
-{
-    return mbedtls_sha256_finish_ret( ctx, output );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha256_finish( mbedtls_sha256_context *ctx,
                             unsigned char output[32] )
 {
     mbedtls_sha256_finish_ret( ctx, output );
+}
+#else
+int mbedtls_sha256_finish( mbedtls_sha256_context *ctx,
+                            unsigned char output[32] )
+{
+    return mbedtls_sha256_finish_ret( ctx, output );
 }
 #endif
 #endif

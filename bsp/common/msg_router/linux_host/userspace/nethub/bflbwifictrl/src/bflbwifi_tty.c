@@ -18,64 +18,128 @@
 
 #include "../include/bflbwifi_log.h"
 
-#define TTY_RECV_BUF_SIZE  2048
-#define TTY_LINE_BUF_SIZE  512
+#define TTY_RECV_BUF_SIZE 2048
+#define TTY_LINE_BUF_SIZE 512
 
 /**
  * @brief Command response status
  */
 typedef enum {
-    CMD_RESP_PENDING = 0,   /* Waiting for response */
-    CMD_RESP_OK,            /* Received OK */
-    CMD_RESP_ERROR,         /* Received ERROR */
-    CMD_RESP_TIMEOUT,       /* Timeout */
+    CMD_RESP_PENDING = 0, /* Waiting for response */
+    CMD_RESP_OK,          /* Received OK */
+    CMD_RESP_ERROR,       /* Received ERROR */
+    CMD_RESP_TIMEOUT,     /* Timeout */
 } cmd_response_t;
 
 /**
  * @brief TTY connection status
  */
 typedef enum {
-    TTY_STATE_DISCONNECTED = 0,  /* Disconnected */
-    TTY_STATE_CONNECTING,        /* Connecting */
-    TTY_STATE_CONNECTED,         /* Connected */
+    TTY_STATE_DISCONNECTED = 0, /* Disconnected */
+    TTY_STATE_CONNECTING,       /* Connecting */
+    TTY_STATE_CONNECTED,        /* Connected */
 } tty_state_t;
 
 /**
  * @brief TTY context
  */
 typedef struct {
-    int fd;                         /* TTY file descriptor */
-    pthread_t recv_thread;          /* Receive thread */
-    pthread_t reconnect_thread;     /* Reconnect thread */
-    bool running;                   /* Thread running flag */
-    pthread_mutex_t tx_mutex;       /* Send mutex */
+    int fd;                     /* TTY file descriptor */
+    pthread_t recv_thread;      /* Receive thread */
+    pthread_t reconnect_thread; /* Reconnect thread */
+    bool running;               /* Thread running flag */
+    pthread_mutex_t tx_mutex;   /* Send mutex */
 
     /* Connection management */
-    tty_state_t state;              /* Connection status */
-    pthread_mutex_t state_mutex;    /* Status mutex */
-    pthread_cond_t state_cond;      /* Status condition variable */
-    char dev_path[256];             /* TTY device path */
-    int baudrate;                   /* Baud rate */
+    tty_state_t state;           /* Connection status */
+    pthread_mutex_t state_mutex; /* Status mutex */
+    pthread_cond_t state_cond;   /* Status condition variable */
+    char dev_path[256];          /* TTY device path */
+    int baudrate;                /* Baud rate */
 
     /* Command response management */
-    cmd_response_t cmd_resp;        /* Current command response status */
-    pthread_mutex_t resp_mutex;     /* Response status mutex */
-    pthread_cond_t resp_cond;       /* Response condition variable */
-    char last_resp_line[256];       /* Last received non-OK/ERROR line */
+    cmd_response_t cmd_resp;    /* Current command response status */
+    pthread_mutex_t resp_mutex; /* Response status mutex */
+    pthread_cond_t resp_cond;   /* Response condition variable */
+    char last_resp_line[256];   /* Last received non-OK/ERROR line */
 
     /* Receive thread control (for OTA exclusive access) */
-    bool recv_thread_suspended;     /* Suspend flag for receive thread */
-    pthread_cond_t suspend_cond;    /* Condition variable for suspend/resume */
+    bool recv_thread_suspended;  /* Suspend flag for receive thread */
+    pthread_cond_t suspend_cond; /* Condition variable for suspend/resume */
 
     /* Callback functions (for notifying upper layer of data arrival) */
     void (*data_callback)(const char *line, void *user_data);
-    void (*disconnect_callback)(void);  /* Disconnect callback */
-    void (*reconnect_callback)(void);   /* Reconnect success callback */
+    void (*disconnect_callback)(void); /* Disconnect callback */
+    void (*reconnect_callback)(void);  /* Reconnect success callback */
     void *user_data;
 } bflbwifi_tty_t;
 
 /* Global TTY instance */
 static bflbwifi_tty_t *g_tty = NULL;
+
+static bool tty_is_disconnect_error(int err)
+{
+    switch (err) {
+        case EBADF:
+        case ENODEV:
+        case EIO:
+        case ENXIO:
+        case EPIPE:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static void tty_replace_fd(bflbwifi_tty_t *tty, int new_fd)
+{
+    int old_fd;
+
+    if (!tty) {
+        return;
+    }
+
+    pthread_mutex_lock(&tty->tx_mutex);
+    old_fd = tty->fd;
+    tty->fd = new_fd;
+    pthread_mutex_unlock(&tty->tx_mutex);
+
+    if (old_fd >= 0 && old_fd != new_fd) {
+        close(old_fd);
+    }
+}
+
+static void tty_mark_disconnected(bflbwifi_tty_t *tty, const char *reason)
+{
+    bool notify = false;
+
+    if (!tty) {
+        return;
+    }
+
+    tty_replace_fd(tty, -1);
+
+    pthread_mutex_lock(&tty->resp_mutex);
+    tty->cmd_resp = CMD_RESP_ERROR;
+    pthread_cond_broadcast(&tty->resp_cond);
+    pthread_mutex_unlock(&tty->resp_mutex);
+
+    pthread_mutex_lock(&tty->state_mutex);
+    if (tty->state != TTY_STATE_DISCONNECTED) {
+        tty->state = TTY_STATE_DISCONNECTED;
+        notify = true;
+    }
+    pthread_cond_broadcast(&tty->state_cond);
+    pthread_mutex_unlock(&tty->state_mutex);
+
+    if (reason && notify) {
+        BFLB_LOGW("%s", reason);
+    }
+
+    if (notify && tty->disconnect_callback) {
+        tty->disconnect_callback();
+    }
+}
 
 /**
  * @brief Set serial port parameters
@@ -92,14 +156,30 @@ static int tty_set_params(int fd, int baudrate)
     /* Set baud rate */
     speed_t speed;
     switch (baudrate) {
-        case 9600:   speed = B9600; break;
-        case 19200:  speed = B19200; break;
-        case 38400:  speed = B38400; break;
-        case 57600:  speed = B57600; break;
-        case 115200: speed = B115200; break;
-        case 230400: speed = B230400; break;
-        case 460800: speed = B460800; break;
-        case 921600: speed = B921600; break;
+        case 9600:
+            speed = B9600;
+            break;
+        case 19200:
+            speed = B19200;
+            break;
+        case 38400:
+            speed = B38400;
+            break;
+        case 57600:
+            speed = B57600;
+            break;
+        case 115200:
+            speed = B115200;
+            break;
+        case 230400:
+            speed = B230400;
+            break;
+        case 460800:
+            speed = B460800;
+            break;
+        case 921600:
+            speed = B921600;
+            break;
         default:
             BFLB_LOGE("Unsupported baudrate: %d", baudrate);
             return -1;
@@ -109,10 +189,10 @@ static int tty_set_params(int fd, int baudrate)
     cfsetospeed(&options, speed);
 
     /* 8N1 mode */
-    options.c_cflag &= ~PARENB;  /* No parity */
-    options.c_cflag &= ~CSTOPB;  /* 1 stop bit */
+    options.c_cflag &= ~PARENB; /* No parity */
+    options.c_cflag &= ~CSTOPB; /* 1 stop bit */
     options.c_cflag &= ~CSIZE;
-    options.c_cflag |= CS8;      /* 8 data bits */
+    options.c_cflag |= CS8; /* 8 data bits */
     options.c_cflag |= CREAD | CLOCAL;
 
     /* Disable hardware flow control */
@@ -128,8 +208,8 @@ static int tty_set_params(int fd, int baudrate)
     options.c_iflag &= ~(IXON | IXOFF | IXANY);
 
     /* Set timeout and minimum character count */
-    options.c_cc[VTIME] = 1;    /* 0.1 second timeout */
-    options.c_cc[VMIN] = 0;     /* Don't block waiting */
+    options.c_cc[VTIME] = 1; /* 0.1 second timeout */
+    options.c_cc[VMIN] = 0;  /* Don't block waiting */
 
     if (tcsetattr(fd, TCSANOW, &options) != 0) {
         BFLB_LOGE("tcsetattr failed: %s", strerror(errno));
@@ -173,8 +253,7 @@ static int tty_open_device(const char *dev, int baudrate)
 static void tty_close_device(void)
 {
     if (g_tty && g_tty->fd >= 0) {
-        close(g_tty->fd);
-        g_tty->fd = -1;
+        tty_replace_fd(g_tty, -1);
     }
 }
 
@@ -196,7 +275,7 @@ static void tty_set_state(tty_state_t new_state)
 /**
  * @brief Reconnect thread
  */
-static void* tty_reconnect_thread(void *arg)
+static void *tty_reconnect_thread(void *arg)
 {
     bflbwifi_tty_t *tty = (bflbwifi_tty_t *)arg;
     int fd;
@@ -227,12 +306,7 @@ static void* tty_reconnect_thread(void *arg)
             continue;
         }
 
-        /* Close old device (if already open) */
-        if (tty->fd >= 0) {
-            close(tty->fd);
-        }
-
-        tty->fd = fd;
+        tty_replace_fd(tty, fd);
         tty_set_state(TTY_STATE_CONNECTED);
         BFLB_LOGI("Reconnected to %s", tty->dev_path);
 
@@ -252,7 +326,7 @@ static void* tty_reconnect_thread(void *arg)
 /**
  * @brief Receive thread
  */
-static void* tty_recv_thread(void *arg)
+static void *tty_recv_thread(void *arg)
 {
     bflbwifi_tty_t *tty = (bflbwifi_tty_t *)arg;
     char buf[TTY_RECV_BUF_SIZE];
@@ -278,7 +352,7 @@ static void* tty_recv_thread(void *arg)
 
         /* Check if device is connected */
         if (tty->fd < 0) {
-            usleep(100000);  /* 100ms */
+            usleep(100000); /* 100ms */
             continue;
         }
 
@@ -286,18 +360,13 @@ static void* tty_recv_thread(void *arg)
         FD_ZERO(&readfds);
         FD_SET(tty->fd, &readfds);
         tv.tv_sec = 0;
-        tv.tv_usec = 100000;  /* 100ms timeout */
+        tv.tv_usec = 100000; /* 100ms timeout */
 
         ret = select(tty->fd + 1, &readfds, NULL, NULL, &tv);
         if (ret < 0) {
             /* Device disconnect detection */
-            if (errno == EBADF || errno == ENODEV) {
-                BFLB_LOGW("TTY device disconnected");
-                tty_close_device();
-                tty_set_state(TTY_STATE_DISCONNECTED);
-                if (tty->disconnect_callback) {
-                    tty->disconnect_callback();
-                }
+            if (tty_is_disconnect_error(errno)) {
+                tty_mark_disconnected(tty, "TTY device disconnected");
                 continue;
             }
             if (errno == EINTR) {
@@ -316,13 +385,8 @@ static void* tty_recv_thread(void *arg)
         ret = read(tty->fd, buf, sizeof(buf));
         if (ret <= 0) {
             /* Device disconnect detection */
-            if (errno == EBADF || errno == ENODEV || ret == 0) {
-                BFLB_LOGW("TTY device read error, marking as disconnected");
-                tty_close_device();
-                tty_set_state(TTY_STATE_DISCONNECTED);
-                if (tty->disconnect_callback) {
-                    tty->disconnect_callback();
-                }
+            if (ret == 0 || tty_is_disconnect_error(errno)) {
+                tty_mark_disconnected(tty, "TTY device read error, marking as disconnected");
                 continue;
             }
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -343,7 +407,6 @@ static void* tty_recv_thread(void *arg)
                     line_buf[line_pos - 1] = '\0';
                 }
 
-                /* Debug log */
                 BFLB_LOGD("TTY RX: %s", line_buf);
 
                 /* Identify command response (OK/ERROR) and notify waiter */
@@ -392,72 +455,50 @@ static void* tty_recv_thread(void *arg)
 /**
  * @brief Initialize TTY
  */
-int bflbwifi_tty_init(const char *dev, int baudrate,
-                  void (*callback)(const char *line, void *user_data),
-                  void *user_data)
+int bflbwifi_tty_init(const char *dev, int baudrate, void (*callback)(const char *line, void *user_data),
+                      void *user_data)
 {
-    int fd;
+    int fd = -1;
 
     if (!dev || !callback) {
         BFLB_LOGE("Invalid parameters");
         return -1;
     }
 
-    /* Already initialized */
     if (g_tty) {
         BFLB_LOGE("TTY already initialized");
         return -1;
     }
 
-    /* Open TTY device */
-    fd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
-    if (fd < 0) {
-        BFLB_LOGE("Failed to open %s: %s", dev, strerror(errno));
-        return -1;
-    }
-
-    /* Configure serial port parameters */
-    if (tty_set_params(fd, baudrate) != 0) {
-        close(fd);
-        return -1;
-    }
-
-    /* Allocate TTY context */
     g_tty = (bflbwifi_tty_t *)calloc(1, sizeof(bflbwifi_tty_t));
     if (!g_tty) {
         BFLB_LOGE("Failed to allocate memory");
-        close(fd);
         return -1;
     }
 
-    g_tty->fd = fd;
+    g_tty->fd = -1;
     g_tty->data_callback = callback;
     g_tty->user_data = user_data;
     g_tty->running = true;
     g_tty->cmd_resp = CMD_RESP_PENDING;
     g_tty->state = TTY_STATE_DISCONNECTED;
-    g_tty->disconnect_callback = NULL;
-    g_tty->reconnect_callback = NULL;
 
-    /* Save device path and baud rate */
     strncpy(g_tty->dev_path, dev, sizeof(g_tty->dev_path) - 1);
     g_tty->dev_path[sizeof(g_tty->dev_path) - 1] = '\0';
     g_tty->baudrate = baudrate;
 
-    /* Initialize send mutex */
     if (pthread_mutex_init(&g_tty->tx_mutex, NULL) != 0) {
         BFLB_LOGE("Failed to init tx_mutex");
         free(g_tty);
-        close(fd);
+        g_tty = NULL;
         return -1;
     }
 
-    /* Initialize state management mutex and condition variable */
     if (pthread_mutex_init(&g_tty->state_mutex, NULL) != 0) {
         BFLB_LOGE("Failed to init state_mutex");
         pthread_mutex_destroy(&g_tty->tx_mutex);
         free(g_tty);
-        close(fd);
+        g_tty = NULL;
         return -1;
     }
 
@@ -466,18 +507,17 @@ int bflbwifi_tty_init(const char *dev, int baudrate,
         pthread_mutex_destroy(&g_tty->state_mutex);
         pthread_mutex_destroy(&g_tty->tx_mutex);
         free(g_tty);
-        close(fd);
+        g_tty = NULL;
         return -1;
     }
 
-    /* Initialize response management mutex and condition variable */
     if (pthread_mutex_init(&g_tty->resp_mutex, NULL) != 0) {
         BFLB_LOGE("Failed to init resp_mutex");
         pthread_cond_destroy(&g_tty->state_cond);
         pthread_mutex_destroy(&g_tty->state_mutex);
         pthread_mutex_destroy(&g_tty->tx_mutex);
         free(g_tty);
-        close(fd);
+        g_tty = NULL;
         return -1;
     }
 
@@ -488,44 +528,67 @@ int bflbwifi_tty_init(const char *dev, int baudrate,
         pthread_mutex_destroy(&g_tty->state_mutex);
         pthread_mutex_destroy(&g_tty->tx_mutex);
         free(g_tty);
-        close(fd);
+        g_tty = NULL;
         return -1;
     }
 
-    /* Start receive thread */
-    if (pthread_create(&g_tty->recv_thread, NULL, tty_recv_thread, g_tty) != 0) {
-        BFLB_LOGE("Failed to create recv thread");
+    if (pthread_cond_init(&g_tty->suspend_cond, NULL) != 0) {
+        BFLB_LOGE("Failed to init suspend_cond");
         pthread_cond_destroy(&g_tty->resp_cond);
         pthread_mutex_destroy(&g_tty->resp_mutex);
         pthread_cond_destroy(&g_tty->state_cond);
         pthread_mutex_destroy(&g_tty->state_mutex);
         pthread_mutex_destroy(&g_tty->tx_mutex);
         free(g_tty);
-        close(fd);
         g_tty = NULL;
         return -1;
     }
 
-    /* Start reconnect thread */
+    fd = tty_open_device(dev, baudrate);
+    if (fd < 0) {
+        BFLB_LOGW("Initial open of %s failed: %s, starting in disconnected state",
+                  dev, strerror(errno));
+    } else {
+        g_tty->fd = fd;
+    }
+
+    if (pthread_create(&g_tty->recv_thread, NULL, tty_recv_thread, g_tty) != 0) {
+        BFLB_LOGE("Failed to create recv thread");
+        tty_close_device();
+        pthread_cond_destroy(&g_tty->suspend_cond);
+        pthread_cond_destroy(&g_tty->resp_cond);
+        pthread_mutex_destroy(&g_tty->resp_mutex);
+        pthread_cond_destroy(&g_tty->state_cond);
+        pthread_mutex_destroy(&g_tty->state_mutex);
+        pthread_mutex_destroy(&g_tty->tx_mutex);
+        free(g_tty);
+        g_tty = NULL;
+        return -1;
+    }
+
     if (pthread_create(&g_tty->reconnect_thread, NULL, tty_reconnect_thread, g_tty) != 0) {
         BFLB_LOGE("Failed to create reconnect thread");
         g_tty->running = false;
+        pthread_cond_broadcast(&g_tty->suspend_cond);
         pthread_join(g_tty->recv_thread, NULL);
+        tty_close_device();
+        pthread_cond_destroy(&g_tty->suspend_cond);
         pthread_cond_destroy(&g_tty->resp_cond);
         pthread_mutex_destroy(&g_tty->resp_mutex);
         pthread_cond_destroy(&g_tty->state_cond);
         pthread_mutex_destroy(&g_tty->state_mutex);
         pthread_mutex_destroy(&g_tty->tx_mutex);
         free(g_tty);
-        close(fd);
         g_tty = NULL;
         return -1;
     }
 
-    /* Set to connected status */
-    tty_set_state(TTY_STATE_CONNECTED);
-
-    BFLB_LOGI("TTY initialized: %s @ %d baud", dev, baudrate);
+    if (g_tty->fd >= 0) {
+        tty_set_state(TTY_STATE_CONNECTED);
+        BFLB_LOGI("TTY initialized: %s @ %d baud", dev, baudrate);
+    } else {
+        BFLB_LOGW("TTY initialized without an active device, reconnect thread is waiting for %s", dev);
+    }
 
     return 0;
 }
@@ -536,6 +599,8 @@ int bflbwifi_tty_init(const char *dev, int baudrate,
 int bflbwifi_tty_send(const char *data, int len)
 {
     int ret;
+    int saved_errno = 0;
+    int fd;
 
     if (!g_tty) {
         BFLB_LOGE("TTY not initialized");
@@ -549,20 +614,38 @@ int bflbwifi_tty_send(const char *data, int len)
 
     /* Lock to avoid multiple threads sending at the same time */
     pthread_mutex_lock(&g_tty->tx_mutex);
+    fd = g_tty->fd;
+    if (fd < 0) {
+        pthread_mutex_unlock(&g_tty->tx_mutex);
+        BFLB_LOGW("TTY is disconnected, cannot send data");
+        return -1;
+    }
 
     /* Debug log */
     BFLB_LOGD("TTY TX: %.*s", len, data);
 
     /* Send data */
-    ret = write(g_tty->fd, data, len);
+    ret = write(fd, data, len);
     if (ret != len) {
-        BFLB_LOGE("Write failed: %s", strerror(errno));
+        saved_errno = errno;
         pthread_mutex_unlock(&g_tty->tx_mutex);
+        if (tty_is_disconnect_error(saved_errno)) {
+            tty_mark_disconnected(g_tty, "TTY write failed due to disconnect");
+        }
+        BFLB_LOGE("Write failed: %s", strerror(saved_errno));
         return -1;
     }
 
     /* Wait for data transmission to complete */
-    tcdrain(g_tty->fd);
+    if (tcdrain(fd) != 0) {
+        saved_errno = errno;
+        pthread_mutex_unlock(&g_tty->tx_mutex);
+        if (tty_is_disconnect_error(saved_errno)) {
+            tty_mark_disconnected(g_tty, "TTY drain failed due to disconnect");
+        }
+        BFLB_LOGE("tcdrain failed: %s", strerror(saved_errno));
+        return -1;
+    }
 
     pthread_mutex_unlock(&g_tty->tx_mutex);
 
@@ -630,8 +713,13 @@ int bflbwifi_tty_send_command_sync(const char *cmd, int timeout_ms)
     }
 
     if (timeout_ms <= 0) {
-        timeout_ms = 5000;  /* Default 5 seconds */
+        timeout_ms = 5000; /* Default 5 seconds */
     }
+
+    pthread_mutex_lock(&g_tty->resp_mutex);
+    g_tty->cmd_resp = CMD_RESP_PENDING;
+    g_tty->last_resp_line[0] = '\0';
+    pthread_mutex_unlock(&g_tty->resp_mutex);
 
     /* 1. Send command (protected by tx_mutex) */
     ret = bflbwifi_tty_send_command(cmd);
@@ -651,7 +739,6 @@ int bflbwifi_tty_send_command_sync(const char *cmd, int timeout_ms)
 
     /* Wait for response */
     pthread_mutex_lock(&g_tty->resp_mutex);
-    g_tty->cmd_resp = CMD_RESP_PENDING;
 
     while (g_tty->cmd_resp == CMD_RESP_PENDING) {
         ret = pthread_cond_timedwait(&g_tty->resp_cond, &g_tty->resp_mutex, &ts);
@@ -692,19 +779,18 @@ void bflbwifi_tty_deinit(void)
 
     /* Stop receive thread and reconnect thread */
     g_tty->running = false;
+    tty_close_device();
 
     /* Wake up reconnect thread */
     pthread_cond_broadcast(&g_tty->state_cond);
+    pthread_cond_broadcast(&g_tty->resp_cond);
+    pthread_cond_broadcast(&g_tty->suspend_cond);
 
     pthread_join(g_tty->recv_thread, NULL);
     pthread_join(g_tty->reconnect_thread, NULL);
 
-    /* Close TTY */
-    if (g_tty->fd >= 0) {
-        close(g_tty->fd);
-    }
-
     /* Destroy locks and condition variables */
+    pthread_cond_destroy(&g_tty->suspend_cond);
     pthread_cond_destroy(&g_tty->resp_cond);
     pthread_mutex_destroy(&g_tty->resp_mutex);
     pthread_cond_destroy(&g_tty->state_cond);
@@ -770,6 +856,8 @@ int bflbwifi_tty_get_last_response(char *buf, size_t len)
 int bflbwifi_tty_write_raw(const void *data, int len)
 {
     int ret;
+    int saved_errno = 0;
+    int fd;
 
     if (!g_tty || !data || len <= 0) {
         return -1;
@@ -777,14 +865,27 @@ int bflbwifi_tty_write_raw(const void *data, int len)
 
     /* Lock to prevent concurrent writes */
     pthread_mutex_lock(&g_tty->tx_mutex);
+    fd = g_tty->fd;
+    if (fd < 0) {
+        pthread_mutex_unlock(&g_tty->tx_mutex);
+        BFLB_LOGW("TTY is disconnected, cannot write raw data");
+        return -1;
+    }
 
     /* Direct write to TTY */
-    ret = write(g_tty->fd, data, len);
+    ret = write(fd, data, len);
     if (ret < 0) {
-        BFLB_LOGE("Failed to write raw data: %s", strerror(errno));
+        saved_errno = errno;
     }
 
     pthread_mutex_unlock(&g_tty->tx_mutex);
+
+    if (ret < 0) {
+        if (tty_is_disconnect_error(saved_errno)) {
+            tty_mark_disconnected(g_tty, "TTY raw write failed due to disconnect");
+        }
+        BFLB_LOGE("Failed to write raw data: %s", strerror(saved_errno));
+    }
 
     return ret;
 }
@@ -877,7 +978,7 @@ int bflbwifi_tty_suspend_recv_thread(void)
 
     /* Wait a bit to ensure receive thread is in select() and will see the flag */
     pthread_mutex_unlock(&g_tty->resp_mutex);
-    usleep(200000);  /* 200ms */
+    usleep(200000); /* 200ms */
 
     BFLB_LOGI("Receive thread suspended");
     return 0;
@@ -952,14 +1053,14 @@ int bflbwifi_tty_sync_wait(const char *expected, int timeout_ms)
         FD_ZERO(&read_fds);
         FD_SET(g_tty->fd, &read_fds);
 
-        tv.tv_sec = 1;  /* Wait for 1 second each iteration */
+        tv.tv_sec = 1; /* Wait for 1 second each iteration */
         tv.tv_usec = 0;
 
         ret = select(g_tty->fd + 1, &read_fds, NULL, NULL, &tv);
 
         if (ret < 0) {
             if (errno == EINTR) {
-                continue;  /* Interrupted by signal, continue */
+                continue; /* Interrupted by signal, continue */
             }
             BFLB_LOGE("select failed: %s", strerror(errno));
             return -1;
@@ -970,20 +1071,18 @@ int bflbwifi_tty_sync_wait(const char *expected, int timeout_ms)
 
         if (FD_ISSET(g_tty->fd, &read_fds)) {
             /* Read data */
-            int bytes_read = read(g_tty->fd, buffer + buffer_pos,
-                                  sizeof(buffer) - buffer_pos - 1);
+            int bytes_read = read(g_tty->fd, buffer + buffer_pos, sizeof(buffer) - buffer_pos - 1);
             if (bytes_read > 0) {
                 buffer_pos += bytes_read;
                 buffer[buffer_pos] = '\0';
 
                 /* Display received data (for debugging) */
-                BFLB_LOGD("TTY RX raw: %.*s", bytes_read,
-                         buffer + buffer_pos - bytes_read);
+                BFLB_LOGD("TTY RX raw: %.*s", bytes_read, buffer + buffer_pos - bytes_read);
 
                 /* Check if target string received */
                 if (strstr(buffer, expected) != NULL) {
                     BFLB_LOGD("Found expected string: %s", expected);
-                    return 0;  /* Successfully found target string */
+                    return 0; /* Successfully found target string */
                 }
 
                 /* Prevent buffer overflow - shift data if buffer half full */
@@ -993,7 +1092,7 @@ int bflbwifi_tty_sync_wait(const char *expected, int timeout_ms)
                 }
             } else if (bytes_read < 0) {
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                    continue;  /* Non-blocking read, try again */
+                    continue; /* Non-blocking read, try again */
                 }
                 BFLB_LOGE("read failed: %s", strerror(errno));
                 return -1;
@@ -1006,5 +1105,5 @@ int bflbwifi_tty_sync_wait(const char *expected, int timeout_ms)
     }
 
     BFLB_LOGE("Timeout waiting for: %s", expected);
-    return -1;  /* Timeout, target string not found */
+    return -1; /* Timeout, target string not found */
 }

@@ -19,6 +19,9 @@ extern "C" {
 #include "../draw/lv_draw_image.h"
 #include "../draw/lv_draw_line.h"
 #include "../draw/lv_draw_arc.h"
+#include "../draw/lv_draw_triangle.h"
+#include "../draw/lv_draw_blur.h"
+#include "lv_obj_style.h"
 
 /*********************
  *      DEFINES
@@ -28,9 +31,23 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
+/** Store the type of layer required to render a widget.*/
 typedef enum {
+    /**No layer is needed. */
     LV_LAYER_TYPE_NONE,
+
+    /**Simple layer means that the layer can be rendered in chunks.
+     * For example with opa_layered = 140 it's possible to render only 10 lines
+     * from the layer. When it's ready go to the next 10 lines.
+     * It avoids large memory allocations for the layer buffer.
+     * The buffer size for a chunk can be set by `LV_DRAW_LAYER_SIMPLE_BUF_SIZE` in lv_conf.h.*/
     LV_LAYER_TYPE_SIMPLE,
+
+    /**The widget is transformed and cannot be rendered in chunks.
+     * It's because - due to the transformations -  pixel outside of
+     * a given area will also contribute to the final image.
+     * In this case there is no limitation on the buffer size.
+     * LVGL will allocate as large buffer as needed to render the transformed area.*/
     LV_LAYER_TYPE_TRANSFORM,
 } lv_layer_type_t;
 
@@ -86,6 +103,18 @@ void lv_obj_init_draw_line_dsc(lv_obj_t * obj, lv_part_t part, lv_draw_line_dsc_
  *                  Should be initialized with `lv_draw_arc_dsc_init(draw_dsc)`.
  */
 void lv_obj_init_draw_arc_dsc(lv_obj_t * obj, lv_part_t part, lv_draw_arc_dsc_t * draw_dsc);
+
+
+/**
+ * Initialize a blur draw descriptor from an object's styles in its current state.
+ * draw_dsc->radius will only be calculated if it's 0 initially. Radius can be set before calling this function
+ * to avoid getting it twice.
+ * @param obj       pointer to an object
+ * @param part      part of the object, e.g. `LV_PART_MAIN`, `LV_PART_SCROLLBAR`, `LV_PART_KNOB`, etc
+ * @param draw_dsc  the descriptor to initialize.
+ *                  Should be initialized with `lv_draw_blur_dsc_init(draw_dsc)`.
+ */
+void lv_obj_init_draw_blur_dsc(lv_obj_t * obj, lv_part_t part, lv_draw_blur_dsc_t * draw_dsc);
 
 /**
  * Get the required extra size (around the object's part) to draw shadow, outline, value etc.

@@ -92,7 +92,7 @@ int at_ble_subscribe(int idx, int ccc_handle, int value_handle,int value);
 
 int at_ble_unsubscribe(int idx, int value_handle);
 
-int at_ble_sec_paramter_setup(int sec);
+int at_ble_sec_paramter_setup(int sec, int level);
 
 int at_ble_sec_auth_cancel(int idx);
 

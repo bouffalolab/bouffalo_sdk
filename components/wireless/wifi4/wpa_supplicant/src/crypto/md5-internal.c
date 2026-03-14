@@ -19,7 +19,7 @@
 #include "md5_i.h"
 #include "crypto.h"
 
-#ifdef CONFIG_MBEDTLS_V3
+#ifndef CONFIG_MBEDTLS_V2
 #include "mbedtls/compat-2.x.h"
 #endif
 

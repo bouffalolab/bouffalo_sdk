@@ -117,10 +117,19 @@ typedef struct
 
 typedef struct
 {
-    uint8_t eckye_x[HAL_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
+    uint8_t eckey_x[HAL_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
     uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE]; //ec key in boot header
     uint32_t crc32;
 } boot_pk_config;
+
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+typedef struct
+{
+    uint8_t eckey_x[HAL_BOOT2_ECC_KEYXSIZE_SHA384]; //ec key in boot header
+    uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE_SHA384]; //ec key in boot header
+    uint32_t crc32;
+} boot_pk_sha384_config;
+#endif
 
 typedef struct
 {
@@ -128,6 +137,15 @@ typedef struct
     uint8_t signature[HAL_BOOT2_SIGN_MAXSIZE];
     uint32_t crc32;
 } boot_sign_config;
+
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+typedef struct
+{
+    uint32_t sig_len;
+    uint8_t signature[HAL_BOOT2_SIGN_MAXSIZE_SHA384];
+    uint32_t crc32;
+} boot_sign_sha384_config;
+#endif
 
 typedef struct
 {

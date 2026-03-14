@@ -46,10 +46,15 @@
 #define HAL_PLL_CFG_MAGICCODE                 "PCFG"
 
 #define HAL_BOOT2_PK_HASH_SIZE                256 / 8
+#define HAL_BOOT2_PK_HASH_SIZE_SHA384         384 / 8
 #define HAL_BOOT2_IMG_HASH_SIZE               256 / 8
+#define HAL_BOOT2_IMG_HASH_SIZE_SHA384        384 / 8
 #define HAL_BOOT2_ECC_KEYXSIZE                256 / 8
+#define HAL_BOOT2_ECC_KEYXSIZE_SHA384         384 / 8
 #define HAL_BOOT2_ECC_KEYYSIZE                256 / 8
+#define HAL_BOOT2_ECC_KEYYSIZE_SHA384         384 / 8
 #define HAL_BOOT2_SIGN_MAXSIZE                (2048 / 8)
+#define HAL_BOOT2_SIGN_MAXSIZE_SHA384         (3072 / 8)
 #define HAL_BOOT2_DEADBEEF_VAL                0xdeadbeef
 #define HAL_BOOT2_CPU0_MAGIC                  "BFNP"
 #define HAL_BOOT2_CPU1_MAGIC                  "BFAP"
@@ -62,6 +67,7 @@
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM   0 /* 1 support eflash loader ram, 0 not support */
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH 0 /* 1 support eflash loader flash, 0 not support */
 #define HAL_BOOT2_SUPPORT_SIGN_ENCRYPT        0 /* 1 support sign and encrypt, 0 not support */
+#define HAL_BOOT2_SUPPORT_SIGN_SHA384         0 /* 1 support SHA384 sign, 0 not support */
 
 #define HAL_BOOT2_CPU_GROUP_MAX               1
 #define HAL_BOOT2_CPU_MAX                     1
@@ -95,6 +101,11 @@
 #define HAL_APP_SIGN_SAME_AS_BOOT2            0b001 /*!< app use the same sign key as boot2 */
 #define HAL_APP_SIGN_INDIVIDUAL_SHA256        0b010 /*!< app use its own sign key (sha256) */
 #define HAL_APP_SIGN_INDIVIDUAL_SHA384        0b100 /*!< app use its own sign key (sha384) */
+
+/* Sign type values for efuse_cfg->sign[i] and boot_img_cfg->basic_cfg.sign_type */
+#define HAL_BOOT_SIGN_TYPE_NONE              0  /*!< No signature */
+#define HAL_BOOT_SIGN_TYPE_ECC_SHA256        1  /*!< SHA256 (ECC P-256) signature */
+#define HAL_BOOT_SIGN_TYPE_ECC_SHA384        2  /*!< SHA384 (ECC P-384) signature */
 
 #define BFLB_Soft_CRC32                       bflb_soft_crc32
 
@@ -171,14 +182,14 @@ struct __attribute__((packed, aligned(4))) boot_efuse_sw_cfg1_t {
 
 typedef struct
 {
+    uint8_t pk_hash_cpu[HAL_BOOT2_CPU_GROUP_MAX][HAL_BOOT2_PK_HASH_SIZE_SHA384];
+    uint8_t chip_id[8];
     uint8_t encrypted[HAL_BOOT2_CPU_GROUP_MAX];
     uint8_t sign[HAL_BOOT2_CPU_GROUP_MAX];
     uint8_t hbn_check_sign;
     uint8_t app_encrypt_type;
     uint8_t app_sign_type;
     uint8_t rsvd[1];
-    uint8_t chip_id[8];
-    uint8_t pk_hash_cpu[HAL_BOOT2_CPU_GROUP_MAX][HAL_BOOT2_PK_HASH_SIZE];
     uint8_t uart_download_cfg;
     uint8_t sf_pin_cfg;
     uint8_t keep_dbg_port_closed;
@@ -302,13 +313,15 @@ typedef struct
 
     uint8_t aes_iv[16 + 4]; //iv in boot header
 
-    uint8_t eckye_x[HAL_BOOT2_ECC_KEYXSIZE];  //ec key in boot header
-    uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE];  //ec key in boot header
-    uint8_t eckey_x2[HAL_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
-    uint8_t eckey_y2[HAL_BOOT2_ECC_KEYYSIZE]; //ec key in boot header
+    uint8_t eckey_x[HAL_BOOT2_ECC_KEYXSIZE_SHA384];  //ec key in boot header (max size for SHA384)
+    uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE_SHA384];  //ec key in boot header (max size for SHA384)
+    uint8_t eckey_x2[HAL_BOOT2_ECC_KEYXSIZE_SHA384]; //ec key in boot header (max size for SHA384)
+    uint8_t eckey_y2[HAL_BOOT2_ECC_KEYYSIZE_SHA384]; //ec key in boot header (max size for SHA384)
 
-    uint8_t signature[HAL_BOOT2_SIGN_MAXSIZE];  //signature in boot header
-    uint8_t signature2[HAL_BOOT2_SIGN_MAXSIZE]; //signature in boot header
+    uint8_t signature[HAL_BOOT2_SIGN_MAXSIZE_SHA384];  //signature in boot header (max size for SHA384)
+    uint8_t signature2[HAL_BOOT2_SIGN_MAXSIZE_SHA384]; //signature in boot header (max size for SHA384)
+
+    uint8_t hash_384_ext[16]; //hash of the image
 
 } boot2_image_config;
 

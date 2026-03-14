@@ -4,17 +4,8 @@
 #include "lfs.h"
 #include "../../core/lv_global.h"
 
-#if LV_FS_LITTLEFS_LETTER == '\0'
-    #error "LV_FS_LITTLEFS_LETTER must be set to a valid value"
-#else
-    #if (LV_FS_LITTLEFS_LETTER < 'A') || (LV_FS_LITTLEFS_LETTER > 'Z')
-        #if LV_FS_DEFAULT_DRIVE_LETTER != '\0' /*When using default drive letter, strict format (X:) is mandatory*/
-            #error "LV_FS_LITTLEFS_LETTER must be an upper case ASCII letter"
-        #else /*Lean rules for backward compatibility*/
-            #warning LV_FS_LITTLEFS_LETTER should be an upper case ASCII letter. \
-            Using a slash symbol as drive letter should be replaced with LV_FS_DEFAULT_DRIVE_LETTER mechanism
-        #endif
-    #endif
+#if !LV_FS_IS_VALID_LETTER(LV_FS_LITTLEFS_LETTER)
+    #error "Invalid drive letter"
 #endif
 
 typedef struct LittleFile {
@@ -28,6 +19,7 @@ typedef struct LittleDirectory {
 /**********************
  *  STATIC PROTOTYPES
  **********************/
+static void fs_remove(lv_fs_drv_t * drv);
 static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
 static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p);
 static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br);
@@ -38,15 +30,15 @@ static void * fs_dir_open(lv_fs_drv_t * drv, const char * path);
 static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p);
 static lv_fs_res_t fs_dir_read(lv_fs_drv_t * drv, void * dir_p, char * fn, uint32_t fn_len);
 
+
+
+
 void lv_littlefs_set_handler(lfs_t * lfs)
 {
     lv_fs_drv_t * drv = lv_fs_get_drv(LV_FS_LITTLEFS_LETTER);
     drv->user_data = lfs;
 }
 
-/**
- * Register a driver for the LittleFS File System interface
- */
 void lv_fs_littlefs_init(void)
 {
     lv_fs_drv_t * fs_drv = &(LV_GLOBAL_DEFAULT()->littlefs_fs_drv);
@@ -67,9 +59,56 @@ void lv_fs_littlefs_init(void)
     lv_fs_drv_register(fs_drv);
 }
 
+lv_fs_res_t lv_fs_littlefs_register_drive(lfs_t * lfs, char letter)
+{
+
+    if(lfs == NULL) {
+        return LV_FS_RES_INV_PARAM; /*Invalid LittleFS handle*/
+    }
+
+    if(LV_FS_IS_VALID_LETTER(letter) == false) {
+        return LV_FS_RES_INV_PARAM; /*Invalid letter*/
+    }
+
+    if(lv_fs_get_drv(letter) != NULL) {
+        return LV_FS_RES_DRIVE_LETTER_ALREADY_USED; /*Already registered*/
+    }
+
+    lv_fs_drv_t * fs_drv = lv_malloc(sizeof(lv_fs_drv_t));
+    LV_ASSERT_MALLOC(fs_drv);
+    lv_fs_drv_init(fs_drv);
+
+    fs_drv->letter = letter;
+    fs_drv->open_cb = fs_open;
+    fs_drv->close_cb = fs_close;
+    fs_drv->read_cb = fs_read;
+    fs_drv->write_cb = fs_write;
+    fs_drv->seek_cb = fs_seek;
+    fs_drv->tell_cb = fs_tell;
+
+    fs_drv->dir_open_cb = fs_dir_open;
+    fs_drv->dir_close_cb = fs_dir_close;
+    fs_drv->dir_read_cb = fs_dir_read;
+
+    fs_drv->remove_cb = fs_remove; /*Optional*/
+    fs_drv->user_data = lfs;
+
+    lv_fs_drv_register(fs_drv);
+    return LV_FS_RES_OK;
+}
+
 /**********************
  *   STATIC FUNCTIONS
  **********************/
+
+/**
+ * free the driver handle
+ * @param drv       pointer to a driver where this function belongs
+ */
+static void fs_remove(lv_fs_drv_t * drv)
+{
+    lv_free(drv);
+}
 
 /**
  * Open a file
@@ -91,9 +130,13 @@ static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
     LittleFile * lf = lv_malloc(sizeof(LittleFile));
     LV_ASSERT_MALLOC(lf);
 
+    char buf[LV_FS_MAX_PATH_LEN];
+    lv_snprintf(buf, sizeof(buf), LV_FS_LITTLEFS_PATH "%s", path);
+
     lfs_t * lfs = drv->user_data;
-    int err = lfs_file_open(lfs, &lf->file, path, flags);
+    int err = lfs_file_open(lfs, &lf->file, buf, flags);
     if(err) {
+        lv_free(lf);
         return NULL;
     }
 
@@ -209,8 +252,11 @@ static void * fs_dir_open(lv_fs_drv_t * drv, const char * path)
     LittleDirectory * ld = lv_malloc(sizeof(LittleDirectory));
     LV_ASSERT_MALLOC(ld);
 
+    char buf[LV_FS_MAX_PATH_LEN];
+    lv_snprintf(buf, sizeof(buf), LV_FS_LITTLEFS_PATH "%s", path);
+
     lfs_t * lfs = drv->user_data;
-    int err = lfs_dir_open(lfs, &ld->dir, path);
+    int err = lfs_dir_open(lfs, &ld->dir, buf);
     if(err != LFS_ERR_OK) {
         lv_free(ld);
         return NULL;

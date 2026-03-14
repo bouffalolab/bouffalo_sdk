@@ -26,12 +26,13 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-struct lv_ffmpeg_player_t {
+struct _lv_ffmpeg_player_t {
     lv_image_t img;
     lv_timer_t * timer;
     lv_image_dsc_t imgdsc;
     bool auto_restart;
     struct ffmpeg_context_s * ffmpeg_ctx;
+    const char * decoder_name;
 };
 
 /**********************

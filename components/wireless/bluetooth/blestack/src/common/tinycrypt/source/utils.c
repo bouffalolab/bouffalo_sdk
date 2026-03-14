@@ -30,8 +30,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils.h"
-#include "constants.h"
+#include "tinycrypt/utils.h"
+#include "tinycrypt/constants.h"
 
 #include <string.h>
 

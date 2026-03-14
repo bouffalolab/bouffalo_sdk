@@ -410,7 +410,7 @@ void pt_table_init_default_fw(pt_table_stuff_config *pt_stuff, uint32_t fw_addr)
     pt_table->entryCnt = 1;
     pt_table->age = 0;
     pt_table->crc32 = BFLB_Soft_CRC32((uint8_t *)&pt_table, sizeof(pt_table_config) - 4);
-    memcpy(pt_entries[0].name, "FW", 2);
+    arch_memcpy_fast(pt_entries[0].name, "FW", 2);
     pt_entries[0].type = 0;
     pt_entries[0].device = 0;
     pt_entries[0].active_index = 0;

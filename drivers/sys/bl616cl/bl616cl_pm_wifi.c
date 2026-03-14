@@ -98,3 +98,56 @@ void bl_lp_turnon_rf(void)
 {
     PDS_Power_On_WB();
 }
+
+
+int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu)
+{
+    if (beacon_interval_tu < 20 || beacon_interval_tu > 1000) {
+        return -1;
+    }
+
+    if (beacon_interval_tu == iot2lp_para->wifi_parameter->beacon_interval_tu) {
+        return 0;
+    }
+
+    // BL_LP_LOG("beacon interval update %d -> %d", (int)iot2lp_para->wifi_parameter->beacon_interval_tu, (int)beacon_interval_tu);
+
+    iot2lp_para->wifi_parameter->beacon_interval_tu = beacon_interval_tu;
+
+    /* TODO: Other actions may be required, such as resetting the state */
+
+    return 0;
+}
+
+int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode)
+{
+    uint8_t tim_id = tim[0];
+    uint8_t tim_len = tim[1];
+    uint8_t dtim_count = tim[2];
+    uint8_t dtim_period = tim[3];
+
+    if (tim_id != 5 || tim_len < 4) {
+        // BL_LP_LOG("tim elem error, id:%d,len:%d\r\n", tim_id, tim_len);
+        return -1;
+    }
+
+    if (dtim_count >= dtim_period) {
+        // BL_LP_LOG("dtim count %d >= period %d\r\n", dtim_count, dtim_period);
+        return -1;
+    }
+
+    if (mode == BEACON_STAMP_LPFW) {
+        if ((iot2lp_para->wifi_parameter->beacon_dtim_period != dtim_period) && iot2lp_para->wifi_parameter->beacon_dtim_period) {
+            return -1; /* not allow change dtim period */
+        }
+    } else {
+        iot2lp_para->wifi_parameter->beacon_dtim_period = dtim_period;
+    }
+
+    iot2lp_para->wifi_parameter->last_beacon_dtim_count = dtim_count;
+
+    // BL_LP_LOG("[LP] beacon tim update: id:%d, len:%d, dtim_count:%d, dtim_period:%d\r\n",
+    //               tim_id, tim_len, dtim_count, dtim_period);
+
+    return 0;
+}

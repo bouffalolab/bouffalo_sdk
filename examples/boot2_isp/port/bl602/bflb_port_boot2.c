@@ -66,7 +66,7 @@ uint32_t hal_boot2_custom(void *custom_param)
     */
     flash_pin_cfg = ((sw_cfg >> 16) & 0x3);
     if ((flash_pin_cfg == 0) || (flash_pin_cfg == 1)) {
-        struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+        struct bflb_device_s *gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
         bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
         bflb_gpio_reset(gpio, GPIO_PIN_20);
     }

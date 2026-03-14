@@ -19,10 +19,10 @@
 #include <misc/byteorder.h>
 #include <misc/stack.h>
 
-#include <constants.h>
-#include <tinycrypt/include/tinycrypt/aes.h>
-#include <utils.h>
-#include <cmac_mode.h>
+#include <tinycrypt/constants.h>
+#include <tinycrypt/aes.h>
+#include <tinycrypt/utils.h>
+#include <tinycrypt/cmac_mode.h>
 #include <../include/bluetooth/crypto.h>
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_DEBUG_RPA)

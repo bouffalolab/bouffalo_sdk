@@ -95,7 +95,6 @@ uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload);
 **/
 int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program);
 
-
 /**
  * @brief  Efuse read optional MAC address
  *
@@ -107,6 +106,37 @@ int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t progr
  */
 int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
 
+#if defined(BL616CL) || defined(BL618DG)
+/**
+ * @brief  Efuse read adc vref trim
+ *
+ * @param  dev: ADC device handle
+ *
+ * @return vref trim value
+ *
+*/
+uint32_t bflb_efuse_get_adc_vref_trim(struct bflb_device_s *dev);
+
+/**
+ * @brief  Efuse read adc offset trim
+ *
+ * @param  dev: ADC device handle
+ *
+ * @return offset trim value
+ *
+*/
+int32_t bflb_efuse_get_adc_offset_trim(struct bflb_device_s *dev);
+
+/**
+ * @brief  Efuse read adc gain trim
+ *
+ * @param  dev: ADC device handle
+ *
+ * @return coe
+ *
+*/
+float bflb_efuse_get_adc_gain_trim(struct bflb_device_s *dev);
+#else
 /**
  * @brief  Efuse read adc trim
  *
@@ -116,6 +146,7 @@ int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload
  *
  */
 float bflb_efuse_get_adc_trim(void);
+#endif
 
 /**
  * @brief  Efuse read adc tsen trim

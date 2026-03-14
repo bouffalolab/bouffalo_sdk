@@ -13,10 +13,10 @@
 #include <atomic.h>
 #include <misc/stack.h>
 #include <misc/byteorder.h>
-#include <constants.h>
-#include <utils.h>
-#include <ecc.h>
-#include <ecc_dh.h>
+#include <tinycrypt/constants.h>
+#include <tinycrypt/utils.h>
+#include <tinycrypt/ecc.h>
+#include <tinycrypt/ecc_dh.h>
 
 #include <bluetooth.h>
 #include <conn.h>

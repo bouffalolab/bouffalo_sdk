@@ -98,7 +98,7 @@
 #define __TC_CMAC_MODE_H__
 
 //#include <aes.h>
-#include <../tinycrypt/aes.h>
+#include <tinycrypt/aes.h>
 
 
 #include <stddef.h>

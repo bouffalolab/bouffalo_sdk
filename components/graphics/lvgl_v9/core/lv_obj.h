@@ -38,50 +38,6 @@ extern "C" {
 /**********************
  *      TYPEDEFS
  **********************/
-
-/**
- * Possible states of a widget.
- * OR-ed values are possible
- */
-enum {
-    LV_STATE_DEFAULT     =  0x0000,
-    LV_STATE_CHECKED     =  0x0001,
-    LV_STATE_FOCUSED     =  0x0002,
-    LV_STATE_FOCUS_KEY   =  0x0004,
-    LV_STATE_EDITED      =  0x0008,
-    LV_STATE_HOVERED     =  0x0010,
-    LV_STATE_PRESSED     =  0x0020,
-    LV_STATE_SCROLLED    =  0x0040,
-    LV_STATE_DISABLED    =  0x0080,
-    LV_STATE_USER_1      =  0x1000,
-    LV_STATE_USER_2      =  0x2000,
-    LV_STATE_USER_3      =  0x4000,
-    LV_STATE_USER_4      =  0x8000,
-
-    LV_STATE_ANY = 0xFFFF,    /**< Special value can be used in some functions to target all states*/
-};
-
-/**
- * The possible parts of widgets.
- * The parts can be considered as the internal building block of the widgets.
- * E.g. slider = background + indicator + knob
- * Not all parts are used by every widget
- */
-
-enum {
-    LV_PART_MAIN         = 0x000000,   /**< A background like rectangle*/
-    LV_PART_SCROLLBAR    = 0x010000,   /**< The scrollbar(s)*/
-    LV_PART_INDICATOR    = 0x020000,   /**< Indicator, e.g. for slider, bar, switch, or the tick box of the checkbox*/
-    LV_PART_KNOB         = 0x030000,   /**< Like handle to grab to adjust the value*/
-    LV_PART_SELECTED     = 0x040000,   /**< Indicate the currently selected option or section*/
-    LV_PART_ITEMS        = 0x050000,   /**< Used if the widget has multiple similar elements (e.g. table cells)*/
-    LV_PART_CURSOR       = 0x060000,   /**< Mark a specific place e.g. for text area's cursor or on a chart*/
-
-    LV_PART_CUSTOM_FIRST = 0x080000,    /**< Extension point for custom widgets*/
-
-    LV_PART_ANY          = 0x0F0000,    /**< Special value can be used in some functions to target all parts*/
-};
-
 /**
  * On/Off features controlling the object's behavior.
  * OR-ed values are possible
@@ -90,45 +46,47 @@ enum {
  * whenever add/remove flags or change bit definition of flags.
  */
 typedef enum {
-    LV_OBJ_FLAG_HIDDEN          = (1L << 0),  /**< Make the object hidden. (Like it wasn't there at all)*/
-    LV_OBJ_FLAG_CLICKABLE       = (1L << 1),  /**< Make the object clickable by the input devices*/
-    LV_OBJ_FLAG_CLICK_FOCUSABLE = (1L << 2),  /**< Add focused state to the object when clicked*/
-    LV_OBJ_FLAG_CHECKABLE       = (1L << 3),  /**< Toggle checked state when the object is clicked*/
-    LV_OBJ_FLAG_SCROLLABLE      = (1L << 4),  /**< Make the object scrollable*/
-    LV_OBJ_FLAG_SCROLL_ELASTIC  = (1L << 5),  /**< Allow scrolling inside but with slower speed*/
-    LV_OBJ_FLAG_SCROLL_MOMENTUM = (1L << 6),  /**< Make the object scroll further when "thrown"*/
-    LV_OBJ_FLAG_SCROLL_ONE      = (1L << 7),  /**< Allow scrolling only one snappable children*/
-    LV_OBJ_FLAG_SCROLL_CHAIN_HOR = (1L << 8), /**< Allow propagating the horizontal scroll to a parent*/
-    LV_OBJ_FLAG_SCROLL_CHAIN_VER = (1L << 9), /**< Allow propagating the vertical scroll to a parent*/
+    LV_OBJ_FLAG_HIDDEN          = (1u << 0),  /**< Make the object hidden. (Like it wasn't there at all)*/
+    LV_OBJ_FLAG_CLICKABLE       = (1u << 1),  /**< Make the object clickable by the input devices*/
+    LV_OBJ_FLAG_CLICK_FOCUSABLE = (1u << 2),  /**< Add focused state to the object when clicked*/
+    LV_OBJ_FLAG_CHECKABLE       = (1u << 3),  /**< Toggle checked state when the object is clicked*/
+    LV_OBJ_FLAG_SCROLLABLE      = (1u << 4),  /**< Make the object scrollable*/
+    LV_OBJ_FLAG_SCROLL_ELASTIC  = (1u << 5),  /**< Allow scrolling inside but with slower speed*/
+    LV_OBJ_FLAG_SCROLL_MOMENTUM = (1u << 6),  /**< Make the object scroll further when "thrown"*/
+    LV_OBJ_FLAG_SCROLL_ONE      = (1u << 7),  /**< Allow scrolling only one snappable children*/
+    LV_OBJ_FLAG_SCROLL_CHAIN_HOR = (1u << 8), /**< Allow propagating the horizontal scroll to a parent*/
+    LV_OBJ_FLAG_SCROLL_CHAIN_VER = (1u << 9), /**< Allow propagating the vertical scroll to a parent*/
     LV_OBJ_FLAG_SCROLL_CHAIN     = (LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER),
-    LV_OBJ_FLAG_SCROLL_ON_FOCUS = (1L << 10),  /**< Automatically scroll object to make it visible when focused*/
-    LV_OBJ_FLAG_SCROLL_WITH_ARROW  = (1L << 11), /**< Allow scrolling the focused object with arrow keys*/
-    LV_OBJ_FLAG_SNAPPABLE       = (1L << 12), /**< If scroll snap is enabled on the parent it can snap to this object*/
-    LV_OBJ_FLAG_PRESS_LOCK      = (1L << 13), /**< Keep the object pressed even if the press slid from the object*/
-    LV_OBJ_FLAG_EVENT_BUBBLE    = (1L << 14), /**< Propagate the events to the parent too*/
-    LV_OBJ_FLAG_GESTURE_BUBBLE  = (1L << 15), /**< Propagate the gestures to the parent*/
-    LV_OBJ_FLAG_ADV_HITTEST     = (1L << 16), /**< Allow performing more accurate hit (click) test. E.g. consider rounded corners.*/
-    LV_OBJ_FLAG_IGNORE_LAYOUT   = (1L << 17), /**< Make the object not positioned by the layouts*/
-    LV_OBJ_FLAG_FLOATING        = (1L << 18), /**< Do not scroll the object when the parent scrolls and ignore layout*/
-    LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS = (1L << 19), /**< Send `LV_EVENT_DRAW_TASK_ADDED` events*/
-    LV_OBJ_FLAG_OVERFLOW_VISIBLE = (1L << 20),/**< Do not clip the children to the parent's ext draw size*/
+    LV_OBJ_FLAG_SCROLL_ON_FOCUS = (1u << 10),  /**< Automatically scroll object to make it visible when focused*/
+    LV_OBJ_FLAG_SCROLL_WITH_ARROW  = (1u << 11), /**< Allow scrolling the focused object with arrow keys*/
+    LV_OBJ_FLAG_SNAPPABLE       = (1u << 12), /**< If scroll snap is enabled on the parent it can snap to this object*/
+    LV_OBJ_FLAG_PRESS_LOCK      = (1u << 13), /**< Keep the object pressed even if the press slid from the object*/
+    LV_OBJ_FLAG_EVENT_BUBBLE    = (1u << 14), /**< Propagate the events to the parent too*/
+    LV_OBJ_FLAG_GESTURE_BUBBLE  = (1u << 15), /**< Propagate the gestures to the parent*/
+    LV_OBJ_FLAG_ADV_HITTEST     = (1u << 16), /**< Allow performing more accurate hit (click) test. E.g. consider rounded corners.*/
+    LV_OBJ_FLAG_IGNORE_LAYOUT   = (1u << 17), /**< Make the object not positioned by the layouts*/
+    LV_OBJ_FLAG_FLOATING        = (1u << 18), /**< Do not scroll the object when the parent scrolls and ignore layout*/
+    LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS = (1u << 19), /**< Send `LV_EVENT_DRAW_TASK_ADDED` events*/
+    LV_OBJ_FLAG_OVERFLOW_VISIBLE = (1u << 20),/**< Do not clip the children to the parent's ext draw size*/
+    LV_OBJ_FLAG_EVENT_TRICKLE   = (1u << 21), /**< Propagate the events to the children too*/
+    LV_OBJ_FLAG_STATE_TRICKLE   = (1u << 22), /**< Propagate the states to the children too*/
+
+    LV_OBJ_FLAG_LAYOUT_1        = (1u << 23), /**< Custom flag, free to use by layouts*/
+    LV_OBJ_FLAG_LAYOUT_2        = (1u << 24), /**< Custom flag, free to use by layouts*/
 #if LV_USE_FLEX
-    LV_OBJ_FLAG_FLEX_IN_NEW_TRACK = (1L << 21),     /**< Start a new flex track on this item*/
+    LV_OBJ_FLAG_FLEX_IN_NEW_TRACK = LV_OBJ_FLAG_LAYOUT_1,     /**< Start a new flex track on this item*/
 #endif
 
-    LV_OBJ_FLAG_LAYOUT_1        = (1L << 23), /**< Custom flag, free to use by layouts*/
-    LV_OBJ_FLAG_LAYOUT_2        = (1L << 24), /**< Custom flag, free to use by layouts*/
-
-    LV_OBJ_FLAG_WIDGET_1        = (1L << 25), /**< Custom flag, free to use by widget*/
-    LV_OBJ_FLAG_WIDGET_2        = (1L << 26), /**< Custom flag, free to use by widget*/
-    LV_OBJ_FLAG_USER_1          = (1L << 27), /**< Custom flag, free to use by user*/
-    LV_OBJ_FLAG_USER_2          = (1L << 28), /**< Custom flag, free to use by user*/
-    LV_OBJ_FLAG_USER_3          = (1L << 29), /**< Custom flag, free to use by user*/
-    LV_OBJ_FLAG_USER_4          = (1L << 30), /**< Custom flag, free to use by user*/
+    LV_OBJ_FLAG_WIDGET_1        = (1u << 25), /**< Custom flag, free to use by widget*/
+    LV_OBJ_FLAG_WIDGET_2        = (1u << 26), /**< Custom flag, free to use by widget*/
+    LV_OBJ_FLAG_USER_1          = (1u << 27), /**< Custom flag, free to use by user*/
+    LV_OBJ_FLAG_USER_2          = (1u << 28), /**< Custom flag, free to use by user*/
+    LV_OBJ_FLAG_USER_3          = (1u << 29), /**< Custom flag, free to use by user*/
+    LV_OBJ_FLAG_USER_4          = (1u << 30), /**< Custom flag, free to use by user*/
 } lv_obj_flag_t;
 
 #if LV_USE_OBJ_PROPERTY
-enum {
+enum _lv_signed_prop_id_t {
     /*OBJ flag properties */
     LV_PROPERTY_ID(OBJ, FLAG_START,                 LV_PROPERTY_TYPE_INT,       0),
     LV_PROPERTY_ID(OBJ, FLAG_HIDDEN,                LV_PROPERTY_TYPE_INT,       0),
@@ -152,9 +110,11 @@ enum {
     LV_PROPERTY_ID(OBJ, FLAG_FLOATING,              LV_PROPERTY_TYPE_INT,       18),
     LV_PROPERTY_ID(OBJ, FLAG_SEND_DRAW_TASK_EVENTS, LV_PROPERTY_TYPE_INT,       19),
     LV_PROPERTY_ID(OBJ, FLAG_OVERFLOW_VISIBLE,      LV_PROPERTY_TYPE_INT,       20),
-    LV_PROPERTY_ID(OBJ, FLAG_FLEX_IN_NEW_TRACK,     LV_PROPERTY_TYPE_INT,       21),
+    LV_PROPERTY_ID(OBJ, FLAG_EVENT_TRICKLE,         LV_PROPERTY_TYPE_INT,       21),
+    LV_PROPERTY_ID(OBJ, FLAG_STATE_TRICKLE,         LV_PROPERTY_TYPE_INT,       22),
     LV_PROPERTY_ID(OBJ, FLAG_LAYOUT_1,              LV_PROPERTY_TYPE_INT,       23),
     LV_PROPERTY_ID(OBJ, FLAG_LAYOUT_2,              LV_PROPERTY_TYPE_INT,       24),
+    LV_PROPERTY_ID(OBJ, FLAG_FLEX_IN_NEW_TRACK,     LV_PROPERTY_TYPE_INT,       23), /*Mapped to FLAG_LAYOUT_1*/
     LV_PROPERTY_ID(OBJ, FLAG_WIDGET_1,              LV_PROPERTY_TYPE_INT,       25),
     LV_PROPERTY_ID(OBJ, FLAG_WIDGET_2,              LV_PROPERTY_TYPE_INT,       26),
     LV_PROPERTY_ID(OBJ, FLAG_USER_1,                LV_PROPERTY_TYPE_INT,       27),
@@ -164,15 +124,17 @@ enum {
     LV_PROPERTY_ID(OBJ, FLAG_END,                   LV_PROPERTY_TYPE_INT,       30),
 
     LV_PROPERTY_ID(OBJ, STATE_START,                LV_PROPERTY_TYPE_INT,       31),
-    LV_PROPERTY_ID(OBJ, STATE_CHECKED,              LV_PROPERTY_TYPE_INT,       31),
-    LV_PROPERTY_ID(OBJ, STATE_FOCUSED,              LV_PROPERTY_TYPE_INT,       32),
-    LV_PROPERTY_ID(OBJ, STATE_FOCUS_KEY,            LV_PROPERTY_TYPE_INT,       33),
-    LV_PROPERTY_ID(OBJ, STATE_EDITED,               LV_PROPERTY_TYPE_INT,       34),
-    LV_PROPERTY_ID(OBJ, STATE_HOVERED,              LV_PROPERTY_TYPE_INT,       35),
-    LV_PROPERTY_ID(OBJ, STATE_PRESSED,              LV_PROPERTY_TYPE_INT,       36),
-    LV_PROPERTY_ID(OBJ, STATE_SCROLLED,             LV_PROPERTY_TYPE_INT,       37),
-    LV_PROPERTY_ID(OBJ, STATE_DISABLED,             LV_PROPERTY_TYPE_INT,       38),
-    /*not used bit8-bit11*/
+    LV_PROPERTY_ID(OBJ, STATE_ALT,                  LV_PROPERTY_TYPE_INT,       31),
+    /*1 reserved*/
+    LV_PROPERTY_ID(OBJ, STATE_CHECKED,              LV_PROPERTY_TYPE_INT,       33),
+    LV_PROPERTY_ID(OBJ, STATE_FOCUSED,              LV_PROPERTY_TYPE_INT,       34),
+    LV_PROPERTY_ID(OBJ, STATE_FOCUS_KEY,            LV_PROPERTY_TYPE_INT,       35),
+    LV_PROPERTY_ID(OBJ, STATE_EDITED,               LV_PROPERTY_TYPE_INT,       36),
+    LV_PROPERTY_ID(OBJ, STATE_HOVERED,              LV_PROPERTY_TYPE_INT,       37),
+    LV_PROPERTY_ID(OBJ, STATE_PRESSED,              LV_PROPERTY_TYPE_INT,       38),
+    LV_PROPERTY_ID(OBJ, STATE_SCROLLED,             LV_PROPERTY_TYPE_INT,       39),
+    LV_PROPERTY_ID(OBJ, STATE_DISABLED,             LV_PROPERTY_TYPE_INT,       40),
+    /*2 reserved*/
     LV_PROPERTY_ID(OBJ, STATE_USER_1,               LV_PROPERTY_TYPE_INT,       43),
     LV_PROPERTY_ID(OBJ, STATE_USER_2,               LV_PROPERTY_TYPE_INT,       44),
     LV_PROPERTY_ID(OBJ, STATE_USER_3,               LV_PROPERTY_TYPE_INT,       45),
@@ -200,7 +162,7 @@ enum {
     LV_PROPERTY_ID(OBJ, SCROLL_BOTTOM,              LV_PROPERTY_TYPE_INT,       64),
     LV_PROPERTY_ID(OBJ, SCROLL_LEFT,                LV_PROPERTY_TYPE_INT,       65),
     LV_PROPERTY_ID(OBJ, SCROLL_RIGHT,               LV_PROPERTY_TYPE_INT,       66),
-    LV_PROPERTY_ID(OBJ, SCROLL_END,                 LV_PROPERTY_TYPE_INT,       67),
+    LV_PROPERTY_ID(OBJ, SCROLL_END,                 LV_PROPERTY_TYPE_POINT,     67),
     LV_PROPERTY_ID(OBJ, EXT_DRAW_SIZE,              LV_PROPERTY_TYPE_INT,       68),
     LV_PROPERTY_ID(OBJ, EVENT_COUNT,                LV_PROPERTY_TYPE_INT,       69),
     LV_PROPERTY_ID(OBJ, SCREEN,                     LV_PROPERTY_TYPE_OBJ,       70),
@@ -252,7 +214,7 @@ void lv_obj_remove_flag(lv_obj_t * obj, lv_obj_flag_t f);
  * @param f     OR-ed values from `lv_obj_flag_t` to update.
  * @param v     true: add the flags; false: remove the flags
  */
-void lv_obj_update_flag(lv_obj_t * obj, lv_obj_flag_t f, bool v);
+void lv_obj_set_flag(lv_obj_t * obj, lv_obj_flag_t f, bool v);
 
 /**
  * Add one or more states to the object. The other state bits will remain unchanged.
@@ -284,6 +246,13 @@ void lv_obj_set_state(lv_obj_t * obj, lv_state_t state, bool v);
  * @param user_data   pointer to the new user_data.
  */
 void lv_obj_set_user_data(lv_obj_t * obj, void * user_data);
+
+
+/** Allow only one RADIO_BUTTON sibling to be checked
+ * @param obj     pointer to a widget
+ * @param en      enable or disable radio button behavior
+ */
+void lv_obj_set_radio_button(lv_obj_t * obj, bool en);
 
 /*=======================
  * Getter functions
@@ -319,6 +288,12 @@ lv_state_t lv_obj_get_state(const lv_obj_t * obj);
  * @return          true: `obj` is in `state`; false: `obj` is not in `state`
  */
 bool lv_obj_has_state(const lv_obj_t * obj, lv_state_t state);
+
+/** Get whether the object is a radio button
+ * @param obj     pointer to a widget
+ * @return        true if radio button behavior is enabled
+ */
+bool lv_obj_is_radio_button(const lv_obj_t * obj);
 
 /**
  * Get the group of the object
@@ -383,6 +358,43 @@ bool lv_obj_is_valid(const lv_obj_t * obj);
  */
 void lv_obj_null_on_delete(lv_obj_t ** obj_ptr);
 
+/**
+ * Add an event handler to a widget that will load a screen on a trigger.
+ * @param obj           pointer to widget which should load the screen
+ * @param trigger       an event code, e.g. `LV_EVENT_CLICKED`
+ * @param screen        the screen to load (must be a valid widget)
+ * @param anim_type     element of `lv_screen_load_anim_t` the screen load animation
+ * @param duration      duration of the animation in milliseconds
+ * @param delay         delay before the screen load in milliseconds
+ */
+void lv_obj_add_screen_load_event(lv_obj_t * obj, lv_event_code_t trigger, lv_obj_t * screen,
+                                  lv_screen_load_anim_t anim_type, uint32_t duration, uint32_t delay);
+
+/**
+ * Add an event handler to a widget that will create a screen on a trigger.
+ * The created screen will be deleted when it's unloaded
+ * @param obj               pointer to widget which should load the screen
+ * @param trigger           an event code, e.g. `LV_EVENT_CLICKED`
+ * @param screen_create_cb  a callback to create the screen, e.g. `lv_obj_t * myscreen_create(void)`
+ * @param anim_type         element of `lv_screen_load_anim_t` the screen load animation
+ * @param duration          duration of the animation in milliseconds
+ * @param delay             delay before the screen load in milliseconds
+ */
+void lv_obj_add_screen_create_event(lv_obj_t * obj, lv_event_code_t trigger, lv_screen_create_cb_t screen_create_cb,
+                                    lv_screen_load_anim_t anim_type, uint32_t duration, uint32_t delay);
+
+
+/**
+ * Play a timeline animation on a trigger
+ * @param obj               pointer to widget which should trigger playing the animation
+ * @param trigger           an event code, e.g. `LV_EVENT_CLICKED`
+ * @param at                pointer to an animation timeline
+ * @param delay             wait time before starting the animation
+ * @param reverse           true: play in reverse
+ */
+void lv_obj_add_play_timeline_event(lv_obj_t * obj, lv_event_code_t trigger, lv_anim_timeline_t * at, uint32_t delay,
+                                    bool reverse);
+
 #if LV_USE_OBJ_ID
 /**
  * Set an id for an object.
@@ -399,6 +411,9 @@ void lv_obj_set_id(lv_obj_t * obj, void * id);
 void * lv_obj_get_id(const lv_obj_t * obj);
 
 /**
+ * DEPRECATED IDs are used only to print the widget trees.
+ * To find a widget use `lv_obj_find_by_name`
+ *
  * Get the child object by its id.
  * It will check children and grandchildren recursively.
  * Function `lv_obj_id_compare` is used to matched obj id with given id.
@@ -407,7 +422,7 @@ void * lv_obj_get_id(const lv_obj_t * obj);
  * @param id        the id of the child object
  * @return          pointer to the child object or NULL if not found
  */
-lv_obj_t * lv_obj_get_child_by_id(const lv_obj_t * obj, const void * id);
+lv_obj_t * lv_obj_find_by_id(const lv_obj_t * obj, const void * id);
 
 /**
  * Assign id to object if not previously assigned.
@@ -470,7 +485,7 @@ void lv_objid_builtin_destroy(void);
         LV_ASSERT_MSG(lv_obj_is_valid(obj_p)  == true, "The object is invalid, deleted or corrupted?"); \
     } while(0)
 # else
-#  define LV_ASSERT_OBJ(obj_p, obj_class) do{}while(0)
+#  define LV_ASSERT_OBJ(obj_p, obj_class) LV_ASSERT_NULL(obj_p)
 #endif
 
 #if LV_USE_LOG && LV_LOG_TRACE_OBJ_CREATE

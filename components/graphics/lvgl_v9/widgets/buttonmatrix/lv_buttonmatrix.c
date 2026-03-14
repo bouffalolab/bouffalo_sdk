@@ -1,5 +1,5 @@
 /**
- * @file lv_btnmatrix.c
+ * @file lv_buttonmatrix.c
  *
  */
 
@@ -17,7 +17,7 @@
 #include "../../core/lv_group.h"
 #include "../../draw/lv_draw.h"
 #include "../../core/lv_refr.h"
-#include "../../misc/lv_text.h"
+#include "../../misc/lv_text_private.h"
 #include "../../misc/lv_text_ap.h"
 #include "../../stdlib/lv_string.h"
 
@@ -51,16 +51,34 @@ static bool button_is_popover(lv_buttonmatrix_ctrl_t ctrl_bits);
 static bool button_is_checkable(lv_buttonmatrix_ctrl_t ctrl_bits);
 static bool button_get_checked(lv_buttonmatrix_ctrl_t ctrl_bits);
 static uint32_t get_button_from_point(lv_obj_t * obj, lv_point_t * p);
-static void allocate_button_areas_and_controls(const lv_obj_t * obj, const char ** map);
+static void allocate_button_areas_and_controls(const lv_obj_t * obj, const char * const * map);
 static void invalidate_button_area(const lv_obj_t * obj, uint32_t btn_idx);
 static void make_one_button_checked(lv_obj_t * obj, uint32_t btn_idx);
 static bool has_popovers_in_top_row(lv_obj_t * obj);
+static bool button_is_recolor(lv_buttonmatrix_ctrl_t ctrl_bits);
+static void update_map(lv_obj_t * obj);
+static void free_map(lv_buttonmatrix_t * btnm);
 
 /**********************
  *  STATIC VARIABLES
  **********************/
 #if LV_WIDGETS_HAS_DEFAULT_VALUE
-static const char * lv_buttonmatrix_def_map[] = {"Btn1", "Btn2", "Btn3", "\n", "Btn4", "Btn5", ""};
+static const char * const lv_buttonmatrix_def_map[] = {"Btn1", "Btn2", "Btn3", "\n", "Btn4", "Btn5", ""};
+#endif
+
+#if LV_USE_OBJ_PROPERTY
+static const lv_property_ops_t lv_buttonmatrix_properties[] = {
+    {
+        .id = LV_PROPERTY_BUTTONMATRIX_SELECTED_BUTTON,
+        .setter = lv_buttonmatrix_set_selected_button,
+        .getter = lv_buttonmatrix_get_selected_button,
+    },
+    {
+        .id = LV_PROPERTY_BUTTONMATRIX_ONE_CHECKED,
+        .setter = lv_buttonmatrix_set_one_checked,
+        .getter = lv_buttonmatrix_get_one_checked,
+    },
+};
 #endif
 
 const lv_obj_class_t lv_buttonmatrix_class = {
@@ -73,7 +91,8 @@ const lv_obj_class_t lv_buttonmatrix_class = {
     .editable = LV_OBJ_CLASS_EDITABLE_TRUE,
     .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
     .base_class = &lv_obj_class,
-    .name = "btnmatrix",
+    .name = "lv_buttonmatrix",
+    LV_PROPERTY_CLASS_FIELDS(buttonmatrix, BUTTONMATRIX)
 };
 
 /**********************
@@ -96,95 +115,20 @@ lv_obj_t * lv_buttonmatrix_create(lv_obj_t * parent)
  * Setter functions
  *====================*/
 
-void lv_buttonmatrix_set_map(lv_obj_t * obj, const char * map[])
+void lv_buttonmatrix_set_map(lv_obj_t * obj, const char * const map[])
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
     if(map == NULL) return;
 
     lv_buttonmatrix_t * btnm = (lv_buttonmatrix_t *)obj;
+    if(btnm->auto_free_map) free_map(btnm);
+    btnm->auto_free_map = 0;
 
     /*Analyze the map and create the required number of buttons*/
     allocate_button_areas_and_controls(obj, map);
     btnm->map_p = map;
 
-    lv_base_dir_t base_dir = lv_obj_get_style_base_dir(obj, LV_PART_MAIN);
-
-    /*Set size and positions of the buttons*/
-    int32_t sleft = lv_obj_get_style_space_left(obj, LV_PART_MAIN);
-    int32_t stop = lv_obj_get_style_space_top(obj, LV_PART_MAIN);
-    int32_t prow = lv_obj_get_style_pad_row(obj, LV_PART_MAIN);
-    int32_t pcol = lv_obj_get_style_pad_column(obj, LV_PART_MAIN);
-
-    int32_t max_w            = lv_obj_get_content_width(obj);
-    int32_t max_h            = lv_obj_get_content_height(obj);
-
-    /*Calculate the position of each row*/
-    int32_t max_h_no_gap = max_h - (prow * (btnm->row_cnt - 1));
-
-    /*Count the units and the buttons in a line
-     *(A button can be 1,2,3... unit wide)*/
-    uint32_t txt_tot_i = 0; /*Act. index in the str map*/
-    uint32_t btn_tot_i = 0; /*Act. index of button areas*/
-    const char ** map_row = map;
-
-    /*Count the units and the buttons in a line*/
-    uint32_t row;
-    for(row = 0; row < btnm->row_cnt; row++) {
-        uint32_t unit_cnt = 0;           /*Number of units in a row*/
-        uint32_t btn_cnt = 0;            /*Number of buttons in a row*/
-        /*Count the buttons and units in this row*/
-        while(map_row[btn_cnt] && lv_strcmp(map_row[btn_cnt], "\n") != 0 && map_row[btn_cnt][0] != '\0') {
-            unit_cnt += get_button_width(btnm->ctrl_bits[btn_tot_i + btn_cnt]);
-            btn_cnt++;
-        }
-
-        /*Only deal with the non empty lines*/
-        if(btn_cnt == 0) {
-            map_row = &map_row[btn_cnt + 1];       /*Set the map to the next row*/
-            continue;
-        }
-
-        int32_t row_y1 = stop + (max_h_no_gap * row) / btnm->row_cnt + row * prow;
-        int32_t row_y2 = stop + (max_h_no_gap * (row + 1)) / btnm->row_cnt + row * prow - 1;
-
-        /*Set the button size and positions*/
-        int32_t max_w_no_gap = max_w - (pcol * (btn_cnt - 1));
-        if(max_w_no_gap < 0) max_w_no_gap = 0;
-
-        uint32_t row_unit_cnt = 0;  /*The current unit position in the row*/
-        uint32_t btn;
-        for(btn = 0; btn < btn_cnt; btn++, btn_tot_i++, txt_tot_i++) {
-            uint32_t btn_u = get_button_width(btnm->ctrl_bits[btn_tot_i]);
-
-            int32_t btn_x1 = (max_w_no_gap * row_unit_cnt) / unit_cnt + btn * pcol;
-            int32_t btn_x2 = (max_w_no_gap * (row_unit_cnt + btn_u)) / unit_cnt + btn * pcol - 1;
-
-            /*If RTL start from the right*/
-            if(base_dir == LV_BASE_DIR_RTL) {
-                int32_t tmp = btn_x1;
-                btn_x1 = btn_x2;
-                btn_x2 = tmp;
-
-                btn_x1 = max_w - btn_x1;
-                btn_x2 = max_w - btn_x2;
-            }
-
-            btn_x1 += sleft;
-            btn_x2 += sleft;
-
-            lv_area_set(&btnm->button_areas[btn_tot_i], btn_x1, row_y1, btn_x2, row_y2);
-
-            row_unit_cnt += btn_u;
-        }
-
-        map_row = &map_row[btn_cnt + 1];       /*Set the map to the next line*/
-    }
-
-    /*Popovers in the top row will draw outside the widget and the extended draw size depends on
-     *the row height which may have changed when setting the new map*/
-    lv_obj_refresh_ext_draw_size(obj);
-
-    lv_obj_invalidate(obj);
+    update_map(obj);
 }
 
 void lv_buttonmatrix_set_ctrl_map(lv_obj_t * obj, const lv_buttonmatrix_ctrl_t ctrl_map[])
@@ -194,7 +138,7 @@ void lv_buttonmatrix_set_ctrl_map(lv_obj_t * obj, const lv_buttonmatrix_ctrl_t c
     lv_buttonmatrix_t * btnm = (lv_buttonmatrix_t *)obj;
     lv_memcpy(btnm->ctrl_bits, ctrl_map, sizeof(lv_buttonmatrix_ctrl_t) * btnm->btn_cnt);
 
-    lv_buttonmatrix_set_map(obj, btnm->map_p);
+    update_map(obj);
 }
 
 void lv_buttonmatrix_set_selected_button(lv_obj_t * obj, uint32_t btn_id)
@@ -277,7 +221,7 @@ void lv_buttonmatrix_set_button_width(lv_obj_t * obj, uint32_t btn_id, uint32_t 
     btnm->ctrl_bits[btn_id] &= (~LV_BUTTONMATRIX_WIDTH_MASK);
     btnm->ctrl_bits[btn_id] |= (LV_BUTTONMATRIX_WIDTH_MASK & width);
 
-    lv_buttonmatrix_set_map(obj, btnm->map_p);
+    update_map(obj);
 }
 
 void lv_buttonmatrix_set_one_checked(lv_obj_t * obj, bool en)
@@ -295,7 +239,7 @@ void lv_buttonmatrix_set_one_checked(lv_obj_t * obj, bool en)
  * Getter functions
  *====================*/
 
-const char ** lv_buttonmatrix_get_map(const lv_obj_t * obj)
+const char * const * lv_buttonmatrix_get_map(const lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
@@ -318,7 +262,7 @@ const char * lv_buttonmatrix_get_button_text(const lv_obj_t * obj, uint32_t btn_
     if(btn_id == LV_BUTTONMATRIX_BUTTON_NONE) return NULL;
 
     lv_buttonmatrix_t * btnm = (lv_buttonmatrix_t *)obj;
-    if(btn_id > btnm->btn_cnt) return NULL;
+    if(btn_id >= btnm->btn_cnt) return NULL;
 
     uint32_t txt_i = 0;
     uint32_t btn_i = 0;
@@ -371,6 +315,7 @@ static void lv_buttonmatrix_constructor(const lv_obj_class_t * class_p, lv_obj_t
     btnm->ctrl_bits      = NULL;
     btnm->map_p          = NULL;
     btnm->one_check      = 0;
+    btnm->auto_free_map  = 0;
 
 #if LV_WIDGETS_HAS_DEFAULT_VALUE
     lv_buttonmatrix_set_map(obj, lv_buttonmatrix_def_map);
@@ -414,10 +359,10 @@ static void lv_buttonmatrix_event(const lv_obj_class_t * class_p, lv_event_t * e
         }
     }
     if(code == LV_EVENT_STYLE_CHANGED) {
-        lv_buttonmatrix_set_map(obj, btnm->map_p);
+        update_map(obj);
     }
     else if(code == LV_EVENT_SIZE_CHANGED) {
-        lv_buttonmatrix_set_map(obj, btnm->map_p);
+        update_map(obj);
     }
     else if(code == LV_EVENT_PRESSED) {
         lv_indev_t * indev = lv_event_get_indev(e);
@@ -455,14 +400,17 @@ static void lv_buttonmatrix_event(const lv_obj_class_t * class_p, lv_event_t * e
         }
     }
     else if(code == LV_EVENT_PRESSING) {
-        /*If a slid to a new button, discard the current button and don't press any buttons*/
         if(btnm->btn_id_sel != LV_BUTTONMATRIX_BUTTON_NONE) {
             lv_indev_t * indev = lv_event_get_indev(e);
-            lv_indev_get_point(indev, &p);
-            uint32_t btn_pr = get_button_from_point(obj, &p);
-            if(btn_pr != btnm->btn_id_sel) {
-                invalidate_button_area(obj, btnm->btn_id_sel); /*Invalidate the old area*/
-                btnm->btn_id_sel = LV_BUTTONMATRIX_BUTTON_NONE;
+            lv_indev_type_t indev_type = lv_indev_get_type(indev);
+            if(indev_type == LV_INDEV_TYPE_POINTER || indev_type == LV_INDEV_TYPE_BUTTON) {
+                /*If pointer device slid to a new button, discard the current button and don't press any buttons*/
+                lv_indev_get_point(indev, &p);
+                uint32_t btn_pr = get_button_from_point(obj, &p);
+                if(btn_pr != btnm->btn_id_sel) {
+                    invalidate_button_area(obj, btnm->btn_id_sel); /*Invalidate the old area*/
+                    btnm->btn_id_sel = LV_BUTTONMATRIX_BUTTON_NONE;
+                }
             }
         }
     }
@@ -659,6 +607,9 @@ static void lv_buttonmatrix_event(const lv_obj_class_t * class_p, lv_event_t * e
     else if(code == LV_EVENT_DRAW_MAIN) {
         draw_main(e);
     }
+    else if(code == LV_EVENT_DELETE) {
+        if(btnm->auto_free_map) free_map(btnm);
+    }
 
 }
 
@@ -689,7 +640,9 @@ static void draw_main(lv_event_t * e)
     obj->state = LV_STATE_DEFAULT;
     obj->skip_trans = 1;
     lv_draw_rect_dsc_init(&draw_rect_dsc_def);
+    draw_rect_dsc_def.base.layer = layer;
     lv_draw_label_dsc_init(&draw_label_dsc_def);
+    draw_label_dsc_def.base.layer = layer;
     lv_obj_init_draw_rect_dsc(obj, LV_PART_ITEMS, &draw_rect_dsc_def);
     lv_obj_init_draw_label_dsc(obj, LV_PART_ITEMS, &draw_label_dsc_def);
     obj->skip_trans = 0;
@@ -742,12 +695,18 @@ static void draw_main(lv_event_t * e)
             obj->state = btn_state;
             obj->skip_trans = 1;
             lv_draw_rect_dsc_init(&draw_rect_dsc_act);
+            draw_rect_dsc_act.base.layer = layer;
             lv_draw_label_dsc_init(&draw_label_dsc_act);
+            draw_label_dsc_act.base.layer = layer;
             lv_obj_init_draw_rect_dsc(obj, LV_PART_ITEMS, &draw_rect_dsc_act);
             lv_obj_init_draw_label_dsc(obj, LV_PART_ITEMS, &draw_label_dsc_act);
             obj->state = state_ori;
             obj->skip_trans = 0;
         }
+
+        bool recolor = button_is_recolor(btnm->ctrl_bits[btn_i]);
+        if(recolor) draw_label_dsc_act.flag |= LV_TEXT_FLAG_RECOLOR;
+        else draw_label_dsc_act.flag &= ~LV_TEXT_FLAG_RECOLOR;
 
         draw_rect_dsc_act.base.id1 = btn_i;
 
@@ -784,9 +743,14 @@ static void draw_main(lv_event_t * e)
             txt = txt_ap;
         }
 #endif
+        lv_text_attributes_t attributes = {0};
+        attributes.letter_space = letter_space;
+        attributes.line_space = line_space;
+        attributes.text_flags = draw_label_dsc_act.flag;
+        attributes.max_width = lv_area_get_width(&area_obj);
+
         lv_point_t txt_size;
-        lv_text_get_size(&txt_size, txt, font, letter_space,
-                         line_space, lv_area_get_width(&area_obj), draw_label_dsc_act.flag);
+        lv_text_get_size_attributes(&txt_size, txt, font, &attributes);
 
         btn_area.x1 += (lv_area_get_width(&btn_area) - txt_size.x) / 2;
         btn_area.y1 += (lv_area_get_height(&btn_area) - txt_size.y) / 2;
@@ -813,7 +777,7 @@ static void draw_main(lv_event_t * e)
  * @param obj pointer to button matrix object
  * @param map_p pointer to a string array
  */
-static void allocate_button_areas_and_controls(const lv_obj_t * obj, const char ** map)
+static void allocate_button_areas_and_controls(const lv_obj_t * obj, const char * const * map)
 {
     lv_buttonmatrix_t * btnm = (lv_buttonmatrix_t *)obj;
     btnm->row_cnt = 1;
@@ -1029,7 +993,7 @@ static bool has_popovers_in_top_row(lv_obj_t * obj)
         return false;
     }
 
-    const char ** map_row = btnm->map_p;
+    const char * const * map_row = btnm->map_p;
     uint32_t btn_cnt = 0;
 
     while(map_row[btn_cnt] && lv_strcmp(map_row[btn_cnt], "\n") != 0 && map_row[btn_cnt][0] != '\0') {
@@ -1040,6 +1004,106 @@ static bool has_popovers_in_top_row(lv_obj_t * obj)
     }
 
     return false;
+}
+
+static bool button_is_recolor(lv_buttonmatrix_ctrl_t ctrl_bits)
+{
+    return (ctrl_bits & LV_BUTTONMATRIX_CTRL_RECOLOR) ? true : false;
+}
+
+static void update_map(lv_obj_t * obj)
+{
+    lv_buttonmatrix_t * btnm = (lv_buttonmatrix_t *)obj;
+
+    lv_base_dir_t base_dir = lv_obj_get_style_base_dir(obj, LV_PART_MAIN);
+
+    /*Set size and positions of the buttons*/
+    int32_t sleft = lv_obj_get_style_space_left(obj, LV_PART_MAIN);
+    int32_t stop = lv_obj_get_style_space_top(obj, LV_PART_MAIN);
+    int32_t prow = lv_obj_get_style_pad_row(obj, LV_PART_MAIN);
+    int32_t pcol = lv_obj_get_style_pad_column(obj, LV_PART_MAIN);
+
+    int32_t max_w            = lv_obj_get_content_width(obj);
+    int32_t max_h            = lv_obj_get_content_height(obj);
+
+    /*Calculate the position of each row*/
+    int32_t max_h_no_gap = max_h - (prow * (btnm->row_cnt - 1));
+
+    /*Count the units and the buttons in a line
+     *(A button can be 1,2,3... unit wide)*/
+    uint32_t txt_tot_i = 0; /*Act. index in the str map*/
+    uint32_t btn_tot_i = 0; /*Act. index of button areas*/
+    const char * const * map_row = btnm->map_p;
+
+    /*Count the units and the buttons in a line*/
+    uint32_t row;
+    for(row = 0; row < btnm->row_cnt; row++) {
+        uint32_t unit_cnt = 0;           /*Number of units in a row*/
+        uint32_t btn_cnt = 0;            /*Number of buttons in a row*/
+        /*Count the buttons and units in this row*/
+        while(map_row[btn_cnt] && lv_strcmp(map_row[btn_cnt], "\n") != 0 && map_row[btn_cnt][0] != '\0') {
+            unit_cnt += get_button_width(btnm->ctrl_bits[btn_tot_i + btn_cnt]);
+            btn_cnt++;
+        }
+
+        /*Only deal with the non empty lines*/
+        if(btn_cnt == 0) {
+            map_row = &map_row[btn_cnt + 1];       /*Set the map to the next row*/
+            continue;
+        }
+
+        int32_t row_y1 = stop + (max_h_no_gap * row) / btnm->row_cnt + row * prow;
+        int32_t row_y2 = stop + (max_h_no_gap * (row + 1)) / btnm->row_cnt + row * prow - 1;
+
+        /*Set the button size and positions*/
+        int32_t max_w_no_gap = max_w - (pcol * (btn_cnt - 1));
+        if(max_w_no_gap < 0) max_w_no_gap = 0;
+
+        uint32_t row_unit_cnt = 0;  /*The current unit position in the row*/
+        uint32_t btn;
+        for(btn = 0; btn < btn_cnt; btn++, btn_tot_i++, txt_tot_i++) {
+            uint32_t btn_u = get_button_width(btnm->ctrl_bits[btn_tot_i]);
+
+            int32_t btn_x1 = (max_w_no_gap * row_unit_cnt) / unit_cnt + btn * pcol;
+            int32_t btn_x2 = (max_w_no_gap * (row_unit_cnt + btn_u)) / unit_cnt + btn * pcol - 1;
+
+            /*If RTL start from the right*/
+            if(base_dir == LV_BASE_DIR_RTL) {
+                int32_t tmp = btn_x1;
+                btn_x1 = btn_x2;
+                btn_x2 = tmp;
+
+                btn_x1 = max_w - btn_x1;
+                btn_x2 = max_w - btn_x2;
+            }
+
+            btn_x1 += sleft;
+            btn_x2 += sleft;
+
+            lv_area_set(&btnm->button_areas[btn_tot_i], btn_x1, row_y1, btn_x2, row_y2);
+
+            row_unit_cnt += btn_u;
+        }
+
+        map_row = &map_row[btn_cnt + 1];       /*Set the map to the next line*/
+    }
+
+    /*Popovers in the top row will draw outside the widget and the extended draw size depends on
+     *the row height which may have changed when setting the new map*/
+    lv_obj_refresh_ext_draw_size(obj);
+
+    lv_obj_invalidate(obj);
+
+}
+
+static void free_map(lv_buttonmatrix_t * btnm)
+{
+    uint32_t i;
+    for(i = 0; btnm->map_p[i]; i++) {
+        lv_free((void *)btnm->map_p[i]);
+    }
+    lv_free((void *)btnm->map_p);
+    btnm->map_p = NULL;
 }
 
 #endif

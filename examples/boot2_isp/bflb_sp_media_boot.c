@@ -57,7 +57,7 @@ uint32_t g_boot2_parse_xz_image_status = 0;
  * @return BL_Err_Type
  *
 *******************************************************************************/
-static int32_t bflb_sp_mediaboot_cal_hash(uint32_t start_addr, uint32_t total_len)
+static int32_t bflb_sp_mediaboot_cal_hash(uint32_t start_addr, uint32_t total_len, uint8_t sign_type)
 {
     uint32_t deal_len = 0;
     uint32_t read_len = 0;
@@ -65,7 +65,7 @@ static int32_t bflb_sp_mediaboot_cal_hash(uint32_t start_addr, uint32_t total_le
     // int32_t ret;
     uint32_t *p;
     p = (uint32_t *)hal_boot2_get_xip_addr(start_addr);
-#if defined(CHIP_BL616) || defined(CHIP_WB03) ||  defined(CHIP_BL606P) || defined(CHIP_BL808)
+#if defined(CHIP_BL616) || defined(CHIP_WB03) ||  defined(CHIP_BL606P) || defined(CHIP_BL808) || defined(CHIP_BL618DG) || defined(CHIP_BL616CL)
     bflb_l1c_dcache_clean_invalidate_range(p, total_len);
 #endif
     while (deal_len < total_len) {
@@ -78,14 +78,21 @@ static int32_t bflb_sp_mediaboot_cal_hash(uint32_t start_addr, uint32_t total_le
         // ret = bflb_sp_mediaboot_read(addr, g_boot2_read_buf, read_len);
         /* use xip read acceler */
         p = (uint32_t *)hal_boot2_get_xip_addr(addr);
-        memcpy(g_boot2_read_buf, (void *)p, read_len);
+        arch_memcpy_fast(g_boot2_read_buf, (void *)p, read_len);
 
         // if (ret != BFLB_BOOT2_SUCCESS) {
         //     return ret;
         // }
 
         /* Update hash*/
-        bflb_sha256_update(sha, &ctx_sha256, g_boot2_read_buf, read_len);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            bflb_sha512_update(sha, &ctx_sha384, g_boot2_read_buf, read_len);
+        } else
+#endif
+        {
+            bflb_sha256_update(sha, &ctx_sha256, g_boot2_read_buf, read_len);
+        }
 
         addr += read_len;
         deal_len += read_len;
@@ -121,7 +128,13 @@ static int32_t bflb_sp_mediaboot_read_signaure(uint32_t addr, uint32_t *len)
     addr += sizeof(sig_len);
 
     if (sig_len > HAL_BOOT2_SIGN_MAXSIZE) {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (sig_len > HAL_BOOT2_SIGN_MAXSIZE_SHA384) {
+            return BFLB_BOOT2_IMG_SIGNATURE_LEN_ERROR;
+        }
+#else
         return BFLB_BOOT2_IMG_SIGNATURE_LEN_ERROR;
+#endif
     }
 
     /* Tail 4 bytes for crc */
@@ -154,26 +167,47 @@ static int32_t bflb_sp_mediaboot_parse_one_group(boot2_image_config *boot_img_cf
 {
     uint32_t addr;
     int32_t ret;
+    uint32_t bootheader_size = sizeof(struct hal_bootheader_t);
 
     addr = boot_header_addr + hal_boot2_get_bootheader_offset();
     /* Read boot header*/
     BOOT2_MSG("R header from %x\r\n", addr);
-    ret = bflb_sp_mediaboot_read(addr, g_boot2_read_buf, sizeof(struct hal_bootheader_t));
 
+    ret = bflb_sp_mediaboot_read(addr, g_boot2_read_buf, bootheader_size);
     if (ret != BFLB_BOOT2_SUCCESS) {
         return ret;
     }
 
-    addr += sizeof(struct hal_bootheader_t);
     ret = hal_boot_parse_bootheader(boot_img_cfg, (uint8_t *)g_boot2_read_buf);
 
     if (ret != BFLB_BOOT2_SUCCESS) {
         return ret;
     }
-    /* we init hash here since aes iv need to be caled as image hash */
 
-    bflb_sha_init(sha, SHA_MODE_SHA256);
-    bflb_sha256_start(sha, &ctx_sha256);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        ret = bflb_sp_mediaboot_read(addr + bootheader_size, g_boot2_read_buf, bootheader_size);
+        if (ret != BFLB_BOOT2_SUCCESS) {
+            return ret;
+        }
+        arch_memcpy_fast(boot_img_cfg->hash_384_ext, g_boot2_read_buf, 16);
+
+        bootheader_size += 16;
+    }
+#endif
+    addr += bootheader_size;
+
+    /* we init hash here since aes iv need to be caled as image hash */
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        bflb_sha_init(sha, SHA_MODE_SHA384);
+        bflb_sha512_start(sha, &ctx_sha384);
+    } else
+#endif
+    {
+        bflb_sha_init(sha, SHA_MODE_SHA256);
+        bflb_sha256_start(sha, &ctx_sha256);
+    }
 
     /* Due to OTA, the flash_offset is changed, so copy from partition info */
     boot_img_cfg->basic_cfg.group_image_offset = img_addr;
@@ -182,12 +216,25 @@ static int32_t bflb_sp_mediaboot_parse_one_group(boot2_image_config *boot_img_cf
     uint32_t sig_len = 0;
     /* If sign enable,get pk key and signature*/
     if (boot_img_cfg->basic_cfg.sign_type) {
-        /* Read public key */
-        BOOT2_MSG("R PK\r\n");
-        ret = bflb_sp_mediaboot_read(addr, g_boot2_read_buf, sizeof(boot_pk_config));
-        if (ret != BFLB_BOOT2_SUCCESS) {
-            return ret;
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            /* Read public key for SHA384 */
+            BOOT2_MSG("R PK SHA384\r\n");
+            ret = bflb_sp_mediaboot_read(addr, g_boot2_read_buf, sizeof(boot_pk_sha384_config));
+            if (ret != BFLB_BOOT2_SUCCESS) {
+                return ret;
+            }
+        } else
+#endif
+        {
+            /* Read public key */
+            BOOT2_MSG("R PK\r\n");
+            ret = bflb_sp_mediaboot_read(addr, g_boot2_read_buf, sizeof(boot_pk_config));
+            if (ret != BFLB_BOOT2_SUCCESS) {
+                return ret;
+            }
         }
+
         ret = bflb_sp_boot_parse_pkey(boot_img_cfg, (uint8_t *)g_boot2_read_buf, 1);
         if (ret != BFLB_BOOT2_SUCCESS) {
             return ret;
@@ -208,9 +255,19 @@ static int32_t bflb_sp_mediaboot_parse_one_group(boot2_image_config *boot_img_cf
             }
         }
 #endif
-        addr += sizeof(boot_pk_config);
+
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            addr += sizeof(boot_pk_sha384_config);
+            BOOT2_MSG("R SIG1 SHA384\r\n");
+        } else
+#endif
+        {
+            addr += sizeof(boot_pk_config);
+            BOOT2_MSG("R SIG1\r\n");
+        }
+
         /* Read signature*/
-        BOOT2_MSG("R SIG1\r\n");
         ret = bflb_sp_mediaboot_read_signaure(addr, &sig_len);
         if (ret != BFLB_BOOT2_SUCCESS) {
             return ret;
@@ -264,7 +321,7 @@ static int32_t bflb_sp_mediaboot_parse_one_group(boot2_image_config *boot_img_cf
         if (!boot_img_cfg->basic_cfg.hash_ignore) {
             BOOT2_MSG("Cal hash addr 0x%x,len %d\r\n", img_addr, boot_img_cfg->basic_cfg.img_len_cnt);
             ret = bflb_sp_mediaboot_cal_hash(img_addr,
-                                          boot_img_cfg->basic_cfg.img_len_cnt);
+                                          boot_img_cfg->basic_cfg.img_len_cnt, boot_img_cfg->basic_cfg.sign_type);
 
             if (ret != BFLB_BOOT2_SUCCESS) {
                 BOOT2_MSG("Cal hash err\r\n");
@@ -305,9 +362,10 @@ int32_t bflb_sp_mediaboot_parse_one_group_xz(boot2_image_config *boot_img_cfg, u
 {
     uint32_t addr = 0;
     int32_t ret = 0;
+    uint32_t bootheader_size = sizeof(struct hal_bootheader_t);
 
     if (0 == g_boot2_parse_xz_image_status) {
-        BOOT2_MSG("xz parse header\r\n", addr);
+        BOOT2_MSG("xz parse header\r\n");
 
         ret = hal_boot_parse_bootheader(boot_img_cfg, (uint8_t *)&input[addr]);
 
@@ -316,22 +374,44 @@ int32_t bflb_sp_mediaboot_parse_one_group_xz(boot2_image_config *boot_img_cfg, u
             return ret;
         }
 
-        addr += sizeof(struct  hal_bootheader_t);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            arch_memcpy_fast(boot_img_cfg->hash_384_ext, &input[bootheader_size], 16);
+
+            bootheader_size += 16;
+        }
+#endif
+        addr += bootheader_size;
 
         /* we init hash here since aes iv need to be caled as image hash */
 
-        bflb_sha_init(sha, SHA_MODE_SHA256);
-        bflb_sha256_start(sha, &ctx_sha256);
-
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            bflb_sha_init(sha, SHA_MODE_SHA384);
+            bflb_sha512_start(sha, &ctx_sha384);
+        } else
+#endif
+        {
+            bflb_sha_init(sha, SHA_MODE_SHA256);
+            bflb_sha256_start(sha, &ctx_sha256);
+        }
         /* Due to OTA, the flash_offset is changed, so copy from partition info */
         boot_img_cfg->basic_cfg.group_image_offset = img_addr;
 
 #if BFLB_SP_BOOT2_SUPPORT_SIGN_ENCRYPT
         uint32_t sig_len=0;
         /* If sign enable,get pk key and signature*/
-        if(boot_img_cfg->basic_cfg.sign_type){
-            /* Read public key */
-            BOOT2_MSG("xz parse PK\r\n");
+        if (boot_img_cfg->basic_cfg.sign_type) {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+            if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+                /* Read public key for SHA384 */
+                BOOT2_MSG("xz parse PK SHA384\r\n");
+            } else
+#endif
+            {
+                /* Read public key */
+                BOOT2_MSG("xz parse PK\r\n");
+            }
 
             ret=bflb_sp_boot_parse_pkey(boot_img_cfg,(uint8_t *)&input[addr],1);
             if(ret!=BFLB_BOOT2_SUCCESS){
@@ -349,9 +429,19 @@ int32_t bflb_sp_mediaboot_parse_one_group_xz(boot2_image_config *boot_img_cfg, u
                 }
             }
 #endif
-            addr+=sizeof(boot_pk_config);
+
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+            if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+                addr += sizeof(boot_pk_sha384_config);
+                BOOT2_MSG("xz parse SIG1 SHA384\r\n");
+            } else
+#endif
+            {
+                addr += sizeof(boot_pk_config);
+                BOOT2_MSG("xz parse SIG1\r\n");
+            }
+
             /* Read signature*/
-            BOOT2_MSG("xz parse SIG1\r\n");
             sig_len = *(uint32_t *)&input[addr];
 
             ret=bflb_sp_boot_parse_signature(boot_img_cfg,(uint8_t *)&input[addr],1);
@@ -406,7 +496,14 @@ int32_t bflb_sp_mediaboot_parse_one_group_xz(boot2_image_config *boot_img_cfg, u
                         }
                     }
 #endif
-                    bflb_sha256_update(sha, &ctx_sha256, input, len);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+                    if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+                        bflb_sha512_update(sha, &ctx_sha384, input, len);
+                    } else
+#endif
+                    {
+                        bflb_sha256_update(sha, &ctx_sha256, input, len);
+                    }
                     g_boot2_parse_xz_image_status = 2;
                 }
                 if(last_packet){
@@ -482,7 +579,7 @@ int32_t bflb_sp_mediaboot_version_check(uint8_t *image_start, uint8_t group_roll
             if (image_start == NULL) {
                 bflb_sp_mediaboot_read(g_boot_img_cfg[i].basic_cfg.group_image_offset + BFLB_SP_APP_VERSION_LINK_OFFSET, (uint8_t *)read_buf, sizeof(read_buf));
             } else {
-                memcpy((uint8_t *)read_buf, (image_start + BFLB_SP_APP_VERSION_LINK_OFFSET), sizeof(read_buf));
+                arch_memcpy_fast((uint8_t *)read_buf, (image_start + BFLB_SP_APP_VERSION_LINK_OFFSET), sizeof(read_buf));
             }
             if (g_efuse_cfg.encrypted[0]) {
                 /* encrypted image */

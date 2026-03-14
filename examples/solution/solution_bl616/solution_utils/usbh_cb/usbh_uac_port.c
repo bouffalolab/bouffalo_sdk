@@ -17,7 +17,7 @@
 
 #define ATTR_FAST_RAM_SECTION ATTR_TCM_SECTION
 
-#if CONFIG_SOLUTION_FUNC_UAC_IN
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UAC_IN)
 
 /************************************ UAC MIC ISO BUFF PORT ************************************ */
 #define AUDIO_MIC_ISO_INTERVAL (10)
@@ -139,7 +139,7 @@ ATTR_FAST_RAM_SECTION int usbh_uac_mic_frame_send(struct usbh_audioframe *frame)
 #endif
 
 /************************************ UAC Speaker FRAME PORT ************************************ */
-#if CONFIG_SOLUTION_FUNC_UAC_OUT
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UAC_OUT)
 int usbh_uac_speaker_frame_recv(struct usbh_audioframe **frame, uint32_t timeout)
 {
     return 0;
@@ -156,12 +156,12 @@ int usbh_uac_speaker_frame_free(struct usbh_audioframe *frame)
 /* for test */
 void usbh_audio_run(struct usbh_audio *audio_class)
 {
-#if CONFIG_SOLUTION_FUNC_UAC_OUT
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UAC_OUT)
     printf("Starting UAC Speaker ...\r\n");
     usbh_audio_speaker_stream_start(16000);
 #endif
 
-#if CONFIG_SOLUTION_FUNC_UAC_IN
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UAC_IN)
     printf("Starting UAC Mic ...\r\n");
     usbh_audio_mic_stream_start(16000);
 #endif
@@ -169,12 +169,12 @@ void usbh_audio_run(struct usbh_audio *audio_class)
 
 void usbh_audio_stop(struct usbh_audio *audio_class)
 {
-#if CONFIG_SOLUTION_FUNC_UAC_IN
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UAC_IN)
     printf("Stop UAC Mic !\r\n");
     usbh_audio_mic_stream_stop();
 #endif
 
-#if CONFIG_SOLUTION_FUNC_UAC_OUT
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UAC_OUT)
     printf("Stop UAC Speaker !\r\n");
     usbh_audio_speaker_stream_stop();
 #endif

@@ -35,6 +35,21 @@ static void lv_led_event(const lv_obj_class_t * class_p, lv_event_t * e);
  *  STATIC VARIABLES
  **********************/
 
+#if LV_USE_OBJ_PROPERTY
+static const lv_property_ops_t lv_led_properties[] = {
+    {
+        .id = LV_PROPERTY_LED_COLOR,
+        .setter = lv_led_set_color,
+        .getter = lv_led_get_color,
+    },
+    {
+        .id = LV_PROPERTY_LED_BRIGHTNESS,
+        .setter = lv_led_set_brightness,
+        .getter = lv_led_get_brightness,
+    },
+};
+#endif
+
 const lv_obj_class_t lv_led_class  = {
     .base_class = &lv_obj_class,
     .constructor_cb = lv_led_constructor,
@@ -42,7 +57,8 @@ const lv_obj_class_t lv_led_class  = {
     .height_def = LV_DPI_DEF / 5,
     .event_cb = lv_led_event,
     .instance_size = sizeof(lv_led_t),
-    .name = "led",
+    .name = "lv_led",
+    LV_PROPERTY_CLASS_FIELDS(led, LED)
 };
 
 /**********************
@@ -118,6 +134,12 @@ uint8_t lv_led_get_brightness(const lv_obj_t * obj)
     return led->bright;
 }
 
+lv_color_t lv_led_get_color(const lv_obj_t * obj)
+{
+    lv_led_t * led = (lv_led_t *)obj;
+    return led->color;
+}
+
 /**********************
  *   STATIC FUNCTIONS
  **********************/
@@ -147,9 +169,11 @@ static void lv_led_event(const lv_obj_class_t * class_p, lv_event_t * e)
     if(code == LV_EVENT_DRAW_MAIN) {
         /*Make darker colors in a temporary style according to the brightness*/
         lv_led_t * led = (lv_led_t *)obj;
+        lv_layer_t * layer = lv_event_get_layer(e);
 
         lv_draw_rect_dsc_t rect_dsc;
         lv_draw_rect_dsc_init(&rect_dsc);
+        rect_dsc.base.layer = layer;
         lv_obj_init_draw_rect_dsc(obj, LV_PART_MAIN, &rect_dsc);
 
         /*Use the original colors brightness to modify color->led*/
@@ -176,8 +200,6 @@ static void lv_led_event(const lv_obj_class_t * class_p, lv_event_t * e)
                                 (LV_LED_BRIGHT_MAX - LV_LED_BRIGHT_MIN);
         rect_dsc.shadow_spread = ((led->bright - LV_LED_BRIGHT_MIN) * rect_dsc.shadow_spread) /
                                  (LV_LED_BRIGHT_MAX - LV_LED_BRIGHT_MIN);
-
-        lv_layer_t * layer = lv_event_get_layer(e);
 
         lv_draw_rect(layer, &rect_dsc, &obj->coords);
     }

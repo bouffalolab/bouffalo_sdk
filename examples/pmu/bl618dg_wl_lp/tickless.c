@@ -4,10 +4,23 @@
 #include <stdio.h>
 
 #include "bl_lp.h"
-#include "bl618dg_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_mtimer.h"
+
+
+#if defined(BL616)
+#include "bl616.h"
+#include "bl616_clock.h"
+#elif defined(BL616CL)
+#include "bl616cl.h"
+#include "bl616cl_clock.h"
+#elif defined(BL618DG)
 #include "bl618dg.h"
+#include "bl618dg_clock.h"
+#endif
+
+#include "bflb_rtc.h"
+#include "bflb_mtimer.h"
 #include "bflb_irq.h"
 
 #include "wifi_mgmr_ext.h"

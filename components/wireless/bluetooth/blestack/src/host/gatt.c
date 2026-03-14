@@ -18,11 +18,11 @@
 #include <settings.h>
 
 #if defined(CONFIG_BT_GATT_CACHING)
-#include <constants.h>
-#include <utils.h>
-#include <aes.h>
-#include <cmac_mode.h>
-#include <ccm_mode.h>
+#include <tinycrypt/constants.h>
+#include <tinycrypt/utils.h>
+#include <tinycrypt/aes.h>
+#include <tinycrypt/cmac_mode.h>
+#include <tinycrypt/ccm_mode.h>
 #endif /* CONFIG_BT_GATT_CACHING */
 #include <hci_host.h>
 #include <bluetooth.h>

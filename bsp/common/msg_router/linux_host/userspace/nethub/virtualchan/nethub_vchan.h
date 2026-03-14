@@ -1,9 +1,10 @@
 /**
  * @file nethub_vchan.h
- * @brief BFLB Virtual Channel - Bouffalo Virtual Channel Interface
+ * @brief NetHub virtual channel userspace interface
  *
- * Provides Netlink-based virtual channel communication mechanism for user space
- * and kernel space data transmission. Supports multiple types: SYSTEM, USER, AT
+ * Provides a Netlink-based logical channel between host userspace and the
+ * kernel/msg_router stack. Multiple payload types are multiplexed on the same
+ * host link, including SYSTEM, USER and AT.
  */
 
 #ifndef NETHUB_VCHAN_H
@@ -24,9 +25,9 @@ extern "C" {
 
 /* ==================== Data Type Definitions ==================== */
 
-#define NETHUB_VCHAN_DATA_TYPE_USER   0x01  /* AT messages */
-#define NETHUB_VCHAN_DATA_TYPE_AT     0x02  /* WiFi related data */
-#define NETHUB_VCHAN_DATA_TYPE_SYSTEM 0x03  /* System related data */
+#define NETHUB_VCHAN_DATA_TYPE_USER   0x01  /* User payload data */
+#define NETHUB_VCHAN_DATA_TYPE_AT     0x02  /* AT command / response data */
+#define NETHUB_VCHAN_DATA_TYPE_SYSTEM 0x03  /* System / internal coordination data */
 #define NETHUB_VCHAN_DATA_TYPE_MAX    0x04  /* Maximum supported data type (for callback array) */
 
 /* ==================== Type Definitions ==================== */
@@ -38,16 +39,53 @@ extern "C" {
  */
 typedef void (*nethub_vchan_recv_callback_t)(const void *data, size_t len);
 
+/**
+ * @brief Virtual channel host-device link state
+ */
+typedef uint8_t nethub_vchan_link_state_t;
+
+#define NETHUB_VCHAN_LINK_DOWN ((nethub_vchan_link_state_t)0u)
+#define NETHUB_VCHAN_LINK_UP   ((nethub_vchan_link_state_t)1u)
+
+/**
+ * @brief Virtual channel host state mirrored from kernel virtualchan state machine
+ *
+ * Values 0..3 are intentionally kept aligned with MR_VIRTUALCHAN_HSTA_* so the
+ * userspace library can report the raw kernel state without translation loss.
+ */
+typedef uint8_t nethub_vchan_host_state_t;
+
+#define NETHUB_VCHAN_HOST_STATE_ERROR      ((nethub_vchan_host_state_t)0u)
+#define NETHUB_VCHAN_HOST_STATE_RESET      ((nethub_vchan_host_state_t)1u)
+#define NETHUB_VCHAN_HOST_STATE_HOST_READY ((nethub_vchan_host_state_t)2u)
+#define NETHUB_VCHAN_HOST_STATE_DEVICE_RUN ((nethub_vchan_host_state_t)3u)
+#define NETHUB_VCHAN_HOST_STATE_UNKNOWN    ((nethub_vchan_host_state_t)0xffu)
+
+/**
+ * @brief Virtual channel runtime state snapshot
+ */
+typedef struct {
+    nethub_vchan_link_state_t link_state;
+    nethub_vchan_host_state_t host_state;
+} nethub_vchan_state_snapshot_t;
+
+/**
+ * @brief Link state change callback
+ * @param link_state Current link state
+ * @param user_data User private pointer
+ */
+typedef void (*nethub_vchan_link_event_callback_t)(nethub_vchan_link_state_t link_state, void *user_data);
+
 /* ==================== Core API ==================== */
 
 /**
- * @brief Initialize BFLB virtual channel
+ * @brief Initialize NetHub virtual channel
  * @return 0 for success, negative for failure
  */
 int nethub_vchan_init(void);
 
 /**
- * @brief Clean up BFLB virtual channel
+ * @brief Deinitialize NetHub virtual channel
  * @return 0 for success, negative for failure
  */
 int nethub_vchan_deinit(void);
@@ -75,6 +113,35 @@ int nethub_vchan_register_callback(uint8_t data_type, nethub_vchan_recv_callback
  * @return 0 for success, negative for failure
  */
 int nethub_vchan_unregister_callback(uint8_t data_type);
+
+/**
+ * @brief Get current virtual channel runtime snapshot
+ * @param snapshot Output snapshot
+ * @return 0 for success, negative for failure
+ */
+int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
+
+/**
+ * @brief Convert link state to printable string
+ * @param link_state Link state
+ * @return Constant string
+ */
+const char *nethub_vchan_link_state_name(nethub_vchan_link_state_t link_state);
+
+/**
+ * @brief Convert host state to printable string
+ * @param host_state Host state
+ * @return Constant string
+ */
+const char *nethub_vchan_host_state_name(nethub_vchan_host_state_t host_state);
+
+/**
+ * @brief Register virtual channel link event callback
+ * @param callback Callback function, pass NULL to unregister
+ * @param user_data User private pointer
+ * @return 0 for success, negative for failure
+ */
+int nethub_vchan_register_link_event_callback(nethub_vchan_link_event_callback_t callback, void *user_data);
 
 /* ==================== USER Data Type Convenient API ==================== */
 

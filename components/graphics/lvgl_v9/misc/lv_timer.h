@@ -44,15 +44,11 @@ typedef void (*lv_timer_handler_resume_cb_t)(void * data);
  * GLOBAL PROTOTYPES
  **********************/
 
-//! @cond Doxygen_Suppress
-
 /**
  * Call it periodically to handle lv_timers.
  * @return time till it needs to be run next (in ms)
  */
 LV_ATTRIBUTE_TIMER_HANDLER uint32_t lv_timer_handler(void);
-
-//! @endcond
 
 /**
  * Call it in the super-loop of main() or threads. It will run lv_timer_handler()
@@ -102,6 +98,7 @@ void lv_timer_delete(lv_timer_t * timer);
 
 /**
  * Pause a timer.
+ * It is typically safe to call from an interrupt handler or a different thread.
  * @param timer pointer to an lv_timer
  */
 void lv_timer_pause(lv_timer_t * timer);
@@ -198,6 +195,22 @@ void * lv_timer_get_user_data(lv_timer_t * timer);
  * @return true: timer is paused; false: timer is running
  */
 bool lv_timer_get_paused(lv_timer_t * timer);
+
+#if LV_USE_EXT_DATA
+/**
+ * @brief Attaches external user data and destructor callback to a timer object
+ *
+ * Associates custom user data with an LVGL timer and specifies a destructor function
+ * that will be automatically invoked when the timer is deleted to properly clean up
+ * the associated resources.
+ *
+ * @param timer      Pointer to the timer object
+ * @param data       User-defined data pointer to associate with the timer
+ * @param destructor Callback function for cleaning up ext_data when timer is deleted.
+ *                   Receives ext_data as parameter. NULL means no cleanup required.
+ */
+void lv_timer_set_external_data(lv_timer_t * timer, void * data, void (* free_cb)(void * data));
+#endif
 
 /**********************
  *      MACROS

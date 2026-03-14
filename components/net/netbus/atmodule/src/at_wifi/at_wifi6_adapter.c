@@ -79,7 +79,37 @@ int at_wifi_mgmr_sta_state_get(void)
 
 int at_wifi_mgmr_sta_connect(const char *ssid, const char *key, const char *bssid, const char *akm_str, uint8_t pmf_cfg, uint16_t freq1, uint16_t freq2, uint8_t use_dhcp)
 {
-    return wifi_sta_connect(ssid, key, bssid, akm_str, pmf_cfg, freq1, freq2, use_dhcp);
+    int res = 0;
+#ifdef CONFIG_WL80211
+    wifi_mgmr_sta_connect_params_t config;
+    memset(&config, 0, sizeof(config));
+    config.freq1 = freq1;
+    config.freq2 = freq2;
+    config.pmf_cfg = pmf_cfg;
+    config.use_dhcp = use_dhcp;
+    if (ssid) {
+        memcpy(config.ssid, ssid, 32);
+    }
+    if (key) {
+        memcpy(config.key, key, 64);
+    }
+    if (bssid) {
+        memcpy(config.bssid_str, bssid, strlen(bssid));
+    }
+    if (akm_str) {
+        memcpy(config.akm_str, akm_str, strlen(akm_str));
+    }
+
+    {
+        void _wifi_mgmr_sta_stop_dhcpc();
+        _wifi_mgmr_sta_stop_dhcpc();
+    }
+
+    res = wifi_mgmr_sta_connect(&config);
+#else
+    res = wifi_sta_connect(ssid, key, bssid, akm_str, pmf_cfg, freq1, freq2, use_dhcp);
+#endif
+    return res;
 }
 
 int at_wifi_mgmr_sta_connect_ind_stat_get(at_wifi_mgmr_connect_ind_stat_info_t *info)
@@ -211,6 +241,9 @@ int at_wifi_mgmr_ap_state_get(void)
 
 int at_wifi_mgmr_ap_sta_info_get(at_wifi_mgmr_sta_basic_info_t *sta_info, int index)
 {
+#ifdef CONFIG_WL80211
+    return 0;
+#else
     struct wifi_sta_basic_info wifi_sta_info;
     int ret = wifi_mgmr_ap_sta_info_get(&wifi_sta_info, index);
 
@@ -223,11 +256,16 @@ int at_wifi_mgmr_ap_sta_info_get(at_wifi_mgmr_sta_basic_info_t *sta_info, int in
     }
 
     return ret;
+#endif
 }
 
 int at_wifi_mgmr_ap_sta_delete(int sta_idx)
 {
+#ifdef CONFIG_WL80211
+    return 0;
+#else
     return wifi_mgmr_ap_sta_delete(sta_idx);
+#endif
 }
 
 int at_wifi_mgmr_ap_stop(void)
@@ -259,12 +297,20 @@ int at_wifi_mgmr_ap_start(at_wifi_mgmr_ap_params_t *config)
 
 int at_wifi_mgmr_sta_channel_get(uint8_t *channel)
 {
+#ifdef CONFIG_WL80211
+    return 0;
+#else
     return wifi_mgmr_sta_channel_get(channel);
+#endif
 }
 
 int at_wifi_mgmr_conf_max_sta(uint8_t max_sta)
 {
+#ifdef CONFIG_WL80211
+    return 0;
+#else
     return wifi_mgmr_conf_max_sta(max_sta);
+#endif
 }
 
 #endif

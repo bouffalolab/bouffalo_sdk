@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-
 find_package(
     bouffalo_sdk
     REQUIRED
@@ -9,13 +8,7 @@ find_package(
 )
 
 sdk_add_include_directories(.)
-
-if(CONFIG_CHERRYUSB_DEVICE)
-    sdk_add_compile_definitions(-D CONFIG_CHERRYUSB_DEVICE)
-endif()
-if(CONFIG_CHERRYUSB_HOST)
-    sdk_add_compile_definitions(-D CONFIG_CHERRYUSB_HOST)
-endif()
+sdk_add_include_directories(config_file)
 
 # User 
 # sdk_add_compile_definitions(-D CONFIG_CLI_CMD_ENABLE)

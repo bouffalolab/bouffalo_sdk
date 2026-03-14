@@ -33,15 +33,15 @@
 
 #if (LCD_INFO_DISP_ENABLE)
 
-#if (defined(CONFIG_SOLUTION_FUNC_MJPEG) && CONFIG_SOLUTION_FUNC_MJPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_MJPEG)
 #include "mjpeg.h"
 #endif
 
-#if (defined(CONFIG_SOLUTION_FUNC_DVP) && CONFIG_SOLUTION_FUNC_DVP)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DVP)
 #include "dvp.h"
 #endif
 
-#if (defined(CONFIG_SOLUTION_FUNC_DVP_JPEG) && CONFIG_SOLUTION_FUNC_DVP_JPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DVP_JPEG)
 #include "dvp_mjpeg.h"
 #endif
 
@@ -681,28 +681,33 @@ static ATTR_TCM_SECTION void dbi_disp_lcd_task(void *pvParameters)
         sprintf(str_buff, "lcd:%2d", g_dbi_disp_fps);
         strcat(str_buff_total, str_buff);
 
-#if (defined(CONFIG_SOLUTION_FUNC_DVP) && CONFIG_SOLUTION_FUNC_DVP)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DVP)
         extern uint32_t g_dvp_fps;
         sprintf(str_buff, ", dvp:%2d", g_dvp_fps);
         strcat(str_buff_total, str_buff);
 #endif
 
-#if (defined(CONFIG_SOLUTION_FUNC_MJPEG) && CONFIG_SOLUTION_FUNC_MJPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_MJPEG)
         extern uint32_t g_mjpeg_fps;
         sprintf(str_buff, ", mjpeg:%2d", g_mjpeg_fps);
         strcat(str_buff_total, str_buff);
 #endif
 
-#if (defined(CONFIG_SOLUTION_FUNC_DVP_JPEG) && CONFIG_SOLUTION_FUNC_DVP_JPEG)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DVP_JPEG)
         extern uint32_t g_dvp_mjpeg_fps;
         sprintf(str_buff, "dvp_mjpeg: %2d, ", g_dvp_mjpeg_fps);
         strcat(str_buff_total, str_buff);
 #endif
 
-#if ((defined(CONFIG_SOLUTION_FUNC_UVC_YUYV) && CONFIG_SOLUTION_FUNC_UVC_YUYV) || \
-     (defined(CONFIG_SOLUTION_FUNC_UVC_JPEG) && CONFIG_SOLUTION_FUNC_UVC_JPEG))
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_YUYV) || IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_JPEG)
         extern uint32_t g_uvc_fps;
         sprintf(str_buff, ", uvc:%2d", g_uvc_fps);
+        strcat(str_buff_total, str_buff);
+#endif
+
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_HIBOOSTER_NEW)
+        extern uint32_t g_hibooster_fps;
+        sprintf(str_buff, ", hb:%2d", g_hibooster_fps);
         strcat(str_buff_total, str_buff);
 #endif
 

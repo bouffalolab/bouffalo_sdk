@@ -88,6 +88,9 @@ extern struct bflb_device_s *boot2_wdg;
 extern struct bflb_device_s *sha;
 extern struct bflb_device_s *uartx;
 extern struct bflb_sha256_ctx_s ctx_sha256;
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+extern struct bflb_sha512_ctx_s ctx_sha384;
+#endif
 extern struct bflb_device_s *console;
 extern void bflb_uart_set_console(struct bflb_device_s *dev);
 extern const bflb_verinf_t boot2_ver;

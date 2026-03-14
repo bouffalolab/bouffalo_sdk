@@ -30,9 +30,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "hmac.h"
-#include "constants.h"
-#include "utils.h"
+#include "tinycrypt/hmac.h"
+#include "tinycrypt/constants.h"
+#include "tinycrypt/utils.h"
 
 static void rekey(uint8_t *key, const uint8_t *new_key, unsigned int key_size)
 {

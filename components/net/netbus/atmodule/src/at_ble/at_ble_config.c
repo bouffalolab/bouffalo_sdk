@@ -54,6 +54,7 @@ int at_ble_config_init(void)
     at_ble_config->scan_param.scan_interval = 40;
     at_ble_config->scan_param.scan_window = 40;
     at_ble_config->ble_sec_param = 0x03;
+    at_ble_config->ble_sec_lvl = 1;
     #if defined(CONFIG_BT_BAS_SERVER)
     at_ble_config->ble_bas_init=0;
     #endif
@@ -83,11 +84,11 @@ int at_ble_config_save(const char *key)
 
 int at_ble_config_default(void)
 {
-    ef_del_env(AT_CONFIG_KEY_BLE_NAME);
     if (at_ble_config == NULL) {
         AT_CMD_PRINTF("at_ble_config is NULL in at_ble_config_default\r\n");
         return -1;
     }
+    ef_del_env(AT_CONFIG_KEY_BLE_NAME);
     memset(at_ble_config, 0, sizeof(ble_config));
     at_ble_config->work_role = BLE_DISABLE;
     strlcpy(at_ble_config->ble_name, "BFLB-AT", sizeof(at_ble_config->ble_name));
@@ -102,6 +103,7 @@ int at_ble_config_default(void)
     at_ble_config->scan_param.scan_interval = 40;
     at_ble_config->scan_param.scan_window = 40;
     at_ble_config->ble_sec_param = 0x03;
+    at_ble_config->ble_sec_lvl = 1;
     #if defined(CONFIG_BT_BAS_SERVER)
     at_ble_config->ble_bas_init=0;
     #endif

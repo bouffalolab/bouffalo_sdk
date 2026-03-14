@@ -18,6 +18,7 @@
 #include "async_event.h"
 
 struct netif vif2netif[WL80211_VIF_MAX];
+static int g_wl80211_ap_dhcpd_running;
 
 #ifndef CONFIG_WL80211_RX_ZEROCOPY_THRES
 #define CONFIG_WL80211_RX_ZEROCOPY_THRES 500
@@ -43,7 +44,8 @@ void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_
             assert(0);
         }
 
-        p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+        p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, pc + 1,
+                                frm_len);
         pc->custom_free_function = (void *)free;
 
         memcpy(p->payload, buf, frm_len);
@@ -315,23 +317,62 @@ void _wifi_mgmr_ip_got_dump(void)
     wl80211_printf("Memory left is %d Bytes\r\n", kfree_size());
     wl80211_printf("[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n", netif->num, netif->name[0],
                    netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3],
-                   netif->hwaddr[4], netif->hwaddr[5], netif->ip_addr.addr & 0xff, (netif->ip_addr.addr >> 8) & 0xff,
-                   (netif->ip_addr.addr >> 16) & 0xff, (netif->ip_addr.addr >> 24) & 0xff,
-                   32 - __builtin_clz(netif->netmask.addr), state, connected);
-}
-
-void _wifi_mgmr_ap_start_dhcpd(void)
-{
-    wl80211_printf("start dhcpd\n");
-    dhcpd_start(&vif2netif[WL80211_VIF_AP], -1, -1);
+                   netif->hwaddr[4], netif->hwaddr[5], ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr)) & 0xff,
+                   (ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr)) >> 8) & 0xff,
+                   (ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr)) >> 16) & 0xff,
+                   (ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr)) >> 24) & 0xff,
+                   32 - __builtin_clz(ip4_addr_get_u32(ip_2_ip4(&netif->netmask))), state, connected);
 }
 
 void _wifi_mgmr_ap_stop_dhcpd(void)
 {
+    if (!g_wl80211_ap_dhcpd_running) {
+        return;
+    }
+
     wl80211_printf("stop dhcpd\n");
 
     extern err_t dhcp_server_stop(struct netif * netif);
     dhcpd_clear_dns_server(&vif2netif[WL80211_VIF_AP]);
     dhcp_server_stop(&vif2netif[WL80211_VIF_AP]);
+    g_wl80211_ap_dhcpd_running = 0;
+}
+
+void _wifi_mgmr_ap_start_dhcpd(bool use_ipcfg, bool use_dhcpd, int start, int limit, uint32_t ap_ipaddr,
+                               uint32_t ap_mask)
+{
+    struct netif *ap_netif = &vif2netif[WL80211_VIF_AP];
+
+    if (g_wl80211_ap_dhcpd_running) {
+        _wifi_mgmr_ap_stop_dhcpd();
+    }
+
+    if (use_ipcfg) {
+        if (ap_ipaddr && ap_mask) {
+            ip4_addr_t ipaddr;
+            ip4_addr_t netmask;
+            ip4_addr_t gw;
+
+            ip4_addr_set_u32(&ipaddr, ap_ipaddr);
+            ip4_addr_set_u32(&netmask, ap_mask);
+            ip4_addr_set_u32(&gw, ap_ipaddr);
+
+            wl80211_printf("DHCPD: Setting AP IP: %s\r\n", ip4addr_ntoa(&ipaddr));
+            wl80211_printf("DHCPD: Setting AP Mask: %s\r\n", ip4addr_ntoa(&netmask));
+
+            netifapi_netif_set_addr(ap_netif, &ipaddr, &netmask, &gw);
+            netifapi_netif_set_up(ap_netif);
+        }
+
+        if (use_dhcpd) {
+            wl80211_printf("DHCPD: Starting with pool start=%d, limit=%d\r\n", start, limit);
+
+            netifapi_netif_set_link_up(ap_netif);
+            dhcpd_start(ap_netif, start, limit);
+            g_wl80211_ap_dhcpd_running = 1;
+        }
+    } else {
+        netifapi_netif_set_link_up(ap_netif);
+    }
 }
 #endif

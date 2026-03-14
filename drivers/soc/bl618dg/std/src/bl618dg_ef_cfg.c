@@ -568,21 +568,91 @@ int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload
 }
 
 /****************************************************************************/ /**
- * @brief  Efuse read adc trim
+ * @brief  Efuse read adc vref trim
  *
- * @param  None
+ * @param [in] dev ADC device handle
+ *
+ * @return vref trim value
+ *
+*******************************************************************************/
+uint32_t bflb_efuse_get_adc_vref_trim(struct bflb_device_s *dev)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+    /* use hardware default value, also the median value. */
+    uint32_t default_value = 32;
+
+    if (dev->idx == 0) {
+        bflb_ef_ctrl_read_common_trim(NULL, "gpadc_vref", &trim, 1);
+    } else if (dev->idx == 1) {
+        bflb_ef_ctrl_read_common_trim(NULL, "gpadc2_vref", &trim, 1);
+    } else {
+        return default_value;
+    }
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            default_value = trim.value;
+        }
+    }
+    return default_value;
+}
+
+/****************************************************************************/ /**
+ * @brief  Efuse read adc offset trim
+ *
+ * @param [in] dev ADC device handle
+ *
+ * @return offset trim value
+ *
+*******************************************************************************/
+int32_t bflb_efuse_get_adc_offset_trim(struct bflb_device_s *dev)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+    int32_t default_value = 0;
+
+    if (dev->idx == 0) {
+        bflb_ef_ctrl_read_common_trim(NULL, "gpadc_offset", &trim, 1);
+    } else if (dev->idx == 1) {
+        bflb_ef_ctrl_read_common_trim(NULL, "gpadc2_offset", &trim, 1);
+    } else {
+        return default_value;
+    }
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            /* trim.value is a 9-bits signed value */
+            if (trim.value & 0x8000) {
+                default_value = trim.value | 0xFFFF0000;
+            } else {
+                default_value = trim.value & 0xFFFF;
+            }
+        }
+    }
+    return default_value;
+}
+
+/****************************************************************************/ /**
+ * @brief  Efuse read adc gain trim
+ *
+ * @param [in] dev ADC device handle
  *
  * @return coe
  *
 *******************************************************************************/
-float bflb_efuse_get_adc_trim(void)
+float bflb_efuse_get_adc_gain_trim(struct bflb_device_s *dev)
 {
     bflb_ef_ctrl_com_trim_t trim;
     uint32_t tmp;
 
-    float coe = 1.0;
+    float coe = 1.0f;
 
-    bflb_ef_ctrl_read_common_trim(NULL, "gpadc_gain", &trim, 1);
+    if (dev->idx == 0) {
+        bflb_ef_ctrl_read_common_trim(NULL, "gpadc_gain", &trim, 1);
+    } else if (dev->idx == 1) {
+        bflb_ef_ctrl_read_common_trim(NULL, "gpadc2_gain", &trim, 1);
+    } else {
+        return coe;
+    }
 
     if (trim.en) {
         if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {

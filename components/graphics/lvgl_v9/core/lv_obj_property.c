@@ -1,5 +1,5 @@
 /**
- * @file lv_obj_id.c
+ * @file lv_obj_property.c
  *
  */
 
@@ -19,24 +19,72 @@
  *      DEFINES
  *********************/
 
+#define HANDLE_PROPERTY_TYPE(type, field) \
+    if(!set) { \
+        value->field = ((lv_property_get_##type##_t)(prop->getter))(obj); \
+    } else { \
+        switch(LV_PROPERTY_ID_TYPE2(prop->id)) { \
+            case LV_PROPERTY_ID_INVALID: \
+                ((lv_property_set_##type##_t)(prop->setter))(obj, value->field); \
+                break; \
+            case LV_PROPERTY_TYPE_INT: \
+                ((lv_property_set_##type##_integer_t)(prop->setter))(obj, value->arg1.field, value->arg2.num); \
+                break; \
+            case LV_PROPERTY_TYPE_BOOL: \
+                ((lv_property_set_##type##_boolean_t)(prop->setter))(obj, value->arg1.field, value->arg2.enable); \
+                break; \
+            case LV_PROPERTY_TYPE_PRECISE: \
+                ((lv_property_set_##type##_precise_t)(prop->setter))(obj, value->arg1.field, value->arg2.precise); \
+                break; \
+            case LV_PROPERTY_TYPE_COLOR: \
+                ((lv_property_set_##type##_color_t)(prop->setter))(obj, value->arg1.field, value->arg2.color); \
+                break; \
+            case LV_PROPERTY_TYPE_POINTER: \
+            case LV_PROPERTY_TYPE_IMGSRC: \
+            case LV_PROPERTY_TYPE_TEXT: \
+            case LV_PROPERTY_TYPE_OBJ: \
+            case LV_PROPERTY_TYPE_DISPLAY: \
+            case LV_PROPERTY_TYPE_FONT: \
+                ((lv_property_set_##type##_pointer_t)(prop->setter))(obj, value->arg1.field, value->arg2.ptr); \
+                break; \
+        } \
+    }
+
+
 /**********************
  *      TYPEDEFS
  **********************/
 
-typedef void (*lv_property_set_int_t)(lv_obj_t *, int32_t);
-typedef void (*lv_property_set_bool_t)(lv_obj_t *, bool);
-typedef void (*lv_property_set_precise_t)(lv_obj_t *, lv_value_precise_t);
-typedef void (*lv_property_set_color_t)(lv_obj_t *, lv_color_t);
+typedef int32_t integer;
+typedef bool boolean;
+typedef lv_value_precise_t precise;
+typedef lv_color_t color;
+typedef const void * pointer;
+
+#define DEFINE_PROPERTY_SETTER_TYPES(type) \
+    typedef void (*lv_property_set_##type##_t)(lv_obj_t *, type); \
+    typedef void (*lv_property_set_##type##_integer_t)(lv_obj_t *, type, int32_t); \
+    typedef void (*lv_property_set_##type##_boolean_t)(lv_obj_t *, type, bool); \
+    typedef void (*lv_property_set_##type##_precise_t)(lv_obj_t *, type, lv_value_precise_t); \
+    typedef void (*lv_property_set_##type##_color_t)(lv_obj_t *, type, lv_color_t); \
+    typedef void (*lv_property_set_##type##_pointer_t)(lv_obj_t *, type, const void *)
+
+DEFINE_PROPERTY_SETTER_TYPES(integer);
+DEFINE_PROPERTY_SETTER_TYPES(boolean);
+DEFINE_PROPERTY_SETTER_TYPES(precise);
+DEFINE_PROPERTY_SETTER_TYPES(color);
+DEFINE_PROPERTY_SETTER_TYPES(pointer);
+
 typedef void (*lv_property_set_point_t)(lv_obj_t *, lv_point_t *);
-typedef void (*lv_property_set_pointer_t)(lv_obj_t *, const void *);
 typedef lv_result_t (*lv_property_setter_t)(lv_obj_t *, lv_prop_id_t, const lv_property_t *);
 
-typedef int32_t (*lv_property_get_int_t)(const lv_obj_t *);
-typedef bool (*lv_property_get_bool_t)(const lv_obj_t *);
+typedef integer(*lv_property_get_integer_t)(const lv_obj_t *);
+typedef bool (*lv_property_get_boolean_t)(const lv_obj_t *);
 typedef lv_value_precise_t (*lv_property_get_precise_t)(const lv_obj_t *);
 typedef lv_color_t (*lv_property_get_color_t)(const lv_obj_t *);
-typedef lv_point_t (*lv_property_get_point_t)(lv_obj_t *);
 typedef void * (*lv_property_get_pointer_t)(const lv_obj_t *);
+typedef lv_point_t (*lv_property_get_point_t)(lv_obj_t *);
+
 typedef lv_result_t (*lv_property_getter_t)(const lv_obj_t *, lv_prop_id_t, lv_property_t *);
 
 /**********************
@@ -44,7 +92,7 @@ typedef lv_result_t (*lv_property_getter_t)(const lv_obj_t *, lv_prop_id_t, lv_p
  **********************/
 
 static lv_result_t obj_property(lv_obj_t * obj, lv_prop_id_t id, lv_property_t * value, bool set);
-static int32_t property_name_compare(const void * ref, const void * element);
+static int property_name_compare(const void * ref, const void * element);
 
 /**********************
  *  STATIC VARIABLES
@@ -102,9 +150,9 @@ lv_property_t lv_obj_get_property(lv_obj_t * obj, lv_prop_id_t id)
     }
 
     if(index < LV_PROPERTY_ID_START) {
-        lv_obj_get_local_style_prop(obj, index, &value.style, 0);
+        value.style = lv_obj_get_style_prop(obj, LV_PART_MAIN, index);
         value.id = id;
-        value.selector = 0;
+        value.selector = LV_PART_MAIN | obj->state;
         return value;
     }
 
@@ -115,21 +163,21 @@ lv_property_t lv_obj_get_property(lv_obj_t * obj, lv_prop_id_t id)
     return value;
 }
 
-lv_property_t lv_obj_get_style_property(lv_obj_t * obj, lv_prop_id_t id, uint32_t selector)
+lv_property_t lv_obj_get_style_property(lv_obj_t * obj, lv_prop_id_t id, lv_part_t part)
 {
     lv_property_t value;
     uint32_t index = LV_PROPERTY_ID_INDEX(id);
 
     if(index == LV_PROPERTY_ID_INVALID || index >= LV_PROPERTY_ID_START) {
-        LV_LOG_WARN("invalid style property id %d", id);
+        LV_LOG_WARN("invalid style property id 0x%" LV_PRIx32, id);
         value.id = LV_PROPERTY_ID_INVALID;
         value.num = 0;
         return value;
     }
 
-    lv_obj_get_local_style_prop(obj, id, &value.style, selector);
+    value.style = lv_obj_get_style_prop(obj, part, index);
     value.id = id;
-    value.selector = selector;
+    value.selector = part | obj->state;
     return value;
 }
 
@@ -232,7 +280,7 @@ static lv_result_t obj_property(lv_obj_t * obj, lv_prop_id_t id, lv_property_t *
 
             /*id matched but we got null pointer to functions*/
             if(set ? prop->setter == NULL : prop->getter == NULL) {
-                LV_LOG_WARN("NULL %s provided, id: %d", set ? "setter" : "getter", id);
+                LV_LOG_WARN("NULL %s provided, id: 0x%" LV_PRIx32, set ? "setter" : "getter", id);
                 return LV_RESULT_INVALID;
             }
 
@@ -240,45 +288,34 @@ static lv_result_t obj_property(lv_obj_t * obj, lv_prop_id_t id, lv_property_t *
             if(!set) value->id = prop->id;
 
             switch(LV_PROPERTY_ID_TYPE(prop->id)) {
-                case LV_PROPERTY_TYPE_INT: {
-                        if(set)((lv_property_set_int_t)(prop->setter))(obj, value->num);
-                        else value->num = ((lv_property_get_int_t)(prop->getter))(obj);
-                        break;
-                    }
-                case LV_PROPERTY_TYPE_BOOL: {
-                        if(set)((lv_property_set_bool_t)(prop->setter))(obj, value->enable);
-                        else value->enable = ((lv_property_get_bool_t)(prop->getter))(obj);
-                        break;
-                    }
-
-                case LV_PROPERTY_TYPE_PRECISE: {
-                        if(set)((lv_property_set_precise_t)(prop->setter))(obj, value->precise);
-                        else value->precise = ((lv_property_get_precise_t)(prop->getter))(obj);
-                        break;
-                    }
-                case LV_PROPERTY_TYPE_COLOR: {
-                        if(set)((lv_property_set_color_t)prop->setter)(obj, value->color);
-                        else value->color = ((lv_property_get_color_t)(prop->getter))(obj);
-                        break;
-                    }
+                case LV_PROPERTY_TYPE_INT:
+                    HANDLE_PROPERTY_TYPE(integer, num);
+                    break;
+                case LV_PROPERTY_TYPE_BOOL:
+                    HANDLE_PROPERTY_TYPE(boolean, enable);
+                    break;
+                case LV_PROPERTY_TYPE_PRECISE:
+                    HANDLE_PROPERTY_TYPE(precise, precise);
+                    break;
+                case LV_PROPERTY_TYPE_COLOR:
+                    HANDLE_PROPERTY_TYPE(color, color);
+                    break;
+                case LV_PROPERTY_TYPE_POINTER:
+                case LV_PROPERTY_TYPE_IMGSRC:
+                case LV_PROPERTY_TYPE_TEXT:
+                case LV_PROPERTY_TYPE_OBJ:
+                case LV_PROPERTY_TYPE_DISPLAY:
+                case LV_PROPERTY_TYPE_FONT:
+                    HANDLE_PROPERTY_TYPE(pointer, ptr);
+                    break;
                 case LV_PROPERTY_TYPE_POINT: {
                         lv_point_t * point = &value->point;
                         if(set)((lv_property_set_point_t)(prop->setter))(obj, point);
                         else *point = ((lv_property_get_point_t)(prop->getter))(obj);
                         break;
                     }
-                case LV_PROPERTY_TYPE_POINTER:
-                case LV_PROPERTY_TYPE_IMGSRC:
-                case LV_PROPERTY_TYPE_TEXT:
-                case LV_PROPERTY_TYPE_OBJ:
-                case LV_PROPERTY_TYPE_DISPLAY:
-                case LV_PROPERTY_TYPE_FONT: {
-                        if(set)((lv_property_set_pointer_t)(prop->setter))(obj, value->ptr);
-                        else value->ptr = ((lv_property_get_pointer_t)(prop->getter))(obj);
-                        break;
-                    }
                 default: {
-                        LV_LOG_WARN("Unknown property id: 0x%08x", prop->id);
+                        LV_LOG_WARN("Unknown property id: 0x%08" LV_PRIx32, prop->id);
                         return LV_RESULT_INVALID;
                     }
             }
@@ -289,7 +326,7 @@ static lv_result_t obj_property(lv_obj_t * obj, lv_prop_id_t id, lv_property_t *
         /*If no setter found, try base class then*/
     }
 
-    LV_LOG_WARN("Unknown property id: 0x%08x", id);
+    LV_LOG_WARN("Unknown property id: 0x%08" LV_PRIx32, id);
     return LV_RESULT_INVALID;
 }
 

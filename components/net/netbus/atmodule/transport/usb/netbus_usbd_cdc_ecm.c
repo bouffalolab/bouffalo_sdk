@@ -33,7 +33,7 @@
 #ifdef CONFIG_WL80211
 #include <wl80211.h>
 #include <wl80211_mac.h>
-#include <netpacket_filter.h>
+#include <nethub_packet_filter.h>
 #else
 #include <wifi_pkt_hooks.h>
 #include <net_pkt_filter.h>

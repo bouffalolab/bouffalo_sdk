@@ -150,7 +150,7 @@ static int32_t bflb_bootrom_cmd_get_bootinfo(uint16_t cmd, uint8_t *data, uint16
     bootinfo[2] = 0x18;
     bootinfo[3] = 00;
     *((uint32_t *)(bootinfo + 4)) = BFLB_BOOTROM_VERSION;
-    memcpy(bootinfo + 8, &otp_cfg, 20);
+    arch_memcpy_fast(bootinfo + 8, &otp_cfg, 20);
 
     bflb_eflash_loader_if_write(eflash_loader_cmd_ack_buf, bootinfo[2] + 4);
 
@@ -265,7 +265,7 @@ int32_t bflb_bootrom_parse_seg_header(uint8_t *data)
     hdr = (struct segment_header_t *)data;
 
     if (hdr->crc32 == BFLB_Soft_CRC32(hdr, sizeof(struct segment_header_t) - 4)) {
-        memcpy(&segment_hdr, hdr, sizeof(struct segment_header_t));
+        arch_memcpy_fast(&segment_hdr, hdr, sizeof(struct segment_header_t));
         if (bflb_bootrom_is_boot_dst_valid(segment_hdr.destaddr, segment_hdr.len) == 1) {
             return BFLB_EFLASH_LOADER_SUCCESS;
         } else {
@@ -304,7 +304,7 @@ static int32_t bflb_bootrom_cmd_load_segheader(uint16_t cmd, uint8_t *data, uint
         eflash_loader_cmd_ack_buf[0] = BFLB_BOOTROM_CMD_ACK;
         segdatainfo[2] = sizeof(segment_hdr);
         segdatainfo[3] = 0x00;
-        memcpy(&segdatainfo[4], (void *)&segment_hdr, sizeof(segment_hdr));
+        arch_memcpy_fast(&segdatainfo[4], (void *)&segment_hdr, sizeof(segment_hdr));
         bflb_eflash_loader_if_write(eflash_loader_cmd_ack_buf, segdatainfo[2] + 4);
     } else {
         bflb_bootrom_cmd_ack(ret);

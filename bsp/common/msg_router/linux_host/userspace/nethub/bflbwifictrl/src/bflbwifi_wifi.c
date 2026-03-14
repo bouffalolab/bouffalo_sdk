@@ -13,11 +13,10 @@
 #include <errno.h>
 
 #include "../include/bflbwifi_log.h"
-#include "../include/bflbwifi.h"
+#include "bflbwifi_internal.h"
 
-/* TTY callback setup functions (defined in bflbwifi_tty.c) */
-extern void bflbwifi_tty_set_disconnect_callback(void (*callback)(void));
-extern void bflbwifi_tty_set_reconnect_callback(void (*callback)(void));
+/* Channel abstraction layer */
+#include "channel/channel.h"
 
 /* ========== Constant Definitions ========== */
 
@@ -28,30 +27,9 @@ extern void bflbwifi_tty_set_reconnect_callback(void (*callback)(void));
 #define CMD_RESP_TIMEOUT     3
 
 /* Error code constants */
-#define E_SUCCESS               0
-#define E_ERR                  -1
-#define E_ERR_INVALID_PARAM     -4
-#define E_ERR_NOT_INIT         -9
-#define E_ERR_TTY_FAIL         -2
-#define E_ERR_BUFFER_TOO_SMALL -11
+#define E_ERR_TTY_FAIL         -2   /* TTY/Channel operation failed */
 
 /* ========== Forward Declarations ========== */
-
-/* TTY interface */
-extern int bflbwifi_tty_init(const char *dev, int baudrate,
-                        void (*callback)(const char *line, void *user_data),
-                        void *user_data);
-extern int bflbwifi_tty_send(const char *data, int len);
-extern int bflbwifi_tty_send_command(const char *cmd);
-extern int bflbwifi_tty_send_command_sync(const char *cmd, int timeout_ms);
-extern void bflbwifi_tty_deinit(void);
-extern int bflbwifi_tty_write_raw(const void *data, int len);
-extern int bflbwifi_tty_wait_for(const char *expected, int timeout_ms);
-extern int bflbwifi_tty_get_last_response(char *buf, size_t len);
-extern void bflbwifi_tty_clear_last_response(void);
-extern int bflbwifi_tty_suspend_recv_thread(void);
-extern int bflbwifi_tty_resume_recv_thread(void);
-extern int bflbwifi_tty_get_fd(void);
 
 /* State management interface */
 extern int bflbwifi_state_init(void);
@@ -67,6 +45,8 @@ extern void bflbwifi_state_reset_scan(void);
 extern int bflbwifi_state_wait_scan_complete(int timeout_ms);
 extern int bflbwifi_state_get_scan_results(bflbwifi_ap_info_t *ap_list, int max_count, int *actual_count);
 extern int bflbwifi_state_wait_sta_state(bflbwifi_sta_state_t target_state, int timeout_ms);
+extern void bflbwifi_state_prepare_sta_connect(void);
+extern int bflbwifi_state_wait_sta_connect(int timeout_ms);
 
 /* Parser interface */
 extern void bflbwifi_parser_process_line(const char *line, void *user_data);
@@ -76,6 +56,90 @@ extern void bflbwifi_state_set_sta_info(const bflbwifi_sta_connection_info_t *in
 /* ========== Global Variables ========== */
 
 static bool g_initialized = false;
+static channel_backend_t g_channel_backend = {
+    .type = CHANNEL_TYPE_NONE,
+    .ops = NULL,
+};
+
+static channel_state_t bflbwifi_get_channel_state(void)
+{
+    if (!g_initialized) {
+        return CHANNEL_STATE_DISCONNECTED;
+    }
+
+    return channel_backend_get_state(&g_channel_backend);
+}
+
+static bool bflbwifi_ctrl_link_connected(void)
+{
+    return bflbwifi_get_channel_state() == CHANNEL_STATE_CONNECTED;
+}
+
+void bflbwifi_ctrl_config_init(bflbwifi_ctrl_config_t *cfg)
+{
+    if (!cfg) {
+        return;
+    }
+
+    memset(cfg, 0, sizeof(*cfg));
+    cfg->ctrl_backend = BFLBWIFI_CTRL_BACKEND_NONE;
+}
+
+int bflbwifi_ctrl_config_use_tty(bflbwifi_ctrl_config_t *cfg, const char *dev_path, int baudrate)
+{
+    if (!cfg || !dev_path) {
+        return E_ERR_INVALID_PARAM;
+    }
+
+    cfg->ctrl_backend = BFLBWIFI_CTRL_BACKEND_TTY;
+    cfg->dev_path = dev_path;
+    cfg->baudrate = (baudrate > 0) ? baudrate : BFLBWIFI_CTRL_TTY_BAUDRATE_DEFAULT;
+    return 0;
+}
+
+int bflbwifi_ctrl_config_use_vchan(bflbwifi_ctrl_config_t *cfg)
+{
+    if (!cfg) {
+        return E_ERR_INVALID_PARAM;
+    }
+
+    cfg->ctrl_backend = BFLBWIFI_CTRL_BACKEND_VCHAN;
+    cfg->dev_path = NULL;
+    cfg->baudrate = 0;
+    return 0;
+}
+
+static int bflbwifi_require_ctrl_backend(const char *op_name)
+{
+    if (!g_initialized || !channel_backend_is_valid(&g_channel_backend)) {
+        return E_ERR_NOT_INITIALIZED;
+    }
+
+    if (!bflbwifi_ctrl_link_connected()) {
+        BFLB_LOGW("%s rejected: control backend '%s' is disconnected",
+                  op_name, channel_backend_name(&g_channel_backend));
+        return E_ERR_BACKEND_DOWN;
+    }
+
+    return 0;
+}
+
+static int bflbwifi_map_ctrl_error(int ret, const char *op_name)
+{
+    if (ret == CMD_RESP_TIMEOUT) {
+        BFLB_LOGE("%s timed out", op_name);
+        return E_ERR_TIMEOUT;
+    }
+
+    if (!bflbwifi_ctrl_link_connected()) {
+        BFLB_LOGW("%s failed because control backend '%s' is disconnected",
+                  op_name, channel_backend_name(&g_channel_backend));
+        return E_ERR_BACKEND_DOWN;
+    }
+
+    BFLB_LOGE("%s failed", op_name);
+    return E_ERR_TTY_FAIL;
+}
 
 /* ========== Helper Functions ========== */
 
@@ -93,6 +157,46 @@ const char* bflbwifi_strerror(int err)
     }
 }
 
+const char *bflbwifi_ctrl_backend_name(uint8_t ctrl_backend)
+{
+    return channel_get_type_name((channel_type_t)ctrl_backend);
+}
+
+const char *bflbwifi_ctrl_link_state_name(bflbwifi_ctrl_link_state_t link_state)
+{
+    switch (link_state) {
+        case BFLBWIFI_CTRL_LINK_CONNECTED:
+            return "CONNECTED";
+        case BFLBWIFI_CTRL_LINK_DISCONNECTED:
+            return "DISCONNECTED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+int bflbwifi_get_ctrl_status(bflbwifi_ctrl_status_t *status)
+{
+    if (!g_initialized || !channel_backend_is_valid(&g_channel_backend)) {
+        return E_ERR_NOT_INITIALIZED;
+    }
+
+    if (!status) {
+        return E_ERR_INVALID_PARAM;
+    }
+
+    memset(status, 0, sizeof(*status));
+    status->ctrl_backend = (uint8_t)channel_backend_type(&g_channel_backend);
+    status->link_state = bflbwifi_ctrl_link_connected() ?
+                         BFLBWIFI_CTRL_LINK_CONNECTED :
+                         BFLBWIFI_CTRL_LINK_DISCONNECTED;
+    status->link_events_supported = channel_backend_has_capability(&g_channel_backend, CHANNEL_CAP_LINK_EVENTS);
+    status->rx_thread_ctl_supported = channel_backend_has_capability(&g_channel_backend, CHANNEL_CAP_RX_THREAD_CTL);
+    status->raw_fd_supported = channel_backend_has_capability(&g_channel_backend, CHANNEL_CAP_RAW_FD);
+    status->ota_in_progress = bflbwifi_is_ota_in_progress();
+
+    return 0;
+}
+
 /**
  * @brief TTY data callback
  */
@@ -107,6 +211,10 @@ static void tty_data_callback(const char *line, void *user_data)
  */
 static void tty_disconnect_callback(void)
 {
+    bflbwifi_sta_connection_info_t empty_info = {0};
+
+    bflbwifi_state_set_sta_state(WIFI_STATE_DISCONNECTED);
+    bflbwifi_state_set_sta_info(&empty_info);
     BFLB_LOGW("TTY disconnected, waiting for reconnection...");
 }
 
@@ -115,36 +223,39 @@ static void tty_disconnect_callback(void)
  */
 static void tty_reconnect_callback(void)
 {
-    int ret;
-
-    BFLB_LOGI("TTY reconnected, reinitializing AT module...");
-
-    /* Wait for device to stabilize */
-    usleep(100000);  /* 100ms */
-
-    /* Resend initialization commands */
-    ret = bflbwifi_tty_send_command_sync("AT+CWMODE=1", 2000);
-    if (ret != CMD_RESP_OK) {
-        BFLB_LOGW("AT+CWMODE=1 failed after reconnect");
-    }
-
-    ret = bflbwifi_tty_send_command_sync("AT+CWMODE?", 2000);
-    if (ret != CMD_RESP_OK) {
-        BFLB_LOGW("AT+CWMODE? failed after reconnect");
-    }
-
-    BFLB_LOGI("AT module reinitialized");
+    BFLB_LOGI("TTY reconnected, control backend recovered");
 }
 
 /* ========== Initialization and Cleanup ========== */
 
-int bflbwifi_init(const char *tty_dev, int baudrate)
+int bflbwifi_init_ex(const bflbwifi_ctrl_config_t *cfg)
 {
     int ret;
+    channel_type_t channel_type;
+    const char *dev_path;
+    int baudrate;
 
-    if (!tty_dev) {
-        BFLB_LOGE("Invalid parameters");
+    if (!cfg) {
+        BFLB_LOGE("Invalid parameters: cfg is NULL");
         return E_ERR_INVALID_PARAM;
+    }
+
+    channel_type = (channel_type_t)cfg->ctrl_backend;
+    dev_path = cfg->dev_path;
+    baudrate = cfg->baudrate;
+
+    if (!channel_type_is_valid(channel_type)) {
+        BFLB_LOGE("Invalid control backend: %u", (unsigned int)cfg->ctrl_backend);
+        return E_ERR_INVALID_PARAM;
+    }
+
+    if (channel_type == CHANNEL_TYPE_TTY && !dev_path) {
+        BFLB_LOGE("TTY backend requires a valid device path");
+        return E_ERR_INVALID_PARAM;
+    }
+
+    if (channel_type == CHANNEL_TYPE_TTY && baudrate <= 0) {
+        baudrate = BFLBWIFI_CTRL_TTY_BAUDRATE_DEFAULT;
     }
 
     if (g_initialized) {
@@ -159,52 +270,56 @@ int bflbwifi_init(const char *tty_dev, int baudrate)
         return -1;
     }
 
-    /* Initialize TTY (first initialize without callback) */
-    ret = bflbwifi_tty_init(tty_dev, baudrate, tty_data_callback, NULL);
+    /* Initialize channel */
+    ret = channel_backend_init(&g_channel_backend, channel_type, dev_path, baudrate, tty_data_callback, NULL);
     if (ret != 0) {
-        BFLB_LOGE("Failed to init TTY");
+        BFLB_LOGE("Failed to init channel");
         bflbwifi_state_deinit();
         return E_ERR_TTY_FAIL;
     }
 
-    /* Register disconnect and reconnect callbacks */
-    bflbwifi_tty_set_disconnect_callback(tty_disconnect_callback);
-    bflbwifi_tty_set_reconnect_callback(tty_reconnect_callback);
-
-    /* Wait for TTY device to stabilize */
-    usleep(100000);  /* 100ms */
-
-    /* Send initialization command sequence */
-    BFLB_LOGI("Initializing AT module...");
-
-    /* 1. Set to Station mode (AT+CWMODE=1) */
-    ret = bflbwifi_tty_send_command_sync("AT+CWMODE=1", 2000);
-    if (ret != CMD_RESP_OK) {
-        BFLB_LOGW("AT+CWMODE=1 failed, module may already be in correct mode");
+    if (channel_backend_has_capability(&g_channel_backend, CHANNEL_CAP_LINK_EVENTS)) {
+        channel_backend_set_disconnect_callback(&g_channel_backend, tty_disconnect_callback);
+        channel_backend_set_reconnect_callback(&g_channel_backend, tty_reconnect_callback);
+    } else {
+        BFLB_LOGI("Backend '%s' does not provide link events", channel_backend_name(&g_channel_backend));
     }
 
-    /* 2. Query current WiFi mode */
-    ret = bflbwifi_tty_send_command_sync("AT+CWMODE?", 2000);
-    if (ret != CMD_RESP_OK) {
-        BFLB_LOGW("AT+CWMODE? failed");
+    if (!bflbwifi_ctrl_link_connected()) {
+        bflbwifi_state_set_sta_state(WIFI_STATE_DISCONNECTED);
+        BFLB_LOGW("Backend '%s' is not connected yet, entering disconnected state",
+                  channel_backend_name(&g_channel_backend));
+    } else {
+        BFLB_LOGI("Backend '%s' is connected", channel_backend_name(&g_channel_backend));
     }
 
     g_initialized = true;
-    BFLB_LOGI("BFLB WiFi initialized");
+    BFLB_LOGI("BFLB WiFi initialized (backend: %s)", channel_backend_name(&g_channel_backend));
 
     return 0;
+}
+
+int bflbwifi_init(const char *tty_dev, int baudrate)
+{
+    bflbwifi_ctrl_config_t cfg;
+
+    bflbwifi_ctrl_config_init(&cfg);
+    if (bflbwifi_ctrl_config_use_tty(&cfg, tty_dev, baudrate) != 0) {
+        return E_ERR_INVALID_PARAM;
+    }
+    return bflbwifi_init_ex(&cfg);
 }
 
 int bflbwifi_deinit(void)
 {
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     BFLB_LOGI("Deinitializing BFLB WiFi...");
 
-    /* Clean up TTY */
-    bflbwifi_tty_deinit();
+    /* Clean up channel */
+    channel_backend_deinit(&g_channel_backend);
 
     /* Clean up state manager */
     bflbwifi_state_deinit();
@@ -223,20 +338,20 @@ int bflbwifi_set_mode(bflbwifi_mode_t mode)
     char cmd[64];
     int ret;
 
-    if (!g_initialized) {
-        return E_ERR_NOT_INIT;
-    }
-
     if (mode < WIFI_MODE_IDLE || mode > WIFI_MODE_STA_AP) {
         return E_ERR_INVALID_PARAM;
     }
 
+    ret = bflbwifi_require_ctrl_backend("Set mode");
+    if (ret != 0) {
+        return ret;
+    }
+
     /* Send AT+CWMODE command and wait for OK */
     snprintf(cmd, sizeof(cmd), "AT+CWMODE=%d", mode);
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, cmd, 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Set mode failed");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Set mode");
     }
 
     /* Update status */
@@ -250,7 +365,7 @@ int bflbwifi_set_mode(bflbwifi_mode_t mode)
 int bflbwifi_get_mode(bflbwifi_mode_t *mode)
 {
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     return bflbwifi_state_get_mode(mode);
@@ -258,18 +373,24 @@ int bflbwifi_get_mode(bflbwifi_mode_t *mode)
 
 /* ========== Station Mode API ========== */
 
-int bflbwifi_sta_connect(bflbwifi_sta_config_t *config, int timeout_ms)
+int bflbwifi_sta_connect(const bflbwifi_sta_config_t *config, int timeout_ms)
 {
     char cmd[256];
     int ret;
     int default_timeout = 30000;  /* Default 30 seconds */
+    bflbwifi_sta_state_t previous_state = WIFI_STATE_IDLE;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!config) {
         return E_ERR_INVALID_PARAM;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("Station connect");
+    if (ret != 0) {
+        return ret;
     }
 
     /* Validate timeout parameter */
@@ -294,20 +415,31 @@ int bflbwifi_sta_connect(bflbwifi_sta_config_t *config, int timeout_ms)
         timeout_ms = default_timeout;
     }
 
+    ret = bflbwifi_set_mode(WIFI_MODE_STA);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = bflbwifi_set_station_dhcpc(true);
+    if (ret != 0) {
+        BFLB_LOGW("Failed to enable station DHCP client before connect: %s", bflbwifi_strerror(ret));
+    }
+
     BFLB_LOGI("Connecting to %s...", config->ssid);
+    (void)bflbwifi_state_get_sta_state(&previous_state);
+    bflbwifi_state_prepare_sta_connect();
 
     /* Construct AT+CWJAP command */
     snprintf(cmd, sizeof(cmd), "AT+CWJAP=\"%s\",\"%s\"", config->ssid, config->pwd);
 
-    /* Send command and wait for OK (5 second timeout) */
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
-    if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Send connect command failed");
-        return E_ERR_TTY_FAIL;
+    /* AT+CWJAP is asynchronous: send command first, then wait for connect URCs. */
+    ret = channel_backend_send_command(&g_channel_backend, cmd);
+    if (ret < 0) {
+        bflbwifi_state_set_sta_state(previous_state);
+        return bflbwifi_map_ctrl_error(ret, "Station connect");
     }
 
-    /* Wait for CONNECTED status (wait for +CW:CONNECTED URC) */
-    ret = bflbwifi_state_wait_sta_state(WIFI_STATE_CONNECTED, timeout_ms);
+    ret = bflbwifi_state_wait_sta_connect(timeout_ms);
     if (ret != 0) {
         BFLB_LOGE("Connect failed: %s", bflbwifi_strerror(ret));
         return ret;
@@ -315,12 +447,14 @@ int bflbwifi_sta_connect(bflbwifi_sta_config_t *config, int timeout_ms)
 
     BFLB_LOGI("Connected to %s", config->ssid);
 
-    /* Actively query connection information (SSID, BSSID, Channel, RSSI) */
-    /* Note: Since WiFi side DHCP is disabled, there will be no +CW:GOTIP event */
-    /* Need to actively query WiFi connection information */
-    ret = bflbwifi_tty_send_command_sync("AT+CWJAP?", 2000);
+    /*
+     * Refresh the cached STA snapshot after association. Some firmware builds
+     * do not emit a complete post-connect info set immediately, so we query it
+     * explicitly instead of relying only on URCs.
+     */
+    ret = channel_backend_send_command_sync(&g_channel_backend, "AT+CWJAP?", 2000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGI("Failed to query connection info");
+        BFLB_LOGW("Failed to query connection info: %s", bflbwifi_strerror(bflbwifi_map_ctrl_error(ret, "Query station info")));
     }
     /* Parser will automatically handle +CWJAP response and update status */
 
@@ -331,17 +465,17 @@ int bflbwifi_sta_disconnect(void)
 {
     int ret;
 
-    if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+    ret = bflbwifi_require_ctrl_backend("Station disconnect");
+    if (ret != 0) {
+        return ret;
     }
 
     BFLB_LOGI("Disconnecting...");
 
     /* Send AT+CWQAP command and wait for OK */
-    ret = bflbwifi_tty_send_command_sync("AT+CWQAP", 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, "AT+CWQAP", 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Disconnect failed");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Station disconnect");
     }
 
     /* Update status */
@@ -358,11 +492,16 @@ int bflbwifi_scan(bflbwifi_ap_info_t *ap_list, int max_count, int *actual_count,
     int default_timeout = 30000;  /* Default 30 seconds */
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!ap_list || max_count <= 0 || !actual_count) {
         return E_ERR_INVALID_PARAM;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("Scan");
+    if (ret != 0) {
+        return ret;
     }
 
     /* Validate timeout parameter */
@@ -382,10 +521,9 @@ int bflbwifi_scan(bflbwifi_ap_info_t *ap_list, int max_count, int *actual_count,
     bflbwifi_state_reset_scan();
 
     /* Send AT+CWLAP command and wait for OK (immediate response, 5 second timeout) */
-    ret = bflbwifi_tty_send_command_sync("AT+CWLAP", 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, "AT+CWLAP", 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Scan command failed");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Scan");
     }
 
     /* Wait for scan completion (wait for +CW:SCAN_DONE URC) */
@@ -412,17 +550,21 @@ int bflbwifi_set_station_dhcpc(bool enable)
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("Set station DHCP");
+    if (ret != 0) {
+        return ret;
     }
 
     /* Send AT+CWDHCP command and wait for OK */
     /* operate: 1=enable, 0=disable */
     /* mode: 1=Station (bit0) */
     snprintf(cmd, sizeof(cmd), "AT+CWDHCP=%d,1", enable ? 1 : 0);
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, cmd, 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Set DHCP failed");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Set station DHCP");
     }
 
     BFLB_LOGI("DHCP %s", enable ? "enabled" : "disabled");
@@ -436,19 +578,23 @@ int bflbwifi_set_static_ip(const char *ip, const char *gateway, const char *netm
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!ip || !gateway || !netmask) {
         return E_ERR_INVALID_PARAM;
     }
 
+    ret = bflbwifi_require_ctrl_backend("Set static IP");
+    if (ret != 0) {
+        return ret;
+    }
+
     /* Send AT+CIPSTA command and wait for OK */
     snprintf(cmd, sizeof(cmd), "AT+CIPSTA=\"%s\",\"%s\",\"%s\"", ip, gateway, netmask);
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, cmd, 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Set static IP failed");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Set static IP");
     }
 
     BFLB_LOGI("Static IP set: %s", ip);
@@ -459,7 +605,7 @@ int bflbwifi_set_static_ip(const char *ip, const char *gateway, const char *netm
 int bflbwifi_sta_get_state(bflbwifi_sta_state_t *state)
 {
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!state) {
@@ -469,10 +615,10 @@ int bflbwifi_sta_get_state(bflbwifi_sta_state_t *state)
     return bflbwifi_state_get_sta_state(state);
 }
 
-int bflbwifi_get_sta_connection_info(bflbwifi_sta_connection_info_t *info)
+int bflbwifi_sta_get_connection_info(bflbwifi_sta_connection_info_t *info)
 {
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!info) {
@@ -490,11 +636,16 @@ int bflbwifi_ap_config(const bflbwifi_ap_config_t *config)
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!config) {
         return E_ERR_INVALID_PARAM;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("Configure SoftAP");
+    if (ret != 0) {
+        return ret;
     }
 
     /* Send AT+CWSAP command */
@@ -502,9 +653,9 @@ int bflbwifi_ap_config(const bflbwifi_ap_config_t *config)
              config->ssid, config->pwd, config->channel,
              config->enc, config->max_conn, config->ssid_hidden ? 1 : 0);
 
-    ret = bflbwifi_tty_send_command(cmd);
+    ret = channel_backend_send_command(&g_channel_backend, cmd);
     if (ret < 0) {
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Configure SoftAP");
     }
 
     BFLB_LOGI("AP configured: %s", config->ssid);
@@ -512,18 +663,23 @@ int bflbwifi_ap_config(const bflbwifi_ap_config_t *config)
     return 0;
 }
 
-int bflbwifi_ap_start(bflbwifi_ap_config_t *config, int timeout_ms)
+int bflbwifi_ap_start(const bflbwifi_ap_config_t *config, int timeout_ms)
 {
     int ret;
     int default_timeout = 30000;  /* Default 30 seconds */
     char cmd[512];
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!config) {
         return E_ERR_INVALID_PARAM;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("Start SoftAP");
+    if (ret != 0) {
+        return ret;
     }
 
     /* Validate SSID and password length */
@@ -552,28 +708,25 @@ int bflbwifi_ap_start(bflbwifi_ap_config_t *config, int timeout_ms)
 
     /* Step 1: Set to AP mode (AT+CWMODE=2) */
     BFLB_LOGI("Step 1: Setting AP mode...");
-    ret = bflbwifi_tty_send_command_sync("AT+CWMODE=2", 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, "AT+CWMODE=2", 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Failed to set AP mode");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Start SoftAP");
     }
 
     /* Step 2: Set AP IP address (AT+CIPAP) */
     BFLB_LOGI("Step 2: Setting AP IP address...");
     snprintf(cmd, sizeof(cmd), "AT+CIPAP=\"192.168.4.1\",\"192.168.4.1\",\"255.255.255.0\"");
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, cmd, 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Failed to set AP IP address");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Start SoftAP");
     }
 
     /* Step 3: Configure DHCP server (AT+CWDHCPS) */
     BFLB_LOGI("Step 3: Configuring DHCP server...");
     snprintf(cmd, sizeof(cmd), "AT+CWDHCPS=1,3,\"192.168.4.50\",\"192.168.4.200\"");
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, cmd, 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Failed to configure DHCP server");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Start SoftAP");
     }
 
     /* Step 4: Configure SoftAP parameters (AT+CWSAP) */
@@ -587,10 +740,9 @@ int bflbwifi_ap_start(bflbwifi_ap_config_t *config, int timeout_ms)
              config->max_conn > 0 ? config->max_conn : 4,
              config->ssid_hidden ? 1 : 0);
 
-    ret = bflbwifi_tty_send_command_sync(cmd, 5000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, cmd, 5000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Failed to configure SoftAP");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Start SoftAP");
     }
 
     /* Update mode state */
@@ -612,7 +764,7 @@ int bflbwifi_ap_get_sta_list(bflbwifi_sta_info_t *sta_list, int max_count, int *
     /* TODO: Implement station list query */
     /* Need to query through AT+CWLIF command */
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!sta_list || max_count <= 0 || !actual_count) {
@@ -629,19 +781,24 @@ int bflbwifi_ap_disconnect_sta(const char *mac)
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!mac) {
         return E_ERR_INVALID_PARAM;
     }
 
+    ret = bflbwifi_require_ctrl_backend("Disconnect SoftAP station");
+    if (ret != 0) {
+        return ret;
+    }
+
     /* Send AT+CWQIF command */
     snprintf(cmd, sizeof(cmd), "AT+CWQIF=\"%s\"", mac);
 
-    ret = bflbwifi_tty_send_command(cmd);
+    ret = channel_backend_send_command(&g_channel_backend, cmd);
     if (ret < 0) {
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Disconnect SoftAP station");
     }
 
     BFLB_LOGI("Station disconnected: %s", mac);
@@ -655,19 +812,24 @@ int bflbwifi_ap_set_dhcp_range(const char *start_ip, const char *end_ip, int lea
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!start_ip || !end_ip) {
         return E_ERR_INVALID_PARAM;
     }
 
+    ret = bflbwifi_require_ctrl_backend("Set SoftAP DHCP range");
+    if (ret != 0) {
+        return ret;
+    }
+
     /* Send AT+CWDHCPS command */
     snprintf(cmd, sizeof(cmd), "AT+CWDHCPS=1,%d,\"%s\",\"%s\"", lease_min, start_ip, end_ip);
 
-    ret = bflbwifi_tty_send_command(cmd);
+    ret = channel_backend_send_command(&g_channel_backend, cmd);
     if (ret < 0) {
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Set SoftAP DHCP range");
     }
 
     BFLB_LOGI("AP DHCP range set: %s - %s", start_ip, end_ip);
@@ -682,24 +844,28 @@ int bflbwifi_get_version(char *buf, size_t len)
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!buf || len == 0) {
         return E_ERR_INVALID_PARAM;
     }
 
+    ret = bflbwifi_require_ctrl_backend("Get version");
+    if (ret != 0) {
+        return ret;
+    }
+
     BFLB_LOGI("Getting version...");
 
     /* Send AT+GMR command */
-    ret = bflbwifi_tty_send_command_sync("AT+GMR", 2000);
+    ret = channel_backend_send_command_sync(&g_channel_backend, "AT+GMR", 2000);
     if (ret != CMD_RESP_OK) {
-        BFLB_LOGE("Get version failed");
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Get version");
     }
 
     /* Get version from TTY last response buffer */
-    bflbwifi_tty_get_last_response(buf, len);
+    channel_backend_get_last_response(&g_channel_backend, buf, len);
 
     BFLB_LOGI("Version: %s", buf);
 
@@ -711,15 +877,20 @@ int bflbwifi_restart(void)
     int ret;
 
     if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+        return E_ERR_NOT_INITIALIZED;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("Restart module");
+    if (ret != 0) {
+        return ret;
     }
 
     BFLB_LOGI("Restarting module...");
 
     /* Send AT+RST command */
-    ret = bflbwifi_tty_send_command("AT+RST");
+    ret = channel_backend_send_command(&g_channel_backend, "AT+RST");
     if (ret < 0) {
-        return E_ERR_TTY_FAIL;
+        return bflbwifi_map_ctrl_error(ret, "Restart module");
     }
 
     /* Wait for module to restart */
@@ -876,6 +1047,7 @@ void bflbwifi_ota_reset(void)
  * @note This function is thread-safe and blocks during OTA
  * @note OTA must not be interrupted by other operations
  * @note Device will reboot after successful OTA
+ * @note OTA is NOT supported on Virtualchannel (returns E_ERR_NOT_SUPPORTED)
  */
 int bflbwifi_ota_upgrade(const char *filepath)
 {
@@ -889,12 +1061,29 @@ int bflbwifi_ota_upgrade(const char *filepath)
     size_t read_size;
     int ota_fd;
 
-    if (!g_initialized) {
-        return E_ERR_NOT_INIT;
+    if (!g_initialized || !channel_backend_is_valid(&g_channel_backend)) {
+        return E_ERR_NOT_INITIALIZED;
     }
 
     if (!filepath) {
         return E_ERR_INVALID_PARAM;
+    }
+
+    ret = bflbwifi_require_ctrl_backend("OTA upgrade");
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (!channel_backend_has_capability(&g_channel_backend, CHANNEL_CAP_RX_THREAD_CTL) ||
+        !channel_backend_has_capability(&g_channel_backend, CHANNEL_CAP_RAW_FD)) {
+        BFLB_LOGE("OTA is not supported on backend '%s'", channel_backend_name(&g_channel_backend));
+        return E_ERR_NOT_SUPPORTED;
+    }
+
+    /* Check if OTA is supported on this channel */
+    if (!channel_backend_supports_ota(&g_channel_backend)) {
+        BFLB_LOGE("Backend '%s' does not implement OTA prerequisites", channel_backend_name(&g_channel_backend));
+        return E_ERR_NOT_SUPPORTED;
     }
 
     /* Check if OTA already in progress */
@@ -935,13 +1124,13 @@ int bflbwifi_ota_upgrade(const char *filepath)
     g_ota_start_time = time(NULL);  /* Record start time */
 
     /* Suspend receive thread to get exclusive TTY access */
-    if (bflbwifi_tty_suspend_recv_thread() != 0) {
+    if (channel_backend_suspend_recv_thread(&g_channel_backend) != 0) {
         BFLB_LOGE("Failed to suspend receive thread");
         goto error;
     }
 
     /* Get TTY fd for direct access */
-    ota_fd = bflbwifi_tty_get_fd();
+    ota_fd = channel_backend_get_fd(&g_channel_backend);
     if (ota_fd < 0) {
         BFLB_LOGE("Invalid TTY fd");
         goto resume_error;
@@ -1034,7 +1223,7 @@ int bflbwifi_ota_upgrade(const char *filepath)
     }
 
     /* Success - resume receive thread before returning */
-    bflbwifi_tty_resume_recv_thread();
+    channel_backend_resume_recv_thread(&g_channel_backend);
     fclose(fp);
     g_ota_in_progress = false;
     g_ota_start_time = 0;
@@ -1044,7 +1233,7 @@ int bflbwifi_ota_upgrade(const char *filepath)
 
 resume_error:
     /* Resume receive thread on error */
-    bflbwifi_tty_resume_recv_thread();
+    channel_backend_resume_recv_thread(&g_channel_backend);
 
 error:
     fclose(fp);

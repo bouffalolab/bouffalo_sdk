@@ -1123,7 +1123,7 @@ typedef enum {
     STD_ROM_APITABLE[ROM_API_INDEX_GLB_UART_Sig_Swap_Set])
 
 #define RomDriver_GLB_Swap_MCU_SPI_0_MOSI_With_MISO \
-    ((BL_Err_Type (*)(BL_Fun_Type newState)) \
+    ((BL_Err_Type (*)(uint8_t enable)) \
     STD_ROM_APITABLE[ROM_API_INDEX_GLB_Swap_MCU_SPI_0_MOSI_With_MISO])
 
 #define RomDriver_GLB_Set_MCU_SPI_0_ACT_MOD_Sel \

@@ -532,10 +532,10 @@ typedef struct {
 
 
 extern iot2lp_para_t *const iot2lp_para;
-extern uint32_t __lpfw_load_addr[];     /* ld symbol */
-extern uint32_t __lpfw_share_start[];   /* ld symbol */
-extern uint32_t __lpfw_share_used[];    /* ld symbol */
-extern uint32_t __lpfw_share_end[];     /* ld symbol */
+extern uint32_t __attribute__((weak)) __lpfw_load_addr[];     /* ld symbol */
+extern uint32_t __attribute__((weak)) __lpfw_share_start__[];   /* ld symbol */
+extern uint32_t __attribute__((weak)) __lpfw_share_used[];    /* ld symbol */
+extern uint32_t __attribute__((weak)) __lpfw_share_end__[];     /* ld symbol */
 
 bl_lp_fw_info_t *bl_lpfw_bin_get_info(void);
 int bl_lpfw_bin_check(void);

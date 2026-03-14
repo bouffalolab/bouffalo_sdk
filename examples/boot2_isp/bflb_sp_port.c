@@ -87,7 +87,7 @@ void boot2_wdt_init(void)
     wdg_cfg.clock_div = TIMER_CLK_DIV;
     wdg_cfg.comp_val = 30000;
     wdg_cfg.mode = WDG_MODE_RESET;
-    boot2_wdg = bflb_device_get_by_name("watchdog0");
+    boot2_wdg = bflb_device_get_by_name(BFLB_NAME_WDT);
 
     bflb_wdg_stop(boot2_wdg);
     bflb_wdg_init(boot2_wdg, &wdg_cfg);
@@ -308,7 +308,7 @@ int32_t ATTR_TCM_SECTION bflb_sp_boot2_set_encrypt(uint8_t index, boot2_image_co
         if (len != 0) {
             aes_enabled = 1;
             if (g_boot_img_cfg->basic_cfg.xts_mode) {
-#if defined(BL616)
+#if defined(BL616) || defined(BL618DG) || defined(BL616CL)
                 bflb_sf_ctrl_disable_wrap_access(0);
                 bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_XTS_MODE);
                 bflb_sf_ctrl_aes_xts_set_key_be(index, NULL, (g_boot_img_cfg->basic_cfg.encrypt_type - 1));
@@ -320,7 +320,7 @@ int32_t ATTR_TCM_SECTION bflb_sp_boot2_set_encrypt(uint8_t index, boot2_image_co
                                        g_boot_img_cfg->basic_cfg.aes_region_lock /*lock*/);
 #endif
             } else {
-#if defined(BL616)
+#if defined(BL616) || defined(BL618DG) || defined(BL616CL)
                 bflb_sf_ctrl_disable_wrap_access(1);
                 bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_CTR_MODE);
 #endif
@@ -436,7 +436,7 @@ void bflb_sp_boot2_printf(const char *format, ...)
     va_end(arg_list);
 
     if ((g_cur_pos + pos) < BFLB_BOOT2_LOG_OUT_BUF_SIZE) {
-        memcpy(&g_log_out_buf[g_cur_pos], output, pos);
+        arch_memcpy_fast(&g_log_out_buf[g_cur_pos], output, pos);
         g_cur_pos += pos;
     }
 

@@ -55,7 +55,7 @@ int filedir_delete(char *path)
 
         memset(file_path, 0, sizeof(file_path));
 
-#if _USE_LFN
+#if FF_USE_LFN
         sprintf((char *)file_path, "%s/%s", path, (*fno.altname) ? fno.altname : fno.fname);
 #else
         sprintf((char *)file_path, "%s/%s", path, fno.fname);

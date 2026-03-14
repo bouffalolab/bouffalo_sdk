@@ -26,7 +26,6 @@ extern int wifi_mgmr_task_start(void);
 extern int fhost_init(void);
 extern int at_module_init(void);
 extern net_al_if_t fhost_to_net_if(uint8_t fhost_vif_idx);
-extern int wifi_mgmr_init(void *conf);
 extern int at_wifi_main_init(void);
 
 int wifi_mgmr_sta_mac_set(uint8_t mac[6])
@@ -91,10 +90,6 @@ static int at_wifi_event_code_get(uint32_t code)
 
 static void _wifi_fhost_event_cb(void *private_data, uint32_t code)
 {
-    static wifi_conf_t conf = {
-        .country_code = "00",
-    };
-
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             char *country_code_string[WIFI_COUNTRY_CODE_MAX] = AT_WIFI_COUNTRY_CODE;
@@ -102,7 +97,7 @@ static void _wifi_fhost_event_cb(void *private_data, uint32_t code)
             wifi_background_init(   at_wifi_config->ap_mac.addr,
                                     at_wifi_config->sta_mac.addr,
                                     at_wifi_config->wifi_country.country_code);
-            wifi_mgmr_init(&conf);
+            wifi_mgmr_init();
         }
         break;
         default: {
@@ -143,4 +138,3 @@ int at_wifi_start(void)
     at_wifi_main_init();
     return 0;
 }
-

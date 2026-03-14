@@ -6,7 +6,7 @@
 #include "bflb_sec_pka.h"
 #include "bignum_ext.h"
 
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #define MBEDTLS_PRIVATE(member) member
 #endif
 

@@ -79,7 +79,7 @@ static void _bflb_init_psram_gpio(void)
 {
     struct bflb_device_s *gpio;
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     for (uint8_t i = 0; i < 12; i++) {
         bflb_gpio_init(gpio, (41 + i), GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
     }
@@ -572,7 +572,7 @@ void hal_boot2_uart_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     bflb_gpio_uart_init(gpio, GPIO_PIN_21, GPIO_UART_FUNC_UART0_TX);
     bflb_gpio_uart_init(gpio, GPIO_PIN_22, GPIO_UART_FUNC_UART0_RX);
 }
@@ -589,7 +589,7 @@ void hal_boot2_debug_uart_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     bflb_gpio_uart_init(gpio, GPIO_PIN_21, GPIO_UART_FUNC_UART0_TX);
 }
 
@@ -837,7 +837,7 @@ void hal_boot2_get_img_info(uint8_t *data, uint32_t *image_offset, uint32_t *img
     if (hash_ignore == 1) {
         *hash = NULL;
     } else {
-        memcpy(phash, header->basic_cfg.hash, sizeof(header->basic_cfg.hash));
+        arch_memcpy_fast(phash, header->basic_cfg.hash, sizeof(header->basic_cfg.hash));
     }
 }
 

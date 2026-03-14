@@ -27,6 +27,102 @@ static int mr_virtualchan_daemon_thread(void *data);
 static int mr_virtualchan_upld_recv_cb(struct sk_buff *skb, bool success, void *arg);
 static int mr_virtualchan_dnld_send_cb(struct sk_buff *skb, bool success, void *arg);
 
+struct nethub_vchan_data_hdr {
+    uint8_t data_type;
+    uint8_t reserved;
+    uint16_t len;
+    uint8_t data[];
+} __packed;
+
+struct nethub_vchan_ctrl_msg {
+    uint32_t magic;
+    uint8_t version;
+    uint8_t msg_type;
+    uint8_t link_state;
+    uint8_t host_state;
+} __packed;
+
+#define NETHUB_VCHAN_DATA_TYPE_SYSTEM 0x03
+#define NETHUB_VCHAN_CTRL_MAGIC       0x4e485643u /* "NHVC" */
+#define NETHUB_VCHAN_CTRL_VERSION     1u
+
+#define NETHUB_VCHAN_CTRL_MSG_QUERY_LINK_STATE 1u
+#define NETHUB_VCHAN_CTRL_MSG_LINK_STATE_EVENT 2u
+
+#define NETHUB_VCHAN_LINK_DOWN 0u
+#define NETHUB_VCHAN_LINK_UP   1u
+
+static bool mr_virtualchan_link_is_up(int state)
+{
+    return state == MR_VIRTUALCHAN_HSTA_DEVICE_RUN;
+}
+
+static int mr_virtualchan_send_ctrl_event(struct mr_virtualchan_priv *priv, uint8_t msg_type)
+{
+    struct sk_buff *nl_skb;
+    struct nlmsghdr *nlh;
+    struct nethub_vchan_data_hdr *data_hdr;
+    struct nethub_vchan_ctrl_msg *ctrl_msg;
+    size_t payload_len = sizeof(*ctrl_msg);
+    size_t frame_len = sizeof(*data_hdr) + payload_len;
+    int ret;
+
+    if (!priv || !priv->nl_sock) {
+        return -EINVAL;
+    }
+
+    nl_skb = nlmsg_new(frame_len, GFP_KERNEL);
+    if (!nl_skb) {
+        VIRTUALCHAN_ERR(priv, "Failed to allocate netlink event skb\n");
+        return -ENOMEM;
+    }
+
+    nlh = nlmsg_put(nl_skb, 0, 0, NLMSG_DONE, frame_len, 0);
+    if (!nlh) {
+        kfree_skb(nl_skb);
+        return -EMSGSIZE;
+    }
+
+    data_hdr = nlmsg_data(nlh);
+    data_hdr->data_type = NETHUB_VCHAN_DATA_TYPE_SYSTEM;
+    data_hdr->reserved = 0u;
+    data_hdr->len = payload_len;
+
+    ctrl_msg = (struct nethub_vchan_ctrl_msg *)data_hdr->data;
+    ctrl_msg->magic = NETHUB_VCHAN_CTRL_MAGIC;
+    ctrl_msg->version = NETHUB_VCHAN_CTRL_VERSION;
+    ctrl_msg->msg_type = msg_type;
+    ctrl_msg->link_state = mr_virtualchan_link_is_up(priv->virtualchan_status) ?
+                           NETHUB_VCHAN_LINK_UP :
+                           NETHUB_VCHAN_LINK_DOWN;
+    ctrl_msg->host_state = (uint8_t)priv->virtualchan_status;
+
+    ret = nlmsg_multicast(priv->nl_sock, nl_skb, 0, MR_VIRTUALCHAN_MULTICAST_GROUP, GFP_KERNEL);
+    if (ret < 0 && ret != -ESRCH) {
+        VIRTUALCHAN_ERR(priv, "Failed to multicast control event: %d\n", ret);
+        return ret;
+    }
+
+    return 0;
+}
+
+static void mr_virtualchan_set_state(struct mr_virtualchan_priv *priv, int new_state)
+{
+    int old_state;
+
+    if (!priv) {
+        return;
+    }
+
+    old_state = priv->virtualchan_status;
+    priv->virtualchan_status = new_state;
+
+    if (old_state != new_state &&
+        mr_virtualchan_link_is_up(old_state) != mr_virtualchan_link_is_up(new_state)) {
+        mr_virtualchan_send_ctrl_event(priv, NETHUB_VCHAN_CTRL_MSG_LINK_STATE_EVENT);
+    }
+}
+
 /**
  * @brief Update flow control credit limit
  * @param[in] priv Virtual channel private structure
@@ -308,6 +404,8 @@ static void mr_virtualchan_recv_from_userspace(struct sk_buff *skb)
     struct nlmsghdr *nlh;
     struct sk_buff *dev_skb;
     struct mr_virtualchan_msg_pkt *virtualchan_msg_pkt;
+    struct nethub_vchan_data_hdr *data_hdr;
+    struct nethub_vchan_ctrl_msg *ctrl_msg;
     uint16_t data_len;
 
     /* Get netlink socket private data */
@@ -335,6 +433,21 @@ static void mr_virtualchan_recv_from_userspace(struct sk_buff *skb)
     if (data_len > MR_VIRTUALCHAN_MAX_DATA_LEN) {
         VIRTUALCHAN_ERR(priv, "Data too large: %u > %u\n", data_len, MR_VIRTUALCHAN_MAX_DATA_LEN);
         return;
+    }
+
+    if (data_len >= sizeof(*data_hdr) + sizeof(*ctrl_msg)) {
+        data_hdr = nlmsg_data(nlh);
+        if (data_hdr->data_type == NETHUB_VCHAN_DATA_TYPE_SYSTEM &&
+            data_hdr->len >= sizeof(*ctrl_msg) &&
+            sizeof(*data_hdr) + data_hdr->len <= data_len) {
+            ctrl_msg = (struct nethub_vchan_ctrl_msg *)data_hdr->data;
+            if (ctrl_msg->magic == NETHUB_VCHAN_CTRL_MAGIC &&
+                ctrl_msg->version == NETHUB_VCHAN_CTRL_VERSION &&
+                ctrl_msg->msg_type == NETHUB_VCHAN_CTRL_MSG_QUERY_LINK_STATE) {
+                mr_virtualchan_send_ctrl_event(priv, NETHUB_VCHAN_CTRL_MSG_LINK_STATE_EVENT);
+                return;
+            }
+        }
     }
 
     /* Check device status */
@@ -401,7 +514,7 @@ static int mr_virtualchan_received_process(struct mr_virtualchan_priv *priv)
     if (virtualchan_msg_pkt->flag == MR_VIRTUALCHAN_FLAG_DEVICE_RESET ||
         virtualchan_msg_pkt->flag == MR_VIRTUALCHAN_FLAG_DEVICE_STOP) {
         /* Transition to reset state */
-        priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_RESET;
+        mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_RESET);
         dev_kfree_skb_any(skb);
 
         VIRTUALCHAN_INFO(priv, "Received DEVICE_RESET/STOP in state %d, returning to HSTA_RESET\n", priv->virtualchan_status);
@@ -423,7 +536,7 @@ static int mr_virtualchan_received_process(struct mr_virtualchan_priv *priv)
                 priv->credit_limit_cnt = virtualchan_msg_pkt->credit_limit_cnt;
                 priv->credit_consumed_cnt = 0;
                 spin_unlock_irqrestore(&priv->credit_lock, flags);
-                priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_DEVICE_RUN;
+                mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_DEVICE_RUN);
 
                 VIRTUALCHAN_INFO(priv, "Device ready! Credit Limit=%u\n", virtualchan_msg_pkt->credit_limit_cnt);
             }
@@ -511,7 +624,7 @@ static int mr_virtualchan_transmit_process(struct mr_virtualchan_priv *priv)
         mr_virtualchan_credit_put(priv);
         skb_queue_head(&priv->transmit_skb_head, tx_skb);
 
-        priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_ERROR;
+        mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_ERROR);
 
         VIRTUALCHAN_ERR(priv, "Failed to send queued packet: %d\n", ret);
         return ret;
@@ -537,11 +650,11 @@ thread_restart:
     /* Send HOST_RESET command to initialize state machine */
     ret = mr_virtualchan_send_cmd_packet(priv, MR_VIRTUALCHAN_FLAG_HOST_RESET);
     if (ret < 0) {
-        priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_ERROR;
+        mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_ERROR);
         VIRTUALCHAN_ERR(priv, "Failed to send HOST_RESET command: %d\n", ret);
         goto exit;
     }
-    priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_RESET;
+    mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_RESET);
 
 thread_reset:
     /* Clear queues */
@@ -550,12 +663,12 @@ thread_reset:
     /* Send HOST_READY packet to indicate HOST is ready */
     ret = mr_virtualchan_send_cmd_packet(priv, MR_VIRTUALCHAN_FLAG_HOST_READY);
     if (ret < 0) {
-        priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_ERROR;
+        mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_ERROR);
         VIRTUALCHAN_ERR(priv, "Failed to send HOST_READY command: %d\n", ret);
         goto exit;
     }
     VIRTUALCHAN_INFO(priv, "Host ready, waiting for device start\n");
-    priv->virtualchan_status = MR_VIRTUALCHAN_HSTA_HOST_READY;
+    mr_virtualchan_set_state(priv, MR_VIRTUALCHAN_HSTA_HOST_READY);
 
     while (1) {
         /* Sleep and wait for wake up from various reasons */
@@ -731,4 +844,3 @@ void mr_virtualchan_deinit(struct mr_virtualchan_priv *priv)
 
     VIRTUALCHAN_INFO(NULL, "Virtualchan interface deinitialized\n");
 }
-

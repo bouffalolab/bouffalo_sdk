@@ -76,7 +76,7 @@
 #define SECTION_DATA_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); __##name##_load__ = ABSOLUTE(LOADADDR(name)); name attr:
 #define SECTION_BSS_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); name attr:
 
-#if CONFIG_LPAPP
+#ifdef CONFIG_LPAPP
 __LPFW_SIZE = 120K;
 /* Link stage feature control */
 PROVIDE( __macsw_conf_bl_wifi_ps_enable = 1 );
@@ -95,8 +95,8 @@ MEMORY
 {
 #if CONFIG_FLASH_XIP_ADDRESS
     fw_header  (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS - 0x1000, LENGTH = 4K
-    rom_header (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS,          LENGTH = 4K
-    rom (rx)          : ORIGIN = CONFIG_FLASH_XIP_ADDRESS + 0x1000, LENGTH = CONFIG_FLASH_XIP_LENGTH
+    rom_header (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS,          LENGTH = 6K
+    rom (rx)          : ORIGIN = CONFIG_FLASH_XIP_ADDRESS + 0x1800, LENGTH = CONFIG_FLASH_XIP_LENGTH
 
     ram_nocache (!rx) : ORIGIN = (RAM_ADDRESS) & 0x2FFFFFFF,        LENGTH = RAM_LENGTH
     ram  (!rx)        : ORIGIN = RAM_ADDRESS,                       LENGTH = RAM_LENGTH
@@ -141,33 +141,18 @@ SECTIONS
     {
         KEEP (*(SORT_NONE(.init)))
         KEEP (*(SORT_NONE(.vector)))
-        __dualcore_images__ = ABSOLUTE(.);
-#ifdef CPU_AP
-        LONG(__rom_end__ - __rom_start__ + 4K + 4K)
-#endif
-#ifdef CONFIG_NP_IMAGE_SIZE
-        LONG(CONFIG_NP_IMAGE_SIZE)
-#endif
-#ifdef CONFIG_LP_IMAGE_SIZE
-        LONG(CONFIG_LP_IMAGE_SIZE)
-#endif
-        LONG(0xFFFFFFFF)
 
-        *system_bl618dg*.o*(.rodata*)
-        *system_bl618dg*.o*(.srodata*)
-        *system_bl618dg*.o*(.text*)
+        . = ORIGIN(rom_header) + 512;
+        __multi_bins__ = ABSOLUTE(.);
+        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_start__ + LENGTH(fw_header) + LENGTH(rom_header))
+	__dualcore_images__ = ABSOLUTE(.) + 12;
+        LONG(0x0000504E) LONG(0x00000000) /*NP*/        LONG(0x00000000) LONG(0x00000000)
+        LONG(0x0000504C) LONG(0x00000000) /*LP*/        LONG(0x00000000) LONG(0x00000000)
+        LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
+        LONG(0x464D4F52) LONG(0x00000053) /*ROMFS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0x54524543) LONG(0x00000053) /*CERTS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)               LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)
 
-        *start_load*.o*(.rodata*)
-        *start_load*.o*(.srodata*)
-        *start_load*.o*(.text*)
-
-        *rv_pmp*.o*(.rodata*)
-        *rv_pmp*.o*(.srodata*)
-        *rv_pmp*.o*(.text*)
-
-        *rv_Sv39*.o*(.rodata*)
-        *rv_Sv39*.o*(.srodata*)
-        *rv_Sv39*.o*(.text*)
     } > rom_header
 
     .rftlv.tool ORIGIN(rom_header) + 1K:
@@ -191,6 +176,26 @@ SECTIONS
         KEEP(*(.version.*))
         _version_info_section_end = .;
     } > rom_header
+
+    .init_code :
+    {
+        *system_bl618dg*.o*(.rodata*)
+        *system_bl618dg*.o*(.srodata*)
+        *system_bl618dg*.o*(.text*)
+
+        *start_load*.o*(.rodata*)
+        *start_load*.o*(.srodata*)
+        *start_load*.o*(.text*)
+
+        *rv_pmp*.o*(.rodata*)
+        *rv_pmp*.o*(.srodata*)
+        *rv_pmp*.o*(.text*)
+
+        *rv_Sv39*.o*(.rodata*)
+        *rv_Sv39*.o*(.srodata*)
+        *rv_Sv39*.o*(.text*)
+    } > rom_header
+
     GROUP_END(rom_header)
 
     GROUP_START(ram_nocache)
@@ -376,24 +381,19 @@ SECTIONS
     } > ram_wifi AT > rom
 */
 
-#if CONFIG_LPAPP
-
-    .lpfw_share (NOLOAD) :
+#ifdef CONFIG_LPAPP
+    SECTION_BSS_PROLOGUE(lpfw_share, (NOLOAD),)
     {
-        __lpfw_share_start__ = ABSOLUTE(ADDR(.lpfw_share)); 
-        __lpfw_share_end__ = ADDR(.lpfw_share) + __LPFW_SIZE;
-
         _sshram = . ;
         *(.lpfw_share_nocache_noinit*)
         __lpfw_share_used__ = .;
-        . = (__lpfw_share_used__ < __lpfw_share_end__) ? __lpfw_share_end__ : .;
+	. = (__lpfw_share_used__ < _sshram + __LPFW_SIZE ) ? _sshram + __LPFW_SIZE : .;
     } > ram_wifi
+#endif
 
     SECTION_BSS_PROLOGUE(wifi_bss, (NOLOAD),)
     {
-#else
-    SECTION_BSS_PROLOGUE(wifi_bss, (NOLOAD),)
-    {
+#ifndef CONFIG_LPAPP
       _sshram = . ;
 #endif
 
@@ -494,7 +494,7 @@ SECTIONS
         . = ALIGN(1024);
     } > rom
 
-#if CONFIG_LPAPP
+#ifdef CONFIG_LPAPP
     SECTION_DATA_PROLOGUE(lpfw, ,)
     {
         /* For DMA Burst copy lpfw binary from flash to ram */

@@ -13,16 +13,24 @@
 #include <limits.h>
 
 #ifndef R_OK
-#define R_OK 4  /* Test for read permission */
+#define R_OK 4 /* Test for read permission */
 #endif
 
-#include "bflbwifid.h"
+#include "bflbwifi_ipc.h"
+#include "bflbwifi_command.h"
+#include "bflbwifid_paths.h"
 
 /* ========== Global Variables ========== */
 
-static char g_socket_path[128] = UNIX_SOCKET_PATH;
+static char g_socket_path[sizeof(((struct sockaddr_un *)0)->sun_path)] = BFLBWIFID_DEFAULT_SOCKET_PATH;
+static const char *g_prog_name = "bflbwifictrl";
 
 /* ========== Helper Functions ========== */
+
+#define DAEMON_CONNECT_RETRY_COUNT      20
+#define DAEMON_CONNECT_RETRY_DELAY_US   100000
+#define STATUS_REPLY_RETRY_COUNT        20
+#define STATUS_REPLY_RETRY_DELAY_US     100000
 
 static void print_usage(const char *prog_name)
 {
@@ -30,19 +38,25 @@ static void print_usage(const char *prog_name)
     fprintf(stderr, "Usage: %s [options] <command> [arguments]\n", prog_name);
     fprintf(stderr, "\n");
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -s <path>   Unix socket path (default: %s)\n", UNIX_SOCKET_PATH);
+    fprintf(stderr, "  -s <path>   Unix socket path (default: %s)\n", BFLBWIFID_DEFAULT_SOCKET_PATH);
     fprintf(stderr, "  -h          Show this help\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Commands:\n");
-    fprintf(stderr, "  connect_ap <ssid> [password]   Connect to AP (open network if no password)\n");
-    fprintf(stderr, "  disconnect                     Disconnect from AP\n");
-    fprintf(stderr, "  scan                           Scan for APs\n");
-    fprintf(stderr, "  status                         Show WiFi status\n");
-    fprintf(stderr, "  version                        Show version\n");
-    fprintf(stderr, "  reboot                         Reboot WiFi module\n");
-    fprintf(stderr, "  ota <file.bin>                 OTA firmware upgrade\n");
-    fprintf(stderr, "  start_ap <ssid> [password]     Start SoftAP\n");
-    fprintf(stderr, "  stop_ap                        Stop SoftAP\n");
+    for (size_t i = 0; i < bflbwifi_command_count(); i++) {
+        const bflbwifi_command_desc_t *command = bflbwifi_command_at(i);
+        if (!command) {
+            continue;
+        }
+
+        if (command->usage_args[0] != '\0') {
+            fprintf(stderr, "  %-28s %s\n",
+                    command->cli_name,
+                    command->summary);
+            fprintf(stderr, "    usage: %s %s %s\n", prog_name, command->cli_name, command->usage_args);
+        } else {
+            fprintf(stderr, "  %-28s %s\n", command->cli_name, command->summary);
+        }
+    }
     fprintf(stderr, "\n");
     fprintf(stderr, "Examples:\n");
     fprintf(stderr, "  %s connect_ap myssid\n", prog_name);
@@ -52,9 +66,26 @@ static void print_usage(const char *prog_name)
     fprintf(stderr, "  %s start_ap myap mypassword\n", prog_name);
 }
 
+static int set_socket_path(const char *path)
+{
+    if (!path || path[0] == '\0') {
+        fprintf(stderr, "Error: Socket path cannot be empty\n");
+        return -1;
+    }
+
+    if (strlen(path) >= sizeof(g_socket_path)) {
+        fprintf(stderr, "Error: Socket path too long: %s\n", path);
+        return -1;
+    }
+
+    memcpy(g_socket_path, path, strlen(path) + 1);
+    return 0;
+}
+
 static int connect_to_daemon(void)
 {
     int fd;
+    int last_errno = 0;
     struct sockaddr_un addr;
 
     /* Check socket path length */
@@ -63,205 +94,229 @@ static int connect_to_daemon(void)
         return -1;
     }
 
-    /* Create Unix Domain Socket */
-    fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (fd < 0) {
-        fprintf(stderr, "Error: Failed to create socket: %s\n", strerror(errno));
-        return -1;
-    }
-
-    /* Connect to daemon */
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     memcpy(addr.sun_path, g_socket_path, strlen(g_socket_path) + 1);
 
-    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        fprintf(stderr, "Error: Failed to connect to daemon: %s\n", strerror(errno));
-        fprintf(stderr, "Make sure bflbwifid is running\n");
+    for (int attempt = 0; attempt < DAEMON_CONNECT_RETRY_COUNT; attempt++) {
+        fd = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (fd < 0) {
+            fprintf(stderr, "Error: Failed to create socket: %s\n", strerror(errno));
+            return -1;
+        }
+
+        if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+            return fd;
+        }
+
+        last_errno = errno;
         close(fd);
-        return -1;
+
+        if (last_errno != ENOENT && last_errno != ECONNREFUSED) {
+            break;
+        }
+
+        usleep(DAEMON_CONNECT_RETRY_DELAY_US);
     }
 
-    return fd;
+    fprintf(stderr, "Error: Failed to connect to daemon: %s\n", strerror(last_errno));
+    fprintf(stderr, "Make sure bflbwifid is running\n");
+    return -1;
 }
 
-static int send_command_and_wait(const char *cmd, char *response, size_t response_len)
+static int send_request_and_wait(int argc, const char *const argv[], bflbwifi_ipc_response_t *response)
 {
     int fd;
-    ssize_t n;
-    size_t total = 0;
 
-    /* Connect to daemon */
     fd = connect_to_daemon();
     if (fd < 0) {
         return -1;
     }
 
-    /* Send command */
-    n = send(fd, cmd, strlen(cmd), 0);
-    if (n < 0) {
-        fprintf(stderr, "Error: Failed to send command: %s\n", strerror(errno));
+    if (bflbwifi_ipc_send_request(fd, argc, argv) != 0) {
+        fprintf(stderr, "Error: Failed to send IPC request\n");
         close(fd);
         return -1;
     }
 
-    /* Receive response */
-    while (total < response_len - 1) {
-        n = recv(fd, response + total, response_len - total - 1, 0);
-        if (n <= 0) {
-            break;
-        }
-        total += (size_t)n;
+    if (bflbwifi_ipc_recv_response(fd, response) != 0) {
+        fprintf(stderr, "Error: Failed to receive IPC response\n");
+        close(fd);
+        return -1;
+    }
 
-        /* Check if complete response is received (END marker) */
-        if (strstr(response, "\nEND\n") != NULL) {
-            break;
+    close(fd);
+    return 0;
+}
+
+static int send_request_and_wait_for_status(int argc, const char *const argv[], bflbwifi_ipc_response_t *response)
+{
+    for (int attempt = 0; attempt < STATUS_REPLY_RETRY_COUNT; attempt++) {
+        if (send_request_and_wait(argc, argv, response) == 0) {
+            if (response->payload_len > 0 && response->payload && response->payload[0] != '\0') {
+                return 0;
+            }
+            bflbwifi_ipc_response_deinit(response);
+        }
+
+        if (attempt + 1 < STATUS_REPLY_RETRY_COUNT) {
+            usleep(STATUS_REPLY_RETRY_DELAY_US);
         }
     }
 
-    response[total] = '\0';
-    close(fd);
+    return -1;
+}
 
-    return (int)total;
+static int print_response_and_return(const bflbwifi_ipc_response_t *response)
+{
+    if (!response) {
+        return -1;
+    }
+
+    if (response->payload) {
+        printf("%s", response->payload);
+    }
+
+    return (response->status == 0) ? 0 : -1;
+}
+
+static void print_command_usage(const bflbwifi_command_desc_t *command)
+{
+    if (!command) {
+        return;
+    }
+
+    if (command->usage_args[0] != '\0') {
+        fprintf(stderr, "Usage: %s %s %s\n", g_prog_name, command->cli_name, command->usage_args);
+    } else {
+        fprintf(stderr, "Usage: %s %s\n", g_prog_name, command->cli_name);
+    }
 }
 
 /* ========== Command Handler Functions ========== */
 
-static int cmd_connect_ap(int argc, char *argv[])
+static int cmd_connect_ap(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
-    char cmd[MAX_CMD_LEN];
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[BFLBWIFI_IPC_MAX_ARGS];
+    int request_argc = 0;
 
-    if (argc < 3) {
-        fprintf(stderr, "Error: Missing SSID\n");
-        fprintf(stderr, "Usage: %s connect_ap <ssid> [password]\n", argv[0]);
-        return -1;
-    }
-
-    const char *ssid = argv[2];
-    const char *password = (argc >= 4) ? argv[3] : "";
+    const char *ssid = argv[1];
+    const char *password = (argc >= 3) ? argv[2] : "";
 
     printf("Connecting to '%s'...\n", ssid);
 
-    /* Construct command */
-    snprintf(cmd, sizeof(cmd), "CONNECT_AP %s %s\n", ssid, password);
+    request_args[request_argc++] = command->ipc_name;
+    request_args[request_argc++] = ssid;
+    if (strlen(password) > 0) {
+        request_args[request_argc++] = password;
+    }
 
-    /* Send command */
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(request_argc, request_args, &response) < 0) {
         return -1;
     }
 
-    /* Parse and display response */
-    printf("%s", response);
-
-    /* Check if successful */
-    if (strncmp(response, "OK", 2) == 0) {
-        return 0;
-    } else {
-        return -1;
-    }
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_disconnect(int argc, char *argv[])
+static int cmd_disconnect(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    char cmd[] = "DISCONNECT\n";
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[] = {command->ipc_name};
 
     printf("Disconnecting...\n");
 
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(1, request_args, &response) < 0) {
         return -1;
     }
 
-    printf("%s", response);
-
-    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_scan(int argc, char *argv[])
+static int cmd_scan(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    char cmd[] = "SCAN\n";
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[] = {command->ipc_name};
 
     printf("Scanning for APs...\n");
 
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(1, request_args, &response) < 0) {
         return -1;
     }
 
-    printf("%s", response);
-
-    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_status(int argc, char *argv[])
+static int cmd_status(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    char cmd[] = "STATUS\n";
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[] = {command->ipc_name};
 
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait_for_status(1, request_args, &response) < 0) {
         return -1;
     }
 
-    printf("%s", response);
-
-    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_version(int argc, char *argv[])
+static int cmd_version(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    char cmd[] = "VERSION\n";
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[] = {command->ipc_name};
 
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(1, request_args, &response) < 0) {
         return -1;
     }
 
-    printf("%s", response);
-
-    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_reboot(int argc, char *argv[])
+static int cmd_reboot(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    char cmd[] = "REBOOT\n";
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[] = {command->ipc_name};
 
     printf("Rebooting WiFi module...\n");
 
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(1, request_args, &response) < 0) {
         return -1;
     }
 
-    printf("%s", response);
-
-    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_ota(int argc, char *argv[])
+static int cmd_ota(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
-    char cmd[MAX_CMD_LEN];
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
     char filepath_abs[PATH_MAX];
     const char *filepath;
+    const char *request_args[BFLBWIFI_IPC_MAX_ARGS];
 
-    if (argc < 3) {
-        fprintf(stderr, "Error: Missing OTA file path\n");
-        fprintf(stderr, "Usage: %s ota <ota.bin>\n", argv[0]);
-        return -1;
-    }
+    (void)argc;
 
-    filepath = argv[2];
+    filepath = argv[1];
 
     /* Convert relative path to absolute path */
     if (filepath[0] != '/') {
@@ -278,88 +333,66 @@ static int cmd_ota(int argc, char *argv[])
         return -1;
     }
 
-    /* Check command length */
-    if (strlen(filepath) + 6 > MAX_CMD_LEN) {  // "OTA " + filepath + "\n"
+    if (strlen(filepath) + 1 > MAX_BUFFER_SIZE) {
         fprintf(stderr, "Error: File path too long\n");
         return -1;
     }
 
     printf("Starting OTA upgrade: %s\n", filepath);
 
-    /* Construct command */
-    snprintf(cmd, sizeof(cmd), "OTA %s\n", filepath);
-
-    /* Send command */
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    request_args[0] = command->ipc_name;
+    request_args[1] = filepath;
+    if (send_request_and_wait(2, request_args, &response) < 0) {
         return -1;
     }
 
-    /* Parse and display response */
-    printf("%s", response);
-
-    /* Check if successful */
-    if (strncmp(response, "OK", 2) == 0) {
-        return 0;
-    } else {
-        return -1;
-    }
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_start_ap(int argc, char *argv[])
+static int cmd_start_ap(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
-    char cmd[MAX_CMD_LEN];
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[BFLBWIFI_IPC_MAX_ARGS];
+    int request_argc = 0;
 
-    if (argc < 3) {
-        fprintf(stderr, "Error: Missing SSID\n");
-        fprintf(stderr, "Usage: %s start_ap <ssid> [password]\n", argv[0]);
-        return -1;
-    }
-
-    const char *ssid = argv[2];
-    const char *password = (argc >= 4) ? argv[3] : "";
+    const char *ssid = argv[1];
+    const char *password = (argc >= 3) ? argv[2] : "";
 
     printf("Starting SoftAP '%s'...\n", ssid);
 
-    /* Construct command */
+    request_args[request_argc++] = command->ipc_name;
+    request_args[request_argc++] = ssid;
     if (strlen(password) > 0) {
-        snprintf(cmd, sizeof(cmd), "START_AP %s %s\n", ssid, password);
-    } else {
-        snprintf(cmd, sizeof(cmd), "START_AP %s\n", ssid);
+        request_args[request_argc++] = password;
     }
 
-    /* Send command */
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(request_argc, request_args, &response) < 0) {
         return -1;
     }
 
-    /* Parse and display response */
-    printf("%s", response);
-
-    /* Check if successful */
-    if (strncmp(response, "OK", 2) == 0) {
-        return 0;
-    } else {
-        return -1;
-    }
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
-static int cmd_stop_ap(int argc, char *argv[])
+static int cmd_stop_ap(const bflbwifi_command_desc_t *command, int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    char cmd[] = "STOP_AP\n";
-    char response[MAX_RESPONSE_LEN];
+    bflbwifi_ipc_response_t response;
+    const char *request_args[] = {command->ipc_name};
 
     printf("Stopping SoftAP...\n");
 
-    if (send_command_and_wait(cmd, response, sizeof(response)) < 0) {
+    if (send_request_and_wait(1, request_args, &response) < 0) {
         return -1;
     }
 
-    printf("%s", response);
-
-    return (strncmp(response, "OK", 2) == 0) ? 0 : -1;
+    int ret = print_response_and_return(&response);
+    bflbwifi_ipc_response_deinit(&response);
+    return ret;
 }
 
 /* ========== Main Function ========== */
@@ -368,12 +401,19 @@ int main(int argc, char *argv[])
 {
     int ret;
     int opt;
+    int cmd_argc;
+    char **cmd_argv;
+    const bflbwifi_command_desc_t *command_desc;
+
+    g_prog_name = argv[0];
 
     /* Parse options */
     while ((opt = getopt(argc, argv, "s:h")) != -1) {
         switch (opt) {
             case 's':
-                strncpy(g_socket_path, optarg, sizeof(g_socket_path) - 1);
+                if (set_socket_path(optarg) != 0) {
+                    return 1;
+                }
                 break;
             case 'h':
                 print_usage(argv[0]);
@@ -392,39 +432,53 @@ int main(int argc, char *argv[])
     }
 
     /* Execute command */
-    const char *command = argv[optind];
+    cmd_argc = argc - optind;
+    cmd_argv = &argv[optind];
 
-    if (strcmp(command, "connect_ap") == 0) {
-        ret = cmd_connect_ap(argc, argv);
-    }
-    else if (strcmp(command, "disconnect") == 0) {
-        ret = cmd_disconnect(argc, argv);
-    }
-    else if (strcmp(command, "scan") == 0) {
-        ret = cmd_scan(argc, argv);
-    }
-    else if (strcmp(command, "status") == 0) {
-        ret = cmd_status(argc, argv);
-    }
-    else if (strcmp(command, "version") == 0) {
-        ret = cmd_version(argc, argv);
-    }
-    else if (strcmp(command, "reboot") == 0) {
-        ret = cmd_reboot(argc, argv);
-    }
-    else if (strcmp(command, "ota") == 0) {
-        ret = cmd_ota(argc, argv);
-    }
-    else if (strcmp(command, "start_ap") == 0) {
-        ret = cmd_start_ap(argc, argv);
-    }
-    else if (strcmp(command, "stop_ap") == 0) {
-        ret = cmd_stop_ap(argc, argv);
-    }
-    else {
-        fprintf(stderr, "Error: Unknown command: %s\n\n", command);
-        print_usage(argv[0]);
+    command_desc = bflbwifi_command_find_cli(cmd_argv[0]);
+    if (!command_desc) {
+        fprintf(stderr, "Error: Unknown command: %s\n\n", cmd_argv[0]);
+        print_usage(g_prog_name);
         return 1;
+    }
+
+    if (bflbwifi_command_validate_argc(command_desc, cmd_argc - 1) != 0) {
+        fprintf(stderr, "Error: Invalid arguments for command '%s'\n", command_desc->cli_name);
+        print_command_usage(command_desc);
+        return 1;
+    }
+
+    switch (command_desc->id) {
+        case BFLBWIFI_COMMAND_CONNECT_AP:
+            ret = cmd_connect_ap(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_DISCONNECT:
+            ret = cmd_disconnect(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_SCAN:
+            ret = cmd_scan(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_STATUS:
+            ret = cmd_status(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_VERSION:
+            ret = cmd_version(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_REBOOT:
+            ret = cmd_reboot(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_OTA:
+            ret = cmd_ota(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_START_AP:
+            ret = cmd_start_ap(command_desc, cmd_argc, cmd_argv);
+            break;
+        case BFLBWIFI_COMMAND_STOP_AP:
+            ret = cmd_stop_ap(command_desc, cmd_argc, cmd_argv);
+            break;
+        default:
+            fprintf(stderr, "Error: Unsupported command id: %d\n", command_desc->id);
+            return 1;
     }
 
     return (ret == 0) ? EXIT_SUCCESS : EXIT_FAILURE;

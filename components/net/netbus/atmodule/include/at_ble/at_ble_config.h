@@ -89,6 +89,7 @@ typedef struct {
     ble_adv_data adv_data;
     ble_scan_rsp_data scan_rsp_data;
     int ble_sec_param;
+    int ble_sec_lvl;
 #if defined(CONFIG_BT_BAS_SERVER)
     int ble_bas_init;
 #endif

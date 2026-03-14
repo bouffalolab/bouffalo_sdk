@@ -33,6 +33,20 @@ extern "C" {
 
 LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_spinbox_class;
 
+#if LV_USE_OBJ_PROPERTY
+enum _lv_property_spinbox_id_t {
+    LV_PROPERTY_ID(SPINBOX, VALUE,                LV_PROPERTY_TYPE_INT, 0),
+    LV_PROPERTY_ID(SPINBOX, ROLLOVER,             LV_PROPERTY_TYPE_BOOL, 1),
+    LV_PROPERTY_ID(SPINBOX, DIGIT_COUNT,          LV_PROPERTY_TYPE_INT, 2),
+    LV_PROPERTY_ID(SPINBOX, DEC_POINT_POS,        LV_PROPERTY_TYPE_INT, 3),
+    LV_PROPERTY_ID(SPINBOX, STEP,                 LV_PROPERTY_TYPE_INT, 4),
+    LV_PROPERTY_ID(SPINBOX, MIN_VALUE,            LV_PROPERTY_TYPE_INT, 5),
+    LV_PROPERTY_ID(SPINBOX, MAX_VALUE,            LV_PROPERTY_TYPE_INT, 6),
+    LV_PROPERTY_ID(SPINBOX, DIGIT_STEP_DIRECTION, LV_PROPERTY_TYPE_INT, 7),
+    LV_PROPERTY_SPINBOX_END,
+};
+#endif
+
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
@@ -72,6 +86,20 @@ void lv_spinbox_set_rollover(lv_obj_t * obj, bool rollover);
 void lv_spinbox_set_digit_format(lv_obj_t * obj, uint32_t digit_count, uint32_t sep_pos);
 
 /**
+ * Set the number of digits
+ * @param obj           pointer to spinbox
+ * @param digit_count   number of digits
+ */
+void lv_spinbox_set_digit_count(lv_obj_t * obj, uint32_t digit_count);
+
+/**
+ * Set the position of the decimal point
+ * @param obj           pointer to spinbox
+ * @param dec_point_pos 0: there is no separator, 2: two integer digits
+ */
+void lv_spinbox_set_dec_point_pos(lv_obj_t * obj, uint32_t dec_point_pos);
+
+/**
  * Set spinbox step
  * @param obj   pointer to spinbox
  * @param step  steps on increment/decrement. Can be 1, 10, 100, 1000, etc the digit that will change.
@@ -81,10 +109,24 @@ void lv_spinbox_set_step(lv_obj_t * obj, uint32_t step);
 /**
  * Set spinbox value range
  * @param obj       pointer to spinbox
- * @param range_min maximum value, inclusive
- * @param range_max minimum value, inclusive
+ * @param min_value minimum value, inclusive
+ * @param max_value maximum value, inclusive
  */
-void lv_spinbox_set_range(lv_obj_t * obj, int32_t range_min, int32_t range_max);
+void lv_spinbox_set_range(lv_obj_t * obj, int32_t min_value, int32_t max_value);
+
+/**
+ * Set the minimum value
+ * @param obj       pointer to spinbox
+ * @param min_value the minimum value
+ */
+void lv_spinbox_set_min_value(lv_obj_t * obj, int32_t min_value);
+
+/**
+ * Set the maximum value
+ * @param obj       pointer to spinbox
+ * @param max_value the maximum value
+ */
+void lv_spinbox_set_max_value(lv_obj_t * obj, int32_t max_value);
 
 /**
  * Set cursor position to a specific digit for edition
@@ -124,6 +166,41 @@ int32_t lv_spinbox_get_value(lv_obj_t * obj);
  */
 int32_t lv_spinbox_get_step(lv_obj_t * obj);
 
+/**
+ * Get the spinbox digit count
+ * @param obj   pointer to spinbox
+ * @return      number of digits
+ */
+uint32_t lv_spinbox_get_digit_count(lv_obj_t * obj);
+
+/**
+ * Get the decimal point position
+ * @param obj   pointer to spinbox
+ * @return      decimal point position
+ */
+uint32_t lv_spinbox_get_dec_point_pos(lv_obj_t * obj);
+
+/**
+ * Get the spinbox minimum value
+ * @param obj   pointer to spinbox
+ * @return      minimum value
+ */
+int32_t lv_spinbox_get_min_value(lv_obj_t * obj);
+
+/**
+ * Get the spinbox maximum value
+ * @param obj   pointer to spinbox
+ * @return      maximum value
+ */
+int32_t lv_spinbox_get_max_value(lv_obj_t * obj);
+
+/**
+ * Get the digit step direction
+ * @param obj   pointer to spinbox
+ * @return      direction (LV_DIR_RIGHT or LV_DIR_LEFT)
+ */
+lv_dir_t lv_spinbox_get_digit_step_direction(lv_obj_t * obj);
+
 /*=====================
  * Other functions
  *====================*/
@@ -151,6 +228,18 @@ void lv_spinbox_increment(lv_obj_t * obj);
  * @param obj   pointer to spinbox
  */
 void lv_spinbox_decrement(lv_obj_t * obj);
+
+
+
+#if LV_USE_OBSERVER
+/**
+ * Bind an integer subject to a Spinbox's value.
+ * @param obj       pointer to Spinbox
+ * @param subject   pointer to Subject
+ * @return          pointer to newly-created Observer
+ */
+lv_observer_t * lv_spinbox_bind_value(lv_obj_t * obj, lv_subject_t * subject);
+#endif
 
 /**********************
  *      MACROS

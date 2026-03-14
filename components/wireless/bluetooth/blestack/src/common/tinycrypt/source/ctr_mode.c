@@ -30,9 +30,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "constants.h"
-#include "ctr_mode.h"
-#include "utils.h"
+#include "tinycrypt/constants.h"
+#include "tinycrypt/ctr_mode.h"
+#include "tinycrypt/utils.h"
 
 int tc_ctr_mode(uint8_t *out, unsigned int outlen, const uint8_t *in,
 		unsigned int inlen, uint8_t *ctr, const TCAesKeySched_t sched)

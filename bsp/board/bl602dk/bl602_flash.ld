@@ -47,6 +47,14 @@ SECTIONS
         KEEP (*(SORT_NONE(.init)))
         KEEP (*(SORT_NONE(.vector)))
 
+	. = ORIGIN(xip_memory) + 512;
+        __multi_bins__ = ABSOLUTE(.);
+        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(4K)         LONG(4K)
+        LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
+        LONG(0x464D4F52) LONG(0x00000053) /*ROMFS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0x54524543) LONG(0x00000053) /*CERTS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)               LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)
+
     } > xip_memory
 
     /* value for rftlv */

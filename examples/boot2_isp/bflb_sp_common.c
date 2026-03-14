@@ -177,14 +177,16 @@ void ATTR_TCM_SECTION bflb_sp_boot2_jump_entry(void)
     uint32_t encrypt_region = 0;
     /* Set decryption before read MSP and PC*/
     if (0 != g_efuse_cfg.encrypted[0]) {
-#if defined(BL616)
+#if defined(BL616) || defined(BL618DG) || defined(BL616CL)
         if (g_efuse_cfg.app_encrypt_type > HAL_APP_ENCRYPT_SAME_AS_BOOT2){
             encrypt_region++;
         }
 #endif
         bflb_sp_boot2_set_encrypt(encrypt_region, &g_boot_img_cfg[0]);
-        encrypt_region++;
-        bflb_sp_boot2_set_encrypt(encrypt_region, &g_boot_img_cfg[1]);
+        if (BFLB_SP_BOOT2_CPU_GROUP_MAX > 1) {
+            encrypt_region++;
+            bflb_sp_boot2_set_encrypt(encrypt_region, &g_boot_img_cfg[1]);
+        }
 
 #if BFLB_SP_BOOT2_CPU_MAX > 1
         if (hal_boot2_get_feature_flag() == HAL_BOOT2_CP_FLAG) {

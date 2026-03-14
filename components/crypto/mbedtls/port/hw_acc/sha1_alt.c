@@ -35,14 +35,14 @@
 #include "mbedtls/platform.h"
 #include "sec_mutex.h"
 
-#ifdef CONFIG_MBEDTLS_V3
-#define SHA1_VALIDATE_RET(cond)
-#define SHA1_VALIDATE(cond)
-#else
+#ifdef CONFIG_MBEDTLS_V2
 #define SHA1_VALIDATE_RET(cond)                             \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
 
 #define SHA1_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+#else
+#define SHA1_VALIDATE_RET(cond)
+#define SHA1_VALIDATE(cond)
 #endif
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha1_link_ctx_s link_ctx_temp;
@@ -100,15 +100,15 @@ int mbedtls_sha1_starts_ret( mbedtls_sha1_context *ctx )
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
-{
-    return mbedtls_sha1_starts_ret( ctx );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
 {
     mbedtls_sha1_starts_ret( ctx );
+}
+#else
+int mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
+{
+    return mbedtls_sha1_starts_ret( ctx );
 }
 #endif
 #endif
@@ -137,19 +137,19 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha1_update( mbedtls_sha1_context *ctx,
-                          const unsigned char *input,
-                          size_t ilen )
-{
-    return mbedtls_sha1_update_ret( ctx, input, ilen );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha1_update( mbedtls_sha1_context *ctx,
                           const unsigned char *input,
                           size_t ilen )
 {
     mbedtls_sha1_update_ret( ctx, input, ilen );
+}
+#else
+int mbedtls_sha1_update( mbedtls_sha1_context *ctx,
+                          const unsigned char *input,
+                          size_t ilen )
+{
+    return mbedtls_sha1_update_ret( ctx, input, ilen );
 }
 #endif
 #endif
@@ -173,17 +173,17 @@ int mbedtls_sha1_finish_ret( mbedtls_sha1_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha1_finish( mbedtls_sha1_context *ctx,
-                          unsigned char output[20] )
-{
-    return mbedtls_sha1_finish_ret( ctx, output );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha1_finish( mbedtls_sha1_context *ctx,
                           unsigned char output[20] )
 {
     mbedtls_sha1_finish_ret( ctx, output );
+}
+#else
+int mbedtls_sha1_finish( mbedtls_sha1_context *ctx,
+                          unsigned char output[20] )
+{
+    return mbedtls_sha1_finish_ret( ctx, output );
 }
 #endif
 #endif
@@ -203,12 +203,26 @@ void mbedtls_sha1_once_padded_init( void )
 int mbedtls_sha1_once_padded(const unsigned char *input, unsigned char *output, unsigned char nblock)
 {
     struct bflb_device_s *sha;
+    const uint8_t *input_nc;
+
+    SHA1_VALIDATE_RET( input != NULL );
+    SHA1_VALIDATE_RET( output != NULL );
+
+    if (nblock == 0) {
+        return 0;
+    }
+
+    /* SEC SHA one-shot path requires aligned input for direct memory fetch. */
+    if (!bflb_check_cache_addr_aligned((uintptr_t)input)) {
+        return MBEDTLS_ERR_SHA1_BAD_INPUT_DATA;
+    }
 
     sha = bflb_device_get_by_name(BFLB_NAME_SEC_SHA);
 
     bflb_l1c_dcache_clean_range((void *)input, nblock * 64);
+    input_nc = (const uint8_t *)bflb_get_no_cache_addr(input);
     bflb_sec_sha_mutex_take();
-    bflb_sha1_once_padded(sha, (uint8_t *)(((uint32_t)input & ~0xF0000000UL) | 0x20000000UL), output, nblock);
+    bflb_sha1_once_padded(sha, (uint8_t *)input_nc, output, nblock);
     bflb_sec_sha_mutex_give();
 
     return( 0 );

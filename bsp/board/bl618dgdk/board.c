@@ -486,7 +486,7 @@ void boot_up_np()
         return;
     }
     extern uint32_t __dualcore_images__;
-    uint32_t image_ap_1Kalign_size = *(uint32_t *)(&__dualcore_images__);
+    uint32_t image_ap_1Kalign_size = *(uint32_t *)(&__dualcore_images__) + 0x1000;
     boot_addr += image_ap_1Kalign_size + 0x1000; // FW0 header size is 0x1000
 
     printf("NP bootaddr get success 0x%08x\r\n", boot_addr);

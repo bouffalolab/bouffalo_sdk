@@ -1,222 +1,187 @@
-# NetHub VirtualChannel
+# NetHub Virtual Channel Guide
 
-NetHub Virtual Channel - High-efficiency data transmission between userspace and kernelspace based on Netlink mechanism.
+## 1. Overview
 
-## Features
+NetHub Virtual Channel is a logical message channel carried on the active host link.
 
-- **Multiple Data Types**: Support for USER, AT, and SYSTEM data channels
-- **Message Packet Transmission**: Transmits in message packets, receiving complete packets at the bottom layer (non-stream)
-- **Maximum Data Length**: Maximum 1500 bytes per transmission
-- **Callback Mechanism**: Support for registering data receive callbacks
-- **Userspace API**: Simple C language interface
+It is not a separate physical interface. It reuses the current `SDIO / USB / SPI`
+transport and multiplexes different payload types into different logical channels.
 
-## Data Types
+The relevant channel types are:
+
+- `USER`
+  - private application data
+- `AT`
+  - host control-plane payload
+- `SYSTEM`
+  - internal coordination
+
+For customer integrations, the main concern is usually the `USER` channel.
+
+## 2. Data Types
 
 | Type | Value | Usage |
-|------|-------|-------|
-| USER | 0x01 | User private data |
-| AT | 0x02 | WiFi related data/AT commands |
-| SYSTEM | 0x03 | System related data |
+| --- | --- | --- |
+| USER | `0x01` | private user payload |
+| AT | `0x02` | AT / control payload |
+| SYSTEM | `0x03` | internal system payload |
 
-## Quick Start
+## 3. Prerequisites
 
-### Build
+Before using the host-side USER virtual channel, ensure that:
+
+1. device is built with:
+   - `CONFIG_NETHUB=y`
+   - `CONFIG_MR_VIRTUALCHAN=y`
+2. host has loaded `mr_sdio.ko`
+3. the underlying host-device link is already working
+
+Notes:
+
+- USER and AT are parallel logical channels
+- if host control already runs over `vchan`, it uses the `AT` type
+- customer private traffic should use the `USER` type
+
+## 4. Build
+
+### 4.1 Build from the host top-level entry
+
+Recommended:
 
 ```bash
-cd virtualchan/
+cd bsp/common/msg_router/linux_host/userspace/nethub
+./build.sh build
+```
+
+Artifacts include:
+
+- `output/libnethub_vchan.a`
+- `output/nethub_vchan_app`
+
+### 4.2 Build virtualchan only
+
+```bash
+cd bsp/common/msg_router/linux_host/userspace/nethub/virtualchan
 make
 ```
 
-Build artifact: `nethub_vchan_app`
+## 5. Host Public API
 
-### Run Test Program
+Header:
 
-```bash
-# Requires kernel module mr_sdio.ko to be loaded
-sudo ./nethub_vchan_app
-```
+- `bsp/common/msg_router/linux_host/userspace/nethub/virtualchan/nethub_vchan.h`
 
-### Command Reference
-
-The test program supports the following commands:
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `send <type> <data>` | Send data | `send user hello` |
-| `test mtu` | MTU test | `test mtu` |
-| `status` | View status | `status` |
-| `help` | Display help | `help` |
-| `quit/exit` | Exit program | `quit` |
-
-**Data Type Parameters**:
-- `user` - USER type data
-- `at` - AT type data
-- `system` - SYSTEM type data
-
-### Usage Examples
-
-```bash
-# Send USER type data
-nethub_vchan> send user test_message_123
-
-# View status
-nethub_vchan> status
-Virtual Channel Status: Active
-USER callback: registered
-AT callback: not registered
-SYSTEM callback: not registered
-
-# MTU test
-nethub_vchan> test mtu
-Testing maximum transfer unit...
-MTU test completed: max size=1500 bytes
-```
-
-## API Interface
-
-### Initialization and Cleanup
+### 5.1 Init and deinit
 
 ```c
-/* Initialize virtual channel */
 int nethub_vchan_init(void);
-
-/* Clean up virtual channel */
 int nethub_vchan_deinit(void);
 ```
 
-### Data Sending
+### 5.2 USER channel
 
 ```c
-/* Send data (generic interface) */
-int nethub_vchan_send(uint8_t type, const void *data, size_t len);
-
-/* Send USER type data (convenience interface) */
-int nethub_vchan_user_send(const void *data, size_t len);
-
-/* Send AT type data (convenience interface) */
-int nethub_vchan_at_send(const void *data, size_t len);
-```
-
-### Callback Registration
-
-```c
-/* Receive callback function type */
 typedef void (*nethub_vchan_recv_callback_t)(const void *data, size_t len);
 
-/* Register data receive callback (generic interface) */
-int nethub_vchan_register_callback(uint8_t data_type,
-                                    nethub_vchan_recv_callback_t callback);
-
-/* Register USER type callback (convenience interface) */
+int nethub_vchan_user_send(const void *data, size_t len);
 int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
-
-/* Register AT type callback (convenience interface) */
-int nethub_vchan_at_register_callback(nethub_vchan_recv_callback_t callback);
-
-/* Unregister callback */
-int nethub_vchan_unregister_callback(uint8_t data_type);
 ```
 
-### Code Example
+### 5.3 Optional state query
+
+If the application needs to know whether virtual channel is ready, it can use:
 
 ```c
+typedef struct {
+    nethub_vchan_link_state_t link_state;
+    nethub_vchan_host_state_t host_state;
+} nethub_vchan_state_snapshot_t;
+
+int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
+```
+
+Typical checks:
+
+- `link_state == NETHUB_VCHAN_LINK_UP`
+  - link is ready for data transfer
+- `host_state == NETHUB_VCHAN_HOST_STATE_DEVICE_RUN`
+  - host-side state machine has completed handshake with device
+
+### 5.4 Optional link event callback
+
+If the application needs asynchronous notification when the link goes up or down,
+it can register:
+
+```c
+int nethub_vchan_register_link_event_callback(
+    nethub_vchan_link_event_callback_t callback,
+    void *user_data);
+```
+
+For most customer integrations, the minimal flow is still:
+
+- `nethub_vchan_init()`
+- `nethub_vchan_user_register_callback()`
+- `nethub_vchan_user_send()`
+- `nethub_vchan_deinit()`
+
+State snapshot and link event callback are only needed when the application
+wants stricter readiness checks or passive link-state tracking.
+
+## 6. Typical Usage
+
+Typical flow:
+
+1. `nethub_vchan_init()`
+2. `nethub_vchan_user_register_callback()`
+3. `nethub_vchan_user_send()`
+4. `nethub_vchan_deinit()`
+
+Example:
+
+```c
+#include <stdio.h>
+#include <string.h>
+
 #include "nethub_vchan.h"
 
-/* Data receive callback function */
-void user_data_callback(const void *data, size_t len)
+static void user_rx_cb(const void *data, size_t len)
 {
-    printf("Received USER data: %.*s\n", (int)len, (char *)data);
+    printf("recv USER data: %.*s\n", (int)len, (const char *)data);
 }
 
 int main(void)
 {
-    /* Initialize virtual channel */
+    const char *msg = "hello from host";
+
     if (nethub_vchan_init() != 0) {
-        fprintf(stderr, "Failed to initialize virtual channel\n");
         return -1;
     }
 
-    /* Register USER data receive callback */
-    nethub_vchan_user_register_callback(user_data_callback);
-
-    /* Send USER data */
-    const char *msg = "Hello from userspace!";
+    nethub_vchan_user_register_callback(user_rx_cb);
     nethub_vchan_user_send(msg, strlen(msg));
 
-    /* Wait for data... */
-    sleep(1);
-
-    /* Cleanup */
     nethub_vchan_deinit();
     return 0;
 }
 ```
 
-## Build Options
+## 7. Test Utility
 
-### Enable Readline Support
+`nethub_vchan_app` is an optional debug tool. It is not required for customer
+integration of the USER channel.
 
-If the readline library is installed on the system, command auto-completion and history features can be enabled:
-
-```bash
-make HAVE_READLINE=1
-```
-
-Install readline:
-```bash
-# Ubuntu/Debian
-sudo apt-get install libreadline-dev
-
-# CentOS/RHEL
-sudo yum install readline-devel
-```
-
-### Clean Build Artifacts
+If a quick link check is needed:
 
 ```bash
-make clean
+cd bsp/common/msg_router/linux_host/userspace/nethub/virtualchan
+sudo ./nethub_vchan_app
 ```
 
-## Directory Structure
+## 8. Limits and Notes
 
-```
-virtualchan/
-├── nethub_vchan.h          # Virtual channel header file (API interface)
-├── nethub_vchan.c          # Virtual channel core implementation
-├── nethub_vchan_app.c      # Test application
-├── Makefile                # Build configuration
-└── README_CN.md            # Chinese version of this document
-```
-
-## Error Codes
-
-| Error Code | Macro Definition | Description |
-|------------|------------------|-------------|
-| 0 | NETHUB_VCHAN_OK | Success |
-| -1 | NETHUB_VCHAN_ERROR | Generic error |
-| -2 | NETHUB_VCHAN_ERROR_INIT | Initialization failed |
-| -3 | NETHUB_VCHAN_ERROR_NOT_INIT | Not initialized |
-| -4 | NETHUB_VCHAN_ERROR_PARAM | Invalid parameter |
-| -5 | NETHUB_VCHAN_ERROR_BUSY | Busy state |
-| -6 | NETHUB_VCHAN_ERROR_NOMEM | Out of memory |
-| -7 | NETHUB_VCHAN_ERROR_IO | IO error |
-
-## Dependencies
-
-- **Kernel Module**: Requires `mr_sdio.ko` kernel driver to be loaded
-- **System Libraries**:
-  - Standard: libc, pthread
-  - Optional: libreadline (for enhanced command-line interface)
-
-## Limitations and Notes
-
-1. **Data Length Limit**: Maximum 1500 bytes per transmission
-2. **Root Privilege Required**: Netlink communication requires privileged user
-3. **Depends on Kernel Module**: Must load `mr_sdio.ko` first
-4. **Message Packet Integrity**: Guarantees packet-based reception without half-packets or sticky packets
-
-## Application Scenarios
-
-- **Private Data Channel**: User-defined data transmission
-- **AT Command Channel**: WiFi configuration and control
-- **System Message Channel**: Information exchange between kernelspace and userspace
+1. Maximum payload length per message is `1500` bytes.
+2. USER channel is packet-oriented, not a byte stream.
+3. The kernel module must be loaded before use.
+4. If device does not enable `CONFIG_MR_VIRTUALCHAN`, the host USER channel will not work.
+5. If host control-plane and USER traffic coexist, keep customer private traffic on `USER` and do not reuse the `AT` type.

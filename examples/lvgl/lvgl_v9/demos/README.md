@@ -11,19 +11,19 @@
  * DEMO USAGE
  ====================*/
 
-/*Show some widget. It might be required to increase `LV_MEM_SIZE` */
+/* Show some widget. It might be required to increase `LV_MEM_SIZE` */
 #define LV_USE_DEMO_WIDGETS        0
 
-/*Demonstrate the usage of encoder and keyboard*/
+/* Demonstrate the usage of encoder and keyboard */
 #define LV_USE_DEMO_KEYPAD_AND_ENCODER     0
 
-/*Benchmark your system*/
+/* Benchmark your system */
 #define LV_USE_DEMO_BENCHMARK   0
 
-/*Stress test for LVGL*/
+/* Stress test for LVGL */
 #define LV_USE_DEMO_STRESS      0
 
-/*Music player demo*/
+/* Music player demo */
 #define LV_USE_DEMO_MUSIC       0
 #if LV_USE_DEMO_MUSIC
 # define LV_DEMO_MUSIC_SQUARE       0
@@ -33,17 +33,12 @@
 # define LV_DEMO_MUSIC_AUTO_PLAY    0
 #endif
 
-/*Flex layout demo*/
+/* Flex layout demo */
 #define LV_USE_DEMO_FLEX_LAYOUT     0
 
-/*Smart-phone like multi-language demo*/
+/* Smart-phone like multi-language demo */
 #define LV_USE_DEMO_MULTILANG       0
 
-/*Widget transformation demo*/
-#define LV_USE_DEMO_TRANSFORM       0
-
-/*Demonstrate scroll settings*/
-#define LV_USE_DEMO_SCROLL          0
 ...
 ```
 
@@ -99,7 +94,8 @@ int main(int argc, char ** argv)
 
   while (1) {
     uint32_t delay = lv_timer_handler();
-    if (delay < 1) delay = 1;
+    if (delay < 1) delay = 1; /*delay for at least 1 ms*/
+    else if(delay == LV_NO_TIMER_READY) delay = LV_DEF_REFR_PERIOD; /*handle LV_NO_TIMER_READY. Another option is to `sleep` for longer*/
     usleep(delay * 1000);
   }
 

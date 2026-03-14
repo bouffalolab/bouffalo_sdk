@@ -6,11 +6,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
 #include "../include/bflbwifi_log.h"
 #include "../include/bflbwifi_netif.h"
+
+#define BFLBWIFI_NETIF_DEFAULT_ROUTE_METRIC 700
+
+static int parse_ipv4_addr(const char *addr, uint32_t *value)
+{
+    unsigned int parts[4];
+    int count;
+
+    if (!addr || !value) {
+        return -1;
+    }
+
+    count = sscanf(addr, "%u.%u.%u.%u", &parts[0], &parts[1], &parts[2], &parts[3]);
+    if (count != 4) {
+        return -1;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (parts[i] > 255) {
+            return -1;
+        }
+    }
+
+    *value = ((uint32_t)parts[0] << 24) |
+             ((uint32_t)parts[1] << 16) |
+             ((uint32_t)parts[2] << 8) |
+             (uint32_t)parts[3];
+    return 0;
+}
 
 /**
  * @brief 验证子网掩码是否有效
@@ -19,40 +49,25 @@
  */
 static int is_valid_mask(const char *mask)
 {
-    unsigned int parts[4];
-    int count;
-    unsigned int m;
+    uint32_t m;
+    uint32_t inverted;
 
     if (!mask) {
         BFLB_LOGE("子网掩码验证失败：mask 为 NULL");
         return 0;
     }
 
-    /* 解析子网掩码的 4 个部分 */
-    count = sscanf(mask, "%u.%u.%u.%u", &parts[0], &parts[1], &parts[2], &parts[3]);
-    if (count != 4) {
-        BFLB_LOGE("子网掩码解析失败：%s (解析了 %d 个部分)", mask, count);
+    if (parse_ipv4_addr(mask, &m) != 0) {
+        BFLB_LOGE("子网掩码解析失败：%s", mask);
         return 0;
     }
 
-    BFLB_LOGD("子网掩码解析：%s -> %u.%u.%u.%u", mask, parts[0], parts[1], parts[2], parts[3]);
-
-    /* 检查每个部分是否在有效范围内 */
-    for (int i = 0; i < 4; i++) {
-        if (parts[i] > 255) {
-            BFLB_LOGE("子网掩码部分 %d 超出范围：%u", i, parts[i]);
-            return 0;
-        }
-    }
-
-    /* 将子网掩码转换为 32 位整数 */
-    m = (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
     BFLB_LOGD("子网掩码 32 位整数值：0x%08x", m);
 
-    /* 验证是否是有效的子网掩码（连续的 1 后面跟连续的 0） */
-    /* 如果 (m & (m + 1)) == 0，说明是有效的掩码 */
-    if ((m & (m + 1)) != 0) {
-        BFLB_LOGE("子网掩码格式无效：0x%08x & 0x%08x != 0", m, m + 1);
+    /* 有效掩码应满足 ~mask 为连续的低位 1。 */
+    inverted = ~m;
+    if ((inverted & (inverted + 1U)) != 0) {
+        BFLB_LOGE("子网掩码格式无效：0x%08x", m);
         return 0;
     }
 
@@ -67,21 +82,16 @@ static int is_valid_mask(const char *mask)
  */
 static int mask_to_cidr(const char *mask)
 {
-    unsigned int parts[4];
-    unsigned int m;
+    uint32_t m;
     int cidr = 0;
 
     if (!mask) {
         return -1;
     }
 
-    /* 解析子网掩码的 4 个部分 */
-    if (sscanf(mask, "%u.%u.%u.%u", &parts[0], &parts[1], &parts[2], &parts[3]) != 4) {
+    if (parse_ipv4_addr(mask, &m) != 0) {
         return -1;
     }
-
-    /* 将子网掩码转换为 32 位整数 */
-    m = (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
 
     /* 计算连续的 1 的个数 */
     while (m) {
@@ -106,24 +116,17 @@ static int mask_to_cidr(const char *mask)
  */
 static int calculate_broadcast(const char *ip, const char *mask, char *broadcast)
 {
-    unsigned int ip_parts[4], mask_parts[4];
-    unsigned int ip_addr, mask_addr, broadcast_addr;
+    uint32_t ip_addr;
+    uint32_t mask_addr;
+    uint32_t broadcast_addr;
 
     if (!ip || !mask || !broadcast) {
         return -1;
     }
 
-    /* 解析 IP 地址和子网掩码 */
-    if (sscanf(ip, "%u.%u.%u.%u", &ip_parts[0], &ip_parts[1], &ip_parts[2], &ip_parts[3]) != 4) {
+    if (parse_ipv4_addr(ip, &ip_addr) != 0 || parse_ipv4_addr(mask, &mask_addr) != 0) {
         return -1;
     }
-    if (sscanf(mask, "%u.%u.%u.%u", &mask_parts[0], &mask_parts[1], &mask_parts[2], &mask_parts[3]) != 4) {
-        return -1;
-    }
-
-    /* 转换为 32 位整数 */
-    ip_addr = (ip_parts[0] << 24) | (ip_parts[1] << 16) | (ip_parts[2] << 8) | ip_parts[3];
-    mask_addr = (mask_parts[0] << 24) | (mask_parts[1] << 16) | (mask_parts[2] << 8) | mask_parts[3];
 
     /* 计算广播地址：IP | ~mask */
     broadcast_addr = ip_addr | (~mask_addr);
@@ -165,6 +168,71 @@ static int execute_command(const char *command)
         return -1;
     }
 
+    return 0;
+}
+
+static int execute_command_ignore_exit(const char *command, int ignored_exit)
+{
+    int ret;
+
+    if (!command) {
+        return -1;
+    }
+
+    BFLB_LOGD("执行命令: %s", command);
+
+    ret = system(command);
+    if (ret == -1) {
+        BFLB_LOGE("命令执行失败: %s", command);
+        return -1;
+    }
+
+    if (!WIFEXITED(ret)) {
+        BFLB_LOGE("命令异常退出: %s", command);
+        return -1;
+    }
+
+    if (WEXITSTATUS(ret) == ignored_exit) {
+        BFLB_LOGD("命令返回已忽略的退出码: %s (exit=%d)", command, ignored_exit);
+        return 0;
+    }
+
+    if (WEXITSTATUS(ret) != 0) {
+        BFLB_LOGE("命令返回错误: %s (exit=%d)", command, WEXITSTATUS(ret));
+        return -1;
+    }
+
+    return 0;
+}
+
+static int resolv_conf_has_nameserver(void)
+{
+    FILE *fp;
+    char line[256];
+
+    fp = fopen("/etc/resolv.conf", "r");
+    if (!fp) {
+        return 0;
+    }
+
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        char *cursor = line;
+
+        while (*cursor == ' ' || *cursor == '\t') {
+            cursor++;
+        }
+
+        if (*cursor == '#' || *cursor == '\n' || *cursor == '\0') {
+            continue;
+        }
+
+        if (strncmp(cursor, "nameserver", strlen("nameserver")) == 0) {
+            fclose(fp);
+            return 1;
+        }
+    }
+
+    fclose(fp);
     return 0;
 }
 
@@ -237,18 +305,32 @@ int bflbwifi_netif_set_gateway(const char *ifname, const char *gw)
         return -1;
     }
 
-    /* 先删除旧的默认路由 */
-    snprintf(cmd, sizeof(cmd), "ip route del default 2>/dev/null");
-    execute_command(cmd);
+    /*
+     * 仅维护目标接口上的默认路由，避免破坏宿主机现有管理链路
+     * （例如 eth0 的默认路由和 SSH 出口）。
+     */
+    snprintf(cmd, sizeof(cmd), "ip route del default dev %s 2>/dev/null", ifname);
+    execute_command_ignore_exit(cmd, 2);
 
-    /* 添加新的默认路由 */
-    snprintf(cmd, sizeof(cmd), "ip route add default via %s dev %s", gw, ifname);
+    /*
+     * 使用较高 metric 挂载 nethub 路由：
+     * 1. 没有其他默认路由时，仍可通过 device Wi-Fi 出网；
+     * 2. 已有 eth0 等管理链路时，不会抢占系统默认出口。
+     */
+    snprintf(cmd, sizeof(cmd),
+             "ip route add default via %s dev %s metric %d",
+             gw,
+             ifname,
+             BFLBWIFI_NETIF_DEFAULT_ROUTE_METRIC);
     if (execute_command(cmd) != 0) {
         BFLB_LOGE("配置网关失败");
         return -1;
     }
 
-    BFLB_LOGI("默认网关配置成功: via %s dev %s", gw, ifname);
+    BFLB_LOGI("默认网关配置成功: via %s dev %s metric %d",
+              gw,
+              ifname,
+              BFLBWIFI_NETIF_DEFAULT_ROUTE_METRIC);
     return 0;
 }
 
@@ -261,7 +343,15 @@ int bflbwifi_netif_set_dns(const char *dns)
         return -1;
     }
 
-    /* 打开 /etc/resolv.conf 文件 */
+    /*
+     * 不覆盖系统已经存在的 DNS 配置，避免影响宿主机原有管理网络。
+     * 仅在系统尚无 nameserver 时，使用 device 提供的 DNS 作为兜底。
+     */
+    if (resolv_conf_has_nameserver()) {
+        BFLB_LOGI("保留现有 DNS 配置，跳过覆盖 device DNS: %s", dns);
+        return 0;
+    }
+
     fp = fopen("/etc/resolv.conf", "w");
     if (!fp) {
         BFLB_LOGE("无法打开 /etc/resolv.conf");

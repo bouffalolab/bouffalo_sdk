@@ -8,7 +8,7 @@
 #include <sys/queue.h>
 #include <sys/tree.h>
 
-#define INVARIANTS
+//#define INVARIANTS
 #define COMPAT_WIFI_MGMR
 
 #ifndef container_of
@@ -91,8 +91,8 @@ enum wl80211_auth_type {
 
 enum wl80211_mfp {
     WL80211_MFP_NO,
-    WL80211_MFP_REQUIRED,
     WL80211_MFP_OPTIONAL,
+    WL80211_MFP_REQUIRED,
 };
 
 enum wl80211_vif_type {
@@ -149,6 +149,16 @@ struct wl80211_connect_params {
 
     uint8_t auth_type; // ref @ enum wl80211_auth_type
     uint8_t mfp;       // ref @ enum wl80211_mfp
+
+    /* Listen Interval Field
+     * In frames sent from stations to access points (association request, reassociation request),
+     * the Listen Interval field is used to indicate to the AP how often a station in Power Save
+     * mode wakes to listen to beacon management frames. This value is an integer expressed in
+     * beacon interval units (for example, a value of 3 indicates that the station wakes up every
+     * three beacons). This field is 2 bytes long, which means that the maximum interval could
+     * be 65,535.
+    */
+    uint16_t listen_interval;
 
     const uint8_t *ie;
     uint16_t ie_len;

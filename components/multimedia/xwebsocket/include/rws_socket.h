@@ -43,9 +43,11 @@
 #include "rws_list.h"
 
 #ifdef WEBSOCKET_SSL_ENABLE
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls/certs.h"
+#endif
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/debug.h"

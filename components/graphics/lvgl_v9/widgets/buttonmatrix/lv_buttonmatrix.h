@@ -18,6 +18,7 @@ extern "C" {
 #if LV_USE_BUTTONMATRIX != 0
 
 #include "../../core/lv_obj.h"
+#include "../../core/lv_obj_property.h"
 
 /*********************
  *      DEFINES
@@ -29,27 +30,51 @@ LV_EXPORT_CONST_INT(LV_BUTTONMATRIX_BUTTON_NONE);
  *      TYPEDEFS
  **********************/
 
-/** Type to store button control bits (disabled, hidden etc.)
- * The first 3 bits are used to store the width*/
+/** Type to store button control flags (disabled, hidden etc.)
+ *  The least-significant 4 bits are used to store button-width proportions in range [1..15]. */
 typedef enum {
-    LV_BUTTONMATRIX_CTRL_HIDDEN       = 0x0010, /**< Button hidden*/
-    LV_BUTTONMATRIX_CTRL_NO_REPEAT    = 0x0020, /**< Do not repeat press this button.*/
-    LV_BUTTONMATRIX_CTRL_DISABLED     = 0x0040, /**< Disable this button.*/
-    LV_BUTTONMATRIX_CTRL_CHECKABLE    = 0x0080, /**< The button can be toggled.*/
-    LV_BUTTONMATRIX_CTRL_CHECKED      = 0x0100, /**< Button is currently toggled (e.g. checked).*/
-    LV_BUTTONMATRIX_CTRL_CLICK_TRIG   = 0x0200, /**< 1: Send LV_EVENT_VALUE_CHANGE on CLICK, 0: Send LV_EVENT_VALUE_CHANGE on PRESS*/
-    LV_BUTTONMATRIX_CTRL_POPOVER      = 0x0400, /**< Show a popover when pressing this key*/
-    LV_BUTTONMATRIX_CTRL_RESERVED_1  = 0x0800, /**< Reserved for later use*/
-    LV_BUTTONMATRIX_CTRL_RESERVED_2  = 0x1000, /**< Reserved for later use*/
-    LV_BUTTONMATRIX_CTRL_RESERVED_3  = 0x2000, /**< Reserved for later use*/
-    LV_BUTTONMATRIX_CTRL_CUSTOM_1     = 0x4000, /**< Custom free to use flag*/
-    LV_BUTTONMATRIX_CTRL_CUSTOM_2     = 0x8000, /**< Custom free to use flag*/
+    LV_BUTTONMATRIX_CTRL_NONE         = 0x0000, /**< No extra control, use the default settings*/
+    LV_BUTTONMATRIX_CTRL_WIDTH_1      = 0x0001, /**< Set the width to 1 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_2      = 0x0002, /**< Set the width to 2 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_3      = 0x0003, /**< Set the width to 3 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_4      = 0x0004, /**< Set the width to 4 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_5      = 0x0005, /**< Set the width to 5 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_6      = 0x0006, /**< Set the width to 6 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_7      = 0x0007, /**< Set the width to 7 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_8      = 0x0008, /**< Set the width to 8 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_9      = 0x0009, /**< Set the width to 9 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_10     = 0x000A, /**< Set the width to 10 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_11     = 0x000B, /**< Set the width to 11 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_12     = 0x000C, /**< Set the width to 12 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_13     = 0x000D, /**< Set the width to 13 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_14     = 0x000E, /**< Set the width to 14 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_WIDTH_15     = 0x000F, /**< Set the width to 15 relative to the other buttons in the same row */
+    LV_BUTTONMATRIX_CTRL_HIDDEN       = 0x0010, /**< Hides button; it continues to hold its space in layout. */
+    LV_BUTTONMATRIX_CTRL_NO_REPEAT    = 0x0020, /**< Do not emit LV_EVENT_LONG_PRESSED_REPEAT events while button is long-pressed. */
+    LV_BUTTONMATRIX_CTRL_DISABLED     = 0x0040, /**< Disables button like LV_STATE_DISABLED on normal Widgets. */
+    LV_BUTTONMATRIX_CTRL_CHECKABLE    = 0x0080, /**< Enable toggling of LV_STATE_CHECKED when clicked. */
+    LV_BUTTONMATRIX_CTRL_CHECKED      = 0x0100, /**< Make the button checked. It will use the :cpp:enumerator:`LV_STATE_CHECHKED` styles. */
+    LV_BUTTONMATRIX_CTRL_CLICK_TRIG   = 0x0200, /**< 1: Enables sending LV_EVENT_VALUE_CHANGE on CLICK, 0: sends LV_EVENT_VALUE_CHANGE on PRESS. */
+    LV_BUTTONMATRIX_CTRL_POPOVER      = 0x0400, /**< Show button text in a pop-over while being pressed. */
+    LV_BUTTONMATRIX_CTRL_RECOLOR      = 0x0800, /**< Enable text recoloring with `#color` */
+    LV_BUTTONMATRIX_CTRL_RESERVED_1   = 0x1000, /**< Reserved for later use */
+    LV_BUTTONMATRIX_CTRL_RESERVED_2   = 0x2000, /**< Reserved for later use */
+    LV_BUTTONMATRIX_CTRL_CUSTOM_1     = 0x4000, /**< Custom free-to-use flag */
+    LV_BUTTONMATRIX_CTRL_CUSTOM_2     = 0x8000, /**< Custom free-to-use flag */
 } lv_buttonmatrix_ctrl_t;
 
 typedef bool (*lv_buttonmatrix_button_draw_cb_t)(lv_obj_t * btnm, uint32_t btn_id, const lv_area_t * draw_area,
                                                  const lv_area_t * clip_area);
 
 LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_buttonmatrix_class;
+
+#if LV_USE_OBJ_PROPERTY
+enum _lv_property_buttonmatrix_id_t {
+    LV_PROPERTY_ID(BUTTONMATRIX, SELECTED_BUTTON, LV_PROPERTY_TYPE_INT, 0),
+    LV_PROPERTY_ID(BUTTONMATRIX, ONE_CHECKED,     LV_PROPERTY_TYPE_BOOL, 1),
+    LV_PROPERTY_BUTTONMATRIX_END,
+};
+#endif
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -73,7 +98,7 @@ lv_obj_t * lv_buttonmatrix_create(lv_obj_t * parent);
  * @param obj       pointer to a button matrix object
  * @param map       pointer a string array. The last string has to be: "". Use "\n" to make a line break.
  */
-void lv_buttonmatrix_set_map(lv_obj_t * obj, const char * map[]);
+void lv_buttonmatrix_set_map(lv_obj_t * obj, const char * const map[]);
 
 /**
  * Set the button control map (hidden, disabled etc.) for a button matrix.
@@ -155,7 +180,7 @@ void lv_buttonmatrix_set_one_checked(lv_obj_t * obj, bool en);
  * @param obj       pointer to a button matrix object
  * @return          the current map
  */
-const char ** lv_buttonmatrix_get_map(const lv_obj_t * obj);
+const char * const * lv_buttonmatrix_get_map(const lv_obj_t * obj);
 
 /**
  * Get the index of the lastly "activated" button by the user (pressed, released, focused etc)

@@ -30,45 +30,45 @@
 
 Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
-|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
-|  ADC         |      ○         |      √             |   √           |   ○      |
-|  CAM         |      -         |      √             |   √           |   √      |
-|  CKS         |      ○         |      √             |   √           |   ○      |
-|  CSI         |      -         |      -             |   -           |   √      |
-|  DAC         |      ○         |      √             |   √           |   ○      |
-|  DMA         |      ○         |      √             |   √           |   √      |
-|  EFUSE       |      ×         |      ×             |   ×           |   ×      |
-|  EMAC        |      -         |      √             |   √           |   √      |
-|  FLASH       |      √         |      √             |   √           |   √      |
-|  GPIO        |      ○         |      √             |   √           |   √      |
-|  I2C         |      ○         |      √             |   √           |   ○      |
-|  I2S         |      ○         |      ○             |   √           |   ○      |
-|  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      ×             |   √           |   √      |
-|  PWM_v1      |      ○         |      √             |   -           |   -      |
-|  PWM_v2      |      -         |      -             |   √           |   √      |
-|  RTC         |      ○         |      √             |   √           |   √      |
-|  SEC_AES     |      ○         |      √             |   √           |   √      |
-|  SEC_SHA     |      ○         |      √             |   √           |   √      |
-|  SEC_TRNG    |      ○         |      √             |   √           |   √      |
-|  SEC_PKA     |      ○         |      √             |   √           |   √      |
-|  SPI         |      ○         |      √             |   √           |   √      |
-|  TIMER       |      ○         |      √             |   √           |   √      |
-|  UART        |      √         |      √             |   √           |   √      |
-|  USB_v1      |      -         |      √             |   -           |   -      |
-|  USB_v2      |      -         |      -             |   √           |   √      |
-|  WDG         |      ○         |      √             |   √           |   ○      |
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |
+|:------------:|:--------------:|:--------------------:|:-----------:|
+|  ADC         |      ○         |      √             |   √           |
+|  CAM         |      -         |      √             |   √           |
+|  CKS         |      ○         |      √             |   √           |
+|  CSI         |      -         |      -             |   -           |
+|  DAC         |      ○         |      √             |   √           |
+|  DMA         |      ○         |      √             |   √           |
+|  EFUSE       |      ×         |      ×             |   ×           |
+|  EMAC        |      -         |      √             |   √           |
+|  FLASH       |      √         |      √             |   √           |
+|  GPIO        |      ○         |      √             |   √           |
+|  I2C         |      ○         |      √             |   √           |
+|  I2S         |      ○         |      ○             |   √           |
+|  IR          |      ○         |      √             |   √           |
+|  MJPEG       |      ×         |      ×             |   √           |
+|  PWM_v1      |      ○         |      √             |   -           |
+|  PWM_v2      |      -         |      -             |   √           |
+|  RTC         |      ○         |      √             |   √           |
+|  SEC_AES     |      ○         |      √             |   √           |
+|  SEC_SHA     |      ○         |      √             |   √           |
+|  SEC_TRNG    |      ○         |      √             |   √           |
+|  SEC_PKA     |      ○         |      √             |   √           |
+|  SPI         |      ○         |      √             |   √           |
+|  TIMER       |      ○         |      √             |   √           |
+|  UART        |      √         |      √             |   √           |
+|  USB_v1      |      -         |      √             |   -           |
+|  USB_v2      |      -         |      -             |   √           |
+|  WDG         |      ○         |      √             |   √           |
 
 # Wireless Support
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
-|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
-|  WIFI4       |      √         |      -             |   -           |   ×      |
-|  WIFI6       |      -         |      -             |   √           |   -      |
-|  BT          |      -         |      -             |   ×           |   ×      |
-|  BLE         |      √         |      ×             |   √           |   ×      |
-|  ZIGBEE      |      -         |      ×             |   ×           |   ×      |
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |
+|:------------:|:--------------:|:--------------------:|:-----------:|
+|  WIFI4       |      √         |      -             |   -           |
+|  WIFI6       |      -         |      -             |   √           |
+|  BT          |      -         |      -             |   ×           |
+|  BLE         |      √         |      ×             |   √           |
+|  ZIGBEE      |      -         |      ×             |   ×           |
 
 Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
@@ -125,18 +125,11 @@ cd examples/helloworld
 make CHIP=bl602 BOARD=bl602dk
 ```
 
-- If you use **BL808** or **BL606P**, you need to add **CPU_ID** with m0 or d0.
-
 If you want to use **ninja**, you can try:
 
 ```
 cd examples/helloworld
 make ninja CHIP=bl616 BOARD=bl616dk
-```
-
-```
-cd examples/helloworld
-make ninja CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## CDK Development
@@ -157,14 +150,7 @@ usermod -aG dialout xxx # xxx is your own name
 
 ```
 cd examples/helloworld
-make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl616/bl808/bl606p, COMX in Windows, /dev/ttyxxx in Linux
-```
-
-- If you use **BL808** or **BL606P**, you need to add **CPU_ID** with m0 or d0.
-
-```
-cd examples/helloworld
-make flash CHIP=chip_name CPU_ID=m0 COMX=xxx # chip_name should be bl602/bl702/bl616/bl808/bl606p, COMX in Windows, /dev/ttyxxx in Linux
+make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl616, COMX in Windows, /dev/ttyxxx in Linux
 ```
 
 If flash using serial port rather than USB, different USB2TTL chips support different max baudrates, need to pay attention to when flashing.

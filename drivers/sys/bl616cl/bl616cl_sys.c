@@ -10,8 +10,6 @@
 #define REASON_HWWDT       (1)   // watchdog reboot wdog
 #define REASON_POWEROFF    (0x0) // software        soft
 
-#define RST_REASON         HBN_SYS_RESET_REASON     // use 4 Bytes
-#define RST_REASON_CHK     HBN_SYS_RESET_REASON_CHK // use 4 Bytes
 #define RST_REASON_CHK_VAL (0xBF1BA55A)
 
 static BL_RST_REASON_E s_rst_reason = BL_RST_POWER_OFF;
@@ -38,16 +36,16 @@ char *bl_sys_rstinfo_getstring(void)
 
 int bl_sys_rstinfo_set(BL_RST_REASON_E val)
 {
-    RST_REASON = (uint32_t)val;
-    RST_REASON_CHK = (uint32_t)val ^ RST_REASON_CHK_VAL;
+    iot2lp_para->reset_keep.reset_reason = (uint32_t)val;
+    iot2lp_para->reset_keep.reset_reason_chk = (uint32_t)val ^ RST_REASON_CHK_VAL;
 
     return 0;
 }
 
 void bl_sys_rstinfo_init(void)
 {
-    uint32_t reason = RST_REASON;
-    uint32_t reason_chk = RST_REASON_CHK;
+    uint32_t reason = iot2lp_para->reset_keep.reset_reason;
+    uint32_t reason_chk = iot2lp_para->reset_keep.reset_reason_chk;
 
     uint8_t reset_evt = 0;
 
@@ -63,8 +61,8 @@ void bl_sys_rstinfo_init(void)
 
     HBN_Clr_Reset_Event();
 
-    RST_REASON = REASON_HWWDT;
-    RST_REASON_CHK = REASON_HWWDT ^ RST_REASON_CHK_VAL;
+    iot2lp_para->reset_keep.reset_reason = REASON_HWWDT;
+    iot2lp_para->reset_keep.reset_reason_chk = REASON_HWWDT ^ RST_REASON_CHK_VAL;
 }
 
 int bl_sys_rstinfo_getsting(char *info)

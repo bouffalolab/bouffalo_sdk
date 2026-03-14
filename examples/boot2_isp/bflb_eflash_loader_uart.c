@@ -100,7 +100,7 @@ static void ATTR_TCM_SECTION bflb_eflash_loader_usart_if_init(uint32_t bdrate)
 {
     struct bflb_uart_config_s cfg;
     hal_boot2_uart_gpio_init();
-    uartx = bflb_device_get_by_name("uart0");
+    uartx = bflb_device_get_by_name(BFLB_NAME_UART0);
 
     cfg.baudrate = 2000000;
     cfg.data_bits = UART_DATA_BITS_8;
@@ -119,7 +119,7 @@ void bflb_eflash_loader_usart_if_enable_int(void)
 
 void ATTR_TCM_SECTION bflb_eflash_loader_usart_if_send(uint8_t *data, uint32_t len)
 {
-    //uartx = bflb_device_get_by_name("uart0");
+    //uartx = bflb_device_get_by_name(BFLB_NAME_UART0);
     bflb_uart_put(uartx, data, len);
 }
 
@@ -167,7 +167,7 @@ static uint32_t ATTR_TCM_SECTION *bflb_eflash_loader_usart_if_receive(uint32_t *
 
 static void bflb_eflash_loader_usart_if_deinit()
 {
-    uartx = bflb_device_get_by_name("uart0");
+    uartx = bflb_device_get_by_name(BFLB_NAME_UART0);
     bflb_uart_deinit(uartx);
 }
 
@@ -186,7 +186,7 @@ int32_t ATTR_TCM_SECTION bflb_eflash_loader_uart_handshake_poll(uint32_t timeout
     uint32_t handshake_count = 0;
     uint32_t rcv_buf_len = 0;
     //rcv_buf_len = UART_ReceiveData(g_uart_if_id,buf,128);
-    //uartx = bflb_device_get_by_name("uart0");
+    //uartx = bflb_device_get_by_name(BFLB_NAME_UART0);
     arch_memset(buf,0,UART_FIFO_LEN);
     rcv_buf_len = bflb_uart_get(uartx, buf, UART_FIFO_LEN);
 

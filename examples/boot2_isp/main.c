@@ -71,6 +71,9 @@ uint32_t g_user_hash_ignored = 0;
 uint8_t g_usb_init_flag = 0;
 struct bflb_device_s *sha;
 ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha512_ctx_s ctx_sha384;
+#endif
 uint32_t g_anti_rollback_flag[3];
 uint32_t g_anti_ef_en = 0, g_anti_ef_app_ver = 0;
 uint32_t g_no_active_fw_age = 0;

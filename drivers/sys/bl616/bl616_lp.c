@@ -159,12 +159,12 @@ ATTR_HBN_CODE_SECTION void lp_fw_pre(void)
 
     /* jump to lp_fw */
     void (*pFunc)(void);
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start & 0x0FFFFFFF) | 0x60000000; /* cacheable */
+    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000; /* cacheable */
     pFunc = (void (*)(void))lpfw_addr;
     pFunc();
 }
 
-extern uint32_t __hbn_load_addr;
+extern uint32_t __hbn_ram_load__;
 extern uint32_t __hbn_ram_start__;
 extern uint32_t __hbn_ram_end__;
 
@@ -174,7 +174,7 @@ static void bl616_load_hbn_ram(void)
     uint32_t *pSrc, *pDest;
 
     /* BF Add HBNRAM data copy */
-    pSrc = &__hbn_load_addr;
+    pSrc = &__hbn_ram_load__;
     pDest = &__hbn_ram_start__;
     uint8_t i = 0;
 
@@ -371,12 +371,12 @@ int bl_lpfw_bin_check(void)
         return -1;
     }
 
-    if ((lpfw_info->lpfw_memory_start & 0x0FFFFFFF) != ((uint32_t)__lpfw_share_start & 0x0FFFFFFF)) {
-        printf("lpfw memory start address error: lpfw:0x%08X, app:0x%08X\r\n", lpfw_info->lpfw_memory_start, (uint32_t)__lpfw_share_start);
+    if ((lpfw_info->lpfw_memory_start & 0x0FFFFFFF) != ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF)) {
+        printf("lpfw memory start address error: lpfw:0x%08X, app:0x%08X\r\n", lpfw_info->lpfw_memory_start, (uint32_t)__lpfw_share_start__);
         return -2;
     }
 
-    if ((lpfw_info->lpfw_memory_end - lpfw_info->lpfw_memory_start) > ((uint32_t)__lpfw_share_end - (uint32_t)__lpfw_share_start)) {
+    if ((lpfw_info->lpfw_memory_end - lpfw_info->lpfw_memory_start) > ((uint32_t)__lpfw_share_end__ - (uint32_t)__lpfw_share_start__)) {
         printf("lpfw memory size_over\r\n");
         return -3;
     }
@@ -401,7 +401,7 @@ int bl_lpfw_ram_load(void)
         assert(0);
     }
 
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start & 0x0FFFFFFF) | 0x60000000; /* cacheable */
+    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000; /* cacheable */
     uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
 
     /* load */
@@ -418,7 +418,7 @@ int bl_lpfw_ram_verify(void)
         assert(0);
     }
 
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start & 0x0FFFFFFF) | 0x60000000; /* cacheable */
+    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000; /* cacheable */
     uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
     uint8_t *lpfw_sha256 = (uint8_t *)(__lpfw_load_addr - 16);
     uint8_t result[32];

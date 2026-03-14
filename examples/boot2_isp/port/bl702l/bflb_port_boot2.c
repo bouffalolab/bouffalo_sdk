@@ -214,7 +214,7 @@ void ATTR_TCM_SECTION hal_boot2_sboot_finish(void)
 void hal_boot2_uart_gpio_init(void)
 {
     struct bflb_device_s *gpio;
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     bflb_gpio_uart_init(gpio, GPIO_PIN_14, GPIO_UART_FUNC_UART0_TX);
     bflb_gpio_uart_init(gpio, GPIO_PIN_15, GPIO_UART_FUNC_UART0_RX);
 }

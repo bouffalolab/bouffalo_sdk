@@ -588,7 +588,7 @@ int http_client_req(int sock, struct http_request *req,
     k_timeout_t req_timeout = (timeout == SYS_FOREVER_MS) ? K_FOREVER : K_MSEC(timeout);
     k_timepoint_t req_end_timepoint = sys_timepoint_calc(req_timeout);
 
-    if (sock < 0 || req == NULL || req->response == NULL ||
+    if (sock == 0 || req == NULL || req->response == NULL ||
         req->recv_buf == NULL || req->recv_buf_len == 0) {
         return -EINVAL;
     }

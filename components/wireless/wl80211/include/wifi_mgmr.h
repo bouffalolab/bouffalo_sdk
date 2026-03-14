@@ -162,6 +162,57 @@ typedef struct wifi_mgmr_sta_connect_params {
     uint8_t eapol_rem_timeout;
 } wifi_mgmr_sta_connect_params_t;
 
+/// ap start params
+typedef struct wifi_mgmr_ap_params {
+    /// must be setted
+    char *ssid;
+    /// if NULL and the akm is not NULL, the default value "12345678" will be setted
+    char *key;
+    /// OPEN/WPA/WPA2 can be supported now, if NULL and the key is not NULL, the default value "WPA2" will be setted
+    char *akm;
+    /// if zero, the default value 6 will be setted
+    uint8_t channel;
+    /// Channel type (@ref mac_chan_bandwidth)
+    uint8_t type;
+    /// use_ipcfg;
+    bool use_ipcfg;
+    /// Whether use dhcpd
+    bool use_dhcpd;
+    /// dhcpd pool start
+    int start;
+    /// dhcpd pool limit
+    int limit;
+    /// ap ip addr
+    uint32_t ap_ipaddr;
+    /// ap subnet mask
+    uint32_t ap_mask;
+    /// STA MAX inactivity under connection
+    uint32_t ap_max_inactivity;
+    /// whether use hidden ssid
+    bool hidden_ssid;
+    /// whether enable isolation
+    bool isolation;
+    /// Beacon interval in TU
+    int bcn_interval;
+    /// Additional vendor specific elements for Beacon and Probe Response frames
+    /// a hexdump of the raw information elements (id+len+payload for one or more elements),
+    //  the maximum length supported is MAX_AP_VENDOR_ELEMENTS_LEN,
+    /// ref wap_supplicant.conf
+    char *ap_vendor_elements;
+    /// bcn_mode:
+    /// 0   Start/Stop beacon transmissions automatically
+    ///         a.Beacon transmission is NOT started when SAP is started.
+    ///         b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
+    ///         c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    /// 1   Do not transmit beacon frames
+    /// 2   Transmit beacon frames (Default)
+    uint8_t bcn_mode;
+    /// Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds
+    int bcn_timer;
+    /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames
+    bool disable_wmm;
+} wifi_mgmr_ap_params_t;
+
 typedef void (*scan_item_cb_t)(void *env, void *arg, wifi_mgmr_scan_item_t *item);
 
 /* Initialize WiFi manager and register event handlers */
@@ -234,6 +285,24 @@ int wifi_mgmr_sta_autoconnect_disable(void);
 int wifi_mgmr_ap_state_get(void);
 /* Get AP MAC address (not implemented, returns -1) */
 int wifi_mgmr_ap_mac_get(uint8_t mac[6]);
+/**
+ * Start AP mode
+ * param:
+ *  param1 : Configuration of AP mode
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ *  Others is Failed
+ */
+int wifi_mgmr_ap_start(const wifi_mgmr_ap_params_t *config);
+/**
+ * Stop AP mode
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ *  Others is Failed
+ */
+int wifi_mgmr_ap_stop(void);
 
 /* String Conversion Utilities */
 /* Convert WiFi mode to string (e.g., "BGN", "BGNAX") */

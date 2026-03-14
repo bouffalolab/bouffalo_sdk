@@ -15,10 +15,10 @@
 #include <hci_host.h>
 #include <conn.h>
 
-#include <constants.h>
-#include <hmac_prng.h>
-#include <tinycrypt/include/tinycrypt/aes.h>
-#include <utils.h>
+#include <tinycrypt/constants.h>
+#include <tinycrypt/hmac_prng.h>
+#include <tinycrypt/aes.h>
+#include <tinycrypt/utils.h>
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_DEBUG_HCI_CORE)
 #define LOG_MODULE_NAME bt_crypto

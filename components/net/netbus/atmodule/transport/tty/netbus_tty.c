@@ -15,8 +15,9 @@
 
 #define NETBUS_TTY_DEBUG (0)
 
-int netbus_tty_dnld(netbus_tty_ctx_t *pctx, uint8_t *data, uint32_t data_size)
+static int netbus_tty_dnld(void *arg, uint8_t *data, uint32_t data_size)
 {
+    netbus_tty_ctx_t *pctx = (netbus_tty_ctx_t *)arg;
     //return data_size;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     int res;
@@ -53,7 +54,7 @@ int netbus_tty_init(netbus_tty_ctx_t *pctx, uint32_t txbuf_size, uint32_t rxbuf_
     pctx->w_mutex = xSemaphoreCreateMutex();
 
     //	bflb_tty_dnld_register(netbus_tty_dnld, pctx);
-    nethub_ctrlpath_dnld_register((nethub_ctrlpath_callback_t)netbus_tty_dnld, pctx);
+    nethub_ctrl_dnld_register(netbus_tty_dnld, pctx);
     return 0;
 }
 
@@ -85,7 +86,7 @@ int netbus_tty_send(netbus_tty_ctx_t *pctx, const uint8_t *p_data, uint32_t len,
         return -1;
     }
     //bflb_tty_upld_send(p_data, len);
-    nethub_ctrlpath_upld_send((uint8_t *)p_data, len);
+    nethub_ctrl_upld_send((uint8_t *)p_data, len);
     xSemaphoreGive(pctx->w_mutex);
 
 #if NETBUS_TTY_DEBUG

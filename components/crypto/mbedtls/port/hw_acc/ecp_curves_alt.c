@@ -24,7 +24,7 @@
 #include "mbedtls/ecp.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error.h"
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls/bn_mul.h"
 #endif
 #include "ecp_invasive.h"
@@ -32,7 +32,17 @@
 #include <string.h>
 
 /* Parameter validation macros based on platform_util.h */
-#ifdef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
+#define ECP_VALIDATE_RET( cond )    \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
+#define ECP_VALIDATE( cond )        \
+    MBEDTLS_INTERNAL_VALIDATE( cond )
+
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
+#define inline __inline
+#endif
+#else
 #define ECP_VALIDATE_RET( cond )
 #define ECP_VALIDATE( cond )
 #define MBEDTLS_BYTES_TO_T_UINT_4(a, b, c, d)               \
@@ -47,16 +57,6 @@
 #define MBEDTLS_BYTES_TO_T_UINT_8(a, b, c, d, e, f, g, h) \
     MBEDTLS_BYTES_TO_T_UINT_4(a, b, c, d),                \
     MBEDTLS_BYTES_TO_T_UINT_4(e, f, g, h)
-#else
-#define ECP_VALIDATE_RET( cond )    \
-    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
-#define ECP_VALIDATE( cond )        \
-    MBEDTLS_INTERNAL_VALIDATE( cond )
-
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
-    !defined(inline) && !defined(__cplusplus)
-#define inline __inline
-#endif
 #endif
 
 #define ECP_MPI_INIT(s, n, p) {s, (n), (mbedtls_mpi_uint *)(p)}

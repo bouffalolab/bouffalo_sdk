@@ -16,6 +16,14 @@ const struct ieee80211_dot_d country_list[] = {
         .channel5G_num = 13,
         .channel5G_chan = { 36, 40, 44, 48, 52, 56, 60, 64, 149, 153, 157, 161, 165 },
     },
+    /* CN country code for SRRC */
+    {
+        .code = "CS",
+        .channel24G_num = 13,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 },
+        .channel5G_num = 13,
+        .channel5G_chan = { 36, 40, 44, 48, 52, 56, 60, 64, 149, 153, 157, 161, 165 },
+    },
     {
         .code = "JP",
         .channel24G_num = 14,
@@ -318,6 +326,72 @@ const struct ieee80211_dot_d country_list[] = {
         .channel5G_num = 25,
         .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112, 116,
                             120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165 },
+    },
+
+    /* FCC Regulation - Colombia, Dominican Republic, Guatemala, Mexico, Panama, Puerto Rico */
+    {
+        .code = "CO",
+        .channel24G_num = 11,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+        .channel5G_num = 24,
+        .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112,
+                            116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 },
+    },
+    {
+        .code = "DO",
+        .channel24G_num = 11,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+        .channel5G_num = 24,
+        .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112,
+                            116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 },
+    },
+    {
+        .code = "GT",
+        .channel24G_num = 11,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+        .channel5G_num = 24,
+        .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112,
+                            116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 },
+    },
+    {
+        .code = "MX",
+        .channel24G_num = 11,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+        .channel5G_num = 24,
+        .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112,
+                            116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 },
+    },
+    {
+        .code = "PA",
+        .channel24G_num = 11,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+        .channel5G_num = 24,
+        .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112,
+                            116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 },
+    },
+    {
+        .code = "PR",
+        .channel24G_num = 11,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+        .channel5G_num = 24,
+        .channel5G_chan = { 36,  40,  44,  48,  52,  56,  60,  64,  100, 104, 108, 112,
+                            116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 },
+    },
+
+    /* ETSI Regulation - Uzbekistan, Israel */
+    {
+        .code = "UZ",
+        .channel24G_num = 13,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 },
+        .channel5G_num = 19,
+        .channel5G_chan = { 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140 },
+    },
+    {
+        .code = "IL",
+        .channel24G_num = 13,
+        .channel24G_chan = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 },
+        .channel5G_num = 19,
+        .channel5G_chan = { 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140 },
     },
 };
 

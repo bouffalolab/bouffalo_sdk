@@ -28,7 +28,7 @@
 #include "mbedtls/sha1.h"
 #endif
 
-#ifdef CONFIG_MBEDTLS_V3
+#ifndef CONFIG_MBEDTLS_V2
 #include "mbedtls/compat-2.x.h"
 #endif
 

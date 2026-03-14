@@ -161,40 +161,40 @@ static int avi_build_header(avi_file_t *avi_hd)
     /* clang-format on */
 
     /* riff */
-    riff = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+    riff = (RIFF *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
     avi_hd->p_riff = riff;
     avi_hd->riff_offset = avi_hd->head_data_size;
     avi_hd->head_data_size += sizeof(RIFF);
 
     /* list hdrl */
-    hdrl = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+    hdrl = (LIST *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
     avi_hd->head_data_size += sizeof(LIST);
 
     /* avih */
-    avih = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+    avih = (MainAVIHeader *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
     avi_hd->p_main_header = avih;
     avi_hd->main_header_offset = avi_hd->head_data_size;
     avi_hd->head_data_size += sizeof(MainAVIHeader);
 
     if (avi_hd->avi_param.vids_en) {
         /* list vids_strl */
-        vids_strl = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        vids_strl = (LIST *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->head_data_size += sizeof(LIST);
 
         /* vids_strh */
-        vids_strh = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        vids_strh = (AVIStreamHeader *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->p_vids_strh = vids_strh;
         avi_hd->vids_strh_offset = avi_hd->head_data_size;
         avi_hd->head_data_size += sizeof(AVIStreamHeader);
 
         /* vids_strf */
-        vids_strf = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        vids_strf = (EXBMINFOHEADER *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->p_vids_strf = vids_strf;
         avi_hd->vids_strf_offset = avi_hd->head_data_size;
         avi_hd->head_data_size += sizeof(EXBMINFOHEADER);
 
         /* vids_super_idx */
-        vids_super_idx = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        vids_super_idx = (AVISUPERINDEXCHUNK *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->p_vids_super_idx = vids_super_idx;
         avi_hd->vids_super_idx_offset = avi_hd->head_data_size;
         avi_hd->vids_super_idx_total = AVI_VIDS_SUP_IDX_NUM;
@@ -203,23 +203,23 @@ static int avi_build_header(avi_file_t *avi_hd)
 
     if (avi_hd->avi_param.auds_en) {
         /* list auds_strl */
-        auds_strl = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        auds_strl = (LIST *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->head_data_size += sizeof(LIST);
 
         /* auds_strh */
-        auds_strh = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        auds_strh = (AVIStreamHeader *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->p_auds_strh = auds_strh;
         avi_hd->auds_strh_offset = avi_hd->head_data_size;
         avi_hd->head_data_size += sizeof(AVIStreamHeader);
 
         /* auds_strf */
-        auds_strf = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        auds_strf = (WAVEFORMAT *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->p_auds_strf = auds_strf;
         avi_hd->auds_strf_offset = avi_hd->head_data_size;
         avi_hd->head_data_size += sizeof(WAVEFORMAT);
 
-        /* auds_index */
-        auds_super_idx = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        /* auds_super_idx */
+        auds_super_idx = (AVISUPERINDEXCHUNK *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->p_auds_super_idx = auds_super_idx;
         avi_hd->auds_super_idx_offset = avi_hd->head_data_size;
         avi_hd->auds_super_idx_total = AVI_AUDS_SUP_IDX_NUM;
@@ -227,17 +227,17 @@ static int avi_build_header(avi_file_t *avi_hd)
     }
 
     /* list odml */
-    odml = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+    odml = (LIST *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
     avi_hd->head_data_size += sizeof(LIST);
 
     /* dmlh */
-    dmlh = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+    dmlh = (ODMLExtendedAVIheader *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
     avi_hd->p_dmlh = dmlh;
     avi_hd->dmlh_offset = avi_hd->head_data_size;
     avi_hd->head_data_size += sizeof(ODMLExtendedAVIheader);
 
     /* list movi */
-    movi = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+    movi = (LIST *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
     avi_hd->p_movi_list = movi;
     avi_hd->movi_list_offset = avi_hd->head_data_size;
     avi_hd->head_data_size += sizeof(LIST);
@@ -251,7 +251,7 @@ static int avi_build_header(avi_file_t *avi_hd)
             junk_size += 512;
         }
 
-        CHUNK *junk_chunk = (void *)avi_hd->head_buff + avi_hd->head_data_size;
+        CHUNK *junk_chunk = (CHUNK *)((uint8_t *)avi_hd->head_buff + avi_hd->head_data_size);
         avi_hd->head_data_size += junk_size;
 
         if (avi_hd->head_data_size > avi_hd->head_buff_size) {
@@ -407,13 +407,13 @@ static int avi_build_subindex(avi_file_t *avi_hd)
     avi_hd->sub_idx_data_size = 0;
 
     /* AVIX riff */
-    RIFF *aiv_sub_avix = (void *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size;
+    RIFF *aiv_sub_avix = (RIFF *)((uint8_t *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size);
     avi_hd->p_avix_riff = aiv_sub_avix;
     avi_hd->avix_riff_offset = avi_hd->sub_idx_data_size;
     avi_hd->sub_idx_data_size += sizeof(RIFF);
 
     /* AVIX movi LIST */
-    LIST *avix_movi_list = (void *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size;
+    LIST *avix_movi_list = (LIST *)((uint8_t *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size);
     avi_hd->p_avix_movi_list = avix_movi_list;
     avi_hd->avix_movi_list_offset = avi_hd->sub_idx_data_size;
     avi_hd->sub_idx_data_size += sizeof(LIST);
@@ -421,7 +421,7 @@ static int avi_build_subindex(avi_file_t *avi_hd)
     /* vids */
     if (avi_hd->avi_param.vids_en) {
         /* vids_std_idx */
-        AVISTDINDEXCHUNK *vids_std_idx = (void *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size;
+        AVISTDINDEXCHUNK *vids_std_idx = (AVISTDINDEXCHUNK *)((uint8_t *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size);
         avi_hd->p_vids_std_idx = vids_std_idx;
         avi_hd->vids_sub_idx_offset = avi_hd->sub_idx_data_size;
         avi_hd->vids_sub_idx_total = AVI_VIDS_SUB_IDX_NUM;
@@ -447,7 +447,7 @@ static int avi_build_subindex(avi_file_t *avi_hd)
 
     if (avi_hd->avi_param.auds_en) {
         /* auds_std_idx */
-        AVISTDINDEXCHUNK *auds_std_idx = (void *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size;
+        AVISTDINDEXCHUNK *auds_std_idx = (AVISTDINDEXCHUNK *)((uint8_t *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size);
         avi_hd->p_auds_std_idx = auds_std_idx;
         avi_hd->auds_sub_idx_offset = avi_hd->sub_idx_data_size;
         avi_hd->auds_sub_idx_total = AVI_AUDS_SUB_IDX_NUM;
@@ -468,7 +468,7 @@ static int avi_build_subindex(avi_file_t *avi_hd)
         auds_std_idx->dwChunkId = *(uint32_t *)"01wb";
         auds_std_idx->qwBaseOffset = 0;
 
-        SD_AVI_INFO("sub auds offset %d\r\n", avi_hd->auds_sub_idx_offset );
+        SD_AVI_INFO("sub auds offset %d\r\n", avi_hd->auds_sub_idx_offset);
     }
 
     /* junk chunk, keep align to 512 (sd_card block) */
@@ -478,7 +478,7 @@ static int avi_build_subindex(avi_file_t *avi_hd)
         junk_size += 512;
     }
 
-    CHUNK *junk_chunk = (void *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size;
+    CHUNK *junk_chunk = (CHUNK *)((uint8_t *)avi_hd->sub_idx_buff + avi_hd->sub_idx_data_size);
     avi_hd->avi_sub_junk_offset = avi_hd->sub_idx_data_size;
     avi_hd->avi_sub_junk_size = junk_size - sizeof(CHUNK);
     avi_hd->sub_idx_data_size += junk_size;
@@ -507,7 +507,6 @@ static int avi_build_subindex(avi_file_t *avi_hd)
     SD_AVI_INFO("sub idx data size %d\r\n", avi_hd->sub_idx_data_size);
     SD_AVI_INFO("sub idx junk size %d\r\n", junk_size);
     SD_AVI_INFO("sub idx sector num %d\r\n", avi_hd->disk_sub_idx_sector_num);
-
 
     return 0;
 }
@@ -1044,7 +1043,7 @@ int avi_write_frame(avi_file_t *avi_hd, void *jpeg_frame, uint32_t frame_size, v
         avi_hd->p_auds_strh->dwLength += avi_hd->auds_frame_size / avi_hd->auds_scale_size;
     }
 
-    if ((avi_hd->avi_param.vids_en && avi_hd->p_vids_std_idx->nEntriesInUse >= AVI_VIDS_SUB_IDX_NUM) || 
+    if ((avi_hd->avi_param.vids_en && avi_hd->p_vids_std_idx->nEntriesInUse >= AVI_VIDS_SUB_IDX_NUM) ||
         (avi_hd->avi_param.auds_en && avi_hd->p_auds_std_idx->nEntriesInUse >= AVI_AUDS_SUB_IDX_NUM)) {
         /* create the new avix_riff and sub_idx */
         avi_jpeg_sub_idx_create(avi_hd);
@@ -1078,7 +1077,7 @@ static FIL fnew = { 0 };
 static TaskHandle_t save_avi_init_task_hd;
 
 /* auds and vids(selectable) */
-#if (CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
 
 static uint16_t jpeg_out_queue_avi_id;
 static uint16_t audio_out_queue_avi_id;
@@ -1117,7 +1116,7 @@ static void save_sdcard_avi_jpeg_pcm_task(void *pvParameters)
 
     avi_param_t avi_param = {
         .avi_fps = 50,
-#if(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
         .vids_en = 1,
         .width = CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH,
         .hight = CONFIG_SOLUTION_VIDEO_DEFAULT_HIGHT,
@@ -1171,7 +1170,7 @@ create_new_file:
             memcpy(avi_auds_ringbuff + avi_auds_rb_wptr, audio_out_frame.elem_base.frame_addr, size_1);
 
             uint32_t size_2 = audio_out_frame.data_size - size_1;
-            memcpy(avi_auds_ringbuff, audio_out_frame.elem_base.frame_addr + size_1, size_2);
+            memcpy(avi_auds_ringbuff, (uint8_t *)audio_out_frame.elem_base.frame_addr + size_1, size_2);
 
             avi_auds_rb_wptr = size_2;
         }
@@ -1185,7 +1184,7 @@ create_new_file:
         }
         /****** ring buff end ******/
 
-#if (CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
         jpeg_frame_t jpeg_frame;
         if (save_cnt > 0) {
             /* pop vids frame */
@@ -1196,21 +1195,21 @@ create_new_file:
 #endif
         save_cnt++;
 
-        if (ret < 0 || CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS == 0) {
+        if (ret < 0 || !IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)) {
             /* write null frame */
-            ret = avi_write_frame(avi_hd, NULL, 0, ((void *)avi_auds_ringbuff + AUDS_BUFF_BLOCK_SIZE * avi_auds_rb_block_r));
+            ret = avi_write_frame(avi_hd, NULL, 0, ((uint8_t *)avi_auds_ringbuff + AUDS_BUFF_BLOCK_SIZE * avi_auds_rb_block_r));
             if (ret < 0) {
                 error_cnt++;
                 SD_AVI_ERR("avi write error, sd cnt:%d, err_cnt:%d, err_code:%d, offset %d\r\n", save_cnt, error_cnt, ret, avi_hd->new_chunk_offset);
             }
         }
-#if (CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
         else {
             /* align size to 32Byte */
             uint32_t frame_size = (jpeg_frame.data_size + 31) & 0xffffffe0;
-            memset((jpeg_frame.elem_base.frame_addr + jpeg_frame.data_size), 0, frame_size - jpeg_frame.data_size);
+            memset(((uint8_t *)jpeg_frame.elem_base.frame_addr + jpeg_frame.data_size), 0, frame_size - jpeg_frame.data_size);
             /* write to avi file */
-            ret = avi_write_frame(avi_hd, jpeg_frame.elem_base.frame_addr, frame_size, ((void *)avi_auds_ringbuff + AUDS_BUFF_BLOCK_SIZE * avi_auds_rb_block_r));
+            ret = avi_write_frame(avi_hd, jpeg_frame.elem_base.frame_addr, frame_size, ((uint8_t *)avi_auds_ringbuff + AUDS_BUFF_BLOCK_SIZE * avi_auds_rb_block_r));
             if (ret < 0) {
                 error_cnt++;
                 SD_AVI_ERR("avi write error, sd cnt:%d, err_cnt:%d, err_code:%d, offset %d\r\n", save_cnt, error_cnt, ret, avi_hd->new_chunk_offset);
@@ -1404,7 +1403,7 @@ static void sdcard_avi_init_task(void *pvParameters)
     /* create dir */
     f_mkdir("/sd/avi_test");
 
-#if (CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
     /* create audio_out output queue */
     audio_out_queue_avi_id = AUDIO_OUT_FRAME_STREAM_SD_AVI_ID;
     if (frame_queue_output_create(g_audio_out_frame_ctrl, &audio_out_queue_avi_id, AUDIO_OUT_FRAME_STREAM_AUDAC_DEPTH) < 0) {
@@ -1416,7 +1415,7 @@ static void sdcard_avi_init_task(void *pvParameters)
 
 #endif
 
-#if (CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
     /* create jpeg output queue */
     jpeg_out_queue_avi_id = MJPEG_FRAME_STREAM_SD_AVI_ID;
     if (frame_queue_output_create(g_jpeg_frame_ctrl, &jpeg_out_queue_avi_id, MJPEG_FRAME_STREAM_SD_AVI_DEPTH) < 0) {
@@ -1427,12 +1426,12 @@ static void sdcard_avi_init_task(void *pvParameters)
     }
 #endif
 
-#if (CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
     /* auds or auds_vids */
     /* create jpeg_pcm save task */
     xTaskCreate(save_sdcard_avi_jpeg_pcm_task, (char *)"save_sdcard_avi_jpeg_pcm_task", 1024, NULL, 15, &save_avi_jpeg_pcm_task_hd);
 
-#elif (CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+#elif IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
     /* onyl vids */
     /* create vids save task */
     xTaskCreate(save_sdcard_avi_jpeg, (char *)"save_sdcard_avi_jpeg", 1024, NULL, 15, &save_avi_jpeg_task_hd);

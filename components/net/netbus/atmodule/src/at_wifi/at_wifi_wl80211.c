@@ -73,6 +73,40 @@ static void evt_handler_wrapper(void (*handler)(void))
     vTaskDelete(NULL);
 }
 
+static void start_dhcp_tsk(void)
+{
+    extern void _wifi_mgmr_sta_start_dhcpc(void);
+
+    if (at_wifi_config->dhcp_state.bit.sta_dhcp) {
+        _wifi_mgmr_sta_start_dhcpc();
+    } else {
+        //_wifi_mgmr_sta_start_dhcpc();// fixme
+    }
+}
+
+static void disconnect_tsk(void)
+{
+#if 0
+    _wifi_mgmr_sta_stop_dhcpc();
+    if (!at_wifi_config->switch_mode_auto_conn && wl80211_glb.last_connect_params) {
+        wl80211_printf("Autoconnect: Reconnecting to %s\r\n", wl80211_glb.last_connect_params->ssid);
+        wl80211_sta_connect(wl80211_glb.last_connect_params);
+    }
+#endif
+}
+
+static void start_dhcpd_tsk(void)
+{
+    extern void _wifi_mgmr_ap_start_dhcpd(void);
+    _wifi_mgmr_ap_start_dhcpd();
+}
+
+static void stop_dhcpd_tsk(void)
+{
+    void _wifi_mgmr_ap_stop_dhcpd(void);
+    _wifi_mgmr_ap_stop_dhcpd();
+}
+
 static void wl80211_event_handler(async_input_event_t ev, void *priv)
 {
     void (*handler)(void) = NULL;
@@ -81,7 +115,7 @@ static void wl80211_event_handler(async_input_event_t ev, void *priv)
     switch (ev->code) {
         case WL80211_EVT_STA_CONNECTED:
             async_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED, 0);
-            //handler = start_dhcp_tsk;
+            handler = start_dhcp_tsk;
             break;
 
         case WL80211_EVT_SCAN_DONE:
@@ -92,7 +126,17 @@ static void wl80211_event_handler(async_input_event_t ev, void *priv)
         case WL80211_EVT_STA_DISCONNECTED:
             //connect_ind_dump((ev->value >> 16) & 0xFF, ev->value & 0xFF);
             async_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0);
-            //handler = disconnect_tsk;
+            handler = disconnect_tsk;
+            break;
+
+        case WL80211_EVT_AP_STARTED:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STARTED, 0);
+            handler = start_dhcpd_tsk;
+            break;
+
+        case WL80211_EVT_AP_STOPPED:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STOPPED, 0);
+            handler = stop_dhcpd_tsk;
             break;
     }
 

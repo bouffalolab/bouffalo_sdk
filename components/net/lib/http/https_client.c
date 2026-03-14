@@ -36,6 +36,17 @@ struct http_client {
     char                   *query;
 };
 
+static bool host_is_ip_literal(const char *host)
+{
+    ip_addr_t addr;
+
+    if (!host || host[0] == '\0') {
+        return false;
+    }
+
+    return ipaddr_aton(host, &addr) != 0;
+}
+
 static int connect_https(struct http_client *client,
                          const char *ca_pem, size_t ca_len,
                          const char *client_cert_pem, size_t client_cert_len,
@@ -49,6 +60,10 @@ static int connect_https(struct http_client *client,
     } else if (strcasecmp(client->scheme, "https") == 0) {
         ssl_param.ca_cert = ca_pem;
         ssl_param.ca_cert_len = ca_len;
+        /* Only use SNI/hostname verification for DNS names. */
+        if (!host_is_ip_literal(client->host)) {
+            ssl_param.sni = client->host;
+        }
 
         ssl_param.own_cert = client_cert_pem;
         ssl_param.own_cert_len = client_cert_len;
@@ -237,6 +252,9 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
 {
     int ret;
     int buffer_size;
+    size_t path_len;
+    size_t query_len;
+    char *request_uri = NULL;
     struct http_request req = {0};
     struct http_client client = {0};
 
@@ -257,7 +275,10 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
                                   request->client_key_pem, request->client_key_len);
     if (!client.socket) {
         ret = -ECONNREFUSED;
-        LOG_ERR("https connect failed\r\n");
+        LOG_ERR("https connect failed, host=%s scheme=%s port=%d\r\n",
+                client.host ? client.host : "(null)",
+                client.scheme ? client.scheme : "(null)",
+                client.port);
         goto __end;
     }
 
@@ -273,7 +294,25 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
     req.method = request->method;
     req.response = request->response;
     req.http_cb = request->http_cb;
-    req.url = client.path;
+    if (client.path) {
+        path_len = strlen(client.path);
+    } else {
+        path_len = 1;
+    }
+    query_len = (client.query && client.query[0] != '\0') ? strlen(client.query) : 0;
+    if (query_len > 0) {
+        request_uri = malloc(path_len + 1 + query_len + 1);
+        if (!request_uri) {
+            ret = -ENOMEM;
+            goto __end;
+        }
+        snprintf(request_uri, path_len + 1 + query_len + 1, "%s?%s",
+                 client.path ? client.path : "/",
+                 client.query);
+        req.url = request_uri;
+    } else {
+        req.url = client.path ? client.path : "/";
+    }
     req.protocol = request->protocol;
     req.header_fields = request->header_fields;
     req.content_type_value = request->content_type_value;
@@ -286,12 +325,19 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
 
     ret = http_client_req(client.socket, &req, timeout, user_data);
     if (ret < 0) {
-        LOG_ERR("http_client_req fail ret:%d\r\n", ret);
+        LOG_ERR("http_client_req fail ret:%d, fd=%d, host=%s port=%d\r\n",
+                ret, https_wrapper_socketfd_get((https_wrapper_handle_t)client.socket),
+                client.host ? client.host : "(null)",
+                client.port);
     }
 
-    https_wrapper_destroy((https_wrapper_handle_t)client.socket);
-
 __end:
+    if (request_uri) {
+        free(request_uri);
+    }
+    if (client.socket) {
+        https_wrapper_destroy((https_wrapper_handle_t)client.socket);
+    }
     if (req.recv_buf) {
         free(req.recv_buf);
     }
@@ -299,4 +345,3 @@ __end:
 
     return ret;
 }
-

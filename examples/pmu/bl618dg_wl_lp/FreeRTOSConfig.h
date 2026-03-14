@@ -111,6 +111,9 @@ to exclude the API function. */
 #define INCLUDE_xSemaphoreGetMutexHolder 1
 #define INCLUDE_xTaskGetIdleTaskHandle   1
 
+#define  configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
+
+
 // extern void __check_free_();
 // #define traceTASK_SWITCHED_OUT() __check_free_()
 

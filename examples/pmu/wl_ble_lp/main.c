@@ -1,7 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
-#include "mem.h"
+#include "mm.h"
 
 #include <lwip/tcpip.h>
 #include <lwip/sockets.h>
@@ -38,6 +38,7 @@
 
 #define DBG_TAG "MAIN"
 #include "log.h"
+#include "async_event.h"
 
 #if defined(CFG_BLE_ENABLE)
 #include "bluetooth.h"

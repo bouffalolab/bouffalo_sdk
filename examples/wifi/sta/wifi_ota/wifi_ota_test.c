@@ -329,10 +329,10 @@ static void wifi_test_ota_test_init(int argc, char **argv)
             printf("Will Write %u to %08X from %p left %lu.\r\n", buffer_offset, ota_addr + flash_offset, recv_buffer, bin_size - total_cnt);
 #if SHA256_SEL
             bflb_l1c_dcache_clean_range(recv_buffer, buffer_offset);
-#ifdef CONFIG_MBEDTLS_V3
-            status = mbedtls_sha256_update(&ctx_sha256, recv_buffer, buffer_offset);
-#else
+#ifdef CONFIG_MBEDTLS_V2
             status = mbedtls_sha256_update_ret(&ctx_sha256, recv_buffer, buffer_offset);
+#else
+            status = mbedtls_sha256_update(&ctx_sha256, recv_buffer, buffer_offset);
 #endif
             if (status != 0) {
                 printf("sha256 update fail! %d\r\n", status);

@@ -35,6 +35,17 @@ static void lv_line_event(const lv_obj_class_t * class_p, lv_event_t * e);
 /**********************
  *  STATIC VARIABLES
  **********************/
+
+#if LV_USE_OBJ_PROPERTY
+static const lv_property_ops_t lv_line_properties[] = {
+    {
+        .id = LV_PROPERTY_LINE_Y_INVERT,
+        .setter = lv_line_set_y_invert,
+        .getter = lv_line_get_y_invert,
+    },
+};
+#endif
+
 const lv_obj_class_t lv_line_class = {
     .constructor_cb = lv_line_constructor,
     .event_cb = lv_line_event,
@@ -42,7 +53,8 @@ const lv_obj_class_t lv_line_class = {
     .height_def = LV_SIZE_CONTENT,
     .instance_size = sizeof(lv_line_t),
     .base_class = &lv_obj_class,
-    .name = "line",
+    .name = "lv_line",
+    LV_PROPERTY_CLASS_FIELDS(line, LINE)
 };
 
 /**********************
@@ -227,7 +239,7 @@ static void lv_line_event(const lv_obj_class_t * class_p, lv_event_t * e)
         lv_line_t * line = (lv_line_t *)obj;
         lv_layer_t * layer = lv_event_get_layer(e);
 
-        if(line->point_num == 0 || line->point_array.constant == NULL) return;
+        if(line->point_num < 2 || line->point_array.constant == NULL) return;
 
         lv_area_t area;
         lv_obj_get_coords(obj, &area);
@@ -236,6 +248,7 @@ static void lv_line_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
         lv_draw_line_dsc_t line_dsc;
         lv_draw_line_dsc_init(&line_dsc);
+        line_dsc.base.layer = layer;
         lv_obj_init_draw_line_dsc(obj, LV_PART_MAIN, &line_dsc);
 
         /*Read all points and draw the lines*/

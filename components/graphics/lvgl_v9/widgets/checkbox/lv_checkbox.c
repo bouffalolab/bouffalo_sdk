@@ -1,5 +1,5 @@
 /**
- * @file lv_cb.c
+ * @file lv_checkbox.c
  *
  */
 
@@ -12,6 +12,7 @@
 #if LV_USE_CHECKBOX != 0
 
 #include "../../misc/lv_assert.h"
+#include "../../misc/lv_text_private.h"
 #include "../../misc/lv_text_ap.h"
 #include "../../core/lv_group.h"
 #include "../../draw/lv_draw.h"
@@ -37,6 +38,17 @@ static void lv_checkbox_draw(lv_event_t * e);
 /**********************
  *  STATIC VARIABLES
  **********************/
+
+#if LV_USE_OBJ_PROPERTY
+static const lv_property_ops_t lv_checkbox_properties[] = {
+    {
+        .id = LV_PROPERTY_CHECKBOX_TEXT,
+        .setter = lv_checkbox_set_text,
+        .getter = lv_checkbox_get_text,
+    },
+};
+#endif
+
 const lv_obj_class_t lv_checkbox_class = {
     .constructor_cb = lv_checkbox_constructor,
     .destructor_cb = lv_checkbox_destructor,
@@ -46,7 +58,8 @@ const lv_obj_class_t lv_checkbox_class = {
     .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
     .instance_size = sizeof(lv_checkbox_t),
     .base_class = &lv_obj_class,
-    .name = "checkbox",
+    .name = "lv_checkbox",
+    LV_PROPERTY_CLASS_FIELDS(checkbox, CHECKBOX)
 };
 
 /**********************
@@ -182,11 +195,16 @@ static void lv_checkbox_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
         const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
         int32_t font_h = lv_font_get_line_height(font);
-        int32_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
-        int32_t letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
+        lv_text_attributes_t attributes = {0};
+
+        attributes.line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
+        attributes.letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
+        attributes.max_width = LV_COORD_MAX;
+        attributes.text_flags = LV_TEXT_FLAG_NONE;
 
         lv_point_t txt_size;
-        lv_text_get_size(&txt_size, cb->txt, font, letter_space, line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+
+        lv_text_get_size_attributes(&txt_size, cb->txt, font, &attributes);
 
         int32_t bg_colp = lv_obj_get_style_pad_column(obj, LV_PART_MAIN);
         int32_t marker_leftp = lv_obj_get_style_pad_left(obj, LV_PART_INDICATOR);
@@ -237,6 +255,7 @@ static void lv_checkbox_draw(lv_event_t * e)
 
     lv_draw_rect_dsc_t indic_dsc;
     lv_draw_rect_dsc_init(&indic_dsc);
+    indic_dsc.base.layer = layer;
     lv_obj_init_draw_rect_dsc(obj, LV_PART_INDICATOR, &indic_dsc);
     lv_area_t marker_area;
     if(is_rtl) {
@@ -256,14 +275,18 @@ static void lv_checkbox_draw(lv_event_t * e)
 
     lv_draw_rect(layer, &indic_dsc, &marker_area_transf);
 
-    int32_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
-    int32_t letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
+    lv_text_attributes_t attributes = {0};
+    attributes.line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
+    attributes.letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
+    attributes.text_flags = LV_TEXT_FLAG_NONE;
+    attributes.max_width = LV_COORD_MAX;
 
     lv_point_t txt_size;
-    lv_text_get_size(&txt_size, cb->txt, font, letter_space, line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+    lv_text_get_size_attributes(&txt_size, cb->txt, font, &attributes);
 
     lv_draw_label_dsc_t txt_dsc;
     lv_draw_label_dsc_init(&txt_dsc);
+    txt_dsc.base.layer = layer;
     lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &txt_dsc);
     txt_dsc.text = cb->txt;
 

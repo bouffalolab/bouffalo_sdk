@@ -9,6 +9,10 @@
 #include "async_event.h"
 #include "log.h"
 
+/* Forward declarations for external functions */
+extern int wifi_mgmr_task_start(void);
+extern int fhost_init(void);
+
 extern void app_atmodule_init(void);
 static bool wifi_init_done = 0;
 

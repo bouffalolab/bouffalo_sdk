@@ -746,6 +746,9 @@ void net_al_ext_netif_status_callback(struct netif *netif)
 {
     static ip4_addr_t old_addr;
 
+    if (!is_sta_netif(netif))
+        return;
+
     printf("[lwip] netif status callback\r\n");
     if (ip4_addr_cmp((&old_addr), netif_ip4_addr(netif)) == 0) {
         if (ip4_addr_isany(netif_ip4_addr(netif))) {

@@ -14,11 +14,11 @@
 #include <byteorder.h>
 #include <util.h>
 
-#include <constants.h>
-#include <utils.h>
-#include <../../blestack/src/common/tinycrypt/include/tinycrypt/aes.h>
-#include <cmac_mode.h>
-#include <ccm_mode.h>
+#include <tinycrypt/constants.h>
+#include <tinycrypt/utils.h>
+#include <tinycrypt/aes.h>
+#include <tinycrypt/cmac_mode.h>
+#include <tinycrypt/ccm_mode.h>
 
 #include <include/mesh.h>
 #include <../../blestack/src/include/bluetooth/crypto.h>
@@ -32,7 +32,7 @@
 #ifdef BFLB_CRYPT_HARDWARE
 #include "bl_sec.h"
 #endif
-#include "hmac.h"
+#include <tinycrypt/hmac.h>
 
 #define NET_MIC_LEN(pdu) (((pdu)[1] & 0x80) ? 8 : 4)
 #define APP_MIC_LEN(aszmic) ((aszmic) ? 8 : 4)

@@ -102,6 +102,57 @@ if(CONFIG_POST_BUILDS_GENERATE_ROMFS)
         COMMAND ${BL_SDK_BASE}/tools/genromfs/genromfs${TOOL_SUFFIX} -d romfs/ -f ./${BUILD_DIR}/build_out/romfs.bin)
 endif()
 
+if(CONFIG_DUALCORE_NP_IMAGE)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[dualcore] append CONFIG_DUALCORE_NP_IMAGE"
+	COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
+	        ${BIN_FILE}
+                --append NP
+                ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DUALCORE_NP_IMAGE}
+		--output ${BIN_FILE}
+                --align 0x400
+        )
+endif()
+
+if(CONFIG_BACKTRACE)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[dwarfcfi] generating and embedding DWARF CFI table"
+        # Step 1: Generate DWARFCFI bin from ELF
+	#COMMAND ${CMAKE} -E echo "  [1/2] Generating DWARFCFI bin from ELF..."
+        COMMAND python3 ${BL_SDK_BASE}/tools/byai/unwind_6byte_table.py
+            ${CMAKE_CURRENT_BINARY_DIR}/build_out/dwarfcfi.bin
+            ${ELF_FILE}
+        # Step 2: Append DWARFCFI to firmware using multi_bins.py
+	#COMMAND ${CMAKE} -E echo "  [2/2] Appending DWARFCFI to firmware..."
+        COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
+            ${BIN_FILE}
+            --append DWARFCFI
+            ${CMAKE_CURRENT_BINARY_DIR}/build_out/dwarfcfi.bin
+            --output ${BIN_FILE}
+            --align 0x1000
+        #COMMAND ${CMAKE} -E echo "  [done] DWARFCFI embedded successfully"
+        )
+endif()
+
+if(CONFIG_X509_CERTIFICATE_BUNDLE)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[certs] generating and embedding x509 certificate bundle"
+        # Step 1: Generate certificate bundle from PEM files (filtered)
+        COMMAND python3 ${BL_SDK_BASE}/components/crypto/mbedtls/bl_crt_bundle/gen_crt_bundle.py
+            --input ${BL_SDK_BASE}/components/crypto/mbedtls/bl_crt_bundle/cacrt_all.pem
+            --filter ${BL_SDK_BASE}/components/crypto/mbedtls/bl_crt_bundle/cmn_crt_authorities.csv
+            --output ${CMAKE_CURRENT_BINARY_DIR}/build_out/x509_crt_bundle
+            --quiet
+        # Step 2: Append certificate bundle to firmware using multi_bins.py
+        COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
+            ${BIN_FILE}
+            --append CERTS
+            ${CMAKE_CURRENT_BINARY_DIR}/build_out/x509_crt_bundle
+            --output ${BIN_FILE}
+            --align 0x1000
+        )
+endif()
+
 if(CONFIG_POST_BUILDS_GENERATE_LITTLEFS)
     list(APPEND post_build_cmds
         COMMAND ${CMAKE} -E echo "[littlefs] generate littlefs.bin using littlefs directory, size=${CONFIG_POST_BUILDS_LITTLEFS_SIZE}"

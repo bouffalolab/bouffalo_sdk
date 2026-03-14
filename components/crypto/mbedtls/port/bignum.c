@@ -38,7 +38,7 @@
 #if defined(MBEDTLS_BIGNUM_C)
 
 #include "mbedtls/bignum.h"
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls/bn_mul.h"
 #endif
 #include "mbedtls/platform_util.h"
@@ -50,15 +50,15 @@
 
 #include "mbedtls/platform.h"
 
-#ifdef CONFIG_MBEDTLS_V3
-#define MPI_VALIDATE_RET( cond )
-#define MPI_VALIDATE( cond )
-#else
+#ifdef CONFIG_MBEDTLS_V2
 #define MBEDTLS_PRIVATE(member) member
 #define MPI_VALIDATE_RET( cond )                                       \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_MPI_BAD_INPUT_DATA )
 #define MPI_VALIDATE( cond )                                           \
     MBEDTLS_INTERNAL_VALIDATE( cond )
+#else
+#define MPI_VALIDATE_RET( cond )
+#define MPI_VALIDATE( cond )
 #endif
 
 #define ciL    (sizeof(mbedtls_mpi_uint))         /* chars in limb  */

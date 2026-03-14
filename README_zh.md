@@ -30,45 +30,45 @@
 
 备注：**√** 表示已支持；**×** 表示未支持；**○** 表示已支持但未测试；**-** 表示没有该外设。
 
-|   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
-|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
-|  ADC         |      ○         |      √             |   √           |   ○      |
-|  CAM         |      -         |      √             |   √           |   √      |
-|  CKS         |      ○         |      √             |   √           |   ○      |
-|  CSI         |      -         |      -             |   -           |   √      |
-|  DAC         |      ○         |      √             |   √           |   ○      |
-|  DMA         |      ○         |      √             |   √           |   √      |
-|  EFUSE       |      ×         |      √             |   √           |   √      |
-|  EMAC        |      -         |      √             |   √           |   √      |
-|  FLASH       |      √         |      √             |   √           |   √      |
-|  GPIO        |      ○         |      √             |   √           |   √      |
-|  I2C         |      ○         |      √             |   √           |   ○      |
-|  I2S         |      ○         |      ○             |   √           |   ○      |
-|  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      ×             |   √           |   √      |
-|  PWM_v1      |      ○         |      √             |   -           |   -      |
-|  PWM_v2      |      -         |      -             |   √           |   √      |
-|  RTC         |      ○         |      √             |   √           |   √      |
-|  SEC_AES     |      ○         |      √             |   √           |   √      |
-|  SEC_SHA     |      ○         |      √             |   √           |   √      |
-|  SEC_TRNG    |      ○         |      √             |   √           |   √      |
-|  SEC_PKA     |      ○         |      √             |   √           |   √      |
-|  SPI         |      ○         |      √             |   √           |   √      |
-|  TIMER       |      ○         |      √             |   √           |   √      |
-|  UART        |      √         |      √             |   √           |   √      |
-|  USB_v1      |      -         |      √             |   -           |   -      |
-|  USB_v2      |      -         |      -             |   √           |   √      |
-|  WDG         |      ○         |      √             |   √           |   ○      |
+|   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |
+|:------------:|:--------------:|:--------------------:|:-----------:|
+|  ADC         |      ○         |      √             |   √           |
+|  CAM         |      -         |      √             |   √           |
+|  CKS         |      ○         |      √             |   √           |
+|  CSI         |      -         |      -             |   -           |
+|  DAC         |      ○         |      √             |   √           |
+|  DMA         |      ○         |      √             |   √           |
+|  EFUSE       |      ×         |      √             |   √           |
+|  EMAC        |      -         |      √             |   √           |
+|  FLASH       |      √         |      √             |   √           |
+|  GPIO        |      ○         |      √             |   √           |
+|  I2C         |      ○         |      √             |   √           |
+|  I2S         |      ○         |      ○             |   √           |
+|  IR          |      ○         |      √             |   √           |
+|  MJPEG       |      ×         |      ×             |   √           |
+|  PWM_v1      |      ○         |      √             |   -           |
+|  PWM_v2      |      -         |      -             |   √           |
+|  RTC         |      ○         |      √             |   √           |
+|  SEC_AES     |      ○         |      √             |   √           |
+|  SEC_SHA     |      ○         |      √             |   √           |
+|  SEC_TRNG    |      ○         |      √             |   √           |
+|  SEC_PKA     |      ○         |      √             |   √           |
+|  SPI         |      ○         |      √             |   √           |
+|  TIMER       |      ○         |      √             |   √           |
+|  UART        |      √         |      √             |   √           |
+|  USB_v1      |      -         |      √             |   -           |
+|  USB_v2      |      -         |      -             |   √           |
+|  WDG         |      ○         |      √             |   √           |
 
 # Wireless 支持
 
-|   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
-|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
-|  WIFI4       |      √         |      -             |   -           |   ×      |
-|  WIFI6       |      -         |      -             |   √           |   -      |
-|  BT          |      -         |      -             |   ×           |   ×      |
-|  BLE         |      √         |      ×             |   √           |   ×      |
-|  ZIGBEE      |      -         |      ×             |   ×           |   ×      |
+|   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |
+|:------------:|:--------------:|:--------------------:|:-----------:|
+|  WIFI4       |      √         |      -             |   -           |
+|  WIFI6       |      -         |      -             |   √           |
+|  BT          |      -         |      -             |   ×           |
+|  BLE         |      √         |      ×             |   √           |
+|  ZIGBEE      |      -         |      ×             |   ×           |
 
 备注：**√** 表示已支持；**×** 表示未支持；**○** 表示已支持但未测试；**-** 表示没有该外设。
 
@@ -118,18 +118,11 @@ cd examples/helloworld
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- 如果使用 **BL602** 
+- 如果使用 **BL602**
 
 ```
 cd examples/helloworld
 make CHIP=bl602 BOARD=bl602dk
-```
-
-- 如果使用 **BL808** 或者 **BL606P** ,需要添加 **CPU_ID**
-
-```
-cd examples/helloworld
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 如果你想使用 **ninja** 编译，你可以尝试：
@@ -137,11 +130,6 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 cd examples/helloworld
 make ninja CHIP=bl616 BOARD=bl616dk
-```
-
-```
-cd examples/helloworld
-make ninja CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## CDK 编译
@@ -163,13 +151,6 @@ sudo usermod -aG dialout xxx # xxx 是你自己的用户名
 ```
 cd examples/helloworld
 make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl616/bl808/bl606p, COMX in Windows, /dev/ttyxxx in Linux
-```
-
-- 如果使用 **BL808** 或者 **BL606P** ,需要添加 **CPU_ID**
-
-```
-cd examples/helloworld
-make flash CHIP=chip_name CPU_ID=m0 COMX=xxx # chip_name should be bl602/bl702/bl616/bl808/bl606p, COMX in Windows, /dev/ttyxxx in Linux
 ```
 
 如果使用串口烧录而非 USB 烧录，不同的 USB2TTL 芯片支持的最高波特率不一样,烧录的时候需要注意。

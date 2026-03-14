@@ -25,6 +25,52 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
+/**
+ * Possible states of a widget.
+ * OR-ed values are possible
+ */
+typedef enum {
+    LV_STATE_DEFAULT     = 0,
+    LV_STATE_ALT         = 1 << 0,
+    /*1 reserved*/
+    LV_STATE_CHECKED     = 1 << 2,
+    LV_STATE_FOCUSED     = 1 << 3,
+    LV_STATE_FOCUS_KEY   = 1 << 4,
+    LV_STATE_EDITED      = 1 << 5,
+    LV_STATE_HOVERED     = 1 << 6,
+    LV_STATE_PRESSED     = 1 << 7,
+    LV_STATE_SCROLLED    = 1 << 8,
+    LV_STATE_DISABLED    = 1 << 9,
+    /*2 reserved*/
+    LV_STATE_USER_1      = 1 << 12,
+    LV_STATE_USER_2      = 1 << 13,
+    LV_STATE_USER_3      = 1 << 14,
+    LV_STATE_USER_4      = 1 << 15,
+
+    LV_STATE_ANY         = 0xFFFF,  /**< Special value can be used in some functions to target all states*/
+} lv_state_t;
+
+/**
+ * The possible parts of widgets.
+ * The parts can be considered as the internal building block of the widgets.
+ * E.g. slider = background + indicator + knob
+ * Not all parts are used by every widget
+ */
+
+typedef enum {
+    LV_PART_MAIN         = 0x000000,  /**< A background like rectangle*/
+    LV_PART_SCROLLBAR    = 0x010000,  /**< The scrollbar(s)*/
+    LV_PART_INDICATOR    = 0x020000,  /**< Indicator, e.g. for slider, bar, switch, or the tick box of the checkbox*/
+    LV_PART_KNOB         = 0x030000,  /**< Like handle to grab to adjust the value*/
+    LV_PART_SELECTED     = 0x040000,  /**< Indicate the currently selected option or section*/
+    LV_PART_ITEMS        = 0x050000,  /**< Used if the widget has multiple similar elements (e.g. table cells)*/
+    LV_PART_CURSOR       = 0x060000,  /**< Mark a specific place e.g. for text area's cursor or on a chart*/
+
+    LV_PART_CUSTOM_FIRST = 0x080000,  /**< Extension point for custom widgets*/
+
+    LV_PART_ANY          = 0x0F0000,  /**< Special value can be used in some functions to target all parts*/
+} lv_part_t;
+
 typedef enum {
     LV_STYLE_STATE_CMP_SAME,           /**< The style properties in the 2 states are identical */
     LV_STYLE_STATE_CMP_DIFF_REDRAW,    /**< The differences can be shown with a simple redraw */
@@ -32,6 +78,13 @@ typedef enum {
     LV_STYLE_STATE_CMP_DIFF_LAYOUT,    /**< The differences can be shown with a simple redraw */
 } lv_style_state_cmp_t;
 
+/**
+ * A joint type for `lv_part_t` and `lv_state_t`. Example values
+ * - `0`: means `LV_PART_MAIN | LV_STATE_DEFAULT`
+ * - `LV_STATE_PRSSED`
+ * - `LV_PART_KNOB`
+ * - `LV_PART_KNOB | LV_STATE_PRESSED | LV_STATE_CHECKED`
+ */
 typedef uint32_t lv_style_selector_t;
 
 /**********************
@@ -87,6 +140,15 @@ bool lv_obj_replace_style(lv_obj_t * obj, const lv_style_t * old_style, const lv
  */
 void lv_obj_remove_style(lv_obj_t * obj, const lv_style_t * style, lv_style_selector_t selector);
 
+
+/**
+ * Remove all styles added by a theme from a widget
+ * @param selector  OR-ed values of states and a part to remove only styles with matching selectors.
+ *                  LV_STATE_ANY and LV_PART_ANY can be used
+ * @param obj   pointer to a widget
+ */
+void lv_obj_remove_theme(lv_obj_t * obj, lv_style_selector_t selector);
+
 /**
  * Remove all styles from an object
  * @param obj       pointer to an object
@@ -109,6 +171,24 @@ void lv_obj_report_style_change(lv_style_t * style);
  *                  `LV_STYLE_PROP_INV` to perform only a style cache update
  */
 void lv_obj_refresh_style(lv_obj_t * obj, lv_part_t part, lv_style_prop_t prop);
+
+/**
+ * Temporary disable a style for a selector. It will look like is the style wasn't added
+ * @param obj       pointer to an object
+ * @param style     pointer to a style
+ * @param selector  the selector of a style (e.g. LV_STATE_PRESSED | LV_PART_KNOB)
+ * @param dis       true: disable the style, false: enable the style
+ */
+void lv_obj_style_set_disabled(lv_obj_t * obj, const lv_style_t * style, lv_style_selector_t selector, bool dis);
+
+/**
+ * Get if a given style is disabled on an object.
+ * @param obj       pointer to an object
+ * @param style     pointer to a style
+ * @param selector  the selector of a style (e.g. LV_STATE_PRESSED | LV_PART_KNOB)
+ * @return          true: disable the style, false: enable the style
+ */
+bool lv_obj_style_get_disabled(lv_obj_t * obj, const lv_style_t * style, lv_style_selector_t selector);
 
 /**
  * Enable or disable automatic style refreshing when a new style is added/removed to/from an object
@@ -183,12 +263,12 @@ void lv_obj_fade_out(lv_obj_t * obj, uint32_t time, uint32_t delay);
 
 static inline lv_state_t lv_obj_style_get_selector_state(lv_style_selector_t selector)
 {
-    return selector & 0xFFFF;
+    return (lv_state_t)(selector & 0xFFFF);
 }
 
 static inline lv_part_t lv_obj_style_get_selector_part(lv_style_selector_t selector)
 {
-    return selector & 0xFF0000;
+    return (lv_part_t)(selector & 0xFF0000);
 }
 
 #include "lv_obj_style_gen.h"
@@ -306,6 +386,51 @@ static inline int32_t lv_obj_get_style_transform_scale_y_safe(const lv_obj_t * o
  * @return          the final opacity considering the parents' opacity too
  */
 lv_opa_t lv_obj_get_style_opa_recursive(const lv_obj_t * obj, lv_part_t part);
+
+
+/**
+ * Apply recolor effect to the input color based on the object's style properties.
+ * @param obj       the target object containing recolor style properties
+ * @param part      the part to retrieve recolor styles.
+ * @param color     the original color to be modified
+ * @return          the blended color after applying recolor and opacity
+ */
+lv_color32_t lv_obj_style_apply_recolor(const lv_obj_t * obj, lv_part_t part, lv_color32_t color);
+
+/**
+ * Get the `recolor` style property from all parents and blend them recursively.
+ * @param obj       the object whose recolor value should be retrieved
+ * @param part      the target part to check. Non-MAIN parts will also consider
+ *                  the `recolor` value from the MAIN part during calculation
+ * @return          the final blended recolor value combining all parent's recolor values
+ */
+lv_color32_t lv_obj_get_style_recolor_recursive(const lv_obj_t * obj, lv_part_t part);
+
+#if LV_USE_OBSERVER
+/**
+ * Disable a style if a subject's value is not equal to a reference value
+ * @param obj           pointer to Widget
+ * @param style         pointer to a style
+ * @param selector      pointer to a selector
+ * @param subject       pointer to Subject
+ * @param ref_value     reference value to compare Subject's value with
+ * @return              pointer to newly-created Observer
+ */
+lv_observer_t * lv_obj_bind_style(lv_obj_t * obj, const lv_style_t * style, lv_style_selector_t selector,
+                                  lv_subject_t * subject, int32_t ref_value);
+
+/**
+ * Connect a subject's value to a style property of a widget.
+ * @param obj       pointer to a Widget
+ * @param prop      a style property
+ * @param selector  a selector for which the property should be added, e.g. `LV_PART_KNOB | LV_STATE_PRESSED`
+ * @param subject   pointer a Subject to which value the property should be bound
+ * @return              pointer to newly-created Observer
+ */
+lv_observer_t * lv_obj_bind_style_prop(lv_obj_t * obj, lv_style_prop_t prop, lv_style_selector_t selector,
+                                       lv_subject_t * subject);
+
+#endif
 
 /**********************
  *      MACROS

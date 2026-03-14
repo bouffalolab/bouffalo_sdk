@@ -1,222 +1,183 @@
-# NetHub VirtualChannel
+# NetHub Virtual Channel 用户指南
 
-NetHub 虚拟通道，基于 Netlink 机制实现用户空间与内核空间之间的高效数据传输。
+## 1. 概述
 
-## 功能特性
+NetHub Virtual Channel 是承载在当前 host link 上的逻辑消息通道。
 
-- **多种数据类型**：支持 USER、AT、SYSTEM 三种数据通道
-- **消息包传输**：以消息包为单位，底层接收完整的数据包（非流式）
-- **最大数据长度**：单次传输最大 1500 字节
-- **回调机制**：支持注册数据接收回调函数
-- **用户态 API**：提供简洁的 C 语言接口
+它不是独立物理接口，而是复用当前的 `SDIO / USB / SPI` 链路，把不同类型的数据拆分到不同逻辑通道中。
 
-## 数据类型
+当前最常用的是：
+
+- `USER`
+  - 给客户或应用层传输私有数据
+- `AT`
+  - 给 host 控制面承载 AT 数据
+- `SYSTEM`
+  - 内部协调使用
+
+对客户来说，最主要关注的是 `USER` 通道。
+
+## 2. 数据类型
 
 | 类型 | 值 | 用途 |
-|------|-----|------|
-| USER | 0x01 | 用户私有数据 |
-| AT | 0x02 | WiFi 相关数据/AT 命令 |
-| SYSTEM | 0x03 | 系统相关数据 |
+| --- | --- | --- |
+| USER | `0x01` | 用户私有数据 |
+| AT | `0x02` | 控制面 AT 数据 |
+| SYSTEM | `0x03` | 系统内部消息 |
 
-## 快速开始
+## 3. bringup 前提
 
-### 编译
+使用 host 侧 USER Virtual Channel 前，建议确认：
+
+1. device 侧已编入：
+   - `CONFIG_NETHUB=y`
+   - `CONFIG_MR_VIRTUALCHAN=y`
+2. host 侧已加载 `mr_sdio.ko`
+3. device 与 host 的底层链路已经正常工作
+
+说明：
+
+- USER 通道和 AT 通道是并列关系
+- 如果 host 控制面本身走 `vchan`，它使用的是 `AT` 类型
+- 客户自己的私有消息建议使用 `USER` 类型
+
+## 4. 编译
+
+### 4.1 跟随 host 整体编译
+
+推荐直接使用 host 总入口：
 
 ```bash
-cd virtualchan/
+cd bsp/common/msg_router/linux_host/userspace/nethub
+./build.sh build
+```
+
+生成产物包括：
+
+- `output/libnethub_vchan.a`
+- `output/nethub_vchan_app`
+
+### 4.2 单独编译 virtualchan
+
+```bash
+cd bsp/common/msg_router/linux_host/userspace/nethub/virtualchan
 make
 ```
 
-编译产物：`nethub_vchan_app`
+## 5. host 侧公共 API
 
-### 运行测试程序
+头文件：
 
-```bash
-# 需要加载内核模块 mr_sdio.ko
-sudo ./nethub_vchan_app
-```
+- `bsp/common/msg_router/linux_host/userspace/nethub/virtualchan/nethub_vchan.h`
 
-### 命令说明
-
-测试程序支持以下命令：
-
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| `send <type> <data>` | 发送数据 | `send user hello` |
-| `test mtu` | MTU 测试 | `test mtu` |
-| `status` | 查看状态 | `status` |
-| `help` | 显示帮助 | `help` |
-| `quit/exit` | 退出程序 | `quit` |
-
-**数据类型参数**：
-- `user` - USER 类型数据
-- `at` - AT 类型数据
-- `system` - SYSTEM 类型数据
-
-### 使用示例
-
-```bash
-# 发送 USER 类型数据
-nethub_vchan> send user test_message_123
-
-# 查看状态
-nethub_vchan> status
-Virtual Channel Status: Active
-USER callback: registered
-AT callback: not registered
-SYSTEM callback: not registered
-
-# MTU 测试
-nethub_vchan> test mtu
-Testing maximum transfer unit...
-MTU test completed: max size=1500 bytes
-```
-
-## API 接口
-
-### 初始化与清理
+### 5.1 初始化与清理
 
 ```c
-/* 初始化虚拟通道 */
 int nethub_vchan_init(void);
-
-/* 清理虚拟通道 */
 int nethub_vchan_deinit(void);
 ```
 
-### 数据发送
+### 5.2 USER 通道
 
 ```c
-/* 发送数据（通用接口） */
-int nethub_vchan_send(uint8_t type, const void *data, size_t len);
-
-/* 发送 USER 类型数据（便捷接口） */
-int nethub_vchan_user_send(const void *data, size_t len);
-
-/* 发送 AT 类型数据（便捷接口） */
-int nethub_vchan_at_send(const void *data, size_t len);
-```
-
-### 回调注册
-
-```c
-/* 接收回调函数类型 */
 typedef void (*nethub_vchan_recv_callback_t)(const void *data, size_t len);
 
-/* 注册数据接收回调（通用接口） */
-int nethub_vchan_register_callback(uint8_t data_type,
-                                    nethub_vchan_recv_callback_t callback);
-
-/* 注册 USER 类型回调（便捷接口） */
+int nethub_vchan_user_send(const void *data, size_t len);
 int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
-
-/* 注册 AT 类型回调（便捷接口） */
-int nethub_vchan_at_register_callback(nethub_vchan_recv_callback_t callback);
-
-/* 注销回调 */
-int nethub_vchan_unregister_callback(uint8_t data_type);
 ```
 
-### 代码示例
+### 5.3 可选状态查询
+
+如果客户需要判断当前 virtual channel 是否已经 ready，可选使用：
 
 ```c
+typedef struct {
+    nethub_vchan_link_state_t link_state;
+    nethub_vchan_host_state_t host_state;
+} nethub_vchan_state_snapshot_t;
+
+int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
+```
+
+常用判断：
+
+- `link_state == NETHUB_VCHAN_LINK_UP`
+  - 表示链路已可收发
+- `host_state == NETHUB_VCHAN_HOST_STATE_DEVICE_RUN`
+  - 表示 host 侧状态机已经和 device 完成握手
+
+### 5.4 可选链路事件回调
+
+如果应用希望在链路 up/down 时被动收到通知，可选注册：
+
+```c
+int nethub_vchan_register_link_event_callback(
+    nethub_vchan_link_event_callback_t callback,
+    void *user_data);
+```
+
+通常客户集成只需要：
+
+- `nethub_vchan_init()`
+- `nethub_vchan_user_register_callback()`
+- `nethub_vchan_user_send()`
+- `nethub_vchan_deinit()`
+
+只有在应用需要更严格的 ready 判断或链路事件感知时，再额外使用状态快照和链路事件回调。
+
+## 6. 典型使用方式
+
+典型流程：
+
+1. `nethub_vchan_init()`
+2. `nethub_vchan_user_register_callback()`
+3. `nethub_vchan_user_send()`
+4. 结束时调用 `nethub_vchan_deinit()`
+
+示例：
+
+```c
+#include <stdio.h>
+#include <string.h>
+
 #include "nethub_vchan.h"
 
-/* 数据接收回调函数 */
-void user_data_callback(const void *data, size_t len)
+static void user_rx_cb(const void *data, size_t len)
 {
-    printf("Received USER data: %.*s\n", (int)len, (char *)data);
+    printf("recv USER data: %.*s\n", (int)len, (const char *)data);
 }
 
 int main(void)
 {
-    /* 初始化虚拟通道 */
+    const char *msg = "hello from host";
+
     if (nethub_vchan_init() != 0) {
-        fprintf(stderr, "Failed to initialize virtual channel\n");
         return -1;
     }
 
-    /* 注册 USER 数据接收回调 */
-    nethub_vchan_user_register_callback(user_data_callback);
-
-    /* 发送 USER 数据 */
-    const char *msg = "Hello from userspace!";
+    nethub_vchan_user_register_callback(user_rx_cb);
     nethub_vchan_user_send(msg, strlen(msg));
 
-    /* 等待数据... */
-    sleep(1);
-
-    /* 清理 */
     nethub_vchan_deinit();
     return 0;
 }
 ```
 
-## 编译选项
+## 7. 测试程序
 
-### 启用 Readline 支持
+`nethub_vchan_app` 是一个可选的调试工具，不是客户集成 USER 通道时必须依赖的组件。
 
-如果系统安装了 readline 库，可以启用命令自动补全和历史记录功能：
-
-```bash
-make HAVE_READLINE=1
-```
-
-安装 readline：
-```bash
-# Ubuntu/Debian
-sudo apt-get install libreadline-dev
-
-# CentOS/RHEL
-sudo yum install readline-devel
-```
-
-### 清理编译产物
+如果需要快速验证链路，可执行：
 
 ```bash
-make clean
+cd bsp/common/msg_router/linux_host/userspace/nethub/virtualchan
+sudo ./nethub_vchan_app
 ```
 
-## 目录结构
+## 8. 限制与注意事项
 
-```
-virtualchan/
-├── nethub_vchan.h          # 虚拟通道头文件（API 接口）
-├── nethub_vchan.c          # 虚拟通道核心实现
-├── nethub_vchan_app.c      # 测试应用程序
-├── Makefile                # 编译配置
-└── README_CN.md            # 本文档
-```
-
-## 错误码
-
-| 错误码 | 宏定义 | 说明 |
-|--------|--------|------|
-| 0 | NETHUB_VCHAN_OK | 成功 |
-| -1 | NETHUB_VCHAN_ERROR | 通用错误 |
-| -2 | NETHUB_VCHAN_ERROR_INIT | 初始化失败 |
-| -3 | NETHUB_VCHAN_ERROR_NOT_INIT | 未初始化 |
-| -4 | NETHUB_VCHAN_ERROR_PARAM | 参数错误 |
-| -5 | NETHUB_VCHAN_ERROR_BUSY | 忙碌状态 |
-| -6 | NETHUB_VCHAN_ERROR_NOMEM | 内存不足 |
-| -7 | NETHUB_VCHAN_ERROR_IO | IO 错误 |
-
-## 依赖
-
-- **内核模块**：需要加载 `mr_sdio.ko` 内核驱动
-- **系统库**：
-  - 标准库：libc、pthread
-  - 可选：libreadline（用于命令行增强）
-
-## 限制与注意事项
-
-1. **数据长度限制**：单次传输最大 1500 字节
-2. **需要 root 权限**：Netlink 通信需要特权用户
-3. **依赖内核模块**：必须先加载 `mr_sdio.ko`
-4. **消息包完整性**：保证按包接收，不会出现半包或粘包
-
-## 应用场景
-
-- **私有数据通道**：用户自定义数据传输
-- **AT 命令通道**：WiFi 配置和控制
-- **系统消息通道**：内核态与用户态信息交换
+1. 单次消息最大长度为 `1500` 字节。
+2. USER 通道是消息包语义，不是流式字节流。
+3. 使用前必须保证内核模块已经加载。
+4. 如果 device 侧未启用 `CONFIG_MR_VIRTUALCHAN`，host 侧 USER 通道无法工作。
+5. 如果同时使用 host 控制面和 USER 通道，建议把客户私有数据固定放在 `USER` 类型，不要复用 `AT` 类型。

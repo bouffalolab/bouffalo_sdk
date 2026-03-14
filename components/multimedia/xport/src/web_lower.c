@@ -36,7 +36,7 @@
 
 #ifdef CONFIG_USING_TLS
 #include "mbedtls/base64.h"
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
@@ -439,7 +439,11 @@ int wsession_read(wsession_t *session, char *buf, size_t count, int timeout_ms)
 
     if (URL_IS_HTTPS(session->url)) {
         mbedtls_ssl_conf_read_timeout(&mtls->conf, timeout_ms);
+#ifdef CONFIG_MBEDTLS_V2
         count = count >= MBEDTLS_SSL_MAX_CONTENT_LEN ? MBEDTLS_SSL_MAX_CONTENT_LEN / 2 : count;
+#else
+        count = count >= MBEDTLS_SSL_IN_CONTENT_LEN ? MBEDTLS_SSL_IN_CONTENT_LEN / 2 : count;
+#endif
         rc = mbedtls_ssl_read(&mtls->ssl, (unsigned char *)buf, count);
         //printf("====>>>count = %10d, rc = %10d, %d\n", count, rc, MBEDTLS_SSL_MAX_CONTENT_LEN);
         if (rc < 0) {

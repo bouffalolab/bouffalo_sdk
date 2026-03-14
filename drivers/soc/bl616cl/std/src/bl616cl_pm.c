@@ -811,7 +811,7 @@ BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie)
     return SUCCESS;
 }
 
-int pm_lowpower_gpio_cfg(lp_gpio_cfg_Type *gpio_cfg)
+int pm_lowpower_gpio_cfg(lp_gpio_cfg_type *gpio_cfg)
 {
     uint8_t io = 0;
     uint8_t ie = 0;

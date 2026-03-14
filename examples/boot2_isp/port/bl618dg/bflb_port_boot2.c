@@ -84,7 +84,7 @@ static void _bflb_init_psram_gpio(void)
 {
     struct bflb_device_s *gpio;
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     for (uint8_t i = 0; i < 12; i++) {
         bflb_gpio_init(gpio, (59 + i), GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
     }
@@ -427,18 +427,23 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
         /* get public key hash */
         switch (efuse_cfg->app_sign_type) {
             case HAL_APP_SIGN_SAME_AS_BOOT2:
-                // TODO: sha384
-                bflb_ef_ctrl_read_direct(NULL, 0x1C, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
                 efuse_cfg->sign[i] = ((struct boot_efuse_sw_cfg1_t)sw_cfg1).sign_cfg;
+                bflb_ef_ctrl_read_direct(NULL, 0x1C, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
+                if (efuse_cfg->sign[i] == 2) {
+                    /* Read additional 16 bytes (4 words) for SHA384 pk hash at offset 32 bytes */
+                    bflb_ef_ctrl_read_direct(NULL, 0xC0, (uint32_t *)((uint8_t *)efuse_cfg->pk_hash_cpu[i] + HAL_BOOT2_PK_HASH_SIZE), 4, 0);
+                }
                 break;
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
             case HAL_APP_SIGN_INDIVIDUAL_SHA256:
-                // TODO: sha256
                 efuse_cfg->sign[i] = 1;
+                bflb_ef_ctrl_read_direct(NULL, 0x80, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
                 break;
             case HAL_APP_SIGN_INDIVIDUAL_SHA384:
-                // TODO: sha384
-                efuse_cfg->sign[i] = 1;
+                efuse_cfg->sign[i] = 2;
+                bflb_ef_ctrl_read_direct(NULL, 0x80, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4, 0);
                 break;
+#endif
             case HAL_APP_NO_SIGN:
                 efuse_cfg->sign[i] = 0;
                 break;
@@ -583,7 +588,7 @@ void hal_boot2_uart_gpio_init(void)
     volatile uint32_t *p = (uint32_t *)0x2000C060;
     struct bflb_device_s *gpio;
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     bflb_gpio_uart_init(gpio, GPIO_PIN_11, GPIO_UART_FUNC_UART0_TX);
     if ((*p) & (0x1 << 22)) {
         /* QFN68 */
@@ -605,7 +610,7 @@ void hal_boot2_debug_uart_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(BFLB_NAME_GPIO);
     bflb_gpio_uart_init(gpio, GPIO_PIN_11, GPIO_UART_FUNC_UART0_TX);
 }
 
@@ -853,7 +858,14 @@ void hal_boot2_get_img_info(uint8_t *data, uint32_t *image_offset, uint32_t *img
     if (hash_ignore == 1) {
         *hash = NULL;
     } else {
-        memcpy(phash, header->basic_cfg.hash, sizeof(header->basic_cfg.hash));
+        arch_memcpy_fast(phash, header->basic_cfg.hash, sizeof(header->basic_cfg.hash));
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        /* For SHA384, read the remaining 16 bytes from after the boot header */
+        if (HAL_BOOT_SIGN_TYPE_ECC_SHA384 == g_efuse_cfg.sign) {
+            uint8_t *hash_ext = data + sizeof(struct hal_bootheader_t);
+            arch_memcpy_fast(&phash[HAL_BOOT2_PK_HASH_SIZE], hash_ext, 16);
+        }
+#endif
     }
 }
 

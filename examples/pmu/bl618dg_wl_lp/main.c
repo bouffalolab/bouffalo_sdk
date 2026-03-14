@@ -19,7 +19,18 @@
 #include "bflb_uart.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
+
+#ifdef BL616
+#include "bl616_pm.h"
+#include "bl616_hbn.h"
+#elif defined(BL616CL)
+#include "bl616cl_pm.h"
+#include "bl616cl_hbn.h"
+#elif defined(BL618DG)
+#include "bl618dg_pm.h"
 #include "bl618dg_hbn.h"
+#endif
+
 #include "bflb_rtc.h"
 
 #include "rfparam_adapter.h"
@@ -35,7 +46,6 @@
 
 #define DBG_TAG "MAIN"
 #include "log.h"
-#include "bl618dg_pm.h"
 #include "async_event.h"
 
 /****************************************************************************
@@ -61,8 +71,6 @@ static wifi_conf_t conf = {
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
-
-extern bl_lp_fw_cfg_t lpfw_cfg;
 
 /****************************************************************************
  * Private Function Prototypes
@@ -431,7 +439,7 @@ static void proc_hellow_entry(void *pvParameters)
     vTaskDelete(NULL);
 }
 #endif
-#if 1
+#if defined(BL618DG)
 static struct bflb_device_s *rtc = NULL;
 
 static TaskHandle_t rc32k_coarse_trim_task_hd = NULL;
@@ -562,6 +570,28 @@ int main(void)
 
     board_init();
 
+#if defined(BL616CL)
+    AON_Trim_Ldo18_IO_Vout();
+    HBN_Trim_Ldo_Sys_Vout();
+    HBN_Trim_Ldo_Aon_Vout();
+    HBN_Trim_Ldo_Soc_Vout();
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, HBN_SW_LDO08AON_VOUT_TRIM_AON);
+    printf("ldo08aon value:%d\r\n",tmpVal);
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_LDO_0);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, HBN_LDO_SOC_VOUT_SEL_AON);
+    printf("ldo08soc value:%d\r\n",tmpVal);
+
+    // HBN_SW_Trim_Ldo_Aon_Vout();
+    HBN_SW_Set_Ldo_Soc_Vout(HBN_LDO_SOC_LEVEL_0P900V);
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_LDO_0);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, HBN_LDO_SOC_VOUT_TRIM_AON);
+    printf("ldo08soc value:%d\r\n",tmpVal);
+#endif
+
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 
@@ -578,7 +608,7 @@ int main(void)
 
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
     // ci_pm_test_init();
-#if 1
+#if defined(BL618DG) 
     /* coarse trim rc32k */
     puts("[OS] Create rc32k_coarse_trim task...\r\n");
     xTaskCreate(rc32k_coarse_trim_task, (char *)"rc32k_coarse_trim", 512, NULL, 11, &rc32k_coarse_trim_task_hd);

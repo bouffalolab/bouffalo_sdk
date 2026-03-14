@@ -5,7 +5,6 @@
 #include <task.h>
 #include <timers.h>
 #include <shell.h>
-#include <netbus_uart.h>
 #include "at_main.h"
 #include "bflb_dma.h"
 #include "wifi_mgmr_ext.h"

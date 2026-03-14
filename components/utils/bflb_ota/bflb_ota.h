@@ -2,7 +2,9 @@
 #define __HOSAL_OTA_H__
 #include <stdint.h>
 
+#ifndef HOSAL_OTA_FILE_SIZE_MAX
 #define HOSAL_OTA_FILE_SIZE_MAX    0x100000  // 1M
+#endif
 
 #define BL_MTD_PARTITION_NAME_FW_DEFAULT    "FW"
 

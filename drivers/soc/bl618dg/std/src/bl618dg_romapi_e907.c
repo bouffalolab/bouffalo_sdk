@@ -446,10 +446,12 @@ int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload
     return RomDriver_bflb_efuse_read_mac_address_opt(slot, mac, reload);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 float bflb_efuse_get_adc_trim(void) {
     return RomDriver_bflb_efuse_get_adc_trim();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t bflb_efuse_get_adc_tsen_trim(void) {
@@ -802,8 +804,8 @@ BL_Err_Type GLB_UART_Sig_Swap_Set(uint8_t group, uint8_t swap) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(BL_Fun_Type newState) {
-    return RomDriver_GLB_Swap_MCU_SPI_0_MOSI_With_MISO(newState);
+BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(uint8_t enable) {
+    return RomDriver_GLB_Swap_MCU_SPI_0_MOSI_With_MISO(enable);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

@@ -139,7 +139,11 @@ void wifiopt_sta_connect(void)
     char *ssid = at_wifi_config->sta_info.ssid;
     char *psk = at_wifi_config->sta_info.psk;
 
+#ifdef CONFIG_WL80211
+    int pmf_cfg = 0;
+#else
     int pmf_cfg = 1;
+#endif
 
     char * __attribute__((unused)) pmk = at_wifi_config->sta_info.pmk;
     uint16_t freq = at_wifi_config->sta_info.freq;
@@ -770,9 +774,9 @@ int at_wifi_set_mode(void)
 #endif
 #if defined(CONFIG_ATMODULE_WIFI_AP) && defined(CONFIG_ATMODULE_WIFI_STA) && defined (CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO)
     if(at_wifi_config->wifi_mode == WIFI_STATION_MODE) {
-        nethub_update_wifichannel(NHIF_TYPE_STA);
+        nethub_set_active_wifi_channel(NETHUB_CHANNEL_WIFI_STA);
     } else if(at_wifi_config->wifi_mode == WIFI_SOFTAP_MODE) {
-        nethub_update_wifichannel(NHIF_TYPE_AP);
+        nethub_set_active_wifi_channel(NETHUB_CHANNEL_WIFI_AP);
     }
 #endif
     if (at_wifi_config->wifi_mode == WIFI_DISABLE) {

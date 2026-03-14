@@ -43,7 +43,7 @@ typedef struct {
     uint8_t io_0_5_trig_mode;
     uint8_t io_6_36_trig_mode[31];
     uint64_t io_wakeup_unmask;
-} lp_gpio_cfg_Type;
+} lp_gpio_cfg_type;
 
 /* PDS sleep level defines */
 #define PM_PDS_LEVEL_1   (1)
@@ -106,7 +106,7 @@ BL_Err_Type pm_pds_wakeup_src_disable(uint32_t WakeupType);
 uint32_t pm_pds_get_all_wakeup_src(void);
 BL_Sts_Type pm_pds_get_wakeup_src(uint32_t WakeupType);
 BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie);
-int pm_lowpower_gpio_cfg(lp_gpio_cfg_Type *gpio_cfg);
+int pm_lowpower_gpio_cfg(lp_gpio_cfg_type *gpio_cfg);
 void pm_pds_mask_all_wakeup_src(void);
 BL_Err_Type pm_set_gpio_int_mask(int pin, int int_mask);
 BL_Err_Type pm_set_gpio_trig_mode_int_mask(int pin, int trig_mode, int int_mask);

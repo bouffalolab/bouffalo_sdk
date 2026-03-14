@@ -524,8 +524,6 @@ cleanup:
 
 int wifi_ota_init(void)
 {
-    int ret;
-
     if (g_ota_initialized) {
         LOG_W("WiFi OTA already initialized\r\n");
         return 0;

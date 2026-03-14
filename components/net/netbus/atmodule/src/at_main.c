@@ -31,10 +31,10 @@
 #include "at_through.h"
 #include "at_ble_cmd.h"
 
-#ifndef CONFIG_ATMODULE_FULL_FEAT
-#define ATCMD_TASK_STACK_SIZE (384)
-#else
+#if defined(CONFIG_BLUETOOTH_APP) || defined(CONFIG_ATMODULE_FULL_FEAT)
 #define ATCMD_TASK_STACK_SIZE (896)
+#else
+#define ATCMD_TASK_STACK_SIZE (384)
 #endif
 #define ATCMD_TASK_PRIORITY 25
 

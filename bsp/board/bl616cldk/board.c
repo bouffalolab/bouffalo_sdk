@@ -17,6 +17,7 @@
 #include "bflb_efuse.h"
 #include "board.h"
 #include "bl616cl_tzc_sec.h"
+#include "bl616cl_pm.h"
 
 #include "bl616cl_glb.h"
 
@@ -135,73 +136,7 @@ static void peripheral_clock_init(void)
 
 static void peripheral_clock_init_lp(void)
 {
-    uint32_t tmpVal = 0;
 
-    /* clk gate,except DMA&CPU&UART0&SF&EMI&WIFI&EFUSE */
-    tmpVal = 0;
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_CPU, 1); // ungate cpu
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_DMA, 1); // ungate dma
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_SEC, 1); // ungate sec
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_SDU, 1); // ungate sdu
-    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG0, tmpVal);
-
-    tmpVal = 0;
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_RSVD0, 1);   // ungate dma and gpio set&clr register's bclk
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EF_CTRL, 1); // ungate ef_ctrl
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_SF_CTRL, 1); // ungate sf_ctrl
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_DMA, 1);     // ungate dma
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_UART0, 1);  // ungate uart0
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_UART1, 1);  // ungate uart1
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_SEC_ENG, 1); // ungate sev_eng
-
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_UART2, 1); // ungate uart2
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_I2C1, 1); // ungate i2c1
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_DBI, 1); // ungate dbi
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_CKS, 1); // ungate cks
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_IR, 1); // ungate ir
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_TIMER, 1); // ungate timer
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_PWM, 1); // ungate pwm
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_I2C, 1); // ungate i2c
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_SPI, 1); // ungate spi
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_TZ, 1); // ungate tz
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_SEC_DBG, 1); // ungate sec_dbg
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_GPIP, 1); // ungate gpip
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_RF_TOP, 1); // ungate rf_top
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_RSVD12, 1); // ungate audio
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_RSVD11, 1); // ungate i2s
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_RSVD13, 1); // ungate sdu&usb
-
-    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG1, tmpVal);
-
-    tmpVal = 0;
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S2_WIFI, 1);         // ungate wifi
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_EMI_MISC, 1); // ungate emi_misc
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_PIO, 1);      // ungate pec
-
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_DMA2, 1); // ungate dma2
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_EMAC, 1); // ungate emac
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_SDH, 1); // ungate sdh
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_AUDIO, 1); // ungate audio
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_MIX2, 1); // ungate mix2
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_USB, 1); // ungate usb
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_PSRAM_CTRL, 1); // ungate psram_ctrl
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_PSRAM0_CTRL, 1); // ungate psram0_ctrl
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S3_M1542, 1); // ungate m1542
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S3_M154, 1); // ungate m154
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S3_BT_BLE2, 1); // ungate bt_ble2
-    // tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S3_BT_BLE, 1); // ungate bt_ble
-
-    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG2, tmpVal);
-
-    GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
-
-#ifdef CONFIG_BSP_USB
-    PERIPHERAL_CLOCK_USB_ENABLE();
-    GLB_Set_USB_CLK_From_WIFIPLL(1);
-#endif
-
-    PERIPHERAL_CLOCK_ADC_DAC_ENABLE();
-    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
 }
 #endif
 
@@ -666,47 +601,32 @@ static void test_io_wakeup_status(uint8_t io_num)
         } else if (wakeup_mode == BL_LP_IO_WAKEUP_MODE_RISING) {
             printf("edge rising\r\n");
         } else {
-            printf("unkown error: %d\r\n", wakeup_mode);
+            printf("unknown error: %d\r\n", wakeup_mode);
         }
     }
 }
 
 static void test_wakeup_io_callback(uint64_t wake_up_io_bits)
 {
-    printf("io wakeup bits 0x%llX\r\n", wake_up_io_bits);
+    printf("io wakeup bits 0x%llX\r\n", (unsigned long long)wake_up_io_bits);
 
-    /* wakeup io status dump */
+    /* wakeup io status dump: only report pins that actually triggered */
     for (uint8_t i = 0; i < BL_LP_WAKEUP_IO_MAX_NUM; i++) {
-        test_io_wakeup_status(i);
+        if (wake_up_io_bits & ((uint64_t)1 << i)) {
+            test_io_wakeup_status(i);
+        }
     }
 }
 
 void cmd_io_test(char *buf, int len, int argc, char **argv)
 {
-    static bl_lp_io_cfg_t lp_wake_io_cfg = {
-        /* input enable, use @ref BL_LP_IO_INPUT_EN */
-        .io_0_15_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_16_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_17_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_18_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_19_ie = BL_LP_IO_INPUT_ENABLE,
-        .io_20_34_ie = BL_LP_IO_INPUT_ENABLE,
-        /* trigger mode */
-        .io_0_7_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE,          /* use @ref BL_LP_PDS_IO_TRIG */
-        .io_8_15_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL,           /* use @ref BL_LP_PDS_IO_TRIG */
-        .io_16_19_aon_trig_mode = BL_LP_AON_IO_TRIG_SYNC_RISING_FALLING_EDGE, /* aon io, use @ref BL_LP_AON_IO_TRIG, full mode support */
-        .io_20_27_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE,        /* use @ref BL_LP_PDS_IO_TRIG */
-        .io_28_34_pds_trig_mode = BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE,        /* use @ref BL_LP_PDS_IO_TRIG */
-        /* resistors */
-        .io_0_15_res = BL_LP_IO_RES_PULL_UP,
-        .io_16_res = BL_LP_IO_RES_NONE,
-        .io_17_res = BL_LP_IO_RES_NONE,
-        .io_18_res = BL_LP_IO_RES_PULL_UP,
-        .io_19_res = BL_LP_IO_RES_PULL_UP,
-        .io_20_34_res = BL_LP_IO_RES_PULL_DOWN,
-        /* wake up unmask */
-        .io_wakeup_unmask = 0,
-    };
+    static lp_gpio_cfg_type lp_wake_io_cfg = { 0};
+
+    /* trigger mode */
+    lp_wake_io_cfg.io_0_5_trig_mode = PDS_GPIO_INT_SYNC_FALLING_EDGE; /* gpio 0-5 */
+    lp_wake_io_cfg.io_6_36_trig_mode[0] = PDS_GPIO_INT_SYNC_FALLING_EDGE; /* gpio 6 */
+    lp_wake_io_cfg.io_6_36_trig_mode[17] = PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE; /* gpio 23 */
+
 
     /* wake up unmask */
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 0); /* gpio 0 */
@@ -720,62 +640,15 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 33);     /* gpio 33 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 34);     /* gpio 34 */
 
+    lp_wake_io_cfg.io_ie = lp_wake_io_cfg.io_wakeup_unmask;
+
     bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
 
     /* register io wakeup callback */
     bl_lp_wakeup_io_int_register(test_wakeup_io_callback);
 }
 
-static void test_acomp_wakeup_status(uint8_t acomp_num)
-{
-    int wakeup_mode;
-
-    wakeup_mode = bl_lp_wakeup_acomp_get_mode(acomp_num);
-
-    if (wakeup_mode) {
-        printf("ACOMP %d wakeup: ", acomp_num);
-        if (wakeup_mode == BL_LP_ACOMP_WAKEUP_MODE_FALLING) {
-            printf("edge falling\r\n");
-        } else if (wakeup_mode == BL_LP_ACOMP_WAKEUP_MODE_RISING) {
-            printf("edge rising\r\n");
-        } else {
-            printf("unkown error: %d\r\n", wakeup_mode);
-        }
-    }
-}
-
-static void test_wakeup_acomp_callback(uint32_t wake_up_acomp_bits)
-{
-    printf("acomp wakeup bits 0x%02X\r\n", wake_up_acomp_bits);
-
-    for (uint8_t i = 0; i < BL_LP_WAKEUP_ACOMP_MAX_NUM; i++) {
-        test_acomp_wakeup_status(i);
-    }
-}
-
-void cmd_acomp_test(char *buf, int len, int argc, char **argv)
-{
-    static bl_lp_acomp_cfg_t lp_wake_acomp_cfg = {
-        /* input enable, use @ref BL_LP_ACOMP_EN */
-        .acomp0_en = BL_LP_ACOMP_ENABLE,
-        .acomp1_en = BL_LP_ACOMP_ENABLE,
-
-        /* Map to pins num, range: 2, 3, 10, 12, 13, 14, 19 */
-        .acomp0_io_num = 13,
-        .acomp1_io_num = 14,
-
-        /* trigger mode, use @ref BL_LP_ACOMP_TRIG  */
-        .acomp0_trig_mode = BL_LP_ACOMP_TRIG_EDGE_FALLING,
-        .acomp1_trig_mode = BL_LP_ACOMP_TRIG_EDGE_FALLING_RISING,
-    };
-
-    bl_lp_acomp_wakeup_cfg(&lp_wake_acomp_cfg);
-
-    /* register acomp wakeup callback */
-    bl_lp_wakeup_acomp_int_register(test_wakeup_acomp_callback);
-}
 SHELL_CMD_EXPORT_ALIAS(cmd_io_test, io_test, cmd io_test);
-SHELL_CMD_EXPORT_ALIAS(cmd_acomp_test, acomp_test, cmd acomp_test);
 #endif /* LP_APP */
 
 #endif /* CONFIG_SHELL */

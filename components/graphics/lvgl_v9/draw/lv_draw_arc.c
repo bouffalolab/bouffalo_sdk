@@ -56,21 +56,29 @@ void lv_draw_arc(lv_layer_t * layer, const lv_draw_arc_dsc_t * dsc)
     if(dsc->width == 0) return;
     if(dsc->start_angle == dsc->end_angle) return;
 
-    LV_PROFILER_BEGIN;
+    LV_PROFILER_DRAW_BEGIN;
     lv_area_t a;
     a.x1 = dsc->center.x - dsc->radius;
     a.y1 = dsc->center.y - dsc->radius;
     a.x2 = dsc->center.x + dsc->radius - 1;
     a.y2 = dsc->center.y + dsc->radius - 1;
-    lv_draw_task_t * t = lv_draw_add_task(layer, &a);
 
-    t->draw_dsc = lv_malloc(sizeof(*dsc));
+    if(dsc->base.drop_shadow_opa) {
+        lv_layer_t * ds_layer = lv_draw_layer_create_drop_shadow(layer, &dsc->base, &a);
+        LV_ASSERT_NULL(ds_layer);
+        lv_draw_arc_dsc_t ds_dsc = *dsc;
+        ds_dsc.base.drop_shadow_opa = 0; /*Disable drop shadow so rendering below will render plain arc*/
+        lv_draw_arc(ds_layer, &ds_dsc);
+        lv_draw_layer_finish_drop_shadow(ds_layer, &dsc->base);
+    }
+
+    lv_draw_task_t * t = lv_draw_add_task(layer, &a, LV_DRAW_TASK_TYPE_ARC);
+
     lv_memcpy(t->draw_dsc, dsc, sizeof(*dsc));
-    t->type = LV_DRAW_TASK_TYPE_ARC;
 
     lv_draw_finalize_task_creation(layer, t);
 
-    LV_PROFILER_END;
+    LV_PROFILER_DRAW_END;
 }
 
 void lv_draw_arc_get_area(int32_t x, int32_t y, uint16_t radius,  lv_value_precise_t start_angle,

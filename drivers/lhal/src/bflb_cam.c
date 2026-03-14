@@ -34,7 +34,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #if !defined(BL702)
     uint32_t threshold;
 #endif
-#if  defined(BL618DG)
+#if defined(BL618DG)
     uint32_t tmpval;
 #endif
 
@@ -97,27 +97,27 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
     if (config->input_source != CAM_INPUT_SOURCE_CSI) {
 #endif
 
-        regval = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_CAMERA, 0) / 1000000;
+    regval = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_CAMERA, 0) / 1000000;
 
-        if (regval == 0) {
-            regval = 80;
-        }
-        threshold = config->resolution_x - (config->resolution_x * (config->pixel_clock / 1000000) / regval) / 2 + 10;
+    if (regval == 0) {
+        regval = 80;
+    }
+    threshold = config->resolution_x - (config->resolution_x * (config->pixel_clock / 1000000) / regval) / 2 + 10;
 
-        if (threshold > (config->resolution_x - 1)) {
-            threshold = config->resolution_x - 1;
-        }
+    if (threshold > (config->resolution_x - 1)) {
+        threshold = config->resolution_x - 1;
+    }
 
-        if (threshold < 2) {
-            threshold = 2;
-        } else if (threshold > 1024) {
-            threshold = 1024;
-        }
+    if (threshold < 2) {
+        threshold = 2;
+    } else if (threshold > 1024) {
+        threshold = 1024;
+    }
 
-        regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-        regval &= ~CAM_FRONT_RG_DVPAS_FIFO_TH_MASK;
-        regval |= threshold << CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT;
-        putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
+    regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
+    regval &= ~CAM_FRONT_RG_DVPAS_FIFO_TH_MASK;
+    regval |= threshold << CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT;
+    putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
 #if 0
     }
 #endif
@@ -826,7 +826,29 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_ISP_ID_YUV_OFFSET);
             break;
 #endif
+#if defined(BL618DG)
+        case CAM_CMD_INVERSE_VSYNC_POLARITY:
+            /* Inverse vsync polarity */
+            regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
+            if (arg) {
+                regval |= CAM_FRONT_CR_DVP_S2P_VS_INV;
+            } else {
+                regval &= ~CAM_FRONT_CR_DVP_S2P_VS_INV;
+            }
+            putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
+            break;
 
+        case CAM_CMD_INVERSE_HSYNC_POLARITY:
+            /* Inverse hsync polarity */
+            regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
+            if (arg) {
+                regval |= CAM_FRONT_CR_DVP_S2P_HS_INV;
+            } else {
+                regval &= ~CAM_FRONT_CR_DVP_S2P_HS_INV;
+            }
+            putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_MM_MISC_CTRL_OFFSET);
+            break;
+#else
         case CAM_CMD_INVERSE_VSYNC_POLARITY:
             /* Inverse vsync polarity */
             regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
@@ -848,7 +870,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
             break;
-
+#endif
         case CAM_CMD_INVERSE_YUYV2UYVY:
             /* If image sensor output format is YUYV, it will be changed to UYVY */
 #if defined(BL618DG)

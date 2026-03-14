@@ -93,7 +93,12 @@ COMPILE_COMMANDS ?=n
 ifneq ($(wildcard $(SDK_DEMO_PATH)/defconfig),)
 include $(SDK_DEMO_PATH)/defconfig
 endif
+ifeq ($(CHIP) $(CONFIG_FREERTOS),bl616 y)
+  CONFIG_BACKTRACE ?=y
+endif
+
 CONFIG_VARS := $(filter CONFIG_%,$(.VARIABLES))
+
 
 #cmake definition config
 cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}

@@ -14,10 +14,10 @@
 extern "C" {
 #endif
 
-#ifndef CONFIG_ATMODULE_FULL_FEAT
-#define AT_THROUGH_MAX_LEN (256)
-#else
+#if defined(CONFIG_BLUETOOTH_APP) || defined(CONFIG_ATMODULE_FULL_FEAT)
 #define AT_THROUGH_MAX_LEN (1*1536)
+#else
+#define AT_THROUGH_MAX_LEN (256)
 #endif
 #define AT_THROUGH_EXIT_CMD "+++"
 

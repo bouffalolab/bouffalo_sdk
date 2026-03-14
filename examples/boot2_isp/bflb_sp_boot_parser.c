@@ -52,12 +52,22 @@ extern uint32_t g_user_hash_ignored;
  * @return 1 for valid and 0 for invalid
  *
 *******************************************************************************/
-static uint32_t bflb_sp_boot_parse_is_pkhash_valid(uint8_t pk_src, uint8_t *pkhash)
+static uint32_t bflb_sp_boot_parse_is_pkhash_valid(uint8_t pk_src, uint8_t *pkhash, uint8_t sign_type)
 {
     uint32_t i = 0;
+    uint32_t hash_size;
+
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        hash_size = HAL_BOOT2_PK_HASH_SIZE_SHA384; /* 48 bytes */
+    } else
+#endif
+    {
+        hash_size = HAL_BOOT2_PK_HASH_SIZE; /* 32 bytes */
+    }
 
     for (i = 0; i < HAL_BOOT2_CPU_GROUP_MAX; i++) {
-        if ((pk_src == i) && (0 == memcmp(g_efuse_cfg.pk_hash_cpu[i], pkhash, BFLB_BOOT2_PK_HASH_SIZE))) {
+        if ((pk_src == i) && (0 == memcmp(g_efuse_cfg.pk_hash_cpu[i], pkhash, hash_size))) {
             return 1;
         }
     }
@@ -77,32 +87,72 @@ static uint32_t bflb_sp_boot_parse_is_pkhash_valid(uint8_t pk_src, uint8_t *pkha
 *******************************************************************************/
 int32_t bflb_sp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
 {
-    boot_pk_config *cfg = (boot_pk_config *)data;
-    uint32_t pk_hash[BFLB_BOOT2_PK_HASH_SIZE / 4];
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    uint32_t pk_hash[HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4]; /* 48 bytes */
+#else
+    uint32_t pk_hash[HAL_BOOT2_PK_HASH_SIZE / 4]; /* 32 bytes */
+#endif
 
-    if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_config) - 4)) {
-        /* Check public key with data info in OTP*/
-        bflb_sha256_update(sha, &ctx_sha256, data, HAL_BOOT2_ECC_KEYXSIZE + HAL_BOOT2_ECC_KEYYSIZE);
-        bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)pk_hash);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (g_boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        boot_pk_sha384_config *cfg = (boot_pk_sha384_config *)data;
 
-        bflb_sha_init(sha, SHA_MODE_SHA256);
-        bflb_sha256_start(sha, &ctx_sha256);
-        /* Check pk is valid */
-        if (own == 1) {
-            if (1 != bflb_sp_boot_parse_is_pkhash_valid(g_boot_img_cfg->pk_src,
-                                                     (uint8_t *)pk_hash)) {
-                BOOT2_MSG("PK sha error\r\n");
-                return BFLB_BOOT2_IMG_PK_HASH_ERROR;
+        if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_sha384_config) - 4)) {
+            /* Check public key with data info in OTP using SHA384 */
+            bflb_sha512_update(sha, &ctx_sha384, data, HAL_BOOT2_ECC_KEYXSIZE_SHA384 + HAL_BOOT2_ECC_KEYYSIZE_SHA384);
+            bflb_sha512_finish(sha, &ctx_sha384, (uint8_t *)pk_hash);
+
+            bflb_sha_init(sha, SHA_MODE_SHA384);
+            bflb_sha512_start(sha, &ctx_sha384);
+
+            /* Check pk is valid */
+            if (own == 1) {
+                if (1 != bflb_sp_boot_parse_is_pkhash_valid(g_boot_img_cfg->pk_src, (uint8_t *)pk_hash,
+                                                            g_boot_img_cfg->basic_cfg.sign_type)) {
+                    BOOT2_MSG("PK SHA384 sha error\r\n");
+                    return BFLB_BOOT2_IMG_PK_HASH_ERROR;
+                }
             }
-        }
 
-        if (own == 1) {
-            arch_memcpy_fast(g_boot_img_cfg->eckye_x, cfg->eckye_x, sizeof(cfg->eckye_x));
-            arch_memcpy_fast(g_boot_img_cfg->eckey_y, cfg->eckey_y, sizeof(cfg->eckey_y));
+            if (own == 1) {
+                arch_memcpy_fast(g_boot_img_cfg->eckey_x, cfg->eckey_x, sizeof(cfg->eckey_x));
+                arch_memcpy_fast(g_boot_img_cfg->eckey_y, cfg->eckey_y, sizeof(cfg->eckey_y));
+            }
+        } else {
+            BOOT2_MSG("PK SHA384 crc error\r\n");
+            return BFLB_BOOT2_IMG_PK_CRC_ERROR;
         }
-    } else {
-        BOOT2_MSG("PK crc error\r\n");
-        return BFLB_BOOT2_IMG_PK_CRC_ERROR;
+    } else
+#endif
+    {
+        /* SHA256 */
+        boot_pk_config *cfg = (boot_pk_config *)data;
+
+        if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_config) - 4)) {
+            /* Check public key with data info in OTP using SHA256 */
+            bflb_sha256_update(sha, &ctx_sha256, data, HAL_BOOT2_ECC_KEYXSIZE + HAL_BOOT2_ECC_KEYYSIZE);
+            bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)pk_hash);
+
+            bflb_sha_init(sha, SHA_MODE_SHA256);
+            bflb_sha256_start(sha, &ctx_sha256);
+
+            /* Check pk is valid */
+            if (own == 1) {
+                if (1 != bflb_sp_boot_parse_is_pkhash_valid(g_boot_img_cfg->pk_src, (uint8_t *)pk_hash,
+                                                            g_boot_img_cfg->basic_cfg.sign_type)) {
+                    BOOT2_MSG("PK sha error\r\n");
+                    return BFLB_BOOT2_IMG_PK_HASH_ERROR;
+                }
+            }
+
+            if (own == 1) {
+                arch_memcpy_fast(g_boot_img_cfg->eckey_x, cfg->eckey_x, sizeof(cfg->eckey_x));
+                arch_memcpy_fast(g_boot_img_cfg->eckey_y, cfg->eckey_y, sizeof(cfg->eckey_y));
+            }
+        } else {
+            BOOT2_MSG("PK crc error\r\n");
+            return BFLB_BOOT2_IMG_PK_CRC_ERROR;
+        }
     }
 
     return BFLB_BOOT2_SUCCESS;
@@ -122,8 +172,18 @@ int32_t bflb_sp_boot_parse_signature(boot2_image_config *g_boot_img_cfg, uint8_t
 {
     boot_sign_config *cfg = (boot_sign_config *)data;
     uint32_t crc;
+    uint32_t max_sig_len;
 
-    if (cfg->sig_len > sizeof(g_boot_img_cfg->signature)) {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (g_boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        max_sig_len = HAL_BOOT2_SIGN_MAXSIZE_SHA384;
+    } else
+#endif
+    {
+        max_sig_len = HAL_BOOT2_SIGN_MAXSIZE;
+    }
+
+    if (cfg->sig_len > max_sig_len) {
         return BFLB_BOOT2_IMG_SIGNATURE_LEN_ERROR;
     }
 
@@ -160,14 +220,20 @@ int32_t bflb_sp_boot_parse_aesiv(boot2_image_config *g_boot_img_cfg, uint8_t *da
     boot_aes_config *cfg = (boot_aes_config *)data;
 
     if (cfg->crc32 == BFLB_Soft_CRC32(cfg->aes_iv, sizeof(cfg->aes_iv))) {
-        memcpy(g_boot_img_cfg->aes_iv, cfg->aes_iv, sizeof(boot_aes_config));
+        arch_memcpy_fast(g_boot_img_cfg->aes_iv, cfg->aes_iv, sizeof(boot_aes_config));
 
         /* Update image hash */
         if (!g_boot_img_cfg->basic_cfg.hash_ignore) {
-            //Sec_Eng_SHA256_Update(&g_sha_ctx, SEC_ENG_SHA_ID0, data, sizeof(boot_aes_config));
-#ifndef CHIP_WB03
-            bflb_sha256_update(sha, &ctx_sha256, data, sizeof(boot_aes_config));
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+            if (g_boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+                bflb_sha512_update(sha, &ctx_sha384, data, sizeof(boot_aes_config));
+            } else
 #endif
+            {
+#ifndef CHIP_WB03
+                bflb_sha256_update(sha, &ctx_sha256, data, sizeof(boot_aes_config));
+#endif
+            }
         }
     } else {
         BOOT2_MSG("AES IV crc error\r\n");
@@ -190,6 +256,14 @@ int32_t bflb_sp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg)
     int32_t ret = 0;
     uint64_t startTime = 0;
     struct bflb_ecdsa_s ecdsa_handle;
+    uint32_t curve_type;
+    uint32_t signature_size;
+    uint32_t hash_len_words;
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    uint32_t pk_hash[HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4]; /* 48 bytes */
+#else
+    uint32_t pk_hash[HAL_BOOT2_PK_HASH_SIZE / 4]; /* 32 bytes */
+#endif
 
     BOOT2_MSG_DBG("ps_mode %d,efuse hbn_check_sign %d\r\n", g_ps_mode, g_efuse_cfg.hbn_check_sign);
 
@@ -198,15 +272,31 @@ int32_t bflb_sp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg)
     }
 
     if (g_boot_img_cfg->basic_cfg.sign_type) {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (g_boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            curve_type = ECP_SECP384R1;
+            signature_size = 48; /* 384 bits = 48 bytes */
+            hash_len_words = 12; /* 48 bytes / 4 = 12 words */
+            arch_memcpy_fast(pk_hash, (uint32_t *)g_boot_img_cfg->basic_cfg.hash, HAL_BOOT2_PK_HASH_SIZE);
+            arch_memcpy_fast(&pk_hash[HAL_BOOT2_PK_HASH_SIZE / 4], g_boot_img_cfg->hash_384_ext, 16);
+        } else
+#endif
+        {
+            curve_type = ECP_SECP256R1;
+            signature_size = 32; /* 256 bits = 32 bytes */
+            hash_len_words = 8;  /* 32 bytes / 4 = 8 words */
+            arch_memcpy_fast(pk_hash, (uint32_t *)g_boot_img_cfg->basic_cfg.hash, HAL_BOOT2_PK_HASH_SIZE);
+        }
+
         BOOT2_MSG_DBG("Check sig1\r\n");
         startTime = bflb_mtimer_get_time_ms();
-        bflb_sec_ecdsa_init(&ecdsa_handle, ECP_SECP256R1);
+        bflb_sec_ecdsa_init(&ecdsa_handle, curve_type);
 
-        ecdsa_handle.publicKeyx = (uint32_t *)g_boot_img_cfg->eckye_x;
+        ecdsa_handle.publicKeyx = (uint32_t *)g_boot_img_cfg->eckey_x;
         ecdsa_handle.publicKeyy = (uint32_t *)g_boot_img_cfg->eckey_y;
 
-        ret = bflb_sec_ecdsa_verify(&ecdsa_handle, (uint32_t *)g_boot_img_cfg->basic_cfg.hash, 8,
-                                    (uint32_t *)g_boot_img_cfg->signature, (uint32_t *)&g_boot_img_cfg->signature[32]);
+        ret = bflb_sec_ecdsa_verify(&ecdsa_handle, pk_hash, hash_len_words, (uint32_t *)g_boot_img_cfg->signature,
+                                    (uint32_t *)&g_boot_img_cfg->signature[signature_size]);
         if (ret != 0) {
             BOOT2_MSG_DBG("verify failed\r\n");
             return BFLB_BOOT2_IMG_SIGN_ERROR;
@@ -228,13 +318,32 @@ int32_t bflb_sp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg)
 *******************************************************************************/
 int32_t bflb_sp_boot_parser_check_hash(boot2_image_config *g_boot_img_cfg)
 {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    uint32_t img_hash_cal[HAL_BOOT2_IMG_HASH_SIZE_SHA384 / 4];
+    uint32_t img_header_hash[12] = { 0 }; /* Max 48 bytes for SHA384 */
+#else
     uint32_t img_hash_cal[HAL_BOOT2_IMG_HASH_SIZE / 4];
+    uint32_t img_header_hash[8] = { 0 }; /* 32 bytes for SHA256 */
+#endif
+    uint32_t hash_size;
 
     if (!g_boot_img_cfg->basic_cfg.hash_ignore) {
-        //Sec_Eng_SHA256_Finish(&g_sha_ctx, SEC_ENG_SHA_ID0, (uint8_t *)img_hash_cal);
-        bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)img_hash_cal);
+        /* Copy first 32 bytes from basic_cfg.hash */
+        arch_memcpy_fast(img_header_hash, g_boot_img_cfg->basic_cfg.hash, HAL_BOOT2_IMG_HASH_SIZE);
 
-        if (memcmp(img_hash_cal, g_boot_img_cfg->basic_cfg.hash, 32) != 0) {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (g_boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            arch_memcpy_fast(&img_header_hash[8], g_boot_img_cfg->hash_384_ext, 16);
+            bflb_sha512_finish(sha, &ctx_sha384, (uint8_t *)img_hash_cal);
+            hash_size = HAL_BOOT2_IMG_HASH_SIZE_SHA384; /* 48 bytes */
+        } else
+#endif
+        {
+            bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)img_hash_cal);
+            hash_size = HAL_BOOT2_IMG_HASH_SIZE; /* 32 bytes */
+        }
+
+        if (memcmp(img_hash_cal, img_header_hash, hash_size) != 0) {
             BOOT2_MSG_ERR("Hash error\r\n");
             return BFLB_BOOT2_IMG_HASH_ERROR;
         } else {

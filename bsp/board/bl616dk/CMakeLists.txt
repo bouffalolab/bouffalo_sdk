@@ -11,21 +11,14 @@ if(CONFIG_RF)
     target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/wireless_spur.c)
 endif()
 
-if(CONFIG_PSRAM_COPY_CODE)
-    message(STATUS "LINK IN PSRAM")
-    sdk_set_linker_script(bl616_chip_psram.ld)
-elseif(CONFIG_LPAPP)
-    message(STATUS "LINK IN LPAPP")
-    sdk_set_linker_script(bl616_lp.ld)
-elseif(CONFIG_WFA)
-    message(STATUS "LINK IN WFA")
-    sdk_set_linker_script(bl616_wfa_flash.ld)
-    sdk_add_link_options(
-    -L ${CMAKE_CURRENT_SOURCE_DIR}
-    )
+if(CONFIG_CUSTOM_LINKSCRIPT)
+message(STATUS "LINK IN CUSTOM_LINKSCRIPT")
 else()
-    message(STATUS "LINK IN FLASH")
-    sdk_set_linker_script(bl616_flash.ld)
+message(STATUS "LINK IN bl616_common.ld.in")
+sdk_set_linker_script_macro(bl616_common.ld.in)
+sdk_add_link_options(
+-L ${CMAKE_CURRENT_SOURCE_DIR}
+)
 endif()
 
 sdk_add_link_options(-ufw_header)

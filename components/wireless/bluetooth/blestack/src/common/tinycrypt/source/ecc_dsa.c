@@ -53,11 +53,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "constants.h"
-#include "ecc.h"
-#include "ecc_dsa.h"
+#include "tinycrypt/constants.h"
+#include "tinycrypt/ecc.h"
+#include "tinycrypt/ecc_dsa.h"
 #if defined(BL_MCU_SDK)
-#include "ecc_platform_specific.h"
+#include "tinycrypt/ecc_platform_specific.h"
 #endif 
 
 #if defined(default_RNG_defined)

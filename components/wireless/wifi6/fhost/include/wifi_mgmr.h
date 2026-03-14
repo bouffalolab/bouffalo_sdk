@@ -110,12 +110,17 @@ typedef struct wifi_mgmr {
 } wifi_mgmr_t;
 extern wifi_mgmr_t wifiMgmr;
 
+int wifi_mgmr_init(void);
+
 /* Bitmap conversion functions */
 void wifi_mgmr_bitmap_to_chanlist(const uint8_t *bitmap, uint8_t *chan_list, uint8_t *chan_count);
 void wifi_mgmr_chanlist_to_bitmap(const uint8_t *chan_list, uint8_t chan_count, uint8_t *bitmap);
 
 /* Internal initialization function */
 void wifi_mgmr_init_country_bitmaps(void);
+
+/* Print channel information for a country code */
+void wifi_mgmr_print_channel_info(const char *country_code);
 
 int wifi_mgmr_task_start(void);
 int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);

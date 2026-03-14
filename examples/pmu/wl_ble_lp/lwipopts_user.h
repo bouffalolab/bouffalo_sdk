@@ -62,15 +62,15 @@
 
 #define PBUF_LINK_ENCAPSULATION_HLEN  388
 
-#define IP_REASS_MAX_PBUFS            (2 * CONFIG_MAC_RXQ_DEPTH - 2)
+#define MAC_TXQ_DEPTH                 8
+#define MAC_RXQ_DEPTH                 12
+
+#define IP_REASS_MAX_PBUFS            (2 * MAC_RXQ_DEPTH - 2)
 
 #define MEMP_NUM_NETBUF               32
 #define MEMP_NUM_NETCONN              16
 #define MEMP_NUM_UDP_PCB              16
 #define MEMP_NUM_REASSDATA            LWIP_MIN((IP_REASS_MAX_PBUFS), 5)
-
-#define MAC_TXQ_DEPTH                 CONFIG_MAC_TXQ_DEPTH
-#define MAC_RXQ_DEPTH                 CONFIG_MAC_RXQ_DEPTH
 
 #define TCP_MSS                       (1500 - 40)
 #define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)

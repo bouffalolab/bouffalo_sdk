@@ -38,7 +38,7 @@
 /* device hd */
 static struct bflb_device_s *audio_i2s;
 
-#if (CONFIG_SOLUTION_FUNC_AUDIO_I2S_IN)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_AUDIO_I2S_IN)
 
 /***************** i2s input: *****************/
 /* enable/disable record */
@@ -235,7 +235,7 @@ static void i2s_input_dma_init(void)
 
 #endif
 
-#if (CONFIG_SOLUTION_FUNC_AUDIO_I2S_OUT)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_AUDIO_I2S_OUT)
 
 /***************** i2s output: *****************/
 /* enable/disable play */
@@ -469,7 +469,7 @@ int external_codec_i2s_task_init(void)
     /* i2s init */
     i2s_init();
 
-#if (CONFIG_SOLUTION_FUNC_AUDIO_I2S_IN)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_AUDIO_I2S_IN)
     /* i2s input dma init */
     i2s_input_dma_init();
 
@@ -481,7 +481,7 @@ int external_codec_i2s_task_init(void)
     xTaskCreate(i2s_input_resume_task, (char *)"i2s_input_task", 512, NULL, I2S_INPUT_TASK_PRIORITY, &i2s_input_resume_task_hd);
 #endif
 
-#if (CONFIG_SOLUTION_FUNC_AUDIO_I2S_OUT)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_AUDIO_I2S_OUT)
     /* i2s output dma init */
     i2s_output_dma_init();
 

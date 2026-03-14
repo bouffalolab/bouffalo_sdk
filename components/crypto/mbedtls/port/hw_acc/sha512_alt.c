@@ -33,13 +33,13 @@
 #include "mbedtls/platform.h"
 #include "sec_mutex.h"
 
-#ifdef CONFIG_MBEDTLS_V3
-#define SHA512_VALIDATE_RET(cond)
-#define SHA512_VALIDATE(cond)
-#else
+#ifdef CONFIG_MBEDTLS_V2
 #define SHA512_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA512_BAD_INPUT_DATA )
 #define SHA512_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+#else
+#define SHA512_VALIDATE_RET(cond)
+#define SHA512_VALIDATE(cond)
 #endif
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha512_link_ctx_s link_ctx_temp;
@@ -101,17 +101,17 @@ int mbedtls_sha512_starts_ret( mbedtls_sha512_context *ctx, int is384 )
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha512_starts( mbedtls_sha512_context *ctx,
-                            int is384 )
-{
-    return mbedtls_sha512_starts_ret( ctx, is384 );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha512_starts( mbedtls_sha512_context *ctx,
                             int is384 )
 {
     mbedtls_sha512_starts_ret( ctx, is384 );
+}
+#else
+int mbedtls_sha512_starts( mbedtls_sha512_context *ctx,
+                            int is384 )
+{
+    return mbedtls_sha512_starts_ret( ctx, is384 );
 }
 #endif
 #endif
@@ -141,20 +141,21 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha512_update( mbedtls_sha512_context *ctx,
-                            const unsigned char *input,
-                            size_t ilen )
-{
-    return mbedtls_sha512_update_ret( ctx, input, ilen );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha512_update( mbedtls_sha512_context *ctx,
                             const unsigned char *input,
                             size_t ilen )
 {
     mbedtls_sha512_update_ret( ctx, input, ilen );
 }
+#else
+int mbedtls_sha512_update( mbedtls_sha512_context *ctx,
+                            const unsigned char *input,
+                            size_t ilen )
+{
+    return mbedtls_sha512_update_ret( ctx, input, ilen );
+}
+
 #endif
 #endif
 
@@ -177,17 +178,17 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
 }
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#ifdef CONFIG_MBEDTLS_V3
-int mbedtls_sha512_finish( mbedtls_sha512_context *ctx,
-                            unsigned char output[64] )
-{
-    return mbedtls_sha512_finish_ret( ctx, output );
-}
-#else
+#ifdef CONFIG_MBEDTLS_V2
 void mbedtls_sha512_finish( mbedtls_sha512_context *ctx,
                             unsigned char output[64] )
 {
     mbedtls_sha512_finish_ret( ctx, output );
+}
+#else
+int mbedtls_sha512_finish( mbedtls_sha512_context *ctx,
+                            unsigned char output[64] )
+{
+    return mbedtls_sha512_finish_ret( ctx, output );
 }
 #endif
 #endif

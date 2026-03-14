@@ -18,13 +18,64 @@
 
 /* Autoconnect state */
 static int wifi_mgmr_disable_autoconnect = 1; /* Default: disabled */
+static uint16_t wifi_mgmr_listen_itv = 0;
 
 #if !defined(__NuttX__)
+struct wifi_mgmr_ap_netif_cfg {
+    bool pending;
+    bool use_ipcfg;
+    bool use_dhcpd;
+    int start;
+    int limit;
+    uint32_t ap_ipaddr;
+    uint32_t ap_mask;
+};
+
+static struct wifi_mgmr_ap_netif_cfg wifi_mgmr_ap_netif_cfg;
+
 extern void *_wifi_mgmr_sta_start_dhcpc(void);
 extern void *_wifi_mgmr_sta_stop_dhcpc(void);
 extern void _wifi_mgmr_ip_got_dump(void);
-extern void *_wifi_mgmr_ap_start_dhcpd(void);
+extern void _wifi_mgmr_ap_start_dhcpd(bool use_ipcfg, bool use_dhcpd, int start, int limit, uint32_t ap_ipaddr,
+                                      uint32_t ap_mask);
 extern void _wifi_mgmr_ap_stop_dhcpd(void);
+
+static void auth_cipher_convert(struct wl80211_scan_result_item *result, uint8_t *auth, uint8_t *cipher);
+
+static void wifi_mgmr_ap_netif_cfg_clear(void)
+{
+    memset(&wifi_mgmr_ap_netif_cfg, 0, sizeof(wifi_mgmr_ap_netif_cfg));
+}
+
+static void wifi_mgmr_ap_netif_cfg_save(const wifi_mgmr_ap_params_t *config)
+{
+    wifi_mgmr_ap_netif_cfg.pending = true;
+    wifi_mgmr_ap_netif_cfg.use_ipcfg = config->use_ipcfg;
+    wifi_mgmr_ap_netif_cfg.use_dhcpd = config->use_ipcfg && config->use_dhcpd;
+    wifi_mgmr_ap_netif_cfg.start = config->start;
+    wifi_mgmr_ap_netif_cfg.limit = config->limit;
+    wifi_mgmr_ap_netif_cfg.ap_ipaddr = config->ap_ipaddr;
+    wifi_mgmr_ap_netif_cfg.ap_mask = config->ap_mask;
+}
+
+static void wifi_mgmr_ap_netif_start(void)
+{
+    if (!wifi_mgmr_ap_netif_cfg.pending) {
+        return;
+    }
+
+    _wifi_mgmr_ap_start_dhcpd(wifi_mgmr_ap_netif_cfg.use_ipcfg, wifi_mgmr_ap_netif_cfg.use_dhcpd,
+                              wifi_mgmr_ap_netif_cfg.start, wifi_mgmr_ap_netif_cfg.limit,
+                              wifi_mgmr_ap_netif_cfg.ap_ipaddr, wifi_mgmr_ap_netif_cfg.ap_mask);
+
+    wifi_mgmr_ap_netif_cfg.pending = false;
+}
+
+static void wifi_mgmr_ap_netif_stop(void)
+{
+    wifi_mgmr_ap_netif_cfg.pending = false;
+    _wifi_mgmr_ap_stop_dhcpd();
+}
 
 static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
 {
@@ -52,12 +103,12 @@ static void disconnect_tsk(void)
 
 static void start_dhcpd_tsk(void)
 {
-    _wifi_mgmr_ap_start_dhcpd();
+    wifi_mgmr_ap_netif_start();
 }
 
 static void stop_dhcpd_tsk(void)
 {
-    _wifi_mgmr_ap_stop_dhcpd();
+    wifi_mgmr_ap_netif_stop();
 }
 #endif
 
@@ -74,7 +125,7 @@ static void dump_scan_result(void)
     struct wl80211_scan_result_item *n;
     struct wl80211_scan_result_item **rssi_sorted = NULL;
     int i = 0;
-    int auth = -1, cipher = -1;
+    uint8_t auth, cipher;
     int total = 0;
 
     /* count APs */
@@ -106,54 +157,7 @@ static void dump_scan_result(void)
     for (i = 0; i < total; i++) {
         n = rssi_sorted[i];
 
-        RB_REMOVE(_scan_result_tree, &wl80211_scan_result, n);
-
-        if (n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN) {
-            if (n->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK;
-                if (n->key_mgmt & WPA_KEY_MGMT_SAE) {
-                    auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK_WPA3_SAE;
-                }
-            } else if (n->key_mgmt & WPA_KEY_MGMT_SAE) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE;
-            } else if (n->key_mgmt & (WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_IEEE8021X_SHA256)) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
-            }
-        } else if (n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA) {
-            if (n->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_PSK;
-            } else if (n->key_mgmt & WPA_KEY_MGMT_IEEE8021X) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
-            }
-        }
-
-#define TEST_WPA_RSN (WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN | WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA)
-        if ((n->flags & TEST_WPA_RSN) == TEST_WPA_RSN) {
-            if (auth != WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_WPA2_PSK;
-            }
-        } else if ((n->flags & TEST_WPA_RSN) == 0) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WEP;
-            cipher = WIFI_EVENT_BEACON_IND_CIPHER_WEP;
-        }
-#undef TEST_WPA_RSN
-
-#define TEST_CCMP_TKIP (WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP | WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP)
-        if ((n->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP) {
-            cipher = WIFI_EVENT_BEACON_IND_CIPHER_AES;
-        }
-        if ((n->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP) {
-            cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP;
-        }
-        if ((n->flags & (TEST_CCMP_TKIP)) == TEST_CCMP_TKIP) {
-            cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP_AES;
-        }
-#undef TEST_CCMP_TKIP
-
-        if (n->key_mgmt == 0) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_OPEN;
-            cipher = WIFI_EVENT_BEACON_IND_CIPHER_NONE;
-        }
+        auth_cipher_convert(n, &auth, &cipher);
 
         wl80211_printf("index[%02d]: channel %3u, bssid %02X:%02X:%02X:%02X:%02X:%02X, "
                        "rssi %3d, ppm abs:rel %3d : %3d, wps %2d, mode %6s, auth %20s, "
@@ -162,11 +166,6 @@ static void dump_scan_result(void)
                        n->rssi, 0, 0, !!(n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPS),
                        wifi_mgmr_mode_to_str(n->mode), wifi_mgmr_auth_to_str(auth), wifi_mgmr_cipher_to_str(cipher),
                        n->ssid);
-
-        if (n->ssid) {
-            free((void *)n->ssid);
-        }
-        free(n);
     }
     free(rssi_sorted);
 
@@ -496,72 +495,64 @@ int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config)
     return wl80211_scan(&scan_params);
 }
 
-uint32_t wifi_mgmr_sta_scanlist_nums_get(void)
+static void auth_cipher_convert(struct wl80211_scan_result_item *result, uint8_t *auth, uint8_t *cipher)
 {
-    struct wl80211_scan_result_item *n, *tmp;
-    uint32_t cnt = 0;
-
-    RB_FOREACH_SAFE(n, _scan_result_tree, &wl80211_scan_result, tmp)
-    {
-        cnt++;
+    if (result->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN) {
+        if (result->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
+            *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK;
+            if (result->key_mgmt & WPA_KEY_MGMT_SAE) {
+                *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK_WPA3_SAE;
+            }
+        } else if (result->key_mgmt & WPA_KEY_MGMT_SAE) {
+            *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE;
+        } else if (result->key_mgmt & (WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_IEEE8021X_SHA256)) {
+            *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
+        }
+    } else if (result->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA) {
+        if (result->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
+            *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_PSK;
+        } else if (result->key_mgmt & WPA_KEY_MGMT_IEEE8021X) {
+            *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
+        }
     }
 
-    return cnt;
+#define TEST_WPA_RSN (WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN | WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA)
+    if ((result->flags & TEST_WPA_RSN) == TEST_WPA_RSN) {
+        if (*auth != WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT) {
+            *auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_WPA2_PSK;
+        }
+    } else if ((result->flags & TEST_WPA_RSN) == 0) {
+        *auth = WIFI_EVENT_BEACON_IND_AUTH_WEP;
+        *cipher = WIFI_EVENT_BEACON_IND_CIPHER_WEP;
+    }
+#undef TEST_WPA_RSN
+
+#define TEST_CCMP_TKIP (WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP | WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP)
+    if ((result->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP) {
+        *cipher = WIFI_EVENT_BEACON_IND_CIPHER_AES;
+    }
+    if ((result->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP) {
+        *cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP;
+    }
+    if ((result->flags & (TEST_CCMP_TKIP)) == TEST_CCMP_TKIP) {
+        *cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP_AES;
+    }
+#undef TEST_CCMP_TKIP
+
+    if (result->key_mgmt == 0) {
+        *auth = WIFI_EVENT_BEACON_IND_AUTH_OPEN;
+        *cipher = WIFI_EVENT_BEACON_IND_CIPHER_NONE;
+    }
 }
 
 static void wifi_mgmr_sta_scanlist_format(struct wl80211_scan_result_item *result, wifi_mgmr_scan_item_t *item)
 {
     uint8_t auth = 0, cipher = 0;
 
-    if (result->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN) {
-        if (result->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK;
-            if (result->key_mgmt & WPA_KEY_MGMT_SAE) {
-                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK_WPA3_SAE;
-            }
-        } else if (result->key_mgmt & WPA_KEY_MGMT_SAE) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE;
-        } else if (result->key_mgmt & (WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_IEEE8021X_SHA256)) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
-        }
-    } else if (result->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA) {
-        if (result->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_PSK;
-        } else if (result->key_mgmt & WPA_KEY_MGMT_IEEE8021X) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
-        }
-    }
-
-#define TEST_WPA_RSN (WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN | WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA)
-    if ((result->flags & TEST_WPA_RSN) == TEST_WPA_RSN) {
-        if (auth != WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT) {
-            auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_WPA2_PSK;
-        }
-    } else if ((result->flags & TEST_WPA_RSN) == 0) {
-        auth = WIFI_EVENT_BEACON_IND_AUTH_WEP;
-        cipher = WIFI_EVENT_BEACON_IND_CIPHER_WEP;
-    }
-#undef TEST_WPA_RSN
-
-#define TEST_CCMP_TKIP (WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP | WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP)
-    if ((result->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP) {
-        cipher = WIFI_EVENT_BEACON_IND_CIPHER_AES;
-    }
-    if ((result->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP) {
-        cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP;
-    }
-    if ((result->flags & (TEST_CCMP_TKIP)) == TEST_CCMP_TKIP) {
-        cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP_AES;
-    }
-#undef TEST_CCMP_TKIP
-
-    if (result->key_mgmt == 0) {
-        auth = WIFI_EVENT_BEACON_IND_AUTH_OPEN;
-        cipher = WIFI_EVENT_BEACON_IND_CIPHER_NONE;
-    }
+    auth_cipher_convert(result, &auth, &cipher);
 
     item->mode = result->mode;
-    item->timestamp_lastseen = rtos_now(0);
+    item->timestamp_lastseen = 0;
     if (result->ssid) {
         item->ssid_len = strlen(result->ssid);
         memcpy(item->ssid, result->ssid, strlen(result->ssid));
@@ -579,24 +570,54 @@ static void wifi_mgmr_sta_scanlist_format(struct wl80211_scan_result_item *resul
     item->best_antenna = 0;
 }
 
-uint32_t wifi_mgmr_sta_scanlist_dump(void *results, uint32_t resultNums)
+uint32_t wifi_mgmr_sta_scanlist_nums_get(void)
 {
     struct wl80211_scan_result_item *n, *tmp;
     uint32_t cnt = 0;
-    wifi_mgmr_scan_item_t *scanResults = (wifi_mgmr_scan_item_t *)results;
 
     RB_FOREACH_SAFE(n, _scan_result_tree, &wl80211_scan_result, tmp)
     {
-        memset(scanResults + cnt, 0, sizeof(wifi_mgmr_scan_item_t));
-        wifi_mgmr_sta_scanlist_format(n, scanResults + cnt);
         cnt++;
-
-        if (cnt >= resultNums) {
-            break;
-        }
     }
 
     return cnt;
+}
+
+uint32_t wifi_mgmr_sta_scanlist_dump(void *results, uint32_t resultNums)
+{
+    struct wl80211_scan_result_item *n;
+    int total = 0, i;
+    wifi_mgmr_scan_item_t *scanResults = (wifi_mgmr_scan_item_t *)results;
+    struct wl80211_scan_result_item **rssi_sorted = NULL;
+
+    RB_FOREACH(n, _scan_result_tree, &wl80211_scan_result)
+    {
+        total++;
+    }
+
+    if (total == 0) {
+        return 0;
+    }
+
+    rssi_sorted = calloc(total, sizeof(struct wl80211_scan_result_item *));
+    assert(rssi_sorted);
+
+    i = 0;
+    RB_FOREACH(n, _scan_result_tree, &wl80211_scan_result)
+    {
+        rssi_sorted[i++] = n;
+    }
+
+    qsort(rssi_sorted, total, sizeof(void *), cmp_rssi_desc);
+
+    for (i = 0; i < resultNums && i < resultNums; i++) {
+        memset(scanResults + i, 0, sizeof(wifi_mgmr_scan_item_t));
+        wifi_mgmr_sta_scanlist_format(rssi_sorted[i], scanResults + i);
+    }
+
+    free(rssi_sorted);
+
+    return i;
 }
 
 int wifi_mgmr_sta_scanlist_free(void)
@@ -664,9 +685,7 @@ int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *config)
     memcpy(params.bssid, &bssid_addr, 6);
 
     /* listen_interval */
-    if (config->listen_interval) {
-        // not use
-    }
+    params.listen_interval = wifi_mgmr_listen_itv;
 
     /* start scan and connect */
     ret = wl80211_sta_connect(&params);
@@ -685,12 +704,13 @@ int wifi_mgmr_sta_disconnect(void)
 // XXX need this?
 int wifi_mgmr_sta_set_listen_itv(uint16_t itv)
 {
-    return -1;
+    wifi_mgmr_listen_itv = itv;
+    return 0;
 }
 
 uint16_t wifi_mgmr_sta_get_listen_itv(void)
 {
-    return 100;
+    return wifi_mgmr_listen_itv;
 }
 
 int wifi_mgmr_ap_state_get(void)
@@ -933,6 +953,71 @@ int wifi_mgmr_mac_str_to_addr(const char *str, uint8_t addr[])
         if (addr) {
             ((uint8_t *)addr)[i] = (uint8_t)hex;
         }
+    }
+
+    return 0;
+}
+
+int wifi_mgmr_ap_start(const wifi_mgmr_ap_params_t *config)
+{
+    struct wl80211_ap_settings ap_setting;
+
+    if ((!config) || (!config->ssid)) {
+        printf("arg error.\r\n");
+        return -1;
+    }
+
+    memset(&ap_setting, 0, sizeof(ap_setting));
+
+    /* Set SSID */
+    strncpy((char *)ap_setting.ssid, config->ssid, 32);
+
+    /* Set password if provided */
+    if (config->key != NULL) {
+        strncpy((char *)ap_setting.password, config->key, 64);
+        ap_setting.auth_type = WL80211_AUTHTYPE_OPEN_SYSTEM; /* WPA2-PSK with password */
+        wl80211_printf("Starting AP: SSID=%s, Password=***\r\n", ap_setting.ssid);
+    } else {
+        ap_setting.auth_type = WL80211_AUTHTYPE_OPEN_SYSTEM; /* Open system */
+        wl80211_printf("Starting AP: SSID=%s, Open\r\n", ap_setting.ssid);
+    }
+
+    /* Set AP parameters from config */
+    if (config->channel != 0) {
+        ap_setting.center_freq1 = wl80211_channel_to_freq(config->channel);
+        wl80211_printf("AP Channel: %d\r\n", config->channel);
+    } else {
+        ap_setting.center_freq1 = wl80211_channel_to_freq(11); /* Default channel 11 */
+    }
+
+    ap_setting.channel_width = WL80211_CHAN_WIDTH_20;
+    ap_setting.beacon_interval = 100;
+    ap_setting.max_power = 0x14;
+
+#if !defined(__NuttX__)
+    wifi_mgmr_ap_netif_cfg_save(config);
+#endif
+
+    if (wl80211_ap_start(&ap_setting) != 0) {
+#if !defined(__NuttX__)
+        wifi_mgmr_ap_netif_cfg_clear();
+#endif
+        wl80211_printf("Error: Failed to start AP\r\n");
+        return -1;
+    }
+
+    return 0;
+}
+int wifi_mgmr_ap_stop(void)
+{
+#if !defined(__NuttX__)
+    wifi_mgmr_ap_netif_stop();
+#endif
+    /* Stop AP */
+    if (wl80211_ap_stop() != 0) {
+        wl80211_printf("Error: Failed to stop AP\r\n");
+    } else {
+        wl80211_printf("AP stopped\r\n");
     }
 
     return 0;

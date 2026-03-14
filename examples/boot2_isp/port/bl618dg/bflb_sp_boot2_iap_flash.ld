@@ -17,7 +17,7 @@ INPUT(-lgcc)
 /* configure the entry point */
 ENTRY(__start)
 
-StackSize = 0x1000; /*  1KB */
+StackSize = 0x1000; /*  4KB */
 
 VerOffset = 0xC00;
 Boot2Size = 0xC000;
@@ -28,12 +28,10 @@ MEMORY
     fw_header_memory  (rx)  : ORIGIN = 0x80000000 - 0x2000, LENGTH = 8K
     xip_memory     (rx)  : ORIGIN = 0x80000000, LENGTH = 3K
     ver_memory     (rx)  : ORIGIN = 0x80000000 + VerOffset, LENGTH = 256
-    ram_psram  (wxa)   : ORIGIN = 0x88000000, LENGTH = 0K
+    ram_psram      (wxa) : ORIGIN = 0x88000000, LENGTH = 0K
     xip_memory1    (rx)  : ORIGIN = 0x80000d00, LENGTH = 44K + 768
-    itcm_memory    (rx)  : ORIGIN = 0x21000000, LENGTH = 60K
-    dtcm_memory    (rx)  : ORIGIN = 0x6100F000, LENGTH = 4K
-    nocache_memory (!rx) : ORIGIN = 0x21010000, LENGTH = 84K
-    ram_memory     (!rx) : ORIGIN = 0x61025000, LENGTH = 44K
+    ram_memory     (!rx) : ORIGIN = 0x61000000, LENGTH = 280K
+    nocache_memory (!rx) : ORIGIN = 0x21000000, LENGTH = 280K
 }
 
 SECTIONS
@@ -97,8 +95,34 @@ SECTIONS
         __build_id_end__ = .;
     } > xip_memory1
 
-    __itcm_load_addr = __build_id_end__;
+    __nocache_ram_load_addr = __build_id_end__;
+    .nocache_ram_region : AT (__nocache_ram_load_addr)
+    {
+        . = ALIGN(4);
+        __nocache_ram_data_start__ = .;
+        __nocache_noinit_ram_data_start__ = .;
+        *(.nocache_ram)
+        . = ALIGN(4);
+        __nocache_ram_data_end__ = .;
+    } > nocache_memory
 
+    .nocache_noinit_ram_region (NOLOAD) :
+    {
+        . = ALIGN(4);
+        *(.nocache_noinit_ram)
+        *(.noncacheable)
+        . = ALIGN(4);
+        __nocache_noinit_ram_data_end__ = .;
+    } > nocache_memory
+
+    /* Skip the nocache region in ram_memory */
+    .ram_skip_nocache_region (NOLOAD) :
+    {
+        . += (__nocache_noinit_ram_data_end__ - ORIGIN(nocache_memory));
+        . = ALIGN(32);
+    } > ram_memory
+
+    __itcm_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
     .itcm_region : AT (__itcm_load_addr)
     {
         . = ALIGN(4);
@@ -109,10 +133,9 @@ SECTIONS
         *(.sclock_rlt_code.*)
         *(.sclock_rlt_const.*)
 
-
         . = ALIGN(4);
         __tcm_code_end__ = .;
-    } > itcm_memory
+    } > ram_memory
 
     __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
 
@@ -123,13 +146,7 @@ SECTIONS
         *(.tcm_data)
         . = ALIGN(4);
         __tcm_data_end__ = .;
-    } > dtcm_memory
-
-    __StackTop = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory);
-    __StackLimit = __StackTop - StackSize;
-
-    /* Check if data + heap + stack exceeds dtcm limit */
-    ASSERT(__StackLimit >= __tcm_data_end__, "region dtcm overflowed with stack")
+    } > ram_memory
 
     __system_ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
 
@@ -177,15 +194,6 @@ SECTIONS
     __etext_final__ = (__psram_load_addr + SIZEOF(.psram_data_region));
     ASSERT(__etext_final__ <= ORIGIN(xip_memory) + Boot2Size, "xip memory overflowed")
 
-    .nocache_ram_region (NOLOAD) :
-    {
-        . = ALIGN(4);
-        *(.nocache_ram)
-        *(.nocache_noinit_ram)
-        *(.noncacheable)
-        . = ALIGN(4);
-    } > nocache_memory
-
     .system_ram_noinit_data_region (NOLOAD) :
     {
         . = ALIGN(4);
@@ -209,6 +217,17 @@ SECTIONS
         *(.noinit_data*)
         . = ALIGN(4);
     } > ram_memory
+
+    .stack (NOLOAD) :
+    {
+        . = ALIGN(16);
+        __StackLimit = .;
+        . = . + StackSize;
+        __StackTop = .;
+    } > ram_memory
+
+    /* Check if data + heap + stack exceeds ram limit */
+    ASSERT(__StackTop <= ORIGIN(ram_memory) + LENGTH(ram_memory), "region ram_memory overflowed with stack")
 
     PROVIDE( __wifi_bss_start = 0 );
     PROVIDE( __wifi_bss_end = 0 );

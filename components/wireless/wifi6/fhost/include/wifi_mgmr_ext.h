@@ -1522,4 +1522,15 @@ uint8_t wifi_mgmr_get_channelnum_24G(void);
 * @note For 5GHz channels (BL618DG), country-specific validation is not yet implemented (TODO)
 */
 int wifi_mgmr_channel_valid_check(uint16_t channel);
+
+/**
+ * @brief Check if a WiFi mode is valid
+ *
+ * @param mode The WiFi mode to validate
+ * @return int
+ *   - 0: Mode is valid
+ *   - -1: Mode is invalid
+ */
+int wifi_mgmr_wifimode_valid_check(uint16_t mode);
+
 #endif

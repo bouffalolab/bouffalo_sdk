@@ -112,10 +112,6 @@
 #ifndef BL_HD_RETRY_MAX
 #define BL_HD_RETRY_MAX 0
 #endif
-
-#ifndef BL_WIFI_LP_FW
-#define BL_WIFI_LP_FW 0
-#endif
 /* hacks end */
 
 /* coex */

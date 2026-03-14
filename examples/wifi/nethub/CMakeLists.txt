@@ -29,8 +29,18 @@ sdk_add_compile_definitions(-DCONFIG_NETHUB=1)
 target_sources(app PRIVATE
                    app/src/atmodule/app_atmodule.c
                    app/src/app_user.c
-                   app/src/wifi/app_wifi_fhost.c
                    )
+
+# Virtual channel demo (only compile if CONFIG_MR_VIRTUALCHAN is defined)
+if(CONFIG_MR_VIRTUALCHAN)
+target_sources(app PRIVATE app/src/virtualchan/app_vchan.c)
+endif()
+
+if (CONFIG_WL80211)
+    target_sources(app PRIVATE app/src/wifi/app_wifi_wl80211.c)
+else ()
+    target_sources(app PRIVATE app/src/wifi/app_wifi_fhost.c)
+endif()
 
 sdk_add_include_directories(.)
 sdk_add_include_directories(./app/include)

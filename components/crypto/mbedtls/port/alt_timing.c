@@ -3,7 +3,7 @@
 #include "mbedtls/timing.h"
 #include <stdio.h>
 
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #define MBEDTLS_PRIVATE(member) member
 #endif
 

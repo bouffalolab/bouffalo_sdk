@@ -10,7 +10,7 @@
 #include <time.h>
 
 #include "../include/bflbwifi_log.h"
-#include "../include/bflbwifi.h"
+#include "bflbwifi_internal.h"
 
 /* URC type definition (consistent with parser) */
 typedef enum {
@@ -82,6 +82,7 @@ typedef struct {
 
     /* Error information */
     int last_error;
+    int last_cwjap_error;
     char last_error_str[128];
 } wifi_state_context_t;
 
@@ -178,6 +179,9 @@ static void handle_wifi_connected(void)
 {
     pthread_mutex_lock(&g_state.mutex);
     g_state.sta_state = WIFI_STATE_CONNECTED;
+    g_state.last_error = 0;
+    g_state.last_cwjap_error = 0;
+    g_state.last_error_str[0] = '\0';
     pthread_cond_signal(&g_state.state_cond);
     pthread_mutex_unlock(&g_state.mutex);
 
@@ -242,6 +246,9 @@ static void handle_wifi_gotip(const char *line)
     /* 更新状态 */
     pthread_mutex_lock(&g_state.mutex);
     g_state.sta_state = WIFI_STATE_GOTIP;
+    g_state.last_error = 0;
+    g_state.last_cwjap_error = 0;
+    g_state.last_error_str[0] = '\0';
     pthread_cond_signal(&g_state.state_cond);
     pthread_mutex_unlock(&g_state.mutex);
 }
@@ -274,6 +281,20 @@ void bflbwifi_state_handle_cwjap(const char *line)
     }
 }
 
+void bflbwifi_state_handle_cwjap_error(int error_code)
+{
+    pthread_mutex_lock(&g_state.mutex);
+    g_state.sta_state = WIFI_STATE_ERROR;
+    g_state.last_error = error_code;
+    g_state.last_cwjap_error = error_code;
+    snprintf(g_state.last_error_str, sizeof(g_state.last_error_str),
+             "CWJAP error: %d", error_code);
+    pthread_cond_signal(&g_state.state_cond);
+    pthread_mutex_unlock(&g_state.mutex);
+
+    BFLB_LOGE("WiFi: CWJAP failed (%d)", error_code);
+}
+
 /**
  * @brief Handle WiFi error URC
  */
@@ -282,14 +303,13 @@ static void handle_wifi_error(const char *line)
     int error_code = bflbwifi_parser_parse_wifi_error(line);
 
     pthread_mutex_lock(&g_state.mutex);
-    g_state.sta_state = WIFI_STATE_ERROR;
     g_state.last_error = error_code;
     snprintf(g_state.last_error_str, sizeof(g_state.last_error_str),
              "WiFi error: %d", error_code);
     pthread_cond_signal(&g_state.state_cond);
     pthread_mutex_unlock(&g_state.mutex);
 
-    BFLB_LOGE("WiFi: ERROR (%d)", error_code);
+    BFLB_LOGW("WiFi: reason update (%d)", error_code);
 }
 
 /**
@@ -578,4 +598,86 @@ int bflbwifi_state_wait_sta_state(bflbwifi_sta_state_t target_state, int timeout
 
     pthread_mutex_unlock(&g_state.mutex);
     return 0;
+}
+
+void bflbwifi_state_prepare_sta_connect(void)
+{
+    pthread_mutex_lock(&g_state.mutex);
+    g_state.sta_state = WIFI_STATE_CONNECTING;
+    g_state.last_error = 0;
+    g_state.last_cwjap_error = 0;
+    g_state.last_error_str[0] = '\0';
+    pthread_mutex_unlock(&g_state.mutex);
+}
+
+static int map_cwjap_error_to_result(int error_code)
+{
+    switch (error_code) {
+        case 1:
+            return E_ERR_TIMEOUT;
+        case 2:
+            return E_ERR_WRONG_PASSWORD;
+        case 3:
+            return E_ERR_NO_AP_FOUND;
+        case 4:
+        default:
+            return E_ERR_CONNECT_FAILED;
+    }
+}
+
+static int map_wifi_reason_to_connect_result(int reason_code)
+{
+    switch (reason_code) {
+        case 8:
+        case 17:
+        case 18:
+            return E_ERR_WRONG_PASSWORD;
+        case 12:
+            return E_ERR_NO_AP_FOUND;
+        default:
+            return E_ERR_TIMEOUT;
+    }
+}
+
+int bflbwifi_state_wait_sta_connect(int timeout_ms)
+{
+    struct timespec ts;
+    int ret;
+    int cwjap_error;
+    int last_error;
+
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += timeout_ms / 1000;
+    ts.tv_nsec += (timeout_ms % 1000) * 1000000;
+    if (ts.tv_nsec >= 1000000000) {
+        ts.tv_sec++;
+        ts.tv_nsec -= 1000000000;
+    }
+
+    pthread_mutex_lock(&g_state.mutex);
+    while (1) {
+        if (g_state.sta_state == WIFI_STATE_CONNECTED ||
+            g_state.sta_state == WIFI_STATE_GOTIP) {
+            pthread_mutex_unlock(&g_state.mutex);
+            return 0;
+        }
+
+        if (g_state.last_cwjap_error != 0) {
+            cwjap_error = g_state.last_cwjap_error;
+            pthread_mutex_unlock(&g_state.mutex);
+            return map_cwjap_error_to_result(cwjap_error);
+        }
+
+        if (g_state.sta_state == WIFI_STATE_ERROR) {
+            pthread_mutex_unlock(&g_state.mutex);
+            return E_ERR_CONNECT_FAILED;
+        }
+
+        ret = pthread_cond_timedwait(&g_state.state_cond, &g_state.mutex, &ts);
+        if (ret != 0) {
+            last_error = g_state.last_error;
+            pthread_mutex_unlock(&g_state.mutex);
+            return map_wifi_reason_to_connect_result(last_error);
+        }
+    }
 }

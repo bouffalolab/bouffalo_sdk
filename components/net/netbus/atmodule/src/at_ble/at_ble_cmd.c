@@ -31,6 +31,10 @@
 #define AT_BLE_CMD_PRINTF printf
 #define AT_BLE_SCAN_DEBUG_OUTPUT 0
 
+/* BLE AT Command Constants */
+#define BLE_AT_FORMAT_MAX_LEN          64      /* Maximum length for AT command format string */
+#define BLE_AT_HEX_STRING_MAX_LEN      62      /* Maximum HEX string length for 31-byte data */
+
 static int get_mac_from_string(const char *string, uint8_t mac[6])
 {
     if (string == NULL || strlen(string) != 17) {
@@ -81,14 +85,22 @@ static int is_valid_uuid_string(const char *uuid_str)
     
     return 0;
 }
+
 static void hex_to_string(uint8_t *hex, int hex_len, char *string, int string_len)
 {
+    const char hex_table[] = "0123456789abcdef";
     int i;
 
-    memset(string, 0, string_len);
-    for (i = 0; i < hex_len; i++) {
-        snprintf(string + strlen(string), string_len - strlen(string), "%02x", hex[i]);
+    /* Check if buffer is large enough: each hex byte needs 2 chars + null terminator */
+    if (string_len < hex_len * 2 + 1) {
+        return;
     }
+
+    for (i = 0; i < hex_len; i++) {
+        string[i * 2]     = hex_table[hex[i] >> 4];
+        string[i * 2 + 1] = hex_table[hex[i] & 0x0F];
+    }
+    string[hex_len * 2] = '\0';
 }
 
 static int at_query_cmd_ble_init(int argc, const char **argv)
@@ -278,6 +290,13 @@ static int at_setup_cmd_ble_scan_rsp_data(int argc, const char **argv)
     AT_CMD_PARSE_STRING(0, scan_rsp_data, sizeof(scan_rsp_data));
     if (strlen(scan_rsp_data) <= 0||strlen(scan_rsp_data)%2!=0)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+
+    /* Validate input length against BLE spec limit (31 bytes = 62 hex chars) */
+    if (strlen(scan_rsp_data) > BLE_AT_HEX_STRING_MAX_LEN) {
+        AT_BLE_CMD_PRINTF("Scan rsp data too long: max 62 hex chars (31 bytes)\r\n");
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
+
     at_ble_config->scan_rsp_data.len = utils_hex2bin(scan_rsp_data, strlen(scan_rsp_data), at_ble_config->scan_rsp_data.data, sizeof(at_ble_config->scan_rsp_data.data));
     if(at_ble_config->scan_rsp_data.len != (strlen(scan_rsp_data)/2))
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
@@ -339,6 +358,13 @@ static int at_setup_cmd_ble_adv_data(int argc, const char **argv)
     AT_CMD_PARSE_STRING(0, adv_data, sizeof(adv_data));
     if (strlen(adv_data) <= 0 || strlen(adv_data)%2!=0)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+
+    /* Validate input length against BLE spec limit (31 bytes = 62 hex chars) */
+    if (strlen(adv_data) > BLE_AT_HEX_STRING_MAX_LEN) {
+        AT_BLE_CMD_PRINTF("Adv data too long: max 62 hex chars (31 bytes)\r\n");
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
+
     at_ble_config->adv_data.len = utils_hex2bin(adv_data, strlen(adv_data), at_ble_config->adv_data.data, sizeof(at_ble_config->adv_data.data));
     if(at_ble_config->adv_data.len != (strlen(adv_data)/2))
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
@@ -378,7 +404,7 @@ static int at_query_cmd_ble_conn(int argc, const char **argv)
 
     for (i = 0; i < BLE_CONN_MAX_NUM; i++) {
         if (at_ble_is_valid_conn_idx(i) && at_ble_is_connected(i) && at_ble_conn_get_addr(i, addr)&&(at_ble_conn_get_role(i)!=-1)) {
-            at_response_string("+BLECONN:%d,%d,\"%02x:%02x:%02x:%02x:%02x:%02x\"\r\n", i,at_ble_conn_get_role(i), addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+            at_response_string("+BLECONN:%d,\"%02x:%02x:%02x:%02x:%02x:%02x\",%d\r\n", i, addr[5], addr[4], addr[3], addr[2], addr[1], addr[0],at_ble_conn_get_role(i));
             conn_num++;
         }
     }
@@ -776,6 +802,7 @@ static int at_setup_cmd_ble_gatts_char_create(int argc, const char **argv)
 static int at_setup_cmd_ble_gatts_notify(int argc, const char **argv)
 {
     int conn_index = 0;
+    int conn_index_valid = 0;
     int srv_idx = 0;
     int char_idx = 0;
     int length = 0;
@@ -784,18 +811,18 @@ static int at_setup_cmd_ble_gatts_notify(int argc, const char **argv)
 
     if (at_ble_config->work_role != BLE_SERVER&&at_ble_config->work_role != BLE_DUALMODE)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_INIT);
-
-    AT_CMD_PARSE_NUMBER(0, &conn_index);
+    
+    
+    AT_CMD_PARSE_NUMBER(0, &srv_idx);
+    AT_CMD_PARSE_NUMBER(1, &char_idx );
+    AT_CMD_PARSE_NUMBER(2, &length);
+    AT_CMD_PARSE_OPT_NUMBER(3, &conn_index,conn_index_valid);
 
     if (!at_ble_is_valid_conn_idx(conn_index))
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     
     if (!at_ble_is_connected(conn_index))
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
-
-    AT_CMD_PARSE_NUMBER(1, &srv_idx);
-    AT_CMD_PARSE_NUMBER(2, &char_idx );
-    AT_CMD_PARSE_NUMBER(3, &length);
 
     if (srv_idx < 0 || srv_idx >= BLE_SRV_MAX_NUM)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
@@ -811,13 +838,19 @@ static int at_setup_cmd_ble_gatts_notify(int argc, const char **argv)
         buffer = NULL;
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
     }
-    
+    at_response_result(AT_RESULT_CODE_OK);
     AT_CMD_RESPONSE(AT_CMD_MSG_WAIT_DATA);
     while(recv_num < length) {
        recv_num += AT_CMD_DATA_RECV(buffer + recv_num, length - recv_num);
     }
     at_response_string("Recv %d bytes\r\n", recv_num);
-
+    
+    if (recv_num != length) {
+        at_free(buffer);
+        buffer = NULL;
+        AT_BLE_CMD_PRINTF("Data reception incomplete: expected %d, got %d\r\n", length, recv_num);
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
+    }
     send_num = at_ble_gatts_service_notify(conn_index, srv_idx, char_idx, buffer, recv_num);
     at_free(buffer);
     buffer = NULL;
@@ -834,6 +867,7 @@ static int at_setup_cmd_ble_gatts_indicate(int argc, const char **argv)
 {
     int srv_idx = 0;
     int conn_index = 0;
+    int conn_index_valid = 0;
     int char_idx = 0;
     int length = 0;
     int recv_num = 0;
@@ -841,18 +875,14 @@ static int at_setup_cmd_ble_gatts_indicate(int argc, const char **argv)
 
     if (at_ble_config->work_role != BLE_SERVER&&at_ble_config->work_role != BLE_DUALMODE)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_INIT);
-
-    AT_CMD_PARSE_NUMBER(0, &conn_index);
+    
+    AT_CMD_PARSE_NUMBER(0, &srv_idx);
+    AT_CMD_PARSE_NUMBER(1, &char_idx );
+    AT_CMD_PARSE_NUMBER(2, &length);
+    AT_CMD_PARSE_OPT_NUMBER(3, &conn_index,conn_index_valid);
 
     if (!at_ble_is_valid_conn_idx(conn_index))
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
-    
-    if (!at_ble_is_connected(conn_index))
-        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
-
-    AT_CMD_PARSE_NUMBER(1, &srv_idx);
-    AT_CMD_PARSE_NUMBER(2, &char_idx );
-    AT_CMD_PARSE_NUMBER(3, &length);
 
     if (srv_idx < 0 || srv_idx >= BLE_SRV_MAX_NUM)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
@@ -874,7 +904,12 @@ static int at_setup_cmd_ble_gatts_indicate(int argc, const char **argv)
        recv_num += AT_CMD_DATA_RECV(buffer + recv_num, length - recv_num);
     }
     at_response_string("Recv %d bytes\r\n", recv_num);
-
+    if (recv_num != length) {
+        at_free(buffer);
+        buffer = NULL;
+        AT_BLE_CMD_PRINTF("Data reception incomplete: expected %d, got %d\r\n", length, recv_num);
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
+    }
     send_num = at_ble_gatts_service_indicate(conn_index, srv_idx, char_idx, buffer, recv_num);
     at_free(buffer);
     buffer = NULL;
@@ -904,26 +939,35 @@ static int at_setup_cmd_ble_gatts_read(int argc, const char **argv)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     if (char_idx < 0 || char_idx >= BLE_CHAR_MAX_NUM)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
-    if (length <= 0 || length > 244) {
+    if (length < 0 || length > 244) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }
 
-    char *buffer = (char *)at_malloc(length);
-    if (!buffer) {
-        AT_BLE_CMD_PRINTF("malloc %d bytes failed\r\n", length);
+    if (length > 0) {
+        char *buffer = (char *)at_malloc(length);
+        if (!buffer) {
+            AT_BLE_CMD_PRINTF("malloc %d bytes failed\r\n", length);
+            buffer = NULL;
+            return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
+        }
+
+        AT_CMD_RESPONSE(AT_CMD_MSG_WAIT_DATA);
+        while(recv_num < length) {
+            recv_num += AT_CMD_DATA_RECV(buffer + recv_num, length - recv_num);
+        }
+        at_response_string("Recv %d bytes\r\n", recv_num);
+        if (recv_num != length) {
+            at_free(buffer);
+            buffer = NULL;
+            AT_BLE_CMD_PRINTF("Data reception incomplete: expected %d, got %d\r\n", length, recv_num);
+            return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
+        }
+        send_num = at_ble_gatts_service_read(srv_idx, char_idx, buffer, recv_num);
+        at_free(buffer);
         buffer = NULL;
-        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
+    } else {
+        send_num = at_ble_gatts_service_read(srv_idx, char_idx, NULL, 0);
     }
-
-    AT_CMD_RESPONSE(AT_CMD_MSG_WAIT_DATA);
-    while(recv_num < length) {
-        recv_num += AT_CMD_DATA_RECV(buffer + recv_num, length - recv_num);
-    }
-    at_response_string("Recv %d bytes\r\n", recv_num);
-
-    send_num = at_ble_gatts_service_read(srv_idx, char_idx, buffer, recv_num);
-    at_free(buffer);
-    buffer = NULL;
 
     if (send_num != recv_num) {
         return AT_RESULT_CODE_SEND_FAIL;
@@ -1021,6 +1065,13 @@ static int at_setup_cmd_ble_gattc_write(int argc, const char **argv)
     }
     at_response_string("Recv %d bytes\r\n", recv_num);
 
+    if (recv_num != length) {
+        at_free(buffer);
+        buffer = NULL;
+        AT_BLE_CMD_PRINTF("Data reception incomplete: expected %d, got %d\r\n", length, recv_num);
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
+    }
+
     send_num = at_ble_gattc_service_write(conn_index, srv_idx, char_idx, buffer, recv_num);
     at_free(buffer);
     buffer = NULL;
@@ -1114,21 +1165,33 @@ static int at_query_cmd_ble_sec_param(int argc, const char **argv)
 {
     if (at_ble_config->work_role == BLE_DISABLE)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_INIT);
-    at_response_string("+BLESECPARAM:%d\r\n",at_ble_config->ble_sec_param);
+    at_response_string("+BLESECPARAM:%d,%d\r\n",at_ble_config->ble_sec_param,at_ble_config->ble_sec_lvl);
     return AT_RESULT_CODE_OK;
 }
 
 static int at_setup_cmd_ble_sec_param(int argc, const char **argv)
 {
     int sec_param = 0;
+    int sec_level = 1;
+    int level_vaild = 0;
     if (at_ble_config->work_role == BLE_DISABLE)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_INIT);
     AT_CMD_PARSE_NUMBER(0, &sec_param);
     if(sec_param < 0 || sec_param > 4)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
-    if(at_ble_sec_paramter_setup(sec_param))
+    AT_CMD_PARSE_OPT_NUMBER(1, &sec_level, level_vaild);
+    
+    // Validate security level parameter
+    if (level_vaild && (sec_level < 0 || sec_level > 4)) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
+    if (sec_param == 3 && sec_level > 2) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
+    if(at_ble_sec_paramter_setup(sec_param,sec_level))
        return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
-    at_ble_config->ble_sec_param=sec_param;
+    at_ble_config->ble_sec_param = sec_param;
+    at_ble_config->ble_sec_lvl = sec_level;
     return AT_RESULT_CODE_OK;
 }
 
@@ -1639,7 +1702,7 @@ static int at_setup_cmd_ble_dis_set(int argc, const char **argv)
     AT_CMD_PARSE_STRING(1, disname_value, sizeof(disname_value));
     AT_CMD_PARSE_NUMBER(2, &disname_value_len);
 
-    if (at_ble_config->work_role != BLE_SERVER)
+    if (at_ble_config->work_role != BLE_SERVER&&at_ble_config->work_role != BLE_DUALMODE)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_INIT);
     if(at_ble_config->ble_dis_init!=1)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
@@ -1679,66 +1742,80 @@ static int at_setup_cmd_ble_dis_set(int argc, const char **argv)
     }
     #endif
     return AT_RESULT_CODE_OK;
-
+    
 }
 #endif
 
+int at_setup_cmd_ble_gap_appearance(int argc, const char **argv)
+{
+    int  device_appearance  =  0 ;
+    if (at_ble_config->work_role == BLE_DISABLE)
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_INIT);
+    AT_CMD_PARSE_NUMBER(0,&device_appearance);
+    if(device_appearance < 0||device_appearance>0xFFFF)
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID); 
+    bt_gap_set_local_device_appearance(device_appearance);
+    return AT_RESULT_CODE_OK;
+
+}
+
 static const at_cmd_struct at_ble_cmd[] = {
-    {"+BLEINIT",              at_query_cmd_ble_init, at_setup_cmd_ble_init, NULL, 1, 1},
-    {"+BLEADDR",              at_query_cmd_ble_addr, at_setup_cmd_ble_addr, NULL, 1, 1},
-    {"+BLENAME",              at_query_cmd_ble_name, at_setup_cmd_ble_name, NULL, 1, 1},
-    {"+BLESCANPARAM",         at_query_cmd_ble_scan_param, at_setup_cmd_ble_scan_param, NULL, 5, 5},
-    {"+BLESCAN",              NULL, at_setup_cmd_ble_scan, NULL, 1, 1},
-    {"+BLESCANRSPDATA",       NULL, at_setup_cmd_ble_scan_rsp_data, NULL, 1, 1},
-    {"+BLEADVPARAM",          at_query_cmd_ble_adv_param, at_setup_cmd_ble_adv_param, NULL, 4, 4},
-    {"+BLEADVDATA",           NULL, at_setup_cmd_ble_adv_data, NULL, 1, 1},
-    {"+BLEADVSTART",          NULL, NULL, at_exe_cmd_ble_adv_start, 0, 0},
-    {"+BLEADVSTOP",           NULL, NULL, at_exe_cmd_ble_adv_stop, 0, 0},
-    {"+BLECONN",              at_query_cmd_ble_conn, at_setup_cmd_ble_conn, NULL, 2, 4},
-    {"+BLECONNPARAM",         at_query_cmd_ble_conn_param, at_setup_cmd_ble_conn_param, NULL, 5, 5},
-    {"+BLEDISCONN",           NULL, at_setup_cmd_ble_disconn, NULL, 1, 1},
-    {"+BLEDATALEN",           NULL, at_setup_cmd_ble_datalen, NULL, 3, 3},
-    {"+BLEEXCHANGEMTU",       NULL, at_setup_cmd_ble_exchange_mtu, NULL, 1, 1},
-    {"+BLEGATTSSRV",          at_query_cmd_ble_gatts_service, NULL, NULL, 0, 0},
-    {"+BLEGATTSSRVCRE",       NULL, at_setup_cmd_ble_gatts_service_create, NULL, 4, 4},
-    {"+BLEGATTSSRVDEL",       NULL, at_setup_cmd_ble_gatts_service_delete, NULL, 1, 1},
-    {"+BLEGATTSREGISTER",     NULL, at_setup_cmd_ble_gatts_service_register, NULL, 1, 1},
-    {"+BLEGATTSCHAR",         at_query_cmd_ble_gatts_char, NULL, NULL, 0, 0},
-    {"+BLEGATTSCHARCRE",      NULL, at_setup_cmd_ble_gatts_char_create, NULL, 6, 6},
-    {"+BLEGATTSNTFY",         NULL, at_setup_cmd_ble_gatts_notify, NULL, 4, 4},
-    {"+BLEGATTSIND",          NULL, at_setup_cmd_ble_gatts_indicate, NULL, 4, 4},
-    {"+BLEGATTSRD",           NULL, at_setup_cmd_ble_gatts_read, NULL, 3, 3},
-    {"+BLEGATTCSRVDIS",       NULL, at_setup_cmd_ble_gattc_service_discover, NULL, 1, 1},
-    {"+BLEGATTCCHARDIS",      NULL, at_setup_cmd_ble_gattc_char_discover, NULL, 2, 2},
-    {"+BLEGATTCWR",           NULL, at_setup_cmd_ble_gattc_write, NULL, 4, 4},
-    {"+BLEGATTCRD",           NULL, at_setup_cmd_ble_gattc_read, NULL, 3, 3},
-    {"+BLEGATTCSUBSCRIBE",    NULL, at_setup_cmd_ble_gattc_subscribe, NULL, 4, 4},
-    {"+BLEGATTCUNSUBSCRIBE",  NULL, at_setup_cmd_ble_gattc_unsubscribe, NULL, 2, 2},
-    {"+BLETXPWR",             at_query_cmd_ble_tx_power, at_setup_cmd_ble_tx_power, NULL, 1, 1},
-    {"+BLESECPARAM",          at_query_cmd_ble_sec_param, at_setup_cmd_ble_sec_param, NULL, 1, 1},
-    {"+BLESECCANNEL",         NULL, at_setup_cmd_ble_sec_cancel, NULL, 1, 1},
+    {"+BLEINIT", at_query_cmd_ble_init, at_setup_cmd_ble_init, NULL, 1, 1},
+    {"+BLEADDR", at_query_cmd_ble_addr, at_setup_cmd_ble_addr, NULL, 1, 1},
+    {"+BLENAME", at_query_cmd_ble_name, at_setup_cmd_ble_name, NULL, 1, 1},
+    {"+BLESCANPARAM", at_query_cmd_ble_scan_param, at_setup_cmd_ble_scan_param, NULL, 5, 5},
+    {"+BLESCAN", NULL, at_setup_cmd_ble_scan, NULL, 1, 1},
+    {"+BLESCANRSPDATA",  NULL, at_setup_cmd_ble_scan_rsp_data, NULL, 1, 1},
+    {"+BLEADVPARAM", at_query_cmd_ble_adv_param, at_setup_cmd_ble_adv_param, NULL, 4, 4},
+    {"+BLEADVDATA",NULL, at_setup_cmd_ble_adv_data, NULL, 1, 1},
+    {"+BLEADVSTART",  NULL, NULL, at_exe_cmd_ble_adv_start, 0, 0},
+    {"+BLEADVSTOP", NULL, NULL, at_exe_cmd_ble_adv_stop, 0, 0},
+    {"+BLECONN", at_query_cmd_ble_conn, at_setup_cmd_ble_conn, NULL, 2, 4},
+    {"+BLECONNPARAM",  at_query_cmd_ble_conn_param, at_setup_cmd_ble_conn_param, NULL, 5, 5},
+    {"+BLEDISCONN",  NULL, at_setup_cmd_ble_disconn, NULL, 1, 1},
+    {"+BLEDATALEN",  NULL, at_setup_cmd_ble_datalen, NULL, 3, 3},
+    {"+BLEEXCHANGEMTU", NULL, at_setup_cmd_ble_exchange_mtu, NULL, 1, 1},
+    {"+BLEGATTSSRV", at_query_cmd_ble_gatts_service, NULL, NULL, 0, 0},
+    {"+BLEGATTSSRVCRE",NULL, at_setup_cmd_ble_gatts_service_create, NULL, 4, 4},
+    {"+BLEGATTSSRVDEL", NULL, at_setup_cmd_ble_gatts_service_delete, NULL, 1, 1},
+    {"+BLEGATTSREGISTER", NULL, at_setup_cmd_ble_gatts_service_register, NULL, 1, 1},
+    {"+BLEGATTSCHAR", at_query_cmd_ble_gatts_char, NULL, NULL, 0, 0},
+    {"+BLEGATTSCHARCRE", NULL, at_setup_cmd_ble_gatts_char_create, NULL, 6, 6},
+    {"+BLEGATTSNTFY",  NULL, at_setup_cmd_ble_gatts_notify, NULL, 3, 4},
+    {"+BLEGATTSIND",NULL, at_setup_cmd_ble_gatts_indicate, NULL, 3, 4},
+    {"+BLEGATTSRD", NULL, at_setup_cmd_ble_gatts_read, NULL, 3, 3},
+    {"+BLEGATTCSRVDIS", NULL, at_setup_cmd_ble_gattc_service_discover, NULL, 1, 1},
+    {"+BLEGATTCCHARDIS",  NULL, at_setup_cmd_ble_gattc_char_discover, NULL, 2, 2},
+    {"+BLEGATTCWR", NULL, at_setup_cmd_ble_gattc_write, NULL, 4, 4},
+    {"+BLEGATTCRD", NULL, at_setup_cmd_ble_gattc_read, NULL, 3, 3},
+    {"+BLEGATTCSUBSCRIBE",  NULL, at_setup_cmd_ble_gattc_subscribe, NULL, 4, 4},
+    {"+BLEGATTCUNSUBSCRIBE", NULL, at_setup_cmd_ble_gattc_unsubscribe, NULL, 2, 2},
+    {"+BLETXPWR", at_query_cmd_ble_tx_power, at_setup_cmd_ble_tx_power, NULL, 1, 1},
+    {"+BLESECPARAM",  at_query_cmd_ble_sec_param, at_setup_cmd_ble_sec_param, NULL, 1, 2},
+    {"+BLESECCANNEL",NULL, at_setup_cmd_ble_sec_cancel, NULL, 1, 1},
     {"+BLESECPASSKEYCONFIRM", NULL, at_setup_cmd_ble_sec_passkey_confirm, NULL, 1, 1},
     {"+BLESECPAIRINGCONFIRM", NULL, at_setup_cmd_ble_sec_pairing_confirm, NULL, 1, 1},
-    {"+BLESECPASSKEY",        NULL, at_setup_cmd_ble_sec_passkey, NULL, 2, 2},
-    {"+BLESECGETLTKLIST",     at_query_cmd_ble_ltk_list, NULL, NULL, 0, 0},
-    {"+BLESECUNPAIR",         NULL, at_setup_cmd_ble_sec_unpair, NULL, 2, 2},
-    {"+BLESECSTART",          NULL, at_setup_cmd_ble_sec_start, NULL, 2, 2},
+    {"+BLESECPASSKEY", NULL, at_setup_cmd_ble_sec_passkey, NULL, 2, 2},
+    {"+BLESECGETLTKLIST", at_query_cmd_ble_ltk_list, NULL, NULL, 0, 0},
+    {"+BLESECUNPAIR", NULL, at_setup_cmd_ble_sec_unpair, NULL, 2, 2},
+    {"+BLESECSTART",  NULL, at_setup_cmd_ble_sec_start, NULL, 2, 2},
 #if defined(CONFIG_BT_BAS_SERVER)
-    {"+BLEBASINIT",           NULL, NULL, at_exe_cmd_ble_bas_register, 0, 0},
-    {"+BLEBASDEINIT",         NULL, NULL, at_exe_cmd_ble_bas_unregister, 0, 0},
-    {"+BLEBASLVLGET",         at_query_cmd_ble_bas_getlevel, NULL,NULL, 0, 0},
-    {"+BLEBASLVLSET",         NULL, at_setup_cmd_ble_bas_setlevel, NULL, 2, 2},
+    {"+BLEBASINIT",  NULL, NULL, at_exe_cmd_ble_bas_register, 0, 0},
+    {"+BLEBASDEINIT", NULL, NULL, at_exe_cmd_ble_bas_unregister, 0, 0},
+    {"+BLEBASLVLGET", at_query_cmd_ble_bas_getlevel, NULL,NULL, 0, 0},
+    {"+BLEBASLVLSET", NULL, at_setup_cmd_ble_bas_setlevel, NULL, 2, 2},
 #endif
 #if defined (CONFIG_BT_IAS_SERVER)
-    {"+BLEIASINIT",           NULL, NULL, at_exe_cmd_ble_ias_register, 0, 0},
-    {"+BLEIASDEINIT",         NULL, NULL, at_exe_cmd_ble_ias_unregister, 0, 0},
+    {"+BLEIASINIT", NULL, NULL, at_exe_cmd_ble_ias_register, 0, 0},
+    {"+BLEIASDEINIT", NULL, NULL, at_exe_cmd_ble_ias_unregister, 0, 0},
 #endif
 #if defined (CONFIG_BT_DIS_SERVER)
-    {"+BLEDISINIT",           NULL, at_setup_cmd_ble_dis_register, NULL, 4, 4},
-    {"+BLEDISDEINIT",         NULL, NULL, at_exe_cmd_ble_dis_unregister, 0, 0},
-    {"+BLEDISSET",            NULL, at_setup_cmd_ble_dis_set,NULL, 3, 3},
+    {"+BLEDISINIT", NULL, at_setup_cmd_ble_dis_register, NULL, 4, 4},
+    {"+BLEDISDEINIT", NULL, NULL, at_exe_cmd_ble_dis_unregister, 0, 0},
+    {"+BLEDISSET", NULL, at_setup_cmd_ble_dis_set,NULL, 3, 3},
 #endif
-    {NULL,              NULL, NULL, NULL, 0, 0},
+    {"+BLESETGAPAPPEARANCE",  NULL, at_setup_cmd_ble_gap_appearance, NULL, 1, 1},
+    {NULL, NULL, NULL, NULL, 0, 0},
 };
 
 bool at_ble_cmd_regist(void)

@@ -33,7 +33,7 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-struct lv_matrix_t {
+struct _lv_matrix_t {
     float m[3][3];
 };
 
@@ -110,11 +110,26 @@ lv_point_precise_t lv_matrix_transform_precise_point(const lv_matrix_t * matrix,
 lv_area_t lv_matrix_transform_area(const lv_matrix_t * matrix, const lv_area_t * area);
 
 /**
+ * Check if the matrix is identity
+ * @param matrix           pointer to a matrix
+ * @return true: the matrix is identity , false: the matrix is not identity
+ */
+bool lv_matrix_is_identity(const lv_matrix_t * matrix);
+
+/**
  * Check if the matrix is identity or translation matrix
  * @param matrix           pointer to a matrix
  * @return true: the matrix is identity or translation matrix, false: the matrix is not identity or translation matrix
  */
 bool lv_matrix_is_identity_or_translation(const lv_matrix_t * matrix);
+
+/**
+ * Transpose a matrix.
+ * @param src   pointer to the source matrix. If NULL, the function returns.
+ * @param dst   pointer to the destination matrix. If NULL, the function returns.
+ * Note: src and dst may point to the same matrix for in-place transposition.
+ */
+void lv_matrix_transpose(const lv_matrix_t * src, lv_matrix_t * dst);
 
 /**********************
  *      MACROS

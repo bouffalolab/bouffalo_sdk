@@ -7,6 +7,10 @@
 #include "crypto.h"
 #include "random.h"
 
+#ifdef CONFIG_MBEDTLS_V2
+#define MBEDTLS_PRIVATE(member) member
+#endif
+
 #define HSU_HW_ENABLE 0
 
 #if HSU_HW_ENABLE
@@ -455,12 +459,13 @@ int crypto_bignum_is_one(const struct crypto_bignum *a)
  */
 int crypto_bignum_is_odd(const struct crypto_bignum *a)
 {
-#ifdef CONFIG_MBEDTLS_V3
-    return (mbedtls_mpi_get_bit((const mbedtls_mpi *) a, 0) == 1);
-#else
-	if (a->mpi.p)
+#ifdef CONFIG_MBEDTLS_V2
+    if (a->mpi.p)
 		return (a->mpi.p[0] & 0x1);
 	return 0;
+#else
+    return (mbedtls_mpi_get_bit((const mbedtls_mpi *) a, 0) == 1);
+	
 #endif
 }
 
@@ -1193,32 +1198,17 @@ int crypto_ec_point_to_bin(struct crypto_ec *e,
     int len = mbedtls_mpi_size(&e->group.P);
 
     if (x) {
-#ifdef CONFIG_MBEDTLS_V3
         if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->MBEDTLS_PRIVATE(X),
                              x, len, len) < 0) {
             return -1;
         }
-#else
-        if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->X,
-                             x, len, len) < 0) {
-            return -1;
-        }
-#endif
-
     }
 
     if (y) {
-#ifdef CONFIG_MBEDTLS_V3
         if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->MBEDTLS_PRIVATE(Y),
                              y, len, len) < 0) {
             return -1;
         }
-#else
-        if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->Y,
-                             y, len, len) < 0) {
-            return -1;
-        }
-#endif
     }
 
     return 0;
@@ -1240,15 +1230,9 @@ struct crypto_ec_point *crypto_ec_point_from_bin(struct crypto_ec *e,
     pt = os_zalloc(sizeof(mbedtls_ecp_point));
     mbedtls_ecp_point_init(pt);
 
-#ifdef CONFIG_MBEDTLS_V3
     MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->MBEDTLS_PRIVATE(X), val, len));
     MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->MBEDTLS_PRIVATE(Y), val + len, len));
     MBEDTLS_MPI_CHK(mbedtls_mpi_lset((&pt->MBEDTLS_PRIVATE(Z)), 1));
-#else
-    MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->X, val, len));
-    MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->Y, val + len, len));
-    MBEDTLS_MPI_CHK(mbedtls_mpi_lset((&pt->Z), 1));
-#endif
 
     return (struct crypto_ec_point *) pt;
 
@@ -1318,15 +1302,9 @@ static int ecp_opp( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R, const mb
     }
 
     /* In-place opposite */
-#ifdef CONFIG_MBEDTLS_V3
     if (mbedtls_mpi_cmp_int( &R->MBEDTLS_PRIVATE(Y), 0) != 0) {
         MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&R->MBEDTLS_PRIVATE(Y), &grp->P, &R->MBEDTLS_PRIVATE(Y)));
     }
-#else
-    if (mbedtls_mpi_cmp_int( &R->Y, 0) != 0) {
-        MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&R->Y, &grp->P, &R->Y));
-    }
-#endif
 
 cleanup:
     return ( ret );
@@ -1346,11 +1324,7 @@ int crypto_ec_point_solve_y_coord(struct crypto_ec *e,
     mbedtls_mpi_init(&temp);
     int ret = 0;
 
-#ifdef CONFIG_MBEDTLS_V3
     y = &((mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(Y);
-#else
-    y = &((mbedtls_ecp_point *)p)->Y;
-#endif
 
     /* Faster way to find sqrt
      * Works only with curves having prime p
@@ -1374,13 +1348,8 @@ int crypto_ec_point_solve_y_coord(struct crypto_ec *e,
         if (y_bit != mbedtls_mpi_get_bit(y, 0))
             MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(y, &e->group.P, y));
 
-#ifdef CONFIG_MBEDTLS_V3
         MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&((mbedtls_ecp_point* )p)->MBEDTLS_PRIVATE(X), (const mbedtls_mpi*) x));
         MBEDTLS_MPI_CHK(mbedtls_mpi_lset(&((mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(Z), 1));
-#else
-        MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&((mbedtls_ecp_point* )p)->X, (const mbedtls_mpi*) x));
-        MBEDTLS_MPI_CHK(mbedtls_mpi_lset(&((mbedtls_ecp_point *)p)->Z, 1));
-#endif
     } else {
         ret = 1;
     }
@@ -1463,15 +1432,9 @@ int crypto_ec_point_is_on_curve(struct crypto_ec *e,
 
     /* Calculate y^2  mod P*/
     MBEDTLS_MPI_CHK(mbedtls_mpi_lset( &two, 2));
-#ifdef CONFIG_MBEDTLS_V3
     MBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&y_sqr_lhs, &((const mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(Y) , &two, &e->group.P, NULL));
 
     y_sqr_rhs = (mbedtls_mpi *) crypto_ec_point_compute_y_sqr(e, (const struct crypto_bignum *) & ((const mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(X));
-#else
-    MBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&y_sqr_lhs, &((const mbedtls_ecp_point *)p)->Y , &two, &e->group.P, NULL));
-
-    y_sqr_rhs = (mbedtls_mpi *) crypto_ec_point_compute_y_sqr(e, (const struct crypto_bignum *) & ((const mbedtls_ecp_point *)p)->X);
-#endif
 
     if (y_sqr_rhs && (mbedtls_mpi_cmp_mpi(y_sqr_rhs, &y_sqr_lhs) == 0)) {
         on_curve = 1;

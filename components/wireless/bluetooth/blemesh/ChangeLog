@@ -1,4 +1,7 @@
 # Changes
+## 2026-03-12
+1. [blemesh] Refactor tinycrypt header include paths.
+
 ## 2025-09-24
 1. [blemesh]Use common config a macro for Bouffalo_SDK
 

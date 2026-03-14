@@ -54,15 +54,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#include "constants.h"
-#include "ecc.h"
-#include "ecc_dh.h"
+#include "tinycrypt/constants.h"
+#include "tinycrypt/ecc.h"
+#include "tinycrypt/ecc_dh.h"
 #if defined(BFLB_BLE)
-#include "utils.h"
+#include "tinycrypt/utils.h"
 #endif
 #include <string.h>
 #if defined(BL_MCU_SDK)
-#include "ecc_platform_specific.h"
+#include "tinycrypt/ecc_platform_specific.h"
 #endif 
 
 #if defined(default_RNG_defined)

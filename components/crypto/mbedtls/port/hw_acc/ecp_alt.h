@@ -69,7 +69,7 @@ mbedtls_ecp_group;
  * \{
  */
 
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #if defined(MBEDTLS_ECP_MAX_BITS)
 
 #if MBEDTLS_ECP_MAX_BITS < MBEDTLS_ECP_MAX_BITS_MIN

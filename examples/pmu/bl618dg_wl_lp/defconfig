@@ -63,3 +63,6 @@ ifeq ($(CHIP),bl618dg)
     CONFIG_RAM_FOR_AP_SIZE    = 0x50000
 endif
 
+ifeq ($(CHIP),bl616cl)
+    CONFIG_ROMAPI            =n
+endif

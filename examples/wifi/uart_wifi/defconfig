@@ -20,3 +20,7 @@ CONFIG_MQTT                 =y
 CONFIG_HTTP                 =y
 CONFIG_HTTP_CLIENT          =y
 CONFIG_LITTLEFS             =y
+
+#CONFIG_RCP_ENABLE =y
+#CONFIG_USE_LPAPP =y
+#CONFIG_PSRAM_COPY_CODE =y

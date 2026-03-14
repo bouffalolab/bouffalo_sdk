@@ -35,7 +35,7 @@
 #include "mbedtls/oid.h"
 #include "mbedtls/ecp.h"
 
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #define MBEDTLS_PRIVATE(member) member
 #endif
 
@@ -452,10 +452,10 @@ int crypto_ec_point_cmp(const struct crypto_ec *e,
 }
 int crypto_key_compare(struct crypto_key *key1, struct crypto_key *key2)
 {
-#ifdef CONFIG_MBEDTLS_V3
-    if (mbedtls_pk_check_pair((mbedtls_pk_context *)key1, (mbedtls_pk_context *)key2, NULL, NULL) < 0)
-#else
+#ifdef CONFIG_MBEDTLS_V2
 	if (mbedtls_pk_check_pair((mbedtls_pk_context *)key1, (mbedtls_pk_context *)key2) < 0)
+#else
+    if (mbedtls_pk_check_pair((mbedtls_pk_context *)key1, (mbedtls_pk_context *)key2, NULL, NULL) < 0)
 #endif
 		return 0;
 
@@ -649,10 +649,10 @@ struct crypto_key *crypto_ec_get_key(const u8 *privkey, size_t privkey_len)
 		wpa_printf(MSG_ERROR, "memory allocation failed\n");
 		return NULL;
 	}
-#ifdef CONFIG_MBEDTLS_V3
-	ret = mbedtls_pk_parse_key(kctx, privkey, privkey_len, NULL, 0, NULL, NULL);
-#else
+#ifdef CONFIG_MBEDTLS_V2
 	ret = mbedtls_pk_parse_key(kctx, privkey, privkey_len, NULL, 0);
+#else
+	ret = mbedtls_pk_parse_key(kctx, privkey, privkey_len, NULL, 0, NULL, NULL);
 #endif
 	if (ret < 0) {
 		//crypto_print_error_string(ret);

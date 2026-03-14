@@ -67,6 +67,10 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
 
 void app_wifi_init(void)
 {
+    #ifdef LP_APP
+    app_pm_init();
+    #endif
+
     LOG_I("Starting wifi ...\r\n");
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
@@ -80,10 +84,6 @@ void app_wifi_init(void)
         vTaskDelay(500);
     }
 
-    #ifdef LP_APP
-    app_pm_init();
-    #else
     app_atmodule_init();
-    #endif
 }
 

@@ -15,7 +15,7 @@
 
 #include "bflb_rtc.h"
 #include "bflb_clock.h"
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls_sample_config.h"
 #endif
 

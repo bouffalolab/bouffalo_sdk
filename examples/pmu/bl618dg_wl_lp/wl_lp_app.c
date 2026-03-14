@@ -25,7 +25,6 @@
 #elif defined(BL616CL)
 #include "bl616cl_pm.h"
 #include "bl616cl_glb.h"
-#include "bl616cl_glb_gpio.h"
 #include "bl616cl_hbn.h"
 #elif defined(BL618DG)
 #include "bl618dg_pm.h"

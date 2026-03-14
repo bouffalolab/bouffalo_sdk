@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#ifndef CONFIG_MBEDTLS_V3
+#ifdef CONFIG_MBEDTLS_V2
 #include "mbedtls/config.h"
 #endif
 #include "mbedtls/debug.h"

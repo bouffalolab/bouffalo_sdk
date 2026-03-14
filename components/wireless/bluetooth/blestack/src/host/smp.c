@@ -26,10 +26,10 @@
 #include <../include/bluetooth/crypto.h>
 #include <../include/bluetooth/buf.h>
 
-#include "constants.h"
-#include <tinycrypt/include/tinycrypt/aes.h>
-#include "utils.h"
-#include "cmac_mode.h"
+#include "tinycrypt/constants.h"
+#include <tinycrypt/aes.h>
+#include "tinycrypt/utils.h"
+#include "tinycrypt/cmac_mode.h"
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_DEBUG_SMP)
 #define LOG_MODULE_NAME bt_smp
@@ -37,7 +37,6 @@
 
 #include "hci_core.h"
 #include "ecc.h"
-#include <ecc_dh.h>
 #include "keys.h"
 #include "conn_internal.h"
 #include "l2cap_internal.h"

@@ -75,3 +75,91 @@ uint32_t ATTR_CLOCK_SECTION HBN_Get_RC32K_R_Code(void)
     return r_code;
 }
 
+/****************************************************************************/ /**
+ * @brief  Efuse read adc vref trim
+ *
+ * @param [in] dev ADC device handle
+ *
+ * @return vref trim value
+ *
+*******************************************************************************/
+uint32_t bflb_efuse_get_adc_vref_trim(struct bflb_device_s *dev)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+    /* use hardware default value, also the median value. */
+    uint32_t default_value = 32;
+
+    bflb_ef_ctrl_read_common_trim(NULL, "gpadc_vref", &trim, 1);
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            default_value = trim.value;
+        }
+    }
+
+    return default_value;
+}
+
+/****************************************************************************/ /**
+ * @brief  Efuse read adc offset trim
+ *
+ * @param [in] dev ADC device handle
+ *
+ * @return offset trim value
+ *
+*******************************************************************************/
+int32_t bflb_efuse_get_adc_offset_trim(struct bflb_device_s *dev)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+    int32_t default_value = 0;
+
+    bflb_ef_ctrl_read_common_trim(NULL, "gpadc_offset", &trim, 1);
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            /* trim.value is a 9-bits signed value */
+            if (trim.value & 0x100) {
+                default_value = trim.value | 0xFFFFFE00;
+            } else {
+                default_value = trim.value & 0x1FF;
+            }
+        }
+    }
+
+    return default_value;
+}
+
+/****************************************************************************/ /**
+ * @brief  Efuse read adc gain trim
+ *
+ * @param [in] dev ADC device handle
+ *
+ * @return coe
+ *
+*******************************************************************************/
+float bflb_efuse_get_adc_gain_trim(struct bflb_device_s *dev)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+    uint32_t tmp;
+
+    float coe = 1.0;
+
+    bflb_ef_ctrl_read_common_trim(NULL, "gpadc_gain", &trim, 1);
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            tmp = trim.value;
+
+            if (tmp & 0x800) {
+                tmp = ~tmp;
+                tmp += 1;
+                tmp = tmp & 0xfff;
+                coe = (1.0f + ((float)tmp / 2048.0f));
+            } else {
+                coe = (1.0f - ((float)tmp / 2048.0f));
+            }
+        }
+    }
+
+    return coe;
+}

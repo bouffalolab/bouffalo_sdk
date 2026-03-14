@@ -1,4 +1,7 @@
 # Changes
+## 2026-03-12
+1. [blestack] Refactor tinycrypt header include paths.
+
 ## 2026-02-10
 1. [blestack] Add CONFIG_BT_ATT_PREPARE_COUNT configuration option to make ATT prepare count configurable (0-64 range) with validation in both build system and compile-time checks.
 

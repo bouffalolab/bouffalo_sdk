@@ -4,7 +4,7 @@ sdk_add_compile_definitions(-D LV_KCONFIG_IGNORE)
 sdk_add_compile_definitions(-D LV_CONF_INCLUDE_SIMPLE)
 sdk_add_compile_definitions(-D LV_LVGL_H_INCLUDE_SIMPLE)
 
-file(GLOB_RECURSE SOURCES 
+file(GLOB_RECURSE SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/core/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/display/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/draw/*.c
@@ -20,6 +20,7 @@ file(GLOB_RECURSE SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/themes/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tick/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/widgets/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/debugging/*.c
 )
 sdk_library_add_sources(${SOURCES})
 sdk_library_add_sources(lv_init.c)
@@ -54,3 +55,4 @@ sdk_add_include_directories(themes/)
 sdk_add_include_directories(tick/)
 sdk_add_include_directories(widgets/)
 sdk_add_include_directories(port/)
+sdk_add_include_directories(debugging/)

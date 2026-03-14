@@ -13,20 +13,11 @@ sdk_library_add_sources_ifdef(CONFIG_PS_EXTEND freertos_helper/ps_extend.c porta
 sdk_add_include_directories(include)
 sdk_add_include_directories_ifdef(CONFIG_PS_EXTEND freertos_helper/include)
 
-if(("${CHIP}" STREQUAL "bl808") AND ("${CPU_ID}" STREQUAL "d0"))
-sdk_library_add_sources(portable/GCC/RISC-V/c906/port.c)
-sdk_library_add_sources(portable/GCC/RISC-V/c906/portASM.S)
-sdk_add_include_directories(portable/GCC/RISC-V/c906)
-sdk_add_include_directories(portable/GCC/RISC-V/c906/chip_specific_extensions/Thead_E906FD_RV32IMAFDC)
-sdk_add_compile_definitions(-D__OS_FREERTOS__)
-else()
 sdk_library_add_sources(portable/GCC/RISC-V/common/port.c)
 sdk_library_add_sources(portable/GCC/RISC-V/common/portASM.S)
 sdk_add_include_directories(portable/GCC/RISC-V/common)
 sdk_add_include_directories(portable/GCC/RISC-V/common/chip_specific_extensions/RV32I_CLINT_no_extensions)
 sdk_add_compile_definitions(-DportasmHANDLE_INTERRUPT=interrupt_entry -Ddefault_interrupt_handler=freertos_risc_v_trap_handler)
-
-endif()
 
 if(CONFIG_POSIX)
 # posix for freertos

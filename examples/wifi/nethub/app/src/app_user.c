@@ -10,15 +10,23 @@
 #include "rfparam_adapter.h"
 
 #include <nethub.h>
-#include <nhsdiowifi.h>
 
 #define DBG_TAG "appuser"
 #include "log.h"
+
+/* Forward declarations for external functions */
+extern void tcpip_init(void (* tcpip_init_done_fn)(void *arg), void *arg);
+extern int easyflash_init(void);
+extern int app_wifi_init(void);
 
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (16)
 
 extern void app_atmodule_init(void);
+
+#ifdef CONFIG_MR_VIRTUALCHAN
+extern void app_vchan_init(void);
+#endif
 
 int app_user_init(void)
 {
@@ -35,10 +43,15 @@ int app_user_init(void)
     easyflash_init();
 
     /* nethub init */
-    nethub_sdiowifi_init();
+    nethub_bootstrap();
 
     /* wifi start */
     app_wifi_init();
+
+#ifdef CONFIG_MR_VIRTUALCHAN
+    /* vchan demo init */
+    app_vchan_init();
+#endif
 
     return 0;
 }
