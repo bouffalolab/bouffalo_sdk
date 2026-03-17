@@ -21,6 +21,9 @@ static int wifi_mgmr_disable_autoconnect = 1; /* Default: disabled */
 static uint16_t wifi_mgmr_listen_itv = 0;
 
 #if !defined(__NuttX__)
+#define WIFI_MGMR_AP_DHCPD_DEFAULT_START (-1)
+#define WIFI_MGMR_AP_DHCPD_DEFAULT_LIMIT (-1)
+
 struct wifi_mgmr_ap_netif_cfg {
     bool pending;
     bool use_ipcfg;
@@ -42,9 +45,20 @@ extern void _wifi_mgmr_ap_stop_dhcpd(void);
 
 static void auth_cipher_convert(struct wl80211_scan_result_item *result, uint8_t *auth, uint8_t *cipher);
 
+static void wifi_mgmr_ap_netif_cfg_set_defaults(struct wifi_mgmr_ap_netif_cfg *config)
+{
+    config->use_ipcfg = true;
+    config->use_dhcpd = true;
+    config->start = WIFI_MGMR_AP_DHCPD_DEFAULT_START;
+    config->limit = WIFI_MGMR_AP_DHCPD_DEFAULT_LIMIT;
+    config->ap_ipaddr = 0;
+    config->ap_mask = 0;
+}
+
 static void wifi_mgmr_ap_netif_cfg_clear(void)
 {
     memset(&wifi_mgmr_ap_netif_cfg, 0, sizeof(wifi_mgmr_ap_netif_cfg));
+    wifi_mgmr_ap_netif_cfg_set_defaults(&wifi_mgmr_ap_netif_cfg);
 }
 
 static void wifi_mgmr_ap_netif_cfg_save(const wifi_mgmr_ap_params_t *config)
@@ -52,16 +66,22 @@ static void wifi_mgmr_ap_netif_cfg_save(const wifi_mgmr_ap_params_t *config)
     wifi_mgmr_ap_netif_cfg.pending = true;
     wifi_mgmr_ap_netif_cfg.use_ipcfg = config->use_ipcfg;
     wifi_mgmr_ap_netif_cfg.use_dhcpd = config->use_ipcfg && config->use_dhcpd;
-    wifi_mgmr_ap_netif_cfg.start = config->start;
-    wifi_mgmr_ap_netif_cfg.limit = config->limit;
     wifi_mgmr_ap_netif_cfg.ap_ipaddr = config->ap_ipaddr;
     wifi_mgmr_ap_netif_cfg.ap_mask = config->ap_mask;
+
+    if (wifi_mgmr_ap_netif_cfg.use_dhcpd && (config->start <= 0 || config->limit <= 0)) {
+        wifi_mgmr_ap_netif_cfg.start = WIFI_MGMR_AP_DHCPD_DEFAULT_START;
+        wifi_mgmr_ap_netif_cfg.limit = WIFI_MGMR_AP_DHCPD_DEFAULT_LIMIT;
+    } else {
+        wifi_mgmr_ap_netif_cfg.start = config->start;
+        wifi_mgmr_ap_netif_cfg.limit = config->limit;
+    }
 }
 
 static void wifi_mgmr_ap_netif_start(void)
 {
     if (!wifi_mgmr_ap_netif_cfg.pending) {
-        return;
+        wifi_mgmr_ap_netif_cfg_set_defaults(&wifi_mgmr_ap_netif_cfg);
     }
 
     _wifi_mgmr_ap_start_dhcpd(wifi_mgmr_ap_netif_cfg.use_ipcfg, wifi_mgmr_ap_netif_cfg.use_dhcpd,
