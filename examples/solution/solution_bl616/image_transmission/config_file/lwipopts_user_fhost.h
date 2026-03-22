@@ -99,7 +99,7 @@
 #if (defined(BL602))
 #define LWIP_HEAP_SIZE (14 * 1024)
 #else 
-#define LWIP_HEAP_SIZE (32 * 1024)
+#define LWIP_HEAP_SIZE (16 * 1024)
 #endif 
 
 #ifdef LWIP_HEAP_SIZE

@@ -68,6 +68,9 @@ void tlsf_free(tlsf_t tlsf, void *ptr);
 /* Returns internal block size, not original request size */
 size_t tlsf_block_size(void *ptr);
 
+/* Returns tracked free payload bytes in TLSF. */
+size_t tlsf_free_size(tlsf_t tlsf);
+
 /* Overheads/limits of internal structures. */
 size_t tlsf_size(void);
 size_t tlsf_align_size(void);

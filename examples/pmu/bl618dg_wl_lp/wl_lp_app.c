@@ -41,7 +41,11 @@
 
 int pwr_info_clear(void)
 {
+#ifdef BL616
+    bl_lp_info_clear();
+#else
     bl_lp_info_clear(iot2lp_para->lp_info);
+#endif
 
     return 0;
 }

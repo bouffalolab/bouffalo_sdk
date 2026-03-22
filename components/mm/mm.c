@@ -209,6 +209,11 @@ mm_heap_t *mm_register_heap(uint32_t heap_id, const char *name, uint32_t allocat
     heap->is_active = true;
     manager->heaps[heap_id] = heap;
 
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+    /* New heap changes total free memory baseline; force-reset watermark. */
+    manager->min_free_size = kfree_size(0);
+#endif
+
     mm_unlock_restore(flags);
 
     return heap;
@@ -322,6 +327,14 @@ void *kmalloc(size_t size, uint32_t flags)
         manager->stats.total_malloc_successes++;
     } else {
         manager->stats.total_malloc_failures++;
+    }
+#endif
+
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+    /* Track runtime free-memory watermark after each malloc attempt. */
+    const size_t free_size = kfree_size(0);
+    if (free_size < manager->min_free_size) {
+        manager->min_free_size = free_size;
     }
 #endif
 
@@ -460,6 +473,14 @@ void *krealloc(void *ptr, size_t newsize)
     }
 #endif
 
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+    /* Track runtime free-memory watermark after each realloc attempt. */
+    const size_t free_size = kfree_size(0);
+    if (free_size < manager->min_free_size) {
+        manager->min_free_size = free_size;
+    }
+#endif
+
     mm_unlock_restore(irq_flags);
 
     return new_ptr;
@@ -494,3 +515,145 @@ void *kmemalign(size_t size, size_t align)
 
     return kmalloc(size, flags);
 }
+
+/**
+ * @brief Query the usable payload size of an allocated block.
+ *
+ * @param ptr Pointer returned by memory allocation APIs.
+ * @return Usable payload size in bytes, 0 on failure.
+ */
+size_t kmalloc_size(void *ptr)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    size_t size = 0;
+    uintptr_t irq_flags;
+
+    if (!ptr || !manager->initialized) {
+        return 0;
+    }
+
+    irq_flags = mm_lock_save();
+
+    heap = mm_find_heap_by_addr(ptr);
+    if (!heap) {
+        mm_unlock_restore(irq_flags);
+        return 0;
+    }
+
+    allocator = manager->allocators[heap->allocator_id];
+    if (!allocator || !allocator->get_block_size) {
+        mm_unlock_restore(irq_flags);
+        return 0;
+    }
+
+    size = allocator->get_block_size(heap, ptr);
+    mm_unlock_restore(irq_flags);
+
+    return size;
+}
+
+/**
+ * @brief Return remaining free bytes.
+ *
+ * @param heap_id Heap ID to query. Pass 0 to sum all active heaps.
+ * @return Remaining free bytes, or 0 on failure.
+ */
+size_t kfree_size(uint32_t heap_id)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    uint32_t start_idx, end_idx;
+    uintptr_t irq_flags;
+    size_t total_free = 0;
+
+    if (!manager->initialized) {
+        return 0;
+    }
+
+    /* heap_id == 0 means summing free bytes from all active heaps. */
+    if (heap_id != 0) {
+        if (heap_id >= CONFIG_MM_HEAP_COUNT) {
+            return 0;
+        }
+        start_idx = heap_id;
+        end_idx = heap_id + 1;
+    } else {
+        start_idx = 1;
+        end_idx = CONFIG_MM_HEAP_COUNT;
+    }
+
+    irq_flags = mm_lock_save();
+
+    for (uint32_t i = start_idx; i < end_idx; i++) {
+        size_t free_size = 0;
+
+        heap = manager->heaps[i];
+        if (!heap || !heap->is_active) {
+            continue;
+        }
+
+        if (heap->allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+            continue;
+        }
+
+        allocator = manager->allocators[heap->allocator_id];
+        if (!allocator) {
+            continue;
+        }
+
+        if (allocator->get_free_size) {
+            free_size = allocator->get_free_size(heap);
+        } else if (allocator->get_usage_info) {
+            struct mm_usage_info usage;
+            allocator->get_usage_info(heap, &usage);
+            free_size = (size_t)usage.free_size;
+        }
+
+        total_free += free_size;
+    }
+
+    mm_unlock_restore(irq_flags);
+
+    return total_free;
+}
+
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+
+/**
+ * @brief Get the minimum free-memory watermark.
+ *
+ * Returns the tracked minimum value of kfree_size(0).
+ *
+ * @return Minimum free bytes watermark.
+ */
+size_t kmin_free_size(void)
+{
+    return g_mem_manager.min_free_size;
+}
+
+/**
+ * @brief Reset and return the minimum free-memory watermark.
+ *
+ * Recomputes the watermark from the current total free bytes.
+ *
+ * @return New minimum free bytes watermark after reset.
+ */
+size_t kmin_free_size_reset(void)
+{
+    uintptr_t irq_flags;
+    size_t free_size;
+
+    irq_flags = mm_lock_save();
+
+    free_size = kfree_size(0);
+    g_mem_manager.min_free_size = free_size;
+
+    mm_unlock_restore(irq_flags);
+
+    return free_size;
+}
+
+#endif

@@ -38,9 +38,15 @@
 #define JPEG_FRAME_COMP       (2)
 #define JPEG_OVER_SIZE        (3)
 
+#if IS_ENABLED(CONFIG_PSRAM)
+#define DVP_BUFFER_ATTR ATTR_NOINIT_PSRAM_SECTION __ALIGNED(32)
+#else
+#define DVP_BUFFER_ATTR __ALIGNED(32)
+#endif
+
 uint32_t g_dvp_mjpeg_total_frame_cnt = 0;
 
-ATTR_NOINIT_PSRAM_SECTION __ALIGNED(64) uint8_t dvp_jpeg_line_buff[DVP_JPEG_LINE_BUFF_SIZE]; /*  */
+DVP_BUFFER_ATTR uint8_t dvp_jpeg_line_buff[DVP_JPEG_LINE_BUFF_SIZE]; /*  */
 
 /***** ctrl *****/
 static TaskHandle_t dvp_mjpeg_task_hd;

@@ -27,6 +27,8 @@ typedef uint8_t audio_codec_type_t;
 #define AUDIO_CODEC_TYPE_ES8389  ((audio_codec_type_t)2)
 #define AUDIO_CODEC_TYPE_ES8388  ((audio_codec_type_t)3)
 #define AUDIO_CODEC_TYPE_WM8978  ((audio_codec_type_t)4)
+#define AUDIO_CODEC_TYPE_JY6311  ((audio_codec_type_t)5)
+#define AUDIO_CODEC_TYPE_BL      ((audio_codec_type_t)6)
 
 typedef uint8_t audio_codec_i2s_fmt_t;
 #define AUDIO_CODEC_I2S_FMT_I2S     ((audio_codec_i2s_fmt_t)0)
@@ -71,7 +73,15 @@ typedef struct {
     const struct audio_codec_driver *drv;
     audio_codec_type_t type;
     uint8_t i2c_addr;
+    void *priv;
 } audio_codec_dev_t;
+
+#ifdef CONFIG_BSP_AUDIO_CODEC_BL_ENABLE
+typedef struct {
+    struct bflb_device_s *audac;
+    struct bflb_device_s *auadc;
+} audio_codec_bl_hw_cfg_t;
+#endif
 
 /* Scan codecs by probing known I2C addresses.
  * - returns matched codec type on success
@@ -81,6 +91,9 @@ typedef struct {
  * and its fields remain valid as long as the caller keeps the storage.
  */
 audio_codec_type_t audio_codec_scan(struct bflb_device_s *i2c, audio_codec_dev_t *out_dev);
+#ifdef CONFIG_BSP_AUDIO_CODEC_BL_ENABLE
+int audio_codec_open_builtin(audio_codec_dev_t *out_dev, const audio_codec_bl_hw_cfg_t *cfg);
+#endif
 int audio_codec_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg);
 int audio_codec_set_mute(audio_codec_dev_t *dev, bool mute);
 int audio_codec_set_volume(audio_codec_dev_t *dev, int volume_percent);

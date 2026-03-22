@@ -16,9 +16,6 @@ message(STATUS "LINK IN CUSTOM_LINKSCRIPT")
 else()
 message(STATUS "LINK IN bl616_common.ld.in")
 sdk_set_linker_script_macro(bl616_common.ld.in)
-sdk_add_link_options(
--L ${CMAKE_CURRENT_SOURCE_DIR}
-)
 endif()
 
 sdk_add_link_options(-ufw_header)

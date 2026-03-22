@@ -8,6 +8,7 @@
 
 #include "supplicant_api.h"
 #include "wl80211_platform.h"
+#include "bl_lp.h"
 
 #ifdef COMPAT_WIFI_MGMR
 #include "wifi_mgmr.h"
@@ -36,8 +37,8 @@ struct wifi_mgmr_ap_netif_cfg {
 
 static struct wifi_mgmr_ap_netif_cfg wifi_mgmr_ap_netif_cfg;
 
-extern void *_wifi_mgmr_sta_start_dhcpc(void);
-extern void *_wifi_mgmr_sta_stop_dhcpc(void);
+extern void *_wifi_mgmr_sta_link_up(void);
+extern void *_wifi_mgmr_sta_link_down(void);
 extern void _wifi_mgmr_ip_got_dump(void);
 extern void _wifi_mgmr_ap_start_dhcpd(bool use_ipcfg, bool use_dhcpd, int start, int limit, uint32_t ap_ipaddr,
                                       uint32_t ap_mask);
@@ -109,12 +110,12 @@ static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
 
 static void start_dhcp_tsk(void)
 {
-    _wifi_mgmr_sta_start_dhcpc();
+    _wifi_mgmr_sta_link_up();
 }
 
 static void disconnect_tsk(void)
 {
-    _wifi_mgmr_sta_stop_dhcpc();
+    _wifi_mgmr_sta_link_down();
     if (!wifi_mgmr_disable_autoconnect && wl80211_glb.last_connect_params) {
         wl80211_printf("Autoconnect: Reconnecting to %s\r\n", wl80211_glb.last_connect_params->ssid);
         wl80211_sta_connect(wl80211_glb.last_connect_params);
@@ -258,6 +259,9 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
+#ifdef LP_APP
+            bl_pm_event_bit_clear(PSM_EVENT_DISCONNECT);
+#endif
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
         } break;
         case CODE_WIFI_CMD_RECONNECT: {

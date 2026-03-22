@@ -8,11 +8,11 @@ sdk_library_add_sources(startup/system_bl616cl.c)
 sdk_library_add_sources(startup/interrupt.c)
 
 # set CONFIG_ROMAPI n before chip tapeout
-unset(CONFIG_ROMAPI CACHE)
-set(CONFIG_ROMAPI
-    n
-    CACHE INTERNAL "Override CONFIG_ROMAPI for bl616cl"
-)
+# unset(CONFIG_ROMAPI CACHE)
+# set(CONFIG_ROMAPI
+#     n
+#     CACHE INTERNAL "Override CONFIG_ROMAPI for bl616cl"
+# )
 
 if(CONFIG_ROMAPI)
     sdk_library_add_sources(src/bl616cl_romapi_e907.c)

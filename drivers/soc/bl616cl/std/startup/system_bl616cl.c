@@ -30,29 +30,6 @@ static void Tzc_Sec_PSRAMB_Access_Set_Not_Lock(uint8_t region, uint32_t startAdd
     BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_PSRAMB_TZSRG_CTRL, tmpVal);
 }
 
-static void Tzc_Sec_ROM_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
-{
-    uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
-
-    /* check the parameter */
-    group = group & 0xf;
-
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL);
-    tmpVal &= (~(0xf << (region * 4)));
-    tmpVal |= (group << (region * 4));
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL, tmpVal);
-
-    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
-    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_ROM_TZSRG_R0_OFFSET + region * 4, tmpVal);
-
-    /* set enable and lock */
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL);
-    tmpVal |= 1 << (region + 16);
-    // tmpVal |= 1 << (region + 24);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL, tmpVal);
-}
-
 #if (!defined(CONFIG_PMP_NO_INIT) && !defined(CONFIG_BOOT2))
 
 static const pmp_config_entry_t pmp_entry_tab[16] = {
@@ -136,7 +113,6 @@ void SystemInit(void)
     if (BL616CL_PSRAM_INIT_DONE == 0) {
         Tzc_Sec_PSRAMB_Access_Set_Not_Lock(0, 0x0, 64 * 1024 * 1024, 0);
     }
-    Tzc_Sec_ROM_Access_Set_Not_Lock(1, 0x90020000, ((256 * 1024 * 1024) - (128 * 1024)), 0);
     flash_bank2_access_init();
 
 #if (!defined(CONFIG_PMP_NO_INIT) && !defined(CONFIG_BOOT2))
@@ -155,9 +131,8 @@ void SystemInit(void)
     mxstatus |= (1 << 15);
     __set_MXSTATUS(mxstatus);
 
-    /* Disable RAS */
-    __set_MHCR(__get_MHCR() & ~(1 << 4));
-#warning "Disabling RAS can cause performance issues."
+    /* Enable RAS */
+    __set_MHCR(__get_MHCR() | (1 << 4));
 
     /* get interrupt level from info */
     CLIC->CLICCFG =

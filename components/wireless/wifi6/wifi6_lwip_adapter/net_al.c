@@ -889,15 +889,19 @@ int net_l2_socket_create(net_al_if_t net_if, uint16_t ethertype)
     return 0;
 }
 
-int net_l2_socket_delete(void)
+int net_l2_socket_delete(net_al_if_t net_if)
 {
     int i;
     for (i = 0; i < MACSW_NB_L2_FILTER; i++)
     {
         if (l2_filter[i].net_if != NULL)
         {
-            l2_filter[i].net_if = NULL;
-            return 0;
+            /* Check if this is the filter for the specified net_if */
+            if (l2_filter[i].net_if == net_if)
+            {
+                l2_filter[i].net_if = NULL;
+                return 0;
+            }
         }
     }
 
@@ -942,7 +946,15 @@ err_t net_eth_receive(struct pbuf *pbuf, struct netif *netif)
     if (!filter)
         return ERR_VAL;
 
-    if (eloop_event_commit(ELOOP_EVT_WPA_L2_DATA, pbuf->payload, pbuf->tot_len)) {
+    /* Get event ID based on interface name (wl1/wl2) */
+    int event_id = ELOOP_EVT_WPA_L2_DATA;  /* fallback */
+    char ifname[8] = {0};
+    /* net_if_get_name returns 3 on success (number of chars written) */
+    if (net_if_get_name(netif, ifname, sizeof(ifname)) > 0) {
+        event_id = eloop_get_l2_event_id(ifname);
+    }
+
+    if (eloop_event_commit(event_id, pbuf->payload, pbuf->tot_len)) {
         printf("failed to commit L2 data\r\n");
     }
     pbuf_free(pbuf);

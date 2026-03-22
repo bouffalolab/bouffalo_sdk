@@ -77,6 +77,14 @@
 #include <wifi_mgmr_pmk.h>
 #endif /* CONFIG_PMK_CACHE_IN_MGMR */
 
+__attribute__((weak)) int
+wpas_get_auth_fail_fixed_backoff(unsigned int *threshold, unsigned int *interval_sec)
+{
+	(void)threshold;
+	(void)interval_sec;
+	return -1;
+}
+
 const char *const wpa_supplicant_version =
 "wpa_supplicant v" VERSION_STR "\n"
 "Copyright (c) 2003-2022, Jouni Malinen <j@w1.fi> and contributors";
@@ -8134,6 +8142,9 @@ void wpas_auth_failed(struct wpa_supplicant *wpa_s, char *reason)
 	struct wpa_ssid *ssid = wpa_s->current_ssid;
 	int dur;
 	struct os_reltime now;
+	unsigned int fixed_threshold = 0;
+	unsigned int fixed_interval_sec = 0;
+	bool use_fixed_dur = false;
 
 	if (ssid == NULL) {
 		wpa_printf(MSG_DEBUG, "Authentication failure but no known "
@@ -8157,20 +8168,28 @@ void wpas_auth_failed(struct wpa_supplicant *wpa_s, char *reason)
 	}
 #endif /* CONFIG_P2P */
 
-	if (ssid->auth_failures > 50)
-		dur = 300;
-	else if (ssid->auth_failures > 10)
-		dur = 120;
-	else if (ssid->auth_failures > 5)
-		dur = 90;
-	else if (ssid->auth_failures > 3)
-		dur = 60;
-	else if (ssid->auth_failures > 2)
-		dur = 30;
-	else if (ssid->auth_failures > 1)
-		dur = 20;
-	else
-		dur = 10;
+	if ((wpas_get_auth_fail_fixed_backoff(&fixed_threshold, &fixed_interval_sec) == 0) &&
+	    (ssid->auth_failures > fixed_threshold)) {
+		dur = (int)fixed_interval_sec;
+		use_fixed_dur = true;
+	}
+
+	if (!use_fixed_dur) {
+		if (ssid->auth_failures > 50)
+			dur = 300;
+		else if (ssid->auth_failures > 10)
+			dur = 120;
+		else if (ssid->auth_failures > 5)
+			dur = 90;
+		else if (ssid->auth_failures > 3)
+			dur = 60;
+		else if (ssid->auth_failures > 2)
+			dur = 30;
+		else if (ssid->auth_failures > 1)
+			dur = 20;
+		else
+			dur = 10;
+	}
 
 	if (ssid->auth_failures > 1 &&
 	    wpa_key_mgmt_wpa_ieee8021x(ssid->key_mgmt))

@@ -81,6 +81,82 @@ struct lp_env {
     uint32_t gpio_stat;
 };
 
+
+#define CHECK_IOT2LP_POINTER(field)                       \
+    if (para->field == NULL) {                            \
+        BL_LP_LOG("iot2lp_para->"#field" is NULL\r\n");   \
+        return -1;                                        \
+    }
+
+static int bl_lp_check_iot2lp_para_pointers(iot2lp_para_t *para)
+{
+    if (para == NULL) {
+        BL_LP_LOG("iot2lp_para is NULL\r\n");
+        return -1;
+    }
+
+    /* Check critical pointer variables in iot2lp_para */
+    CHECK_IOT2LP_POINTER(wifi_parameter);
+    CHECK_IOT2LP_POINTER(bcn_delay_info);
+    CHECK_IOT2LP_POINTER(bcn_loss_info);
+    CHECK_IOT2LP_POINTER(rc32k_trim_parameter);
+    CHECK_IOT2LP_POINTER(mtimer_parameter);
+    CHECK_IOT2LP_POINTER(lp_info);
+    CHECK_IOT2LP_POINTER(flash_parameter);
+    CHECK_IOT2LP_POINTER(sec_cfg);
+    CHECK_IOT2LP_POINTER(tzc_cfg);
+    CHECK_IOT2LP_POINTER(jtag_parameter);
+    CHECK_IOT2LP_POINTER(uart_config);
+    CHECK_IOT2LP_POINTER(clock_config);
+    CHECK_IOT2LP_POINTER(wakeup_source_parameter);
+    CHECK_IOT2LP_POINTER(wakeup_reason_info);
+
+#if (BL_LP_TIME_DEBUG)
+    CHECK_IOT2LP_POINTER(time_debug);
+#endif
+    return 0;
+}
+
+void bl_lp_wifi_param_update(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
+{
+    if (bl_lp_fw_cfg->tim_wakeup_en) {
+        iot2lp_para->wifi_parameter->tim_wakeup_en = 1;
+        memcpy(iot2lp_para->wifi_parameter->bssid, bl_lp_fw_cfg->bssid, 6);
+        memcpy(iot2lp_para->wifi_parameter->local_mac, bl_lp_fw_cfg->mac, 6);
+        iot2lp_para->wifi_parameter->ap_channel = bl_lp_fw_cfg->channel;
+        iot2lp_para->wifi_parameter->aid = bl_lp_fw_cfg->aid;
+        iot2lp_para->wifi_parameter->bcn_target_level = bl_lp_fw_cfg->rssi;
+        iot2lp_para->wifi_parameter->wifi_rx_buff = (uint8_t *)((uint32_t)export_get_rx_buffer1_addr() & 0x2FFFFFFF);
+
+        /* lpfw rx timeout */
+        iot2lp_para->mtimer_parameter->mtimer_timeout_en = 0;
+        iot2lp_para->mtimer_parameter->mtimer_timeout_mini_us = bl_lp_fw_cfg->mtimer_timeout_mini_us;
+        iot2lp_para->mtimer_parameter->mtimer_timeout_max_us = bl_lp_fw_cfg->mtimer_timeout_max_us;
+
+
+        /* take rc32k error rate as default */
+        if (!(*((volatile uint32_t *)0x2000f030) & (1 << 3))) {
+            /* rc32k 1500-ppm */
+            iot2lp_para->rtc32k_jitter_error_ppm = 1200;
+        } else {
+            /* xtal 500-ppm */
+            iot2lp_para->rtc32k_jitter_error_ppm = 400;
+        }
+
+        /* tim interval */
+        if (bl_lp_fw_cfg->dtim_num != 0) {
+            iot2lp_para->wifi_parameter->dtim_num = bl_lp_fw_cfg->dtim_num;
+        } else {
+            iot2lp_para->wifi_parameter->dtim_num = 10;
+        }
+        iot2lp_para->wifi_parameter->bcmc_dtim_mode = bl_lp_fw_cfg->bcmc_dtim_mode;
+
+    } else {
+        iot2lp_para->wifi_parameter->tim_wakeup_en = 0;
+    }
+}
+
+
 void lp_fw_save_cpu_para(uint32_t save_addr)
 {
     __asm__ __volatile__("sw      x0, 0(a0)\n\t"
@@ -638,6 +714,24 @@ int bl_lpfw_ram_load(void)
     return 0;
 }
 
+#if 1
+#include "bflb_sec_sha.h"
+
+static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
+
+static void lpfw_sec_sha256(uint32_t addr, uint32_t len, uint8_t *result)
+{
+    struct bflb_device_s *sha256;
+    sha256 = bflb_device_get_by_name(BFLB_NAME_SEC_SHA);
+
+    bflb_group0_request_sha_access(sha256);
+
+    bflb_sha_init(sha256, SHA_MODE_SHA256);
+    bflb_sha256_start(sha256, &ctx_sha256);
+    bflb_sha256_update(sha256, &ctx_sha256, (const uint8_t *)addr, len);
+    bflb_sha256_finish(sha256, &ctx_sha256, result);
+}
+#endif
 int bl_lpfw_ram_verify(void)
 {
     if (bl_lpfw_bin_check() < 0) {
@@ -823,7 +917,7 @@ void bl_lp_fw_init(void)
     iot2lp_para->lp_info = &lp_info_struct;
     bl_lp_info_clear(&lp_info_struct);
 
-  bl_lp_xip_para_save();
+    bl_lp_xip_para_save();
 
 #ifndef CONFIG_LPFW_INIT_LOAD
     /* First load */
@@ -886,9 +980,85 @@ int bl_lp_init(void)
     return 0;
 }
 
+/* Virtual time functions */
+static void bl_lp_vtime_before_sleep(void)
+{
+    uint64_t rtc_cnt, mtimer_cnt;
+
+    HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
+    mtimer_cnt = CPU_Get_MTimer_Counter();
+
+    /* update timestamp */
+    g_rtc_timestamp_before_sleep_us = BL_PDS_CNT_TO_US(rtc_cnt);
+    g_mtimer_timestamp_before_sleep_us = mtimer_cnt;
+
+    /* update virtual time base */
+    g_virtual_timestamp_base_us += g_mtimer_timestamp_before_sleep_us - g_mtimer_timestamp_after_sleep_us;
+}
+
+static void bl_lp_vtime_after_sleep(void)
+{
+    uint64_t rtc_cnt, mtimer_cnt;
+
+    HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
+    mtimer_cnt = CPU_Get_MTimer_Counter();
+
+    /* update timestamp */
+    g_rtc_timestamp_after_sleep_us = BL_PDS_CNT_TO_US(rtc_cnt);
+    g_mtimer_timestamp_after_sleep_us = mtimer_cnt;
+
+    /* update virtual time base */
+    g_virtual_timestamp_base_us += g_rtc_timestamp_after_sleep_us - g_rtc_timestamp_before_sleep_us;
+}
+
+uint64_t bl_lp_get_virtual_us(void)
+{
+    uint64_t mtimer_cnt;
+
+    mtimer_cnt = CPU_Get_MTimer_Counter();
+
+    return (g_virtual_timestamp_base_us + mtimer_cnt - g_mtimer_timestamp_after_sleep_us);
+}
+
+
+static uint32_t get_dtim_num(uint32_t period_dtim, uint32_t bcn_past_num, lp_fw_wifi_para_t *wifi_param)
+{
+    uint32_t dtim_num;
+    uint8_t next_dtim_count;
+
+    if (wifi_param->bcmc_dtim_mode) {
+        dtim_num = period_dtim * wifi_param->beacon_dtim_period;
+
+        dtim_num = dtim_num - (bcn_past_num % dtim_num);
+
+        next_dtim_count =
+            (wifi_param->last_beacon_dtim_count + bcn_past_num + dtim_num) % wifi_param->beacon_dtim_period;
+        if (next_dtim_count) {
+            if (dtim_num + next_dtim_count > wifi_param->beacon_dtim_period) {
+                dtim_num = dtim_num + next_dtim_count - wifi_param->beacon_dtim_period;
+            } else {
+                dtim_num = dtim_num + next_dtim_count;
+            }
+        }
+    } else {
+        dtim_num = period_dtim - (bcn_past_num % period_dtim);
+    }
+
+    return dtim_num;
+}
+
 int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 {
     uint64_t rtc_sleep_us, rtc_wakeup_cmp_cnt;
+    uint32_t dtim_num, bcn_past_num, beacon_interval_us;
+    uint64_t last_beacon_rtc_us;
+    uint64_t rtc_cnt, rtc_now_us;
+    uint32_t pds_sleep_us;
+    uint32_t period_dtim;
+    uint32_t bcn_loss_level;
+    int32_t rtc32k_error_us;
+
+    lp_fw_bcn_loss_level_t *bcn_loss_cfg = NULL;
 
     if (bl_lp_fw_cfg == NULL) {
         return -1;
@@ -896,28 +1066,22 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     bl_lp_debug_record_time(iot2lp_para, "bl_lp_fw_enter");
 
-    rtc_wakeup_cmp_cnt = bl_lp_fw_cfg->rtc_wakeup_cmp_cnt;
-    rtc_sleep_us = bl_lp_fw_cfg->rtc_timeout_us;
+    // rtc_wakeup_cmp_cnt = bl_lp_fw_cfg->rtc_wakeup_cmp_cnt;
+    // rtc_sleep_us = bl_lp_fw_cfg->rtc_timeout_us;
 
-    // BL_LP_LOG("clock_config:0x%08x\r\n",iot2lp_para->clock_config);
-    // BL_LP_LOG("mcu_clk_sel:%d\r\n",iot2lp_para->clock_config->mcu_clk_sel);
-    // BL_LP_LOG("hclk_div:%d\r\n",iot2lp_para->clock_config->hclk_div);
-    // BL_LP_LOG("bclk_div:%d\r\n",iot2lp_para->clock_config->bclk_div);
-    // BL_LP_LOG("xclk_sel:%d\r\n",iot2lp_para->clock_config->xclk_sel);
-
-    /* clean wakeup reason */
+     /* clean wakeup reason */
     memset(&wakeup_reason, 0, sizeof(wakeup_reason));
     iot2lp_para->wakeup_reason_info = &wakeup_reason;
 
     /* clean wakeup source */
+    iot2lp_para->wakeup_source_parameter->rtc_wakeup_en = 0;
+    iot2lp_para->wakeup_source_parameter->rtc_wakeup_cnt = 0;
 
-    // LP_HOOK(pre_user, bl_lp_fw_cfg);
-
-    arch_delay_ms(500);
+    LP_HOOK(pre_user, bl_lp_fw_cfg);
 
     __disable_irq();
 
-    // LP_HOOK(pre_sys, bl_lp_fw_cfg);
+    LP_HOOK(pre_sys, bl_lp_fw_cfg);
 
     if (bl_lp_fw_cfg->lpfw_copy) {
         bl_lpfw_ram_load();
@@ -925,79 +1089,176 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     if (bl_lp_fw_cfg->lpfw_verify) {
         /* ensure integrity of lpfw  */
-        // if (bl_lpfw_ram_verify() < 0) {
-        //     assert(0);
-        // }
+        if (bl_lpfw_ram_verify() < 0) {
+            assert(0);
+        }
     }
 
-    /* ready sleep*/
+    bl_lp_wifi_param_update(bl_lp_fw_cfg);
+
+
+   /* ready sleep*/
     iot2lp_para->wakeup_flag = 0;
     iot2lp_para->pattern = 0xAA5555AA;
     iot2lp_para->app_entry = (uintptr_t)lp_fw_restore_cpu_para;
     iot2lp_para->args[0] = GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR;
+    iot2lp_para->wakeup_reason_info->wakeup_reason = LPFW_WAKEUP_UNKOWN;
 
-    pm_set_wakeup_callback((void (*)(void))((uint32_t)__lpfw_share_start) /*(void (*)(void))LP_FW_PRE_JUMP_ADDR*/);
+   /* cacheable */
+    pm_set_wakeup_callback(
+        (void (*)(void))((uint32_t)__lpfw_share_start | 0x60000000) /*(void (*)(void))LP_FW_PRE_JUMP_ADDR*/);
 
-    // LP_HOOK(pre_sleep, iot2lp_para);
 
-    // L1C_DCache_Clean_All();
+    LP_HOOK(pre_sleep, iot2lp_para);
+
+    HBN_Pin_WakeUp_Mask(0xFF);
+
+    if (gp_lp_io_cfg) {
+        iot2lp_para->wakeup_source_parameter->io_wakeup_parameter = (void *)gp_lp_io_cfg;
+        BL_LP_LOG("io_wakeup_unmask: 0x%llX\r\n",
+                  (unsigned long long)((lp_fw_gpio_cfg_t *)iot2lp_para->wakeup_source_parameter->io_wakeup_parameter)
+                      ->io_wakeup_unmask);
+        bl_lp_io_wakeup_init((lp_fw_gpio_cfg_t *)iot2lp_para->wakeup_source_parameter->io_wakeup_parameter);
+    }
+
+    /* app to sleep_pds, update time_info */
+    bl_lp_time_info_update_app(iot2lp_para->lp_info);
+
+    bl_lp_vtime_before_sleep();
+
     csi_dcache_clean();
-    // csi_icache_invalid();
+
+    /* Gets the current rtc time */
+    HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
+    rtc_now_us = BL_PDS_CNT_TO_US(rtc_cnt);
+
+    rtc_wakeup_cmp_cnt = bl_lp_fw_cfg->rtc_wakeup_cmp_cnt;
+    rtc_sleep_us = bl_lp_fw_cfg->rtc_timeout_us;
+
+    if (bl_lp_fw_cfg->tim_wakeup_en) {
+        /* last beacon timestamp */
+        last_beacon_rtc_us = iot2lp_para->last_beacon_stamp_rtc_us;
+        /* beacon delay */
+        last_beacon_rtc_us -= iot2lp_para->bcn_delay_info->last_beacon_delay_us;
+
+        /* get period of dtim */
+        if (iot2lp_para->bcn_loss_info->continuous_loss_cnt == 0) {
+            period_dtim = iot2lp_para->wifi_parameter->dtim_num;
+        } else {
+            bcn_loss_level = iot2lp_para->bcn_loss_info->bcn_loss_level;
+            bcn_loss_cfg = &(iot2lp_para->bcn_loss_info->bcn_loss_cfg_table[bcn_loss_level]);
+            period_dtim = bcn_loss_cfg->dtim_num;
+        }
+
+        /* beacon interval us, TU * 1024 */
+        beacon_interval_us = iot2lp_para->wifi_parameter->beacon_interval_tu * 1024;
+        bcn_past_num = (rtc_now_us - last_beacon_rtc_us + PROTECT_BF_MS * 1000) / beacon_interval_us;
+        dtim_num = get_dtim_num(period_dtim, bcn_past_num, iot2lp_para->wifi_parameter);
+
+        // if (dtim_num <= 3) {
+        //     dtim_num += (4 - dtim_num);
+        // }
+
+        BL_LP_LOG("period_dtim:%d\r\n", period_dtim);
+        BL_LP_LOG("dtim_num:%d\r\n", dtim_num);
+        BL_LP_LOG("bcn_past_num:%d\r\n", bcn_past_num);
+        BL_LP_LOG("beacon_interval_us:%d\r\n", beacon_interval_us);
+        BL_LP_LOG("rc32k code %d\r\n", iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
+        /* last bcn -> next bcn */
+        pds_sleep_us = (dtim_num + bcn_past_num) * beacon_interval_us;
+
+        /* rc32k error compensation (last bcn -> next bcn) */
+        rtc32k_error_us =
+            (int32_t)((int64_t)pds_sleep_us * iot2lp_para->rc32k_trim_parameter->rtc32k_error_ppm / (1000 * 1000));
+
+        /* now -> next bcn */
+        pds_sleep_us = pds_sleep_us - (uint32_t)(rtc_now_us - last_beacon_rtc_us);
+
+        /* phy init time */
+        // pds_sleep_us -= 280000;
+        // pds_sleep_us -= 500;
+
+        /* rc32k error */
+        if (rtc32k_error_us > 0 || pds_sleep_us > (-rtc32k_error_us)) {
+            pds_sleep_us += rtc32k_error_us;
+        } else {
+            pds_sleep_us = 0;
+        }
+    } else {
+        pds_sleep_us = 0;
+    }
+
+    if ((rtc_wakeup_cmp_cnt == 0) && rtc_sleep_us > ((uint64_t)24 * 60 * 60 * 1000 * 1000)) {
+        rtc_sleep_us = ((uint64_t)24 * 60 * 60 * 1000 * 1000);
+    }
+
+    /* Prevent rtc from colliding with pds */
+    if (rtc_wakeup_cmp_cnt == 0 && rtc_sleep_us) {
+        /*  */
+        if (((pds_sleep_us >= rtc_sleep_us) && (pds_sleep_us - rtc_sleep_us) < PROTECT_BF_MS * 1000) ||
+            ((pds_sleep_us <= rtc_sleep_us) && (rtc_sleep_us - pds_sleep_us) < PROTECT_AF_MS * 1000)) {
+            /* Advance the RTC time */
+            if (pds_sleep_us > PROTECT_AF_MS * 1000) {
+                rtc_sleep_us = pds_sleep_us - PROTECT_AF_MS * 1000;
+            } else {
+                rtc_sleep_us = 0;
+            }
+            BL_LP_LOG("---- Advance of rtc ----\r\n");
+        }
+    }
+
+    csi_dcache_clean();
+
+    BL_LP_LOG("pds_sleep_us:%ld\r\n", pds_sleep_us);
+    // BL_LP_LOG("last_beacon_stamp_rtc_us: %lld\r\n", iot2lp_para->last_beacon_stamp_rtc_us);
+    // BL_LP_LOG("stamp_rtc_valid: %ld\r\n", iot2lp_para->last_beacon_stamp_rtc_valid);
+    // BL_LP_LOG("rtc_wakeup_cmp_cnt:%lld\r\n", rtc_wakeup_cmp_cnt);
+    BL_LP_LOG("rtc_sleep_us:%lld\r\n", rtc_sleep_us);
+    // BL_LP_LOG("rc32k code %ld\r\n", iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
+    // BL_LP_LOG("rtc ppm %ld\r\n", iot2lp_para->rc32k_trim_parameter->rtc32k_error_ppm);
+    arch_delay_us(500);
+
+
+    /* Check iot2lp_para pointer variables for valid values */
+    if (bl_lp_check_iot2lp_para_pointers(iot2lp_para) != 0) {
+        assert(0);
+    }
+
+    /* Check buf_addr when bcmc_dtim_mode is enabled */
+    if (iot2lp_para->wifi_parameter->bcmc_dtim_mode && iot2lp_para->wifi_parameter->buf_addr == 0) {
+        assert(0);
+    }
+
 
     bl_lp_debug_record_time(iot2lp_para, "lp_fw_save_cpu_para");
 
     lp_fw_save_cpu_para(GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR);
 
     if (iot2lp_para->wakeup_flag == 0) {
-        /* debug cpu parameter */
-        // lp_fw_print_cpu_para(GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR);
-        // arch_delay_ms(500);
 
-        /* Check io_stat , judge whether to enter PDS mode */
-        /* if io_stat isn't 0x0, will sleep 2ms */
-        // if (1 == bl_lp_wakeup_check()) {
-        //     rtc_sleep_us = 2000;
-        //     pds_sleep_us = 2000;
-        // }
-
-        // if ((bl_lp_fw_cfg->tim_wakeup_en) && (rtc_wakeup_cmp_cnt || rtc_sleep_us)) {
-        //     /* rtc cfg */
-        //     rtc_wakeup_init(rtc_wakeup_cmp_cnt, rtc_sleep_us);
-        //     /* clear rtc IRQ */
-        //     BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0x00000001 << 16);
-        //     /* enable rtc wakeup source */
-        //     BL_WR_REG(PDS_BASE, PDS_INT, BL_RD_REG(PDS_BASE, PDS_INT) | (0x00000001 << 11));
-        //     /* pds15 enter */
-        //     pm_pds_mode_enter(PM_PDS_LEVEL_15, BL_US_TO_PDS_CNT(pds_sleep_us));
-
-        // } else if (bl_lp_fw_cfg->tim_wakeup_en) {
-        //     /* disable rtc comp */
-        //     uint32_t tmpVal;
-        //     tmpVal = BL_RD_REG(HBN_BASE, HBN_CTL);
-        //     tmpVal = tmpVal & 0xfffffff1;
-        //     BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
-        //     /* pds15 enter */
-        //     pm_pds_mode_enter(PM_PDS_LEVEL_15, BL_US_TO_PDS_CNT(pds_sleep_us));
-
-        // } else
         if (rtc_wakeup_cmp_cnt || rtc_sleep_us) {
             /* rtc cfg */
             rtc_wakeup_init(rtc_wakeup_cmp_cnt, rtc_sleep_us);
-
-            // BL_LP_LOG("pds enter\r\n");
             /* clear rtc IRQ */
             HBN_Clear_IRQ(HBN_INT_RTC);
             /* enable rtc wakeup source */
             PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_HBN_IRQ_OUT, UNMASK);
+        } else {
+            /* disable rtc comp */
+            uint32_t tmpVal;
+            tmpVal = BL_RD_REG(HBN_BASE, HBN_CTL);
+            tmpVal = tmpVal & 0xfffffff1;
+            BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
+        }
+
+        if (bl_lp_fw_cfg->tim_wakeup_en) {
+            /* pds15 enter */
+            pm_pds_mode_enter(PM_PDS_LEVEL_15, BL_US_TO_PDS_CNT(pds_sleep_us));
+        } else {
             /* pds15 enter */
             pm_pds_mode_enter(PM_PDS_LEVEL_15, 0);
-            /* jump to lp_fw */
-            // void (*pFunc)(void);
-            // uint32_t lpfw_addr = HBN_RAM_BASE; /* cacheable */
-            // pFunc = (void (*)(void))lpfw_addr;
-            // pFunc();
-            // bl_sys_reset_por();
         }
+
 
         iot2lp_para->wakeup_flag = 1;
         lp_fw_restore_cpu_para(GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR);
@@ -1052,14 +1313,15 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     /* watch-dog disable */
 
     /* rc32k code restored */
+    HBN_Set_RC32K_R_Code(iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
 
-    // LP_HOOK(post_sys, iot2lp_para);
+    LP_HOOK(post_sys, iot2lp_para);
 
     bl_lp_debug_record_time(iot2lp_para, "bl_lp_fw_enter end");
 
-  #if (BL_LP_TIME_DEBUG)
-      bl_lp_debug_dump_time(iot2lp_para);
-  #endif
+#if (BL_LP_TIME_DEBUG)
+    bl_lp_debug_dump_time(iot2lp_para);
+#endif
 
     return iot2lp_para->wakeup_reason_info->wakeup_reason;
 }
@@ -1196,45 +1458,7 @@ ATTR_TCM_SECTION uint32_t bl_lp_get_dtim_num(void)
     return iot2lp_para->wifi_parameter->dtim_num;
 }
 
-/* Virtual time functions */
-static void bl_lp_vtime_before_sleep(void)
-{
-    uint64_t rtc_cnt, mtimer_cnt;
 
-    HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-    mtimer_cnt = CPU_Get_MTimer_Counter();
-
-    /* update timestamp */
-    g_rtc_timestamp_before_sleep_us = BL_PDS_CNT_TO_US(rtc_cnt);
-    g_mtimer_timestamp_before_sleep_us = mtimer_cnt;
-
-    /* update virtual time base */
-    g_virtual_timestamp_base_us += g_mtimer_timestamp_before_sleep_us - g_mtimer_timestamp_after_sleep_us;
-}
-
-static void bl_lp_vtime_after_sleep(void)
-{
-    uint64_t rtc_cnt, mtimer_cnt;
-
-    HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-    mtimer_cnt = CPU_Get_MTimer_Counter();
-
-    /* update timestamp */
-    g_rtc_timestamp_after_sleep_us = BL_PDS_CNT_TO_US(rtc_cnt);
-    g_mtimer_timestamp_after_sleep_us = mtimer_cnt;
-
-    /* update virtual time base */
-    g_virtual_timestamp_base_us += g_rtc_timestamp_after_sleep_us - g_rtc_timestamp_before_sleep_us;
-}
-
-uint64_t bl_lp_get_virtual_us(void)
-{
-    uint64_t mtimer_cnt;
-
-    mtimer_cnt = CPU_Get_MTimer_Counter();
-
-    return (g_virtual_timestamp_base_us + mtimer_cnt - g_mtimer_timestamp_after_sleep_us);
-}
 
 int bl_lp_get_bcn_delay_ready(void)
 {

@@ -20,7 +20,7 @@
 
 static uint32_t cpu_sleep_reg_save[32];
 
-void ATTR_TCM_SECTION lp_fw_save_cpu_para(uint32_t save_addr)
+void ATTR_TCM_SECTION save_cpu_para(uint32_t save_addr)
 {
     __asm__ volatile(
         "sw x0,  0(%[addr])\n\t"
@@ -60,7 +60,7 @@ void ATTR_TCM_SECTION lp_fw_save_cpu_para(uint32_t save_addr)
         : "memory");            /* Clobbers */
 }
 
-void ATTR_TCM_SECTION lp_fw_restore_cpu_para(uint32_t save_addr)
+void ATTR_TCM_SECTION restore_cpu_para(uint32_t save_addr)
 {
     __asm__ volatile(
         "lw x0,  0(%[addr])\n\t"
@@ -250,7 +250,7 @@ static void lp_console_init()
 void ATTR_TCM_SECTION pds_cpu_wakeup_cb(void)
 {
     /* cpu return */
-    lp_fw_restore_cpu_para((uint32_t)cpu_sleep_reg_save);
+    restore_cpu_para((uint32_t)cpu_sleep_reg_save);
 }
 
 void ATTR_TCM_SECTION pds_wakeup_recover(void)
@@ -318,7 +318,7 @@ void ATTR_TCM_SECTION pds_enter(uint32_t pds_level, uint32_t sleep_time)
 
     /* cpu save */
     enert_flag = true;
-    lp_fw_save_cpu_para((uint32_t)cpu_sleep_reg_save);
+    save_cpu_para((uint32_t)cpu_sleep_reg_save);
 
     if (enert_flag) {
         enert_flag = false;

@@ -9,14 +9,33 @@
 #include "audio_codec_es8389.h"
 #include "audio_codec_es8388.h"
 #include "audio_codec_wm8978.h"
+#include "audio_codec_jy6311.h"
+#ifdef CONFIG_BSP_AUDIO_CODEC_BL_ENABLE
+#include "audio_codec_bl.h"
+#endif
 
 static const audio_codec_driver_t *g_drivers[] = {
     NULL,
+    &audio_codec_jy6311_driver,
     &audio_codec_es8311_driver,
     &audio_codec_es8389_driver,
     &audio_codec_es8388_driver,
     &audio_codec_wm8978_driver,
 };
+
+static void audio_codec_reset_dev(audio_codec_dev_t *dev)
+{
+    if (dev == NULL) {
+        return;
+    }
+
+    dev->type = AUDIO_CODEC_TYPE_UNKNOWN;
+    dev->name = NULL;
+    dev->i2c = NULL;
+    dev->i2c_addr = 0;
+    dev->drv = NULL;
+    dev->priv = NULL;
+}
 
 audio_codec_type_t audio_codec_scan(struct bflb_device_s *i2c, audio_codec_dev_t *out_dev)
 {
@@ -24,11 +43,8 @@ audio_codec_type_t audio_codec_scan(struct bflb_device_s *i2c, audio_codec_dev_t
         return AUDIO_CODEC_TYPE_UNKNOWN;
     }
 
-    out_dev->type = AUDIO_CODEC_TYPE_UNKNOWN;
-    out_dev->name = NULL;
+    audio_codec_reset_dev(out_dev);
     out_dev->i2c = i2c;
-    out_dev->i2c_addr = 0;
-    out_dev->drv = NULL;
 
     for (size_t di = 0; di < (sizeof(g_drivers) / sizeof(g_drivers[0])); di++) {
         const audio_codec_driver_t *drv = g_drivers[di];
@@ -50,6 +66,18 @@ audio_codec_type_t audio_codec_scan(struct bflb_device_s *i2c, audio_codec_dev_t
 
     return AUDIO_CODEC_TYPE_UNKNOWN;
 }
+
+#ifdef CONFIG_BSP_AUDIO_CODEC_BL_ENABLE
+int audio_codec_open_builtin(audio_codec_dev_t *out_dev, const audio_codec_bl_hw_cfg_t *cfg)
+{
+    if (out_dev == NULL || cfg == NULL) {
+        return -1;
+    }
+
+    audio_codec_reset_dev(out_dev);
+    return audio_codec_bl_open(out_dev, cfg);
+}
+#endif
 
 int audio_codec_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg)
 {

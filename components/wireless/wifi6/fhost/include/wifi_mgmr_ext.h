@@ -50,6 +50,26 @@
 #define  CODE_WIFI_ON_GOT_IP_TIMEOUT    28
 #define  CODE_WIFI_ON_GOT_IP_ABORT      29
 #define  CODE_WIFI_ON_SCAN_DONE_CONNECTING  31
+#define  CODE_WIFI_ON_PARAMS_ERROR      32
+
+#define WIFI_MGMR_STA_RECONNECT_DEFAULT_AUTH_FAIL_THRESHOLD 10
+#define WIFI_MGMR_STA_RECONNECT_DEFAULT_FIXED_INTERVAL_SEC  15
+#define WIFI_MGMR_STA_RECONNECT_MIN_INTERVAL_SEC            1
+#define WIFI_MGMR_STA_RECONNECT_MAX_INTERVAL_SEC            300
+#define WIFI_MGMR_STA_RECONNECT_MAX_AUTH_FAIL_THRESHOLD     200
+
+typedef enum
+{
+    WIFI_MGMR_STA_RECONNECT_MODE_EXP_BACKOFF = 0,
+    WIFI_MGMR_STA_RECONNECT_MODE_FIXED_AFTER_THRESHOLD = 1,
+} wifi_mgmr_sta_reconnect_mode_t;
+
+typedef struct wifi_mgmr_sta_reconnect_policy
+{
+    wifi_mgmr_sta_reconnect_mode_t mode;  /* Reconnect mode, see wifi_mgmr_sta_reconnect_mode_t. */
+    uint16_t auth_fail_threshold;         /* Apply fixed interval when auth_failures > threshold. */
+    uint16_t fixed_interval_sec;          /* Fixed reconnect interval in seconds. */
+} wifi_mgmr_sta_reconnect_policy_t;
 
 #define WIFI_EVENT_BEACON_IND_AUTH_OPEN            0
 #define WIFI_EVENT_BEACON_IND_AUTH_WEP             1
@@ -910,6 +930,59 @@ int wifi_mgmr_sta_autoconnect_enable(void);
  *  Others is Failed
  */
 int wifi_mgmr_sta_autoconnect_disable(void);
+
+/**
+ * wifi_mgmr_sta_reconnect_policy_set
+ * Set station reconnect policy used after authentication failure.
+ * param:
+ *  cfg : Pointer to reconnect policy configuration.
+ *        cfg->mode:
+ *          WIFI_MGMR_STA_RECONNECT_MODE_EXP_BACKOFF(0)
+ *            Always use legacy exponential backoff after auth failures.
+ *            cfg->auth_fail_threshold and cfg->fixed_interval_sec are accepted
+ *            by range check but not used for timing in this mode.
+ *
+ *          WIFI_MGMR_STA_RECONNECT_MODE_FIXED_AFTER_THRESHOLD(1)
+ *            Use legacy exponential backoff first, then switch to fixed interval
+ *            when auth_failures > cfg->auth_fail_threshold.
+ *            Fixed wait duration is cfg->fixed_interval_sec seconds.
+ *
+ *        cfg->auth_fail_threshold:
+ *          Valid range: 0 .. WIFI_MGMR_STA_RECONNECT_MAX_AUTH_FAIL_THRESHOLD.
+ *          Trigger condition is strict greater-than ('>'), not greater-or-equal.
+ *          Example: threshold=2 switches to fixed interval from failure #3.
+ *
+ *        cfg->fixed_interval_sec:
+ *          Valid range:
+ *          WIFI_MGMR_STA_RECONNECT_MIN_INTERVAL_SEC ..
+ *          WIFI_MGMR_STA_RECONNECT_MAX_INTERVAL_SEC.
+ *
+ *        Invalid cfg effects:
+ *          - Return -1.
+ *          - Previous reconnect policy remains unchanged.
+ *
+ *        Example 1:
+ *          mode=0, threshold=10, interval=15
+ *          -> always exponential backoff.
+ *
+ *        Example 2:
+ *          mode=1, threshold=2, interval=5
+ *          -> failures #1/#2 use exponential backoff,
+ *             failure #3 and later use fixed 5-second interval.
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ */
+int wifi_mgmr_sta_reconnect_policy_set(const wifi_mgmr_sta_reconnect_policy_t *cfg);
+
+/**
+ * wifi_mgmr_sta_reconnect_policy_get
+ * Get station reconnect policy used after authentication failure.
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ */
+int wifi_mgmr_sta_reconnect_policy_get(wifi_mgmr_sta_reconnect_policy_t *cfg);
 
 /**
  * wifi_mgmr_sta_wps_pbc

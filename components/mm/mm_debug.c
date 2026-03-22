@@ -32,6 +32,8 @@ static void mm_dump_info(uint32_t heap_id)
     mm_heap_t *heap;
     const mm_allocator_t *allocator;
     struct mm_usage_info usage;
+    size_t free_size;
+    uintptr_t irq_flags;
 
     heap = g_mem_manager.heaps[heap_id];
     if (!heap || !heap->is_active) {
@@ -45,7 +47,10 @@ static void mm_dump_info(uint32_t heap_id)
         return;
     }
 
+    irq_flags = mm_lock_save();
     allocator->get_usage_info(heap, &usage);
+    free_size = allocator->get_free_size(heap);
+    mm_unlock_restore(irq_flags);
 
     /* clang-format off */
     LOG_I("\033[32mHeap id:%u (%s, %s)\033[0m, Usage Info:\r\n",
@@ -76,6 +81,12 @@ static void mm_dump_info(uint32_t heap_id)
         LOG_E("Heap size mismatch, Memory may be corruption\r\n");
     }
 #endif
+
+    if (free_size != usage.free_size) {
+        LOG_E("Heap free size mismatch: %u vs %u, Memory may be corruption\r\n",
+              (uint32_t)free_size, (uint32_t)usage.free_size);
+    }
+
     LOG_RI("\r\n");
 }
 
@@ -92,12 +103,18 @@ static void mm_dump_info(uint32_t heap_id)
 int cmd_mm_info(int argc, char **argv)
 {
     if (argc == 1) {
-#if (CONFIG_MM_ENABLE_STATISTICS)
         LOG_I("\033[32mGlobal Statistics\033[0m: \r\n");
+        LOG_I("  Total free bytes      : %u\r\n", (uint32_t)kfree_size(0));
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+        LOG_I("  Total min free bytes  : %u\r\n", (uint32_t)kmin_free_size());
+#endif
+#if (CONFIG_MM_ENABLE_STATISTICS)
         LOG_I("  Total malloc successes: %u\r\n", g_mem_manager.stats.total_malloc_successes);
         LOG_I("  Total free successes  : %u\r\n", g_mem_manager.stats.total_free_successes);
-        LOG_I("  Total malloc failures : %u\r\n\r\n", g_mem_manager.stats.total_malloc_failures);
+        LOG_I("  Total malloc failures : %u\r\n", g_mem_manager.stats.total_malloc_failures);
 #endif
+        LOG_I("\r\n");
+
         /* dump all heaps info */
         for (uint32_t i = 0; i < CONFIG_MM_HEAP_COUNT; i++) {
             mm_heap_t *heap = g_mem_manager.heaps[i];
@@ -122,47 +139,6 @@ int cmd_mm_info(int argc, char **argv)
     }
 
     return 0;
-}
-
-/**
- * @brief Return remaining OCRAM heap size for legacy compatibility.
- *
- * Historically `kfree_size` reported the free bytes of the OCRAM heap.
- * This implementation locates the OCRAM heap (MM_HEAP_OCRAM_0) and queries
- * its allocator for current usage statistics. If the manager is not
- * initialized, the heap is inactive, or the allocator cannot provide usage
- * information, the function returns 0.
- *
- * @return Remaining free bytes in the OCRAM heap, or 0 on failure.
- */
-size_t kfree_size(void)
-{
-    mem_manager_t *manager = &g_mem_manager;
-    mm_heap_t *heap;
-    const mm_allocator_t *allocator;
-    struct mm_usage_info usage;
-
-    if (!manager->initialized) {
-        return 0;
-    }
-
-    if (MM_HEAP_OCRAM_0 >= CONFIG_MM_HEAP_COUNT) {
-        return 0;
-    }
-
-    heap = manager->heaps[MM_HEAP_OCRAM_0];
-    if (!heap || !heap->is_active) {
-        return 0;
-    }
-
-    allocator = manager->allocators[heap->allocator_id];
-    if (!allocator || !allocator->get_usage_info) {
-        return 0;
-    }
-
-    allocator->get_usage_info(heap, &usage);
-
-    return (size_t)usage.free_size;
 }
 
 #if defined(CONFIG_SHELL)

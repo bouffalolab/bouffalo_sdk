@@ -130,7 +130,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         case CODE_WIFI_ON_GOT_IP: {
             wifi_state = 1;
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
-            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size(0));
             void webrtc_main(void);
             webrtc_main();
         } break;

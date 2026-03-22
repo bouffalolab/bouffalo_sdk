@@ -84,6 +84,16 @@ extern "C" {
 #define CONFIG_MM_ENABLE_LEAK_DETECTION 0
 #endif
 
+/**
+ * @brief Enable minimum free memory watermark tracking
+ *
+ * Tracks the minimum value of kfree_size(0) at key allocation points.
+ * Disable by default to avoid extra runtime overhead.
+ */
+#ifndef CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+#define CONFIG_MM_ENABLE_MIN_FREE_TRACKING 0
+#endif
+
 /* ======================================================================== */
 /** @brief Allocator selection configuration */
 /* ======================================================================== */

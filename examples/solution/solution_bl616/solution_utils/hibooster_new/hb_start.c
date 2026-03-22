@@ -7,11 +7,11 @@
 
 #include "hb_sender.h"
 
-#define DBG_TAG "HB_TRANS"
-#include "log.h"
-
 #include "frame_queue_ctrl.h"
 #include "frame_queue.h"
+
+#define DBG_TAG "HB_TRANS"
+#include "log.h"
 
 volatile uint32_t g_hibooster_total_frame_cnt = 0;
 

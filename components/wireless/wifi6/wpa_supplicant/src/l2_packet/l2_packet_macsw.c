@@ -17,6 +17,7 @@
 struct l2_packet_data {
 	int l2_hdr; /* whether TX buffer already contain L2 (Ethernet) header */
 	net_al_if_t net_if;
+	int event_id; /* Event ID for this interface (e.g., ELOOP_EVT_WPA_L2_DATA_WL1) */
 	void (*rx_callback)(void *ctx, const u8 *src_addr, const u8 *buf, size_t len);
 	void *rx_callback_ctx;
 };
@@ -58,9 +59,12 @@ struct l2_packet_data * l2_packet_init(
 	if (!l2->net_if)
 		goto err;
 
+	/* Get event ID for this interface (wl1/wl2) */
+	l2->event_id = eloop_get_l2_event_id(ifname);
+
     net_l2_socket_create(l2->net_if, protocol);
 
-    eloop_register_read_sock(ELOOP_EVT_WPA_L2_DATA, l2_packet_receive, l2, NULL);
+    eloop_register_read_sock(l2->event_id, l2_packet_receive, l2, NULL);
 	return l2;
 
 err:
@@ -84,8 +88,8 @@ void l2_packet_deinit(struct l2_packet_data *l2)
 	if (l2 == NULL)
 		return;
 
-	eloop_unregister_read_sock(ELOOP_EVT_WPA_L2_DATA);
-	net_l2_socket_delete();
+	eloop_unregister_read_sock(l2->event_id);
+	net_l2_socket_delete(l2->net_if);
 	os_free(l2);
 }
 

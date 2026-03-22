@@ -1168,7 +1168,7 @@ __STATIC_INLINE void csi_dcache_enable(void)
     __ISB();
     __DCACHE_IALL(); /* invalidate all dcache */
     cache = __get_MHCR();
-    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk); /* enable all Cache */
+    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk); /* enable all Cache */
     __set_MHCR(cache);
 
     __DSB();

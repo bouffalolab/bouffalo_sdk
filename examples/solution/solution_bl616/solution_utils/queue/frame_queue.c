@@ -12,7 +12,11 @@
 
 #include "frame_queue.h"
 
+#if IS_ENABLED(CONFIG_PSRAM)
 #define FRAME_BUFFER_ATTR ATTR_NOINIT_PSRAM_SECTION __ALIGNED(32)
+#else
+#define FRAME_BUFFER_ATTR __ALIGNED(32)
+#endif
 
 /******************* yuyv frame  **********************/
 #if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV)
@@ -166,6 +170,7 @@ int auadc_out_frame_ctrl_init(void)
 int frame_ctrl_init_all(void)
 {
     int ret;
+    (void)ret;
 
     printf("frame_ctrl_init_all\r\n");
 

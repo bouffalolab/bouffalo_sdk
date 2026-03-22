@@ -36,7 +36,7 @@
 #include <sys/fcntl.h>
 #include <at_main.h>
 
-extern uint32_t kfree_size(void);
+extern uint32_t kfree_size(uint32_t heap_id);
 
 #define AT_FS_TYPE_LFS        0 // default littlefs
 
@@ -230,7 +230,7 @@ static int at_query_cmd_sysram(int argc, const char **argv)
     lwip_heap = at_lwip_heap_free_size();
 #endif
     //at_response_string("+SYSRAM:%d,%d", info.free_size, info.total_size);
-    at_response_string("+SYSRAM:%d,%d", kfree_size(), lwip_heap);
+    at_response_string("+SYSRAM:%d,%d", kfree_size(0), lwip_heap);
     return AT_RESULT_CODE_OK;
 }
 

@@ -1,52 +1,65 @@
-# NetHub Host 用户指南
+# NetHub Host User Guide
 
-本文档面向 host 使用者，说明如何在 Linux host 上 bringup NetHub。
+This document is for host-side users and explains how to bring up NetHub on a
+Linux host.
 
-当前 host 侧生效目录：
+If this is your first full NetHub bring-up, start with:
+
+- `examples/wifi/nethub/README.md`
+- `examples/wifi/nethub/docs/NetHubQuickBringup.md`
+
+Online wiki:
+
+- <https://docs.bouffalolab.com/index.php?title=NetHub>
+- <https://docs.bouffalolab.com/index.php?title=NetHubQuickBringup>
+
+Active host-side directories:
 
 - `bsp/common/msg_router/linux_host/kernel`
 - `bsp/common/msg_router/linux_host/userspace/nethub`
 
-当前主路径是 `SDIO`。
-`tty / vchan / USER virtual channel` 都承载在这条 host link 上，其中 `tty / vchan` 用于控制面 backend 选择，`USER virtual channel` 用于客户私有数据。
+The current primary path is `SDIO`.
+`tty / vchan / USER virtual channel` are all carried on this same host link.
+`tty / vchan` select the control-plane backend, while `USER virtual channel`
+is for private application data.
 
-## 1. 组成
+## 1. Components
 
-host 侧主要组件：
+Main host-side components:
 
 - `mr_sdio.ko`
-  - host kernel 模块
+  - host kernel module
 - `bflbwifid`
-  - 控制面守护进程
+  - control-plane daemon
 - `bflbwifictrl`
-  - 命令行工具
+  - command-line tool
 - `libbflbwifi.a`
-  - Wi-Fi 控制库
+  - Wi-Fi control library
 - `libnethub_vchan.a`
-  - virtual channel 用户态库
+  - user-space virtual channel library
 - `nethub_vchan_app`
-  - 可选调试工具
+  - optional debug tool
 
-控制 backend 当前支持：
+Supported control backends:
 
 - `tty`
 - `vchan`
 
-说明：
+Notes:
 
-- host 侧会同时编入 `tty + vchan`
-- 实际使用哪一种，在 `bflbwifid` 启动时选择
+- The host build always includes both `tty + vchan`.
+- The actual backend is selected when `bflbwifid` starts.
 
-## 2. 快速 bringup
+## 2. Quick Bring-Up
 
-### 2.1 编译
+### 2.1 Build
 
 ```bash
 cd bsp/common/msg_router/linux_host/userspace/nethub
 ./build.sh build
 ```
 
-产物位于：
+Artifacts:
 
 - `output/mr_sdio.ko`
 - `output/bflbwifid`
@@ -54,88 +67,89 @@ cd bsp/common/msg_router/linux_host/userspace/nethub
 - `output/libnethub_vchan.a`
 - `output/nethub_vchan_app`
 
-### 2.2 加载内核模块
+### 2.2 Load the Kernel Module
 
 ```bash
 sudo ./build.sh load
 ```
 
-如需卸载：
+To unload:
 
 ```bash
 sudo ./build.sh unload
 ```
 
-### 2.3 启动 daemon
+### 2.3 Start the Daemon
 
-#### 默认 TTY 模式
+#### Default TTY mode
 
 ```bash
 sudo ./output/bflbwifid
 ```
 
-#### 指定 TTY 设备
+#### Explicit TTY device
 
 ```bash
 sudo ./output/bflbwifid -c tty -p /dev/ttyAT0
 ```
 
-#### VCHAN 模式
+#### VCHAN mode
 
 ```bash
 sudo ./output/bflbwifid -c vchan
 ```
 
-可选路径参数：
+Optional path arguments:
 
 - `-s <socket_path>`
 - `-P <pid_file>`
 - `-l <log_file>`
 
-### 2.4 使用 CLI
+### 2.4 Use the CLI
 
-查看状态：
+Check status:
 
 ```bash
 sudo ./output/bflbwifictrl status
 ```
 
-扫描 AP：
+Scan APs:
 
 ```bash
 sudo ./output/bflbwifictrl scan
 ```
 
-连接 AP：
+Connect to an AP:
 
 ```bash
 sudo ./output/bflbwifictrl connect_ap "<ssid>" "<password>"
 ```
 
-断开连接：
+Disconnect:
 
 ```bash
 sudo ./output/bflbwifictrl disconnect
 ```
 
-## 3. 控制 backend 选择
+## 3. Control Backend Selection
 
-host 侧 backend 需要和 device 配置匹配：
+The host backend must match the device configuration:
 
-| device 配置 | host 启动方式 |
+| Device configuration | Host startup |
 | --- | --- |
-| `CONFIG_NETHUB_AT_USE_VCHAN=n` | `./output/bflbwifid` 或 `./output/bflbwifid -c tty -p /dev/ttyAT0` |
+| `CONFIG_NETHUB_AT_USE_VCHAN=n` | `./output/bflbwifid` or `./output/bflbwifid -c tty -p /dev/ttyAT0` |
 | `CONFIG_NETHUB_AT_USE_VCHAN=y` | `./output/bflbwifid -c vchan` |
 
-默认情况下，device 侧控制通道走 `TTY`，因此 host 侧通常直接启动：
+By default, the device control channel uses `TTY`, so the usual host startup
+command is:
 
 ```bash
 sudo ./output/bflbwifid
 ```
 
-## 4. 常用命令
+## 4. Common Commands
 
-当前公共命令固定为 9 条：
+The public CLI surface is fixed to 9 commands:
 
 - `connect_ap`
 - `disconnect`
@@ -147,7 +161,7 @@ sudo ./output/bflbwifid
 - `start_ap`
 - `stop_ap`
 
-示例：
+Examples:
 
 ```bash
 sudo ./output/bflbwifictrl version
@@ -156,35 +170,37 @@ sudo ./output/bflbwifictrl start_ap "<ssid>" "<password>"
 sudo ./output/bflbwifictrl stop_ap
 ```
 
-详细命令说明见：
+Detailed command documentation is currently in:
 
 - `bflbwifictrl/COMMANDS_CN.md`
 
-## 5. 自动配网
+## 5. Automatic Network Configuration
 
-`build.sh` 默认会以 `ENABLE_NETIF_AUTO_CONFIG=1` 编译 userspace。
+`build.sh` builds userspace with `ENABLE_NETIF_AUTO_CONFIG=1` by default.
 
-因此当 device 侧上报 `GOTIP` 后，host 侧会自动尝试配置：
+After the device reports `GOTIP`, the host will try to configure:
 
-- `mr_eth0` 的 IP
-- 默认网关
+- the IP address of `mr_eth0`
+- the default gateway
 - DNS
 
-如果 `connect_ap` 成功但 host 仍无法联网，请检查：
+If `connect_ap` succeeds but the host still cannot reach the network, check:
 
-- `status` 是否已经进入 `GOTIP`
-- `mr_eth0` 是否已获取地址
-- 系统里的 NetworkManager、dhcpcd 等服务是否覆盖了 NetHub 配置
+- whether `status` has reached `GOTIP`
+- whether `mr_eth0` has an address
+- whether services such as NetworkManager or `dhcpcd` override the NetHub
+  configuration
 
 ## 6. USER Virtual Channel
 
-如果客户需要在 host 和 device 之间传输私有数据，可使用 USER Virtual Channel。
+If you need to transfer private data between the host and device, use the USER
+Virtual Channel.
 
-头文件：
+Header:
 
 - `virtualchan/nethub_vchan.h`
 
-常用接口：
+Common APIs:
 
 ```c
 int nethub_vchan_init(void);
@@ -196,46 +212,50 @@ int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
 int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
 ```
 
-更多说明见：
+For more details, see:
 
-- `virtualchan/README_CN.md`
+- `virtualchan/README.md`
 
-如果应用需要在发送前判断当前 virtual channel 是否已经 ready，可选读取：
+If an application needs to check whether the virtual channel is ready before
+sending, the following snapshot fields are the usual checks:
 
 - `link_state == NETHUB_VCHAN_LINK_UP`
-  - 表示链路已可收发
+  - the link is ready for transfer
 - `host_state == NETHUB_VCHAN_HOST_STATE_DEVICE_RUN`
-  - 表示 host 侧已经和 device 完成握手
+  - the host has completed the handshake with the device
 
-## 7. 常见问题
+## 7. FAQ
 
-### 7.1 `bflbwifid` 启动失败
+### 7.1 `bflbwifid` fails to start
 
-优先检查：
+Check first:
 
-- backend 选择是否和 device 匹配
-- `/dev/ttyAT0` 是否存在
-- `mr_sdio.ko` 是否已成功加载
-- 硬件链路是否正常
+- whether the backend selection matches the device configuration
+- whether `/dev/ttyAT0` exists
+- whether `mr_sdio.ko` loaded successfully
+- whether the hardware link is healthy
 
-### 7.2 `build.sh unload` 提示模块被占用
+### 7.2 `build.sh unload` reports that the module is busy
 
-优先确认：
+Check first:
 
-- 是否还有 `bflbwifid` 正在运行
-- 是否还有 `nethub_vchan_app` 正在运行
+- whether `bflbwifid` is still running
+- whether `nethub_vchan_app` is still running
 
-通常直接执行：
+Usually you can just run:
 
 ```bash
 sudo ./build.sh unload
 ```
 
-脚本会先尝试停止已知持有者，再执行卸载。
+The script will first stop known holders and then unload the module.
 
-## 8. 相关文档
+## 8. Related Documents
 
-- `HOST_ARCHITECTURE_CN.md`
-- `bflbwifictrl/README_CN.md`
+- `examples/wifi/nethub/README.md`
+- `examples/wifi/nethub/docs/NetHub.md`
+- `examples/wifi/nethub/docs/NetHubQuickBringup.md`
+- `HOST_ARCHITECTURE.md`
+- `bflbwifictrl/README.md`
 - `bflbwifictrl/COMMANDS_CN.md`
-- `virtualchan/README_CN.md`
+- `virtualchan/README.md`

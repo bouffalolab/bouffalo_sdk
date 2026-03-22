@@ -91,61 +91,72 @@ void bflb_mjpeg_init(struct bflb_device_s *dev, const struct bflb_mjpeg_config_s
             regval |= (3 << MJPEG_REG_YUV_MODE_SHIFT);
             bflb_mjpeg_set_yuv422_interleave_order(dev, 0, 1, 2, 3);
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 7) >> 3);
+            if (config->resolution_x % 16) {
+                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
+            }
             break;
         case MJPEG_FORMAT_YUV422_YVYU:
             regval |= (3 << MJPEG_REG_YUV_MODE_SHIFT);
             bflb_mjpeg_set_yuv422_interleave_order(dev, 0, 3, 2, 1);
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 7) >> 3);
+            if (config->resolution_x % 16) {
+                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
+            }
             break;
         case MJPEG_FORMAT_YUV422_UYVY:
             regval |= (3 << MJPEG_REG_YUV_MODE_SHIFT);
             bflb_mjpeg_set_yuv422_interleave_order(dev, 1, 0, 3, 2);
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 7) >> 3);
+            if (config->resolution_x % 16) {
+                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
+            }
             break;
         case MJPEG_FORMAT_YUV422_VYUY:
             regval |= (3 << MJPEG_REG_YUV_MODE_SHIFT);
             bflb_mjpeg_set_yuv422_interleave_order(dev, 1, 2, 3, 0);
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 7) >> 3);
+            if (config->resolution_x % 16) {
+                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
+            }
             break;
         case MJPEG_FORMAT_YUV422SP_NV16:
             regval |= (2 << MJPEG_REG_YUV_MODE_SHIFT);
             regval |= MJPEG_REG_ORDER_U_EVEN;
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 7) >> 3);
+            if (config->resolution_x % 16) {
+                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
+            }
             break;
         case MJPEG_FORMAT_YUV422SP_NV61:
             regval |= (2 << MJPEG_REG_YUV_MODE_SHIFT);
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 7) >> 3);
+            if (config->resolution_x % 16) {
+                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
+            }
             break;
         case MJPEG_FORMAT_YUV420SP_NV12:
             regval |= (0 << MJPEG_REG_YUV_MODE_SHIFT);
             regval |= MJPEG_REG_ORDER_U_EVEN;
-
             if (config->resolution_x % 16) {
                 regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
             }
-
+            if (config->resolution_y % 16) {
+                regval |= MJPEG_REG_LAST_HF_HBLK_DMY;
+            }
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 15) >> 4);
             break;
         case MJPEG_FORMAT_YUV420SP_NV21:
             regval |= (0 << MJPEG_REG_YUV_MODE_SHIFT);
-
             if (config->resolution_x % 16) {
                 regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
             }
-
+            if (config->resolution_y % 16) {
+                regval |= MJPEG_REG_LAST_HF_HBLK_DMY;
+            }
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 15) >> 4, (config->resolution_y + 15) >> 4);
             break;
         case MJPEG_FORMAT_GRAY:
             regval |= (1 << MJPEG_REG_YUV_MODE_SHIFT);
-
-            if (config->resolution_x % 16) {
-                regval |= MJPEG_REG_LAST_HF_WBLK_DMY;
-            }
-
-            if (config->resolution_y % 16) {
-                regval |= MJPEG_REG_LAST_HF_HBLK_DMY;
-            }
-
             bflb_mjpeg_set_framesize(dev, (config->resolution_x + 7) >> 3, (config->resolution_y + 7) >> 3);
             break;
 

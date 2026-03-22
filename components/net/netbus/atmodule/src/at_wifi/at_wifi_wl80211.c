@@ -75,10 +75,10 @@ static void evt_handler_wrapper(void (*handler)(void))
 
 static void start_dhcp_tsk(void)
 {
-    extern void _wifi_mgmr_sta_start_dhcpc(void);
+    extern void _wifi_mgmr_sta_link_up(void);
 
     if (at_wifi_config->dhcp_state.bit.sta_dhcp) {
-        _wifi_mgmr_sta_start_dhcpc();
+        _wifi_mgmr_sta_link_up();
     } else {
         //_wifi_mgmr_sta_start_dhcpc();// fixme
     }
@@ -87,7 +87,7 @@ static void start_dhcp_tsk(void)
 static void disconnect_tsk(void)
 {
 #if 0
-    _wifi_mgmr_sta_stop_dhcpc();
+    _wifi_mgmr_sta_link_down();
     if (!at_wifi_config->switch_mode_auto_conn && wl80211_glb.last_connect_params) {
         wl80211_printf("Autoconnect: Reconnecting to %s\r\n", wl80211_glb.last_connect_params->ssid);
         wl80211_sta_connect(wl80211_glb.last_connect_params);
@@ -167,4 +167,3 @@ int at_wifi_start(void)
     at_wifi_main_init();
     return 0;
 }
-

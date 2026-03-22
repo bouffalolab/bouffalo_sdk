@@ -1,5 +1,11 @@
 # NetHub Virtual Channel Guide
 
+If you are new to NetHub bringup, read these first:
+
+- `examples/wifi/nethub/README.md`
+- `examples/wifi/nethub/docs/NetHubQuickBringup.md`
+- `bsp/common/msg_router/linux_host/userspace/nethub/README.md`
+
 ## 1. Overview
 
 NetHub Virtual Channel is a logical message channel carried on the active host link.
@@ -185,3 +191,10 @@ sudo ./nethub_vchan_app
 3. The kernel module must be loaded before use.
 4. If device does not enable `CONFIG_MR_VIRTUALCHAN`, the host USER channel will not work.
 5. If host control-plane and USER traffic coexist, keep customer private traffic on `USER` and do not reuse the `AT` type.
+
+## 9. Related Docs
+
+- `examples/wifi/nethub/README.md`
+- `examples/wifi/nethub/docs/NetHub.md`
+- `examples/wifi/nethub/docs/NetHubVirtualChannel.md`
+- `bsp/common/msg_router/linux_host/userspace/nethub/README.md`

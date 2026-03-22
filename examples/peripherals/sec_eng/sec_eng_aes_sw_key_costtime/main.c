@@ -15,6 +15,16 @@ ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_input_buf[16 * 1024];
 ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_enc_buf[16 * 1024];
 ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_dec_buf[16 * 1024];
 
+#define AES_COSTTIME_MAX_BLOCK 1024U
+
+static void emit_done_marker(const char *marker)
+{
+    for (uint32_t i = 0; i < 5; i++) {
+        printf("%s\r\n", marker);
+        bflb_mtimer_delay_ms(20);
+    }
+}
+
 void mbedtls_check(uint32_t j)
 {
     for (uint32_t i = 0; i < 16 * j; i++) {
@@ -46,7 +56,7 @@ int main(void)
 
     bflb_mtimer_delay_ms(500);
 
-    for (uint32_t i = 1; i <= 1024; i++) {
+    for (uint32_t i = 1; i <= AES_COSTTIME_MAX_BLOCK; i <<= 1) {
         printf("test aes ecb 128 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_ECB);
         bflb_aes_setkey(aes, aes_256bit_key, 128);
@@ -71,7 +81,7 @@ int main(void)
 #endif
     }
 
-    for (uint32_t i = 1; i <= 1024; i++) {
+    for (uint32_t i = 1; i <= AES_COSTTIME_MAX_BLOCK; i <<= 1) {
         printf("test aes cbc 128 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_CBC);
         bflb_aes_setkey(aes, aes_256bit_key, 128);
@@ -102,7 +112,7 @@ int main(void)
 #endif
     }
 
-    for (uint32_t i = 1; i <= 1024; i++) {
+    for (uint32_t i = 1; i <= AES_COSTTIME_MAX_BLOCK; i <<= 1) {
         printf("test aes ctr 128 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_CTR);
         bflb_aes_setkey(aes, aes_256bit_key, 128);
@@ -133,7 +143,7 @@ int main(void)
     }
 
 #if !defined(BL602) && !defined(BL702)
-    for (uint32_t i = 1; i <= 1024; i++) {
+    for (uint32_t i = 1; i <= AES_COSTTIME_MAX_BLOCK; i <<= 1) {
         printf("test aes xts 128 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_XTS);
         bflb_aes_setkey(aes, aes_256bit_key, 128);
@@ -165,8 +175,9 @@ int main(void)
 #endif
 
     printf("aes success\r\n");
+    emit_done_marker("sec_eng_aes_sw_key_costtime done");
     bflb_group0_release_aes_access(aes);
     while (1) {
-        bflb_mtimer_delay_ms(2000);
+        bflb_mtimer_delay_ms(1000);
     }
 }

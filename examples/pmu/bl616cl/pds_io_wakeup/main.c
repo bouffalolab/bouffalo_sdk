@@ -11,7 +11,7 @@
 #include "bl616cl_pm.h"
 #include "bflb_flash.h"
 
-volatile lp_gpio_cfg_Type lp_wake_io_cfg;
+volatile lp_gpio_cfg_type lp_wake_io_cfg;
 
 struct bflb_device_s *gpio;
 
@@ -83,10 +83,8 @@ int main(void)
 
     gpio = bflb_device_get_by_name("gpio");
 
-    /* gpio latch clear */
-    for (uint8_t i = 0; i < GPIO_PIN_MAX; i++) {
-        PDS_Disable_GPIO_Keep(i);
-    }
+    /* gpio latch clear - clear PDS GPIO latch for GPIO 6-36 */
+    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, 0);
 
     app_print_wakeup_source();
     pm_pds_mask_all_wakeup_src();
@@ -165,7 +163,7 @@ int pds_io_wakeup_test(int argc, char **argv)
         printf("[ERR]test_io >= %d\r\n", GPIO_PIN_MAX);
         return 0;
     }
-    pm_lowpower_gpio_cfg((lp_gpio_cfg_Type *)&lp_wake_io_cfg);
+    pm_lowpower_gpio_cfg((lp_gpio_cfg_type *)&lp_wake_io_cfg);
     PDS_Set_All_GPIO_Pad_IntClr();
 
     switch (pds_mode) {

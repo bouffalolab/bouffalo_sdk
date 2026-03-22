@@ -11,6 +11,7 @@
 #define __SHELL_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -162,6 +163,7 @@ struct shell_sysvar {
 void shell_handler(uint8_t data);
 int shell_set_prompt(const char *prompt);
 int shell_set_print(void (*shell_printf)(char *fmt, ...));
+int shell_set_echo(bool enabled);
 void shell_init(void);
 void shell_init_with_task(struct bflb_device_s *shell);
 void shell_exe_cmd(uint8_t *cmd, uint16_t len);

@@ -166,11 +166,12 @@ typedef struct mm_allocator {
     void *(*malloc)(struct mm_heap *heap, size_t size, uint32_t flags);
     void (*free)(struct mm_heap *heap, void *ptr);
     void *(*realloc)(struct mm_heap *heap, void *ptr, size_t newsize);
-
-    /* State query interface */
-    void (*get_usage_info)(struct mm_heap *heap, struct mm_usage_info *info);
+    /* State query interface - must be implemented  */
+    size_t (*get_block_size)(struct mm_heap *heap, void *ptr);
+    size_t (*get_free_size)(struct mm_heap *heap);
 
     /* Debug and validation interfaces - optional */
+    void (*get_usage_info)(struct mm_heap *heap, struct mm_usage_info *info);
     void (*dump_pool)(struct mm_heap *heap);
     int (*validate_pool)(struct mm_heap *heap);
 } mm_allocator_t;
@@ -226,6 +227,11 @@ typedef struct mem_manager {
         uint32_t total_free_successes;   ///< Total successful free count
         uint32_t total_malloc_failures;  ///< Total malloc failure count
     } stats;
+#endif
+
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+    /* Global memory watermark tracking */
+    size_t min_free_size; ///< Minimum observed remaining free bytes
 #endif
 
     /* Framework state */
@@ -340,6 +346,42 @@ void *krealloc(void *ptr, size_t newsize);
  * @return Pointer to aligned memory on success, NULL on failure.
  */
 void *kmemalign(size_t size, size_t align);
+
+/**
+ * @brief Query the usable payload size of an allocated block.
+ *
+ * @param ptr Pointer returned by kmalloc/kmemalign/krealloc.
+ * @return Usable payload size in bytes, 0 on failure.
+ */
+size_t kmalloc_size(void *ptr);
+
+/**
+ * @brief Return remaining free bytes.
+ *
+ * @param heap_id Heap ID to query. Pass 0 to return the sum of all active heaps.
+ * @return Remaining free bytes for one heap or the sum of all active heaps, or 0 on failure.
+ */
+size_t kfree_size(uint32_t heap_id);
+
+#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+/**
+ * @brief Get the minimum free-memory watermark.
+ *
+ * Returns the tracked minimum value of kfree_size(0).
+ *
+ * @return Minimum free bytes watermark.
+ */
+size_t kmin_free_size(void);
+
+/**
+ * @brief Reset and return the minimum free-memory watermark.
+ *
+ * Recomputes the watermark from the current total free bytes.
+ *
+ * @return New minimum free bytes watermark after reset.
+ */
+size_t kmin_free_size_reset(void);
+#endif
 
 /* TLSF allocator local declaration */
 extern const mm_allocator_t g_tlsf_allocator;

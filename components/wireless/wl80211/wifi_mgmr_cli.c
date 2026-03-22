@@ -222,6 +222,7 @@ void wifi_ap_start_cmd(int argc, char **argv)
     int opt;
     getopt_env_t getopt_env;
     struct wl80211_ap_settings ap_setting;
+    int channel = 11;
     const char *ssid = NULL;
     const char *password = NULL;
 
@@ -236,7 +237,7 @@ void wifi_ap_start_cmd(int argc, char **argv)
             password = getopt_env.optarg;
             break;
         case 'c': {
-            int channel = atoi(getopt_env.optarg);
+            channel = atoi(getopt_env.optarg);
             if (channel < 1 || channel > 14) {
                 wl80211_printf("Error: Invalid channel %d (1-14)\r\n", channel);
                 return;
@@ -273,8 +274,8 @@ void wifi_ap_start_cmd(int argc, char **argv)
     }
 
     /* Set default AP parameters */
-    ap_setting.beacon_interval = 100;
-    ap_setting.center_freq1 = wl80211_channel_to_freq(11); /* Default channel 11 */
+    ap_setting.beacon_interval = 0;
+    ap_setting.center_freq1 = wl80211_channel_to_freq(channel); /* Default channel 11 */
     ap_setting.channel_width = WL80211_CHAN_WIDTH_20;
     ap_setting.max_power = 0x14;
 
@@ -329,6 +330,23 @@ void wifi_sta_list_cmd(int argc, char **argv)
         wl80211_printf("Total: %d station(s)\r\n", sta_count);
     }
     wl80211_printf("========================================\r\n");
+}
+
+void wifi_sta_ps_enter_cmd(int argc, char **argv)
+{
+    if (!wifi_mgmr_sta_state_get()) {
+        wl80211_printf("Error: Not connected, cannot enter PS mode\r\n");
+        return;
+    }
+
+    wifi_mgmr_sta_ps_enter();
+    wl80211_printf("WiFi PS mode enabled\r\n");
+}
+
+void wifi_sta_ps_exit_cmd(int argc, char **argv)
+{
+    wifi_mgmr_sta_ps_exit();
+    wl80211_printf("WiFi PS mode disabled\r\n");
 }
 
 /* CLI command registration moved to wl80211_platform.c (platform-specific) */

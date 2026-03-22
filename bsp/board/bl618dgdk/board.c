@@ -363,7 +363,7 @@ static void console_init()
 {
 #ifdef CONFIG_CONSOLE_WO
     wo = bflb_device_get_by_name("wo");
-    bflb_wo_uart_init(wo, 2000000, GPIO_PIN_11);
+    bflb_wo_uart_init(wo, CONFIG_CONSOLE_UART_BAUDRATE, GPIO_PIN_11);
     bflb_wo_set_console(wo);
 #else
 
@@ -376,7 +376,7 @@ static void console_init()
 #endif
 
     struct bflb_uart_config_s cfg = { 0 };
-    cfg.baudrate = 2000000;
+    cfg.baudrate = CONFIG_CONSOLE_UART_BAUDRATE;
     cfg.data_bits = UART_DATA_BITS_8;
     cfg.stop_bits = UART_STOP_BITS_1;
     cfg.parity = UART_PARITY_NONE;

@@ -14,6 +14,7 @@
 #include <dhcp_server.h>
 
 #include "wl80211_mac.h"
+#include "wl80211_platform.h"
 
 #include "async_event.h"
 
@@ -127,7 +128,7 @@ static void pbuf_custom_raw_free(struct pbuf_custom *pc)
     if (p->cb) {
         p->cb(p->opaque);
     }
-    mem_free(p);
+    wl80211_platform_free_wram_nolimit(p);
 }
 
 int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
@@ -141,7 +142,7 @@ int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned in
     // alloc tx packet in lwip heap (wifi ram)
     uint16_t payload_len = (uint16_t)(LWIP_MEM_ALIGN_SIZE(PBUF_RAW_TX) + LWIP_MEM_ALIGN_SIZE(len));
 
-    pc = (struct pbuf_custom_raw *)mem_malloc(payload_len + sizeof(struct pbuf_custom_raw));
+    pc = (struct pbuf_custom_raw *)wl80211_platform_malloc_wram_nolimit(payload_len + sizeof(struct pbuf_custom_raw));
     if (!pc) {
         return -1;
     }
@@ -176,33 +177,6 @@ int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned in
     }
 }
 
-/**
- * Allocate memory in WRAM region (WiFi RAM)
- *
- * This function allocates memory from the WiFi RAM (WRAM) region using lwIP's
- * memory management. WRAM is required for WiFi hardware to access packet buffers.
- *
- * @param size Size of memory to allocate in bytes
- * @return Pointer to allocated memory, or NULL on failure
- */
-void *wl80211_platform_malloc_wram(size_t size)
-{
-    /* Use lwIP's mem_malloc which allocates from WRAM heap */
-    return mem_malloc(size);
-}
-
-/**
- * Free memory allocated from WRAM region
- *
- * @param ptr Pointer to memory allocated by wl80211_platform_malloc_wram
- */
-void wl80211_platform_free_wram(void *ptr)
-{
-    if (ptr) {
-        mem_free(ptr);
-    }
-}
-
 static err_t wl80211_netif_init(struct netif *net_if)
 {
     err_t status = ERR_OK;
@@ -220,11 +194,11 @@ static err_t wl80211_netif_init(struct netif *net_if)
     net_if->output = etharp_output;
 
 #ifdef CFG_IPV6
-    net_if->flags = NETIF_FLAG_LINK_UP | NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET |
-                    NETIF_FLAG_IGMP | NETIF_FLAG_MLD6;
+    net_if->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET |
+                    NETIF_FLAG_IGMP | NETIF_FLAG_MLD6 | NETIF_FLAG_UP;
     net_if->output_ip6 = ethip6_output;
 #else
-    net_if->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET | NETIF_FLAG_LINK_UP | NETIF_FLAG_UP;
+    net_if->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET | NETIF_FLAG_UP;
 #endif
 
     net_if->hwaddr_len = ETHARP_HWADDR_LEN;
@@ -274,9 +248,10 @@ static void ip_got_cb(struct netif *netif)
     }
 }
 
-void _wifi_mgmr_sta_start_dhcpc(void)
+void _wifi_mgmr_sta_link_up(void)
 {
     netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
+    netif_set_link_up(&vif2netif[WL80211_VIF_STA]);
 
     if (netifapi_dhcp_start(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
         wl80211_printf("start dhcpc success.\n");
@@ -287,9 +262,10 @@ void _wifi_mgmr_sta_start_dhcpc(void)
     }
 }
 
-void _wifi_mgmr_sta_stop_dhcpc(void)
+void _wifi_mgmr_sta_link_down(void)
 {
-    netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
+    netif_set_link_down(&vif2netif[WL80211_VIF_STA]);
+    netif_set_status_callback(&vif2netif[WL80211_VIF_STA], NULL);
 
     if (netifapi_dhcp_stop(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
         wl80211_printf("stop dhcpc success.\n");
@@ -313,8 +289,8 @@ void _wifi_mgmr_ip_got_dump(void)
         connected = "";
     }
 
-    extern size_t kfree_size(void);
-    wl80211_printf("Memory left is %d Bytes\r\n", kfree_size());
+    extern size_t kfree_size(uint32_t heap_id);
+    wl80211_printf("Memory left is %d Bytes\r\n", kfree_size(0));
     wl80211_printf("[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n", netif->num, netif->name[0],
                    netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3],
                    netif->hwaddr[4], netif->hwaddr[5], ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr)) & 0xff,

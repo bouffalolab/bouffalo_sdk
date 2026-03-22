@@ -4,6 +4,8 @@
 #else
 
 #include "board_gpio.h"
+#include "bflb_audac.h"
+#include "bflb_auadc.h"
 #include "bflb_gpio.h"
 #include "bl616_glb.h"
 
@@ -98,6 +100,43 @@ void board_dac_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* DAC_CHB */
     bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+}
+
+void board_auadc_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+#ifdef CONFIG_AUDIO_MIC_PDM_MODE
+    /* data */
+    bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    /* clk */
+    bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+
+#else
+    /* auadc ch4 */
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    /* auadc ch7 */
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+#endif
+    /* clock cfg */
+    GLB_Config_AUDIO_PLL_To_491P52M();
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
+}
+
+void board_audac_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+
+    /* audac pwm output mode */
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+
+    /* clock cfg */
+    GLB_Config_AUDIO_PLL_To_491P52M();
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
 }
 
 void board_emac_gpio_init(void)

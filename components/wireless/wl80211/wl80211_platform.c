@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "mm.h"
+
 #include "wl80211_mac.h"
 #include "wl80211_platform.h"
 
@@ -226,6 +228,146 @@ int platform_get_mac(uint8_t vif_type, uint8_t mac[6])
     return mfg_media_read_macaddr_with_lock((uint8_t *)mac, 1);
 }
 
+/*
+ ****************************************************************************************
+ * WRAM MEMORY ALLOCATION FUNCTIONS
+ ****************************************************************************************
+ */
+
+/* The total memory size limit used by WL80211 */
+#if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+static size_t g_wl80211_wram_mem_size_malloced;
+static size_t g_wl80211_wram_mem_size_freed;
+#endif
+/* The total memory count limit used by WL80211 */
+#if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+static size_t g_wl80211_wram_mem_cnt_malloced;
+static size_t g_wl80211_wram_mem_cnt_freed;
+#endif
+
+/**
+ * @brief Allocate memory in WRAM region (WiFi RAM)
+ *
+ * This function allocates memory from the WiFi RAM (WRAM) region.
+ * It also tracks the total allocated memory size and count, and enforces limits if configured.
+ *
+ * @param[in] size Size of memory to allocate in bytes
+ * @return Pointer to allocated memory, or NULL on failure
+ *
+ * @note Memory allocated by this function MUST be freed using wl80211_platform_free_wram()
+ */
+void *wl80211_platform_malloc_wram(size_t size)
+{
+    /* Check memory size limit */
+#if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+    if (g_wl80211_wram_mem_size_malloced - g_wl80211_wram_mem_size_freed + size > CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT) {
+        return NULL;
+    }
+#endif
+    /* Check memory count limit */
+#if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+    if (g_wl80211_wram_mem_cnt_malloced - g_wl80211_wram_mem_cnt_freed + 1 > CONFIG_WL80211_WRAM_MEM_CNT_LIMIT) {
+        return NULL;
+    }
+#endif
+
+    void *ptr = kmalloc(size, MM_FLAG_HEAP_WRAM_0);
+    if (!ptr) {
+        return NULL;
+    }
+
+    /* Update memory usage size */
+#if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+    g_wl80211_wram_mem_size_malloced += kmalloc_size(ptr);
+#endif
+    /* Update memory usage count */
+#if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+    g_wl80211_wram_mem_cnt_malloced += 1;
+#endif
+
+    return ptr;
+}
+
+/**
+ * @brief Free memory from WRAM region
+ *
+ * Frees memory that was allocated by wl80211_platform_malloc_wram().
+ *
+ * @param[in] ptr Pointer to memory to free
+ */
+void wl80211_platform_free_wram(void *ptr)
+{
+    if (!ptr) {
+        return;
+    }
+
+    /* Update memory freed size */
+#if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+    g_wl80211_wram_mem_size_freed += kmalloc_size(ptr);
+#endif
+    /* Update memory freed count */
+#if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+    g_wl80211_wram_mem_cnt_freed += 1;
+#endif
+
+    kfree(ptr);
+}
+
+#if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+/** Get current WRAM memory size usage
+ *
+ * @return Current allocated memory size in bytes
+ */
+size_t wl80211_platform_get_wram_mem_size_usage(void)
+{
+    return g_wl80211_wram_mem_size_malloced - g_wl80211_wram_mem_size_freed;
+}
+#endif
+
+#if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+/** Get current WRAM memory count usage
+ *
+ * @return Current allocated memory count
+ */
+size_t wl80211_platform_get_wram_mem_cnt_usage(void)
+{
+    return g_wl80211_wram_mem_cnt_malloced - g_wl80211_wram_mem_cnt_freed;
+}
+#endif
+
+/** * @brief Allocate memory in WRAM region without limit
+ *
+ * This function allocates memory from the WiFi RAM (WRAM) region without enforcing any limits.
+ * It is intended for use cases where the caller needs to bypass the standard memory usage tracking.
+ * For example, when sending the Wi-Fi management frames
+ *
+ * @param[in] size Size of memory to allocate in bytes
+ * @return Pointer to allocated memory, or NULL on failure
+ *
+ * @note Memory allocated by this function MUST be freed using wl80211_platform_free_wram_nolimit()
+ */
+void *wl80211_platform_malloc_wram_nolimit(size_t size)
+{
+    return kmalloc(size, MM_FLAG_HEAP_WRAM_0);
+}
+
+/** * @brief Free memory allocated from WRAM region without limit
+ *
+ * Frees memory that was allocated by wl80211_platform_malloc_wram_nolimit().
+ *
+ * @param[in] ptr Pointer to memory to free
+ */
+void wl80211_platform_free_wram_nolimit(void *ptr)
+{
+    kfree(ptr);
+}
+
+/*
+ ****************************************************************************************
+ * PRINTF FUNCTION
+ ****************************************************************************************
+ */
+
 int wl80211_printf(const char *fmt, ...)
 {
     va_list args;
@@ -257,6 +399,8 @@ extern void wifi_country_code_set_cmd(int argc, char **argv);
 extern void wifi_ap_start_cmd(int argc, char **argv);
 extern void wifi_ap_stop_cmd(int argc, char **argv);
 extern void wifi_sta_list_cmd(int argc, char **argv);
+extern void wifi_sta_ps_enter_cmd(int argc, char **argv);
+extern void wifi_sta_ps_exit_cmd(int argc, char **argv);
 
 /* CLI command exports - automatically registered when shell component is enabled */
 SHELL_CMD_EXPORT_ALIAS(wifi_connect_cmd, wifi_sta_connect, wifi station connect);
@@ -269,5 +413,7 @@ SHELL_CMD_EXPORT_ALIAS(wifi_country_code_set_cmd, wifi_country_code_set, wifi se
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_start_cmd, wifi_ap_start, wifi ap start);
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_stop_cmd, wifi_ap_stop, wifi ap stop);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_list_cmd, wifi_sta_list, wifi ap sta list);
+SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_enter_cmd, wifi_sta_ps_enter, wifi sta enter ps mode);
+SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_exit_cmd, wifi_sta_ps_exit, wifi sta exit ps mode);
 
 #endif /* CONFIG_SHELL */

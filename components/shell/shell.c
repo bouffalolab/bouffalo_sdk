@@ -31,6 +31,7 @@ struct shell_sysvar *_sysvar_table_end = NULL;
 struct shell _shell;
 static struct shell *shell;
 static char *shell_prompt_custom = NULL;
+static bool shell_echo_enabled = true;
 
 extern void shell_abort_exec(int sig);
 extern int shell_start_exec(cmd_function_t func, int argc, char *argv[]);
@@ -152,6 +153,10 @@ static int str_common(const char *str1, const char *str2)
 
 static void shell_handle_history(struct shell *shell)
 {
+    if (!shell_echo_enabled) {
+        return;
+    }
+
     SHELL_PRINTF("\033[2K\r");
     SHELL_PROMPT("%s", shell_get_prompt());
     SHELL_PRINTF("%s", shell->line);
@@ -645,7 +650,9 @@ void shell_handler(uint8_t data)
             shell_sig_func(SHELL_SIGINT);
             shell_sig_func = NULL;
         } 
-        SHELL_PRINTF("^C");
+        if (shell_echo_enabled) {
+            SHELL_PRINTF("^C");
+        }
         data = '\r';
     }
 
@@ -702,7 +709,9 @@ void shell_handler(uint8_t data)
         } else if (data == 0x44) /* left key */
         {
             if (shell->line_curpos) {
-                SHELL_PRINTF("\b");
+                if (shell_echo_enabled) {
+                    SHELL_PRINTF("\b");
+                }
                 shell->line_curpos--;
             }
 
@@ -710,7 +719,9 @@ void shell_handler(uint8_t data)
         } else if (data == 0x43) /* right key */
         {
             if (shell->line_curpos < shell->line_position) {
-                SHELL_PRINTF("%c", shell->line[shell->line_curpos]);
+                if (shell_echo_enabled) {
+                    SHELL_PRINTF("%c", shell->line[shell->line_curpos]);
+                }
                 shell->line_curpos++;
             }
             return;
@@ -727,7 +738,9 @@ void shell_handler(uint8_t data)
 
         /* move the cursor to the beginning of line */
         for (i = 0; i < shell->line_curpos; i++) {
-            SHELL_PRINTF("\b");
+            if (shell_echo_enabled) {
+                SHELL_PRINTF("\b");
+            }
         }
 
         /* auto complete */
@@ -755,14 +768,18 @@ void shell_handler(uint8_t data)
                     shell->line_position - shell->line_curpos);
             shell->line[shell->line_position] = 0;
 
-            SHELL_PRINTF("\b%s  \b", &shell->line[shell->line_curpos]);
+            if (shell_echo_enabled) {
+                SHELL_PRINTF("\b%s  \b", &shell->line[shell->line_curpos]);
 
-            /* move the cursor to the origin position */
-            for (i = shell->line_curpos; i <= shell->line_position; i++) {
-                SHELL_PRINTF("\b");
+                /* move the cursor to the origin position */
+                for (i = shell->line_curpos; i <= shell->line_position; i++) {
+                    SHELL_PRINTF("\b");
+                }
             }
         } else {
-            SHELL_PRINTF("\b \b");
+            if (shell_echo_enabled) {
+                SHELL_PRINTF("\b \b");
+            }
             shell->line[shell->line_position] = 0;
         }
 
@@ -800,15 +817,19 @@ void shell_handler(uint8_t data)
                 shell->line_position - shell->line_curpos);
         shell->line[shell->line_curpos] = data;
 
-        SHELL_PRINTF("%s", &shell->line[shell->line_curpos]);
+        if (shell_echo_enabled) {
+            SHELL_PRINTF("%s", &shell->line[shell->line_curpos]);
 
-        /* move the cursor to new position */
-        for (i = shell->line_curpos; i < shell->line_position; i++) {
-            SHELL_PRINTF("\b");
+            /* move the cursor to new position */
+            for (i = shell->line_curpos; i < shell->line_position; i++) {
+                SHELL_PRINTF("\b");
+            }
         }
     } else {
         shell->line[shell->line_position] = data;
-        SHELL_PRINTF("%c", data);
+        if (shell_echo_enabled) {
+            SHELL_PRINTF("%c", data);
+        }
     }
 
     data = 0;
@@ -860,6 +881,12 @@ int shell_set_print(void (*shell_printf)(char *fmt, ...))
         return 0;
     } else
         return -1;
+}
+
+int shell_set_echo(bool enabled)
+{
+    shell_echo_enabled = enabled;
+    return 0;
 }
 
 /*

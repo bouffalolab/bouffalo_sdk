@@ -112,6 +112,7 @@ void sdio2_reset_irq_callback(void *arg)
             .buff_len = SDIO2_TEST_SIZE,
             .user_arg = NULL,
         };
+        bflb_l1c_dcache_invalidate_range(buff, SDIO2_TEST_SIZE);
         bflb_sdio2_dnld_port_push(sdio2_hd, &dnld_desc);
     }
 }
@@ -188,6 +189,7 @@ void sdio2_test(void)
             .buff_len = SDIO2_TEST_SIZE,
             .user_arg = NULL,
         };
+        bflb_l1c_dcache_invalidate_range(buff, SDIO2_TEST_SIZE);
         bflb_sdio2_dnld_port_push(sdio2_hd, &dnld_desc);
     }
 

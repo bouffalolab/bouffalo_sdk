@@ -16,6 +16,11 @@
 #include <stdint.h>
 #include "wl80211.h"
 
+#define WG_FLAG_UPDATE(f, v) \
+    rtos_lock();             \
+    wl80211_glb.f = v;       \
+    rtos_unlock();
+
 extern const struct platform_feature {
     uint32_t he_mcs  : 2;
     uint32_t band_5g : 1;
@@ -199,12 +204,20 @@ int platform_feature_index(void);
  ****************************************************************************************
  */
 
+/* The total memory size limit used by WL80211 */
+#ifndef CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+#define CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT (32 * 1024)
+#endif
+/* The total memory count limit used by WL80211 */
+#ifndef CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+#define CONFIG_WL80211_WRAM_MEM_CNT_LIMIT (0)
+#endif
+
 /**
- * @brief Allocate memory in WRAM (WiFi RAM) region
+ * Allocate memory in WRAM region (WiFi RAM)
  *
- * Allocates memory from the WiFi RAM (WRAM) region. WRAM is required for
- * WiFi hardware DMA access to packet buffers. This function uses lwIP's
- * memory management internally.
+ * This function allocates memory from the WiFi RAM (WRAM) region.
+ * It also tracks the total allocated memory size and count, and enforces limits if configured.
  *
  * @param[in] size Size of memory to allocate in bytes
  * @return Pointer to allocated memory, or NULL on failure
@@ -218,8 +231,45 @@ void *wl80211_platform_malloc_wram(size_t size);
  *
  * Frees memory that was allocated by wl80211_platform_malloc_wram().
  *
- * @param[in] ptr Pointer to memory to free (can be NULL)
+ * @param[in] ptr Pointer to memory to free
  */
 void wl80211_platform_free_wram(void *ptr);
+
+#if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
+/** Get current WRAM memory size usage
+ *
+ * @return Current allocated memory size in bytes
+ */
+size_t wl80211_platform_get_wram_mem_size_usage(void);
+#endif
+
+#if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
+/** Get current WRAM memory count usage
+ *
+ * @return Current allocated memory count
+ */
+size_t wl80211_platform_get_wram_mem_cnt_usage(void);
+#endif
+
+/** * @brief Allocate memory in WRAM region without limit
+ *
+ * This function allocates memory from the WiFi RAM (WRAM) region without enforcing any limits.
+ * It is intended for use cases where the caller needs to bypass the standard memory usage tracking.
+ * For example, when sending the Wi-Fi management frames
+ *
+ * @param[in] size Size of memory to allocate in bytes
+ * @return Pointer to allocated memory, or NULL on failure
+ *
+ * @note Memory allocated by this function MUST be freed using wl80211_platform_free_wram_nolimit()
+ */
+void *wl80211_platform_malloc_wram_nolimit(size_t size);
+
+/** * @brief Free memory allocated from WRAM region without limit
+ *
+ * Frees memory that was allocated by wl80211_platform_malloc_wram_nolimit().
+ *
+ * @param[in] ptr Pointer to memory to free
+ */
+void wl80211_platform_free_wram_nolimit(void *ptr);
 
 #endif /* _WL80211_PLATFORM_H_ */

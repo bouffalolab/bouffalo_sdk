@@ -358,6 +358,9 @@ typedef struct control_t {
 
     /* Head of free lists. */
     block_header_t *blocks[FL_INDEX_COUNT][SL_INDEX_COUNT];
+
+    /* Tracked free payload bytes in all free blocks. */
+    size_t free_size;
 } control_t;
 
 /* A type used for casting when doing pointer arithmetic. */
@@ -572,12 +575,16 @@ static block_header_t *search_suitable_block(control_t *control, int *fli, int *
 /* Remove a free block from the free list.*/
 static void remove_free_block(control_t *control, block_header_t *block, int fl, int sl)
 {
+    const size_t block_bytes = block_size(block);
     block_header_t *prev = block->prev_free;
     block_header_t *next = block->next_free;
     tlsf_assert(prev && "prev_free field can not be null");
     tlsf_assert(next && "next_free field can not be null");
+    tlsf_assert(control->free_size >= block_bytes && "tracked free size underflow");
     next->prev_free = prev;
     prev->next_free = next;
+
+    control->free_size -= block_bytes;
 
     /* If this block is the head of the free list, set new head. */
     if (control->blocks[fl][sl] == block) {
@@ -598,6 +605,7 @@ static void remove_free_block(control_t *control, block_header_t *block, int fl,
 /* Insert a free block into the free block list. */
 static void insert_free_block(control_t *control, block_header_t *block, int fl, int sl)
 {
+    const size_t block_bytes = block_size(block);
     block_header_t *current = control->blocks[fl][sl];
     tlsf_assert(current && "free list cannot have a null entry");
     tlsf_assert(block && "cannot insert a null entry into the free list");
@@ -613,6 +621,7 @@ static void insert_free_block(control_t *control, block_header_t *block, int fl,
     control->blocks[fl][sl] = block;
     control->fl_bitmap |= (1U << fl);
     control->sl_bitmap[fl] |= (1U << sl);
+    control->free_size += block_bytes;
 }
 
 /* Remove a given block from the free list. */
@@ -785,6 +794,7 @@ static void control_construct(control_t *control)
     control->block_null.prev_free = &control->block_null;
 
     control->fl_bitmap = 0;
+    control->free_size = 0;
     for (i = 0; i < FL_INDEX_COUNT; ++i) {
         control->sl_bitmap[i] = 0;
         for (j = 0; j < SL_INDEX_COUNT; ++j) {
@@ -906,6 +916,12 @@ size_t tlsf_block_size(void *ptr)
         size = block_size(block);
     }
     return size;
+}
+
+size_t tlsf_free_size(tlsf_t tlsf)
+{
+    const control_t *control = tlsf_cast(const control_t *, tlsf);
+    return control ? control->free_size : 0;
 }
 
 int tlsf_check_pool(pool_t pool)

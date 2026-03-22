@@ -384,12 +384,12 @@ int net_l2_socket_create(net_al_if_t net_if, uint16_t ethertype);
  ****************************************************************************************
  * @brief Delete a L2 (aka ethernet) socket
  *
- * @param[in] sock Socket descriptor returned by @ref net_l2_socket_create
+ * @param[in] net_if Pointer to the net_if structure
  *
  * @return 0 on success and != 0 if error occurred.
  ****************************************************************************************
  **/
-int net_l2_socket_delete(void);
+int net_l2_socket_delete(net_al_if_t net_if);
 
 /**
  ****************************************************************************************

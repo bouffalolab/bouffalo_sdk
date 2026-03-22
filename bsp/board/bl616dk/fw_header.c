@@ -115,7 +115,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .basic_cfg.cpu_master_id = 0x0,      /* [14: 11] master id */
     .basic_cfg.notload_in_bootrom = 0x0, /* [15]     notload in bootrom */
     .basic_cfg.crc_ignore = 0x1,         /* [16]     ignore crc */
+#ifndef CONFIG_ENABLE_IMG_HASH
     .basic_cfg.hash_ignore = 0x1,        /* [17]     hash ignore */
+#else
+    .basic_cfg.hash_ignore = 0x0,        /* [17]     hash ignore */
+#endif
     .basic_cfg.power_on_mm = 0x1,        /* [18]     power on mm */
     .basic_cfg.em_sel = 0x1,             /* [21: 19] em_sel */
     .basic_cfg.cmds_en = 0x1,            /* [22]     command spliter enable */

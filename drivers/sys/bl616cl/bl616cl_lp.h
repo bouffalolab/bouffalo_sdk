@@ -397,6 +397,12 @@ extern uint32_t __lpfw_share_end[];   /* ld symbol */
 extern iot2lp_para_t *const iot2lp_para;
 extern bl_lp_fw_cfg_t lpfw_cfg;
 
+/* LP_HOOK */
+void lp_hook_pre_sys(void *) __attribute__((weak));
+void lp_hook_pre_user(void *) __attribute__((weak));
+void lp_hook_pre_sleep(iot2lp_para_t *) __attribute__((weak));
+void lp_hook_post_sys(iot2lp_para_t *) __attribute__((weak));
+
 int bl_lp_sys_callback_register(bl_lp_cb_t enter_callback, void *enter_arg, bl_lp_cb_t exit_callback, void *exit_arg);
 int bl_lp_user_callback_register(bl_lp_cb_t enter_callback, void *enter_arg, bl_lp_cb_t exit_callback, void *exit_arg);
 

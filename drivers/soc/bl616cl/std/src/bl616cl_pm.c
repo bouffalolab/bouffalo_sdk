@@ -1318,9 +1318,21 @@ char *pm_get_trig_mode_desc(int index)
 
 void pm_set_wakeup_callback(void (*wakeup_callback)(void))
 {
-    BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
-    /* Set HBN flag */
-    BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+    uint32_t chip_version = 0;
+
+    /* get chip version*/
+    chip_version = BL_RD_WORD(0x90018800);
+    if (chip_version == 0x0616a002) {
+        BL_WR_WORD(BL616CL_OCRAM_BASE + 8, (uint32_t)wakeup_callback);
+        /* Set HBN flag */
+        BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+        BL_WR_WORD(BL616CL_OCRAM_BASE, 0x4e42484d);
+        BL_WR_WORD(BL616CL_OCRAM_BASE + 4, 0x4e42484d);
+    } else {
+        BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
+        /* Set HBN flag */
+        BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+    }
 }
 
 void pm_set_boot2_app_jump_para(uint32_t para)

@@ -1,12 +1,11 @@
-= Release 1.3.7 =
+= Release 1.4.0 =
 Released: 2026-02
 
 == FlashCube ==
 Features:
-1. rename chipname
+1. rename bl616l as bl616cl, bl616d as bl618dg
+2. remove bl628, bl808, bl606p
 
-Bug Fixes:
-None
 
 = Release 1.3.3 =
 Released: 2025-09

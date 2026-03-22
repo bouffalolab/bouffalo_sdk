@@ -163,3 +163,61 @@ float bflb_efuse_get_adc_gain_trim(struct bflb_device_s *dev)
 
     return coe;
 }
+
+/****************************************************************************/ /**
+ * @brief  Efuse write optional MAC address
+ *
+ * @param  slot: MAC address slot
+ * @param  mac[6]: MAC address buffer
+ * @param  program: Whether program
+ *
+ * @return 0 or -1
+ *
+*******************************************************************************/
+int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program)
+{
+    uint8_t *maclow = (uint8_t *)mac;
+    uint8_t *machigh = (uint8_t *)(mac + 4);
+    uint32_t tmpval;
+    uint32_t i = 0, cnt;
+
+    if (slot >= 3) {
+        return -1;
+    }
+
+    /* Change to local order */
+    for (i = 0; i < 3; i++) {
+        tmpval = mac[i];
+        mac[i] = mac[5 - i];
+        mac[5 - i] = tmpval;
+    }
+    /* The low 32 bits */
+
+    tmpval = BL_RDWD_FRM_BYTEP(maclow);
+    if (slot == 0) {
+        bflb_ef_ctrl_write_direct(NULL, 0x04, &tmpval, 1, program);
+    } else if (slot == 1) {
+        bflb_ef_ctrl_write_direct(NULL, 0x1C, &tmpval, 1, program);
+    } else if (slot == 2) {
+        bflb_ef_ctrl_write_direct(NULL, 0x24, &tmpval, 1, program);
+    }
+
+    /* The high 16 bits */
+    tmpval = machigh[0] + (machigh[1] << 8);
+    cnt = 0;
+
+    for (i = 0; i < 6; i++) {
+        cnt += bflb_ef_ctrl_get_byte_zero_cnt(mac[i]);
+    }
+
+    tmpval |= ((cnt & 0x3f) << 16);
+    if (slot == 0) {
+        bflb_ef_ctrl_write_direct(NULL, 0x08, &tmpval, 1, program);
+    } else if (slot == 1) {
+        bflb_ef_ctrl_write_direct(NULL, 0x20, &tmpval, 1, program);
+    } else if (slot == 2) {
+        bflb_ef_ctrl_write_direct(NULL, 0x28, &tmpval, 1, program);
+    }
+
+    return 0;
+}

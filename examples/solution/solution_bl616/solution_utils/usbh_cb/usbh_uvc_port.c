@@ -30,7 +30,12 @@ ATTR_FAST_RAM_SECTION void usbh_video_transfer_abort_callback(void)
 /************************************ UVC ISO BUFF PORT ************************************ */
 #define VIDEO_ISO_INTERVAL (2)
 #define VIDEO_ISO_PACKETS  (8 * VIDEO_ISO_INTERVAL)
-#define VIDEO_EP_MPS       3072
+
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_JPEG)
+#define VIDEO_EP_MPS 1024
+#else
+#define VIDEO_EP_MPS 3072
+#endif
 
 static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t video_buffer1[VIDEO_ISO_PACKETS][VIDEO_EP_MPS];
 static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t video_buffer2[VIDEO_ISO_PACKETS][VIDEO_EP_MPS];

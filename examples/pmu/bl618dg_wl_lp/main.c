@@ -21,6 +21,7 @@
 #include "bflb_clock.h"
 
 #ifdef BL616
+#include "bl616_glb.h"
 #include "bl616_pm.h"
 #include "bl616_hbn.h"
 #elif defined(BL616CL)
@@ -43,6 +44,7 @@
 #include "assert.h"
 
 #include "pm_manager.h"
+#include "clock_manager.h"
 
 #define DBG_TAG "MAIN"
 #include "log.h"
@@ -64,10 +66,6 @@
  ****************************************************************************/
 
 static struct bflb_device_s *uart0;
-
-static wifi_conf_t conf = {
-    .country_code = "CN",
-};
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
@@ -106,9 +104,10 @@ void wifi_start_firmware_task(void *param)
 {
     LOG_I("Starting wifi ...\r\n");
 
+#if defined(BL616)
     /* set ble controller EM Size */
-
-    // GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+    GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+#endif
 
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");
@@ -139,7 +138,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
-            wifi_mgmr_init(&conf);
+            wifi_mgmr_task_start();
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
@@ -155,7 +154,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         } break;
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
-            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size(0));
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);            
@@ -201,8 +200,10 @@ static int lp_exit(void *arg)
     /* recovery system_clock_init\peripheral_clock_init\console_init*/
     board_recovery();
 
-    // GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
-
+#if defined(BL616)
+    /* set ble controller EM Size */
+    GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+#endif
 
     board_rf_ctl(BRD_CTL_RF_RESET_DEFAULT, 0);
 
@@ -308,9 +309,17 @@ static void cmd_io_dbg(int argc, char **argv)
     }
 
     if (atoi(argv[1]) <= 34) {
+#ifdef BL616
+        iot2lp_para->debug_io = atoi(argv[1]);
+#else
         iot2lp_para->wifi_debug_io = atoi(argv[1]);
+#endif
     } else {
+#ifdef BL616
+        iot2lp_para->debug_io = 0xFF;
+#else
         iot2lp_para->wifi_debug_io = 0xFF;
+#endif
     }
 }
 
@@ -356,6 +365,7 @@ static void cmd_send_arp(int argc, char **argv)
     return;
 }
 
+#if !defined(BL616)
 static void cmd_lpfw_uart_cfg(int argc, char **argv)
 {
     if (argc != 5) {
@@ -391,12 +401,15 @@ static void cmd_lpfw_clock_cfg(int argc, char **argv)
     iot2lp_para->clock_config->bclk_div = atoi(argv[3]);
     iot2lp_para->clock_config->xclk_sel = atoi(argv[4]);
 }
+#endif
 
 SHELL_CMD_EXPORT_ALIAS(cmd_tickless, tickless, cmd tickless);
 SHELL_CMD_EXPORT_ALIAS(cmd_hbn_test, hbn_test, hbn test);
 SHELL_CMD_EXPORT_ALIAS(cmd_io_dbg, io_debug, cmd io_debug);
+#if !defined(BL616)
 SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_uart_cfg, lpfw_uart, cmd lpfw_uart);
 SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_clock_cfg, lpfw_clock, cmd lpfw_clock);
+#endif
 
 #endif /* CONFIG_SHELL */
 
@@ -439,26 +452,15 @@ static void proc_hellow_entry(void *pvParameters)
     vTaskDelete(NULL);
 }
 #endif
-#if defined(BL618DG)
+
+#if defined(BL616CL) || defined(BL618DG)
 static struct bflb_device_s *rtc = NULL;
 
 static TaskHandle_t rc32k_coarse_trim_task_hd = NULL;
 static TaskHandle_t xtal32k_check_entry_task_hd = NULL;
-void rc32k_get_trim_code(uint32_t *c_code, uint32_t *r_code, uint32_t *half_msb_sht_en)
-{
-    uint32_t tmpVal;
-
-    /* coarse calibration code for C */
-    tmpVal = BL_RD_REG(AON_BASE, AON_RC32K_0);
-    *c_code = BL_GET_REG_BITS_VAL(tmpVal, AON_RC32K_CAP_SEL_AON);
-
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
-    *r_code = BL_GET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT);
-
-    tmpVal = BL_RD_REG(AON_BASE, AON_1);
-    *half_msb_sht_en = (tmpVal >> 13) & 0x1;
-}
-
+extern int32_t rc32k_accuracy_ppm_calculate(uint32_t expect_time, uint32_t rc32k_actual_time);
+extern bool rc32k_check_accuracy(int32_t actual_ppm, int32_t threshold_ppm);
+extern void rc32k_get_trim_code(uint32_t* c_code, uint32_t* r_code);
 /**********************************************************
     rc32k coarse trim task func
  **********************************************************/
@@ -474,16 +476,22 @@ static void rc32k_coarse_trim_task(void *pvParameters)
     int error_ppm;
     bool ret = false;
 
-    uint32_t c_code, r_code = 0, half_msb_sht_en;
+    uint32_t c_code, r_code = 0;
+    uint32_t rc32k_code;
+    int last_error_ppm = 0;
+    int last_diff_code = 0;
+    int first_measure = 1;
 
     /* hardware trim rc32k */
     HBN_Trim_RC32K();
-
-    rc32k_get_trim_code(&c_code, &r_code, &half_msb_sht_en);
-    printf("c_code=%d,r_code=%d,half_msb_sht_en=%d\r\n", c_code, r_code, half_msb_sht_en);
+    rc32k_get_trim_code(&c_code, &r_code);
+    printf("c_code=%d,r_code=%d\r\n",c_code,r_code);
 
     /* select rtc clock */
     HBN_32K_Sel(HBN_32K_RC);
+#if defined(BL616CL)
+    HBN_Set_RTC_CLK_Sel(HBN_RTC_CLK_F32K);
+#endif
 
     /* rtc start */
     rtc = bflb_device_get_by_name("rtc");
@@ -494,8 +502,8 @@ static void rc32k_coarse_trim_task(void *pvParameters)
 
     vTaskDelay(20);
 
-    while (1) {
-        retry_cnt += 1;
+    while(retry_cnt < 100){
+        retry_cnt++;
 
         /* disable irq */
         __disable_irq();
@@ -526,40 +534,132 @@ static void rc32k_coarse_trim_task(void *pvParameters)
         rtc_us = (uint32_t)(rtc_now_us - rtc_record_us);
         mtimer_us = (uint32_t)(mtimer_now_us - mtimer_record_us);
         /* call coarse_adj */
-        error_ppm = bl_lp_rtc_rc32k_coarse_adj(mtimer_us, rtc_us);
+        error_ppm = rc32k_accuracy_ppm_calculate(mtimer_us, rtc_us);
 
         printf("rc32k_coarse_trim: mtimer_us:%d, rtc_us:%d\r\n", mtimer_us, rtc_us);
 
-        if (error_ppm > 500 || error_ppm < -500) {
-            /*  */
-            printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, continue...\r\n", retry_cnt, error_ppm);
-            vTaskDelay(5);
-        } else {
+        ret = rc32k_check_accuracy(error_ppm,200);
+        rc32k_get_trim_code(&c_code, &r_code);
+        printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, r_code=%d", retry_cnt, error_ppm,r_code);
+
+        if (ret == true) {
             /* finish */
-            printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, finish!\r\n", retry_cnt, error_ppm);
+            printf(", finish!\r\n");
+            break;
+        }
+
+        /* Improved coarse trim with dynamic step adjustment */
+        if (abs(error_ppm) > 500) {
+            int diff_code;
+            int is_diverging = 0;
+
+            /* Divergence detection: only when error absolute value increases */
+            if (!first_measure && abs(error_ppm) > abs(last_error_ppm)) {
+                if (abs(last_error_ppm) > 1) {
+                    is_diverging = 1;
+                }
+            }
+
+            if (is_diverging) {
+                /* Diverging, rollback to last code and adjust by ±1 */
+                printf(" (diverging, rollback)\r\n");
+
+                rc32k_code = HBN_Get_RC32K_R_Code();
+                rc32k_code = (int)rc32k_code - (int)last_diff_code;
+
+                /* Rollback to last code and adjust by ±1 */
+                if (last_error_ppm < 0) {
+                    diff_code = -1;
+                } else {
+                    diff_code = 1;
+                }
+                rc32k_code += diff_code;
+                HBN_Set_RC32K_R_Code(rc32k_code);
+
+                printf("rc32k_coarse_trim: adjust code=%u (diff=%d)\r\n",
+                    rc32k_code, diff_code);
+
+                /* Diverging diff_code not Record */
+                last_diff_code = diff_code;
+                first_measure = 0;
+
+                /* Wait for RC32K frequency to settle */
+                vTaskDelay(10);
+
+            } else {
+                /* Normal calculation of adjustment code */
+                /* For coarse trim, use larger step (800ppm per step) */
+                diff_code = error_ppm / 800;
+
+                /* Limit max adjustment to avoid jumping at fluctuation points */
+                if (diff_code > 5) diff_code = 5;
+                if (diff_code < -5) diff_code = -5;
+
+                /* Ensure at least ±1 adjustment if error is significant */
+                if (diff_code == 0 && abs(error_ppm) > 400) {
+                    diff_code = (error_ppm > 0) ? 1 : -1;
+                }
+
+                rc32k_code = HBN_Get_RC32K_R_Code();
+                rc32k_code += diff_code;
+
+                HBN_Set_RC32K_R_Code(rc32k_code);
+
+                printf(" (adjust code=%u, diff=%d)\r\n", rc32k_code, diff_code);
+
+                /* Record current error for next divergence detection */
+                last_error_ppm = error_ppm;
+                last_diff_code = diff_code;
+                first_measure = 0;
+
+                /* Wait for RC32K frequency to settle */
+                vTaskDelay(10);
+            }
+        } else {
+            printf("\r\n");
             break;
         }
     }
 
-    printf("rc32k coarse trim success!, total time:%dms\r\n", (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
-    /* coarse_adj success */
-    if (xtal32k_check_entry_task_hd) {
-        /* resume xtal32k_check task */
-        printf("rc32k_coarse_trim: Resume xtal32k_check task!\r\n");
-        xTaskNotifyGive(xtal32k_check_entry_task_hd);
-    } else {
-        /* set bl_lp 32k clock ready */
-        printf("rc32k_coarse_trim: set lp_32k ready!\r\n");
-        bl_lp_set_32k_clock_ready(1);
+    if (retry_cnt >= 100) {
+        printf("rc32k_coarse_trim: timeout!\r\n");
     }
 
+    printf("rc32k coarse trim success!, total time:%dms\r\n", (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
+
+    /* coarse_adj success */
+    // if(xtal32k_check_entry_task_hd){
+    //     /* resume xtal32k_check task */
+    //     printf("rc32k_coarse_trim: Resume xtal32k_check task!\r\n");
+    //     xTaskNotifyGive(xtal32k_check_entry_task_hd);
+    // }else{
+    //     /* set bl_lp 32k clock ready */
+    //     printf("rc32k_coarse_trim: set lp_32k ready!\r\n");
+        bl_lp_set_32k_clock_ready(1);
+    // }
+
     // printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_fr_ext);
-    rc32k_get_trim_code(&c_code, &r_code, &half_msb_sht_en);
-    printf("c_code=%d,r_code=%d,half_msb_sht_en=%d\r\n", c_code, r_code, half_msb_sht_en);
+
     printf("rc32k_coarse task: vTaskDelete\r\n");
     vTaskDelete(NULL);
 }
+#elif defined(BL616)
+static void f32k_clk_init_task(void *pvParameters)
+{
+    LOG_I("F32K clock init task started\r\n");
+
+    /* Initialize F32K clock */
+    if (app_clock_init() != 0) {
+        LOG_E("F32K clock initialization failed!\r\n");
+    } else {
+        LOG_I("F32K clock initialization success!\r\n");
+    }
+
+    /* Task done, delete itself */
+    vTaskDelete(NULL);
+}
 #endif
+
 void tcpip_init_done(void *arg)
 {
 }
@@ -608,10 +708,14 @@ int main(void)
 
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
     // ci_pm_test_init();
-#if defined(BL618DG) 
+#if defined(BL616CL) || defined(BL618DG)
     /* coarse trim rc32k */
     puts("[OS] Create rc32k_coarse_trim task...\r\n");
     xTaskCreate(rc32k_coarse_trim_task, (char *)"rc32k_coarse_trim", 512, NULL, 11, &rc32k_coarse_trim_task_hd);
+#elif defined(BL616)
+    /* Create F32K clock init task */
+    printf("[OS] Create f32k_clk_init task...\r\n");
+    xTaskCreate(f32k_clk_init_task, (char *)"f32k_clk_init", 1024, NULL, 12, NULL);
 #endif
 
 #if 0

@@ -101,8 +101,8 @@ int at_wifi_mgmr_sta_connect(const char *ssid, const char *key, const char *bssi
     }
 
     {
-        void _wifi_mgmr_sta_stop_dhcpc();
-        _wifi_mgmr_sta_stop_dhcpc();
+        void _wifi_mgmr_sta_link_down();
+        _wifi_mgmr_sta_link_down();
     }
 
     res = wifi_mgmr_sta_connect(&config);

@@ -302,7 +302,7 @@
         };
         brd_rf {
             xtal_mode = "MF";
-            xtal = <36 36 0 60 60>;
+            xtal = <128 128 0 60 60>;
             pwr_mode = "bf";//B: only use power offset in EFUSE; b: use power offset in EFUSE with incremental mode; F: only use power offset in Flash; f: use power offset in Flash with incremental mode
             pwr_table_11b        = <20 20 20 20>;//1Mbps 2Mbps 5.5Mbps 11Mbps
             pwr_table_11g        = <18 18 18 18 18 18 16 16>; //6Mbps 9Mbps 12Mbps 18MBps 24Mbps 36Mbps 48Mbps 54Mbps

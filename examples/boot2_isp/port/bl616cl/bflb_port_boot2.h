@@ -62,6 +62,7 @@
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM   0 /* 1 support eflash loader ram, 0 not support */
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH 0 /* 1 support eflash loader flash, 0 not support */
 #define HAL_BOOT2_SUPPORT_SIGN_ENCRYPT        0 /* 1 support sign and encrypt, 0 not support */
+#define HAL_BOOT2_SUPPORT_SIGN_SHA384         0 /* 1 support SHA384 sign, 0 not support */
 
 #define HAL_BOOT2_CPU_GROUP_MAX               1
 #define HAL_BOOT2_CPU_MAX                     1

@@ -38,8 +38,8 @@ int yuyv_frame_ctrl_init(void);
 #if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG)
 
 /* frame pool cfg */
-#define MJPEG_FRAME_SIZE                  (300 * 1024)
-#define MJPEG_FRAME_NUM                   (8)
+#define MJPEG_FRAME_SIZE                  (200 * 1024)
+#define MJPEG_FRAME_NUM                   (6)
 
 /* sd avi out_queue cfg */
 #define MJPEG_FRAME_STREAM_SD_AVI_ID      (0)

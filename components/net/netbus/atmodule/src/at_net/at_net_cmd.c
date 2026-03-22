@@ -1195,7 +1195,7 @@ static int at_setup_cmd_ciprecvbuf(int argc, const char **argv)
     }
 
     /* Reserve some size to prevent fragmented memory */
-    if (size <= 0 || (size + 10240 > kfree_size())) {
+    if (size <= 0 || (size + 10240 > kfree_size(0))) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }
 

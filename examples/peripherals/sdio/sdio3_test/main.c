@@ -162,6 +162,7 @@ void sdio3_irq_cb_soft_reset(void *arg, bflb_sdio3_trans_desc_t *trans_desc)
             .buff_len = SDIO3_FN1_TEST_SIZE,
             .user_arg = NULL,
         };
+        bflb_l1c_dcache_invalidate_range(buff, SDIO3_FN1_TEST_SIZE);
         bflb_sdio3_dnld_push(sdio3_hd, &dnld_desc);
     }
     /* card func ready */
@@ -182,6 +183,7 @@ void sdio3_irq_cb_soft_reset(void *arg, bflb_sdio3_trans_desc_t *trans_desc)
             .buff_len = SDIO3_FN2_TEST_SIZE,
             .user_arg = NULL,
         };
+        bflb_l1c_dcache_invalidate_range(buff, SDIO3_FN2_TEST_SIZE);
         bflb_sdio3_dnld_push(sdio3_hd, &dnld_desc);
     }
     /* card func ready */
@@ -290,6 +292,7 @@ void sdio3_test(void)
             .buff_len = SDIO3_FN1_TEST_SIZE,
             .user_arg = NULL,
         };
+        bflb_l1c_dcache_invalidate_range(buff, SDIO3_FN1_TEST_SIZE);
         bflb_sdio3_dnld_push(sdio3_hd, &dnld_desc);
     }
     /* card func ready */
@@ -310,6 +313,7 @@ void sdio3_test(void)
             .buff_len = SDIO3_FN2_TEST_SIZE,
             .user_arg = NULL,
         };
+        bflb_l1c_dcache_invalidate_range(buff, SDIO3_FN2_TEST_SIZE);
         bflb_sdio3_dnld_push(sdio3_hd, &dnld_desc);
     }
     /* card func ready */

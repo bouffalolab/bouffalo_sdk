@@ -6,6 +6,10 @@ endif
 # The default configuration of the wireless network
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
+ifeq ($(CONFIG_WL80211),y)
+    CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT = 0x4000 # 16KB
+endif
+
 CONFIG_PSRAM =y
 
 CONFIG_IPERF =y
@@ -18,9 +22,10 @@ CONFIG_CHERRYUSB_OSAL =freertos
 CONFIG_CHERRYUSB_HOST =y
 CONFIG_CHERRYUSB_HOST_VIDEO =y
 CONFIG_CHERRYUSB_HOST_AUDIO =y
-
-# psram ld mode
-CONFIG_PSRAM_COPY_CODE =n
+# The log of macsw affects the real-time performance of usb iso.
+ifeq ($(CONFIG_CHERRYUSB_HOST),y)
+    CONFIG_NO_FW_BL_LOG_PRINT =y
+endif
 
 CONFIG_BSP_LCD =y
 CONFIG_BSP_IMAGE_SENSOR =y

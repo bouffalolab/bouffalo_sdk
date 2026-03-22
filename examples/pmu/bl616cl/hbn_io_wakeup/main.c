@@ -6,7 +6,7 @@
 #include "bl616cl_hbn.h"
 #include "bl616cl_pm.h"
 
-volatile lp_gpio_cfg_Type lp_wake_io_cfg;
+volatile lp_gpio_cfg_type lp_wake_io_cfg;
 
 int main(void)
 {
@@ -88,7 +88,7 @@ int hbn_io_wakeup_test(int argc, char **argv)
         printf("[ERR]test_io >= %d\r\n", GPIO_PIN_MAX);
         return 0;
     }
-    pm_lowpower_gpio_cfg((lp_gpio_cfg_Type *)&lp_wake_io_cfg);
+    pm_lowpower_gpio_cfg((lp_gpio_cfg_type *)&lp_wake_io_cfg);
 
     switch (hbn_mode) {
         case 0:

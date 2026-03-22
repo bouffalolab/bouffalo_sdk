@@ -32,6 +32,7 @@ endif()
 target_sources(app PRIVATE
                    tickless.c
                    wl_lp_app.c
+                   rc32k_trim.c
                    )
 
 sdk_set_main_file(main.c)

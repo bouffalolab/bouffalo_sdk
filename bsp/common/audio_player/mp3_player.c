@@ -322,7 +322,8 @@ int mp3_player_start(audio_mp3_task_cfg_t *cfg)
     g_mp3.pause = false;
     g_mp3.stop = false;
 
-    if (xTaskCreate(audio_player_mp3_task, (char *)"mp3_play", 376, cfg, 3, &g_mp3.task) != pdPASS) {
+    if (xTaskCreate(audio_player_mp3_task, (char *)"mp3_play", MP3_PLAYER_TASK_STACK_DEPTH, cfg, 3, &g_mp3.task) !=
+        pdPASS) {
         g_mp3.task = NULL;
         printf("mp3_player: create task failed\r\n");
         return -1;

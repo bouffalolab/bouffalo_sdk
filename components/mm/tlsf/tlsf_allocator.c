@@ -217,6 +217,51 @@ static void *tlsf_allocator_realloc(struct mm_heap *heap, void *ptr, size_t news
 }
 
 /**
+ * @brief Query usable payload size of an allocated TLSF block.
+ *
+ * @param heap Pointer to heap.
+ * @param ptr Pointer returned by TLSF allocation APIs.
+ * @return Usable payload size in bytes, 0 on failure.
+ */
+static size_t tlsf_allocator_get_block_size(struct mm_heap *heap, void *ptr)
+{
+    tlsf_t tlsf_handle;
+
+    if (!heap || !ptr) {
+        return 0;
+    }
+
+    tlsf_handle = (tlsf_t)heap->allocator_priv;
+    if (!tlsf_handle) {
+        return 0;
+    }
+
+    return tlsf_block_size(ptr);
+}
+
+/**
+ * @brief Query total free payload bytes tracked by TLSF.
+ *
+ * @param heap Pointer to heap.
+ * @return Free payload bytes, 0 on failure.
+ */
+static size_t tlsf_allocator_get_free_size(struct mm_heap *heap)
+{
+    tlsf_t tlsf_handle;
+
+    if (!heap) {
+        return 0;
+    }
+
+    tlsf_handle = (tlsf_t)heap->allocator_priv;
+    if (!tlsf_handle) {
+        return 0;
+    }
+
+    return tlsf_free_size(tlsf_handle);
+}
+
+/**
  * @brief TLSF memory usage information traversal function
  *
  * @param ptr Pointer to memory block
@@ -283,6 +328,9 @@ const mm_allocator_t g_tlsf_allocator = {
     .malloc = tlsf_allocator_malloc,
     .free = tlsf_allocator_free,
     .realloc = tlsf_allocator_realloc,
+
+    .get_block_size = tlsf_allocator_get_block_size,
+    .get_free_size = tlsf_allocator_get_free_size,
 
     .get_usage_info = tlsf_allocator_get_usage_info,
 

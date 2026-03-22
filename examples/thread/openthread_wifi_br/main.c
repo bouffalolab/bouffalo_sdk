@@ -136,7 +136,7 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         #endif
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
-            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size(0));
             OT_APP_NOTIFY(OT_APP_NOTIFY_WIFI_IP_EVENT);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {

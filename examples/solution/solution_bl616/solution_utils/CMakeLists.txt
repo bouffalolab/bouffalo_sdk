@@ -8,33 +8,9 @@ endif()
 # queue
 # ##################################################################################################
 
-# Frame_buff Queue
-if(CONFIG_SOLUTION_QUEUE_YUYV)
-    sdk_add_include_directories(queue)
-    sdk_library_add_sources(queue/frame_queue_ctrl.c)
-    sdk_library_add_sources(queue/frame_queue.c)
-endif()
-
-# MJPEG Queue
-if(CONFIG_SOLUTION_QUEUE_MJPEG)
-    sdk_add_include_directories(queue)
-    sdk_library_add_sources(queue/frame_queue_ctrl.c)
-    sdk_library_add_sources(queue/frame_queue.c)
-endif()
-
-# Auadc Queue
-if(CONFIG_SOLUTION_QUEUE_AUDIO_IN)
-    sdk_add_include_directories(queue)
-    sdk_library_add_sources(queue/frame_queue_ctrl.c)
-    sdk_library_add_sources(queue/frame_queue.c)
-endif()
-
-# Audac Queue
-if(CONFIG_SOLUTION_QUEUE_AUDIO_OUT)
-    sdk_add_include_directories(queue)
-    sdk_library_add_sources(queue/frame_queue_ctrl.c)
-    sdk_library_add_sources(queue/frame_queue.c)
-endif()
+sdk_add_include_directories(queue)
+sdk_library_add_sources(queue/frame_queue_ctrl.c)
+sdk_library_add_sources(queue/frame_queue.c)
 
 # audio
 # ##################################################################################################
@@ -242,15 +218,17 @@ if(CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
 endif()
 
 # Hibooster New Implementation
-if(CONFIG_SOLUTION_FUNC_HIBOOSTER_NEW)
-    if((NOT DEFINED CONFIG_SOLUTION_QUEUE_MJPEG) OR (NOT CONFIG_SOLUTION_QUEUE_MJPEG))
-        message(FATAL_ERROR "hibooster_new need mjpeg_queue")
-    endif()
-
+if(CONFIG_SOLUTION_FUNC_HIBOOSTER_NEW OR CONFIG_HB_SEND_TEST OR CONFIG_HB_RECV_TEST)
     add_subdirectory(hibooster_new)
 
-    sdk_add_include_directories(hibooster_new)
-    sdk_library_add_sources(hibooster_new/hb_start.c)
+    if(CONFIG_SOLUTION_FUNC_HIBOOSTER_NEW)
+        if((NOT DEFINED CONFIG_SOLUTION_QUEUE_MJPEG) OR (NOT CONFIG_SOLUTION_QUEUE_MJPEG))
+            message(FATAL_ERROR "hibooster_new need mjpeg_queue")
+        endif()
+
+        sdk_add_include_directories(hibooster_new)
+        sdk_library_add_sources(hibooster_new/hb_start.c)
+    endif()
 endif()
 
 # Hibooster (image_transmission)

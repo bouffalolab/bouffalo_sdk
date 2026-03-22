@@ -1,149 +1,158 @@
-# NetHub Virtual Channel 演示代码使用说明
+# NetHub Virtual Channel Demo Guide
 
-## 概述
+## Overview
 
-本目录包含 NetHub Virtual Channel 的演示代码，用于展示 `nethub_vchan_user_send` 和 `nethub_vchan_user_recv_register` 的使用方法。
+This directory contains demo code for NetHub Virtual Channel. It shows how to
+use `nethub_vchan_user_send` and `nethub_vchan_user_recv_register`.
 
-## 设计原则
+## Design Principles
 
-1. **单一命令入口**：所有功能通过 `vchanuser` 命令访问
-2. **最小静态内存占用**：仅使用 1 字节静态内存（`g_recv_callback_registered` 标志）
-3. **按需注册回调**：默认不注册任何回调，由用户通过命令触发
-4. **临时内存分配**：测试时使用 `pvPortMalloc` 临时分配，测试结束立即释放
+1. **Single command entry**: all functions are accessed through the `vchanuser`
+   command.
+2. **Minimal static memory usage**: only 1 byte of static memory is used, for
+   the `g_recv_callback_registered` flag.
+3. **Register callbacks on demand**: no callback is registered by default; the
+   user enables it explicitly through commands.
+4. **Temporary memory allocation**: tests use `pvPortMalloc` temporarily and
+   free the memory immediately after the test completes.
 
-## 命令格式
+## Command Format
 
-```
+```text
 vchanuser <subcmd> [args...]
 ```
 
-## 子命令说明
+## Subcommands
 
-### 1. 发送数据
+### 1. Send Data
 
 ```bash
-# 发送 ASCII 字符串
+# Send an ASCII string
 vchanuser send hello
 
-# 发送十六进制数据
+# Send hexadecimal data
 vchanuser send hex 0102030405
 ```
 
-### 2. 接收回调控制
+### 2. Receive Callback Control
 
 ```bash
-# 注册接收回调
+# Register the receive callback
 vchanuser recv on
 
-# 注销接收回调
+# Unregister the receive callback
 vchanuser recv off
 ```
 
-### 3. 流量测试
+### 3. Flow Test
 
 ```bash
-# 发送 100 个 512 字节的数据包
+# Send 100 packets, each 512 bytes
 vchanuser test flow 100 512
 ```
 
-**说明**：
-- 自动注册接收回调（如未注册）
-- 每个数据包前 4 字节为序号（大端序）
-- 每发送 100 个包显示进度
-- 等待 1 秒让接收完成
-- 显示收发统计结果
+Notes:
 
-### 4. MTU 测试
+- Automatically registers the receive callback if it is not already registered
+- Uses the first 4 bytes of each packet as a big-endian sequence number
+- Prints progress every 100 packets
+- Waits 1 second so the receive path can complete
+- Prints TX/RX statistics at the end
+
+### 4. MTU Test
 
 ```bash
-# 测试 1024 字节 MTU
+# Test a 1024-byte MTU
 vchanuser test mtu 1024
 ```
 
-**说明**：
-- 自动注册接收回调（如未注册）
-- 发送指定大小的测试数据
-- 数据填充递增模式（0x00, 0x01, 0x02...）
+Notes:
 
-### 5. 统计信息
+- Automatically registers the receive callback if it is not already registered
+- Sends test data with the requested length
+- Fills the payload with an incremental pattern (`0x00`, `0x01`, `0x02`, ...)
+
+### 5. Statistics
 
 ```bash
 vchanuser stats
 ```
 
-显示：
-- 接收回调注册状态
-- 发送/接收的包数和字节数
+Shows:
 
-### 6. 帮助信息
+- receive callback registration state
+- sent/received packet counts and byte counts
+
+### 6. Help
 
 ```bash
 vchanuser help
 ```
 
-## 使用示例
+## Usage Examples
 
-### 基本收发测试
+### Basic Send/Receive Test
 
 ```bash
-# 1. 开启接收
+# 1. Enable receive
 vchanuser recv on
 
-# 2. 发送测试数据
+# 2. Send test data
 vchanuser send test123
 
-# 3. 查看接收结果（设备端会自动打印接收到的数据）
+# 3. Check the receive result
+#    The device side prints the received payload automatically.
 
-# 4. 关闭接收
+# 4. Disable receive
 vchanuser recv off
 ```
 
-### 流量测试
+### Flow Test
 
 ```bash
-# 发送 1000 个 1024 字节的数据包
+# Send 1000 packets, each 1024 bytes
 vchanuser test flow 1000 1024
 
-# 查看统计
+# Show statistics
 vchanuser stats
 ```
 
-### MTU 探测
+### MTU Probing
 
 ```bash
-# 测试不同大小，找出最大 MTU
+# Try different sizes to find the maximum MTU
 vchanuser test mtu 512
 vchanuser test mtu 1024
 vchanuser test mtu 1500
 ```
 
-## API 使用示例
+## API Examples
 
-代码中演示了以下 API 的使用：
+The demo shows how to use the following APIs:
 
 ```c
-// 发送数据
+// Send data
 int ret = nethub_vchan_user_send(data_buf, data_len);
 
-// 注册接收回调
+// Register a receive callback
 int ret = nethub_vchan_user_recv_register(callback_fn, NULL);
 
-// 注销接收回调（传入 NULL）
+// Unregister the receive callback by passing NULL
 int ret = nethub_vchan_user_recv_register(NULL, NULL);
 ```
 
-## 文件结构
+## File Layout
 
-```
+```text
 virtualchan/
-├── app_vchan.c       # 主实现文件
-├── app_vchan.h       # 头文件
-└── README.md         # 本文档
+|- app_vchan.c       # main implementation
+|- app_vchan.h       # header
+`- README.md         # this document
 ```
 
-## 注意事项
+## Notes
 
-1. 最大数据长度为 1500 字节（`NETHUB_VCHAN_MAX_DATA_LEN`）
-2. 十六进制字符串必须是偶数长度（如 "0102"，不能是 "010"）
-3. 流量测试时会自动注册接收回调
-4. 统计数据仅在本次运行期间有效，复位后清零
+1. The maximum payload length is 1500 bytes (`NETHUB_VCHAN_MAX_DATA_LEN`).
+2. Hex strings must have an even length, for example `"0102"` instead of `"010"`.
+3. The flow test registers the receive callback automatically.
+4. Statistics are only valid for the current run and are cleared after reset.

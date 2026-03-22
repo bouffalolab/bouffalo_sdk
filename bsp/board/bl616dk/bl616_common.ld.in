@@ -109,7 +109,6 @@ SECTIONS
         . = ORIGIN(rom_header) + 512;
         __multi_bins__ = ABSOLUTE(.);
         LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_start__ + LENGTH(fw_header) + LENGTH(rom_header))
-        LONG(0x0000504E) LONG(0x00000000) /*NP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x0000504C) LONG(0x00000000) /*LP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
         LONG(0x464D4F52) LONG(0x00000053) /*ROMFS*/     LONG(0x00000000) LONG(0x00000000)
@@ -191,7 +190,7 @@ SECTIONS
     {
         . = ALIGN(4);
 
-#ifdef CONFIG_WFA
+#if defined(CONFIG_WFA) && !defined(CONFIG_PSRAM_COPY_CODE)
 	INCLUDE run_in_ram_function.ld.in
 
         *libfreertos.a:*.o*(.text*)
@@ -298,14 +297,11 @@ SECTIONS
         __StackTop = .;
         __freertos_irq_stack_top = .;
 
-        . = ALIGN(16);
-        /* for CPU_NP */
-        . = . + 0x1000;
-        __StackTop_NP = .;
-
+#ifdef CONFIG_HIGH_ISR_STACK
         . = ALIGN(16);
         . = . + 0x1000;
         __freertos_high_irq_stack_top = .;
+#endif
 
         *(.bss*)
         *(.sbss*)

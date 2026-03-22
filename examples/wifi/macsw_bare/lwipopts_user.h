@@ -68,43 +68,46 @@
 
 #define IP_REASS_MAX_PBUFS            4
 
-#define MEMP_MEM_MALLOC                 1
+#define MEMP_MEM_MALLOC                 0
 #define MEM_LIBC_MALLOC                 1
 
 #if MEM_LIBC_MALLOC
-#include "mm.h"
+#include <string.h>
 
 #ifndef mem_clib_free
-static inline void _g_wifi_ram_free(void *ptr) {
-    kfree(ptr);
-}
-#define mem_clib_free(x) _g_wifi_ram_free(x)
+void wl80211_platform_free_wram(void *ptr);
+#define mem_clib_free(x) wl80211_platform_free_wram(x)
 #endif
+
 #ifndef mem_clib_malloc
-static inline void* _g_wifi_ram_malloc(size_t size) {
-  void *ptr = kmalloc(size, MM_FLAG_HEAP_WRAM_0);
-  if (ptr) {
-    memset(ptr, 0, size);
-  }
-  return ptr;
-}
-#define mem_clib_malloc(x) _g_wifi_ram_malloc(x)
+void *wl80211_platform_malloc_wram(size_t size);
+#define mem_clib_malloc(x) wl80211_platform_malloc_wram(x)
 #endif
+
 #ifndef mem_clib_calloc
-static inline void* _g_wifi_ram_calloc(size_t count, size_t size) {
-  void *ptr = kmalloc(count * size, MM_FLAG_HEAP_WRAM_0);
-  if (ptr) {
-    memset(ptr, 0, count * size);
-  }
-  return ptr;
+void *wl80211_platform_malloc_wram(size_t size);
+static inline void *_lwip_calloc(size_t count, size_t size)
+{
+    void *ptr = wl80211_platform_malloc_wram(count * size);
+    if (ptr) {
+      memset(ptr, 0, count * size);
+    }
+    return ptr;
 }
-#define mem_clib_calloc(c, s) _g_wifi_ram_calloc(c, s)
+#define mem_clib_calloc(c, s) _lwip_calloc(c, s)
 #endif
+
+/* memp does not necessarily have to be on WRAM. */
+#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[LWIP_MEM_ALIGN_BUFFER(size)]
+
 #endif
 
 #define MEMP_NUM_NETBUF               32
-#define MEMP_NUM_NETCONN              16
-#define MEMP_NUM_UDP_PCB              16
+#define MEMP_NUM_NETCONN              8
+#define MEMP_NUM_UDP_PCB              8
+#define MEMP_NUM_TCP_PCB              8
+#define MEMP_NUM_TCPIP_MSG_API        16
+#define MEMP_NUM_TCPIP_MSG_INPKT      16
 
 #define MEMP_NUM_REASSDATA            LWIP_MIN((IP_REASS_MAX_PBUFS), 5)
 #define TCP_MSS                       (1500 - 40)
@@ -145,6 +148,7 @@ static inline void* _g_wifi_ram_calloc(size_t count, size_t size) {
 
 #define LWIP_DHCP                 1
 #define LWIP_DNS                  1
+#define LWIP_DNS_SERVER           0
 #define LWIP_IGMP                 0
 #define LWIP_SO_RCVTIMEO          1
 #define LWIP_SO_SNDTIMEO          1

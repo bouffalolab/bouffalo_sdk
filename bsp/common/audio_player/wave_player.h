@@ -26,6 +26,12 @@
 #define WAVE_PLAYER_ENABLE_REC CONFIG_WAVE_PLAYER_ENABLE_REC
 #endif
 
+#ifndef CONFIG_WAVE_PLAYER_ENABLE_REC_LOOPBACK
+#define WAVE_PLAYER_ENABLE_REC_LOOPBACK 0
+#else
+#define WAVE_PLAYER_ENABLE_REC_LOOPBACK CONFIG_WAVE_PLAYER_ENABLE_REC_LOOPBACK
+#endif
+
 #ifndef CONFIG_WAVE_PLAYER_TEST_WAVE
 #define WAVE_PLAYER_TEST_WAVE 0
 #else
@@ -48,6 +54,12 @@
 #define WAVE_PLAYER_RESAMPLE_QUALITY 5
 #else
 #define WAVE_PLAYER_RESAMPLE_QUALITY CONFIG_WAVE_PLAYER_RESAMPLE_QUALITY
+#endif
+
+#ifndef CONFIG_WAVE_PLAYER_TASK_STACK_DEPTH
+#define WAVE_PLAYER_TASK_STACK_DEPTH 256U
+#else
+#define WAVE_PLAYER_TASK_STACK_DEPTH CONFIG_WAVE_PLAYER_TASK_STACK_DEPTH
 #endif
 
 #ifndef CONFIG_WAVE_PLAYER_REC_DEFAULT_MIC_PGA
@@ -88,6 +100,13 @@
 #else
 #define WAVE_PLAYER_REC_MONO_SOURCE CONFIG_WAVE_PLAYER_REC_MONO_SOURCE
 #endif
+
+/* 0: left, 1: right */
+#ifndef CONFIG_WAVE_PLAYER_REC_LOOPBACK_SOURCE
+#define WAVE_PLAYER_REC_LOOPBACK_SOURCE 1U
+#else
+#define WAVE_PLAYER_REC_LOOPBACK_SOURCE CONFIG_WAVE_PLAYER_REC_LOOPBACK_SOURCE
+#endif
 #endif
 
 typedef struct {
@@ -96,11 +115,32 @@ typedef struct {
     uint8_t bits_per_sample;
 } audio_config_t;
 
+typedef uint8_t wave_player_backend_t;
+#define WAVE_PLAYER_BACKEND_AUTO      ((wave_player_backend_t)0)
+#define WAVE_PLAYER_BACKEND_I2S_CODEC ((wave_player_backend_t)1)
+#define WAVE_PLAYER_BACKEND_BL_CODEC  ((wave_player_backend_t)2)
+
+#ifndef CONFIG_WAVE_PLAYER_PLAYBACK_BACKEND
+#define WAVE_PLAYER_PLAYBACK_BACKEND_DEFAULT WAVE_PLAYER_BACKEND_AUTO
+#else
+#define WAVE_PLAYER_PLAYBACK_BACKEND_DEFAULT CONFIG_WAVE_PLAYER_PLAYBACK_BACKEND
+#endif
+
+#ifndef CONFIG_WAVE_PLAYER_CAPTURE_BACKEND
+#define WAVE_PLAYER_CAPTURE_BACKEND_DEFAULT WAVE_PLAYER_BACKEND_AUTO
+#else
+#define WAVE_PLAYER_CAPTURE_BACKEND_DEFAULT CONFIG_WAVE_PLAYER_CAPTURE_BACKEND
+#endif
+
 typedef struct {
     const char *i2s_dev_name;
     const char *i2c_dev_name;
     const char *dma_tx_dev_name;
     const char *dma_rx_dev_name;
+    const char *audac_dev_name;
+    const char *auadc_dev_name;
+    wave_player_backend_t playback_backend;
+    wave_player_backend_t capture_backend;
 } wave_player_hw_cfg_t;
 
 int wave_player_init(const wave_player_hw_cfg_t *hw_cfg);
@@ -114,6 +154,7 @@ int wave_player_set_volume(uint8_t volume);
 uint8_t wave_player_get_volume(void);
 int wave_player_set_mute(bool mute);
 bool wave_player_get_mute(void);
+int wave_player_set_record_volume(uint8_t volume);
 int wave_player_feed(uint8_t *data, uint32_t len);
 uint32_t wave_player_feed_blocking(uint8_t *data, uint32_t len);
 void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_t rx_block_bytes, uint8_t channels);
@@ -123,12 +164,23 @@ void wave_player_dump_stack(void);
 typedef void (*wave_player_rec_mono_frame_cb_t)(const int16_t *samples, uint32_t sample_count, uint32_t sample_rate_hz,
                                                 void *user_data);
 
+#if WAVE_PLAYER_ENABLE_REC_LOOPBACK
+typedef void (*wave_player_rec_loopback_frame_cb_t)(const int16_t *samples, uint32_t sample_count,
+                                                    uint32_t sample_rate_hz, void *user_data);
+#endif
+
 int wave_player_rec_start(uint32_t duration_ms, uint32_t sample_rate_hz, uint8_t channels);
 int wave_player_rec_stop(void);
 int wave_player_rec_get_mono(int16_t *dst, uint32_t max_samples, uint32_t *out_samples);
 int wave_player_rec_set_callback(wave_player_rec_mono_frame_cb_t cb, void *user_data);
 int wave_record_enable(bool enable);
 bool wave_record_is_enabled(void);
+
+#if WAVE_PLAYER_ENABLE_REC_LOOPBACK
+int wave_player_rec_loopback_set_callback(wave_player_rec_loopback_frame_cb_t cb, void *user_data);
+int wave_loopback_enable(bool enable);
+bool wave_loopback_is_enabled(void);
+#endif
 #endif
 
 #endif
