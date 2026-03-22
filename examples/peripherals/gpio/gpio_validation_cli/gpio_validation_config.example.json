@@ -1,0 +1,149 @@
+{
+  "report_name": "gpio_validation_report.xlsx",
+  "startup_drain_ms": 500,
+  "targets": {
+    "dut": {
+      "build": {
+        "enabled": true,
+        "clean_before_build": true,
+        "chip": "bl616cl",
+        "board": "bl616cldk",
+        "make_args": []
+      },
+      "flash": {
+        "enabled": true,
+        "port": "/dev/ttyUSB0",
+        "make_args": []
+      }
+    }
+  },
+  "serial": {
+    "dut": {
+      "port": "/dev/ttyUSB0",
+      "baudrate": 2000000,
+      "run_reset_on_open": true,
+      "reset_pulse_ms": 5,
+      "boot_wait_ms": 500,
+      "dtr_low_is_true": true,
+      "rts_low_is_true": true
+    },
+    "tester": {
+      "port": "/dev/ttyACM0",
+      "baudrate": 2000000,
+      "run_reset_on_open": true,
+      "reset_pulse_ms": 5,
+      "boot_wait_ms": 500,
+      "dtr_low_is_true": true,
+      "rts_low_is_true": true
+    }
+  },
+  "pin_groups": [
+    {
+      "name": "gpio0_33",
+      "dut_pins": [
+        0, 1, 2, 3, 4, 5, 6, 7,
+        8, 9, 10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        24, 25, 26, 27, 28, 29, 30, 31,
+        32, 33
+      ],
+      "tester_pins": [
+        0, 1, 2, 3, 4, 5, 6, 7,
+        8, 9, 10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        24, 25, 26, 27, 28, 29, 30, 31,
+        32, 33
+      ]
+    }
+  ],
+  "scenarios": {
+    "output": {
+      "enabled": true,
+      "settle_ms": 20,
+      "dut_drive": 0,
+      "dut_pull": "float"
+    },
+    "input": {
+      "enabled": true,
+      "settle_ms": 20,
+      "dut_pull": "float"
+    },
+    "interrupt": {
+      "enabled": true,
+      "settle_ms": 20,
+      "restore_settle_ms": 20,
+      "active_hold_ms": 5,
+      "irq_read_chunk_size": 8,
+      "irq_read_retry_max": 2,
+      "irq_read_retry_delay_ms": 20,
+      "timeout_ms": 200,
+      "expected_delta": 1,
+      "dut_pull": "float",
+      "triggers": [
+        {
+          "name": "sync_rise",
+          "trigger": "sync_rise",
+          "idle_level": 0,
+          "active_level": 1,
+          "expected_delta": 1
+        },
+        {
+          "name": "sync_fall",
+          "trigger": "sync_fall",
+          "idle_level": 1,
+          "active_level": 0,
+          "expected_delta": 1
+        },
+        {
+          "name": "sync_both",
+          "trigger": "sync_both",
+          "idle_level": 0,
+          "active_level": 1,
+          "expected_delta": 2
+        },
+        {
+          "name": "sync_low",
+          "trigger": "sync_low",
+          "idle_level": 1,
+          "active_level": 0,
+          "expected_delta": 1
+        },
+        {
+          "name": "sync_high",
+          "trigger": "sync_high",
+          "idle_level": 0,
+          "active_level": 1,
+          "expected_delta": 1
+        },
+        {
+          "name": "async_fall",
+          "trigger": "async_fall",
+          "idle_level": 1,
+          "active_level": 0,
+          "expected_delta": 1
+        },
+        {
+          "name": "async_rise",
+          "trigger": "async_rise",
+          "idle_level": 0,
+          "active_level": 1,
+          "expected_delta": 1
+        },
+        {
+          "name": "async_low",
+          "trigger": "async_low",
+          "idle_level": 1,
+          "active_level": 0,
+          "expected_delta": 1
+        },
+        {
+          "name": "async_high",
+          "trigger": "async_high",
+          "idle_level": 0,
+          "active_level": 1,
+          "expected_delta": 1
+        }
+      ]
+    }
+  }
+}
