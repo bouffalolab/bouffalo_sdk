@@ -1,0 +1,28 @@
+# MQuickJS SDK Configuration
+# Bouffalo Lab SDK - BL616/BL618
+
+CONFIG_MQUICKJS             =y
+
+# Enable newlib with LittleFS POSIX port for file I/O
+CONFIG_NEWLIB               =y
+CONFIG_NEWLIB_STANDARD      =n
+CONFIG_NEWLIB_LITTLEFS      =y
+
+# Float/long long support for JavaScript number formatting
+# (newlib.nano is used by default, these enable float formatting in vsnprintf)
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+
+# FreeRTOS for task management
+CONFIG_FREERTOS             =y
+
+# Shell for interactive commands (js_run, js_eval)
+CONFIG_SHELL                =y
+
+# Partition and file system support
+CONFIG_PARTITION            =y
+CONFIG_LITTLEFS             =y
+CONFIG_BFLB_MTD             =y
+CONFIG_POST_BUILDS_GENERATE_LITTLEFS =y
+CONFIG_POST_BUILDS_LITTLEFS_SIZE =0x71000
