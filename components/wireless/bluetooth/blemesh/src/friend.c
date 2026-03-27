@@ -58,7 +58,12 @@ struct friend_pdu_info {
 NET_BUF_POOL_FIXED_DEFINE(friend_buf_pool, FRIEND_BUF_COUNT,
 			  BT_MESH_ADV_DATA_SIZE, NULL);
 #else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_friend_buf_pool;
+#define friend_buf_pool (*p_friend_buf_pool)
+#else
 struct net_buf_pool friend_buf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 
 static struct friend_adv {
@@ -1232,7 +1237,11 @@ int bt_mesh_friend_init(void)
 	int i;
 
     #if defined(BFLB_DYNAMIC_ALLOC_MEM)
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	net_buf_init(&p_friend_buf_pool, FRIEND_BUF_COUNT, BT_MESH_ADV_DATA_SIZE, NULL);
+	#else
     net_buf_init(&friend_buf_pool, FRIEND_BUF_COUNT, BT_MESH_ADV_DATA_SIZE, NULL);
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     #endif
     
 	for (i = 0; i < ARRAY_SIZE(bt_mesh.frnd); i++) {

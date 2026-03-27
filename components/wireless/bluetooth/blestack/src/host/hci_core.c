@@ -70,7 +70,6 @@
 
 #define HCI_CMD_TIMEOUT      K_SECONDS(10)
 
-extern struct k_fifo recv_fifo;
 extern struct k_work_q g_work_queue_main;
 /* Stacks for the threads */
 #if !defined(CONFIG_BT_RECV_IS_RX_THREAD)
@@ -84,6 +83,11 @@ static K_THREAD_STACK_DEFINE(tx_thread_stack, CONFIG_BT_HCI_TX_STACK_SIZE);
 
 static void init_work(struct k_work *work);
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static const struct bt_hci_driver *g_registered_drv = NULL;
+struct bt_dev_t *p_bt_dev = NULL;
+#define bt_dev (*p_bt_dev)
+#else
 struct bt_dev bt_dev = {
 	.init          = _K_WORK_INITIALIZER(init_work),
 	/* Give cmd_sem allowing to send first HCI_Reset cmd, the only
@@ -111,20 +115,24 @@ struct bt_dev bt_dev = {
 	.rx_queue      = Z_FIFO_INITIALIZER(bt_dev.rx_queue),
 #endif
 #endif
+	.adv_ch_map = BT_GAP_ADV_CHNL_ALL_EN,
 };
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 static bt_ready_cb_t ready_cb;
 
 static bt_le_scan_cb_t *scan_dev_found_cb;
-
-u8_t adv_ch_map = BT_GAP_ADV_CHNL_ALL_EN;
 
 #if defined(CONFIG_BT_HCI_VS_EVT_USER)
 static bt_hci_vnd_evt_cb_t *hci_vnd_evt_cb;
 #endif /* CONFIG_BT_HCI_VS_EVT_USER */
 
 #if defined(CONFIG_BT_ECC)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static u8_t* pub_key;
+#else
 static u8_t pub_key[64];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 static struct bt_pub_key_cb *pub_key_cb;
 static bt_dh_key_cb_t dh_key_cb;
 #endif /* CONFIG_BT_ECC */
@@ -215,8 +223,12 @@ struct acl_data {
 #if defined(BFLB_BLE)
 extern struct k_sem g_poll_sem;
 #endif
-
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct cmd_data* cmd_data;
+static uint8_t *g_bt_dev_mem_pool = NULL;
+#else
 static struct cmd_data cmd_data[CONFIG_BT_HCI_CMD_COUNT];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 #define cmd(buf) (&cmd_data[net_buf_id(buf)])
 #define acl(buf) ((struct acl_data *)net_buf_user_data(buf))
@@ -245,13 +257,30 @@ NET_BUF_POOL_FIXED_DEFINE(discardable_pool, CONFIG_BT_DISCARDABLE_BUF_COUNT,
 			  BT_BUF_RX_SIZE, NULL);
 #endif /* CONFIG_BT_DISCARDABLE_BUF_COUNT */
 #else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_hci_cmd_pool;
+#define hci_cmd_pool (*p_hci_cmd_pool)
+struct net_buf_pool* p_hci_rx_pool;
+#define hci_rx_pool (*p_hci_rx_pool)
+#else
 struct net_buf_pool hci_cmd_pool;
 struct net_buf_pool hci_rx_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(CONFIG_BT_CONN)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_num_complete_pool;
+#define num_complete_pool (*p_num_complete_pool)
+#else
 struct net_buf_pool num_complete_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #if defined(CONFIG_BT_DISCARDABLE_BUF_COUNT)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_discardable_pool;
+#define discardable_pool (*p_discardable_pool)
+#else
 struct net_buf_pool discardable_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #endif /*!defined(BFLB_DYNAMIC_ALLOC_MEM)*/
 
@@ -363,7 +392,12 @@ static void report_completed_packet(struct net_buf *buf)
 NET_BUF_POOL_DEFINE(acl_in_pool, CONFIG_BT_ACL_RX_COUNT, ACL_IN_SIZE,
 		    sizeof(struct acl_data), report_completed_packet);
 #else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_acl_in_pool;
+#define acl_in_pool (*p_acl_in_pool)
+#else
 struct net_buf_pool acl_in_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #endif /* CONFIG_BT_HCI_ACL_FLOW_CONTROL */
 
@@ -4600,12 +4634,20 @@ static void hci_tx_thread(void *p1)
 static void hci_tx_thread(void *p1, void *p2, void *p3)
 #endif
 {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	struct k_poll_event* events = bt_dev.events;
+	K_POLL_EVENT_STATIC_INITIALIZERP(events[0], K_POLL_TYPE_FIFO_DATA_AVAILABLE,
+						K_POLL_MODE_NOTIFY_ONLY,
+						&bt_dev.cmd_tx_queue,
+						BT_EVENT_CMD_TX);
+#else
 	static struct k_poll_event events[EV_COUNT] = {
 		K_POLL_EVENT_STATIC_INITIALIZER(K_POLL_TYPE_FIFO_DATA_AVAILABLE,
 						K_POLL_MODE_NOTIFY_ONLY,
 						&bt_dev.cmd_tx_queue,
 						BT_EVENT_CMD_TX),
 	};
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 	BT_DBG("Started");
 
@@ -5736,6 +5778,21 @@ int bt_recv_prio(struct net_buf *buf)
 
 int bt_hci_driver_register(const struct bt_hci_driver *drv)
 {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	if (g_registered_drv) {
+		return -EALREADY;
+	}
+
+	if (!drv->open || !drv->send) {
+		return -EINVAL;
+	}
+
+	/* Store driver temporarily, will assign to bt_dev.drv in bt_enable() */
+	g_registered_drv = drv;
+	if(p_bt_dev){
+		p_bt_dev->drv = g_registered_drv;
+	}
+#else
 	if (bt_dev.drv) {
 		return -EALREADY;
 	}
@@ -5745,6 +5802,7 @@ int bt_hci_driver_register(const struct bt_hci_driver *drv)
 	}
 
 	bt_dev.drv = drv;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 	BT_DBG("Registered %s", drv->name ? drv->name : "");
 
@@ -5816,6 +5874,14 @@ static int bt_init(void)
     #if defined(CONFIG_BT_STACK_PTS)
     u8_t dbg_irk[16];
     #endif
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	err = bt_log_init();
+	if (err) {
+		return err;
+	}
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
 /*Make sure that freertos is running when set info into flash, because Semaphore is used in ef_set_env*/
 #if defined(BFLB_BLE_PATCH_SETTINGS_LOAD)
     char empty_name[CONFIG_BT_DEVICE_NAME_MAX];
@@ -5847,6 +5913,14 @@ static int bt_init(void)
 			return err;
 		}
 	}
+
+#if defined(CONFIG_BT_SMP) && (CONFIG_BLE_USING_DYNAMIC_RAM)
+	err = bt_keys_init();
+	if (err) {
+		BT_ERR("Failed to init key_pool");
+		return err;
+	}
+#endif /* CONFIG_BT_SMP && CONFIG_BLE_USING_DYNAMIC_RAM */
 
 #if defined(CONFIG_BT_PRIVACY)
 	err = irk_init();
@@ -5883,8 +5957,7 @@ static int bt_init(void)
 	bt_finalize_init();
 	#if defined(CONFIG_BT_BREDR)
 	#if defined(BFLB_BT_LINK_KEYS_STORE)
-	extern int bt_keys_init(void);
-	bt_keys_init();
+	bt_keys_br_init();
 	#endif
 	#endif
 	return 0;
@@ -5939,6 +6012,11 @@ static void hci_rx_thread(void)
 
 bool bt_is_ready(void)
 {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    if (!p_bt_dev) {
+        return false;
+    }
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     if(atomic_test_bit(bt_dev.flags, BT_DEV_READY))
         return true;
     else
@@ -5947,45 +6025,122 @@ bool bt_is_ready(void)
 
 int bt_enable(bt_ready_cb_t cb)
 {
-	int err;
+	int err = 0;
 
-	if (!bt_dev.drv) {
-		BT_ERR("No HCI driver registered");
-		return -ENODEV;
-	}
-
-	if (atomic_test_and_set_bit(bt_dev.flags, BT_DEV_ENABLE)) {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	if (p_bt_dev) {
+		BT_WARN("BLE already enabled");
 		return -EALREADY;
 	}
+	const size_t bt_dev_size = MEM_ALIGN_32(sizeof(struct bt_dev_t));
+	const size_t events_size = MEM_ALIGN_32(sizeof(struct k_poll_event) * EV_COUNT);
+#if defined(CONFIG_BT_ECC)
+	const size_t pub_key_size = MEM_ALIGN_32(64);
+#else
+	const size_t pub_key_size = 0;
+#endif
+	const size_t cmd_data_size = MEM_ALIGN_32(sizeof(struct cmd_data) * CONFIG_BT_HCI_CMD_COUNT);
+
+	const size_t total_size = bt_dev_size + events_size + pub_key_size + cmd_data_size;
+
+	g_bt_dev_mem_pool = (uint8_t *)k_malloc(total_size);
+	if (!g_bt_dev_mem_pool) {
+		BT_ERR("Failed to allocate bt_dev mem pool: %u bytes", total_size);
+		return -ENOMEM;
+	}
+	memset(g_bt_dev_mem_pool, 0, total_size);
+
+	size_t offset = 0;
+	p_bt_dev = (struct bt_dev_t *)(g_bt_dev_mem_pool + offset);
+	offset += bt_dev_size;
+	p_bt_dev->events = (struct k_poll_event *)(g_bt_dev_mem_pool + offset);
+	offset += events_size;
+#if defined(CONFIG_BT_ECC)
+	pub_key = (u8_t *)(g_bt_dev_mem_pool + offset);
+	offset += pub_key_size;
+#endif
+	cmd_data = (struct cmd_data *)(g_bt_dev_mem_pool + offset);
+
+	p_bt_dev->drv = g_registered_drv;
+	g_registered_drv = NULL;  /* Clear temporary reference */
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
+	/* Check if driver is registered */
+	if (!bt_dev.drv) {
+		BT_ERR("No HCI driver registered");
+		err = -ENODEV;
+		goto cleanup;
+	}
+
+	/* Check if already enabled */
+	if (atomic_test_and_set_bit(bt_dev.flags, BT_DEV_ENABLE)) {
+		err = -EALREADY;
+		goto cleanup;
+	}
+	bt_dev.adv_ch_map = BT_GAP_ADV_CHNL_ALL_EN;
 
 #if defined(BFLB_BLE)
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
         #if (BFLB_STATIC_ALLOC_MEM)
-        net_buf_init(HCI_CMD,&hci_cmd_pool, CONFIG_BT_HCI_CMD_COUNT, CMD_BUF_SIZE, NULL);
-        net_buf_init(HCI_RX,&hci_rx_pool, CONFIG_BT_RX_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(HCI_CMD, &p_hci_cmd_pool, CONFIG_BT_HCI_CMD_COUNT, CMD_BUF_SIZE, NULL);
+        net_buf_init(HCI_RX, &p_hci_rx_pool, CONFIG_BT_RX_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #else
+        net_buf_init(HCI_CMD, &hci_cmd_pool, CONFIG_BT_HCI_CMD_COUNT, CMD_BUF_SIZE, NULL);
+        net_buf_init(HCI_RX, &hci_rx_pool, CONFIG_BT_RX_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #endif
+        #else
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(&p_hci_cmd_pool, CONFIG_BT_HCI_CMD_COUNT, CMD_BUF_SIZE, NULL);
+        net_buf_init(&p_hci_rx_pool, CONFIG_BT_RX_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
         #else
         net_buf_init(&hci_cmd_pool, CONFIG_BT_HCI_CMD_COUNT, CMD_BUF_SIZE, NULL);
         net_buf_init(&hci_rx_pool, CONFIG_BT_RX_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
         #endif
+        #endif
         #if defined(CONFIG_BT_CONN)
         #if (BFLB_STATIC_ALLOC_MEM)
-        net_buf_init(NUM_COMPLETE,&num_complete_pool, 1, BT_BUF_RX_SIZE, NULL);
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(NUM_COMPLETE, &p_num_complete_pool, 1, BT_BUF_RX_SIZE, NULL);
+        #else
+        net_buf_init(NUM_COMPLETE, &num_complete_pool, 1, BT_BUF_RX_SIZE, NULL);
+        #endif
+        #else
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(&p_num_complete_pool, 1, BT_BUF_RX_SIZE, NULL);
         #else
         net_buf_init(&num_complete_pool, 1, BT_BUF_RX_SIZE, NULL);
         #endif
+        #endif
         #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
         #if (BFLB_STATIC_ALLOC_MEM)
-        net_buf_init(ACL_IN,&acl_in_pool, CONFIG_BT_ACL_RX_COUNT, ACL_IN_SIZE, report_completed_packet);
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(ACL_IN, &p_acl_in_pool, CONFIG_BT_ACL_RX_COUNT, ACL_IN_SIZE, report_completed_packet);
+        #else
+        net_buf_init(ACL_IN, &acl_in_pool, CONFIG_BT_ACL_RX_COUNT, ACL_IN_SIZE, report_completed_packet);
+        #endif
+        #else
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(&p_acl_in_pool, CONFIG_BT_ACL_RX_COUNT, ACL_IN_SIZE, report_completed_packet);
         #else
         net_buf_init(&acl_in_pool, CONFIG_BT_ACL_RX_COUNT, ACL_IN_SIZE, report_completed_packet);
+        #endif
         #endif
         #endif//CONFIG_BT_HCI_ACL_FLOW_CONTROL
         #endif//CONFIG_BT_CONN
         #if defined(CONFIG_BT_DISCARDABLE_BUF_COUNT)
         #if (BFLB_STATIC_ALLOC_MEM)
-        net_buf_init(DISCARDABLE,&discardable_pool, CONFIG_BT_DISCARDABLE_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(DISCARDABLE, &p_discardable_pool, CONFIG_BT_DISCARDABLE_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #else
+        net_buf_init(DISCARDABLE, &discardable_pool, CONFIG_BT_DISCARDABLE_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #endif
+        #else
+        #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        net_buf_init(&p_discardable_pool, CONFIG_BT_DISCARDABLE_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
         #else
         net_buf_init(&discardable_pool, CONFIG_BT_DISCARDABLE_BUF_COUNT, BT_BUF_RX_SIZE, NULL);
+        #endif
         #endif
         #endif
 #endif
@@ -6013,7 +6168,7 @@ int bt_enable(bt_ready_cb_t cb)
     if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
 		err = bt_settings_init();
 		if (err) {
-			return err;
+			goto cleanup;
 		}
 	} else {
 		bt_set_name(CONFIG_BT_DEVICE_NAME);
@@ -6024,7 +6179,7 @@ int bt_enable(bt_ready_cb_t cb)
 
 	/* TX thread */
 #if defined(BFLB_BLE)
-k_thread_create(&tx_thread_data, "hci_tx_thread",
+	k_thread_create(&tx_thread_data, "hci_tx_thread",
 			CONFIG_BT_HCI_TX_STACK_SIZE,
 			hci_tx_thread,
 			CONFIG_BT_HCI_TX_PRIO);
@@ -6034,7 +6189,7 @@ k_thread_create(&tx_thread_data, "hci_tx_thread",
 			hci_tx_thread, NULL, NULL, NULL,
 			K_PRIO_COOP(CONFIG_BT_HCI_TX_PRIO),
 			0, K_NO_WAIT);
-	k_thread_name_set(&tx_thread_data, "BT TX");
+    k_thread_name_set(&tx_thread_data, "BT TX");
 #endif
 
 #if !defined(CONFIG_BT_RECV_IS_RX_THREAD)
@@ -6050,7 +6205,7 @@ k_thread_create(&tx_thread_data, "hci_tx_thread",
 			(k_thread_entry_t)hci_rx_thread, NULL, NULL, NULL,
 			K_PRIO_COOP(CONFIG_BT_RX_PRIO),
 			0, K_NO_WAIT);
-	k_thread_name_set(&rx_thread_data, "BT RX");
+    k_thread_name_set(&rx_thread_data, "BT RX");
 #endif //BFLB_BLE
 #endif
 
@@ -6061,7 +6216,7 @@ k_thread_create(&tx_thread_data, "hci_tx_thread",
 	err = bt_dev.drv->open();
 	if (err) {
 		BT_ERR("HCI driver open failed (%d)", err);
-		return err;
+		goto cleanup;
 	}
 
 #if !defined(BFLB_BLE)
@@ -6076,6 +6231,20 @@ k_thread_create(&tx_thread_data, "hci_tx_thread",
 
 	k_work_submit(&bt_dev.init);
 	return 0;
+
+cleanup:
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	if (g_bt_dev_mem_pool) {
+		k_free(g_bt_dev_mem_pool);
+		g_bt_dev_mem_pool = NULL;
+	}
+	p_bt_dev = NULL;
+	cmd_data = NULL;
+#if defined(CONFIG_BT_ECC)
+	pub_key = NULL;
+#endif /* CONFIG_BT_ECC */
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+	return err;
 }
 
 struct bt_ad {
@@ -6099,9 +6268,15 @@ bool le_check_valid_adv(void)
 #if defined(BFLB_DISABLE_BT)
 extern struct k_thread recv_thread_data;
 extern struct k_thread work_q_thread;
+#if !(CONFIG_BLE_USING_DYNAMIC_RAM)
 extern struct k_fifo free_tx;
+#endif
 #if defined(CONFIG_BT_SMP)
-extern struct k_sem sc_local_pkey_ready;
+extern void bt_smp_deinit(void);
+#endif
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern void bt_att_deinit(void);
+extern void bt_log_deinit(void);
 #endif
 
 void bt_delete_queue(struct k_fifo * queue_to_del)
@@ -6117,17 +6292,43 @@ void bt_delete_queue(struct k_fifo * queue_to_del)
 }
 
 #if defined(BFLB_DYNAMIC_ALLOC_MEM) && (CONFIG_BT_CONN)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_acl_tx_pool;
+#define acl_tx_pool (*p_acl_tx_pool)
+struct net_buf_pool* p_prep_pool;
+#define prep_pool (*p_prep_pool)
+#else
 extern struct net_buf_pool acl_tx_pool;
 extern struct net_buf_pool prep_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(CONFIG_BT_BREDR)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_br_sig_pool;
+#define br_sig_pool (*p_br_sig_pool)
+extern struct net_buf_pool* p_sdp_pool;
+#define sdp_pool (*p_sdp_pool)
+extern struct net_buf_pool* p_dummy_pool;
+#define dummy_pool (*p_dummy_pool)
+#else
 extern struct net_buf_pool br_sig_pool;
 extern struct net_buf_pool sdp_pool;
 extern struct net_buf_pool dummy_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined CONFIG_BT_HFP
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_hf_pool;
+#define hf_pool (*p_hf_pool)
+#else
 extern struct net_buf_pool hf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #if defined CONFIG_BT_SPP
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_spp_pool;
+#define spp_pool (*p_spp_pool)
+#else
 extern struct net_buf_pool spp_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #endif
 #endif
@@ -6139,20 +6340,31 @@ int bt_disable_action(void)
     #endif
     #if defined(CONFIG_BT_CONN)
     bt_gatt_deinit();
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	bt_conn_deinit();
+	bt_att_deinit();
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     #endif
     bt_conn_cb_clear();
     //delete queue, not delete hci_cmd_pool.free/hci_rx_pool.free/acl_tx_pool.free which store released buffers.
-    bt_delete_queue(&recv_fifo);
+    //bt_delete_queue(&recv_fifo); move to driver->close
+	int err = bt_dev.drv->close();
+	if (err) {
+		BT_ERR("HCI driver close failed (%d)", err);
+		return err;
+	}
     bt_delete_queue(&g_work_queue_main.fifo);
     bt_delete_queue(&bt_dev.cmd_tx_queue);
     #if defined(CONFIG_BT_CONN)
+    #if !(CONFIG_BLE_USING_DYNAMIC_RAM)
     k_queue_free((struct k_queue *)&free_tx);
+    #endif
     #endif
     //delete sem
     k_sem_delete(&bt_dev.ncmd_sem);
     k_sem_delete(&g_poll_sem);
-    #if defined(CONFIG_BT_ECC) && defined(CONFIG_BT_SMP)
-    k_sem_delete(&sc_local_pkey_ready);
+    #if defined(CONFIG_BT_SMP)
+    bt_smp_deinit();
     #endif
     #if defined(CONFIG_BT_CONN)
     k_sem_delete(&bt_dev.le.pkts);
@@ -6207,8 +6419,30 @@ int bt_disable_action(void)
     k_thread_delete(&tx_thread_data);
     k_thread_delete(&work_q_thread);
     k_thread_delete(&recv_thread_data);
-    memset(&bt_dev, 0, sizeof(bt_dev));
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	/* Free single memory pool and clear all pointers */
+	if (g_bt_dev_mem_pool) {
+		k_free(g_bt_dev_mem_pool);
+		g_bt_dev_mem_pool = NULL;
+	}
+	p_bt_dev = NULL;
+	cmd_data = NULL;
+#if defined(CONFIG_BT_ECC)
+	pub_key = NULL;
+#endif /* CONFIG_BT_ECC */
+
+	#if defined(CONFIG_BT_SMP)
+	bt_keys_deinit();
+	#if defined(CONFIG_BT_BREDR)
+	bt_keys_br_deinit();
+	#endif
+	#endif /* CONFIG_BT_SMP  */
+
+	bt_log_deinit();
+#else
+	memset(&bt_dev, 0, sizeof(bt_dev));
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     return 0;
 }
 
@@ -6819,7 +7053,7 @@ int bt_le_adv_start_internal(const struct bt_le_adv_param *param,
 
 	set_param.min_interval = sys_cpu_to_le16(param->interval_min);
 	set_param.max_interval = sys_cpu_to_le16(param->interval_max);
-	set_param.channel_map  = adv_ch_map;
+	set_param.channel_map  = bt_dev.adv_ch_map;
 
 	if (bt_dev.adv_id != param->id) {
 		atomic_clear_bit(bt_dev.flags, BT_DEV_RPA_VALID);
@@ -7296,7 +7530,7 @@ int set_adv_channel_map(bt_gap_adv_chnl_map_t channel)
 
     if(channel >= BT_GAP_ADV_CHNL_37_EN && channel <= BT_GAP_ADV_CHNL_ALL_EN)
     {
-        adv_ch_map = channel;
+        bt_dev.adv_ch_map = channel;
     }
     else
     {

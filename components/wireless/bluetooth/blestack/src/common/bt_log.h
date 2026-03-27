@@ -125,6 +125,11 @@ const char *bt_hex_real(const void *buf, size_t len);
 const char *bt_addr_str_real(const bt_addr_t *addr);
 const char *bt_addr_le_str_real(const bt_addr_le_t *addr);
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+int bt_log_init(void);
+void bt_log_deinit(void);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
 /* NOTE: log_strdup does not guarantee a duplication of the string.
  * It is therefore still the responsibility of the user to handle the
  * restrictions in the underlying function call.

@@ -271,7 +271,12 @@ static bool mitm = IS_ENABLED(CONFIG_BT_SMP_ENFORCE_MITM);
 static int  smp_test_flag = 0;
 #endif
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct bt_smp *bt_smp_pool;
+static uint8_t *g_smp_mem_pool = NULL;
+#else
 static struct bt_smp bt_smp_pool[CONFIG_BT_MAX_CONN];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 static bool bondable = IS_ENABLED(CONFIG_BT_BONDABLE);
 static bool oobd_present;
 static bool sc_supported;
@@ -283,7 +288,12 @@ u8_t local_auth = SMP_INVALID_AUTH;
 #endif
 
 #if defined(BFLB_BLE)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct k_sem *p_sc_local_pkey_ready;
+#define sc_local_pkey_ready (*p_sc_local_pkey_ready)
+#else
 struct k_sem sc_local_pkey_ready;
+#endif
 #else
 static K_SEM_DEFINE(sc_local_pkey_ready, 0, 1);
 #endif
@@ -1752,7 +1762,7 @@ static bool br_sc_supported(void)
 
 static int bt_smp_br_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 {
-	static struct bt_l2cap_chan_ops ops = {
+	static const struct bt_l2cap_chan_ops ops = {
 		.connected = bt_smp_br_connected,
 		.disconnected = bt_smp_br_disconnected,
 		.recv = bt_smp_br_recv,
@@ -1766,7 +1776,7 @@ static int bt_smp_br_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 
 	BT_DBG("conn %p handle %u", conn, conn->handle);
 
-	for (i = 0; i < ARRAY_SIZE(bt_smp_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
 		struct bt_smp_br *smp = &bt_smp_br_pool[i];
 
 		if (smp->chan.chan.conn) {
@@ -3518,7 +3528,7 @@ static void bt_smp_dhkey_ready(const u8_t *dhkey)
 
 	BT_DBG("%p", dhkey);
 
-	for (i = 0; i < ARRAY_SIZE(bt_smp_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
 		if (atomic_test_and_clear_bit(bt_smp_pool[i].flags,
 					      SMP_FLAG_DHKEY_PENDING)) {
 			smp = &bt_smp_pool[i];
@@ -4473,7 +4483,7 @@ static void bt_smp_pkey_ready(const u8_t *pkey)
 
 	k_sem_give(&sc_local_pkey_ready);
 
-	for (i = 0; i < ARRAY_SIZE(bt_smp_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
 		struct bt_smp *smp = &bt_smp_pool[i];
 		u8_t err;
 
@@ -5627,7 +5637,7 @@ void bt_smp_update_keys(struct bt_conn *conn)
 static int bt_smp_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 {
 	int i;
-	static struct bt_l2cap_chan_ops ops = {
+	static const struct bt_l2cap_chan_ops ops = {
 		.connected = bt_smp_connected,
 		.disconnected = bt_smp_disconnected,
 		.encrypt_change = bt_smp_encrypt_change,
@@ -5636,7 +5646,7 @@ static int bt_smp_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 
 	BT_DBG("conn %p handle %u", conn, conn->handle);
 
-	for (i = 0; i < ARRAY_SIZE(bt_smp_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
 		struct bt_smp *smp = &bt_smp_pool[i];
 
 		if (smp->chan.chan.conn) {
@@ -5677,35 +5687,110 @@ BT_L2CAP_BR_CHANNEL_DEFINE(smp_br_fixed_chan, BT_L2CAP_CID_BR_SMP,
 
 int bt_smp_init(void)
 {
-    #if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
+	int err;
+#if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
 	static struct bt_l2cap_fixed_chan chan = {
 		.cid		= BT_L2CAP_CID_SMP,
 		.accept		= bt_smp_accept,
 	};
-    #endif
+#endif
 
-    #if defined(CONFIG_BT_ECC)
+#if defined(CONFIG_BT_ECC)
 	static struct bt_pub_key_cb pub_key_cb = {
 		.func           = bt_smp_pkey_ready,
 	};
-    #if defined(BFLB_BLE)
-    k_sem_init(&sc_local_pkey_ready, 0, 1);
-    #endif
-    #endif
-    
+#endif
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	const size_t bt_smp_pool_size = MEM_ALIGN_32(CONFIG_BT_MAX_CONN * sizeof(struct bt_smp));
+#if defined(BFLB_BLE)
+	const size_t sc_local_pkey_ready_size = MEM_ALIGN_32(sizeof(struct k_sem));
+#else
+	const size_t sc_local_pkey_ready_size = 0;
+#endif
+	const size_t total_size = bt_smp_pool_size + sc_local_pkey_ready_size;
+
+	g_smp_mem_pool = (uint8_t *)k_malloc(total_size);
+	if (!g_smp_mem_pool) {
+		BT_ERR("Failed to allocate smp mem pool: %u bytes", total_size);
+		return -ENOMEM;
+	}
+	memset(g_smp_mem_pool, 0, total_size);
+
+	size_t offset = 0;
+	bt_smp_pool = (struct bt_smp *)(g_smp_mem_pool + offset);
+	offset += bt_smp_pool_size;
+#if defined(BFLB_BLE)
+	p_sc_local_pkey_ready = (struct k_sem *)(g_smp_mem_pool + offset);
+	offset += sc_local_pkey_ready_size;
+	k_sem_init(p_sc_local_pkey_ready, 0, 1);
+#endif
+#else /* !(CONFIG_BLE_USING_DYNAMIC_RAM) */
+	#if defined(BFLB_BLE)
+	k_sem_init(&sc_local_pkey_ready, 0, 1);
+	#endif /* BFLB_BLE */
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 	sc_supported = le_sc_supported();
 	if (IS_ENABLED(CONFIG_BT_SMP_SC_PAIR_ONLY) && !sc_supported) {
 		BT_ERR("SC Pair Only Mode selected but LE SC not supported");
-		return -ENOENT;
+		err = -ENOENT;
+		goto cleanup;
 	}
 
-    #if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
+#if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
 	bt_l2cap_le_fixed_chan_register(&chan);
-    #endif
+#endif
 
 	BT_DBG("LE SC %s", sc_supported ? "enabled" : "disabled");
     #if defined(CONFIG_BT_ECC)
 	bt_pub_key_gen(&pub_key_cb);
     #endif
-	return smp_self_test();
+
+	err = smp_self_test();
+	if (err) {
+		goto cleanup;
+	}
+
+	return 0;
+
+cleanup:
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+#if defined(BFLB_BLE)
+	if (p_sc_local_pkey_ready) {
+		k_sem_delete(p_sc_local_pkey_ready);
+	}
+#endif
+	if (g_smp_mem_pool) {
+		k_free(g_smp_mem_pool);
+		g_smp_mem_pool = NULL;
+	}
+	bt_smp_pool = NULL;
+#if defined(BFLB_BLE)
+	p_sc_local_pkey_ready = NULL;
+#endif
+#endif
+	return err;
+}
+
+void bt_smp_deinit(void)
+{
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+#if defined(BFLB_BLE)
+	if (p_sc_local_pkey_ready) {
+		k_sem_delete(p_sc_local_pkey_ready);
+	}
+#endif
+	if (g_smp_mem_pool) {
+		k_free(g_smp_mem_pool);
+		g_smp_mem_pool = NULL;
+	}
+	bt_smp_pool = NULL;
+#if defined(BFLB_BLE)
+	p_sc_local_pkey_ready = NULL;
+#endif
+#else
+#if defined(BFLB_BLE)
+	k_sem_delete(&sc_local_pkey_ready);
+#endif
+#endif
 }

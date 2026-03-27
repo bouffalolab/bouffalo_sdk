@@ -17,13 +17,13 @@
 // #define MJDEC_FORMAT MJDEC_FORMAT_BGR565
 // #define MJDEC_FORMAT MJDEC_FORMAT_NBGR8888
 
-static __attribute__((aligned(16))) ATTR_NOCACHE_RAM_SECTION uint8_t jpeg_buffer[] = {
+static __attribute__((aligned(BFLB_CACHE_LINE_SIZE))) ATTR_NOCACHE_RAM_SECTION uint8_t jpeg_buffer[] = {
 // #include "picture/jpg_yuv422.h"
 #include "picture/jpg_yuv420.h"
 // #include "picture/jpg_yuv400.h"
 // #include "picture/jpg_red.h"
 };
-static __attribute__((aligned(16))) ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t out_buffer[48 * 1024];
+static __attribute__((aligned(BFLB_CACHE_LINE_SIZE))) ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t out_buffer[80 * 1024];
 static struct bflb_mjdec_config_s config = {
     .format = MJDEC_FORMAT,
     .alpha = 0x0,

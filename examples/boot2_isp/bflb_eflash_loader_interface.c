@@ -124,7 +124,8 @@ int32_t ATTR_TCM_SECTION bflb_eflash_loader_main()
     boot2_wdt_feed();
     boot2_wdt_disable();
 
-#if defined(CHIP_BL602) || defined(CHIP_BL702) || defined(CHIP_BL616)  || defined(CHIP_BL606P)  || defined(CHIP_BL808)
+#if defined(CHIP_BL602) || defined(CHIP_BL702) || defined(CHIP_BL616) || defined(CHIP_BL606P) || \
+    defined(CHIP_BL808) || defined(CHIP_BL618DG) || defined(CHIP_BL616CL)
     int32_t ret;
     uint32_t total_len;
     uint32_t i, tmp, cmd_len;

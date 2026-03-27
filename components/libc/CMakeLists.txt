@@ -2,6 +2,10 @@ sdk_generate_library()
 
 sdk_add_include_directories(.)
 
+if(CONFIG_NEWLIB_LITTLEFS)
+    sdk_add_compile_definitions(CONFIG_NEWLIB_LITTLEFS=1)
+endif()
+
 # ##################################################################################################
 # 1.syscall select
 if(CONFIG_NEWLIB)
@@ -12,7 +16,9 @@ if(CONFIG_NEWLIB)
     sdk_library_add_sources(newlib/port_time.c)
     sdk_library_add_sources(newlib/port_init_fini.c)
 
-    if(CONFIG_NEWLIB_FATFS)
+    if(CONFIG_NEWLIB_LITTLEFS)
+        sdk_library_add_sources(newlib/port_file_littlefs.c)
+    elseif(CONFIG_NEWLIB_FATFS)
         sdk_library_add_sources(newlib/port_file_fatfs.c)
     else()
         sdk_library_add_sources(newlib/port_file_nosys.c)

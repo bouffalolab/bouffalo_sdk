@@ -66,6 +66,18 @@ static uint32_t bflb_sp_boot_parse_is_pkhash_valid(uint8_t pk_src, uint8_t *pkha
         hash_size = HAL_BOOT2_PK_HASH_SIZE; /* 32 bytes */
     }
 
+    if (pk_src >= HAL_BOOT2_CPU_GROUP_MAX) {
+        return 0;
+    }
+
+#if defined(CHIP_BL616CL)
+    if ((sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA256) &&
+        (g_efuse_cfg.pkhash_sel == HAL_APP_SIGN_PKHASH_FROM_EFUSE) &&
+        (g_efuse_cfg.pkhash_len == 0)) {
+        hash_size = HAL_BOOT2_PK_HASH_SIZE_LEN192;
+    }
+#endif
+
     for (i = 0; i < HAL_BOOT2_CPU_GROUP_MAX; i++) {
         if ((pk_src == i) && (0 == memcmp(g_efuse_cfg.pk_hash_cpu[i], pkhash, hash_size))) {
             return 1;

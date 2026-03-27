@@ -32,6 +32,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// __INLINE is typically provided by the build system or compiler headers
+#ifndef __INLINE
+#define __INLINE inline
+#endif
+
+#ifndef PHY_STATIC_INLINE
+#define PHY_STATIC_INLINE static inline
+#endif
+
 /*
  * DEFINES
  ****************************************************************************************
@@ -114,6 +123,20 @@ enum phy_mac_chan_bandwidth
     /// Reserved BW
     E_PHY_CHNL_BW_OTHER,
 };
+
+#define PHY_SUPPORTED_BAND        E_PHY_BAND_2G4
+#define PHY_SUPPORTED_CHAN_BW     E_PHY_CHNL_BW_20
+#define PHY_SUPPORTED_NSS         1
+#define PHY_SUPPORTED_NSTS_NDP    4
+#define PHY_SUPPORTED_NTX         1
+#define PHY_SUPPORTED_NRX         1
+#define PHY_SUPPORTED_ANTENNA_SET 1
+#define PHY_SUPPORTS_VHT          0
+#define PHY_SUPPORTS_LDPC_TX      0
+#define PHY_SUPPORTS_LDPC_RX      0
+#define PHY_SUPPORTS_BFMEE        1
+#define PHY_MAX_PWR               ((int8_t)22)
+#define PHY_MIN_PWR               ((int8_t)-10)
 
 /// Operating Channel
 struct phy_mac_chan_op
@@ -234,7 +257,13 @@ void phy_get_channel(struct phy_channel_info *info, uint8_t index);
  * It puts back the MAC HW to the IDLE state
  ****************************************************************************************
  */
+#if PHYRF_LOG_EN
 void phy_stop(void);
+#else
+PHY_STATIC_INLINE void phy_stop(void)
+{
+}
+#endif
 
 /**
  ****************************************************************************************
@@ -243,7 +272,10 @@ void phy_stop(void);
  * @return Maximum duration, in ms, to configure a new channel.
  ****************************************************************************************
  */
-uint32_t phy_get_channel_switch_dur(void);
+PHY_STATIC_INLINE uint32_t phy_get_channel_switch_dur(void)
+{
+    return 1000;
+}
 
 /**
  ****************************************************************************************
@@ -256,16 +288,12 @@ uint32_t phy_get_channel_switch_dur(void);
  */
 __INLINE int phy_freq_to_channel(uint8_t band, uint16_t freq)
 {
-    if ((band == E_PHY_BAND_2G4) && (freq >= 2412) && (freq <= 2484))
+    if ((band == PHY_SUPPORTED_BAND) && (freq >= 2412) && (freq <= 2484))
     {
         if (freq == 2484)
             return 14;
         else
             return (freq - 2407) / 5;
-    }
-    else if ((band == E_PHY_BAND_5G) && (freq >= 5005) && (freq <= 5885))
-    {
-        return (freq - PHY_FREQ_5G) / 5;
     }
 
     return 0;
@@ -282,16 +310,12 @@ __INLINE int phy_freq_to_channel(uint8_t band, uint16_t freq)
  */
 __INLINE uint16_t phy_channel_to_freq(uint8_t band, int channel)
 {
-    if ((band == E_PHY_BAND_2G4) && (channel >= 1) && (channel <= 14))
+    if ((band == PHY_SUPPORTED_BAND) && (channel >= 1) && (channel <= 14))
     {
         if (channel == 14)
             return 2484;
         else
             return 2407 + channel * 5;
-    }
-    else if ((band == E_PHY_BAND_5G) && (channel >= 1) && (channel <= 177))
-    {
-        return PHY_FREQ_5G + channel * 5;
     }
 
     return 0;
@@ -347,7 +371,10 @@ bool phy_get_radar_pulse(int rd_idx, struct phy_radar_pulse *pulse);
  * @return true if the VHT is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_vht_supported(void);
+PHY_STATIC_INLINE bool phy_vht_supported(void)
+{
+    return PHY_SUPPORTS_VHT;
+}
 
 /**
  ****************************************************************************************
@@ -356,7 +383,10 @@ bool phy_vht_supported(void);
  * @return true if the HE is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_he_supported(void);
+PHY_STATIC_INLINE bool phy_he_supported(void)
+{
+    return true;
+}
 
 /**
  ****************************************************************************************
@@ -383,7 +413,10 @@ void phy_uf_enable(bool enable);
  * @return true if the LDPC TX is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_ldpc_tx_supported(void);
+PHY_STATIC_INLINE bool phy_ldpc_tx_supported(void)
+{
+    return PHY_SUPPORTS_LDPC_TX;
+}
 
 /**
  ****************************************************************************************
@@ -392,7 +425,10 @@ bool phy_ldpc_tx_supported(void);
  * @return true if the LDPC RX is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_ldpc_rx_supported(void);
+PHY_STATIC_INLINE bool phy_ldpc_rx_supported(void)
+{
+    return PHY_SUPPORTS_LDPC_RX;
+}
 
 /**
  ****************************************************************************************
@@ -401,7 +437,10 @@ bool phy_ldpc_rx_supported(void);
  * @return true if Beamformee is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_bfmee_supported(void);
+PHY_STATIC_INLINE bool phy_bfmee_supported(void)
+{
+    return PHY_SUPPORTS_BFMEE;
+}
 
 /**
  ****************************************************************************************
@@ -410,7 +449,10 @@ bool phy_bfmee_supported(void);
  * @return true if Beamformer is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_bfmer_supported(void);
+PHY_STATIC_INLINE bool phy_bfmer_supported(void)
+{
+    return false;
+}
 
 /**
  ****************************************************************************************
@@ -419,7 +461,10 @@ bool phy_bfmer_supported(void);
  * @return true if MU-MIMO RX is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_mu_mimo_rx_supported(void);
+PHY_STATIC_INLINE bool phy_mu_mimo_rx_supported(void)
+{
+    return true;
+}
 
 /**
  ****************************************************************************************
@@ -428,7 +473,10 @@ bool phy_mu_mimo_rx_supported(void);
  * @return true if MU-MIMO TX is supported by the PHY, false otherwise
  ****************************************************************************************
  */
-bool phy_mu_mimo_tx_supported(void);
+PHY_STATIC_INLINE bool phy_mu_mimo_tx_supported(void)
+{
+    return false;
+}
 
 /**
  ****************************************************************************************
@@ -438,7 +486,11 @@ bool phy_mu_mimo_tx_supported(void);
  * @param[in] userpos_addr     Address of the user position array in the received frame
  ****************************************************************************************
  */
-void phy_set_group_id_info(uint32_t membership_addr, uint32_t userpos_addr);
+PHY_STATIC_INLINE void phy_set_group_id_info(uint32_t membership_addr, uint32_t userpos_addr)
+{
+    (void)membership_addr;
+    (void)userpos_addr;
+}
 
 /**
  ****************************************************************************************
@@ -456,7 +508,10 @@ void phy_set_aid(uint16_t aid);
  * @return 0: BW20MHZ, 1: BW40MHZ, 2: BW80MHZ
  ****************************************************************************************
  */
-uint8_t phy_get_bw(void);
+PHY_STATIC_INLINE uint8_t phy_get_bw(void)
+{
+    return PHY_SUPPORTED_CHAN_BW;
+}
 
 /**
  ****************************************************************************************
@@ -465,7 +520,10 @@ uint8_t phy_get_bw(void);
  * @return Number of Spatial Streams supported by the PHY (start from 0, 0 is for 1 SS)
  ****************************************************************************************
  */
-uint8_t phy_get_nss(void);
+PHY_STATIC_INLINE uint8_t phy_get_nss(void)
+{
+    return PHY_SUPPORTED_NSS - 1;
+}
 
 /**
  ****************************************************************************************
@@ -474,7 +532,10 @@ uint8_t phy_get_nss(void);
  * @return Number of antenna supported for TX minus 1 (i.e. 0 means 1 antenna)
  ****************************************************************************************
  */
-uint8_t phy_get_ntx(void);
+PHY_STATIC_INLINE uint8_t phy_get_ntx(void)
+{
+    return PHY_SUPPORTED_NTX - 1;
+}
 
 /**
  ****************************************************************************************
@@ -483,7 +544,10 @@ uint8_t phy_get_ntx(void);
  * @return Number of antenna supported for RX minus 1 (i.e. 0 means 1 antenna)
  ****************************************************************************************
  */
-uint8_t phy_get_nrx(void);
+PHY_STATIC_INLINE uint8_t phy_get_nrx(void)
+{
+    return PHY_SUPPORTED_NRX - 1;
+}
 
 /**
  ****************************************************************************************
@@ -507,7 +571,19 @@ uint8_t phy_get_bfr_mem_size(void);
  * @param[out]    idx   Idx to use in policy table to configure a tx power of \<gain\>
  ****************************************************************************************
  */
-void phy_get_rf_gain_idx(int8_t *power, uint8_t *idx);
+PHY_STATIC_INLINE void phy_get_rf_gain_idx(int8_t *power, uint8_t *idx)
+{
+    if (*power > PHY_MAX_PWR)
+    {
+        *power = PHY_MAX_PWR;
+    }
+    else if (*power < PHY_MIN_PWR)
+    {
+        *power = PHY_MIN_PWR;
+    }
+
+    *idx = (uint8_t)*power;
+}
 
 /**
  ****************************************************************************************
@@ -517,7 +593,11 @@ void phy_get_rf_gain_idx(int8_t *power, uint8_t *idx);
  * @param[out] min Minimum TX power for the radio (in dBm)
  ****************************************************************************************
  */
-void phy_get_rf_gain_capab(int8_t *max, int8_t *min);
+PHY_STATIC_INLINE void phy_get_rf_gain_capab(int8_t *max, int8_t *min)
+{
+    *max = PHY_MAX_PWR;
+    *min = PHY_MIN_PWR;
+}
 
 /**
  ****************************************************************************************
@@ -527,7 +607,10 @@ void phy_get_rf_gain_capab(int8_t *max, int8_t *min);
  * @return The antenna set value
  ****************************************************************************************
  */
-uint8_t phy_get_antenna_set(void);
+PHY_STATIC_INLINE uint8_t phy_get_antenna_set(void)
+{
+    return PHY_SUPPORTED_ANTENNA_SET;
+}
 
 #if NX_DEBUG_DUMP
 /**
@@ -549,7 +632,10 @@ void phy_get_diag_state(struct dbg_debug_info_tag *dbg_info);
  * @return Value of PATHMUX register
  ****************************************************************************************
  */
-uint8_t phy_switch_antenna_paths(void);
+PHY_STATIC_INLINE uint8_t phy_switch_antenna_paths(void)
+{
+    return 0;
+}
 
 void phy_update_power_table(void);
 

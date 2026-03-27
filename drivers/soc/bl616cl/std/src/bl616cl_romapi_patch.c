@@ -76,6 +76,65 @@ uint32_t ATTR_CLOCK_SECTION HBN_Get_RC32K_R_Code(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  USB PHY enter suspend mode for low power
+ *
+ * @note   This function configures USB PHY to enter suspend mode, allowing
+ *         XTAL to be turned off during PDS sleep. Used for USB low power
+ *         scenarios where current consumption is critical.
+ *         Registers: PDS_U2PHY_1 (0x2000E508)
+ *         - SUSPENDM0_USE_REG (bit 0): Set to 1 for register control
+ *         - SUSPENDM0 (bit 23): Clear to 0 for suspend state
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION PDS_Set_USB_PHY_Suspend(void)
+{
+    uint32_t tmpVal = 0;
+
+    /* Configure USB PHY suspend via PDS_U2PHY_1 register */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_U2PHY_1);
+    /* Set SUSPENDM0_USE_REG to 1: use register control for suspend */
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_SUSPENDM0_USE_REG);
+    /* Clear SUSPENDM0 to 0: enter suspend state */
+    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_SUSPENDM0);
+    BL_WR_REG(PDS_BASE, PDS_U2PHY_1, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  USB PHY exit suspend mode
+ *
+ * @note   This function restores USB PHY from suspend mode to normal
+ *         operation after PDS wakeup.
+ *         Registers: PDS_U2PHY_1 (0x2000E508)
+ *         - SUSPENDM0_USE_REG (bit 0): Clear to 0 to disable register control
+ *         - SUSPENDM0 (bit 23): Set to 1 to exit suspend (active)
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION PDS_Set_USB_PHY_Resume(void)
+{
+    uint32_t tmpVal = 0;
+
+    /* Restore USB PHY from suspend via PDS_U2PHY_1 register */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_U2PHY_1);
+    /* Clear SUSPENDM0_USE_REG to 0: disable register control */
+    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_SUSPENDM0_USE_REG);
+    /* Set SUSPENDM0 to 1: exit suspend state (active) */
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_SUSPENDM0);
+    BL_WR_REG(PDS_BASE, PDS_U2PHY_1, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  Efuse read adc vref trim
  *
  * @param [in] dev ADC device handle

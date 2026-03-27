@@ -156,7 +156,7 @@ static void audio_player_mp3_task(void *arg)
     }
 
     int16_t *mp3_pcm_tmp = (int16_t *)pvPortMalloc((size_t)MP3_MAX_SAMPLES_TOTAL * sizeof(int16_t));
-    uint8_t *mp3_cache = (uint8_t *)pvPortMalloc(4096);
+    uint8_t *mp3_cache = (uint8_t *)pvPortMalloc(MP3_PLAYER_CACHE_BYTES);
     if (mp3_pcm_tmp == NULL || mp3_cache == NULL) {
         printf("mp3_player: alloc scratch failed\r\n");
         if (mp3_pcm_tmp != NULL) {
@@ -199,8 +199,8 @@ static void audio_player_mp3_task(void *arg)
             break;
         }
 
-        if (!stream_done && mp3_cache_len < 1024) {
-            uint32_t space = (uint32_t)(4096U - mp3_cache_len);
+        if (!stream_done && mp3_cache_len < 1024U) {
+            uint32_t space = (uint32_t)(MP3_PLAYER_CACHE_BYTES - mp3_cache_len);
             if (space > 0) {
                 int r = cfg->ops.read(cfg->user_data, mp3_cache + mp3_cache_len, space);
                 if (r > 0) {
@@ -277,8 +277,18 @@ static void audio_player_mp3_task(void *arg)
 
         if (!playback_started) {
             uint32_t tx_block_bytes = AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS * sizeof(int16_t);
+#if MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES > 0U
+            if (WAVE_PLAYER_FIX_SAMPLE_RATE != 0U && (uint32_t)hz != WAVE_PLAYER_FIX_SAMPLE_RATE &&
+                tx_block_bytes > MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES) {
+                printf("[AUDIO][WARN] mp3 resample shrinks tx_block %u->%u for heap headroom\r\n",
+                       (unsigned)tx_block_bytes, (unsigned)MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES);
+                tx_block_bytes = MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES;
+            }
+#endif
             wave_player_config((uint32_t)hz, tx_block_bytes, 0, (uint8_t)src_ch);
-            wave_player_start();
+            if (wave_player_start() != 0) {
+                break;
+            }
             playback_started = true;
         }
 

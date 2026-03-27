@@ -62,16 +62,10 @@ int bflb_sys_isxipaddr(uint32_t addr)
     }
     return 0;
 }
-#elif defined(BL616)
+#elif defined(BL616) || defined(BL616CL) || defined(BL618DG)
 static int bflb_sys_isxipaddr(uint32_t addr)
 {
-    if ( ((addr & 0xFF000000) == 0xA0000000) || ((addr & 0xFF000000) == 0xA1000000) ||
-         ((addr & 0xFF000000) == 0xA2000000) || ((addr & 0xFF000000) == 0xA3000000) ||
-         ((addr & 0xFF000000) == 0xA4000000) || ((addr & 0xFF000000) == 0xA5000000) ||
-         ((addr & 0xFF000000) == 0xA6000000) || ((addr & 0xFF000000) == 0xA7000000) ) {
-        return 1;
-    }
-    return 0;
+    return (addr >= FLASH_XIP_BASE) && (addr < (FLASH_XIP_BASE + (64UL * 1024UL * 1024UL)));
 }
 #endif
 

@@ -22,8 +22,15 @@
 
 #define DATA_MSG_CNT 10
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct rx_msg_struct *data_msg;
+static struct k_queue *p_msg_queue;
+#define msg_queue (*p_msg_queue)
+static uint8_t *g_hci_wrapper_mem_pool = NULL;
+#else
 struct rx_msg_struct data_msg[DATA_MSG_CNT];
 struct k_queue msg_queue;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(BFLB_BLE_NOTIFY_ADV_DISCARDED)
 extern void ble_controller_notify_adv_discarded(uint8_t *adv_bd_addr, uint8_t adv_type);
 #endif
@@ -349,14 +356,40 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
 
 uint8_t bl_onchiphci_interface_init(void)
 {
-    for(int i = 0; i < DATA_MSG_CNT; i++)
-    {
-        memset(data_msg + i, 0, sizeof(struct rx_msg_struct));
-    }
+	int err;
 
-    k_queue_init(&msg_queue, DATA_MSG_CNT);
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	const size_t data_msg_size = MEM_ALIGN_32(DATA_MSG_CNT * sizeof(struct rx_msg_struct));
+	const size_t msg_queue_size = MEM_ALIGN_32(sizeof(struct k_queue));
 
-    return bt_onchiphci_interface_init(bl_onchiphci_rx_packet_handler);
+	const size_t total_size = data_msg_size + msg_queue_size;
+
+	g_hci_wrapper_mem_pool = (uint8_t *)k_malloc(total_size);
+	if (!g_hci_wrapper_mem_pool) {
+		BT_ERR("Failed to allocate hci_wrapper mem pool: %u bytes", total_size);
+		return 1;
+	}
+	memset(g_hci_wrapper_mem_pool, 0, total_size);
+
+	data_msg = (struct rx_msg_struct *)(g_hci_wrapper_mem_pool + 0);
+	p_msg_queue = (struct k_queue *)(g_hci_wrapper_mem_pool + data_msg_size);
+#else
+	memset(data_msg, 0, DATA_MSG_CNT * sizeof(struct rx_msg_struct));
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+	k_queue_init(&msg_queue, DATA_MSG_CNT);
+
+	err = bt_onchiphci_interface_init(bl_onchiphci_rx_packet_handler);
+	if (err) {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+		k_free(g_hci_wrapper_mem_pool);
+		g_hci_wrapper_mem_pool = NULL;
+		data_msg = NULL;
+		p_msg_queue = NULL;
+#endif
+		return err;
+	}
+
+	return 0;
 }
 
 void bl_onchiphci_interface_deinit(void)
@@ -379,4 +412,13 @@ void bl_onchiphci_interface_deinit(void)
     }while(1);
 
     k_queue_free(&msg_queue);
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    if (g_hci_wrapper_mem_pool) {
+        k_free(g_hci_wrapper_mem_pool);
+        g_hci_wrapper_mem_pool = NULL;
+    }
+    data_msg = NULL;
+    p_msg_queue = NULL;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 }

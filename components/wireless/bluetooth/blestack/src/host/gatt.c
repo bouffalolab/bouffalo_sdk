@@ -97,6 +97,13 @@ static atomic_t init;
 bt_gatt_mtu_changed_cb_t gatt_mtu_changed_cb;
 #endif
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct bt_gatt_indicate_params *sc_restore_params;
+static uint8_t *g_gatt_mem_pool = NULL;
+#else
+static struct bt_gatt_indicate_params sc_restore_params[CONFIG_BT_MAX_CONN];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
 static int sc_clear_by_addr(u8_t id, const bt_addr_le_t *addr);
 
 static ssize_t read_name(struct bt_conn *conn, const struct bt_gatt_attr *attr,
@@ -234,12 +241,16 @@ BT_GATT_SERVICE_DEFINE(_2_gap_svc,
 #if defined(CONFIG_BT_DEVICE_NAME_GATT_WRITABLE)
 	/* Require pairing for writes to device name */
 	BT_GATT_CHARACTERISTIC(BT_UUID_GAP_DEVICE_NAME,
-			       BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
+					BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
 #if defined(CONFIG_AUTO_PTS)
-			       //BT_GATT_PERM_WRITE_ENCRYPT |
+					//BT_GATT_PERM_WRITE_ENCRYPT |
 #endif /* CONFIG_AUTO_PTS */
-			       BT_GATT_PERM_READ | BT_GATT_PERM_WRITE,
-			       read_name, write_name, bt_dev.name),
+					BT_GATT_PERM_READ | BT_GATT_PERM_WRITE,
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+					read_name, write_name, NULL),
+	#else
+					read_name, write_name, bt_dev.name),
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #else
 	BT_GATT_CHARACTERISTIC(BT_UUID_GAP_DEVICE_NAME, BT_GATT_CHRC_READ,
 			       BT_GATT_PERM_READ, read_name, NULL, NULL),
@@ -287,14 +298,18 @@ struct gatt_sc_cfg {
 };
 
 #define SC_CFG_MAX (CONFIG_BT_MAX_PAIRED + CONFIG_BT_MAX_CONN)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct gatt_sc_cfg* sc_cfg;
+#else
 static struct gatt_sc_cfg sc_cfg[SC_CFG_MAX];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 BUILD_ASSERT(sizeof(struct sc_data) == sizeof(sc_cfg[0].data));
 
 static struct gatt_sc_cfg *find_sc_cfg(u8_t id, bt_addr_le_t *addr)
 {
 	BT_DBG("id: %u, addr: %s", id, bt_addr_le_str(addr));
 
-	for (size_t i = 0; i < ARRAY_SIZE(sc_cfg); i++) {
+	for (size_t i = 0; i < SC_CFG_MAX; i++) {
 		if (id == sc_cfg[i].id &&
 		    !bt_addr_le_cmp(&sc_cfg[i].peer, addr)) {
 			return &sc_cfg[i];
@@ -914,13 +929,20 @@ enum {
 	SC_NUM_FLAGS,
 };
 
-static struct gatt_sc {
+struct gatt_sc_t {
 	struct bt_gatt_indicate_params params;
 	u16_t start;
 	u16_t end;
 	struct k_delayed_work work;
 	ATOMIC_DEFINE(flags, SC_NUM_FLAGS);
-} gatt_sc;
+};
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct gatt_sc_t *p_gatt_sc;
+#define gatt_sc (*p_gatt_sc)
+#else
+static struct gatt_sc_t gatt_sc;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 static void sc_indicate_rsp(struct bt_conn *conn,
 			    const struct bt_gatt_attr *attr, u8_t err)
@@ -955,7 +977,7 @@ static void sc_indicate_rsp(struct bt_conn *conn,
 
 static void sc_process(struct k_work *work)
 {
-	struct gatt_sc *sc = CONTAINER_OF(work, struct gatt_sc, work);
+	struct gatt_sc_t *sc = CONTAINER_OF(work, struct gatt_sc_t, work);
 	u16_t sc_range[2];
 
 	__ASSERT(!atomic_test_bit(sc->flags, SC_INDICATE_PENDING),
@@ -1089,12 +1111,31 @@ void bt_gatt_init(void)
 	k_delayed_work_submit(&db_hash_work, DB_HASH_TIMEOUT);
 #endif /* CONFIG_BT_GATT_CACHING */
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	const size_t sc_cfg_size = MEM_ALIGN_32(SC_CFG_MAX * sizeof(struct gatt_sc_cfg));
+	const size_t sc_restore_params_size = MEM_ALIGN_32(CONFIG_BT_MAX_CONN * sizeof(struct bt_gatt_indicate_params));
+	const size_t gatt_sc_size = MEM_ALIGN_32(sizeof(struct gatt_sc_t));
+
+	const size_t total_size = sc_cfg_size + sc_restore_params_size + gatt_sc_size;
+
+	g_gatt_mem_pool = (uint8_t *)k_malloc(total_size);
+	if (!g_gatt_mem_pool) {
+		BT_ERR("Failed to allocate gatt mem pool: %u bytes", total_size);
+	} else {
+		memset(g_gatt_mem_pool, 0, total_size);
+
+		sc_cfg = (struct gatt_sc_cfg *)(g_gatt_mem_pool + 0);
+		sc_restore_params = (struct bt_gatt_indicate_params *)(g_gatt_mem_pool + sc_cfg_size);
+		p_gatt_sc = (struct gatt_sc_t *)(g_gatt_mem_pool + sc_cfg_size + sc_restore_params_size);
+	}
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
 	if (IS_ENABLED(CONFIG_BT_GATT_SERVICE_CHANGED)) {
 		k_delayed_work_init(&gatt_sc.work, sc_process);
 		if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
 			/* Make sure to not send SC indications until SC
-			 * settings are loaded
-			 */
+				* settings are loaded
+				*/
 			atomic_set_bit(gatt_sc.flags, SC_INDICATE_PENDING);
 		}
 	}
@@ -1112,9 +1153,26 @@ void bt_gatt_deinit(void)
     #endif
 
     if (IS_ENABLED(CONFIG_BT_GATT_SERVICE_CHANGED)){
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        if (p_gatt_sc) {
+            k_delayed_work_del_timer(&p_gatt_sc->work);
+        }
+#else
         k_delayed_work_del_timer(&gatt_sc.work);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     }
-        
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    if (g_gatt_mem_pool) {
+        k_free(g_gatt_mem_pool);
+        g_gatt_mem_pool = NULL;
+    }
+
+    sc_cfg = NULL;
+    sc_restore_params = NULL;
+    p_gatt_sc = NULL;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
     #if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
     k_delayed_work_del_timer(&gatt_ccc_store.work);
     #endif
@@ -1897,7 +1955,7 @@ static u8_t notify_cb(const struct bt_gatt_attr *attr, void *user_data)
 
 	/* Save Service Changed data if peer is not connected */
 	if (IS_ENABLED(CONFIG_BT_GATT_SERVICE_CHANGED) && ccc == &sc_ccc) {
-		for (i = 0; i < ARRAY_SIZE(sc_cfg); i++) {
+		for (i = 0; i < SC_CFG_MAX; i++) {
 			struct gatt_sc_cfg *cfg = &sc_cfg[i];
 			struct bt_conn *conn;
 
@@ -2219,8 +2277,6 @@ static void sc_restore_rsp(struct bt_conn *conn,
 	}
 #endif
 }
-
-static struct bt_gatt_indicate_params sc_restore_params[CONFIG_BT_MAX_CONN];
 
 static void sc_restore(struct bt_conn *conn)
 {

@@ -58,8 +58,12 @@
 #if !defined(BFLB_BLE)
 static K_SEM_DEFINE(sem_prio_recv, 0, BT_UINT_MAX);
 #endif
-
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct k_fifo* p_recv_fifo;
+#define recv_fifo (*p_recv_fifo)
+#else
 K_FIFO_DEFINE(recv_fifo);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if !defined(BFLB_BLE)
 struct k_thread prio_recv_thread_data;
 static BT_STACK_NOINIT(prio_recv_thread_stack,
@@ -460,7 +464,9 @@ char hci_port[14];
 #endif
 static int hci_driver_open(void)
 {
-#if !defined(BFLB_BLE) 
+	int err;
+
+#if !defined(BFLB_BLE)
 	u32_t err;
 
 	DEBUG_INIT();
@@ -481,6 +487,13 @@ static int hci_driver_open(void)
 	hci_init(NULL);
 #endif
 #endif
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	p_recv_fifo = k_malloc(sizeof(recv_fifo));
+	if (!p_recv_fifo) {
+		BT_ERR("Recv fifo malloc err: %u", ENOMEM);
+		return ENOMEM;
+	}
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     k_fifo_init(&recv_fifo, 20);
 #if defined(BFLB_BLE)
     k_thread_create(&recv_thread_data, "recv_thread",
@@ -504,7 +517,11 @@ static int hci_driver_open(void)
 	k_sleep(10);
 	bl_gpio_output_set(CTRL_RESET_PIN, 1);
 	k_sleep(500); // wait controller ready
-	return bl_hci_init(hci_port);
+	err = bl_hci_init(hci_port);
+	if (err) {
+		BT_ERR("bl_hci_init failed: %d", err);
+		goto cleanup;
+	}
 	#endif
     #endif
 #endif
@@ -512,6 +529,15 @@ static int hci_driver_open(void)
 	BT_DBG("Success.");
 
 	return 0;
+
+cleanup:
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	if (p_recv_fifo) {
+		k_free(p_recv_fifo);
+		p_recv_fifo = NULL;
+	}
+#endif
+	return err;
 }
 
 void hci_driver_enque_recvq(struct net_buf *buf)
@@ -519,10 +545,34 @@ void hci_driver_enque_recvq(struct net_buf *buf)
     net_buf_put(&recv_fifo, buf);
 }
 
+static int hci_driver_close()
+{
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	if(!p_recv_fifo)
+		return EINVAL;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+	struct net_buf *buf = NULL;
+    buf = net_buf_get(&recv_fifo, K_NO_WAIT);
+    while(buf){
+        net_buf_unref(buf);
+        buf = net_buf_get(&recv_fifo, K_NO_WAIT);
+    }
+
+    k_queue_free(&((&recv_fifo)->_queue));
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	k_free(p_recv_fifo);
+	p_recv_fifo = NULL;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
+	return 0;
+}
+
 static const struct bt_hci_driver drv = {
 	.name	= "Controller",
 	.bus	= BT_HCI_DRIVER_BUS_VIRTUAL,
 	.open	= hci_driver_open,
+	.close	= hci_driver_close,
 	.send	= hci_driver_send,
 };
 

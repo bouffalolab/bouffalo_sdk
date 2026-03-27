@@ -86,7 +86,12 @@ static sys_slist_t br_channels;
 NET_BUF_POOL_FIXED_DEFINE(br_sig_pool, CONFIG_BT_MAX_CONN,
 			  BT_L2CAP_BUF_SIZE(L2CAP_BR_MIN_MTU), NULL);
 #else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_br_sig_pool;
+#define br_sig_pool (*p_br_sig_pool)
+#else
 struct net_buf_pool br_sig_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 
 /* BR/EDR L2CAP signalling channel specific context */
@@ -1628,7 +1633,11 @@ void bt_l2cap_br_init(void)
 	#endif
 
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	net_buf_init(&p_br_sig_pool, CONFIG_BT_MAX_CONN, BT_L2CAP_BUF_SIZE(L2CAP_BR_MIN_MTU), NULL);
+	#else
 	net_buf_init(&br_sig_pool, CONFIG_BT_MAX_CONN, BT_L2CAP_BUF_SIZE(L2CAP_BR_MIN_MTU), NULL);
+	#endif
 #endif
 	sys_slist_init(&br_servers);
 

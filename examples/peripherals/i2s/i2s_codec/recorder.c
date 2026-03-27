@@ -11,6 +11,7 @@
 
 #include "board.h"
 #include "bflb_mtimer.h"
+#include "mm.h"
 #include "shell.h"
 #include "wave_player.h"
 #include "recorder.h"
@@ -36,6 +37,8 @@
 #define REC_SD_MOUNT_PATH         "/sd"
 #define REC_SD_RECORD_DIR         "/sd/records"
 #define REC_SD_INDEX_PATH         REC_SD_RECORD_DIR "/RECLIST.TXT"
+#define REC_SD_MKFS_WORKBUF_ALIGN 64U
+#define REC_SD_MKFS_WORKBUF_SIZE  (FF_MAX_SS * 16U)
 #define REC_SD_SEGMENT_SECONDS    30U
 #define REC_SD_STORE_DEFAULT_ENABLE 1U
 #define REC_SD_LIST_DEFAULT_LIMIT 32U
@@ -91,8 +94,6 @@ typedef struct {
 static recorder_store_ctx_t g_rec_store = { 0 };
 
 #if RECORDER_ENABLE_SD_STORE
-__attribute((aligned(64))) static uint8_t g_rec_sd_mkfs_workbuf[FF_MAX_SS * 16U];
-
 static const MKFS_PARM g_rec_sd_mkfs_param = {
     .fmt = FM_FAT32,
     .n_fat = 1,
@@ -599,12 +600,23 @@ static int rec_sd_try_init_locked(bool force_retry)
 
 static int rec_sd_format_locked(void)
 {
+    void *mkfs_workbuf;
+    FRESULT ret;
+
     rec_sd_prepare_driver_locked();
     rec_sd_unmount_locked();
 
     printf("[REC] formatting %s as FAT32, this may take a while...\r\n", REC_SD_MOUNT_PATH);
 
-    FRESULT ret = f_mkfs(REC_SD_MOUNT_PATH, &g_rec_sd_mkfs_param, g_rec_sd_mkfs_workbuf, sizeof(g_rec_sd_mkfs_workbuf));
+    mkfs_workbuf = kmemalign(REC_SD_MKFS_WORKBUF_SIZE, REC_SD_MKFS_WORKBUF_ALIGN);
+    if (mkfs_workbuf == NULL) {
+        printf("[REC] format failed: mkfs workbuf alloc %u bytes align %u failed\r\n",
+               (unsigned)REC_SD_MKFS_WORKBUF_SIZE, (unsigned)REC_SD_MKFS_WORKBUF_ALIGN);
+        return -1;
+    }
+
+    ret = f_mkfs(REC_SD_MOUNT_PATH, &g_rec_sd_mkfs_param, mkfs_workbuf, REC_SD_MKFS_WORKBUF_SIZE);
+    kfree(mkfs_workbuf);
     if (ret != FR_OK) {
         printf("[REC] format failed: %s (ret=%d)\r\n", rec_sd_mount_error_str(ret), (int)ret);
         return -1;

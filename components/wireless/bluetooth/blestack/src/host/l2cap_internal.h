@@ -208,7 +208,9 @@ struct bt_l2cap_le_credits {
 struct bt_l2cap_fixed_chan {
 	u16_t		cid;
 	int (*accept)(struct bt_conn *conn, struct bt_l2cap_chan **chan);
+	#if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
 	sys_snode_t	node;
+	#endif /* BFLB_BLE_DISABLE_STATIC_CHANNEL */
 };
 
 #define BT_L2CAP_CHANNEL_DEFINE(_name, _cid, _accept)		\
@@ -221,7 +223,9 @@ struct bt_l2cap_fixed_chan {
 struct bt_l2cap_br_fixed_chan {
 	u16_t		cid;
 	int (*accept)(struct bt_conn *conn, struct bt_l2cap_chan **chan);
+	#if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
 	sys_snode_t	node;
+	#endif /* BFLB_BLE_DISABLE_STATIC_CHANNEL */
 };
 
 #define BT_L2CAP_BR_CHANNEL_DEFINE(_name, _cid, _accept)		\
@@ -305,6 +309,10 @@ int bt_l2cap_update_conn_param(struct bt_conn *conn,
 
 /* Initialize L2CAP and supported channels */
 void bt_l2cap_init(void);
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void bt_l2cap_deinit(void);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 /* Lookup channel by Transmission CID */
 struct bt_l2cap_chan *bt_l2cap_le_lookup_tx_cid(struct bt_conn *conn,

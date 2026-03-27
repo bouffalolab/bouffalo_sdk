@@ -80,7 +80,11 @@ struct bt_l2cap {
 	struct bt_l2cap_le_chan	chan;
 };
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct bt_l2cap* bt_l2cap_pool = NULL;
+#else
 static struct bt_l2cap bt_l2cap_pool[CONFIG_BT_MAX_CONN];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 static u8_t get_ident(void)
 {
@@ -1810,7 +1814,7 @@ static void l2cap_disconnected(struct bt_l2cap_chan *chan)
 static int l2cap_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 {
 	int i;
-	static struct bt_l2cap_chan_ops ops = {
+	static const struct bt_l2cap_chan_ops ops = {
 		.connected = l2cap_connected,
 		.disconnected = l2cap_disconnected,
 		.recv = l2cap_recv,
@@ -1818,7 +1822,7 @@ static int l2cap_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 
 	BT_DBG("conn %p handle %u", conn, conn->handle);
 
-	for (i = 0; i < ARRAY_SIZE(bt_l2cap_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
 		struct bt_l2cap *l2cap = &bt_l2cap_pool[i];
 
 		if (l2cap->chan.chan.conn) {
@@ -1840,6 +1844,16 @@ BT_L2CAP_CHANNEL_DEFINE(le_fixed_chan, BT_L2CAP_CID_LE_SIG, l2cap_accept);
 
 void bt_l2cap_init(void)
 {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	/* Allocate L2CAP pool dynamically */
+	bt_l2cap_pool = k_malloc(sizeof(struct bt_l2cap) * CONFIG_BT_MAX_CONN);
+	if (!bt_l2cap_pool) {
+		BT_ERR("Failed to allocate bt_l2cap_pool");
+		return;
+	}
+
+	memset(bt_l2cap_pool, 0, sizeof(struct bt_l2cap) * CONFIG_BT_MAX_CONN);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     #if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
 	static struct bt_l2cap_fixed_chan chan = {
 		.cid	= BT_L2CAP_CID_LE_SIG,
@@ -1852,6 +1866,15 @@ void bt_l2cap_init(void)
 		bt_l2cap_br_init();
 	}
 }
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void bt_l2cap_deinit(void)
+{
+	if (bt_l2cap_pool) {
+		k_free(bt_l2cap_pool);
+		bt_l2cap_pool = NULL;
+	}
+}
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static int l2cap_le_connect(struct bt_conn *conn, struct bt_l2cap_le_chan *ch,

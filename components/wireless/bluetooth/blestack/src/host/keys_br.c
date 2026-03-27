@@ -8,6 +8,7 @@
 
 #include <zephyr.h>
 #include <string.h>
+#include <bt_errno.h>
 #include <atomic.h>
 #include <util.h>
 
@@ -24,7 +25,11 @@
 #include "settings.h"
 #include "keys.h"
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct bt_keys_link_key *key_pool;
+#else
 static struct bt_keys_link_key key_pool[CONFIG_BT_MAX_PAIRED];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 #if defined(BFLB_BT_LINK_KEYS_STORE)
 #define LINK_KEY "link_key"
@@ -85,8 +90,18 @@ typedef struct bt_keys_list_t{
 
 static bt_keys_list key_list;
 
-int bt_keys_init(void)
+int bt_keys_br_init(void)
 {
+	int err;
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	key_pool = (struct bt_keys_link_key *)k_malloc(CONFIG_BT_MAX_PAIRED * sizeof(struct bt_keys_link_key));
+	if (!key_pool) {
+		BT_ERR("Failed to allocate link_key_pool");
+		return -ENOMEM;
+	}
+	memset(key_pool, 0, CONFIG_BT_MAX_PAIRED * sizeof(struct bt_keys_link_key));
+#endif
+
 	static struct linkkey_ops ops = {
 		.key_get = bt_key_get,
 		.key_set = bt_key_set,
@@ -105,10 +120,10 @@ int bt_keys_init(void)
 	key_list.ops = &ops;
 
 	if(key_list.ops && key_list.ops->key_get){
-		int ret = key_list.ops->key_get(LINK_KEY,&keys,&len);
-		if(ret){
+		err = key_list.ops->key_get(LINK_KEY,&keys,&len);
+		if(err){
 			BT_ERR("Failed to get key");
-			return -1;
+			goto cleanup;
 		}
 	}
 
@@ -117,6 +132,15 @@ int bt_keys_init(void)
 	}
 
 	return 0;
+
+cleanup:
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	if (key_pool) {
+		k_free(key_pool);
+		key_pool = NULL;
+	}
+#endif
+	return -1;
 }
 
 static int bt_keys_link_key_set(const struct bt_keys_link_key *key)
@@ -216,7 +240,7 @@ struct bt_keys_link_key *bt_keys_find_link_key(const bt_addr_t *addr)
 
 	BT_DBG("%s", bt_addr_str(addr));
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		key = &key_pool[i];
 
 		if (!bt_addr_cmp(&key->addr, addr)) {
@@ -265,7 +289,7 @@ void bt_keys_link_key_clear_addr(const bt_addr_t *addr)
 	struct bt_keys_link_key *key;
 
 	if (!addr) {
-		for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+		for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 			key = &key_pool[i];
 			bt_keys_link_key_clear(key);
 		}
@@ -313,7 +337,7 @@ void bt_br_foreach_bond(void (*func)(const struct bt_br_bond_info *info,
         }
     }
     #else
-    for (int i = 0; i < ARRAY_SIZE(key_pool); i++) {
+    for (int i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
         struct bt_keys_link_key *key = &key_pool[i];
         
         if (bt_addr_cmp(&key->addr, BT_ADDR_ANY) != 0) {
@@ -425,4 +449,14 @@ void bt_keys_link_key_update_usage(const bt_addr_t *addr)
 }
 
 #endif
+#endif
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void bt_keys_br_deinit(void)
+{
+	if (key_pool) {
+		k_free(key_pool);
+		key_pool = NULL;
+	}
+}
 #endif

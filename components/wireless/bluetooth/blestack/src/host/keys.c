@@ -9,6 +9,7 @@
 #include <zephyr.h>
 #include <string.h>
 #include <stdlib.h>
+#include <bt_errno.h>
 #include <atomic.h>
 #include <misc/util.h>
 
@@ -31,7 +32,11 @@
 #endif
 #endif
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct bt_keys *key_pool;
+#else
 static struct bt_keys key_pool[CONFIG_BT_MAX_PAIRED];
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 #define BT_KEYS_STORAGE_LEN_COMPAT (BT_KEYS_STORAGE_LEN - sizeof(uint32_t))
 
@@ -44,18 +49,18 @@ struct bt_keys *bt_keys_get_addr(u8_t id, const bt_addr_le_t *addr)
 {
 	struct bt_keys *keys;
 	int i;
-	size_t first_free_slot = ARRAY_SIZE(key_pool);
+	size_t first_free_slot = CONFIG_BT_MAX_PAIRED;
 
 	BT_DBG("%s", bt_addr_le_str(addr));
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		keys = &key_pool[i];
 
 		if (keys->id == id && !bt_addr_le_cmp(&keys->addr, addr)) {
 			return keys;
 		}
 
-		if (first_free_slot == ARRAY_SIZE(key_pool) &&
+		if (first_free_slot == CONFIG_BT_MAX_PAIRED &&
 		    (!bt_addr_le_cmp(&keys->addr, BT_ADDR_LE_ANY) ||
 		     !keys->enc_size)) {
 			first_free_slot = i;
@@ -63,10 +68,10 @@ struct bt_keys *bt_keys_get_addr(u8_t id, const bt_addr_le_t *addr)
 	}
 
 #if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
-	if (first_free_slot == ARRAY_SIZE(key_pool)) {
+	if (first_free_slot == CONFIG_BT_MAX_PAIRED) {
 		struct bt_keys *oldest = &key_pool[0];
 
-		for (i = 1; i < ARRAY_SIZE(key_pool); i++) {
+		for (i = 1; i < CONFIG_BT_MAX_PAIRED; i++) {
 			struct bt_keys *current = &key_pool[i];
 
 			if (current->aging_counter < oldest->aging_counter) {
@@ -81,7 +86,7 @@ struct bt_keys *bt_keys_get_addr(u8_t id, const bt_addr_le_t *addr)
 	}
 
 #endif  /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
-	if (first_free_slot < ARRAY_SIZE(key_pool)) {
+	if (first_free_slot < CONFIG_BT_MAX_PAIRED) {
 		keys = &key_pool[first_free_slot];
 		keys->id = id;
 		bt_addr_le_copy(&keys->addr, addr);
@@ -104,7 +109,7 @@ void bt_foreach_bond(u8_t id, void (*func)(const struct bt_bond_info *info,
 {
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		struct bt_keys *keys = &key_pool[i];
 
 		if (keys->keys && keys->id == id) {
@@ -121,7 +126,7 @@ void bt_keys_foreach(int type, void (*func)(struct bt_keys *keys, void *data),
 {
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		if ((key_pool[i].keys & type)) {
 			func(&key_pool[i], data);
 		}
@@ -134,7 +139,7 @@ struct bt_keys *bt_keys_find(int type, u8_t id, const bt_addr_le_t *addr)
 
 	BT_DBG("type %d %s", type, bt_addr_le_str(addr));
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		if ((key_pool[i].keys & type) && key_pool[i].id == id &&
 		    !bt_addr_le_cmp(&key_pool[i].addr, addr)) {
 			return &key_pool[i];
@@ -175,7 +180,7 @@ struct bt_keys *bt_keys_find_irk(u8_t id, const bt_addr_le_t *addr)
 		return NULL;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		if (!(key_pool[i].keys & BT_KEYS_IRK)) {
 			continue;
 		}
@@ -189,7 +194,7 @@ struct bt_keys *bt_keys_find_irk(u8_t id, const bt_addr_le_t *addr)
 		}
 	}
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		if (!(key_pool[i].keys & BT_KEYS_IRK)) {
 			continue;
 		}
@@ -220,7 +225,7 @@ struct bt_keys *bt_keys_find_addr(u8_t id, const bt_addr_le_t *addr)
 
 	BT_DBG("%s", bt_addr_le_str(addr));
 
-	for (i = 0; i < ARRAY_SIZE(key_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_PAIRED; i++) {
 		if (key_pool[i].id == id &&
 		    !bt_addr_le_cmp(&key_pool[i].addr, addr)) {
 			return &key_pool[i];
@@ -236,7 +241,7 @@ struct bt_keys *bt_keys_find_addr(u8_t id, const bt_addr_le_t *addr)
     bt_addr_le_t addr;
 
     memset(&addr,0,sizeof(bt_addr_le_t));
-    if(id < ARRAY_SIZE(key_pool)){
+    if(id < CONFIG_BT_MAX_PAIRED){
     	if (bt_addr_le_cmp(&key_pool[id].addr, &addr)) {
     		return &key_pool[id].addr;
     	}
@@ -514,3 +519,25 @@ void bt_keys_update_usage(u8_t id, const bt_addr_le_t *addr)
 }
 
 #endif  /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+int bt_keys_init(void)
+{
+	key_pool = (struct bt_keys *)k_malloc(CONFIG_BT_MAX_PAIRED * sizeof(struct bt_keys));
+	if (!key_pool) {
+		BT_ERR("Failed to allocate key_pool");
+		return -ENOMEM;
+	}
+	memset(key_pool, 0, CONFIG_BT_MAX_PAIRED * sizeof(struct bt_keys));
+
+	return 0;
+}
+
+void bt_keys_deinit(void)
+{
+	if (key_pool) {
+		k_free(key_pool);
+		key_pool = NULL;
+	}
+}
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */

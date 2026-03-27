@@ -36,18 +36,23 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define FLASH_XIP_BASE (0x23000000)
+#define FLASH_XIP_END  (FLASH_XIP_BASE + 16 * 1024 * 1024)
 #elif defined(BL616)
 #define FLASH_XIP_BASE (0xA0000000)
+#define FLASH_XIP_END  (FLASH_XIP_BASE + 64 * 1024 * 1024)
 #elif  defined(BL616CL)
 #define FLASH_XIP_BASE (0x80000000)
+#define FLASH_XIP_END  (FLASH_XIP_BASE + 64 * 1024 * 1024)
 #elif defined(BL618DG) 
 #if defined(CPU_MODEL_A0)
 #define FLASH_XIP_BASE (0x80000000)
 #else
 #define FLASH_XIP_BASE (0xb0000000)
 #endif
+#define FLASH_XIP_END  (FLASH_XIP_BASE + 64 * 1024 * 1024)
 #elif 0 
 #define FLASH_XIP_BASE (0x58000000)
+#define FLASH_XIP_END  (FLASH_XIP_BASE + 64 * 1024 * 1024)
 #endif
 
 struct bflb_flash_aes_config_s {

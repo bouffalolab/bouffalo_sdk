@@ -13,6 +13,8 @@
 #include "bflb_core.h"
 #include "bflb_mtimer.h"
 
+#define JY6311_ID_VALUE 0x12
+
 typedef struct {
     struct bflb_device_s *i2c;
     uint8_t i2c_addr;
@@ -2746,35 +2748,29 @@ static int audio_codec_jy6311_configure(audio_codec_dev_t *dev, const audio_code
             break;
     }
 
+    g_jy6311_ctx.initialized = 1;
+
     return 0;
 }
 
 int audio_codec_jy6311_probe(struct bflb_device_s *i2c, uint8_t addr)
 {
-    uint8_t pwr_ctrl1 = 0;
-    uint8_t pwr_ctrl2 = 0;
-    uint8_t adda_fs = 0;
+    uint8_t id_value = 0;
 
     if (i2c == NULL) {
         return -1;
     }
 
-    if (audio_codec_i2c_read_reg8(i2c, addr, PWR_CTRL1, &pwr_ctrl1) != 0) {
-        return -1;
-    }
-    if (audio_codec_i2c_read_reg8(i2c, addr, PWR_CTRL2, &pwr_ctrl2) != 0) {
-        return -1;
-    }
-    if (audio_codec_i2c_read_reg8(i2c, addr, ADDA_FS, &adda_fs) != 0) {
+    if (audio_codec_i2c_read_reg8(i2c, addr, 0xff, &id_value) != 0) {
         return -1;
     }
 
-    if (pwr_ctrl1 == 0x8c && pwr_ctrl2 == 0x48 && adda_fs == 0x25) {
-        audio_codec_jy6311_bind_i2c(i2c);
-        return 0;
+    if(id_value != JY6311_ID_VALUE){
+        return -1;
     }
 
-    return -1;
+    audio_codec_jy6311_bind_i2c(i2c);
+    return 0;
 }
 
 int audio_codec_jy6311_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg)

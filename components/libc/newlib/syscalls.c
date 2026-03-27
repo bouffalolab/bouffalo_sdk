@@ -8,6 +8,12 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "port_file_fd.h"
+
+#if CONFIG_NEWLIB_LITTLEFS
+#include "port_file_littlefs.h"
+#endif
+
 /*****************************************************************************
 * @brief        get thread reent
 * 
@@ -118,6 +124,38 @@ extern _ssize_t _write_tty_r(struct _reent *reent, int fd, const void *ptr, size
 extern int _fstat_tty_r(struct _reent *reent, int fd, struct stat *st);
 extern int _stat_tty_r(struct _reent *reent, const char *path, struct stat *st);
 
+#if CONFIG_NEWLIB_LITTLEFS
+static int _chmod_file_lfs_r(struct _reent *reent, const char *path, mode_t mode)
+{
+    (void)path;
+    (void)mode;
+    reent->_errno = ENOSYS;
+    return -1;
+}
+
+static int _chroot_file_lfs_r(struct _reent *reent, const char *path)
+{
+    (void)path;
+    reent->_errno = ENOSYS;
+    return -1;
+}
+
+#define _open_file_r _open_file_lfs_r
+#define _close_file_r _close_file_lfs_r
+#define _read_file_r _read_file_lfs_r
+#define _write_file_r _write_file_lfs_r
+#define _lseek_file_r _lseek_file_lfs_r
+#define _rename_file_r _rename_file_lfs_r
+#define _unlink_file_r _unlink_file_lfs_r
+#define _fstat_file_r _fstat_file_lfs_r
+#define _stat_file_r _stat_file_lfs_r
+#define _mkdir_file_r _mkdir_file_lfs_r
+#define _rmdir_file_r _rmdir_file_lfs_r
+#define _chmod_file_r _chmod_file_lfs_r
+#define _chdir_file_r _chdir_file_lfs_r
+#define _getcwd_file_r _getcwd_file_lfs_r
+#define _chroot_file_r _chroot_file_lfs_r
+#else
 extern int _open_file_r(struct _reent *reent, const char *path, int flags, int mode);
 extern int _close_file_r(struct _reent *reent, int fd);
 extern _ssize_t _read_file_r(struct _reent *reent, int fd, void *ptr, size_t size);
@@ -133,6 +171,12 @@ extern int _chmod_file_r(struct _reent *reent, const char *path, mode_t mode);
 extern int _chdir_file_r(struct _reent *reent, const char *path);
 extern char *_getcwd_file_r(struct _reent *reent, char *buf, size_t size);
 extern int _chroot_file_r(struct _reent *reent, const char *path);
+#endif
+
+static int is_file_fd(int fd)
+{
+    return IS_FILE_FD(fd);
+}
 
 /*****************************************************************************
 * @brief        chekc fd is a tty
@@ -193,7 +237,7 @@ int _open_r(struct _reent *reent, const char *path, int flags, int mode)
 *****************************************************************************/
 int _close_r(struct _reent *reent, int fd)
 {
-    if ((fd & 0x4000) == 0) {
+    if (!is_file_fd(fd)) {
         return _close_tty_r(reent, fd);
     } else {
         return _close_file_r(reent, fd);
@@ -217,7 +261,7 @@ _ssize_t _read_r(struct _reent *reent, int fd, void *ptr, size_t size)
         return 0;
     }
 
-    if ((fd & 0x4000) == 0) {
+    if (!is_file_fd(fd)) {
         return _read_tty_r(reent, fd, ptr, size);
     } else {
         return _read_file_r(reent, fd, ptr, size);
@@ -241,7 +285,7 @@ _ssize_t _write_r(struct _reent *reent, int fd, const void *ptr, size_t size)
         return 0;
     }
 
-    if ((fd & 0x4000) == 0) {
+    if (!is_file_fd(fd)) {
         return _write_tty_r(reent, fd, ptr, size);
     } else {
         return _write_file_r(reent, fd, ptr, size);
@@ -260,7 +304,7 @@ _ssize_t _write_r(struct _reent *reent, int fd, const void *ptr, size_t size)
 *****************************************************************************/
 _off_t _lseek_r(struct _reent *reent, int fd, _off_t offset, int whence)
 {
-    if ((fd & 0x4000) == 0) {
+    if (!is_file_fd(fd)) {
         reent->_errno = ESPIPE;
         return -1;
     } else {
@@ -354,7 +398,7 @@ int _fstat_r(struct _reent *reent, int fd, struct stat *st)
 
     memset(st, 0, sizeof(*st));
 
-    if ((fd & 0x4000) == 0) {
+    if (!is_file_fd(fd)) {
         return _fstat_tty_r(reent, fd, st);
     } else {
         return _fstat_file_r(reent, fd, st);

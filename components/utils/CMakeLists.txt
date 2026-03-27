@@ -91,3 +91,7 @@ endif()
 if(CONFIG_BFLB_OTA)
 add_subdirectory(wifi_ota)
 endif()
+
+if(CONFIG_MQUICKJS)
+add_subdirectory(mquickjs)
+endif()

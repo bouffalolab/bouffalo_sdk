@@ -209,7 +209,8 @@ int32_t ATTR_TCM_SECTION bflb_eflash_loader_uart_handshake_poll(uint32_t timeout
         return -1;
     }
 
-#if defined(CHIP_BL606P) || defined(CHIP_BL808) || defined(CHIP_BL616) || defined(CHIP_WB03) || defined(CHIP_BL702L)
+#if defined(CHIP_BL606P) || defined(CHIP_BL808) || defined(CHIP_BL616) || defined(CHIP_WB03) || \
+    defined(CHIP_BL702L) || defined(CHIP_BL618DG) || defined(CHIP_BL616CL)
     /*receive shake hanad signal*/
     bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", sizeof("Boot2 ISP Ready")-1);
     bflb_mtimer_delay_ms(2);

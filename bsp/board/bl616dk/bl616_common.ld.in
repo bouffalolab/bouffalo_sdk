@@ -21,20 +21,22 @@
 #define CONFIG_PSRAM_LENGTH 4096 * 1024
 #endif
 
+#ifndef CONFIG_WRAM_LENGTH
+#if (defined CONFIG_WIFI6) || (defined CONFIG_WLAN)
+#define CONFIG_WRAM_LENGTH 160 * 1024
+#else
+#define CONFIG_WRAM_LENGTH 64 * 1024
+#endif
+#endif
+
 __EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
 
 /* 160K */
-#if (defined CONFIG_WIFI6) || (defined CONFIG_WLAN)
-  #define CONFIG_WRAM_ADDRESS 0x23038000 - 160K
-  #define CONFIG_WRAM_LENGTH (160K - __EM_SIZE)
-#else
-  #define CONFIG_WRAM_ADDRESS 0x23038000 - 32K - __EM_SIZE
-  #define CONFIG_WRAM_LENGTH 32K
-#endif
+#define CONFIG_WRAM_ADDRESS 0x23038000 - CONFIG_WRAM_LENGTH
 
 /* 320K + remain wram */
 #define CONFIG_RAM_ADDRESS 0x62FC0000
-#define CONFIG_RAM_LENGTH (320K + 160K - CONFIG_WRAM_LENGTH - __EM_SIZE)
+#define CONFIG_RAM_LENGTH (320K + 160K - CONFIG_WRAM_LENGTH)
 
 #define RAM_HOLE 0x400
 #define RAM_ADDRESS CONFIG_RAM_ADDRESS + RAM_HOLE
@@ -81,8 +83,8 @@ MEMORY
 #endif
 
     ram_psram  (wxa)  : ORIGIN = CONFIG_PSRAM_ADDRESS,              LENGTH = CONFIG_PSRAM_LENGTH
-    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS,               LENGTH = CONFIG_WRAM_LENGTH
-    hbn_memory (rx)   : ORIGIN = 0x20010000,                        LENGTH = 512
+    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS,               LENGTH = CONFIG_WRAM_LENGTH - __EM_SIZE
+    hbn_memory (rx)   : ORIGIN = 0x20010000,                        LENGTH = 4K
 }
 
 #if !CONFIG_FLASH_XIP_ADDRESS
@@ -494,6 +496,10 @@ SECTIONS
         . = ALIGN(4);
         *(.gcc_except_table.*)
 
+        __gcov_info_start = .;
+        KEEP (*(.gcov_info))
+        KEEP (*(.gcov_info.*))
+        __gcov_info_end = .;
     } > rom
 
 #ifdef CONFIG_LPAPP

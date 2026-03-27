@@ -102,7 +102,12 @@ struct bt_mesh_net bt_mesh = {
 NET_BUF_POOL_DEFINE(loopback_buf_pool, CONFIG_BT_MESH_LOOPBACK_BUFS,
 		    LOOPBACK_MAX_PDU_LEN, LOOPBACK_USER_DATA_SIZE, NULL);
 #else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_loopback_buf_pool;
+#define loopback_buf_pool (*p_loopback_buf_pool)
+#else
 struct net_buf_pool loopback_buf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #if !defined(BFLB_BLE_MESH_PATCH_NET_DECODE)
 static u32_t dup_cache[CONFIG_BT_MESH_MSG_CACHE_SIZE];
@@ -1821,7 +1826,11 @@ void bt_mesh_net_start(void)
 void bt_mesh_net_init(void)
 {
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
-	net_buf_init(&loopback_buf_pool, CONFIG_BT_MESH_LOOPBACK_BUFS, LOOPBACK_MAX_PDU_LEN, NULL);
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	net_buf_init(&p_loopback_buf_pool, CONFIG_BT_MESH_LOOPBACK_BUFS, LOOPBACK_MAX_PDU_LEN, NULL);
+	#else
+    net_buf_init(&loopback_buf_pool, CONFIG_BT_MESH_LOOPBACK_BUFS, LOOPBACK_MAX_PDU_LEN, NULL);
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 
 	k_delayed_work_init(&bt_mesh.ivu_timer, ivu_refresh);

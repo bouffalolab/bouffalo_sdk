@@ -861,7 +861,7 @@ __WEAK void ATTR_TCM_SECTION bflb_flash_secreg_callapi_after(const spi_flash_cfg
 *
 * @retval int               0:Success, -1:Failed (invalid param or JEDEC ID not found)
 *****************************************************************************/
-int ATTR_TCM_SECTION bflb_flash_secreg_get_param(uint32_t jid, const bflb_flash_secreg_param_t **param)
+__WEAK int ATTR_TCM_SECTION bflb_flash_secreg_get_param(uint32_t jid, const bflb_flash_secreg_param_t **param)
 {
 #ifdef romapi_bflb_flash_secreg_get_param
     return romapi_bflb_flash_secreg_get_param(jid, param);

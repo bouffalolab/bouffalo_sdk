@@ -783,9 +783,11 @@ typedef enum {
     ((int (*)(bflb_flash_otp_config_t *otp_cfg, uint32_t addr, uint32_t len)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_flash_secreg_erase])
 
+#if 0
 #define romapi_bflb_sf_cfg_init_ext_flash_gpio \
     ((int (*)(uint8_t ext_flash_pin)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_sf_cfg_init_ext_flash_gpio])
+#endif
 
 #define romapi_bflb_sf_cfg_deinit_ext_flash_gpio \
     ((int (*)(uint8_t ext_flash_pin)) \

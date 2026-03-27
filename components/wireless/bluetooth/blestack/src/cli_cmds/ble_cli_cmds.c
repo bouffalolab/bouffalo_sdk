@@ -740,9 +740,16 @@ void btcli_enable_cb(int err)
 
 BLE_CLI(enable)
 {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	extern struct bt_dev_t* p_bt_dev;
+	if (p_bt_dev && atomic_test_bit(bt_dev.flags, BT_DEV_ENABLE)) {
+		return;
+	}
+#else
     if (atomic_test_bit(bt_dev.flags, BT_DEV_ENABLE)) {
         return;
     }
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     #if !defined (CONFIG_BT_HOST_HCI_TL)
     // Initialize BLE controller
     #if defined(BL702) || defined(BL602)

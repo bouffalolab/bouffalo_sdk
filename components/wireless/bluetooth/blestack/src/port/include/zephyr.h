@@ -132,6 +132,17 @@ struct k_poll_signal {
         .unused = 0, \
         { .obj = event_obj }, \
         }
+    
+#define K_POLL_EVENT_STATIC_INITIALIZERP(val, event_type, event_mode, event_obj, \
+                                        event_tag) \
+        { \
+        val.type = event_type; \
+        val.tag = event_tag; \
+        val.state = K_POLL_STATE_NOT_READY; \
+        val.mode = event_mode; \
+        val.unused = 0; \
+        { val.obj = event_obj; }; \
+        }
 
 extern int k_poll_signal_raise(struct k_poll_signal *signal, int result);
 extern int k_poll(struct k_poll_event *events, int num_events, s32_t timeout);

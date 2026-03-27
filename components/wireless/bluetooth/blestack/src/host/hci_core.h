@@ -133,7 +133,11 @@ struct bt_dev_br {
 #define BT_DEV_VS_CMDS_MAX  2
 
 /* State tracking for the local Bluetooth controller */
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct bt_dev_t {
+#else
 struct bt_dev {
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 	/* Local Identity Address(es) */
 	bt_addr_le_t		id_addr[CONFIG_BT_ID_MAX];
 	u8_t                    id_count;
@@ -211,6 +215,11 @@ struct bt_dev {
 #if defined(BFLB_BLE_SMP_SUPPORT_DISABLE_PAIR)
     bool disable_pair;
 #endif
+
+	u8_t adv_ch_map;
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	struct k_poll_event* events;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 };
 
 #if defined (CONFIG_BT_STACK_PTS)
@@ -237,7 +246,12 @@ typedef enum __packed{
 
 #endif 
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct bt_dev_t* p_bt_dev;
+#define bt_dev (*p_bt_dev)
+#else
 extern struct bt_dev bt_dev;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 #if !defined(BL602) && !defined(BL702)
 struct bt_controller_sdk_ver{

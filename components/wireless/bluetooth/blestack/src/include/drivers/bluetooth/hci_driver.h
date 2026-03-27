@@ -143,6 +143,8 @@ struct bt_hci_driver {
 	 */
 	int (*open)(void);
 
+	int (*close)(void);
+
 	/**
 	 * @brief Send HCI buffer to controller.
 	 *

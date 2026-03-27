@@ -6,6 +6,7 @@
 #include <sys/fcntl.h>
 
 #include "ff.h"
+#include "port_file_fd.h"
 
 int fresult_table[20] = {
     0,      /* (0) Succeeded */
@@ -120,7 +121,7 @@ int _open_file_r(struct _reent *reent, const char *path, int flags, int mode)
 
     fd_table[fd] = fp;
 
-    return 0x4000 | fd;
+    return FATFS_FD_ENCODE(fd);
 }
 
 /*****************************************************************************
@@ -136,7 +137,7 @@ int _close_file_r(struct _reent *reent, int fd)
     FRESULT fresult;
     FIL *fp;
 
-    fd &= ~0x4000;
+    fd = FATFS_FD_INDEX(fd);
 
     if ((fd < 0) || (fd >= FOPEN_MAX) || (fd_table[fd] == NULL)) {
         reent->_errno = EBADF;
@@ -175,7 +176,7 @@ _ssize_t _read_file_r(struct _reent *reent, int fd, void *ptr, size_t size)
     FRESULT fresult;
     FIL *fp;
 
-    fd &= ~0x4000;
+    fd = FATFS_FD_INDEX(fd);
 
     if ((fd < 0) || (fd >= FOPEN_MAX) || (fd_table[fd] == NULL)) {
         reent->_errno = EBADF;
@@ -210,7 +211,7 @@ _ssize_t _write_file_r(struct _reent *reent, int fd, const void *ptr, size_t siz
     FRESULT fresult;
     FIL *fp;
 
-    fd &= ~0x4000;
+    fd = FATFS_FD_INDEX(fd);
 
     if ((fd < 0) || (fd >= FOPEN_MAX) || (fd_table[fd] == NULL)) {
         reent->_errno = EBADF;
@@ -246,7 +247,7 @@ _off_t _lseek_file_r(struct _reent *reent, int fd, _off_t offset, int whence)
     FRESULT fresult;
     FIL *fp;
 
-    fd &= ~0x4000;
+    fd = FATFS_FD_INDEX(fd);
     if ((fd < 0) || (fd >= FOPEN_MAX) || (fd_table[fd] == NULL)) {
         reent->_errno = EBADF;
         return -1;
@@ -341,7 +342,7 @@ int _fstat_file_r(struct _reent *reent, int fd, struct stat *st)
 {
     FIL *fp;
 
-    fd &= ~0x4000;
+    fd = FATFS_FD_INDEX(fd);
 
     if ((fd < 0) || (fd >= FOPEN_MAX) || (fd_table[fd] == NULL)) {
         reent->_errno = EBADF;

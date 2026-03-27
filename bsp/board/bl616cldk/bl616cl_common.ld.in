@@ -23,25 +23,27 @@
 
 __EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
 
-/* 160K WiFi RAM - BL616CL uses 0x21020000 instead of 0x23038000 */
+#ifndef CONFIG_WRAM_LENGTH
 #if (defined CONFIG_WIFI6) || (defined CONFIG_WLAN)
-  #define CONFIG_WRAM_ADDRESS 0x21020000 - 160K
-  #define CONFIG_WRAM_LENGTH (160K - __EM_SIZE)
+#define CONFIG_WRAM_LENGTH 160 * 1024
 #else
-  #define CONFIG_WRAM_ADDRESS 0x21020000 - 32K - __EM_SIZE
-  #define CONFIG_WRAM_LENGTH 32K
+#define CONFIG_WRAM_LENGTH 64 * 1024
 #endif
+#endif
+
+/* 160K WiFi RAM - BL616CL uses 0x21020000 instead of 0x23038000 */
+#define CONFIG_WRAM_ADDRESS 0x21020000 - CONFIG_WRAM_LENGTH
 
 /* 224K SRAM - BL616CL has 224K instead of 320K+160K */
 #define CONFIG_RAM_ADDRESS 0x60FC0400
-#define CONFIG_RAM_LENGTH (224K - 1K + 160K - CONFIG_WRAM_LENGTH - __EM_SIZE)
+#define CONFIG_RAM_LENGTH (224K - 1K + 160K - CONFIG_WRAM_LENGTH)
 
 #define RAM_HOLE 0x400
 #define RAM_ADDRESS CONFIG_RAM_ADDRESS
 #define RAM_LENGTH CONFIG_RAM_LENGTH
 
 #define RAM_NOCACHE_ADDRESS 0x20FC0400
-#define RAM_NOCACHE_LENGTH (224K - 1K + 160K - CONFIG_WRAM_LENGTH - __EM_SIZE)
+#define RAM_NOCACHE_LENGTH (224K - 1K + 160K - CONFIG_WRAM_LENGTH)
 
 #define GROUP_START(name) __##name##_start__ = ABSOLUTE(ORIGIN(name)); . = ABSOLUTE(ORIGIN(name));
 #define GROUP_END(name) __##name##_end__ = ABSOLUTE(.);
@@ -84,7 +86,7 @@ MEMORY
 #endif
 
     ram_psram  (wxa)  : ORIGIN = CONFIG_PSRAM_ADDRESS,              LENGTH = CONFIG_PSRAM_LENGTH
-    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS,               LENGTH = CONFIG_WRAM_LENGTH
+    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS,               LENGTH = CONFIG_WRAM_LENGTH - __EM_SIZE
     hbn_memory (rx)   : ORIGIN = 0x20010000,                        LENGTH = 512
 }
 

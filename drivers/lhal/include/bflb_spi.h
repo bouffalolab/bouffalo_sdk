@@ -87,10 +87,21 @@
 #define SPI_INTSTS_RTO               (1 << 3)
 #define SPI_INTSTS_SLAVE_TX_UNDERRUN (1 << 4)
 #define SPI_INTSTS_FIFO_ERR          (1 << 5)
+#define SPI_INTSTS_ALL ((1 << 6) - 1)
 /**
   * @}
   */
 
+/** @defgroup SPI_FIFO_ERROR_STATUS spi fifo error status definition
+  * @{
+  */
+#define SPI_FIFO_ERROR_FLAG_TX_OVERFLOW (1 << 0)
+#define SPI_FIFO_ERROR_FLAG_TX_UNDERFLOW (1 << 1)
+#define SPI_FIFO_ERROR_FLAG_RX_OVERFLOW (1 << 2)
+#define SPI_FIFO_ERROR_FLAG_RX_UNDERFLOW (1 << 3)
+/**
+  * @}
+  */
 /** @defgroup SPI_INTCLR spi interrupt clear definition
   * @{
   */
@@ -129,7 +140,7 @@
 #define SPI_CMD_RX_IGNORE_DISABLE    (0x16)
 #define SPI_CMD_SET_ROLE             (0x17)
 #define SPI_CMD_GET_ROLE             (0x18)
-
+#define SPI_CMD_READ_FIFO_ERROR_FLAG (0x19)
 /**
   * @}
   */

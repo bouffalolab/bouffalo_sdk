@@ -9,6 +9,7 @@
 #include "shell.h"
 #include "wave_player.h"
 #include "recorder.h"
+#include "mm.h"
 
 static int cmd_cpu_diag(int argc, char **argv)
 {
@@ -73,12 +74,17 @@ static void recorder_init_task(void *arg)
 
 void vApplicationMallocFailedHook(void)
 {
+    const char *task_name = pcTaskGetName(NULL);
+    printf("[FATAL] malloc failed task=%s heap_free=%u\r\n", task_name != NULL ? task_name : "unknown",
+           (unsigned)kfree_size(0));
     taskDISABLE_INTERRUPTS();
     while (1) {}
 }
 
 void vAssertCalled(void)
 {
+    const char *task_name = pcTaskGetName(NULL);
+    printf("[FATAL] assert task=%s\r\n", task_name != NULL ? task_name : "unknown");
     taskDISABLE_INTERRUPTS();
     while (1) {}
 }

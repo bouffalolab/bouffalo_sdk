@@ -335,7 +335,7 @@ const struct bflb_device_s bl616cl_device_table[] = {
       .user_data = NULL },
 };
 
-struct bflb_device_s *bflb_device_get_by_name(const char *name)
+ATTR_TCM_SECTION struct bflb_device_s *bflb_device_get_by_name(const char *name)
 {
     for (uint8_t i = 0; i < sizeof(bl616cl_device_table) / sizeof(bl616cl_device_table[0]); i++) {
         if (arch_strcmp(bl616cl_device_table[i].name, name) == 0) {

@@ -37,6 +37,8 @@
 #define __BFLB_ROMAPI_PATCH_H__
 
 #include "bflb_sflash.h"
+#include "bflb_flash_secreg.h"
+#include "bflb_flash_secreg_port.h"
 #include "bflb_sf_cfg.h"
 #include "bflb_xip_sflash.h"
 #include "bl616cl_memorymap.h"

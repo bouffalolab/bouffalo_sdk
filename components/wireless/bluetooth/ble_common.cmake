@@ -275,6 +275,7 @@ sdk_ifndef(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL n)
 sdk_ifndef(CONFIG_BT_GATT_CLIENT y)
 sdk_ifndef(CONFIG_BT_DATA_LEN_UPDATE y)
 sdk_ifndef(CONFIG_BT_ATT_PREPARE_COUNT 0)
+sdk_ifndef(CONFIG_BLE_USING_DYNAMIC_RAM 0)
 sdk_ifndef(CONFIG_BT_MESH n)
 sdk_ifndef(CONFIG_BT_MESH_MODEL n)
 # ifeq ($(CONFIG_BT_MESH),1)
@@ -645,7 +646,7 @@ if(CONFIG_BT_ATT_PREPARE_COUNT LESS 0)
 endif()
 sdk_add_compile_definitions(-DCONFIG_BT_ATT_PREPARE_COUNT=${CONFIG_BT_ATT_PREPARE_COUNT})
 endif()
-
+sdk_add_compile_definitions(-DCONFIG_BLE_USING_DYNAMIC_RAM=${CONFIG_BLE_USING_DYNAMIC_RAM})
 # 
 # ##########################################
 # ############## BLE MESH ##################

@@ -169,14 +169,14 @@ struct __attribute__((packed, aligned(4))) boot_efuse_sw_cfg1_t {
 
 typedef struct
 {
+    uint8_t pk_hash_cpu[HAL_BOOT2_CPU_GROUP_MAX][HAL_BOOT2_PK_HASH_SIZE];
+    uint8_t chip_id[8];
     uint8_t encrypted[HAL_BOOT2_CPU_GROUP_MAX];
     uint8_t sign[HAL_BOOT2_CPU_GROUP_MAX];
     uint8_t hbn_check_sign;
     uint8_t app_encrypt_type;
     uint8_t app_sign_type;
     uint8_t rsvd[1];
-    uint8_t chip_id[8];
-    uint8_t pk_hash_cpu[HAL_BOOT2_CPU_GROUP_MAX][HAL_BOOT2_PK_HASH_SIZE];
     uint8_t uart_download_cfg;
     uint8_t sf_pin_cfg;
     uint8_t keep_dbg_port_closed;

@@ -1832,7 +1832,12 @@ int ble_stack_white_list_remove(dev_addr_t *peer_addr)
 int ble_stack_white_list_size()
 {
     tlog("");
+    #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    extern struct bt_dev_t* p_bt_dev;
+    #define bt_dev (*p_bt_dev)
+    #else
     extern struct bt_dev bt_dev;
+    #endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     tlog("size (%p) (%u)",&bt_dev,bt_dev.le.wl_size);
     return bt_dev.le.wl_size;
 }

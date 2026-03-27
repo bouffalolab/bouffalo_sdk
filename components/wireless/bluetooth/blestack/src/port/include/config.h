@@ -3,6 +3,11 @@
 
 #include "FreeRTOSConfig.h"
 
+/*
+ * Memory Alignment Macros
+ */
+#define MEM_ALIGN_32(x) (((x) + 3) & ~3)  /* Align to 4-byte boundary */
+
 /**
  * CONFIG_BLUETOOTH: Enable the bluetooh stack
  */

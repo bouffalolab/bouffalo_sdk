@@ -593,8 +593,8 @@ uint32_t bflb_spi_get_intstatus(struct bflb_device_s *dev)
     uint32_t int_mask;
 
     reg_base = dev->reg_base;
-    int_status = getreg32(reg_base + SPI_INT_STS_OFFSET) & 0x1f;
-    int_mask = getreg32(reg_base + SPI_INT_STS_OFFSET) >> 8 & 0x1f;
+    int_status = getreg32(reg_base + SPI_INT_STS_OFFSET) & SPI_INTSTS_ALL;
+    int_mask = getreg32(reg_base + SPI_INT_STS_OFFSET) >> 8 & SPI_INTSTS_ALL;
     return (int_status & ~int_mask);
 #endif
 }
@@ -914,7 +914,13 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 ret = SPI_ROLE_SLAVE;
             }
             break;
-
+        case SPI_CMD_READ_FIFO_ERROR_FLAG:
+            regval = getreg32(reg_base + SPI_FIFO_CONFIG_0_OFFSET);
+            ret = ((regval >> 4) & 0x0F) & (SPI_FIFO_ERROR_FLAG_TX_OVERFLOW | \
+                                            SPI_FIFO_ERROR_FLAG_TX_UNDERFLOW | \
+                                            SPI_FIFO_ERROR_FLAG_RX_OVERFLOW | \
+                                            SPI_FIFO_ERROR_FLAG_RX_UNDERFLOW);
+            break;
         default:
             ret = -EPERM;
             break;

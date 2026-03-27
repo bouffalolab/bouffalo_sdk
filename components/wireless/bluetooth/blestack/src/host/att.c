@@ -29,6 +29,7 @@
 #include "smp.h"
 #include "att_internal.h"
 #include "gatt_internal.h"
+#include "bl_port.h"
 
 #define ATT_CHAN(_ch) CONTAINER_OF(_ch, struct bt_att, chan.chan)
 #define ATT_REQ(_node) CONTAINER_OF(_node, struct bt_att_req, node)
@@ -60,7 +61,12 @@ struct bt_attr_data {
 NET_BUF_POOL_DEFINE(prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU,
 		    sizeof(struct bt_attr_data), NULL);
 #else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_prep_pool;
+#define prep_pool (*p_prep_pool)
+#else
 struct net_buf_pool prep_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #endif /* CONFIG_BT_ATT_PREPARE_COUNT */
 
@@ -92,9 +98,15 @@ struct bt_att {
 extern volatile u8_t event_flag;
 #endif
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+static struct bt_att *bt_req_pool;
+static struct bt_att_req *p_cancel;
+#define cancel (*p_cancel)
+static uint8_t *g_att_mem_pool = NULL;
+#else
 static struct bt_att bt_req_pool[CONFIG_BT_MAX_CONN];
 static struct bt_att_req cancel;
-
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
 static u16_t local_mtu_size = BT_ATT_MTU;
 #endif
@@ -2341,7 +2353,7 @@ void bt_att_mtu_changed(struct bt_l2cap_chan *chan, u16_t mtu)
 static int bt_att_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 {
 	int i;
-	static struct bt_l2cap_chan_ops ops = {
+	static const struct bt_l2cap_chan_ops ops = {
 		.connected = bt_att_connected,
 		.disconnected = bt_att_disconnected,
 		.recv = bt_att_recv,
@@ -2350,12 +2362,12 @@ static int bt_att_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 #endif /* CONFIG_BT_SMP */
 #if defined(BFLB_BLE_MTU_CHANGE_CB)
         .mtu_changed = bt_att_mtu_changed,
-#endif     
+#endif
 	};
 
 	BT_DBG("conn %p handle %u", conn, conn->handle);
 
-	for (i = 0; i < ARRAY_SIZE(bt_req_pool); i++) {
+	for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
 		struct bt_att *att = &bt_req_pool[i];
 
 		if (att->chan.chan.conn) {
@@ -2539,27 +2551,68 @@ BT_L2CAP_CHANNEL_DEFINE(att_fixed_chan, BT_L2CAP_CID_ATT, bt_att_accept);
 
 void bt_att_init(void)
 {
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	/* Define aligned structure sizes */
+	const size_t bt_req_pool_size = MEM_ALIGN_32(CONFIG_BT_MAX_CONN * sizeof(struct bt_att));
+	const size_t cancel_size = MEM_ALIGN_32(sizeof(struct bt_att_req));
+
+	/* Calculate total size */
+	const size_t total_size = bt_req_pool_size + cancel_size;
+
+	g_att_mem_pool = (uint8_t *)k_malloc(total_size);
+	if (!g_att_mem_pool) {
+		BT_ERR("Failed to allocate att mem pool: %u bytes", total_size);
+		return;
+	}
+	memset(g_att_mem_pool, 0, total_size);
+
+	bt_req_pool = (struct bt_att *)(g_att_mem_pool + 0);
+	p_cancel = (struct bt_att_req *)(g_att_mem_pool + bt_req_pool_size);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
     #if defined(BFLB_BLE_DISABLE_STATIC_CHANNEL)
 	static struct bt_l2cap_fixed_chan chan = {
 		.cid		= BT_L2CAP_CID_ATT,
 		.accept		= bt_att_accept,
 	};
-    
+
 	bt_l2cap_le_fixed_chan_register(&chan);
     #endif
 
     #if CONFIG_BT_ATT_PREPARE_COUNT > 0
     #if defined(BFLB_DYNAMIC_ALLOC_MEM)
     #if (BFLB_STATIC_ALLOC_MEM)
-    net_buf_init(PREP,&prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
+    #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    net_buf_init(PREP, &p_prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
+    #else
+    net_buf_init(PREP, &prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
+    #endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+    #else
+    #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    net_buf_init(&p_prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
     #else
     net_buf_init(&prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
+    #endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     #endif
     #endif
     #endif
 
 	bt_gatt_init();
 }
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+
+void bt_att_deinit(void)
+{
+	if (g_att_mem_pool) {
+		k_free(g_att_mem_pool);
+		g_att_mem_pool = NULL;
+	}
+	bt_req_pool = NULL;
+	p_cancel = NULL;
+}
+
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 u16_t bt_att_get_mtu(struct bt_conn *conn)
 {

@@ -531,7 +531,7 @@ static void rtc_wakeup_init(uint64_t rtc_wakeup_cmp_cnt, uint64_t sleep_us)
 
 //     /* jump to lp_fw */
 //     void (*pFunc)(void);
-//     uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start & 0x6FFFFFFF) /* 0x60000000*/; /* cacheable */
+//     uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x6FFFFFFF) /* 0x60000000*/; /* cacheable */
 //     pFunc = (void (*)(void))lpfw_addr;
 //     pFunc();
 // }
@@ -652,14 +652,14 @@ int bl_lpfw_bin_check(void)
         return -1;
     }
 
-    if ((lpfw_info->lpfw_memory_start & 0x0FFFFFFF) != ((uint32_t)__lpfw_share_start & 0x0FFFFFFF)) {
+    if ((lpfw_info->lpfw_memory_start & 0x0FFFFFFF) != ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF)) {
         BL_LP_LOG("lpfw memory start address error: lpfw:0x%08X, app:0x%08X\r\n", lpfw_info->lpfw_memory_start,
-                  (uint32_t)__lpfw_share_start);
+                  (uint32_t)__lpfw_share_start__);
         return -2;
     }
 
     if ((lpfw_info->lpfw_memory_end - lpfw_info->lpfw_memory_start) >
-        ((uint32_t)__lpfw_share_end - (uint32_t)__lpfw_share_start)) {
+        ((uint32_t)__lpfw_share_end__ - (uint32_t)__lpfw_share_start__)) {
         BL_LP_LOG("lpfw memory size_over\r\n");
         return -3;
     }
@@ -684,7 +684,7 @@ int bl_lpfw_ram_load(void)
         assert(0);
     }
 
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start & 0x0FFFFFFF) | 0x60000000; /* cacheable */
+    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000; /* cacheable */
     uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
 
     BL_LP_LOG("lpfw_addr:0x%08x\r\n", lpfw_addr);
@@ -738,7 +738,7 @@ int bl_lpfw_ram_verify(void)
         assert(0);
     }
 
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start & 0x0FFFFFFF) | 0x60000000; /* cacheable */
+    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000; /* cacheable */
     uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
     uint8_t *lpfw_sha256 = (uint8_t *)(__lpfw_load_addr - 16);
     uint8_t result[32];
@@ -1106,7 +1106,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
    /* cacheable */
     pm_set_wakeup_callback(
-        (void (*)(void))((uint32_t)__lpfw_share_start | 0x60000000) /*(void (*)(void))LP_FW_PRE_JUMP_ADDR*/);
+        (void (*)(void))((uint32_t)__lpfw_share_start__ | 0x60000000) /*(void (*)(void))LP_FW_PRE_JUMP_ADDR*/);
 
 
     LP_HOOK(pre_sleep, iot2lp_para);

@@ -640,6 +640,14 @@ int32_t bflb_sp_mediaboot_main(uint32_t group_boot_header_addr[BFLB_SP_BOOT2_CPU
 
     BOOT2_MSG_DBG("Media boot main\r\n");
 
+#if defined(CHIP_BL616CL)
+    ret = hal_boot2_load_runtime_sign_cfg(&g_efuse_cfg);
+    if (ret != 0) {
+        BOOT2_MSG_ERR("Load runtime sign cfg failed: %d\r\n", (int)ret);
+        return ret;
+    }
+#endif
+
     /* Reset some parameters*/
     for (i = 0; i < BFLB_SP_BOOT2_CPU_GROUP_MAX; i++) {
         memset(&g_boot_img_cfg[i], 0, sizeof(g_boot_img_cfg[i]));

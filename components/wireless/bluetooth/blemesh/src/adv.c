@@ -78,7 +78,13 @@ static K_THREAD_STACK_DEFINE(adv_thread_stack, ADV_STACK_SIZE);
 NET_BUF_POOL_DEFINE(adv_buf_pool, CONFIG_BT_MESH_ADV_BUF_COUNT,
 		    BT_MESH_ADV_DATA_SIZE, BT_MESH_ADV_USER_DATA_SIZE, NULL);
 #else
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* p_adv_buf_pool;
+#define adv_buf_pool (*p_adv_buf_pool)
+#else
 struct net_buf_pool adv_buf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 static struct bt_mesh_adv adv_pool[CONFIG_BT_MESH_ADV_BUF_COUNT];
 
@@ -454,7 +460,11 @@ void bt_mesh_adv_init(void)
 {
 #if defined(BFLB_BLE)
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+	net_buf_init(&p_adv_buf_pool, CONFIG_BT_MESH_ADV_BUF_COUNT, BT_MESH_ADV_DATA_SIZE, NULL);
+	#else
     net_buf_init(&adv_buf_pool, CONFIG_BT_MESH_ADV_BUF_COUNT, BT_MESH_ADV_DATA_SIZE, NULL);
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 
     k_fifo_init(&adv_queue, 20);

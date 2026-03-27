@@ -243,7 +243,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel2 = {
     .pdsCtl5 = {
         .cpuWfiMask = 0,
         .pdsPadOdEn = 0,
-        .ctrlUsb33 = 1,
+        .ctrlUsb33 = 0,
     },
     .pdsCtl6 = {
         .pdsEisoCnt = 0,
@@ -329,7 +329,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel3 = {
     .pdsCtl5 = {
         .cpuWfiMask = 0,
         .pdsPadOdEn = 0,
-        .ctrlUsb33 = 1,
+        .ctrlUsb33 = 0,
     },
     .pdsCtl6 = {
         .pdsEisoCnt = 0,
@@ -441,7 +441,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel11 = {
         .isolation = 1,
         .waitXtalRdy = 1,
         .pdsPwrOff = 1,
-        .xtalOff = 0,
+        .xtalOff = 1,
         .socEnbForceOn = 0,
         .pdsRstSocEn = 0,
         .pdsRC32mOn = 0,
@@ -501,7 +501,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel11 = {
     .pdsCtl5 = {
         .cpuWfiMask = 0,
         .pdsPadOdEn = 0,
-        .ctrlUsb33 = 1,
+        .ctrlUsb33 = 0,
     },
     .pdsCtl6 = {
         .pdsEisoCnt = 0,

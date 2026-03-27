@@ -15,6 +15,10 @@ ifeq ($(CHIP),bl602)
     CONFIG_ROMAPI             =y
     CONFIG_BL_SDK             =y
     CONFIG_BFLB_OTA           =y
+else ifeq ($(CHIP),bl616cl)
+    CONFIG_BLUETOOTH          =y
+    CONFIG_BTBLECONTROLLER_LIB =m2s1
+    CONFIG_BT_SETTINGS =y
 else
     CONFIG_BLUETOOTH           =y
     CONFIG_BTBLECONTROLLER_LIB =ble1m0s1bredr0
@@ -22,12 +26,8 @@ else
     CONFIG_BLE_TP_SERVER       =y
 endif
 
-ifeq ($(CHIP),bl616)
-# coex
+ifeq ($(filter $(CHIP),bl616 bl616cl),)
     CONFIG_COEX                =y
-    CONFIG_COEX_WIFI_MODE      =1
-    CONFIG_COEX_BT_MODE        =1
-    CONFIG_COEX_TDMA_NONE      =2
 endif
 
 ifeq ($(CHIP),bl618dg)

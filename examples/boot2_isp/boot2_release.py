@@ -20,8 +20,8 @@ release_list = [
 [r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk CONFIG_ANTI_ROLLBACK=y CONFIG_DEBUG=y',"bl616","debug"],
 [r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CONFIG_DEBUG=n',"bl618dg","release"],
 [r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CONFIG_DEBUG=y',"bl618dg","debug"],
-[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=n',"bl616cl","release"],
-[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=y',"bl616cl","debug"],
+[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=n CONFIG_LHAL_ROMAPI=y',"bl616cl","release"],
+[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=y CONFIG_LHAL_ROMAPI=y',"bl616cl","debug"],
 ]
 
 def zipDir(dirpath,outFullName):

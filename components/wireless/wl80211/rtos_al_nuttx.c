@@ -557,7 +557,7 @@ void wl80211_post_event(int code1, int code2)
   nxmutex_unlock(&g_event_queue_mutex);
 
   /* Queue the event handler if work is available */
-  ret = work_queue(LPWORK, &g_event_work, async_event_handler, NULL, 0);
+  ret = work_queue(HPWORK, &g_event_work, async_event_handler, NULL, 0);
   if (ret != 0)
     {
       wlerr("Failed to queue event handler work\n");

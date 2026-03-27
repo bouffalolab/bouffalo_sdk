@@ -122,3 +122,15 @@ void bt_keys_link_key_clear_addr(const bt_addr_t *addr);
 /* BT_KEYS_SAVE_AGING_COUNTER_ON_PAIRING is enabled */
 void bt_keys_update_usage(u8_t id, const bt_addr_le_t *addr);
 void bt_keys_link_key_store(struct bt_keys_link_key *link_key);
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+int bt_keys_init(void);
+void bt_keys_deinit(void);
+#if defined(CONFIG_BT_BREDR)
+void bt_keys_br_deinit(void);
+#endif
+#endif
+
+#if defined(CONFIG_BT_BREDR)
+int bt_keys_br_init(void);
+#endif

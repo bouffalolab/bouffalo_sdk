@@ -39,7 +39,12 @@ static struct hast_cb assist_cb = {
 	.le_adv_cb = hast_ble_adv_assist_cb,
 };
 
-extern struct bt_dev bt_dev;
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct bt_dev_t* p_bt_dev;
+#define bt_dev (*p_bt_dev)
+#else
+extern struct bt_dev_t bt_dev;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
 static void hast_ble_scan_assist_cb(const struct bt_le_scan_param *param, bt_le_scan_cb_t cb)
 {

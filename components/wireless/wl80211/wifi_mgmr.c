@@ -17,9 +17,13 @@
 #include "async_event.h"
 #endif
 
-/* Autoconnect state */
-static int wifi_mgmr_disable_autoconnect = 1; /* Default: disabled */
+static struct {
+    uint8_t autoconnect : 1;
+    uint8_t powersave : 1;
+} wifi_mgmr_glb = {0};
 static uint16_t wifi_mgmr_listen_itv = 0;
+
+static void auth_cipher_convert(struct wl80211_scan_result_item *result, uint8_t *auth, uint8_t *cipher);
 
 #if !defined(__NuttX__)
 #define WIFI_MGMR_AP_DHCPD_DEFAULT_START (-1)
@@ -43,8 +47,6 @@ extern void _wifi_mgmr_ip_got_dump(void);
 extern void _wifi_mgmr_ap_start_dhcpd(bool use_ipcfg, bool use_dhcpd, int start, int limit, uint32_t ap_ipaddr,
                                       uint32_t ap_mask);
 extern void _wifi_mgmr_ap_stop_dhcpd(void);
-
-static void auth_cipher_convert(struct wl80211_scan_result_item *result, uint8_t *auth, uint8_t *cipher);
 
 static void wifi_mgmr_ap_netif_cfg_set_defaults(struct wifi_mgmr_ap_netif_cfg *config)
 {
@@ -108,15 +110,26 @@ static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
     wl80211_printf("=================================================================\r\n");
 }
 
-static void start_dhcp_tsk(void)
+static void auto_powersave(struct timeout_s *timeout) {
+    if (wifi_mgmr_glb.powersave) {
+        wifi_mgmr_sta_ps_enter();
+    }
+    free(timeout);
+}
+
+static void connected_tsk(void)
 {
     _wifi_mgmr_sta_link_up();
+
+    if (wifi_mgmr_glb.powersave) {
+        timeout_start_new(auto_powersave, NULL, 5000);
+    }
 }
 
 static void disconnect_tsk(void)
 {
     _wifi_mgmr_sta_link_down();
-    if (!wifi_mgmr_disable_autoconnect && wl80211_glb.last_connect_params) {
+    if (wifi_mgmr_glb.autoconnect && wl80211_glb.last_connect_params) {
         wl80211_printf("Autoconnect: Reconnecting to %s\r\n", wl80211_glb.last_connect_params->ssid);
         wl80211_sta_connect(wl80211_glb.last_connect_params);
     }
@@ -205,7 +218,7 @@ static void wl80211_event_handler(async_input_event_t ev, void *priv)
         case WL80211_EVT_STA_CONNECTED:
             connect_ind_dump(0, 0);
             async_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED, 0);
-            handler = start_dhcp_tsk;
+            handler = connected_tsk;
             break;
 
         case WL80211_EVT_SCAN_DONE:
@@ -299,6 +312,10 @@ void wifi_mgmr_init(void)
 
 void wifi_mgmr_sta_ps_enter(void)
 {
+    rtos_lock();
+    wifi_mgmr_glb.powersave = 1;
+    rtos_unlock();
+
     if (wl80211_sta_set_ps(1)) {
         wl80211_printf("enable ps mode failed!\r\n");
     }
@@ -306,6 +323,10 @@ void wifi_mgmr_sta_ps_enter(void)
 
 void wifi_mgmr_sta_ps_exit(void)
 {
+    rtos_lock();
+    wifi_mgmr_glb.powersave = 0;
+    rtos_unlock();
+
     if (wl80211_sta_set_ps(0)) {
         wl80211_printf("exit ps mode failed!\r\n");
     }
@@ -634,7 +655,7 @@ uint32_t wifi_mgmr_sta_scanlist_dump(void *results, uint32_t resultNums)
 
     qsort(rssi_sorted, total, sizeof(void *), cmp_rssi_desc);
 
-    for (i = 0; i < resultNums && i < resultNums; i++) {
+    for (i = 0; i < resultNums && i < total; i++) {
         memset(scanResults + i, 0, sizeof(wifi_mgmr_scan_item_t));
         wifi_mgmr_sta_scanlist_format(rssi_sorted[i], scanResults + i);
     }
@@ -759,14 +780,19 @@ int wifi_mgmr_sta_scanlist(void)
 
 int wifi_mgmr_sta_autoconnect_enable(void)
 {
-    wifi_mgmr_disable_autoconnect = 0;
+    rtos_lock();
+    wifi_mgmr_glb.autoconnect = 1;
+    rtos_unlock();
     wl80211_printf("Enable Auto Reconnect\r\n");
     return 0;
 }
 
 int wifi_mgmr_sta_autoconnect_disable(void)
 {
-    wifi_mgmr_disable_autoconnect = 1;
+    rtos_lock();
+    wifi_mgmr_glb.autoconnect = 0;
+    rtos_unlock();
+
     wl80211_printf("Disable Auto Reconnect\r\n");
     return 0;
 }

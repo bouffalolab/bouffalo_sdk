@@ -43,8 +43,424 @@
 #include "bflb_clock.h"
 #include "bl616cl_psram.h"
 #include "bflb_flash.h"
+#include "bflb_flash_secreg.h"
+#include "bflb_sp_common.h"
 #include "bflb_sp_port.h"
 
+#define HAL_BOOT2_TLVC_CRC32_SIZE          4U
+#define HAL_BOOT2_TLVC_MIN_SIZE            (sizeof(struct boot2_tlvc_hdr_t) + HAL_BOOT2_TLVC_CRC32_SIZE)
+#define HAL_BOOT2_TLVC_TOTAL_SIZE(vlen)    (sizeof(struct boot2_tlvc_hdr_t) + (uint32_t)(vlen) + HAL_BOOT2_TLVC_CRC32_SIZE)
+#define HAL_BOOT2_FLASH_OTP_PK_HASH_REGION 0U
+
+static uint8_t g_boot2_runtime_sign_cfg_loaded = 0;
+extern uint8_t __etext_final__[];
+
+/****************************************************************************/ /**
+ * @brief  read one little-endian 16-bit value from byte stream
+ *
+ * @param  data: input byte pointer
+ *
+ * @return decoded 16-bit value
+ *
+ *******************************************************************************/
+static uint16_t hal_boot2_get_le16(const uint8_t *data)
+{
+    return ((uint16_t)data[0]) | ((uint16_t)data[1] << 8);
+}
+
+/****************************************************************************/ /**
+ * @brief  read one little-endian 32-bit value from byte stream
+ *
+ * @param  data: input byte pointer
+ *
+ * @return decoded 32-bit value
+ *
+ *******************************************************************************/
+static uint32_t hal_boot2_get_le32(const uint8_t *data)
+{
+    return ((uint32_t)data[0]) | ((uint32_t)data[1] << 8) |
+           ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24);
+}
+
+/****************************************************************************/ /**
+ * @brief  calculate crc32 of one boot2 tlvc record
+ *
+ * @param  tlvc_data: TLVC item header pointer
+ * @param  value_len: TLVC value length
+ *
+ * @return crc32 value
+ *
+ *******************************************************************************/
+static uint32_t hal_boot2_calc_tlvc_crc(const uint8_t *tlvc_data, uint16_t value_len)
+{
+    return bflb_soft_crc32((uint8_t *)tlvc_data, sizeof(struct boot2_tlvc_hdr_t) + value_len);
+}
+
+/****************************************************************************/ /**
+ * @brief  read crc32 value from one boot2 tlvc record
+ *
+ * @param  crc_ptr: TLVC crc32 address
+ *
+ * @return crc32 value
+ *
+ *******************************************************************************/
+static uint32_t hal_boot2_get_tlvc_crc32(const uint8_t *crc_ptr)
+{
+    return hal_boot2_get_le32(crc_ptr);
+}
+
+/****************************************************************************/ /**
+ * @brief  decode one boot2 tlvc record into parsed fields
+ *
+ * @param  tlvc_data: TLVC item header pointer
+ * @param  tlvc_item: decoded TLVC item output
+ *
+ * @return none
+ *
+ *******************************************************************************/
+static void hal_boot2_get_tlvc_item(const uint8_t *tlvc_data, boot2_tlvc_item_t *tlvc_item)
+{
+    tlvc_item->magic = hal_boot2_get_le32(tlvc_data);
+    tlvc_item->type = hal_boot2_get_le16(tlvc_data + sizeof(uint32_t));
+    tlvc_item->length = hal_boot2_get_le16(tlvc_data + sizeof(uint32_t) + sizeof(uint16_t));
+    tlvc_item->value = tlvc_data + sizeof(struct boot2_tlvc_hdr_t);
+    tlvc_item->crc32 = 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  parse one tlvc record and validate it inside the specified tlvc area
+ *
+ * @param  tlvc: TLVC record pointer
+ * @param  tlvc_area_end: End address of the TLVC area
+ * @param  tlvc_item: decoded TLVC item output
+ * @param  tlvc_total_len: TLVC total length output
+ *
+ * @return 0 for valid and negative value for invalid
+ *
+ *******************************************************************************/
+static int32_t hal_boot2_parse_tlvc_record(const uint8_t *tlvc, const uint8_t *tlvc_area_end,
+                                           boot2_tlvc_item_t *tlvc_item, uint32_t *tlvc_total_len)
+{
+    if (((uintptr_t)tlvc_area_end - (uintptr_t)tlvc) < HAL_BOOT2_TLVC_MIN_SIZE) {
+        return -1;
+    }
+
+    hal_boot2_get_tlvc_item(tlvc, tlvc_item);
+    if (tlvc_item->magic != HAL_BOOT2_TLVC_MAGIC) {
+        return -2;
+    }
+
+    *tlvc_total_len = HAL_BOOT2_TLVC_TOTAL_SIZE(tlvc_item->length);
+    if (((uintptr_t)tlvc_area_end - (uintptr_t)tlvc) < *tlvc_total_len) {
+        return -3;
+    }
+
+    tlvc_item->crc32 = hal_boot2_get_tlvc_crc32(tlvc + *tlvc_total_len - HAL_BOOT2_TLVC_CRC32_SIZE);
+    if (hal_boot2_calc_tlvc_crc(tlvc, tlvc_item->length) != tlvc_item->crc32) {
+        return -4;
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  clear one app public key hash slot
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ * @param  group: cpu group index
+ *
+ * @return none
+ *
+ *******************************************************************************/
+static void hal_boot2_clear_app_pkhash(boot2_efuse_hw_config *efuse_cfg, uint32_t group)
+{
+    memset(efuse_cfg->pk_hash_cpu[group], 0, sizeof(efuse_cfg->pk_hash_cpu[group]));
+}
+
+/****************************************************************************/ /**
+ * @brief  get TLVC type and default app public key hash length from sign type
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ * @param  group: cpu group index
+ * @param  tlvc_type: output TLVC type, NULL if unused
+ * @param  hash_len: output hash length, NULL if unused
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+static int32_t hal_boot2_get_app_pkhash_tlvc_info(const boot2_efuse_hw_config *efuse_cfg, uint32_t group,
+                                                  uint16_t *tlvc_type, uint32_t *hash_len)
+{
+    if (efuse_cfg->sign[group] == HAL_BOOT_SIGN_TYPE_ECC_SHA256) {
+        if (tlvc_type != NULL) {
+            *tlvc_type = HAL_BOOT2_TLVC_TYPE_PKHA_SHA256;
+        }
+        if (hash_len != NULL) {
+            *hash_len = HAL_BOOT2_PK_HASH_SIZE;
+        }
+        return 0;
+    }
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (efuse_cfg->sign[group] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        if (tlvc_type != NULL) {
+            *tlvc_type = HAL_BOOT2_TLVC_TYPE_PKHA_SHA384;
+        }
+        if (hash_len != NULL) {
+            *hash_len = HAL_BOOT2_PK_HASH_SIZE_SHA384;
+        }
+        return 0;
+    }
+#endif
+
+    return -3;
+}
+
+/****************************************************************************/ /**
+ * @brief  parse one matched tlvc record and load app public key hash
+ *
+ * @param  tlvc: TLVC record pointer
+ * @param  efuse_cfg: boot2 efuse config pointer
+ * @param  group: cpu group index
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+static int32_t hal_boot2_parse_app_pkhash_tlvc(const uint8_t *tlvc, boot2_efuse_hw_config *efuse_cfg, uint32_t group)
+{
+    boot2_tlvc_item_t tlvc_item;
+    uint32_t hash_idx = 0;
+    uint32_t hash_len = 0;
+    uint16_t expected_type = 0;
+    int32_t ret = 0;
+
+    hal_boot2_get_tlvc_item(tlvc, &tlvc_item);
+    ret = hal_boot2_get_app_pkhash_tlvc_info(efuse_cfg, group, &expected_type, &hash_len);
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (tlvc_item.type != expected_type) {
+        return -4;
+    }
+
+    if ((uint32_t)tlvc_item.length != hash_len) {
+        return -5;
+    }
+
+    hal_boot2_clear_app_pkhash(efuse_cfg, group);
+    for (hash_idx = 0; hash_idx < hash_len; hash_idx++) {
+        efuse_cfg->pk_hash_cpu[group][hash_idx] = tlvc_item.value[hash_idx];
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  load app public key hash from flash otp region0
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ * @param  group: cpu group index
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+static int32_t hal_boot2_load_app_pkhash_from_flash_otp(boot2_efuse_hw_config *efuse_cfg, uint32_t group)
+{
+    const bflb_flash_secreg_param_t *param = NULL;
+    bflb_flash_otp_config_t flash_otp_cfg;
+    uint8_t *flash_cfg = NULL;
+    uint32_t flash_cfg_len = 0;
+    uint32_t jedec_id = 0;
+    uint32_t hash_len = 0;
+    uint16_t tlvc_type = 0;
+    int32_t ret = 0;
+
+    ret = hal_boot2_get_app_pkhash_tlvc_info(efuse_cfg, group, &tlvc_type, &hash_len);
+    if (ret != 0) {
+        return ret;
+    }
+    (void)tlvc_type;
+
+    bflb_flash_get_cfg(&flash_cfg, &flash_cfg_len);
+    if (flash_cfg == NULL) {
+        return -6;
+    }
+    (void)flash_cfg_len;
+
+    jedec_id = bflb_flash_get_jedec_id();
+    ret = bflb_flash_secreg_get_param(jedec_id, &param);
+    if ((ret != 0) || (param == NULL)) {
+        return -7;
+    }
+
+    flash_otp_cfg.flash_cfg = (spi_flash_cfg_type *)flash_cfg;
+    flash_otp_cfg.param = param;
+
+    hal_boot2_clear_app_pkhash(efuse_cfg, group);
+    ret = bflb_flash_secreg_read_by_idx(&flash_otp_cfg, HAL_BOOT2_FLASH_OTP_PK_HASH_REGION, 0,
+                                        efuse_cfg->pk_hash_cpu[group], hash_len);
+    if (ret != 0) {
+        return -8;
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  load app public key hash from boot2 tail tlvc records
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ * @param  group: cpu group index
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+static int32_t hal_boot2_load_app_pkhash_from_tlvc(boot2_efuse_hw_config *efuse_cfg, uint32_t group)
+{
+    struct hal_bootheader_t boot2_hdr;
+    uint32_t boot2_start_addr = HAL_BOOT2_FLASH_XIP_BASE + hal_boot2_get_bootheader_offset();
+    const uint8_t *tlvc_start_raw = __etext_final__;
+    const uint8_t *tlvc_start = NULL;
+    const uint8_t *tlvc_end = NULL;
+    const uint8_t *cursor = NULL;
+    uint32_t boot2_img_len = 0;
+    uint16_t expected_type = 0;
+    uint32_t hash_len = 0;
+    int32_t ret = -9;
+
+    if (bflb_flash_read(hal_boot2_get_bootheader_offset(), (uint8_t *)&boot2_hdr, sizeof(boot2_hdr)) != 0) {
+        return ret;
+    }
+
+    boot2_img_len = boot2_hdr.basic_cfg.img_len_cnt;
+    if (boot2_img_len == 0) {
+        return ret;
+    }
+
+    tlvc_start = (const uint8_t *)((((uintptr_t)tlvc_start_raw) + 0x0FU) & (~((uintptr_t)0x0FU)));
+    tlvc_end = (const uint8_t *)(boot2_start_addr + HAL_BOOT2_FW_IMG_OFFSET_AFTER_HEADER + boot2_img_len);
+    if ((uintptr_t)tlvc_end <= (uintptr_t)tlvc_start) {
+        return ret;
+    }
+
+    ret = hal_boot2_get_app_pkhash_tlvc_info(efuse_cfg, group, &expected_type, &hash_len);
+    if (ret != 0) {
+        return ret;
+    }
+
+    cursor = tlvc_start;
+    while (((uintptr_t)tlvc_end - (uintptr_t)cursor) >= HAL_BOOT2_TLVC_MIN_SIZE) {
+        boot2_tlvc_item_t tlvc_item;
+        uint32_t tlvc_total_len = 0;
+
+        ret = hal_boot2_parse_tlvc_record(cursor, tlvc_end, &tlvc_item, &tlvc_total_len);
+        if (ret != 0) {
+            return -10;
+        }
+
+        if ((tlvc_item.type == expected_type) && ((uint32_t)tlvc_item.length == hash_len)) {
+            return hal_boot2_parse_app_pkhash_tlvc(cursor, efuse_cfg, group);
+        }
+
+        cursor += tlvc_total_len;
+    }
+
+    return -11;
+}
+
+/****************************************************************************/ /**
+ * @brief  load individual app sign config after flash init
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+int32_t hal_boot2_load_individual_sign_cfg(boot2_efuse_hw_config *efuse_cfg)
+{
+    uint32_t i = 0;
+    int32_t ret = 0;
+
+    if (efuse_cfg->app_sign_type != HAL_APP_SIGN_INDIVIDUAL) {
+        return 0;
+    }
+
+    for (i = 0; i < HAL_BOOT2_CPU_GROUP_MAX; i++) {
+        ret = hal_boot2_load_app_pkhash_from_tlvc(efuse_cfg, i);
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  load same-as-boot2 sign config from flash otp after flash init
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+int32_t hal_boot2_load_sign_cfg_from_flash_otp(boot2_efuse_hw_config *efuse_cfg)
+{
+    uint32_t i = 0;
+    int32_t ret = 0;
+
+    if (efuse_cfg->app_sign_type != HAL_APP_SIGN_SAME_AS_BOOT2) {
+        return 0;
+    }
+
+    if (efuse_cfg->pkhash_sel != HAL_APP_SIGN_PKHASH_FROM_FLASH_OTP) {
+        return 0;
+    }
+
+    for (i = 0; i < HAL_BOOT2_CPU_GROUP_MAX; i++) {
+        if (efuse_cfg->sign[i] == HAL_BOOT_SIGN_TYPE_NONE) {
+            continue;
+        }
+
+        ret = hal_boot2_load_app_pkhash_from_flash_otp(efuse_cfg, i);
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  load runtime sign config after flash init
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ *
+ * @return 0 on success, negative value on failure
+ *
+ *******************************************************************************/
+int32_t hal_boot2_load_runtime_sign_cfg(boot2_efuse_hw_config *efuse_cfg)
+{
+    int32_t ret = 0;
+
+    if (g_boot2_runtime_sign_cfg_loaded != 0) {
+        return 0;
+    }
+
+    ret = hal_boot2_load_individual_sign_cfg(efuse_cfg);
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (efuse_cfg->pkhash_sel == HAL_APP_SIGN_PKHASH_FROM_FLASH_OTP) {
+        ret = hal_boot2_load_sign_cfg_from_flash_otp(efuse_cfg);
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    g_boot2_runtime_sign_cfg_loaded = 1;
+    return 0;
+}
 /****************************************************************************/ /**
  * @brief  init boot2 system clock
  *
@@ -320,6 +736,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num, uint1
             return ERROR;
         }
         /* to do write efuse psram dqs delay */
+        (void)before_ef;
         // if (!(before_ef & 0x1fff)) {
         //     bflb_ef_ctrl_write_common_trim(NULL, "psram_trim", g_efuse_cfg.psram_dqs_cfg, 1);
         // }
@@ -382,6 +799,7 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
 
     /* get app encrypt and sign type */
     bflb_ef_ctrl_read_direct(NULL, 0x7C, (uint32_t *)&app_encrypt_sign, 1, 1);
+    g_boot2_runtime_sign_cfg_loaded = 0;
 
     efuse_cfg->app_encrypt_type = ((app_encrypt_sign >> 12) & 0x3);
     efuse_cfg->app_sign_type = ((app_encrypt_sign >> 10) & 0x3);
@@ -415,24 +833,55 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
     bflb_ef_ctrl_read_direct(NULL, 0x70, (uint32_t *)&sw_cfg0, 1, 0);
     /* get sw uasge 1 */
     bflb_ef_ctrl_read_direct(NULL, 0x74, (uint32_t *)&sw_cfg1, 1, 0);
+    efuse_cfg->pkhash_sel = (uint8_t)sw_cfg1.pkhash_sel;
+    efuse_cfg->pkhash_len = (uint8_t)sw_cfg1.pkhash_len;
 
     for (i = 0; i < HAL_BOOT2_CPU_GROUP_MAX; i++) {
         /* get public key hash */
         switch (efuse_cfg->app_sign_type) {
             case HAL_APP_SIGN_SAME_AS_BOOT2:
-                // TODO: sha384
-                bflb_ef_ctrl_read_direct(NULL, 0x40, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
-                efuse_cfg->sign[i] = ((struct boot_efuse_sw_cfg1_t)sw_cfg1).sign_cfg;
+                hal_boot2_clear_app_pkhash(efuse_cfg, i);
+                efuse_cfg->sign[i] = (uint8_t)sw_cfg0.sign_cfg;
+                switch (efuse_cfg->pkhash_sel) {
+                    case HAL_APP_SIGN_PKHASH_FROM_EFUSE:
+                        /* read from efuse directly */
+                        if (sw_cfg1.pkhash_len == 0) {
+                            /* pkhash len is 192 bits */
+                            bflb_ef_ctrl_read_direct(NULL, 0x48, (uint32_t *)efuse_cfg->pk_hash_cpu[i],
+                                                     HAL_BOOT2_PK_HASH_SIZE_LEN192 / 4, 0);
+                        } else {
+                            bflb_ef_ctrl_read_direct(NULL, 0x40, (uint32_t *)efuse_cfg->pk_hash_cpu[i],
+                                                     HAL_BOOT2_PK_HASH_SIZE / 4, 0);
+                        }
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+                        if (efuse_cfg->sign[i] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+                            /* Read additional 16 bytes (4 words) for SHA384 pk hash at offset 32 bytes */
+                            bflb_ef_ctrl_read_direct(
+                                NULL, 0x1C, (uint32_t *)((uint8_t *)efuse_cfg->pk_hash_cpu[i] + HAL_BOOT2_PK_HASH_SIZE),
+                                4, 0);
+                        }
+#endif
+                        break;
+                    case HAL_APP_SIGN_PKHASH_FROM_FLASH_OTP:
+                        /* defer public key hash loading until flash init is complete */
+                        break;
+                    default:
+                        BOOT2_MSG_DBG("Invalid pkhash_sel: %d\r\n", efuse_cfg->pkhash_sel);
+                        while (1)
+                            ;
+                        break;
+                }
                 break;
             case HAL_APP_SIGN_INDIVIDUAL:
-                // TODO
-                efuse_cfg->sign[i] = 1;
+                hal_boot2_clear_app_pkhash(efuse_cfg, i);
+                efuse_cfg->sign[i] = (uint8_t)sw_cfg0.sign_cfg;
                 break;
             case HAL_APP_NO_SIGN:
-                efuse_cfg->sign[i] = 0;
+                hal_boot2_clear_app_pkhash(efuse_cfg, i);
+                efuse_cfg->sign[i] = HAL_BOOT_SIGN_TYPE_NONE;
                 break;
             default:
-                BOOT2_MSG_DBG("APP sign flag is invalid, deadbeef!\r\n");
+                BOOT2_MSG_DBG("Invalid app_sign_type: %d\r\n", efuse_cfg->app_sign_type);
                 while (1)
                     ;
         }
@@ -835,6 +1284,13 @@ void hal_boot2_get_img_info(uint8_t *data, uint32_t *image_offset, uint32_t *img
         *hash = NULL;
     } else {
         arch_memcpy_fast(phash, header->basic_cfg.hash, sizeof(header->basic_cfg.hash));
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        /* For SHA384, read the remaining 16 bytes from after the boot header */
+        if (HAL_BOOT_SIGN_TYPE_ECC_SHA384 == g_efuse_cfg.sign[0]) {
+            uint8_t *hash_ext = data + sizeof(struct hal_bootheader_t);
+            arch_memcpy_fast(&phash[HAL_BOOT2_PK_HASH_SIZE], hash_ext, 16);
+        }
+#endif
     }
 }
 

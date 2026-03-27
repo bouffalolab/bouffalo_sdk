@@ -66,58 +66,131 @@
 #endif
 
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_hci_cmd_pool;
+#define hci_cmd_pool (p_hci_cmd_pool)
+extern struct net_buf_pool* p_hci_rx_pool;
+#define hci_rx_pool (p_hci_rx_pool)
+#else
 extern struct net_buf_pool hci_cmd_pool;
 extern struct net_buf_pool hci_rx_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(CONFIG_BT_CONN)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_acl_tx_pool;
+#define acl_tx_pool (p_acl_tx_pool)
+extern struct net_buf_pool* p_num_complete_pool;
+#define num_complete_pool (p_num_complete_pool)
+#else
 extern struct net_buf_pool acl_tx_pool;
 extern struct net_buf_pool num_complete_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if (BFLB_STATIC_ALLOC_MEM)
 __attribute__((section(".tcm_data"))) u8_t num_complete_data_pool[1 * BT_BUF_RX_SIZE];
 #endif
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_prep_pool;
+#define prep_pool (p_prep_pool)
+#else
 extern struct net_buf_pool prep_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if (BFLB_STATIC_ALLOC_MEM)
 __attribute__((section(".tcm_data"))) u8_t prep_data_pool[CONFIG_BT_ATT_PREPARE_COUNT * BT_ATT_MTU];
 #endif
 #endif
 #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_acl_in_pool;
+#define acl_in_pool (p_acl_in_pool)
+#else
 extern struct net_buf_pool acl_in_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if (BFLB_STATIC_ALLOC_MEM)
 __attribute__((section(".tcm_data"))) u8_t acl_in_data_pool[CONFIG_BT_ACL_RX_COUNT * ACL_IN_SIZE];
 #endif
 #endif
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_frag_pool;
+#define frag_pool (p_frag_pool)
+#else
 extern struct net_buf_pool frag_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #endif //CONFIG_BT_CONN
 #if defined(CONFIG_BT_DISCARDABLE_BUF_COUNT)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_discardable_pool;
+#define discardable_pool (p_discardable_pool)
+#else
 extern struct net_buf_pool discardable_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if (BFLB_STATIC_ALLOC_MEM)
 __attribute__((section(".tcm_data"))) u8_t discardable_data_pool[CONFIG_BT_DISCARDABLE_BUF_COUNT * BT_BUF_RX_SIZE];
 #endif
 #endif
 #ifdef CONFIG_BT_MESH
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_adv_buf_pool;
+#define adv_buf_pool (p_adv_buf_pool)
+extern struct net_buf_pool* p_loopback_buf_pool;
+#define loopback_buf_pool (p_loopback_buf_pool)
+#else
 extern struct net_buf_pool adv_buf_pool;
 extern struct net_buf_pool loopback_buf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(CONFIG_BT_MESH_FRIEND)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_friend_buf_pool;
+#define friend_buf_pool (p_friend_buf_pool)
+#else
 extern struct net_buf_pool friend_buf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif //CONFIG_BT_MESH_FRIEND
 #endif
 #if defined(CONFIG_BT_BREDR)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_br_sig_pool;
+#define br_sig_pool (p_br_sig_pool)
+extern struct net_buf_pool* p_sdp_pool;
+#define sdp_pool (p_sdp_pool)
+extern struct net_buf_pool* p_dummy_pool;
+#define dummy_pool (p_dummy_pool)
+#else
 extern struct net_buf_pool br_sig_pool;
 extern struct net_buf_pool sdp_pool;
 extern struct net_buf_pool dummy_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #if defined(CONFIG_BT_HFP)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_hf_pool;
+#define hf_pool (p_hf_pool)
+#else
 extern struct net_buf_pool hf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #if defined(CONFIG_BT_SPP)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_spp_pool;
+#define spp_pool (p_spp_pool)
+#else
 extern struct net_buf_pool spp_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 #endif
 
 #if defined(CONFIG_AUTO_PTS)
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_server_pool;
+#define server_pool (p_server_pool)
+extern struct net_buf_pool* p_data_pool;
+#define data_pool (p_data_pool)
+#else
 extern struct net_buf_pool server_pool;
 extern struct net_buf_pool data_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #define SERVER_BUF_SIZE			2048
 #define DATA_MTU 264
 #if (BFLB_STATIC_ALLOC_MEM)
@@ -127,11 +200,21 @@ __attribute__((section(".tcm_data"))) u8_t data_data_pool[1 * DATA_MTU];
 #endif
 
 #if defined(CONFIG_DYNAMIC_GATTS)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+extern struct net_buf_pool* p_dynamic_gatt_pool;
+#define dynamic_gatt_pool (p_dynamic_gatt_pool)
+#else
 extern struct net_buf_pool dynamic_gatt_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 
-struct net_buf_pool *_net_buf_pool_list[] = {&hci_cmd_pool, &hci_rx_pool,
-
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+struct net_buf_pool* *_net_buf_pool_list[] = {
+#else
+struct net_buf_pool *_net_buf_pool_list[] = {
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+	&hci_cmd_pool,
+	&hci_rx_pool,
     #if defined(CONFIG_BT_CONN)
     &acl_tx_pool,
     &num_complete_pool,
@@ -146,7 +229,7 @@ struct net_buf_pool *_net_buf_pool_list[] = {&hci_cmd_pool, &hci_rx_pool,
     #endif
     #endif//defined(CONFIG_BT_CONN)
     #if defined(CONFIG_BT_DISCARDABLE_BUF_COUNT)
-    discardable_pool,
+    &discardable_pool,
     #endif
     #ifdef CONFIG_BT_MESH
     &adv_buf_pool,
@@ -181,18 +264,40 @@ extern struct net_buf_pool _net_buf_pool_list[];
 
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
 #if (BFLB_STATIC_ALLOC_MEM)
-void net_buf_init(u8_t buf_type,struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_size, destroy_cb_t destroy)
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void net_buf_init(u8_t buf_type, struct net_buf_pool **buf_pool_ptr, u16_t buf_count, size_t data_size, destroy_cb_t destroy)
+#else
+void net_buf_init(u8_t buf_type, struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_size, destroy_cb_t destroy)
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+#else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void net_buf_init(struct net_buf_pool **buf_pool_ptr, u16_t buf_count, size_t data_size, destroy_cb_t destroy)
 #else
 void net_buf_init(struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_size, destroy_cb_t destroy)
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 {
     struct net_buf_pool_fixed *buf_fixed;
-    buf_pool->alloc = (struct net_buf_data_alloc *)k_malloc(sizeof(struct net_buf_data_alloc));
-    buf_pool->alloc->alloc_data = (struct net_buf_pool_fixed *)k_malloc(sizeof(struct net_buf_pool_fixed));
-    
-    buf_fixed = (struct net_buf_pool_fixed *)buf_pool->alloc->alloc_data;
-    
-    buf_pool->alloc->cb = &net_buf_fixed_cb;
+    struct net_buf_pool *real_pool;
+
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    /* Allocate and initialize the net_buf_pool structure */
+    *buf_pool_ptr = (struct net_buf_pool *)k_malloc(sizeof(struct net_buf_pool));
+    if (!*buf_pool_ptr) {
+        return;
+    }
+    memset(*buf_pool_ptr, 0, sizeof(struct net_buf_pool));
+    real_pool = *buf_pool_ptr;
+#else
+    real_pool = buf_pool;
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
+    real_pool->alloc = (struct net_buf_data_alloc *)k_malloc(sizeof(struct net_buf_data_alloc));
+    real_pool->alloc->alloc_data = (struct net_buf_pool_fixed *)k_malloc(sizeof(struct net_buf_pool_fixed));
+
+    buf_fixed = (struct net_buf_pool_fixed *)real_pool->alloc->alloc_data;
+
+    real_pool->alloc->cb = &net_buf_fixed_cb;
     buf_fixed->data_size = data_size;
     #if (BFLB_STATIC_ALLOC_MEM)
     switch (buf_type){
@@ -202,62 +307,62 @@ void net_buf_init(struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_si
         case HCI_RX:
             buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size);
             break;
-        #if defined(CONFIG_BT_CONN)
+#if defined(CONFIG_BT_CONN)
         case ACL_TX:
             buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size);
             break;
         case NUM_COMPLETE:
             buf_fixed->data_pool = num_complete_data_pool;
-            break; 
-        #if CONFIG_BT_ATT_PREPARE_COUNT > 0
+            break;
+#if CONFIG_BT_ATT_PREPARE_COUNT > 0
         case PREP:
             buf_fixed->data_pool = prep_data_pool;
-            break;         
-        #endif
-        #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
+            break;
+#endif
+#if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
         case ACL_IN:
             buf_fixed->data_pool = acl_in_data_pool;
-            break;                
-        #endif
-        #if CONFIG_BT_L2CAP_TX_FRAG_COUNT > 0
+            break;
+#endif
+#if CONFIG_BT_L2CAP_TX_FRAG_COUNT > 0
         case FRAG:
             buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size);
-            break;               
-        #endif
-        #endif
-        #if defined(CONFIG_BT_DISCARDABLE_BUF_COUNT)
+            break;
+#endif
+#endif
+#if defined(CONFIG_BT_DISCARDABLE_BUF_COUNT)
         case DISCARDABLE:
             buf_fixed->data_pool = discardable_data_pool;
             break;
-        #endif
-        #if defined(CONFIG_AUTO_PTS)
+#endif
+#if defined(CONFIG_AUTO_PTS)
         case SERVER:
             buf_fixed->data_pool = server_data_pool;
             break;
         case DATA:
             buf_fixed->data_pool = data_data_pool;
             break;
-        #endif
-        #if defined(CONFIG_DYNAMIC_GATTS)
+#endif
+#if defined(CONFIG_DYNAMIC_GATTS)
         case GATTSERVER:
             buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size);
             break;
-        #endif
+#endif
         default:
-            break;      
+            break;
     }
     #else
-    buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size); 
+    buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size);
     #endif
-    buf_pool->__bufs = (struct net_buf *)k_malloc(buf_count * sizeof(struct net_buf));
-    buf_pool->buf_count = buf_count;
-    buf_pool->uninit_count = buf_count;
-    #if defined(CONFIG_NET_BUF_POOL_USAGE)
-    buf_pool->avail_count = buf_count;
-    #endif
-    buf_pool->destroy = destroy;  
+    real_pool->__bufs = (struct net_buf *)k_malloc(buf_count * sizeof(struct net_buf));
+    real_pool->buf_count = buf_count;
+    real_pool->uninit_count = buf_count;
+#if defined(CONFIG_NET_BUF_POOL_USAGE)
+    real_pool->avail_count = buf_count;
+#endif
+    real_pool->destroy = destroy;
 
-    k_lifo_init(&(buf_pool->free), buf_count);
+    k_lifo_init(&(real_pool->free), buf_count);
 }
 
 void net_buf_deinit(struct net_buf_pool *buf_pool)
@@ -266,11 +371,19 @@ void net_buf_deinit(struct net_buf_pool *buf_pool)
     bt_delete_queue((struct k_fifo *)(&(buf_pool->free)));
     struct net_buf_pool_fixed *buf_fixed = (struct net_buf_pool_fixed *)buf_pool->alloc->alloc_data;
     #if (BFLB_STATIC_ALLOC_MEM)
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    if(buf_pool == hci_cmd_pool || buf_pool == acl_tx_pool || buf_pool == hci_rx_pool
+       #if CONFIG_BT_L2CAP_TX_FRAG_COUNT > 0
+       || buf_pool == frag_pool
+       #endif
+        )
+	#else
     if(buf_pool == &hci_cmd_pool || buf_pool == &acl_tx_pool || buf_pool == &hci_rx_pool
        #if CONFIG_BT_L2CAP_TX_FRAG_COUNT > 0
        || buf_pool == &frag_pool
        #endif
         )
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
     {
         k_free(buf_fixed->data_pool);
     }
@@ -280,13 +393,20 @@ void net_buf_deinit(struct net_buf_pool *buf_pool)
     k_free(buf_pool->__bufs);
     k_free(buf_pool->alloc->alloc_data);
     k_free(buf_pool->alloc);
+    #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    k_free(buf_pool);
+    #endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 }
 #endif
 
 struct net_buf_pool *net_buf_pool_get(int id)
 {
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
-    return _net_buf_pool_list[id];
+	#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    return *_net_buf_pool_list[id];
+	#else
+	return _net_buf_pool_list[id];
+	#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #else
 	return &_net_buf_pool_list[id];
 #endif
@@ -298,7 +418,11 @@ static int pool_id(struct net_buf_pool *pool)
     int index;
 
     for (index = 0; index < (sizeof(_net_buf_pool_list) / 4); index++) {
-        if (_net_buf_pool_list[index] == pool) {
+		#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+        if (*_net_buf_pool_list[index] == pool) {
+		#else
+		if (_net_buf_pool_list[index] == pool) {
+		#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
             break;
         }
     }
@@ -823,8 +947,12 @@ void net_buf_unref(struct net_buf *buf)
 		buf = frags;
 
 	#if defined(BFLB_BLE)
-       #if !defined(CONFIG_BT_HOST_HCI_TL)
+		#if !defined(CONFIG_BT_HOST_HCI_TL)
+		#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+		if (pool == hci_rx_pool)
+		#else
 		if (pool == &hci_rx_pool)
+		#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 		{
 			bl_trigger_queued_msg();
 			return;

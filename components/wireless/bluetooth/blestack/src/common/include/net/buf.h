@@ -920,9 +920,17 @@ extern const struct net_buf_data_cb net_buf_var_cb;
 
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
 #if (BFLB_STATIC_ALLOC_MEM)
-void net_buf_init(u8_t buf_type,struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_size, destroy_cb_t destroy);
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void net_buf_init(u8_t buf_type, struct net_buf_pool **buf_pool_ptr, u16_t buf_count, size_t data_size, destroy_cb_t destroy);
+#else
+void net_buf_init(u8_t buf_type, struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_size, destroy_cb_t destroy);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+#else
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+void net_buf_init(struct net_buf_pool **buf_pool_ptr, u16_t buf_count, size_t data_size, destroy_cb_t destroy);
 #else
 void net_buf_init(struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_size, destroy_cb_t destroy);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 #endif
 void net_buf_deinit(struct net_buf_pool *buf_pool);
 #endif

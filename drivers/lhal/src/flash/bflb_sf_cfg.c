@@ -3009,8 +3009,9 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
     struct bflb_device_s *gpio;
     uint8_t gpio_pins[6];
     uint8_t i = 0;
+    const char gpio_name[] = "gpio";
 
-    gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name(gpio_name);
     if (ext_flash_pin == 0) {
         gpio_pins[0] = BFLB_EXTFLASH_CLK0_GPIO;
         gpio_pins[1] = BFLB_EXTFLASH_CS0_GPIO;

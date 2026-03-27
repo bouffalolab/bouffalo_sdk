@@ -66,10 +66,24 @@ static int bflb_sp_cal_ram_img_hash(uint32_t src, uint32_t total_len, uint8_t *h
     //flash_read_via_xip(src, dest,total_len);
     uint32_t cur_len = 0;
     uint32_t read_len = 0;
-    uint32_t cal_hash[8];
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    uint32_t cal_hash[HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4];
+    uint32_t calc_len = (g_efuse_cfg.sign[0] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) ? HAL_BOOT2_PK_HASH_SIZE_SHA384 : HAL_BOOT2_PK_HASH_SIZE;
+#else
+    uint32_t cal_hash[HAL_BOOT2_PK_HASH_SIZE / 4];
+    uint32_t calc_len = HAL_BOOT2_PK_HASH_SIZE;
+#endif
 
-    bflb_sha_init(sha, SHA_MODE_SHA256);
-    bflb_sha256_start(sha, &ctx_sha256);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (g_efuse_cfg.sign[0] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        bflb_sha_init(sha, SHA_MODE_SHA384);
+        bflb_sha512_start(sha, &ctx_sha384);
+    } else
+#endif
+    {
+        bflb_sha_init(sha, SHA_MODE_SHA256);
+        bflb_sha256_start(sha, &ctx_sha256);
+    }
 
     while (cur_len < total_len) {
         read_len = total_len - cur_len;
@@ -77,11 +91,27 @@ static int bflb_sp_cal_ram_img_hash(uint32_t src, uint32_t total_len, uint8_t *h
             read_len = BFLB_BOOT2_READBUF_SIZE;
         }
         bflb_flash_read(src + cur_len, g_boot2_read_buf, read_len);
-        bflb_sha256_update(sha, &ctx_sha256, g_boot2_read_buf, read_len);
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+        if (g_efuse_cfg.sign[0] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+            bflb_sha512_update(sha, &ctx_sha384, g_boot2_read_buf, read_len);
+        } else
+#endif
+        {
+            bflb_sha256_update(sha, &ctx_sha256, g_boot2_read_buf, read_len);
+        }
         cur_len += read_len;
     }
-    bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)cal_hash);
-    if (memcmp(hash, cal_hash, 32) != 0) {
+
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (g_efuse_cfg.sign[0] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        bflb_sha512_finish(sha, &ctx_sha384, (uint8_t *)cal_hash);
+    } else
+#endif
+    {
+        bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)cal_hash);
+    }
+
+    if (memcmp(hash, cal_hash, calc_len) != 0) {
         BOOT2_MSG_ERR("Cal hash error\r\n");
         return -1;
     }
@@ -175,6 +205,14 @@ int bflb_sp_do_ram_image_boot(pt_table_id_type active_id, pt_table_stuff_config 
     int try_again = 0;
     int32_t bflb_sp_boot2_rollback_ptentry(pt_table_id_type active_id,
                                         pt_table_stuff_config * pt_stuff, pt_table_entry_config * pt_entry);
+
+#if defined(CHIP_BL616CL)
+    ret = hal_boot2_load_runtime_sign_cfg(&g_efuse_cfg);
+    if (ret != 0) {
+        BOOT2_MSG_ERR("Load runtime sign cfg failed: %d\r\n", ret);
+        return try_again;
+    }
+#endif
 
     hal_boot2_get_ram_img_cnt(img_name, &ram_img_cnt);
     if (ram_img_cnt == 0) {

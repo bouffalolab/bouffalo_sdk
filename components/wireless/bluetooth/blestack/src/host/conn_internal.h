@@ -344,6 +344,11 @@ struct net_buf *bt_conn_create_frag_timeout(size_t reserve, s32_t timeout);
 /* Initialize connection management */
 int bt_conn_init(void);
 
+#if (CONFIG_BLE_USING_DYNAMIC_RAM)
+/* Deinitialize connection management */
+int bt_conn_deinit(void);
+#endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
+
 /* Selects based on connecton type right semaphore for ACL packets */
 struct k_sem *bt_conn_get_pkts(struct bt_conn *conn);
 

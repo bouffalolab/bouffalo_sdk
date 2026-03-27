@@ -23,7 +23,7 @@ struct bflb_gpio_irq_callback g_gpio_irq_callback[53] = { 0 };
 extern void bflb_gpio_pad_check(uint8_t pin);
 #endif
 
-void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
+void ATTR_TCM_SECTION bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 {
 #ifdef romapi_bflb_gpio_init
     romapi_bflb_gpio_init(dev, pin, cfgset);

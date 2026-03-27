@@ -321,7 +321,7 @@ macro(project name)
   if(OUTPUT_DIR)
     add_custom_command(TARGET ${proj_name}.elf POST_BUILD
       COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${proj_name}.elf> ${BIN_FILE}
-      COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
+      #COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
 
       # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
       # COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${proj_name}.elf>
@@ -336,7 +336,7 @@ macro(project name)
   else()
     add_custom_command(TARGET ${proj_name}.elf POST_BUILD
       COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${proj_name}.elf> ${BIN_FILE}
-      COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
+      #COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
 
       # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
       # COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${proj_name}.elf>
