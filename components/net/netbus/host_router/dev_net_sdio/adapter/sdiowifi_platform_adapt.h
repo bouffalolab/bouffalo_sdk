@@ -65,9 +65,7 @@ int sdiowifi_streambuf_spaces_available(sdiowifi_streambuf_handle_t handle);
 #else
 #include <bflb_boot2.h>
 #include <bflb_mtd.h>
-#include <bflb_ota.h>
 
-#define iot_sha256_context sha256_context
 #define HALPartition_Entry_Config bflb_partition_config_t
 #define hal_reboot bl_sys_reset_por
 

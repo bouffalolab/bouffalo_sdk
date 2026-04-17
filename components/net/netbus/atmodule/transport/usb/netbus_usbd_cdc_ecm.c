@@ -40,6 +40,11 @@
 #include <net_al.h>
 #include <fhost.h>
 #endif
+
+#ifdef CONFIG_ATMODULE
+#include "at_wifi_config.h"
+#endif
+
 #include "netbus_usbd_cdc_acm.h"
 #include "wifi_mgmr_ext.h"
 
@@ -405,6 +410,11 @@ int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
     if (is_sta) {
         net_if = (net_al_if_t *)fhost_env.vif[0].net_if;
     } else {
+        if (fhost_to_mac_vif(MGMR_VIF_AP) == NULL) {
+            ecm_print("ap mac_vif invalid, drop frame\r\n");
+            pbuf_free(p);
+            return -1;
+        }
         net_if = (net_al_if_t *)fhost_env.vif[1].net_if;
     }
 #endif
@@ -490,7 +500,16 @@ void usb_dn_task(void *arg)
         g_usbecm.dbg_dntask_mode = 5;
 
         // update pbuf
+#if defined(CONFIG_ATMODULE) && defined(CONFIG_ATMODULE_WIFI_AP) && CONFIG_ATMODULE && CONFIG_ATMODULE_WIFI_AP
+        extern wifi_config *at_wifi_config;
+        if (at_wifi_config->wifi_mode == WIFI_SOFTAP_MODE) {
+            portwifi_eth_tx(g_usbecm.dnmsg, 0);
+        } else {
+            portwifi_eth_tx(g_usbecm.dnmsg, 1);
+        }
+#else
         portwifi_eth_tx(g_usbecm.dnmsg, 1);
+#endif
         g_usbecm.dnmsg = NULL;
     }
 }

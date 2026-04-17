@@ -478,4 +478,9 @@ void wifi_sta_info_cmd(int argc, char **argv)
     printf("================================================================\r\n");
 }
 
+void wifi_keyram_cmd(int argc, char **argv) {
+    void mm_sec_keydump(void);
+    mm_sec_keydump();
+}
+
 /* CLI command registration moved to wl80211_platform.c (platform-specific) */

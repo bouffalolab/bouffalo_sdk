@@ -3,6 +3,7 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#include "bflb_sec_mutex.h"
 #include "bflb_spi_psram.h"
 #include "bflb_ef_ctrl.h"
 
@@ -286,10 +287,7 @@ void board_init(void)
     rtc = bflb_device_get_by_name("rtc");
 #endif
 
-#ifdef CONFIG_MBEDTLS
-    extern void bflb_sec_mutex_init(void);
     bflb_sec_mutex_init();
-#endif
 
     bflb_irq_restore(flag);
 

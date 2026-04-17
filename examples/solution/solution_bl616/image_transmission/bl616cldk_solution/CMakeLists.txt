@@ -19,16 +19,3 @@ sdk_add_include_directories(.)
 
 # Inherited bl616dk board base
 add_subdirectory(${BOARD_BASE_PATH} bl616cldk)
-
-# select custom ld script
-if(CONFIG_PSRAM_COPY_CODE)
-    message(STATUS "OVERLAY: LINK IN PSRAM")
-    sdk_add_compile_definitions(-D CONFIG_PSRAM_COPY_CODE)
-    sdk_set_linker_script(bl616cl_chip_psram.ld)
-elseif(CONFIG_LPAPP)
-    message(STATUS "OVERLAY: LINK IN LPAPP")
-    sdk_set_linker_script(bl616cl_lp.ld)
-else()
-    message(STATUS "OVERLAY: LINK IN FLASH")
-    sdk_set_linker_script(bl616cl_flash.ld)
-endif()

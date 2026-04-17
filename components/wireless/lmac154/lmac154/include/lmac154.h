@@ -4,16 +4,28 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "lmac154_frame.h"
 
 #define VERSION_LMAC154_MAJOR 1
 #define VERSION_LMAC154_MINOR 7
-#define VERSION_LMAC154_PATCH 3
+#define VERSION_LMAC154_PATCH 4
 
 // #define VERSION_LMAC154_SRC_EXTRA_INFO "customer-1"
 
 #ifndef CONFIG_LMAC154_DBG
 #define CONFIG_LMAC154_DBG 0
 #endif
+
+#define M154_RD_WORD(addr)                          (*((volatile uint32_t *)(uintptr_t)(addr)))
+#define M154_WR_WORD(addr, val)                     ((*(volatile uint32_t *)(uintptr_t)(addr)) = (val))
+#define M154_RD_REG(addr, regname)                  M154_RD_WORD(addr + regname##_OFFSET)
+#define M154_WR_REG(addr, regname, val)             M154_WR_WORD(addr + regname##_OFFSET, val)
+
+#define M154_SET_REG_BIT(val, bitname)              ((val) | (1U << bitname##_POS))
+#define M154_CLR_REG_BIT(val, bitname)              ((val)&bitname##_UMSK)
+#define M154_GET_REG_BITS_VAL(val, bitname)         (((val)&bitname##_MSK) >> bitname##_POS)
+#define M154_SET_REG_BITS_VAL(val, bitname, bitval) (((val)&bitname##_UMSK) | ((uint32_t)(bitval) << bitname##_POS))
+#define M154_IS_REG_BIT_SET(val, bitname)           (((val) & (1U << (bitname##_POS))) != 0)
 
 typedef void (*lmac154_isr_t)(void);
 
@@ -166,23 +178,35 @@ typedef enum {
     lmac154_addr_info_panid_ext_addr     = lmac154_addr_info_panid | lmac154_addr_info_ext_addr,
 } lmac154_addr_info_t;
 
-typedef struct { 
-    uint8_t         rx_length;
-    uint8_t         nbr_idx;
-    uint16_t        rx_error;
-    uint8_t         is_tx_acking:1;
-    uint8_t         is_enh_ack_requested:1;
-    uint8_t         is_frame_pended:1;
-    uint8_t         is_rx_buf:1;
-    uint8_t         channel;
-    int8_t          rssi;
-    int8_t          lqi;
-    uint32_t *      rx_buf[2];
-    uint64_t        rx_timestamp;
-} lmac154_receiveInfo_t;
-
 typedef void (*lmac154_txDoneCallback_t)(lmac154_tx_status_t, uint32_t *, uint32_t);
-typedef uint32_t * (*lmac154_rxDoneCallback_t)(lmac154_receiveInfo_t *, uint32_t *);
+
+/**
+ * @brief RX callback status codes
+ */
+typedef enum {
+    LMAC154_RX_STATUS_NONE          = 0,
+    LMAC154_RX_STATUS_RX_DONE       = 1,
+    LMAC154_RX_STATUS_ACK_SENT      = 2,
+    LMAC154_RX_STATUS_ACK_ERR       = 3,
+} lmac154_rx_status_t;
+
+typedef struct lmac154_receiveInfo lmac154_receiveInfo_t;
+
+typedef void (*lmac154_rxDoneCallback_t)(lmac154_rx_status_t, lmac154_receiveInfo_t *, uint32_t *);
+
+struct lmac154_receiveInfo {
+    uint8_t                     rx_length;
+    uint8_t                     nbr_idx;
+    uint8_t                     mac_hdr_size;
+    uint8_t                     src_addr_offset;
+    uint16_t                    rx_error;
+    uint16_t                    is_tx_acking:1;
+    uint16_t                    is_enh_ack_requested:1;
+    uint16_t                    is_frame_pended:1;
+    uint16_t                    stack_msk:2;
+    uint16_t                    unused:11;
+    lmac154_rxDoneCallback_t    callback[2];
+};
 
 /****************************************************************************//**
  * @brief  lmac154 stack index enumeration
@@ -193,104 +217,73 @@ typedef enum {
     LMAC154_STACK_2 = 1,  /**< Second stack (for dual stack mode) */
 } lmac154_stack_idx_t;
 
-typedef struct __lmac154_txParam { 
-    uint32_t *                  pkt;
-    uint32_t                    pkt_length:8;
-    uint32_t                    tx_channel:4;
-    uint32_t                    resume_channel:4;
-    uint32_t                    csma_ca_max_backoff:4;
-    uint32_t                    is_cca:1;
-    uint32_t                    is_ack_required:1;
-    uint32_t                    is_enh_ack_required:1;
-    uint32_t                    is_tx_doing:1;
-    uint32_t                    is_last_tx:1;
-    uint32_t                    unused1:7;
-    uint32_t                    unused2;
-    uint32_t                    base_time;
-    uint32_t                    delay_time;
-    lmac154_txDoneCallback_t    tx_done_cb;
-    struct __lmac154_txParam *  next;
+typedef struct {
+    uint32_t *                  key;
+    uint8_t                     a_data_length;
+    uint8_t                     m_data_length;
+    struct {
+        uint32_t                ext_addr[2];
+        uint32_t                frame_cnt;
+        uint8_t                 security_level;
+    }                           nonce;
+    uint32_t *                  a_data;      /* Authentication data (header) */
+    uint32_t *                  m_data;      /* Message data */
+    uint32_t *                  c_data;      /* Encrypted output buffer */
+} lmac154_security_t;
+
+typedef struct __lmac154_txParam_ext { 
+    uint32_t *                      pkt;
+    uint32_t                        pkt_length:8;
+    uint32_t                        tx_channel:4;
+    uint32_t                        resume_channel:4;
+    uint32_t                        csma_ca_max_backoff:4;
+    uint32_t                        is_cca:1;
+    uint32_t                        is_ack_required:1;
+    uint32_t                        is_enh_ack_required:1;
+    uint32_t                        is_tx_doing:1;
+    uint32_t                        is_last_tx:1;
+    uint32_t                        is_base_param:1;
+    uint32_t                        is_tx_security:1;
+    uint32_t                        is_tx_timeing:1;
+    uint32_t                        is_tx_csl:1;
+    uint32_t                        unused:3;
+    lmac154_txDoneCallback_t        tx_done_cb;
+    struct __lmac154_txParam_ext *  next;
+
+    lmac154_security_t              sec;
+
+    union {
+        struct {
+            uint32_t                base_time;
+            uint32_t                delay_time;
+        } timing;
+        struct {
+            uint8_t                 csl_retry;
+            uint8_t                 csl_ie_offset;
+            uint16_t                csl_period;
+            uint32_t                csl_sample_time;
+        } csl;
+    } tx_opt;
+} lmac154_txParam_ext_t;
+
+typedef struct __lmac154_txParam {
+    uint32_t *                      pkt;
+    uint32_t                        pkt_length:8;
+    uint32_t                        tx_channel:4;
+    uint32_t                        resume_channel:4;
+    uint32_t                        csma_ca_max_backoff:4;
+    uint32_t                        is_cca:1;
+    uint32_t                        is_ack_required:1;
+    uint32_t                        is_enh_ack_required:1;
+    uint32_t                        is_tx_doing:1;
+    uint32_t                        is_last_tx:1;
+    uint32_t                        is_base_param:1;
+    uint32_t                        unused:6;
+    lmac154_txDoneCallback_t        tx_done_cb;
+    struct __lmac154_txParam_ext *  next;
 } lmac154_txParam_t;
 
-#define LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK       (7)
-#define LMAC154_FRAME_CONTROL_FRAME_TYPE_DATA       (1)
-#define LMAC154_FRAME_CONTROL_FRAME_TYPE_ACK        (2)
-#define LMAC154_FRAME_CONTROL_FRAME_TYPE_CMD        (3)
-#define LMAC154_FRAME_CONTROL_FRAME_TYPE_MPP        (5)
-
-#define LMAC154_FRAME_SECURITY_MASK                 (1 << 3)
-#define LMAC154_FRAME_FRAME_PENDING_MASK            (1 << 4)
-#define LMAC154_FRAME_ACK_REQUEST_MASK              (1 << 5)
-#define LMAC154_FRAME_PANID_COMPRESSION             (1 << 6)
-#define LMAC154_FRAME_SEQ_SUPRESSION_MASK           (1 << 8)
-#define LMAC154_FRAME_IE_MASK                       (1 << 9)
-#define LMAC154_FRAME_ADDR_DEST_NONE                (0 << 10)
-#define LMAC154_FRAME_ADDR_DEST_SHORT               (2 << 10)
-#define LMAC154_FRAME_ADDR_DEST_EXT                 (3 << 10)
-#define LMAC154_FRAME_ADDR_DEST_MASK                (3 << 10)
-#define LMAC154_FRAME_VERSION_MASK                  (3 << 12)
-#define LMAC154_FRAME_VERSION_2015                  (2 << 12)
-#define LMAC154_FRAME_ADDR_SRC_NONE                 (0 << 14)
-#define LMAC154_FRAME_ADDR_SRC_SHORT                (2 << 14)
-#define LMAC154_FRAME_ADDR_SRC_EXT                  (3 << 14)
-#define LMAC154_FRAME_ADDR_SRC_MASK                 (3 << 14)
-
-#define LMAC154_FRAME_MPP_LONG_FRAME_BIT            (1 << 3)
-#define LMAC154_FRAME_MPP_SECURITY_BIT              (1 << 9)
-#define LMAC154_FRAME_MPP_ACK_REQ                   (1 << 14)
-
-#define LMAC154_FRAME_CMD_DATA_REQUEST              (4)
-#define LMAC154_FRAME_IS_CMD(x)                     (((x) & LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK) == LMAC154_FRAME_CONTROL_FRAME_TYPE_CMD)
-#define LMAC154_FRAME_IS_DATA(x)                     (((x) & LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK) == LMAC154_FRAME_CONTROL_FRAME_TYPE_DATA)
-#define LMAC154_FRAME_IS_ACK(x)                     (((x) & LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK) == LMAC154_FRAME_CONTROL_FRAME_TYPE_ACK)
-
-#define LMAC154_FRAME_IS_ACK_REQ(x)                 (((x) & LMAC154_FRAME_ACK_REQUEST_MASK) == LMAC154_FRAME_ACK_REQUEST_MASK)
-#define LMAC154_FRAME_IS_PANID_COMPRESSED(x)        (((x) & LMAC154_FRAME_PANID_COMPRESSION) == LMAC154_FRAME_PANID_COMPRESSION)
-#define LMAC154_FRAME_IS_SEQ_SUPPURESS(x)           (((x) & LMAC154_FRAME_SEQ_SUPPURESS_MASK) == LMAC154_FRAME_SEQ_SUPPURESS)
-
-
-#define LMAC154_FRAME_IS_FRAME_2015(x)              (((x) & LMAC154_FRAME_VERSION_MASK) == LMAC154_FRAME_VERSION_2015)
-
-#define LMAC154_FRAME_IS_FRAME_PENDED(x)            ((x) & LMAC154_FRAME_FRAME_PENDING_MASK)
-#define LMAC154_FRAME_IS_NORMAL_SECURITY(x)         ((x & LMAC154_FRAME_SECURITY_MASK) == LMAC154_FRAME_SECURITY_MASK)
-
-#define LMAC154_FRAME_IS_MPP(x)                     ((x & LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK) == LMAC154_FRAME_CONTROL_FRAME_TYPE_MPP)
-#define LMAC154_FRAME_IS_MPP_LONG_FRAME(x)          ((x & LMAC154_FRAME_MPP_LONG_FRAME_BIT) == LMAC154_FRAME_MPP_LONG_FRAME_BIT)
-#define LMAC154_FRAME_IS_MPP_SECURITY(x)            (LMAC154_FRAME_IS_MPP_LONG_FRAME(x) && ((x) & LMAC154_FRAME_MPP_SECURITY_BIT) == LMAC154_FRAME_MPP_SECURITY_BIT)
-
-#define LMAC154_FRAME_IS_MPP_ACK_REQ(x)             (LMAC154_FRAME_IS_MPP(x) && LMAC154_FRAME_IS_MPP_LONG_FRAME(x) && ((x) & LMAC154_FRAME_MPP_ACK_REQ) == LMAC154_FRAME_MPP_ACK_REQ)
-#define LMAC154_FRAME_IS_ENH_ACK_REQ(x)             (LMAC154_FRAME_IS_MPP_ACK_REQ(x) || (LMAC154_FRAME_IS_ACK_REQ(x) && LMAC154_FRAME_IS_FRAME_2015(x)))
-#define LMAC154_FRAME_IS_IMM_ACK_REQ(x)             (LMAC154_FRAME_IS_ACK_REQ(x) && !LMAC154_FRAME_IS_FRAME_2015(x))
-
-#define LMAC154_FRAME_IS_SECURITY_ENABLED(x)        (LMAC154_FRAME_IS_MPP(x) ?                                                          \
-                                                        (LMAC154_FRAME_IS_MPP_SECURITY(x) : LMAC154_FRAME_IS_NORMAL_SECURITY(x))
-
-#define LMAC154_FRAME_IS_ACK(x)                     (((x) & LMAC154_FRAME_CONTROL_FRAME_TYPE_MASK) == LMAC154_FRAME_CONTROL_FRAME_TYPE_ACK)
-#define LMAC154_FRAME_IS_IMM_ACK(x)                 (LMAC154_FRAME_IS_ACK(x) && !LMAC154_FRAME_IS_FRAME_2015(x))
-#define LMAC154_FRAME_IS_ENH_ACK(x)                 (LMAC154_FRAME_IS_ACK(x) && LMAC154_FRAME_IS_FRAME_2015(x))
-#define LMAC154_FRAME_IS_IE_EXIST(x)                (((x) & LMAC154_FRAME_IE_MASK) && LMAC154_FRAME_IS_FRAME_2015(x))
-
-#define LMAC154_FRAME_GET_SRC_ADDR_TYPE(x)          ((x) & LMAC154_FRAME_ADDR_SRC_MASK)
-#define LMAC154_FRAME_GET_DST_ADDR_TYPE(x)          ((x) & LMAC154_FRAME_ADDR_DEST_MASK)
-
-
-#define LMAC154_FRAME_AUX_KEY_ID_MODE_MASK          (3 << 3)
-#define LMAC154_FRAME_AUX_KEY_ID_MODE_0             (0 << 3)
-#define LMAC154_FRAME_AUX_KEY_ID_MODE_1             (1 << 3)
-#define LMAC154_FRAME_AUX_KEY_ID_MODE_2             (2 << 3)
-#define LMAC154_FRAME_AUX_KEY_ID_MODE_3             (3 << 3)
-
-#define LMAC154_LIFS                    40
-#define LMAC154_SIFS                    12
-#define LMAC154_AIFS                    LMAC154_SIFS
-#define LMAC154_SIFS_MAX_FRAME_SIZE     18
-#define LMAC154_TURNAROUND              12
-#define LMAC154_PKT_MAX_LEN             127
-#define LMAC154_PREAMBLE_LEN            8
-
-#define LMAC154_US_PER_SYMBOL_BITS      4
-#define LMAC154_US_PER_SYMBOL           (1 << LMAC154_US_PER_SYMBOL_BITS)
-#define LMAC154_US_PER_SYMBOL_MASK      (LMAC154_US_PER_SYMBOL - 1)
+/* Frame control constants and macros have been moved to lmac154_frame.h */
 
 /****************************************************************************//**
  * @brief  Initialize the hardware module
@@ -601,6 +594,28 @@ void lmac154_triggerTx(uint8_t *DataPtr, uint8_t length, uint8_t csma);
  *
 *******************************************************************************/
 int lmac154_triggerParamTx(lmac154_txParam_t * txParam);
+int lmac154_triggerParamTxExt(lmac154_txParam_ext_t * txParam);
+
+/****************************************************************************//**
+ * @brief  Encrypt packet using AES-CCM with parameters from lmac154_security_t
+ *
+ * Supports frames with or without payload (e.g., enhanced ACK with only header).
+ *
+ * @param  param: pointer to lmac154_security_t containing encryption parameters
+ *                - key: AES key pointer [required]
+ *                - nonce: nonce (ext_addr, frame_cnt, key_id) [required]
+ *                - security_level: security level (determines MIC length) [required]
+ *                - a_data: authentication data (header, plaintext) [required]
+ *                - m_data: message data (plaintext) [optional, can be NULL]
+ *                - c_data: output buffer for encrypted message + MIC [required]
+ *                - a_data_length: length of authentication data [required]
+ *                - m_data_length: length of message data (0 if no payload) [optional]
+ *
+ * @return Encrypted message length + MIC length on success (if m_data_length=0, returns MIC length only),
+ *         negative error code on failure
+ *
+ *******************************************************************************/
+int32_t lmac154_encryptPacket(lmac154_security_t * param);
 
 /****************************************************************************//**
  * @brief  Write TX ack frame to mpdu buffer to send in lmac154_receivedEvent 
@@ -1058,6 +1073,16 @@ void lmac154_enableCoex(void);
 *******************************************************************************/
 void lmac154_disableCoex(void);
 
+
+/****************************************************************************//**
+ * @brief  Check if coexistence is enabled
+ *
+ * @param  None
+ *
+ * @return true if coexistence is enabled, false otherwise
+ *
+ *******************************************************************************/
+bool lmac154_isCoexEnabled(void);
 
 /****************************************************************************//**
  * @brief  set m154 module coexistence priority
@@ -1646,62 +1671,5 @@ void lmac154_rxMhrEvent(uint8_t *rx_buf, uint8_t rx_len, uint8_t pkt_len);
 *******************************************************************************/
 void lmac154_rxSecMhrEvent(uint8_t *rx_buf, uint8_t rx_len, uint8_t pkt_len);
 
-/****************************************************************************//**
- * @brief  Parse IEEE 802.15.4 frame to get memory address of destination PAN ID 
- *         and address
- *
- * @param  a_pkt: pointer to IEEE 802.15.4 frame
- * @param  a_panid: pointer to the destination PAN ID in input frame, if present.
- * @param  a_sa: pointer to destination short address in input frame, if present.
- * @param  a_xa: pointer to destination extended address in input frame, 
- *               if present.
- * @return None
-*******************************************************************************/
-void lmac154_parseDestAddress(uint8_t * a_pkt, uint16_t ** a_panid, 
-                              uint16_t ** a_sa, uint8_t ** a_xa);
-
-/****************************************************************************//**
- * @brief  Parse IEEE 802.15.4 frame to get memory address of source PANID 
- *         and address
- *
- * @param  a_pkt: pointer to IEEE 802.15.4 frame
- * @param  a_panid: pointer to the source PAN ID in input frame, if present.
- * @param  a_sa: pointer to source short address in input frame, if present.
- * @param  a_xa: pointer to source extended address in input frame, if present.
- * 
- * @return None
-*******************************************************************************/
-void lmac154_parseSrcAddress(uint8_t * a_pkt, uint16_t **a_panid, 
-                             uint16_t ** a_sa, uint8_t ** a_xa);
-
-/****************************************************************************//**
- * @brief  Parse IEEE 802.15.4 frame to get destination PAN ID and address
- *
- * @param  a_pkt: pointer to IEEE 802.15.4 frame
- * @param  a_panid: pointer to save destination PAN ID from input frame
- * @param  a_sa: pointer to save destination short address from input frame, 
- *              if present.
- * @param  a_xa: pointer to save destination extended address from input frame, 
- *              if present.
- * 
- * @return lmac154_addr_info_t to indicate information of source address
-*******************************************************************************/
-lmac154_addr_info_t lmac154_getDestAddress(uint8_t * a_pkt, uint16_t * a_panid, 
-                                           uint16_t * a_sa, uint8_t * a_xa);
-
-/****************************************************************************//**
- * @brief  Parse IEEE 802.15.4 frame to get source PAN ID and address
- *
- * @param  a_pkt: pointer to IEEE 802.15.4 frame
- * @param  a_panid: pointer to save source PAN ID from input frame
- * @param  a_sa: pointer to save source short address from input frame, 
- *              if present.
- * @param  a_xa: pointer to save source extended address from input frame, 
- *              if present.
- * 
- * @return lmac154_addr_info_t to indicate information of source address
-*******************************************************************************/
-lmac154_addr_info_t lmac154_getSrcAddress(uint8_t * a_pkt, uint16_t * a_panid, 
-                                          uint16_t * a_sa, uint8_t * a_xa);
 
 #endif

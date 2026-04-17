@@ -43,6 +43,28 @@ void board_pec_spi_gpio_init(void);
 #define PEC_UART_TX_PIN  GPIO_PIN_8
 #define PEC_UART_RX_PIN  GPIO_PIN_9
 void board_pec_uart_gpio_init(void);
+
+#define PEC_QSPI_CAM_D0_PIN   GPIO_PIN_24
+#define PEC_QSPI_CAM_D1_PIN   GPIO_PIN_25
+#define PEC_QSPI_CAM_D2_PIN   GPIO_PIN_26
+#define PEC_QSPI_CAM_D3_PIN   GPIO_PIN_27
+#define PEC_QSPI_CAM_PCLK_PIN GPIO_PIN_28
+void board_pec_qspi_cam_gpio_init(void);
+
+#define PEC_DPI_DATA0_PIN  GPIO_PIN_16
+#define PEC_DPI_DATA1_PIN  GPIO_PIN_17
+#define PEC_DPI_DATA2_PIN  GPIO_PIN_18
+#define PEC_DPI_DATA3_PIN  GPIO_PIN_19
+#define PEC_DPI_DATA4_PIN  GPIO_PIN_20
+#define PEC_DPI_DATA5_PIN  GPIO_PIN_21
+#define PEC_DPI_DATA6_PIN  GPIO_PIN_22
+#define PEC_DPI_DATA7_PIN  GPIO_PIN_23
+#define PEC_DPI_PCLK_PIN   GPIO_PIN_12
+#define PEC_DPI_HSYNC_PIN  GPIO_PIN_14
+#define PEC_DPI_VSYNC_PIN  GPIO_PIN_15
+#define PEC_DPI_DE_PIN     GPIO_PIN_13
+void board_pec_dpi_gpio_init(void);
+
 void board_audio_pll_config_for_rate(unsigned int samplerate_hz);
 void board_audac_gpio_init(void);
 void board_auadc_gpio_init(void);

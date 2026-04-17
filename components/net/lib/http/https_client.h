@@ -88,6 +88,9 @@ struct https_client_request {
      */
     const char **optional_headers;
 
+    /** Optional callback to stop receiving more response data. */
+    http_cancel_cb_t cancel;
+
     const char *ca_pem;             /*!< SSL server CA certification, PEM format as string, if the client requires to verify server */
     size_t      ca_len;
     const char *client_cert_pem;    /*!< SSL client certification, PEM format as string, if the server requires to verify client */

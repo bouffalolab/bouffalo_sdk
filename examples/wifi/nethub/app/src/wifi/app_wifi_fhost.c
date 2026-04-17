@@ -4,17 +4,24 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
-#include <shell.h>
-#include "wifi_mgmr_ext.h"
-#include "async_event.h"
-#include "log.h"
 
-/* Forward declarations for external functions */
-extern int wifi_mgmr_task_start(void);
-extern int fhost_init(void);
+#include <async_event.h>
+#include <bl_fw_api.h>
+#include <fhost_api.h>
+#include <mm.h>
+#include <wifi_mgmr_ext.h>
+#include <wifi_mgmr.h>
 
-extern void app_atmodule_init(void);
-static bool wifi_init_done = 0;
+#ifdef BL616
+#include <bl616_glb.h>
+#endif
+
+#include <app_user.h>
+
+#define DBG_TAG "appwifi"
+#include <log.h>
+
+static bool wifi_init_done;
 
 static void wifi_event_handler(async_input_event_t ev, void *priv)
 {
@@ -27,7 +34,7 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
-            wifi_init_done = 1;
+            wifi_init_done = true;
         } break;
         case CODE_WIFI_ON_SCAN_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
@@ -47,6 +54,7 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
         #endif
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", (int)kfree_size(0));
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
@@ -69,9 +77,16 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
     }
 }
 
-void app_wifi_init(void)
+int app_wifi_init(void)
 {
     LOG_I("Starting wifi ...\r\n");
+
+#if defined(BL616)
+    GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+#endif
+
+    wifi_init_done = false;
+
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
     wifi_task_create();
@@ -82,6 +97,8 @@ void app_wifi_init(void)
     while (!wifi_init_done) {
         vTaskDelay(1);
     }
-    app_atmodule_init();
-}
 
+    app_atmodule_init();
+
+    return 0;
+}

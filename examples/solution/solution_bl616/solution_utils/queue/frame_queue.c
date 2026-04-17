@@ -18,77 +18,137 @@
 #define FRAME_BUFFER_ATTR __ALIGNED(32)
 #endif
 
-/******************* yuyv frame  **********************/
-#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV)
+/******************* img_raw OUT frame **********************/
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_IMG_RAW_OUT)
 
-#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV_SHARE_EN)
-FRAME_BUFFER_ATTR uint8_t picture_frame_buffer[1][CONFIG_YUYV_FRAME_SIZE]; /* YUYV raw data */
-#else
-FRAME_BUFFER_ATTR uint8_t picture_frame_buffer[CONFIG_YUYV_FRAME_NUM][CONFIG_YUYV_FRAME_SIZE]; /* YUYV raw data */
-#endif
+FRAME_BUFFER_ATTR uint8_t img_raw_out_frame_buffer[CONFIG_IMG_RAW_OUT_FRAME_NUM][CONFIG_IMG_RAW_OUT_FRAME_SIZE]; /* RAW image data */
 
-frame_queue_ctrl_t *g_yuyv_frame_ctrl = NULL;
+frame_queue_ctrl_t *g_img_raw_out_frame_ctrl = NULL;
 
-int yuyv_frame_ctrl_init(void)
+int img_raw_out_frame_ctrl_init(void)
 {
     int ret;
-    printf("yuyv_frame_ctrl_init\r\n");
+    printf("img_raw_out_frame_ctrl_init\r\n");
 
     /* fill info */
-    pyuyv_frame_t frame_desc[CONFIG_YUYV_FRAME_NUM];
-    for (uint16_t i = 0; i < CONFIG_YUYV_FRAME_NUM; i++) {
+    pimg_raw_frame_t frame_desc[CONFIG_IMG_RAW_OUT_FRAME_NUM];
+    for (uint16_t i = 0; i < CONFIG_IMG_RAW_OUT_FRAME_NUM; i++) {
         frame_desc[i].elem_base.frame_id = i;
-        frame_desc[i].elem_base.frame_size = CONFIG_YUYV_FRAME_SIZE;
-#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV_SHARE_EN)
-        frame_desc[i].elem_base.frame_addr = picture_frame_buffer[0];
-#else
-        frame_desc[i].elem_base.frame_addr = picture_frame_buffer[i];
-#endif
+        frame_desc[i].elem_base.frame_size = CONFIG_IMG_RAW_OUT_FRAME_SIZE;
+        frame_desc[i].elem_base.frame_addr = img_raw_out_frame_buffer[i];
         frame_desc[i].x_start = 0;
         frame_desc[i].y_start = 0;
         frame_desc[i].x_end = 0;
         frame_desc[i].y_end = 0;
+        frame_desc[i].format = IMG_RAW_FRAME_FORMAT_INVALID;
     }
 
     /* create ctrl */
-    ret = frame_queue_create(&g_yuyv_frame_ctrl, CONFIG_YUYV_FRAME_NUM, sizeof(pyuyv_frame_t), (void *)frame_desc, "yuyv");
+    ret = frame_queue_create(&g_img_raw_out_frame_ctrl, CONFIG_IMG_RAW_OUT_FRAME_NUM, sizeof(pimg_raw_frame_t), (void *)frame_desc, "img_raw_out");
 
     if (ret < 0) {
-        printf("yuyv frame ctrl create failed\r\n");
+        printf("img_raw out frame ctrl create failed\r\n");
     }
 
     return ret;
 }
 #endif
 
-/******************** jpeg frame **********************/
+/******************* img_raw IN frame **********************/
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_IMG_RAW_IN)
 
-#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG)
+FRAME_BUFFER_ATTR uint8_t img_raw_in_frame_buffer[CONFIG_IMG_RAW_IN_FRAME_NUM][CONFIG_IMG_RAW_IN_FRAME_SIZE]; /* RAW image data */
 
-FRAME_BUFFER_ATTR uint8_t jpeg_frame_buffer[CONFIG_MJPEG_FRAME_NUM][CONFIG_MJPEG_FRAME_SIZE]; /* Multi buffer queue */
+frame_queue_ctrl_t *g_img_raw_in_frame_ctrl = NULL;
 
-frame_queue_ctrl_t *g_jpeg_frame_ctrl = NULL;
+int img_raw_in_frame_ctrl_init(void)
+{
+    int ret;
+    printf("img_raw_in_frame_ctrl_init\r\n");
 
-int jpeg_frame_ctrl_init(void)
+    /* fill info */
+    pimg_raw_frame_t frame_desc[CONFIG_IMG_RAW_IN_FRAME_NUM];
+    for (uint16_t i = 0; i < CONFIG_IMG_RAW_IN_FRAME_NUM; i++) {
+        frame_desc[i].elem_base.frame_id = i;
+        frame_desc[i].elem_base.frame_size = CONFIG_IMG_RAW_IN_FRAME_SIZE;
+        frame_desc[i].elem_base.frame_addr = img_raw_in_frame_buffer[i];
+        frame_desc[i].x_start = 0;
+        frame_desc[i].y_start = 0;
+        frame_desc[i].x_end = 0;
+        frame_desc[i].y_end = 0;
+        frame_desc[i].format = IMG_RAW_FRAME_FORMAT_INVALID;
+    }
+
+    /* create ctrl */
+    ret = frame_queue_create(&g_img_raw_in_frame_ctrl, CONFIG_IMG_RAW_IN_FRAME_NUM, sizeof(pimg_raw_frame_t), (void *)frame_desc, "img_raw_in");
+
+    if (ret < 0) {
+        printf("img_raw in frame ctrl create failed\r\n");
+    }
+
+    return ret;
+}
+#endif
+
+/******************** mjpeg OUT frame **********************/
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG_OUT)
+FRAME_BUFFER_ATTR uint8_t mjpeg_out_frame_buffer[CONFIG_MJPEG_OUT_FRAME_NUM][CONFIG_MJPEG_OUT_FRAME_SIZE]; /* Multi buffer queue */
+
+frame_queue_ctrl_t *g_mjpeg_out_frame_ctrl = NULL;
+
+int mjpeg_out_frame_ctrl_init(void)
 {
     int ret;
 
-    printf("jpeg_frame_ctrl_init\r\n");
+    printf("mjpeg_out_frame_ctrl_init\r\n");
 
     /* fill info */
-    jpeg_frame_t frame_desc[CONFIG_MJPEG_FRAME_NUM];
-    for (uint16_t i = 0; i < CONFIG_MJPEG_FRAME_NUM; i++) {
+    jpeg_frame_t frame_desc[CONFIG_MJPEG_OUT_FRAME_NUM];
+    for (uint16_t i = 0; i < CONFIG_MJPEG_OUT_FRAME_NUM; i++) {
         frame_desc[i].elem_base.frame_id = i;
-        frame_desc[i].elem_base.frame_size = CONFIG_MJPEG_FRAME_SIZE;
-        frame_desc[i].elem_base.frame_addr = jpeg_frame_buffer[i];
+        frame_desc[i].elem_base.frame_size = CONFIG_MJPEG_OUT_FRAME_SIZE;
+        frame_desc[i].elem_base.frame_addr = mjpeg_out_frame_buffer[i];
         frame_desc[i].data_size = 0;
     }
 
     /* create ctrl */
-    ret = frame_queue_create(&g_jpeg_frame_ctrl, CONFIG_MJPEG_FRAME_NUM, sizeof(jpeg_frame_t), (void *)frame_desc, "jpeg");
+    ret = frame_queue_create(&g_mjpeg_out_frame_ctrl, CONFIG_MJPEG_OUT_FRAME_NUM, sizeof(jpeg_frame_t), (void *)frame_desc, "mjpeg_out");
 
     if (ret < 0) {
-        printf("jpeg frame ctrl create failed\r\n");
+        printf("mjpeg out frame ctrl create failed\r\n");
+    }
+
+    return ret;
+}
+#endif
+
+/******************** mjpeg IN frame **********************/
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG_IN)
+
+FRAME_BUFFER_ATTR uint8_t mjpeg_in_frame_buffer[CONFIG_MJPEG_IN_FRAME_NUM][CONFIG_MJPEG_IN_FRAME_SIZE]; /* Multi buffer queue */
+
+frame_queue_ctrl_t *g_mjpeg_in_frame_ctrl = NULL;
+
+int mjpeg_in_frame_ctrl_init(void)
+{
+    int ret;
+
+    printf("mjpeg_in_frame_ctrl_init\r\n");
+
+    /* fill info */
+    jpeg_frame_t frame_desc[CONFIG_MJPEG_IN_FRAME_NUM];
+    for (uint16_t i = 0; i < CONFIG_MJPEG_IN_FRAME_NUM; i++) {
+        frame_desc[i].elem_base.frame_id = i;
+        frame_desc[i].elem_base.frame_size = CONFIG_MJPEG_IN_FRAME_SIZE;
+        frame_desc[i].elem_base.frame_addr = mjpeg_in_frame_buffer[i];
+        frame_desc[i].data_size = 0;
+    }
+
+    /* create ctrl */
+    ret = frame_queue_create(&g_mjpeg_in_frame_ctrl, CONFIG_MJPEG_IN_FRAME_NUM, sizeof(jpeg_frame_t), (void *)frame_desc, "mjpeg_in");
+
+    if (ret < 0) {
+        printf("mjpeg in frame ctrl create failed\r\n");
     }
 
     return ret;
@@ -174,16 +234,32 @@ int frame_ctrl_init_all(void)
 
     printf("frame_ctrl_init_all\r\n");
 
-#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_YUYV)
-    ret = yuyv_frame_ctrl_init();
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_IMG_RAW_OUT)
+    ret = img_raw_out_frame_ctrl_init();
     if (ret < 0) {
         return ret;
     }
 
 #endif
 
-#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG)
-    ret = jpeg_frame_ctrl_init();
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_IMG_RAW_IN)
+    ret = img_raw_in_frame_ctrl_init();
+    if (ret < 0) {
+        return ret;
+    }
+
+#endif
+
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG_OUT)
+    ret = mjpeg_out_frame_ctrl_init();
+    if (ret < 0) {
+        return ret;
+    }
+
+#endif
+
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG_IN)
+    ret = mjpeg_in_frame_ctrl_init();
     if (ret < 0) {
         return ret;
     }

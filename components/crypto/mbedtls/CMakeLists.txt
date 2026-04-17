@@ -308,7 +308,6 @@ endif()
 if (CONFIG_MBEDTLS_SELF_TEST)
   sdk_add_compile_definitions(-DMBEDTLS_SELF_TEST)
 endif()
-sdk_library_add_sources(port/sec_mutex.c)
 sdk_library_add_sources(port/alt_timing.c)
 
 # X.509 Certificate Bundle support

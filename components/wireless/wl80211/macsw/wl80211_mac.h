@@ -71,6 +71,11 @@ int wl80211_mac_do_scan(struct wl80211_scan_params *params);
  */
 int wl80211_mac_do_connect(struct wl80211_connect_params *conn_params);
 
+int wl80211_mac_set_key(uint8_t vif_idx, uint8_t sta_idx, uint8_t key_idx, uint8_t *key, uint8_t key_len,
+                        uint8_t cipher_suite, uint8_t spp, bool pairwise);
+int wl80211_mac_clr_ptk(uint8_t vif_idx, uint8_t sta_idx);
+int wl80211_mac_clr_gtk(uint8_t vif_idx, uint8_t sta_idx);
+
 int wl80211_mac_ctrl_port(uint8_t sta_id, int control_port_open);
 int wl80211_mac_set_ps_mode(int enable);
 int wl80211_mac_chan_config_update(uint8_t channel24G_num, const uint8_t *channel24G_chan, uint8_t channel5G_num,
@@ -94,9 +99,6 @@ int wl80211_mac_start_ap(struct wl80211_ap_settings *ap_settings);
  * Return value: 0 on success
  */
 int wl80211_mac_stop_ap(void);
-int wl80211_mac_ap_set_key(uint8_t key_idx, uint8_t sta_idx, uint8_t *key, uint8_t key_len, uint8_t cipher_suite,
-                           bool pairwise);
-int wl80211_mac_ap_del_key(uint8_t sta_idx);
 int wl80211_mac_ap_del_sta(uint8_t sta_idx);
 int wl80211_mac_ap_ctrl_port(uint8_t sta_id, int control_port_open);
 // AP mode process auth packet
@@ -168,9 +170,9 @@ int _macsw_add_vif(uint8_t type, uint8_t mac[6]);
  * Return value: VIF index on success
  */
 int _macsw_remove_vif(int vif_idx);
+
 struct scanu_start_req *_macsw_make_scan_req(struct wl80211_scan_params *params);
 struct me_config_req *_macsw_make_me_config(void);
-
 void _find_wpa_rsn_ie(uint32_t var_part_addr, uint32_t var_part_len, uint32_t *wpa_ie, uint32_t *rsn_ie);
 uint8_t _macsw_get_staid(int vif_idx, struct mac_addr *dst_addr, bool mgmt_frame);
 void _sme_auth_mgmt_rx(uint8_t *frame, size_t len);

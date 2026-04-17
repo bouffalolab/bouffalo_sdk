@@ -53,7 +53,7 @@ int tty_atcmd_init(mr_msg_ctrl_priv_t *msg_ctrl)
         .upld_done_cb = NULL,
         .task_stack_size = 512,
         .task_priority = 15,
-        .task_period_max_ms = 100,
+        .task_period_max_ms = portMAX_DELAY,
     };
 
     priv = mr_tty_init(&tty_cmd_cfg);

@@ -366,3 +366,115 @@ static void wifi_inject_frame_test_cmd(int argc, char **argv)
 }
 
 SHELL_CMD_EXPORT_ALIAS(wifi_inject_frame_test_cmd, inject_frame_test, inject raw 802.11 frame test);
+
+/**
+ * Test commands for AP intra-BSS forwarding verification.
+ *
+ * udp_echo_server <port>    - Start a UDP echo server on <port>
+ * udp_send <ip> <port> <msg> - Send a UDP message to <ip>:<port> and wait for reply
+ *
+ * Test procedure:
+ *   Device A (AP):  macsw_start_ap BL616-AP
+ *   Device B (STA1): macsw_connect BL616-AP  ->  udp_echo_server 5000
+ *   Device C (STA2): macsw_connect BL616-AP  ->  udp_send <STA1_IP> 5000 hello
+ *   If forwarding works, STA2 will receive the echo reply from STA1.
+ */
+
+static void udp_echo_server_task(void *param)
+{
+    int port = (int)(uintptr_t)param;
+    int sock;
+    struct sockaddr_in addr, client;
+    socklen_t client_len = sizeof(client);
+    char buf[256];
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        printf("udp_echo: socket failed\n");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        printf("udp_echo: bind failed\n");
+        close(sock);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    printf("udp_echo: listening on port %d\n", port);
+
+    while (1) {
+        int n = recvfrom(sock, buf, sizeof(buf) - 1, 0,
+                         (struct sockaddr *)&client, &client_len);
+        if (n > 0) {
+            buf[n] = '\0';
+            printf("udp_echo: recv %d bytes from %s:%d -> \"%s\"\n",
+                   n, inet_ntoa(client.sin_addr), ntohs(client.sin_port), buf);
+            /* Echo back */
+            sendto(sock, buf, n, 0, (struct sockaddr *)&client, client_len);
+        }
+    }
+}
+
+static void udp_echo_server_cmd(int argc, char **argv)
+{
+    int port = 5000;
+    if (argc >= 2) {
+        port = atoi(argv[1]);
+    }
+    xTaskCreate(udp_echo_server_task, "udp_echo", 1024, (void *)(uintptr_t)port, 5, NULL);
+}
+
+static void udp_send_cmd(int argc, char **argv)
+{
+    if (argc < 4) {
+        printf("usage: udp_send <ip> <port> <message>\n");
+        return;
+    }
+
+    const char *ip = argv[1];
+    int port = atoi(argv[2]);
+    const char *msg = argv[3];
+
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        printf("udp_send: socket failed\n");
+        return;
+    }
+
+    struct sockaddr_in dest;
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(port);
+    dest.sin_addr.s_addr = inet_addr(ip);
+
+    printf("udp_send: sending \"%s\" to %s:%d\n", msg, ip, port);
+    sendto(sock, msg, strlen(msg), 0, (struct sockaddr *)&dest, sizeof(dest));
+
+    /* Wait for echo reply with timeout */
+    struct timeval tv = { .tv_sec = 3, .tv_usec = 0 };
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+    char buf[256];
+    struct sockaddr_in from;
+    socklen_t from_len = sizeof(from);
+    int n = recvfrom(sock, buf, sizeof(buf) - 1, 0, (struct sockaddr *)&from, &from_len);
+    if (n > 0) {
+        buf[n] = '\0';
+        printf("udp_send: reply from %s:%d -> \"%s\" [OK]\n",
+               inet_ntoa(from.sin_addr), ntohs(from.sin_port), buf);
+    } else {
+        printf("udp_send: no reply (timeout) [FAIL]\n");
+    }
+
+    close(sock);
+}
+
+SHELL_CMD_EXPORT_ALIAS(udp_echo_server_cmd, udp_echo_server, start UDP echo server for AP forward test.);
+SHELL_CMD_EXPORT_ALIAS(udp_send_cmd, udp_send, send UDP msg and wait for echo reply.);

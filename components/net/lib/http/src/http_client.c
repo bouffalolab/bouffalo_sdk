@@ -470,6 +470,15 @@ static void http_report_progress(struct http_request *req)
     }
 }
 
+static bool http_client_cancel_requested(struct http_request *req)
+{
+    if (req->cancel == NULL) {
+        return false;
+    }
+
+    return req->cancel(req->internal.user_data) != 0;
+}
+
 static int http_wait_data(int sock, struct http_request *req, const k_timepoint_t req_end_timepoint)
 {
     int total_received = 0;
@@ -542,6 +551,11 @@ static int http_wait_data(int sock, struct http_request *req, const k_timepoint_
                 break;
             } else if (offset == 0) {
                 http_report_progress(req);
+
+                if (http_client_cancel_requested(req)) {
+                    ret = -ECANCELED;
+                    goto error;
+                }
 
                 /* Re-use the result buffer and start to fill it again */
                 req->internal.response.data_len = 0;

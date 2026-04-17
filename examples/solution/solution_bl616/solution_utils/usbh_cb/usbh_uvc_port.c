@@ -68,12 +68,12 @@ static struct usbh_videoframe uvc_frame = { 0 };
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_JPEG)
 #define USBH_UVC_FORMAT USBH_VIDEO_FORMAT_MJPEG
-#define IMG_FRAME_CTRL  g_jpeg_frame_ctrl
+#define IMG_FRAME_CTRL  g_mjpeg_out_frame_ctrl
 static jpeg_frame_t queue_frame = { 0 };
 #elif IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_YUYV)
 #define USBH_UVC_FORMAT USBH_VIDEO_FORMAT_UNCOMPRESSED
-#define IMG_FRAME_CTRL  g_yuyv_frame_ctrl
-static pyuyv_frame_t queue_frame = { 0 };
+#define IMG_FRAME_CTRL  g_img_raw_out_frame_ctrl
+static pimg_raw_frame_t queue_frame = { 0 };
 #endif
 
 ATTR_FAST_RAM_SECTION struct usbh_videoframe *usbh_uvc_frame_alloc(void)
@@ -151,6 +151,7 @@ ATTR_FAST_RAM_SECTION int usbh_uvc_frame_send(struct usbh_videoframe *frame)
     queue_frame.y_start = 0;
     queue_frame.x_end = CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH - 1;
     queue_frame.y_end = CONFIG_SOLUTION_VIDEO_DEFAULT_HIGHT - 1;
+    queue_frame.format = IMG_RAW_FRAME_FORMAT_YUYV;
     /* cache */
     // bflb_l1c_dcache_invalidate_range(queue_frame.elem_base.frame_addr, frame->frame_size);
 #endif

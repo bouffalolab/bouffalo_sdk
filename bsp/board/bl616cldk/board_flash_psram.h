@@ -8,7 +8,7 @@
 #include "stdio.h"
 
 /* flash */
-void board_set_flash_80m(void);
+uint32_t board_set_flash_hs(uint8_t flash_clock);
 void bl_show_flashinfo(void);
 
 /* psram */

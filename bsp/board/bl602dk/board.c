@@ -8,6 +8,7 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#include "bflb_sec_mutex.h"
 #include "board.h"
 #include "bl602_glb.h"
 
@@ -197,10 +198,7 @@ void board_init(void)
     rtc = bflb_device_get_by_name("rtc");
 #endif
 
-#ifdef CONFIG_MBEDTLS
-    extern void bflb_sec_mutex_init(void);
     bflb_sec_mutex_init();
-#endif
 
     bflb_irq_restore(flag);
 
@@ -288,6 +286,17 @@ void board_dac_gpio_init()
     // /* DAC_CHB */
     // bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
 }
+
+#ifdef CONFIG_SHELL
+#include "shell.h"
+extern int bl_sys_reset_por(void);
+
+static void reboot_cmd(int argc, char **argv)
+{
+    bl_sys_reset_por();
+}
+SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);
+#endif
 
 #ifdef CONFIG_BFLB_LOG
 __attribute__((weak)) uint64_t bflb_log_clock(void)

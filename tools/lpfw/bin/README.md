@@ -1,50 +1,50 @@
--e Release Date: 2026-01-15
-Release Author: Jenkins
-Git Commit Version: c2ddae532639ad3660ea9115f8f83fdeee37ebab
+Release Date: 2026-04-14
+Release Author: rfhuang
+Git Commit Version: 75c6a73585570f383b5282dd871267b4aa527b0f
 
 Submodule Information:
--3bc6321603b0ab07c39ebdbe6ad1c65e0f4beb45 ../../../components/crypto/mbedtls/mbedtls
--e185d7fd85499c8ce5ca2a54f5cf8fe7dbe3f8df ../../../components/crypto/mbedtls/mbedtls_v3
--a06be1ccc6bf7551a25101aa6d51e22e0b309e9e ../../../components/fs
--238f19aeae0358bd9f237925e87929e0c0227190 ../../../components/graphics
--71c2fb3643461e93b6638c3e7add97a2ed9d3e07 ../../../components/ipc/libmetal/libmetal
--f819642829a6080038311d0a7828415c6bee9ef5 ../../../components/ipc/open-amp/open-amp
--89bef14b133dc47190cfdb4bbbfecbd68f1319c2 ../../../components/multimedia
--c1031a01a04561953ab403e682f27974b8be1737 ../../../components/net/lwip/lwip
--27fdd91d6c93b1c13ae3f922c95df69db129d4a4 ../../../components/net/netbus/atmodule
--ab307b8f380b9c94216ac068195d1b3726b85016 ../../../components/net/netbus/host_router
--3ea82ed491ed1f24d7700c3e02e909cbdbdb99e8 ../../../components/net/nethub/host_linux
--a88b72ce2012ac734189dfc29c997d071e7a0fbc ../../../components/usb/cherryusb
--ab3e6d96e00da02beee1372f00d3f53811c8c48e ../../../components/wireless/bl3141_drv
--5583c9a16d8a2253296b9fef4bdfe7b26328549f ../../../components/wireless/bluetooth
--50191a7d658568d0d87fb4f3acd74073844579cf ../../../components/wireless/lmac154
--3f14461f8f74b1f9ab625e660f831bec07bef0e5 ../../../components/wireless/macsw
--5961b7b8aa42c6c02d1aa7a3422b1196bd3cf9fa ../../../components/wireless/matter/mfd
--719286c70239ed3838517e5ff33f09956265adea ../../../components/wireless/thread
--dcee3e1b67aba46b68518f2b2294b20f0a6e3099 ../../../components/wireless/wifi4/firmware
--cd06c145f1a62d29f899bb979249a78c81b24456 ../../../components/wireless/wifi4/manager
--de01b5974a5f5a196fc8c53d12f2d1ece5d14184 ../../../components/wireless/wifi6
--01121716e4af27200721f5fb8a4a617e596f57f7 ../../../components/wireless/wl80211
--9e8b2dbba86ee167e0a75368a8b6fe549043d79f ../../../components/wireless/wlan/linux_driver
--d2554fb5f2836f1dfda08cb8b7439f421d324e91 ../../../components/wireless/wlan/wlan_mac
--e9f6bf16d330f71021e733c8fe8d661ba7cdce8b ../../../components/wireless/zigbee
--da969395f7d21b7dcaf5f118530da0bc57695c69 ../../../drivers/lhal
--25ffb329a3b97c5d4fc79d66c60e0b988882d996 ../../../drivers/soc/bl602/phyrf
--39aee008ea45f8d9763c2ffece1043a87eae4927 ../../../drivers/soc/bl602/std
--966b71fd5c2d05e56e0bff3bb1d0634e6037c137 ../../../drivers/soc/bl606p/std
--f910c86e6083dee8946203ca9d582c2c91ebd169 ../../../drivers/soc/bl616/phyrf
--f3a088b134cf11c8c4ad6e36442db49128cd70cc ../../../drivers/soc/bl616/std
--975fb76395ab2e213d8023252621c6fd6cfbc495 ../../../drivers/soc/bl618dg/phyrf
--3d264e32a24a0ee75fa91cc3e4ae3b0a894dadfe ../../../drivers/soc/bl618dg/std
--a2b4e571de539f4d257bb62ebd4fd639deb4697f ../../../drivers/soc/bl616cl/phyrf
--cfd14ae582b635d2bae19589a4bf2be9a7e7b207 ../../../drivers/soc/bl616cl/std
--cefe8a6b28383ca405cec0d75785dcb07548c709 ../../../drivers/soc/bl628/std
--d929f1aaee7579ec832fcf1b5bcbfe2fc4302d5d ../../../drivers/soc/bl702/phyrf
--662cb2b5c5b8abaa2962d5d2c967ae558e3f89de ../../../drivers/soc/bl702/std
--7ae5adfd8bd02f95031fdd5892fcacb23962ea19 ../../../drivers/soc/bl702l/phyrf
--d49dde1da77e54d1e2ec6c81378153eb9485d35f ../../../drivers/soc/bl702l/std
--ed689474db7440986e2fe720c6b8e90da7a34fcf ../../../drivers/soc/bl808/std
--02949416136e003929ad337e205070003c56514a ../../../drivers/sys
--8429b8ca60e8ce494acfbf58ec394ad68766121a ../../../tools/autotest
--1c7f9736e87b9020fcb6707935ccb2589a93c095 ../../../tools/bflb_tools
+ 3bc6321603b0ab07c39ebdbe6ad1c65e0f4beb45 ../../../components/crypto/mbedtls/mbedtls (v2.28.2-2-g3bc632160)
+ e185d7fd85499c8ce5ca2a54f5cf8fe7dbe3f8df ../../../components/crypto/mbedtls/mbedtls_v3 (v3.6.5)
+ 457996474728cb8e968ed21953b72f74d2f536b2 ../../../components/crypto/mbedtls/mbedtls_v3/framework (mbedtls-4.0.0_tf-psa-crypto-1.0.0)
+ a06be1ccc6bf7551a25101aa6d51e22e0b309e9e ../../../components/fs (bouffalo_sdk/v2.3-7-ga06be1c)
+ 0f26e482c23e32f73e6226b5386a4040c1a4adb4 ../../../components/graphics (bouffalo_sdk/v2.3-3-g0f26e48)
+ 71c2fb3643461e93b6638c3e7add97a2ed9d3e07 ../../../components/ipc/libmetal/libmetal (heads/master)
+ f819642829a6080038311d0a7828415c6bee9ef5 ../../../components/ipc/open-amp/open-amp (heads/master)
+ f60dd66662d86797ba724a8fda403e6e67c67b8c ../../../components/multimedia (remotes/origin/HEAD)
+ 2cc76ab9fea1070bab7cb296b242cfa9aecc73de ../../../components/net/lwip/lwip (remotes/origin/HEAD)
+ 569cf4cee1a53400d9a3005ec4ca401c410c0151 ../../../components/net/netbus/atmodule (remotes/origin/HEAD)
+ ab307b8f380b9c94216ac068195d1b3726b85016 ../../../components/net/netbus/host_router (remotes/origin/HEAD)
+ 47765b8917a01ff6e2bfbab891f151291b63e028 ../../../components/net/nethub/host_linux (remotes/origin/HEAD)
+ 621ccd5eedb262f1b7e01ab4bca7131bda3034a5 ../../../components/usb/cherryusb (v1.5.0-4-g621ccd5)
+ ab3e6d96e00da02beee1372f00d3f53811c8c48e ../../../components/wireless/bl3141_drv (heads/master)
+ 803157ab68bcf1fcd72037b8e5c5f2a3becf0d02 ../../../components/wireless/bluetooth (remotes/origin/HEAD)
+ 4b9fcca9ff62c8878b50142019654cb2815803b5 ../../../components/wireless/lmac154 (remotes/origin/HEAD)
++4826b347572d67e9f863be325da5e55a4c210174 ../../../components/wireless/macsw (heads/master)
+ 5961b7b8aa42c6c02d1aa7a3422b1196bd3cf9fa ../../../components/wireless/matter/mfd (heads/master)
+ a4a904c83293bd967cd1fc360064b87664166add ../../../components/wireless/thread (remotes/origin/HEAD)
+ fe73a98a17231783cbf4b86fec1b2c2259257df8 ../../../components/wireless/wifi4/firmware (remotes/origin/HEAD)
+ 24fc0eb5f051e6ab10e6ed75ad830eea87869897 ../../../components/wireless/wifi4/firmware/plf/refip/src/driver/phy/bl602_phy_rf (24fc0eb)
+ f6ed2e981d6de92d25dfff092853f6cf50d94804 ../../../components/wireless/wifi4/firmware/plf/refip/src/driver/phy/bl602_phy_rf/rf (heads/master)
+ fa80513ba835ea3fbbd8314f325e1f428347f62c ../../../components/wireless/wifi4/manager (remotes/origin/HEAD)
+ 2fe672e41c00d9374c9fa7d12efaf8e9b4d529ff ../../../components/wireless/wifi6 (amazon_release_v0.1.1-292-g2fe672e4)
+ c4f616dd8bde10c5a2a4649cac5e1bec6404bc3d ../../../components/wireless/wl80211 (remotes/origin/HEAD)
+ b25a069dfea4ce78bde03c2ef245d4ae93bf7718 ../../../components/wireless/wlan/linux_driver (remotes/origin/HEAD)
+ 3f223c3ff2a1c9661b17495c6a6556cf2b933f10 ../../../components/wireless/wlan/wlan_mac (remotes/origin/HEAD)
+ c74d2cf429fbb51558694730f38dfe76715fcb4d ../../../components/wireless/zigbee (remotes/origin/HEAD)
+ 1e373239ab41771925166395d997f7c479b368bb ../../../drivers/lhal (lhal-v1.1.0-433-g1e37323)
+ 25ffb329a3b97c5d4fc79d66c60e0b988882d996 ../../../drivers/soc/bl602/phyrf (heads/master)
+ 39aee008ea45f8d9763c2ffece1043a87eae4927 ../../../drivers/soc/bl602/std (remotes/origin/HEAD)
+ f910c86e6083dee8946203ca9d582c2c91ebd169 ../../../drivers/soc/bl616/phyrf (remotes/origin/HEAD)
+ 71decaabe4539cb4aa7f8200b217817f19602f92 ../../../drivers/soc/bl616/std (remotes/origin/HEAD)
+ 6431f1f92f7395eda2e6df3d71e0250e2f72f034 ../../../drivers/soc/bl616cl/phyrf (remotes/origin/HEAD)
+ 3abf8820d92d41b750151501ce9adb936b1e9dd1 ../../../drivers/soc/bl616cl/std (remotes/origin/HEAD)
+ f60b50e37833c5d0a23d89258770dbc27ff784dc ../../../drivers/soc/bl618dg/phyrf (remotes/origin/HEAD)
+ 98c363055a992c554b6aec2ab54798e0e8c0f0e3 ../../../drivers/soc/bl618dg/std (remotes/origin/HEAD)
+ 712e35f8da9fc43c920cd0259a04ed9a78276d01 ../../../drivers/soc/bl702/phyrf (remotes/origin/HEAD)
+ 662cb2b5c5b8abaa2962d5d2c967ae558e3f89de ../../../drivers/soc/bl702/std (heads/master)
+ d51ad0139dbf6891c1367a603446f3b35f60376b ../../../drivers/soc/bl702l/phyrf (remotes/origin/HEAD)
+ d49dde1da77e54d1e2ec6c81378153eb9485d35f ../../../drivers/soc/bl702l/std (heads/master)
+ 887c86d7dc0602d19b321ea198497f432cd14e9a ../../../drivers/sys (remotes/origin/HEAD)
+ 060fc2d67573a2acdedeb7fcc41cac38d6557b4c ../../../tools/autotest (remotes/origin/HEAD)
+ ac37f0bea1f5da24869dabdfe292f0e77c474394 ../../../tools/bflb_tools (remotes/origin/HEAD)
 

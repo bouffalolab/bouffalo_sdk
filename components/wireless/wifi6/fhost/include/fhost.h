@@ -400,6 +400,19 @@ int fhost_ap_cfg(int fhost_vif_idx, struct fhost_vif_ap_cfg *cfg, bool mesh_mode
 int fhost_get_sta_idx(struct fhost_vif_tag *fhost_vif, uint8_t table_max_size,
                       uint8_t *idx_table);
 
+/**
+ ****************************************************************************************
+ * @brief Get supported cipher suites based on MAC capabilities
+ *
+ * Returns a bitmask of supported ciphers in MAC_CIPHER format (CO_BIT(MAC_CIPHER_*)).
+ * Queries MAC layer for actual cipher support. 256-bit ciphers (CCMP-256, GCMP-256)
+ * are enabled by default.
+ *
+ * @return Bitmask of supported ciphers
+ ****************************************************************************************
+ */
+uint32_t fhost_get_cipher_supported(void);
+
 int fhost_vif_is_up(int fhost_vif_idx);
 
 /// @}

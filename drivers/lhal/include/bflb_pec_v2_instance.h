@@ -2,7 +2,50 @@
 #define __BFLB_PEC_V2_INSTANCE_H__
 
 #include "bflb_core.h"
-#include "bflb_pec_v2.h"
+
+/******************************************************************
+COMMON MACRO
+******************************************************************/
+#define PEC_SHIFT_DIR_TO_LEFT    (0) /*!< shift OSR/ISR to left (data enters from right) */
+#define PEC_SHIFT_DIR_TO_RIGHT   (1) /*!< shift OSR/ISR to right (data enters from left) */
+
+/******************************************************************
+COMMON API
+******************************************************************/
+int bflb_pec_memory_size_check(struct bflb_device_s *dev, uint8_t start, uint16_t size, uint8_t *actual_start);
+
+/******************************************************************
+low level API
+******************************************************************/
+/* fifo */
+uint8_t bflb_pec_fifo_get_deepth_tx(struct bflb_device_s *dev);
+uint8_t bflb_pec_fifo_get_deepth_rx(struct bflb_device_s *dev);
+uint8_t bflb_pec_fifo_get_level_tx(struct bflb_device_s *dev);
+uint8_t bflb_pec_fifo_get_level_rx(struct bflb_device_s *dev);
+void bflb_pec_fifo_clr_tx(struct bflb_device_s *dev);
+void bflb_pec_fifo_clr_rx(struct bflb_device_s *dev);
+uint8_t bflb_pec_fifo_is_rdy_tx(struct bflb_device_s *dev);
+uint8_t bflb_pec_fifo_is_rdy_rx(struct bflb_device_s *dev);
+uint32_t bflb_pec_fifo_get_addr_tx(struct bflb_device_s *dev);
+uint32_t bflb_pec_fifo_get_addr_rx(struct bflb_device_s *dev);
+void bflb_pec_fifo_write(struct bflb_device_s *dev, uint32_t value);
+uint32_t bflb_pec_fifo_read(struct bflb_device_s *dev);
+uint32_t bflb_pec_fifo_write_multi_32bits(struct bflb_device_s *dev, uint32_t *data, uint32_t len);
+uint32_t bflb_pec_fifo_write_multi_16bits(struct bflb_device_s *dev, uint16_t *data, uint32_t len);
+uint32_t bflb_pec_fifo_write_multi_8bits(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+void bflb_pec_fifo_write_multi_32bits_blocking(struct bflb_device_s *dev, uint32_t *data, uint32_t len);
+void bflb_pec_fifo_write_multi_16bits_blocking(struct bflb_device_s *dev, uint16_t *data, uint32_t len);
+void bflb_pec_fifo_write_multi_8bits_blocking(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+uint32_t bflb_pec_fifo_read_multi_32bits(struct bflb_device_s *dev, uint32_t *data, uint32_t len);
+uint32_t bflb_pec_fifo_read_multi_16bits(struct bflb_device_s *dev, uint16_t *data, uint32_t len);
+uint32_t bflb_pec_fifo_read_multi_8bits(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+void bflb_pec_fifo_set_threshold_tx(struct bflb_device_s *dev, uint8_t threshold);
+void bflb_pec_fifo_set_threshold_rx(struct bflb_device_s *dev, uint8_t threshold);
+/* dma */
+void bflb_pec_dma_enable_tx(struct bflb_device_s *dev);
+void bflb_pec_dma_enable_rx(struct bflb_device_s *dev);
+void bflb_pec_dma_disable_tx(struct bflb_device_s *dev);
+void bflb_pec_dma_disable_rx(struct bflb_device_s *dev);
 
 /******************************************************************
 PWM
@@ -205,5 +248,34 @@ struct bflb_pec_dpi_s {
 
 int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi);
 void bflb_pec_dpi_deinit(struct bflb_device_s *dev);
+
+/******************************************************************
+QSPI_CAM
+******************************************************************/
+struct bflb_pec_qspi_cam_s {
+    uint32_t mem;                 /*!< memory address of first instruction */
+    uint16_t div;                 /*!< divisor, N = div + 1 */
+    uint16_t resolution_x;        /*!< camera horizontal resolution */
+    uint16_t resolution_y;        /*!< camera vertical resolution */
+    uint8_t pixel_bits;           /*!< clock count of every pixel */
+    uint8_t pin_pclk;             /*!< QSPI CAM PCLK pin index */
+    uint8_t pin_d0;               /*!< QSPI CAM D0 pin index */
+    uint8_t pin_data_count;       /*!< QSPI CAM data pin count, must be power of 2, such as 1, 2, 4, 8 */
+    uint8_t pin_pclk_idle_level;  /*!< QSPI CAM pixel clock level when idle, 0: low level, others: high level */
+    uint8_t sample_edge;          /*!< QSPI CAM data sample after clock pin edge, 0: sample after falling edge, others: sample after rising edge */
+    uint8_t fifo_direction;       /*!< FIFO direction, PEC_SHIFT_DIR_TO_LEFT or PEC_SHIFT_DIR_TO_RIGHT */
+    uint8_t bits_every_push;      /*!< bits of every push when sample data into ISR, 1~32, must be multiple of pin_data_count */
+    uint32_t delay_first_us;      /*!< delay time in microsecond before start capature camera data */
+    uint32_t det_frame_ns;        /*!< time in nanosecond for inter-frame space detect */
+    uint32_t det_line_ns;         /*!< time in nanosecond for inter-line space detect */
+    uint16_t skip_clk_line;       /*!< skip clock count before every line */
+    uint16_t skip_clk_first_line; /*!< skip clock count before first line */
+    uint8_t skip_dly;             /*!< delay count in every clock skip */
+    uint8_t sample_dly;           /*!< QSPI CAM data sample delay time after clock pin edge, in unit of PEC clock */
+};
+
+int bflb_pec_qspi_cam_init(struct bflb_device_s *dev, struct bflb_pec_qspi_cam_s *cam);
+void bflb_pec_qspi_cam_start(struct bflb_device_s *dev, struct bflb_pec_qspi_cam_s *cam);
+void bflb_pec_qspi_cam_stop(struct bflb_device_s *dev);
 
 #endif /* __BFLB_PEC_V2_INSTANCE_H__ */

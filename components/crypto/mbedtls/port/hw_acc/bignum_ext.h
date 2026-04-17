@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mbedtls/bignum.h>
-#include "sec_mutex.h"
+#include "bflb_sec_mutex.h"
 
 void dump_mpi(const char *tag, const mbedtls_mpi *bn);
 int mpi_words_to_reg_size(size_t words);

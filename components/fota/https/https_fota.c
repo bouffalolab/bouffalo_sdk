@@ -24,6 +24,9 @@
 #include "https_fota.h"
 #include "ota/ota.h"
 
+#define DBG_TAG "HTTPS_FOTA"
+#include "log.h"
+
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 #endif
@@ -46,30 +49,53 @@ struct https_fota {
     void *cb_arg;
     uint8_t status;
     uint8_t auto_finish;
+    uint8_t abort_requested;
+    uint8_t trailing_fragment_logged;
+    int last_error;
 };
+
+static void https_fota_request_abort(struct https_fota *fota, int error)
+{
+    if (fota == NULL) {
+        return;
+    }
+
+    if (!fota->abort_requested) {
+        fota->abort_requested = 1;
+        fota->last_error = error;
+        HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_ABORT)
+    }
+}
+
+static int https_fota_cancel_requested(void *user_data)
+{
+    struct https_fota *fota = user_data;
+
+    return (fota != NULL && fota->abort_requested) ? 1 : 0;
+}
 
 static int payload_cb(int sock, struct http_request *req, void *user_data)
 {
-	const char *content[] = {
-		"foobar",
-		"chunked",
-		"last"
-	};
-	char tmp[64];
-	int i, pos = 0;
+    const char *content[] = {
+        "foobar",
+        "chunked",
+        "last"
+    };
+    char tmp[64];
+    int i, pos = 0;
 
-	for (i = 0; i < ARRAY_SIZE(content); i++) {
-		pos += snprintf(tmp + pos, sizeof(tmp) - pos,
-				"%x\r\n%s\r\n",
-				(unsigned int)strlen(content[i]),
-				content[i]);
-	}
+    for (i = 0; i < ARRAY_SIZE(content); i++) {
+        pos += snprintf(tmp + pos, sizeof(tmp) - pos,
+                        "%x\r\n%s\r\n",
+                        (unsigned int)strlen(content[i]),
+                        content[i]);
+    }
 
-	pos += snprintf(tmp + pos, sizeof(tmp) - pos, "0\r\n\r\n");
+    pos += snprintf(tmp + pos, sizeof(tmp) - pos, "0\r\n\r\n");
 
-	(void)zsock_send(sock, tmp, pos, 0);
+    (void)zsock_send(sock, tmp, pos, 0);
 
-	return pos;
+    return pos;
 }
 
 static void response_cb(struct http_response *rsp,
@@ -77,25 +103,53 @@ static void response_cb(struct http_response *rsp,
 			void *user_data)
 {
     struct https_fota *fota = (struct https_fota *)user_data;
+    int ret;
 
-    //rsp->body_frag_start, rsp->body_frag_len
+    if (fota == NULL) {
+        return;
+    }
+
+    if (fota->abort_requested) {
+        if (!fota->trailing_fragment_logged) {
+            fota->trailing_fragment_logged = 1;
+            LOG_W("FOTA ignore trailing fragments after abort, first body_frag_len:%d final:%d\r\n",
+                  rsp ? rsp->body_frag_len : 0, final_data);
+        }
+        return;
+    }
+
+    if (rsp == NULL) {
+        LOG_E("FOTA response is NULL\r\n");
+        https_fota_request_abort(fota, -EINVAL);
+        return;
+    }
 
     LOG_I("\r\nbody_frag_len:%d recv_buf_len:%d  data_len:%d content_length:%d\r\n", rsp->body_frag_len, rsp->recv_buf_len, rsp->data_len, rsp->content_length);
 
-    HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_PROCESS_TRANSFER)
+    if (rsp->body_frag_len > 0) {
+        HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_PROCESS_TRANSFER)
 
-    ota_update(fota->ota, rsp->body_frag_start, rsp->body_frag_len);
-    fota->file_size += rsp->body_frag_len;
+        ret = ota_update(fota->ota, rsp->body_frag_start, rsp->body_frag_len);
+        if (ret != 0) {
+            LOG_E("FOTA ota_update failed ret:%d\r\n", ret);
+            https_fota_request_abort(fota, ret);
+            return;
+        }
+        fota->file_size += rsp->body_frag_len;
+    }
 
-	if (final_data == HTTP_DATA_MORE) {
-
-	} else if (final_data == HTTP_DATA_FINAL) {
-
+    if (final_data == HTTP_DATA_MORE) {
+    } else if (final_data == HTTP_DATA_FINAL) {
         if (fota->file_size == rsp->content_length) {
             HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_TRANSFER_FINISH)
+        } else {
+            LOG_E("FOTA transfer size mismatch, received:%u expected:%u\r\n",
+                  (unsigned int)fota->file_size, (unsigned int)rsp->content_length);
+            https_fota_request_abort(fota, -EIO);
+            return;
         }
-		printf("HTTP_DATA_FINAL All the data received (%zd bytes)\r\n", rsp->data_len);
-	}
+        LOG_I("HTTP_DATA_FINAL All the data received (%zd bytes)\r\n", rsp->data_len);
+    }
 }
 
 
@@ -107,33 +161,43 @@ static void fota_service_start(void *arg)
     struct https_fota *fota = (struct https_fota *)arg;
 
     memset(&req, 0, sizeof(req));
-	req.method           = HTTP_GET;
-	req.url              = fota->url;
-	req.protocol         = "HTTP/1.1";
-	req.response         = response_cb;
-	req.ca_pem           = fota->config.ca_pem;
-	req.ca_len           = fota->config.ca_len;
-	req.client_cert_pem  = fota->config.client_cert_pem;
-	req.client_cert_len  = fota->config.client_cert_len;
-	req.client_key_pem   = fota->config.client_key_pem;
-	req.client_key_len   = fota->config.client_key_len;
-
-	req.buffer_size      = HTTPS_FOTA_BUFFER_SIZE;
+    req.method = HTTP_GET;
+    req.url = fota->url;
+    req.protocol = "HTTP/1.1";
+    req.response = response_cb;
+    req.ca_pem = fota->config.ca_pem;
+    req.ca_len = fota->config.ca_len;
+    req.client_cert_pem = fota->config.client_cert_pem;
+    req.client_cert_len = fota->config.client_cert_len;
+    req.client_key_pem = fota->config.client_key_pem;
+    req.client_key_len = fota->config.client_key_len;
+    req.buffer_size = HTTPS_FOTA_BUFFER_SIZE;
+    req.cancel = https_fota_cancel_requested;
 
     fota->file_size      = 0;
+    fota->abort_requested = 0;
+    fota->trailing_fragment_logged = 0;
+    fota->last_error = 0;
     HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_START)
-	ret = https_client_request(&req, HTTPS_FOTA_REQUEST_TIMEOUT_MS, fota);
-    if (ret < 0) {
+    ret = https_client_request(&req, HTTPS_FOTA_REQUEST_TIMEOUT_MS, fota);
+    if (ret < 0 && !fota->abort_requested) {
         LOG_E("FOTA http request fail ret:%d\r\n", ret);
         HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_SERVER_CONNECTE_FAIL)
     }
 
     if (fota->status != HTTPS_FOTA_TRANSFER_FINISH) {
+        if (fota->abort_requested) {
+            LOG_I("FOTA request canceled after abort, last_error:%d\r\n", fota->last_error);
+        }
         https_fota_abort(fota);
+        vTaskDelete(NULL);
+        return;
     }
 
     if (fota->auto_finish && fota->status == HTTPS_FOTA_TRANSFER_FINISH) {
         https_fota_finish(fota, 0);
+        vTaskDelete(NULL);
+        return;
     }
 
     vTaskDelete(NULL);
@@ -141,20 +205,31 @@ static void fota_service_start(void *arg)
 
 https_fota_handle_t https_fota_init(const char *url, const struct https_fota_config *config)
 {
-    int ret;
     struct https_fota *fota = calloc(sizeof(struct https_fota), 1);
-    if (!fota) {
-        LOG_E("FOTA alloc fail ret\r\n");
-		return NULL;
+    if (url == NULL) {
+        LOG_E("FOTA init fail, url is NULL\r\n");
+        return NULL;
     }
 
-	fota->ota = ota_start();
-	if (!fota->ota) {
+    if (!fota) {
+        LOG_E("FOTA alloc fail ret\r\n");
+        return NULL;
+    }
+
+    fota->ota = ota_start();
+    if (!fota->ota) {
         free(fota);
-		return NULL;
-	}
+        return NULL;
+    }
 
     fota->url = strdup(url);
+    if (!fota->url) {
+        LOG_E("FOTA strdup url fail\r\n");
+        ota_abort(fota->ota);
+        free(fota);
+        return NULL;
+    }
+
     if (config) {
         fota->config = *config;
         https_fota_callback_register(fota, config->callback, config->user_arg);
@@ -246,4 +321,3 @@ int https_ota_rollback(void)
     ret = ota_rollback();
     return ret;
 }
-

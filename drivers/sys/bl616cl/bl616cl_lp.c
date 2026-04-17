@@ -1,4 +1,7 @@
 #include "bl_lp_internal.h"
+#include "bl616cl_ext_dcdc.h"
+
+static struct bflb_device_s *gpio;
 
 ATTR_TCM_CONST_SECTION iot2lp_para_t *const iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
 
@@ -433,6 +436,9 @@ void bl_lp_fw_init(void)
     lp_fw_clock_cfg.xclk_sel = HBN_MCU_XCLK_XTAL;
     iot2lp_para->clock_config = &lp_fw_clock_cfg;
 
+
+    iot2lp_para->dcdc_sel_pin = BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED;
+
     /* lpfw info */
     memset(&lp_info_struct, 0, sizeof(lp_info_struct));
     iot2lp_para->lp_info = &lp_info_struct;
@@ -532,6 +538,124 @@ static uint32_t get_dtim_num(uint32_t period_dtim, uint32_t bcn_past_num, lp_fw_
 }
 
 
+/* Get flash IO select from efuse */
+static uint32_t ATTR_TCM_SECTION get_sf_pin_select(void)
+{
+    uint32_t tmpVal;
+    /* Read from efuse sw usage 0 */
+    tmpVal = BL_RD_WORD(0x20056000 + 0x74);
+    return (tmpVal >> 5) & 0x3f;
+}
+
+/* Check if the pin is flash IO */
+static int ATTR_TCM_SECTION is_flash_io(uint8_t pin, uint32_t sf_pin_select)
+{
+    if (sf_pin_select & (1 << 2)) {
+        /* Flash IO is GPIO 6-11 */
+        return (pin >= GPIO_PIN_6 && pin <= GPIO_PIN_11);
+    } else if (sf_pin_select & (1 << 3)) {
+        /* Flash IO is GPIO 24-29 */
+        return (pin >= GPIO_PIN_24 && pin <= GPIO_PIN_29);
+    }
+    return 0;
+}
+
+static int ATTR_TCM_SECTION is_psram_io(uint8_t pin)
+{
+    return (pin >= 46 && pin <= 57);
+}
+
+static int ATTR_TCM_SECTION is_uart_io(uint8_t pin)
+{
+    if (lp_fw_uart_cfg.debug_log_en == 1) {
+        return (pin == lp_fw_uart_cfg.uart_tx_io) || (pin == lp_fw_uart_cfg.uart_rx_io);
+    } else {
+        return 0;
+    }
+}
+
+/* Configure GPIO for PDS low power and enable keep */
+static void ATTR_TCM_SECTION bl_pds_gpio_keep_enable(void)
+{
+    uint32_t sf_pin_select;
+
+    /* Get flash IO configuration and configure GPIO for low power */
+    sf_pin_select = get_sf_pin_select();
+
+    gpio = bflb_device_get_by_name("gpio");
+
+    /* Enable all PDS GPIO keep for low power consumption */
+    for (uint8_t i = GPIO_PIN_6; i < GPIO_PIN_MAX; i++) {
+        if (!is_flash_io(i, sf_pin_select) && !is_psram_io(i) && !is_uart_io(i)) {
+            if (bl_ext_dcdc_pds_is_keep_pin(i)) {
+                PDS_Enable_GPIO_Keep(i);
+                continue;
+            }
+            bflb_gpio_init(gpio, i, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
+            PDS_Enable_GPIO_Keep(i);
+        }
+    }
+}
+
+static int board_dcdc_enter_pds(void *arg)
+{
+    uint8_t pin = (uintptr_t)arg;
+
+    HBN_SW_Set_Ldo_Soc_Vout(HBN_LDO_SOC_LEVEL_0P900V);
+
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
+    GLB_Set_MCU_System_CLK_Div(1, 0);
+
+    if (gpio == NULL) {
+        gpio = bflb_device_get_by_name("gpio");
+    }
+    
+    bflb_gpio_init(gpio, pin, GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_reset(gpio, pin);
+
+    arch_delay_us(100);
+
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
+    HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
+
+    return 0;
+}
+
+static int board_dcdc_exit_pds(void *arg)
+{
+    uint8_t pin = (uintptr_t)arg;
+
+    if (gpio == NULL) {
+        gpio = bflb_device_get_by_name("gpio");
+    }
+    
+    bflb_gpio_init(gpio, pin, GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_0);
+
+    bflb_gpio_set(gpio, pin);
+    return 0;
+}
+
+void board_ext_dcdc_init(void)
+{
+    iot2lp_para->dcdc_sel_pin = BL_EXT_DCDC_OUTPUT_CTRL_PIN;
+
+    if (BL_EXT_DCDC_OUTPUT_CTRL_PIN == BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED) {
+        return;
+    }
+
+    bl_ext_dcdc_pds_cfg_t cfg = {
+        .keep_pin_num = 1,
+        .keep_pins = { BL_EXT_DCDC_OUTPUT_CTRL_PIN },
+        .settle_time_us = 200,
+        .enter_pds_cb = board_dcdc_enter_pds,
+        .enter_pds_arg = (void *)(uintptr_t)BL_EXT_DCDC_OUTPUT_CTRL_PIN,
+        .exit_pds_cb = board_dcdc_exit_pds,
+        .exit_pds_arg = (void *)(uintptr_t)BL_EXT_DCDC_OUTPUT_CTRL_PIN,
+    };
+
+    /* Enable GPIO select EXT DCDC output */
+    bl_ext_dcdc_pds_register(&cfg);
+}
 
 int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 {
@@ -551,6 +675,8 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         return -1;
     }
 
+    board_ext_dcdc_init();
+
     bl_lp_debug_record_time(iot2lp_para, "bl_lp_fw_enter");
 
     // rtc_wakeup_cmp_cnt = bl_lp_fw_cfg->rtc_wakeup_cmp_cnt;
@@ -565,6 +691,12 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     iot2lp_para->wakeup_source_parameter->rtc_wakeup_cnt = 0;
 
     LP_HOOK(pre_user, bl_lp_fw_cfg);
+
+    if (bl_ext_dcdc_pds_prepare_enter() != 0) {
+        BL_LP_LOG("---- dcdc enter ----\r\n");
+
+        return -1;
+    }
 
     __disable_irq();
 
@@ -608,6 +740,9 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     HBN_Pin_WakeUp_Mask(0xFF);
 
     bl616cl_lp_io_wakeup_prepare();
+
+    bl_pds_gpio_keep_enable();
+
     PDS_Set_All_GPIO_Pad_IntClr();
 
     /* app to sleep_pds, update time_info */
@@ -852,6 +987,8 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     /* rc32k code restored */
     HBN_Set_RC32K_R_Code(iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
+
+    bl_ext_dcdc_pds_restore_exit();
 
     LP_HOOK(post_sys, iot2lp_para);
 

@@ -620,6 +620,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			if (debug_print)
 				wpa_dbg(wpa_s, MSG_DEBUG,
 					"   skip RSN IE - PTK cipher mismatch");
+			wpa_msg_ctrl(wpa_s, MSG_INFO, AP_STA_ENCRYPTION_TYPE_MISMATCH);
 			break;
 		}
 
@@ -627,6 +628,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			if (debug_print)
 				wpa_dbg(wpa_s, MSG_DEBUG,
 					"   skip RSN IE - GTK cipher mismatch");
+			wpa_msg_ctrl(wpa_s, MSG_INFO, AP_STA_ENCRYPTION_TYPE_MISMATCH);
 			break;
 		}
 
@@ -709,6 +711,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			if (debug_print)
 				wpa_dbg(wpa_s, MSG_DEBUG,
 					"   skip WPA IE - PTK cipher mismatch");
+			wpa_msg_ctrl(wpa_s, MSG_INFO, AP_STA_ENCRYPTION_TYPE_MISMATCH);
 			break;
 		}
 
@@ -716,6 +719,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			if (debug_print)
 				wpa_dbg(wpa_s, MSG_DEBUG,
 					"   skip WPA IE - GTK cipher mismatch");
+			wpa_msg_ctrl(wpa_s, MSG_INFO, AP_STA_ENCRYPTION_TYPE_MISMATCH);
 			break;
 		}
 
@@ -2788,13 +2792,9 @@ static int wpa_supplicant_use_own_rsne_params(struct wpa_supplicant *wpa_s,
 	wpa_dbg(wpa_s, MSG_DEBUG,
 		"WPA: AP pairwise cipher 0x%x network pairwise cipher 0x%x; available pairwise cipher 0x%x",
 		ie.pairwise_cipher, ssid->pairwise_cipher, sel);
-	if (ie.pairwise_cipher && !sel) {
-		wpa_supplicant_deauthenticate(
-			wpa_s, WLAN_REASON_PAIRWISE_CIPHER_NOT_VALID);
-		return -1;
-	}
 
-	wpa_s->pairwise_cipher = ie.pairwise_cipher;
+	/* Select the best cipher from available options based on priority */
+	wpa_s->pairwise_cipher = wpa_pick_pairwise_cipher(sel, 0);
 	wpa_sm_set_param(wpa_s->wpa, WPA_PARAM_PAIRWISE,
 			 wpa_s->pairwise_cipher);
 	wpa_dbg(wpa_s, MSG_DEBUG, "WPA: using PTK %s",

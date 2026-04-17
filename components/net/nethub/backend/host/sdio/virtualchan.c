@@ -309,7 +309,7 @@ int nethub_vchan_backend_init(mr_msg_ctrl_priv_t *msg_ctrl)
         .upld_done_cb = NULL,
         .task_stack_size = 512,
         .task_priority = 10,
-        .task_period_max_ms = 100,
+        .task_period_max_ms = portMAX_DELAY,
     };
 
     g_virtualchan_priv = mr_virtualchan_init(&virtualchan_cfg);

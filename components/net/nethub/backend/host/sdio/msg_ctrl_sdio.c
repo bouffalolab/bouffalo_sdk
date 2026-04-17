@@ -46,7 +46,7 @@ int msg_ctrl_sdio_init(void)
         .upld_queue_depth = 64,
         .task_priority = 27,
         .task_stack_size = 1024,
-        .task_period_max_ms = 100,
+        .task_period_max_ms = portMAX_DELAY,
         .msg_task_cb = NULL,
     };
 

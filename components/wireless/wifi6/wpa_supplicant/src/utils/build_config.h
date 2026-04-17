@@ -17,6 +17,8 @@
 
 /* Insert configuration defines, e.g., #define EAP_MD5, here, if needed. */
 
+#include "macsw.h"
+
 #define CONFIG_PMK_CACHE_IN_MGMR
 #define CONFIG_EXTRA_WPA_SSID_FLAG
 
@@ -26,9 +28,11 @@
 #define CONFIG_EXTRA_SIZE_OPT
 #define CONFIG_RANDOM_OPT
 #define CONFIG_EAP_SERVER
+#if MACSW_WFA
 #define CONFIG_WNM
 #define CONFIG_MBO
 #define CONFIG_RRM
+#endif
 /* #define CONFIG_DFS */
 
 #define IEEE8021X_EAPOL
@@ -63,8 +67,6 @@
 #define CONFIG_CRYPTO_INTERNAL
 #endif /* USE_INTERNAL_CRYPTO */
 #endif /* CONFIG_WIN32_DEFAULTS */
-
-#include "macsw.h"
 
 #define CONFIG_MACSW
 #ifndef CONFIG_LWIP
@@ -101,7 +103,9 @@
 #define CONFIG_NO_VLAN
 #define EAP_SERVER
 #define EAP_SERVER_IDENTITY
+#if MACSW_WFA
 #define CONFIG_WNM_AP
+#endif
 #define CONFIG_WPS
 #define IEEE8021X_EAPOL
 #define EAP_WSC

@@ -14,7 +14,6 @@ ifeq ($(CHIP),bl602)
     CONFIG_BT_SETTINGS =y
     CONFIG_ROMAPI =y
     CONFIG_BL_SDK =y
-    CONFIG_BFLB_OTA =y
 else ifeq ($(CHIP),bl616cl)
     CONFIG_BTBLECONTROLLER_LIB =m2s1
     CONFIG_BT_MESH =y

@@ -6,12 +6,17 @@
 #include "bl616.h"
 #elif defined(BL702L)
 #include "bl702l.h"
+#elif defined(BL702)
+#include "bl702.h"
 #endif
 
 #include <bl_sys.h>
 #include <bflb_mtd.h>
 
 #include <lmac154.h>
+#if defined (BL616) || defined (BL702L)
+#include <lmac154_fpt.h>
+#endif
 #include <zb_timer.h>
 
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
@@ -38,6 +43,9 @@ void lmac154_app_init(void)
 #if defined(BL702L)
     lmac154_setTxRxTransTime(0xA0);
 #endif
+#if OPENTHREAD_FTD && (defined (BL616) || defined(BL702L))
+    lmac154_setFramePendingMode(LMAC154_FPT_ANY);
+#endif
 
     zb_timer_cfg(bflb_mtimer_get_time_us() >> LMAC154_US_PER_SYMBOL_BITS);
     lmac154_disableRx();
@@ -61,31 +69,12 @@ void vApplicationTickHook( void )
 
 static void prvInitTask(void *pvParameters)
 {
-    otRadio_opt_t opt;
-
     lmac154_app_init();
-
-    opt.byte = 0;
-
-    opt.bf.isCoexEnable = false;
-#if OPENTHREAD_FTD
-    opt.bf.isFtd = true;
-#endif
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    opt.bf.isLinkMetricEnable = true;
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    opt.bf.isCSLReceiverEnable = true;
-#endif
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    opt.bf.isTimeSyncEnable = true;
-#endif
 
     struct bflb_device_s *uart0 = bflb_device_get_by_name("uart0");
     ot_uart_init(uart0);
 
-    otrStart(opt);
+    otrStart();
 
     vTaskDelete(NULL);
 }

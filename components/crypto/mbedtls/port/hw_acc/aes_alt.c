@@ -41,7 +41,7 @@
 #endif
 
 #include "mbedtls/platform.h"
-#include "sec_mutex.h"
+#include "bflb_sec_mutex.h"
 
 /* Parameter validation macros based on platform_util.h */
 #ifdef CONFIG_MBEDTLS_V2

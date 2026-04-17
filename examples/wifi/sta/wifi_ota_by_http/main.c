@@ -23,15 +23,11 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "timers.h"
 
 #include <lwip/tcpip.h>
-#include <lwip/sockets.h>
-#include <lwip/netdb.h>
 
 #include "wifi_mgmr_ext.h"
 
-#include "bflb_irq.h"
 #include "bflb_uart.h"
 #include "bflb_flash.h"
 
@@ -41,9 +37,6 @@
 #include "shell.h"
 #include "partition.h"
 
-#include "bflb_wdg.h"
-#include "ring_buffer.h"
-
 #define DBG_TAG "MAIN"
 #include "log.h"
 #include "async_event.h"
@@ -51,11 +44,6 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
-#define WIFI_STACK_SIZE  (1536)
-#define TASK_PRIORITY_FW (16)
-
-#define AUTO_CONNECT_WIFI (0)
 
 /****************************************************************************
  * Private Types
@@ -65,31 +53,7 @@
  * Private Data
  ****************************************************************************/
 
-struct bflb_device_s *gpio;
 static struct bflb_device_s *uart0;
-
-#if AUTO_CONNECT_WIFI
-struct bflb_device_s *wdg;
-static TaskHandle_t ota_task_handle;
-#endif
-
-#if AUTO_CONNECT_WIFI
-// clang-format off
-/* config your wifi ssid and password */
-static const uint8_t wifi_sta_connet[] = "wifi_sta_connect 21a 12344321\r";
-/* config your ota server and port */
-static const uint8_t wifi_ota_test[] = "wifi_ota_test 192.168.123.120 3365 /wifi_ota_bl616.bin.ota\r";
-/* reboot command */
-// static const uint8_t send_buf1[] = "reboot\r";
-// clang-format on
-
-extern Ring_Buffer_Type shell_rb;
-extern void shell_release_sem(void);
-
-SemaphoreHandle_t sem_wifi_init_done;
-SemaphoreHandle_t sem_wifi_connect_done;
-SemaphoreHandle_t sem_wifi_disconnect;
-#endif
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
@@ -173,30 +137,6 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
     }
 }
 
-
-#if AUTO_CONNECT_WIFI
-void ota_task(void *param)
-{
-    if (xSemaphoreTake(sem_wifi_init_done, portMAX_DELAY) == pdTRUE) {
-        Ring_Buffer_Write(&shell_rb, wifi_sta_connet, sizeof(wifi_sta_connet) - 1);
-        shell_release_sem();
-    }
-
-    if (xSemaphoreTake(sem_wifi_connect_done, portMAX_DELAY) == pdTRUE) {
-        Ring_Buffer_Write(&shell_rb, wifi_ota_test, sizeof(wifi_ota_test) - 1);
-        shell_release_sem();
-    }
-
-    while (1) {
-        if (xSemaphoreTake(sem_wifi_disconnect, portMAX_DELAY) == pdTRUE) {
-            Ring_Buffer_Write(&shell_rb, wifi_sta_connet, sizeof(wifi_sta_connet) - 1);
-            shell_release_sem();
-        }
-        vTaskDelay(10000);
-    }
-}
-#endif
-
 static void wifi_ota_dump_partition()
 {
     pt_table_stuff_config pt_table_stuff[2];
@@ -240,12 +180,6 @@ int main(void)
 {
     board_init();
 
-#if AUTO_CONNECT_WIFI
-    sem_wifi_init_done = xSemaphoreCreateBinary();
-    sem_wifi_connect_done = xSemaphoreCreateBinary();
-    sem_wifi_disconnect = xSemaphoreCreateBinary();
-#endif
-
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 
@@ -260,24 +194,6 @@ int main(void)
 
     tcpip_init(NULL, NULL);
     xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
-
-#if AUTO_CONNECT_WIFI
-    printf("Config Watchdog...\r\n");
-    struct bflb_wdg_config_s wdg_cfg;
-    wdg_cfg.clock_source = WDG_CLKSRC_32K;
-    wdg_cfg.clock_div = 31;
-    wdg_cfg.comp_val = 30000;
-    wdg_cfg.mode = WDG_MODE_RESET;
-
-    wdg = bflb_device_get_by_name("watchdog");
-    bflb_wdg_init(wdg, &wdg_cfg);
-
-    bflb_wdg_start(wdg);
-    bflb_wdg_reset_countervalue(wdg);
-    printf("Next delay 30s, wdg will reset it.\r\n");
-
-    xTaskCreate(ota_task, "ota_task", 2048, NULL, 15, &ota_task_handle);
-#endif
 
     vTaskStartScheduler();
 

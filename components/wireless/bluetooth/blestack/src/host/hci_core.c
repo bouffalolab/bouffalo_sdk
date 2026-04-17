@@ -6487,7 +6487,11 @@ int bt_force_disable(void)
 
 int bt_disable(void)
 {  
+    #if (CONFIG_BLE_USING_DYNAMIC_RAM)
+    if (!p_bt_dev || !atomic_test_bit(bt_dev.flags, BT_DEV_ENABLE))
+    #else
     if (!atomic_test_bit(bt_dev.flags, BT_DEV_ENABLE))
+    #endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
         return -EALREADY;
         
     if(

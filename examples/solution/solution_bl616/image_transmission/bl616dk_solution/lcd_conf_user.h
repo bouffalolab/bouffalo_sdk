@@ -315,7 +315,7 @@
         0: R-G-B
         1: B-G-R
     */
-   #define ST7796_DBI_COLOR_ORDER 0
+   #define ST7796_DBI_COLOR_ORDER 1
 
     /* Color reversal, Some screens are required
         0: disable

@@ -31,7 +31,7 @@
 #include "mbedtls/error.h"
 
 #include "mbedtls/platform.h"
-#include "sec_mutex.h"
+#include "bflb_sec_mutex.h"
 
 #ifdef CONFIG_MBEDTLS_V2
 #define SHA512_VALIDATE_RET(cond)                           \

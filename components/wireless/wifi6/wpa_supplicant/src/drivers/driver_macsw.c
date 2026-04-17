@@ -1522,12 +1522,18 @@ static int wpa_macsw_driver_get_capa(void *priv, struct wpa_driver_capa *capa)
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_msg cmd;
-	struct cfgmacsw_msg resp;
+	struct cfgmacsw_get_capa_resp resp;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_GET_CAPA_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_GET_CAPA_RESP, sizeof(resp));
 
 	os_memset(capa, 0, sizeof(*capa));
+
+	// Send command to get actual cipher support from fhost
+	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr)) {
+		wpa_printf(MSG_ERROR, "Failed to get capabilities from fhost");
+		return -1;
+	}
 
 	capa->key_mgmt = WPA_DRIVER_CAPA_KEY_MGMT_WPA |
 			 WPA_DRIVER_CAPA_KEY_MGMT_WPA_PSK |
@@ -1535,13 +1541,24 @@ static int wpa_macsw_driver_get_capa(void *priv, struct wpa_driver_capa *capa)
 			 WPA_DRIVER_CAPA_KEY_MGMT_WPA2_PSK |
 			 WPA_DRIVER_CAPA_KEY_MGMT_SUITE_B |
 			 WPA_DRIVER_CAPA_KEY_MGMT_SUITE_B_192;
-	capa->enc = WPA_DRIVER_CAPA_ENC_WEP40 |
-		    WPA_DRIVER_CAPA_ENC_WEP104 |
-		    WPA_DRIVER_CAPA_ENC_TKIP |
+
+	// Build cipher capabilities from fhost response
+	capa->enc = WPA_DRIVER_CAPA_ENC_WEP40 | WPA_DRIVER_CAPA_ENC_WEP104;
+
+	if (resp.cipher_support & CFGMACSW_CIPHER_TKIP)
+		capa->enc |= WPA_DRIVER_CAPA_ENC_TKIP;
+	if (resp.cipher_support & CFGMACSW_CIPHER_CCMP)
+		capa->enc |= WPA_DRIVER_CAPA_ENC_CCMP;
+	if (resp.cipher_support & CFGMACSW_CIPHER_CCMP_256)
+		capa->enc |= WPA_DRIVER_CAPA_ENC_CCMP_256;
+	if (resp.cipher_support & CFGMACSW_CIPHER_GCMP_128)
+		capa->enc |= WPA_DRIVER_CAPA_ENC_GCMP;
+	if (resp.cipher_support & CFGMACSW_CIPHER_GCMP_256)
+		capa->enc |= WPA_DRIVER_CAPA_ENC_GCMP_256;
+
 #if MACSW_MFP
-		    WPA_DRIVER_CAPA_ENC_BIP |
+	capa->enc |= WPA_DRIVER_CAPA_ENC_BIP;
 #endif
-		    WPA_DRIVER_CAPA_ENC_CCMP;
 
         capa->auth = WPA_DRIVER_AUTH_OPEN |
                      WPA_DRIVER_AUTH_SHARED |
@@ -1604,7 +1621,6 @@ static int wpa_macsw_driver_get_capa(void *priv, struct wpa_driver_capa *capa)
 	//capa->max_conc_chan_5_0 = 0;
 	capa->max_csa_counters = 2;
 
-	fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
 	return 0;
 }
 

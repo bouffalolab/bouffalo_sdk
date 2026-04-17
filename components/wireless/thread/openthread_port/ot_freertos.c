@@ -8,18 +8,9 @@
 #include <openthread_port.h>
 #include <openthread/tasklet.h>
 #include <ot_radio_trx.h>
-#include <ot_utils_ext.h>
 
-#ifdef CFG_OT_USE_ROM_CODE
-extern ot_system_event_t            ot_system_event_var;
-extern SemaphoreHandle_t            ot_extLock;
-extern otInstance *                 ot_instance;
-extern TaskHandle_t                 ot_taskHandle;
-
-#else
 ot_system_event_t                   ot_system_event_var = OT_SYSTEM_EVENT_NONE;
 static SemaphoreHandle_t            ot_extLock          = NULL;
-static otInstance *                 ot_instance         = NULL;
 static TaskHandle_t                 ot_taskHandle       = NULL;
 
 uint32_t otrEnterCrit(void) 
@@ -97,7 +88,6 @@ void otrNotifyEvent(ot_system_event_t sevent)
         xTaskNotifyGive(ot_taskHandle);
     }
 }
-#endif
 
 __attribute__((weak)) void ot_serialProcess(ot_system_event_t sevent) {}
 __attribute__((weak)) void otrAppProcess(ot_system_event_t sevent) {}
@@ -114,7 +104,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 
 otInstance *otrGetInstance()
 {
-    return ot_instance;
+    return ot_radio_ctx.instance;
 }
 
 void otSysProcessDrivers(otInstance *aInstance) 
@@ -130,56 +120,51 @@ void otSysProcessDrivers(otInstance *aInstance)
 
 void otrStackInit(void)
 {
-    ot_instance = otInstanceInitSingle();
-    assert(ot_instance);
+    ot_radio_ctx.instance = otInstanceInitSingle();
+    assert(ot_radio_ctx.instance);
 }
 
-#if defined(CFG_PDS_ENABLE)
-extern void otrStackTask(void *p_arg);
-#else
 static void otrStackTask(void *p_arg)
 {
-    /** This task is an example to handle both main event loop of openthread task lets and 
+    /** This task is an example to handle both main event loop of openthread task lets and
      * hardware drivers for openthread, such as radio, alarm timer and also uart shell.
      * Customer can implement own task for both of two these missions with other privoded APIs.  */
-    otRadio_opt_t opt;
+    (void)p_arg;
 
     otrLock();
     otrUnlock();
-    
-    opt.byte = (uint8_t)((uint32_t)p_arg);
+
     ot_system_event_var = OT_SYSTEM_EVENT_NONE;
 
     OT_THREAD_SAFE (
         ot_alarmInit();
-        ot_radioInit(opt);
+        ot_radioInit();
         otrStackInit();
 
-        otrInitUser(ot_instance);
+        otrInitUser(ot_radio_ctx.instance);
     );
 
     while (true)
     {
         OT_THREAD_SAFE (
-            otTaskletsProcess(ot_instance);
-            otSysProcessDrivers(ot_instance);
-            otbr_netif_process(ot_instance);
+            otTaskletsProcess(ot_radio_ctx.instance);
+            otSysProcessDrivers(ot_radio_ctx.instance);
+            otbr_netif_process(ot_radio_ctx.instance);
         );
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
 
-    otInstanceFinalize(ot_instance);
-    ot_instance = NULL;
+    otInstanceFinalize(ot_radio_ctx.instance);
+    ot_radio_ctx.instance = NULL;
 
     vTaskDelete(NULL);
 }
-#endif
 
-void otrStart(otRadio_opt_t opt)
+void otrStart(void)
 {
     ot_extLock = xSemaphoreCreateMutex();
     assert(ot_extLock != NULL);
 
-    xTaskCreate(otrStackTask, "threadTask", OT_TASK_SIZE, (void *)((uint32_t)opt.byte), 
+    xTaskCreate(otrStackTask, "threadTask", OT_TASK_SIZE, NULL,
                 OT_TASK_PRORITY, &ot_taskHandle);
 }

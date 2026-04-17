@@ -322,13 +322,21 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
     req.payload_len = request->payload_len;
     req.optional_headers_cb = request->optional_headers_cb;
     req.optional_headers = request->optional_headers;
+    req.cancel = request->cancel;
 
     ret = http_client_req(client.socket, &req, timeout, user_data);
     if (ret < 0) {
-        LOG_ERR("http_client_req fail ret:%d, fd=%d, host=%s port=%d\r\n",
-                ret, https_wrapper_socketfd_get((https_wrapper_handle_t)client.socket),
-                client.host ? client.host : "(null)",
-                client.port);
+        if (ret == -ECANCELED && request->cancel != NULL) {
+            LOG_DBG("http_client_req canceled, fd=%d, host=%s port=%d\r\n",
+                    https_wrapper_socketfd_get((https_wrapper_handle_t)client.socket),
+                    client.host ? client.host : "(null)",
+                    client.port);
+        } else {
+            LOG_ERR("http_client_req fail ret:%d, fd=%d, host=%s port=%d\r\n",
+                    ret, https_wrapper_socketfd_get((https_wrapper_handle_t)client.socket),
+                    client.host ? client.host : "(null)",
+                    client.port);
+        }
     }
 
 __end:

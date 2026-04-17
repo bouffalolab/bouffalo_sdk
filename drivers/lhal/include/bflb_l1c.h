@@ -17,6 +17,9 @@
 #else
 #define BFLB_CACHE_LINE_SIZE 32
 #endif
+#else
+/* just align to word */
+#define BFLB_CACHE_LINE_SIZE 4
 #endif
 
 /**

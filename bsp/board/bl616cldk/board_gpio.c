@@ -264,6 +264,56 @@ void board_pec_uart_gpio_init(void)
     bflb_gpio_init(gpio, PEC_UART_RX_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
+void board_pec_qspi_cam_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, PEC_QSPI_CAM_D0_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, PEC_QSPI_CAM_D1_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, PEC_QSPI_CAM_D2_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, PEC_QSPI_CAM_D3_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, PEC_QSPI_CAM_PCLK_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* PWDN GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_set(gpio, GPIO_PIN_30);
+    bflb_mtimer_delay_ms(10);
+    bflb_gpio_reset(gpio, GPIO_PIN_30);
+    bflb_mtimer_delay_ms(10);
+
+    /* MCLK CLKOUT */
+    GLB_Set_Chip_Clock_Out1_Sel(GLB_CHIP_CLK_OUT_1_CAM_REF_CLK);
+    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+
+    /* I2C0 */
+    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_pec_dpi_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+    const uint8_t pins[] = { PEC_DPI_PCLK_PIN, PEC_DPI_VSYNC_PIN, PEC_DPI_HSYNC_PIN, PEC_DPI_DE_PIN,     \
+                             PEC_DPI_DATA0_PIN, PEC_DPI_DATA1_PIN, PEC_DPI_DATA2_PIN, PEC_DPI_DATA3_PIN, \
+                             PEC_DPI_DATA4_PIN, PEC_DPI_DATA5_PIN, PEC_DPI_DATA6_PIN, PEC_DPI_DATA7_PIN, };
+
+    gpio = bflb_device_get_by_name("gpio");
+    for (int i = 0; i < sizeof(pins) / sizeof(pins[0]); i++) {
+        bflb_gpio_init(gpio, pins[i], GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    }
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_OUTPUT | GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_OUTPUT | GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_OUTPUT | GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_OUTPUT | GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_OUTPUT | GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_reset(gpio, GPIO_PIN_2); /* LCD_POWER_CONTROL */
+    bflb_gpio_set(gpio, GPIO_PIN_3); /* LCD_Display */
+    bflb_gpio_set(gpio, GPIO_PIN_4); /* LCD_HDIR */
+    bflb_gpio_set(gpio, GPIO_PIN_5); /* LCD_VDIR */
+    bflb_gpio_set(gpio, GPIO_PIN_30); /* LCD_K */
+}
+
 void board_audio_pll_config_for_rate(unsigned int samplerate_hz)
 {
     switch (samplerate_hz) {

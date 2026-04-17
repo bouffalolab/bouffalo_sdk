@@ -1,4 +1,7 @@
 # Changes
+## 2026-04-17
+1.[blestack] serialize mtu and data len exchange for oad and atvv.
+
 ## 2026-04-08
 1. [L2CAP BR] Fix stale CID on reconnection: clear channel CIDs when destroyed so reused channel structs get fresh allocation on next connection.
 2. [host/conn] Fix connection reference leak after BR/EDR role switch: track original creation role to correctly release the sticky reference regardless of post-RSW live role.

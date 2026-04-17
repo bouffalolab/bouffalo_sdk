@@ -3,6 +3,14 @@ import ssl
 import argparse
 import os
 
+TLS_CIPHERS = (
+    'ECDHE-RSA-AES128-GCM-SHA256:'
+    'ECDHE-RSA-AES256-GCM-SHA384:'
+    'AES128-SHA:'
+    'AES256-SHA:'
+    '@SECLEVEL=0'
+)
+
 app = Flask(__name__)
 
 # Set the allowed root directory (current directory)
@@ -99,6 +107,8 @@ def parse_args():
     parser.add_argument('--https', action='store_true', help='Enable HTTPS')
     parser.add_argument('--cert', help='SSL certificate file')
     parser.add_argument('--key', help='SSL private key file')
+    parser.add_argument('--ca', help='CA certificate used to verify client certificates')
+    parser.add_argument('--require-client-cert', action='store_true', help='Require client certificate authentication')
     return parser.parse_args()
 
 def generate_self_signed_cert():
@@ -116,13 +126,22 @@ def generate_self_signed_cert():
 if __name__ == '__main__':
     args = parse_args()
 
+    if args.require_client_cert and not args.ca:
+        raise SystemExit('--require-client-cert requires --ca')
+
     if args.https:
         cert_file, key_file = args.cert, args.key
         if not cert_file or not key_file:
             cert_file, key_file = generate_self_signed_cert()
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+        ssl_context.maximum_version = ssl.TLSVersion.TLSv1_2
         ssl_context.load_cert_chain(cert_file, key_file)
-        ssl_context.set_ciphers('ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384')
+        ssl_context.set_ciphers(TLS_CIPHERS)
+        if args.ca:
+            ssl_context.load_verify_locations(cafile=args.ca)
+        if args.require_client_cert:
+            ssl_context.verify_mode = ssl.CERT_REQUIRED
     else:
         ssl_context = None
 
@@ -132,10 +151,16 @@ if __name__ == '__main__':
     print("1. Access paths like /path/to/file.txt to get file content")
     print("2. Other HTTP methods (POST/PUT etc) or non-file paths will return request info")
     print("3. Supports all HTTP methods and arbitrary paths")
+    if args.https:
+        print(f"4. Server certificate: {cert_file}")
+        if args.require_client_cert:
+            print(f"5. Client certificate verification enabled with CA: {args.ca}")
 
     app.run(
         host=args.host,
         port=args.port,
         ssl_context=ssl_context,
-        debug=True
+        debug=False,
+        use_reloader=False,
+        threaded=True
     )

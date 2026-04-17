@@ -99,7 +99,7 @@ SECTIONS
     {
         KEEP(*(.fw_header))
 #if !CONFIG_FLASH_XIP_ADDRESS
-        LONG(CONFIG_RAM_ADDRESS)
+        LONG(RAM_ADDRESS)
         LONG(0x48474553)
 #endif
     } > fw_header
@@ -195,7 +195,7 @@ SECTIONS
         . = ALIGN(4);
 
 #if defined(CONFIG_WFA) && !defined(CONFIG_PSRAM_COPY_CODE)
-	INCLUDE run_in_ram_function.ld.in
+        INCLUDE run_in_ram_function.ld.in
 
         *libfreertos.a:*.o*(.text*)
         *libfreertos.a:*.o*(.rodata.CSWTCH*)
@@ -446,12 +446,12 @@ SECTIONS
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         . = ALIGN(4); __mem_noinit_sections = ABSOLUTE(.);
-	LONG(__ram_nocache_noinit_start__); LONG(__ram_nocache_noinit_end__);
-	LONG(__ram_noinit_start__);         LONG(__ram_noinit_end__);
-	LONG(__psram_noinit_data_start__);       LONG(__psram_noinit_data_end__);
+        LONG(__ram_nocache_noinit_start__); LONG(__ram_nocache_noinit_end__);
+        LONG(__ram_noinit_start__);         LONG(__ram_noinit_end__);
+        LONG(__psram_noinit_data_start__);       LONG(__psram_noinit_data_end__);
         LONG(0xffffffff);                   LONG(0xffffffff);
 
-	. = ALIGN(4); _dump_sections = ABSOLUTE(.);
+        . = ALIGN(4); _dump_sections = ABSOLUTE(.);
         LONG(ORIGIN(ram_nocache));          LONG(__ram_nocache_end__ - ORIGIN(ram_nocache));
         LONG(ORIGIN(ram) + (__ram_nocache_end__ - ORIGIN(ram_nocache)));
         LONG(LENGTH(ram) - (__ram_nocache_end__ - ORIGIN(ram_nocache)));
@@ -460,6 +460,10 @@ SECTIONS
         LONG(ORIGIN(ram_psram));            LONG(LENGTH(ram_psram));
 #endif
         LONG(0xffffffff);                   LONG(0xffffffff);
+
+#if defined(CONFIG_WIFI6) && !defined(CONFIG_PSRAM_COPY_CODE)
+        INCLUDE macsw_cache_affinity.ld.in
+#endif
 
         *(.text*)
         *(.rodata*)

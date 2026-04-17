@@ -99,6 +99,17 @@ typedef void (*http_response_cb_t)(struct http_response *rsp,
 				   void *user_data);
 
 /**
+ * @typedef http_cancel_cb_t
+ * @brief Optional callback used to let the client abort an in-flight receive loop.
+ *
+ * @param user_data User specified data specified in http_client_req()
+ *
+ * @return non-zero if http_client_req() should stop receiving and return
+ *         -ECANCELED, zero to continue normally.
+ */
+typedef int (*http_cancel_cb_t)(void *user_data);
+
+/**
  * HTTP response from the server.
  */
 struct http_response {
@@ -316,6 +327,11 @@ struct http_request {
 	 * headers will be placed into this field.
 	 */
 	const char **optional_headers;
+
+	/** Optional callback to stop receiving more response data.
+	 * If NULL, the request will continue until completion or socket error.
+	 */
+	http_cancel_cb_t cancel;
 };
 
 /**

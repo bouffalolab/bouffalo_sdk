@@ -467,7 +467,7 @@ static void sme_send_authentication(struct wpa_supplicant *wpa_s,
 					      &wpa_s->sme.assoc_req_ie_len)) {
 			wpa_msg(wpa_s, MSG_WARNING, "SME: Failed to set WPA "
 				"key management and encryption suites");
-			wpas_connect_work_done(wpa_s);
+			wpas_connection_failed(wpa_s, bss->bssid);
 			return;
 		}
 #ifdef CONFIG_HS20
@@ -480,7 +480,7 @@ static void sme_send_authentication(struct wpa_supplicant *wpa_s,
 					      &wpa_s->sme.assoc_req_ie_len)) {
 			wpa_msg(wpa_s, MSG_WARNING, "SME: Failed to set WPA "
 				"key management and encryption suites");
-			wpas_connect_work_done(wpa_s);
+			wpas_connection_failed(wpa_s, bss->bssid);
 			return;
 		}
 #endif /* CONFIG_HS20 */
@@ -501,7 +501,7 @@ static void sme_send_authentication(struct wpa_supplicant *wpa_s,
 			wpa_msg(wpa_s, MSG_WARNING, "SME: Failed to set WPA "
 				"key management and encryption suites (no "
 				"scan results)");
-			wpas_connect_work_done(wpa_s);
+			wpas_connection_failed(wpa_s, bss ? bss->bssid : NULL);
 			return;
 		}
 #ifdef CONFIG_WPS

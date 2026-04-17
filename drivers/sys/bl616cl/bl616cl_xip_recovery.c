@@ -72,6 +72,19 @@ static void bl_lp_xip_get_flash_clock(uint8_t *flash_clk, uint8_t *flash_clk_div
     *flash_clk_div = Clock_Get_SF_Div_Val();
 }
 
+static uint8_t bl_lp_xip_get_flash_pin_cfg(void)
+{
+    uint32_t flash_pin_cfg;
+
+    flash_pin_cfg = (BL_RD_WORD(0x20056000 + 0x74) >> 5) & 0x3F;
+
+    if (flash_pin_cfg == 0x3F) {
+        return SF_IO_EXT_SF2;
+    } else {
+        return (uint8_t)flash_pin_cfg;
+    }
+}
+
 static void bl_lp_tzc_para_save(void)
 {
     iot2lp_para->tzc_cfg = &tzc_info;
@@ -94,7 +107,7 @@ void bl_lp_xip_para_save(void)
     g_flash_para.flash_clk = flash_clk;
     g_flash_para.flash_clk_div = flash_clk_div;
     g_flash_para.flash_offset = bflb_sf_ctrl_get_flash_image_offset(0, SF_CTRL_FLASH_BANK0);
-    g_flash_para.flash_pin_cfg = (BL_RD_WORD(0x20056000 + 0x74) >> 5) & 0x3F;
+    g_flash_para.flash_pin_cfg = bl_lp_xip_get_flash_pin_cfg();
 
     /* flash io cs clk delay info save */
     bflb_sf_ctrl_get_flash_io_cs_clk_delay((struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)&io_cs_delay_cfg);

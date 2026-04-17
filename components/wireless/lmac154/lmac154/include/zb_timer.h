@@ -5,6 +5,13 @@
 
 #define ZB_TIMER_CH_NUM            6
 #define ZB_TIMER_US_PER_TICK       16
+#define ZB_TIMER_BITNUM_PER_TICK   4
+
+#define ZB_TIMER_ZIGBEE_0
+#define ZB_TIMER_ZIGBEE_1
+#define ZB_TIMER_THREAD_MS 2
+#define ZB_TIMER_THREAD_US 3
+#define ZB_TIMER_THREAD_PDS 4
 
 typedef void (*zb_timer_cb_t)(void);
 

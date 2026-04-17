@@ -49,6 +49,7 @@ CONFIG_MACSW_SELECT = default
 
 CONFIG_PWRMGMT               =y
 CONFIG_TICKLESS_CUSTOMIZE    =y
+CONFIG_TICKLESS_EXT          =y
 
 # easyflash
 CONFIG_LITTLEFS              =y

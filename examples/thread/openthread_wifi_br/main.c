@@ -16,9 +16,11 @@
 
 #include <log.h>
 
-#include <zb_timer.h>
-
 #include <lmac154.h>
+#if defined (BL616) || defined (BL702L)
+#include <lmac154_fpt.h>
+#endif
+#include <zb_timer.h>
 
 #include <lwip/tcpip.h>
 #include <lwip/dhcp6.h>
@@ -39,7 +41,6 @@
 #include <openthread_port.h>
 #include <openthread_br.h>
 #include <otbr_rtos_lwip.h>
-#include <ot_utils_ext.h>
 #include <openthread_rest.h>
 
 #include "board.h"
@@ -81,34 +82,15 @@ static void lmac154_app_init(void)
 #if defined(BL702L)
     lmac154_setTxRxTransTime(0xA0);
 #endif
-
+#if (defined (BL616) || defined(BL702L))
+    lmac154_setFramePendingMode(LMAC154_FPT_ANY);
+#endif
     zb_timer_cfg(bflb_mtimer_get_time_us() >> LMAC154_US_PER_SYMBOL_BITS);
     lmac154_disableRx();
 
     lmac154_isr_callback = (irq_callback)lmac154_getInterruptCallback();
     bflb_irq_attach(M154_INT_IRQn, lmac154_isr_callback, NULL);
     bflb_irq_enable(M154_INT_IRQn);
-}
-
-static void app_start_otr(void)
-{
-    otRadio_opt_t opt;
-
-    opt.byte = 0;
-
-    opt.bf.isCoexEnable = true;
-    opt.bf.isFtd = true;
-    #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    opt.bf.isLinkMetricEnable = true;
-    #endif
-    #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    opt.bf.isCSLReceiverEnable = true;
-    #endif
-    #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    opt.bf.isTimeSyncEnable = true;
-    #endif
-
-    otrStart(opt);
 }
 
 static void wifi_event_handler(async_input_event_t ev, void *priv)
@@ -200,7 +182,7 @@ static void prvInitTask(void *pvParameters)
     fhost_init();
 
     LOG_I("Starting Thread ...\r\n");
-    app_start_otr();
+    otrStart();
 
     vTaskDelete(NULL);
 }

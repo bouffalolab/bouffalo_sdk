@@ -11,6 +11,7 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#include "bflb_sec_mutex.h"
 #include "bflb_xip_sflash.h"
 #include "bflb_sf_ctrl.h"
 #include "bflb_acomp.h"
@@ -377,8 +378,15 @@ void board_init(void)
     /* flash init */
     ret = bflb_flash_init();
 #ifndef CONFIG_BOARD_FLASH_LOW_SPEED
+#ifdef CONFIG_BOARD_FLASH_96M
+    /* flash clock frequency increased to 96MHz */
+    if( 1 != board_set_flash_hs(GLB_SFLASH_CLK_WIFIPLL_96M)){
+        board_set_flash_hs(GLB_SFLASH_CLK_MUXPLL_80M);
+    }
+#else
     /* flash clock frequency increased to 80MHz */
-    board_set_flash_80m();
+    board_set_flash_hs(GLB_SFLASH_CLK_MUXPLL_80M);
+#endif
 #endif
 #endif
 
@@ -435,10 +443,7 @@ void board_init(void)
     rtc = bflb_device_get_by_name("rtc");
 #endif
 
-#ifdef CONFIG_MBEDTLS
-    extern void bflb_sec_mutex_init(void);
     bflb_sec_mutex_init();
-#endif
 
     /* unlock */
     bflb_irq_restore(flag);

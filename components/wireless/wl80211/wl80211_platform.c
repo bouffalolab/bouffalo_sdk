@@ -404,6 +404,7 @@ extern void wifi_sta_ps_enter_cmd(int argc, char **argv);
 extern void wifi_sta_ps_exit_cmd(int argc, char **argv);
 extern void wifi_sta_info_cmd(int argc, char **argv);
 extern void set_ipv4_cmd(int argc, char **argv);
+extern void wifi_keyram_cmd(int argc, char **argv);
 
 /* CLI command exports - automatically registered when shell component is enabled */
 SHELL_CMD_EXPORT_ALIAS(wifi_connect_cmd, wifi_sta_connect, wifi station connect);
@@ -421,5 +422,6 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_enter_cmd, wifi_sta_ps_enter, wifi sta enter 
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_exit_cmd, wifi_sta_ps_exit, wifi sta exit ps mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_info_cmd, wifi_sta_info, show wifi sta info);
 SHELL_CMD_EXPORT_ALIAS(set_ipv4_cmd, set_ipv4, set sta netif static ipv4);
+SHELL_CMD_EXPORT_ALIAS(wifi_keyram_cmd, wifi_keyram, show keyram);
 
 #endif /* CONFIG_SHELL */

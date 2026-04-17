@@ -3,22 +3,53 @@
 
 include $(COMPONENT_PATH)/../openthread_common.mk
 
-## These include paths would be exported to project level
-COMPONENT_ADD_INCLUDEDIRS := ../openthread_utils/include
+COMPONENT_PRIV_INCLUDEDIRS := .
 
-## not be exported to project level
-COMPONENT_PRIV_INCLUDEDIRS := ../openthread_utils
+COMPONENT_SRCS := ot_alarm.c ot_frame.c ot_freertos.c ot_linkmetric.c ot_radio.c ot_radio_iot.c  ot_sys_iot.c ot_uart_iot.c 
 
-COMPONENT_SRCS := ../openthread_utils/ot_frame.c ../openthread_utils/ot_linkmetric.c ../openthread_utils/ot_utils.c
+ifndef OT_NCP
+	COMPONENT_SRCS := ${COMPONENT_SRCS} ot_logging.c
+endif
 
-ifeq ($(CONFIG_CHIP_NAME), BL702)
-    CPPFLAGS += -DOT_UTILS_H=\"ot_utils_bl702.h\"
-else ifeq ($(CONFIG_CHIP_NAME), BL702L)
-    CPPFLAGS += -DOT_UTILS_H=\"ot_utils_bl702l.h\"
+ifeq (${CONFIG_EASYFLASH_ENABLE}, 1)
+	COMPONENT_SRCS := ${COMPONENT_SRCS} ot_settings_easyflash.c
+else ifeq (${CONFIG_LITTLEFS}, 1)
+	COMPONENT_SRCS := ${COMPONENT_SRCS} ot_settings_littlefs.c
+	CPPFLAGS += -DLFS_THREADSAFE -DCONFIG_FREERTOS
+else 
+	$(error "Need storage setting: CONFIG_EASYFLASH_ENABLE or CONFIG_LITTLEFS")
+endif
+
+ifeq (${CONFIG_OTBR}, 1)
+	COMPONENT_SRCS := ${COMPONENT_SRCS} otbr_rtos_lwip.c
+    CPPFLAGS += -DOPENTHREAD_BORDER_ROUTER
+endif
+
+ifeq ($(CONFIG_USB_CDC),1)
+    CPPFLAGS += -DCFG_USB_CDC_ENABLE
+endif
+
+ifeq ($(CONFIG_SYS_AOS_LOOP_ENABLE),1)
+    CPPFLAGS += -DSYS_AOS_LOOP_ENABLE
+endif
+
+ifeq ($(CONFIG_SYS_AOS_CLI_ENABLE),1)
+    ifdef CONFIG_PREFIX
+        CPPFLAGS += -DCFG_PREFIX=\"${CONFIG_PREFIX}\"
+    endif
+endif
+
+ifeq ($(CONFIG_PDS_ENABLE),1)
+    CONFIG_PDS_LEVEL ?= 31
+    CPPFLAGS += -DCFG_PDS_LEVEL=$(CONFIG_PDS_LEVEL)
+    CPPFLAGS += -DCFG_PDS_ENABLE
+    ifeq ($(origin CONFIG_DATA_POLL_CSMA), undefined)
+        CPPFLAGS += -DCFG_DATA_POLL_CSMA=1
+    else
+        CPPFLAGS += -DCFG_DATA_POLL_CSMA=${CONFIG_DATA_POLL_CSMA}
+    endif
 endif
 
 COMPONENT_OBJS := $(patsubst %.cpp,%.o, $(filter %.cpp,$(COMPONENT_SRCS))) $(patsubst %.c,%.o, $(filter %.c,$(COMPONENT_SRCS))) $(patsubst %.S,%.o, $(filter %.S,$(COMPONENT_SRCS)))
-COMPONENT_SRCDIRS := ../openthread_utils
 
-# CPPFLAGS += -DOT_CFG_HWACK_CFG=1
 CPPFLAGS += -D$(CONFIG_CHIP_NAME)

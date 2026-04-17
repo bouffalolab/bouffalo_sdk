@@ -278,6 +278,7 @@ typedef struct {
     lp_fw_clock_t *clock_config;
 
     uint8_t em_size;
+    uint8_t dcdc_sel_pin;
 
     uint32_t mcu_sts;
 

@@ -14,6 +14,7 @@
 #include <dhcp_server.h>
 #include <lwip/dns.h>
 #include <lwip/inet.h>
+#include <lwip/prot/ethernet.h>
 
 #include "wl80211_mac.h"
 #include "wl80211_platform.h"
@@ -30,8 +31,32 @@ static int g_wl80211_ap_dhcpd_running;
 _Static_assert(sizeof(struct wl80211_mac_tx_desc) <= PBUF_LINK_ENCAPSULATION_HLEN, "tx_desc too large");
 _Static_assert(sizeof(struct rx_info) >= sizeof(struct pbuf_custom), "pbuf_custom too large");
 
-// FIXME
-extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
+/**
+ * Intra-BSS forwarding for WiFi AP mode.
+ * When our chip acts as AP, forward frames between connected stations.
+ * - Broadcast/multicast frames: forward to all stations
+ * - Unicast frames not destined to AP: forward to the target station
+ */
+static void wl80211_tcpip_forward_frame(void *frame, uint32_t len)
+{
+    struct netif *ap_netif = &vif2netif[WL80211_VIF_AP];
+    struct pbuf *fwd;
+
+    if (!netif_is_link_up(ap_netif)) {
+        return;
+    }
+
+    /* Allocate pbuf with TX encapsulation headroom for MAC descriptor */
+    fwd = pbuf_alloc(PBUF_RAW_TX, len, PBUF_RAM);
+    if (fwd == NULL) {
+        return;
+    }
+
+    memcpy(fwd->payload, frame, len);
+
+    ap_netif->linkoutput(ap_netif, fwd);
+    pbuf_free(fwd);
+}
 
 void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_len,
                          uint32_t status /* enum rx_status_bits */)
@@ -62,6 +87,22 @@ void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_
 
     assert(p != NULL);
     assert(p->ref > 0);
+
+    /* AP intra-BSS forwarding: forward frames between connected stations */
+    if (vif_type == WL80211_VIF_AP && frm_len >= SIZEOF_ETH_HDR) {
+        struct eth_hdr *ethhdr = (struct eth_hdr *)p->payload;
+
+        if (ethhdr->dest.addr[0] & 0x01) {
+            /* Broadcast/multicast: forward to all stations, then process locally */
+            wl80211_tcpip_forward_frame(p->payload, frm_len);
+        } else if (memcmp(ethhdr->dest.addr, vif2netif[WL80211_VIF_AP].hwaddr, ETH_HWADDR_LEN) != 0) {
+            /* Unicast not destined to AP: forward to target station only */
+            wl80211_tcpip_forward_frame(p->payload, frm_len);
+            pbuf_free(p);
+            return;
+        }
+        /* Unicast destined to AP: fall through to normal lwIP processing */
+    }
 
     assert(vif2netif[vif_type].input != NULL);
     if (vif2netif[vif_type].input(p, &vif2netif[vif_type])) {
@@ -205,7 +246,7 @@ static err_t wl80211_netif_init(struct netif *net_if)
 
     net_if->hwaddr_len = ETHARP_HWADDR_LEN;
 
-    if (0 == mfg_media_read_macaddr_with_lock((uint8_t *)net_if->hwaddr, 1)) {}
+    platform_get_mac((uintptr_t)net_if->state, (uint8_t *)net_if->hwaddr);
 
     wl80211_printf("mac addr: %02X:%02X:%02X:%02X:%02X:%02X\r\n", net_if->hwaddr[0], net_if->hwaddr[1],
                    net_if->hwaddr[2], net_if->hwaddr[3], net_if->hwaddr[4], net_if->hwaddr[5]);
@@ -223,12 +264,12 @@ int wl80211_lwip_init(void)
 
     // Add default sta netif
     status = netifapi_netif_add(&vif2netif[WL80211_VIF_STA], (const ip4_addr_t *)NULL, (const ip4_addr_t *)NULL,
-                                (const ip4_addr_t *)NULL, NULL, wl80211_netif_init, tcpip_input);
+                                (const ip4_addr_t *)NULL, (void *)WL80211_VIF_STA, wl80211_netif_init, tcpip_input);
     assert(status == ERR_OK);
 
     // Add default ap netif
     status = netifapi_netif_add(&vif2netif[WL80211_VIF_AP], (const ip4_addr_t *)NULL, (const ip4_addr_t *)NULL,
-                                (const ip4_addr_t *)NULL, NULL, wl80211_netif_init, tcpip_input);
+                                (const ip4_addr_t *)NULL, (void *)WL80211_VIF_AP, wl80211_netif_init, tcpip_input);
     assert(status == ERR_OK);
 
     return 0;

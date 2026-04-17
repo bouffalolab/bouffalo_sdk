@@ -297,6 +297,23 @@ struct cfgmacsw_resp {
     uint32_t status;
 };
 
+/// Cipher suite support flags for CFGMACSW_GET_CAPA_RESP
+enum cfgmacsw_cipher_support {
+    CFGMACSW_CIPHER_TKIP = 0x01,
+    CFGMACSW_CIPHER_CCMP = 0x02,
+    CFGMACSW_CIPHER_CCMP_256 = 0x04,
+    CFGMACSW_CIPHER_GCMP_128 = 0x08,
+    CFGMACSW_CIPHER_GCMP_256 = 0x10,
+};
+
+/// structure for CFGMACSW_GET_CAPA_RESP
+struct cfgmacsw_get_capa_resp {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Supported cipher suites (bitmask of enum cfgmacsw_cipher_support)
+    uint32_t cipher_support;
+};
+
 struct fhost_mm_start_req
 {
     /// PHY configuration

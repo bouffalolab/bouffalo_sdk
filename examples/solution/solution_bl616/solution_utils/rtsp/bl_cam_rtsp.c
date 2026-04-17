@@ -32,9 +32,9 @@ void bl_cam_frame_init(void)
 {
     RTC_INFO("bl_cam_frame_init\r\n");
 
-    if (jpeg_out_queue_rtc_id != MJPEG_FRAME_STREAM_WIFI_RTC_ID) {
-        jpeg_out_queue_rtc_id = MJPEG_FRAME_STREAM_WIFI_RTC_ID;
-        if (frame_queue_output_create(g_jpeg_frame_ctrl, &jpeg_out_queue_rtc_id, MJPEG_FRAME_STREAM_WIFI_RTC_DEPTH) < 0) {
+    if (jpeg_out_queue_rtc_id != MJPEG_OUT_FRAME_STREAM_WIFI_RTC_ID) {
+        jpeg_out_queue_rtc_id = MJPEG_OUT_FRAME_STREAM_WIFI_RTC_ID;
+        if (frame_queue_output_create(g_mjpeg_out_frame_ctrl, &jpeg_out_queue_rtc_id, MJPEG_OUT_FRAME_STREAM_WIFI_RTC_DEPTH) < 0) {
             jpeg_out_queue_rtc_id = FRAME_QUEUE_DEFAULT_ID;
             RTC_ERR("jpeg frame wifi_rtc out queue create failed\r\n");
             return;
@@ -64,7 +64,7 @@ static int get_frm_cb(struct strm_info *strm_info, struct frm_info *frm_info)
         static uint32_t get_count = 0;
         RTC_DBG("[rtc] get: %d\r\n", get_count);
 
-        ret = frame_queue_output_pop(g_jpeg_frame_ctrl, (frame_elem_t *)&jpeg_frame_info, jpeg_out_queue_rtc_id, 1000);
+        ret = frame_queue_output_pop(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame_info, jpeg_out_queue_rtc_id, 1000);
 
         if (ret < 0) {
             RTC_INFO("[RTC]mjpeg frame pop timeout!\r\n");
@@ -78,7 +78,7 @@ static int get_frm_cb(struct strm_info *strm_info, struct frm_info *frm_info)
             frm_info->frm_type = FRM_TYPE_M;
             frm_info->timestamp = xTaskGetTickCount(); // frame timestamp unit: 100ns
              /* free frame */
-            frame_queue_output_free(g_jpeg_frame_ctrl, (frame_elem_t *)&jpeg_frame_info);
+            frame_queue_output_free(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame_info);
 
             return 1;
         }

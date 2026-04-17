@@ -24,7 +24,7 @@
 #include <shell.h>
 #endif
 
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#include <openthread-core-config.h>
 #include <openthread/udp.h>
 #include <openthread/tcp.h>
 #include <openthread/message.h>

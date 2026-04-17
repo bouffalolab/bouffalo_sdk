@@ -4,11 +4,13 @@
 #include <bflb_efuse.h>
 #include <bflb_flash.h>
 #include <lmac154.h>
+#if defined (BL702L) || defined (BL616)
+#include <lmac154_fpt.h>
+#endif
 #include <zb_timer.h>
 
 #include <openthread_port.h>
 #include <ot_radio_trx.h>
-#include <ot_utils_ext.h>
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64) 
 {

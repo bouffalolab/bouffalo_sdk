@@ -274,6 +274,14 @@ static void wpa_sta_disconnected_cb(uint8_t reason_code) {
 #endif
     break;
   }
+
+  /* Clear keys from hardware key RAM to prevent stale key
+   * interfering with subsequent connections (e.g. DHCP on open AP) */
+  {
+    struct wpa_sm *sm = &gWpaSm;
+    /* Delete group keys (GTK: key_idx 0~3, IGTK: key_idx 4~5) */
+    bl_wifi_set_sta_key_internal(sm->vif_idx, 255, WIFI_WPA_ALG_NONE, 0, 0, NULL, 0, NULL, 0, false);
+  }
 }
 
 extern int wpa_sm_get_state(void);

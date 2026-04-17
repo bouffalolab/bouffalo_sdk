@@ -84,6 +84,17 @@ uint32_t flash_offset = 0;
 
 spi_flash_cfg_type *flash_cfg;
 
+static int is_flash_io(uint8_t pin, uint32_t sf_pin_select)
+{
+    if (sf_pin_select & (1 << 2)) {
+        return (pin >= GPIO_PIN_6 && pin <= GPIO_PIN_11);
+    } else if (sf_pin_select & (1 << 3)) {
+        return (pin >= GPIO_PIN_24 && pin <= GPIO_PIN_29);
+    }
+
+    return 0;
+}
+
 static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel1 = {
     .pdsCtl = {
         .pdsStart = 1,
@@ -819,9 +830,20 @@ int pm_lowpower_gpio_cfg(lp_gpio_cfg_type *gpio_cfg)
     uint8_t pd = 0;
     uint8_t unmask = 0;
     uint8_t trig_mode = 0;
+    uint32_t sf_pin_select;
+
+    sf_pin_select = (BL_RD_WORD(0x20056000 + 0x74) >> 5) & 0x3f;
+    if (sf_pin_select == 0x3f) {
+        sf_pin_select = SF_IO_EXT_SF2;
+    }
 
     for (uint8_t i = 0; i < GPIO_PIN_MAX; i++) {
         io = i;
+
+        if (is_flash_io(io, sf_pin_select)) {
+            continue;
+        }
+
         ie = (gpio_cfg->io_ie >> i) & 0x1;
         pu = (gpio_cfg->io_pu >> i) & 0x1;
         pd = (gpio_cfg->io_pd >> i) & 0x1;
@@ -1093,6 +1115,10 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
         tmpVal = BL_RD_WORD(0x20056000 + 0x74);
         /* get flash type */
         sf_pin_select = (tmpVal >> 5) & 0x3f;
+        if (sf_pin_select == 0x3f) {
+            sf_pin_select = SF_IO_EXT_SF2;
+        } else {
+        }
         HBN_Power_Down_Flash((spi_flash_cfg_type *)p->flashCfg);
 
         /* latch flash io pad */

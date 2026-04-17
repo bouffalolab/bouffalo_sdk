@@ -295,6 +295,10 @@
     #define configNUM_THREAD_LOCAL_STORAGE_POINTERS    0
 #endif
 
+#ifndef configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS
+    #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
+#endif
+
 #ifndef configUSE_RECURSIVE_MUTEXES
     #define configUSE_RECURSIVE_MUTEXES    0
 #endif

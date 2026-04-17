@@ -5,8 +5,8 @@ typedef struct
 {
     uint32_t rxok;
     uint32_t rxend;
-    float ppm_dsss;
-    float ppm_ofdm;
+    int8_t ppm_dsss;
+    int8_t ppm_ofdm;
     int8_t rssi;
 } cli_ate_ret_t;
 

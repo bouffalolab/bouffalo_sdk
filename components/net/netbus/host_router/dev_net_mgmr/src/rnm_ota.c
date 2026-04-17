@@ -5,9 +5,15 @@
 #include <string.h>
 //#include <hal_sys.h>
 #include <sdio_port.h>
+#include <bflb_l1c.h>
+#include <bflb_name.h>
+#include <bflb_sec_mutex.h>
+#include <bflb_sec_sha.h>
 
 #define RNM_MTD_PARTITION_NAME_FW_DEFAULT      "FW"
 #define RNM_MTD_OPEN_FLAG_BACKUP               (1<<0)
+
+static ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32))) struct bflb_sha256_ctx_s rnm_ota_sha_ctx;
 
 typedef struct ota_header {
     union {
@@ -147,6 +153,12 @@ static int handle_start(rnms_t *rnm, rnm_msg_t *cmd)
     }
     rnm_ota_t *octx = (rnm_ota_t *)rnm->ota;
 
+    octx->sha_dev = bflb_device_get_by_name(BFLB_NAME_SEC_SHA);
+    if (octx->sha_dev == NULL) {
+        HR_LOGE("SEC_SHA device not found\r\n");
+        MY_ERROR_OUT(BFLB_OTA_ERROR_MISC, -1, error1);
+    }
+
     ret = bl_mtd_open(RNM_MTD_PARTITION_NAME_FW_DEFAULT, &octx->mtd_hdl, RNM_MTD_OPEN_FLAG_BACKUP);
     if (ret) {
         HR_LOGE("Open Default FW partition failed\r\n");
@@ -231,9 +243,12 @@ static int handle_program_part(rnms_t *rnm, rnm_msg_t *cmd)
 
     if (part_offset == 0) {
         is_first_part = true;
-        utils_sha256_init(&octx->sha_ctx);
-        utils_sha256_starts(&octx->sha_ctx);
         MEMSET_SAFE(octx->sha256_this,  sizeof(octx->sha256_this),  0,  sizeof(octx->sha256_this));
+
+        bflb_sec_sha_mutex_take();
+        bflb_sha_init(octx->sha_dev, SHA_MODE_SHA256);
+        bflb_sha256_start(octx->sha_dev, &rnm_ota_sha_ctx);
+        bflb_sec_sha_mutex_give();
 
         ota_header_t *ota_header = (ota_header_t *)pb;
         uint32_t hdr_adv_bin_size = 0;
@@ -265,11 +280,16 @@ static int handle_program_part(rnms_t *rnm, rnm_msg_t *cmd)
 
     bl_mtd_write(octx->mtd_hdl, octx->offset_written, part_size, pb);
     bl_mtd_read(octx->mtd_hdl, octx->offset_written, part_size, pb);
-    utils_sha256_update(&octx->sha_ctx, pb, part_size);
+    bflb_l1c_dcache_clean_range(pb, part_size);
+    bflb_sec_sha_mutex_take();
+    bflb_sha256_update(octx->sha_dev, &rnm_ota_sha_ctx, pb, part_size);
+    bflb_sec_sha_mutex_give();
     octx->offset_written += part_size;
 
     if (is_last_part) {
-        utils_sha256_finish(&octx->sha_ctx, octx->sha256_this);
+        bflb_sec_sha_mutex_take();
+        bflb_sha256_finish(octx->sha_dev, &rnm_ota_sha_ctx, octx->sha256_this);
+        bflb_sec_sha_mutex_give();
         if (memcmp(octx->sha256_this, octx->sha256_that, sizeof(octx->sha256_this))) {
             HR_LOGE("SHA256 not correct\r\n");
             MY_ERROR_OUT(BFLB_OTA_ERROR_CKSUM_MISMATCH, -1, error1);

@@ -10,7 +10,7 @@ extern "C" {
 
 #define VERSION_OT_SRC_MAJOR 1
 #define VERSION_OT_SRC_MINOR 7
-#define VERSION_OT_SRC_PATCH 2
+#define VERSION_OT_SRC_PATCH 3
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 
@@ -29,22 +29,6 @@ extern "C" {
 #ifndef OTRADIO_RX_FRAME_BUFFER_NUM
 #define OTRADIO_RX_FRAME_BUFFER_NUM         8
 #endif
-
-typedef union {
-    struct {
-        uint16_t isCoexEnable:1;
-        uint16_t isFtd:1;
-        uint16_t isLinkMetricEnable:1;
-        uint16_t isCSLReceiverEnable:1;
-        uint16_t isTimeSyncEnable:1;
-        uint16_t isImmAck4Error:1;
-        uint16_t isCslPhaseUpdated:1;
-        uint16_t isTxTimestampValid:1;
-        uint16_t isWiFiCoexEnable:1;
-        uint16_t unused:7;
-    } bf;
-    uint16_t byte;
-} __packed otRadio_opt_t;
 
 typedef enum _ot_system_event {
     OT_SYSTEM_EVENT_NONE                                = 0,
@@ -101,7 +85,7 @@ extern ot_system_event_t ot_system_event_var;
  * @return None
  *
 *******************************************************************************/
-void otrStart(otRadio_opt_t opt);
+void otrStart(void);
 
 /****************************************************************************//**
  * @brief  Get current OpenThread instance.
@@ -173,7 +157,7 @@ void ot_alarmTask(ot_system_event_t sevent);
  * @return None
  *
 *******************************************************************************/
-void ot_radioInit(otRadio_opt_t opt);
+void ot_radioInit(void);
 
 /****************************************************************************//**
  * @brief  Init uart.

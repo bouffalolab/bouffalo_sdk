@@ -33,10 +33,10 @@
 #define LWIP_HDR_LWIPOPTS_H__
 
 #define LWIP_NETIF_API     1
-#define LWIP_DEBUG         1
-#define LWIP_STATS_DISPLAY 1
-#define SOCKETS_DEBUG      LWIP_DBG_OFF
-#define DHCP_DEBUG         LWIP_DBG_OFF
+#define LWIP_DEBUG         0
+#define LWIP_STATS_DISPLAY 0
+#define SOCKETS_DEBUG                 LWIP_DBG_OFF
+#define DHCP_DEBUG                    LWIP_DBG_OFF
 #define IP_DEBUG                      LWIP_DBG_OFF
 #define NETIF_DEBUG                   LWIP_DBG_OFF
 #define ICMP_DEBUG                    LWIP_DBG_OFF
@@ -108,6 +108,7 @@ static inline void *_lwip_calloc(size_t count, size_t size)
 #define MEMP_NUM_TCP_PCB              4
 #define MEMP_NUM_TCPIP_MSG_API        16
 #define MEMP_NUM_TCPIP_MSG_INPKT      16
+#define MEMP_NUM_PBUF                 32
 
 #define MEMP_NUM_REASSDATA            LWIP_MIN((IP_REASS_MAX_PBUFS), 5)
 #define TCP_MSS                       (1500 - 40)
@@ -116,7 +117,6 @@ static inline void *_lwip_calloc(size_t count, size_t size)
 
 #define TCP_QUEUE_OOSEQ               1
 #define MEMP_NUM_TCP_SEG              ((4 * TCP_SND_BUF) / TCP_MSS)
-#define MEMP_NUM_PBUF                 (TCP_SND_BUF / TCP_MSS)
 #define PBUF_POOL_SIZE                0
 #define LWIP_WND_SCALE                1
 #define TCP_RCV_SCALE                 2
@@ -125,17 +125,6 @@ static inline void *_lwip_calloc(size_t count, size_t size)
 #define MEM_MIN_TCP                   (2300 + MEMP_NUM_PBUF * (100 + PBUF_LINK_ENCAPSULATION_HLEN))
 #define MEM_MIN                       MEM_MIN_TCP
 #define MEM_ALIGNMENT                 4
-
-#define LWIP_HEAP_SIZE (32 * 1024)
-#ifdef LWIP_HEAP_SIZE
-#define MEM_SIZE LWIP_HEAP_SIZE
-#else
-#if MEM_MIN > 8192
-#define MEM_SIZE MEM_MIN
-#else
-#define MEM_SIZE 8192
-#endif
-#endif
 
 #define LWIP_RAW                  1
 #define LWIP_MULTICAST_TX_OPTIONS 1
@@ -163,11 +152,7 @@ extern int *__errno(void);
 #define ETHARP_SUPPORT_STATIC_ENTRIES 1
 
 #define LWIP_SUPPORT_CUSTOM_PBUF      1
-#ifdef HIGH_PERFORMANCE_PBUF
-#define LWIP_NETIF_TX_SINGLE_PBUF 0
-#else
-#define LWIP_NETIF_TX_SINGLE_PBUF 1
-#endif
+#define LWIP_NETIF_TX_SINGLE_PBUF     0
 #define LWIP_RAND()                                      ((u32_t)random())
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

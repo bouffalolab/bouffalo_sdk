@@ -1,4 +1,5 @@
 #include "bl_lp_internal.h"
+#include "bl616cl_ext_dcdc.h"
 #include "bflb_clock.h"
 #include "bflb_irq.h"
 #include "bflb_uart.h"
@@ -345,6 +346,10 @@ static void ATTR_TCM_SECTION pds_gpio_keep_enable(uint32_t sf_pin_select)
 
     for (uint8_t i = GPIO_PIN_6; i < GPIO_PIN_MAX; i++) {
         if (!is_flash_io(i, sf_pin_select) && !is_psram_io(i) && !is_uart_io(i)) {
+            if (bl_ext_dcdc_pds_is_keep_pin(i)) {
+                PDS_Enable_GPIO_Keep(i);
+                continue;
+            }
             bflb_gpio_init(gpio_lp, i, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
             PDS_Enable_GPIO_Keep(i);
         }
@@ -382,6 +387,10 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
         bl_lp_runtime_peripheral_clock_snapshot();
         bl_lp_runtime_uart_baudrate_snapshot();
         bl_lp_runtime_gpio_snapshot();
+    }
+
+    if (bl_ext_dcdc_pds_prepare_enter() != 0) {
+        return -1;
     }
 
     irq_flag = bflb_irq_save();
@@ -426,6 +435,10 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
     ret = bl_lp_psram_resume(pds_level);
     bl_lp_debug_record_time(iot2lp_para, "psram resume end");
 #endif
+
+    if (bl_ext_dcdc_pds_restore_exit() != 0 && ret == 0) {
+        ret = -1;
+    }
 
     bl_lp_debug_record_time(iot2lp_para, "restore context end");
 

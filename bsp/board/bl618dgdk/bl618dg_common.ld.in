@@ -107,7 +107,7 @@ MEMORY
     rom_header (rx)   : ORIGIN = RAM_ADDRESS,                       LENGTH = 6K
 
     ram_nocache (!rx) : ORIGIN = (RAM_ADDRESS + 6K) & 0x2FFFFFFF,   LENGTH = RAM_LENGTH - 6K
-    ram  (!rx)        : ORIGIN = RAM_ADDRESS + 6K,                  LENGTH = RAM_LENGTH - 6K 
+    ram  (!rx)        : ORIGIN = RAM_ADDRESS + 6K,                  LENGTH = RAM_LENGTH - 6K
 #endif
 
 #ifdef CPU_AP
@@ -133,7 +133,7 @@ SECTIONS
     {
         KEEP(*(.fw_header))
 #if !CONFIG_FLASH_XIP_ADDRESS
-        LONG(CONFIG_RAM_ADDRESS)
+        LONG(RAM_ADDRESS)
         LONG(0x48474553)
 #endif
     } > fw_header
@@ -147,7 +147,7 @@ SECTIONS
         . = ORIGIN(rom_header) + 512;
         __multi_bins__ = ABSOLUTE(.);
         LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_start__ + LENGTH(fw_header) + LENGTH(rom_header))
-	__dualcore_images__ = ABSOLUTE(.) + 12;
+        __dualcore_images__ = ABSOLUTE(.) + 12;
         LONG(0x0000504E) LONG(0x00000000) /*NP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x0000504C) LONG(0x00000000) /*LP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
@@ -233,7 +233,7 @@ SECTIONS
         . = ALIGN(4);
 
 #if defined(CONFIG_WFA) && !defined(CONFIG_PSRAM_COPY_CODE)
-	INCLUDE run_in_ram_function.ld.in
+        INCLUDE run_in_ram_function.ld.in
 
         *libfreertos.a:*.o*(.text*)
         *libfreertos.a:*.o*(.rodata.CSWTCH*)
@@ -427,7 +427,7 @@ SECTIONS
         _sshram = . ;
         *(.lpfw_share_nocache_noinit*)
         __lpfw_share_used__ = .;
-	. = (__lpfw_share_used__ < _sshram + __LPFW_SIZE ) ? _sshram + __LPFW_SIZE : .;
+        . = (__lpfw_share_used__ < _sshram + __LPFW_SIZE ) ? _sshram + __LPFW_SIZE : .;
     } > ram_wifi
 #endif
 
@@ -478,12 +478,12 @@ SECTIONS
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         . = ALIGN(4); __mem_noinit_sections = ABSOLUTE(.);
-	LONG(__ram_nocache_noinit_start__); LONG(__ram_nocache_noinit_end__);
-	LONG(__ram_noinit_start__);         LONG(__ram_noinit_end__);
-	LONG(__psram_noinit_start__);       LONG(__psram_noinit_end__);
+        LONG(__ram_nocache_noinit_start__); LONG(__ram_nocache_noinit_end__);
+        LONG(__ram_noinit_start__);         LONG(__ram_noinit_end__);
+        LONG(__psram_noinit_start__);       LONG(__psram_noinit_end__);
         LONG(0xffffffff);                   LONG(0xffffffff);
 
-	. = ALIGN(4); _dump_sections = ABSOLUTE(.);
+        . = ALIGN(4); _dump_sections = ABSOLUTE(.);
         LONG(ORIGIN(ram_nocache));          LONG(__ram_nocache_end__ - ORIGIN(ram_nocache));
         LONG(ORIGIN(ram) + (__ram_nocache_end__ - ORIGIN(ram_nocache)));
         LONG(LENGTH(ram) - (__ram_nocache_end__ - ORIGIN(ram_nocache)));
@@ -492,6 +492,10 @@ SECTIONS
         LONG(ORIGIN(ram_psram));            LONG(LENGTH(ram_psram));
 #endif
         LONG(0xffffffff);                   LONG(0xffffffff);
+
+#if defined(CONFIG_WIFI6) && !defined(CONFIG_PSRAM_COPY_CODE)
+        INCLUDE macsw_cache_affinity.ld.in
+#endif
 
         *(.text*)
         *(.rodata*)
@@ -545,7 +549,7 @@ SECTIONS
         . = ALIGN(32);
         LONG(0x5746504C); /* LPFW */
         . = ALIGN(32);
-    
+
         __lpfw_load_addr = .;
     } > rom
 #endif

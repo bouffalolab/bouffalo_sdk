@@ -51,7 +51,11 @@
 
 #define configSUPPORT_STATIC_ALLOCATION         1
 #define configUSE_PREEMPTION                    1
+
+#ifndef configUSE_IDLE_HOOK
 #define configUSE_IDLE_HOOK                     0
+#endif
+
 #define configUSE_TICK_HOOK                     0
 #define configCPU_CLOCK_HZ                      ((uint32_t)(1 * 1000 * 1000))
 #define configTICK_RATE_HZ                      ((TickType_t)1000)
@@ -72,18 +76,19 @@
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
-#define configUSE_TICKLESS_IDLE                 0
+// #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
+#define portasmHAS_F_EXTENSION                  1
 
 /* Co-routine definitions. */
-#define configUSE_CO_ROUTINES           0
-#define configMAX_CO_ROUTINE_PRIORITIES (2)
+#define configUSE_CO_ROUTINES                   0
+#define configMAX_CO_ROUTINE_PRIORITIES         (2)
 
 /* Software timer definitions. */
-#define configUSE_TIMERS             1
-#define configTIMER_TASK_PRIORITY    (configMAX_PRIORITIES - 1)
-#define configTIMER_QUEUE_LENGTH     4
-#define configTIMER_TASK_STACK_DEPTH (1024)
+#define configUSE_TIMERS                        (1)
+#define configTIMER_TASK_PRIORITY               (configMAX_PRIORITIES - 1)
+#define configTIMER_QUEUE_LENGTH                (4)
+#define configTIMER_TASK_STACK_DEPTH            (1024)
 
 /* Task priorities.  Allow these to be overridden. */
 #ifndef uartPRIMARY_PRIORITY
@@ -104,6 +109,7 @@ to exclude the API function. */
 #define INCLUDE_xTaskAbortDelay          1
 #define INCLUDE_xTaskGetHandle           1
 #define INCLUDE_xSemaphoreGetMutexHolder 1
+#define INCLUDE_xTaskGetIdleTaskHandle   1
 
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
@@ -121,6 +127,21 @@ void vAssertCalled(void);
 #if (configUSE_TICKLESS_IDLE != 0)
 void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
+
+#ifndef configEXPECTED_IDLE_TIME_BEFORE_SLEEP
+extern uint32_t expected_idle_before_sleep(void);
+#define configEXPECTED_IDLE_TIME_BEFORE_SLEEP expected_idle_before_sleep()
+#endif
+
+#ifdef TICKLESS_DEBUG
+#include <stdint.h>
+#include "portmacro.h"
+extern void tickless_debug_who_wake_me(const char *name, TickType_t ticks);
+#define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING( x ) do { \
+  TCB_t *next_wake_tcb = (TCB_t *)((uint32_t)pxDelayedTaskList->xListEnd.pxNext - 4); \
+  tickless_debug_who_wake_me(next_wake_tcb->pcTaskName, next_wake_tcb->xStateListItem.xItemValue); \
+} while(0);
+#endif
 #endif
 
 // #define portUSING_MPU_WRAPPERS

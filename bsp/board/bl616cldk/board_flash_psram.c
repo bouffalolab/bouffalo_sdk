@@ -178,6 +178,16 @@ static uint8_t flash_final_delay = 0;
 static uint8_t flash_added_delay = 0;
 
 #ifndef CONFIG_BOARD_FLASH_LOW_SPEED
+static void ATTR_TCM_SECTION flash_reset_io_cs_delay(void)
+{
+    bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD1, 0, 0, 0);
+    bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD2, 0, 0, 0);
+    bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD3, 0, 0, 0);
+    bflb_sf_ctrl_set_cs_clk_delay(SF_CTRL_PAD1, 0, 0);
+    bflb_sf_ctrl_set_cs_clk_delay(SF_CTRL_PAD2, 0, 0);
+    bflb_sf_ctrl_set_cs_clk_delay(SF_CTRL_PAD3, 0, 0);
+}
+
 static uint32_t sdmin_range_list[] = { 0x6E0000, 0x640000, 0x5A0000, 0x500000, 0x460000, 0x3C0000 };
 static int ATTR_TCM_SECTION clk_pll_set(uint32_t sdmin)
 {
@@ -292,7 +302,7 @@ static int ATTR_TCM_SECTION board_get_flash_delay(spi_flash_cfg_type *p_flash_cf
     return cal_delay;
 }
 
-void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
+uint32_t ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_hs(uint8_t flash_clock)
 {
     uint8_t is_aes_enable = 0;
     uint32_t offset = 0;
@@ -303,6 +313,12 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
     uint32_t sf_ctrl_0, sf_ctrl_1, sf_clk_cfg;
     uint32_t config_change = 0;
     uint32_t delay_found = 0;
+    uint8_t v_1p5t_left[2]= { 120, 100};
+    uint8_t v_1p5t_right[2] = { 155, 130};
+    uint8_t v_1t_left[2]= { 50, 40};
+    uint8_t v_1t_right[2] = { 70, 72};
+    uint8_t v_1p5t_best[2]= { 125, 104};
+    uint8_t v_index = 0;
 
     sf_ctrl_cfg.owner = SF_CTRL_OWNER_SAHB;
     sf_ctrl_cfg.en32b_addr = 0;
@@ -312,6 +328,12 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
     sf_ctrl_cfg.do_delay = 0;
     sf_ctrl_cfg.di_delay = 0;
     sf_ctrl_cfg.oe_delay = 0;
+
+    if( flash_clock == GLB_SFLASH_CLK_MUXPLL_80M){
+        v_index = 0;
+    }else if( flash_clock == GLB_SFLASH_CLK_WIFIPLL_96M){
+        v_index = 1;
+    }
     /* disable interrupt */
     flag = bflb_irq_save();
     /* save register changed by calibration */
@@ -325,30 +347,31 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
 
     bflb_sflash_init(&sf_ctrl_cfg, NULL);
     bflb_sflash_reset_continue_read(p_flash_cfg);
+    flash_reset_io_cs_delay();
 
     /* cal delay value */
     flash_org_delay = board_get_flash_delay(p_flash_cfg);
     flash_final_delay = flash_org_delay;
 
     if (0 != flash_org_delay) {
-        if (flash_org_delay >= 120 && flash_org_delay <= 155) {
-            /* flash can run @ 80M @1.5T */
+        if (flash_org_delay >= v_1p5t_left[v_index] && flash_org_delay <= v_1p5t_right[v_index]) {
+            /* flash can run at target flash clock with 1.5T */
             sf_ctrl_cfg.clk_delay = 1;
             sf_ctrl_cfg.clk_invert = 1;
             sf_ctrl_cfg.rx_clk_invert = 1;
             bflb_sflash_init(&sf_ctrl_cfg, NULL);
-            GLB_Set_SF_CLK(1, GLB_SFLASH_CLK_MUXPLL_80M, 0);
+            GLB_Set_SF_CLK(1, flash_clock, 0);
             config_change = 1;
-        } else if (flash_org_delay >= 50 && flash_org_delay <= 70) {
-            /* flash can run @ 80M @1T */
+        } else if (flash_org_delay >= v_1t_left[v_index] && flash_org_delay <= v_1t_right[v_index]) {
+            /* flash can run at target flash clock with 1T */
             sf_ctrl_cfg.clk_delay = 1;
             sf_ctrl_cfg.clk_invert = 1;
             sf_ctrl_cfg.rx_clk_invert = 0;
             bflb_sflash_init(&sf_ctrl_cfg, NULL);
-            GLB_Set_SF_CLK(1, GLB_SFLASH_CLK_MUXPLL_80M, 0);
+            GLB_Set_SF_CLK(1, flash_clock, 0);
             config_change = 1;
-        } else if (flash_org_delay > 70 && flash_org_delay < 120) {
-            /* flash can run @ 80M @1.5T with added delay */
+        } else if (flash_org_delay > v_1t_right[v_index] && flash_org_delay < v_1p5t_left[v_index]) {
+            /* flash can run at target flash clock with 1.5T and added delay */
             flash_added_delay = 1;
             while (1) {
                 if (delay_found) {
@@ -357,7 +380,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
                     sf_ctrl_cfg.clk_invert = 1;
                     sf_ctrl_cfg.rx_clk_invert = 1;
                     bflb_sflash_init(&sf_ctrl_cfg, NULL);
-                    GLB_Set_SF_CLK(1, GLB_SFLASH_CLK_MUXPLL_80M, 0);
+                    GLB_Set_SF_CLK(1, flash_clock, 0);
                     flash_added_delay--;
                 }
                 if (flash_added_delay > 6) {
@@ -390,9 +413,9 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
 
                 flash_final_delay = board_get_flash_delay(p_flash_cfg);
                 /* step1: delay found */
-                if (flash_final_delay >= 125) {
+                if (flash_final_delay >= v_1p5t_best[v_index]) {
                     delay_found = 1;
-                } else if (flash_final_delay >= 110 && flash_added_delay == 6) {
+                } else if (flash_final_delay >= v_1p5t_best[v_index] - 15 && flash_added_delay == 6) {
                     delay_found = 1;
                 }
                 flash_added_delay++;
@@ -402,6 +425,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
 
     if (config_change == 0) {
         /* restore flash config */
+        flash_reset_io_cs_delay();
         BL_WR_WORD(0x2000b000, sf_ctrl_0);
         BL_WR_WORD(0x2000b004, sf_ctrl_1);
         BL_WR_REG(GLB_BASE, GLB_SF_CFG0, sf_clk_cfg);
@@ -415,6 +439,8 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
     bflb_xip_sflash_state_restore(p_flash_cfg, offset, 0, 0);
     bflb_xip_sflash_opt_exit(is_aes_enable);
     bflb_irq_restore(flag);
+
+    return config_change;
 }
 #endif
 

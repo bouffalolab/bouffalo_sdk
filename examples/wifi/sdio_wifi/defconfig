@@ -1,6 +1,5 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
-CONFIG_BFLB_OTA  =y
 CONFIG_BFLB_MTD  =y
 CONFIG_PARTITION =y
 

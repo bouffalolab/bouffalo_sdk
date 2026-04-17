@@ -15,6 +15,12 @@
 make CHIP=bl616 BOARD=bl616dk
 ```
 
+To package a specific OTA software version into the OTA header, override `PROJECT_SDK_VERSION` when building. This example enables `CONFIG_OTA_HEADER_USE_SDK_VERSION=y`, `CONFIG_OTA_VERSION_CHECK=y`, and `CONFIG_OTA_VERSION_PREFIX="EVENT_V"`, so the OTA header carries `EVENT_Vx.y.z` and the device rejects non-increasing versions.
+
+```bash
+make CHIP=bl616 BOARD=bl616dk PROJECT_SDK_VERSION=2.1.5
+```
+
 - BL602
 
 ```
@@ -42,37 +48,56 @@ make flash COMX=xxx ## xxx is your com name
                     Password:12345678
 ```
 
-### Start HTTPS OTA server
+### Start HTTP OTA server
 
-Run an https server using the python command in the directory where the OTA bin file is located. like this:
+Run an http server using the python command in the directory where the OTA bin file is located.
 
 ```bash
-$ python https.py --https --cert ./ssl/server_1.crt --key ./ssl/server_1.key
+$ python3 https.py
+```
+
+### Start HTTPS OTA server with mutual TLS
+
+Run an https server with server authentication and required client certificates.
+
+```bash
+$ python3 https.py --https --cert ./ssl/server_1.crt --key ./ssl/server_1.key --ca ./ssl/ca_1.crt --require-client-cert
+```
+
+The sample certificate set in `ssl/` contains a CA, server certificate/key, and client certificate/key. The firmware embeds `ca_1.crt`, `client_1.crt`, and `client_1.key` from `https_ota_tls_material.h` and injects them into the active `https_fota` shell path automatically. If you replace the files in `ssl/`, regenerate the header first and then rebuild the firmware.
+
+```bash
+python3 gen_tls_material.py --input-dir ./ssl --output ./https_ota_tls_material.h
+```
+
+### Start TCP OTA server
+
+Run a simple TCP server in the directory where the OTA file is located.
+
+```bash
+cat validation_artifacts/2.1.5/wifi_ota_bl616.bin.ota | nc -N -nvl 3365
 ```
 
 ### Connect wifi
 
-If you use automatic networking, you need `AUTO_CONNECT_WIFI` to `1` to enable automatic connection, and you need to configure your wifi ssid and password correctly in main.c.
-When this program is downloaded to the chip, it will automatically search for the network after starting by pressing the reset button. If the networking is successful, it will automatically send OTA command for OTA.
-
-```c
-/* config your wifi ssid and password */
-static const uint8_t wifi_sta_connet[] = "wifi_sta_connect BL_TEST 12345678\r";
-/* config your OTA server and port */
-static const uint8_t wifi_ota_test[] = "wifi_ota_test https://192.168.31.112:5000/build/build_out/wifi_ota_bl616.bin.ota\r";
-
-```
-
-If automatic networking is not configured, then you will need to manually enter networking commands and OTA commands into the BL616's serial port.
-On BL616 board, using <wifi_sta_connect> command connect your WiFi router, and start OTA command
+Use CLI commands on the BL616 serial port to connect Wi-Fi and trigger OTA.
 
 ```bash
 bouffalolab />wifi_sta_connect BL_TEST 12345678
-bouffalolab />wifi_ota_test https://192.168.31.112:5000/build/build_out/wifi_ota_bl616.bin.ota
+bouffalolab />tcp_ota_start 192.168.18.125 3365
+bouffalolab />wifi_ota_test http://192.168.18.125:5000/build/build_out/wifi_ota_bl616.bin.ota
+bouffalolab />wifi_ota_test https://192.168.18.125:5000/build/build_out/wifi_ota_bl616.bin.ota
 
 ```
 
 if connect success, Linux server pc have send data to BL616.
+
+### OTA version and integrity checks
+
+1. The OTA header software version is generated from `PROJECT_SDK_VERSION` and prefixed with `EVENT_V`.
+2. `CONFIG_OTA_VERSION_CHECK=y` rejects downgrade and same-version images before the firmware body is applied.
+3. The OTA header SHA256 is verified by the common OTA core for TCP, HTTP, and HTTPS paths. A corrupted `.ota` file is aborted and does not switch the active partition.
+4. HTTPS with `--require-client-cert` verifies the device against `client_1.crt` signed by `ca_1.crt`, and the device also verifies the server certificate chain with the embedded CA.
 
 
 ## OTA use partition
@@ -137,21 +162,21 @@ In general IOT application scenarios, the Flash layout is as follows:
 
 3. 0xE000-0xEFFF of Flash is partition table 0, 0xF000-0xFFFF of Flash is partition table 1.
 4. 0x10000-0x10FFF of Flash is the BootHeader of the application firmware A, which is used to analyze and run the application firmware for the second-level Boot:Boot2 of the chip.
-5. 0x110000-0x20FFFF of Flash is the entity of area B of the application firmware, which is the content of the Bin file output after compiling the SDK
+5. 0x11000-0x20FFFF of Flash is the entity of area A of the application firmware, which is the content of the Bin file output after compiling the SDK.
 6. 0x210000-0x210FFF of Flash is the BootHeader of the application firmware B, which is used to analyze and run the application firmware for the second-level Boot:Boot2 of the chip.
-7. 0x210FFF-0x377FFF of Flash is the entity of area B of the application firmware, which is the content of the Bin file output after compiling the SDK.
+7. 0x211000-0x377FFF of Flash is the entity of area B of the application firmware, which is the content of the Bin file output after compiling the SDK.
 8. Flash's 0x378000-0x3E8FFF is a Media partition, which stores files used by the application.
 
 ## This case OTA flow
 
 1. Get the partition table，check partition;
-2. If the currently active partition is partition FW A, then Erase FW B zone.
+2. Erase the currently inactive FW slot selected from the partition table.
 3. Connect OTA server.
 4. Check the OTA Header sent by the server; if check is successful, continue to get the OTA data.
 5. Calculates whether the hash value of the OTA data is correct.
 6. If the hash value is calculated incorrectly, the OTA process is exited and the partition table and currently active partition flags are not updated. If hash is correct, then partition table and current active partition flags are updated, and the `age++` indicates the number of OTA updates.
 7. reboot system.
-8. If the OTA case run crashes, there will be Watch Dog for system reset; Watch Dog starts running from the system and will reset after 30s without OTA success.
+8. If the OTA case run crashes, recover it according to your system policy. This example no longer injects an extra watchdog reset path for OTA automation.
 
 ## Dump OTA log
 

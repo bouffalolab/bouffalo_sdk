@@ -43,7 +43,7 @@ void app_init_entry(void *param)
 int main(void)
 {
     board_init();
-
+    app_pm_init();
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 

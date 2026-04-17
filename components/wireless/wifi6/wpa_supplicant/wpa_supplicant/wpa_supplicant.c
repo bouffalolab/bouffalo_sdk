@@ -1328,9 +1328,31 @@ void wpas_set_mgmt_group_cipher(struct wpa_supplicant *wpa_s,
 	if (wpas_get_ssid_pmf(wpa_s, ssid) == NO_MGMT_FRAME_PROTECTION ||
 	    !(ie->capabilities & WPA_CAPABILITY_MFPC))
 		sel = 0;
-	wpa_dbg(wpa_s, MSG_DEBUG,
-		"WPA: AP mgmt_group_cipher 0x%x network profile mgmt_group_cipher 0x%x; available mgmt_group_cipher 0x%x",
-		ie->mgmt_group_cipher, ssid->group_mgmt_cipher, sel);
+
+	/* Intersect with STA driver capabilities */
+	if (wpa_s->drv_enc && sel) {
+		int drv_sel = 0;
+
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_BIP)
+			drv_sel |= WPA_CIPHER_AES_128_CMAC;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_BIP_GMAC_128)
+			drv_sel |= WPA_CIPHER_BIP_GMAC_128;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_BIP_GMAC_256)
+			drv_sel |= WPA_CIPHER_BIP_GMAC_256;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_BIP_CMAC_256)
+			drv_sel |= WPA_CIPHER_BIP_CMAC_256;
+
+		sel &= drv_sel;
+
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"WPA: AP mgmt_group_cipher 0x%x network profile mgmt_group_cipher 0x%x; driver supported 0x%x; available mgmt_group_cipher 0x%x",
+			ie->mgmt_group_cipher, ssid->group_mgmt_cipher, drv_sel, sel);
+	} else {
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"WPA: AP mgmt_group_cipher 0x%x network profile mgmt_group_cipher 0x%x; available mgmt_group_cipher 0x%x",
+			ie->mgmt_group_cipher, ssid->group_mgmt_cipher, sel);
+	}
+
 	if (sel & WPA_CIPHER_AES_128_CMAC) {
 		wpa_s->mgmt_group_cipher = WPA_CIPHER_AES_128_CMAC;
 		wpa_dbg(wpa_s, MSG_DEBUG,
@@ -1528,27 +1550,68 @@ int wpa_supplicant_set_suites(struct wpa_supplicant *wpa_s,
 	wpa_s->group_cipher = WPA_CIPHER_NONE;
 	wpa_s->pairwise_cipher = WPA_CIPHER_NONE;
 #else /* CONFIG_NO_WPA */
+	/* Convert driver capabilities to WPA_CIPHER format (for both group and pairwise) */
+	int drv_sel = 0;
+	if (wpa_s->drv_enc) {
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_CCMP)
+			drv_sel |= WPA_CIPHER_CCMP;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_GCMP)
+			drv_sel |= WPA_CIPHER_GCMP;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_CCMP_256)
+			drv_sel |= WPA_CIPHER_CCMP_256;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_GCMP_256)
+			drv_sel |= WPA_CIPHER_GCMP_256;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_TKIP)
+			drv_sel |= WPA_CIPHER_TKIP;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_WEP40)
+			drv_sel |= WPA_CIPHER_WEP40;
+		if (wpa_s->drv_enc & WPA_DRIVER_CAPA_ENC_WEP104)
+			drv_sel |= WPA_CIPHER_WEP104;
+	}
+
+	/* Select group cipher */
 	sel = ie.group_cipher & ssid->group_cipher;
-	wpa_dbg(wpa_s, MSG_DEBUG,
-		"WPA: AP group 0x%x network profile group 0x%x; available group 0x%x",
-		ie.group_cipher, ssid->group_cipher, sel);
+	if (drv_sel) {
+		sel &= drv_sel;
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"WPA: AP group 0x%x network profile group 0x%x; available group (with driver) 0x%x",
+			ie.group_cipher, ssid->group_cipher, sel);
+	} else {
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"WPA: AP group 0x%x network profile group 0x%x; available group 0x%x",
+			ie.group_cipher, ssid->group_cipher, sel);
+	}
 	wpa_s->group_cipher = wpa_pick_group_cipher(sel);
 	if (wpa_s->group_cipher < 0) {
-		wpa_msg(wpa_s, MSG_WARNING, "WPA: Failed to select group "
-			"cipher");
+		wpa_msg(wpa_s, MSG_WARNING, "WPA: Failed to select group cipher");
 		return -1;
 	}
 	wpa_dbg(wpa_s, MSG_DEBUG, "WPA: using GTK %s",
 		wpa_cipher_txt(wpa_s->group_cipher));
 
+	/* Select pairwise cipher */
 	sel = ie.pairwise_cipher & ssid->pairwise_cipher;
-	wpa_dbg(wpa_s, MSG_DEBUG,
-		"WPA: AP pairwise 0x%x network profile pairwise 0x%x; available pairwise 0x%x",
-		ie.pairwise_cipher, ssid->pairwise_cipher, sel);
+	if (drv_sel) {
+		sel &= drv_sel;
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"WPA: AP pairwise 0x%x network profile pairwise 0x%x; available pairwise (with driver) 0x%x",
+			ie.pairwise_cipher, ssid->pairwise_cipher, sel);
+	} else {
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"WPA: AP pairwise 0x%x network profile pairwise 0x%x; available pairwise 0x%x",
+			ie.pairwise_cipher, ssid->pairwise_cipher, sel);
+	}
+
+	if (!sel) {
+		wpa_msg(wpa_s, MSG_WARNING,
+			"WPA: No common cipher between AP (0x%x) and STA driver (0x%x)",
+			ie.pairwise_cipher, wpa_s->drv_enc);
+		return -1;
+	}
+
 	wpa_s->pairwise_cipher = wpa_pick_pairwise_cipher(sel, 1);
 	if (wpa_s->pairwise_cipher < 0) {
-		wpa_msg(wpa_s, MSG_WARNING, "WPA: Failed to select pairwise "
-			"cipher");
+		wpa_msg(wpa_s, MSG_WARNING, "WPA: Failed to select pairwise cipher");
 		return -1;
 	}
 	wpa_dbg(wpa_s, MSG_DEBUG, "WPA: using PTK %s",

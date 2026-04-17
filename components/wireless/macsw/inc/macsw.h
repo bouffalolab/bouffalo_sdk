@@ -2732,6 +2732,9 @@ __INLINE uint16_t co_read16p(uint32_t addr)
         /* uint16_t val __PACKED16 */
         uint16_t val __attribute__ ((__packed__));
     } *ptr = (struct co_read16_struct*)addr;
+    if (ptr == NULL) {
+        return 0;
+    }
     return ptr->val;
     #endif
 }

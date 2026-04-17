@@ -21,7 +21,10 @@
 #else
 #include "partition.h"
 #include "bflb_flash.h"
-#include "utils_sha256.h"
+#include "bflb_l1c.h"
+#include "bflb_name.h"
+#include "bflb_sec_mutex.h"
+#include "bflb_sec_sha.h"
 #endif
 #include "bt_log.h"
 
@@ -30,6 +33,11 @@ pt_table_stuff_config pt_table_stuff[2];
 pt_table_id_type active_id;
 pt_table_entry_config pt_fw_entry;
 #define OTA_PARTITION_NAME_TYPE_FW    "FW"
+#define FW_CHECK_IMG_BUF_SIZE         512
+
+static ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32))) struct bflb_sha256_ctx_s ctx_sha256;
+static ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32))) uint8_t fw_check_img_buf[FW_CHECK_IMG_BUF_SIZE];
+
 static int fw_check_hash256(void);
 #endif //CONFIG_BL_SDK
 
@@ -468,33 +476,52 @@ static int fw_check_hash256(void)
         return -1;
     }
 
-#define CHECK_IMG_BUF_SIZE 512
+    struct bflb_device_s *sha_dev;
     uint32_t read_size;
-    sha256_context ctx_sha256;
     uint8_t sha256_result[32];
     uint8_t sha256_img[32];
+    int ret;
     int i, offset = 0;
-    uint8_t r_buf[CHECK_IMG_BUF_SIZE];
+
+    sha_dev = bflb_device_get_by_name(BFLB_NAME_SEC_SHA);
+    if (sha_dev == NULL) {
+        BT_WARN("get SEC_SHA device fail\r\n");
+        return -1;
+    }
 
     BT_WARN("[OTA]prepare OTA partition info\r\n");
-    utils_sha256_init(&ctx_sha256);
-    utils_sha256_starts(&ctx_sha256);
+    bflb_sec_sha_mutex_take();
+    bflb_sha_init(sha_dev, SHA_MODE_SHA256);
+    bflb_sha256_start(sha_dev, &ctx_sha256);
+    bflb_sec_sha_mutex_give();
     memset(sha256_result, 0, sizeof(sha256_result));
 
     offset = 0;
     while (offset < bin_size) {
-        (bin_size - offset >= CHECK_IMG_BUF_SIZE) ? (read_size = CHECK_IMG_BUF_SIZE):(read_size = bin_size - offset);
-        if (bflb_flash_read(oad_env.new_img_addr+offset, r_buf, read_size)) {
+        (bin_size - offset >= FW_CHECK_IMG_BUF_SIZE) ? (read_size = FW_CHECK_IMG_BUF_SIZE):(read_size = bin_size - offset);
+        if (bflb_flash_read(oad_env.new_img_addr + offset, fw_check_img_buf, read_size)) {
             BT_WARN("flash read failed \r\n");
             return -1;
         }
-        utils_sha256_update(&ctx_sha256, (const uint8_t *)r_buf, read_size);
+        bflb_l1c_dcache_clean_range(fw_check_img_buf, read_size);
+        bflb_sec_sha_mutex_take();
+        ret = bflb_sha256_update(sha_dev, &ctx_sha256, fw_check_img_buf, read_size);
+        bflb_sec_sha_mutex_give();
+        if (ret != 0) {
+            BT_WARN("sha256 update fail %d\r\n", ret);
+            return -1;
+        }
         offset += read_size;
     }
 
-    utils_sha256_finish(&ctx_sha256, sha256_result);
+    bflb_sec_sha_mutex_take();
+    bflb_sha256_finish(sha_dev, &ctx_sha256, sha256_result);
+    bflb_sec_sha_mutex_give();
 
-    bflb_flash_read(hash_addr,sha256_img,32);
+    if (bflb_flash_read(hash_addr, sha256_img, 32)) {
+        BT_WARN("flash read hash failed \r\n");
+        return -1;
+    }
     for (i = 0; i < 32; i++) {
         BT_WARN("%02X", sha256_img[i]);
     }

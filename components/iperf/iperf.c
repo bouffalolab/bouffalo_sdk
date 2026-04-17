@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <FreeRTOS.h>
@@ -56,8 +58,8 @@
 
 #define IPERF_GOTO_ON_FALSE(a, err_code, goto_tag, log_tag, format, ...) \
     do {                                                                 \
-        (void)log_tag;                                                   \
         if (unlikely(!(a))) {                                            \
+            IPERF_LOGE(log_tag, format, ##__VA_ARGS__);                  \
             ret = err_code;                                              \
             goto goto_tag;                                               \
         }                                                                \
@@ -73,6 +75,13 @@ typedef struct {
     uint32_t buffer_len;
     uint8_t *buffer;
     uint32_t sockfd;
+    uint64_t udp_start_us;
+    int64_t udp_last_transit_us;
+    double udp_jitter_us;
+    int32_t udp_last_id;
+    uint32_t udp_datagram_cnt;
+    uint32_t udp_error_cnt;
+    uint32_t udp_outorder_cnt;
 } iperf_ctrl_t;
 
 static bool s_iperf_is_running = false;
@@ -106,6 +115,7 @@ inline static bool iperf_is_tcp_server(void)
 
 static int iperf_get_socket_error_code(int sockfd)
 {
+    (void)sockfd;
     return errno;
 }
 
@@ -168,24 +178,205 @@ static iperf_err_t iperf_start_report(void)
     return IPERF_OK;
 }
 
+typedef struct {
+    int32_t flags;
+    int32_t numThreads;
+    int32_t mPort;
+    int32_t bufferlen;
+    int32_t mWindowSize;
+    int32_t mAmount;
+    int32_t mRate;
+    int32_t mUDPRateUnits;
+    int32_t mRealtime;
+} iperf_client_hdr_t;
+#define HEADER_VERSION1 0x80000000
+#define RUN_NOW         0x00000001
+#define UNITS_PPS       0x00000002
+#define IPERF_UDP_ACK_RETRY_MAX 20
+#define IPERF_UDP_SEND_FAIL_DELAY_US 200
+
+typedef struct {
+    int32_t id;
+    uint32_t tv_sec;
+    uint32_t tv_usec;
+} iperf_udp_datagram_t;
+
+typedef struct {
+    int32_t flags;
+    int32_t total_len1;
+    int32_t total_len2;
+    int32_t stop_sec;
+    int32_t stop_usec;
+    int32_t error_cnt;
+    int32_t outorder_cnt;
+    int32_t datagrams;
+    int32_t jitter1;
+    int32_t jitter2;
+} iperf_server_hdr_t;
+
+typedef struct {
+    iperf_udp_datagram_t datagram;
+    iperf_server_hdr_t hdr;
+} iperf_udp_ackfin_t;
+
+static inline uint64_t iperf_time_now_us(void)
+{
+    return iperf_timer_get_time();
+}
+
+static void iperf_set_udp_datagram(iperf_udp_datagram_t *datagram, int32_t packet_id, uint64_t now_us)
+{
+    datagram->id = htonl(packet_id);
+    datagram->tv_sec = htonl((uint32_t)(now_us / 1000000ULL));
+    datagram->tv_usec = htonl((uint32_t)(now_us % 1000000ULL));
+}
+
+static void iperf_update_udp_jitter_lost(int32_t packet_id, uint32_t sent_sec, uint32_t sent_usec, uint64_t now_us)
+{
+    int64_t transit_us;
+    int64_t delta_us;
+    uint64_t sent_us = ((uint64_t)sent_sec * 1000000ULL) + (uint64_t)sent_usec;
+    int32_t expected = s_iperf_ctrl.udp_last_id + 1;
+
+    s_iperf_ctrl.udp_datagram_cnt++;
+    if (s_iperf_ctrl.udp_start_us == 0) {
+        s_iperf_ctrl.udp_start_us = now_us;
+    }
+
+    if (packet_id != expected) {
+        if (packet_id < expected) {
+            s_iperf_ctrl.udp_outorder_cnt++;
+        } else {
+            s_iperf_ctrl.udp_error_cnt += (uint32_t)(packet_id - expected);
+        }
+    }
+    if (packet_id > s_iperf_ctrl.udp_last_id) {
+        s_iperf_ctrl.udp_last_id = packet_id;
+    }
+
+    if (sent_us != 0) {
+        transit_us = (int64_t)now_us - (int64_t)sent_us;
+        if (transit_us < 0) {
+            transit_us = -transit_us;
+        }
+        if (s_iperf_ctrl.udp_last_transit_us != 0) {
+            delta_us = transit_us - s_iperf_ctrl.udp_last_transit_us;
+            if (delta_us < 0) {
+                delta_us = -delta_us;
+            }
+            s_iperf_ctrl.udp_jitter_us += ((double)delta_us - s_iperf_ctrl.udp_jitter_us) / 16.0;
+        }
+        s_iperf_ctrl.udp_last_transit_us = transit_us;
+    }
+}
+
+static void iperf_udp_server_send_ackfin(int recv_socket, const struct sockaddr *peer_addr, socklen_t peer_len, int32_t fin_packet_id)
+{
+    iperf_udp_ackfin_t ack = { 0 };
+    uint64_t duration_us = 0;
+    uint64_t jitter_us = (uint64_t)(s_iperf_ctrl.udp_jitter_us);
+
+    if (s_iperf_ctrl.udp_start_us > 0) {
+        duration_us = iperf_time_now_us() - s_iperf_ctrl.udp_start_us;
+    }
+
+    iperf_set_udp_datagram(&ack.datagram, -fin_packet_id, iperf_time_now_us());
+    ack.hdr.flags = htonl(0x80000000);
+    ack.hdr.total_len1 = htonl((uint32_t)((uint64_t)s_iperf_ctrl.tot_len >> 32));
+    ack.hdr.total_len2 = htonl((uint32_t)((uint64_t)s_iperf_ctrl.tot_len & 0xFFFFFFFFULL));
+    ack.hdr.stop_sec = htonl((uint32_t)(duration_us / 1000000ULL));
+    ack.hdr.stop_usec = htonl((uint32_t)(duration_us % 1000000ULL));
+    ack.hdr.error_cnt = htonl(s_iperf_ctrl.udp_error_cnt);
+    ack.hdr.outorder_cnt = htonl(s_iperf_ctrl.udp_outorder_cnt);
+    ack.hdr.datagrams = htonl(s_iperf_ctrl.udp_datagram_cnt);
+    ack.hdr.jitter1 = htonl((uint32_t)(jitter_us / 1000000ULL));
+    ack.hdr.jitter2 = htonl((uint32_t)(jitter_us % 1000000ULL));
+
+    sendto(recv_socket, &ack, sizeof(ack), 0, peer_addr, peer_len);
+}
+
+static void iperf_udp_print_server_summary(void)
+{
+    double jitter_ms = s_iperf_ctrl.udp_jitter_us / 1000.0;
+    double loss_pct = 0.0;
+
+    if (s_iperf_ctrl.udp_datagram_cnt > 0) {
+        loss_pct = (100.0 * (double)s_iperf_ctrl.udp_error_cnt) / (double)s_iperf_ctrl.udp_datagram_cnt;
+    }
+
+    printf("[SUM] UDP jitter %.3f ms  lost %u/%u (%.2f%%)  out-of-order %u\r\n",
+           jitter_ms,
+           s_iperf_ctrl.udp_error_cnt,
+           s_iperf_ctrl.udp_datagram_cnt,
+           loss_pct,
+           s_iperf_ctrl.udp_outorder_cnt);
+}
+
+static void iperf_udp_client_wait_ackfin(int client_socket, struct sockaddr *dest_addr, socklen_t socklen, int32_t last_packet_id)
+{
+    int retry = 0;
+    int recv_len;
+    int32_t fin_id = last_packet_id;
+    struct timeval timeout = { 0 };
+    iperf_udp_ackfin_t ack = { 0 };
+    double jitter_ms;
+    uint32_t lost;
+    uint32_t total;
+    uint32_t out_of_order;
+    double loss_pct = 0.0;
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
+    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    for (retry = 0; retry < IPERF_UDP_ACK_RETRY_MAX; retry++) {
+        iperf_set_udp_datagram((iperf_udp_datagram_t *)s_iperf_ctrl.buffer, -fin_id, iperf_time_now_us());
+        sendto(client_socket, s_iperf_ctrl.buffer, s_iperf_ctrl.buffer_len, 0, dest_addr, socklen);
+        recv_len = recvfrom(client_socket, s_iperf_ctrl.buffer, s_iperf_ctrl.buffer_len, 0, NULL, NULL);
+        if (recv_len >= (int)sizeof(iperf_udp_ackfin_t)) {
+            memcpy(&ack, s_iperf_ctrl.buffer, sizeof(ack));
+            lost = ntohl(ack.hdr.error_cnt);
+            total = ntohl(ack.hdr.datagrams);
+            out_of_order = ntohl(ack.hdr.outorder_cnt);
+            jitter_ms = (double)ntohl(ack.hdr.jitter1) * 1000.0 + (double)ntohl(ack.hdr.jitter2) / 1000.0;
+            if (total > 0) {
+                loss_pct = (100.0 * (double)lost) / (double)total;
+            }
+            printf("[SVR] UDP jitter %.3f ms  lost %u/%u (%.2f%%)  out-of-order %u\r\n",
+                   jitter_ms, lost, total, loss_pct, out_of_order);
+            return;
+        }
+    }
+
+    printf("[SVR] WARNING: no UDP AckFIN received\r\n");
+}
+
 static void socket_recv(int recv_socket, struct sockaddr_storage listen_addr, uint8_t type)
 {
     bool iperf_recv_start = true;
     uint8_t *buffer;
     int want_recv = 0;
     int actual_recv = 0;
+    struct sockaddr_storage peer_addr = { 0 };
+    iperf_udp_datagram_t *udp_data;
 #if IPERF_V6
     socklen_t socklen = (s_iperf_ctrl.cfg.type == IPERF_IP_TYPE_IPV6) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
 #else
     socklen_t socklen = sizeof(struct sockaddr_in);
 #endif
     const char *error_log = (type == IPERF_TRANS_TYPE_TCP) ? "tcp server recv" : "udp server recv";
+    (void)listen_addr;
 
     buffer = s_iperf_ctrl.buffer;
     want_recv = s_iperf_ctrl.buffer_len;
     while (!s_iperf_ctrl.finish) {
-        actual_recv = recvfrom(recv_socket, buffer, want_recv, 0, (struct sockaddr *)&listen_addr, &socklen);
+        socklen = sizeof(peer_addr);
+        actual_recv = recvfrom(recv_socket, buffer, want_recv, 0, (struct sockaddr *)&peer_addr, &socklen);
         if (actual_recv < 0) {
+            int err = iperf_get_socket_error_code(recv_socket);
+            if (type == IPERF_TRANS_TYPE_UDP && (err == EAGAIN || err == EWOULDBLOCK)) {
+                continue;
+            }
             iperf_show_socket_error_reason(error_log, recv_socket);
             s_iperf_ctrl.finish = true;
             break;
@@ -196,10 +387,34 @@ static void socket_recv(int recv_socket, struct sockaddr_storage listen_addr, ui
             }
             s_iperf_ctrl.actual_len += actual_recv;
             s_iperf_ctrl.tot_len += actual_recv;
+            if (type == IPERF_TRANS_TYPE_UDP && actual_recv >= (int)sizeof(iperf_udp_datagram_t)) {
+                int32_t packet_id;
+
+                udp_data = (iperf_udp_datagram_t *)buffer;
+                packet_id = (int32_t)ntohl(udp_data->id);
+                if (packet_id == 0) {
+                    if (s_iperf_ctrl.udp_last_id < 0) {
+                        s_iperf_ctrl.udp_last_id = 0;
+                    }
+                    continue;
+                }
+                if (packet_id < 0) {
+                    packet_id = -packet_id;
+                    iperf_udp_server_send_ackfin(recv_socket, (struct sockaddr *)&peer_addr, socklen, packet_id);
+                    break;
+                }
+                iperf_update_udp_jitter_lost(packet_id,
+                                             ntohl(udp_data->tv_sec),
+                                             ntohl(udp_data->tv_usec),
+                                             iperf_time_now_us());
+            }
             if (s_iperf_ctrl.cfg.num_bytes > 0 && s_iperf_ctrl.tot_len > s_iperf_ctrl.cfg.num_bytes) {
                 break;
             }
         }
+    }
+    if (type == IPERF_TRANS_TYPE_UDP) {
+        iperf_udp_print_server_summary();
     }
 }
 
@@ -209,6 +424,7 @@ static void socket_recv_dual(int recv_socket, struct sockaddr_storage listen_add
     int want_recv = 0;
     int actual_recv = 0;
     socklen_t socklen = sizeof(struct sockaddr_in);
+    (void)type;
 
 #define RECV_DUAL_BUF_LEN (4 * 1024)
     buffer = malloc(RECV_DUAL_BUF_LEN);
@@ -224,21 +440,6 @@ static void socket_recv_dual(int recv_socket, struct sockaddr_storage listen_add
     }
     free(buffer);
 }
-
-typedef struct {
-    int32_t flags;
-    int32_t numThreads;
-    int32_t mPort;
-    int32_t bufferlen;
-    int32_t mWindowSize;
-    int32_t mAmount;
-    int32_t mRate;
-    int32_t mUDPRateUnits;
-    int32_t mRealtime;
-} iperf_client_hdr_t;
-#define HEADER_VERSION1 0x80000000
-#define RUN_NOW         0x00000001
-#define UNITS_PPS       0x00000002
 
 static void send_dual_header(int sock, struct sockaddr *addr, socklen_t socklen)
 {
@@ -258,6 +459,8 @@ static void socket_send(int send_socket, struct sockaddr_storage dest_addr, uint
     uint8_t *buffer;
     int32_t *pkt_id_p;
     int32_t pkt_cnt = 0;
+    int32_t last_udp_packet_id = 0;
+    bool udp_sent_any = false;
     int actual_send = 0;
     int want_send = 0;
     int period_us = -1;
@@ -302,10 +505,8 @@ static void socket_send(int send_socket, struct sockaddr_storage dest_addr, uint
             prev_time = send_time;
         }
         *pkt_id_p = htonl(pkt_cnt); // datagrams need to be sequentially numbered
-        if (pkt_cnt >= INT32_MAX) {
-            pkt_cnt = 0;
-        } else {
-            pkt_cnt++;
+        if (type == IPERF_TRANS_TYPE_UDP) {
+            iperf_set_udp_datagram((iperf_udp_datagram_t *)buffer, pkt_cnt, iperf_time_now_us());
         }
         actual_send = sendto(send_socket, buffer, want_send, 0, (struct sockaddr *)&dest_addr, socklen);
         if (actual_send != want_send) {
@@ -315,11 +516,22 @@ static void socket_send(int send_socket, struct sockaddr_storage dest_addr, uint
                 if (err != ENOMEM) {
                     iperf_show_socket_error_reason(error_log, send_socket);
                 }
+                // A tiny backoff avoids busy-looping on TX queue pressure.
+                iperf_delay_us(IPERF_UDP_SEND_FAIL_DELAY_US);
             } else if (type == IPERF_TRANS_TYPE_TCP) {
                 iperf_show_socket_error_reason(error_log, send_socket);
                 break;
             }
         } else {
+            if (pkt_cnt >= INT32_MAX) {
+                pkt_cnt = 0;
+            } else {
+                pkt_cnt++;
+            }
+            if (type == IPERF_TRANS_TYPE_UDP) {
+                last_udp_packet_id = pkt_cnt - 1;
+                udp_sent_any = true;
+            }
             s_iperf_ctrl.actual_len += actual_send;
             s_iperf_ctrl.tot_len += actual_send;
             if (s_iperf_ctrl.cfg.num_bytes > 0 && s_iperf_ctrl.tot_len >= s_iperf_ctrl.cfg.num_bytes) {
@@ -330,6 +542,9 @@ static void socket_send(int send_socket, struct sockaddr_storage dest_addr, uint
         if (delay_us > 0) {
             iperf_delay_us(delay_us);
         }
+    }
+    if (type == IPERF_TRANS_TYPE_UDP && udp_sent_any) {
+        iperf_udp_client_wait_ackfin(send_socket, (struct sockaddr *)&dest_addr, socklen, last_udp_packet_id);
     }
 }
 
@@ -636,7 +851,7 @@ static iperf_err_t iperf_run_udp_client(void)
 
         client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         IPERF_GOTO_ON_FALSE((client_socket >= 0), IPERF_FAIL, exit, TAG, "Unable to create socket: errno %d", errno);
-        IPERF_LOGI(TAG, "Socket created, sending to %d:%d", s_iperf_ctrl.cfg.destination_ip4, s_iperf_ctrl.cfg.dport);
+        IPERF_LOGI(TAG, "Socket created, sending to %s:%d", inet_ntoa(dest_addr4.sin_addr), s_iperf_ctrl.cfg.dport);
 
         setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
         opt = s_iperf_ctrl.cfg.tos;
@@ -727,6 +942,7 @@ iperf_err_t iperf_start(iperf_cfg_t *cfg)
 
     memset(&s_iperf_ctrl, 0, sizeof(s_iperf_ctrl));
     memcpy(&s_iperf_ctrl.cfg, cfg, sizeof(*cfg));
+    s_iperf_ctrl.udp_last_id = -1;
     s_iperf_is_running = true;
     s_iperf_ctrl.finish = false;
     s_iperf_ctrl.buffer_len = iperf_get_buffer_len();
@@ -736,6 +952,7 @@ iperf_err_t iperf_start(iperf_cfg_t *cfg)
         return IPERF_FAIL;
     }
     memset(s_iperf_ctrl.buffer, 0, s_iperf_ctrl.buffer_len);
+    net_iperf_print_header(cfg);
     ret = xTaskCreatePinnedToCore(iperf_task_traffic, IPERF_TRAFFIC_TASK_NAME, IPERF_TRAFFIC_TASK_STACK, NULL, s_iperf_ctrl.cfg.traffic_task_priority, NULL, portNUM_PROCESSORS - 1);
     if (ret != pdPASS) {
         IPERF_LOGE(TAG, "create task %s failed", IPERF_TRAFFIC_TASK_NAME);
@@ -743,7 +960,6 @@ iperf_err_t iperf_start(iperf_cfg_t *cfg)
         s_iperf_ctrl.buffer = NULL;
         return IPERF_FAIL;
     }
-    net_iperf_print_header(cfg);
     return IPERF_OK;
 }
 

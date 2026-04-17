@@ -1,6 +1,7 @@
 sdk_add_subdirectory_ifdef(CONFIG_BLUETOOTH bluetooth)
 sdk_add_subdirectory_ifdef(CONFIG_WL80211 wl80211)
 if(CONFIG_WIFI6)
+    sdk_add_link_options(-L${CMAKE_CURRENT_SOURCE_DIR}/macsw)
     sdk_add_include_directories(macsw/inc)
     sdk_add_compile_definitions(-DCONFIG_MACSW_SELECT_INCLUDE=\"macsw_${CONFIG_MACSW_SELECT}_config.h\")
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/macsw/lib/libmacsw_${CHIP}_${CONFIG_MACSW_SELECT}.a)

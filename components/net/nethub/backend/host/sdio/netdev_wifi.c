@@ -209,7 +209,7 @@ int netdev_wifi_init(mr_msg_ctrl_priv_t *msg_ctrl)
         .upld_done_cb = netdev_upld_done_cb,
         .task_priority = 27,
         .task_stack_size = 1024,
-        .task_period_max_ms = 100,
+        .task_period_max_ms = portMAX_DELAY,
         .netdev_task_cb = netdev_task_cb,
         .link_up_flag = true,
         .mac = { 0x22, 0x22, 0x22, 0x88, 0x88, 0x88 },

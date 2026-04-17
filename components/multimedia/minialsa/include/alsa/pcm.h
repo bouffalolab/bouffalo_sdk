@@ -160,58 +160,50 @@ typedef struct msp_pcm_dev {
 int msp_pcm_new(msp_pcm_t **pcm, int type, const char *name, msp_pcm_stream_t stream, int mode);
 void msp_pcm_set_ops(msp_pcm_t *pcm, int direction, struct msp_pcm_ops *ops);
 
-int msp_pcm_hw_params_alloca(msp_pcm_hw_params_t **p);
-int msp_pcm_sw_params_alloca(msp_pcm_sw_params_t **p);
-
 int msp_pcm_open(msp_pcm_t **pcm, const char *name, msp_pcm_stream_t stream, int mode);
 int msp_pcm_close(msp_pcm_t *pcm);
 
-int msp_pcm_pause(msp_pcm_t *pcm, int enable);
-int msp_pcm_drop(msp_pcm_t *pcm);
-int msp_pcm_drain(msp_pcm_t *pcm);
-
-int msp_pcm_hw_params_set_access(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_access_t _access);
-int msp_pcm_hw_params_set_format(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, int val);
-int msp_pcm_hw_params_set_buffer_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val);
-int msp_pcm_hw_params_set_period_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val, int *dir);
 int msp_pcm_hw_params_current(msp_pcm_t *pcm, msp_pcm_hw_params_t *params);
-int msp_pcm_hw_free(msp_pcm_t *pcm);
-int msp_pcm_hw_params_any(msp_pcm_t *pcm, msp_pcm_hw_params_t *params);
 int msp_pcm_hw_params(msp_pcm_t *pcm, msp_pcm_hw_params_t *params);
-int msp_pcm_prepare(msp_pcm_t *pcm);
-int msp_pcm_wait(msp_pcm_t *pcm, int timeout);
-int msp_pcm_recover(msp_pcm_t *pcm, int err, int silent);
-
-int msp_pcm_hw_params_set_channels(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val);
-int msp_pcm_hw_params_set_rate(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val, int dir);
-int msp_pcm_hw_params_set_rate_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int *val, int *dir);
-int msp_pcm_hw_params_set_rate_resample(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val);
-int msp_pcm_hw_params_set_export_buffer(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val);
-int msp_pcm_hw_params_set_period_wakeup(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val);
-int msp_pcm_hw_params_set_period_time(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val, int dir);
-int msp_pcm_hw_params_set_period_size(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t val, int dir);
-int msp_pcm_hw_params_set_periods(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val, int dir);
-int msp_pcm_hw_params_set_buffer_time(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val, int dir);
-int msp_pcm_hw_params_set_buffer_size(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t val);
-int msp_pcm_set_params(msp_pcm_t *pcm, int format, msp_pcm_access_t acc, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
-
 
 int msp_pcm_sw_params_current(msp_pcm_t *pcm, msp_pcm_sw_params_t *params);
-int msp_pcm_sw_params_set_tstamp_mode(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, int val);
-int msp_pcm_sw_params_set_avail_min(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
-int msp_pcm_sw_params_set_period_event(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, int val);
-int msp_pcm_sw_params_set_start_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
-int msp_pcm_sw_params_set_stop_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
-int msp_pcm_sw_params_set_silence_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
-int msp_pcm_sw_params_set_silence_size(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
 int msp_pcm_sw_params(msp_pcm_t *pcm, msp_pcm_sw_params_t *params);
+
+int msp_pcm_drop(msp_pcm_t *pcm);
+int msp_pcm_drain(msp_pcm_t *pcm);
+int msp_pcm_pause(msp_pcm_t *pcm, int enable);
 
 msp_pcm_sframes_t msp_pcm_avail(msp_pcm_t *pcm);
 msp_pcm_sframes_t msp_pcm_writei(msp_pcm_t *pcm, const void *buffer, msp_pcm_uframes_t size);
 msp_pcm_sframes_t msp_pcm_readi(msp_pcm_t *pcm, void *buffer, msp_pcm_uframes_t size);
-msp_pcm_sframes_t msp_pcm_writen(msp_pcm_t *pcm, void **bufs, msp_pcm_uframes_t size);
 msp_pcm_sframes_t msp_pcm_readn(msp_pcm_t *pcm, void **bufs, msp_pcm_uframes_t size);
+int msp_pcm_wait(msp_pcm_t *pcm, int timeout);
 
+int msp_pcm_recover(msp_pcm_t *pcm, int err, int silent);
+int msp_pcm_set_params(msp_pcm_t *pcm, int format, msp_pcm_access_t acc, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
+
+int msp_pcm_hw_params_any(msp_pcm_t *pcm, msp_pcm_hw_params_t *params);
+int msp_pcm_hw_params_malloc(msp_pcm_hw_params_t **p);
+void msp_pcm_hw_params_free(msp_pcm_hw_params_t *obj);
+int msp_pcm_hw_params_alloca(msp_pcm_hw_params_t **p);
+
+int msp_pcm_hw_params_set_access(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_access_t _access);
+int msp_pcm_hw_params_get_format(const msp_pcm_hw_params_t *params, int *val);
+int msp_pcm_hw_params_set_format(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, int val);
+int msp_pcm_hw_params_get_channels(const msp_pcm_hw_params_t *params, unsigned int *val);
+int msp_pcm_hw_params_set_channels(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val);
+int msp_pcm_hw_params_get_rate(const msp_pcm_hw_params_t *params, unsigned int *val, int *dir);
+int msp_pcm_hw_params_set_rate(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val, int dir);
+int msp_pcm_hw_params_set_rate_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int *val, int *dir);
+int msp_pcm_hw_params_get_period_size(const msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val, int *dir);
+int msp_pcm_hw_params_set_period_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val, int *dir);
+int msp_pcm_hw_params_get_buffer_size(const msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val);
+int msp_pcm_hw_params_set_buffer_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val);
+
+int msp_pcm_sw_params_alloca(msp_pcm_sw_params_t **p);
+int msp_pcm_sw_params_set_start_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
+int msp_pcm_sw_params_get_start_threshold(const msp_pcm_sw_params_t *params, msp_pcm_uframes_t *val);
+int msp_pcm_sw_params_set_stop_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
 
 msp_pcm_sframes_t msp_pcm_bytes_to_frames(msp_pcm_t *pcm, ssize_t bytes);
 ssize_t msp_pcm_frames_to_bytes(msp_pcm_t *pcm, msp_pcm_sframes_t frames);

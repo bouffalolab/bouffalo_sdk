@@ -64,6 +64,21 @@ static const ATTR_TCM_CONST_SECTION bflb_flash_secreg_param_t flash_secreg_param
     .lb_read_loop = 1,
 };
 
+static const ATTR_TCM_CONST_SECTION bflb_flash_secreg_param_t flash_secreg_param_gd_le80c = {
+    .region_offset = 1,
+    .region_count = 3,
+    .region_size = 0x10,
+    .secreg_size = 0x2,
+    .api_type = BFLB_FLASH_SECREG_API_TYPE_GENERAL,
+    .lb_share = 0,
+    .lb_offset = 11,
+    .lb_write_cmd = 0x01,
+    .lb_write_len = 2,
+    .lb_read_cmd = { 0x05, 0x35 },
+    .lb_read_len = 1,
+    .lb_read_loop = 2,
+};
+
 static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_winb_16jv = {
     .reset_c_read_cmd = 0xff,
     .reset_c_read_cmd_size = 3,
@@ -268,12 +283,21 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         //.name="issi_25lp256_33",
         .cfg = &flash_cfg_issi_25lp256,
     },
+    {
+        .jedec_id = 0x14345e,
+        //.name="ZB_WQ80A_08_33",
+        .cfg = &flash_cfg_winb_16jv,
+    },
 };
 
 static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_secreg_infos[] = {
     {
         .jedec_id = 0x155020,
         .param = flash_secreg_param_gd_wq32e_q128e,
+    },
+    {
+        .jedec_id = 0x14345e,
+        .param = flash_secreg_param_gd_le80c,
     },
 };
 

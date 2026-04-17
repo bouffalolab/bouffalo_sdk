@@ -68,11 +68,7 @@ sdk_add_include_directories(cjson)
 sdk_library_add_sources(math/src/utils_base64.c math/src/utils_crc.c math/src/utils_hex.c)
 sdk_add_include_directories(math/include)
 
-# ota
-if(CONFIG_BFLB_OTA)
-sdk_library_add_sources(bflb_ota/bflb_ota.c bflb_ota/utils_sha256.c)
-sdk_add_include_directories(bflb_ota)
-endif()
+# ota legacy implementation moved to components/fota/compat
 
 # list
 sdk_add_include_directories(list)
@@ -84,12 +80,18 @@ sdk_library_add_sources(async_event/async_event.c async_event/rtos_al.c)
 sdk_add_include_directories(async_event)
 endif()
 
-if(CONFIG_RPMSG_SERVICE)
-sdk_add_include_directories(ipc_rpmsg_ops/flash_ops_rpmsg)
+if(CONFIG_IPC)
+    if(CONFIG_RPMSG_SERVICE_MODE_MASTER)
+        sdk_library_add_sources(ipc_rpmsg_ops/flash_ops_rpmsg/flash_ops_rpmsg_master.c)
+        sdk_library_add_sources(ipc_rpmsg_ops/rpmsg_master_init.c)
+    else()
+        sdk_library_add_sources(ipc_rpmsg_ops/flash_ops_rpmsg/flash_ops_rpmsg_slave.c)
+        sdk_library_add_sources(ipc_rpmsg_ops/rpmsg_slave_init.c)
+    endif()
 endif()
 
-if(CONFIG_BFLB_OTA)
-add_subdirectory(wifi_ota)
+if(CONFIG_RPMSG_SERVICE)
+sdk_add_include_directories(ipc_rpmsg_ops/flash_ops_rpmsg)
 endif()
 
 if(CONFIG_MQUICKJS)

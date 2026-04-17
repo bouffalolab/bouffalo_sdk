@@ -1,6 +1,10 @@
 sdk_generate_library()
 sdk_library_add_sources(clock_manager.c)
 sdk_library_add_sources(pm_manager.c)
+if (CONFIG_TICKLESS_EXT)
+    sdk_library_add_sources(tickless.c)
+    sdk_library_add_sources(rc32k_trim.c)
+endif()
 sdk_add_include_directories(.)
 
 if (CONFIG_TICKLESS_ACCURATE)

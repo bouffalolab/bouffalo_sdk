@@ -4,56 +4,40 @@ ifneq (,$(filter $(CHIP),bl616 bl616cl))
     CONFIG_WL80211 =y
     CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT = 0x4000 # 16KB
 endif
-
-CONFIG_BFLB_LOG      =n
-CONFIG_FREERTOS      =y
-CONFIG_POSIX         =y
-CONFIG_TLSF          =y
-#CONFIG_SHELL        =y
-CONFIG_LOG_DISABLE   =y
-CONFIG_LWIP          =y
-CONFIG_RF            =y
-CONFIG_DHCPD         =y
-CONFIG_MBEDTLS       =y
-
-ifeq ($(CHIP),bl602)
-    CONFIG_WIFI4=y
-else
-    CONFIG_WIFI6=y
-    CONFIG_MACSW_SELECT = default
-    ifeq ($(CONFIG_WL80211),y)
-        CONFIG_BL_WPA_SUPPLICANT =y
-    else
-        CONFIG_FHOST=y
-    endif
-endif
-
-CONFIG_VSNPRINTF_FLOAT      =y
-CONFIG_VSNPRINTF_FLOAT_EX   =y
-CONFIG_VSNPRINTF_LONG_LONG  =y
+# The default configuration of the wireless network
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
 
 CONFIG_PSRAM =y
+CONFIG_SHELL =y
+CONFIG_IPERF =y
 
 ################### solution_utils config ###################
 ################### queue ###################
-CONFIG_SOLUTION_QUEUE_YUYV          =y
-CONFIG_SOLUTION_QUEUE_MJPEG         =y
-CONFIG_SOLUTION_QUEUE_AUDIO_IN      =y
-CONFIG_SOLUTION_QUEUE_AUDIO_OUT     =y
+CONFIG_SOLUTION_QUEUE_IMG_RAW_OUT   =y
+CONFIG_SOLUTION_QUEUE_IMG_RAW_IN    =n
+CONFIG_SOLUTION_QUEUE_MJPEG_OUT     =y
+CONFIG_SOLUTION_QUEUE_MJPEG_IN      =n
+CONFIG_SOLUTION_QUEUE_AUDIO_IN      =n
+CONFIG_SOLUTION_QUEUE_AUDIO_OUT     =n
 
 ################### video ##################
 ## video default size
-CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH  =240
-CONFIG_SOLUTION_VIDEO_DEFAULT_HIGHT  =320
-## dbi display (yuyv >> dbi_displa)
-CONFIG_SOLUTION_FUNC_DBI_DISP       =y
+CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH  =640
+CONFIG_SOLUTION_VIDEO_DEFAULT_HIGHT  =480
+## dbi display (yuyv >> dbi_display)
+CONFIG_SOLUTION_FUNC_DISP_DBI       =y
 ## jpeg compression (yuyv >> jpeg)
-CONFIG_SOLUTION_FUNC_MJPEG          =y
+CONFIG_SOLUTION_FUNC_MJPEG_ENC      =y
+## jpeg decompression (jpeg >> yuv/rgb)
+CONFIG_SOLUTION_FUNC_MJPEG_DEC      =n
+## mjpeg dec output format:  1: RGB565, 2: RGB888, 3: NRGB8888, 4: YUYV, 5: YUV,
+CONFIG_MJPEG_DEC_OUTPUT_FORMAT      =1
 ## dvp sensor (dvp >> yuyv)
 CONFIG_SOLUTION_FUNC_DVP            =y
 
 ## image_transmission (jpeg)
-CONFIG_SOLUTION_FUNC_HIBOOSTER_NEW  =y
+CONFIG_SOLUTION_FUNC_HIBOOSTER_TX   =y
+CONFIG_SOLUTION_FUNC_HIBOOSTER_RX   =n
 CONFIG_HB_SEND_TEST                 =n
 CONFIG_HB_RECV_TEST                 =y
 

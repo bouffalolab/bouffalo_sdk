@@ -8,13 +8,14 @@
 #include <bl_timer.h>
 #include <bl_wireless.h>
 #include <lmac154.h>
+#if defined (BL702L)
+#include <lmac154_fpt.h>
+#endif
+#include <zb_timer.h>
 
 #include <openthread_port.h>
 #include <ot_radio_trx.h>
-#include <ot_utils_ext.h>
-#ifdef CFG_PDS_ENABLE
-#include <ot_pds_ext.h>
-#endif
+
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64) 
 {

@@ -114,6 +114,10 @@ cmake_definition+= -DBUILD_DIR=$(BUILD_DIR)
 cmake_definition+= -DVSCODE_PARSE_EN=$(VSCODE_PARSE_EN)
 cmake_definition+= -DSDK_DEMO_PATH=$(SDK_DEMO_PATH)
 
+ifneq ($(strip $(PROJECT_SDK_VERSION)),)
+cmake_definition+= -DPROJECT_SDK_VERSION=$(PROJECT_SDK_VERSION)
+endif
+
 $(BUILD_DIR): Makefile cmake_cache library_build
 	$(MAKE) -C $(BUILD_DIR) pre_build
 	$(MAKE) -C $(BUILD_DIR) -j8

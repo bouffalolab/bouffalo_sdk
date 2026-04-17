@@ -61,7 +61,7 @@ static void cam_isr(int irq, void *arg)
 static void dvp_start_task(void *pvParameters)
 {
     int ret;
-    pyuyv_frame_t pbuff_frame;
+    pimg_raw_frame_t pbuff_frame;
 
     vTaskDelay(2);
 
@@ -70,13 +70,13 @@ static void dvp_start_task(void *pvParameters)
 
     while (1) {
         /* alloc new frame buff */
-        ret = frame_queue_alloc_lock(g_yuyv_frame_ctrl, (frame_elem_t *)&pbuff_frame, 1000);
+        ret = frame_queue_alloc_lock(g_img_raw_out_frame_ctrl, (frame_elem_t *)&pbuff_frame, 1000);
         if (ret < 0) {
-            DVP_INFO("yuyv alloc timeout %d, continue wait... \r\n", ret);
+            DVP_INFO("img_raw alloc timeout %d, continue wait... \r\n", ret);
             continue;
         }
 
-        DVP_DBG("yuyv alloc: id %d, addr 0x%08X, size %d\r\n", pbuff_frame.elem_base.frame_id, pbuff_frame.elem_base.frame_addr, pbuff_frame.elem_base.frame_size);
+        DVP_DBG("img_raw alloc: id %d, addr 0x%08X, size %d\r\n", pbuff_frame.elem_base.frame_id, pbuff_frame.elem_base.frame_addr, pbuff_frame.elem_base.frame_size);
 
         cam_config.output_bufaddr = (uint32_t)pbuff_frame.elem_base.frame_addr;
         cam_config.output_bufsize = pbuff_frame.elem_base.frame_size;
@@ -108,16 +108,17 @@ static void dvp_start_task(void *pvParameters)
         pbuff_frame.y_start = 0;
         pbuff_frame.x_end = cam_config.resolution_x - 1;
         pbuff_frame.y_end = cam_config.resolution_y - 1;
+        pbuff_frame.format = IMG_RAW_FRAME_FORMAT_YUYV;
 
         bflb_l1c_dcache_invalidate_range(pbuff_frame.elem_base.frame_addr, (cam_config.resolution_x) * (cam_config.resolution_y) * 2);
 
         /* push all */
         for (uint8_t i = 0; i < OUTPUT_QUEUE_NUM_MAX; i++) {
-            ret = frame_queue_push(g_yuyv_frame_ctrl, (frame_elem_t *)&pbuff_frame, i, 0);
+            ret = frame_queue_push(g_img_raw_out_frame_ctrl, (frame_elem_t *)&pbuff_frame, i, 0);
         }
 
         /* unlock */
-        frame_queue_free_unlock(g_yuyv_frame_ctrl, (frame_elem_t *)&pbuff_frame);
+        frame_queue_free_unlock(g_img_raw_out_frame_ctrl, (frame_elem_t *)&pbuff_frame);
 
         /* update dvp frame */
         g_dvp_total_frame_cnt++;
@@ -155,8 +156,8 @@ int dvp_cam_task_init(void)
     DVP_INFO("dvp y: %d\r\n", cam_config.resolution_y);
 
     uint32_t dvp_size = cam_config.resolution_x * cam_config.resolution_y * 2;
-    if (dvp_size > CONFIG_YUYV_FRAME_SIZE) {
-        DVP_ERR("dvp size over: dvp:%d, buff:%d\r\n", dvp_size, CONFIG_YUYV_FRAME_SIZE);
+    if (dvp_size > CONFIG_IMG_RAW_OUT_FRAME_SIZE) {
+        DVP_ERR("dvp size over: dvp:%d, buff:%d\r\n", dvp_size, CONFIG_IMG_RAW_OUT_FRAME_SIZE);
         return -2;
     }
 
@@ -165,7 +166,7 @@ int dvp_cam_task_init(void)
     bflb_irq_enable(cam0->irq_num);
 
     /* camer task */
-    xTaskCreate(dvp_start_task, (char *)"dvp_start_task", 1024, NULL, 20, &dvp_task_handle);
+    xTaskCreate(dvp_start_task, (char *)"dvp_task", 384, NULL, 30, &dvp_task_handle);
 
     return 0;
 }

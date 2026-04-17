@@ -30,6 +30,87 @@ typedef struct {
     int offset;
 } pcm_access_t;
 
+static int pcm_sample_bits(const msp_pcm_hw_params_t *params)
+{
+    if (params == NULL) {
+        return 0;
+    }
+
+    if (params->sample_bits > 0) {
+        return params->sample_bits;
+    }
+
+    return params->format;
+}
+
+static void pcm_recalc_hw_params(msp_pcm_hw_params_t *params)
+{
+    int sample_bits;
+
+    if (params == NULL) {
+        return;
+    }
+
+    sample_bits = pcm_sample_bits(params);
+    if (sample_bits <= 0) {
+        return;
+    }
+
+    params->sample_bits = sample_bits;
+    if (params->channels > 0) {
+        params->frame_bits = sample_bits * params->channels;
+    }
+    if (params->rate > 0 && params->period_size > 0) {
+        params->period_time = (params->period_size * 1000000ULL) / params->rate;
+    }
+    if (params->rate > 0 && params->buffer_size > 0) {
+        params->buffer_time = (params->buffer_size * 1000000ULL) / params->rate;
+    }
+    if (params->frame_bits > 0 && params->period_size > 0) {
+        params->period_bytes = (params->period_size * params->frame_bits) / 8;
+    }
+    if (params->frame_bits > 0 && params->buffer_size > 0) {
+        params->buffer_bytes = (params->buffer_size * params->frame_bits) / 8;
+    }
+}
+
+static void pcm_init_default_hw_params(msp_pcm_hw_params_t *params)
+{
+    if (params == NULL) {
+        return;
+    }
+
+    memset(params, 0, sizeof(*params));
+    params->access = MSP_PCM_ACCESS_RW_INTERLEAVED;
+    params->channels = 2;
+    params->rate = 16000;
+    params->format = 16;
+    params->sample_bits = 16;
+    pcm_recalc_hw_params(params);
+}
+
+static void pcm_init_default_sw_params(msp_pcm_t *pcm, msp_pcm_sw_params_t *params)
+{
+    if (params == NULL) {
+        return;
+    }
+
+    memset(params, 0, sizeof(*params));
+    if (pcm != NULL && pcm->hw_params != NULL) {
+        if (pcm->hw_params->period_size > 0) {
+            params->avail_min = pcm->hw_params->period_size;
+            params->start_threshold = pcm->hw_params->period_size;
+        } else {
+            params->avail_min = 1;
+            params->start_threshold = 1;
+        }
+        if (pcm->hw_params->buffer_size > 0) {
+            params->stop_threshold = pcm->hw_params->buffer_size;
+            params->boundary = pcm->hw_params->buffer_size;
+        }
+    }
+}
+
 static void pcm_event(msp_pcm_t *pcm, int event_id, void *priv)
 {
     if (event_id == PCM_EVT_XRUN) {
@@ -115,12 +196,9 @@ int msp_pcm_close(msp_pcm_t *pcm)
 
 int msp_pcm_hw_params_any(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
 {
-    msp_check_return_einval(pcm);
+    msp_check_return_einval(pcm && params);
 
-    params->access      = MSP_PCM_ACCESS_RW_INTERLEAVED;
-    params->channels    = 2;
-    params->rate        = 16000;
-    params->sample_bits = 16;
+    pcm_init_default_hw_params(params);
 
     pcm->hw_params = params;
     return 0;
@@ -130,7 +208,7 @@ int msp_pcm_hw_params_set_access(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, ms
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->access = _access;
+    params->access = _access;
 
     return 0;
 }
@@ -139,7 +217,9 @@ int msp_pcm_hw_params_set_format(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, in
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->format = val;
+    params->format = val;
+    params->sample_bits = val;
+    pcm_recalc_hw_params(params);
 
     return 0;
 }
@@ -148,7 +228,19 @@ int msp_pcm_hw_params_set_channels(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, 
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->channels = val;
+    params->channels = val;
+    pcm_recalc_hw_params(params);
+
+    return 0;
+}
+
+int msp_pcm_hw_params_set_rate(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val, int dir)
+{
+    (void)dir;
+    msp_check_return_einval(pcm && params);
+
+    params->rate = val;
+    pcm_recalc_hw_params(params);
 
     return 0;
 }
@@ -157,7 +249,11 @@ int msp_pcm_hw_params_set_rate_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params,
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->rate = *val;
+    if (dir) {
+        *dir = 0;
+    }
+    params->rate = *val;
+    pcm_recalc_hw_params(params);
 
     return 0;
 }
@@ -166,7 +262,10 @@ int msp_pcm_hw_params_set_buffer_time_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->buffer_time = *val;
+    if (dir) {
+        *dir = 0;
+    }
+    params->buffer_time = *val;
 
     return 0;
 }
@@ -175,7 +274,8 @@ int msp_pcm_hw_params_set_buffer_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->buffer_size = *val;
+    params->buffer_size = *val;
+    pcm_recalc_hw_params(params);
 
     return 0;
 }
@@ -184,8 +284,68 @@ int msp_pcm_hw_params_set_period_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *
 {
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->period_size = *val;
+    if (dir) {
+        *dir = 0;
+    }
+    params->period_size = *val;
+    pcm_recalc_hw_params(params);
 
+    return 0;
+}
+
+int msp_pcm_hw_params_get_period_size(const msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val, int *dir)
+{
+    msp_check_return_einval(params && val);
+
+    *val = params->period_size;
+    if (dir) {
+        *dir = 0;
+    }
+
+    return 0;
+}
+
+int msp_pcm_hw_params_get_buffer_size(const msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val)
+{
+    msp_check_return_einval(params && val);
+
+    *val = params->buffer_size;
+    return 0;
+}
+
+int msp_pcm_hw_params_get_rate(const msp_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    msp_check_return_einval(params && val);
+
+    *val = params->rate;
+    if (dir) {
+        *dir = 0;
+    }
+
+    return 0;
+}
+
+int msp_pcm_hw_params_get_channels(const msp_pcm_hw_params_t *params, unsigned int *val)
+{
+    msp_check_return_einval(params && val);
+
+    *val = params->channels;
+    return 0;
+}
+
+int msp_pcm_hw_params_get_format(const msp_pcm_hw_params_t *params, int *val)
+{
+    msp_check_return_einval(params && val);
+
+    *val = params->format;
+    return 0;
+}
+
+int msp_pcm_hw_params_current(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
+{
+    msp_check_return_einval(pcm && params && pcm->hw_params);
+
+    memcpy(params, pcm->hw_params, sizeof(*params));
     return 0;
 }
 
@@ -211,8 +371,8 @@ int msp_pcm_hw_params(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
     int ret;
     msp_check_return_einval(pcm && params);
 
-    hw_params(pcm)->period_bytes = (hw_params(pcm)->period_size * ( hw_params(pcm)->format / 8)) * hw_params(pcm)->channels;
-    hw_params(pcm)->buffer_bytes = (hw_params(pcm)->buffer_size * ( hw_params(pcm)->format / 8)) * hw_params(pcm)->channels;
+    pcm->hw_params = params;
+    pcm_recalc_hw_params(params);
 
     if (pcm->ops == NULL) {
         return -1;
@@ -230,7 +390,11 @@ int msp_pcm_sw_params_current(msp_pcm_t *pcm, msp_pcm_sw_params_t *params)
 {
     msp_check_return_einval(pcm && params);
 
-    pcm->sw_params = params;
+    if (pcm->sw_params != NULL) {
+        memcpy(params, pcm->sw_params, sizeof(*params));
+    } else {
+        pcm_init_default_sw_params(pcm, params);
+    }
     return 0;
 }
 
@@ -238,7 +402,7 @@ int msp_pcm_sw_params_set_start_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *p
 {
     msp_check_return_einval(pcm && params);
 
-    sw_params(pcm)->start_threshold = val;
+    params->start_threshold = val;
 
     return 0;
 }
@@ -247,7 +411,16 @@ int msp_pcm_sw_params_set_stop_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *pa
 {
     msp_check_return_einval(pcm && params);
 
-    sw_params(pcm)->stop_threshold = val;
+    params->stop_threshold = val;
+
+    return 0;
+}
+
+int msp_pcm_sw_params_get_start_threshold(const msp_pcm_sw_params_t *params, msp_pcm_uframes_t *val)
+{
+    msp_check_return_einval(params && val);
+
+    *val = params->start_threshold;
 
     return 0;
 }
@@ -255,6 +428,8 @@ int msp_pcm_sw_params_set_stop_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *pa
 int msp_pcm_sw_params(msp_pcm_t *pcm, msp_pcm_sw_params_t *params)
 {
     msp_check_return_einval(pcm && params);
+
+    pcm->sw_params = params;
 
     return 0;
 }
@@ -367,6 +542,21 @@ msp_pcm_sframes_t msp_pcm_readn(msp_pcm_t *pcm, void **bufs, msp_pcm_uframes_t s
     PCM_UNLOCK(pcm);
 
     return (msp_pcm_bytes_to_frames(pcm, bytes));
+}
+
+int msp_pcm_hw_params_malloc(msp_pcm_hw_params_t **p)
+{
+    msp_check_return_einval(p);
+
+    *p = msp_zalloc_check(sizeof(msp_pcm_hw_params_t));
+    return 0;
+}
+
+void msp_pcm_hw_params_free(msp_pcm_hw_params_t *obj)
+{
+    if (obj != NULL) {
+        msp_free(obj);
+    }
 }
 
 int msp_pcm_hw_params_alloca(msp_pcm_hw_params_t **p)

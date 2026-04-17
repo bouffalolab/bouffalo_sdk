@@ -104,8 +104,8 @@ static void save_jpeg_to_sdcard(void *pvParameters)
     f_mkdir("/sd/jpeg_test");
 
     /* create output queue */
-    jpeg_out_queue_jpeg_id = MJPEG_FRAME_STREAM_SD_JPEG_ID;
-    if (frame_queue_output_create(g_jpeg_frame_ctrl, &jpeg_out_queue_jpeg_id, MJPEG_FRAME_STREAM_SD_JPEG_DEPTH) < 0) {
+    jpeg_out_queue_jpeg_id = MJPEG_OUT_FRAME_STREAM_SD_ID;
+    if (frame_queue_output_create(g_mjpeg_out_frame_ctrl, &jpeg_out_queue_jpeg_id, MJPEG_OUT_FRAME_STREAM_SD_DEPTH) < 0) {
         SD_JPEG_ERR("jpeg frame sd_jpeg out queue create failed\r\n");
         vTaskSuspend(NULL);
     } else {
@@ -114,7 +114,7 @@ static void save_jpeg_to_sdcard(void *pvParameters)
 
     while (1) {
         /* pop frame */
-        if (frame_queue_output_pop(g_jpeg_frame_ctrl, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_jpeg_id, 1000) < 0) {
+        if (frame_queue_output_pop(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_jpeg_id, 1000) < 0) {
             SD_JPEG_INFO("jpeg pop timeout, continue wait...\r\n");
             continue;
         }
@@ -139,7 +139,7 @@ static void save_jpeg_to_sdcard(void *pvParameters)
         }
 
         /* free frame */
-        frame_queue_output_free(g_jpeg_frame_ctrl, (frame_elem_t *)&jpeg_frame);
+        frame_queue_output_free(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame);
 
         if (save_cnt % 50 == 0) {
             SD_JPEG_INFO("sd cnt:%d, err_cnt:%d\r\n", save_cnt, error_cnt);

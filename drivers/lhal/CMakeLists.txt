@@ -9,6 +9,7 @@ sdk_library_add_sources(
     src/bflb_i2c.c
     src/bflb_dma.c
     src/bflb_rtc.c
+    src/bflb_sec_mutex.c
     src/bflb_sec_aes.c
     src/bflb_sec_sha.c
     src/bflb_sec_trng.c
@@ -90,7 +91,6 @@ elseif("${CHIP}" STREQUAL "bl616cl")
         src/bflb_adc_v2.c
         src/bflb_emac.c
         src/bflb_mjpeg.c
-        src/bflb_mjdec_v2.c
         src/bflb_pwm_v2.c
         src/bflb_cam.c
         src/bflb_sdio2.c
@@ -101,8 +101,6 @@ elseif("${CHIP}" STREQUAL "bl616cl")
         src/bflb_wo.c
         src/bflb_sdh.c
         src/bflb_ir.c
-        src/bflb_pec_v2.c
-        src/bflb_pec_v2_instr.c
         src/bflb_sec_gmac.c
         src/bflb_touch_v2.c
     )
@@ -115,7 +113,6 @@ elseif("${CHIP}" STREQUAL "bl618dg")
         src/bflb_emac_v2.c
         src/bflb_ir.c
         src/bflb_mjpeg.c
-        src/bflb_mjdec.c
         src/bflb_pwm_v2.c
         src/bflb_cam.c
         src/bflb_i2s.c
@@ -125,23 +122,13 @@ elseif("${CHIP}" STREQUAL "bl618dg")
         src/bflb_sdh.c
         src/bflb_ipc.c
         src/bflb_canfd.c
-        src/bflb_pec_v2.c
-        src/bflb_pec_v2_instr.c
-        src/bflb_dvp_raster.c
         src/bflb_dpi.c
-        src/bflb_osd.c
         src/bflb_sec_gmac.c
-        src/bflb_dsi.c
         src/bflb_touch_v2.c
         src/bflb_auadc.c
         src/bflb_audac.c
         src/bflb_multi_core_sync.c
     )
-    if((NOT ("${CPU_MODEL}" STREQUAL "a0")))
-        sdk_library_add_sources(
-            src/bflb_dma2d.c
-        )
-    endif()
 endif()
 
 if(CONFIG_CHERRYUSB)
@@ -206,7 +193,8 @@ else()
 endif()
 
 if(("${CHIP}" STREQUAL "bl618dg") OR ("${CHIP}" STREQUAL "bl616cl"))
-    add_subdirectory(src/pec_v2_instance)
+    add_subdirectory(src/pec_v2)
+    add_subdirectory(src/multimedia)
 endif()
 
  if("${CHIP}" STREQUAL "bl616cl")

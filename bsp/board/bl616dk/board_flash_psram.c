@@ -174,6 +174,16 @@ static uint8_t flash_final_delay = 0;
 static uint8_t flash_added_delay = 0;
 
 #ifndef CONFIG_BOARD_FLASH_LOW_SPEED
+static void ATTR_TCM_SECTION flash_reset_io_cs_delay(void)
+{
+    bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD1, 0, 0, 0);
+    bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD2, 0, 0, 0);
+    bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD3, 0, 0, 0);
+    bflb_sf_ctrl_set_cs_clk_delay(SF_CTRL_PAD1, 0, 0);
+    bflb_sf_ctrl_set_cs_clk_delay(SF_CTRL_PAD2, 0, 0);
+    bflb_sf_ctrl_set_cs_clk_delay(SF_CTRL_PAD3, 0, 0);
+}
+
 static void ATTR_TCM_SECTION clk_pll_set(uint32_t sdmin)
 {
     uint32_t regval = 0;
@@ -296,6 +306,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
 
     bflb_sflash_init(&sf_ctrl_cfg, NULL);
     bflb_sflash_reset_continue_read(p_flash_cfg);
+    flash_reset_io_cs_delay();
 
     /* cal delay value */
     flash_org_delay = board_get_flash_delay(p_flash_cfg);
@@ -373,6 +384,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
 
     if (config_change == 0) {
         /* restore flash config */
+        flash_reset_io_cs_delay();
         BL_WR_WORD(0x2000b000, sf_ctrl_0);
         BL_WR_WORD(0x2000b004, sf_ctrl_1);
         BL_WR_REG(GLB_BASE, GLB_SF_CFG0, sf_clk_cfg);

@@ -47,6 +47,7 @@ DESCRIPTION
 #define STOP_REASON_DIS_NOTIFY      0x10
 
 void atvv_init(void);
+void atvv_deinit(void);
 void set_codecs_mode(uint8_t used);
 void set_assis_mode(uint8_t mode);
 int audio_search(void);

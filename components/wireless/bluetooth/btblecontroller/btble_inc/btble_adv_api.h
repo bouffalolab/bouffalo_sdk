@@ -142,4 +142,16 @@ int btble_adv_is_active(void);
  */
 int btble_adv_set_random_addr(uint8_t *random_addr);
 
+/**
+ * @brief Get the controller public BD address (MAC)
+ *
+ * Returns the 6-byte public BD address loaded from efuse during
+ * btble_controller_init(). Byte order: addr[0]=LSB, addr[5]=MSB.
+ * Must be called after btble_controller_init().
+ *
+ * @param addr Output buffer, at least 6 bytes
+ * @return 0 on success, -1 if addr is NULL
+ */
+int btble_adv_get_public_addr(uint8_t *addr);
+
 #endif /* BTBLE_ADV_API_H_ */

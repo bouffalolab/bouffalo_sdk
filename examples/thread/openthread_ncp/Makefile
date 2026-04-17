@@ -6,7 +6,7 @@ export BL_SDK_BASE
 BOARD ?= ${CHIP}dk
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
-OT_NCP ?= 1
+OT_NCP ?= 0
 OT_FTD ?= 1
 
 # add custom cmake definition

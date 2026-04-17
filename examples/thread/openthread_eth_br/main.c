@@ -35,6 +35,10 @@
 #include "lwip_netif_emac.h"
 
 #include <lmac154.h>
+#if defined (BL616) || defined (BL702L)
+#include <lmac154_fpt.h>
+#endif
+#include <zb_timer.h>
 
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include <openthread/thread.h>
@@ -51,8 +55,6 @@
 
 #define DBG_TAG "MAIN"
 #include "log.h"
-
-#include <zb_timer.h>
 
 #define THREAD_CHANNEL     15
 #define THREAD_PANID       0x6677
@@ -85,7 +87,9 @@ void lmac154_app_init(void)
 #if defined(BL702L)
     lmac154_setTxRxTransTime(0xA0);
 #endif
-
+#if (defined (BL616) || defined(BL702L))
+    lmac154_setFramePendingMode(LMAC154_FPT_ANY);
+#endif
     zb_timer_cfg(bflb_mtimer_get_time_us() >> LMAC154_US_PER_SYMBOL_BITS);
     lmac154_disableRx();
 
@@ -242,33 +246,15 @@ void otrInitUser(otInstance *instance)
 
 static void prvInitTask(void *pvParameters)
 {
-    otRadio_opt_t opt;
-
     lmac154_app_init();
 
-    opt.byte = 0;
-
-    opt.bf.isCoexEnable = false;
-    opt.bf.isFtd = true;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    opt.bf.isLinkMetricEnable = true;
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    opt.bf.isCSLReceiverEnable = true;
-#endif
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    opt.bf.isTimeSyncEnable = true;
-#endif
-
-    otrStart(opt);
+    otrStart();
 
     vTaskDelete(NULL);
 }
 
 int main(void)
 {
-    otRadio_opt_t opt;
-    
     bl_sys_rstinfo_init();
 
     board_init();

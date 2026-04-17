@@ -2746,14 +2746,15 @@ int wpa_cipher_put_suites(u8 *start, int ciphers)
 
 int wpa_pick_pairwise_cipher(int ciphers, int none_allowed)
 {
-	if (ciphers & WPA_CIPHER_CCMP_256)
-		return WPA_CIPHER_CCMP_256;
-	if (ciphers & WPA_CIPHER_GCMP_256)
-		return WPA_CIPHER_GCMP_256;
+	/* Prefer non-256-bit ciphers by default for better compatibility */
 	if (ciphers & WPA_CIPHER_CCMP)
 		return WPA_CIPHER_CCMP;
 	if (ciphers & WPA_CIPHER_GCMP)
 		return WPA_CIPHER_GCMP;
+	if (ciphers & WPA_CIPHER_CCMP_256)
+		return WPA_CIPHER_CCMP_256;
+	if (ciphers & WPA_CIPHER_GCMP_256)
+		return WPA_CIPHER_GCMP_256;
 	if (ciphers & WPA_CIPHER_TKIP)
 		return WPA_CIPHER_TKIP;
 	if (none_allowed && (ciphers & WPA_CIPHER_NONE))
@@ -2764,16 +2765,17 @@ int wpa_pick_pairwise_cipher(int ciphers, int none_allowed)
 
 int wpa_pick_group_cipher(int ciphers)
 {
-	if (ciphers & WPA_CIPHER_CCMP_256)
-		return WPA_CIPHER_CCMP_256;
-	if (ciphers & WPA_CIPHER_GCMP_256)
-		return WPA_CIPHER_GCMP_256;
+	/* Prefer non-256-bit ciphers by default for better compatibility */
 	if (ciphers & WPA_CIPHER_CCMP)
 		return WPA_CIPHER_CCMP;
 	if (ciphers & WPA_CIPHER_GCMP)
 		return WPA_CIPHER_GCMP;
 	if (ciphers & WPA_CIPHER_GTK_NOT_USED)
 		return WPA_CIPHER_GTK_NOT_USED;
+	if (ciphers & WPA_CIPHER_CCMP_256)
+		return WPA_CIPHER_CCMP_256;
+	if (ciphers & WPA_CIPHER_GCMP_256)
+		return WPA_CIPHER_GCMP_256;
 	if (ciphers & WPA_CIPHER_TKIP)
 		return WPA_CIPHER_TKIP;
 	return -1;

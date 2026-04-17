@@ -125,6 +125,15 @@
 #define SO_REUSE                  1
 #define LWIP_TCP_KEEPALIVE        1
 
+#if CONFIG_LWIP_LP
+#define TCP_TIMER_PRECISE_NEEDED        1
+#define DHCP_TIMER_PRECISE_NEEDED       1
+#define ARP_TIMER_PRECISE_NEEDED        1
+#define IP4_FRAG_TIMER_PRECISE_NEEDED   1
+#define DNS_FRAG_TIMER_PRECISE_NEEDED   1
+#define DNS_TIMER_PRECISE_NEEDED        1
+#endif
+
 extern int *__errno(void);
 #define errno                         (*__errno())
 #define LWIP_NETIF_STATUS_CALLBACK    1
