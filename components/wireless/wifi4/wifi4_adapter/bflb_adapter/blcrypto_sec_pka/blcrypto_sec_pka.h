@@ -119,7 +119,7 @@ typedef enum {
     SEC_ENG_AES_ID0,
 }SEC_ENG_AES_ID_Type;
 
-int bflb_crypto_crypto_aes_acquire_hw();
+int bflb_crypto_aes_acquire_hw();
 int bflb_crypto_aes_release_hw();
 int bflb_crypto_aes_init(bflb_crypto_sec_aes_t *aes);
 int bflb_crypto_aes_set_key(bflb_crypto_sec_aes_t *aes, bflb_crypto_sec_aes_op_t op, const uint8_t *key, size_t key_len);

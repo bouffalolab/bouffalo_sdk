@@ -15,6 +15,7 @@
 #include <bflb_mtd.h>
 
 #include <log.h>
+#include <mm.h>
 
 #include <lmac154.h>
 #if defined (BL616) || defined (BL702L)

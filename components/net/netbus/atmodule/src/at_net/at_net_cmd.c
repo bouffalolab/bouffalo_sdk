@@ -33,7 +33,14 @@
 #include "at_port.h"
 #include "assert.h"
 #include "wifi_mgmr_ext.h"
-#if AT_TRANS_ZEROCOPY
+#include "at_fs.h"
+
+extern int at_wifi_sta_ip4_addr_get(uint32_t *ip, uint32_t *mask, uint32_t *gw, uint32_t *dns);
+extern size_t kfree_size(uint32_t heap_id);
+extern void *fhost_iperf_msg_handle_get(void);
+extern void shell_exe_cmd(uint8_t *cmd, uint16_t len);
+extern char *ctime_r(const time_t *timep, char *buf);
+#if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY
 #include "nxspi.h"
 #endif
 #define AT_NET_CMD_PRINTF printf
@@ -41,7 +48,7 @@
 #define AT_THROUGHPUT_NOWIFI (0)
 #define AT_NET_CIPSTART_TIMEOUT_DEFAULT_MS (10*1000)
 
-#if (!AT_TRANS_ZEROCOPY)
+#if !(defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY)
 static uint8_t at_net_tx_buffer[AT_NET_TX_MAX_LEN];
 #endif
 //static uint8_t at_net_tx_buffer[AT_NET_TX_MAX_LEN];
@@ -157,7 +164,7 @@ static int at_setup_cmd_cipv6(int argc, const char **argv)
 
 static int at_query_cmd_cipdns(int argc, const char **argv)
 {
-    ip_addr_t *dns1, *dns2, *dns3;
+    const ip_addr_t *dns1, *dns2, *dns3;
     char dns_str1[16] = {0};
     char dns_str2[16] = {0};
     char dns_str3[16] = {0};
@@ -166,9 +173,9 @@ static int at_query_cmd_cipdns(int argc, const char **argv)
     dns2 = dns_getserver(1);
     dns3 = dns_getserver(2);
 
-    strlcpy(dns_str1, ipaddr_ntoa((ip_addr_t *)dns1), sizeof(dns_str1));
-    strlcpy(dns_str2, ipaddr_ntoa((ip_addr_t *)dns2), sizeof(dns_str2));
-    strlcpy(dns_str3, ipaddr_ntoa((ip_addr_t *)dns3), sizeof(dns_str3));
+    strlcpy(dns_str1, ipaddr_ntoa(dns1), sizeof(dns_str1));
+    strlcpy(dns_str2, ipaddr_ntoa(dns2), sizeof(dns_str2));
+    strlcpy(dns_str3, ipaddr_ntoa(dns3), sizeof(dns_str3));
     at_response_string("+CIPDNS:%d,\"%s\",\"%s\",\"%s\"\r\n", at_net_config->dns.dns_isset, dns_str1, dns_str2, dns_str3);
 
     return AT_RESULT_CODE_OK;
@@ -198,14 +205,14 @@ static int at_setup_cmd_cipdns(int argc, const char **argv)
     }
     if (dns1_valid) {
         ipaddr_aton(dns_str1, &dns1);
-        if (ip_addr_isany(&dns1)) {
+        if (ip_addr_isany_val(dns1)) {
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_OP_ADDR_ERROR);
         }
         at_net_config->dns.dns[0] = dns1;
     }
     if (dns2_valid) {
         ipaddr_aton(dns_str2, &dns2);
-        if (ip_addr_isany(&dns2)) {
+        if (ip_addr_isany_val(dns2)) {
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_OP_ADDR_ERROR);
         }
         at_net_config->dns.dns[1] = dns2;
@@ -214,7 +221,7 @@ static int at_setup_cmd_cipdns(int argc, const char **argv)
     }
     if (dns3_valid) {
         ipaddr_aton(dns_str3, &dns3);
-        if (ip_addr_isany(&dns3)) {
+        if (ip_addr_isany_val(dns3)) {
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_OP_ADDR_ERROR);
         }
         at_net_config->dns.dns[2] = dns3;
@@ -349,6 +356,7 @@ static int at_setup_cmd_cipstart(int argc, const char **argv)
     int local_ip_valid = 0;
     ip_addr_t remote_ipaddr;
     int argc_index = 0, ret = 0;
+    (void)local_ip_valid; (void)local_ip[0];
 
     if (at_net_config->mux_mode == NET_LINK_MULT) {
         AT_CMD_PARSE_NUMBER(argc_index, &linkid);
@@ -459,6 +467,7 @@ static int at_setup_cmd_cipstartex(int argc, const char **argv)
     int local_ip_valid = 0;
     ip_addr_t remote_ipaddr = {0};
     int argc_index = 0, ret = 0;
+    (void)local_ip_valid; (void)local_ip[0];
 
     linkid = at_net_client_get_valid_id();
     if (linkid < 0 || (at_net_config->mux_mode == NET_LINK_SINGLE && linkid != 0))
@@ -654,7 +663,7 @@ static int at_exe_cmd_cipclose(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-#if AT_TRANS_ZEROCOPY
+#if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY
 static void _net_tx_async(int linkid, void *arg)
 {
     trans_desc_t *desc_buf = (trans_desc_t *)arg;
@@ -675,7 +684,7 @@ static int at_setup_cmd_cipsend(int argc, const char **argv)
     int remote_port_valid = 0;
     ip_addr_t remote_ipaddr;
     int recv_num = 0;
-#if AT_TRANS_ZEROCOPY
+#if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY
     trans_desc_t *desc_buf = NULL;
 #else
     uint8_t *buffer = at_net_tx_buffer;
@@ -727,7 +736,7 @@ static int at_setup_cmd_cipsend(int argc, const char **argv)
 
     AT_CMD_DATA_SEND("\r\nOK\r\n"AT_CMD_MSG_WAIT_DATA, strlen("\r\nOK\r\n"AT_CMD_MSG_WAIT_DATA));
 
-#if AT_TRANS_ZEROCOPY
+#if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY
     
     at_workq_dowork(linkid, 0);
 
@@ -766,8 +775,7 @@ static int at_setup_cmd_cipsend(int argc, const char **argv)
 
 static int at_exe_cmd_cipsend(int argc, const char **argv)
 {
-    int linkid = 0;
-
+    (void)argc; (void)argv;
     printf("at_set_work_mode AT_WORK_MODE_THROUGHPUT\r\n");
     at_set_work_mode(AT_WORK_MODE_THROUGHPUT);
     return AT_RESULT_CODE_OK;
@@ -896,10 +904,10 @@ static int at_setup_cmd_cipsendex(int argc, const char **argv)
     ip_addr_t remote_ipaddr;
     int recv_num = 0;
     int index = 0, finish = 0;
-    int ret;
-#if AT_TRANS_ZEROCOPY
+#if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY
     trans_desc_t *desc_buf = NULL;
 #else
+    int ret;
     uint8_t *buffer = at_net_tx_buffer;
 #endif
 
@@ -946,7 +954,7 @@ static int at_setup_cmd_cipsendex(int argc, const char **argv)
 
     at_response_string("%s%s", AT_CMD_MSG_OK, AT_CMD_MSG_WAIT_DATA);
 
-#if AT_TRANS_ZEROCOPY 
+#if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY 
  
     at_workq_dowork(linkid, 0);
 
@@ -975,7 +983,7 @@ static int at_setup_cmd_cipsendex(int argc, const char **argv)
         ret = AT_CMD_DATA_RECV(buffer + recv_num, length - recv_num);
         if (ret > 0) {
             recv_num += ret;
-            recv_num = at_senddata_parse(buffer, recv_num, &index, &finish);
+            recv_num = at_senddata_parse((char *)buffer, recv_num, &index, &finish);
             if (finish)
                 break;
         }
@@ -1091,8 +1099,8 @@ static int at_setup_cmd_ciprecvmode(int argc, const char **argv)
 
 static int at_setup_cmd_ciprecvdata(int argc, const char **argv)
 {
-    int read_len, remain_len, single_len, linkid = 0, size, ret = 0, n, offset = 0;
-    uint8_t *buffer;
+    int read_len, remain_len, single_len, linkid = 0, size, ret = 0, offset = 0;
+    char *buffer;
     uint8_t ishead = 1;
 
     AT_DEBUG_POINT(0);
@@ -1124,7 +1132,7 @@ static int at_setup_cmd_ciprecvdata(int argc, const char **argv)
 
         single_len = remain_len > (AT_NET_TX_MAX_LEN - (ishead?48:2)) ? (AT_NET_TX_MAX_LEN - (ishead?48:2)) : remain_len;
 
-#if (AT_TRANS_ZEROCOPY)
+#if defined(AT_TRANS_ZEROCOPY) && (AT_TRANS_ZEROCOPY)
         trans_desc_t *desc_buf = nxspi_writebuf_pop(NXSPI_TYPE_AT, portMAX_DELAY);
         if (!desc_buf) {
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
@@ -1132,12 +1140,12 @@ static int at_setup_cmd_ciprecvdata(int argc, const char **argv)
         buffer = desc_buf->payload;
         desc_buf->len = 0;
 #else
-        buffer = at_net_tx_buffer;
+        buffer = (char *)at_net_tx_buffer;
 #endif
 
         if (ishead) {
             /* Use strncat + itoa instead of snprintf to improve performance. */
-            uint8_t tmp[10];
+            char tmp[10];
             buffer[0] = 0;
             strncat(buffer, "+CIPRECVDATA:", 48);
             strncat(buffer, itoa(read_len, tmp, 10), 48 - strlen(buffer));
@@ -1151,7 +1159,7 @@ static int at_setup_cmd_ciprecvdata(int argc, const char **argv)
 #if AT_THROUGHPUT_NOWIFI
             ret = read_len;
 #else
-            ret = at_net_recvbuf_read(linkid, NULL, NULL, buffer + offset, single_len);
+            ret = at_net_recvbuf_read(linkid, NULL, NULL, (uint8_t *)(buffer + offset), single_len);
 #endif
             if (ret != single_len) {
                 printf("at_net_recvbuf_read error %d\r\n", ret);
@@ -1165,7 +1173,7 @@ static int at_setup_cmd_ciprecvdata(int argc, const char **argv)
             memcpy(buffer + offset, "\r\n", 2);
         }
 
-#if (AT_TRANS_ZEROCOPY)
+#if defined(AT_TRANS_ZEROCOPY) && (AT_TRANS_ZEROCOPY)
         desc_buf->len = (remain_len - single_len == 0) ? (offset + 2) : offset;
         nxspi_writebuf_push(desc_buf);
 #else
@@ -1279,6 +1287,7 @@ static int at_setup_cmd_cipserver(int argc, const char **argv)
     int ca_enable_valid = 0, ca_enable = 0;
     int keepalive_valid = 0, keepalive = 0;
     int ret = 0;
+    (void)param_valid; (void)ca_enable_valid;
 
     if (at_net_config->mux_mode != NET_LINK_MULT) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_ALLOWED);
@@ -1606,7 +1615,7 @@ static int at_setup_cmd_cipsslcpskhex(int argc, const char **argv)
         AT_CMD_PARSE_STRING(2, hint, sizeof(hint));
     }
 
-    psk_len = _str_to_hex(psk, psk_hex);
+    psk_len = _str_to_hex(psk, (uint8_t *)psk_hex);
 
     at_net_ssl_psk_set(linkid, psk_hex, psk_len, hint, strlen(hint));
 
@@ -1928,17 +1937,17 @@ static int at_setup_cmd_ping(int argc, const char **argv)
 #endif
 }
 
-static int at_query_cmd_ciupdate(int argc, const char **argv)
+static int __attribute__((unused)) at_query_cmd_ciupdate(int argc, const char **argv)
 {
     return AT_RESULT_CODE_OK;
 }
 
-static int at_setup_cmd_ciupdate(int argc, const char **argv)
+static int __attribute__((unused)) at_setup_cmd_ciupdate(int argc, const char **argv)
 {
     return AT_RESULT_CODE_OK;
 }
 
-static int at_exe_cmd_ciupdate(int argc, const char **argv)
+static int __attribute__((unused)) at_exe_cmd_ciupdate(int argc, const char **argv)
 {
     return AT_RESULT_CODE_OK;
 }
@@ -2019,14 +2028,14 @@ static int at_setup_cmd_iperf(int argc, const char **argv)
 
     printf(buffer);
     at_output_redirect_register(at_iperf_redirect);
-    shell_exe_cmd(buffer, strlen(buffer));
+    shell_exe_cmd((uint8_t *)buffer, (uint16_t)strlen(buffer));
 
     return AT_RESULT_CODE_OK;
 }
 
 static int at_setup_cmd_iperf_stop(int argc, const char **argv)
 {
-    shell_exe_cmd("iperf stop\r\n", strlen("iperf stop\r\n"));
+    shell_exe_cmd((uint8_t *)"iperf stop\r\n", (uint16_t)strlen("iperf stop\r\n"));
 
     return AT_RESULT_CODE_OK;
 }
@@ -2106,7 +2115,7 @@ static int at_setup_cmd_cipsslcconf(int argc, const char **argv)
 static int at_query_cmd_cipsslcconf(int argc, const char **argv)
 {
     int linkid = 0, auth_mode = 0;
-    char *ca, *cert, *key;
+    const char *ca, *cert, *key;
 
     if (at_net_config->mux_mode == NET_LINK_SINGLE) {
     } else {
@@ -2192,7 +2201,7 @@ static int at_setup_cmd_cipsslsconf(int argc, const char **argv)
 static int at_query_cmd_cipsslsconf(int argc, const char **argv)
 {
     int linkid = 0, auth_mode = 0;
-    char *ca, *cert, *key;
+    const char *ca, *cert, *key;
 
     at_net_ssl_server_path_get(linkid, &ca, &cert, &key);
 

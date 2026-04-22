@@ -204,6 +204,8 @@ struct fhost_iperf_stream
 
 /* Macros for timers */
 
+int get_time_SINCE_BOOT(uint32_t *sec, uint32_t *usec);
+
 /// Current time
 #define iperf_current_time(a) \
     get_time_SINCE_BOOT(&(a)->sec, &(a)->usec);

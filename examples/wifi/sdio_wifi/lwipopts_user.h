@@ -111,7 +111,7 @@
 #endif
 #endif
 
-#if CONFIG_IPV6
+#ifdef CONFIG_IPV6
 #define LWIP_IPV6                     1
 #endif
 

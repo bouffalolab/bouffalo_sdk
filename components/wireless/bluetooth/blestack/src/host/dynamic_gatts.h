@@ -5,7 +5,7 @@
 #include <conn.h>
 #include <gatt.h>
 #include "bt_uuid.h"
-typedef void (*dynamic_gatt_wr_callbck_func_t)(struct bt_conn *conn,const struct bt_gatt_attr* attr,u8_t *data, u16_t length);
+typedef void (*dynamic_gatt_wr_callbck_func_t)(struct bt_conn *conn,const struct bt_gatt_attr* attr,const u8_t *data, u16_t length);
 typedef void (*dynamic_gatt_rd_callbck_func_t)(struct bt_conn *conn,const struct bt_gatt_attr* attr ,u8_t *data, u16_t* length);
 typedef void (*dynamic_gatt_noti_callbck_func_t)(const struct bt_gatt_attr* attr ,u8_t data);
 

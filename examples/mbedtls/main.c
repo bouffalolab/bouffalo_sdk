@@ -94,7 +94,7 @@ void mbedtls_ecdh_test(void)
     mbedtls_entropy_add_source(&entropy, entropy_source, NULL,
                        MBEDTLS_ENTROPY_MAX_GATHER, MBEDTLS_ENTROPY_SOURCE_STRONG);*/
     mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                          pers, strlen(pers));
+                          (const unsigned char *)pers, strlen(pers));
     mbedtls_printf("setup rng ... ok\r\n");
 
     // Load elliptic curve, select SECP256R1.
@@ -165,9 +165,9 @@ cleanup:
 void mbedtls_ecdsa_test()
 {
     int ret = 0;
-    char buf[97];
+    uint8_t buf[97];
     uint8_t hash[32], msg[100];
-    uint8_t *pers = "simple_ecdsa";
+    const char *pers = "simple_ecdsa";
     size_t rlen, slen, qlen, dlen;
     uint32_t start_time;
 

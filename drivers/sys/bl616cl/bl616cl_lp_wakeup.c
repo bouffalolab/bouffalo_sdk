@@ -1,10 +1,10 @@
 #include "bl_lp_internal.h"
 
-static lp_fw_gpio_cfg_t *gp_lp_io_cfg = NULL;
+static ATTR_NOCACHE_RAM_SECTION lp_fw_gpio_cfg_t *gp_lp_io_cfg = NULL;
 
-int bl_lp_io_wakeup_cfg(lp_fw_gpio_cfg_t *io_wakeup_cfg)
+int bl_lp_io_wakeup_cfg(void *io_wakeup_cfg)
 {
-    gp_lp_io_cfg = io_wakeup_cfg;
+    gp_lp_io_cfg = (lp_fw_gpio_cfg_t *)io_wakeup_cfg;
     return 0;
 }
 
@@ -36,12 +36,10 @@ void bl616cl_lp_io_wakeup_prepare(void)
 int bl_lp_wakeup_io_get_mode(uint8_t io_num)
 {
     lp_fw_gpio_cfg_t *b_lp_io_cfg_bak = NULL;
-    uint8_t *p_trig_modes;
     uint64_t wakeup_io_bits = iot2lp_para->wakeup_reason_info->wakeup_io_bits;
     uint8_t trig_mode;
 
     b_lp_io_cfg_bak = (lp_fw_gpio_cfg_t *)iot2lp_para->wakeup_source_parameter->io_wakeup_parameter;
-    p_trig_modes = (uint8_t *)&b_lp_io_cfg_bak->io_0_5_trig_mode;
 
     if (io_num >= BL_LP_WAKEUP_IO_MAX_NUM) {
         return -1;
@@ -51,14 +49,16 @@ int bl_lp_wakeup_io_get_mode(uint8_t io_num)
         return 0;
     }
 
-    trig_mode = p_trig_modes[io_num < 6 ? 0 : (io_num - 5)];
+    trig_mode = b_lp_io_cfg_bak->io_0_36_trig_mode[io_num];
 
     if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_FALLING_EDGE) {
         return BL_LP_IO_WAKEUP_MODE_FALLING;
-    } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_HIGH_LEVEL) {
-        return BL_LP_IO_WAKEUP_MODE_HIGH;
     } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_RISING_EDGE || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_RISING_EDGE) {
         return BL_LP_IO_WAKEUP_MODE_RISING;
+    } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_LOW_LEVEL || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_LOW_LEVEL) {
+            return BL_LP_IO_WAKEUP_MODE_LOW;
+    } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_HIGH_LEVEL) {
+        return BL_LP_IO_WAKEUP_MODE_HIGH;
     } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_RISING_FALLING_EDGE) {
         return BL_LP_IO_WAKEUP_MODE_RISING_FALLING;
     } else {

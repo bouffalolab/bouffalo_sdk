@@ -1,6 +1,8 @@
 #ifndef __BL616CL_LP_H__
 #define __BL616CL_LP_H__
 #include <stdint.h>
+#include <stdbool.h>
+#include "bl616cl_ext_dcdc.h"
 #include "bl616cl_xip_recovery.h"
 #include "bl616cl_psram_recovery.h"
 
@@ -181,15 +183,6 @@ typedef struct {
     uint32_t buf_addr;
     uint32_t pack_env;
 } lp_fw_wifi_para_t;
-
-// typedef struct {
-//     uint64_t io_ie;
-//     uint64_t io_pu;
-//     uint64_t io_pd;
-//     uint8_t io_0_5_trig_mode;
-//     uint8_t io_6_36_trig_mode[31];
-//     uint64_t io_wakeup_unmask;
-// } lp_fw_gpio_cfg_t;
 
 typedef struct {
     void *io_wakeup_parameter;
@@ -454,6 +447,7 @@ int bl_lp_set_32k_trim_ready(uint8_t ready_val);
 int bl_lp_get_32k_trim_ready(void);
 int bl_lp_get_bcn_delay_ready(void);
 void bl_lp_rc32k_save_code(uint32_t code);
+void board_ext_dcdc_init(void);
 
 int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu);
 int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode);
@@ -466,5 +460,12 @@ void bl_lp_info_clear(struct bl_lp_info_s *lp_info);
 void bl_lp_fw_bcn_loss_cfg_dtim_default(uint8_t dtim_num);
 void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num, uint16_t loop_start,
                            uint16_t loss_max);
+
+int bl_lp_io_wakeup_cfg(void *io_wakeup_cfg);
+void bl_lp_wakeup_io_int_register(void (*wakeup_io_callback)(uint64_t wake_up_io_bits));
+int bl_lp_wakeup_io_get_mode(uint8_t io_num);
+
+int bl_lp_rtc_rc32k_coarse_adj(uint32_t expect_time, uint32_t rc32k_actual_time);
+void bl_pm_resume_wifi(bool isr);
 
 #endif

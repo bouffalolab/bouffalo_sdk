@@ -27,7 +27,7 @@ typedef struct netbus_uart_config {
     uint8_t parity;
     uint8_t flow_control;
 
-#if NETBUS_UART_DMA
+#if defined(NETBUS_UART_DMA) && NETBUS_UART_DMA
     const char *tx_dmach;
     const char *rx_dmach;
 
@@ -41,7 +41,7 @@ typedef struct netbus_uart_config {
 typedef struct netbus_uart_ctx {
     const netbus_uart_config_t *config;
 
-#if NETBUS_UART_DMA
+#if defined(NETBUS_UART_DMA) && NETBUS_UART_DMA
     uint8_t *txslot_addr;
     uint8_t *rxslot_addr;
     uint16_t txslot_cur;

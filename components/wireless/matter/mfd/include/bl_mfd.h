@@ -35,6 +35,8 @@ int mfd_getProductLabel(char * buf, uint32_t size);
 bool mfd_getManufacturingDate(uint16_t *pYear, uint8_t *pMonth, uint8_t *pDay);
 int mfd_getHardwareVersion(uint8_t * buf, uint32_t size);
 int mfd_getHardwareVersionString(char * buf, uint32_t size);
+int mfd_getProductFinish(uint8_t * buf, uint32_t size);
+int mfd_getProductPrimaryColor(char * buf, uint32_t size);
 
 int mfd_getElementById(int16_t id, uint8_t * buf, uint32_t size);
 

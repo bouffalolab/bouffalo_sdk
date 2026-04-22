@@ -13,6 +13,11 @@
 #include "wifi_mgmr_ext.h"
 #include "macsw.h"
 
+extern int macswl_ps_sleep_common_check(void);
+extern int macswl_ps_sleep_check(void);
+extern int macswl_connected_enter_ops(void);
+extern void macswl_regs_save_ops(void);
+
 #ifdef BL_HOSTROUTER_ENABLE
 #include "sdiowifi_mgmr.h"
 #endif
@@ -56,11 +61,13 @@ void tickless_debug_who_wake_me(const char *name, TickType_t ticks)
 int tickless_enter(void)
 {
     enable_tickless = 1;
+    return 0;
 }
 
 int tickless_exit(void)
 {
     enable_tickless = 0;
+    return 0;
 }
 
 

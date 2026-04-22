@@ -23,6 +23,7 @@
 #include "at_port.h"
 #include "at_base_cmd.h"
 #include "at_base_config.h"
+#include "at_base/at_fs.h"
 #include "at_user_cmd.h"
 #include "at_wifi_cmd.h"
 #include "at_net_cmd.h"
@@ -30,6 +31,9 @@
 #include "at_http_cmd.h"
 #include "at_through.h"
 #include "at_ble_cmd.h"
+#if (defined LP_APP) && (defined CONFIG_ATMODULE_LP)
+#include "at_pwr/at_pwr_cmd.h"
+#endif
 
 #if defined(CONFIG_BLUETOOTH_APP) || defined(CONFIG_ATMODULE_FULL_FEAT)
 #define ATCMD_TASK_STACK_SIZE (896)
@@ -38,7 +42,7 @@
 #endif
 #define ATCMD_TASK_PRIORITY 25
 
-#if CONFIG_ATMODULE_WORK_Q
+#if defined(CONFIG_ATMODULE_WORK_Q) && CONFIG_ATMODULE_WORK_Q
 /* Static task stack and control block for at_workq_task */
 #define AT_WORKQ_TASK_STACK_SIZE 384
 static __attribute__((section(".wifi_ram."))) StackType_t at_workq_task_stack[AT_WORKQ_TASK_STACK_SIZE];
@@ -160,7 +164,7 @@ at_work_mode at_get_work_mode(void)
     return at->incmd;
 }
 
-#if CONFIG_ATMODULE_WORK_Q
+#if defined(CONFIG_ATMODULE_WORK_Q) && CONFIG_ATMODULE_WORK_Q
 
 int at_workq_send(int id, struct at_workq *q, int timeout)
 {
@@ -344,7 +348,7 @@ int at_module_init(void)
         goto INIT_ERROR;
     }
 
-#if CONFIG_ATMODULE_WORK_Q
+#if defined(CONFIG_ATMODULE_WORK_Q) && CONFIG_ATMODULE_WORK_Q
     TaskHandle_t at_workq_task_handle = NULL;
     at_workq_task_handle = xTaskCreateStatic(at_workq_task, (char*)"at_workq",
                                             AT_WORKQ_TASK_STACK_SIZE, NULL, 15,

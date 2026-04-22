@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "bl_crt_bundle.h"
+#include "bflb_flash.h"
 
 /*============================================================================
  * Multi_bins Descriptor Parsing
@@ -25,13 +26,8 @@ typedef struct {
 extern const uint8_t __multi_bins__[];
 
 /* Firmware base address in XIP space */
-#ifdef BL616
 #define FW_HEADER_OFFSET  0x1000
-#define XIP_BASE_ADDR     0xA0000000
-#elif defined(BL602)
-#define FW_HEADER_OFFSET  0x1000
-#define XIP_BASE_ADDR     0x23000000
-#endif
+#define XIP_BASE_ADDR     FLASH_XIP_BASE
 
 /**
  * @brief Get certificate bundle location from multi_bins descriptor

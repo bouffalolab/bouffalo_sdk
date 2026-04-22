@@ -1347,6 +1347,7 @@ int wifi_mgmr_psk_cal(char *password, const uint8_t *ssid, int ssid_len, char *o
  *0xFFFF: disable fixed rate
  */
 int wifi_mgmr_rate_config(uint16_t fixed_rate_cfg);
+int wifi_mgmr_rate_config_sta(uint16_t fixed_rate_cfg);
 
 /**
  * wifi_mgmr_set_ht40_enable

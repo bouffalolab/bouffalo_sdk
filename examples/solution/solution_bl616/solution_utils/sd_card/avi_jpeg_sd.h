@@ -243,8 +243,8 @@ typedef struct {
 #define AVI_VIDS_SUP_IDX_NUM        (450)
 #define AVI_AUDS_SUP_IDX_NUM        (450)
 /* std index num */
-#define AVI_VIDS_SUB_IDX_NUM        (500)
-#define AVI_AUDS_SUB_IDX_NUM        (500)
+#define AVI_VIDS_SUB_IDX_NUM        (1000)
+#define AVI_AUDS_SUB_IDX_NUM        (1000)
 
 /* avi init param */
 typedef struct {
@@ -379,6 +379,8 @@ avi_file_t *avi_file_create(FIL *p_file, avi_param_t *avi_param);
 int avi_write_frame(avi_file_t *avi_hd, void *jpeg_frame, uint32_t frame_size, void *pcm_frame);
 int avi_jpeg_file_sync(avi_file_t *avi_hd, uint8_t mode);
 int avi_jpeg_close(avi_file_t *avi_hd);
+
+extern uint32_t g_avi_sd_total_frame_cnt;
 
 int save_avi_to_sdcard_init(void);
 

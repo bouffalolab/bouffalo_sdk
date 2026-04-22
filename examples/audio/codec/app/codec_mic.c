@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <xcodec.h>
 #include <msp/kernel.h>
+#include <msp_port.h>
 
 //#define CODEC_DUMP_INPUT_DATA   (1)
 #ifdef CODEC_DUMP_INPUT_DATA
@@ -86,7 +87,7 @@ static void _codec_input_task(void *arg)
     
     /* micbias set high if need */
     msp_gpio_output_config(24, 1);
-    msp_gpio_output_set(1);
+    msp_gpio_output_set(24, 1);
     
     g_dma_hdl_in = msp_zalloc_check(sizeof(xcodec_dma_ch_t)); 
     //g_dma_hdl_in->ctrl_id = DMA_NUM;

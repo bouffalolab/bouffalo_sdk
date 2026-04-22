@@ -134,7 +134,6 @@ static void wifi_tcp_client_init(void *input_arg)
 
     char *addr;
     char *port;
-    int mode;
     int sock_client = -1;
     struct sockaddr_in remote_addr;
     TaskHandle_t px_tcpclient_rx_task = NULL;

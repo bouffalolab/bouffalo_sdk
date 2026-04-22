@@ -43,7 +43,7 @@
     LCD_SPI_ST7789V
     LCD_SPI_ST7735
 */
-#define LCD_DPI_ILI9488
+#define LCD_SPI_ST7796
 
 
 /* dbi gc9307 config */
@@ -277,7 +277,7 @@
         0: R-G-B
         1: B-G-R
     */
-   #define NT35510_DBI_COLOR_ORDER 1
+   #define NT35510_DBI_COLOR_ORDER 0
 
     /* Color reversal, Some screens are required
         0: disable
@@ -599,8 +599,9 @@
 
     /* Selecting DPI working mode
         1: DPI peripheral (support: bl618dg)
-        2: PEC simulation (support: bl616, bl618dg)
+        2: PEC simulation old version (support: bl616, bl618dg)
         3. DPI v2 peripheral (support: bl618dg)
+        4. PEC simulation v2 (support: bl616cl, bl618dg)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 
@@ -935,6 +936,54 @@
     /* cache num of dma_lli, >= 2,
         Performance is best when the value is no less than the number of disp_buffs used */
     #define LCD_DPI_SIM_DMA_LLI_CACHE_NUM 3
+#endif
+
+/********** PEC simulation DPI v2 configuration **********/
+#if (defined(LCD_DPI_INTERFACE_TYPE) && (LCD_DPI_INTERFACE_TYPE == 4))
+
+    /* For internal use, do not modify */
+    #define LCD_DPI_SIM_V2_ENABLE
+
+    /* Selecting initialization interface */
+    #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
+        /* Software spi 3-wires 9-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_DAT   GPIO_PIN_3
+
+    #elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+        /* Software spi 4-wires 8-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DAT   GPIO_PIN_3
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DC    GPIO_PIN_4
+    #endif
+
+    /* PEC and DMA device names */
+    #define LCD_DPI_SIM_V2_PEC_NAME      "pec_sm0"
+    #define LCD_SIM_DPI_V2_DMA_NAME      "dma0_ch1"
+
+     /* sRGB simulation v2 uses fixed 8-bit data bus in driver implementation. */
+
+    /* Signal polarity selection */
+    #define LCD_SIM_DPI_V2_PCLK_POL      0
+    #define LCD_SIM_DPI_V2_VSYNC_POL     0
+    #define LCD_SIM_DPI_V2_HSYNC_POL     0
+    #define LCD_SIM_DPI_V2_DE_POL        1
+
+    /* PEC clock divider: Fpec_out = Fpec_root / (div + 1) */
+    #define LCD_SIM_DPI_V2_CLOCK_DIV     1
+
+    /* Selecting pin
+        The numbers of data pins must be consecutive.
+        Rules: PIN_DATA_n = PIN_DATA_START + n;
+    */
+    #define LCD_DPI_SIM_V2_PIN_PCLK      GPIO_PIN_32
+    #define LCD_DPI_SIM_V2_PIN_HSYNC     GPIO_PIN_18
+    #define LCD_DPI_SIM_V2_PIN_VSYNC     GPIO_PIN_19
+    #define LCD_DPI_SIM_V2_PIN_DE        GPIO_PIN_33
+    #define LCD_DPI_SIM_V2_PIN_DATA_START GPIO_PIN_24
+
 #endif
 
 /********** DPI v2 configuration **********/

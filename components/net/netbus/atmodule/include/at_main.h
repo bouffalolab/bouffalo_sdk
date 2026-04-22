@@ -118,7 +118,7 @@ int at_output_redirect_register(int (*output_redirect) (void));
 
 int at_output_is_redirect();
 
-#if CONFIG_ATMODULE_WORK_Q
+#if defined(CONFIG_ATMODULE_WORK_Q) && CONFIG_ATMODULE_WORK_Q
 int at_workq_send(int eventid, struct at_workq *q, int timeout);
 
 int at_workq_dowork(int eventid, int timeout);

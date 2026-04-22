@@ -394,7 +394,7 @@ static int at_twt_status_cmd(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-static int at_listen_itv_get_cmd(int argc, const char **argv)
+static int __attribute__((unused)) at_listen_itv_get_cmd(int argc, const char **argv)
 {
     int listen_itv = wifi_mgmr_sta_get_listen_itv();
 

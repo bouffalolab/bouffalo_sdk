@@ -15,6 +15,12 @@
 
 // #include "time_statics.h"
 
+extern int macswl_ps_sleep_common_check(void);
+extern int macswl_ps_sleep_check(void);
+extern int macswl_connected_enter_ops(void);
+extern void macswl_regs_save_ops(void);
+extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
+
 #ifdef TICKLESS_DEBUG
 #define tickless_debugf(fmt, ...) printf("[TICKLESS]: " fmt "\r\n", ##__VA_ARGS__)
 #else
@@ -47,11 +53,13 @@ void tickless_debug_who_wake_me(const char *name, TickType_t ticks)
 int tickless_enter(void)
 {
     enable_tickless = 1;
+    return 0;
 }
 
 int tickless_exit(void)
 {
     enable_tickless = 0;
+    return 0;
 }
 
 

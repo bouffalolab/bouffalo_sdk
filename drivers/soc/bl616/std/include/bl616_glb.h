@@ -1757,6 +1757,7 @@ BL_Err_Type GLB_Config_AUDIO_PLL_To_400M(void);
 
 BL_Err_Type GLB_Config_AUDIO_PLL_To_451P58M(void);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_491P52M(void);
+void GLB_AUDIO_PLL_fine_tuning_sdmin(uint32_t sdmin);
 /*----------*/
 void glb_40M_delay_us(uint32_t us);
 BL_Err_Type GLB_Fast_Power_On_WIFIPLL(const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t waitStable);

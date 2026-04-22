@@ -860,9 +860,9 @@ static int coex_tdma_activity_decide(struct rf_ctxt_tag* ctxt, struct coex_tdma_
     return decision;
 }
 
-static char *_coex_decision_str(int decision)
+__attribute__((unused)) static const char *_coex_decision_str(int decision)
 {
-    const *str[] = {
+    const char *str[] = {
         "NONE",
         "ADD ",
         "UPD ",
@@ -1081,9 +1081,9 @@ end:
     vTaskDelete(NULL);
 }
 
-static char *_coex_nty_role_str(uint32_t role)
+__attribute__((unused)) static const char *_coex_nty_role_str(uint32_t role)
 {
-    const *str[] = {
+    const char *str[] = {
         "BT    ",
         "WIFI  ",
         "THREAD",
@@ -1098,9 +1098,9 @@ static char *_coex_nty_role_str(uint32_t role)
     return str[role];
 }
 
-static char *_coex_state_str(uint32_t state)
+__attribute__((unused)) static const char *_coex_state_str(uint32_t state)
 {
-    const *str[] = {
+    const char *str[] = {
         "UNUSED",
         "INITED",
         "SCHED ",

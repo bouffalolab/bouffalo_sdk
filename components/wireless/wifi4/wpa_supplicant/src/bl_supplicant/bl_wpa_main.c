@@ -295,7 +295,7 @@ int bl_supplicant_init(void)
 
     bl_wifi_register_wpa_cb_internal(&wpa_cb);
 
-#if CONFIG_WPA_WAPI_PSK
+#if defined(CONFIG_WPA_WAPI_PSK)
     ret =  esp_wifi_internal_wapi_init();
 #endif
 

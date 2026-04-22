@@ -76,7 +76,7 @@ static void bflb_blesync_init(int err)
         return;
     }
     bl_ble_sync_start(gp_index,
-                      wifi_drv_register(),
+                      (struct blesync_wifi_func *)wifi_drv_register(),
                       blesync_complete_cb,
                       (void *)gp_index);
 }

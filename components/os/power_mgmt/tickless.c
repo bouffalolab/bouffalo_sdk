@@ -41,6 +41,9 @@ uint8_t flag_txl_cfm_evt = 0;
 int enable_tickless = 0;
 
 extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
+extern int macswl_ps_sleep_check(void);
+extern int macswl_connected_enter_ops(void);
+extern void macswl_regs_save_ops(void);
 
 int pds_wakeup_overhead = 0;
 static uint64_t ulLowPowerTimeEnterFunction;
@@ -65,11 +68,13 @@ void tickless_debug_who_wake_me(const char *name, TickType_t ticks)
 int tickless_enter(void)
 {
     enable_tickless = 1;
+    return 0;
 }
 
 int tickless_exit(void)
 {
     enable_tickless = 0;
+    return 0;
 }
 
 void lp_hook_pre_user(void *env)
@@ -244,7 +249,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
     lpfw_cfg.mtimer_timeout_max_us = 12000;
     lpfw_cfg.dtim_num = lpfw_cfg.dtim_origin;
 
-    uint32_t ret=0;
+    uint32_t ret __attribute__((unused)) = 0;
     ret = bl_lp_fw_enter(&lpfw_cfg);
 
     /* measure overhead */

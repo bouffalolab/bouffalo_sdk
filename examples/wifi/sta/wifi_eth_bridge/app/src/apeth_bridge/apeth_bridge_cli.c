@@ -60,14 +60,14 @@ struct bridge_api_arg_t {
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-static TaskHandle_t bridge_netif_dhcp_task;
+static TaskHandle_t bridge_netif_dhcp_task __attribute__((unused));
 
 
 static struct netif bridge_netif;
 static struct netif ethernet_netif;
 static int bridge_port_up = 0;
 
-static struct bridge_api_arg_t bridge_api_arg = {
+static struct bridge_api_arg_t bridge_api_arg __attribute__((unused)) = {
     .bridge_netif = &bridge_netif,
     .port_netif   = 0,
 };

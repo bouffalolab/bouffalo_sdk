@@ -4,7 +4,11 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "timers.h"
 #include "platform_al.h"
+#include "bflb_irq.h"
+#include "bl602_aon.h"
+#include "bflb_sec_trng.h"
 #include "stdbool.h"
 
 #ifdef CFG_CHIP_BL602 
@@ -13,7 +17,6 @@
 /* User defined wifi event handler */
 extern void wifi_event_handler(uint32_t code1, uint32_t code2);
 static pfn_wifi_event pfn_event_handler;
-static void *p_event_arg;
 
 volatile bool sys_log_all_enable = 1;
 
@@ -77,12 +80,14 @@ int platform_register_event(int catalogue, pfn_wifi_event cb, void *arg)
 {
     pfn_event_handler = cb;
     async_register_event_filter(EV_WIFI, wifi_async_event, arg);
+    return 0;
 }
 
 int platform_unregister_event(int catalogue, pfn_wifi_event cb, void *arg)
 {
     async_unregister_event_filter(EV_WIFI, wifi_async_event, arg);
     pfn_event_handler = NULL;
+    return 0;
 }
 
 /**
@@ -104,8 +109,8 @@ int platform_wifi_enable_irq(void)
 {
 extern void mac_irq(void);
 extern void bl_irq_handler(void);
-    bflb_irq_attach(WIFI_IRQn, mac_irq, NULL);
-    bflb_irq_attach(WIFI_IPC_PUBLIC_IRQn, bl_irq_handler, NULL);
+    bflb_irq_attach(WIFI_IRQn, (irq_callback)mac_irq, NULL);
+    bflb_irq_attach(WIFI_IPC_PUBLIC_IRQn, (irq_callback)bl_irq_handler, NULL);
     bflb_irq_enable(WIFI_IRQn);
     bflb_irq_enable(WIFI_IPC_PUBLIC_IRQn);
 

@@ -97,7 +97,7 @@ const ili9488_dbi_init_cmd_t ili9488_dbi_init_cmds[] = {
 
     { 0xF7, "\xA9\x51\x2C\x82", 4 }, /* Adjust Control 3 */
 
-#if ILI9488_DBI_COLOR_REVERSAL
+#if defined(ILI9488_DBI_COLOR_REVERSAL) && ILI9488_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 }, /* Color reversal */
 #endif
 
@@ -174,7 +174,7 @@ int ili9488_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if ILI9488_DBI_DIR_MIRROR
+#if defined(ILI9488_DBI_DIR_MIRROR) && ILI9488_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -185,7 +185,7 @@ int ili9488_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if ILI9488_DBI_COLOR_ORDER
+#if defined(ILI9488_DBI_COLOR_ORDER) && ILI9488_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -203,11 +203,11 @@ int ili9488_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void ili9488_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if ILI9488_DBI_OFFSET_X
+#if defined(ILI9488_DBI_OFFSET_X) && ILI9488_DBI_OFFSET_X
     x1 += ILI9488_DBI_OFFSET_X;
     x2 += ILI9488_DBI_OFFSET_X;
 #endif
-#if ILI9488_DBI_OFFSET_Y
+#if defined(ILI9488_DBI_OFFSET_Y) && ILI9488_DBI_OFFSET_Y
     y1 += ILI9488_DBI_OFFSET_Y;
     y2 += ILI9488_DBI_OFFSET_Y;
 #endif

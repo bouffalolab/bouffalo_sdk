@@ -40,7 +40,9 @@ typedef struct { k_ticks_t ticks; } k_timepoint_t;
  * value to be e.g. a literal "1" at expansion time in the next macro,
  * not "(1)", etc...  Standard recursive expansion does not work.
  */
+#ifndef IS_ENABLED
 #define IS_ENABLED(config_macro) _IS_ENABLED1(config_macro)
+#endif
 
 /* Now stick on a "_XXXX" prefix, it will now be "_XXXX1" if config_macro
  * is "1", or just "_XXXX" if it's undefined.
@@ -128,9 +130,9 @@ static inline int zsock_poll(struct zsock_pollfd *fds, nfds_t nfds, int timeout)
     return ret;
 }
 
-#define NET_DBG                                                    //printf
+#define NET_DBG(...)                                               do {} while(0)
 #define NET_ERR                                                    printf
-#define LOG_HEXDUMP_DBG
+#define LOG_HEXDUMP_DBG(...)
 #define CONFIG_NET_HTTP_LOG_LEVEL_DBG  0
 
 static inline k_timepoint_t sys_timepoint_calc(k_timeout_t timeout)

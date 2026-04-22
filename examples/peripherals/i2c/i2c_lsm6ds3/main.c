@@ -35,7 +35,7 @@ int main(void)
     /* LSM6DS3TR-C id: 0x6A, LSM6DS33TR id: 0x69 */
     if ((read_data[0] != 0x6A) && (read_data[0] != 0x69)) {
         printf("I2C LSM6DS3 error\r\n");
-        return;
+        return -1;
     }
 
     /* config XL and G output by 104Hz */

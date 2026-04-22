@@ -171,7 +171,7 @@ int dbi_disp_task_init(void)
     }
 
     /* dbi display task */
-    xTaskCreate(dbi_disp_lcd_task, (char *)"disp_lcd_task", 512, NULL, 10, &dbi_disp_handle);
+    xTaskCreate(dbi_disp_lcd_task, (char *)"disp_dbi_task", 512, NULL, 10, &dbi_disp_handle);
 
     return 0;
 }

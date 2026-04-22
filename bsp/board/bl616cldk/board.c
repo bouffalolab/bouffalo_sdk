@@ -262,6 +262,10 @@ static void console_init()
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
+
+    pm_disable_gpio_keep(GPIO_PIN_34);
+    pm_disable_gpio_keep(GPIO_PIN_35);
+
     bflb_gpio_uart_init(gpio, GPIO_PIN_34, GPIO_UART_FUNC_UART0_TX);
     bflb_gpio_uart_init(gpio, GPIO_PIN_35, GPIO_UART_FUNC_UART0_RX);
 
@@ -635,9 +639,9 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
     static lp_gpio_cfg_type lp_wake_io_cfg = { 0};
 
     /* trigger mode */
-    lp_wake_io_cfg.io_0_5_trig_mode = PDS_GPIO_INT_SYNC_FALLING_EDGE; /* gpio 0-5 */
-    lp_wake_io_cfg.io_6_36_trig_mode[0] = PDS_GPIO_INT_SYNC_FALLING_EDGE; /* gpio 6 */
-    lp_wake_io_cfg.io_6_36_trig_mode[17] = PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE; /* gpio 23 */
+    lp_wake_io_cfg.io_0_36_trig_mode[0] = PDS_GPIO_INT_SYNC_FALLING_EDGE; /* gpio 0 */
+    lp_wake_io_cfg.io_0_36_trig_mode[6] = PDS_GPIO_INT_SYNC_FALLING_EDGE; /* gpio 6 */
+    lp_wake_io_cfg.io_0_36_trig_mode[23] = PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE; /* gpio 23 */
 
 
     /* wake up unmask */

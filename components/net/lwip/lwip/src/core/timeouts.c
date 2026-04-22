@@ -281,6 +281,7 @@ tcpip_tcp_fast_timer(void)
   }
 }
 
+struct netconn;
 int lwip_netconn_is_tcp_polling(struct netconn *conn);
 void
 tcpip_tcp_poll_timer(void)

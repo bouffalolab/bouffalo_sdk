@@ -27,6 +27,7 @@
 #include "bflb_sec_sha.h"
 #endif
 #include "bt_log.h"
+extern void GLB_SW_POR_Reset(void);
 
 #if defined(CONFIG_BL_SDK)
 pt_table_stuff_config pt_table_stuff[2];

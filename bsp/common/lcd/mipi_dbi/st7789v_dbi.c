@@ -173,7 +173,7 @@ int st7789v_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if ST7789V_DBI_DIR_MIRROR
+#if defined(ST7789V_DBI_DIR_MIRROR) && ST7789V_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -184,7 +184,7 @@ int st7789v_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if ST7789V_DBI_COLOR_ORDER
+#if defined(ST7789V_DBI_COLOR_ORDER) && ST7789V_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -203,11 +203,11 @@ int st7789v_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void st7789v_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if ST7789V_DBI_OFFSET_X
+#if defined(ST7789V_DBI_OFFSET_X) && ST7789V_DBI_OFFSET_X
     x1 += ST7789V_DBI_OFFSET_X;
     x2 += ST7789V_DBI_OFFSET_X;
 #endif
-#if ST7789V_DBI_OFFSET_Y
+#if defined(ST7789V_DBI_OFFSET_Y) && ST7789V_DBI_OFFSET_Y
     y1 += ST7789V_DBI_OFFSET_Y;
     y2 += ST7789V_DBI_OFFSET_Y;
 #endif

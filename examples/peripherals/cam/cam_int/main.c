@@ -24,7 +24,6 @@ void cam_isr(int irq, void *arg)
 
 int main(void)
 {
-    uint32_t i;
     struct bflb_cam_config_s cam_config;
     struct image_sensor_config_s *sensor_config;
 

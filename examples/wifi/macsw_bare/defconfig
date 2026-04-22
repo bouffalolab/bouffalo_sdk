@@ -1,3 +1,6 @@
+# Build Options
+CONFIG_STRICT=y
+
 # Components
 CONFIG_BFLB_LOG          =n
 CONFIG_FREERTOS          =y

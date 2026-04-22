@@ -70,7 +70,7 @@ const st7735_spi_init_cmd_t st7735_spi_init_cmds[] = {
 #endif
 
 /* Color reversal */
-#if ST7735_SPI_COLOR_REVERSAL
+#if defined(ST7735_SPI_COLOR_REVERSAL) && ST7735_SPI_COLOR_REVERSAL
     { 0xB4, "\x01", 1 },
     { 0x21, NULL, 0 },
 #endif
@@ -158,7 +158,7 @@ int st7735_spi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if ST7735_SPI_DIR_MIRROR
+#if defined(ST7735_SPI_DIR_MIRROR) && ST7735_SPI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -169,7 +169,7 @@ int st7735_spi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if ST7735_SPI_COLOR_ORDER
+#if defined(ST7735_SPI_COLOR_ORDER) && ST7735_SPI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -188,11 +188,11 @@ int st7735_spi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void st7735_spi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if ST7735_SPI_OFFSET_X
+#if defined(ST7735_SPI_OFFSET_X) && ST7735_SPI_OFFSET_X
     x1 += ST7735_SPI_OFFSET_X;
     x2 += ST7735_SPI_OFFSET_X;
 #endif
-#if ST7735_SPI_OFFSET_Y
+#if defined(ST7735_SPI_OFFSET_Y) && ST7735_SPI_OFFSET_Y
     y1 += ST7735_SPI_OFFSET_Y;
     y2 += ST7735_SPI_OFFSET_Y;
 #endif

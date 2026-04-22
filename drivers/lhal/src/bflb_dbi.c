@@ -2,7 +2,7 @@
 #include "bflb_clock.h"
 #include "hardware/dbi_reg.h"
 
-#if (DBI_YUV_SUPPORT)
+#if ((defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT) || (defined(DBI_YUYV_SUPPORT) && DBI_YUYV_SUPPORT))
 /* YUV to RGB parameter list, do not modify. */
 
 #define YUV_PRE_OFFSET_0  0
@@ -27,7 +27,7 @@
 
 #endif
 
-static void bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
+static int bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
 {
     uint32_t reg_base;
     uint32_t regval;
@@ -38,6 +38,7 @@ static void bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
     regval &= ~DBI_FIFO_FORMAT_MASK;
     regval &= ~DBI_FIFO_YUV_MODE;
     regval &= ~DBI_CR_YUVITV_FORMAT_MASK;
+
     switch (format) {
         case DBI_PIXEL_INPUT_FORMAT_NBGR_8888:
         case DBI_PIXEL_INPUT_FORMAT_NRGB_8888:
@@ -49,6 +50,8 @@ static void bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
         case DBI_PIXEL_INPUT_FORMAT_RGB_565:
             regval |= (format << DBI_FIFO_FORMAT_SHIFT);
             break;
+
+#if (defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT)
         case DBI_PIXEL_INPUT_FORMAT_NVUY:
         case DBI_PIXEL_INPUT_FORMAT_NYUV:
         case DBI_PIXEL_INPUT_FORMAT_VUYN:
@@ -58,6 +61,9 @@ static void bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
             regval |= ((format - DBI_PIXEL_INPUT_FORMAT_NVUY) << DBI_FIFO_FORMAT_SHIFT);
             regval |= DBI_FIFO_YUV_MODE;
             break;
+#endif
+
+#if (defined(DBI_YUYV_SUPPORT) && DBI_YUYV_SUPPORT)
         case DBI_PIXEL_INPUT_FORMAT_YUYV:
         case DBI_PIXEL_INPUT_FORMAT_YVYU:
         case DBI_PIXEL_INPUT_FORMAT_UYVY:
@@ -66,10 +72,14 @@ static void bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
             regval |= DBI_FIFO_YUV_MODE;
             regval |= ((format - DBI_PIXEL_INPUT_FORMAT_YUYV) << DBI_CR_YUVITV_FORMAT_SHIFT);
             break;
+#endif
+
         default:
-            break;
+            return -1;
     }
+
     putreg32(regval, reg_base + DBI_FIFO_CONFIG_0_OFFSET);
+    return 0;
 }
 
 void bflb_dbi_init(struct bflb_device_s *dev, const struct bflb_dbi_config_s *config)
@@ -220,7 +230,7 @@ void bflb_dbi_init(struct bflb_device_s *dev, const struct bflb_dbi_config_s *co
     putreg32(regval, reg_base + DBI_QSPI_CONFIG_OFFSET);
 #endif
 
-#if (DBI_YUV_SUPPORT)
+#if ((defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT) || (defined(DBI_YUYV_SUPPORT) && DBI_YUYV_SUPPORT))
     /* YUV to RGB parameter list. */
     regval = 0;
     regval |= (YUV_PRE_OFFSET_0 << DBI_CR_Y2R_PRE_0_SHIFT) & DBI_CR_Y2R_PRE_0_MASK;
@@ -879,19 +889,6 @@ int bflb_dbi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, reg_base + DBI_PIX_CNT_OFFSET);
             break;
-
-#if (DBI_YUV_SUPPORT)
-        case DBI_CMD_YUV_TO_RGB_ENABLE:
-            /* yuv to rgb cfg, arg use true or false */
-            regval = getreg32(reg_base + DBI_FIFO_CONFIG_0_OFFSET);
-            if (arg) {
-                regval |= DBI_FIFO_YUV_MODE;
-            } else {
-                regval &= ~DBI_FIFO_YUV_MODE;
-            }
-            putreg32(regval, reg_base + DBI_FIFO_CONFIG_0_OFFSET);
-            break;
-#endif
 
         default:
             ret = -EPERM;

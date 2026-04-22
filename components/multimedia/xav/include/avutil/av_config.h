@@ -262,7 +262,7 @@
 #ifndef CONFIG_TCPIP
 #define CONFIG_TCPIP                                   (1)
 #else
-#if !CONFIG_TCPIP
+ #if !defined(CONFIG_TCPIP) || !CONFIG_TCPIP
 #error "CONFIG_STREAMER_HLS or CONFIG_STREAMER_HTTP is enabled, but CONFIG_TCPIP is disabled"
 #endif
 #endif
@@ -280,7 +280,7 @@
 #ifndef CONFIG_USING_TLS
 #define CONFIG_USING_TLS                               (1)
 #else
-#if !CONFIG_USING_TLS
+ #if !defined(CONFIG_USING_TLS) || !CONFIG_USING_TLS
 #error "CONFIG_DEMUXER_MP4 or CONFIG_STREAMER_CRYPTO is enabled, but CONFIG_USING_TLS is disabled"
 #endif
 #endif

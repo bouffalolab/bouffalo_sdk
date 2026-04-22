@@ -46,6 +46,9 @@
 #define luaport_snprintf snprintf
 
 #include <string.h>
+#ifndef strlcpy
+extern size_t strlcpy(char *dst, const char *src, size_t size);
+#endif
 #define luaport_memchr   memchr
 #define luaport_memcmp   memcmp
 #define luaport_memcpy   memcpy

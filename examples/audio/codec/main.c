@@ -66,8 +66,6 @@ struct bflb_device_s *gpio;
 
 static struct bflb_device_s *uart0;
 
-static TaskHandle_t wifi_fw_task;
-
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
@@ -168,7 +166,7 @@ int main(void)
 
     tcpip_init(NULL, NULL);
     xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S)
     extern msp_i2s_port_init(void);
     msp_i2s_port_init();
 #endif

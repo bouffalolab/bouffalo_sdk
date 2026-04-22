@@ -56,6 +56,7 @@
 #ifdef OS_USING_FREERTOS
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -1129,8 +1130,6 @@ uint32_t bflb_os_get_tick()
 
 void bflb_os_irq_attach(int32_t n, void *f, void *arg)
 {
-    struct irq_adpt *adapter;
-
     //blog_info("irq attach: n=%ld f=%p arg=%p\n", n, f, arg);
 
     bflb_irq_clear_pending(n);
@@ -1406,14 +1405,14 @@ int32_t bflb_os_sem_give(BL_Sem_t semphr)
  *
  ****************************************************************************/
 
-static void bflb_os_log_writev(uint32_t level,
+static void __attribute__((unused)) bflb_os_log_writev(uint32_t level,
                              const char *tag,
                              const char *file,
                              int line,
                              const char *format,
                              va_list args)
 {
-#if (CFG_COMPONENT_BLOG_ENABLE == 1)
+#if defined(CFG_COMPONENT_BLOG_ENABLE) && (CFG_COMPONENT_BLOG_ENABLE == 1)
     if ((level >= REFC_LEVEL(__COMPONENT_NAME_DEQUOTED__)) &&
         (level >= REFF_LEVEL(__COMPONENT_FILE_NAME_DEQUOTED__)))
     {

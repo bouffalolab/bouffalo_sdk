@@ -25,7 +25,7 @@
 #include "app_player.h"
 #include "app_player_mixer.h"
 #include "test_audio.h"
-//#include "bt/app_bt.h"
+#include "bt/app_bt.h"
 
 #define TAG "player"
 

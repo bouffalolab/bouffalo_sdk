@@ -92,7 +92,7 @@ const gc9307_dbi_init_cmd_t gc9307_dbi_init_cmds[] = {
     { 0x44, "\x00\x0A", 2 },
 
 /* Color reversal */
-#if GC9307_DBI_COLOR_REVERSAL
+#if defined(GC9307_DBI_COLOR_REVERSAL) && GC9307_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 },
 #endif
 
@@ -177,7 +177,7 @@ int gc9307_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if GC9307_DBI_DIR_MIRROR
+#if defined(GC9307_DBI_DIR_MIRROR) && GC9307_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -188,7 +188,7 @@ int gc9307_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if GC9307_DBI_COLOR_ORDER
+#if defined(GC9307_DBI_COLOR_ORDER) && GC9307_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -206,11 +206,11 @@ int gc9307_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void gc9307_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if GC9307_DBI_OFFSET_X
+#if defined(GC9307_DBI_OFFSET_X) && GC9307_DBI_OFFSET_X
     x1 += GC9307_DBI_OFFSET_X;
     x2 += GC9307_DBI_OFFSET_X;
 #endif
-#if GC9307_DBI_OFFSET_Y
+#if defined(GC9307_DBI_OFFSET_Y) && GC9307_DBI_OFFSET_Y
     y1 += GC9307_DBI_OFFSET_Y;
     y2 += GC9307_DBI_OFFSET_Y;
 #endif

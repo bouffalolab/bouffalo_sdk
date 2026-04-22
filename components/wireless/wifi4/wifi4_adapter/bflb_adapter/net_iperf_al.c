@@ -305,7 +305,7 @@ static void net_iperf_print_header(const struct fhost_iperf_settings *iperf_sett
     if (iperf_settings->flags.is_server)
     {
         net_al_if_t n = fhost_to_net_if(iperf_settings->vif_num);
-        uint32_t ip;
+        uint32_t ip = 0;
 
         if (iperf_settings->flags.is_udp)
         {
@@ -1356,7 +1356,7 @@ static void net_iperf_udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p
         // First packet of the test, init stats.
         // Cannot just test packetID == 0 as we may miss this packet ...
         net_al_if_t n = fhost_to_net_if(stream->iperf_settings.vif_num);
-        uint32_t ip;
+        uint32_t ip = 0;
 
         net_if_get_ip(n, &ip, NULL, NULL);
         fhost_print(stream->iperf_handle, "local %d.%d.%d.%d port %d connected with %d.%d.%d.%d port %d\n",
@@ -1415,7 +1415,7 @@ static void net_iperf_udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p
 static err_t net_iperf_pcb_config(void *pcb, struct fhost_iperf_stream *stream)
 {
     const struct fhost_iperf_settings *settings = (struct fhost_iperf_settings *) &stream->iperf_settings;
-    uint32_t ip;
+    uint32_t ip = 0;
     ip_addr_t lip;
 
     if (settings->flags.is_server)
@@ -1521,22 +1521,22 @@ static void* net_iperf_init(struct fhost_iperf_stream* stream)
 
         /* Don't call ip_route() with IP_ANY_TYPE */
         LOCK_TCPIP_CORE();
-        netif = ip4_route_src(IP46_ADDR_ANY(IP_GET_TYPE(&rip)), &rip);
+        netif = ip4_route_src(IP46_ADDR_ANY(IP_GET_TYPE(&rip)), ip_2_ip4(&rip));
         UNLOCK_TCPIP_CORE();
         if (netif == NULL)
             return NULL;
 
-        found = (etharp_find_addr(netif, &rip, &eth_ret, &ip_ret) != -1);
+        found = (etharp_find_addr(netif, ip_2_ip4(&rip), &eth_ret, &ip_ret) != -1);
         while (!found && tries < 3)
         {
             LOCK_TCPIP_CORE();
-            etharp_request(netif, &rip);
+            etharp_request(netif, ip_2_ip4(&rip));
             UNLOCK_TCPIP_CORE();
 
             // It is not possible to use a callback for the ARP reply, set a timeout
             rtos_task_suspend(ARP_REPLY_TO);
             tries++;
-            found = (etharp_find_addr(netif, &rip, &eth_ret, &ip_ret) != -1);
+            found = (etharp_find_addr(netif, ip_2_ip4(&rip), &eth_ret, &ip_ret) != -1);
         }
         if (!found)
             return NULL;

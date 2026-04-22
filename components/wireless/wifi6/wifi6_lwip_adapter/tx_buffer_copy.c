@@ -1,6 +1,14 @@
 #include "stddef.h"
 #include "assert.h"
+#include <string.h>
 #include "mac_frame.h"
+
+#ifndef CO_ALIGN4_HI
+#define CO_ALIGN4_HI(val) (((val)+3)&~3)
+#endif
+#ifndef ASSERT_ERR
+#define ASSERT_ERR(cond) assert(cond)
+#endif
 #include "net_al.h"
 #include "lwip/tcpip.h"
 #include "tx_buffer_copy.h"

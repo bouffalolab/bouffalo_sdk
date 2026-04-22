@@ -36,6 +36,7 @@ static void lvgl_main(void *param)
 #endif
     // lv_disp_set_rotation(NULL, LV_DISP_ROT_90);
 
+    extern void lv_demo_benchmark(void);
     lv_demo_benchmark();
     // lv_demo_keypad_encoder();
     // lv_demo_music();
@@ -54,6 +55,7 @@ static void lvgl_main(void *param)
 
 static void coremark_main(void *param)
 {
+    extern int core_mark(void);
     core_mark();
 
     vTaskDelete(NULL);
@@ -70,7 +72,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_coremark, coremark, coremark test);
 
 
 extern void app_sample_init(void);
-
+extern int app_wifi_init(void);
 
 int app_init(void)
 {
@@ -78,4 +80,3 @@ int app_init(void)
     app_wifi_init();
     return 0;
 }
-

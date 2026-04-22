@@ -66,7 +66,7 @@ static inline bool npf_is_icmp4(const struct pbuf *skb)
         return false;
     }
     if (npf_is_ip4(skb)) {
-        const struct ip_hdr *iphdr = (const struct ip_hdr *)(skb->payload + NPF_ETH_HDR_LEN);
+        const struct ip_hdr *iphdr = (const struct ip_hdr *)((const uint8_t *)skb->payload + NPF_ETH_HDR_LEN);
         if (IPH_PROTO(iphdr) == IP_PROTO_ICMP) {
             return true;
         }
@@ -80,8 +80,8 @@ static inline bool npf_is_dhcp4(const struct pbuf *skb)
     if (!(skb->len > NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN + NPF_UDP4_HDR_LEN)) {
         return false;
     }
-    const struct ip_hdr *iphdr = (const struct ip_hdr *)(skb->payload + NPF_ETH_HDR_LEN);
-    const struct udp_hdr *udphdr = (const struct udp_hdr *)(skb->payload + NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN);
+    const struct ip_hdr *iphdr = (const struct ip_hdr *)((const uint8_t *)skb->payload + NPF_ETH_HDR_LEN);
+    const struct udp_hdr *udphdr = (const struct udp_hdr *)((const uint8_t *)skb->payload + NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN);
     const uint16_t srcport = lwip_ntohs(udphdr->src);
     const uint16_t dstport = lwip_ntohs(udphdr->dest);
 
@@ -101,7 +101,7 @@ static inline bool npf_is_tcp4_port(const struct pbuf *skb, uint16_t port)
     if (!(skb->len >= NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN + NPF_TCP4_HDR_LEN)) {
         return false;
     }
-    const struct tcp_hdr *tcphdr = (const struct tcp_hdr *)(skb->payload + NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN);
+    const struct tcp_hdr *tcphdr = (const struct tcp_hdr *)((const uint8_t *)skb->payload + NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN);
     if (lwip_htons(port) == tcphdr->src || lwip_htons(port) == tcphdr->dest) {
         return true;
     }
@@ -116,7 +116,7 @@ static inline bool npf_is_udp4_port(const struct pbuf *skb, uint16_t port)
     if (!(skb->len >= NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN + NPF_UDP4_HDR_LEN)) {
         return false;
     }
-    const struct udp_hdr *hdr = (const struct udp_hdr *)(skb->payload + NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN);
+    const struct udp_hdr *hdr = (const struct udp_hdr *)((const uint8_t *)skb->payload + NPF_ETH_HDR_LEN + NPF_IP4_HDR_LEN);
     if (lwip_htons(port) == hdr->src || lwip_htons(port) == hdr->dest) {
         return true;
     }

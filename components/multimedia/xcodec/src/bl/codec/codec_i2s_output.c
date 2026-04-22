@@ -14,6 +14,7 @@
 #include <bflb_clock.h>
 #include <bflb_l1c.h>
 #include <bflb_peri.h>
+#include <bflb_mtimer.h>
 #include <msp_port.h>
 
 #include <msp/kernel.h>
@@ -36,6 +37,12 @@ auo_ch_t *g_auo_ctx = NULL;
 #endif
 
 #define ALIGN_TO_32(addr) ((addr) & ~0x1F)
+
+static uint64_t auo_now_ns(void)
+{
+    uint64_t now_us = bflb_mtimer_get_time_us();
+    return now_us * 1000ULL;
+}
 
 static void _auo_recv(auo_ch_t *context)
 {
@@ -173,7 +180,7 @@ int auo_init(auo_ch_t *context)
         user_log("error\r\n");
         return -1;
     }
-#if CONFIG_MSP_USE_STATIC_RAM
+#if defined(CONFIG_MSP_USE_STATIC_RAM) && CONFIG_MSP_USE_STATIC_RAM
     static uint8_t g_task_buffer[1024];
     static uint8_t g_task_handle[256];
 #endif
@@ -188,7 +195,7 @@ int auo_init(auo_ch_t *context)
     audio_poweron();
     context->task_exit = 0;
     msp_event_new(&(context->event), 0);
-#if CONFIG_MSP_USE_STATIC_RAM
+#if defined(CONFIG_MSP_USE_STATIC_RAM) && CONFIG_MSP_USE_STATIC_RAM
     msp_task_new_static(&(context->task), AUO_TASK, auo_task_entry, context, 1024, context->task_pri, &g_task_buffer, &g_task_handle, 256);//aos_DEFAULT_APP_PRI - 6);
 #else
     msp_task_new_ext(&(context->task), AUO_TASK, auo_task_entry, context, context->stack_size, context->task_pri);//aos_DEFAULT_APP_PRI - 6);
@@ -221,6 +228,8 @@ int auo_channel_config(auo_ch_t *context, auo_cfg_t *config)
     context->sound_channel_num = config->sound_channel_num;
     context->st = 0;
     context->pre_indx = 0;
+    context->submitted_bytes_total = 0;
+    context->first_output_timestamp_ns = 0;
 
     msp_mutex_unlock(&(context->mutex));
 
@@ -435,6 +444,9 @@ static int _auo_hw_start(auo_ch_t *context)
 
     bflb_dma_channel_start(context->device_dma);
     bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_RESUME, 1);
+    if (context->first_output_timestamp_ns == 0) {
+        context->first_output_timestamp_ns = auo_now_ns();
+    }
 
     return 0;
 }
@@ -473,6 +485,8 @@ int auo_stop(auo_ch_t *context)
 
     context->st = 0;
     context->pre_indx = 0;
+    context->submitted_bytes_total = 0;
+    context->first_output_timestamp_ns = 0;
 
     msp_mutex_unlock(&(context->mutex));
 

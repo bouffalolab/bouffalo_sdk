@@ -59,7 +59,7 @@ int lcd_init(void)
 #if (defined(LCD_RESET_EN) && LCD_RESET_EN)
     bflb_gpio_init(gpio, LCD_RESET_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     /* lcd reset */
-#if LCD_RESET_ACTIVE_LEVEL
+#if defined(LCD_RESET_ACTIVE_LEVEL) && LCD_RESET_ACTIVE_LEVEL
     bflb_gpio_set(gpio, LCD_RESET_PIN);
 #else
     bflb_gpio_reset(gpio, LCD_RESET_PIN);
@@ -68,7 +68,7 @@ int lcd_init(void)
     bflb_mtimer_delay_ms(LCD_RESET_HOLD_MS);
 
     /* lcd recovery */
-#if LCD_RESET_ACTIVE_LEVEL
+#if defined(LCD_RESET_ACTIVE_LEVEL) && LCD_RESET_ACTIVE_LEVEL
     bflb_gpio_reset(gpio, LCD_RESET_PIN);
 #else
     bflb_gpio_set(gpio, LCD_RESET_PIN);
@@ -81,7 +81,7 @@ int lcd_init(void)
     /* close backlight */
     bflb_gpio_init(gpio, LCD_BACKLIGHT_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 
-#if LCD_BACKLIGHT_ACTIVE_LEVEL
+#if defined(LCD_BACKLIGHT_ACTIVE_LEVEL) && LCD_BACKLIGHT_ACTIVE_LEVEL
     bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
 #else
     bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
@@ -101,13 +101,13 @@ void lcd_backlight_toggle(bool on)
     /* gpio init */
     gpio = bflb_device_get_by_name("gpio");
     if (on) {
-#if LCD_BACKLIGHT_ACTIVE_LEVEL
+#if defined(LCD_BACKLIGHT_ACTIVE_LEVEL) && LCD_BACKLIGHT_ACTIVE_LEVEL
         bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
 #else
         bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
 #endif
     } else {
-#if LCD_BACKLIGHT_ACTIVE_LEVEL
+#if defined(LCD_BACKLIGHT_ACTIVE_LEVEL) && LCD_BACKLIGHT_ACTIVE_LEVEL
         bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
 #else
         bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
@@ -337,7 +337,7 @@ int lcd_draw_circle(uint16_t x, uint16_t y, uint16_t r, lcd_color_t color)
     return 0;
 }
 
-#if FONT_ASCII_16X8
+#if defined(FONT_ASCII_16X8) && FONT_ASCII_16X8
 
 /**
  * @brief Draw font(16*8) ,Use double buffer to speed up drawing
@@ -430,7 +430,7 @@ int lcd_init(lcd_color_t *screen_buffer)
     bflb_gpio_init(gpio, LCD_RESET_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 
     /* lcd reset */
-#if LCD_RESET_ACTIVE_LEVEL
+#if defined(LCD_RESET_ACTIVE_LEVEL) && LCD_RESET_ACTIVE_LEVEL
     bflb_gpio_set(gpio, LCD_RESET_PIN);
 #else
     bflb_gpio_reset(gpio, LCD_RESET_PIN);
@@ -439,7 +439,7 @@ int lcd_init(lcd_color_t *screen_buffer)
     bflb_mtimer_delay_ms(LCD_RESET_HOLD_MS);
 
     /* lcd recovery */
-#if LCD_RESET_ACTIVE_LEVEL
+#if defined(LCD_RESET_ACTIVE_LEVEL) && LCD_RESET_ACTIVE_LEVEL
     bflb_gpio_reset(gpio, LCD_RESET_PIN);
 #else
     bflb_gpio_set(gpio, LCD_RESET_PIN);
@@ -459,13 +459,13 @@ void lcd_backlight_toggle(bool on)
     /* gpio init */
     gpio = bflb_device_get_by_name("gpio");
     if (on) {
-#if LCD_BACKLIGHT_ACTIVE_LEVEL
+#if defined(LCD_BACKLIGHT_ACTIVE_LEVEL) && LCD_BACKLIGHT_ACTIVE_LEVEL
         bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
 #else
         bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
 #endif
     } else {
-#if LCD_BACKLIGHT_ACTIVE_LEVEL
+#if defined(LCD_BACKLIGHT_ACTIVE_LEVEL) && LCD_BACKLIGHT_ACTIVE_LEVEL
         bflb_gpio_reset(gpio, LCD_BACKLIGHT_PIN);
 #else
         bflb_gpio_set(gpio, LCD_BACKLIGHT_PIN);
@@ -662,7 +662,7 @@ int lcd_draw_circle(lcd_color_t *screen_buffer, uint16_t x, uint16_t y, uint16_t
     return 0;
 }
 
-#if FONT_ASCII_16X8
+#if defined(FONT_ASCII_16X8) && FONT_ASCII_16X8
 
 /**
  * @brief Draw font(16*8)

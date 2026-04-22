@@ -200,7 +200,9 @@ static void mbedtls_ct_mpi_uint_cond_assign( size_t n,
  * Convert between bits/chars and number of limbs
  * Divide first in order to avoid potential overflows
  */
+#undef BITS_TO_LIMBS
 #define BITS_TO_LIMBS(i)  ( (i) / biL + ( (i) % biL != 0 ) )
+#undef CHARS_TO_LIMBS
 #define CHARS_TO_LIMBS(i) ( (i) / ciL + ( (i) % ciL != 0 ) )
 
 /* Implementation that should never be optimized out by the compiler */
@@ -443,6 +445,7 @@ int mbedtls_mpi_get_bit( const mbedtls_mpi *X, size_t pos )
 }
 
 /* Get a specific byte, without range checks. */
+#undef GET_BYTE
 #define GET_BYTE( X, i )                                \
     ( ( ( X )->p[( i ) / ciL] >> ( ( ( i ) % ciL ) * 8 ) ) & 0xff )
 

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "audio_file.h"
 #include <xcodec.h>
+#include <msp/kernel.h>
 
 
 /* user config param */
@@ -25,7 +26,6 @@ static xcodec_t codec;
 static xcodec_output_t codec_output_ch;
 static xcodec_dma_ch_t *dma_hdl_out;
 static uint8_t g_start_run = 0;
-static uint32_t dma_ch_output_handle;
 static uint8_t *output_buf = NULL;
 static m_ringbuf_t loop_output_ring_buffer;
 
@@ -46,15 +46,13 @@ static void _codec_output_init(uint32_t sample_rate)
     xcodec_output_config_t output_config;
     codec.output_chs = &codec_output_ch;
     
-    g_start_run = 1;    
+    g_start_run = 1;
     ret = xcodec_init(&codec, 0);
     if (ret != XCODEC_OK) {
         printf("xcodec_init error\n");
         g_start_run = 0;
         msp_task_exit(0);
     }
-
-    uint8_t *p_buf = NULL;
 
     output_buf = msp_malloc(OUTPUT_BUF_SIZE);
 

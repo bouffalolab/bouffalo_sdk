@@ -54,7 +54,7 @@ static smtaudio_ops_node_t ctrl_bt_a2dp = {
     .vol_down = bt_a2dp_vol_down,
 };
 
-static uint8_t _bt_get_lable(void)
+__attribute__((unused)) static uint8_t _bt_get_lable(void)
 {
     static uint8_t lable = 0;
 

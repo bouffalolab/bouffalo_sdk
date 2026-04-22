@@ -1,12 +1,15 @@
 
-sdk_add_include_directories(.)
-
+# enable usb ehci iso
 sdk_add_compile_definitions(-D CONFIG_USB_EHCI_ISO)
 
-if(CONFIG_SOLUTION_BUILD_FROM_LIB_MODE)
-    sdk_add_static_library(libusbh_uvc_uac_e907.a)
-else()
-    sdk_generate_library(usbh_uvc_uac)
+sdk_add_include_directories(inc)
 
-    sdk_library_add_sources(usb_hc_ehci_iso.c usbh_uvc_stream.c usbh_uac_stream.c)
+if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    sdk_generate_library()
+    sdk_add_include_directories(src)
+    sdk_library_add_sources(src/usb_hc_ehci_iso.c)
+    sdk_library_add_sources(src/usbh_uac_stream.c)
+    sdk_library_add_sources(src/usbh_uvc_stream.c)
+else()
+    sdk_add_static_library(lib/libusbh_uvc_uac_e907.a)
 endif()

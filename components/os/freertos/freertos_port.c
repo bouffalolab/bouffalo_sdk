@@ -3,6 +3,9 @@
 
 #include <FreeRTOS.h>
 #include "semphr.h"
+#if defined(CONFIG_BACKTRACE)
+#include "backtrace.h"
+#endif
 
 __attribute__((weak)) void vAssertCalled(void)
 {

@@ -132,7 +132,9 @@ typedef void (*pFunc)(void);
 void check_failed(uint8_t *file, uint32_t line);
 #define CHECK_PARAM(expr) ((expr) ? (void)0 : check_failed((uint8_t *)__FILE__, __LINE__))
 #else
+#ifndef CHECK_PARAM
 #define CHECK_PARAM(expr) ((void)0)
+#endif
 #endif /* DEBUG */
 
 /*@} end of group COMMON_Public_Types */

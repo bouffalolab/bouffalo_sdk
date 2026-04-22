@@ -49,6 +49,7 @@
  */
 
 #include "lwip/opt.h"
+#include "lwip/tcpip.h"
 
 #include <string.h> /* memset */
 #include <stdlib.h> /* atoi */

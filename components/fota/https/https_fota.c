@@ -24,6 +24,7 @@
 #include "https_fota.h"
 #include "ota/ota.h"
 
+#undef DBG_TAG
 #define DBG_TAG "HTTPS_FOTA"
 #include "log.h"
 
@@ -74,7 +75,7 @@ static int https_fota_cancel_requested(void *user_data)
     return (fota != NULL && fota->abort_requested) ? 1 : 0;
 }
 
-static int payload_cb(int sock, struct http_request *req, void *user_data)
+static int __attribute__((unused)) payload_cb(int sock, struct http_request *req, void *user_data)
 {
     const char *content[] = {
         "foobar",
@@ -242,7 +243,7 @@ int https_fota_start(https_fota_handle_t fota)
 {
     int ret = 0;
 
-    ret = xTaskCreate(fota_service_start, "fota_service", 2048, (const void *)fota, 10, NULL);
+    ret = xTaskCreate(fota_service_start, "fota_service", 2048, (void *)fota, 10, NULL);
     if (ret != pdPASS) {
         LOG_E("FOTA start fail ret:%d\r\n", ret);
         return -1;
@@ -280,7 +281,7 @@ int https_fota_finish(https_fota_handle_t fota, bool reboot)
     HTTPS_FOTA_STATUS_CALLBACK(https_fota, HTTPS_FOTA_SUCCESS)
     ret = HTTPS_FOTA_SUCCESS;
 __end:
-    free(https_fota->url);
+    free((void *)https_fota->url);
     free(https_fota);
     return ret;
 }
@@ -290,7 +291,7 @@ int https_fota_abort(https_fota_handle_t fota)
 	struct https_fota *https_fota = (struct https_fota *)fota;
 
     ota_abort(https_fota->ota);
-    free(https_fota->url);
+    free((void *)https_fota->url);
     free(https_fota);
     return 0;
 }

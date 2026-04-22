@@ -38,7 +38,7 @@
 
 struct bt_br_discovery_result result[10] = { 0 };
 
-static TaskHandle_t g_btinittask_hdl = NULL;
+static TaskHandle_t g_btinittask_hdl __attribute__((unused)) = NULL;
 
 #ifdef CONFIG_BT_A2DP
 struct k_thread media_transport;
@@ -61,8 +61,8 @@ static struct a2dp_callback a2dp_callbacks =
 static void avrcp_chain(struct bt_conn *conn, uint8_t state);
 static void avrcp_absvol(uint8_t vol);
 static void avrcp_play_status(uint32_t song_len, uint32_t song_pos, uint8_t status);
-static void avrcp_passthrough_response(bool released, u8_t option_id);
-static void avrcp_passthrough_handler(bool released, u8_t option_id);
+static void __attribute__((unused)) avrcp_passthrough_response(uint8_t released, uint8_t option_id);
+static void avrcp_passthrough_handler(uint8_t released, uint8_t option_id);
 static void avrcp_handle_play(void);
 static void avrcp_handle_stop(void);
 static void avrcp_handle_pause(void);
@@ -104,7 +104,7 @@ static struct bt_conn_cb conn_callbacks = {
     .disconnected = bredr_disconnected,
 };
 
-static br_a2dp_init(void)
+static void br_a2dp_init(void)
 {
     if(init){
         printf("bredr has initialized\n");
@@ -170,7 +170,7 @@ static void bredr_disconnected(struct bt_conn *conn, u8_t reason)
 typedef struct {
     uint8_t data_type;
     uint8_t data_length;
-    uint8_t *data;
+    const uint8_t *data;
 } eir_data_t;
 
 static void bredr_parse_eir_data(const uint8_t *eir, size_t eir_len)
@@ -215,7 +215,7 @@ void bt_br_discv_cb(struct bt_br_discovery_result *results,
         bt_addr_to_str(&results[i].addr, addr_str, sizeof(addr_str));
         printf("addr %s,class 0x%lx,rssi %d\r\n",addr_str,
                      dev_class,results[i].rssi);
-        bredr_parse_eir_data(&results[i].eir,240);
+        bredr_parse_eir_data((const uint8_t *)&results[i].eir,240);
     }
 
 }
@@ -305,18 +305,18 @@ static void avrcp_play_status(uint32_t song_len, uint32_t song_pos, uint8_t stat
     printf("%s, song length: %lu, song position: %lu, play status: %u \n", __func__, song_len, song_pos, status);
 }
 
-static void avrcp_passthrough_response(bool released, u8_t option_id)
+static void __attribute__((unused)) avrcp_passthrough_response(uint8_t released, uint8_t option_id)
 {
 	printf("released: %d option id: 0x%x \n",released, option_id);
 
 	if(released == 0)
 	{
-		//user todo 
+		//user todo
 
 	}
 }
 
-static void avrcp_passthrough_handler(bool released, u8_t option_id)
+static void avrcp_passthrough_handler(uint8_t released, uint8_t option_id)
 {
     printf("released: %d option id: 0x%x \n",released, option_id);
     if(released==PASTHR_STATE_RELEASED)
@@ -417,7 +417,7 @@ int bt_br_disconnect(void)
 
     if(!default_conn){
         printf("Not connected.\n");
-        return;
+        return 0;
     }
 
     int err = bt_conn_disconnect(default_conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
@@ -439,7 +439,7 @@ int bt_a2dpstart(void)
 
     if(!default_conn){
         printf("Not connected.\n");
-        return;
+        return 0;
     }
 
     a2dp = bt_a2dp_connect(default_conn);
@@ -457,7 +457,7 @@ int bt_a2dpstop(void)
     int ret = 0;
     if (!default_conn) {
         printf("Not connected.\n");
-        return;
+        return 0;
     }
 
     ret = bt_stream_suspend(default_conn);
@@ -476,7 +476,7 @@ int bt_a2dpresume(void)
 
     if (!default_conn) {
         printf("Not connected.\n");
-        return;
+        return 0;
     }
 
     ret = bt_stream_resume(default_conn);
@@ -496,7 +496,8 @@ int cmd_bt(int argc, char **argv)
     }
 
     if (strcmp(argv[1], "init") == 0) {
-        return br_a2dp_init();
+        br_a2dp_init();
+        return 0;
     } else if (strcmp(argv[1], "scan") == 0) {
         return bt_a2dp_scan();
     } else if (strcmp(argv[1], "connect") == 0) {
@@ -517,6 +518,7 @@ int cmd_bt(int argc, char **argv)
         printf("Invalid command: %s\r\n", argv[1]);
         return -1;
     }
+    return 0;
 }
 
 #if defined(CONFIG_SHELL)

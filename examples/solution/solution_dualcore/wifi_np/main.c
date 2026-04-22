@@ -69,4 +69,5 @@ int main(void)
     while (1) {
         // never here.
     }
+    return 0;
 }

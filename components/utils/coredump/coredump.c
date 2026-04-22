@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "bflb_flash.h"
+#include "bflb_uart.h"
 #include "coredump.h"
 
 #if defined(CONFIG_BACKTRACE)

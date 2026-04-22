@@ -1,4 +1,8 @@
 #include "bl602_mfg_media.h"
+#include "bflb_irq.h"
+
+static int8_t mfg_flash_read_macaddr(uint8_t mac[6], uint8_t reload) __attribute__((unused));
+static int8_t mfg_flash_read_macaddr(uint8_t mac[6], uint8_t reload) { (void)mac; (void)reload; return -1; }
 
 static uint8_t rf_para_on_flash=0;
 

@@ -29,6 +29,8 @@
 
 extern int tickless_enter(void);
 extern int tickless_exit(void);
+extern void vPortSetupTimerInterrupt(void);
+void __attribute__((weak)) spisync_wakeup(void *arg) { (void)arg; }
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {

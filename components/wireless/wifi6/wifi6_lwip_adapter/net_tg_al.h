@@ -22,6 +22,8 @@
 struct fhost_tg_stream;
 struct fhost_ping_stream;
 
+int get_time_SINCE_EPOCH(uint32_t *sec, uint32_t *usec);
+
 /// Time structure
 struct tg_time
 {

@@ -2,6 +2,7 @@
 #include "board.h"
 #include "log.h"
 #include "bl616_glb.h"
+#include "bl616_glb_gpio.h"
 #include "bl616_pds.h"
 #include "bl616_hbn.h"
 #include "bl616_aon.h"

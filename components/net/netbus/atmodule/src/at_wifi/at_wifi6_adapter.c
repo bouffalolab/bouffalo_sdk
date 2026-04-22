@@ -28,8 +28,12 @@
 #include <lwip/netifapi.h>
 
 #include <wifi_mgmr_ext.h>
+
+extern int wifi_mgmr_rf_pwr_off(void);
+extern int wifi_mgmr_rf_pwr_on(void);
+extern int wifi_sta_disconnect(void);
 #include "wifi_mgmr.h"
-#if (CONFIG_FHOST)
+#if defined(CONFIG_FHOST) && (CONFIG_FHOST)
 #include "fhost.h"
 #endif
 #include "at_main.h"
@@ -378,6 +382,7 @@ int at_wifi_mgmr_sniffer_enable(at_wifi_mgmr_sniffer_item_t *sniffer_item)
     };
     pfn_sniffer_cb = sniffer_item->cb;
     wifi_mgmr_sniffer_enable(item);
+    return 0;
 }
 
 int at_wifi_mgmr_sniffer_disable(at_wifi_mgmr_sniffer_item_t *sniffer_item)

@@ -33,7 +33,7 @@ int at_ble_config_init(void)
 
     memset(at_ble_config, 0, sizeof(ble_config));
     at_ble_config->work_role = BLE_DISABLE;
-    size_t value_len = 0;
+    size_t value_len __attribute__((unused)) = 0;
     
     if (!at_config_read(AT_CONFIG_KEY_BLE_NAME, &at_ble_config->ble_name, sizeof(at_ble_config->ble_name))) {
         AT_CMD_PRINTF("BLE name config read failed, using default\r\n");

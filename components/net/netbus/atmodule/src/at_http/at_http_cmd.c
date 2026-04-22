@@ -14,6 +14,9 @@
 #include "at_main.h"
 #include "at_core.h"
 #include "at_httpc_main.h"
+#include "at_pal.h"
+#include "at_base/at_fs.h"
+#include "at_net/at_net_main.h"
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <stream_buffer.h>
@@ -328,7 +331,9 @@ static int at_httpc_request(struct at_http_ctx *ctx,
                             void *parg)
 {
 	int ret;
-    char *param, *host_name, *url;
+    const char *param;
+    char *host_name;
+    const char *url;
     httpc_state_t *req = NULL;
     ip_addr_t ip_addr;
     char *p_port;
@@ -367,8 +372,8 @@ static int at_httpc_request(struct at_http_ctx *ctx,
 
         } else if (ctx->https_auth_type == AT_HTTPS_CLIENT_AUTH) {
 
-            if (at_load_file(ctx->cert_file, &cert_buf, &cert_len) != 0 ||
-                at_load_file(ctx->key_file, &privkey_buf, &privkey_len) != 0 ||
+            if (at_load_file(ctx->cert_file, (char **)&cert_buf, (int *)&cert_len) != 0 ||
+                at_load_file(ctx->key_file, (char **)&privkey_buf, (int *)&privkey_len) != 0 ||
                 cert_buf == NULL || cert_len == 0 ||
                 privkey_buf == NULL || privkey_len == 0) {
                 at_free(cert_buf);
@@ -392,7 +397,7 @@ static int at_httpc_request(struct at_http_ctx *ctx,
             at_free(privkey_buf);
         } else if (ctx->https_auth_type == AT_HTTPS_SERVER_AUTH) {
 
-            if (at_load_file(ctx->ca_file, &ca_buf, &ca_len) != 0 || ca_buf == NULL || ca_len == 0) {
+            if (at_load_file(ctx->ca_file, (char **)&ca_buf, (int *)&ca_len) != 0 || ca_buf == NULL || ca_len == 0) {
                 at_free(ca_buf);
                 free_ctx(ctx);
                 return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_ALLOWED);
@@ -407,9 +412,9 @@ static int at_httpc_request(struct at_http_ctx *ctx,
 
         } else if (ctx->https_auth_type == AT_HTTPS_BOTH_AUTH) {
 
-            if (at_load_file(ctx->cert_file, &cert_buf, &cert_len) != 0 ||
-                at_load_file(ctx->key_file, &privkey_buf, &privkey_len) != 0 ||
-                at_load_file(ctx->ca_file, &ca_buf, &ca_len) != 0 ||
+            if (at_load_file(ctx->cert_file, (char **)&cert_buf, (int *)&cert_len) != 0 ||
+                at_load_file(ctx->key_file, (char **)&privkey_buf, (int *)&privkey_len) != 0 ||
+                at_load_file(ctx->ca_file, (char **)&ca_buf, (int *)&ca_len) != 0 ||
                 cert_buf == NULL || cert_len == 0 ||
                 privkey_buf == NULL || privkey_len == 0 ||
                 ca_buf == NULL || ca_len == 0) {
@@ -578,7 +583,7 @@ static int at_setup_cmd_httpclient(int argc, const char **argv)
 {
     int opt, content_type, linkid;
     struct at_http_ctx *ctx = NULL;
-    uint8_t data_valid = 0;
+    uint8_t data_valid __attribute__((unused)) = 0;
     char url_buf[256];
     char *data = at_malloc(256);
    
@@ -608,7 +613,7 @@ static int at_setup_cmd_httpclient(int argc, const char **argv)
     }
     ctx->used = 1;
 
-    ctx->data = data;
+    ctx->data = (uint8_t *)data;
     
     if (strlen(url_buf) == 0) {
         if ((ctx->url == NULL) && (ctx->url_size == 0)) {

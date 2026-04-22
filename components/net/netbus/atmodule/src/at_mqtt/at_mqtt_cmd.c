@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include "at_main.h"
 #include "at_core.h"
+#include "at_pal.h"
+#include "at_base/at_fs.h"
 #include "mqtt.h"
 #include "lwip/netdb.h"
 #include "at_mqtt_config.h"

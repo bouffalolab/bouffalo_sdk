@@ -91,7 +91,7 @@ PTS_CLI(ble_start_scan_rpa);
 PTS_CLI(ble_start_advertise);
 PTS_CLI(ble_connect_le);
 PTS_CLI(ble_disconnect);
-PTS_CLI(ble_select_conn);
+//PTS_CLI(ble_select_conn);
 PTS_CLI(ble_conn_update);
 PTS_CLI(ble_start_scan_timeout);
 PTS_CLI(ble_add_dev_to_resolve_list);
@@ -537,9 +537,9 @@ static ssize_t pts_write_value(
 
 
 static ssize_t pts_read_chara_value(
-			struct bt_conn *conn,	
-			const struct bt_gatt_attr *bt_attr, 
-			void *buf,u16_t len, u16_t offset,u8_t flags)
+			struct bt_conn *conn,
+			const struct bt_gatt_attr *bt_attr,
+			void *buf,u16_t len, u16_t offset)
 {
 	const char *data 	= "PTS_NAME0123456789abcde";
 	u16_t length 		= strlen(data);
@@ -548,9 +548,9 @@ static ssize_t pts_read_chara_value(
 }
 #if defined(PTS_CHARC_LEN_EQUAL_MTU_SIZE)
 static ssize_t pts_read_mtu_size(
-			struct bt_conn *conn,	
-			const struct bt_gatt_attr *bt_attr, 
-			void *buf,u16_t len, u16_t offset,u8_t flags)
+			struct bt_conn *conn,
+			const struct bt_gatt_attr *bt_attr,
+			void *buf,u16_t len, u16_t offset)
 {
 	const char *data 	= "876543210123456789abcde";
 	u16_t length 		= strlen(data);
@@ -1019,8 +1019,6 @@ PTS_CLI(ble_start_scan)
 PTS_CLI(ble_sc_indicate)
 {
 	struct bt_gatt_indicate_params 	params;
-	u8_t data[16];
-	u16_t len = 0;
 	int err;
 
 	if(!default_conn){
@@ -1038,7 +1036,11 @@ PTS_CLI(ble_sc_indicate)
 
 }
 
-PTS_CLI(ble_start_scan_rpa)
+#if defined(CONFIG_SHELL)
+static void __attribute__((unused)) pts_ble_start_scan_rpa(int argc, char **argv)
+#else
+static void __attribute__((unused)) pts_ble_start_scan_rpa(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#endif
 {
     struct bt_le_scan_param scan_param;
     int err;
@@ -1666,7 +1668,7 @@ PTS_CLI(ble_set_mitm)
 
 #if defined(CONFIG_BT_GATT_CLIENT)
 static struct bt_gatt_discover_params discover_params;
-static struct bt_uuid_16 uuid = BT_UUID_INIT_16(0);
+static struct bt_uuid_16 uuid __attribute__((unused)) = BT_UUID_INIT_16(0);
 static struct bt_uuid_128 uuid_128 = BT_UUID_INIT_128(0);
 
 extern u8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *attr, struct bt_gatt_discover_params *params);

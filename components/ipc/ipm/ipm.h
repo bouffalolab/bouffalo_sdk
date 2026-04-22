@@ -167,6 +167,10 @@ uint32_t ipm_max_id_val_get(ipm_device_t *ipmdev);
  */
 int ipm_set_enabled(ipm_device_t *ipmdev, int enable);
 
+int ipm_init(ipm_device_t *dev);
+
+int wait_for_resume(void);
+
 /**
  * @brief Signal asynchronous command completion
  *

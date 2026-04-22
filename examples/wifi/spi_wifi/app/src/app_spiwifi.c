@@ -8,6 +8,8 @@
 #include "bl_fw_api.h"
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
+#include "bflb_mtd.h"
+#include "easyflash.h"
 
 #include "bflb_irq.h"
 #include "bflb_uart.h"
@@ -34,6 +36,7 @@ int app_spiwifi_init(void)
     bflb_mtd_init();
     easyflash_init();
 
+    extern void app_wifi_init(void);
     app_wifi_init();
     return 0;
 }

@@ -12,6 +12,10 @@
 #include <bflb_gpio.h>
 #include <bflb_audac.h>
 #include <bflb_auadc.h>
+#include <bflb_mtimer.h>
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+#include <bflb_i2s.h>
+#endif
 #include <xutils/xringbuffer.h>
 #include <msp/kernel.h>
 #include <msp_port.h>
@@ -55,6 +59,7 @@
 
 static aui_ch_t rx_context;
 static struct bflb_device_s *audac_dev = NULL;
+static uint32_t g_xcodec_output_clock_mhz;
 
 #ifndef CONFIG_CODEC_USE_I2S
 int codec_aupwm_pinmux_config(uint8_t pin)
@@ -154,7 +159,7 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
     cfg.pdm_in_pin = config->pdm_in_pin;
     cfg.pdm_clk_pin = config->pdm_clk_pin;
     rx_context.maxcount = config->buffer_size / (config->period + sizeof(aui_segment_t));
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
     msp_i2s_device_init(config->sample_rate);
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
@@ -316,6 +321,11 @@ xcodec_error_t xcodec_input_analog_gain(xcodec_input_t *ch, float val)
 
 static auo_ch_t tx_context;
 
+static uint64_t xcodec_now_ns(void)
+{
+    uint64_t now_us = bflb_mtimer_get_time_us();
+    return now_us * 1000ULL;
+}
 xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t ch_idx)
 {
     int ret = -1;
@@ -342,6 +352,10 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
     tx_context.event_timeout = XCODEC_OUTPUT_EVENT_TIMEROUT; //ms
     tx_context.maxcount = 16;
     tx_context.per_node_size = 1024;
+    tx_context.sample_rate_hz = 0;
+    tx_context.clock_freq_mhz = 0;
+    tx_context.submitted_bytes_total = 0;
+    tx_context.first_output_timestamp_ns = 0;
     memset(tx_context.dma, 0, sizeof(auo_dma_t));
     tx_context.dma->dst_addr = DMA_BASE + 0x100 + 0x100 * tx_context.ch_id;
     tx_context.dma->halt_reg = tx_context.dma->dst_addr + 0x10;
@@ -388,7 +402,7 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
     cfg.sound_channel_num = config->sound_channel_num;
     cfg.per_node_size = config->period;
     tx_context.maxcount = config->buffer_size / (config->period + sizeof(auo_segment_t));
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
     msp_i2s_device_init(config->sample_rate);
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
@@ -503,6 +517,11 @@ void xcodec_output_close(xcodec_output_t *ch)
         tx_context.dma = NULL;
     }
 
+    tx_context.sample_rate_hz = 0;
+    tx_context.clock_freq_mhz = 0;
+    tx_context.submitted_bytes_total = 0;
+    tx_context.first_output_timestamp_ns = 0;
+
     msp_mutex_free(&tx_context.mutex);
 
     return;
@@ -598,6 +617,37 @@ xcodec_error_t xcodec_output_mix_gain(xcodec_output_t *ch, float val)
 
 xcodec_error_t xcodec_output_get_state(xcodec_output_t *ch, xcodec_state_t *state)
 {
+    return XCODEC_OK;
+}
+
+xcodec_error_t xcodec_output_get_timing_info(xcodec_output_timing_info_t *info)
+{
+    if (info == NULL) {
+        return XCODEC_ERROR;
+    }
+    printf("func:%s, not support now, todo...\r\n", __func__);
+    info->system_time_ns = xcodec_now_ns();
+    info->first_timestamp_ns = tx_context.first_output_timestamp_ns;
+    info->total_frames = 0;
+    info->clock_counter_48k = 0;
+    return XCODEC_OK;
+}
+
+xcodec_error_t xcodec_set_audio_output_clock_mHz(uint32_t freq_mHz)
+{
+    g_xcodec_output_clock_mhz = freq_mHz;
+
+    printf("func:%s, not support now, todo...\r\n", __func__);
+
+    return XCODEC_OK;
+}
+
+xcodec_error_t xcodec_get_audio_output_clock_mHz(uint32_t *freq_mHz)
+{
+    printf("func:%s, not support now, todo...\r\n", __func__);
+    if (freq_mHz) {
+        *freq_mHz = g_xcodec_output_clock_mhz;
+    }
     return XCODEC_OK;
 }
 

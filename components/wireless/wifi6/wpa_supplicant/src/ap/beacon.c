@@ -33,6 +33,10 @@
 #include "taxonomy.h"
 #include "ieee802_11_auth.h"
 
+struct wpa_macsw_driver_itf_data;
+int wpa_macsw_driver_control_bcn(struct wpa_macsw_driver_itf_data *drv,
+                                  uint8_t bcn_mode, int bcn_timer, bool bcn_stop);
+
 
 #ifdef NEED_AP_MLME
 
@@ -1000,8 +1004,6 @@ void handle_probe_req(struct hostapd_data *hapd,
 		return;
 	}
 
-    int wpa_macsw_driver_control_bcn(struct wpa_macsw_driver_itf_data *drv,
-                                      uint8_t bcn_mode, int bcn_timer, bool bcn_stop);
     //printf("bcn_mode == %d  hapd->conf->bcn_timer %d\r\n", hapd->conf->bcn_mode, hapd->conf->bcn_timer);
     if (hapd->conf->bcn_mode == 0 && res == EXACT_SSID_MATCH) {
         //send msg to fhost

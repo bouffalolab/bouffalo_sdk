@@ -873,7 +873,9 @@ etharp_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
   const struct eth_addr *dest;
   struct eth_addr mcastaddr;
   const ip4_addr_t *dst_addr = ipaddr;
+#if ARP_TIMER_PRECISE_NEEDED
   u32_t now;
+#endif
 
   LWIP_ASSERT_CORE_LOCKED();
   LWIP_ASSERT("netif != NULL", netif != NULL);

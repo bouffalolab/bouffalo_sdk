@@ -31,6 +31,10 @@
 
 #define SD_AVI_ERR(a, ...) printf("[SD_AVI err]:" a, ##__VA_ARGS__)
 
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+uint32_t g_avi_sd_total_frame_cnt = 0;
+#endif
+
 #if (PSRAM_COPY_MODE)
 
 static ATTR_DTCM_SECTION __ALIGNED(64) uint8_t psram_copy_buff[PSRAM_COPY_BUFF_SIZE];
@@ -1076,6 +1080,11 @@ int avi_jpeg_close(avi_file_t *avi_hd)
 static FIL fnew = { 0 };
 static TaskHandle_t save_avi_init_task_hd;
 
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+static frame_queue_ctrl_t *mjpeg_queue_ctrl_avi = NULL;
+static uint16_t mjpeg_queue_depth_avi;
+#endif
+
 /* auds and vids(selectable) */
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS)
 
@@ -1188,9 +1197,9 @@ create_new_file:
         jpeg_frame_t jpeg_frame;
         if (save_cnt > 0) {
             /* pop vids frame */
-            ret = frame_queue_output_pop(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, 0);
+            ret = frame_queue_output_pop(mjpeg_queue_ctrl_avi, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, 0);
         } else {
-            ret = frame_queue_output_pop(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, portMAX_DELAY);
+            ret = frame_queue_output_pop(mjpeg_queue_ctrl_avi, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, portMAX_DELAY);
         }
 #endif
         save_cnt++;
@@ -1216,10 +1225,12 @@ create_new_file:
             }
 
             /* free frame */
-            ret = frame_queue_output_free(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame);
+            ret = frame_queue_output_free(mjpeg_queue_ctrl_avi, (frame_elem_t *)&jpeg_frame);
             if (ret < 0) {
                 SD_AVI_ERR("sd avi free %d, saved:%d, continue wait... \r\n", ret, save_cnt);
             }
+
+            g_avi_sd_total_frame_cnt++;
         }
 #endif
 
@@ -1227,14 +1238,18 @@ create_new_file:
 
         /* sync to disk */
         if (save_cnt % 100 == 0) {
-            SD_AVI_INFO("sd cnt:%d, err_cnt:%d, file:%d\r\n", save_cnt, error_cnt, file_num);
             ret = avi_jpeg_file_sync(avi_hd, (0x01 | 0x02));
             if (ret < 0) {
                 SD_AVI_ERR("avi_jpeg_file_sync error\r\n");
             }
         }
 
-        /* new file, max: (AVI_VIDS_SUP_IDX_NUM * AVI_VIDS_SUB_IDX_NUM = 225000)*/
+        /* log */
+        if (save_cnt % 500 == 0) {
+            SD_AVI_INFO("sd cnt:%d, err_cnt:%d, file:%d\r\n", save_cnt, error_cnt, file_num);
+        }
+
+        /* new file, max: (AVI_VIDS_SUP_IDX_NUM * AVI_VIDS_SUB_IDX_NUM = 450 * 1000 = 450000)*/
         if (save_cnt >= (60 * 60 * 50)) {
             save_cnt = 0;
             /* close file */
@@ -1310,14 +1325,14 @@ create_new_file:
     while (1) {
         /* pop vids frame */
         if (null_cnt == 0) {
-            ret = frame_queue_output_pop(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, 1000);
+            ret = frame_queue_output_pop(mjpeg_queue_ctrl_avi, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, 1000);
             if (ret < 0) {
                 SD_AVI_INFO("[sd_avi] jpeg pop timeout: %d, saved:%d, continue wait... \r\n", ret, save_cnt);
                 continue;
             }
             null_cnt = AVI_VIDS_LOSS_CNT;
         } else {
-            ret = frame_queue_output_pop(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, 0);
+            ret = frame_queue_output_pop(mjpeg_queue_ctrl_avi, (frame_elem_t *)&jpeg_frame, jpeg_out_queue_avi_id, 0);
         }
         save_cnt++;
 
@@ -1333,7 +1348,7 @@ create_new_file:
         } else {
             /* align size to 32Byte */
             uint32_t frame_size = (jpeg_frame.data_size + 31) & 0xffffffe0;
-            memset((jpeg_frame.elem_base.frame_addr + jpeg_frame.data_size), 0, frame_size - jpeg_frame.data_size);
+            memset(((uint8_t *)jpeg_frame.elem_base.frame_addr + jpeg_frame.data_size), 0, frame_size - jpeg_frame.data_size);
             /* write to avi file */
             ret = avi_write_frame(avi_hd, jpeg_frame.elem_base.frame_addr, frame_size, NULL);
             if (ret < 0) {
@@ -1342,22 +1357,28 @@ create_new_file:
             }
 
             /* free frame */
-            ret = frame_queue_output_free(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&jpeg_frame);
+            ret = frame_queue_output_free(mjpeg_queue_ctrl_avi, (frame_elem_t *)&jpeg_frame);
             if (ret < 0) {
                 SD_AVI_ERR("sd avi free %d, saved:%d, continue wait... \r\n", ret, save_cnt);
             }
+
+            g_avi_sd_total_frame_cnt++;
         }
 
         /* sync to disk */
         if (save_cnt % 100 == 0) {
-            SD_AVI_INFO("sd cnt:%d, err_cnt:%d, file:%d\r\n", save_cnt, error_cnt, file_num);
             ret = avi_jpeg_file_sync(avi_hd, (0x01 | 0x02));
             if (ret < 0) {
                 SD_AVI_ERR("avi_jpeg_file_sync error\r\n");
             }
         }
 
-        /* new file, max: (AVI_VIDS_SUP_IDX_NUM * AVI_VIDS_SUB_IDX_NUM = 225000)*/
+        /* log */
+        if (save_cnt % 500 == 0) {
+            SD_AVI_INFO("sd cnt:%d, err_cnt:%d, file:%d\r\n", save_cnt, error_cnt, file_num);
+        }
+
+        /* new file, max: (AVI_VIDS_SUP_IDX_NUM * AVI_VIDS_SUB_IDX_NUM = 450 * 1000 = 450000)*/
         if (save_cnt >= (60 * 60 * 50)) {
             save_cnt = 0;
             /* close file */
@@ -1395,7 +1416,7 @@ static void sdcard_avi_init_task(void *pvParameters)
     }
 
     SD_AVI_INFO("save_avi_to_sdcard_init\r\n");
-    SD_AVI_INFO("rm -rf /sd/avi_test ...");
+    SD_AVI_INFO("rm -rf /sd/avi_test ...\r\n");
 
     /* delete dir */
     filedir_delete("/sd/avi_test");
@@ -1416,9 +1437,21 @@ static void sdcard_avi_init_task(void *pvParameters)
 #endif
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
-    /* create jpeg output queue */
+    /* select jpeg queue source */
+#if IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG_IN)
+    mjpeg_queue_ctrl_avi = g_mjpeg_in_frame_ctrl;
+    jpeg_out_queue_avi_id = MJPEG_IN_FRAME_STREAM_SD_ID;
+    mjpeg_queue_depth_avi = MJPEG_IN_FRAME_STREAM_SD_DEPTH;
+#elif IS_ENABLED(CONFIG_SOLUTION_QUEUE_MJPEG_OUT)
+    mjpeg_queue_ctrl_avi = g_mjpeg_out_frame_ctrl;
     jpeg_out_queue_avi_id = MJPEG_OUT_FRAME_STREAM_SD_ID;
-    if (frame_queue_output_create(g_mjpeg_out_frame_ctrl, &jpeg_out_queue_avi_id, MJPEG_OUT_FRAME_STREAM_SD_DEPTH) < 0) {
+    mjpeg_queue_depth_avi = MJPEG_OUT_FRAME_STREAM_SD_DEPTH;
+#else
+#error "please config mjpeg queue for sd avi"
+#endif
+
+    /* create jpeg output queue */
+    if (frame_queue_output_create(mjpeg_queue_ctrl_avi, &jpeg_out_queue_avi_id, mjpeg_queue_depth_avi) < 0) {
         SD_AVI_ERR("jpeg frame sd_avi out queue create failed\r\n");
         vTaskDelete(NULL);
     } else {

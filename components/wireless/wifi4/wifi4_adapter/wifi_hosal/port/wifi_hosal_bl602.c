@@ -28,6 +28,8 @@ extern "C" {
 
 #include "wifi_hosal.h"
 #include "bflb_pm.h"
+#include "bl602_mfg_media.h"
+#include "bl602_aon.h"
 #ifdef BL602_MATTER_SUPPORT
 #include <hosal_adc.c>
 #endif

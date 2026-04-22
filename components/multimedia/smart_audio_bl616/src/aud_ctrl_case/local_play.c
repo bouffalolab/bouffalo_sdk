@@ -197,12 +197,11 @@ static int local_play_vol_set(int vol)
 static int local_play_vol_up(int vol)
 {
     int ret = 0;
-    int cur_vol = local_play_vol_get();
 
     aui_player_vol_adjust(SMTAUDIO_TYPE_ALL, vol);
 
 #if defined(CONFIG_BT_A2DP)
-    smtaudio_btvol_set_vol(cur_vol + vol);
+    smtaudio_btvol_set_vol(local_play_vol_get() + vol);
 #endif
 
     // ret = aos_kv_setint(VOLUME_SAVE_KV_NAME, cur_vol + vol);
@@ -215,12 +214,11 @@ static int local_play_vol_up(int vol)
 static int local_play_vol_down(int vol)
 {
     int ret = 0;
-    int cur_vol = local_play_vol_get();
 
     aui_player_vol_adjust(SMTAUDIO_TYPE_ALL, -vol);
 
 #if defined(CONFIG_BT_A2DP)
-    smtaudio_btvol_set_vol(cur_vol - vol);
+    smtaudio_btvol_set_vol(local_play_vol_get() - vol);
 #endif
 
     // ret = aos_kv_setint(VOLUME_SAVE_KV_NAME, cur_vol - vol);

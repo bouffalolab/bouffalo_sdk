@@ -194,6 +194,9 @@ typedef struct _nxspi_desc {
 
 /* port */
 void nxspi_hwspi_init(void (*callback)(void *arg), void *arg);
+void nxspi_hwspi_ts(uint8_t *send_hd, uint8_t *recv_hd, uint16_t hd_len,
+                    uint8_t *send_bd, uint8_t *recv_bd, uint16_t bd_len,
+                    void *cb, void *arg);
 void nxspi_hwspi_transfer(uint8_t *send, uint8_t *recv, uint16_t len, void *cb, void *arg);
 
 int  nxspi_hwmem_init(void);

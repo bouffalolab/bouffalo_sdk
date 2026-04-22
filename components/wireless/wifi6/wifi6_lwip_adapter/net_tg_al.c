@@ -358,7 +358,7 @@ static void net_tg_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 
         // Get the counter in the received buffer (normally equal to counter_send)
         // Pointer pointed to counter_send in payload
-        c_p = p->payload + 8;
+        c_p = (char *)p->payload + 8;
         // Copy 4 bytes of data (counter_send) and make it an unsigned int
         memcpy(&c, c_p, 4);
         // Convert network format to host format

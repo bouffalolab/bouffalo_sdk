@@ -34,7 +34,7 @@ void log_release_mutex()
 int print_driver(const char *fmt, va_list ap, unsigned int buf[]);
 extern void vprint(const char *fmt, va_list argp);
 
-#if MSP_DEBUG_COLOR
+#if defined(MSP_DEBUG_COLOR) && MSP_DEBUG_COLOR
 const char *color_d = "\x1b[36mmspd\x1b[0m";
 const char *color_i = "\x1b[32mmspi\x1b[0m";
 const char *color_w = "\x1b[33mmspw\x1b[0m";
@@ -111,7 +111,7 @@ void msp_debug(const char *tag, const char *filename, const long line, const cha
 
                 /* You can add your code under here. */
                 //vprint(format, args);
-    #if MSP_DEBUG_COLOR
+    #if defined(MSP_DEBUG_COLOR) && MSP_DEBUG_COLOR
                 if (tag[3] == 'a') {
                     color_tag = (char *)color_a;
                 } else if (tag[3] == 'e') {
@@ -144,7 +144,7 @@ void msp_debug(const char *tag, const char *filename, const long line, const cha
 
                 /* You can add your code under here. */
                 //vprint(format, args);
-    #if MSP_DEBUG_COLOR
+    #if defined(MSP_DEBUG_COLOR) && MSP_DEBUG_COLOR
                 if (tag[3] == 'a') {
                     color_tag = (char *)color_a;
                 } else if (tag[3] == 'e') {

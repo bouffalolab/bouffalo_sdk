@@ -215,11 +215,11 @@ int cmd_wifi_https_client(int argc, char **argv)
 
     if (argc < 2) {
         printf("%s", PING_USAGE);
-        return;
+        return -1;
     }
     url = strdup(argv[1]);
 
-    xTaskCreate(https_client_task_entry, "https_client", 2048, (const void *)url, 10, NULL);
+    xTaskCreate(https_client_task_entry, "https_client", 2048, (void *)url, 10, NULL);
 
     return 0;
 }

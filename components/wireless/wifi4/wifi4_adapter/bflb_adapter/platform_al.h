@@ -19,7 +19,7 @@ typedef struct {
 * @param[in] code Code of event.
 ****************************************************************************************
 */
-typedef void (* pfn_wifi_event)(platform_event_t *event, uint32_t code2);
+typedef void (* pfn_wifi_event)(platform_event_t *event, void *code2);
 
 int platform_register_event(int catalogue, pfn_wifi_event cb, void *arg);
 
@@ -30,6 +30,12 @@ void platform_post_event(int catalogue, int code1, int code2);
 int platform_wifi_enable_irq(void);
 
 void platform_post_delayed_action(int delay_ms, void (*callback)(void* arg), void *arg);
+
+void platform_sys_capcode_update(uint8_t capin, uint8_t capout);
+uint8_t platform_sys_capcode_get(void);
+
+long platform_rand(void);
+int platform_get_random(unsigned char *buf, size_t len);
 
 
 #endif

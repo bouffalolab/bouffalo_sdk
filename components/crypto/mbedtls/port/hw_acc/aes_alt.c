@@ -74,7 +74,7 @@ static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t ecb_dec_buf[16];
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_aes_link_s link_ctx_temp;
 
-static void bflb_aes_xor( unsigned char *out,
+static void __attribute__((unused)) bflb_aes_xor( unsigned char *out,
                           const unsigned char *a,
                           const unsigned char *b,
                           size_t len )
@@ -87,7 +87,7 @@ static void bflb_aes_xor( unsigned char *out,
     }
 }
 
-static void bflb_aes_ctr_increment( unsigned char counter[16] )
+static void __attribute__((unused)) bflb_aes_ctr_increment( unsigned char counter[16] )
 {
     size_t i;
 
@@ -99,7 +99,7 @@ static void bflb_aes_ctr_increment( unsigned char counter[16] )
     }
 }
 
-static int bflb_aes_link_crypt_block( mbedtls_aes_context *ctx,
+static int __attribute__((unused)) bflb_aes_link_crypt_block( mbedtls_aes_context *ctx,
                                       uint8_t aes_mode,
                                       const unsigned char iv[16],
                                       const unsigned char input[16],

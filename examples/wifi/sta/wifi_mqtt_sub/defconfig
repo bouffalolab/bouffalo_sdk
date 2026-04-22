@@ -1,4 +1,0 @@
--include $(BL_SDK_BASE)/examples/wifi/defconfig
-
-CONFIG_MBEDTLS_DEBUG =y
-CONFIG_MQTT          =y

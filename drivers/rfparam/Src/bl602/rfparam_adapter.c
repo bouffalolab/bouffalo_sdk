@@ -1,8 +1,14 @@
 #include "rfparam_adapter.h"
 #include "wl_api.h"
 
+#include "FreeRTOS.h"
+#include "portable.h"
+
 #include "bl602_aon.h"
 #include "bl602_hbn.h"
+#include "phy_trpc.h"
+extern void phy_powroffset_set(int8_t power_offset[14]);
+extern void ble_controller_set_tx_pwr(int ble_tx_power);
 
 #define DBG_TAG "rfparam"
 #include "log.h"
@@ -32,7 +38,7 @@ enum {
 
 void rf_pri_update_tcal_param(uint8_t operation);//FIXME
 
-static void log_buf_int8(uint8_t *buf, size_t buf_len)
+static void log_buf_int8(int8_t *buf, size_t buf_len)
 {
     int i;
     for (i = 0; i < buf_len; i++) {
@@ -234,7 +240,9 @@ break_scan:
     extern void ble_rf_set_pwr_offset_table(int8_t *poweroffset_table);
 	ble_rf_set_pwr_offset_table(poweroffset);
 #endif
+#if defined(CFG_PHY_TRPC)
     phy_powroffset_set(poweroffset);
+#endif
 }
 
 static int update_xtal_config_get_mac_from_factory(uint32_t capcode[5])
@@ -357,7 +365,9 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
             pwr_table[2],
             pwr_table[3]
         );
+#if defined(CFG_PHY_TRPC)
         trpc_update_power_11b((int8_t*)pwr_table);
+#endif
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_11B NULL\r\n");
     }
@@ -375,7 +385,9 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
             pwr_table[6],
             pwr_table[7]
         );
+#if defined(CFG_PHY_TRPC)
         trpc_update_power_11g((int8_t*)pwr_table);
+#endif
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_11G NULL\r\n");
     }
@@ -393,7 +405,9 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
             pwr_table[6],
             pwr_table[7]
         );
+#if defined(CFG_PHY_TRPC)
         trpc_update_power_11n((int8_t*)pwr_table);
+#endif
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_11N NULL\r\n");
     }

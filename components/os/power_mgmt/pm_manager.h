@@ -56,6 +56,7 @@ int pm_sys_init(void);
 int pm_mem_pool_alloc(void);
 int pm_mem_pool_free(void);
 uint32_t pm_manager_handle_get(void);
+struct pbuf;
 void pm_pbuf_free_cb(struct pbuf *p);
 int pm_pbufc_check(void);
 int pm_enter_lp_perparation(void);

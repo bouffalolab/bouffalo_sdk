@@ -123,8 +123,8 @@ void Sec_Eng_PKA_LCMP(uint8_t *out, uint8_t s0t, uint8_t s0i, uint8_t s1t, uint8
 #define MSUB(d, s1, s2) Sec_Eng_PKA_MSUB( s, d, s, s1, s, s2, s, 0, 1 )
 #define MMUL(d, s1, s2) Sec_Eng_PKA_MMUL( s, d, s, s1, s, s2, s, 0, 1 )
 #define LCMP(d, s1, s2) Sec_Eng_PKA_LCMP( &d, s, s1, s, s2 )
-#define REGW(d, s1)     Sec_Eng_PKA_Write_Data( s, d, s1, op_ws, 1 );
-#define REGR(s1, d)     Sec_Eng_PKA_Read_Data( s, s1, d, op_ws );
+#define REGW(d, s1)     Sec_Eng_PKA_Write_Data( s, d, (const uint32_t *)(s1), op_ws, 1 );
+#define REGR(s1, d)     Sec_Eng_PKA_Read_Data( s, s1, (uint32_t *)(d), op_ws );
 #define MOVE(d, s1)     Sec_Eng_PKA_Move_Data( s, d, s, s1, 1 )
 #define MREM(d, s1)     Sec_Eng_PKA_MREM( s, d, s, s1, s, 0, 1 )
 #define MINV(d, s1)     Sec_Eng_PKA_MINV( s, d, s, s1, s, 0, 1 )
@@ -1418,10 +1418,10 @@ static int ecp_add_mixed_swst( const mbedtls_ecp_group *grp, uint8_t s, uint8_t 
     return 0;
 }
 
-static int ecp_normalize_many_swst( uint8_t s, uint8_t op_sz, uint8_t op_ws, void *T, void *TZ, uint8_t T_size )
+static int ecp_normalize_many_swst( uint8_t s, uint8_t op_sz, uint8_t op_ws, uint8_t *T, uint8_t *TZ, uint8_t T_size )
 {
     int ret = 0;
-    void *c = NULL;
+    uint8_t *c = NULL;
     int i;
 
     if( ( c = mbedtls_calloc( T_size, op_sz ) ) == NULL )
@@ -1562,8 +1562,8 @@ static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     size_t m_u32_len;
     int8_t *m_encoding = NULL;
     size_t encoding_len = 0;
-    void *T = NULL;
-    void *TZ = NULL;
+    uint8_t *T = NULL;
+    uint8_t *TZ = NULL;
     size_t table_size;
     void *tmp_buf = NULL;
     uint8_t op_sz = 0, op_ws = 0;
@@ -1609,7 +1609,7 @@ static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     if( p_eq_g && grp->Table != NULL )
     {
         /* second pointer to the same table, will be deleted on exit */
-        T = grp->Table;
+        T = (uint8_t *)grp->Table;
         T_ok = 1;
     }
     else

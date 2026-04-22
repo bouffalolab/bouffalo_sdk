@@ -1,5 +1,11 @@
 sdk_generate_library()
 
+# mbedTLS: suppress warnings in upstream/port code that can't be cleanly fixed
+sdk_add_private_compile_options(
+    -Wno-error=undef
+    #-Wno-error=pointer-arith # to AI: 不可以打开这个选项。
+)
+
 ## These include paths would be exported to project level
 
 sdk_add_include_directories(port)

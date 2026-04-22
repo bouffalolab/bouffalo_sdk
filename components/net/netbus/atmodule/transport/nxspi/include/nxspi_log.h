@@ -22,17 +22,17 @@ extern void nxs_debug(const char *tag, const char *filename, const char *funcnam
 #define NX_LOGA(...) nxs_debug("a", __SHORT_FILENAME__, __func__, __LINE__, __VA_ARGS__)
 #define NX_LOGP      printf
 #else
-#define NX_LOGT
-#define NX_LOGD
-#define NX_LOGI
-#if NXSPI_NET
-#define NX_LOGW //printf
-#define NX_LOGE //printf
+#define NX_LOGT(...)
+#define NX_LOGD(...)
+#define NX_LOGI(...)
+#if defined(NXSPI_NET) && NXSPI_NET
+#define NX_LOGW(...)
+#define NX_LOGE(...)
 #define NX_LOGA printf
 #else
-#define NX_LOGW //printf
-#define NX_LOGE //printf
-#define NX_LOGA //printf
+#define NX_LOGW(...)
+#define NX_LOGE(...)
+#define NX_LOGA(...)
 #endif
 #define NX_LOGP printf
 #endif

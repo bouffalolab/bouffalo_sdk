@@ -1,6 +1,6 @@
 #include "sdiowifi_tty.h"
 
-#if SDIOWIFI_TTY
+#if defined(SDIOWIFI_TTY) && SDIOWIFI_TTY
 #include <sdiowifi_platform_adapt.h>
 #include <vfs.h>
 #include <vfs_inode.h>

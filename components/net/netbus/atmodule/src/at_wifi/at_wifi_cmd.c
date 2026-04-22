@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
+extern struct tm *localtime(const time_t *_timer);
+extern size_t strftime(char *s, size_t maxsize, const char *fmt, const struct tm *t);
+extern uint32_t rtos_now(bool isr);
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include "at_pal.h"
@@ -1142,7 +1146,7 @@ static int at_query_cmd_cwstate(int argc, const char **argv)
         calc_mode = at_wifi_config->sta_proto.byte;
     }
 
-    if (state == AT_WIFI_STATE_STA_CONNECTED && !ip4_addr_isany(&ipaddr)) {
+    if (state == AT_WIFI_STATE_STA_CONNECTED && !ip4_addr_isany_val(ipaddr)) {
         at_response_string("+CWSTATE:%d,\"%s\",%d,%d\r\n", 2, info.ssid, calc_mode, calc_auth);
         return AT_RESULT_CODE_OK;
     }
@@ -1363,7 +1367,7 @@ int time_info_get(char *buffer, uint32_t buffer_len)
     struct timespec timespec = {0,0};
     struct tm *tm_info;
     int offset, len = 0;
-#if CONFIG_ANTENNA_NETWORK
+#if defined(CONFIG_ANTENNA_NETWORK) && CONFIG_ANTENNA_NETWORK
     at_net_sntp_gettime(&timespec);
 #endif
     tm_info = localtime(&timespec.tv_sec);
@@ -1383,7 +1387,7 @@ static void cb_sniffer(uint8_t *payload, uint32_t length, void *arg)
     uint8_t *buffer = NULL;
 
     if (payload != NULL) {
-        struct mac_hdr *hdr = (struct mac_hdr *)payload;
+        struct mac_hdr *hdr __attribute__((unused)) = (struct mac_hdr *)payload;
         //TRACE_APP(INF, "%pM %pM %pM %fc SN:%d length = %d", TR_MAC(hdr->addr1.array),
         //          TR_MAC(hdr->addr2.array), TR_MAC(hdr->addr3.array), hdr->fctl, hdr->seq >> 4,
         //          length);
@@ -1401,7 +1405,7 @@ static void cb_sniffer(uint8_t *payload, uint32_t length, void *arg)
             return;
         }
 
-        n = time_info_get(buffer, 64);
+        n = time_info_get((char *)buffer, 64);
         if (n > 0) {
             offset += n;
         }
@@ -1409,14 +1413,14 @@ static void cb_sniffer(uint8_t *payload, uint32_t length, void *arg)
         //n = snprintf(buffer, buffer_len, "\r\n+CWMONITOR,%d,%d:", phy_freq_to_channel(0, freq), length);
 
         for (int i = 0; i < length && offset < (buffer_len + 64) - 2; i++) {
-            n = snprintf(buffer + offset, (buffer_len + 64) - offset, "%02x", payload[i]);
+            n = snprintf((char *)buffer + offset, (buffer_len + 64) - offset, "%02x", payload[i]);
             if (n > 0 && n < (buffer_len + 64) - offset) {
                 offset += n;
             } else {
                 break; // Buffer overflow protection
             }
         }
-        n = snprintf(buffer + offset, (buffer_len + 64) - offset, "\r\n");
+        n = snprintf((char *)buffer + offset, (buffer_len + 64) - offset, "\r\n");
         if (n > 0 && n < (buffer_len + 64) - offset) {
             offset += n;
         }
@@ -1431,7 +1435,7 @@ static int at_setup_cmd_cwmonitor(int argc, const char **argv)
     int channel = 0;
     int enable = 0;
     int min_pkg_len, max_pkg_len;
-    int max_channel = 0;
+    uint8_t max_channel = 0;
     char country_code[5] = {0};
     int channel_valid = 0;
     int min_pkg_len_valid = 0;
@@ -1512,6 +1516,7 @@ static int at_setup_cmd_wps(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
+static int at_setup_cmd_mdns(int argc, const char **argv) __attribute__((unused));
 static int at_setup_cmd_mdns(int argc, const char **argv)
 {
     return AT_RESULT_WITH_SUB_CODE(AT_SUB_UNSUPPORT_CMD);
@@ -1530,7 +1535,6 @@ static int at_query_cmd_cwhostname(int argc, const char **argv)
 
 static int at_setup_cmd_cwhostname(int argc, const char **argv)
 {
-    struct netif *netif;
     char hostname[28];
 
     AT_CMD_PARSE_STRING(0, hostname, sizeof(hostname));
@@ -1604,7 +1608,6 @@ static int at_setup_cmd_cwevt(int argc, const char **argv)
 
 static int at_query_cmd_cwevt(int argc, const char **argv)
 {
-    int enable;
     at_response_string("+CWEVT:%d\r\n", at_wifi_config->wevt_enable);
     return AT_RESULT_CODE_OK;
 }

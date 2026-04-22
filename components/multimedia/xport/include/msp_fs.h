@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #define MSP_FS_RDONLY                0x0001
 #define MSP_FS_WRONLY                0x0002

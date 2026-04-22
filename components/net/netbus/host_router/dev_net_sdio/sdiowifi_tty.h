@@ -1,7 +1,7 @@
 #ifndef SDIOWIFI_TTY_H_P6XHQNXN
 #define SDIOWIFI_TTY_H_P6XHQNXN
 
-#if SDIOWIFI_TTY 
+#if defined(SDIOWIFI_TTY) && SDIOWIFI_TTY
 
 #include <stdbool.h>
 //#include <sdiowifi_platform_adapt.h>

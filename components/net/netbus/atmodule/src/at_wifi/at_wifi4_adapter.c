@@ -29,6 +29,11 @@
 
 #include <wifi_mgmr_ext.h>
 
+extern void wifi_mgmr_task_start(void);
+extern int wifi_mgmr_rf_pwr_off(void);
+extern int wifi_mgmr_rf_pwr_on(void);
+extern int at_wifi_main_init(void);
+
 #include "at_main.h"
 #include "at_core.h"
 #include "at_port.h"
@@ -67,10 +72,6 @@ static int at_wifi_event_code_get(uint32_t code)
 
 static void _wifi_event_cb(void *private_data, uint32_t code)
 {
-    static wifi_conf_t conf = {
-        .country_code = "00",
-    };
-
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             wifi_mgmr_task_start();
@@ -130,7 +131,7 @@ int at_wifi_mgmr_ap_state_get(void)
 int at_wifi_mgmr_sta_connect(const char *ssid, const char *key, const char *bssid, const char *akm_str, uint8_t pmf_cfg, uint16_t freq1, uint16_t freq2, uint8_t use_dhcp)
 {
     wifi_mgmr_sta_autoconnect_disable();
-    return wifi_mgmr_sta_connect_mid(wifi_mgmr_sta_enable(), ssid, strlen(key)?key:NULL, NULL, bssid, 0, 0, use_dhcp, WIFI_CONNECT_DEFAULT);
+    return wifi_mgmr_sta_connect_mid(wifi_mgmr_sta_enable(), (char *)ssid, strlen(key)?(char *)key:NULL, NULL, (uint8_t *)bssid, 0, 0, use_dhcp, WIFI_CONNECT_DEFAULT);
 }
 
 int at_wifi_mgmr_rf_pwr_off(void)
@@ -177,10 +178,10 @@ int at_wifi_mgmr_sta_scan(at_wifi_mgmr_scan_params_t *scan_cfg)
 {
     return wifi_mgmr_scan_adv(NULL,
                               NULL,
-                              scan_cfg->channels,
+                              (uint16_t *)scan_cfg->channels,
                               scan_cfg->channels_cnt,
                               scan_cfg->bssid,
-                              scan_cfg->ssid_array,
+                              (const char *)scan_cfg->ssid_array,
                               !scan_cfg->passive,
                               scan_cfg->duration);
 }
@@ -407,7 +408,7 @@ int at_wifi_mgmr_scan_get_cipher(uint8_t cipher)
 
 int at_wifi_mgmr_scan_ap_all(void *env, void *arg, void (*cb)(void *, void *, at_wifi_mgmr_scan_item_t *))
 {
-    return wifi_mgmr_scan_ap_all(env, arg, cb);
+    return wifi_mgmr_scan_ap_all(env, arg, (scan_item_cb_t)cb);
 }
 
 int at_wifi_start(void)

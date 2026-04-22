@@ -14,10 +14,13 @@ static int __pack_encrypt_read (void *p_drv, uint8_t pack_type,
 
     p_enc = (struct encrypt *)p_drv;
     enc_ctrl  = src_buf[0];
+    (void)enc_ctrl;
 
     if (p_enc->is_head) {
         ctr      = get_cpu_le32(&src_buf[1]);
         mac      = get_cpu_le32(&src_buf[5]);
+        (void)ctr;
+        (void)mac;
         src_buf += 9;
         src_lenght -= 9;
     } else {

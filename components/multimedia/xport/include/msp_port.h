@@ -19,7 +19,7 @@ typedef struct msp_dma_ch_cfg {
     uint8_t dma_rx_srcPeriph;
 } msp_dma_ch_cfg_t;
 
-#if !CONFIG_CODEC_USE_I2S
+#if !defined(CONFIG_CODEC_USE_I2S) || !CONFIG_CODEC_USE_I2S
 typedef struct msp_codec_pin_cfg {
     uint8_t input_negative_pin;
     uint8_t input_positive_pin;
@@ -38,7 +38,7 @@ msp_dma_ch_cfg_t msp_dma_channel_config(void);
 int msp_gpio_output_config(uint8_t pin, uint8_t pull_type);
 int msp_gpio_output_set(uint8_t pin, uint8_t value);
 
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
 void msp_i2s_tx_enable(void);
 void msp_i2s_rx_enable(void);
 void msp_i2s_device_init(uint32_t sample_rate);

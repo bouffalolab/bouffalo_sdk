@@ -92,9 +92,11 @@ int main(void)
 
     for (uint8_t i = GPIO_PIN_0; i <= GPIO_PIN_5; i++) {
         HBN_Set_Aon_Pad_IntMask(i, MASK);
+        HBN_Clear_IRQ(i);
     }
     for (uint8_t i = GPIO_PIN_6; i < GPIO_PIN_MAX; i++) {
         PDS_Set_GPIO_Pad_IntMask(i, MASK);
+        PDS_Set_GPIO_Pad_IntClr(i);
     }
 
     uartx = bflb_device_get_by_name("uart0");
@@ -155,10 +157,8 @@ int pds_io_wakeup_test(int argc, char **argv)
 
     lp_wake_io_cfg.io_ie = (uint64_t)1 << test_io;
     lp_wake_io_cfg.io_wakeup_unmask = (uint64_t)1 << test_io;
-    if (test_io <= 5) {
-        lp_wake_io_cfg.io_0_5_trig_mode = trig_mode;
-    } else if (test_io < GPIO_PIN_MAX) {
-        lp_wake_io_cfg.io_6_36_trig_mode[test_io - 6] = trig_mode;
+    if (test_io < GPIO_PIN_MAX) {
+        lp_wake_io_cfg.io_0_36_trig_mode[test_io] = trig_mode;
     } else {
         printf("[ERR]test_io >= %d\r\n", GPIO_PIN_MAX);
         return 0;

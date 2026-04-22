@@ -49,7 +49,7 @@
 #include <utils_getopt.h>
 #include <at_utils.h>
 #include "at_pal.h"
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
 #include <lwip/prot/icmp6.h>
 #endif
 
@@ -62,7 +62,7 @@
 
 static struct t_hdr* find_and_extract(struct utils_list *list, u32_t seq);
 static void ping_free(void *arg);
-static void ping_usage();
+static void ping_usage(void) {}
 
 static void ping_prepare_echo(struct icmp_echo_hdr *iecho, u16_t len, void *arg)
 {
@@ -81,7 +81,7 @@ static void ping_prepare_echo(struct icmp_echo_hdr *iecho, u16_t len, void *arg)
     iecho->chksum = inet_chksum(iecho, len);
 }
 
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
 static void ping6_prepare_echo(struct pbuf *p, u16_t len, void *arg)
 {
     size_t i;
@@ -125,17 +125,17 @@ static u8_t ping_recv(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_a
 
     if (ip_addr_cmp(&env->dest, addr)) {
         if (p->tot_len == (IP_HLEN + sizeof(struct icmp_echo_hdr)) + env->data_size){
-            memcpy(&echo_hdr, p->payload + IP_HLEN, sizeof(struct icmp_echo_hdr));
-        #if CFG_IPV6
+            memcpy(&echo_hdr, (char *)p->payload + IP_HLEN, sizeof(struct icmp_echo_hdr));
+        #if defined(CFG_IPV6) && CFG_IPV6
         }else if (p->tot_len == (IP6_HLEN + sizeof(struct icmp_echo_hdr)) + env->data_size){
-            memcpy(&echo_hdr, p->payload + IP6_HLEN, sizeof(struct icmp_echo_hdr));
+            memcpy(&echo_hdr, (char *)p->payload + IP6_HLEN, sizeof(struct icmp_echo_hdr));
         #endif
         }else{
             return 0;
         }
         iecho = &echo_hdr;
         if ((iecho->type == 0
-            #if CFG_IPV6
+            #if defined(CFG_IPV6) && CFG_IPV6
              || iecho->type == ICMP6_TYPE_EREP
             #endif
             ) && (iecho->code == 0) && (iecho->id == env->id) && env->node_num > 0) {
@@ -146,7 +146,7 @@ static u8_t ping_recv(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_a
                 if (env->cb) {
                     env->cb(env->ping_time);
                 }
-                printf("%" PRId16 " bytes from %s: icmp_seq=%d ttl=%d time=%" PRId32 " ms\r\n ", p->tot_len, ipaddr_ntoa(&env->dest), ntohs(iecho->seqno), *((uint8_t *)p->payload + 8), (sys_now() - find_hdr->send_time));
+                printf("%" PRId16 " bytes from %s: icmp_seq=%d ttl=%d time=%" PRId32 " ms\r\n ", p->tot_len, ipaddr_ntoa(&env->dest), ntohs(iecho->seqno), *((uint8_t *)(p->payload) + 8), (sys_now() - find_hdr->send_time));
 
                 utils_memp_free(env->pool, find_hdr);
                 env->node_num--;
@@ -181,7 +181,7 @@ static void ping_send(struct ping_var *env)
         log_info("env-adress %p\r\n", env);
         log_info("env--dest %s\r\n", ipaddr_ntoa(&env->dest));
 #endif
-        #if CFG_IPV6
+        #if defined(CFG_IPV6) && CFG_IPV6
         if(IP_IS_V6(&env->dest)){
             ping6_prepare_echo(p, (u16_t)ping_size, env);
             if (ip_addr_islinklocal(&env->dest)) {
@@ -284,7 +284,7 @@ static int ping_init(void *arg)
 #endif
 
     LOCK_TCPIP_CORE();
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if(IP_IS_V6(&env->dest))
         pcb = raw_new(IP_PROTO_ICMPV6);
     else
@@ -298,7 +298,7 @@ static int ping_init(void *arg)
     }
     env->pcb = pcb;
     raw_recv(pcb, ping_recv, env);
-    #if CFG_IPV6
+    #if defined(CFG_IPV6) && CFG_IPV6
     if(IP_IS_V6(&env->dest))
     {
         raw_bind(pcb, IP6_ADDR_ANY);
@@ -339,7 +339,7 @@ struct ping_var *ping_api_init(u16_t interval, u16_t size, u32_t count, u16_t ti
     return env;
 }
 
-static void ping_cmd(int argc, char **argv)
+static void __attribute__((unused)) ping_cmd(int argc, char **argv)
 {
     //
     // -i interval

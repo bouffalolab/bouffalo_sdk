@@ -3144,9 +3144,7 @@ struct bt_conn *bt_conn_get(u8_t id)
 
 int bt_conn_init(void)
 {
-	#if defined(CONFIG_BT_SMP)
-	int err;
-	#endif
+	int err = 0;
 	int i;
 
 #if (CONFIG_BLE_USING_DYNAMIC_RAM)
@@ -3293,7 +3291,7 @@ int bt_conn_init(void)
 
 	return 0;
 
-cleanup:
+cleanup: __attribute__((unused));
 #if (CONFIG_BLE_USING_DYNAMIC_RAM)
 	k_free(g_conn_mem_pool);
 	g_conn_mem_pool = NULL;

@@ -84,11 +84,13 @@ extern "C"
 #define PI               3.14159265358979f
 #endif
 
+#ifndef ALIGN4
 #ifndef UNALIGNED_SUPPORT_DISABLE
     #define ALIGN4
 #else
     #define ALIGN4 __attribute__((aligned(4)))
 #endif   /* #ifndef UNALIGNED_SUPPORT_DISABLE */
+#endif /* #ifndef ALIGN4 */
 
 /**
  * @brief Macros required for SINE and COSINE Fast math approximations

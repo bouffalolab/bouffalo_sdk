@@ -11,6 +11,10 @@
 //#include <bl_os_private.h>
 //#include <bl_wifi.h>
 #include <wifi_mgmr_ext.h>
+#if LWIP_DNS
+#include "lwip/dns.h"
+#include "lwip/ip_addr.h"
+#endif
 
 #include <rnm_ota.h>
 
@@ -64,8 +68,6 @@ void rnms_notify_sta_ip_addr(rnms_t *rnm)
 
     wifi_sta_ip4_addr_get(&addr, &mask, &gw, &dns);
 #if LWIP_DNS
-#include "lwip/dns.h"
-#include "lwip/ip_addr.h"
     const ip_addr_t *ip;
 
     ip = dns_getserver(1);
@@ -536,7 +538,7 @@ static chr_t handle_sta_get_link_status(rnms_t *rnm, rnm_msg_t *cmd)
 #ifdef CFG_BL616
     if (wifi_mgmr_sta_state_get()) {
         int rssi = 0;
-        int channel = 0;
+        uint8_t channel = 0;
         wifi_mgmr_sta_rssi_get(&rssi);
         wifi_mgmr_sta_channel_get(&channel);
 

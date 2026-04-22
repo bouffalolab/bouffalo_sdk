@@ -714,7 +714,7 @@ void wifi_sta_info_cmd(int argc, char **argv)
     int rssi = 0;
     rf_pwr_table_t power_table;
     char country_code[3] = {0};
-    int channel = 0;
+    uint8_t channel = 0;
 
     memset(&addr, 0, sizeof(ip4_addr_t));
     memset(&mask, 0, sizeof(ip4_addr_t));
@@ -1040,6 +1040,7 @@ static int cmd_mat(int argc, char *argv[])
 {
     void mat_print_mib(void);
     mat_print_mib();
+    return 0;
 }
 #endif
 

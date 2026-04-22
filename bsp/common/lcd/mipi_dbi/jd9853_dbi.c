@@ -122,7 +122,7 @@ const jd9853_dbi_init_cmd_t jd9853_dbi_init_cmds[] = {
 
     { 0x35, "\x00", 1 }, /* enable Tearing Effect Output line */
 
-#if JD9853_DBI_COLOR_REVERSAL
+#if defined(JD9853_DBI_COLOR_REVERSAL) && JD9853_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 }, /* Color reversal */
 #endif
 
@@ -199,7 +199,7 @@ int jd9853_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if JD9853_DBI_DIR_MIRROR
+#if defined(JD9853_DBI_DIR_MIRROR) && JD9853_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -210,7 +210,7 @@ int jd9853_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if JD9853_DBI_COLOR_ORDER
+#if defined(JD9853_DBI_COLOR_ORDER) && JD9853_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -228,11 +228,11 @@ int jd9853_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void jd9853_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if JD9853_DBI_OFFSET_X
+#if defined(JD9853_DBI_OFFSET_X) && JD9853_DBI_OFFSET_X
     x1 += JD9853_DBI_OFFSET_X;
     x2 += JD9853_DBI_OFFSET_X;
 #endif
-#if JD9853_DBI_OFFSET_Y
+#if defined(JD9853_DBI_OFFSET_Y) && JD9853_DBI_OFFSET_Y
     y1 += JD9853_DBI_OFFSET_Y;
     y2 += JD9853_DBI_OFFSET_Y;
 #endif

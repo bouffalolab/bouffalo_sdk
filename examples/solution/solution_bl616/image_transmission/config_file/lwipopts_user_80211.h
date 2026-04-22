@@ -32,9 +32,9 @@
 #ifndef LWIP_HDR_LWIPOPTS_H__
 #define LWIP_HDR_LWIPOPTS_H__
 
-#define LWIP_NETIF_API     1
-#define LWIP_DEBUG         0
-#define LWIP_STATS_DISPLAY 0
+#define LWIP_NETIF_API                1
+#define LWIP_DEBUG                    1
+#define LWIP_STATS_DISPLAY            1
 #define SOCKETS_DEBUG                 LWIP_DBG_OFF
 #define DHCP_DEBUG                    LWIP_DBG_OFF
 #define IP_DEBUG                      LWIP_DBG_OFF
@@ -68,8 +68,8 @@
 
 #define IP_REASS_MAX_PBUFS            4
 
-#define MEMP_MEM_MALLOC                 0
-#define MEM_LIBC_MALLOC                 1
+#define MEMP_MEM_MALLOC               0
+#define MEM_LIBC_MALLOC               1
 
 #if MEM_LIBC_MALLOC
 #include <string.h>
@@ -152,7 +152,11 @@ extern int *__errno(void);
 #define ETHARP_SUPPORT_STATIC_ENTRIES 1
 
 #define LWIP_SUPPORT_CUSTOM_PBUF      1
-#define LWIP_NETIF_TX_SINGLE_PBUF     0
+#ifdef HIGH_PERFORMANCE_PBUF
+#define LWIP_NETIF_TX_SINGLE_PBUF 0
+#else
+#define LWIP_NETIF_TX_SINGLE_PBUF 1
+#endif
 #define LWIP_RAND()                                      ((u32_t)random())
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

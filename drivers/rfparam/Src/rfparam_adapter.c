@@ -10,11 +10,13 @@
 #if defined(BL618DG)
 #include "bl618dg_aon.h"
 #include "bl618dg_hbn.h"
+#include "bl618dg_mfg_media.h"
 #endif
 
 #if defined(BL616CL)
 #include "bl616cl_aon.h"
 #include "bl616cl_hbn.h"
+#include "bl616cl_mfg_media.h"
 #endif
 
 #define DBG_TAG "rfparam"
@@ -805,6 +807,7 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
     g_rfparam_cfg->param.xtalfreq_hz = xtal_value;
     rfparam_printf("xtal value %d\r\n", (int)xtal_value);
 
+    #if defined(BL616)
     bflb_ef_ctrl_read_common_trim(NULL, "dcdc_trim", &trim, 1);
     if (trim.empty) {
         rfparam_printf("dcdc_trim empty\r\n");
@@ -820,7 +823,33 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
             g_rfparam_cfg->param.ef.dcdc_vout_trim_aon = 0x80;
         }
     }
+    #else
+        // Not Needed in BL616CL and BL618DG
+    #endif
 
+    #if defined(BL616CL)
+    bflb_ef_ctrl_read_common_trim(NULL, "rcal", &trim, 1);
+    if (trim.empty) {
+        rfparam_printf("rcal empty\r\n");
+        rfparam_printf("icx use default value 0x80\r\n"); 
+        g_rfparam_cfg->param.ef.icx_code = 0x80;
+        rfparam_printf("iptat use default value 0x80\r\n"); 
+        g_rfparam_cfg->param.ef.iptat_code = 0x80;
+    } else {
+        if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            g_rfparam_cfg->param.ef.icx_code = (0x3f & (trim.value >> 5));// high 6 bits
+            rfparam_printf("icx value %d\r\n", (int)(0x3f & (trim.value >> 5)));
+            g_rfparam_cfg->param.ef.iptat_code = (0x1f & trim.value); // low 5 bits
+            rfparam_printf("iptat value %d\r\n", (int)(0x1f & trim.value));
+        } else {
+            rfparam_printf("rcal param error\r\n");
+            rfparam_printf("icx use default value 0x80\r\n");
+            g_rfparam_cfg->param.ef.icx_code = 0x80;
+            rfparam_printf("iptat use default value 0x80\r\n");
+            g_rfparam_cfg->param.ef.iptat_code = 0x80;
+        }
+    }
+    #else
     bflb_ef_ctrl_read_common_trim(NULL, "icx", &trim, 1);
     if (trim.empty) {
         rfparam_printf("icx empty\r\n");
@@ -852,7 +881,31 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
             g_rfparam_cfg->param.ef.iptat_code = 0x80;
         }
     }
+    #endif
 
+    #if defined(BL616CL)
+    {
+        static char *temp_mp_names[] = {
+            "temp_mp5", "temp_mp4", "temp_mp3",
+            "temp_mp2", "temp_mp1", "temp_mp0"
+        };
+        bool found = false;
+        for (int i = 0; i < sizeof(temp_mp_names) / sizeof(temp_mp_names[0]); i++) {
+            bflb_ef_ctrl_read_common_trim(NULL, temp_mp_names[i], &trim, 1);
+            if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+                g_rfparam_cfg->param.ef.Temperature_MP = trim.value;
+                rfparam_printf("%s value %d\r\n", temp_mp_names[i], (int)trim.value);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            g_rfparam_cfg->param.ef.Temperature_MP = 35;
+            rfparam_printf("temp_mp use default value 35\r\n");
+        }
+    }
+
+    #else
     bflb_ef_ctrl_read_common_trim(NULL, "tmp_mp2", &trim, 1);
     if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
         g_rfparam_cfg->param.pwrcal.Temperature_MP = trim.value;
@@ -873,6 +926,7 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
             }
         }
     }
+    #endif
 
     ret = wl_init();
 

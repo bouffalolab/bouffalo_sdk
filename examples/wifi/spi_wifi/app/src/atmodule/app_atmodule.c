@@ -55,6 +55,7 @@ const spisync_config_t spisync_config = {
 };
 #endif
 
+#if 0
 static void __spisync_gpio_init(void *arg)
 {
 #ifdef CONFIG_SPI_3PIN_MODE_ENABLE
@@ -63,6 +64,7 @@ static void __spisync_gpio_init(void *arg)
     board_spi0_gpio_init();
 #endif
 }
+#endif
 
 #if 0
 #define FAKEBUF_SIZE SPISYNC_PAYLOADBUF_LEN

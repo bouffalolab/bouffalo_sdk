@@ -3,6 +3,7 @@
 #include <stdarg.h>
 
 #include "platform_al.h"
+#include "async_event.h"
 
 #include "FreeRTOS.h"
 #include "timers.h"
@@ -25,11 +26,20 @@
 #ifdef LP_APP
 #include "bl_lp.h"
 #include "macsw.h"
+#if defined(BL616)
+#include "bl616_hbn.h"
+#elif defined(BL616CL)
+#include "bl616cl_hbn.h"
+#elif defined(BL618DG)
+#include "bl618dg_hbn.h"
+#endif
 
 extern int32_t lpfw_calculate_beacon_delay(lp_fw_bcn_delay_t *p_bcn_delay, uint64_t beacon_timestamp_us,
                                            uint64_t rtc_timestamp_us, uint32_t mode);
 extern int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu);
 extern int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode);
+extern int lpfw_recal_rc32k(lp_fw_rc32k_trim_t *p_rc32k_trim_param, uint64_t beacon_timestamp_now_us,
+                            uint64_t rtc_timestamp_now_us, uint32_t mode, int clock_ready_check);
 #endif
 
 /* FIXME: Registers should not be read directly */
@@ -209,7 +219,7 @@ void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
 {
     uint64_t rtc_cnt, rtc_stamp_us;
     uint64_t beacon_stamp_us;
-    int32_t beacon_delay_us;
+    int32_t beacon_delay_us __attribute__((unused));
 
     // struct rx_pbd *pbd = HW2CPU(((struct rx_hd *)rhd)->first_pbd_ptr);
     // struct bcn_frame *bcn = HW2CPU(pbd->datastartptr);

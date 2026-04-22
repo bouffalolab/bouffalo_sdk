@@ -106,6 +106,10 @@ struct _auo_ch {
     void                      *priv;
     uint32_t                  head;
     uint32_t                  pa_pin;
+    uint32_t                  sample_rate_hz;
+    uint32_t                  clock_freq_mhz;
+    uint64_t                  submitted_bytes_total;
+    uint64_t                  first_output_timestamp_ns;
 #if CODEC_OUTPUT_DEBUG_TRACE
     auo_debug_t         debug;
 #endif
@@ -136,4 +140,3 @@ void audio_poweron();
  #endif
 
  #endif /* _BL_AUDIO_OUT_H_ */
-

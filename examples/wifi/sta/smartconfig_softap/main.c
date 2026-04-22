@@ -29,9 +29,15 @@
 #include "easyflash.h"
 #include "web_config.h"
 
+#ifndef BL602
+#include "fhost_api.h"
+#include "wifi_mgmr.h"
+#endif
+#include "async_event.h"
+#include "mm.h"
+
 #define DBG_TAG "MAIN"
 #include "log.h"
-#include "async_event.h"
 
 #define AP_SSID    "BL602_Config"
 #define AP_PASSWD  NULL
@@ -43,6 +49,11 @@ static web_config_t g_web_ctx;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
+#ifdef BL602
+extern void wifi_task_create(void);
+extern int fhost_init(void);
+extern int wifi_mgmr_task_start(void);
+#endif
 
 static void wifi_init_task(void *param)
 {

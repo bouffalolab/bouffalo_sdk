@@ -80,13 +80,15 @@ int nxspiwrite_variable_entry(void *arg)
         }
     }
     free(buf);
+    (void)res;
 
     vTaskDelete(NULL);
+    return 0;
 }
 int cmd_nxspiwrite_variable_test(int argc, char **argv)
 {
     int ret;
-    ret = xTaskCreate(nxspiwrite_variable_entry,
+    ret = xTaskCreate((TaskFunction_t)nxspiwrite_variable_entry,
                 (char*)"nxr_variable",
                 4096/sizeof(StackType_t), NULL,
                 30,
@@ -94,6 +96,7 @@ int cmd_nxspiwrite_variable_test(int argc, char **argv)
     if (ret != pdPASS) {
         NX_LOGE("failed to create nx write variable task, %ld\r\n", ret);
     }
+    return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_nxspiwrite_variable_test, nxw_variable, nxspi write.);
 
@@ -106,13 +109,14 @@ void nx_wm_task(void *arg)
     buf = malloc(NXBD_MTU);
     if (!buf) {
         NX_LOGE("mem err\r\n");
-        return -1;
+        return;
     }
 
     memset(buf, 0xF, NXBD_MTU);
     while (1) {
         //vTaskDelay(3);
         res = nxspi_write(NXSPI_TYPE_AT, buf, NXBD_MTU, portMAX_DELAY);
+        (void)res;
         NX_LOGD("app write :%d Bytes\r\n", res);
     }
     free(buf);
@@ -129,6 +133,7 @@ int cmd_nxspiwritem_test(int argc, char **argv)
     if (ret != pdPASS) {
         NX_LOGE("failed to create nx read task, %ld\r\n", ret);
     }
+    return 0;
 }
 
 SHELL_CMD_EXPORT_ALIAS(cmd_nxspiwritem_test, nxwm, nxspi write mul.);
@@ -188,11 +193,12 @@ int nxspiread_variable_entry(void *arg)
     free(buf);
 
     vTaskDelete(NULL);
+    return 0;
 }
 int cmd_nxspiread_variable_test(int argc, char **argv)
 {
     int ret;
-    ret = xTaskCreate(nxspiread_variable_entry,
+    ret = xTaskCreate((TaskFunction_t)nxspiread_variable_entry,
                 (char*)"nxr_variable",
                 4096/sizeof(StackType_t), NULL,
                 30,
@@ -200,6 +206,7 @@ int cmd_nxspiread_variable_test(int argc, char **argv)
     if (ret != pdPASS) {
         NX_LOGE("failed to create nx read variable task, %ld\r\n", ret);
     }
+    return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_nxspiread_variable_test, nxr_variable, nxspi read.);
 
@@ -244,7 +251,7 @@ void nx_rm_task(void *arg)
     buf = malloc(NXBD_MTU);
     if (!buf) {
         NX_LOGE("mem err\r\n");
-        return -1;
+        return;
     }
 
     while (1) {
@@ -281,6 +288,7 @@ int cmd_nxspireadm_test(int argc, char **argv)
     if (ret != pdPASS) {
         NX_LOGE("failed to create nx read task, %ld\r\n", ret);
     }
+    return 0;
 }
 
 SHELL_CMD_EXPORT_ALIAS(cmd_nxspireadm_test, nxrm, nxspi read mul.);
@@ -349,6 +357,7 @@ int nx_iperf_task(void *arg)
                 // Calculate throughput: total bytes in 1 second
                 uint32_t throughput = total_bytes / (INTERVAL_MS / 1000);  // bytes per second
                 NX_LOGI("Throughput: %u bytes/sec\r\n", throughput);
+                (void)throughput;
 
                 // Reset for next interval
                 total_bytes = 0;
@@ -362,7 +371,7 @@ int nx_iperf_task(void *arg)
 int cmd_nx_perf(int argc, char **argv)
 {
     int ret;
-    ret = xTaskCreate(nx_iperf_task,
+    ret = xTaskCreate((TaskFunction_t)nx_iperf_task,
                 (char*)"nxperf",
                 2048/sizeof(StackType_t), NULL,
                 30,
@@ -370,6 +379,7 @@ int cmd_nx_perf(int argc, char **argv)
     if (ret != pdPASS) {
         NX_LOGE("failed to create nxperf task, %ld\r\n", ret);
     }
+    return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_nx_perf, nx_perf, nxperf...);
 
@@ -615,6 +625,7 @@ int cmd_nxsm(int argc, char *argv[])
 {
     void nxspi_state_machine(void);
     nxspi_state_machine();
+    return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_nxsm, nxsm, nxsm status);
 

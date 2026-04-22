@@ -11,6 +11,8 @@
 #include "pm_manager.h"
 
 #include "bl_lp.h"
+#include "bflb_common.h"
+#include <wifi_mgmr_ext.h>
 
 #ifndef container_of
 #define container_of(ptr, type, member) \
@@ -28,6 +30,8 @@ void *pm_pbuf = NULL;
 int enable_multicast_broadcast = 0;
 TaskHandle_t rxl_process_task_hd = NULL;
 extern bl_lp_fw_cfg_t lpfw_cfg;
+extern int tickless_enter(void);
+extern int tickless_exit(void);
 
 struct pm_wrap pbufc[LINEAR_ALLOCATOR_MAX_PTRS];
 
@@ -129,16 +133,16 @@ uint8_t lp_interval_get(void)
 
 int pm_mem_pool_alloc(void)
 {
-    uint32_t addr;
+    void *addr;
 
     if (pm_pbuf) {
         return 0;
     }
 
-    addr = (uint8_t *)pvPortMalloc(PM_MEM_POOL_SIZE);
+    addr = pvPortMalloc(PM_MEM_POOL_SIZE);
     pm_pbuf = (uint8_t*)addr;
 
-    linear_allocator_init(&pm_mem, (void *)bflb_get_no_cache_addr(addr), PM_MEM_POOL_SIZE);
+    linear_allocator_init(&pm_mem, bflb_get_no_cache_addr(addr), PM_MEM_POOL_SIZE);
 
     return 0;
 }
@@ -197,11 +201,11 @@ int pm_enter_lp_perparation(void)
             lpfw_cfg.buf_addr = pm_manager_handle_get();
             lpfw_cfg.bcmc_dtim_mode = 1;
         } else {
-            lpfw_cfg.buf_addr = NULL;
+            lpfw_cfg.buf_addr = 0;
             lpfw_cfg.bcmc_dtim_mode = 0;
         }
     } else {
-        lpfw_cfg.buf_addr = NULL;
+        lpfw_cfg.buf_addr = 0;
         lpfw_cfg.bcmc_dtim_mode = 0;
     }
 
@@ -217,7 +221,7 @@ int pm_enter_lp_perparation(void)
 int pm_exit_lp_perparation(void)
 {
     pm_mem_pool_free();
-    lpfw_cfg.buf_addr = NULL;
+    lpfw_cfg.buf_addr = 0;
 
     if (wifi_mgmr_sta_state_get()) {
         wifi_mgmr_sta_ps_exit();
@@ -274,7 +278,7 @@ static void process_multicast_broadcast(void *pvParameters)
                 struct pbuf *p = pbuf_alloced_custom(PBUF_RAW, bsize, PBUF_REF, &(pbufc[cnt].pc), pload, bsize);
 
 //print_pbuf_contents(p, 0);
-#if CONFIG_LWIP_ONHOST_ENABLE
+#if defined(CONFIG_LWIP_ONHOST_ENABLE) && CONFIG_LWIP_ONHOST_ENABLE
                 extern int dual_stack_input(struct pbuf * p, bool is_sta);
                 dual_stack_input(p, 1);
 #else
@@ -303,7 +307,7 @@ int pm_alloc_mem_reset(void)
 {
     linear_allocator_reset(&pm_mem);
 
-    return;
+    return 0;
 }
 
 int pm_sys_init(void)

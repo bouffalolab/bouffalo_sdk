@@ -107,9 +107,9 @@ int netifd_pppoe_stop(const char* ifname);
 /**
  * @brief Create bridge interface(The bridge_name parameter in the input may be renamed)
  * @param char* bridge_name: Bridge interface name
- * @return int: 0 on success, other values indicate failure
+ * @return struct netif*: pointer to created netif on success, NULL on failure
  */
-int netifd_bridge_create(const char* bridge_name);
+struct netif *netifd_bridge_create(const char* bridge_name);
 
 /**
  * @brief Delete bridge interface
@@ -133,6 +133,8 @@ int netifd_bridge_add_if(const char* bridge_name, const char* ifname);
  * @return int: 0 on success, other values indicate failure
  */
 int netifd_bridge_remove_if(const char* bridge_name, const char* ifname);
+
+int netifd_nano_init(void);
 
 #ifdef __cplusplus
 }

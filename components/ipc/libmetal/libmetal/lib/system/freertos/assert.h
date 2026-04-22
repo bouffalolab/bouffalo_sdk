@@ -15,13 +15,12 @@
 #ifndef __METAL_FREERTOS_ASSERT__H__
 #define __METAL_FREERTOS_ASSERT__H__
 
-#include <assert.h>
+#include <FreeRTOS.h>
 
 /**
  * @brief Assertion macro for FreeRTOS applications.
  * @param cond Condition to evaluate.
  */
-#define metal_sys_assert(cond) assert(cond)
+#define metal_sys_assert(cond) configASSERT(cond)
 
 #endif /* __METAL_FREERTOS_ASSERT__H__ */
-

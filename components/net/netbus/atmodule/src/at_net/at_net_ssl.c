@@ -18,6 +18,7 @@
 #include "at_pal.h"
 
 //#include <hosal_rng.h>
+#include <bflb_sec_trng.h>
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h" 
@@ -270,11 +271,11 @@ void *mbedtls_ssl_connect(int fd, const ssl_conn_param_t *param)
     mbedtls_ssl_conf_max_frag_len(&ssl_param->conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096); 
 #endif
     if (param->alpn_num && param->alpn) {
-        mbedtls_ssl_conf_alpn_protocols(&ssl_param->conf, param->alpn);
+        mbedtls_ssl_conf_alpn_protocols(&ssl_param->conf, (const char **)param->alpn);
     }
-    
+
     if (param->psk_len && param->psk && param->pskhint_len && param->pskhint) {
-        mbedtls_ssl_conf_psk(&ssl_param->conf, param->psk, param->psk_len, param->pskhint, param->pskhint_len);
+        mbedtls_ssl_conf_psk(&ssl_param->conf, (const unsigned char *)param->psk, param->psk_len, (const unsigned char *)param->pskhint, param->pskhint_len);
     }
 
     ret = mbedtls_ssl_setup(&ssl_param->ssl, &ssl_param->conf);

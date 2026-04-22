@@ -34,7 +34,7 @@ struct fhost_iperf_stream;
 #define inet_buf_tx_t struct pbuf
 
 /// Interface types
-typedef enum
+enum
 {
     /// STA interface
     MGMR_VIF_STA = 0,

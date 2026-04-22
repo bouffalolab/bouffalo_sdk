@@ -16,7 +16,7 @@ uint32_t g_pa_delay_2 = 90;     /* this is time set according to the pa manual *
 
 /***********user config************/
 
-#if !CONFIG_CODEC_USE_I2S
+#if !defined(CONFIG_CODEC_USE_I2S)
 /* codec pin config */
 /* if use single mode. pin set as 255 */
 #define INPUT_NEGATIVE_PIN      (28)
@@ -38,7 +38,7 @@ uint32_t g_pa_delay_2 = 90;     /* this is time set according to the pa manual *
 
 /*********** end user config************/
 
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S)
 #include <bflb_gpio.h>
 #include <bflb_core.h>
 #include <bflb_i2s.h>
@@ -213,7 +213,7 @@ msp_dma_ch_cfg_t msp_dma_channel_config(void)
         .dma_rx_ctrl_id = 0,        // default 0
         .dma_tx_ch_id = DMA_TX_CHANNEL_ID,
         .dma_rx_ch_id = DMA_RX_CHANNEL_ID,
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S)
         .dma_tx_dstPeriph = 17,     //13:DMA_REQ_AUDIO_TX, 17:DMA_REQ_I2S_TX
         .dma_rx_srcPeriph = 16,     //21:DMA_REQ_SOLO_RX, 16:DMA_REQ_I2S_RX
 #else
@@ -225,7 +225,7 @@ msp_dma_ch_cfg_t msp_dma_channel_config(void)
     return dma_channel_cfg;
 }
 
-#if !CONFIG_CODEC_USE_I2S
+#if !defined(CONFIG_CODEC_USE_I2S)
 /* codec pin config */
 msp_codec_pin_cfg_t msp_codec_pin_config(void)
 {

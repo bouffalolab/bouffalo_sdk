@@ -1,6 +1,7 @@
 #include "bflb_mtimer.h"
 #include "bflb_uart.h"
 #include "bflb_rtc.h"
+#include "bflb_clock.h"
 #include "board.h"
 #include "bflb_log.h"
 #include "example_log.h"

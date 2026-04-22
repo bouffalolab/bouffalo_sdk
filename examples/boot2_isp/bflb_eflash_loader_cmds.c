@@ -627,6 +627,7 @@ static int32_t ATTR_TCM_SECTION bflb_eflash_loader_cmd_xip_readSha_flash(uint16_
     int32_t ret = BFLB_EFLASH_LOADER_SUCCESS;
     uint32_t startaddr, read_len;
     FIH_DECLARE(fih_rc, FIH_FAILURE);
+    (void)fih_rc;
     //SEC_Eng_SHA256_Ctx sha_ctx;
     //SEC_ENG_SHA_ID_Type shaId = SEC_ENG_SHA_ID0;
     uint16_t sha_len = 32;

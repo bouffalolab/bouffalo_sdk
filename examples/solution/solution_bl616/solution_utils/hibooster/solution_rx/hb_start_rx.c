@@ -241,28 +241,36 @@ static int cmd_hb_recv_status(int argc, char **argv)
     (void)argc;
     (void)argv;
 
+    LOG_I("=== \033[32m HiBooster Receiver Status \033[0m ===\r\n");
+    LOG_I("Created:      %s\r\n", s_ctx.receiver ? "yes" : "no");
+
     if (s_ctx.receiver == NULL) {
-        LOG_I("HiBooster receiver is not initialized\r\n");
+        LOG_I("=====================================\r\n");
         return 0;
     }
 
     hb_recv_stats_t stats;
     hb_receiver_state_t state = hb_receiver_get_state(s_ctx.receiver);
-
     hb_receiver_get_statistics(s_ctx.receiver, &stats);
     hb_receiver_clear_statistics(s_ctx.receiver);
+    uint32_t fps_avg = (stats.frames_ok + stats.frames_drop) * 1000U / (stats.duration_ms + 1U);
+    uint32_t ack_interval = stats.duration_ms / (stats.acks_sent + 1U);
+    uint32_t invalid_rate = stats.frags_invalid * 100U / (stats.frags_received + 1U);
+    uint32_t speed_avg = (stats.frags_received + stats.frags_invalid) * 1024U / (stats.duration_ms + 1U);
 
-    LOG_I("=== \033[32m HiBooster Receiver Status \033[0m ===\r\n");
     LOG_I("State:        %s\r\n", hb_receiver_state_str(state));
     LOG_I("Duration:     %lu ms\r\n", (unsigned long)stats.duration_ms);
-    LOG_I("FPS AVG:      %lu\r\n", (unsigned long)((stats.frames_ok + stats.frames_drop) * 1000U / (stats.duration_ms + 1U)));
+    LOG_I("FPS AVG:      %lu\r\n", (unsigned long)fps_avg);
     LOG_I("Frames OK:    %lu\r\n", (unsigned long)stats.frames_ok);
     LOG_I("Frames drop:  %lu\r\n", (unsigned long)stats.frames_drop);
     LOG_I("Frames pend:  %lu\r\n", (unsigned long)stats.frames_pending);
+    LOG_I("Speed AVG:    %lu KB/s\r\n", (unsigned long)speed_avg);
     LOG_I("Frags recv:   %lu\r\n", (unsigned long)stats.frags_received);
     LOG_I("Invalid pkt:  %lu\r\n", (unsigned long)stats.frags_invalid);
+    LOG_I("Invalid rate: %lu%%\r\n", (unsigned long)invalid_rate);
     LOG_I("ACKs sent:    %lu\r\n", (unsigned long)stats.acks_sent);
-    LOG_I("====================================\r\n");
+    LOG_I("ACK interval: %lu ms\r\n", (unsigned long)ack_interval);
+    LOG_I("=====================================\r\n");
 
     return 0;
 }

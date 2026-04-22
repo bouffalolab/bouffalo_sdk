@@ -11,9 +11,13 @@
 #include "bflb_uart.h"
 
 #include "rfparam_adapter.h"
+#include "bflb_mtd.h"
+#include "easyflash.h"
 
 #define DBG_TAG "appuartwifi"
 #include "log.h"
+
+extern int app_wifi_init(void);
 
 int app_uartwifi_init(void)
 {

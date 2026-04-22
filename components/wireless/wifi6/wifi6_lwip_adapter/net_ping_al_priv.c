@@ -171,8 +171,8 @@ static u8_t net_ping_recv_cb(void *arg, struct raw_pcb *pcb,
             get_time_SINCE_EPOCH(&stream->stats.last_msg.sec,
                      &stream->stats.last_msg.usec);
             // Get the timestamp in the received buffer
-            sec_p = (p->payload + hdr_len);
-            usec_p = (p->payload + hdr_len + 4);
+            sec_p = (char *)p->payload + hdr_len;
+            usec_p = (char *)p->payload + hdr_len + 4;
             memcpy(&send.sec, sec_p, 4);
             memcpy(&send.usec, usec_p, 4);
             // Convert network format to host format

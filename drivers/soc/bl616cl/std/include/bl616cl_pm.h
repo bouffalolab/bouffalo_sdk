@@ -3,6 +3,10 @@
 
 #include "bl616cl_common.h"
 
+#ifndef PM_PDS_LDO18IO_POWER_DOWN
+#define PM_PDS_LDO18IO_POWER_DOWN 0
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,6 +28,7 @@ typedef struct
     uint8_t turnoffWifiPLL;       /*!< Whether trun off WiFi PLL */
     uint8_t pdsClkType;           /*!< pds_clk type */
     uint8_t pdsGpioDetClkType;    /*!< pds gpio det clk type */
+    uint8_t dcdc_sel_pin;         /*!< external dcdc control pin, 0xFF means not used */
     PM_PWR_Cfg ldo_sys_cfg;       /*!< Power Config of ldo_sys */
     PM_PWR_Cfg ldo_soc_cfg;       /*!< Power Config of ldo_soc */
     uint16_t ldo_sys_lp_en_cnt;   /*!< delay_cnt before ldo_sys enable lowpower mode */
@@ -40,8 +45,7 @@ typedef struct {
     uint64_t io_ie;
     uint64_t io_pu;
     uint64_t io_pd;
-    uint8_t io_0_5_trig_mode;
-    uint8_t io_6_36_trig_mode[31];
+    uint8_t io_0_36_trig_mode[37];
     uint64_t io_wakeup_unmask;
 } lp_gpio_cfg_type;
 
@@ -100,6 +104,8 @@ typedef struct {
 #define PM_PDS_CLK_RC8M                     (0x4) /* use rc8m as pds clock */
 #define PM_PDS_CLK_RC16M                    (0x5) /* use rc16m as pds clock */
 
+void pm_pds_dcdc_soc_set_0v7(uint32_t pin);
+void pm_pds_dcdc_soc_set_0v9(uint32_t pin);
 BL_Err_Type pm_disable_gpio_keep(uint32_t pin);
 BL_Err_Type pm_pds_wakeup_src_en(uint32_t WakeupType);
 BL_Err_Type pm_pds_wakeup_src_disable(uint32_t WakeupType);

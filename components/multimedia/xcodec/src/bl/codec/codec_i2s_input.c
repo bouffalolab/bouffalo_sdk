@@ -507,7 +507,7 @@ uint32_t aui_read(aui_ch_t *context, const void *data, uint32_t size)
         MSP_LOGE("never run here!\r\n");
     }
 
-#if RAMDUMP_CONFIG_DEBUG
+#if defined(RAMDUMP_CONFIG_DEBUG) && RAMDUMP_CONFIG_DEBUG
     if (rel_size + g_rawaui_data_len > RAW_AUO_DUMP_DATA_LEN) {
     } else {
         memcpy(g_rawaui_data + g_rawaui_data_len, (uint8_t*)data, rel_size);

@@ -66,7 +66,7 @@ int hostrouter_stats_display(void)
             sdiowifi_tick_now(0),
             LWIP_HEAP_SIZE);
 #endif
-#ifdef CFG_TXDESC0 && CFG_TXDESC1 && CFG_TXDESC2 && CFG_TXDESC3 && CFG_TXDESC4
+#if defined(CFG_TXDESC0) && defined(CFG_TXDESC1) && defined(CFG_TXDESC2) && defined(CFG_TXDESC3) && defined(CFG_TXDESC4)
     printf("[%ld] hostrouter CFG_TXDESC0-4: %d-%d-%d-%d-%d, \r\n",
             sdiowifi_tick_now(0),
             CFG_TXDESC0 ,CFG_TXDESC1 ,CFG_TXDESC2 ,CFG_TXDESC3 ,CFG_TXDESC4);

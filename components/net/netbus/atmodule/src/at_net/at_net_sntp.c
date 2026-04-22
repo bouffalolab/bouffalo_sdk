@@ -272,11 +272,14 @@ static struct sntp_time sntp_last_timestamp_sent;
 
 #if defined(LWIP_DEBUG) && !defined(sntp_format_time)
 /* Debug print helper. */
-static const char *
+#ifndef __ctime_declared
+extern char *ctime(const time_t *timep);
+#endif
+__attribute__((unused)) static const char *
 sntp_format_time(s32_t sec)
 {
   time_t ut;
-  ut = (u32_t)((u32_t)sec + DIFF_SEC_1970_2036);
+  ut = (time_t)((u32_t)sec + DIFF_SEC_1970_2036);
   return ctime(&ut);
 }
 #endif /* LWIP_DEBUG && !sntp_format_time */

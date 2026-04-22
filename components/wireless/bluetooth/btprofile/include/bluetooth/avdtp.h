@@ -17,7 +17,7 @@ extern "C" {
 enum bt_avdtp_stream_state{
     /*State machine has been initialized*/
     AVDTP_IDLE = 0x00,
-    /*INT has successfully configured an ACP’s stream end-point*/
+    /*INT has successfully configured an ACPï¿½s stream end-point*/
     AVDTP_CONFIGURED,
     /*INT and ACP have successfully opened a stream end-point*/
     AVDTP_OPEN,
@@ -77,6 +77,7 @@ struct bt_avdtp_stream {
 	uint8_t close_int:1;
 	uint8_t starting:1;
 	uint8_t abort_int:1;
+	uint8_t cancel_abort:1; /* ABORT sent internally; cfm already called in cancel_request */
 	uint16_t delay;
 	struct k_delayed_work delay_work; /* Start timer */
 	void *caps;

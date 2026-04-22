@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef CONFIG_SHELL
 #include "shell.h"
 #include "partition.h"
 #include "bflb_flash.h"
@@ -116,3 +117,4 @@ int cmd_tcp_ota_rollback(int argc, char **argv)
 SHELL_CMD_EXPORT_ALIAS(cmd_tcp_ota_start, tcp_ota_start, Start TCP OTA update);
 SHELL_CMD_EXPORT_ALIAS(cmd_tcp_ota_info, tcp_ota_info, Show OTA partition info);
 SHELL_CMD_EXPORT_ALIAS(cmd_tcp_ota_rollback, tcp_ota_rollback, Rollback to previous firmware);
+#endif

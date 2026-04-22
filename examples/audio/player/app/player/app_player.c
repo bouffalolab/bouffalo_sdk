@@ -8,6 +8,7 @@
 #include <math.h>
 #include <smart_audio.h>
 #include <media.h>
+#include <player.h>
 
 #ifdef CONFIG_SHELL
 #include <devices/drv_snd_bl616.h>
@@ -80,7 +81,7 @@ static void media_evt(int type, smtaudio_player_evtid_t evt_id)
 
 #if defined(CONFIG_STREAMER_CUSTOM) && CONFIG_STREAMER_CUSTOM
 // User-defined decryption interface
-static custom_decode_cb_t decoder_test_program(const char *in_data, int len, int offset, char *out_data)
+static int decoder_test_program(const char *in_data, int len, int offset, char *out_data)
 {
     if (out_data != NULL && in_data != NULL && len > 0)
     {

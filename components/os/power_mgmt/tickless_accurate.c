@@ -55,7 +55,7 @@
 #define tickless_error(...)
 #endif
 
-#if defined(TICKLESS_DEBUG) || TICKLESS_DEBUG >= 0
+#if !defined(TICKLESS_DEBUG) || TICKLESS_DEBUG >= 0
 #define tickless_fatal(fmt, ...) printf("[LP][F]: " fmt "\r\n", ##__VA_ARGS__)
 #else
 #define tickless_fatal(...)
@@ -73,6 +73,12 @@ volatile uint32_t *const pulTimeHigh = (volatile uint32_t *const)((configMTIME_B
 volatile uint32_t *const pulTimeLow = (volatile uint32_t *const)(configMTIME_BASE_ADDRESS);
 extern const size_t uxTimerIncrementsForOneTick;
 extern char __lp_mon_start[], __lp_mon_end[];
+extern BL_Err_Type GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, uint8_t mcuClkDiv, uint8_t mcuPBclkDiv);
+extern void board_recovery(void);
+extern int macswl_ps_sleep_check(void);
+extern int macswl_connected_enter_ops(void);
+extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
+extern void macswl_regs_save_ops(void);
 
 static uint64_t get_mtime(void)
 {
@@ -95,7 +101,7 @@ static uint64_t get_mtime(void)
     static uint64_t __attribute__((section(".lp_mon_ctx"))) __last_time = 0;          \
     uint64_t __current_time;                                                          \
     int ret = 0;                                                                      \
-    uint64_t *q = p;                                                                  \
+    uint64_t **q = (uint64_t **)p;                                                    \
     if (q)                                                                            \
         *q = &__last_time;                                                            \
     __current_time = get_mtime();                                                     \
@@ -387,9 +393,9 @@ void lp_hook_post_sys(iot2lp_para_t *param)
 void vApplicationSleep(TickType_t xExpectedIdleTime)
 {
     eSleepModeStatus eSleepStatus;
-    int32_t ble_sleep_rtc = 0;
+    int32_t ble_sleep_rtc __attribute__((unused)) = 0;
     uint64_t delta;
-    uint32_t wake_reason;
+    uint32_t wake_reason __attribute__((unused));
     int connected;
 
     if (unlikely(!enable_tickless)) {

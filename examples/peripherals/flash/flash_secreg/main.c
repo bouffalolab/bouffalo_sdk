@@ -89,7 +89,7 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
             }
 
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_write_by_idx(&flash_otp_cfg, info->index, 0, test->wbuf + info->secreg_size * info->index, info->secreg_size));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_write_by_idx(&flash_otp_cfg, info->index, 0, (uint8_t *)test->wbuf + info->secreg_size * info->index, info->secreg_size));
             end = bflb_mtimer_get_time_us();
             test->write_byte += info->secreg_size;
             LOG_I("Write region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);
@@ -99,7 +99,7 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
         case REGION_WREAD:
             LOG_I("Try to read after write region %u\r\n", info->index);
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(&flash_otp_cfg, info->index, 0, test->wrbuf + info->secreg_size * info->index, info->secreg_size));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(&flash_otp_cfg, info->index, 0, (uint8_t *)test->wrbuf + info->secreg_size * info->index, info->secreg_size));
             end = bflb_mtimer_get_time_us();
             test->wread_byte += info->secreg_size;
             LOG_I("Read region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);
@@ -109,7 +109,7 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
         case REGION_EREAD:
             LOG_I("Try to read after erase region %u\r\n", info->index);
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(&flash_otp_cfg, info->index, 0, test->erbuf + info->secreg_size * info->index, info->secreg_size));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(&flash_otp_cfg, info->index, 0, (uint8_t *)test->erbuf + info->secreg_size * info->index, info->secreg_size));
             end = bflb_mtimer_get_time_us();
             test->eread_byte += info->secreg_size;
             LOG_I("Read region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);

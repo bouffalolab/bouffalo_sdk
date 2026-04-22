@@ -29,7 +29,7 @@ int bflb_flash_erase_mcs(uint32_t erase_addr, uint32_t len)
     return 0;
 }
 
-int bflb_flash_write_mcs(uint32_t write_addr, const uint8_t *data, uint32_t len)
+int bflb_flash_write_mcs(uint32_t write_addr, uint8_t *data, uint32_t len)
 {
     int ret;
 

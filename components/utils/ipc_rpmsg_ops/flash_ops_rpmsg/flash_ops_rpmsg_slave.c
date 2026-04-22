@@ -166,7 +166,7 @@ int bflb_flash_erase_rpmsg(uint32_t addr, uint32_t len)
  * @param len Length to write in bytes
  * @return 0 on success, negative error code on failure
  */
-int bflb_flash_write_rpmsg(uint32_t addr, const uint8_t *data, uint32_t len)
+int bflb_flash_write_rpmsg(uint32_t addr, uint8_t *data, uint32_t len)
 {
     if (!g_rpmsg_initialized) {
         return -EINVAL;

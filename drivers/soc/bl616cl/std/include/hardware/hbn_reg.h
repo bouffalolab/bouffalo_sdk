@@ -270,6 +270,19 @@
 #define HBN_HW_EXT_DCDC2_ON_EN_MSK          (((1U << HBN_HW_EXT_DCDC2_ON_EN_LEN) - 1) << HBN_HW_EXT_DCDC2_ON_EN_POS)
 #define HBN_HW_EXT_DCDC2_ON_EN_UMSK         (~(((1U << HBN_HW_EXT_DCDC2_ON_EN_LEN) - 1) << HBN_HW_EXT_DCDC2_ON_EN_POS))
 
+/* 0x24 : HBN_IRQ_MODE2 */
+#define HBN_IRQ_MODE2_OFFSET                (0x24)
+#define HBN_PIN4_WAKEUP_MODE                HBN_PIN4_WAKEUP_MODE
+#define HBN_PIN4_WAKEUP_MODE_POS            (0U)
+#define HBN_PIN4_WAKEUP_MODE_LEN            (4U)
+#define HBN_PIN4_WAKEUP_MODE_MSK            (((1U << HBN_PIN4_WAKEUP_MODE_LEN) - 1) << HBN_PIN4_WAKEUP_MODE_POS)
+#define HBN_PIN4_WAKEUP_MODE_UMSK           (~(((1U << HBN_PIN4_WAKEUP_MODE_LEN) - 1) << HBN_PIN4_WAKEUP_MODE_POS))
+#define HBN_PIN5_WAKEUP_MODE                HBN_PIN5_WAKEUP_MODE
+#define HBN_PIN5_WAKEUP_MODE_POS            (4U)
+#define HBN_PIN5_WAKEUP_MODE_LEN            (4U)
+#define HBN_PIN5_WAKEUP_MODE_MSK            (((1U << HBN_PIN5_WAKEUP_MODE_LEN) - 1) << HBN_PIN5_WAKEUP_MODE_POS)
+#define HBN_PIN5_WAKEUP_MODE_UMSK           (~(((1U << HBN_PIN5_WAKEUP_MODE_LEN) - 1) << HBN_PIN5_WAKEUP_MODE_POS))
+
 /* 0x2C : HBN_BOR_CFG */
 #define HBN_BOR_CFG_OFFSET                  (0x2C)
 #define HBN_BOD_SEL_AON                     HBN_BOD_SEL_AON

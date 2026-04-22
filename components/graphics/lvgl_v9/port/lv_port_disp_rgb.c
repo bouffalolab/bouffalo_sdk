@@ -6,7 +6,7 @@
 #include "lcd.h"
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
-#if (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI_VIDIO)
+#if (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI)
 
 /*********************
  *      INCLUDES

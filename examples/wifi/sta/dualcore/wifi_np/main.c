@@ -41,6 +41,7 @@
 
 #include "board.h"
 #include "shell.h"
+#include "mm.h"
 
 #include <app_init.h>
 
@@ -153,7 +154,7 @@ void app_wifi_entry(void *param)
     printf("wifi start\r\n");
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");
-        return 0;
+        return ;
     }
 
     LOG_I("PHY RF init success!\r\n");
@@ -183,4 +184,5 @@ int main(void)
     while (1) {
         // never here.
     }
+    return 0;
 }

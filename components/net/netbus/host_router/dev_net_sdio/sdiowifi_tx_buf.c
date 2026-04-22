@@ -6,6 +6,7 @@
 #include "sdiowifi_mgmr.h"
 #include <platform_al.h>
 
+#include "FreeRTOS.h"
 #include "sdiowifi_platform_adapt.h"
 #include "sdio_port.h"
 
@@ -142,7 +143,7 @@ int sdiowifi_tx_buf_lpmem_register(struct sdiowifi_tx_buf *tb)
     sdiowifi_enter_critical();
     // context.payload point payload
     for (int i = 0; i < SDIO_TX_NORMAL_BUFFER_COUNT; i++) {
-        g_txpbuf_context[i].payload_buf = &(g_txpbuf_payload_normal[i]);
+        g_txpbuf_context[i].payload_buf = (uint32_t *)&(g_txpbuf_payload_normal[i]);
         g_txpbuf_context[i].tb = tb;
         // add
         utils_list_push_back(&tb->buf_list, (struct utils_list_hdr *)(&(g_txpbuf_context[i])));
@@ -196,7 +197,7 @@ int sdiowifi_tx_buf_mem_register(struct sdiowifi_tx_buf *tb, void *mem, size_t s
     g_tx_buffer_cnt += tx_count;
     memset(tx_buffer_ctx, 0, tx_count * sizeof(tx_pbuf_t));
     for (int i = 0; i < tx_count; i++) {
-        tx_buffer_ctx[i].payload_buf = p + sizeof(sdio_txbuf_payload_t) * i; 
+        tx_buffer_ctx[i].payload_buf = (uint32_t *)(p + sizeof(sdio_txbuf_payload_t) * i);
         tx_buffer_ctx[i].tb = tb;
         utils_list_push_back(&tb->buf_list, (struct utils_list_hdr *)(&(tx_buffer_ctx[i])));
         // ++free_size

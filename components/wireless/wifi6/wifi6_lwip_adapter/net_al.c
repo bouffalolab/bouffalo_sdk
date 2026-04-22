@@ -15,6 +15,10 @@
  */
 #include "rtos_al.h"
 #include "net_al.h"
+
+#ifndef BL_ENABLE_PACKET_SOCKET
+#define BL_ENABLE_PACKET_SOCKET 0
+#endif
 #include "net_al_ext.h"
 #include "platform_al.h"
 #include "lwip/tcpip.h"

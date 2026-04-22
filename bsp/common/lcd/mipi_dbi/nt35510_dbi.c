@@ -189,7 +189,7 @@ int nt35510_dbi_init()
         if (nt35510_dbi_init_cmds[i].cmd == 0xFF && nt35510_dbi_init_cmds[i].data == NULL && nt35510_dbi_init_cmds[i].databytes) {
             bflb_mtimer_delay_ms(nt35510_dbi_init_cmds[i].databytes);
         } else {
-#if NT35510_CMD_PARA_CONTINUOUS_EN
+#if defined(NT35510_CMD_PARA_CONTINUOUS_EN) && NT35510_CMD_PARA_CONTINUOUS_EN
             /* Change the data to 16bit */
             for (uint8_t j = 0; j < nt35510_dbi_init_cmds[i].databytes; j++) {
                 nt35510_para[j * 2] = 0;
@@ -235,7 +235,7 @@ int nt35510_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if NT35510_DBI_DIR_MIRROR
+#if defined(NT35510_DBI_DIR_MIRROR) && NT35510_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -265,11 +265,11 @@ int nt35510_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void nt35510_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if NT35510_DBI_OFFSET_X
+#if defined(NT35510_DBI_OFFSET_X) && NT35510_DBI_OFFSET_X
     x1 += NT35510_DBI_OFFSET_X;
     x2 += NT35510_DBI_OFFSET_X;
 #endif
-#if NT35510_DBI_OFFSET_Y
+#if defined(NT35510_DBI_OFFSET_Y) && NT35510_DBI_OFFSET_Y
     y1 += NT35510_DBI_OFFSET_Y;
     y2 += NT35510_DBI_OFFSET_Y;
 #endif

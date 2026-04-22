@@ -22,6 +22,7 @@
 #include "tcp_fota.h"
 #include "ota/ota.h"
 
+#undef DBG_TAG
 #define DBG_TAG "TCP_FOTA"
 #include "log.h"
 
@@ -99,7 +100,7 @@ static int tcp_fota_connect(struct tcp_fota *fota)
 /**
  * @brief Read exactly 'len' bytes from socket
  */
-static int tcp_fota_recv(int sock, uint8_t *buf, uint32_t len)
+static int __attribute__((unused)) tcp_fota_recv(int sock, uint8_t *buf, uint32_t len)
 {
     int ret;
     uint32_t received = 0;

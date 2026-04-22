@@ -1,4 +1,3 @@
-
 /**
  ****************************************************************************************
  *
@@ -918,7 +917,7 @@ struct me_sta_add_req
     u8_l opmode;
     /// Index of the VIF the station is attached to
     u8_l vif_idx;
-#if (TDLS_ENABLE)
+#if defined(TDLS_ENABLE)
     /// Whether the the station is TDLS station
     bool_l tdls_sta;
 #endif
@@ -944,7 +943,7 @@ struct me_sta_del_req
 {
     /// Index of the station to be deleted
     u8_l sta_idx;
-#if (TDLS_ENABLE)
+#if defined(TDLS_ENABLE)
     /// Whether the the station is TDLS station
     bool_l tdls_sta;
 #endif
@@ -1164,9 +1163,10 @@ struct sm_connect_abort_cfm
     uint8_t status;
 };
 
+#if 0
 static struct
 {
-    /// TASK 
+    /// TASK
     uint32_t task;
     /// ELEMENT
     uint32_t element;
@@ -1174,7 +1174,8 @@ static struct
     uint32_t length;
     /// buffer
     uint32_t buf[];
-} cfg_start_req_u_tlv_t;
+} cfg_start_req_u_tlv_t __attribute__((unused));
+#endif
 
 struct cfg_start_req
 {
@@ -1183,7 +1184,7 @@ struct cfg_start_req
     union {
         /// struct for get ELEMENT
         struct {
-            /// TASK 
+            /// TASK
             uint32_t task;
             /// ELEMENT
             uint32_t element;
@@ -1191,7 +1192,7 @@ struct cfg_start_req
 
         /// struct for reset ELEMENT
         struct {
-            /// TASK 
+            /// TASK
             uint32_t task;
             /// ELEMENT
             uint32_t element;
@@ -1199,7 +1200,7 @@ struct cfg_start_req
 
         /// struct for set ELEMENT with TLV based
         struct {
-            /// TASK 
+            /// TASK
             uint32_t task;
             /// ELEMENT
             uint32_t element;

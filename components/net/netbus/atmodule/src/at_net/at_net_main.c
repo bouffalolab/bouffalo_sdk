@@ -28,6 +28,10 @@
 #include "at_net_config.h"
 #include "at_net_ssl.h"
 #include "at_wifi_config.h"
+#include "at_fs.h"
+#include <lwip/dns.h>
+
+extern int at_wifi_sta_ip4_addr_get(uint32_t *ip, uint32_t *mask, uint32_t *gw, uint32_t *dns);
 
 #define AT_LOCAL_LOOP_SOCKET_PORT  (9000)
 #define AT_UDP_MAX_BUFFER_LEN      (1470)
@@ -146,7 +150,7 @@ static void sockaddr_to_ipaddr(const struct sockaddr *sa, ip_addr_t *ipaddr)
         ip4_addr_set_u32(ip_2_ip4(ipaddr), sa_in->sin_addr.s_addr);
         IP_SET_TYPE(ipaddr, IPADDR_TYPE_V4);
     }
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     else if (sa->sa_family == AF_INET6) {
         const struct sockaddr_in6 *sa_in6 = (const struct sockaddr_in6 *)sa;
         ip6_addr_set(ip_2_ip6(ipaddr), (const ip6_addr_t *)(&sa_in6->sin6_addr));
@@ -188,7 +192,7 @@ static int ip_multicast_enable(int fd, ip_addr_t *ipaddr)
     }
 
     /* Set multicast interface. */
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (IP_IS_V6(ipaddr)) {
         struct in6_addr addr6;
         memset((void *)&addr6, 0, sizeof(struct in6_addr));
@@ -217,7 +221,7 @@ static int ip_multicast_enable(int fd, ip_addr_t *ipaddr)
     }
 
     /* Add membership to receiving socket. */
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (IP_IS_V6(ipaddr)) {
         struct ipv6_mreq mreq6;
         memset(&mreq6, 0, sizeof(struct ipv6_mreq));
@@ -331,7 +335,7 @@ static int so_localport_get(int fd)
     return ntohs(local_addr.sin_port);
 }
 
-static int so_recvsize_get(int fd)
+static int __attribute__((unused)) so_recvsize_get(int fd)
 {
     int bytes;
 
@@ -402,7 +406,7 @@ static int tcp_client_connect(const ip_addr_t *ipaddr, uint16_t port, uint32_t t
         return -1;
     }*/
 
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     struct sockaddr_in6 addr6 = {0};
     if(IP_IS_V6(ipaddr)) {
         if ( (fd =  socket(AF_INET6, SOCK_STREAM, IPPROTO_IPV6))  < 0) {
@@ -445,7 +449,7 @@ static int tcp_client_connect(const ip_addr_t *ipaddr, uint16_t port, uint32_t t
         int flag;
         flag = fcntl(fd, F_GETFL, 0);
         fcntl(fd, F_SETFL, flag | O_NONBLOCK);
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
         if(IP_IS_V6(ipaddr)) {
             res = connect(fd, (struct sockaddr *)&addr6, sizeof(addr6));
         } else
@@ -485,7 +489,7 @@ static int tcp_client_connect(const ip_addr_t *ipaddr, uint16_t port, uint32_t t
         }
         fcntl(fd, F_SETFL, flag);
     } else {
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
         if(IP_IS_V6(ipaddr)) {
             res = connect(fd, (struct sockaddr *)&addr6, sizeof(addr6));
         } else
@@ -543,7 +547,7 @@ static int udp_client_connect(uint16_t port, ip_addr_t *ipaddr)
     int fd;
     unsigned char loop= 0;
     int so_broadcast=1;
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (IP_IS_V6(ipaddr)) {
         if ( (fd = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
             return -AT_SUB_CMD_EXEC_FAIL;
@@ -560,7 +564,7 @@ static int udp_client_connect(uint16_t port, ip_addr_t *ipaddr)
     setsockopt(fd, SOL_SOCKET,SO_BROADCAST, &so_broadcast, sizeof(so_broadcast));
     setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
 
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (IP_IS_V6(ipaddr)) {
         struct sockaddr_in6 addr6;
         memset(&addr6, 0, sizeof(addr6));
@@ -609,7 +613,7 @@ static int udp_client_send(int fd, void *buffer, int length, ip_addr_t *ipaddr, 
     uint32_t send_len = 0;
 
     if (fd >= 0) {
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
         if (IP_IS_V6(ipaddr)) {
             struct sockaddr_in6 toaddr6;
             memset(&toaddr6, 0, sizeof(toaddr6));
@@ -731,7 +735,7 @@ static int udp_server_create(uint16_t port, int listen, uint8_t is_ipv6)
 
     AT_NET_PRINTF("udp server create port %d\r\n", port);
 
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     struct sockaddr_in6 addr6 = {0};
     if (is_ipv6) {
         if ( (fd =  socket(AF_INET6, SOCK_DGRAM, 0))  < 0) {
@@ -760,7 +764,7 @@ static int udp_server_create(uint16_t port, int listen, uint8_t is_ipv6)
         servaddr.sin_port = htons(port);
     }
 
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (is_ipv6) {
         on= 0;
         setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on));
@@ -769,7 +773,7 @@ static int udp_server_create(uint16_t port, int listen, uint8_t is_ipv6)
 
     on= 1;
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (is_ipv6) {
         if (bind(fd, (struct sockaddr*)&addr6, sizeof(addr6)) < 0) {
             close(fd);
@@ -798,7 +802,7 @@ static int tcp_server_create(uint16_t port, int listen, uint8_t is_ipv6)
 
     AT_NET_PRINTF("tcp server create port %d\r\n", port);
 
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     struct sockaddr_in6 addr6 = {0};
     if (is_ipv6) {
         if ( (fd =  socket(AF_INET6, SOCK_STREAM, 0))  < 0) {
@@ -827,7 +831,7 @@ static int tcp_server_create(uint16_t port, int listen, uint8_t is_ipv6)
 
     on= 1;
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     if (is_ipv6) {
         if (bind(fd, (struct sockaddr*)&addr6, sizeof(addr6)) < 0) {
             close(fd);
@@ -986,7 +990,7 @@ static int net_socket_ipd(net_ipdinfo_type ipd, int id, void *buffer, int length
                     at_write(AT_NET_IPD_EVT_HEAD("+IPD:%d,%d,\"%s\",%d"), id, length, ipaddr_ntoa(ipaddr), port);
             }
             if (at_net_config->recv_mode != NET_RECV_MODE_PASSIVE) {
-                memcpy(buffer + length, "\r\n", 2);
+                memcpy((char *)buffer + length, "\r\n", 2);
                 length += 2;
                 AT_CMD_DATA_SEND(buffer, length);
             }
@@ -994,7 +998,7 @@ static int net_socket_ipd(net_ipdinfo_type ipd, int id, void *buffer, int length
             xStreamBufferSend(g_at_client_handle[id].recv_buf, buffer, length, timeout);
         } else {
             if (at_get_work_mode() != AT_WORK_MODE_THROUGHPUT) {
-                memcpy(buffer + length, "\r\n", 2);
+                memcpy((char *)buffer + length, "\r\n", 2);
                 length += 2;
             }
             AT_CMD_DATA_SEND(buffer, length);
@@ -1113,7 +1117,7 @@ static int net_socket_connect(int id, net_client_type type, ip_addr_t *ipaddr, u
     return 0;
 }
 
-static int net_socket_close_sync(int evtid, void *arg)
+static void net_socket_close_sync(int evtid, void *arg)
 {
 	int id = (int)arg;
 
@@ -1125,7 +1129,7 @@ static int net_socket_close_sync(int evtid, void *arg)
 
     if (!valid) {
         AT_NET_PRINTF("socket is not inited\r\n");
-        return -1;
+        return;
     }
 
     net_lock();
@@ -1156,7 +1160,6 @@ static int net_socket_close_sync(int evtid, void *arg)
        ssl_client_close(fd, priv);
 
     net_socket_ipd(NET_IPDINFO_DISCONNECTED, id, NULL, 0, 0, 0, 0);
-    return 0;
 }
 
 static int net_socket_close(int id)
@@ -1170,13 +1173,12 @@ static int net_socket_close(int id)
     return 0;
 }
 
-static int wake_socket_close_sync(int evtid, void *arg)
+static void wake_socket_close_sync(int evtid, void *arg)
 {
     if (wake_socket_fd >= 0) {
         close(wake_socket_fd);
         wake_socket_fd = -1;
     }
-    return 0;
 }
 static int wake_socket_close(void)
 {
@@ -1248,8 +1250,8 @@ static int net_socket_recv(int id)
                 (struct sockaddr *)&remote_addr,
                 (socklen_t *)(&len));
 
-        ip_addr_t ipaddr;
-        sockaddr_to_ipaddr(&remote_addr, &ipaddr);
+        ip_addr_t ipaddr = {0};
+        sockaddr_to_ipaddr((const struct sockaddr *)&remote_addr, &ipaddr);
         r_port = ntohs(((struct sockaddr_in *)&remote_addr)->sin_port);
         //printf("recvfd %d:%d id:%d udp_mode:%d remote_ip:%s remote_port:%d\r\n", fd, num, id, udp_mode, ipaddr_ntoa(&remote_ip), remote_port);
         //printf("remote_addr.sin_addr:%s remote_addr.sin_port:%d\r\n", ipaddr_ntoa(&ipaddr), ntohs(remote_addr.sin_port));
@@ -1332,7 +1334,7 @@ static int net_socket_accept(int fd, int type, uint16_t port, uint16_t timeout, 
 {
     int sock;
     struct sockaddr_in remote_addr;
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
     struct sockaddr_in6 remote_addr6;
 #endif
     socklen_t len;
@@ -1347,7 +1349,7 @@ static int net_socket_accept(int fd, int type, uint16_t port, uint16_t timeout, 
     	}
     	sock = fd;
     } else {
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
         if (is_ipv6) {
             len = sizeof(struct sockaddr_in6);
     	    sock = accept(fd, (struct sockaddr*)&remote_addr6, &len);
@@ -1408,7 +1410,7 @@ static int net_socket_accept(int fd, int type, uint16_t port, uint16_t timeout, 
         g_at_client_handle[id].fd = sock;
         g_at_client_handle[id].socket_accept = 1;
         g_at_client_handle[id].priv = priv;
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
         if (is_ipv6) {
             sockaddr_to_ipaddr((struct sockaddr *)&remote_addr6, &g_at_client_handle[id].remote_ip);
             g_at_client_handle[id].remote_port = ntohs(remote_addr6.sin6_port);
@@ -1565,6 +1567,7 @@ static void net_poll_recv(void)
     timeout.tv_sec= 0;
     timeout.tv_usec= 10000;
 #ifdef LP_APP
+    (void)timeout;
     if(select(maxfd+1, &fdR, NULL, NULL, NULL) > 0) {
 #else
     if(select(maxfd+1, &fdR, NULL, NULL, &timeout) > 0) {
@@ -1823,21 +1826,21 @@ int at_net_client_get_info(int id, char *type, uint16_t len, ip_addr_t *remote_i
     if (g_at_client_handle[id].valid) {
         if (type) {
             if (g_at_client_handle[id].type == NET_CLIENT_TCP) {
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
                 if (IP_IS_V6(&g_at_client_handle[id].remote_ip)) {
                     strlcpy(type, "TCPv6", len);
                 } else
 #endif
                     strlcpy(type, "TCP", len);
             } else if (g_at_client_handle[id].type == NET_CLIENT_UDP) {
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
                 if (IP_IS_V6(&g_at_client_handle[id].remote_ip)) {
                     strlcpy(type, "UDPv6", len);
                 } else
 #endif
                     strlcpy(type, "UDP", len);
             } else if (g_at_client_handle[id].type == NET_CLIENT_SSL) {
-#if CFG_IPV6
+#if defined(CFG_IPV6) && CFG_IPV6
                 if (IP_IS_V6(&g_at_client_handle[id].remote_ip)) {
                     strlcpy(type, "SSLv6", len);
                 } else
@@ -2058,16 +2061,16 @@ int at_net_server_is_created(uint16_t *port, char *type, int *ca_enable, int *ke
     return 1;
 }
 
-static int _net_server_close(int evtid, void *arg)
+static void _net_server_close(int evtid, void *arg)
 {
     int id = 0;
     int valid = g_at_server_handle[id].valid;
     net_server_type type = g_at_server_handle[id].type;
-    int fd = g_at_server_handle[id].fd;;
+    int fd = g_at_server_handle[id].fd;
 
     if (!valid) {
         AT_NET_PRINTF("socket is not inited\r\n");
-        return -1;
+        return;
     }
 
     net_lock();
@@ -2079,8 +2082,6 @@ static int _net_server_close(int evtid, void *arg)
 
     if (type == NET_SERVER_UDP)
        udp_server_close(fd);
-
-    return 0;
 }
 
 int at_net_server_close(void)
@@ -2391,7 +2392,7 @@ int at_string_host_to_ip(char *host, ip_addr_t *ip)
     if (hostinfo) {
         *ip = *(ip_addr_t *)hostinfo->h_addr;
 
-        #if CFG_IPV6
+        #if defined(CFG_IPV6) && CFG_IPV6
         if (IP_IS_V6(ip) && ip_addr_islinklocal(ip)) {
             printf("linkloacl address:%s\r\n", host);
             //TODO: By default, this is associated with the STA netif.
@@ -2420,9 +2421,9 @@ int at_net_dns_load(void)
         return 0;
     }
 
-    ip_addr_t *current_dns1 = dns_getserver(0);
-    ip_addr_t *current_dns2 = dns_getserver(1);
-    ip_addr_t *current_dns3 = dns_getserver(2);
+    const ip_addr_t *current_dns1 = dns_getserver(0);
+    const ip_addr_t *current_dns2 = dns_getserver(1);
+    const ip_addr_t *current_dns3 = dns_getserver(2);
 
     at_net_config->dns.dns[0] = *current_dns1;
     at_net_config->dns.dns[1] = *current_dns2;

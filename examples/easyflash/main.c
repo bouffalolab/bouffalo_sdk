@@ -86,8 +86,8 @@ int main(void)
     char passwd[65];
     char hwaddr[33];
 
-    if (ef_get_env(WIFI_SSID_KEY) != NULL) {
-        ret = ef_get_env_blob(WIFI_SSID_KEY, ssid, sizeof(ssid), NULL);
+    ret = ef_get_env_blob(WIFI_SSID_KEY, ssid, sizeof(ssid), NULL);
+    if (ret > 0) {
         ssid[ret] = 0;
         printf("ssid:%s, test pass.\r\n", ssid);
     } else {
@@ -95,8 +95,8 @@ int main(void)
         while(1);
     }
 
-    if (ef_get_env(WIFI_PASSWD_KEY) != NULL) {
-        ret = ef_get_env_blob(WIFI_PASSWD_KEY, passwd, sizeof(passwd), NULL);
+    ret = ef_get_env_blob(WIFI_PASSWD_KEY, passwd, sizeof(passwd), NULL);
+    if (ret > 0) {
         passwd[ret] = 0;
         printf("passwd:%s test pass.\r\n", passwd);
     } else {

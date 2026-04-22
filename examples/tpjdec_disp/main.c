@@ -64,7 +64,7 @@ size_t in_func(               /* Returns number of bytes read (zero on error) */
 
     if (buff) {
         /* Raad data from imput stream */
-        memcpy(buff, (void *)dev->in_jpg_buf + dev->in_jpg_offset, nbyte);
+        memcpy(buff, (uint8_t *)dev->in_jpg_buf + dev->in_jpg_offset, nbyte);
     }
     dev->in_jpg_offset += nbyte;
 
@@ -207,9 +207,7 @@ void flush_async_callback()
 
 #if defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT
     if (JD_YUV444_MODE) {
-        /* disable YUV mode for DBI */
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_YUV_TO_RGB_ENABLE, false);
-        /* Switch BGR888 to RGB565 */
+        /* Switch YUV444 to RGB565 */
         bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
     }
     bflb_dbi_feature_control(dbi_hd, DBI_CMD_CLEAR_TX_FIFO, 0);
@@ -229,8 +227,7 @@ int lcd_disp(struct IODEV *dev)
 #if defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT
     if (JD_YUV444_MODE) {
         /* Switch RGB565 to YUV444 */
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_BGR_888);
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_YUV_TO_RGB_ENABLE, true);
+        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
     }
 #endif
 

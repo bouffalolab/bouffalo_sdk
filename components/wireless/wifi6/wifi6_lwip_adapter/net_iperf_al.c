@@ -1498,22 +1498,22 @@ static void* net_iperf_init(struct fhost_iperf_stream* stream)
 
         /* Don't call ip_route() with IP_ANY_TYPE */
         LOCK_TCPIP_CORE();
-        netif = ip4_route_src(IP46_ADDR_ANY(IP_GET_TYPE(&rip)), &rip);
+        netif = ip4_route_src(ip_2_ip4(IP46_ADDR_ANY(IP_GET_TYPE(&rip))), ip_2_ip4(&rip));
         UNLOCK_TCPIP_CORE();
         if (netif == NULL)
             return NULL;
 
-        found = (etharp_find_addr(netif, &rip, &eth_ret, &ip_ret) != -1);
+        found = (etharp_find_addr(netif, ip_2_ip4(&rip), &eth_ret, &ip_ret) != -1);
         while (!found && tries < 3)
         {
             LOCK_TCPIP_CORE();
-            etharp_request(netif, &rip);
+            etharp_request(netif, ip_2_ip4(&rip));
             UNLOCK_TCPIP_CORE();
 
             // It is not possible to use a callback for the ARP reply, set a timeout
             rtos_task_suspend(ARP_REPLY_TO);
             tries++;
-            found = (etharp_find_addr(netif, &rip, &eth_ret, &ip_ret) != -1);
+            found = (etharp_find_addr(netif, ip_2_ip4(&rip), &eth_ret, &ip_ret) != -1);
         }
         if (!found)
             return NULL;
@@ -2233,7 +2233,7 @@ static void fhost_iperf_snprintf(char *out_str, uint32_t len, float amount, char
         amount += round;
         int_amount = (int32_t)amount;
         dec_amount = (amount * 100) - (int_amount * 100);
-        dbg_snprintf((char *)out_str, len, "%d.%02d %s", int_amount, dec_amount, suffix);
+        snprintf((char *)out_str, len, "%d.%02d %s", int_amount, dec_amount, suffix);
     }
     else if (amount < (float)99.95)
     {
@@ -2241,14 +2241,14 @@ static void fhost_iperf_snprintf(char *out_str, uint32_t len, float amount, char
         amount += round;
         int_amount = (int32_t)amount;
         dec_amount = (amount * 10) - (int_amount * 10);
-        dbg_snprintf((char *)out_str, len, "%d.%d %s", int_amount, dec_amount, suffix);
+        snprintf((char *)out_str, len, "%d.%d %s", int_amount, dec_amount, suffix);
     }
     else
     {
         round = (float)0.5;
         amount += round;
         int_amount = (int32_t)amount;
-        dbg_snprintf((char *)out_str, len, "%4d %s", int_amount, suffix);
+        snprintf((char *)out_str, len, "%4d %s", int_amount, suffix);
     }
 }
 

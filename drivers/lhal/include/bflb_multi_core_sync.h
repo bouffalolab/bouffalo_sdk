@@ -17,7 +17,7 @@ int bflb_flash_erase_mcs(uint32_t erase_addr, uint32_t len);
  * @param len Write length in bytes
  * @return 0 on success, negative on failure
  */
-int bflb_flash_write_mcs(uint32_t write_addr, const uint8_t *data, uint32_t len);
+int bflb_flash_write_mcs(uint32_t write_addr, uint8_t *data, uint32_t len);
 
 /**
  * @brief Read flash with NP suspend/resume management

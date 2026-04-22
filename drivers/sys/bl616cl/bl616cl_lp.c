@@ -510,7 +510,6 @@ uint64_t bl_lp_get_virtual_us(void)
     return (g_virtual_timestamp_base_us + mtimer_cnt - g_mtimer_timestamp_after_sleep_us);
 }
 
-
 static uint32_t get_dtim_num(uint32_t period_dtim, uint32_t bcn_past_num, lp_fw_wifi_para_t *wifi_param)
 {
     uint32_t dtim_num;
@@ -610,8 +609,12 @@ static int board_dcdc_enter_pds(void *arg)
         gpio = bflb_device_get_by_name("gpio");
     }
     
+    pm_disable_gpio_keep(pin);
+
     bflb_gpio_init(gpio, pin, GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_reset(gpio, pin);
+
+    PDS_Enable_GPIO_Keep(pin);
 
     arch_delay_us(100);
 
@@ -629,9 +632,14 @@ static int board_dcdc_exit_pds(void *arg)
         gpio = bflb_device_get_by_name("gpio");
     }
     
+    pm_disable_gpio_keep(pin);
+
     bflb_gpio_init(gpio, pin, GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_0);
 
     bflb_gpio_set(gpio, pin);
+
+    PDS_Enable_GPIO_Keep(pin);
+
     return 0;
 }
 
@@ -722,7 +730,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     // sf_pin_select = get_sf_pin_select();
     // pds_gpio_keep_enable(sf_pin_select);
 
-
    /* ready sleep*/
     iot2lp_para->wakeup_flag = 0;
     iot2lp_para->pattern = 0xAA5555AA;
@@ -734,7 +741,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     pm_set_wakeup_callback(
         (void (*)(void))((uint32_t)__lpfw_share_start__ | 0x60000000) /*(void (*)(void))LP_FW_PRE_JUMP_ADDR*/);
 
-
     LP_HOOK(pre_sleep, iot2lp_para);
 
     HBN_Pin_WakeUp_Mask(0xFF);
@@ -743,7 +749,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     bl_pds_gpio_keep_enable();
 
-    PDS_Set_All_GPIO_Pad_IntClr();
+    // PDS_Set_All_GPIO_Pad_IntClr();
 
     /* app to sleep_pds, update time_info */
     bl_lp_time_info_update_app(iot2lp_para->lp_info);
@@ -978,9 +984,8 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         bl616cl_lp_soft_irq_trigger();
     }
 
-    /* Disable GPIO keep after wakeup */
+    /* Disable GPIO keep leave to the business layer */
     // PDS_Disable_ALL_GPIO_Keep();
-
     /* clock re-init */
 
     /* watch-dog disable */
@@ -988,7 +993,8 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     /* rc32k code restored */
     HBN_Set_RC32K_R_Code(iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
 
-    bl_ext_dcdc_pds_restore_exit();
+    /* lpfw firmware has already set the DCDC voltage */
+    // bl_ext_dcdc_pds_restore_exit();
 
     LP_HOOK(post_sys, iot2lp_para);
 

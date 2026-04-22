@@ -5,7 +5,7 @@ include $(COMPONENT_PATH)/../openthread_common.mk
 
 COMPONENT_PRIV_INCLUDEDIRS := .
 
-COMPONENT_SRCS := ot_alarm.c ot_frame.c ot_freertos.c ot_linkmetric.c ot_radio.c ot_radio_iot.c  ot_sys_iot.c ot_uart_iot.c 
+COMPONENT_SRCS := ot_alarm.c ot_freertos.c ot_link_metric.c ot_radio.c ot_sys_iot.c ot_uart_iot.c 
 
 ifndef OT_NCP
 	COMPONENT_SRCS := ${COMPONENT_SRCS} ot_logging.c

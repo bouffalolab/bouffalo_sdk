@@ -30,12 +30,17 @@
 #include <lwip/netdb.h>
 
 #include "wifi_mgmr_ext.h"
+#ifndef BL602
+#include "fhost_api.h"
+#include "wifi_mgmr.h"
+#endif
 
 #include "bflb_irq.h"
 #include "bflb_uart.h"
 
 #include "rfparam_adapter.h"
 #include "async_event.h"
+#include "mm.h"
 #include "board.h"
 #include "shell.h"
 
@@ -60,6 +65,11 @@ static struct bflb_device_s *uart0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
+#ifdef BL602
+extern void wifi_task_create(void);
+extern int fhost_init(void);
+extern int wifi_mgmr_task_start(void);
+#endif
 
 /****************************************************************************
  * Private Function Prototypes
@@ -78,7 +88,9 @@ void wifi_start_firmware_task(void *param)
     wifi_task_create();
 
     LOG_I("Starting fhost ...\r\n");
+#ifndef BL602
     fhost_init();
+#endif
 
     vTaskDelete(NULL);
 }

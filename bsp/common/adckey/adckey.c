@@ -433,7 +433,7 @@ static int adckey_adc_wait_count(adckey_handle_t handle, uint8_t target_count)
         if ((bflb_mtimer_get_time_ms() - start_ms) >= ADCKEY_ADC_WAIT_TIMEOUT_MS) {
             return -1;
         }
-        bflb_mtimer_delay_ms(1);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     return 0;
@@ -452,7 +452,7 @@ static int adckey_adc_wait_ready(adckey_handle_t handle)
         if ((bflb_mtimer_get_time_ms() - start_ms) >= ADCKEY_ADC_WAIT_TIMEOUT_MS) {
             return -1;
         }
-        bflb_mtimer_delay_ms(1);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     return 0;

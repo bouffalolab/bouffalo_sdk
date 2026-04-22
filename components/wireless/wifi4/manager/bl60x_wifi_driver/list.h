@@ -64,8 +64,10 @@ struct list_head {
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
+#ifndef LIST_HEAD
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
+#endif
 
 #define INIT_LIST_HEAD(ptr) do { \
 	(ptr)->next = (ptr); (ptr)->prev = (ptr); \

@@ -5,6 +5,7 @@
 #include <bflb_common.h>
 #else
 #include <compiler/common.h>
+#include <MCU_Common/misc/misc.h>
 #endif
 
 #include <lmac154.h>
@@ -21,7 +22,7 @@ typedef struct {
     utils_dlist_t   dlist;
     otLinkMetrics   metrics;
     otShortAddress  short_addr;
-    otExtAddress    ext_addr;
+    otExtAddress    ext_addr __attribute__((aligned(4)));
 } link_metric_entry_t;
 
 void ot_link_metrics_init(int8_t noise_floor)
@@ -31,28 +32,26 @@ void ot_link_metrics_init(int8_t noise_floor)
 }
 
 ATTR_TCM_SECTION
-uint32_t ot_link_metrics_gen_enh_ack_data(uint8_t *short_addr, uint8_t *ext_addr,
+uint32_t ot_link_metrics_gen_enh_ack_data(lmac154_receiveInfo_t * rx_info,
                                           int8_t rssi, uint8_t lqi, uint8_t *out_data)
 {
     utils_dlist_t *p;
     link_metric_entry_t *entry;
     ot_link_metrics_ie_hdr_t *ie_hdr = (ot_link_metrics_ie_hdr_t *)out_data;
     uint32_t payload_len = 0;
-    uint8_t *payload_ptr = out_data + sizeof(ot_link_metrics_ie_hdr_t);
+    uint8_t * payload_ptr = out_data + sizeof(ot_link_metrics_ie_hdr_t);
 
     utils_dlist_for_each(p, &ot_radio_ctx.link_metrics.dlist) {
         bool match = false;
         entry = (link_metric_entry_t *)p;
+        uint32_t * p_ext = (uint32_t *)(entry->ext_addr.m8);
 
-        if (ext_addr) {
-            if (arch_memcmp(entry->ext_addr.m8, ext_addr, 8) == 0)
-                match = true;
+        if (rx_info->is_src_xaddr && p_ext[0] == rx_info->src_addr.xaddr[0] && p_ext[1] == rx_info->src_addr.xaddr[1]) {
+            match = true;
         }
 
-        if (!match && short_addr) {
-            uint16_t s_addr = short_addr[0] | ((uint16_t)short_addr[1] << 8);
-            if (s_addr != 0xfffe && entry->short_addr == s_addr)
-                match = true;
+        if (!match && rx_info->is_src_saddr && entry->short_addr == rx_info->src_addr.saddr) {
+            match = true;
         }
 
         if (!match)

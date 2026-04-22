@@ -42,7 +42,7 @@ endif()
 
 if("${CHIP}" STREQUAL "bl702")
     if(CONFIG_PM)
-        sdk_library_add_sources(bl702/bl702_xip_recovery.c bl702/bl702_lp_debug.c)
+        sdk_library_add_sources(bl702/bl702_lp.c bl702/bl702_xip_recovery.c bl702/bl702_lp_debug.c)
     endif()
 endif()
 

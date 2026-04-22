@@ -6,13 +6,13 @@
 #define INCLUDE_STDINT_H 1
 #define INCLUDE_SYS_TYPES_H 1
 
-#if INCLUDE_INTTYPES_H
+#if defined(INCLUDE_INTTYPES_H) && INCLUDE_INTTYPES_H
 #  include <inttypes.h>
 #endif
-#if INCLUDE_STDINT_H
+#if defined(INCLUDE_STDINT_H) && INCLUDE_STDINT_H
 #  include <stdint.h>
 #endif
-#if INCLUDE_SYS_TYPES_H
+#if defined(INCLUDE_SYS_TYPES_H) && INCLUDE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
 

@@ -69,7 +69,7 @@ void board_ncp_init(void)
 {
     int ret = -1;
     uintptr_t flag;
-    size_t heap_len;
+    size_t heap_len __attribute__((unused));
 
     flag = bflb_irq_save();
     ret = bflb_flash_init();

@@ -61,6 +61,7 @@ int main(void)
     cfg0.comp2_val = 0xFFFFFFFF; /* match value 2 */
     cfg0.preload_val = 0;    /* preload value */
 
+    #if 0
     struct bflb_timer_config_s cfg1;
     cfg1.counter_mode = TIMER_COUNTER_MODE_PROLOAD;
     cfg1.clock_source = TIMER_CLKSRC_XTAL;
@@ -70,6 +71,7 @@ int main(void)
     cfg1.comp1_val = 1500000; /* match value 1 */
     cfg1.comp2_val = 2500000; /* match value 2 */
     cfg1.preload_val = 0;    /* preload value */
+    #endif
 
     timer0 = bflb_device_get_by_name("timer0");
     // timer1 = bflb_device_get_by_name("timer1");

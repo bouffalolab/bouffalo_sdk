@@ -18,6 +18,7 @@
 
 #include <msp/kernel.h>
 #include <board.h>
+#include <player.h>
 
 /* 相关配置需要调整到板卡中，或者app配置文件中 */
 //#define PA_PIN                 4

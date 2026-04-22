@@ -1,6 +1,5 @@
 
 ################### solution_utils config ###################
-CONFIG_SOLUTION_BUILD_FROM_LIB_MODE	?=y # lib mode, for public use
 
 ################### queue ###################
 CONFIG_SOLUTION_QUEUE_IMG_RAW_OUT	?=n
@@ -63,6 +62,8 @@ CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH  ?=640
 CONFIG_SOLUTION_VIDEO_DEFAULT_HIGHT  ?=480
 ## dbi display (yuyv >> dbi_display)
 CONFIG_SOLUTION_FUNC_DISP_DBI       ?=n
+## rgb display (rgb frame >> rgb_display)
+CONFIG_SOLUTION_FUNC_DISP_RGB       ?=n
 ## jpeg compression (yuyv >> jpeg)
 CONFIG_SOLUTION_FUNC_MJPEG_ENC      ?=n
 ## jpeg compression (jpeg >> yuv/rgb)
@@ -105,11 +106,6 @@ ifneq ($(CONFIG_SOLUTION_FUNC_UVC_JPEG)_$(CONFIG_SOLUTION_FUNC_UVC_YUYV)_$(CONFI
 	ifneq ($(CONFIG_SOLUTION_FUNC_UAC_IN)_$(CONFIG_SOLUTION_FUNC_UAC_OUT),n_n)
 		CONFIG_CHERRYUSB_HOST_AUDIO_UAC =y
 	endif
-
-	# The log of macsw affects the real-time performance of usb iso.
-	ifeq ($(CONFIG_CHERRYUSB_HOST),y)
-		CONFIG_NO_FW_BL_LOG_PRINT =y
-	endif
 endif
 
 # FatFS
@@ -125,6 +121,6 @@ ifneq ($(CONFIG_SOLUTION_FUNC_DVP)_$(CONFIG_SOLUTION_FUNC_DVP_JPEG_ENC),n_n)
 endif
 
 # LCD
-ifeq ($(CONFIG_SOLUTION_FUNC_DISP_DBI),y)
+ifneq ($(CONFIG_SOLUTION_FUNC_DISP_DBI)_$(CONFIG_SOLUTION_FUNC_DISP_RGB),n_n)
 	CONFIG_BSP_LCD =y
 endif

@@ -121,12 +121,12 @@ static void *gatt_buf_add(const void *data, size_t len)
 	return ptr;
 }
 
-static void *gatt_buf_reserve(size_t len)
+static void __attribute__((unused)) *gatt_buf_reserve(size_t len)
 {
 	return gatt_buf_add(NULL, len);
 }
 
-static void gatt_buf_clear(void)
+static void __attribute__((unused)) gatt_buf_clear(void)
 {
 	(void)memset(&gatt_buf, 0, sizeof(gatt_buf));
 }
@@ -211,6 +211,7 @@ static struct bt_gatt_attr *add_ccc(const struct bt_gatt_attr *attr)
 	struct bt_gatt_attr *attr_desc;
 	struct bt_gatt_chrc *chrc = attr->user_data;
 	struct gatt_value *value = NEXT_DB_ATTR(attr)->user_data;
+	(void)value;
 	struct _bt_gatt_ccc *ccc_ptr;
 	/* Check characteristic properties */
 	if (!(chrc->properties &(BT_GATT_CHRC_NOTIFY | BT_GATT_CHRC_INDICATE))) {

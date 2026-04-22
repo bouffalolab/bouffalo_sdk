@@ -66,6 +66,11 @@
 uint32_t g_dbi_disp_fps = 0;
 #endif
 
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DISP_RGB)
+#include "rgb_disp.h"
+uint32_t g_rgb_disp_fps = 0;
+#endif
+
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_MJPEG_ENC)
 #include "mjpeg_enc.h"
 uint32_t g_mjpeg_enc_fps = 0;
@@ -93,6 +98,9 @@ uint32_t g_uvc_fps = 0;
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS) || IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
 #include "jpeg_sd.h"
 #include "avi_jpeg_sd.h"
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+uint32_t g_avi_sd_fps = 0;
+#endif
 #endif
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_HIBOOSTER_TX)
@@ -117,8 +125,15 @@ int solution_fps_str_get(char *str_buff_total, uint32_t buff_size)
 
     str_total_size = snprintf(str_buff_total, buff_size, "FPS:");
 
-#if (LCD_INFO_DISP_ENABLE)
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DISP_DBI)
     str_size = snprintf(str_buff, sizeof(str_buff), " lcd:%2d,", g_dbi_disp_fps);
+    if (str_size + str_total_size >= buff_size) {
+        return -1;
+    }
+    strcat(str_buff_total, str_buff);
+    str_total_size += str_size;
+#elif IS_ENABLED(CONFIG_SOLUTION_FUNC_DISP_RGB)
+    str_size = snprintf(str_buff, sizeof(str_buff), " lcd:%2d,", g_rgb_disp_fps);
     if (str_size + str_total_size >= buff_size) {
         return -1;
     }
@@ -164,6 +179,15 @@ int solution_fps_str_get(char *str_buff_total, uint32_t buff_size)
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_YUYV) || IS_ENABLED(CONFIG_SOLUTION_FUNC_UVC_JPEG)
     str_size = snprintf(str_buff, sizeof(str_buff), " uvc:%2d,", g_uvc_fps);
+    if (str_size + str_total_size >= buff_size) {
+        return -1;
+    }
+    strcat(str_buff_total, str_buff);
+    str_total_size += str_size;
+#endif
+
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+    str_size = snprintf(str_buff, sizeof(str_buff), " avi_sd:%2d,", g_avi_sd_fps);
     if (str_size + str_total_size >= buff_size) {
         return -1;
     }
@@ -223,6 +247,12 @@ static void fps_printf_task(void *pvParameters)
         dbi_disp_cnt_old = g_dbi_disp_total_frame_cnt;
 #endif
 
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DISP_RGB)
+        static uint32_t rgb_disp_cnt_old = 0;
+        g_rgb_disp_fps = (g_rgb_disp_total_frame_cnt - rgb_disp_cnt_old) * 1000 / diff_ms;
+        rgb_disp_cnt_old = g_rgb_disp_total_frame_cnt;
+#endif
+
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_DVP)
         static uint32_t dvp_cnt_old = 0;
         g_dvp_fps = (g_dvp_total_frame_cnt - dvp_cnt_old) * 1000 / diff_ms;
@@ -252,6 +282,12 @@ static void fps_printf_task(void *pvParameters)
         static uint32_t uvc_cnt_old = 0;
         g_uvc_fps = (g_uvc_total_frame_cnt - uvc_cnt_old) * 1000 / diff_ms;
         uvc_cnt_old = g_uvc_total_frame_cnt;
+#endif
+
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS)
+        static uint32_t avi_sd_cnt_old = 0;
+        g_avi_sd_fps = (g_avi_sd_total_frame_cnt - avi_sd_cnt_old) * 1000 / diff_ms;
+        avi_sd_cnt_old = g_avi_sd_total_frame_cnt;
 #endif
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_HIBOOSTER_TX)
@@ -326,6 +362,10 @@ void solution_init(void)
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_DISP_DBI)
     dbi_disp_task_init();
+#endif
+
+#if IS_ENABLED(CONFIG_SOLUTION_FUNC_DISP_RGB)
+    rgb_disp_task_init();
 #endif
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_MJPEG_ENC)

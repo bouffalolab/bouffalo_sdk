@@ -1791,6 +1791,7 @@ int ble_stack_enc_key_size_get(int16_t conn_handle)
 int ble_stack_setting_load()
 {
 #ifdef CONFIG_BT_SETTINGS
+    extern int settings_load(void);
     return  settings_load();
 #else
     return 0;

@@ -519,9 +519,11 @@ static sys_sem_t *sys_thread_sem_alloc(void)
 	LWIP_ASSERT("failed to allocate memory for TLS semaphore", sem != NULL);
 	err = sys_sem_new(sem, 0);
 	LWIP_ASSERT("failed to initialise TLS semaphore", err == ERR_OK);
+	(void)err;
 	ret = vTaskSetThreadLocalStoragePointerAndDelCallback(NULL, PTHREAD_TLS_INDEX, (void *)sem,
 														  pthread_local_storage_thread_deleted_callback);
 	LWIP_ASSERT("failed to initialise TLS semaphore storage", ret == pdTRUE);
+	(void)ret;
 
 #if SYS_STATS
 	++lwip_stats.sys.sem.used;

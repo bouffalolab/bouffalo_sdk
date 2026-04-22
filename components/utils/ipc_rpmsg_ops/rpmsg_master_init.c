@@ -7,8 +7,8 @@
 #include <rpmsg_service.h>
 #include "flash_ops_rpmsg/flash_ops_rpmsg.h"
 
-#include "log.h"
 #define DBG_TAG "RPMSG_MASTER"
+#include "log.h"
 
 SemaphoreHandle_t g_rpmsg_mutex;
 TaskHandle_t g_rpmsg_task_handle = NULL;

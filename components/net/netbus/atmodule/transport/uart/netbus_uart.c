@@ -80,7 +80,7 @@ ATTR_TCM_SECTION void uart_isr(int irq, void *arg)
 
 int netbus_uart_init(netbus_uart_ctx_t *pctx, const netbus_uart_config_t *hwcfg, uint32_t txbuf_size, uint32_t rxbuf_size)
 {
-	int i, ret;
+	int i __attribute__((unused)), ret __attribute__((unused));
 
 	struct bflb_device_s *pdev = bflb_device_get_by_name(hwcfg->name);
 

@@ -428,7 +428,7 @@ const spd2010_dbi_init_cmd_t spd2010_dbi_init_cmds[] = {
 #endif
 
     /*Color reversal*/
-#if SPD2010_DBI_COLOR_REVERSAL
+#if defined(SPD2010_DBI_COLOR_REVERSAL) && SPD2010_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 }, /*Display inversion on*/
 #else
     { 0x20, NULL, 0 }, /* Display inversion off */
@@ -518,7 +518,7 @@ int spd2010_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if SPD2010_DBI_DIR_MIRROR
+#if defined(SPD2010_DBI_DIR_MIRROR) && SPD2010_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -529,7 +529,7 @@ int spd2010_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if SPD2010_DBI_COLOR_ORDER
+#if defined(SPD2010_DBI_COLOR_ORDER) && SPD2010_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -552,11 +552,11 @@ int spd2010_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void spd2010_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if SPD2010_DBI_OFFSET_X
+#if defined(SPD2010_DBI_OFFSET_X) && SPD2010_DBI_OFFSET_X
     x1 += SPD2010_DBI_OFFSET_X;
     x2 += SPD2010_DBI_OFFSET_X;
 #endif
-#if SPD2010_DBI_OFFSET_Y
+#if defined(SPD2010_DBI_OFFSET_Y) && SPD2010_DBI_OFFSET_Y
     y1 += SPD2010_DBI_OFFSET_Y;
     y2 += SPD2010_DBI_OFFSET_Y;
 #endif

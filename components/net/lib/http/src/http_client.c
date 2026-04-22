@@ -536,7 +536,7 @@ static int http_wait_data(int sock, struct http_request *req, const k_timepoint_
 
                 (void)http_parser_execute(
                     &req->internal.parser, &req->internal.parser_settings,
-                    req->internal.response.recv_buf + offset, received);
+                    (const char *)(req->internal.response.recv_buf + offset), received);
             }
 
             total_received += received;

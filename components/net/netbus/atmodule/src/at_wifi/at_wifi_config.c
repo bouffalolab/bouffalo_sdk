@@ -18,6 +18,7 @@
 #include "at_config.h"
 #include "at_wifi_config.h"
 #include "at_wifi_main.h"
+#include "at_port.h"
 #include "at_pal.h"
 #include "at_wifi_mgmr.h"
 

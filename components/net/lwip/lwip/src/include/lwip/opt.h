@@ -3572,6 +3572,10 @@
 #define ARP_TIMER_PRECISE_NEEDED        0
 #endif
 
+#if !defined IPV6_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
+#define IPV6_TIMER_PRECISE_NEEDED       0
+#endif
+
 #if !defined IP4_FRAG_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
 #define IP4_FRAG_TIMER_PRECISE_NEEDED   0
 #endif

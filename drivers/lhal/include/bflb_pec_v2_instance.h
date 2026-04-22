@@ -250,6 +250,62 @@ int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi);
 void bflb_pec_dpi_deinit(struct bflb_device_s *dev);
 
 /******************************************************************
+sRGB
+******************************************************************/
+#define PEC_SRGB_FORMAT_RGB565  (0)
+#define PEC_SRGB_FORMAT_BGR565  (1)
+#define PEC_SRGB_FORMAT_RGB888  (2)
+#define PEC_SRGB_FORMAT_BGR888  (3)
+#define PEC_SRGB_FORMAT_NRGB888 (4)
+#define PEC_SRGB_FORMAT_NBGR888 (5)
+#define PEC_SRGB_FORMAT_MAX     (6)
+
+#define PEC_SRGB_CLOCK_80MHZ (0)
+#define PEC_SRGB_CLOCK_53MHZ (1)
+#define PEC_SRGB_CLOCK_40MHZ (2)
+#define PEC_SRGB_CLOCK_32MHZ (3)
+#define PEC_SRGB_CLOCK_27MHZ (4)
+#define PEC_SRGB_CLOCK_23MHZ (5)
+#define PEC_SRGB_CLOCK_20MHZ (6)
+#define PEC_SRGB_CLOCK_18MHZ (7)
+#define PEC_SRGB_CLOCK_16MHZ (8)
+#define PEC_SRGB_CLOCK_15MHZ (9)
+#define PEC_SRGB_CLOCK_12MHZ (10)
+#define PEC_SRGB_CLOCK_10MHZ (11)
+#define PEC_SRGB_CLOCK_8MHZ  (12)
+#define PEC_SRGB_CLOCK_5MHZ  (13)
+#define PEC_SRGB_CLOCK_4MHZ  (14)
+#define PEC_SRGB_CLOCK_2MHZ  (15)
+
+struct bflb_pec_srgb_s {
+    uint32_t mem;           /*!< memory address of first instruction */
+    uint8_t format;         /*!< sRGB data format, PEC_SRGB_FORMAT_xxx */
+    uint8_t clk_freq;       /*!< sRGB clock frequency, PEC_SRGB_CLOCK_xxx */
+    uint8_t dma_enable;     /*!< enable or disable dma */
+    uint8_t fifo_threshold; /*!< tx fifo threshold */
+    uint8_t pin_data_start; /*!< sRGB data pin start index, data pin number must be continuous */
+    uint8_t pin_clk;        /*!< sRGB clock pin */
+    uint8_t pin_vsync;      /*!< sRGB vsync pin */
+    uint8_t pin_hsync;      /*!< sRGB hsync pin */
+    uint8_t pin_de;         /*!< sRGB de pin */
+    uint8_t level_clk;      /*!< sRGB clock level, 0: sample on falling edge, others: sample on rising edge */
+    uint8_t level_vsync;    /*!< sRGB vsync level in vertical synchronization segment */
+    uint8_t level_hsync;    /*!< sRGB hsync level in horizontal synchronization segment */
+    uint8_t level_de;       /*!< sRGB de level when data is enabled */
+    uint16_t hsync;         /*!< sRGB clock count in horizontal synchronization segment, max is 16383 */
+    uint16_t hbp;           /*!< sRGB clock count in horizontal back porch segment, max is 16383 */
+    uint16_t hfp;           /*!< sRGB clock count in horizontal front porch segment, max is 16383 */
+    uint16_t vsync;         /*!< sRGB row count in vertical synchronization segment, max is 65535 */
+    uint16_t vbp;           /*!< sRGB row count in vertical back porch segment, max is 65535 */
+    uint16_t vfp;           /*!< sRGB row count in vertical front porch segment, max is 65535 */
+    uint16_t width;         /*!< sRGB actual picture width, max is 16383 */
+    uint16_t height;        /*!< sRGB actual picture height, max is 65535 */
+};
+
+int bflb_pec_srgb_init(struct bflb_device_s *dev, struct bflb_pec_srgb_s *srgb);
+void bflb_pec_srgb_deinit(struct bflb_device_s *dev);
+
+/******************************************************************
 QSPI_CAM
 ******************************************************************/
 struct bflb_pec_qspi_cam_s {

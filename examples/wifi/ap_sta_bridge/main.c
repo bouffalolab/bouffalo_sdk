@@ -43,6 +43,9 @@
 #include "board.h"
 #include "shell.h"
 
+#include "mm.h"
+#include "netifd_nano.h"
+
 #define DBG_TAG "MAIN"
 #include "log.h"
 

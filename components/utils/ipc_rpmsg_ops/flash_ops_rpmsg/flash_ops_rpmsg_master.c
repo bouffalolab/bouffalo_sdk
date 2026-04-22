@@ -7,8 +7,8 @@
 #include <rpmsg_service.h>
 #include "flash_ops_rpmsg.h"
 
-#include "log.h"
 #define DBG_TAG "RPMSG_MASTER"
+#include "log.h"
 
 /****************************************************************************
  * Global Variables (defined in rpmsg_master_init.c, declared extern here)

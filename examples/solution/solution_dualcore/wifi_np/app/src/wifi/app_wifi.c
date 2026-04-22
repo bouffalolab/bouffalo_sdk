@@ -4,7 +4,7 @@
  *   Date        Author       Notes
  *   2019-03-25  MSP          the first version
  */
-#if CONFIG_WIFI_ENABLE
+#if defined(CONFIG_WIFI_ENABLE) && CONFIG_WIFI_ENABLE
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"

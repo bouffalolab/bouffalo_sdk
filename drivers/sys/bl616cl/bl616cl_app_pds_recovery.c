@@ -1,5 +1,6 @@
 #include "bl_lp_internal.h"
 #include "bl616cl_ext_dcdc.h"
+#include "bl616cl_pm.h"
 #include "bflb_clock.h"
 #include "bflb_irq.h"
 #include "bflb_uart.h"
@@ -38,11 +39,13 @@ typedef struct {
 } bl_lp_uart_snapshot_t;
 
 static ATTR_NOCACHE_RAM_SECTION uint32_t pds_resume_gpio_cfg[GPIO_PIN_MAX] = { 0 };
+#ifndef CONFIG_CONSOLE_WO
 static ATTR_NOCACHE_RAM_SECTION bl_lp_uart_snapshot_t pds_resume_uart_cfg = {
     .baudrate = 2000000,
     .cfg1 = 0,
     .cfg2 = 0,
 };
+#endif
 static ATTR_NOCACHE_RAM_SECTION bl_lp_peripheral_clock_snapshot_t pds_resume_peripheral_clock_cfg = { 0 };
 
 static struct bflb_device_s *gpio_lp = NULL;
@@ -162,6 +165,7 @@ static void ATTR_TCM_SECTION bl_lp_peripheral_clock_init(void)
 static void bl_lp_console_init(void)
 {
 #ifdef CONFIG_CONSOLE_WO
+    extern void bflb_wo_set_console(struct bflb_device_s *dev);
     struct bflb_device_s *wo = bflb_device_get_by_name("wo");
     bflb_wo_uart_init(wo, 2000000, GPIO_PIN_34);
     bflb_wo_set_console(wo);

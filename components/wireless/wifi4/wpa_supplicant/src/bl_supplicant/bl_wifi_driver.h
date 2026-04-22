@@ -18,7 +18,7 @@
 #include <lwip/pbuf.h>
 #include <supplicant_api.h>
 
-#if CONFIG_NEWLIB_NANO_FORMAT
+#if defined(CONFIG_NEWLIB_NANO_FORMAT)
 #define TASK_STACK_SIZE_ADD 0
 #else
 #define TASK_STACK_SIZE_ADD 512

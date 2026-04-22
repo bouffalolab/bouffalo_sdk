@@ -10,7 +10,7 @@ extern "C" {
 
 #define VERSION_OT_SRC_MAJOR 1
 #define VERSION_OT_SRC_MINOR 7
-#define VERSION_OT_SRC_PATCH 3
+#define VERSION_OT_SRC_PATCH 4
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 

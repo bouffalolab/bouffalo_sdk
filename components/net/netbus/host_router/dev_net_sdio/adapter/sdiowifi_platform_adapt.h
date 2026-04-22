@@ -58,13 +58,14 @@ int sdiowifi_streambuf_send(sdiowifi_streambuf_handle_t handle, const void *data
 int sdiowifi_streambuf_receive(sdiowifi_streambuf_handle_t handle, void *data, size_t len, size_t timeout_ms);
 int sdiowifi_streambuf_spaces_available(sdiowifi_streambuf_handle_t handle);
  
-#ifdef BL_IOT_SDK 
+#ifdef BL_IOT_SDK
 #include <hal_boot2.h>
-#include <bl_mtd.h> 
+#include <bl_mtd.h>
 #include <hal_sys.h>
 #else
 #include <bflb_boot2.h>
 #include <bflb_mtd.h>
+#include <bl_sys.h>
 
 #define HALPartition_Entry_Config bflb_partition_config_t
 #define hal_reboot bl_sys_reset_por

@@ -70,7 +70,7 @@ typedef struct {
  * These functions allow SLAVE to call MASTER's flash operations via RPMsg
  ****************************************************************************/
 int bflb_flash_erase_rpmsg(uint32_t addr, uint32_t len);
-int bflb_flash_write_rpmsg(uint32_t addr, const uint8_t *data, uint32_t len);
+int bflb_flash_write_rpmsg(uint32_t addr, uint8_t *data, uint32_t len);
 int bflb_flash_read_rpmsg(uint32_t addr, uint8_t *data, uint32_t len);
 int bflb_reboot_rpmsg(void);
 
@@ -132,7 +132,7 @@ int bflb_flash_erase_rpmsg(uint32_t addr, uint32_t len);
  * @param len Length to write in bytes
  * @return 0 on success, negative error code on failure
  */
-int bflb_flash_write_rpmsg(uint32_t addr, const uint8_t *data, uint32_t len);
+int bflb_flash_write_rpmsg(uint32_t addr, uint8_t *data, uint32_t len);
 
 /**
  * @brief Reboot system via RPMsg (SLAVE calls MASTER to reboot)

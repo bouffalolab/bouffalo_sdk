@@ -48,7 +48,7 @@ struct xplayer_ops  {
     int   (*set_vol)                (xplayer_t *xplayer, uint8_t vol);
     int   (*set_mute)               (xplayer_t *xplayer, uint8_t mute);
 
-#if !CONFIG_AV_AUDIO_ONLY_SUPPORT
+#if !defined(CONFIG_AV_AUDIO_ONLY_SUPPORT) || !CONFIG_AV_AUDIO_ONLY_SUPPORT
     int   (*switch_audio_track)     (xplayer_t *xplayer, uint8_t idx);
     int   (*switch_subtitle_track)  (xplayer_t *xplayer, uint8_t idx);
     int   (*set_subtitle_url)       (xplayer_t *xplayer, const char *url);

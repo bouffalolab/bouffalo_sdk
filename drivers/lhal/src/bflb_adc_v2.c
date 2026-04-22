@@ -7,14 +7,16 @@
 #define ADC_MIX_BASE   ((uint32_t)0x20001000)
 #define ADC_HBN_BASE   ((uint32_t)0x2000f000)
 
-static float coe;
-static int32_t offset;
-static uint32_t tsen_offset;
-static int32_t adc_os1;
-static int32_t adc_dth;
+static volatile float coe;
+static volatile int32_t offset;
+static volatile uint32_t tsen_offset;
+static volatile int32_t adc_os1;
+static volatile int32_t adc_dth;
+static volatile int adc_cali_complete = 0;
 
 static int32_t bflb_adc_get_internal_gnd_data(struct bflb_device_s *dev)
 {
+#if 0
     struct bflb_adc_channel_s chan;
     uint32_t raw_data;
     uint32_t sum;
@@ -57,10 +59,14 @@ static int32_t bflb_adc_get_internal_gnd_data(struct bflb_device_s *dev)
         }
     }
     return data_gnd_final;
+#else
+    return 0;
+#endif
 }
 
 static int32_t bflb_adc_get_internal_20mv_data(struct bflb_device_s *dev)
 {
+#if 0
     struct bflb_adc_channel_s chan;
     uint32_t regval;
     uint32_t raw_data;
@@ -122,6 +128,9 @@ static int32_t bflb_adc_get_internal_20mv_data(struct bflb_device_s *dev)
         data_20mv_final = (int32_t)(((int32_t)raw_data - offset * 2) / coe);
     }
     return data_20mv_final;
+#else
+    return 0;
+#endif
 }
 
 void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
@@ -210,6 +219,55 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= (32 << GLB_GPADC1_CHL_SEL_NUM_SHIFT);
     putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
 
+    regval = getreg32(reg_base + GLB_GPADC1_REG_STATUS_OFFSET);
+    regval |= (1U << 18);
+    putreg32(regval, reg_base + GLB_GPADC1_REG_STATUS_OFFSET);
+
+    /* only calibrate one time after power on, do not calibrate after reinit even wakeup from pds */
+    if (adc_cali_complete == 0) {
+            offset = bflb_efuse_get_adc_offset_trim(dev);
+            coe = bflb_efuse_get_adc_gain_trim(dev);
+            tsen_offset = bflb_efuse_get_adc_tsen_trim();
+            adc_os1 = bflb_adc_get_internal_gnd_data(dev);
+            adc_dth = bflb_adc_get_internal_20mv_data(dev);
+            adc_cali_complete = 1;
+    }
+
+    regval = getreg32(reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
+    regval &= ~GLB_GPADC1_RES_SEL_MASK;
+    regval |= (config->resolution << GLB_GPADC1_RES_SEL_SHIFT); /* resolution */
+    putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
+
+    regval = getreg32(reg_base + GLB_GPADC1_REG_CONFIG1_OFFSET);
+    regval &= ~GLB_GPADC1_CHOP_MODE_MASK;
+    if (config->resolution == ADC_RESOLUTION_12B) {
+        regval |= (1 << GLB_GPADC1_CHOP_MODE_SHIFT); /* 12-bit mode with PGA uses chopper mode1 */
+    } else {
+        regval |= (2 << GLB_GPADC1_CHOP_MODE_SHIFT); /* 14/16-bit mode with PGA uses chopper mode2 */
+    }
+    putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG1_OFFSET);
+
+    regval = getreg32(reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
+    if (config->scan_conv_mode && config->continuous_conv_mode) {
+        regval |= GLB_GPADC1_SCN_LOOP_EN;
+        regval |= GLB_GPADC1_SCN_EN;
+        regval &= ~GLB_GPADC1_CONT_CONV_EN;
+    } else if (config->scan_conv_mode && !(config->continuous_conv_mode)) {
+        regval &= ~GLB_GPADC1_SCN_LOOP_EN;
+        regval |= GLB_GPADC1_SCN_EN;
+        regval &= ~GLB_GPADC1_CONT_CONV_EN;
+    } else if (!(config->scan_conv_mode) && config->continuous_conv_mode) {
+        regval &= ~GLB_GPADC1_SCN_LOOP_EN;
+        regval &= ~GLB_GPADC1_SCN_EN;
+        regval |= GLB_GPADC1_CONT_CONV_EN;
+    } else if (!(config->scan_conv_mode) && !(config->continuous_conv_mode)) {
+        regval &= ~GLB_GPADC1_SCN_LOOP_EN;
+        regval &= ~GLB_GPADC1_SCN_EN;
+        regval &= ~GLB_GPADC1_CONT_CONV_EN;
+    }
+    putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
+    bflb_adc_clear_fifo(dev);
+
     /* disable regular int and clear status */
     regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
     regval |= (GPIP_GPADC_FIFO_UNDERRUN_MASK | GPIP_GPADC_FIFO_OVERRUN_MASK | GPIP_GPADC_RDY_MASK |
@@ -243,52 +301,6 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
                 GPIP_GPADC_RDY_CLR |
                 GPIP_GPADC_FIFO_CLR);
     putreg32(regval, ADC_GPIP2_BASE + GPIP_GPADC_CONFIG_OFFSET);
-
-    regval = getreg32(reg_base + GLB_GPADC1_REG_STATUS_OFFSET);
-    regval |= (1U << 18);
-    putreg32(regval, reg_base + GLB_GPADC1_REG_STATUS_OFFSET);
-
-    offset = bflb_efuse_get_adc_offset_trim(dev);
-    coe = bflb_efuse_get_adc_gain_trim(dev);
-    tsen_offset = bflb_efuse_get_adc_tsen_trim();
-    adc_os1 = bflb_adc_get_internal_gnd_data(dev);
-
-    regval = getreg32(reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
-    regval &= ~GLB_GPADC1_RES_SEL_MASK;
-    regval |= (config->resolution << GLB_GPADC1_RES_SEL_SHIFT);    /* resolution */
-    putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
-
-    regval = getreg32(reg_base + GLB_GPADC1_REG_CONFIG1_OFFSET);
-    regval &= ~GLB_GPADC1_CHOP_MODE_MASK;
-    if (config->resolution == ADC_RESOLUTION_12B) {
-        regval |= (1 << GLB_GPADC1_CHOP_MODE_SHIFT); /* 12-bit mode with PGA uses chopper mode1 */
-    } else {
-        regval |= (2 << GLB_GPADC1_CHOP_MODE_SHIFT); /* 14/16-bit mode with PGA uses chopper mode2 */
-    }
-    putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG1_OFFSET);
-
-    adc_dth = bflb_adc_get_internal_20mv_data(dev);
-
-    regval = getreg32(reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
-    if (config->scan_conv_mode && config->continuous_conv_mode) {
-        regval |= GLB_GPADC1_SCN_LOOP_EN;
-        regval |= GLB_GPADC1_SCN_EN;
-        regval &= ~GLB_GPADC1_CONT_CONV_EN;
-    } else if (config->scan_conv_mode && !(config->continuous_conv_mode)) {
-        regval &= ~GLB_GPADC1_SCN_LOOP_EN;
-        regval |= GLB_GPADC1_SCN_EN;
-        regval &= ~GLB_GPADC1_CONT_CONV_EN;
-    } else if (!(config->scan_conv_mode) && config->continuous_conv_mode) {
-        regval &= ~GLB_GPADC1_SCN_LOOP_EN;
-        regval &= ~GLB_GPADC1_SCN_EN;
-        regval |= GLB_GPADC1_CONT_CONV_EN;
-    } else if (!(config->scan_conv_mode) && !(config->continuous_conv_mode)) {
-        regval &= ~GLB_GPADC1_SCN_LOOP_EN;
-        regval &= ~GLB_GPADC1_SCN_EN;
-        regval &= ~GLB_GPADC1_CONT_CONV_EN;
-    }
-    putreg32(regval, reg_base + GLB_GPADC1_REG_CONFIG2_OFFSET);
-
 #endif
 }
 

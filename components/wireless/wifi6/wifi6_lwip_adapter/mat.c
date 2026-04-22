@@ -252,7 +252,7 @@ static int mat_arp_handle_egress(struct netif *netif, struct pbuf *p,
     eth_hdr = (struct eth_hdr *)clone->payload;
     arp_hdr = (struct etharp_hdr *)((char *)eth_hdr + SIZEOF_ETH_HDR);
 
-    IP_SET_TYPE(&ipaddr, IPADDR_TYPE_V4);
+    IP_SET_TYPE_VAL(ipaddr, IPADDR_TYPE_V4);
     ip4addr = ip_2_ip4(&ipaddr);
     memcpy(&sip, &arp_hdr->sipaddr, sizeof(sip));
     ip4_addr_set_u32(ip4addr, sip);
@@ -614,8 +614,10 @@ static int mat_ipv6_handle_egress(struct netif *netif, struct pbuf *p,
         return MAT_ERR_DATA;
     }
 
-    if (ipv6_ndp_check(p))
-        return mat_icmpv6_handle_egress(netif, p);
+    if (ipv6_ndp_check(p)) {
+        *out = mat_icmpv6_handle_egress(netif, p);
+        return (*out != NULL) ? MAT_ERR_OK : MAT_ERR_MEM;
+    }
 
 #ifdef CONFIG_MAT_FULL_COPY
     struct pbuf *clone;
@@ -735,7 +737,7 @@ static int mat_arp_handle_ingress(struct netif *netif, struct pbuf *p)
     eth_hdr = (struct eth_hdr *)p->payload;
     arp_hdr = (struct etharp_hdr *)((char *)eth_hdr + SIZEOF_ETH_HDR);
     memcpy(&destip, &arp_hdr->dipaddr, sizeof(destip));
-    IP_SET_TYPE(&ipaddr, IPADDR_TYPE_V4);
+    IP_SET_TYPE_VAL(ipaddr, IPADDR_TYPE_V4);
     ip4addr = ip_2_ip4(&ipaddr);
     ip4_addr_set_u32(ip4addr, destip);
     tuple = mat_tuple_find_by_ip(&ipaddr);

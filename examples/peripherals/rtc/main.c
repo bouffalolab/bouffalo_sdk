@@ -1,5 +1,6 @@
 #include "bflb_mtimer.h"
 #include "bflb_rtc.h"
+#include "bflb_clock.h"
 #include "board.h"
 
 #if defined (BL616CL) || defined (BL618DG)

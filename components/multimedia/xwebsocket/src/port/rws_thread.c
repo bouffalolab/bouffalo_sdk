@@ -87,11 +87,10 @@ void rws_thread_sleep(const unsigned int millisec)
 rws_mutex rws_mutex_create_recursive(void)
 {
     pthread_mutex_t * mutex = (pthread_mutex_t *)rws_malloc_zero(sizeof(pthread_mutex_t));
-    int res = -1;
     pthread_mutexattr_t attr;
     if (pthread_mutexattr_init(&attr) == 0) {
         if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) == 0) {
-            res = pthread_mutex_init(mutex, &attr);
+            pthread_mutex_init(mutex, &attr);
         }
         pthread_mutexattr_destroy(&attr);
     }

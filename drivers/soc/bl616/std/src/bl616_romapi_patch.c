@@ -1894,6 +1894,27 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_491P52M(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  Fine tuning audio pll sdmin
+ *
+ * @param  sdmin: sdmin value, 'sdmin = vco_frequency(MHz) * 204.8' when XTAL=40MHz
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_CLOCK_SECTION GLB_AUDIO_PLL_fine_tuning_sdmin(uint32_t sdmin)
+{
+    uint32_t REG_PLL_BASE_ADDRESS = 0;
+    uint32_t tmpVal = 0;
+
+    REG_PLL_BASE_ADDRESS = CCI_BASE + CCI_AUDIO_PLL_CFG0_OFFSET;
+
+    /* cfg6:Set aupll_sdm_bypass,aupll_sdmin */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 6);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_AUPLL_SDMIN, sdmin);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 6, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  chip clock out0 select
  *
  * @param  clkOutType: chip clock out0 output type

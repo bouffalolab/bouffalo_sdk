@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "at_wifi_main.h"
+extern int at_wifi_main_init(void);
 #include <FreeRTOS.h>
 #include <timers.h>
 #include "wl80211.h"

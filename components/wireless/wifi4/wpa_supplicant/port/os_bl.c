@@ -24,6 +24,7 @@
 
 #include "os.h"
 #include <stdlib.h>
+#include "platform_al.h"
 /* #include <time.h> */
 /* #include <unistd.h> */
 /* #include <sys/time.h> */
@@ -69,7 +70,7 @@ void *wpa_supplicant_malloc(size_t size)
 
 void *wpa_supplicant_realloc(void *ptr, size_t size)
 {
-    return pvPortRealloc(ptr, size);
+    return realloc(ptr, size);
 }
 
 void *wpa_supplicant_zalloc(size_t nmemb, size_t size)

@@ -8,7 +8,7 @@
 #define CLOCK_SOURCE_PASSIVE 2 // External passive crystal
 #define CLOCK_SOURCE_ACTIVE  3 // External active crystal
 
-#if CONFIG_CLOCK_SOURCE_EF_PARAM
+#if defined(CONFIG_CLOCK_SOURCE_EF_PARAM) && CONFIG_CLOCK_SOURCE_EF_PARAM
 // Read clock source from flash
 int clock_source_read(uint8_t *clock_source);
 

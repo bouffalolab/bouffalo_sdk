@@ -2,7 +2,8 @@
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION lp_fw_bcn_loss_level_t bcn_loss_cfg_buff[20];
 
-void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num, uint16_t loop_start, uint16_t loss_max)
+void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num, uint16_t loop_start,
+                           uint16_t loss_max)
 {
     if (cfg_table == NULL || table_num == 0) {
         return;
@@ -12,7 +13,7 @@ void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num
         loop_start = table_num;
     }
 
-    csi_dcache_clean_range(cfg_table, sizeof(lp_fw_bcn_loss_level_t) * table_num);
+    bflb_l1c_dcache_clean_range(cfg_table, sizeof(lp_fw_bcn_loss_level_t) * table_num);
     cfg_table = (void *)(((uint32_t)cfg_table) & 0x2fffffff);
 
     iot2lp_para->bcn_loss_info->continuous_loss_cnt_max = loss_max;

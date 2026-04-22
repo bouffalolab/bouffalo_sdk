@@ -44,9 +44,13 @@
 
 #include "bflb_blesync_app.h"
 
+#include "fhost_api.h"
+#include "wifi_mgmr.h"
+#include "async_event.h"
+#include "mm.h"
+
 #define DBG_TAG "MAIN"
 #include "log.h"
-#include "async_event.h"
 
 struct bflb_device_s *gpio;
 

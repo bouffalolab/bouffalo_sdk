@@ -35,8 +35,8 @@ char *up_buf = NULL;
 #else
 static uint8_t g_dn_buf[NXBD_ITEMS * NXBD_MTU] __attribute__((section(".ram_lp")));
 static uint8_t g_up_buf[NXBD_ITEMS * NXBD_MTU] __attribute__((section(".ram_lp")));
-char *dn_buf = g_dn_buf;
-char *up_buf = g_up_buf;
+char *dn_buf = (char *)g_dn_buf;
+char *up_buf = (char *)g_up_buf;
 #endif
 
 extern struct bflb_device_s *sgpio;
@@ -57,8 +57,9 @@ extern struct bflb_device_s *dma0_ch0;
 extern struct bflb_device_s *dma0_ch1;
 
 // Handles timeout if SPI fails to reach complete state within 1 second of start
-void spi_start_timeout_handler(void *arg)
+void spi_start_timeout_handler(TimerHandle_t xTimer)
 {
+    (void)xTimer;
     NX_LOGW("wait timeout after start.\r\n");
 
     return;//todo: fixme
@@ -188,7 +189,6 @@ void __trans_start()
 {
     uint8_t      *send = NULL;
     uint8_t      *recv = NULL;
-    int res;
 #if GPIO_TIME_ENABLE
     uint64_t  func_usetime_us;
 #endif
@@ -206,14 +206,14 @@ void __trans_start()
         g_nxspi.dnmsg = NULL;
         recv = NULL;
     } else {
-        recv = g_nxspi.dnmsg->payload;
+        recv = (uint8_t *)g_nxspi.dnmsg->payload;
     }
 
     /* get upvq -> g */
     if (xQueueReceive(g_nxspi.upvq, &g_nxspi.upmsg, 0) == pdPASS) {
         up_header.len = g_nxspi.upmsg->len;
         up_header.type = g_nxspi.upmsg->type;
-        send = g_nxspi.upmsg->payload;
+        send = (uint8_t *)g_nxspi.upmsg->payload;
     } else {
         up_header.len = 0;
         g_nxspi.upmsg = NULL;
@@ -248,7 +248,7 @@ void __trans_start()
             up_header.flags, up_header.type, up_header.rsvd);
 #endif
 
-    nxspi_hwspi_ts(&up_header, &dn_header, sizeof(dn_header),
+    nxspi_hwspi_ts((uint8_t *)&up_header, (uint8_t *)&dn_header, sizeof(dn_header),
                 send, recv, NXBD_MTU,
                 __spihdreceived_cb_isr, NULL);
 #if 0
@@ -296,7 +296,7 @@ void __trans_bdcomplete()
                 up_header.rx_stall,
                 (*(volatile uint32_t *)0x2000C204),
                 g_nxspi.dnmsg->payload);
-        if ((g_nxspi.dnmsg->len > 0) && (0 == up_header.rx_stall) && ((*(volatile uint32_t *)0x2000C204) != g_nxspi.dnmsg->payload)) {
+        if ((g_nxspi.dnmsg->len > 0) && (0 == up_header.rx_stall) && ((*(volatile uint32_t *)0x2000C204) != (uintptr_t)g_nxspi.dnmsg->payload)) {
             if (g_nxspi.dnmsg->type==NXSPI_TYPE_AT) {
                 q = g_nxspi.dnat;
             } else if (g_nxspi.dnmsg->type==NXSPI_TYPE_NET) {
@@ -339,7 +339,7 @@ int _bdreceived(void)
         return 0;
     }
 
-    if ((*(volatile uint32_t *)0x2000C204) == (g_nxspi.dnmsg->payload+len)) {
+    if ((*(volatile uint32_t *)0x2000C204) == (uintptr_t)(g_nxspi.dnmsg->payload+len)) {
         return 1;
     } else {
         NX_LOGD("dn_header.len:%d, up_header.len:%d, len:%ld\r\n", dn_header.len, up_header.len, len);

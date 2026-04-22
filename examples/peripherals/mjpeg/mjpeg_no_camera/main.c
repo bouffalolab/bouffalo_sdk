@@ -40,7 +40,9 @@ void mjpeg_isr(int irq, void *arg)
     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);
     if (intstatus & MJPEG_INTSTS_ONE_FRAME) {
         bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);
-        pic_len = bflb_mjpeg_get_frame_info(mjpeg, &pic_addr);
+        uint8_t *tmp_addr;
+        pic_len = bflb_mjpeg_get_frame_info(mjpeg, &tmp_addr);
+        pic_addr = tmp_addr;
         pic_count = 1;
         bflb_mjpeg_pop_one_frame(mjpeg);
     }
@@ -92,7 +94,7 @@ int main(void)
     }
 
     printf("jpg addr:%08x ,jpg size:%d\r\n", pic_addr, pic_len);
-    bflb_mjpeg_dump_hex(pic_addr, pic_len);
+    bflb_mjpeg_dump_hex((uint8_t *)pic_addr, pic_len);
 
     while (1) {
         bflb_mtimer_delay_ms(2000);

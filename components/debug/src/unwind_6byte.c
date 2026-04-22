@@ -262,6 +262,8 @@ bool find_unwind_entry(uint32_t pc, const segment_desc_t *segments, int num_segm
         uint16_t offset_field = *(uint16_t*)entry_ptr;
         uint16_t frame_size_words = *(uint16_t*)(entry_ptr + 2);
         uint16_t func_size = *(uint16_t*)(entry_ptr + 4);
+        (void) frame_size_words;
+        (void) func_size;
 
         /* Extract offset (clear bit 0) */
         uint16_t mid_offset = offset_field & 0xFFFE;

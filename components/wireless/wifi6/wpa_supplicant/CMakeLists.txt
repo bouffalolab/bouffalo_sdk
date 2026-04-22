@@ -1,5 +1,16 @@
 sdk_generate_library()
 
+# wpa_supplicant is third-party code; suppress warnings that arise from its
+# use of debug macros (no-ops when debug disabled) and optional feature guards.
+sdk_add_private_compile_options(
+    -Wno-error=unused-variable
+    -Wno-error=unused-but-set-variable
+    -Wno-error=unused-function
+    -Wno-error=implicit-function-declaration
+    -Wno-error=pointer-arith
+    -Wno-error=discarded-qualifiers
+)
+
 if(CONFIG_WFA)
 set(MACSW_WFA 1)
 endif()

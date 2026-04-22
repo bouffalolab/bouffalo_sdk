@@ -36,19 +36,19 @@
 #define AT_PORT_DEVICE "/dev/ttyS1"
 #define AT_PORT_PRINTF printf
 
-static int at_serial_fd = -1;
-static int at_serial_baudrate = 115200;
-static uint8_t at_serial_databits = 8;
-static uint8_t at_serial_stopbits = 1;
-static uint8_t at_serial_parity = 0;
-static uint8_t at_serial_flow_control = 0;
+static int __attribute__((unused)) at_serial_fd = -1;
+static int __attribute__((unused)) at_serial_baudrate = 115200;
+static uint8_t __attribute__((unused)) at_serial_databits = 8;
+static uint8_t __attribute__((unused)) at_serial_stopbits = 1;
+static uint8_t __attribute__((unused)) at_serial_parity = 0;
+static uint8_t __attribute__((unused)) at_serial_flow_control = 0;
 
 //extern spisync_t *at_spisync;
 struct bflb_device_s *gpio;
 int at_port_init(void)
 {
     nxspi_init();
-#if NXSPI_NET
+#if defined(NXSPI_NET) && NXSPI_NET
     spinet_init();
 #endif
     return 1;

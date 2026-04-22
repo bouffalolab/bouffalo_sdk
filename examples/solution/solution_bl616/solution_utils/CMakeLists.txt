@@ -67,7 +67,7 @@ if(CONFIG_SOLUTION_FUNC_UAC_IN)
         set(FLAG_UVC_UAC_ADDED 1)
         add_subdirectory(usbh_uvc_uac)
     endif()
-    sdk_library_add_sources(usbh_cb/usbh_uac_port.c)
+    sdk_library_add_sources(usbh_uvc_uac/port_cb/usbh_uac_port.c)
 endif()
 
 # USB UAC Output
@@ -84,7 +84,7 @@ if(CONFIG_SOLUTION_FUNC_UAC_OUT)
         set(FLAG_UVC_UAC_ADDED 1)
         add_subdirectory(usbh_uvc_uac)
     endif()
-    sdk_library_add_sources(usbh_cb/usbh_uac_port.c)
+    sdk_library_add_sources(usbh_uvc_uac/port_cb/usbh_uac_port.c)
 endif()
 
 # Audio Lookback
@@ -119,6 +119,17 @@ if(CONFIG_SOLUTION_FUNC_DISP_DBI)
     sdk_add_include_directories(display/display_mcu)
     sdk_library_add_sources(display/display_mcu/dbi_disp.c)
     sdk_library_add_sources(display/display_mcu/display_flush.c)
+endif()
+
+# RGB Display
+if(CONFIG_SOLUTION_FUNC_DISP_RGB)
+    if((NOT CONFIG_SOLUTION_QUEUE_IMG_RAW_OUT) AND (NOT CONFIG_SOLUTION_QUEUE_IMG_RAW_IN))
+        message(FATAL_ERROR "rgb_display need img_raw_queue_out or img_raw_queue_in")
+    endif()
+
+    sdk_add_include_directories(display/display_rgb)
+    sdk_library_add_sources(display/display_rgb/rgb_disp.c)
+    sdk_library_add_sources(display/display_rgb/rgb_draw.c)
 endif()
 
 # DVP Sensor
@@ -171,7 +182,7 @@ if(CONFIG_SOLUTION_FUNC_UVC_YUYV)
         set(FLAG_UVC_UAC_ADDED 1)
         add_subdirectory(usbh_uvc_uac)
     endif()
-    sdk_library_add_sources(usbh_cb/usbh_uvc_port.c)
+    sdk_library_add_sources(usbh_uvc_uac/port_cb/usbh_uvc_port.c)
 endif()
 
 # USB Video Class (mjpeg mode)
@@ -184,7 +195,7 @@ if(CONFIG_SOLUTION_FUNC_UVC_JPEG)
         set(FLAG_UVC_UAC_ADDED 1)
         add_subdirectory(usbh_uvc_uac)
     endif()
-    sdk_library_add_sources(usbh_cb/usbh_uvc_port.c)
+    sdk_library_add_sources(usbh_uvc_uac/port_cb/usbh_uvc_port.c)
 endif()
 
 # other
@@ -251,6 +262,11 @@ endif()
 
 # Conflict Check
 # ##################################################################################################
+
+# Conflict: dbi_display - rgb_display
+if(CONFIG_SOLUTION_FUNC_DISP_DBI AND CONFIG_SOLUTION_FUNC_DISP_RGB)
+    message(FATAL_ERROR "Display Conflict: dbi_display - rgb_display")
+endif()
 
 # Conflict: dvp - uvc_yuyv
 if(CONFIG_SOLUTION_FUNC_DVP AND CONFIG_SOLUTION_FUNC_UVC_YUYV)

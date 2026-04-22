@@ -24,7 +24,6 @@
 #include "tzc_sec_reg.h"
 
 
-#define LP_HOOK(x, ...) if( &lp_hook_##x ) {lp_hook_##x(__VA_ARGS__);}
 
 #define LP_FW_PRE_JUMP_ADDR   0x20010000
 

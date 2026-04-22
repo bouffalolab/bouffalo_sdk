@@ -36,8 +36,8 @@
 #define LMAC154_FRAME_ADDR_DEST_MASK                (3 << 10)
 
 #define LMAC154_FRAME_VERSION_MASK                  (3 << 12)
-#define LMAC154_FRAME_VERSION_2006                  (0 << 12)
-#define LMAC154_FRAME_VERSION_2011                  (1 << 12)
+#define LMAC154_FRAME_VERSION_2003                  (0 << 12)
+#define LMAC154_FRAME_VERSION_2006                  (1 << 12)
 #define LMAC154_FRAME_VERSION_2015                  (2 << 12)
 
 #define LMAC154_FRAME_ADDR_SRC_NONE                 (0 << 14)
@@ -306,7 +306,7 @@ static inline uint32_t lmac154_parse_mhr_2015(uint8_t *pr,
 }
 
 /**
- * lmac154_get_mhr_len - MHR length for 802.15.4-2006/2011
+ * lmac154_get_mhr_len - MHR length for 802.15.4-2003/2006
  * @pkt: Pointer to frame start
  */
 static inline uint32_t lmac154_get_mhr_len(const uint8_t *pkt)

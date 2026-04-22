@@ -443,7 +443,8 @@ static bflb_ble_mesh_light_ctl_srv_t ctl_server = {
 
 #if defined(CONFIG_BT_MESH_MODEL_LIGHT_CLI)
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(ctl_cli_pub, 2 + 1, ROLE_NODE);
-static bflb_ble_mesh_client_t ctl_client;
+__attribute__((unused)) static bflb_ble_mesh_model_pub_t *ctl_cli_pub_ptr = &ctl_cli_pub;
+static bflb_ble_mesh_client_t ctl_client __attribute__((unused));
 #endif
 
 #if defined(CONFIG_BT_MESH_MODEL_LIGHT_SRV)
@@ -458,7 +459,8 @@ static bflb_ble_mesh_light_hsl_srv_t hsl_server = {
 
 #if defined(CONFIG_BT_MESH_MODEL_LIGHT_CLI)
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(hsl_cli_pub, 2 + 1, ROLE_NODE);
-static bflb_ble_mesh_client_t hsl_client;
+__attribute__((unused)) static bflb_ble_mesh_model_pub_t *hsl_cli_pub_ptr = &hsl_cli_pub;
+static bflb_ble_mesh_client_t hsl_client __attribute__((unused));
 #endif
 
 #else
@@ -628,14 +630,16 @@ static bflb_ble_mesh_light_xyl_srv_t light_xyl_server = {
     .state = &light_xyl_state,
 };
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(light_lc_pub, MESH_MSG_LEN, ROLE_NODE);
+__attribute__((unused)) static bflb_ble_mesh_model_pub_t *light_lc_pub_ptr = &light_lc_pub;
 bflb_ble_mesh_light_control_t light_control;
-static bflb_ble_mesh_light_lc_srv_t light_lc_server = {
+static bflb_ble_mesh_light_lc_srv_t light_lc_server __attribute__((unused)) = {
     .rsp_ctrl.get_auto_rsp = BFLB_BLE_MESH_SERVER_AUTO_RSP,
     .rsp_ctrl.set_auto_rsp = BFLB_BLE_MESH_SERVER_AUTO_RSP,
     .lc = &light_control,
 };
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(light_lc_setup_pub, MESH_MSG_LEN, ROLE_NODE);
-static bflb_ble_mesh_light_lc_setup_srv_t light_lc_setup_server = {
+__attribute__((unused)) static bflb_ble_mesh_model_pub_t *light_lc_setup_pub_ptr = &light_lc_setup_pub;
+static bflb_ble_mesh_light_lc_setup_srv_t light_lc_setup_server __attribute__((unused)) = {
     .rsp_ctrl.get_auto_rsp = BFLB_BLE_MESH_SERVER_AUTO_RSP,
     .rsp_ctrl.set_auto_rsp = BFLB_BLE_MESH_SERVER_AUTO_RSP,
     .lc = &light_control,
@@ -657,7 +661,8 @@ static bflb_ble_mesh_client_t property_client;
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(light_xyl_cli_pub, MESH_MSG_LEN, ROLE_NODE);
 static bflb_ble_mesh_client_t light_xyl_client;
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(light_lc_cli_pub, MESH_MSG_LEN, ROLE_NODE);
-static bflb_ble_mesh_client_t light_lc_client;
+__attribute__((unused)) static bflb_ble_mesh_model_pub_t *light_lc_cli_pub_ptr = &light_lc_cli_pub;
+static bflb_ble_mesh_client_t light_lc_client __attribute__((unused));
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(light_ctl_cli_pub, MESH_MSG_LEN, ROLE_NODE);
 static bflb_ble_mesh_client_t light_ctl_client;
 BFLB_BLE_MESH_MODEL_PUB_DEFINE(light_hsl_cli_pub, MESH_MSG_LEN, ROLE_NODE);
@@ -1419,7 +1424,6 @@ BLEMESH_CLI(lpn_friend_req)
 BLEMESH_CLI(lpn_group_del)
 {
 	u16_t groupaddr;
-	int err;
 	get_uint16_from_string(&argv[1], &groupaddr);
 	bt_mesh_lpn_group_del(&groupaddr,1);
 }
@@ -1427,7 +1431,6 @@ BLEMESH_CLI(lpn_group_del)
 BLEMESH_CLI(lpn_group_add)
 {
 	u16_t groupaddr;
-	int err;
 	get_uint16_from_string(&argv[1], &groupaddr);
 	bt_mesh_lpn_group_add(groupaddr);
 }
@@ -1997,12 +2000,12 @@ static void light_lightness_range_set(uint8_t *data, uint16_t len)
     light_set(BFLB_BLE_MESH_MODEL_ID_LIGHT_LIGHTNESS_CLI,
         BFLB_BLE_MESH_MODEL_OP_LIGHT_LIGHTNESS_RANGE_SET_UNACK, data[0], &set_state);
 }
-static void light_lc_mode_get(uint8_t *data, uint16_t len)
+static void __attribute__((unused)) light_lc_mode_get(uint8_t *data, uint16_t len)
 {
     light_get(BFLB_BLE_MESH_MODEL_ID_LIGHT_LC_CLI,
         BFLB_BLE_MESH_MODEL_OP_LIGHT_LC_MODE_GET, NULL);
 }
-static void light_lc_mode_set(uint8_t *data, uint16_t len)
+static void __attribute__((unused)) light_lc_mode_set(uint8_t *data, uint16_t len)
 {
     bflb_ble_mesh_light_client_set_state_t set_state = {0};
     set_state.lc_mode_set.mode = data[1];
@@ -2370,11 +2373,10 @@ static void mmdl_generic_server_cb(bflb_ble_mesh_generic_server_cb_event_t event
                                                bflb_ble_mesh_generic_server_cb_param_t *param)
 {
     const struct bt_mesh_comp *mesh_comp = bt_mesh_comp_get();
-    struct bt_mesh_model *gpl_m,*goo_m,*gl_m,*gpo_m,*lln_m,*lctl_m,*lhsl_m,*lc_m;
+    struct bt_mesh_model *gpl_m,*goo_m,*gl_m,*lln_m,*lctl_m,*lhsl_m;
     bflb_ble_mesh_gen_power_level_srv_t* gpl_srv;
     bflb_ble_mesh_gen_onoff_srv_t* goo_srv;
     bflb_ble_mesh_gen_level_srv_t* gl_srv;
-    bflb_ble_mesh_gen_power_onoff_srv_t* gpo_srv;
     bflb_ble_mesh_light_lightness_srv_t* lln_srv;
     bflb_ble_mesh_light_ctl_srv_t* lctl_srv;
     bflb_ble_mesh_light_hsl_srv_t* lhsl_srv;
@@ -2385,8 +2387,6 @@ static void mmdl_generic_server_cb(bflb_ble_mesh_generic_server_cb_event_t event
     goo_srv = (bflb_ble_mesh_gen_onoff_srv_t*)goo_m->user_data;
     gl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_GEN_LEVEL_SRV);
     gl_srv = (bflb_ble_mesh_gen_level_srv_t*)gl_m->user_data;
-    gpo_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_GEN_POWER_ONOFF_SRV);
-    gpo_srv = (bflb_ble_mesh_gen_power_onoff_srv_t*)gpo_m->user_data;
 
     lln_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_LIGHT_LIGHTNESS_SRV);
     lln_srv = (bflb_ble_mesh_light_lightness_srv_t*)lln_m->user_data;
@@ -2765,30 +2765,26 @@ static void mmdl_lighting_server_cb(bflb_ble_mesh_lighting_server_cb_event_t eve
 static void mmdl_ready(void)
 {
     const struct bt_mesh_comp *mesh_comp = bt_mesh_comp_get();
-    struct bt_mesh_model *gpl_m,*goo_m,*gl_m,*gpo_m,*lln_m,*lctl_m,*lhsl_m,*lxyl_m,*lc_m;
+    struct bt_mesh_model *gpl_m,*goo_m,*gpo_m,*lln_m,*lctl_m,*lhsl_m,*lxyl_m;
     bflb_ble_mesh_gen_power_level_srv_t* gpl_srv;
     bflb_ble_mesh_gen_onoff_srv_t* goo_srv;
-    bflb_ble_mesh_gen_level_srv_t* gl_srv;
     bflb_ble_mesh_gen_power_onoff_srv_t* gpo_srv;
     bflb_ble_mesh_light_lightness_srv_t* lln_srv;
     bflb_ble_mesh_light_ctl_srv_t* lctl_srv;
     bflb_ble_mesh_light_hsl_srv_t* lhsl_srv;
     bflb_ble_mesh_light_xyl_srv_t* lxyl_srv;
-    bflb_ble_mesh_light_lc_srv_t* lc_srv;
 
     gpl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_GEN_POWER_LEVEL_SRV);
     gpl_srv = (bflb_ble_mesh_gen_power_level_srv_t*)gpl_m->user_data;
     goo_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_GEN_ONOFF_SRV);
     goo_srv = (bflb_ble_mesh_gen_onoff_srv_t*)goo_m->user_data;
-    gl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_GEN_LEVEL_SRV);
-    gl_srv = (bflb_ble_mesh_gen_level_srv_t*)gl_m->user_data;
     gpo_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_GEN_POWER_ONOFF_SRV);
     gpo_srv = (bflb_ble_mesh_gen_power_onoff_srv_t*)gpo_m->user_data;
 
     lln_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_LIGHT_LIGHTNESS_SRV);
     lln_srv = (bflb_ble_mesh_light_lightness_srv_t*)lln_m->user_data;
     lctl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_LIGHT_CTL_SRV);
-    lctl_srv = (bflb_ble_mesh_light_lightness_srv_t*)lctl_m->user_data;
+    lctl_srv = (bflb_ble_mesh_light_ctl_srv_t*)lctl_m->user_data;
     lhsl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_LIGHT_HSL_SRV);
     lhsl_srv = (bflb_ble_mesh_light_hsl_srv_t*)lhsl_m->user_data;
     lxyl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_LIGHT_XYL_SRV);
@@ -3210,7 +3206,6 @@ void mmdl_light_client_cb(bflb_ble_mesh_light_client_cb_event_t event,
 static uint8_t models_callback_init(void)
 {
     int err = BFLB_OK;
-    size_t ret;
     /* For server */
     err = bflb_ble_mesh_register_generic_server_callback(mmdl_generic_server_cb);
     if(err != BFLB_OK){
@@ -3317,10 +3312,8 @@ BLEMESH_CLI(init)
 	}
 
 #if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
-    int i;
-
     // used for almost all test cases
-    vOutputString("[PTS] TSPX_bd_addr_iut: %s\n", 
+    vOutputString("[PTS] TSPX_bd_addr_iut: %s\n",
     				bt_hex(bt_dev.id_addr[0].a.val, 6));
 
     // used for almost all test cases
@@ -4375,6 +4368,7 @@ BLEMESH_CLI(vendor_cli)
 #endif /* CONFIG_BT_MESH_MODEL_VENDOR_CLI */
 
 
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 BLEMESH_CLI(models_cli)
 {
 	u32_t opcode;
@@ -4411,6 +4405,7 @@ BLEMESH_CLI(models_cli)
 		BT_ERR("Unable to send models cli command");
 	}
 }
+#endif /* CONFIG_BT_MESH_PTS || CONFIG_AUTO_PTS */
 #endif /* CONFIG_BT_MESH_MODEL */
 
 static int input(bt_mesh_input_action_t act, u8_t size)

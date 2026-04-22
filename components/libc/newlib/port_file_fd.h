@@ -10,7 +10,7 @@
  * stored in a short, otherwise fseek/ftell/fstat will malfunction.
  *
  * FD Encoding Format (must fit in signed 16-bit short: 0 .. 0x7FFF):
- *   0x0000 - 0x0FFF : TTY/Console (stdin, stdout, stderr, /dev/*)
+ *   0x0000 - 0x0FFF : TTY/Console (stdin, stdout, stderr, /dev/X)
  *   0x4000 - 0x4FFF : FatFS
  *   0x5000 - 0x5FFF : LittleFS
  *   0x6000 - 0x7FFF : Reserved for future filesystems

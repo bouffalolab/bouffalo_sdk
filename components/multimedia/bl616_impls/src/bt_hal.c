@@ -53,7 +53,7 @@ audio_vol_config_t *board_audio_out_get_vol_config()
 static uint8_t bt_init_cb = 0;
 static struct bt_conn_info t_bt_conn_info;
 static struct bt_conn *t_bt_def_conn = NULL;
-static void bt_hal_link_loss_evt(void *args);
+static void bt_hal_link_loss_evt(struct k_work *work);
 static void tg_bt_a2dp_connect_remote(bt_addr_t *addr);
 static void bt_hal_link_loss_cb(bt_addr_t *addr);
 
@@ -72,7 +72,7 @@ struct bt_link_loss_t {
     void (*complete)(void);
     void (*cb)(bt_addr_t *addr);
     struct k_delayed_work d_work;
-} __packed;
+};
 
 struct bt_link_loss_t *bt_link_loss = NULL;
 
@@ -87,7 +87,7 @@ static void bt_hal_link_loss_cb(bt_addr_t *addr)
     }
 }
 
-static void bt_link_loss_complete(bt_addr_t *addr)
+static void bt_link_loss_complete(void)
 {
     BT_HAL_DBG("%s\n", __func__);
     //extern int tg_wifi_ps_mode_exit(void);
@@ -234,9 +234,10 @@ static void tg_bt_a2dp_connect_remote(bt_addr_t *addr)
     }
 }
 
-static void bt_hal_link_loss_evt(void *args)
+static void bt_hal_link_loss_evt(struct k_work *work)
 {
-    int8_t *addr = (int8_t *)args;
+    (void)work;
+    int8_t *addr = bt_link_loss ? (int8_t *)bt_link_loss->dst.val : NULL;
     bt_prf_a2dp_cb_param_t link_loss_a2dp_cb_param;
 
     BT_HAL_DBG("%s\n", __func__);
@@ -898,7 +899,7 @@ static void t_avrcp_tg_ntf_evt_status(u8_t evt, u8_t *para,u16_t para_len)
         } else if (*para == BT_PRF_AVRCP_PLAYBACK_PLAYING) {
             if (!a2dp_pcm_handle) {
                 a2dp_pcm_handle = sbc2pcm_player_open(0, 44100, 2, 0);
-                int ret = sbc2pcm_player_start(a2dp_pcm_handle);
+                sbc2pcm_player_start(a2dp_pcm_handle);
             }
         }
     }
@@ -1256,8 +1257,9 @@ static void rfcomm_connected(struct bt_rfcomm_dlc *dlci)
     BT_HAL_DBG("hfp connected success \n");
 }
 
-static void rfcomm_disconnected(struct bt_rfcomm_dlc *dlci)
+static void rfcomm_disconnected(struct bt_rfcomm_dlc *dlci, struct bt_conn *conn)
 {
+    (void)conn;
     BT_HAL_DBG("hfp disconnected \n");
 }
 

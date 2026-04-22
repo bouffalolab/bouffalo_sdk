@@ -80,9 +80,7 @@ void ot_link_metrics_init(int8_t noise_floor);
 /****************************************************************************//**
  * @brief  generate link metric IE data for enhanced ack
  *
- * @param  short_addr, short address pointer (may be NULL)
- *
- * @param  ext_addr, extended address pointer (may be NULL)
+ * @param  rx_info, received packet information
  *
  * @param  rssi, received signal strength indicator
  *
@@ -93,8 +91,8 @@ void ot_link_metrics_init(int8_t noise_floor);
  * @return length of generated IE data, 0 if no match
  *
 *******************************************************************************/
-uint32_t ot_link_metrics_gen_enh_ack_data(uint8_t *short_addr, uint8_t *ext_addr,
-    int8_t rssi, uint8_t lqi, uint8_t *out_data);
+uint32_t ot_link_metrics_gen_enh_ack_data(lmac154_receiveInfo_t * rx_info,
+                                          int8_t rssi, uint8_t lqi, uint8_t *out_data);
 
 /****************************************************************************//**
  * @brief  Enable Radio

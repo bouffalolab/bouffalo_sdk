@@ -39,7 +39,7 @@
 #endif
 
 #ifndef PM_PDS_LDO_SOC_LEVEL_DEFAULT
-#define PM_PDS_LDO_SOC_LEVEL_DEFAULT HBN_LDO_SOC_LEVEL_0P800V
+#define PM_PDS_LDO_SOC_LEVEL_DEFAULT HBN_LDO_SOC_LEVEL_0P700V
 #endif
 
 #ifndef PM_PDS_LDO_SYS_LEVEL_DEFAULT
@@ -56,6 +56,10 @@
 
 #ifndef PM_PDS_LDO18IO_POWER_DOWN
 #define PM_PDS_LDO18IO_POWER_DOWN 0
+#endif
+
+#ifndef PM_EXT_DCDC_SOC_CTRL_PIN
+#define PM_EXT_DCDC_SOC_CTRL_PIN 0xFF
 #endif
 
 static char *trig_mode_desc[] = {
@@ -646,6 +650,50 @@ BL_Err_Type ATTR_TCM_SECTION pm_disable_gpio_keep(uint32_t pin)
     return SUCCESS;
 }
 
+void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v7(uint32_t pin)
+{
+    uint32_t tmpVal = 0;
+
+    if (pin < GPIO_PIN_6 || pin > GPIO_PIN_36) {
+        return;
+    }
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+    tmpVal &= ~(1 << (pin - 6));
+    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+
+    /* gpio output low */
+    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2))) = 0x40400b42;
+    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG140_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+    tmpVal |= (1 << (pin - 6));
+    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+}
+
+
+void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v9(uint32_t pin)
+{
+    uint32_t tmpVal = 0;
+
+    if (pin < GPIO_PIN_6 || pin > GPIO_PIN_36) {
+        return;
+    }
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+    tmpVal &= ~(1 << (pin - 6));
+    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+
+    /* gpio output high */
+    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2))) = 0x40400b42;
+    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG138_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+    tmpVal |= (1 << (pin - 6));
+    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+}
+
+
 /****************************************************************************/ /**
  * @brief  Enable PDS Wakeup Source
  *
@@ -788,13 +836,19 @@ BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie)
     }
 
     gpio = bflb_device_get_by_name("gpio");
+    if (ie) {
+        if (pu) {
+            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN);
+        } else if (pd) {
+            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLDOWN | GPIO_SMT_EN);
+        } else {
+            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
+        }
+    } else {
+        bflb_gpio_init(gpio, pin, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
+    }
 
     if (pin < 6) {
-        if (ie) {
-            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
-        } else {
-            bflb_gpio_init(gpio, pin, GPIO_FLOAT | GPIO_SMT_EN);
-        }
 
         HBN_AON_PAD_CFG_Type aonPadCfg;
         aonPadCfg.ctrlEn = 1;
@@ -805,17 +859,6 @@ BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie)
 
         HBN_Aon_Pad_Cfg(pin, &aonPadCfg);
     } else {
-        if (ie) {
-            if (pu) {
-                bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN);
-            } else if (pd) {
-                bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLDOWN | GPIO_SMT_EN);
-            } else {
-                bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
-            }
-        } else {
-            bflb_gpio_init(gpio, pin, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
-        }
         PDS_Enable_GPIO_Keep(pin);
     }
 
@@ -848,20 +891,14 @@ int pm_lowpower_gpio_cfg(lp_gpio_cfg_type *gpio_cfg)
         pu = (gpio_cfg->io_pu >> i) & 0x1;
         pd = (gpio_cfg->io_pd >> i) & 0x1;
         unmask = (gpio_cfg->io_wakeup_unmask >> i) & 0x1;
-
-        if (io <= 5) {
-            trig_mode = gpio_cfg->io_0_5_trig_mode;
-        } else if (io < GPIO_PIN_MAX) {
-            trig_mode = gpio_cfg->io_6_36_trig_mode[io - 6];
-        } else {
-            return -1;
-        }
+        trig_mode = gpio_cfg->io_0_36_trig_mode[i];
 
         if (unmask) {
             if (!ie) {
                 return -1;
             }
             pm_set_gpio_pu_pd_ie(io, pu, pd, ie);
+            arch_delay_us(100);
             pm_set_gpio_trig_mode_int_mask(io, trig_mode, UNMASK);
         } else {
             pm_set_gpio_pu_pd_ie(io, pu, pd, ie);
@@ -958,7 +995,7 @@ BL_Err_Type pm_set_gpio_trig_mode_int_mask(int pin, int trig_mode, int int_mask)
 
     if (pin < 6) {
         HBN_Set_Aon_Pad_IntMask(pin, int_mask);
-        HBN_Set_Aon_Pad_IntMode(trig_mode);
+        HBN_Set_Aon_Pad_IntMode(pin, trig_mode);
 
         if (int_mask == UNMASK) {
             HBN_Hw_Pu_Pd_Cfg(DISABLE);
@@ -1001,6 +1038,7 @@ void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time)
         .turnoffWifiPLL = PM_PDS_PLL_POWER_OFF,         /*!< Whether trun off WiFi PLL */
         .pdsClkType = PM_PDS_CLK_DEFAULT_SEL,           /*!< pds_clk type */
         .pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K, /*!< pds gpio det clk type */
+        .dcdc_sel_pin = PM_EXT_DCDC_SOC_CTRL_PIN,       /*!< DCDC sel pin, 0xFF means not use */
         .ldo_sys_cfg = ldosys_cfg,                      /*!< Power Config of ldo_sys */
         .ldo_soc_cfg = ldosoc_cfg,                      /*!< Power Config of ldo_soc */
         .ldo_sys_lp_en_cnt = 0,                         /*!< delay_cnt before ldo_sys enable lowpower mode */
@@ -1046,10 +1084,6 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
 
     /* To make it simple and safe*/
     irq_save = csi_irq_save();
-
-    /************************ PDS INT SET ***********************/
-    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
-    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);
 
     if (p->sleepTime) {
         PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_TIMER, UNMASK); // unmask pds sleep time wakeup
@@ -1212,7 +1246,11 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
 
     PDS_Default_Level_Config(pPdsCfg, p->sleepTime);
 
+    pm_pds_dcdc_soc_set_0v7(p->dcdc_sel_pin);
+
     __WFI();
+
+    pm_pds_dcdc_soc_set_0v9(p->dcdc_sel_pin);
 
     /******************************* Wakeup Flow *******************************/
     if (p->turnoffRC32M == DISABLE) {

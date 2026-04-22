@@ -20,6 +20,8 @@
 #define DBG_TAG "MAIN"
 #include <log.h>
 #include "async_event.h"
+#include "app_apeth_bridge.h"
+#include "mm.h"
 
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (16)

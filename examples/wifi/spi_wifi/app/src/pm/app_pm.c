@@ -40,6 +40,10 @@
 //#include "spisync.h"
 #include "clock_manager.h"
 #include "pm_manager.h"
+#include <nxspi.h>
+#include <lwip/etharp.h>
+
+extern void vPortSetupTimerInterrupt(void);
 
 
 #define APP_PM_IELD_TASK_STACK_SIZE (512)
@@ -160,7 +164,7 @@ static int lp_exit(void *arg)
     extern TaskHandle_t rxl_process_task_hd;
     int wakeup_reason;
 
-    nxspi_ps_exit(NULL);
+    nxspi_ps_exit();
 
     set_cpu_bclk_80M_and_gate_clk();
 
@@ -196,7 +200,7 @@ static int lp_exit(void *arg)
 
 static int lp_enter(void *arg)
 {
-    nxspi_ps_enter(NULL);
+    nxspi_ps_enter();
     return 0;
 }
 
@@ -321,10 +325,10 @@ void write_register(uint32_t *reg_addr, uint32_t value) {
 
 static void cmd_32k_output(int argc, char **argv)
 {
-    modify_bit(0x2000F204, 22, 0x1);
-    write_register(0x200002E8, 0x4000);
-    write_register(0x200002F0, 0x1);
-    write_register(0x20000930, 0x40000F02);
+    modify_bit((uint32_t *)0x2000F204, 22, 0x1);
+    write_register((uint32_t *)0x200002E8, 0x4000);
+    write_register((uint32_t *)0x200002F0, 0x1);
+    write_register((uint32_t *)0x20000930, 0x40000F02);
 }
 
 void app_arp_send(void)
@@ -412,7 +416,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_create_arp_timer, create_arp_timer, cmd create arp ti
 SHELL_CMD_EXPORT_ALIAS(cmd_delete_arp_timer, delete_arp_timer, cmd delete arp timer);
 #endif
 
-static TaskHandle_t xtal32k_check_entry_task_hd = NULL;
+static TaskHandle_t __attribute__((unused)) xtal32k_check_entry_task_hd = NULL;
 
 void timerCallback(TimerHandle_t xTimer)
 {
@@ -506,7 +510,7 @@ void keepalive_callback(TimerHandle_t xTimer)
 #define TWT_FLOW_ANNOUNCED      0
 #define TWT_FLOW_UNANNOUNCED    1
 
-static int twt_param_validate(int s, int t, int e, int n, int m)
+static int __attribute__((unused)) twt_param_validate(int s, int t, int e, int n, int m)
 {
     /* 1) SetupType */
     if ((s < TWT_SETUP_REQUEST) || (s > TWT_SETUP_DEMAND)) {

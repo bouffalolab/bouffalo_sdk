@@ -77,7 +77,6 @@ int test_stuck_address(ulv *bufa, size_t count)
     ulv *p1 = bufa;
     unsigned int j;
     size_t i;
-    off_t physaddr;
 
     // printf("           ");
     // fflush(stdout);
@@ -98,7 +97,7 @@ int test_stuck_address(ulv *bufa, size_t count)
         for (i = 0; i < count; i++, p1++) {
             if (*p1 != (((j + i) % 2) == 0 ? (ul)p1 : ~((ul)p1))) {
                 if (use_phys) {
-                    physaddr = physaddrbase + (i * sizeof(ul));
+                    // physaddr = physaddrbase + (i * sizeof(ul));
                     // fprintf(stderr,
                     // "FAILURE: possible bad address line at physical "
                     // "address 0x%08lx.\n",

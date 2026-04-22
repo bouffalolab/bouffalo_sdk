@@ -40,6 +40,12 @@
 #define WAVE_PLAYER_DIAG CONFIG_WAVE_PLAYER_DIAG
 #endif
 
+#ifndef CONFIG_WAVE_PLAYER_CODEC_REG_CLI
+#define WAVE_PLAYER_CODEC_REG_CLI 1
+#else
+#define WAVE_PLAYER_CODEC_REG_CLI CONFIG_WAVE_PLAYER_CODEC_REG_CLI
+#endif
+
 #if WAVE_PLAYER_TEST_WAVE
 #include "incbin.h"
 INCBIN(wave_src_buffer0, "../../bsp/common/audio_player/ruyuan_30s_16k_mono.wav");
@@ -636,6 +642,205 @@ static const char *wave_player_backend_name(wave_player_backend_t backend)
             return "auto";
     }
 }
+
+#if WAVE_PLAYER_CODEC_REG_CLI
+static int wave_player_codec_i2c_write_reg8(struct bflb_device_s *i2c, uint8_t addr, uint8_t reg, uint8_t val)
+{
+    struct bflb_i2c_msg_s msgs[2];
+
+    if (i2c == NULL) {
+        return -1;
+    }
+
+    msgs[0].addr = addr;
+    msgs[0].flags = I2C_M_NOSTOP;
+    msgs[0].buffer = &reg;
+    msgs[0].length = 1;
+
+    msgs[1].addr = addr;
+    msgs[1].flags = 0;
+    msgs[1].buffer = &val;
+    msgs[1].length = 1;
+
+    return bflb_i2c_transfer(i2c, msgs, 2);
+}
+
+static int wave_player_codec_i2c_read_reg8(struct bflb_device_s *i2c, uint8_t addr, uint8_t reg, uint8_t *out_val)
+{
+    struct bflb_i2c_msg_s msgs[2];
+
+    if (i2c == NULL || out_val == NULL) {
+        return -1;
+    }
+
+    msgs[0].addr = addr;
+    msgs[0].flags = I2C_M_NOSTOP;
+    msgs[0].buffer = &reg;
+    msgs[0].length = 1;
+
+    msgs[1].addr = addr;
+    msgs[1].flags = I2C_M_READ;
+    msgs[1].buffer = out_val;
+    msgs[1].length = 1;
+
+    return bflb_i2c_transfer(i2c, msgs, 2);
+}
+
+static audio_codec_dev_t *wave_player_codec_cli_get_codec(bool capture)
+{
+    return capture ? &g_audio.cap_codec : &g_audio.play_codec;
+}
+
+static struct bflb_device_s *wave_player_codec_cli_get_builtin_dev(bool capture)
+{
+    return capture ? g_audio.auadc_dev : g_audio.audac_dev;
+}
+
+static const char *wave_player_codec_cli_role_name(bool capture)
+{
+    return capture ? "cap" : "play";
+}
+
+static int wave_player_codec_cli_parse_role(const char *arg, bool *capture)
+{
+    if (arg == NULL || capture == NULL) {
+        return -1;
+    }
+
+    if (strcmp(arg, "play") == 0 || strcmp(arg, "playback") == 0 || strcmp(arg, "tx") == 0) {
+        *capture = false;
+        return 0;
+    }
+
+    if (strcmp(arg, "cap") == 0 || strcmp(arg, "capture") == 0 || strcmp(arg, "rec") == 0 || strcmp(arg, "rx") == 0) {
+        *capture = true;
+        return 0;
+    }
+
+    return -1;
+}
+
+static int wave_player_codec_cli_validate_width(uint8_t width)
+{
+    if (width == 8U || width == 16U || width == 32U) {
+        return 0;
+    }
+
+    return -1;
+}
+
+static int wave_player_codec_cli_mmio_read(uint32_t addr, uint8_t width, uint32_t *value)
+{
+    if (value == NULL) {
+        return -1;
+    }
+
+    if (wave_player_codec_cli_validate_width(width) != 0) {
+        return -1;
+    }
+
+    if ((width == 16U && (addr & 0x1U) != 0U) || (width == 32U && (addr & 0x3U) != 0U)) {
+        return -1;
+    }
+
+    if (width == 8U) {
+        *value = (uint32_t)getreg8(addr);
+    } else if (width == 16U) {
+        *value = (uint32_t)getreg16(addr);
+    } else {
+        *value = getreg32(addr);
+    }
+
+    return 0;
+}
+
+static int wave_player_codec_cli_mmio_write(uint32_t addr, uint8_t width, uint32_t value)
+{
+    if (wave_player_codec_cli_validate_width(width) != 0) {
+        return -1;
+    }
+
+    if ((width == 16U && (addr & 0x1U) != 0U) || (width == 32U && (addr & 0x3U) != 0U)) {
+        return -1;
+    }
+
+    if (width == 8U) {
+        putreg8((uint8_t)value, addr);
+    } else if (width == 16U) {
+        putreg16((uint16_t)value, addr);
+    } else {
+        putreg32(value, addr);
+    }
+
+    return 0;
+}
+
+static int wave_player_codec_cli_read(bool capture, uint32_t reg, uint8_t width, uint32_t *value)
+{
+    audio_codec_dev_t *codec = wave_player_codec_cli_get_codec(capture);
+
+    if (codec == NULL || codec->drv == NULL) {
+        return -1;
+    }
+
+    if (codec->type == AUDIO_CODEC_TYPE_BL) {
+        struct bflb_device_s *dev = wave_player_codec_cli_get_builtin_dev(capture);
+
+        if (dev == NULL) {
+            return -2;
+        }
+
+        return wave_player_codec_cli_mmio_read(dev->reg_base + reg, width, value);
+    }
+
+    if (width != 8U || reg > 0xFFU || codec->i2c == NULL || value == NULL) {
+        return -1;
+    }
+
+    {
+        uint8_t regv = 0U;
+        int ret = wave_player_codec_i2c_read_reg8(codec->i2c, codec->i2c_addr, (uint8_t)reg, &regv);
+        if (ret != 0) {
+            return ret;
+        }
+        *value = regv;
+    }
+
+    return 0;
+}
+
+static int wave_player_codec_cli_write(bool capture, uint32_t reg, uint32_t value, uint8_t width)
+{
+    audio_codec_dev_t *codec = wave_player_codec_cli_get_codec(capture);
+
+    if (codec == NULL || codec->drv == NULL) {
+        return -1;
+    }
+
+    if (codec->type == AUDIO_CODEC_TYPE_BL) {
+        struct bflb_device_s *dev = wave_player_codec_cli_get_builtin_dev(capture);
+
+        if (dev == NULL) {
+            return -2;
+        }
+
+        return wave_player_codec_cli_mmio_write(dev->reg_base + reg, width, value);
+    }
+
+    if (width != 8U || reg > 0xFFU || value > 0xFFU || codec->i2c == NULL) {
+        return -1;
+    }
+
+    return wave_player_codec_i2c_write_reg8(codec->i2c, codec->i2c_addr, (uint8_t)reg, (uint8_t)value);
+}
+
+static void wave_player_codec_cli_usage(void)
+{
+    printf("usage: codec_reg r <play|cap> <reg> [width]\r\n");
+    printf("       codec_reg w <play|cap> <reg> <value> [width]\r\n");
+    printf("note: ext codec width fixed to 8; builtin codec width supports 8/16/32 and defaults to 32\r\n");
+}
+#endif
 
 static void dma_ch_tx_isr(void *arg)
 {
@@ -2601,6 +2806,104 @@ static int cmd_audio_diag(int argc, char **argv)
 #endif
 }
 
+static int cmd_codec_reg(int argc, char **argv)
+{
+#if !WAVE_PLAYER_CODEC_REG_CLI
+    (void)argc;
+    (void)argv;
+    printf("codec_reg: disabled (CONFIG_WAVE_PLAYER_CODEC_REG_CLI=0)\r\n");
+    return 0;
+#else
+    bool capture = false;
+    bool is_write = false;
+    audio_codec_dev_t *codec;
+    uint32_t reg;
+    uint32_t value = 0U;
+    uint8_t width;
+    int ret;
+
+    if (argc < 4) {
+        wave_player_codec_cli_usage();
+        return 0;
+    }
+
+    if (strcmp(argv[1], "r") == 0 || strcmp(argv[1], "read") == 0) {
+        is_write = false;
+    } else if (strcmp(argv[1], "w") == 0 || strcmp(argv[1], "write") == 0) {
+        is_write = true;
+    } else {
+        wave_player_codec_cli_usage();
+        return -1;
+    }
+
+    if (wave_player_codec_cli_parse_role(argv[2], &capture) != 0) {
+        wave_player_codec_cli_usage();
+        return -1;
+    }
+
+    codec = wave_player_codec_cli_get_codec(capture);
+    if (codec == NULL || codec->drv == NULL) {
+        printf("codec_reg: %s codec not initialized\r\n", wave_player_codec_cli_role_name(capture));
+        return -1;
+    }
+
+    reg = (uint32_t)strtoul(argv[3], NULL, 0);
+    width = (codec->type == AUDIO_CODEC_TYPE_BL) ? 32U : 8U;
+
+    if (is_write) {
+        if (argc < 5 || argc > 6) {
+            wave_player_codec_cli_usage();
+            return -1;
+        }
+        value = (uint32_t)strtoul(argv[4], NULL, 0);
+        if (argc == 6) {
+            width = (uint8_t)strtoul(argv[5], NULL, 0);
+        }
+        ret = wave_player_codec_cli_write(capture, reg, value, width);
+        if (ret != 0) {
+            printf("codec_reg: write failed, role=%s codec=%s type=%u reg=0x%lx width=%u ret=%d\r\n",
+                   wave_player_codec_cli_role_name(capture), codec->name != NULL ? codec->name : "unknown",
+                   (unsigned)codec->type, (unsigned long)reg, (unsigned)width, ret);
+            return ret;
+        }
+        printf("codec_reg: write ok, role=%s codec=%s type=%u reg=0x%lx val=0x%lx width=%u\r\n",
+               wave_player_codec_cli_role_name(capture), codec->name != NULL ? codec->name : "unknown",
+               (unsigned)codec->type, (unsigned long)reg, (unsigned long)value, (unsigned)width);
+        return 0;
+    }
+
+    if (argc > 5) {
+        wave_player_codec_cli_usage();
+        return -1;
+    }
+    if (argc == 5) {
+        width = (uint8_t)strtoul(argv[4], NULL, 0);
+    }
+
+    ret = wave_player_codec_cli_read(capture, reg, width, &value);
+    if (ret != 0) {
+        printf("codec_reg: read failed, role=%s codec=%s type=%u reg=0x%lx width=%u ret=%d\r\n",
+               wave_player_codec_cli_role_name(capture), codec->name != NULL ? codec->name : "unknown",
+               (unsigned)codec->type, (unsigned long)reg, (unsigned)width, ret);
+        return ret;
+    }
+
+    if (codec->type == AUDIO_CODEC_TYPE_BL) {
+        struct bflb_device_s *dev = wave_player_codec_cli_get_builtin_dev(capture);
+        printf("codec_reg: role=%s codec=%s base=0x%08lx reg=0x%lx addr=0x%08lx width=%u val=0x%lx\r\n",
+               wave_player_codec_cli_role_name(capture), codec->name != NULL ? codec->name : "unknown",
+               (unsigned long)((dev != NULL) ? dev->reg_base : 0U), (unsigned long)reg,
+               (unsigned long)(((dev != NULL) ? dev->reg_base : 0U) + reg), (unsigned)width, (unsigned long)value);
+    } else {
+        printf("codec_reg: role=%s codec=%s i2c=0x%02x reg=0x%02lx val=0x%02lx\r\n",
+               wave_player_codec_cli_role_name(capture), codec->name != NULL ? codec->name : "unknown",
+               (unsigned)codec->i2c_addr, (unsigned long)reg, (unsigned long)value);
+    }
+
+    return 0;
+#endif
+}
+
 #if WAVE_PLAYER_ENABLE_REC
 static int cmd_rec_vol(int argc, char **argv)
 {
@@ -2834,6 +3137,9 @@ SHELL_CMD_EXPORT_ALIAS(cmd_audio_mute, audio_mute, "set audio mute (0/1)");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_info, audio_info, "show audio player status");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_stack, audio_stack, "show audio stack high watermarks");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_diag, audio_diag, "show/reset audio diagnostics: audio_diag [clr]");
+#if WAVE_PLAYER_CODEC_REG_CLI
+SHELL_CMD_EXPORT_ALIAS(cmd_codec_reg, codec_reg, "read/write codec registers: codec_reg <r|w> <play|cap> <reg> [value] [width]");
+#endif
 #if WAVE_PLAYER_ENABLE_REC
 SHELL_CMD_EXPORT_ALIAS(cmd_rec_start, rec_start, "start recording: rec_start <duration_ms> <sample_rate> <channels>");
 SHELL_CMD_EXPORT_ALIAS(cmd_rec_stop, rec_stop, "stop recording");

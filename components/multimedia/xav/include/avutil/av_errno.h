@@ -48,7 +48,7 @@ void av_errno_set(int err_no);
  */
 int av_errno_get();
 
-#if CONFIG_AV_ERRNO_DEBUG
+#if defined(CONFIG_AV_ERRNO_DEBUG) && CONFIG_AV_ERRNO_DEBUG
 #define AV_ERRNO_SET(err_no)                                                       \
     do {                                                                          \
         av_errno_set(err_no);                                                      \

@@ -2,6 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
+#include <inttypes.h>
 #include <time.h>
 #include <stdint.h>
 #include <xutils/xringbuffer.h>
@@ -138,7 +139,7 @@ static void mic_rec_start(const char *url, const char *save_name, int rb_size, i
         xringbuffer_create(&rec_mgr->ringbuffer, (uint8_t *)rec_mgr->rbuffer, rb_size + 1);
         msp_event_new(&rec_mgr->wait_evt, 0);
         char buf[64];
-        snprintf(buf, sizeof(buf), "rbuf://handle=%u", (size_t)(uint64_t)(&rec_mgr->ringbuffer));
+        snprintf(buf, sizeof(buf), "rbuf://handle=%" PRIuPTR, (uintptr_t)(&rec_mgr->ringbuffer));
         /*
          * mic://format=16&sample=16000&chan=1&frame_ms=20
          */

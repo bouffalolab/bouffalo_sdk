@@ -3,6 +3,7 @@
 #include <semphr.h>
 
 #include <stdint.h>
+#include <string.h>
 #include <utils_list.h>
 #include "bflb_pm.h"
 #include <assert.h>

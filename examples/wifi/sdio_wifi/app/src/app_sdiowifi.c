@@ -19,6 +19,7 @@
 
 #define DBG_TAG "MAIN"
 #include <log.h>
+#include <mm.h>
 #include "async_event.h"
 
 #define WIFI_STACK_SIZE  (1536)

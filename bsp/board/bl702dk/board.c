@@ -159,6 +159,11 @@ void ATTR_TCM_SECTION board_psram_init(void)
     L1C_Cache_Enable_Set(L1C_WAY_DISABLE_NONE);
 }
 
+uint32_t board_psram_size_get(void)
+{
+    return 2 * 1024 * 1024;
+}
+
 void bl_show_log(void)
 {
     printf("\r\n");

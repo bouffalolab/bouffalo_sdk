@@ -41,6 +41,7 @@
 #define DBG_TAG "MAIN"
 #include "log.h"
 #include "async_event.h"
+#include "mm.h"
 
 /****************************************************************************
  * Pre-processor Definitions

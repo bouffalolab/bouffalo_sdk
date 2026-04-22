@@ -78,7 +78,7 @@ uint32_t wifi_sys_now_ms(bool isr)
 #undef wifi_syslog
 void wifi_syslog(int priority, const char *fmt, ...)
 {
-
+#ifndef CONFIG_NO_FW_BL_LOG_PRINT
     static const struct {
         const char *level;
         const char *color_start;
@@ -113,6 +113,7 @@ void wifi_syslog(int priority, const char *fmt, ...)
         printf("%s", color_end);
         va_end(args);
     }
+#endif
 }
 
 #if WL_BB_TPC

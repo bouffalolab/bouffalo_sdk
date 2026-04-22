@@ -143,7 +143,7 @@ static void mjpeg_enc_task(void *pvParameters)
         }
 
         /* allco frame buff */
-        ret = frame_queue_alloc_lock(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&mjpeg_enc_frame, 5);
+        ret = frame_queue_alloc_lock(g_mjpeg_out_frame_ctrl, (frame_elem_t *)&mjpeg_enc_frame, 20);
         if (ret < 0) {
             frame_queue_output_free(g_img_raw_out_frame_ctrl, (frame_elem_t *)&img_raw_frame);
             JPEG_DBG("jpeg buff alloc timeout %d, continue wait... \r\n", ret);

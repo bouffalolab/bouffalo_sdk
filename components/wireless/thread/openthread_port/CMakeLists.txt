@@ -26,7 +26,6 @@ sdk_add_private_include_directories(./)
 sdk_library_add_sources(./ot_alarm.c)
 sdk_library_add_sources(./ot_link_metric.c)
 sdk_library_add_sources(./ot_radio.c)
-sdk_library_add_sources(./ot_radio_bflb.c)
 sdk_library_add_sources(./ot_sys_bflb.c)
 
 if (CONFIG_THREAD_TPERF)

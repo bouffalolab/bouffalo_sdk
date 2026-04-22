@@ -57,7 +57,7 @@ bool rc32k_check_accuracy(int32_t actual_ppm, int32_t threshold_ppm)
 
 uint8_t rc32k_step_adjust_cal_code(bool direction)
 {
-    uint32_t tmpVal;
+    uint32_t tmpVal __attribute__((unused));
     uint32_t r_code = 0;
 
 #if defined(BL616CL)

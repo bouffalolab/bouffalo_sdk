@@ -54,7 +54,7 @@ static int _mtd_write(uint32_t addr, uint8_t *src, unsigned int len)
     return 0;
 }
 
-#if defined(BL602) || defined(BL702)
+#if defined(BL602) || defined(BL702) || defined(BL702L)
 int bflb_sys_isxipaddr(uint32_t addr)
 {
     if (((addr & 0xFF000000) == 0x23000000) || ((addr & 0xFF000000) == 0x43000000)) {

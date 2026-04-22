@@ -31,7 +31,7 @@ extern spi_header_t up_header;
 
 extern char *dn_buf;
 extern char *up_buf;
-extern void spi_start_timeout_handler(void *arg);
+extern void spi_start_timeout_handler(TimerHandle_t xTimer);
 extern void nxspi_task_entry(void *arg);
 
 extern struct bflb_dma_channel_lli_pool_s txlli_pool[4];

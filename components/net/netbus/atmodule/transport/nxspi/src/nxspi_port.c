@@ -12,7 +12,9 @@
 #include "bflb_timer.h"
 #include <hardware/spi_reg.h>
 #include "bflb_gpio.h"
-#include "hardware/gpio_reg.h"
+/* Compatibility shims: gpio_reg.h conflicts with glb_reg.h; use glb_reg.h equivalents */
+#define GLB_REG_GPIO_0_INT_MODE_SET_SHIFT  GLB_REG_GPIO_0_INT_MODE_SET_POS
+#define GLB_REG_GPIO_0_INT_MODE_SET_MASK   GLB_REG_GPIO_0_INT_MODE_SET_MSK
 
 #include "bflb_dma.h"
 #include "bflb_l1c.h"
@@ -95,6 +97,7 @@ static int _hw_init(void (*callback)(void *arg), void *arg)
 
     //bflb_dma_channel_irq_attach(dma0_ch0, NULL, arg);
     bflb_dma_channel_irq_attach(dma0_ch1, callback, NULL);
+    return 0;
 }
 
 /* spi */
@@ -133,6 +136,7 @@ void nxspi_hwspi_ts(uint8_t *send_hd, uint8_t *recv_hd, uint16_t hd_len,
 {
 #if 1
     uint32_t regval;
+    (void)regval;
 
     struct nx_dma_channel_lli_transfer_s tx_transfers[2];
     struct nx_dma_channel_lli_transfer_s rx_transfers[2];
@@ -318,7 +322,7 @@ void nxspi_hwspi_transfer(uint8_t *send, uint8_t *recv, uint16_t len, void *cb, 
     rx_transfers[0].nbytes = len;
 
     if (NULL == send) {
-        tx_transfers[0].src_addr = &black_hole;
+        tx_transfers[0].src_addr = (uint32_t)&black_hole;
         //bflb_dma_feature_control(dma0_ch0,  DMA_CMD_SET_SRCADDR_INCREMENT, 0);
         regval = *((volatile uint32_t *)0x2000C10C);//dma0
         regval &= ~(1<<26U);// src 0
@@ -330,7 +334,7 @@ void nxspi_hwspi_transfer(uint8_t *send, uint8_t *recv, uint16_t len, void *cb, 
         *((volatile uint32_t *)0x2000C10C) = regval;// dma0
     }
     if (NULL == recv) {
-        rx_transfers[0].dst_addr = &black_hole;
+        rx_transfers[0].dst_addr = (uint32_t)&black_hole;
         //bflb_dma_feature_control(dma0_ch1,  DMA_CMD_SET_DSTADDR_INCREMENT, 0);
         regval = *((volatile uint32_t *)0x2000C20C);//dma1
         regval &= ~(1<<27U);// dest 0
@@ -342,8 +346,8 @@ void nxspi_hwspi_transfer(uint8_t *send, uint8_t *recv, uint16_t len, void *cb, 
         *((volatile uint32_t *)0x2000C20C) = regval;// dma1
     }
 
-    bflb_dma_channel_lli_reload(dma0_ch0, txlli_pool, DMATX_LLIPOOL_CNT, tx_transfers, 1);
-    bflb_dma_channel_lli_reload(dma0_ch1, rxlli_pool, DMARX_LLIPOOL_CNT, rx_transfers, 1);
+    bflb_dma_channel_lli_reload(dma0_ch0, txlli_pool, DMATX_LLIPOOL_CNT, (struct bflb_dma_channel_lli_transfer_s *)tx_transfers, 1);
+    bflb_dma_channel_lli_reload(dma0_ch1, rxlli_pool, DMARX_LLIPOOL_CNT, (struct bflb_dma_channel_lli_transfer_s *)rx_transfers, 1);
 
 #if 0
     bflb_dma_channel_start(dma0_ch0);

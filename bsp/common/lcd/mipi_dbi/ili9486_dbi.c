@@ -102,7 +102,7 @@ const ili9486_dbi_init_cmd_t ili9486_dbi_init_cmds[] = {
 
     { 0x35, "\x00", 1 }, /* enable Tearing Effect Output line */
 
-#if ILI9486_DBI_COLOR_REVERSAL
+#if defined(ILI9486_DBI_COLOR_REVERSAL) && ILI9486_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 }, /* Color reversal */
 #endif
 
@@ -179,7 +179,7 @@ int ili9486_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if ILI9486_DBI_DIR_MIRROR
+#if defined(ILI9486_DBI_DIR_MIRROR) && ILI9486_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -190,7 +190,7 @@ int ili9486_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if ILI9486_DBI_COLOR_ORDER
+#if defined(ILI9486_DBI_COLOR_ORDER) && ILI9486_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -208,11 +208,11 @@ int ili9486_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void ili9486_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if ILI9486_DBI_OFFSET_X
+#if defined(ILI9486_DBI_OFFSET_X) && ILI9486_DBI_OFFSET_X
     x1 += ILI9486_DBI_OFFSET_X;
     x2 += ILI9486_DBI_OFFSET_X;
 #endif
-#if ILI9486_DBI_OFFSET_Y
+#if defined(ILI9486_DBI_OFFSET_Y) && ILI9486_DBI_OFFSET_Y
     y1 += ILI9486_DBI_OFFSET_Y;
     y2 += ILI9486_DBI_OFFSET_Y;
 #endif

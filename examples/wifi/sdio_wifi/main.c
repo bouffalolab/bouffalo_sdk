@@ -10,6 +10,8 @@
 #include <board_rf.h>
 #include <shell.h>
 
+#include "app/include/app_sdiowifi.h"
+
 #define INIT_STACK_SIZE    (2048)
 #define INIT_TASK_PRIORITY (16)
 

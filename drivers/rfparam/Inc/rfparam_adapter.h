@@ -72,6 +72,7 @@ uint32_t rfparam_tlv_base_addr_get();
 
 void rfparam_get_capcode(uint8_t* capcode_in, uint8_t* capcode_out);
 void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out);
+struct wl_param_t;
 int8_t rfparam_load(struct wl_param_t *param);
 
 #endif

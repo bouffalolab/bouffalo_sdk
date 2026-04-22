@@ -94,7 +94,7 @@ typedef struct {
 #define MJPEG_OUT_FRAME_STREAM_SD_DEPTH       (2)
 /* wifi rtc out_queue cfg */
 #define MJPEG_OUT_FRAME_STREAM_WIFI_RTC_ID    (2)
-#define MJPEG_OUT_FRAME_STREAM_WIFI_RTC_DEPTH (1)
+#define MJPEG_OUT_FRAME_STREAM_WIFI_RTC_DEPTH (2)
 
 extern frame_queue_ctrl_t *g_mjpeg_out_frame_ctrl;
 int mjpeg_out_frame_ctrl_init(void);
@@ -110,15 +110,12 @@ int mjpeg_out_frame_ctrl_init(void);
 #define CONFIG_MJPEG_IN_FRAME_NUM (6)
 #endif
 
-/* sd avi in_queue cfg */
+/* sd save in_queue cfg */
 #define MJPEG_IN_FRAME_STREAM_SD_ID     (0)
-#define MJPEG_IN_FRAME_STREAM_SD_DEPTH  (2)
-/* sd jpeg in_queue cfg */
-#define MJPEG_IN_FRAME_STREAM_SD_ID     (0)
-#define MJPEG_IN_FRAME_STREAM_SD_DEPTH  (2)
+#define MJPEG_IN_FRAME_STREAM_SD_DEPTH  (3)
 /* dec in_queue cfg */
 #define MJPEG_IN_FRAME_STREAM_DEC_ID    (2)
-#define MJPEG_IN_FRAME_STREAM_DEC_DEPTH (5)
+#define MJPEG_IN_FRAME_STREAM_DEC_DEPTH (3)
 
 extern frame_queue_ctrl_t *g_mjpeg_in_frame_ctrl;
 int mjpeg_in_frame_ctrl_init(void);

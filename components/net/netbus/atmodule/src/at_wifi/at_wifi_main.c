@@ -26,6 +26,7 @@
 #include <lwip/err.h>
 #include <lwip/netif.h>
 #include <lwip/netifapi.h>
+#include <lwip/dns.h>
 
 #include "at_main.h"
 #include "at_core.h"
@@ -35,10 +36,11 @@
 #include "at_wifi_main.h"
 #include "at_net_main.h"
 #include "at_wifi_mgmr.h"
+#include "dhcp_server.h"
 
 /* Function declarations */
 extern struct netif *at_wifi_netif_get(uint8_t vif_idx);
-extern ip_addr_t *dns_getserver(u8_t numdns);
+/* dns_getserver declared in lwip/dns.h */
 #if defined(CONFIG_ATMODULE_NETWORK) && (CONFIG_ATMODULE_NETWORK)
 #include "at_net_config.h"
 #endif
@@ -113,7 +115,7 @@ int at_wifi_sta_ip4_addr_get(uint32_t *addr, uint32_t *mask, uint32_t *gw, uint3
         *gw   = ip4_addr_get_u32(ip_2_ip4(&netif->gw));
     }
     if (dns) {
-        ip_addr_t *dns_addr = dns_getserver(0);
+        const ip_addr_t *dns_addr = dns_getserver(0);
         *dns  = ip4_addr_get_u32(ip_2_ip4(dns_addr));
     }
 
@@ -216,7 +218,7 @@ static int wifi_ap_start(void)
     at_wifi_mgmr_ap_params_t config = {0};
 
     if (at_wifi_config->wifi_mode == WIFI_AP_STA_MODE) {
-        int sta_channel;
+        uint8_t sta_channel;
         if (at_wifi_mgmr_sta_channel_get(&sta_channel) == 0) {
             if (sta_channel >= 1 && sta_channel <= 14)
                 at_wifi_config->ap_info.channel = sta_channel;
@@ -243,7 +245,7 @@ static int wifi_ap_start(void)
         config.akm = "WPA3";
     }
 
-    struct netif *netif = at_wifi_netif_get(AT_WIFI_VIF_AP);
+    struct netif *netif __attribute__((unused)) = at_wifi_netif_get(AT_WIFI_VIF_AP);
 
     int ret = at_wifi_mgmr_ap_start(&config);
     if (ret != 0) {
@@ -259,7 +261,7 @@ static int wifi_ap_start(void)
     return 0;
 }
 
-static void _wifi_ap_status_callback(struct netif *netif)
+static void __attribute__((unused)) _wifi_ap_status_callback(struct netif *netif)
 {
     uint32_t ipaddr;
     if (wifi_ap_get_sta_ip((uint8_t *)netif->hwaddr, &ipaddr) == 0) {
@@ -282,7 +284,7 @@ static void _wifi_ap_status_callback(struct netif *netif)
                     netif->hwaddr[3],
                     netif->hwaddr[4],
                     netif->hwaddr[5],
-                    ip4addr_ntoa(&netif->ip_addr));
+                    ip4addr_ntoa(ip_2_ip4(&netif->ip_addr)));
         }
     }
 }
@@ -435,6 +437,7 @@ static void wifi_sta_enable_reconnect(int enable)
     }
 }
 
+static void wifi_sniffer_data_recv(void *env, uint8_t *pkt, int pkt_len) __attribute__((unused));
 static void wifi_sniffer_data_recv(void *env, uint8_t *pkt, int pkt_len)
 {
 }

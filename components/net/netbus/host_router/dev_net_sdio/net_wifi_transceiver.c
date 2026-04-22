@@ -16,6 +16,7 @@
 #include "sdiowifi_mgmr_type.h"
 
 #include "sdio_port.h"
+#include "hostrouter.h"
 
 typedef void (*bl_custom_tx_callback_t)(void *cb_arg, bool tx_ok);
 
@@ -165,7 +166,7 @@ static int bflb_net_wifi_trcver_write_mac(net_wifi_trcver_t *trcver)
     return 0;
 }
 
-#if SDIOWIFI_ACK_BOOT_SRC
+#if defined(SDIOWIFI_ACK_BOOT_SRC) && SDIOWIFI_ACK_BOOT_SRC
 static void start_ack_bootsrc(void *pvParameters)
 {
     net_wifi_trcver_t *trcver;

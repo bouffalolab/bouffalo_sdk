@@ -10,6 +10,7 @@
 
 #include <app_player.h>
 #include "bl616_glb.h"
+#include "bflb_romfs.h"
 
 void vAssertCalled(void)
 {
@@ -31,7 +32,7 @@ void app_main_entry(void *arg)
     /* Init player */
     app_player_init();
 
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S)
     extern msp_i2s_port_init(void);
     msp_i2s_port_init();
 #endif

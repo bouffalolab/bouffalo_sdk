@@ -170,6 +170,20 @@ static int mjpeg_dec_decode_frame(void *jpeg_src_addr, void *raw_dst_addr, uint8
     bflb_mjdec_init(mjpeg_dec_dev, &cfg);
     bflb_mjdec_int_clear(mjpeg_dec_dev, MJDEC_INT_ALL);
     bflb_mjdec_int_enable(mjpeg_dec_dev, MJDEC_INT_ALL, true);
+
+#if defined(BL616CL)
+    /* burst 2 and delay 0xA0A0, 100ms @1920x1080@RGB888 */
+    /* axi burst */
+    uint32_t reg_val = getreg32(mjpeg_dec_dev->reg_base + 0);
+    reg_val &= ~(0x3 << 4);
+    reg_val &= ~(0x3 << 6);
+    reg_val |= (2 << 4);
+    reg_val |= (2 << 6);
+    putreg32(reg_val, mjpeg_dec_dev->reg_base + 0);
+    /* axi burst delay */
+    putreg32(0xA0A0, mjpeg_dec_dev->reg_base + 0x40);
+#endif
+
     bflb_mjdec_start(mjpeg_dec_dev);
 
     int mjdec_status = (int)ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(MJPEG_DEC_WAIT_TIMEOUT_MS));
@@ -219,7 +233,7 @@ static void mjpeg_dec_task(void *pvParameters)
         output_size = (uint32_t)width * (uint32_t)height * (uint32_t)g_output_cfg.pixel_size;
 
         /* allco img_raw frame buff */
-        ret = frame_queue_alloc_lock(g_img_raw_in_frame_ctrl, (frame_elem_t *)&img_raw_in_frame, 5);
+        ret = frame_queue_alloc_lock(g_img_raw_in_frame_ctrl, (frame_elem_t *)&img_raw_in_frame, 20);
         if (ret < 0) {
             frame_queue_output_free(g_mjpeg_in_frame_ctrl, (frame_elem_t *)&mjpeg_in_frame);
             JPEG_DBG("img_raw_in alloc timeout %d\r\n", ret);
@@ -288,19 +302,19 @@ int mjpeg_dec_task_init(void)
         JPEG_INFO("mjpeg_in frame mjpeg_dec out queue ID: %d\r\n", mjpeg_in_out_queue_mjpeg_dec_id);
     }
 
-     if (CONFIG_MJPEG_DEC_OUTPUT_FORMAT == 1) {
+    if (CONFIG_MJPEG_DEC_OUTPUT_FORMAT == 1) {
         g_output_cfg.name = "RGB565";
         g_output_cfg.mjdec_format = MJDEC_FORMAT_RGB565;
         g_output_cfg.img_raw_format = IMG_RAW_FRAME_FORMAT_RGB565;
         g_output_cfg.pixel_size = 2;
     } else if (CONFIG_MJPEG_DEC_OUTPUT_FORMAT == 2) {
         g_output_cfg.name = "RGB888";
-        g_output_cfg.mjdec_format = MJDEC_FORMAT_BGR888;
+        g_output_cfg.mjdec_format = MJDEC_FORMAT_RGB888;
         g_output_cfg.img_raw_format = IMG_RAW_FRAME_FORMAT_RGB888;
         g_output_cfg.pixel_size = 3;
     } else if (CONFIG_MJPEG_DEC_OUTPUT_FORMAT == 3) {
         g_output_cfg.name = "NRGB8888";
-        g_output_cfg.mjdec_format = MJDEC_FORMAT_NBGR8888;
+        g_output_cfg.mjdec_format = MJDEC_FORMAT_NRGB8888;
         g_output_cfg.img_raw_format = IMG_RAW_FRAME_FORMAT_NRGB8888;
         g_output_cfg.pixel_size = 4;
     } else if (CONFIG_MJPEG_DEC_OUTPUT_FORMAT == 4) {

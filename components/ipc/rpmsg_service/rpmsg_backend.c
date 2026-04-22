@@ -127,7 +127,7 @@ static int sem_give(SemaphoreHandle_t sem)
     return 0;
 }
 
-static void ipm_callback(const struct device *dev, void *context, uint32_t id, volatile void *data)
+static void ipm_callback(ipm_device_t *dev, void *context, uint32_t id, volatile void *data)
 {
     (void)dev;
     (void)context;

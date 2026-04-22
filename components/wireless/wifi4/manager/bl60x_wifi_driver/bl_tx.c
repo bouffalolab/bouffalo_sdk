@@ -577,7 +577,7 @@ err_t bl_output(struct bl_hw *bl_hw, int is_sta, struct pbuf *p, struct bl_tx_cf
     }
 
     /* Use aligned link_header */
-    txhdr = (struct bl_txhdr *)(p->payload + align_offset);
+    txhdr = (struct bl_txhdr *)((char *)p->payload + align_offset);
     memset(txhdr, 0, sizeof(struct bl_txhdr));
 
     /* Fill-in txhdr */
@@ -728,9 +728,9 @@ err_t bl_tx_intra_bss_broadcast(struct pbuf *p, int src_sta_idx)
                 pbuf_copy(q, p);
 
 #ifdef CFG_NETBUS_WIFI_ENABLE
-                err_t ret = bl_output(&wifi_hw, 0, q, NULL, 1);
+                (void)bl_output(&wifi_hw, 0, q, NULL, 1);
 #else
-                err_t ret = bl_output(&wifi_hw, 0, q, NULL);
+                (void)bl_output(&wifi_hw, 0, q, NULL);
 #endif
                 /* bl_output refs the pbuf, we need to free our reference */
                 pbuf_free(q);

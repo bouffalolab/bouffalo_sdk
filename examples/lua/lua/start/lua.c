@@ -71,7 +71,7 @@ lstop(lua_State *L, lua_Debug *ar)
 ** this function only sets a hook that, when called, will stop the
 ** interpreter.
 */
-static void
+static void __attribute__((unused))
 laction(int i)
 {
     int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;

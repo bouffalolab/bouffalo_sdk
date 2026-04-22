@@ -27,12 +27,12 @@ void sys_irq_disable(unsigned int vector)
 
 void metal_machine_cache_flush(void *addr, unsigned int len)
 {
-    bflb_l1c_dcache_clean_range((uint32_t)addr, len);
+    bflb_l1c_dcache_clean_range(addr, len);
 }
 
 void metal_machine_cache_invalidate(void *addr, unsigned int len)
 {
-    bflb_l1c_dcache_invalidate_range((uint32_t)addr, len);
+    bflb_l1c_dcache_invalidate_range(addr, len);
 }
 
 void metal_generic_default_poll(void)

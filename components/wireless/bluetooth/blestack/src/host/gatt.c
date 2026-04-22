@@ -1026,7 +1026,7 @@ int service_change_test(struct bt_gatt_indicate_params *params,const struct bt_c
 	params->data = &sc_range[0];
 	params->len = sizeof(sc_range);
 
-	return bt_gatt_indicate(con, params);
+	return bt_gatt_indicate((struct bt_conn *)con, params);
 }
 
 #endif

@@ -65,6 +65,20 @@ void board_pec_qspi_cam_gpio_init(void);
 #define PEC_DPI_DE_PIN     GPIO_PIN_13
 void board_pec_dpi_gpio_init(void);
 
+#define PEC_SRGB_DATA0_PIN GPIO_PIN_16
+#define PEC_SRGB_DATA1_PIN GPIO_PIN_17
+#define PEC_SRGB_DATA2_PIN GPIO_PIN_18
+#define PEC_SRGB_DATA3_PIN GPIO_PIN_19
+#define PEC_SRGB_DATA4_PIN GPIO_PIN_20
+#define PEC_SRGB_DATA5_PIN GPIO_PIN_21
+#define PEC_SRGB_DATA6_PIN GPIO_PIN_22
+#define PEC_SRGB_DATA7_PIN GPIO_PIN_23
+#define PEC_SRGB_CLK_PIN   GPIO_PIN_12
+#define PEC_SRGB_HSYNC_PIN GPIO_PIN_14
+#define PEC_SRGB_VSYNC_PIN GPIO_PIN_15
+#define PEC_SRGB_DE_PIN    GPIO_PIN_13
+void board_pec_srgb_gpio_init(void);
+
 void board_audio_pll_config_for_rate(unsigned int samplerate_hz);
 void board_audac_gpio_init(void);
 void board_auadc_gpio_init(void);

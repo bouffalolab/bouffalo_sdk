@@ -22,7 +22,7 @@
 #include <avutil/vol_scale.h>
 
 #include "app_player.h"
-//#include "bt/app_bt.h"
+#include "bt/app_bt.h"
 
 #define TAG "player"
 

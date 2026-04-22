@@ -80,8 +80,8 @@ int cmd_netifd_nano(int argc, char *argv[])
         char *gateway = NULL;
         int opt;
 
-        utils_al_getopt_init(&getopt_env, 0);
-        while ((opt = utils_al_getopt(&getopt_env, argc - 1, argv + 1, "i:a:m:g:")) != -1) {
+        utils_getopt_init(&getopt_env, 0);
+        while ((opt = utils_getopt(&getopt_env, argc - 1, argv + 1, "i:a:m:g:")) != -1) {
             switch (opt) {
                 case 'i':
                     interface = getopt_env.optarg;
@@ -121,8 +121,8 @@ int cmd_netifd_nano(int argc, char *argv[])
         char *interface = NULL;
         int opt;
 
-        utils_al_getopt_init(&getopt_env, 0);
-        while ((opt = utils_al_getopt(&getopt_env, argc - 1, argv + 1, "i:")) != -1) {
+        utils_getopt_init(&getopt_env, 0);
+        while ((opt = utils_getopt(&getopt_env, argc - 1, argv + 1, "i:")) != -1) {
             if (opt == 'i') {
                 interface = getopt_env.optarg;
             }
@@ -142,8 +142,8 @@ int cmd_netifd_nano(int argc, char *argv[])
         char *interface = NULL;
         int opt;
 
-        utils_al_getopt_init(&getopt_env, 0);
-        while ((opt = utils_al_getopt(&getopt_env, argc - 1, argv + 1, "i:")) != -1) {
+        utils_getopt_init(&getopt_env, 0);
+        while ((opt = utils_getopt(&getopt_env, argc - 1, argv + 1, "i:")) != -1) {
             if (opt == 'i') {
                 interface = getopt_env.optarg;
             }
@@ -169,8 +169,8 @@ int cmd_netifd_nano(int argc, char *argv[])
         char *interface = NULL;
         int opt;
 
-        utils_al_getopt_init(&getopt_env, 0);
-        while ((opt = utils_al_getopt(&getopt_env, argc - 2, argv + 2, "i:")) != -1) {
+        utils_getopt_init(&getopt_env, 0);
+        while ((opt = utils_getopt(&getopt_env, argc - 2, argv + 2, "i:")) != -1) {
             if (opt == 'i') {
                 interface = getopt_env.optarg;
             }
@@ -210,8 +210,8 @@ int cmd_netifd_nano(int argc, char *argv[])
         char *interface = NULL;
         int opt;
 
-        utils_al_getopt_init(&getopt_env, 0);
-        while ((opt = utils_al_getopt(&getopt_env, argc - 2, argv + 2, "b:i:")) != -1) {
+        utils_getopt_init(&getopt_env, 0);
+        while ((opt = utils_getopt(&getopt_env, argc - 2, argv + 2, "b:i:")) != -1) {
             switch (opt) {
                 case 'b':
                     bridge = getopt_env.optarg;
@@ -232,7 +232,7 @@ int cmd_netifd_nano(int argc, char *argv[])
 
         if (strcmp(bridge_cmd, "create") == 0) {
             struct netif *netif = netifd_bridge_create(bridge);
-            if (netif >= 0) {
+            if (netif != NULL) {
                 printf("Bridge interface %s%d (renamed from %s) created successfully.\r\n",
                         netif->name, netif->num, bridge);
             } else {

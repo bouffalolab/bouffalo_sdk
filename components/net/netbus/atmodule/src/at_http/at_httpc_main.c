@@ -49,6 +49,7 @@
 
 #include "lwip/altcp_tcp.h"
 #include "lwip/dns.h"
+#include "lwip/timeouts.h"
 #include "lwip/debug.h"
 #include "lwip/mem.h"
 #include "lwip/altcp_tls.h"

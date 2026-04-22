@@ -77,6 +77,7 @@ static int ep1_ep_id;
 static int ep2_ep_id;
 static int ep3_ep_id;
 
+static unsigned int receive_message(void) __attribute__((unused));
 static unsigned int receive_message(void)
 {
     xSemaphoreTake(data_rx_sem, portMAX_DELAY);
@@ -122,7 +123,7 @@ static void app_task(void *param)
 {
     (void)param;
 
-    int status = 0;
+    int status __attribute__((unused)) = 0;
     unsigned int ep1_message = 0U;
     unsigned int ep2_message = 100U;
     unsigned int ep3_message = 200U;

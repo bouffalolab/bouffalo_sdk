@@ -15,6 +15,8 @@
 #include <wifi_mgmr_ext.h>
 #include <semphr.h>
 
+extern int bl_wifi_mac_addr_get(uint8_t mac[6]);
+
 #define WPS_SM_EAPOL_VERSION 1
 
 static int wps_tx_start_(void);

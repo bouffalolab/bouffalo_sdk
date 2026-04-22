@@ -99,6 +99,8 @@ struct tm {
         time_t tv_sec; /**< Seconds. */
         long tv_nsec;  /**< Nanoseconds. */
     };
+#else
+#include <time.h>
 #endif
 
 #if !defined( posixconfigENABLE_ITIMERSPEC ) || ( posixconfigENABLE_ITIMERSPEC == 1 )
@@ -112,6 +114,11 @@ struct tm {
         struct timespec it_value;    /**< Timer expiration. */
     };
 #endif
+
+/* Forward declarations so function parameter lists don't implicitly define these
+ * structs with scope limited to the parameter list (avoids -Werror). */
+struct timespec;
+struct itimerspec;
 
 /**
  * @brief Report CPU time used.
@@ -277,5 +284,9 @@ int timer_settime( timer_t timerid,
 #ifdef __cplusplus
 }
 #endif
+
+/* Standard C time functions not declared in this POSIX time header */
+struct tm *gmtime(const time_t *timep);
+time_t mktime(struct tm *tm);
 
 #endif /* ifndef _FREERTOS_POSIX_TIME_H_ */

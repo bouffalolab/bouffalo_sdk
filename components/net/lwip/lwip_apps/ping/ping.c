@@ -127,7 +127,7 @@ uint32_t ping(char *target_name, uint16_t interval, uint16_t size, uint32_t coun
     int timeout = PING_RCV_TIMEO * 1000UL / (1000 * portTICK_PERIOD_MS);
 #endif
 
-    int s, ttl, recv_len;
+    int s, ttl = 0, recv_len;
     ip_addr_t target_addr;
     uint32_t send_times;
     uint32_t recv_times;

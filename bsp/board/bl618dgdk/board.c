@@ -12,6 +12,10 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#ifdef CONFIG_BFLB_MTD
+#include "bflb_mtd.h"
+#include "bflb_boot2.h"
+#endif
 #include "bflb_sec_mutex.h"
 #include "bflb_xip_sflash.h"
 #include "bflb_sf_ctrl.h"
@@ -54,7 +58,7 @@ static struct bflb_device_s *uart;
 static struct bflb_device_s *rtc;
 #endif
 
-static void system_bod_init(void)
+static void __attribute__((unused)) system_bod_init(void)
 {
     uint8_t enableBod = 1;
     /*0:BOD will trigger interrupt,1:trigger reset*/
@@ -65,7 +69,7 @@ static void system_bod_init(void)
     AON_Set_BOD_Config(enableBod, bodThreshold, enableBodInt);
 }
 
-static void system_bod_isr(int irq, void *arg)
+static void __attribute__((unused)) system_bod_isr(int irq, void *arg)
 {
     printf("BOD interrupt occurred!\n");
     while (1) {
@@ -500,7 +504,7 @@ void boot_up_np()
 __attribute__((weak)) const uint8_t gmini_sysData[4] = { 0 };
 __attribute__((weak)) const uint32_t gmini_sysSize;
 
-static void __attribute__((noinline)) boot_up_lp(uint32_t address)
+static void __attribute__((noinline, unused)) boot_up_lp(uint32_t address)
 {
     //Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_LP, 0);
     if (gmini_sysData[0] != 0) {

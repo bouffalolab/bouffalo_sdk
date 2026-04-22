@@ -11,6 +11,8 @@
 #include "async_event.h"
 #include "log.h"
 
+extern void wifi_task_create(void);
+extern void wl80211_init(void);
 extern void app_atmodule_init(void);
 static bool wifi_init_done = 0;
 

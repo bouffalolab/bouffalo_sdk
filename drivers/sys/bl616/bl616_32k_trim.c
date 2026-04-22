@@ -1,6 +1,7 @@
 #include "bl_lp.h"
 #include "hbn_reg.h"
 #include "bl616_glb.h"
+#include "bl616_glb_gpio.h"
 #include <stdint.h>
 
 #define LP_ABS(a)     (((a) > 0) ? (a) : (-(a)))

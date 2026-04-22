@@ -194,7 +194,7 @@ void bflb_mjpeg_init(struct bflb_device_s *dev, const struct bflb_mjpeg_config_s
             break;
         case MJPEG_FORMAT_YUV420SP_NV12:
         case MJPEG_FORMAT_YUV420SP_NV21:
-            putreg32(((blocks / 2) << 16) + blocks, reg_base + MJPEG_YUV_MEM_OFFSET);
+            putreg32(((((blocks + 1) / 2) << 16) + blocks), reg_base + MJPEG_YUV_MEM_OFFSET);
             break;
         case MJPEG_FORMAT_GRAY:
             putreg32((0 << 16) + blocks, reg_base + MJPEG_YUV_MEM_OFFSET);

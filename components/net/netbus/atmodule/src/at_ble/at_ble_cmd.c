@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "at_main.h"
 #include "at_core.h"
 
@@ -65,7 +66,7 @@ static int get_mac_from_string(const char *string, uint8_t mac[6])
     }
     hex_str[12] = '\0'; 
 
-    if (utils_hex2bin(hex_str, 12, mac, 6) != 6) {
+    if (utils_hex2bin((const char *)hex_str, 12, mac, 6) != 6) {
         return -1;
     }
 
@@ -79,7 +80,7 @@ static int is_valid_uuid_string(const char *uuid_str)
         return 1;
     for(size_t i=0;i<len;i++)
     {
-        if(!isxdigit(uuid_str[i]))
+        if(!isxdigit((unsigned char)uuid_str[i]))
             return 1;
     }
     
@@ -802,7 +803,7 @@ static int at_setup_cmd_ble_gatts_char_create(int argc, const char **argv)
 static int at_setup_cmd_ble_gatts_notify(int argc, const char **argv)
 {
     int conn_index = 0;
-    int conn_index_valid = 0;
+    int conn_index_valid __attribute__((unused)) = 0;
     int srv_idx = 0;
     int char_idx = 0;
     int length = 0;
@@ -867,7 +868,7 @@ static int at_setup_cmd_ble_gatts_indicate(int argc, const char **argv)
 {
     int srv_idx = 0;
     int conn_index = 0;
-    int conn_index_valid = 0;
+    int conn_index_valid __attribute__((unused)) = 0;
     int char_idx = 0;
     int length = 0;
     int recv_num = 0;
@@ -1381,7 +1382,7 @@ static int at_setup_cmd_ble_sec_unpair(int argc, const char **argv)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     if (addrtype != 0 && addrtype != 1)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
-    if(at_ble_get_unpair(remote_address,addrtype))
+    if(at_ble_get_unpair((char *)remote_address,addrtype))
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
     return AT_RESULT_CODE_OK;
 }

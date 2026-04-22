@@ -2286,7 +2286,7 @@ void jy6311_config_play(const audio_codec_cfg_t *cfg)
     jy6311_sysclk_cfg(JY6311_I2C_ADDR, &sysclk_cfg);
 
     /* [Optional] DAC Optional Configuration, eg Path/Volume/EQ/DRC */
-    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0xBF); // DAC Digital Volume 0dB
+    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0x80); // DAC Digital Volume 0dB
     jy6311_dac_eq_cfg(JY6311_I2C_ADDR, true, dac_eq_filt_coef, JY6311_ARRAY_SIZE(dac_eq_filt_coef));
     jy6311_dac_drc_cfg(JY6311_I2C_ADDR, true, dac_drc_filt_coef, JY6311_ARRAY_SIZE(dac_drc_filt_coef));
     jy6311_play_path_cfg(JY6311_I2C_ADDR, JY6311_DAC_OUT_PATH_HEADPHONE);
@@ -2300,7 +2300,7 @@ void jy6311_config_play(const audio_codec_cfg_t *cfg)
     jy6311_play_stop(JY6311_I2C_ADDR);
 
     /* [Optional] DAC Optional Configuration, eg Volume/EQ/DRC */
-    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0xBF);                             // DAC Digital Volume 0dB
+    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0x80);                             // DAC Digital Volume 0dB
     jy6311_dac_eq_cfg(JY6311_I2C_ADDR, false, NULL, 0);
     jy6311_dac_drc_cfg(JY6311_I2C_ADDR, false, NULL, 0);
 
@@ -2406,7 +2406,9 @@ void jy6311_config_play_record(const audio_codec_cfg_t *cfg)
     JY6311_I2SRoleETypeDef i2s_role = JY6311_I2S_ROLE_SLAVE;
     JY6311_UserSmpRateETypeDef sample_rate_hz = JY6311_USER_SR_16K;
 
+#ifdef CHIP_NUM
     uint8_t i2c_addr[2] = { 0x44, 0x45 };
+#endif
 
     memset((void *)&i2s_cfg, 0x0, sizeof(i2s_cfg));
     memset((void *)&sysclk_cfg, 0x0, sizeof(sysclk_cfg));
@@ -2452,13 +2454,13 @@ void jy6311_config_play_record(const audio_codec_cfg_t *cfg)
     /* [Optional] DAC Optional Configuration, eg Path/Volume/EQ/DRC */
 
 #ifdef CHIP_NUM
-    jy6311_multichips_play_vol_cfg(i2c_addr, 2, 0xBF); // DAC Digital Volume 0dB
+    jy6311_multichips_play_vol_cfg(i2c_addr, 2, 0x80); // DAC Digital Volume 0dB
     jy6311_multichips_dac_eq_cfg(i2c_addr, 2, true, dac_eq_filt_coef, JY6311_ARRAY_SIZE(dac_eq_filt_coef));
     jy6311_multichips_dac_drc_cfg(i2c_addr, 2, true, dac_drc_filt_coef, JY6311_ARRAY_SIZE(dac_drc_filt_coef));
     //jy6311_multichips_play_path_cfg(i2c_addr, 2, JY6311_DAC_OUT_PATH_LINEOUT);
     jy6311_multichips_play_path_cfg(i2c_addr, 2, JY6311_DAC_OUT_PATH_HEADPHONE);
 #else
-    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0xBF); // DAC Digital Volume 0dB
+    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0x80); // DAC Digital Volume 0dB
     jy6311_dac_eq_cfg(JY6311_I2C_ADDR, true, dac_eq_filt_coef, JY6311_ARRAY_SIZE(dac_eq_filt_coef));
     jy6311_dac_drc_cfg(JY6311_I2C_ADDR, true, dac_drc_filt_coef, JY6311_ARRAY_SIZE(dac_drc_filt_coef));
     jy6311_play_path_cfg(JY6311_I2C_ADDR, JY6311_DAC_OUT_PATH_HEADPHONE);
@@ -2509,7 +2511,7 @@ void jy6311_config_play_record(const audio_codec_cfg_t *cfg)
     jy6311_record_stop(JY6311_I2C_ADDR);
 
     /* [Optional] DAC Optional Configuration, eg Volume/EQ/DRC */
-    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0xBF);                             // DAC Digital Volume 0dB
+    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0x80);                             // DAC Digital Volume 0dB
     jy6311_dac_eq_cfg(JY6311_I2C_ADDR, false, NULL, 0);
     jy6311_dac_drc_cfg(JY6311_I2C_ADDR, false, NULL, 0);
 
@@ -2691,7 +2693,7 @@ static uint32_t audio_codec_jy6311_default_mclk(uint32_t sample_rate_hz)
     return sample_rate_hz * 256U;
 }
 
-static JY6311_InitModETypeDef audio_codec_jy6311_get_init_mod(const audio_codec_cfg_t *cfg)
+static JY6311_InitModETypeDef __attribute__((unused)) audio_codec_jy6311_get_init_mod(const audio_codec_cfg_t *cfg)
 {
     if (cfg->enable_adc && cfg->enable_dac) {
         return JY6311_INIT_MOD_ADC_DAC;
@@ -2706,7 +2708,7 @@ static JY6311_InitModETypeDef audio_codec_jy6311_get_init_mod(const audio_codec_
     return JY6311_INIT_MOD_NONE;
 }
 
-static int audio_codec_jy6311_apply_runtime_state(audio_codec_dev_t *dev)
+static int __attribute__((unused)) audio_codec_jy6311_apply_runtime_state(audio_codec_dev_t *dev)
 {
     if (dev == NULL) {
         return -1;
@@ -2746,6 +2748,11 @@ static int audio_codec_jy6311_configure(audio_codec_dev_t *dev, const audio_code
         default:
             jy6311_config_play_record(cfg);
             break;
+    }
+
+    g_jy6311_ctx.cfg = *cfg;
+    if (audio_codec_jy6311_apply_runtime_state(dev) != 0) {
+        return -1;
     }
 
     g_jy6311_ctx.initialized = 1;

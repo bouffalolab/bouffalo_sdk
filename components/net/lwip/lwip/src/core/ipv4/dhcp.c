@@ -452,13 +452,13 @@ dhcp_select(struct netif *netif)
  * bouffalo lp change
  * Add for stop the dhcp timer coarse, when there is not any binded address or dhcp is not running
  */
-static void
+static void __attribute__((unused))
 dhcp_timer_coarse_remove(void) {
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_STATE, ("dhcp_timer_coarse_remove"));
   sys_timeouts_set_timer_enable(false, dhcp_coarse_tmr);
 }
 
-static void
+static void __attribute__((unused))
 dhcp_timer_coarse_needed(void) {
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_STATE, ("dhcp_timer_coarse_needed"));
   sys_timeouts_set_timer_enable(true, dhcp_coarse_tmr);

@@ -57,6 +57,7 @@ static int32_t mode_convert(int32_t flags)
     return res;
 }
 
+static int lfs_ret_value_convert(int lfs_ret) __attribute__((unused));
 static int lfs_ret_value_convert(int lfs_ret)
 {
     int ret;

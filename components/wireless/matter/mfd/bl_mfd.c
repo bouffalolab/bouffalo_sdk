@@ -35,9 +35,10 @@ typedef enum {
     ELEMENT_TYPE_MANUFACTORING_DATE,      
     ELEMENT_TYPE_HARDWARE_VERSION,        
     ELEMENT_TYPE_HARDWARE_VERSION_STRING,
-
+    ELEMENT_TYPE_PRODUCT_APPEARANCE_FINISH,        
+    ELEMENT_TYPE_PRODUCT_APPEARANCE_PRIMARY_COLOR,
     ELEMENT_TYPE_ELEMENT_END,
-    
+
     ELEMENT_TYPE_NUM = ELEMENT_TYPE_ELEMENT_END - ELEMENT_TYPE_ELEMENT_START,
     ELEMENT_TYPE_PLAIN_FLAG = 0x8000,
     ELEMENT_TYPE_ID_MASK = 0x7fff,
@@ -402,7 +403,18 @@ int mfd_getHardwareVersionString(char * buf, uint32_t size)
     return mfd_copyDataItem(ELEMENT_TYPE_HARDWARE_VERSION_STRING,(uint8_t*)buf,size);
 }
 
+int mfd_getProductFinish(uint8_t * buf, uint32_t size) 
+{
+    return mfd_copyDataItem(ELEMENT_TYPE_PRODUCT_APPEARANCE_FINISH,buf,size);
+}
+
+int mfd_getProductPrimaryColor(char * buf, uint32_t size)
+{
+    return mfd_copyDataItem(ELEMENT_TYPE_PRODUCT_APPEARANCE_PRIMARY_COLOR,(uint8_t*)buf,size);
+}
+
 int mfd_getElementById(int16_t id, uint8_t * buf, uint32_t size)
 {
     return mfd_copyDataItem(id, buf, size);
 }
+

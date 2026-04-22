@@ -8,6 +8,9 @@
 #include "async_event.h"
 #include "wifi_mgmr_ext.h"
 #include "log.h"
+extern void wifi_mgmr_task_start(void);
+extern void wifi_task_create(void);
+extern void fhost_init(void);
 extern void app_atmodule_init(void);
 static bool wifi_init_done = 0;
 static void wifi_event_handler(async_input_event_t ev, void *priv)

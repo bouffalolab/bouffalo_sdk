@@ -27,7 +27,7 @@
 #if defined(LCD_DPI_STANDARD)
 
 #if (LCD_DPI_INTERFACE_TYPE == 2)
-
+/* PEC_v1 DPI */
 #include "bl_mipi_dpi_sim.h"
 
 #define lcd_mipi_dpi_init                    lcd_mipi_dpi_sim_init
@@ -59,8 +59,39 @@ static lcd_mipi_dpi_sim_init_t dpi_para = {
     .frame_buff = NULL,
 };
 
-#elif (LCD_DPI_INTERFACE_TYPE == 3)
+#elif (LCD_DPI_INTERFACE_TYPE == 4)
+/* PEC_v2 SRGB */
+#include "bl_srgb_sim_v2.h"
 
+#define lcd_mipi_dpi_init                    lcd_srgb_sim_v2_init
+#define lcd_mipi_dpi_screen_switch           lcd_srgb_sim_v2_screen_switch
+#define lcd_mipi_dpi_get_screen_using        lcd_srgb_sim_v2_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register lcd_srgb_sim_v2_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_SRGB_SIM_V2_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_SRGB_SIM_V2_FRAME_INT_TYPE_CYCLE
+
+/* mipi dpi (PEC simulation v2) paramant */
+static lcd_srgb_sim_v2_init_t dpi_para = {
+    .width = STANDARD_DPI_W,
+    .height = STANDARD_DPI_H,
+    .hsw = STANDARD_DPI_HSW,
+    .hbp = STANDARD_DPI_HBP,
+    .hfp = STANDARD_DPI_HFP,
+    .vsw = STANDARD_DPI_VSW,
+    .vbp = STANDARD_DPI_VBP,
+    .vfp = STANDARD_DPI_VFP,
+
+    .frame_rate = STANDARD_DPI_FRAME_RATE,
+#if (STANDARD_DPI_PIXEL_FORMAT == 1)
+    .pixel_format = LCD_SRGB_SIM_V2_PIXEL_FORMAT_RGB565,
+#else
+    .pixel_format = LCD_SRGB_SIM_V2_PIXEL_FORMAT_NRGB8888,
+#endif
+    .frame_buff = NULL,
+};
+
+#elif (LCD_DPI_INTERFACE_TYPE == 3)
+/* DPI (bl616dg) */
 #include "bl_mipi_dpi_v2.h"
 
 #define lcd_mipi_dpi_init                    bl_mipi_dpi_v2_init

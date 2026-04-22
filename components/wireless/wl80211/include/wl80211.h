@@ -76,6 +76,7 @@ struct aid_list_entry {
     void *wpa_sm;
     uint8_t used;
     uint8_t sta_idx;
+    uint16_t last_seq_ctrl;
 };
 
 enum wl80211_auth_type {

@@ -140,7 +140,7 @@ const st77926_dbi_init_cmd_t st77926_dbi_init_cmds[] = {
 #endif
 
 /* Color reversal */
-#if ST77926_DBI_COLOR_REVERSAL
+#if defined(ST77926_DBI_COLOR_REVERSAL) && ST77926_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 },
 #else
     { 0x20, NULL, 0 },
@@ -228,7 +228,7 @@ int st77926_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
         return -1;
     }
 
-#if ST77926_DBI_DIR_MIRROR
+#if defined(ST77926_DBI_DIR_MIRROR) && ST77926_DBI_DIR_MIRROR
     mir_flag = !mir_flag;
 #endif
 
@@ -239,7 +239,7 @@ int st77926_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
     }
 
 /* Color RGB order */
-#if ST77926_DBI_COLOR_ORDER
+#if defined(ST77926_DBI_COLOR_ORDER) && ST77926_DBI_COLOR_ORDER
     param |= 0x08;
 #endif
 
@@ -262,11 +262,11 @@ int st77926_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
  */
 void st77926_dbi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-#if ST77926_DBI_OFFSET_X
+#if defined(ST77926_DBI_OFFSET_X) && ST77926_DBI_OFFSET_X
     x1 += ST77926_DBI_OFFSET_X;
     x2 += ST77926_DBI_OFFSET_X;
 #endif
-#if ST77926_DBI_OFFSET_Y
+#if defined(ST77926_DBI_OFFSET_Y) && ST77926_DBI_OFFSET_Y
     y1 += ST77926_DBI_OFFSET_Y;
     y2 += ST77926_DBI_OFFSET_Y;
 #endif

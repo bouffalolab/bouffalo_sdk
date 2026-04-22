@@ -119,7 +119,7 @@ int is_netif_in_bridge_port(struct netif *bridgeif, struct netif *netif)
     return 0;
 }
 
-int netifd_bridge_create(const char* bridge_name)
+struct netif *netifd_bridge_create(const char* bridge_name)
 {
     struct netif* netif = NULL;
 
@@ -129,24 +129,21 @@ int netifd_bridge_create(const char* bridge_name)
 
     if (g_bridge) {
         printf("now not support multbridge.\r\n");
-        return -1;
+        return NULL;
     }
 
     netif = malloc(sizeof(struct netif));
     if (!netif) {
-        return -1;
+        return NULL;
     }
     g_bridge = netif;
 
     printf("malloc netif:0x%p\r\n", netif);
-    if (NULL == netif) {
-        return -1;
-    }
     /*
      * max_ports: Maximum number of ports in the bridge (ports are stored in an array,
-     *            this influences memory allocated for netif->state of the 
-     *            bridge netif). 
-     * max_fdb_dynamic_entries: Maximum number of dynamic/learning entries in the 
+     *            this influences memory allocated for netif->state of the
+     *            bridge netif).
+     * max_fdb_dynamic_entries: Maximum number of dynamic/learning entries in the
      *            bridge's forwarding database. In the default implementation, this
      *            controls memory consumption only.
      * max_fdb_static_entries: Maximum number of static forwarding entries. Influences
@@ -160,7 +157,7 @@ int netifd_bridge_create(const char* bridge_name)
 
     netif = netif_add_noaddr(netif, &bridge_initdata, bridgeif_init, netif_input);// tcpip_input
     if (netif == NULL) {
-        return -1; // Failed to create bridge interface
+        return NULL; // Failed to create bridge interface
     }
     strncpy(netif->name, bridge_name, sizeof(netif->name) - 1);
 

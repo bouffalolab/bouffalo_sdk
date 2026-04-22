@@ -63,6 +63,7 @@ static const unsigned char sha256_test_sum[6][32] = {
 /*
  * FIPS-180-2 test vectors
  */
+#if !defined(BL702L)
 static const unsigned char sha512_test_buf[3][113] = {
     { "abc" },
     { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu" },
@@ -125,6 +126,7 @@ static const unsigned char sha512_test_sum[6][64] = {
       0xEB, 0x00, 0x9C, 0x5C, 0x2C, 0x49, 0xAA, 0x2E,
       0x4E, 0xAD, 0xB2, 0x17, 0xAD, 0x8C, 0xC0, 0x9B }
 };
+#endif /* !defined(BL702L) */
 
 ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32))) uint8_t sha_input_buf[1000]; /* input addr must be align 32 */
 

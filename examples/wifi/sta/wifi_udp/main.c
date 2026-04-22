@@ -39,9 +39,15 @@
 #include "board.h"
 #include "shell.h"
 
+#ifndef BL602
+#include "fhost_api.h"
+#include "wifi_mgmr.h"
+#endif
+#include "async_event.h"
+#include "mm.h"
+
 #define DBG_TAG "MAIN"
 #include "log.h"
-#include "async_event.h"
 
 struct bflb_device_s *gpio;
 
@@ -65,6 +71,11 @@ static struct bflb_device_s *uart0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
+#ifdef BL602
+extern void wifi_task_create(void);
+extern int fhost_init(void);
+extern int wifi_mgmr_task_start(void);
+#endif
 
 /****************************************************************************
  * Private Function Prototypes

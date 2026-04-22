@@ -140,7 +140,6 @@ struct wl_efuse_t
     uint8_t     icx_code;
     uint8_t     dcdc_vout_trim_aon;
     int8_t      Temperature_MP; // temperature of sensor while power cal at production line
-    uint8_t     mjpeg_dec_dis; // 0: mjpeg decoder on; 1: disable mjpeg decoder;
 };
 
 struct wl_param_tcap_t
@@ -148,6 +147,12 @@ struct wl_param_tcap_t
     uint8_t     en_tcap;
     int8_t      tcap_tsen[10];
     int8_t      tcap_cap[11];
+};
+
+struct wl_param_spur_rules_t
+{
+    uint32_t    cfg20;
+    uint32_t    cfg40;
 };
 
 struct wl_param_t
@@ -162,6 +167,9 @@ struct wl_param_t
     struct wl_param_pwrlimit_t   pwrlim[NUM_WLAN_CHANNELS];
     struct wl_efuse_t            ef;
     struct wl_param_tcap_t       tcap;
+    struct wl_param_spur_rules_t spur_rules[NUM_WLAN_CHANNELS];
+    uint8_t                      spur_rules_en[NUM_WLAN_CHANNELS];
+    uint8_t                      bz_backoff_db[21];
 };
 
 struct wl_env_t
@@ -339,6 +347,26 @@ void wl_rf_set_channel_pwr_comp(uint8_t channel_idx);
 void wl_rf_set_bz_channel_pwr_comp(void);
 void wl_rf_set_status(uint8_t rf_en);// turn on/off rf domain
 void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
+
+// config for rf 
+
+// if build the LPFW, please define 1 
+#ifndef LPFW_CFG_RF
+#define LPFW_CFG_RF (0)
+#endif
+
+// rf log config
+#ifndef PHYRF_LOG_EN
+#define WL_RF_LOG_EN (1)
+#else
+#define WL_RF_LOG_EN PHYRF_LOG_EN
+#endif
+
+// 0: disable the function(cw..) only for mfg to save code size
+#ifndef MFG_FUNC_ONLY
+#define MFG_FUNC_ONLY (0)
+#endif
+
 /*
 * rf driver api end
 */

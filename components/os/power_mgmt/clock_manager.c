@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#if CONFIG_CLOCK_SOURCE_EF_PARAM
+#if defined(CONFIG_CLOCK_SOURCE_EF_PARAM) && CONFIG_CLOCK_SOURCE_EF_PARAM
 #include "easyflash.h"
 #endif
 #include "FreeRTOS.h"
@@ -9,9 +9,11 @@
 #if defined(BL616)
 #include "bl616_glb.h"
 #include "bl616_aon.h"
+#include "bl616_hbn.h"
 #elif defined(BL616CL)
 #include "bl616cl_glb.h"
 #include "bl616cl_aon.h"
+#include "bl616cl_hbn.h"
 #elif defined(BL618DG)
 #include "bl618dg_glb.h"
 #include "bl618dg_aon.h"
@@ -120,7 +122,15 @@ static int xtal32k_check(int crystal_flag)
     vTaskDelay(10);
     printf("xtal32k_check_entry task enable, freq_mtimer must be 1MHz!\r\n");
 
+#if defined(BL618DG)
+    AON_Power_On_Xtal_32K();
+    (void)crystal_flag;
+#elif defined(BL616CL)
+    HBN_Power_On_Xtal_32K();
+    (void)crystal_flag;
+#else
     bl_lp_power_on_xtal32k(crystal_flag);
+#endif
 
     timeout_start = bflb_mtimer_get_time_us();
 
@@ -184,12 +194,21 @@ static int xtal32k_check(int crystal_flag)
                 xtal32_regulator_flag = 1;
 
                 HBN_32K_Sel(0);
+#if defined(BL618DG)
+                AON_Power_Off_Xtal_32K();
+#else
                 HBN_Power_Off_Xtal_32K();
+#endif
 
                 vTaskDelay(10);
 
+#if defined(BL618DG)
+                AON_Set_Xtal_32K_Regulator(3);
+                AON_Power_On_Xtal_32K();
+#else
                 HBN_Set_Xtal_32K_Regulator(3);
                 HBN_Power_On_Xtal_32K();
+#endif
                 HBN_32K_Sel(1);
             }
 
@@ -228,7 +247,11 @@ static int xtal32k_check(int crystal_flag)
         printf("xtal32k_check: failure!, total time:%dms\r\n", (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
         printf("xtal32k_check: select rc32k, and xtal32k poweroff \r\n");
         HBN_32K_Sel(0);
+#if defined(BL618DG)
+        AON_Power_Off_Xtal_32K();
+#else
         HBN_Power_Off_Xtal_32K();
+#endif
     }
 
     /* */
@@ -237,7 +260,7 @@ static int xtal32k_check(int crystal_flag)
     return ret;
 }
 
-#if CONFIG_CLOCK_SOURCE_EF_PARAM
+#if defined(CONFIG_CLOCK_SOURCE_EF_PARAM) && CONFIG_CLOCK_SOURCE_EF_PARAM
 // Read clock source from flash using EasyFlash
 int clock_source_read(uint8_t *clock_source)
 {

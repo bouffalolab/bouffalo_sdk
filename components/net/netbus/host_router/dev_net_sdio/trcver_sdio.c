@@ -18,6 +18,7 @@
 #include "sdiowifi_mgmr_type.h"
 //#include <bl_timer.h>
 
+#include "FreeRTOS.h"
 #include <sdiowifi_platform_adapt.h>
 
 #include <sdio_port.h>
@@ -29,7 +30,7 @@ static bool sdu_software_reset = false;
 static bl_sdio_read_cb_t sd_read_callback = NULL;
 static sdiowifi_task_t sdu_irq_handle = NULL;
 static int send_timeout = 0;
-static int twin_send_timeout = 0;
+static int twin_send_timeout __attribute__((unused)) = 0;
 
 #define SDIO_TX_WDT_TIMEOUT     (450)
 
@@ -368,12 +369,12 @@ int bl_sdio_write_cmd(void *env, uint16_t type, uint16_t subtype, const void *he
     msg->is_amsdu = false;
     msg->has_twin = 0;
 
-    p_buf += msg->pld_off;
+    p_buf = (uint8_t *)p_buf + msg->pld_off;
     buf_size -= msg->pld_off;
 
     MEMCPY_SAFE((uint8_t *)p_buf, buf_size, p1, p1_len);
     if (p2) {
-        p_buf += p1_len;
+        p_buf = (uint8_t *)p_buf + p1_len;
         buf_size -= p1_len;
         MEMCPY_SAFE((uint8_t *)p_buf, buf_size, p2, p2_len);
     }
@@ -392,13 +393,13 @@ int bl_sdio_write_pbuf(void *env, uint16_t type, uint16_t subtype, struct pbuf *
     uint16_t data_len = p->tot_len;
     struct pbuf *next;
 
-    msg = (struct sdio_top_msg *)SDM_ALIGN_LO(data_ptr - sizeof(*msg), 4);
+    msg = (struct sdio_top_msg *)SDM_ALIGN_LO((uint8_t *)data_ptr - sizeof(*msg), 4);
 
     msg->type_lsb = LSB(type);
     msg->type_msb = SLSB(type);
     msg->len_lsb = LSB(data_len);
     msg->len_msb = SLSB(data_len);
-    msg->pld_off = data_ptr - (void *)msg;
+    msg->pld_off = (uint8_t *)data_ptr - (uint8_t *)msg;
     msg->is_amsdu = is_amsdu;
     msg->has_twin = 0;
     msg->subtype_lsb = LSB(subtype);

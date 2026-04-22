@@ -87,6 +87,12 @@ int at_net_server_is_created(uint16_t *port, char *type, int *ca_enable, int *ke
 
 int at_net_server_close(void);
 
+int at_net_server_sockets_close_all(void);
+
+int at_net_server_udp_create(uint16_t port, int max_conn, int timeout, uint8_t is_ipv6);
+
+int at_net_sntp_gettime(struct timespec *tp);
+
 int at_net_sntp_start(void);
 
 int at_net_sntp_stop(void);
@@ -102,6 +108,10 @@ int at_net_recvbuf_read(int linkid, ip_addr_t *remote_ipaddr, uint16_t *remote_p
 int at_net_ssl_path_set(int linkid, const char *ca, const char *cert, const char *key);
 
 int at_net_ssl_path_get(int linkid, const char **ca, const char **cert, const char **key);
+
+int at_net_ssl_server_path_set(int linkid, const char *ca, const char *cert, const char *key);
+
+int at_net_ssl_server_path_get(int linkid, const char **ca, const char **cert, const char **key);
 
 int at_net_ssl_sni_set(int linkid, const char *sni);
 

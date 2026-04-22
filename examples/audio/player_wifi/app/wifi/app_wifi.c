@@ -47,11 +47,6 @@ struct bflb_device_s *gpio;
  * Private Data
  ****************************************************************************/
 
-static struct bflb_device_s *uart0;
-
-static TaskHandle_t wifi_fw_task;
-
-
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
 

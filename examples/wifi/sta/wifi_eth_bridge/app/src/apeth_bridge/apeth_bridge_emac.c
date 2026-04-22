@@ -285,7 +285,7 @@ static err_t emac_low_level_output(struct netif *netif, struct pbuf *p)
             return ERR_BUF;
         }
         /* data copy */
-        memcpy(trans_desc.buff_addr + byte_copy, q->payload, q->len);
+        memcpy((uint8_t *)trans_desc.buff_addr + byte_copy, q->payload, q->len);
         byte_copy += q->len;
     }
 
@@ -327,7 +327,7 @@ static void ethernetif_input(void *argument)
                 #if 1
                 byte_copy = 0;
                 for (q = p; q != NULL; q = q->next) {
-                    memcpy(q->payload, trans_desc.buff_addr + byte_copy, q->len);
+                    memcpy(q->payload, (uint8_t *)trans_desc.buff_addr + byte_copy, q->len);
                     byte_copy += q->len;
                 }
                 #else

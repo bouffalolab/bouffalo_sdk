@@ -166,7 +166,7 @@ static void app_arp_send(void)
         err_t result;
 
         ip_addr_copy(dest_ip, src_ip);
-        result = etharp_request(netif_default, &dest_ip);
+        result = etharp_request(netif_default, ip_2_ip4(&dest_ip));
         if (result != ERR_OK) {
             printf("Failed to send ARP request. Error: %d\n", result);
         }
@@ -678,11 +678,7 @@ static void cmd_io_wakeup(int argc, char **argv)
     lp_wake_io_cfg.io_ie = (uint64_t)1 << io_num;
     lp_wake_io_cfg.io_wakeup_unmask = (uint64_t)1 << io_num;
 
-    if (io_num <= 5) {
-        lp_wake_io_cfg.io_0_5_trig_mode = trig_mode;
-    } else {
-        lp_wake_io_cfg.io_6_36_trig_mode[io_num - 6] = trig_mode;
-    }
+    lp_wake_io_cfg.io_0_36_trig_mode[io_num] = trig_mode;
 
     if (1 == pull) {
         printf("  pull: up\r\n");
@@ -800,7 +796,7 @@ void rc32k_get_trim_code(uint32_t *c_code, uint32_t *r_code);
 static void rc32k_coarse_trim_task(void *pvParameters)
 {
     uint32_t retry_cnt = 0;
-    uint64_t timeout_start;
+    uint64_t timeout_start __attribute__((unused));
     uint64_t rtc_cnt;
     uint64_t rtc_record_us;
     uint64_t rtc_now_us;

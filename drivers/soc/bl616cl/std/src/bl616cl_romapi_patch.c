@@ -37,6 +37,93 @@
 #include "bl616cl_romapi_patch.h"
 #include "bl616cl_romdriver_e907.h"
 
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Ext_DCDC_Auto_Ctrl(uint8_t dcdc_idx, BL_Fun_Type enable, uint8_t aon_gpio)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_EXT_DCDC_CFG);
+
+    if (enable) {
+        CHECK_PARAM(IS_HBN_AON_PAD_TYPE(aon_gpio));
+
+        HBN_Aon_Pad_Cfg_Set(0, aon_gpio);
+    }
+
+    if (dcdc_idx == 1) {
+        if (enable) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_EXT_DCDC1_AON_GPIO_SEL, aon_gpio);
+            tmpVal = BL_SET_REG_BIT(tmpVal, HBN_EXT_DCDC1_AON_CTRL_HW_EN);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_HW_EXT_DCDC1_ON_EN);
+        } else {
+            tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_EXT_DCDC1_AON_CTRL_HW_EN);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_HW_EXT_DCDC1_ON_EN);
+        }
+    } else if (dcdc_idx == 2) {
+        if (enable) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_EXT_DCDC2_AON_GPIO_SEL, aon_gpio);
+            tmpVal = BL_SET_REG_BIT(tmpVal, HBN_EXT_DCDC2_AON_CTRL_HW_EN);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_HW_EXT_DCDC2_ON_EN);
+        } else {
+            tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_EXT_DCDC2_AON_CTRL_HW_EN);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_HW_EXT_DCDC2_ON_EN);
+        }
+    } else {
+        return ERROR;
+    }
+
+    BL_WR_REG(HBN_BASE, HBN_EXT_DCDC_CFG, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Configure external DCDC1 automatic control in HBN mode
+ *
+ * @param  enable: ENABLE or DISABLE
+ * @param  aon_gpio: AON GPIO used to control external DCDC1 when enabled.
+ *          This parameter can be one of the following values:
+ *           @arg HBN_AON_PAD_GPIO0
+ *           @arg HBN_AON_PAD_GPIO1
+ *           @arg HBN_AON_PAD_GPIO2
+ *           @arg HBN_AON_PAD_GPIO3
+ *           @arg HBN_AON_PAD_GPIO4
+ *           @arg HBN_AON_PAD_GPIO5
+ *
+ * @return SUCCESS or ERROR
+ *
+ * @note   When enabled, the selected AON GPIO is driven low in HBN mode and
+ *         driven high again after HBN wakeup.
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Ext_DCDC1_Auto_Ctrl(BL_Fun_Type enable, uint8_t aon_gpio)
+{
+    return HBN_Set_Ext_DCDC_Auto_Ctrl(1, enable, aon_gpio);
+}
+
+/****************************************************************************/ /**
+ * @brief  Configure external DCDC2 automatic control in HBN mode
+ *
+ * @param  enable: ENABLE or DISABLE
+ * @param  aon_gpio: AON GPIO used to control external DCDC2 when enabled.
+ *          This parameter can be one of the following values:
+ *           @arg HBN_AON_PAD_GPIO0
+ *           @arg HBN_AON_PAD_GPIO1
+ *           @arg HBN_AON_PAD_GPIO2
+ *           @arg HBN_AON_PAD_GPIO3
+ *           @arg HBN_AON_PAD_GPIO4
+ *           @arg HBN_AON_PAD_GPIO5
+ *
+ * @return SUCCESS or ERROR
+ *
+ * @note   When enabled, the selected AON GPIO is driven low in HBN mode and
+ *         driven high again after HBN wakeup.
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Ext_DCDC2_Auto_Ctrl(BL_Fun_Type enable, uint8_t aon_gpio)
+{
+    return HBN_Set_Ext_DCDC_Auto_Ctrl(2, enable, aon_gpio);
+}
+
 /****************************************************************************/ /**
  * @brief  Set RC3K R_CODE
  *
@@ -279,4 +366,166 @@ int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t progr
     }
 
     return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN enable GPIO interrupt
+ *
+ * @param  pad: GPIO pin number, this parameter can be one of the following values:
+ *           @arg GPIO_PIN_0
+ *           @arg GPIO_PIN_1
+ *           @arg GPIO_PIN_2
+ *           @arg GPIO_PIN_3
+ *           @arg GPIO_PIN_4
+ *           @arg GPIO_PIN_5
+ * @param  gpioIntTrigType: HBN GPIO interrupt trigger type, this parameter can be one of the following values:
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_FALLING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_RISING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_LOW_LEVEL
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_RISING_FALLING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_RISING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_LOW_LEVEL
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_HIGH_LEVEL
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_GPIO_INT_Enable(uint8_t pad, uint8_t gpioIntTrigType)
+{
+    uint32_t tmpVal;
+    uint32_t reg_addr;
+    uint32_t shift;
+
+    CHECK_PARAM(IS_HBN_GPIO_INT_TRIGGER_TYPE(gpioIntTrigType));
+
+    switch (pad) {
+        case GPIO_PIN_0:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = HBN_PIN_WAKEUP_MODE_POS;
+            break;
+        case GPIO_PIN_1:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = 10;
+            break;
+        case GPIO_PIN_2:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = 20;
+            break;
+        case GPIO_PIN_3:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = 28;
+            break;
+        case GPIO_PIN_4:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE2_OFFSET;
+            shift = HBN_PIN4_WAKEUP_MODE_POS;
+            break;
+        case GPIO_PIN_5:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE2_OFFSET;
+            shift = HBN_PIN5_WAKEUP_MODE_POS;
+            break;
+        default:
+            return ERROR;
+    }
+
+    tmpVal = BL_RD_WORD(reg_addr);
+    tmpVal &= ~(0xFU << shift);
+    tmpVal |= ((uint32_t)gpioIntTrigType << shift);
+    BL_WR_WORD(reg_addr, tmpVal);
+
+    return SUCCESS;
+
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN set AON_IO interrupt Trigger Mode
+ *
+ * @param  pad: gpio type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~5
+ * @param  gpioIntTrigType: HBN GPIO interrupt trigger type, this parameter can be one of the following values:
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_FALLING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_RISING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_LOW_LEVEL
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL
+ *           @arg HBN_GPIO_INT_TRIGGER_SYNC_RISING_FALLING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_RISING_EDGE
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_LOW_LEVEL
+ *           @arg HBN_GPIO_INT_TRIGGER_ASYNC_HIGH_LEVEL
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Aon_Pad_IntMode(uint8_t pad, uint8_t gpioIntTrigType)
+{
+    uint32_t tmpVal;
+    uint32_t reg_addr;
+    uint32_t shift;
+
+    CHECK_PARAM(IS_HBN_GPIO_INT_TRIGGER_TYPE(gpioIntTrigType));
+
+    switch (pad) {
+        case GPIO_PIN_0:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = HBN_PIN_WAKEUP_MODE_POS;
+            break;
+        case GPIO_PIN_1:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = 10;
+            break;
+        case GPIO_PIN_2:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = 20;
+            break;
+        case GPIO_PIN_3:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE_OFFSET;
+            shift = 28;
+            break;
+        case GPIO_PIN_4:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE2_OFFSET;
+            shift = HBN_PIN4_WAKEUP_MODE_POS;
+            break;
+        case GPIO_PIN_5:
+            reg_addr = HBN_BASE + HBN_IRQ_MODE2_OFFSET;
+            shift = HBN_PIN5_WAKEUP_MODE_POS;
+            break;
+        default:
+            return ERROR;
+    }
+
+    tmpVal = BL_RD_WORD(reg_addr);
+    tmpVal &= ~(0xFU << shift);
+    tmpVal |= ((uint32_t)gpioIntTrigType << shift);
+    BL_WR_WORD(reg_addr, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN aon pad debbug pull config
+ *
+ * @param  puPdEn: Enable or disable aon pad pull down and pull up
+ * @param  rsvd: reserved
+ * @param  maskVal: int mask
+ * @param  dlyEn: Enable or disable aon pad wakeup delay function
+ * @param  dlySec: aon pad wakeup delay sec 1 to 7
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, uint8_t rsvd, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec)
+{
+    uint32_t tmpVal;
+
+    CHECK_PARAM(((dlySec >= 1) && (dlySec <= 7)));
+    CHECK_PARAM((maskVal <= 0x3FF));
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_EN, dlyEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_SEL, dlySec);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_REG_EN_HW_PU_PD, puPdEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK, maskVal);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+
+    return SUCCESS;
 }

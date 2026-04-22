@@ -71,28 +71,28 @@ static int _ov_header_fseek_wrap(FILE *f,ogg_int64_t off,int whence){
  * we're using (the same one as the main application).
  */
 
-static ov_callbacks OV_CALLBACKS_DEFAULT = {
+static ov_callbacks OV_CALLBACKS_DEFAULT __attribute__((unused)) = {
   (size_t (*)(void *, size_t, size_t, void *))  fread,
   (int (*)(void *, ogg_int64_t, int))           _ov_header_fseek_wrap,
   (int (*)(void *))                             fclose,
   (long (*)(void *))                            ftell
 };
 
-static ov_callbacks OV_CALLBACKS_NOCLOSE = {
+static ov_callbacks OV_CALLBACKS_NOCLOSE __attribute__((unused)) = {
   (size_t (*)(void *, size_t, size_t, void *))  fread,
   (int (*)(void *, ogg_int64_t, int))           _ov_header_fseek_wrap,
   (int (*)(void *))                             NULL,
   (long (*)(void *))                            ftell
 };
 
-static ov_callbacks OV_CALLBACKS_STREAMONLY = {
+static ov_callbacks OV_CALLBACKS_STREAMONLY __attribute__((unused)) = {
   (size_t (*)(void *, size_t, size_t, void *))  fread,
   (int (*)(void *, ogg_int64_t, int))           NULL,
   (int (*)(void *))                             fclose,
   (long (*)(void *))                            NULL
 };
 
-static ov_callbacks OV_CALLBACKS_STREAMONLY_NOCLOSE = {
+static ov_callbacks OV_CALLBACKS_STREAMONLY_NOCLOSE __attribute__((unused)) = {
   (size_t (*)(void *, size_t, size_t, void *))  fread,
   (int (*)(void *, ogg_int64_t, int))           NULL,
   (int (*)(void *))                             NULL,

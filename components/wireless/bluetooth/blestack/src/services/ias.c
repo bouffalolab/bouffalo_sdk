@@ -39,7 +39,7 @@ static int ias_recv_wr(struct bt_conn *conn, const struct bt_gatt_attr *attr,
         BT_INFO("rcv write command");
         //handle alert level.
         if(ias_recv_callback)
-            ias_recv_callback(conn,buf,len);
+            ias_recv_callback(conn,(void *)buf,len);
     }
 
     return len;

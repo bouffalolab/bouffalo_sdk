@@ -1799,7 +1799,7 @@ void wpa_eapol_key_dump(int level, const struct wpa_eapol_key *key)
 int wpa_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len)
 {
     struct wpa_sm *sm = &gWpaSm;
-    u32 plen, data_len, extra_len, frame_id;
+    u32 plen, data_len, extra_len;
     struct ieee802_1x_hdr *hdr;
     struct wpa_eapol_key *key;
     u16 key_info, ver;

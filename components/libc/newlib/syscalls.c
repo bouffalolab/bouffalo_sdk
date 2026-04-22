@@ -10,7 +10,7 @@
 
 #include "port_file_fd.h"
 
-#if CONFIG_NEWLIB_LITTLEFS
+#if defined(CONFIG_NEWLIB_LITTLEFS)
 #include "port_file_littlefs.h"
 #endif
 
@@ -124,7 +124,7 @@ extern _ssize_t _write_tty_r(struct _reent *reent, int fd, const void *ptr, size
 extern int _fstat_tty_r(struct _reent *reent, int fd, struct stat *st);
 extern int _stat_tty_r(struct _reent *reent, const char *path, struct stat *st);
 
-#if CONFIG_NEWLIB_LITTLEFS
+#if defined(CONFIG_NEWLIB_LITTLEFS)
 static int _chmod_file_lfs_r(struct _reent *reent, const char *path, mode_t mode)
 {
     (void)path;

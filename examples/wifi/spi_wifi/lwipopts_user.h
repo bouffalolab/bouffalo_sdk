@@ -20,8 +20,13 @@
 #define LWIP_ASSERT_CORE_LOCKED()
 #define LWIP_NOASSERT
 
-#define LWIP_NETCONN_SEM_PER_THREAD   1 
-#define LWIP_NETCONN_THREAD_SEM_GET() sys_thread_sem_get()
+#define LWIP_NETCONN_SEM_PER_THREAD   1
+void *sys_thread_sem_get(void);
+void sys_thread_sem_init(void);
+void sys_thread_sem_deinit(void);
+#define LWIP_NETCONN_THREAD_SEM_GET()   sys_thread_sem_get()
+#define LWIP_NETCONN_THREAD_SEM_ALLOC() sys_thread_sem_init()
+#define LWIP_NETCONN_THREAD_SEM_FREE()  sys_thread_sem_deinit()
 
 #define DNS_MAX_SERVERS               3
 #define LWIP_NETIF_HOSTNAME           1

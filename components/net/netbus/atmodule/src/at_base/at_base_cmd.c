@@ -227,7 +227,10 @@ static int at_query_cmd_sysram(int argc, const char **argv)
     int lwip_heap = 0;
 
 #ifdef CONFIG_ATMODULE_NETWORK
-    lwip_heap = at_lwip_heap_free_size();
+    {
+        extern int at_lwip_heap_free_size(void);
+        lwip_heap = at_lwip_heap_free_size();
+    }
 #endif
     //at_response_string("+SYSRAM:%d,%d", info.free_size, info.total_size);
     at_response_string("+SYSRAM:%d,%d", kfree_size(0), lwip_heap);

@@ -187,9 +187,9 @@ static int ota_upgrade_slice(ota_handle_t handle, uint32_t offset, char *buf, ui
     for (retry = 0; retry < OTA_UPGRADE_RETRY; retry++) {
 #ifdef CONFIG_IPC
 #ifdef CONFIG_RPMSG_SERVICE_MODE_MASTER
-        ret = bflb_flash_write_mcs((handle->ota_addr + offset), buf, slice_size);
+        ret = bflb_flash_write_mcs((handle->ota_addr + offset), (uint8_t *)buf, slice_size);
 #else
-        ret = bflb_flash_write_rpmsg((handle->ota_addr + offset), buf, slice_size);
+        ret = bflb_flash_write_rpmsg((handle->ota_addr + offset), (uint8_t *)buf, slice_size);
 #endif
 #else
         ret = bflb_flash_write((handle->ota_addr + offset), (uint8_t *)buf, slice_size);

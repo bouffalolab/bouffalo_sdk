@@ -11,6 +11,11 @@ CONFIG_PSRAM =y
 CONFIG_SHELL =y
 CONFIG_IPERF =y
 
+CONFIG_STRICT=y
+
+# The log of macsw affects the real-time performance.
+CONFIG_NO_FW_BL_LOG_PRINT =y
+
 ################### solution_utils config ###################
 ################### queue ###################
 CONFIG_SOLUTION_QUEUE_IMG_RAW_OUT   =y
@@ -45,12 +50,11 @@ CONFIG_HB_RECV_TEST                 =y
 -include $(BL_SDK_BASE)/examples/solution/solution_bl616/solution_utils/defconfig
 # ################### solution_utils config end ###################
 
-# Config
-## mbedtls
-CONFIG_MBEDTLS_AES_USE_HW =y
+# mbedtls
+CONFIG_MBEDTLS_AES_USE_HW    =y
 CONFIG_MBEDTLS_BIGNUM_USE_HW =y
-CONFIG_MBEDTLS_ECC_USE_HW =y
-CONFIG_MBEDTLS_SHA1_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_MBEDTLS_SHA1_USE_HW   =y
 CONFIG_MBEDTLS_SHA256_USE_HW =y
 CONFIG_MBEDTLS_SHA512_USE_HW =y
 

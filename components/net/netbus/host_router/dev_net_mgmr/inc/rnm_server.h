@@ -207,6 +207,7 @@ int rnms_heartbeat_stop(rnms_t *rnm);
  * @param cmd  User extension message.
  */
 void rnms_handle_user_ext(rnms_t *rnm, rnm_msg_t *cmd);
+void rnms_handle_user_extension(rnms_t *rnm, rnm_msg_t *cmd, uint8_t is_response);
 
 /**
  * @brief  Returns if msg is BF1B_CMD_GET_MAC_ADDR.

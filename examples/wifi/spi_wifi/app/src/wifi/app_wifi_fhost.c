@@ -6,10 +6,13 @@
 #include <timers.h>
 #include <shell.h>
 #include "wifi_mgmr_ext.h"
+#include "wifi_mgmr.h"
+#include "fhost_api.h"
 #include "async_event.h"
 #include "log.h"
 
 extern void app_atmodule_init(void);
+#include "app_pm.h"
 static bool wifi_init_done = 0;
 
 static void wifi_event_handler(async_input_event_t ev, void *priv)

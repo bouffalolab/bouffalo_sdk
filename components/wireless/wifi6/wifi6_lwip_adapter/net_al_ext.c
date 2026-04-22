@@ -5,6 +5,9 @@
 
 #include "net_al.h"
 #include "net_al_ext.h"
+
+/* forward declaration defined in net_al.c / fhost.c */
+int is_sta_netif(struct netif *nif);
 #include "platform_al.h"
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
@@ -23,6 +26,8 @@
 
 #ifdef CFG_IPV6
 #include <lwip/ethip6.h>
+#include <lwip/dhcp6.h>
+#include <lwip/nd6.h>
 #endif
 
 #include "lwip/tcpip.h"

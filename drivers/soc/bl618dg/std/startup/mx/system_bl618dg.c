@@ -11,7 +11,7 @@
 #define SF_CTRL_SF_IF_BK2_MODE (1 << 29U)
 #define SF_CTRL_SF_IF_BK2_EN   (1 << 30U)
 
-static void Tzc_Sec_PSRAMB_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, uint32_t endAddr, uint8_t group)
+static void __attribute__((unused)) Tzc_Sec_PSRAMB_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, uint32_t endAddr, uint8_t group)
 {
     uint32_t tmpVal = 0;
 
@@ -98,7 +98,7 @@ static void pmp_init(void)
 }
 #endif
 
-static void flash_bank2_access_init(void)
+static void __attribute__((unused)) flash_bank2_access_init(void)
 {
     uint32_t reg_base = 0;
     uint32_t regval = 0;

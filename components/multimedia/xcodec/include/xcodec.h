@@ -159,6 +159,13 @@ typedef struct {
     uint32_t              positive_pin;               ///< used for positive_pin
 } xcodec_output_config_t;
 
+typedef struct {
+    uint64_t              clock_counter_48k;          ///< Presented audio frames mapped to the 48 kHz clock domain
+    uint64_t              system_time_ns;             ///< Snapshot time in system nanoseconds
+    uint64_t              first_timestamp_ns;         ///< First hardware start timestamp, 0 until playback really starts
+    uint64_t              total_frames;               ///< Frames already output at snapshot time
+} xcodec_output_timing_info_t;
+
 /**
   \brief       Init the codec according to the specified
   \param[in]   codec  Codec handle to operate
@@ -331,6 +338,27 @@ xcodec_error_t xcodec_output_mix_gain(xcodec_output_t *ch, float val);
   \return      channel state
 */
 xcodec_error_t xcodec_output_get_state(xcodec_output_t *ch, xcodec_state_t *state);
+
+/**
+  \brief       Get an output timing snapshot
+  \param[out]  info    Timing snapshot returned to caller
+  \return      error code \ref xcodec_error_t
+*/
+xcodec_error_t xcodec_output_get_timing_info(xcodec_output_timing_info_t *info);
+
+/**
+  \brief       Set the requested output clock in milli-Hz
+  \param[in]   freq_mHz Requested output clock frequency in milli-Hz
+  \return      error code \ref xcodec_error_t
+*/
+xcodec_error_t xcodec_set_audio_output_clock_mHz(uint32_t freq_mHz);
+
+/**
+  \brief       Get the requested output clock in milli-Hz
+  \param[out]  freq_mHz Current output clock frequency in milli-Hz
+  \return      error code \ref xcodec_error_t
+*/
+xcodec_error_t xcodec_get_audio_output_clock_mHz(uint32_t *freq_mHz);
 
 /**
   \brief       Open a codec input channel

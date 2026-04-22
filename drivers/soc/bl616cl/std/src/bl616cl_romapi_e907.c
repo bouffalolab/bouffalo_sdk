@@ -1133,10 +1133,12 @@ BL_Err_Type HBN_Clear_RTC_INT(void) {
     return RomDriver_HBN_Clear_RTC_INT();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_GPIO_INT_Enable(uint8_t gpioIntTrigType) {
     return RomDriver_HBN_GPIO_INT_Enable(gpioIntTrigType);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_GPIO_INT_Disable(void) {
@@ -1163,10 +1165,12 @@ BL_Err_Type HBN_Hw_Pu_Pd_Cfg(uint8_t enable) {
     return RomDriver_HBN_Hw_Pu_Pd_Cfg(enable);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Set_Aon_Pad_IntMode(uint8_t gpioIntTrigType) {
     return RomDriver_HBN_Set_Aon_Pad_IntMode(gpioIntTrigType);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Pin_WakeUp_Mask(uint8_t maskVal) {
@@ -1203,10 +1207,12 @@ BL_Err_Type HBN_Disable_BOD_IRQ(void) {
     return RomDriver_HBN_Disable_BOD_IRQ();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, uint8_t trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec) {
     return RomDriver_HBN_Aon_Pad_WakeUpCfg(puPdEn, trigMode, maskVal, dlyEn, dlySec);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void HBN_Wdg_Init(uint8_t mode, uint16_t comp_val) {

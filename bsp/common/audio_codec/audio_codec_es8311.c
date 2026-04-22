@@ -248,6 +248,108 @@ static int es8311_read_reg(struct bflb_device_s *i2c, uint8_t addr, uint8_t reg,
     return audio_codec_i2c_read_reg8(i2c, addr, reg, rdata);
 }
 
+static int es8311_config_clk(struct bflb_device_s *i2c, uint8_t addr, uint32_t sample_fre)
+{
+    int ret = 0;
+    uint8_t read_data = 0;
+    uint8_t datmp = 0;
+    uint32_t mclk_fre;
+    int coeff;
+
+    if (i2c == NULL || sample_fre == 0U) {
+        return -1;
+    }
+
+    switch (get_es8311_mclk_src()) {
+        case FROM_MCLK_PIN:
+            ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, &read_data);
+            read_data &= 0x7F;
+            ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, read_data);
+            break;
+        case FROM_SCLK_PIN:
+        default:
+            ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, &read_data);
+            read_data |= 0x80;
+            ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, read_data);
+            break;
+    }
+
+    mclk_fre = sample_fre * MCLK_DIV_FRE;
+    coeff = get_coeff(mclk_fre, sample_fre);
+    if (coeff < 0) {
+        printf("Unable to configure sample rate %luHz with %luHz MCLK\r\n", (unsigned long)sample_fre,
+               (unsigned long)mclk_fre);
+        return -1;
+    }
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG02, &read_data);
+    read_data &= 0x07;
+    read_data |= (coeff_div_tbl[coeff].pre_div - 1U) << 5;
+
+    datmp = 0;
+    switch (coeff_div_tbl[coeff].pre_multi) {
+        case 1:
+            datmp = 0;
+            break;
+        case 2:
+            datmp = 1;
+            break;
+        case 4:
+            datmp = 2;
+            break;
+        case 8:
+            datmp = 3;
+            break;
+        default:
+            break;
+    }
+
+    if (get_es8311_mclk_src() == FROM_SCLK_PIN) {
+        datmp = 3;
+    }
+
+    read_data |= datmp << 3;
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG02, read_data);
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG05, &read_data);
+    read_data = 0;
+    read_data |= (coeff_div_tbl[coeff].adc_div - 1U) << 4;
+    read_data |= (coeff_div_tbl[coeff].dac_div - 1U) << 0;
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG05, read_data);
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG03, &read_data);
+    read_data &= 0x80;
+    read_data |= coeff_div_tbl[coeff].fs_mode << 6;
+    read_data |= coeff_div_tbl[coeff].adc_osr << 0;
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG03, read_data);
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG04, &read_data);
+    read_data &= 0x80;
+    read_data |= coeff_div_tbl[coeff].dac_osr << 0;
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG04, read_data);
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG07, &read_data);
+    read_data &= 0xC0;
+    read_data |= coeff_div_tbl[coeff].lrck_h << 0;
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG07, read_data);
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG08, &read_data);
+    read_data = 0;
+    read_data |= coeff_div_tbl[coeff].lrck_l << 0;
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG08, read_data);
+
+    ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG06, &read_data);
+    read_data &= 0xE0;
+    if (coeff_div_tbl[coeff].bclk_div < 19U) {
+        read_data |= (coeff_div_tbl[coeff].bclk_div - 1U) << 0;
+    } else {
+        read_data |= coeff_div_tbl[coeff].bclk_div << 0;
+    }
+    ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG06, read_data);
+
+    return ret;
+}
+
 static int AUDIO_CODEC_UNUSED es8311_set_adc_scale(struct bflb_device_s *i2c, uint8_t addr, uint8_t adc_scale)
 {
     /* REGISTER 0x16 (ADC):
@@ -366,8 +468,6 @@ static int es8311_init_internal(struct bflb_device_s *i2c, uint8_t addr, const e
 {
     int ret = 0;
     uint8_t read_data = 0;
-    uint8_t datmp = 0;
-    int coeff = 0;
 
     ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, 0x10);
     ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG02, 0x00);
@@ -393,85 +493,7 @@ static int es8311_init_internal(struct bflb_device_s *i2c, uint8_t addr, const e
     }
     ret |= es8311_write_reg(i2c, addr, ES8311_RESET_REG00, read_data);
     ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, 0x1F);
-
-    switch (get_es8311_mclk_src()) {
-        case FROM_MCLK_PIN:
-            ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, &read_data);
-            read_data &= 0x7F;
-            ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, read_data);
-            break;
-        case FROM_SCLK_PIN:
-        default:
-            ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, &read_data);
-            read_data |= 0x80;
-            ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG01, read_data);
-            break;
-    }
-
-    uint32_t sample_fre = i2s_cfg->samples_hz;
-    uint32_t mclk_fre = sample_fre * MCLK_DIV_FRE;
-    coeff = get_coeff(mclk_fre, sample_fre);
-    if (coeff < 0) {
-        printf("Unable to configure sample rate %luHz with %luHz MCLK\r\n", (unsigned long)sample_fre, (unsigned long)mclk_fre);
-    }
-
-    if (coeff >= 0) {
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG02, &read_data);
-        read_data &= 0x07;
-        read_data |= (coeff_div_tbl[coeff].pre_div - 1) << 5;
-
-        datmp = 0;
-        switch (coeff_div_tbl[coeff].pre_multi) {
-            case 1: datmp = 0; break;
-            case 2: datmp = 1; break;
-            case 4: datmp = 2; break;
-            case 8: datmp = 3; break;
-            default: break;
-        }
-
-        if (get_es8311_mclk_src() == FROM_SCLK_PIN) {
-            datmp = 3;
-        }
-
-        read_data |= (datmp) << 3;
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG02, read_data);
-
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG05, &read_data);
-        read_data &= 0x00;
-        read_data |= (coeff_div_tbl[coeff].adc_div - 1) << 4;
-        read_data |= (coeff_div_tbl[coeff].dac_div - 1) << 0;
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG05, read_data);
-
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG03, &read_data);
-        read_data &= 0x80;
-        read_data |= coeff_div_tbl[coeff].fs_mode << 6;
-        read_data |= coeff_div_tbl[coeff].adc_osr << 0;
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG03, read_data);
-
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG04, &read_data);
-        read_data &= 0x80;
-        read_data |= coeff_div_tbl[coeff].dac_osr << 0;
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG04, read_data);
-
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG07, &read_data);
-        read_data &= 0xC0;
-        read_data |= coeff_div_tbl[coeff].lrck_h << 0;
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG07, read_data);
-
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG08, &read_data);
-        read_data &= 0x00;
-        read_data |= coeff_div_tbl[coeff].lrck_l << 0;
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG08, read_data);
-
-        ret |= es8311_read_reg(i2c, addr, ES8311_CLK_MANAGER_REG06, &read_data);
-        read_data &= 0xE0;
-        if (coeff_div_tbl[coeff].bclk_div < 19) {
-            read_data |= (coeff_div_tbl[coeff].bclk_div - 1) << 0;
-        } else {
-            read_data |= (coeff_div_tbl[coeff].bclk_div) << 0;
-        }
-        ret |= es8311_write_reg(i2c, addr, ES8311_CLK_MANAGER_REG06, read_data);
-    }
+    ret |= es8311_config_clk(i2c, addr, i2s_cfg->samples_hz);
 
     ret |= es8311_write_reg(i2c, addr, ES8311_SYSTEM_REG13, 0x10);
     ret |= es8311_write_reg(i2c, addr, ES8311_ADC_REG1B, 0x0A);
@@ -570,7 +592,12 @@ int audio_codec_es8311_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg
     } else {
         module = ES_MODULE_DAC;
     }
-    return es8311_start(dev->i2c, dev->i2c_addr, module);
+
+    ret = es8311_start(dev->i2c, dev->i2c_addr, module);
+    if (ret != 0) {
+        return ret;
+    }
+    return 0;
 }
 
 static void AUDIO_CODEC_UNUSED es8311_legacy_suspend(struct bflb_device_s *i2c, uint8_t addr)
@@ -736,19 +763,8 @@ int audio_codec_es8311_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_r
     if (dev == NULL || dev->i2c == NULL) {
         return -1;
     }
-    /* Re-run init to update dividers when sample rate changes.
-     * In SLAVE mode this is typically not required, but it keeps behavior consistent.
-     */
-    audio_codec_cfg_t cfg = {
-        .sample_rate_hz = sample_rate_hz,
-        .channels = 2,
-        .i2s_fmt = AUDIO_CODEC_I2S_FMT_I2S,
-        .bits = AUDIO_CODEC_BITS_16,
-        .codec_master = false,
-        .enable_adc = false,
-        .enable_dac = true,
-    };
-    return audio_codec_es8311_init(dev, &cfg);
+
+    return es8311_config_clk(dev->i2c, dev->i2c_addr, sample_rate_hz);
 }
 
 uint32_t audio_codec_es8311_calc_mclk_hz(uint32_t sample_rate_hz)

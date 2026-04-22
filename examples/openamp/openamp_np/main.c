@@ -32,6 +32,7 @@
 #include "bl_fw_api.h"
 #include <fhost_api.h>
 #include "wifi_mgmr_ext.h"
+#include "mm.h"
 #include "wifi_mgmr.h"
 
 #include "bflb_irq.h"

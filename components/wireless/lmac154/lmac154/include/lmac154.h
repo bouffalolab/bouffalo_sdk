@@ -8,7 +8,7 @@
 
 #define VERSION_LMAC154_MAJOR 1
 #define VERSION_LMAC154_MINOR 7
-#define VERSION_LMAC154_PATCH 4
+#define VERSION_LMAC154_PATCH 6
 
 // #define VERSION_LMAC154_SRC_EXTRA_INFO "customer-1"
 
@@ -131,12 +131,12 @@ typedef enum {
 
 typedef enum {
     LMAC154_TX_STATUS_TX_FINISHED = 0,
-    LMAC154_TX_STATUS_CSMA_FAILED = 1,
-    LMAC154_TX_STATUS_TX_ABORTED  = 2,
-    LMAC154_TX_STATUS_HW_ERROR    = 3,
-    LMAC154_TX_STATUS_DELAY_ERROR = 4,
-    LMAC154_TX_STATUS_NO_ACK      = 5,
-    LMAC154_TX_STATUS_ACKED       = 6,
+    LMAC154_TX_STATUS_ACKED       = 1,
+    LMAC154_TX_STATUS_CSMA_FAILED = 2,
+    LMAC154_TX_STATUS_TX_ABORTED  = 3,
+    LMAC154_TX_STATUS_HW_ERROR    = 4,
+    LMAC154_TX_STATUS_DELAY_ERROR = 5,
+    LMAC154_TX_STATUS_NO_ACK      = 6,
     LMAC154_TX_STATUS_CCA_FAILED  = 7,
     LMAC154_TX_STATUS_MAX         = 8,
 }lmac154_tx_status_t;
@@ -195,16 +195,25 @@ typedef struct lmac154_receiveInfo lmac154_receiveInfo_t;
 typedef void (*lmac154_rxDoneCallback_t)(lmac154_rx_status_t, lmac154_receiveInfo_t *, uint32_t *);
 
 struct lmac154_receiveInfo {
-    uint8_t                     rx_length;
-    uint8_t                     nbr_idx;
-    uint8_t                     mac_hdr_size;
-    uint8_t                     src_addr_offset;
-    uint16_t                    rx_error;
-    uint16_t                    is_tx_acking:1;
-    uint16_t                    is_enh_ack_requested:1;
-    uint16_t                    is_frame_pended:1;
-    uint16_t                    stack_msk:2;
-    uint16_t                    unused:11;
+    uint32_t                    rx_length:8;
+    uint32_t                    nbr_idx:8;
+    uint32_t                    mac_hdr_size:8;
+    uint32_t                    is_tx_acking:1;
+    uint32_t                    is_enh_ack_requested:1;
+    uint32_t                    is_frame_pended:1;
+    uint32_t                    is_src_saddr:1;
+    uint32_t                    is_src_xaddr:1;
+    uint32_t                    stack_msk:2;
+    uint32_t                    unused:1;
+    uint32_t                    enh_ack_time:8;
+    uint32_t                    dbg_ack_cost:8;
+    uint32_t                    rx_error:16;
+    uint32_t                    rx_done_symbol_cnt;
+    union {
+        uint16_t                saddr;
+        uint32_t                xaddr[2];
+        uint8_t                 addr[8];
+    } src_addr;
     lmac154_rxDoneCallback_t    callback[2];
 };
 
@@ -247,6 +256,7 @@ typedef struct __lmac154_txParam_ext {
     uint32_t                        is_tx_timeing:1;
     uint32_t                        is_tx_csl:1;
     uint32_t                        unused:3;
+    uint32_t                        ack_rx_done_symbol_cnt;
     lmac154_txDoneCallback_t        tx_done_cb;
     struct __lmac154_txParam_ext *  next;
 
@@ -279,6 +289,7 @@ typedef struct __lmac154_txParam {
     uint32_t                        is_last_tx:1;
     uint32_t                        is_base_param:1;
     uint32_t                        unused:6;
+    uint32_t                        ack_rx_done_symbol_cnt;
     lmac154_txDoneCallback_t        tx_done_cb;
     struct __lmac154_txParam_ext *  next;
 } lmac154_txParam_t;
@@ -1448,7 +1459,7 @@ lmac154_fpt_status_t lmac154_fptSetShortAddrPending(uint16_t sadr, uint8_t pendi
  * @return LMAC154_FPT_STATUS_SUCCESS or LMAC154_FPT_STATUS_NO_RESOURCE
  *
 *******************************************************************************/
-lmac154_fpt_status_t lmac154_fptSetLongAddrPending(uint8_t *ladr, uint8_t pending);
+lmac154_fpt_status_t lmac154_fptSetLongAddrPending(uint32_t *xaddr, uint8_t pending);
 
 
 /****************************************************************************//**
@@ -1471,7 +1482,7 @@ lmac154_fpt_status_t lmac154_fptGetShortAddrPending(uint16_t sadr, uint8_t *pend
  * @return LMAC154_FPT_STATUS_SUCCESS or LMAC154_FPT_STATUS_ADDR_NOT_FOUND
  *
 *******************************************************************************/
-lmac154_fpt_status_t lmac154_fptGetLongAddrPending(uint8_t *ladr, uint8_t *pending);
+lmac154_fpt_status_t lmac154_fptGetLongAddrPending(uint32_t *xaddr, uint8_t *pending);
 
 /****************************************************************************//**
  * @brief  Remove the key-value pair {sadr: pending} from the frame pending table
@@ -1492,7 +1503,7 @@ lmac154_fpt_status_t lmac154_fptRemoveShortAddr(uint16_t sadr);
  * @return LMAC154_FPT_STATUS_SUCCESS or LMAC154_FPT_STATUS_ADDR_NOT_FOUND
  *
 *******************************************************************************/
-lmac154_fpt_status_t lmac154_fptRemoveLongAddr(uint8_t *ladr);
+lmac154_fpt_status_t lmac154_fptRemoveLongAddr(uint32_t *ladr);
 
 
 /****************************************************************************//**

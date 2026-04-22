@@ -68,6 +68,16 @@ int rpmsg_service_send(int endpoint_id, const void *data, size_t len);
 bool rpmsg_service_endpoint_is_bound(int endpoint_id);
 
 /**
+ * @brief Start the RPMsg service
+ *
+ * Initializes the RPMsg backend and creates registered endpoints.
+ *
+ * @retval 0 on success;
+ * @retval <0 an error code on failure.
+ */
+int rpmsg_service_start(void);
+
+/**
  * @}
  */
 

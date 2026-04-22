@@ -1,6 +1,11 @@
 #include "bflb_core.h"
 #include "bflb_l1c.h"
 #include "board.h"
+#if __has_include("board_flash_psram.h")
+#include "board_flash_psram.h"
+#else
+extern uint32_t board_psram_size_get(void);
+#endif
 
 #define BFLB_PSRAM_TEST_ADDR (BFLB_PSRAM_BASE + (0 * 1024 * 1024))
 

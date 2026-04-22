@@ -70,6 +70,9 @@
 #define DBG_TAG "MAIN"
 #include "log.h"
 #include "async_event.h"
+#include "fhost_api.h"
+#include "wifi_mgmr.h"
+#include "mm.h"
 
 struct bflb_device_s *gpio;
 

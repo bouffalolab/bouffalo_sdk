@@ -195,41 +195,41 @@ int dis_settings_init(const char *name, char* setting,size_t setting_len)
 	if (!strcmp(name, "manuf"))
 	{
 		memset(&dis_manuf,0,sizeof(dis_manuf));
-		strncpy(&dis_manuf,setting,setting_len);
+		strncpy((char *)dis_manuf,setting,setting_len);
 		return 0;
 	}
 	if (!strcmp(name, "model")) {
 
 		memset(&dis_model,0,sizeof(dis_model));
-		strncpy(&dis_model,setting,setting_len);
+		strncpy((char *)dis_model,setting,setting_len);
 		return 0;
 	}
 	#if defined(CONFIG_BT_GATT_DIS_SERIAL_NUMBER)
 	if (!strcmp(name, "serial")) {
 
 		memset(&dis_serial_number,0,sizeof(dis_serial_number));
-		strncpy(&dis_serial_number,setting,setting_len);
+		strncpy((char *)dis_serial_number,setting,setting_len);
 		return 0;
 	}
 	#endif
 	#if defined(CONFIG_BT_GATT_DIS_FW_REV)
 	if (!strcmp(name, "fw")) {
 		memset(&dis_fw_rev,0,sizeof(dis_fw_rev));
-		strncpy(&dis_fw_rev,setting,setting_len);
+		strncpy((char *)dis_fw_rev,setting,setting_len);
 		return 0;
 	}
 	#endif
 	#if defined(CONFIG_BT_GATT_DIS_HW_REV)
 	if (!strcmp(name, "hw")) {
 		memset(&dis_hw_rev,0,sizeof(dis_fw_rev));
-		strncpy(&dis_hw_rev,setting,setting_len);
+		strncpy((char *)dis_hw_rev,setting,setting_len);
 		return 0;
 	}
 	#endif
 	#if defined(CONFIG_BT_GATT_DIS_SW_REV)
 	if (!strcmp(name, "sw")) {
 		memset(&dis_sw_rev,0,sizeof(dis_sw_rev));
-		strncpy(&dis_sw_rev,setting,setting_len);
+		strncpy((char *)dis_sw_rev,setting,setting_len);
 		return 0;
 	}
 	#endif

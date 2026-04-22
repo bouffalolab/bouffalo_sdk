@@ -14,6 +14,9 @@
 
 #include "rfparam_adapter.h"
 #include "bl616_glb.h"
+#include "bflb_mtd.h"
+#include "easyflash.h"
+#include "bflb_romfs.h"
 
 void vAssertCalled(void)
 {
@@ -51,7 +54,7 @@ void app_main_entry(void *arg)
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
-        return 0;
+        return;
     }
 
     /* For bt status save */
@@ -72,7 +75,7 @@ void app_main_entry(void *arg)
     /* Init bt */
     app_bt_init();
 
-#if CONFIG_CODEC_USE_I2S
+#if defined(CONFIG_CODEC_USE_I2S)
     extern msp_i2s_port_init(void);
     msp_i2s_port_init();
 #endif

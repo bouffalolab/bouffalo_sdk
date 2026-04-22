@@ -132,9 +132,9 @@ int rtos_task_create(rtos_task_fct func,
                      rtos_task_handle * const task_handle)
 {
     BaseType_t res;
-    rtos_task_handle handle;
+    TaskHandle_t handle;
 
-    res = xTaskCreate(func, name, stack_depth, params, prio, &handle);
+    res = xTaskCreate((TaskFunction_t)func, name, stack_depth, params, prio, &handle);
 
     if (res == pdFAIL)
         return 1;
@@ -144,7 +144,7 @@ int rtos_task_create(rtos_task_fct func,
     #endif
 
     if (task_handle)
-        *task_handle = handle;
+        *task_handle = (rtos_task_handle)handle;
 
     return 0;
 }

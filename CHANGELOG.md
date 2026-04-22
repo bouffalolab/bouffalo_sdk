@@ -1,5 +1,87 @@
 # CHANGELOG
 
+## v2.3.24-RC1 — since v2.3.23 (2026-04-17 → 2026-04-22)
+
+### New Features
+
+- **PEC / Display**
+  - Added PEC v2 simulation SRGB LCD support
+  - Added PEC SRGB basic example
+  - Updated PEC v2 library
+
+- **Solution**
+  - Added DPI display output support
+  - Improved UVC/UAC solution
+
+- **BL616CL / Low Power**
+  - Added RAM and ATE manufacturing test codes
+  - Added external DCDC auto control support in standard driver
+  - Added IO wakeup support in low-power firmware
+  - Added clock gate control in low-power firmware
+  - Added DCDC voltage switching support in low-power firmware
+  - Added per-pin HBN wakeup trigger configuration
+
+- **WiFi (802.11)**
+  - Added rate control GI adaptive controller for improved link adaptation
+  - Added compile-time STA bandwidth limit configuration
+  - Enhanced ACK timing and TX/RX state handling
+  - Improved monitor mode function implementations
+
+- **Thread / 802.15.4**
+  - Enhanced ACK timestamp handling and compatibility
+  - Added product appearance attributes support in Matter
+
+- **Multimedia**
+  - Added miniAlsa example
+
+- **Debug**
+  - Added codec debug CLI commands
+
+- **BL616**
+  - Added API for fine-tuning AUPLL SDMIN
+
+- **Manufacturing**
+  - Updated common RF trim parameters for BL616CL
+
+### Bug Fixes
+
+- **PEC / Display**
+  - Fixed bandwidth issue with PEC v2 SRGB mode
+
+- **DBI**
+  - Fixed YUV format errors in DBI interface
+
+- **WiFi**
+  - Filtered duplicate AP management frames
+  - Fixed default GI initialization by mode and MCS
+  - Fixed rate control sample-aware checks gated with transient window
+
+- **WLAN MAC**
+  - Fixed lost packet counter not being cleared on valid RX data
+  - Fixed connection loss timer not being cleared properly
+
+- **Zigbee**
+  - Fixed error in `zb_getGroupTableByGroupId()` API
+  - Fixed compile error due to interface changes
+
+- **Low Power (BL616CL)**
+  - Aligned wakeup trigger mode lookup for BL616CL
+  - Refined IO wakeup DCDC flow
+  - Aligned IO wakeup examples with new trigger mode configuration
+
+- **Manufacturing**
+  - Fixed touch chip version confirmation not being set
+
+- **Build / Tooling**
+  - Fixed FOTA compile failure due to undefined `CONFIG_SHELL`
+  - Fixed `bl_crt_bundle` build failure
+
+### Improvements
+
+- WiFi MQTT now supports auto test framework
+- Fixed compile warnings across multiple components (lwIP, host_router, macsw, wifi4 firmware/manager, wifi6, bl602, bl616CL)
+- LHAL: Renamed BL616D references to BL618DG
+
 ## v2.3.23 — since v2.3.22 (2026-04-11 → 2026-04-17)
 
 ### New Features
