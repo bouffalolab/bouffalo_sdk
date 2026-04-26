@@ -43,7 +43,9 @@ void app_init_entry(void *param)
 int main(void)
 {
     board_init();
+#ifdef CONFIG_LPAPP
     app_pm_init();
+#endif
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 

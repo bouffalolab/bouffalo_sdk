@@ -47,7 +47,6 @@ struct bl_lp_bcn_loss_cfg_desc {
 extern uint32_t *export_get_rx_buffer1_addr(void);
 
 int bl_lpfw_bin_check(void);
-int bl_lpfw_ram_load(void);
 int bl_lpfw_ram_verify(void);
 void bl_lp_fw_bcn_loss_cfg_dtim_default_common(uint8_t dtim_num, const struct bl_lp_bcn_loss_cfg_desc *dtim1_cfg,
                                                const struct bl_lp_bcn_loss_cfg_desc *dtim3_cfg,

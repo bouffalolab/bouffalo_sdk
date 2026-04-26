@@ -125,7 +125,7 @@
 #define SO_REUSE                  1
 #define LWIP_TCP_KEEPALIVE        1
 
-#if CONFIG_LWIP_LP
+#ifdef CONFIG_LWIP_LP
 #define TCP_TIMER_PRECISE_NEEDED        1
 #define DHCP_TIMER_PRECISE_NEEDED       1
 #define ARP_TIMER_PRECISE_NEEDED        1

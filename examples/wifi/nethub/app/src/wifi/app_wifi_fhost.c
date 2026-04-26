@@ -16,6 +16,10 @@
 #include <bl616_glb.h>
 #endif
 
+#ifdef CONFIG_ATMODULE
+#include <at_main.h>
+#endif
+
 #include <app_user.h>
 
 #define DBG_TAG "appwifi"
@@ -98,7 +102,9 @@ int app_wifi_init(void)
         vTaskDelay(1);
     }
 
-    app_atmodule_init();
+#ifdef CONFIG_ATMODULE
+    at_module_init();
+#endif
 
     return 0;
 }

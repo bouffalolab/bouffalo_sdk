@@ -124,10 +124,11 @@ static int _codec_loop_init(void)
     /* input ch config */
     xcodec_input_attach_callback(&g_codec_input_ch, _codec_input_event_cb_fun, NULL);
 
-    xcodec_input_config_t input_config;
+    xcodec_input_config_t input_config = { 0 };
     
     input_config.sample_rate  = INPUT_SAMPLE_RATE;
     input_config.bit_width    = INPUT_SAMPLE_BITS;
+    input_config.slot_width    = INPUT_SAMPLE_BITS;
     input_config.mode         = XCODEC_INPUT_DIFFERENCE;
     input_config.buffer       = g_input_buffer;
     input_config.buffer_size  = INPUT_BUFFER_SIZE;
@@ -160,9 +161,10 @@ static int _codec_loop_init(void)
     /* output ch config */
     xcodec_output_attach_callback(&g_codec_output_ch, codec_output_event_cb_fun, NULL);
     
-    xcodec_output_config_t output_config;
+    xcodec_output_config_t output_config = { 0 };
 
     output_config.bit_width = OUTPUT_SAMPLE_BITS;
+    output_config.slot_width = OUTPUT_SAMPLE_BITS;
     output_config.sample_rate = OUTPUT_SAMPLE_RATE;
     output_config.buffer = g_output_buffer;
     output_config.buffer_size = OUTPUT_BUFFER_SIZE;
@@ -243,4 +245,3 @@ int cmd_codec_loop(int argc, char **argv)
 
 SHELL_CMD_EXPORT_ALIAS(cmd_codec_loop, codec_loop, wifi codec loop test);
 #endif
-

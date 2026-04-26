@@ -133,6 +133,7 @@ typedef enum {
 typedef struct {
     uint32_t              sample_rate;                ///< Input data sample rate
     uint32_t              bit_width;                  ///< Input data sample width
+    uint32_t              slot_width;                 ///< Input slot width in bits
     xcodec_input_mode_t   mode;                       ///< Input work mode
     uint8_t               *buffer;                    ///< The buffer used to save audio data
     uint32_t              buffer_size;                ///< Input buffer size
@@ -149,6 +150,7 @@ typedef struct {
 typedef struct {
     uint32_t              sample_rate;                ///< Output data sample rate
     uint32_t              bit_width;                  ///< Onput data sample width
+    uint32_t              slot_width;                 ///< Output slot width in bits
     xcodec_output_mode_t  mode;                       ///< Onput work mode
     uint8_t               *buffer;                    ///< The buffer used to save audio data
     uint32_t              buffer_size;                ///< Output buffer size

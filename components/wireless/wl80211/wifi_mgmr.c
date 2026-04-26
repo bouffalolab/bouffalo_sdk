@@ -8,6 +8,7 @@
 
 #include "supplicant_api.h"
 #include "wl80211_platform.h"
+#include "timeout.h"
 #include "bl_lp.h"
 
 #ifdef COMPAT_WIFI_MGMR
@@ -111,6 +112,16 @@ static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
     wl80211_printf("=================================================================\r\n");
 }
 
+static timeout_t dhcp_ip_timeout = NULL;
+
+static void dhcp_ip_timeout_cb(struct timeout_s *timeout)
+{
+    dhcp_ip_timeout = NULL;
+    wl80211_printf("[MGMR] DHCP IP acquire timeout (15s), disconnecting WiFi\r\n");
+    wifi_mgmr_sta_disconnect();
+    free(timeout);
+}
+
 static void auto_powersave(struct timeout_s *timeout)
 {
     if (wifi_mgmr_glb.powersave) {
@@ -123,6 +134,10 @@ static void connected_tsk(void)
 {
     _wifi_mgmr_sta_link_up(wifi_mgmr_glb.use_dhcp);
 
+    if (wifi_mgmr_glb.use_dhcp) {
+        dhcp_ip_timeout = timeout_start_new(dhcp_ip_timeout_cb, NULL, 15000);
+    }
+
     if (wifi_mgmr_glb.powersave) {
         timeout_start_new(auto_powersave, NULL, 5000);
     }
@@ -130,6 +145,11 @@ static void connected_tsk(void)
 
 static void disconnect_tsk(void)
 {
+    if (dhcp_ip_timeout) {
+        timeout_stop(dhcp_ip_timeout);
+        free(dhcp_ip_timeout);
+        dhcp_ip_timeout = NULL;
+    }
     _wifi_mgmr_sta_link_down();
     if (wifi_mgmr_glb.autoconnect && wl80211_glb.last_connect_params) {
         wl80211_printf("Autoconnect: Reconnecting to %s\r\n", wl80211_glb.last_connect_params->ssid);
@@ -278,6 +298,11 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
             mm_sec_keydump();
         } break;
         case CODE_WIFI_ON_GOT_IP: {
+            if (ev->value && dhcp_ip_timeout) {
+                timeout_stop(dhcp_ip_timeout);
+                free(dhcp_ip_timeout);
+                dhcp_ip_timeout = NULL;
+            }
             _wifi_mgmr_ip_got_dump();
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;

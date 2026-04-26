@@ -14,13 +14,25 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "bl_lp.h"
-#include "bl616_pm.h"
 #include "bflb_uart.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
+
+#ifdef BL616
+#include "bl616_pm.h"
 #include "bl616_glb.h"
 #include "bl616_glb_gpio.h"
 #include "bl616_hbn.h"
+#elif defined(BL616CL)
+#include "bl616cl_pm.h"
+#include "bl616cl_glb.h"
+#include "bl616cl_hbn.h"
+#elif defined(BL618DG)
+#include "bl618dg_pm.h"
+#include "bl618dg_glb.h"
+#include "bl618dg_hbn.h"
+#endif
+
 #include "bflb_rtc.h"
 #include "shell.h"
 #include "pm_manager.h"
@@ -31,7 +43,11 @@
 
 int pwr_info_clear(void)
 {
+#ifdef BL616
     bl_lp_info_clear();
+#else
+    bl_lp_info_clear(iot2lp_para->lp_info);
+#endif
 
     return 0;
 }

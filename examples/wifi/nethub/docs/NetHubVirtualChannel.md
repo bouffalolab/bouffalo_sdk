@@ -1,43 +1,51 @@
 # NetHub USER Virtual Channel
 
-This document describes how to use the NetHub `USER virtual channel`.
+This document describes the current NetHub USER virtual channel support.
+
+It focuses on USER virtual channel usage, prerequisites, APIs, and limits. For the full NetHub architecture and the broader interface support matrix, read [NetHubArchitecture.md](NetHubArchitecture.md).
 
 ## 1. Concept
 
-`USER virtual channel` is a logical message channel carried on the current host
-link.
+USER virtual channel is a logical message channel carried on the active host interface.
 
-It is not a separate physical interface. It reuses the current
-`SDIO / USB / SPI` transport and multiplexes different payload types into
-separate logical channels.
+It is not a separate physical interface. The public API is transport-neutral, while the current in-tree implementation is still centered on the default `SDIO` interface.
 
-Commonly used types:
+Common logical types:
 
-- `USER`
-  - private customer or application data
-- `AT`
-  - host control-plane data
-- `SYSTEM`
-  - internal system coordination messages
+| Type | Meaning |
+| --- | --- |
+| `USER` | private customer or application data |
+| `AT` | control payloads |
+| `SYSTEM` | internal coordination messages |
 
-For most customer integrations, only the `USER` type matters.
+## 2. Current Scope
 
-## 2. Bring-Up Prerequisites
+Current implementation summary:
 
-Before using it, confirm:
+- the public API is transport-neutral by design
+- the current in-tree end-to-end USER virtual channel path follows the default `SDIO` interface
+- the device-side implementation is currently in `backend/host/sdio/virtualchan.c`
+- the host userspace library is currently aligned with `mr_sdio.ko + netlink`
+- USB device-side ACM transport exists, but in-tree host `nethub_vchan` alignment is not finished
+- SPI is not supported
+
+## 3. Prerequisites
+
+Before using the current in-tree USER virtual channel path, confirm:
 
 - device side is built with `CONFIG_NETHUB=y`
-- device side is built with `CONFIG_MR_VIRTUALCHAN=y`
-- host side has already loaded `mr_sdio.ko`
-- the underlying host-device link is already working
+- device side enables `CONFIG_MR_VIRTUALCHAN=y`
+- the selected bring-up path uses the default `SDIO` interface
+- host side has loaded `mr_sdio.ko`
+- the host-device link is already working
 
-Additional notes:
+Notes:
 
-- The `USER` channel and the control channel are parallel channels
-- If the host control plane itself uses `vchan`, it uses the `AT` type
-- Customer private messages should stay on the `USER` type
+- USER and AT are parallel logical channels
+- customer private data should stay on the `USER` type
+- documentation should not describe USB and SPI as if they already share a finished end-to-end virtual channel stack
 
-## 3. device-side Interfaces
+## 4. Device-Side API
 
 Header:
 
@@ -50,20 +58,20 @@ int nethub_vchan_user_send(const void *data, uint16_t len);
 int nethub_vchan_user_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg);
 ```
 
-## 4. host-side Interfaces
+## 5. Host-Side API
 
 Header:
 
 - `bsp/common/msg_router/linux_host/userspace/nethub/virtualchan/nethub_vchan.h`
 
-### 4.1 Initialization and Cleanup
+Initialization and cleanup:
 
 ```c
 int nethub_vchan_init(void);
 int nethub_vchan_deinit(void);
 ```
 
-### 4.2 USER Channel
+USER channel:
 
 ```c
 typedef void (*nethub_vchan_recv_callback_t)(const void *data, size_t len);
@@ -72,10 +80,7 @@ int nethub_vchan_user_send(const void *data, size_t len);
 int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
 ```
 
-### 4.3 Optional State Query
-
-If you need to know whether the virtual channel is ready, you can optionally
-use:
+Optional state query:
 
 ```c
 typedef struct {
@@ -86,17 +91,7 @@ typedef struct {
 int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
 ```
 
-Typical checks:
-
-- `link_state == NETHUB_VCHAN_LINK_UP`
-  - the link is ready for TX/RX
-- `host_state == NETHUB_VCHAN_HOST_STATE_DEVICE_RUN`
-  - the host has completed the handshake with the device
-
-### 4.4 Optional Link Event Callback
-
-If the application wants passive notification when the link goes up or down, it
-can optionally register:
+Optional link event callback:
 
 ```c
 int nethub_vchan_register_link_event_callback(
@@ -104,12 +99,12 @@ int nethub_vchan_register_link_event_callback(
     void *user_data);
 ```
 
-## 5. Typical Usage Order
+## 6. Typical Usage Order
 
 1. `nethub_vchan_init()`
 2. `nethub_vchan_user_register_callback()`
 3. `nethub_vchan_user_send()`
-4. Call `nethub_vchan_deinit()` when finished
+4. `nethub_vchan_deinit()` when finished
 
 Example:
 
@@ -140,18 +135,16 @@ int main(void)
 }
 ```
 
-## 6. Limits and Notes
+## 7. Limits and Notes
 
-- Maximum payload length per message is `1500` bytes
-- The `USER` channel is packet-oriented, not a byte stream
-- The kernel module must be loaded before use
-- If the device side does not enable `CONFIG_MR_VIRTUALCHAN`, the host-side
-  `USER` channel will not work
-- If host control-plane traffic and `USER` traffic coexist, do not reuse the
-  `AT` type for customer private data
+- maximum payload length per message is `1500` bytes
+- USER virtual channel is packet-oriented, not a byte stream
+- the current in-tree end-to-end path is SDIO-based
+- if the device side does not enable `CONFIG_MR_VIRTUALCHAN`, the current in-tree USER virtual channel path will not work
+- if control traffic and USER traffic coexist, keep private application traffic on `USER` and do not reuse the `AT` type
 
-## 7. Related Pages
+## 8. Related Pages
 
+- [NetHub.md](NetHub.md)
 - [NetHubQuickBringup.md](NetHubQuickBringup.md)
 - [NetHubArchitecture.md](NetHubArchitecture.md)
-- [NetHub.md](NetHub.md)

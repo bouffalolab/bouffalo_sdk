@@ -111,6 +111,7 @@ static void _auo_recv(auo_ch_t *context)
         user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
             ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
     } else {
+        context->submitted_bytes_total += ret;
 #if CODEC_OUTPUT_DEBUG_TRACE
         context->debug.bytes_read += ret;
 #endif
@@ -281,6 +282,7 @@ int auo_channel_config(auo_ch_t *context, auo_cfg_t *config)
     audiopwm_analog_digital_init(config->sample_rate, config->sound_channel_num, config->mode);
 
     context->bit_width = config->bit_width;
+    context->sample_rate_hz = config->sample_rate;
     context->buffer = config->buffer;
     context->buffer_size = config->buffer_size;
     context->per_node_size = config->per_node_size;

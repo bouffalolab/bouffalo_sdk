@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <msp/kernel.h>
 #include <xcodec.h>
 #include "audio_file.h"
 #include <aef/aef_param.h>
@@ -601,7 +602,7 @@ static void codec_output_event_cb_fun(xcodec_output_t *output, xcodec_event_t ev
 static void _codec_eq_task(void *arg)
 {
     xcodec_error_t ret;
-    xcodec_output_config_t output_config;
+    xcodec_output_config_t output_config = { 0 };
     codec.output_chs = &codec_output_ch;
     
     // uint32_t res = 0, output_num = 0;
@@ -635,6 +636,7 @@ static void _codec_eq_task(void *arg)
     xcodec_output_attach_callback(&codec_output_ch, codec_output_event_cb_fun, NULL);
 
     output_config.bit_width = 16;
+    output_config.slot_width = 16;
     output_config.sample_rate = 16000;
     output_config.buffer = output_buf;
     output_config.buffer_size = OUTPUT_BUF_SIZE;

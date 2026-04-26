@@ -4,7 +4,7 @@
 
 # Introduction
 
-**BouffaloSDK** is the IOT and MCU software development kit provided by the Bouffalo Lab Team, supports all the series of Bouffalo chips. Also it is the combination of **bl_mcu_sdk** and **bl_iot_sdk** 。
+**BouffaloSDK** is the IOT and MCU software development kit provided by the Bouffalo Lab Team, supports all the series of Bouffalo chips. Also it is the combination of **bl_mcu_sdk** and **bl_iot_sdk** .
 
 # SDK Architecture
 
@@ -21,7 +21,9 @@
 |drivers/lhal| bouffalo common peripherals drivers which support all the chips|
 |drivers/soc| bouffalo non-generic peripherals drivers|
 |drivers/rfparam| rf param |
+|drivers/sys| system drivers|
 |examples| official samples|
+|tests | unit tests|
 |tools| tools |
 
 # LHAL Support
@@ -30,7 +32,7 @@
 
 Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706/BL702L | BL616/BL618/BL616CL/BL618DG |
 |:------------:|:--------------:|:--------------------:|:-----------:|
 |  ADC         |      ○         |      √             |   √           |
 |  CAM         |      -         |      √             |   √           |
@@ -38,7 +40,7 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 |  CSI         |      -         |      -             |   -           |
 |  DAC         |      ○         |      √             |   √           |
 |  DMA         |      ○         |      √             |   √           |
-|  EFUSE       |      ×         |      ×             |   ×           |
+|  EFUSE       |      ×         |      √             |   √           |
 |  EMAC        |      -         |      √             |   √           |
 |  FLASH       |      √         |      √             |   √           |
 |  GPIO        |      ○         |      √             |   √           |
@@ -62,13 +64,15 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 
 # Wireless Support
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |
-|:------------:|:--------------:|:--------------------:|:-----------:|
-|  WIFI4       |      √         |      -             |   -           |
-|  WIFI6       |      -         |      -             |   √           |
-|  BT          |      -         |      -             |   ×           |
-|  BLE         |      √         |      ×             |   √           |
-|  ZIGBEE      |      -         |      ×             |   ×           |
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL702L | BL616/BL618 | BL616CL | BL618DG |
+|:------------:|:--------------:|:--------------------:|:------:|:-----------:|:-------:|:-------:|
+|  WIFI4       |      √         |      -             |   -    |   -         |   -     |   -     |
+|  WIFI6       |      -         |      -             |   -    |   √         |   √     |   √     |
+|  BT          |      -         |      -             |   -    |   √         |   √     |   √     |
+|  BLE         |      √         |      ×             |   ×    |   √         |   √     |   √     |
+|  ZIGBEE      |      -         |      -             |   √    |   √         |   -     |   √     |
+|  THREAD      |      -         |      -             |   √    |   √         |   -     |   √     |
+|  MATTER      |      √         |      √             |   √    |   √         |   ○     |   ○     |
 
 Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
@@ -77,22 +81,27 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 | Area       | Component(s)            | Original Repository                                          | Version                           |
 | ---------- | ----------------------- | ------------------------------------------------------------ | --------------------------------- |
 | Multimedia | xwebsocket              | https://github.com/OlehKulykov/librws                        | 9-Jan-19                          |
-| Networking | MQTT-C                  | https://github.com/LiamBindle/MQTT-C                         | 1.1.6                             |
-| Bluetooth  | Zephyr                  | https://github.com/zephyrproject-rtos/zephyr/                | 2.1.0                             |
+| Networking | MQTT-C                  | https://github.com/LiamBindle/MQTT-C                         | 1.1.2                             |
+| Bluetooth  | NimBLE                  | https://github.com/apache/mynewt-nimble                      | 1.5.0                             |
 | Bluetooth  | sbc                     | https://android.googlesource.com/platform/external/bluetooth/bluedroid/ | UnKnown                           |
 | Networking | LWIP                    | https://github.com/lwip-tcpip/lwip                           | 2.1.2                             |
 | Networking | PPP                     | https://github.com/ppp-project/ppp                           | Unknown. Managed by upstream LWIP |
 | Utils      | cJSON                   | https://github.com/DaveGamble/cJSON                          | 1.7.18                            |
-| WLAN       | hostapd, wpa_supplicant | https://w1.fi/cgit/hostap                                    | v2.10-devel                       |
-| BSP        | CherryUSB               | https://github.com/cherry-embedded/CherryUSB                 | v1.5.2                            |
-| BSP        | FatFS                   | http://elm-chan.org/fsw/ff/                                  | R0.15                             |
+| WLAN       | hostapd, wpa_supplicant | https://w1.fi/cgit/hostap                                    | v2.10                             |
+| BSP        | CherryUSB               | https://github.com/cherry-embedded/CherryUSB                 | v1.5.3                            |
+| BSP        | FatFS                   | http://elm-chan.org/fsw/ff/                                  | R0.14c                            |
 | BSP        | FreeRTOS-Kernel         | https://github.com/FreeRTOS/FreeRTOS-Kernel/                 | V10.6.2                           |
-| BSP        | LittleFS                | https://github.com/littlefs-project/littlefs                 | v2.8.2                            |
+| BSP        | LittleFS                | https://github.com/littlefs-project/littlefs                 | v2.8                              |
 | BSP        | Nuttx                   | https://github.com/apache/nuttx                              | UnKnown                           |
-| BSP        | TLSF                    | https://github.com/mattconte/tlsf                            | Mar 30, 2020                      |
+| BSP        | TLSF                    | https://github.com/mattconte/tlsf                            | v3.1                              |
 | Graphics   | LVGL_v8                 | https://github.com/lvgl/lvgl                                 | 8.4.0                             |
-| Graphics   | LVGL_v9                 | https://github.com/lvgl/lvgl                                 | 9.2.0                             |
+| Graphics   | LVGL_v9                 | https://github.com/lvgl/lvgl                                 | 9.5.0                             |
 | Networking | mbedtls                 | https://github.com/Mbed-TLS/mbedtls                          | 2.28.2                            |
+| Networking | mbedtls v3              | https://github.com/Mbed-TLS/mbedtls                          | 3.6.5                             |
+| IPC        | OpenAMP                 | https://github.com/OpenAMP/open-amp                          | v1.8.0                            |
+| IPC        | libmetal                | https://github.com/OpenAMP/libmetal                          | v1.8.0                            |
+| Wireless   | OpenThread              | https://github.com/openthread/openthread                     | 1.7.4                             |
+| Wireless   | Zigbee stack            | Bouffalo Lab proprietary                                      | 1.6.68                            |
 | Utils      | musl getopt             | https://git.musl-libc.org/cgit/musl                          | UnKnown                           |
 | Utils      | queue                   | https://web.mit.edu/freebsd/head/sys/sys/queue.h             | 8.5                               |
 | Utils      | tree                    | https://ftp.netbsd.org/pub/NetBSD/NetBSD-current/src/sys/sys/tree.h | 1.8 (NetBSD), 1.7 (OpenBSD)       |
@@ -125,6 +134,21 @@ cd examples/helloworld
 make CHIP=bl602 BOARD=bl602dk
 ```
 
+- If you use **BL702L** , you can try
+
+```
+cd examples/helloworld
+make CHIP=bl702l BOARD=bl702ldk
+```
+
+- For multi-core chip **BL618DG** , you need to specify the CPU core
+
+```
+cd examples/bl618dg_dualcore
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap   # AP core
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np   # NP core
+```
+
 If you want to use **ninja**, you can try:
 
 ```
@@ -150,7 +174,7 @@ usermod -aG dialout xxx # xxx is your own name
 
 ```
 cd examples/helloworld
-make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl616, COMX in Windows, /dev/ttyxxx in Linux
+make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl702l/bl616/bl616cl/bl618dg, COMX in Windows, /dev/ttyxxx in Linux
 ```
 
 If flash using serial port rather than USB, different USB2TTL chips support different max baudrates, need to pay attention to when flashing.

@@ -5,12 +5,14 @@
 #include <task.h>
 #include <timers.h>
 #include <shell.h>
-// #include <netbus_uart.h>
-#include "at_main.h"
 #include "bflb_dma.h"
 #include "wifi_mgmr_ext.h"
 #include "async_event.h"
 #include "log.h"
+
+#ifdef CONFIG_ATMODULE
+#include <at_main.h>
+#endif
 
 extern void app_atmodule_init(void);
 static bool wifi_init_done = 0;
@@ -97,6 +99,8 @@ void app_wifi_init(void)
         vTaskDelay(500);
     }
 
-    app_atmodule_init();
+#ifdef CONFIG_ATMODULE
+    at_module_init();
+#endif
 }
 

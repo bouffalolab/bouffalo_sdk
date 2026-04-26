@@ -1,29 +1,38 @@
 # NetHub
 
-NetHub bridges device-side Wi-Fi capabilities to the host.
+NetHub bridges device-side Wi-Fi capability to a selected host interface.
 
-The current solution targets Wi-Fi SoCs such as `BL616 / BL618 / BL616CL / BL618DG`,
-and the recommended bring-up path is currently `SDIO`.
+The current solution targets Wi-Fi SoCs such as `BL616 / BL618 / BL616CL / BL618DG`.
 
-## Documentation Guide
+## Current Status
 
-- [NetHubQuickBringup.md](NetHubQuickBringup.md)
-  - For customers doing first-time bring-up
-  - Covers key device/host choices, build steps, module loading, AP connection,
-    and common issues
-- [NetHubArchitecture.md](NetHubArchitecture.md)
-  - For developers who need to understand module boundaries and APIs
-  - Covers device/host layering, public interfaces, and key data flows
-- [NetHubVirtualChannel.md](NetHubVirtualChannel.md)
-  - For customers or application developers who need to transfer private data
-  - Covers USER channel prerequisites, APIs, and typical usage
+| Item | Current status |
+| --- | --- |
+| Default interface | `SDIO` |
+| USB data-path | device-side `USB ECM` backend implemented |
+| USB control transport | device-side `USB ACM` transport plumbing implemented |
+| SPI | not implemented |
+| USER virtual channel | default interface is `SDIO` |
+| Low power | currently `BL618DG` only |
+| Optional ATModule control solution | available, but not mandatory |
 
-## Current Conclusions
+## Document Guide
 
-- The current primary path is `SDIO`
-- The device-side Wi-Fi backend supports `fhost / wl80211`
-- The host control backend is selected at runtime: `tty` or `vchan`
-- The control channel and `USER virtual channel` both run on the same host link
+Use these documents according to what you need:
+
+| Document | Focus |
+| --- | --- |
+| [NetHubQuickBringup.md](NetHubQuickBringup.md) | default interface, main configuration switches, build and flash, SDIO and USB pins |
+| [NetHubArchitecture.md](NetHubArchitecture.md) | internal layering, public APIs, support matrix, and interface differences |
+| [NetHubVirtualChannel.md](NetHubVirtualChannel.md) | USER virtual channel scope, prerequisites, APIs, and limits |
+
+## Key Points
+
+- `SDIO` is the current default interface for the in-tree bring-up path.
+- `USB` device-side backend is implemented with `ECM + ACM`.
+- `SPI` is still a stub and is not ready for bring-up.
+- `nethub` core exposes data-path, control path, and virtual channel facades without directly depending on `ATModule`.
+- The optional `ATModule + bflbwifid + bflbwifictrl` flow is available, but not mandatory.
 
 ## In-Repo Reference Directories
 
@@ -33,11 +42,9 @@ and the recommended bring-up path is currently `SDIO`.
 
 ## Local Documentation Source
 
-- Markdown documents:
-  - `examples/wifi/nethub/docs/`
+The in-repo documentation source is:
 
-If you need to publish to the online wiki, use these four Markdown documents
-as the source.
+- `examples/wifi/nethub/docs/`
 
 ## Online Wiki
 

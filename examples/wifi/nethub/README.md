@@ -1,18 +1,29 @@
 # NetHub Documentation Entry
 
-This directory is the device-side example entry point for NetHub.
+This directory is the example entry point for NetHub.
 
-If you only want to complete device build and flashing as quickly as possible,
-this README is enough. If you also need to bring up the host side, understand
-the architecture, or integrate the USER virtual channel, continue with the
-documents under `docs/`.
+If you only need the fastest device build and flash flow, this README is
+enough. For architecture, host bring-up, or USER virtual channel details,
+continue with the documents under `docs/`.
 
-## Current Conclusions
+## Current Support Snapshot
 
-- The current primary path is `SDIO`.
-- The device-side Wi-Fi backend supports `fhost / wl80211`.
-- The host control backend is selected at runtime: `tty` or `vchan`.
-- The control channel and `USER virtual channel` both run on the same host link.
+| Item | Current status |
+| --- | --- |
+| Default interface | `SDIO` |
+| USB interface | device-side backend implemented with `ECM + ACM` |
+| SPI interface | not implemented |
+| USER virtual channel | default interface is `SDIO` |
+| Optional AT control solution | available through example composition, not a core NetHub dependency |
+| Low power | currently `BL618DG` only |
+
+Important notes:
+
+- `nethub` core does not directly depend on `ATModule`.
+- If you only need the data-path, you can ignore the AT control solution.
+- The current host Linux stack under
+  `bsp/common/msg_router/linux_host/userspace/nethub` follows the default
+  `SDIO` interface.
 
 ## Device Build
 
@@ -42,18 +53,39 @@ Configuration entry:
 
 - `examples/wifi/nethub/defconfig`
 
-Common options:
+Important options:
 
 - `CONFIG_NETHUB=y`
-- `CONFIG_MR_NETDEV=y`
-- `CONFIG_MR_TTY=y`
+- `CONFIG_NETHUB_PROFILE_SDIO=y`
+- `CONFIG_NETHUB_PROFILE_USB=y`
+- `CONFIG_NETHUB_PROFILE_SPI=y`
+  - config symbol names use `PROFILE`, but choose exactly one interface per build
+- `CONFIG_WL80211=y`
+  - use the `wl80211` Wi-Fi backend
+- `CONFIG_WL80211` unset
+  - use the default `fhost` Wi-Fi backend
+- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y`
+  - enable the optional example AT control solution
 - `CONFIG_MR_VIRTUALCHAN=y`
-- `CONFIG_WL80211`
-  - Enabled: use `wl80211`
-  - Disabled: default to `fhost`
-- `CONFIG_NETHUB_AT_USE_VCHAN`
-  - `n`: the control channel uses `TTY`
-  - `y`: the control channel uses `AT virtual channel`
+  - required for the current in-tree SDIO USER virtual channel path
+- `CONFIG_NETHUB_LOWPOWER_ENABLE=y`
+  - currently meaningful only on `BL618DG`
+
+About `CONFIG_NETHUB_AT_USE_VCHAN`:
+
+- it still exists in the example configuration
+- treat it as an example or legacy SDIO control path convention
+- do not treat it as the selector that makes all backends share one
+  finished control implementation
+
+Current default example values include:
+
+- `CONFIG_NETHUB_PROFILE_SDIO=y`
+- `CONFIG_NETHUB_PROFILE_USB=n`
+- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y`
+- `CONFIG_MR_VIRTUALCHAN=y`
+- `CONFIG_NETHUB_AT_USE_VCHAN=n`
+- `CONFIG_MR_TTY=n`
 
 ## Documentation Index
 
@@ -70,12 +102,6 @@ Online wiki:
 - <https://docs.bouffalolab.com/index.php?title=NetHubQuickBringup>
 - <https://docs.bouffalolab.com/index.php?title=NetHubArchitecture>
 - <https://docs.bouffalolab.com/index.php?title=NetHubVirtualChannel>
-
-Notes:
-
-- The repository only maintains these Markdown documents.
-- If you later want to publish to the online wiki, use these `docs/*.md`
-  files as the source.
 
 Recommended reading order:
 

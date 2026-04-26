@@ -1,20 +1,14 @@
 #CONFIG_WL80211   =y
+# ctrl Channel（device use ATModule, host use bflbwifid、bflbwifictrl）
+CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE =y
+CONFIG_NETHUB_LOWPOWER_ENABLE          =y
+CONFIG_NETHUB_PROFILE_SDIO             =y
+CONFIG_NETHUB_PROFILE_USB              =n
+
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
--include $(BL_SDK_BASE)/examples/wifi/at_defconfig
 
-CONFIG_COREDUMP=n
-
-# lpfw
-CONFIG_LPAPP                         =y
-CONFIG_PM                            =y
-CONFIG_LWIP_LP                       =y
-CONFIG_DCDC_ENABLE                   =n
-CONFIG_PWRMGMT                       =y
-CONFIG_TICKLESS_CUSTOMIZE            =y
-CONFIG_TICKLESS_EXT                  =y
-CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
-CONFIG_CLOCK_SOURCE_EF_PARAM         =n
-CONFIG_ATMODULE_LP                   =y
+# Debug
+CONFIG_COREDUMP              =n
 
 # easyflash
 CONFIG_LITTLEFS              =y
@@ -42,20 +36,29 @@ CONFIG_MR_SDIO_DRIVER       =y
 CONFIG_MR_SDIO_QUEUE_DEPTH  =4
 
 CONFIG_MR_NETDEV            =y
-CONFIG_MR_TTY               =y
+CONFIG_MR_TTY               =n
 CONFIG_MR_VIRTUALCHAN       =y
 
 #CONFIG_IPV6               =y
 CONFIG_NETBUS             =y
 CONFIG_NETHUB             =y
-CONFIG_NETHUB_AT_USE_VCHAN=n
-CONFIG_ATMODULE_TTY       =y
-CONFIG_ATMODULE_WORK_Q    =y
-CONFIG_ATMODULE_OTA       =y
-CONFIG_ATMODULE_NANO      =y
-CONFIG_ATMODULE_WIFI_STA  =y
-CONFIG_ATMODULE_WIFI_AP   =y
-CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO =y
+
+# lowpower todo: now only bl618dg support lowpower.
+ifneq ($(CHIP),bl618dg)
+CONFIG_NETHUB_LOWPOWER_ENABLE          =n
+endif
+ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
+    CONFIG_LPAPP                         =y
+    CONFIG_PM                            =y
+    CONFIG_LWIP_LP                       =y
+    CONFIG_DCDC_ENABLE                   =n
+    CONFIG_PWRMGMT                       =y
+    CONFIG_TICKLESS_CUSTOMIZE            =y
+    CONFIG_TICKLESS_EXT                  =y
+    CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
+    CONFIG_CLOCK_SOURCE_EF_PARAM         =n
+endif
+
 
 ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI             =n
@@ -69,3 +72,36 @@ endif
 ifeq ($(CHIP),bl616cl)
     CONFIG_ROMAPI             =n
 endif
+
+
+# USB
+ifeq ($(CONFIG_NETHUB_PROFILE_USB),y)
+    CONFIG_CHERRYUSB                =y
+    CONFIG_CHERRYUSB_DEVICE         =y
+    CONFIG_CHERRYUSB_DEVICE_CDC     =y
+    CONFIG_CHERRYUSB_DEVICE_CDC_ECM =y
+    CONFIG_CHERRYUSB_DEVICE_CDC_ACM =y
+endif
+
+
+# AT Module
+ifeq ($(CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE),y)
+    CONFIG_ATMODULE           =y
+endif
+ifeq ($(CONFIG_ATMODULE),y)
+    -include $(BL_SDK_BASE)/examples/wifi/at_defconfig
+endif
+ifeq ($(CONFIG_ATMODULE),y)
+    CONFIG_ATMODULE_TTY       =y
+    CONFIG_ATMODULE_WORK_Q    =y
+    CONFIG_ATMODULE_OTA       =y
+    CONFIG_ATMODULE_NANO      =y
+    CONFIG_ATMODULE_WIFI      =y
+    CONFIG_ATMODULE_WIFI_STA  =y
+    CONFIG_ATMODULE_WIFI_AP   =y
+    CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO =y
+endif
+ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
+    CONFIG_ATMODULE_LP                   =y
+endif
+

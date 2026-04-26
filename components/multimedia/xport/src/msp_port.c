@@ -15,6 +15,18 @@ static uint32_t pull_type_to_lhal(uint8_t pull_type) {
     return pull_type ? GPIO_PULLDOWN : GPIO_PULLUP;
 }
 
+#if defined CONFIG_CODEC_USE_I2S && CONFIG_CODEC_USE_I2S
+__attribute__((weak)) int msp_i2s_device_config(const msp_i2s_device_cfg_t *config)
+{
+    if (config == NULL || config->sample_rate == 0U) {
+        return -1;
+    }
+
+    msp_i2s_device_init(config->sample_rate);
+    return 0;
+}
+#endif
+
 int msp_gpio_output_config(uint8_t pin, uint8_t pull_type)
 {
     struct bflb_device_s* gpio = bflb_device_get_by_name("gpio");

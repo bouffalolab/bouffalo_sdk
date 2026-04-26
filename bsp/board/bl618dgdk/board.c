@@ -943,7 +943,7 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
     lp_wake_io_cfg.io_pu |= ((uint64_t)1 << 0) | ((uint64_t)1 << 1) | ((uint64_t)1 << 32);
     lp_wake_io_cfg.io_pd |= ((uint64_t)1 << 10) | ((uint64_t)1 << 31);
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
 
     /* register io wakeup callback */
     bl_lp_wakeup_io_int_register(test_wakeup_io_callback);

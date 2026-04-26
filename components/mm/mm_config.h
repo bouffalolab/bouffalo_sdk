@@ -80,8 +80,8 @@ extern "C" {
  * Enables tracking of memory allocations and deallocations,
  * detecting potential memory leaks.
  */
-#ifndef CONFIG_MM_ENABLE_LEAK_DETECTION
-#define CONFIG_MM_ENABLE_LEAK_DETECTION 0
+#ifndef CONFIG_MM_ENABLE_TRACKING
+#define CONFIG_MM_ENABLE_TRACKING 0
 #endif
 
 /**

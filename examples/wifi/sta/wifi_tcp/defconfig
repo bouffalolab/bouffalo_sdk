@@ -1,6 +1,5 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
-CONFIG_STRICT=y
 CONFIG_MBEDTLS_AES_USE_HW    =y
 CONFIG_MBEDTLS_BIGNUM_USE_HW =y
 CONFIG_MBEDTLS_ECC_USE_HW    =y

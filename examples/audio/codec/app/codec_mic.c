@@ -99,10 +99,11 @@ static void _codec_input_task(void *arg)
     /* input ch config */
     xcodec_input_attach_callback(&g_codec_input_ch, _codec_input_event_cb_fun, NULL);
 
-    xcodec_input_config_t input_config;
+    xcodec_input_config_t input_config = { 0 };
     
     input_config.sample_rate  = INPUT_SAMPLE_RATE;
     input_config.bit_width    = INPUT_SAMPLE_BITS;
+    input_config.slot_width    = INPUT_SAMPLE_BITS;
     input_config.mode         = XCODEC_INPUT_DIFFERENCE;
     input_config.buffer       = g_input_buffer;
     input_config.buffer_size  = INPUT_BUFFER_SIZE;
@@ -170,4 +171,3 @@ int cmd_codec_mic(int argc, char **argv)
 
 SHELL_CMD_EXPORT_ALIAS(cmd_codec_mic, codec_mic, wifi codec mic test);
 #endif
-

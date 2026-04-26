@@ -25,6 +25,13 @@ typedef struct {
 static bool g_wifi_rx_hook_registered;
 
 #if (DEBUG_DUMP_WIFITX_ENABLE || DEBUG_DUMP_WIFIRX_ENABLE)
+static void nh_wifi_dump_pbuf(const char *tag, const struct pbuf *p)
+{
+    nh_diag_dump_pbuf(tag, p);
+}
+#endif
+
+#if DEBUG_DUMP_WIFIRX_ENABLE
 static const char *nh_wifi_dump_action_name(nh_filter_action_t action)
 {
     switch (action) {
@@ -39,11 +46,6 @@ static const char *nh_wifi_dump_action_name(nh_filter_action_t action)
         default:
             return "unknown";
     }
-}
-
-static void nh_wifi_dump_pbuf(const char *tag, const struct pbuf *p)
-{
-    nh_diag_dump_pbuf(tag, p);
 }
 
 static void nh_wifi_dump_rx_pbuf(bool is_sta, nh_filter_action_t action, const struct pbuf *p)
@@ -88,12 +90,6 @@ static void nh_wifi_dnld_custom_free(struct pbuf *p)
     desc->free_cb(desc->cb_arg);
 }
 
-#define FRAME_BUFF_ELEM_SIZE        32
-#define FRAME_BUFF_PBUFCUSTOM       32
-#define FRAME_BUFF_HWDESCTAG        388
-#define FRAME_BUFF_MSGSTRUCT        8
-#define FRAME_BUFF_MSGSTRUCT_OFFSET (FRAME_BUFF_ELEM_SIZE + FRAME_BUFF_PBUFCUSTOM + FRAME_BUFF_HWDESCTAG)
-#define FRAME_BUFF_PAYLOAD_OFFSET   (FRAME_BUFF_MSGSTRUCT_OFFSET + FRAME_BUFF_MSGSTRUCT)
 #define FRAME_BUFF_PAYLOAD          1536
 
 static int nh_wifi_host_to_air(nethub_frame_t *frame, bool is_sta)
@@ -123,7 +119,7 @@ static int nh_wifi_host_to_air(nethub_frame_t *frame, bool is_sta)
     desc->pbuf.custom_free_function = nh_wifi_dnld_custom_free;
 
 #if DEBUG_DUMP_WIFITX_ENABLE
-    nh_wifi_dump_pbuf(is_sta ? "wifi_sta_tx" : "wifi_ap_tx", &desc->pbuf.pbuf);
+    nh_wifi_dump_pbuf(is_sta ? "dnld" : "upld", &desc->pbuf.pbuf);
 #endif
 
     nh_wifi_tx_to_air((struct pbuf *)desc, is_sta);

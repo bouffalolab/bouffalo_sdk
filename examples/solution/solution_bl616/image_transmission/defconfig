@@ -11,7 +11,6 @@ CONFIG_PSRAM =y
 CONFIG_SHELL =y
 CONFIG_IPERF =y
 
-CONFIG_STRICT=y
 
 # The log of macsw affects the real-time performance.
 CONFIG_NO_FW_BL_LOG_PRINT =y

@@ -53,9 +53,39 @@
 
 #ifdef BL618DG
 #define DMA_BASE 0x20081000
-#elif defined(BL616)
+#elif defined(BL616) || defined(BL616CL)
 #define DMA_BASE 0x2000c000
 #endif
+
+static uint32_t xcodec_default_slot_width(uint32_t bit_width)
+{
+    if (bit_width <= 8U) {
+        return 8U;
+    }
+    if (bit_width <= 16U) {
+        return 16U;
+    }
+
+    return 32U;
+}
+
+static uint32_t xcodec_normalize_slot_width(uint32_t bit_width, uint32_t slot_width)
+{
+    switch (slot_width) {
+        case 8U:
+        case 16U:
+        case 24U:
+        case 32U:
+            if (slot_width >= bit_width) {
+                return slot_width;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return xcodec_default_slot_width(bit_width);
+}
 
 static aui_ch_t rx_context;
 static struct bflb_device_s *audac_dev = NULL;
@@ -143,12 +173,15 @@ xcodec_error_t xcodec_input_open(xcodec_t *codec, xcodec_input_t *ch, uint32_t c
 xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *config)
 {
     int ret = -1;
+    uint32_t slot_width;
     aui_cfg_t cfg;
 
     ch->period = config->period;
 
+    slot_width = xcodec_normalize_slot_width(config->bit_width, config->slot_width);
     cfg.sample_rate = config->sample_rate;
     cfg.bit_width = config->bit_width;
+    cfg.slot_width = slot_width;
     cfg.buffer = config->buffer;
     cfg.buffer_size = config->buffer_size;
     cfg.sound_channel_num = config->sound_channel_num;
@@ -160,7 +193,18 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
     cfg.pdm_clk_pin = config->pdm_clk_pin;
     rx_context.maxcount = config->buffer_size / (config->period + sizeof(aui_segment_t));
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
-    msp_i2s_device_init(config->sample_rate);
+    {
+        msp_i2s_device_cfg_t i2s_cfg = {
+            .sample_rate = config->sample_rate,
+            .channels = config->sound_channel_num,
+            .bit_width = config->bit_width,
+            .slot_width = slot_width,
+        };
+
+        if (msp_i2s_device_config(&i2s_cfg) != 0) {
+            return XCODEC_ERROR;
+        }
+    }
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
     /* means unused pin */
@@ -326,6 +370,73 @@ static uint64_t xcodec_now_ns(void)
     uint64_t now_us = bflb_mtimer_get_time_us();
     return now_us * 1000ULL;
 }
+
+static uint32_t xcodec_output_frame_bytes(const auo_ch_t *context)
+{
+    uint32_t slot_width;
+    uint32_t sample_bytes;
+
+    if ((context == NULL) || (context->bit_width == 0) || (context->sound_channel_num == 0)) {
+        return 0;
+    }
+
+    slot_width = xcodec_normalize_slot_width(context->bit_width, context->slot_width);
+    sample_bytes = (slot_width + 7U) / 8U;
+    return sample_bytes * context->sound_channel_num;
+}
+
+static uint32_t xcodec_output_pending_bytes_locked(const auo_ch_t *context)
+{
+    uint32_t data_len;
+    uint32_t wi;
+    uint32_t ri;
+    uint32_t ar;
+    uint32_t get_size;
+    uint32_t dma_addr;
+
+    if ((context == NULL) || (context->dma == NULL) || (context->ringbuffer == NULL)
+        || (context->device_dma == NULL) || (context->head == 0)
+        || (context->st == 0) || (context->first_output_timestamp_ns == 0)) {
+        return 0;
+    }
+
+    data_len = mringbuffer_data_len(context->ringbuffer);
+    if (data_len == 0) {
+        return 0;
+    }
+
+    dma_addr = (*((volatile uint32_t *)(uintptr_t)(context->dma->dst_addr)));
+    if (dma_addr < context->head) {
+        return 0;
+    }
+
+    ar = (dma_addr - context->head) & ~0x1FU;
+    wi = context->ringbuffer->write_index;
+    ri = context->ringbuffer->read_index;
+
+    if (ri >= wi) {
+        if (ar > ri) {
+            get_size = ar - ri;
+        } else if (ar <= wi) {
+            get_size = context->ringbuffer->buffer_size - (ri - ar);
+        } else {
+            get_size = context->ringbuffer->buffer_size - (ri - wi);
+        }
+    } else {
+        if ((ar > ri) && (ar <= wi)) {
+            get_size = ar - ri;
+        } else {
+            get_size = wi - ri;
+        }
+    }
+
+    if (data_len < get_size) {
+        get_size = data_len;
+    }
+
+    return get_size;
+}
+
 xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t ch_idx)
 {
     int ret = -1;
@@ -353,7 +464,7 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
     tx_context.maxcount = 16;
     tx_context.per_node_size = 1024;
     tx_context.sample_rate_hz = 0;
-    tx_context.clock_freq_mhz = 0;
+    tx_context.clock_freq_mhz = g_xcodec_output_clock_mhz;
     tx_context.submitted_bytes_total = 0;
     tx_context.first_output_timestamp_ns = 0;
     memset(tx_context.dma, 0, sizeof(auo_dma_t));
@@ -387,6 +498,7 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
 xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t *config)
 {
     int ret = -1;
+    uint32_t slot_width;
     auo_cfg_t cfg;
 
     if (config->sample_rate % 8000) {
@@ -395,15 +507,28 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
 
     ch->period = config->period;
 
+    slot_width = xcodec_normalize_slot_width(config->bit_width, config->slot_width);
     cfg.sample_rate = config->sample_rate;
     cfg.bit_width = config->bit_width;
+    cfg.slot_width = slot_width;
     cfg.buffer = config->buffer;
     cfg.buffer_size = config->buffer_size;
     cfg.sound_channel_num = config->sound_channel_num;
     cfg.per_node_size = config->period;
     tx_context.maxcount = config->buffer_size / (config->period + sizeof(auo_segment_t));
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
-    msp_i2s_device_init(config->sample_rate);
+    {
+        msp_i2s_device_cfg_t i2s_cfg = {
+            .sample_rate = config->sample_rate,
+            .channels = config->sound_channel_num,
+            .bit_width = config->bit_width,
+            .slot_width = slot_width,
+        };
+
+        if (msp_i2s_device_config(&i2s_cfg) != 0) {
+            return XCODEC_ERROR;
+        }
+    }
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
     if (pin_cfg.output_negative_pin != 255) {
@@ -622,29 +747,47 @@ xcodec_error_t xcodec_output_get_state(xcodec_output_t *ch, xcodec_state_t *stat
 
 xcodec_error_t xcodec_output_get_timing_info(xcodec_output_timing_info_t *info)
 {
+    uint64_t presented_bytes = 0;
+    uint32_t frame_bytes = 0;
+
     if (info == NULL) {
         return XCODEC_ERROR;
     }
-    printf("func:%s, not support now, todo...\r\n", __func__);
+    info->clock_counter_48k = 0;
+    info->system_time_ns = xcodec_now_ns();
+    info->first_timestamp_ns = 0;
+    info->total_frames = 0;
+
+    if (!msp_mutex_is_valid(&tx_context.mutex)) {
+        return XCODEC_OK;
+    }
+
+    msp_mutex_lock(&(tx_context.mutex), MSP_WAIT_FOREVER);
     info->system_time_ns = xcodec_now_ns();
     info->first_timestamp_ns = tx_context.first_output_timestamp_ns;
-    info->total_frames = 0;
-    info->clock_counter_48k = 0;
+    presented_bytes = tx_context.submitted_bytes_total + xcodec_output_pending_bytes_locked(&tx_context);
+    frame_bytes = xcodec_output_frame_bytes(&tx_context);
+    if (frame_bytes != 0) {
+        info->total_frames = presented_bytes / frame_bytes;
+        if (tx_context.sample_rate_hz != 0) {
+            info->clock_counter_48k = (info->total_frames * 48000ULL) / tx_context.sample_rate_hz;
+        }
+    }
+    msp_mutex_unlock(&(tx_context.mutex));
+
     return XCODEC_OK;
 }
 
 xcodec_error_t xcodec_set_audio_output_clock_mHz(uint32_t freq_mHz)
 {
     g_xcodec_output_clock_mhz = freq_mHz;
-
-    printf("func:%s, not support now, todo...\r\n", __func__);
+    tx_context.clock_freq_mhz = freq_mHz;
 
     return XCODEC_OK;
 }
 
 xcodec_error_t xcodec_get_audio_output_clock_mHz(uint32_t *freq_mHz)
 {
-    printf("func:%s, not support now, todo...\r\n", __func__);
     if (freq_mHz) {
         *freq_mHz = g_xcodec_output_clock_mhz;
     }

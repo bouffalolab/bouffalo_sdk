@@ -18,14 +18,232 @@
 #include "bl618dg_glb.h"
 #include "bl618dg_aon.h"
 #endif
+#include "bflb_rtc.h"
 #include "bflb_mtimer.h"
 #include "clock_manager.h"
 #include "bl_lp.h"
 
+#if (defined(BL616CL) || defined(BL618DG)) && defined(CONFIG_CLOCK_SOURCE_EF_PARAM) && CONFIG_CLOCK_SOURCE_EF_PARAM
+#error "BL616CL/BL618DG only support CONFIG_CLOCK_SOURCE_EF_PARAM=n for now."
+#endif
+
 #define CLOCK_SOURCE_KEY "clock_src"
 #define RC_CAL_DATA_KEY  "rc_cal"
 
+static bool clock_source_xtal_supported(void)
+{
+#if defined(BL616)
+    return true;
+#else
+    return false;
+#endif
+}
 
+#if defined(BL616CL) || defined(BL618DG)
+#define RC32K_PPM_THRESHOLD              (200)
+#define RC32K_ADJUST_TRIGGER_PPM         (500)
+#define RC32K_SETTLE_DELAY_MS            (10)
+#define RC32K_MEASURE_DELAY_MS           (100)
+#define RC32K_START_DELAY_MS             (20)
+#define RC32K_MAX_RETRY_CNT              (100)
+#define RC32K_STEP_PPM                   (800)
+#define RC32K_MAX_STEP                   (5)
+#define RC32K_MIN_SIGNIFICANT_STEP_PPM   (400)
+
+static struct bflb_device_s *rtc;
+
+static int32_t rc32k_accuracy_ppm_calculate(uint32_t expect_time, uint32_t rc32k_actual_time)
+{
+    int diff_val;
+    int diff_ppm;
+
+    if (expect_time == 0 || rc32k_actual_time == 0) {
+        return 1000 * 1000;
+    }
+
+    diff_val = rc32k_actual_time - expect_time;
+    diff_ppm = (int64_t)diff_val * 1000 * 1000 / expect_time;
+
+    return diff_ppm;
+}
+
+static bool rc32k_check_accuracy(int32_t actual_ppm, int32_t threshold_ppm)
+{
+    uint32_t abs_ppm;
+
+    if (actual_ppm < 0) {
+        abs_ppm = -actual_ppm;
+    } else {
+        abs_ppm = actual_ppm;
+    }
+
+    return abs_ppm <= threshold_ppm;
+}
+
+static void rc32k_get_trim_code(uint32_t *c_code, uint32_t *r_code)
+{
+#if defined(BL616CL)
+    uint32_t tmp_val;
+
+    tmp_val = BL_RD_REG(HBN_BASE, HBN_RC32K_0);
+    *c_code = BL_GET_REG_BITS_VAL(tmp_val, HBN_RC32K_CAP_SEL_AON);
+    *r_code = BL_GET_REG_BITS_VAL(tmp_val, HBN_RC32K_CODE_FR_CAL_AON);
+#elif defined(BL618DG)
+    uint32_t tmp_val;
+
+    tmp_val = BL_RD_REG(AON_BASE, AON_RC32K_0);
+    *c_code = BL_GET_REG_BITS_VAL(tmp_val, AON_RC32K_CAP_SEL_AON);
+
+    tmp_val = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
+    *r_code = BL_GET_REG_BITS_VAL(tmp_val, HBN_RC32K_CODE_FR_EXT);
+#endif
+}
+
+static uint32_t rc32k_coarse_calibration(uint32_t cali_val)
+{
+    uint32_t retry_cnt = 0;
+    uint64_t timeout_start;
+
+    uint64_t rtc_cnt;
+    uint64_t rtc_record_us;
+    uint64_t rtc_now_us;
+    uint64_t mtimer_record_us;
+    uint64_t mtimer_now_us;
+
+    uint32_t rtc_us;
+    uint32_t mtimer_us;
+    int error_ppm;
+    bool ret = false;
+
+    uint32_t c_code = 0;
+    uint32_t r_code = 0;
+    uint32_t rc32k_code = 0;
+    int last_error_ppm = 0;
+    int last_diff_code = 0;
+    int first_measure = 1;
+
+    HBN_Trim_RC32K();
+    rc32k_get_trim_code(&c_code, &r_code);
+    rc32k_code = r_code;
+    printf("c_code=%d,r_code=%d\r\n", c_code, r_code);
+
+    HBN_32K_Sel(HBN_32K_RC);
+#if defined(BL616CL)
+    HBN_Set_RTC_CLK_Sel(HBN_RTC_CLK_F32K);
+#endif
+
+    rtc = bflb_device_get_by_name("rtc");
+    bflb_rtc_set_time(rtc, 0);
+
+    printf("rc32k_coarse_trim task enable, freq_mtimer must be 1MHz!\r\n");
+    timeout_start = bflb_mtimer_get_time_us();
+
+    vTaskDelay(RC32K_START_DELAY_MS);
+
+    while (retry_cnt < RC32K_MAX_RETRY_CNT) {
+        int diff_code;
+        int is_diverging = 0;
+
+        retry_cnt++;
+
+        __disable_irq();
+        mtimer_record_us = bflb_mtimer_get_time_us();
+        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
+        __enable_irq();
+
+        rtc_record_us = BL_PDS_CNT_TO_US(rtc_cnt);
+
+        vTaskDelay(RC32K_MEASURE_DELAY_MS);
+
+        __disable_irq();
+        mtimer_now_us = bflb_mtimer_get_time_us();
+        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
+        __enable_irq();
+
+        rtc_now_us = BL_PDS_CNT_TO_US(rtc_cnt);
+
+        rtc_us = (uint32_t)(rtc_now_us - rtc_record_us);
+        mtimer_us = (uint32_t)(mtimer_now_us - mtimer_record_us);
+        error_ppm = rc32k_accuracy_ppm_calculate(mtimer_us, rtc_us);
+
+        printf("rc32k_coarse_trim: mtimer_us:%d, rtc_us:%d\r\n", mtimer_us, rtc_us);
+
+        ret = rc32k_check_accuracy(error_ppm, RC32K_PPM_THRESHOLD);
+        rc32k_get_trim_code(&c_code, &r_code);
+        rc32k_code = r_code;
+        printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, r_code=%d", retry_cnt, error_ppm, r_code);
+
+        if (ret) {
+            printf(", finish!\r\n");
+            break;
+        }
+
+        if (abs(error_ppm) <= RC32K_ADJUST_TRIGGER_PPM) {
+            printf("\r\n");
+            break;
+        }
+
+        if (!first_measure && abs(error_ppm) > abs(last_error_ppm) && abs(last_error_ppm) > 1) {
+            is_diverging = 1;
+        }
+
+        if (is_diverging) {
+            printf(" (diverging, rollback)\r\n");
+
+            rc32k_code = HBN_Get_RC32K_R_Code();
+            rc32k_code = (uint32_t)((int)rc32k_code - last_diff_code);
+
+            diff_code = (last_error_ppm < 0) ? -1 : 1;
+            rc32k_code = (uint32_t)((int)rc32k_code + diff_code);
+            HBN_Set_RC32K_R_Code(rc32k_code);
+
+            printf("rc32k_coarse_trim: adjust code=%u (diff=%d)\r\n", rc32k_code, diff_code);
+
+            last_diff_code = diff_code;
+            first_measure = 0;
+            vTaskDelay(RC32K_SETTLE_DELAY_MS);
+            continue;
+        }
+
+        diff_code = error_ppm / RC32K_STEP_PPM;
+
+        if (diff_code > RC32K_MAX_STEP) {
+            diff_code = RC32K_MAX_STEP;
+        }
+        if (diff_code < -RC32K_MAX_STEP) {
+            diff_code = -RC32K_MAX_STEP;
+        }
+
+        if (diff_code == 0 && abs(error_ppm) > RC32K_MIN_SIGNIFICANT_STEP_PPM) {
+            diff_code = (error_ppm > 0) ? 1 : -1;
+        }
+
+        rc32k_code = HBN_Get_RC32K_R_Code();
+        rc32k_code = (uint32_t)((int)rc32k_code + diff_code);
+        HBN_Set_RC32K_R_Code(rc32k_code);
+
+        printf(" (adjust code=%u, diff=%d)\r\n", rc32k_code, diff_code);
+
+        last_error_ppm = error_ppm;
+        last_diff_code = diff_code;
+        first_measure = 0;
+
+        vTaskDelay(RC32K_SETTLE_DELAY_MS);
+    }
+
+    if (retry_cnt >= RC32K_MAX_RETRY_CNT) {
+        printf("rc32k_coarse_trim: timeout!\r\n");
+    }
+
+    printf("rc32k coarse trim success!, total time:%dms\r\n",
+           (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
+
+    bl_lp_rc32k_save_code(rc32k_code);
+
+    return rc32k_code;
+}
+
+#else
 static uint32_t rc32k_coarse_calibration(uint32_t cali_val)
 {
     uint32_t retry_cnt = 0;
@@ -97,7 +315,7 @@ static uint32_t rc32k_coarse_calibration(uint32_t cali_val)
 
     return cali_result;
 }
-
+#endif
 
 static int xtal32k_check(int crystal_flag)
 {
@@ -548,9 +766,14 @@ int app_clock_init(void)
     printf("[OS] Create rc32k_coarse_trim task...\r\n");
     xTaskCreate(rc32k_coarse_trim_task, (char*)"rc32k_coarse_trim", 512, NULL, 11, &rc32k_coarse_trim_task_hd);
 
-    /* auto check xtal32k, only test */
-    printf("[OS] Create xtal32k_check_entry task...\r\n");
-    xTaskCreate(xtal32k_check_entry_task, (char*)"xtal32k_check_entry", 512, NULL, 10, &xtal32k_check_entry_task_hd);
+    if (clock_source_xtal_supported()) {
+        /* auto check xtal32k, only test */
+        printf("[OS] Create xtal32k_check_entry task...\r\n");
+        xTaskCreate(xtal32k_check_entry_task, (char*)"xtal32k_check_entry", 512, NULL, 10, &xtal32k_check_entry_task_hd);
+    } else {
+        xtal32k_check_entry_task_hd = NULL;
+        printf("[OS] XTAL32K check is disabled on this chip, RC32K only.\r\n");
+    }
 
     printf("[OS] Waiting for clock init to complete...\r\n");
     if (xSemaphoreTake(clock_init_done_sem, pdMS_TO_TICKS(CLOCK_INIT_TIMEOUT_MS)) != pdTRUE) {

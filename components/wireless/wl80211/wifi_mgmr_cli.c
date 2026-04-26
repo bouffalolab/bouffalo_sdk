@@ -252,12 +252,13 @@ void wifi_ap_start_cmd(int argc, char **argv)
     getopt_env_t getopt_env;
     struct wl80211_ap_settings ap_setting;
     int channel = 11;
+    int beacon_interval = 100;
     const char *ssid = NULL;
     const char *password = NULL;
 
     utils_getopt_init(&getopt_env, 0);
 
-    while ((opt = utils_getopt(&getopt_env, argc, argv, "s:k:c:")) >= 0) {
+    while ((opt = utils_getopt(&getopt_env, argc, argv, "s:k:c:i:")) >= 0) {
         switch (opt) {
             case 's':
                 ssid = getopt_env.optarg;
@@ -274,16 +275,21 @@ void wifi_ap_start_cmd(int argc, char **argv)
                 /* Will be used in ap_setting.center_freq1 */
                 break;
             }
+            case 'i': {
+                beacon_interval = atoi(getopt_env.optarg);
+                wl80211_printf("Beacon interval: %d * 1.024ms\n", beacon_interval);
+                break;
+            }
             default:
                 wl80211_printf("unknown option: %c\r\n", getopt_env.optopt);
-                wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>]\r\n");
+                wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>] [-i <beacon interval>]\r\n");
                 return;
         }
     }
 
     if (ssid == NULL) {
         wl80211_printf("Error: SSID is required\r\n");
-        wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>]\r\n");
+        wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>] [-i <beacon interval>]\r\n");
         return;
     }
 
@@ -307,6 +313,7 @@ void wifi_ap_start_cmd(int argc, char **argv)
     ap_setting.center_freq1 = wl80211_channel_to_freq(channel); /* Default channel 11 */
     ap_setting.channel_width = WL80211_CHAN_WIDTH_20;
     ap_setting.max_power = 0x14;
+    ap_setting.beacon_interval = beacon_interval;
 
     if (wl80211_ap_start(&ap_setting) != 0) {
         wl80211_printf("Error: Failed to start AP\r\n");
@@ -478,7 +485,8 @@ void wifi_sta_info_cmd(int argc, char **argv)
     printf("================================================================\r\n");
 }
 
-void wifi_keyram_cmd(int argc, char **argv) {
+void wifi_keyram_cmd(int argc, char **argv)
+{
     void mm_sec_keydump(void);
     mm_sec_keydump();
 }

@@ -292,7 +292,7 @@ int lp_set_wakeup_by_io(uint8_t io, uint8_t mode)
 
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << io);
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
     bl_lp_wakeup_io_int_register(lp_io_wakeup_callback);
 
     return 0;

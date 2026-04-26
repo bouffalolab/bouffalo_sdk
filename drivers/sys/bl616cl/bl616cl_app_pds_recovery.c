@@ -48,8 +48,6 @@ static ATTR_NOCACHE_RAM_SECTION bl_lp_uart_snapshot_t pds_resume_uart_cfg = {
 #endif
 static ATTR_NOCACHE_RAM_SECTION bl_lp_peripheral_clock_snapshot_t pds_resume_peripheral_clock_cfg = { 0 };
 
-static struct bflb_device_s *gpio_lp = NULL;
-
 static void ATTR_TCM_SECTION pds_gpio_keep_enable(uint32_t sf_pin_select);
 static void ATTR_TCM_SECTION bl_lp_runtime_gpio_snapshot(void);
 static void ATTR_TCM_SECTION bl_lp_runtime_gpio_restore(void);
@@ -344,17 +342,8 @@ static int ATTR_TCM_SECTION is_uart_io(uint8_t pin)
 
 static void ATTR_TCM_SECTION pds_gpio_keep_enable(uint32_t sf_pin_select)
 {
-    if (gpio_lp == NULL) {
-        gpio_lp = bflb_device_get_by_name("gpio");
-    }
-
     for (uint8_t i = GPIO_PIN_6; i < GPIO_PIN_MAX; i++) {
         if (!is_flash_io(i, sf_pin_select) && !is_psram_io(i) && !is_uart_io(i)) {
-            if (bl_ext_dcdc_pds_is_keep_pin(i)) {
-                PDS_Enable_GPIO_Keep(i);
-                continue;
-            }
-            bflb_gpio_init(gpio_lp, i, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
             PDS_Enable_GPIO_Keep(i);
         }
     }
@@ -393,9 +382,11 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
         bl_lp_runtime_gpio_snapshot();
     }
 
+#if (BL_EXT_DCDC_OUTPUT_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
     if (bl_ext_dcdc_pds_prepare_enter() != 0) {
         return -1;
     }
+#endif
 
     irq_flag = bflb_irq_save();
 
@@ -406,6 +397,8 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
 
         pm_set_wakeup_callback(pds_cpu_wakeup_cb);
         bflb_l1c_dcache_clean_all();
+
+        bl_lp_check_gpio_leakage_risk();
 
         sf_pin_select = get_sf_pin_select();
         pds_gpio_keep_enable(sf_pin_select);
@@ -440,9 +433,11 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
     bl_lp_debug_record_time(iot2lp_para, "psram resume end");
 #endif
 
+#if (BL_EXT_DCDC_OUTPUT_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
     if (bl_ext_dcdc_pds_restore_exit() != 0 && ret == 0) {
         ret = -1;
     }
+#endif
 
     bl_lp_debug_record_time(iot2lp_para, "restore context end");
 

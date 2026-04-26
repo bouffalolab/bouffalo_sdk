@@ -69,6 +69,13 @@ endif()
 
 sdk_add_compile_definitions(-DBL618DG_VERSION_A0)
 
+# If it's an internal development repository, then enable strict mode.
+if(IS_SYMLINK "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+    message(STATUS "Auto strict build mode for develop.")
+    set(CONFIG_STRICT y)
+endif()
+sdk_add_compile_options_ifdef(CONFIG_STRICT -Werror)
+
 add_subdirectory(bsp)
 add_subdirectory(components)
 add_subdirectory(drivers/lhal)

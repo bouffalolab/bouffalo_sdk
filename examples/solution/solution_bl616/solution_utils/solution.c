@@ -21,6 +21,7 @@
  * Included Files
  ****************************************************************************/
 
+#include "bflb_core.h"
 #include "bflb_mtimer.h"
 
 #include <stdio.h>
@@ -115,9 +116,9 @@ uint32_t g_hb_rx_fps = 0;
 
 int solution_fps_str_get(char *str_buff_total, uint32_t buff_size)
 {
-    int str_size;
-    int str_total_size;
-    char str_buff[32];
+    __UNUSED int str_size;
+    __UNUSED int str_total_size;
+    __UNUSED char str_buff[32];
 
     if (buff_size < 16) {
         return -1;
@@ -224,8 +225,8 @@ int solution_fps_str_get(char *str_buff_total, uint32_t buff_size)
 static void fps_printf_task(void *pvParameters)
 {
     int ret;
-    uint32_t time_ms, now_ms, diff_ms;
     TickType_t xLastWakeTime;
+    __UNUSED uint32_t time_ms, now_ms, diff_ms;
 
     (void)pvParameters;
     xLastWakeTime = xTaskGetTickCount();

@@ -76,7 +76,13 @@
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
-// #define configUSE_TICKLESS_IDLE                 0
+
+#ifdef CONFIG_LPAPP
+#else
+#undef configUSE_TICKLESS_IDLE
+#define configUSE_TICKLESS_IDLE                 0
+#endif
+
 #define configUSE_POSIX_ERRNO                   1
 #define portasmHAS_F_EXTENSION                  1
 
@@ -128,6 +134,7 @@ void vAssertCalled(void);
 void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
 
+#ifdef CONFIG_LPAPP
 #ifndef configEXPECTED_IDLE_TIME_BEFORE_SLEEP
 extern uint32_t expected_idle_before_sleep(void);
 #define configEXPECTED_IDLE_TIME_BEFORE_SLEEP expected_idle_before_sleep()
@@ -141,7 +148,8 @@ extern void tickless_debug_who_wake_me(const char *name, TickType_t ticks);
   TCB_t *next_wake_tcb = (TCB_t *)((uint32_t)pxDelayedTaskList->xListEnd.pxNext - 4); \
   tickless_debug_who_wake_me(next_wake_tcb->pcTaskName, next_wake_tcb->xStateListItem.xItemValue); \
 } while(0);
-#endif
+#endif /// end of TICKLESS_DEBUG
+#endif // end of CONFIG_LPAPP
 #endif
 
 // #define portUSING_MPU_WRAPPERS

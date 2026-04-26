@@ -16,13 +16,22 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "bl_lp.h"
-#include "bl616_pm.h"
 #include "bflb_uart.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
+
+#ifdef BL616
 #include "bl616_glb.h"
-#include "bl616_glb_gpio.h"
+#include "bl616_pm.h"
 #include "bl616_hbn.h"
+#elif defined(BL616CL)
+#include "bl616cl_pm.h"
+#include "bl616cl_hbn.h"
+#elif defined(BL618DG)
+#include "bl618dg_pm.h"
+#include "bl618dg_hbn.h"
+#endif
+
 #include "bflb_rtc.h"
 
 #include "rfparam_adapter.h"
@@ -97,9 +106,10 @@ void wifi_start_firmware_task(void *param)
 {
     LOG_I("Starting wifi ...\r\n");
 
-    /* set ble controller EM Size */
-
+#if defined(BL616)
+    /* BL616 needs the BLE controller EM mapping restored after wakeup/init. */
     GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+#endif
 
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");
@@ -203,7 +213,9 @@ static int lp_exit(void *arg)
     /* recovery system_clock_init\peripheral_clock_init\console_init*/
     board_recovery();
 
+#if defined(BL616)
     GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+#endif
 
     board_rf_ctl(BRD_CTL_RF_RESET_DEFAULT, 0);
 
@@ -397,6 +409,7 @@ static int test_tcp_keepalive(int argc, char **argv)
 
 static void cmd_hbn_test(int argc, char **argv)
 {
+#if defined(BL616)
     if (argc <= 5) {
         bl_lp_hbn_fw_cfg_t hbn_test_cfg = {
             .hbn_sleep_cnt = 32768 * 5,
@@ -421,19 +434,34 @@ static void cmd_hbn_test(int argc, char **argv)
             bl_lp_hbn_enter(&hbn_test_cfg);
         }
     }
+#else
+    (void)argc;
+    (void)argv;
+    printf("hbn_test is only supported on BL616 in this demo.\r\n");
+#endif
 }
 
 static void cmd_io_dbg(int argc, char **argv)
 {
+    iot2lp_para_t *iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
+
     if (argc != 2) {
         printf("cmd_io_dbg err\r\n");
         return;
     }
 
     if (atoi(argv[1]) <= 34) {
+#ifdef BL616
         iot2lp_para->debug_io = atoi(argv[1]);
+#else
+        iot2lp_para->wifi_debug_io = atoi(argv[1]);
+#endif
     } else {
+#ifdef BL616
         iot2lp_para->debug_io = 0xFF;
+#else
+        iot2lp_para->wifi_debug_io = 0xFF;
+#endif
     }
 }
 
@@ -481,6 +509,43 @@ static void cmd_send_arp(int argc, char **argv)
 }
 
 
+#if !defined(BL616)
+static void cmd_lpfw_uart_cfg(int argc, char **argv)
+{
+    if (argc != 5) {
+        printf("Need param\r\n");
+        return;
+    }
+
+    iot2lp_para->uart_config->debug_log_en = atoi(argv[1]);
+    iot2lp_para->uart_config->uart_tx_io = atoi(argv[2]);
+    iot2lp_para->uart_config->uart_rx_io = atoi(argv[3]);
+    iot2lp_para->uart_config->baudrate = atoi(argv[4]);
+}
+
+static void cmd_lpfw_clock_cfg(int argc, char **argv)
+{
+    if (argc != 5) {
+        printf("Need param\r\n");
+        printf("mcu_clk_sel:\n\t0:GLB_MCU_SYS_CLK_RC32M\r");
+        printf("\n\t1:GLB_MCU_SYS_CLK_XTAL\r");
+        printf("\n\t2:GLB_MCU_SYS_CLK_WIFIPLL_96M\r");
+        printf("\n\t3:GLB_MCU_SYS_CLK_WIFIPLL_192M\r");
+        printf("\n\t4:GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M\r");
+        printf("\n\t5:GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M\r\n");
+
+        printf("xclk_sel:\n\t0:HBN_MCU_XCLK_RC32M\r");
+        printf("\n\t1:HBN_MCU_XCLK_XTAL\r");
+
+        return;
+    }
+
+    iot2lp_para->clock_config->mcu_clk_sel = atoi(argv[1]);
+    iot2lp_para->clock_config->hclk_div = atoi(argv[2]);
+    iot2lp_para->clock_config->bclk_div = atoi(argv[3]);
+    iot2lp_para->clock_config->xclk_sel = atoi(argv[4]);
+}
+#endif
 
 SHELL_CMD_EXPORT_ALIAS(cmd_tickless, tickless, cmd tickless);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_lp, wifi_lp_test, wifi low power test);
@@ -488,7 +553,10 @@ SHELL_CMD_EXPORT_ALIAS(test_tcp_keepalive, lpfw_tcp_keepalive, tcp keepalive tes
 SHELL_CMD_EXPORT_ALIAS(cmd_hbn_test, hbn_test, hbn test);
 SHELL_CMD_EXPORT_ALIAS(cmd_io_dbg, io_debug, cmd io_debug);
 SHELL_CMD_EXPORT_ALIAS(cmd_send_arp, arp_send, cmd send arp);
-
+#if !defined(BL616)
+SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_uart_cfg, lpfw_uart, cmd lpfw_uart);
+SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_clock_cfg, lpfw_clock, cmd lpfw_clock);
+#endif
 #endif
 
 static void f32k_clk_init_task(void *pvParameters)
@@ -549,9 +617,18 @@ void tcpip_init_done(void *arg)
 
 int main(void)
 {
-    uint8_t soc_v, rt_v, aon_v;
-
     board_init();
+
+#if defined(BL616)
+    uint8_t soc_v, rt_v, aon_v;
+    hal_pm_ldo11_cfg(PM_PDS_LDO_LEVEL_SOC_DEFAULT, PM_PDS_LDO_LEVEL_RT_DEFAULT, PM_PDS_LDO_LEVEL_AON_DEFAULT);
+    hal_pm_ldo11_cfg_get(&soc_v, &rt_v, &aon_v);
+    printf("SOC:%d RT:%d AON:%d\r\n", soc_v, rt_v, aon_v);
+#endif
+
+#if defined(BL616CL)
+    bl_ext_dcdc_apply_power_supply_mode();
+#endif
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
@@ -560,12 +637,10 @@ int main(void)
 
     xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
 
-    hal_pm_ldo11_cfg(PM_PDS_LDO_LEVEL_SOC_DEFAULT, PM_PDS_LDO_LEVEL_RT_DEFAULT, PM_PDS_LDO_LEVEL_AON_DEFAULT);
-    hal_pm_ldo11_cfg_get(&soc_v, &rt_v, &aon_v);
-    printf("SOC:%d RT:%d AON:%d\r\n", soc_v, rt_v, aon_v);
-
     HBN_Enable_RTC_Counter();
+#if defined(BL616)
     pm_rc32k_auto_cal_init();
+#endif
 
 #ifdef LP_APP
 #if defined(CFG_BL_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
@@ -574,7 +649,11 @@ int main(void)
 #endif
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
 #endif
-
+#if defined(BL616CL)
+    if (BL616CL_POWER_SUPPLY_SOC_USE_EXT_DCDC(BL616CL_POWER_SUPPLY_MODE)) {
+        board_ext_dcdc_init();
+    }
+#endif
     ci_pm_test_init();
 
     /* Create F32K clock init task */

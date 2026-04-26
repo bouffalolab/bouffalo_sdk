@@ -1,7 +1,7 @@
 #include "bl_lp_internal.h"
 #include "bl616cl_ext_dcdc.h"
 
-static struct bflb_device_s *gpio;
+static struct bflb_device_s *gpio __attribute__((unused));
 
 ATTR_TCM_CONST_SECTION iot2lp_para_t *const iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
 
@@ -189,52 +189,53 @@ void ATTR_TCM_SECTION __attribute__((aligned(16))) lp_fw_restore_cpu_para(uint32
 
 void lp_fw_print_cpu_para(uint32_t save_addr)
 {
+    (void)save_addr;
+
     BL_LP_LOG("=== CPU Register Values Saved at 0x%08X ===\n", save_addr);
 
-    uint32_t *regs = (uint32_t *)save_addr;
-
     // Print all 32 registers with their names
-    BL_LP_LOG("x0 (zero):  0x%08X\n", regs[0]);  // hardwired zero
-    BL_LP_LOG("x1 (ra):    0x%08X\n", regs[1]);  // return address
-    BL_LP_LOG("x2 (sp):    0x%08X\n", regs[2]);  // stack pointer
-    BL_LP_LOG("x3 (gp):    0x%08X\n", regs[3]);  // global pointer
-    BL_LP_LOG("x4 (tp):    0x%08X\n", regs[4]);  // thread pointer
-    BL_LP_LOG("x5 (t0):    0x%08X\n", regs[5]);  // temporary/alternate link register
-    BL_LP_LOG("x6 (t1):    0x%08X\n", regs[6]);  // temporary
-    BL_LP_LOG("x7 (t2):    0x%08X\n", regs[7]);  // temporary
-    BL_LP_LOG("x8 (s0/fp): 0x%08X\n", regs[8]);  // saved register/frame pointer
-    BL_LP_LOG("x9 (s1):    0x%08X\n", regs[9]);  // saved register
-    BL_LP_LOG("x10 (a0):   0x%08X\n", regs[10]); // function argument/return value
-    BL_LP_LOG("x11 (a1):   0x%08X\n", regs[11]); // function argument/return value
-    BL_LP_LOG("x12 (a2):   0x%08X\n", regs[12]); // function argument
-    BL_LP_LOG("x13 (a3):   0x%08X\n", regs[13]); // function argument
-    BL_LP_LOG("x14 (a4):   0x%08X\n", regs[14]); // function argument
-    BL_LP_LOG("x15 (a5):   0x%08X\n", regs[15]); // function argument
-    BL_LP_LOG("x16 (a6):   0x%08X\n", regs[16]); // function argument
-    BL_LP_LOG("x17 (a7):   0x%08X\n", regs[17]); // function argument
-    BL_LP_LOG("x18 (s2):   0x%08X\n", regs[18]); // saved register
-    BL_LP_LOG("x19 (s3):   0x%08X\n", regs[19]); // saved register
-    BL_LP_LOG("x20 (s4):   0x%08X\n", regs[20]); // saved register
-    BL_LP_LOG("x21 (s5):   0x%08X\n", regs[21]); // saved register
-    BL_LP_LOG("x22 (s6):   0x%08X\n", regs[22]); // saved register
-    BL_LP_LOG("x23 (s7):   0x%08X\n", regs[23]); // saved register
-    BL_LP_LOG("x24 (s8):   0x%08X\n", regs[24]); // saved register
-    BL_LP_LOG("x25 (s9):   0x%08X\n", regs[25]); // saved register
-    BL_LP_LOG("x26 (s10):  0x%08X\n", regs[26]); // saved register
-    BL_LP_LOG("x27 (s11):  0x%08X\n", regs[27]); // saved register
-    BL_LP_LOG("x28 (t3):   0x%08X\n", regs[28]); // temporary
-    BL_LP_LOG("x29 (t4):   0x%08X\n", regs[29]); // temporary
-    BL_LP_LOG("x30 (t5):   0x%08X\n", regs[30]); // temporary
-    BL_LP_LOG("x31 (t6):   0x%08X\n", regs[31]); // temporary
+    BL_LP_LOG("x0 (zero):  0x%08X\n", getreg32(save_addr + 0 * 4));  // hardwired zero
+    BL_LP_LOG("x1 (ra):    0x%08X\n", getreg32(save_addr + 1 * 4));  // return address
+    BL_LP_LOG("x2 (sp):    0x%08X\n", getreg32(save_addr + 2 * 4));  // stack pointer
+    BL_LP_LOG("x3 (gp):    0x%08X\n", getreg32(save_addr + 3 * 4));  // global pointer
+    BL_LP_LOG("x4 (tp):    0x%08X\n", getreg32(save_addr + 4 * 4));  // thread pointer
+    BL_LP_LOG("x5 (t0):    0x%08X\n", getreg32(save_addr + 5 * 4));  // temporary/alternate link register
+    BL_LP_LOG("x6 (t1):    0x%08X\n", getreg32(save_addr + 6 * 4));  // temporary
+    BL_LP_LOG("x7 (t2):    0x%08X\n", getreg32(save_addr + 7 * 4));  // temporary
+    BL_LP_LOG("x8 (s0/fp): 0x%08X\n", getreg32(save_addr + 8 * 4));  // saved register/frame pointer
+    BL_LP_LOG("x9 (s1):    0x%08X\n", getreg32(save_addr + 9 * 4));  // saved register
+    BL_LP_LOG("x10 (a0):   0x%08X\n", getreg32(save_addr + 10 * 4)); // function argument/return value
+    BL_LP_LOG("x11 (a1):   0x%08X\n", getreg32(save_addr + 11 * 4)); // function argument/return value
+    BL_LP_LOG("x12 (a2):   0x%08X\n", getreg32(save_addr + 12 * 4)); // function argument
+    BL_LP_LOG("x13 (a3):   0x%08X\n", getreg32(save_addr + 13 * 4)); // function argument
+    BL_LP_LOG("x14 (a4):   0x%08X\n", getreg32(save_addr + 14 * 4)); // function argument
+    BL_LP_LOG("x15 (a5):   0x%08X\n", getreg32(save_addr + 15 * 4)); // function argument
+    BL_LP_LOG("x16 (a6):   0x%08X\n", getreg32(save_addr + 16 * 4)); // function argument
+    BL_LP_LOG("x17 (a7):   0x%08X\n", getreg32(save_addr + 17 * 4)); // function argument
+    BL_LP_LOG("x18 (s2):   0x%08X\n", getreg32(save_addr + 18 * 4)); // saved register
+    BL_LP_LOG("x19 (s3):   0x%08X\n", getreg32(save_addr + 19 * 4)); // saved register
+    BL_LP_LOG("x20 (s4):   0x%08X\n", getreg32(save_addr + 20 * 4)); // saved register
+    BL_LP_LOG("x21 (s5):   0x%08X\n", getreg32(save_addr + 21 * 4)); // saved register
+    BL_LP_LOG("x22 (s6):   0x%08X\n", getreg32(save_addr + 22 * 4)); // saved register
+    BL_LP_LOG("x23 (s7):   0x%08X\n", getreg32(save_addr + 23 * 4)); // saved register
+    BL_LP_LOG("x24 (s8):   0x%08X\n", getreg32(save_addr + 24 * 4)); // saved register
+    BL_LP_LOG("x25 (s9):   0x%08X\n", getreg32(save_addr + 25 * 4)); // saved register
+    BL_LP_LOG("x26 (s10):  0x%08X\n", getreg32(save_addr + 26 * 4)); // saved register
+    BL_LP_LOG("x27 (s11):  0x%08X\n", getreg32(save_addr + 27 * 4)); // saved register
+    BL_LP_LOG("x28 (t3):   0x%08X\n", getreg32(save_addr + 28 * 4)); // temporary
+    BL_LP_LOG("x29 (t4):   0x%08X\n", getreg32(save_addr + 29 * 4)); // temporary
+    BL_LP_LOG("x30 (t5):   0x%08X\n", getreg32(save_addr + 30 * 4)); // temporary
+    BL_LP_LOG("x31 (t6):   0x%08X\n", getreg32(save_addr + 31 * 4)); // temporary
     BL_LP_LOG("========================================\n");
 
-    uint32_t sp_addr = getreg32(save_addr + 2 * 4);
-    BL_LP_LOG("SP address: 0x%08x\r\n", sp_addr);
+    BL_LP_LOG("SP address: 0x%08x\r\n", getreg32(save_addr + 2 * 4));
 
     /* Print SP content, size 32 bytes */
     BL_LP_LOG("SP content (32 bytes):\r\n");
     for (int i = 0; i < 32; i += 4) {
-        BL_LP_LOG("0x%08x: 0x%08x\r\n", sp_addr + i, getreg32(sp_addr + i));
+        BL_LP_LOG("0x%08x: 0x%08x\r\n",
+                  getreg32(save_addr + 2 * 4) + i,
+                  getreg32(getreg32(save_addr + 2 * 4) + i));
     }
 }
 
@@ -538,7 +539,7 @@ static uint32_t get_dtim_num(uint32_t period_dtim, uint32_t bcn_past_num, lp_fw_
 
 
 /* Get flash IO select from efuse */
-static uint32_t ATTR_TCM_SECTION get_sf_pin_select(void)
+static uint32_t ATTR_TCM_SECTION __attribute__((unused)) get_sf_pin_select(void)
 {
     uint32_t tmpVal;
     /* Read from efuse sw usage 0 */
@@ -546,25 +547,7 @@ static uint32_t ATTR_TCM_SECTION get_sf_pin_select(void)
     return (tmpVal >> 5) & 0x3f;
 }
 
-/* Check if the pin is flash IO */
-static int ATTR_TCM_SECTION is_flash_io(uint8_t pin, uint32_t sf_pin_select)
-{
-    if (sf_pin_select & (1 << 2)) {
-        /* Flash IO is GPIO 6-11 */
-        return (pin >= GPIO_PIN_6 && pin <= GPIO_PIN_11);
-    } else if (sf_pin_select & (1 << 3)) {
-        /* Flash IO is GPIO 24-29 */
-        return (pin >= GPIO_PIN_24 && pin <= GPIO_PIN_29);
-    }
-    return 0;
-}
-
-static int ATTR_TCM_SECTION is_psram_io(uint8_t pin)
-{
-    return (pin >= 46 && pin <= 57);
-}
-
-static int ATTR_TCM_SECTION is_uart_io(uint8_t pin)
+static int ATTR_TCM_SECTION __attribute__((unused)) is_uart_io(uint8_t pin)
 {
     if (lp_fw_uart_cfg.debug_log_en == 1) {
         return (pin == lp_fw_uart_cfg.uart_tx_io) || (pin == lp_fw_uart_cfg.uart_rx_io);
@@ -573,29 +556,7 @@ static int ATTR_TCM_SECTION is_uart_io(uint8_t pin)
     }
 }
 
-/* Configure GPIO for PDS low power and enable keep */
-static void ATTR_TCM_SECTION bl_pds_gpio_keep_enable(void)
-{
-    uint32_t sf_pin_select;
-
-    /* Get flash IO configuration and configure GPIO for low power */
-    sf_pin_select = get_sf_pin_select();
-
-    gpio = bflb_device_get_by_name("gpio");
-
-    /* Enable all PDS GPIO keep for low power consumption */
-    for (uint8_t i = GPIO_PIN_6; i < GPIO_PIN_MAX; i++) {
-        if (!is_flash_io(i, sf_pin_select) && !is_psram_io(i) && !is_uart_io(i)) {
-            if (bl_ext_dcdc_pds_is_keep_pin(i)) {
-                PDS_Enable_GPIO_Keep(i);
-                continue;
-            }
-            bflb_gpio_init(gpio, i, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
-            PDS_Enable_GPIO_Keep(i);
-        }
-    }
-}
-
+#if (BL_EXT_DCDC_OUTPUT_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
 static int board_dcdc_enter_pds(void *arg)
 {
     uint8_t pin = (uintptr_t)arg;
@@ -642,27 +603,29 @@ static int board_dcdc_exit_pds(void *arg)
 
     return 0;
 }
+#endif
 
 void board_ext_dcdc_init(void)
 {
+#if defined (PM_EXT_DCDC_SOC_CTRL_PIN) && (PM_EXT_DCDC_SOC_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
+    iot2lp_para->dcdc_sel_pin = PM_EXT_DCDC_SOC_CTRL_PIN;
+    return;
+#endif
+#if (BL_EXT_DCDC_OUTPUT_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
     iot2lp_para->dcdc_sel_pin = BL_EXT_DCDC_OUTPUT_CTRL_PIN;
-
-    if (BL_EXT_DCDC_OUTPUT_CTRL_PIN == BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED) {
-        return;
-    }
-
     bl_ext_dcdc_pds_cfg_t cfg = {
         .keep_pin_num = 1,
-        .keep_pins = { BL_EXT_DCDC_OUTPUT_CTRL_PIN },
-        .settle_time_us = 200,
+        .keep_pins = { iot2lp_para->dcdc_sel_pin  },
         .enter_pds_cb = board_dcdc_enter_pds,
-        .enter_pds_arg = (void *)(uintptr_t)BL_EXT_DCDC_OUTPUT_CTRL_PIN,
+        .enter_pds_arg = (void *)(uintptr_t)iot2lp_para->dcdc_sel_pin,
         .exit_pds_cb = board_dcdc_exit_pds,
-        .exit_pds_arg = (void *)(uintptr_t)BL_EXT_DCDC_OUTPUT_CTRL_PIN,
+        .exit_pds_arg = (void *)(uintptr_t)iot2lp_para->dcdc_sel_pin,
     };
 
     /* Enable GPIO select EXT DCDC output */
     bl_ext_dcdc_pds_register(&cfg);
+    return;
+#endif
 }
 
 int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
@@ -700,11 +663,13 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     LP_HOOK(pre_user, bl_lp_fw_cfg);
 
+#if (BL_EXT_DCDC_OUTPUT_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
     if (bl_ext_dcdc_pds_prepare_enter() != 0) {
         BL_LP_LOG("---- dcdc enter ----\r\n");
 
         return -1;
     }
+#endif
 
     __disable_irq();
 
@@ -723,13 +688,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     bl_lp_wifi_param_update(bl_lp_fw_cfg);
 
-
-    // uint32_t sf_pin_select;
-
-    /* Get flash IO configuration and configure GPIO for low power */
-    // sf_pin_select = get_sf_pin_select();
-    // pds_gpio_keep_enable(sf_pin_select);
-
    /* ready sleep*/
     iot2lp_para->wakeup_flag = 0;
     iot2lp_para->pattern = 0xAA5555AA;
@@ -746,10 +704,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     HBN_Pin_WakeUp_Mask(0xFF);
 
     bl616cl_lp_io_wakeup_prepare();
-
-    bl_pds_gpio_keep_enable();
-
-    // PDS_Set_All_GPIO_Pad_IntClr();
 
     /* app to sleep_pds, update time_info */
     bl_lp_time_info_update_app(iot2lp_para->lp_info);

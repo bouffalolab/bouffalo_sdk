@@ -7,7 +7,7 @@
 #include "bl616_hbn.h"
 #include "bl616_aon.h"
 #include "bl616_pm.h"
-#include "bl616_lp.h"
+#include "bl_lp.h"
 
 bl_lp_hbn_fw_cfg_t bl_lp_hbn_fw_cfg = {
     .hbn_sleep_cnt = 0,
@@ -47,7 +47,7 @@ int main(void)
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 18); /* gpio 18 */
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 19); /* gpio 19 */
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
 
     /* disable feed external watchdog during boot2 */
     bl_lp_hbn_init(0, 0, 0, 0);

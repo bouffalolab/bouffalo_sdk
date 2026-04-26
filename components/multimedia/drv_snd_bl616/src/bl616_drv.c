@@ -6,6 +6,11 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
+#ifndef CONFIG_CODEC_USE_I2S
+#define CONFIG_CODEC_USE_I2S 0
+#endif
+
 #include <msp/kernel.h>
 #include <msp_port.h>
 #include <alsa/snd.h>
@@ -52,14 +57,6 @@ uint64_t msp_gettick_count(void);
 #define BYTE_TO_BITS            (8)
 #define SECOND_TO_MILLISECONDS  (1000)
 
-//#define DMA_NUM                 (0)
-/* input fixed config for bl616 ，other configurations are not supported for now */
-#define INPUT_SAMPLE_RATE       (16000)
-#define INPUT_SAMPLE_BITS       (16)
-#define INPUT_CHANNELS          (1)
-
-#define FRAME_SIZE              (INPUT_SAMPLE_RATE * INPUT_SAMPLE_BITS / BYTE_TO_BITS * INPUT_CHANNELS / SECOND_TO_MILLISECONDS)  // 32bytes/ms
-#define CONST_RX_INPUT_BUFSIZE      (FRAME_SIZE * INPUT_CACHE_TIME)   /*for ringbuffer*/
 #define CONST_TX_OUTPUT_BUFSIZE     ((24+512)*16 + 2*32) // output
 
 #if 0
@@ -95,6 +92,21 @@ mixer_playback_t mixp0;
 
 static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params);
 static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params);
+
+static uint32_t pcmc_calc_input_buffer_size(const msp_pcm_hw_params_t *params)
+{
+    uint64_t total_bits;
+
+    if (params == NULL || params->rate == 0U || params->sample_bits == 0U || params->channels == 0U) {
+        return 0U;
+    }
+
+    total_bits = (uint64_t)params->rate * (uint64_t)params->sample_bits *
+                 (uint64_t)params->channels * (uint64_t)INPUT_CACHE_TIME;
+
+    return (uint32_t)((total_bits + (BYTE_TO_BITS * SECOND_TO_MILLISECONDS) - 1U) /
+                      (BYTE_TO_BITS * SECOND_TO_MILLISECONDS));
+}
 
 static void playback_free(playback_t *playback)
 {
@@ -177,16 +189,67 @@ static void codec_event_cb(xcodec_input_t *codec, xcodec_event_t event, void *ar
     }
 }
 
+static int pcm_format_supported(const msp_pcm_hw_params_t *params)
+{
+    int sample_bits;
+    int slot_width;
+
+    if (params == NULL) {
+        return 0;
+    }
+
+    sample_bits = snd_pcm_format_width((snd_pcm_format_t)params->format);
+    if (sample_bits <= 0 || sample_bits != params->sample_bits) {
+        return 0;
+    }
+    if (snd_pcm_format_float((snd_pcm_format_t)params->format)) {
+        return 0;
+    }
+    if (!snd_pcm_format_signed((snd_pcm_format_t)params->format)) {
+        return 0;
+    }
+    if (sample_bits > 8 && !snd_pcm_format_little_endian((snd_pcm_format_t)params->format)) {
+        return 0;
+    }
+    if (params->channels <= 0 || params->frame_bits <= 0 || (params->frame_bits % params->channels) != 0) {
+        return 0;
+    }
+
+    slot_width = params->frame_bits / params->channels;
+    if ((sample_bits != 16) && (sample_bits != 24) && (sample_bits != 32)) {
+        return 0;
+    }
+    if ((slot_width != 16) && (slot_width != 32)) {
+        return 0;
+    }
+    if (sample_bits > slot_width) {
+        return 0;
+    }
+    if ((sample_bits == 24) && (slot_width != 32)) {
+        return 0;
+    }
+
+    return 1;
+}
+
 static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
 {
     //uint32_t g_dmachoutput_handle;// fixme unused
+    int slot_width;
     playback_t *playback = (playback_t *)pcm->hdl;
+
+    if (!pcm_format_supported(params)) {
+        LOGE(TAG, "unsupported playback format(%d), sample_bits(%d)", params->format, params->sample_bits);
+        return -EINVAL;
+    }
+
+    slot_width = params->channels ? (params->frame_bits / params->channels) : 0;
 
     playback_free(playback);
 
     xcodec_output_t *codec = msp_zalloc(sizeof(xcodec_output_t));
     codec->ring_buf = msp_zalloc(sizeof(m_ringbuf_t));
-    codec->sound_channel_num = 1;
+    codec->sound_channel_num = params->channels;
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
 
 #ifdef CONST_TX_OUTPUT_BUFSIZE
@@ -211,6 +274,7 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
     xcodec_output_attach_callback(codec, codec_event_cb, pcm);
 
     playback->output_config->bit_width = params->sample_bits;
+    playback->output_config->slot_width = slot_width;
     playback->output_config->sample_rate = params->rate;
     playback->output_config->buffer = send;
 
@@ -219,7 +283,7 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
 #else
     playback->output_config->buffer_size = params->buffer_bytes;
 #endif
-    playback->output_config->period = 512;
+    playback->output_config->period = params->period_bytes;
     //output_config.period = 2048;
     playback->output_config->mode = XCODEC_OUTPUT_SINGLE_ENDED;
     playback->output_config->sound_channel_num = params->channels;
@@ -417,7 +481,16 @@ static int pcmc_close(msp_dev_t *dev)
 static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
 {
 #if 1
+    int slot_width;
+    uint32_t recv_buf_size;
     capture_t *capture = (capture_t *)pcm->hdl;
+
+    if (!pcm_format_supported(params)) {
+        LOGE(TAG, "unsupported capture format(%d), sample_bits(%d)", params->format, params->sample_bits);
+        return -EINVAL;
+    }
+
+    slot_width = params->channels ? (params->frame_bits / params->channels) : 0;
 
     capture_free(capture);
 
@@ -426,11 +499,12 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
 
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
 
-#ifdef CONST_RX_INPUT_BUFSIZE
-    uint8_t *recv = msp_malloc(CONST_RX_INPUT_BUFSIZE);
-#else
-    uint8_t *recv = msp_malloc(params->buffer_bytes);
-#endif
+    recv_buf_size = pcmc_calc_input_buffer_size(params);
+    if (recv_buf_size < params->buffer_bytes) {
+        recv_buf_size = params->buffer_bytes;
+    }
+
+    uint8_t *recv = msp_malloc(recv_buf_size);
     if (recv == NULL) {
         goto pcmc_err0;
     }
@@ -450,13 +524,10 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
     /* input ch config */
     xcodec_input_attach_callback(codec, codec_event_cb, pcm);
     input_config.bit_width = params->sample_bits;
+    input_config.slot_width = slot_width;
     input_config.sample_rate = params->rate;
     input_config.buffer = recv;
-#ifdef CONST_RX_INPUT_BUFSIZE
-    input_config.buffer_size = CONST_RX_INPUT_BUFSIZE;
-#else
-    input_config.buffer_size = params->buffer_bytes;
-#endif
+    input_config.buffer_size = recv_buf_size;
     input_config.period = params->period_bytes;
     input_config.mode = XCODEC_INPUT_DIFFERENCE;
     input_config.sound_channel_num = params->channels;
@@ -464,7 +535,7 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
     //input_config.negative_pin = INPUT_NEGATIVE_PIN;   //negative pin
     //input_config.positive_pin = INPUT_POSITIVE_PIN;  //positive pin
 
-    printf("input bit_width(%ld), sample_rate(%ld), buffer_size(%ld), period(%ld), sound_channel_num(%ld)\r\n", \
+    printf("input bit_width(%u), sample_rate(%u), buffer_size(%u), period(%u), sound_channel_num(%u)\r\n", \
             input_config.bit_width, input_config.sample_rate, input_config.buffer_size, input_config.period, input_config.sound_channel_num);
     ret = xcodec_input_config(codec, &input_config);
     if (ret != 0) {
@@ -644,4 +715,3 @@ void snd_card_bl616_unregister(void *config)
         msp_free(g_audio_gain_config);
     }
 }
-

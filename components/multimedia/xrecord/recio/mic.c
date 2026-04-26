@@ -21,6 +21,22 @@ typedef struct _mic_dev {
 	uint8_t *pcm_data;
 } mic_dev_t;
 
+static snd_pcm_format_t pcm_format_from_legacy_bits(int bits)
+{
+    switch (bits) {
+        case 8:
+            return SND_PCM_FORMAT_S8;
+        case 16:
+            return SND_PCM_FORMAT_S16_LE;
+        case 24:
+            return SND_PCM_FORMAT_S24_3LE;
+        case 32:
+            return SND_PCM_FORMAT_S32_LE;
+        default:
+            return (snd_pcm_format_t)bits;
+    }
+}
+
 static msp_pcm_t *__capture_init(const char *devname, unsigned int sample_rate /*16000*/, int chn_num,
                                int bit_format /*16bit*/, msp_pcm_uframes_t peroid_size)
 {
@@ -36,27 +52,34 @@ static msp_pcm_t *__capture_init(const char *devname, unsigned int sample_rate /
         return NULL;
     }
 
-    msp_pcm_hw_params_alloca(&params);
+    err = msp_pcm_hw_params_alloca(&params);
+    if (err < 0) {
+        msp_pcm_close(pcm);
+        return NULL;
+    }
     err = msp_pcm_hw_params_any(pcm, params);
 
     if (err < 0) {
         LOGE(TAG, "Broken configuration for this PCM: no configurations available");
+        msp_pcm_hw_params_free(params);
         msp_pcm_close(pcm);
         return NULL;
     }
 
-    err = msp_pcm_hw_params_set_access(pcm, params, MSP_PCM_ACCESS_RW_NONINTERLEAVED);
+    err = msp_pcm_hw_params_set_access(pcm, params, MSP_PCM_ACCESS_RW_INTERLEAVED);
 
     if (err < 0) {
         LOGE(TAG, "Access type not available");
+        msp_pcm_hw_params_free(params);
         msp_pcm_close(pcm);
         return NULL;
     }
 
-    err = msp_pcm_hw_params_set_format(pcm, params, bit_format);
+    err = msp_pcm_hw_params_set_format(pcm, params, pcm_format_from_legacy_bits(bit_format));
 
     if (err < 0) {
         LOGE(TAG, "Sample bit_format non available");
+        msp_pcm_hw_params_free(params);
         msp_pcm_close(pcm);
         return NULL;
     }
@@ -65,6 +88,7 @@ static msp_pcm_t *__capture_init(const char *devname, unsigned int sample_rate /
 
     if (err < 0) {
         LOGE(TAG, "Channels count non available");
+        msp_pcm_hw_params_free(params);
         msp_pcm_close(pcm);
         return NULL;
     }
@@ -81,9 +105,12 @@ static msp_pcm_t *__capture_init(const char *devname, unsigned int sample_rate /
 
     if (err < 0) {
         LOGE(TAG, "msp_pcm_hw_params error");
+        msp_pcm_hw_params_free(params);
         msp_pcm_close(pcm);
         return NULL;
     }
+
+    msp_pcm_hw_params_free(params);
 
     return pcm;
 }
@@ -173,7 +200,7 @@ static int __mic_pcm_read(recio_t *io, uint8_t *buffer, int len, int timeoutms)
         return 0;
     }
 
-    rlen = msp_pcm_readn(priv->pcmC, (void**)buffer, msp_pcm_bytes_to_frames(priv->pcmC, len));
+    rlen = msp_pcm_readi(priv->pcmC, buffer, msp_pcm_bytes_to_frames(priv->pcmC, len));
     rlen = msp_pcm_frames_to_bytes(priv->pcmC, rlen);
 
     return rlen;

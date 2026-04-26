@@ -11,7 +11,7 @@ target_sources(app PRIVATE
                     app/codec_template.c
                     app/codec_loop.c
                     app/codec_eq.c
-                    multimedia_port.c
+                    ../common/multimedia_port_common.c
                    )
 
 sdk_add_include_directories(. app)

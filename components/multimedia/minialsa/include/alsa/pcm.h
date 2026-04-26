@@ -66,15 +66,92 @@ typedef enum _msp_pcm_access {
     MSP_PCM_ACCESS_LAST = MSP_PCM_ACCESS_RW_NONINTERLEAVED
 } msp_pcm_access_t;
 
+typedef enum _snd_pcm_format {
+    SND_PCM_FORMAT_UNKNOWN = -1,
+    SND_PCM_FORMAT_S8 = 0,
+    SND_PCM_FORMAT_U8,
+    SND_PCM_FORMAT_S16_LE,
+    SND_PCM_FORMAT_S16_BE,
+    SND_PCM_FORMAT_U16_LE,
+    SND_PCM_FORMAT_U16_BE,
+    SND_PCM_FORMAT_S24_LE,
+    SND_PCM_FORMAT_S24_BE,
+    SND_PCM_FORMAT_U24_LE,
+    SND_PCM_FORMAT_U24_BE,
+    SND_PCM_FORMAT_S32_LE,
+    SND_PCM_FORMAT_S32_BE,
+    SND_PCM_FORMAT_U32_LE,
+    SND_PCM_FORMAT_U32_BE,
+    SND_PCM_FORMAT_FLOAT_LE,
+    SND_PCM_FORMAT_FLOAT_BE,
+    SND_PCM_FORMAT_FLOAT64_LE,
+    SND_PCM_FORMAT_FLOAT64_BE,
+    SND_PCM_FORMAT_S20_LE = 24,
+    SND_PCM_FORMAT_S20_BE,
+    SND_PCM_FORMAT_U20_LE,
+    SND_PCM_FORMAT_U20_BE,
+    SND_PCM_FORMAT_SPECIAL = 31,
+    SND_PCM_FORMAT_S24_3LE = 32,
+    SND_PCM_FORMAT_S24_3BE,
+    SND_PCM_FORMAT_U24_3LE,
+    SND_PCM_FORMAT_U24_3BE,
+    SND_PCM_FORMAT_S20_3LE,
+    SND_PCM_FORMAT_S20_3BE,
+    SND_PCM_FORMAT_U20_3LE,
+    SND_PCM_FORMAT_U20_3BE,
+    SND_PCM_FORMAT_S18_3LE,
+    SND_PCM_FORMAT_S18_3BE,
+    SND_PCM_FORMAT_U18_3LE,
+    SND_PCM_FORMAT_U18_3BE,
+    SND_PCM_FORMAT_LAST = SND_PCM_FORMAT_U18_3BE,
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+    SND_PCM_FORMAT_S16 = SND_PCM_FORMAT_S16_LE,
+    SND_PCM_FORMAT_U16 = SND_PCM_FORMAT_U16_LE,
+    SND_PCM_FORMAT_S24 = SND_PCM_FORMAT_S24_LE,
+    SND_PCM_FORMAT_U24 = SND_PCM_FORMAT_U24_LE,
+    SND_PCM_FORMAT_S32 = SND_PCM_FORMAT_S32_LE,
+    SND_PCM_FORMAT_U32 = SND_PCM_FORMAT_U32_LE,
+    SND_PCM_FORMAT_FLOAT = SND_PCM_FORMAT_FLOAT_LE,
+    SND_PCM_FORMAT_FLOAT64 = SND_PCM_FORMAT_FLOAT64_LE,
+    SND_PCM_FORMAT_S20 = SND_PCM_FORMAT_S20_LE,
+    SND_PCM_FORMAT_U20 = SND_PCM_FORMAT_U20_LE,
+    SND_PCM_FORMAT_S24_3 = SND_PCM_FORMAT_S24_3LE,
+    SND_PCM_FORMAT_U24_3 = SND_PCM_FORMAT_U24_3LE,
+    SND_PCM_FORMAT_S20_3 = SND_PCM_FORMAT_S20_3LE,
+    SND_PCM_FORMAT_U20_3 = SND_PCM_FORMAT_U20_3LE,
+    SND_PCM_FORMAT_S18_3 = SND_PCM_FORMAT_S18_3LE,
+    SND_PCM_FORMAT_U18_3 = SND_PCM_FORMAT_U18_3LE,
+#else
+    SND_PCM_FORMAT_S16 = SND_PCM_FORMAT_S16_BE,
+    SND_PCM_FORMAT_U16 = SND_PCM_FORMAT_U16_BE,
+    SND_PCM_FORMAT_S24 = SND_PCM_FORMAT_S24_BE,
+    SND_PCM_FORMAT_U24 = SND_PCM_FORMAT_U24_BE,
+    SND_PCM_FORMAT_S32 = SND_PCM_FORMAT_S32_BE,
+    SND_PCM_FORMAT_U32 = SND_PCM_FORMAT_U32_BE,
+    SND_PCM_FORMAT_FLOAT = SND_PCM_FORMAT_FLOAT_BE,
+    SND_PCM_FORMAT_FLOAT64 = SND_PCM_FORMAT_FLOAT64_BE,
+    SND_PCM_FORMAT_S20 = SND_PCM_FORMAT_S20_BE,
+    SND_PCM_FORMAT_U20 = SND_PCM_FORMAT_U20_BE,
+    SND_PCM_FORMAT_S24_3 = SND_PCM_FORMAT_S24_3BE,
+    SND_PCM_FORMAT_U24_3 = SND_PCM_FORMAT_U24_3BE,
+    SND_PCM_FORMAT_S20_3 = SND_PCM_FORMAT_S20_3BE,
+    SND_PCM_FORMAT_U20_3 = SND_PCM_FORMAT_U20_3BE,
+    SND_PCM_FORMAT_S18_3 = SND_PCM_FORMAT_S18_3BE,
+    SND_PCM_FORMAT_U18_3 = SND_PCM_FORMAT_U18_3BE,
+#endif
+} snd_pcm_format_t;
+
+typedef snd_pcm_format_t msp_pcm_format_t;
+
 typedef int msp_pcm_uframes_t;
 typedef int msp_pcm_sframes_t;
 
 typedef struct msp_pcm_hw_params {
     int   access;
-    int   format;
+    int   format;       /* snd_pcm_format_t */
     int   subformat;
-    int   sample_bits;
-    int   frame_bits;
+    int   sample_bits;  /* valid bits per sample */
+    int   frame_bits;   /* physical bits per frame */
     int   channels;
     int   rate;
     int   period_time;
@@ -180,7 +257,14 @@ msp_pcm_sframes_t msp_pcm_readn(msp_pcm_t *pcm, void **bufs, msp_pcm_uframes_t s
 int msp_pcm_wait(msp_pcm_t *pcm, int timeout);
 
 int msp_pcm_recover(msp_pcm_t *pcm, int err, int silent);
-int msp_pcm_set_params(msp_pcm_t *pcm, int format, msp_pcm_access_t acc, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
+int msp_pcm_set_params(msp_pcm_t *pcm, snd_pcm_format_t format, msp_pcm_access_t acc, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
+
+int snd_pcm_format_signed(snd_pcm_format_t format);
+int snd_pcm_format_float(snd_pcm_format_t format);
+int snd_pcm_format_little_endian(snd_pcm_format_t format);
+int snd_pcm_format_big_endian(snd_pcm_format_t format);
+int snd_pcm_format_width(snd_pcm_format_t format);
+int snd_pcm_format_physical_width(snd_pcm_format_t format);
 
 int msp_pcm_hw_params_any(msp_pcm_t *pcm, msp_pcm_hw_params_t *params);
 int msp_pcm_hw_params_malloc(msp_pcm_hw_params_t **p);
@@ -188,8 +272,8 @@ void msp_pcm_hw_params_free(msp_pcm_hw_params_t *obj);
 int msp_pcm_hw_params_alloca(msp_pcm_hw_params_t **p);
 
 int msp_pcm_hw_params_set_access(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_access_t _access);
-int msp_pcm_hw_params_get_format(const msp_pcm_hw_params_t *params, int *val);
-int msp_pcm_hw_params_set_format(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, int val);
+int msp_pcm_hw_params_get_format(const msp_pcm_hw_params_t *params, snd_pcm_format_t *val);
+int msp_pcm_hw_params_set_format(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, snd_pcm_format_t val);
 int msp_pcm_hw_params_get_channels(const msp_pcm_hw_params_t *params, unsigned int *val);
 int msp_pcm_hw_params_set_channels(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int val);
 int msp_pcm_hw_params_get_rate(const msp_pcm_hw_params_t *params, unsigned int *val, int *dir);
@@ -201,6 +285,7 @@ int msp_pcm_hw_params_get_buffer_size(const msp_pcm_hw_params_t *params, msp_pcm
 int msp_pcm_hw_params_set_buffer_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val);
 
 int msp_pcm_sw_params_alloca(msp_pcm_sw_params_t **p);
+void msp_pcm_sw_params_free(msp_pcm_sw_params_t *obj);
 int msp_pcm_sw_params_set_start_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);
 int msp_pcm_sw_params_get_start_threshold(const msp_pcm_sw_params_t *params, msp_pcm_uframes_t *val);
 int msp_pcm_sw_params_set_stop_threshold(msp_pcm_t *pcm, msp_pcm_sw_params_t *params, msp_pcm_uframes_t val);

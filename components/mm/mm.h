@@ -150,6 +150,8 @@ struct mm_usage_info {
     uint32_t max_free_size; ///< Maximum free node size
 };
 
+typedef void (*mm_allocated_block_walker_t)(struct mm_heap *heap, void *ptr, size_t size, void *user);
+
 /**
  * @brief Memory allocator and operation interface
  *
@@ -174,6 +176,7 @@ typedef struct mm_allocator {
 
     /* Debug and validation interfaces - optional */
     void (*get_usage_info)(struct mm_heap *heap, struct mm_usage_info *info);
+    void (*walk_allocated_blocks)(struct mm_heap *heap, mm_allocated_block_walker_t walker, void *user);
     void (*dump_pool)(struct mm_heap *heap);
     int (*validate_pool)(struct mm_heap *heap);
 } mm_allocator_t;
@@ -364,6 +367,8 @@ size_t kmalloc_size(void *ptr);
  * @return Remaining free bytes for one heap or the sum of all active heaps, or 0 on failure.
  */
 size_t kfree_size(uint32_t heap_id);
+
+int mm_walk_allocated_blocks(mm_allocated_block_walker_t walker, void *user);
 
 #if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
 /**

@@ -137,7 +137,8 @@ static void peripheral_clock_init(void)
 
 static void peripheral_clock_init_lp(void)
 {
-
+    PERIPHERAL_CLOCK_UART0_ENABLE();
+    GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
 }
 #endif
 
@@ -660,7 +661,7 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
 
     lp_wake_io_cfg.io_ie = lp_wake_io_cfg.io_wakeup_unmask;
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
 
     /* register io wakeup callback */
     bl_lp_wakeup_io_int_register(test_wakeup_io_callback);

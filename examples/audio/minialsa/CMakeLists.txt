@@ -7,7 +7,7 @@ find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 
 target_sources(app PRIVATE
-                    multimedia_port.c
+                    ../common/multimedia_port_common.c
                     app/app_main.c
                     app/player/app_minialsa.c
                     app/player/audio_file.c

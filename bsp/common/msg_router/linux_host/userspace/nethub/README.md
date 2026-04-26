@@ -1,65 +1,72 @@
 # NetHub Host User Guide
 
-This document is for host-side users and explains how to bring up NetHub on a
-Linux host.
+This document explains the current host-side Linux stack under
+`bsp/common/msg_router/linux_host/userspace/nethub`.
 
-If this is your first full NetHub bring-up, start with:
+If this is your first NetHub bring-up, read these first:
 
 - `examples/wifi/nethub/README.md`
 - `examples/wifi/nethub/docs/NetHubQuickBringup.md`
 
-Online wiki:
+## 1. Scope of This Host Stack
 
-- <https://docs.bouffalolab.com/index.php?title=NetHub>
-- <https://docs.bouffalolab.com/index.php?title=NetHubQuickBringup>
+This directory describes the current in-tree Linux host stack.
+Today that stack is primarily the SDIO flow.
 
-Active host-side directories:
+Current status:
 
-- `bsp/common/msg_router/linux_host/kernel`
-- `bsp/common/msg_router/linux_host/userspace/nethub`
+- `SDIO`
+  - current host stack for the default `SDIO` interface
+- `USB`
+  - device-side NetHub backend exists, but this userspace stack is not
+    yet the main in-tree USB host stack
+- `SPI`
+  - not implemented
 
-The current primary path is `SDIO`.
-`tty / vchan / USER virtual channel` are all carried on this same host link.
-`tty / vchan` select the control-plane backend, while `USER virtual channel`
-is for private application data.
+Also note:
 
-## 1. Components
+- `bflbwifid / bflbwifictrl` are only needed when you use the optional
+  AT-style control solution
+- data-path-only products do not need this full host control stack
+
+## 2. Components
 
 Main host-side components:
 
 - `mr_sdio.ko`
-  - host kernel module
+  - kernel communication base for the current SDIO host stack
 - `bflbwifid`
-  - control-plane daemon
+  - control path daemon
 - `bflbwifictrl`
   - command-line tool
 - `libbflbwifi.a`
   - Wi-Fi control library
 - `libnethub_vchan.a`
-  - user-space virtual channel library
+  - host USER virtual channel library for the current SDIO path
 - `nethub_vchan_app`
   - optional debug tool
 
-Supported control backends:
+Supported control backends in this host stack:
 
 - `tty`
 - `vchan`
 
 Notes:
 
-- The host build always includes both `tty + vchan`.
-- The actual backend is selected when `bflbwifid` starts.
+- the host build keeps both `tty` and `vchan` backends available
+- `vchan` in this repository is still aligned with the SDIO path
+- do not read this guide as a finished USB host guide
 
-## 2. Quick Bring-Up
+## 3. Quick Bring-Up
 
-### 2.1 Build
+Build:
 
 ```bash
 cd bsp/common/msg_router/linux_host/userspace/nethub
 ./build.sh build
 ```
 
-Artifacts:
+Artifacts include:
 
 - `output/mr_sdio.ko`
 - `output/bflbwifid`
@@ -67,33 +74,33 @@ Artifacts:
 - `output/libnethub_vchan.a`
 - `output/nethub_vchan_app`
 
-### 2.2 Load the Kernel Module
+Load the kernel module:
 
 ```bash
 sudo ./build.sh load
 ```
 
-To unload:
+Unload it:
 
 ```bash
 sudo ./build.sh unload
 ```
 
-### 2.3 Start the Daemon
+## 4. Start the Daemon
 
-#### Default TTY mode
+Default mode:
 
 ```bash
 sudo ./output/bflbwifid
 ```
 
-#### Explicit TTY device
+Explicit TTY device:
 
 ```bash
 sudo ./output/bflbwifid -c tty -p /dev/ttyAT0
 ```
 
-#### VCHAN mode
+VCHAN mode:
 
 ```bash
 sudo ./output/bflbwifid -c vchan
@@ -105,7 +112,7 @@ Optional path arguments:
 - `-P <pid_file>`
 - `-l <log_file>`
 
-### 2.4 Use the CLI
+## 5. Use the CLI
 
 Check status:
 
@@ -131,70 +138,30 @@ Disconnect:
 sudo ./output/bflbwifictrl disconnect
 ```
 
-## 3. Control Backend Selection
+## 6. Control-Plane Notes
 
-The host backend must match the device configuration:
+The device-side `nethub` core does not directly depend on `ATModule`.
+This host stack is relevant when the optional example control solution is
+used.
 
-| Device configuration | Host startup |
-| --- | --- |
-| `CONFIG_NETHUB_AT_USE_VCHAN=n` | `./output/bflbwifid` or `./output/bflbwifid -c tty -p /dev/ttyAT0` |
-| `CONFIG_NETHUB_AT_USE_VCHAN=y` | `./output/bflbwifid -c vchan` |
+Important configuration note:
 
-By default, the device control channel uses `TTY`, so the usual host startup
-command is:
+- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y`
+  - example enables the AT control stack
+- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n`
+  - the project can stay data-path-focused and skip this stack
 
-```bash
-sudo ./output/bflbwifid
-```
+About `CONFIG_NETHUB_AT_USE_VCHAN`:
 
-## 4. Common Commands
+- it still appears in the example configuration and older docs
+- treat it as an example or legacy SDIO control path convention
+- do not interpret it as proof that USB and SPI already share the same
+  finished host control path
 
-The public CLI surface is fixed to 9 commands:
+## 7. USER Virtual Channel
 
-- `connect_ap`
-- `disconnect`
-- `scan`
-- `status`
-- `version`
-- `reboot`
-- `ota`
-- `start_ap`
-- `stop_ap`
-
-Examples:
-
-```bash
-sudo ./output/bflbwifictrl version
-sudo ./output/bflbwifictrl reboot
-sudo ./output/bflbwifictrl start_ap "<ssid>" "<password>"
-sudo ./output/bflbwifictrl stop_ap
-```
-
-Detailed command documentation is currently in:
-
-- `bflbwifictrl/COMMANDS_CN.md`
-
-## 5. Automatic Network Configuration
-
-`build.sh` builds userspace with `ENABLE_NETIF_AUTO_CONFIG=1` by default.
-
-After the device reports `GOTIP`, the host will try to configure:
-
-- the IP address of `mr_eth0`
-- the default gateway
-- DNS
-
-If `connect_ap` succeeds but the host still cannot reach the network, check:
-
-- whether `status` has reached `GOTIP`
-- whether `mr_eth0` has an address
-- whether services such as NetworkManager or `dhcpcd` override the NetHub
-  configuration
-
-## 6. USER Virtual Channel
-
-If you need to transfer private data between the host and device, use the USER
-Virtual Channel.
+If you need private data exchange between host and device, use the USER
+virtual channel.
 
 Header:
 
@@ -205,57 +172,38 @@ Common APIs:
 ```c
 int nethub_vchan_init(void);
 int nethub_vchan_deinit(void);
-
 int nethub_vchan_user_send(const void *data, size_t len);
 int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
-
 int nethub_vchan_get_state_snapshot(nethub_vchan_state_snapshot_t *snapshot);
 ```
 
-For more details, see:
+Current implementation:
 
-- `virtualchan/README.md`
+- the in-tree host USER virtual channel path is SDIO-based today
+- host-side `nethub_vchan` is not yet the generic wrapper for USB ACM
+- for more detail, read `virtualchan/README.md`
 
-If an application needs to check whether the virtual channel is ready before
-sending, the following snapshot fields are the usual checks:
+## 8. Automatic Network Configuration
 
-- `link_state == NETHUB_VCHAN_LINK_UP`
-  - the link is ready for transfer
-- `host_state == NETHUB_VCHAN_HOST_STATE_DEVICE_RUN`
-  - the host has completed the handshake with the device
+`build.sh` builds userspace with `ENABLE_NETIF_AUTO_CONFIG=1` by default.
 
-## 7. FAQ
+After the device reports `GOTIP`, the host tries to configure:
 
-### 7.1 `bflbwifid` fails to start
+- the IP address of `mr_eth0`
+- the default gateway
+- DNS
 
-Check first:
+If `connect_ap` succeeds but the host still cannot reach the network,
+check:
 
-- whether the backend selection matches the device configuration
-- whether `/dev/ttyAT0` exists
-- whether `mr_sdio.ko` loaded successfully
-- whether the hardware link is healthy
+- whether `status` has reached `GOTIP`
+- whether `mr_eth0` has an address
+- whether services such as NetworkManager or `dhcpcd` override the
+  NetHub configuration
 
-### 7.2 `build.sh unload` reports that the module is busy
+## 9. Related Documents
 
-Check first:
-
-- whether `bflbwifid` is still running
-- whether `nethub_vchan_app` is still running
-
-Usually you can just run:
-
-```bash
-sudo ./build.sh unload
-```
-
-The script will first stop known holders and then unload the module.
-
-## 8. Related Documents
-
-- `examples/wifi/nethub/README.md`
-- `examples/wifi/nethub/docs/NetHub.md`
-- `examples/wifi/nethub/docs/NetHubQuickBringup.md`
 - `HOST_ARCHITECTURE.md`
-- `bflbwifictrl/README.md`
-- `bflbwifictrl/COMMANDS_CN.md`
 - `virtualchan/README.md`
+- `bflbwifictrl/README.md`
+- `examples/wifi/nethub/docs/NetHubQuickBringup.md`

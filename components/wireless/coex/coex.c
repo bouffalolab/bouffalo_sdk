@@ -59,11 +59,17 @@ int coex_deinit(void)
 }
 #else
 int coex_event(struct coex_evt_arg* arg)
-{}
+{
+    return COEX_OK;
+}
 
 int coex_init(void)
-{}
+{
+    return COEX_OK;
+}
 
 int coex_deinit(void)
-{}
+{
+    return COEX_OK;
+}
 #endif // defined(CONFIG_COEX_TDMA) || defined(CONFIG_COEX_PTI)

@@ -18,7 +18,15 @@
 
 #define PCM_PRIOD_MS 20
 #define PCM_RATE     16000
+#ifndef CONFIG_CODEC_USE_I2S
+#define CONFIG_CODEC_USE_I2S 0
+#endif
+
+#if CONFIG_CODEC_USE_I2S
+#define PCM_CHN      2
+#else
 #define PCM_CHN      1
+#endif
 #define PCM_FRAME    16
 //#define PCM_PRIOD_SIZE ((PCM_RATE / 1000) * PCM_PRIOD_MS * (16 / 8 * PCM_CHN))
 //#define RINBUF_SIZE  (PCM_FRAME * PCM_PRIOD_SIZE)

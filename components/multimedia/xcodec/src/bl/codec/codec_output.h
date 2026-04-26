@@ -30,6 +30,7 @@ typedef struct _auo_segment {
 typedef struct {
     uint32_t                sample_rate;                ///< Output data sample rate
     uint32_t                bit_width;                  ///< Onput data sample width
+    uint32_t                slot_width;                 ///< Output slot width in bits
     uint8_t                 *buffer;                    ///< The buffer used to save audio data
     uint32_t                buffer_size;                ///< Output buffer size
     uint32_t                per_node_size;
@@ -98,6 +99,7 @@ struct _auo_ch {
     uint32_t                  widx;
     uint32_t                  sound_channel_num; ///< Number of sound channel
     uint32_t                  bit_width;                  ///< Onput data sample width
+    uint32_t                  slot_width;                 ///< Output slot width in bits
     auo_dma_t                 *dma;              ///< Dma channel handle
     void                      *device_dma;           //bsdk need
     //csi_state_t               state;             ///< Codec output channel current state

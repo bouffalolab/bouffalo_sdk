@@ -1,8 +1,13 @@
 # CHANGELOG
 
-## v2.3.24-RC1 — since v2.3.23 (2026-04-17 → 2026-04-22)
+## v2.3.24 — since v2.3.23 (2026-04-17 → 2026-04-25)
 
 ### New Features
+
+- **NetHub**
+  - Added USB data path support
+  - Added configuration macros to disable ATModule and low-power mode
+  - Disabled invalid log output
 
 - **PEC / Display**
   - Added PEC v2 simulation SRGB LCD support
@@ -11,7 +16,7 @@
 
 - **Solution**
   - Added DPI display output support
-  - Improved UVC/UAC solution
+  - Updated UVC/UAC solution
 
 - **BL616CL / Low Power**
   - Added RAM and ATE manufacturing test codes
@@ -20,21 +25,25 @@
   - Added clock gate control in low-power firmware
   - Added DCDC voltage switching support in low-power firmware
   - Added per-pin HBN wakeup trigger configuration
+  - Extended tickless low-power support for BL616CL and BL618DG
 
 - **WiFi (802.11)**
+  - Made WiFi log output configurable at runtime
   - Added rate control GI adaptive controller for improved link adaptation
   - Added compile-time STA bandwidth limit configuration
-  - Enhanced ACK timing and TX/RX state handling
-  - Improved monitor mode function implementations
+  - AP mode now supports configurable beacon interval
+  - Auto-disconnect when DHCP fails to obtain IP within 15 seconds
 
 - **Thread / 802.15.4**
   - Enhanced ACK timestamp handling and compatibility
+  - Enhanced ACK timing and TX/RX state handling
+  - Aligned monitor function implementations
   - Added product appearance attributes support in Matter
 
 - **Multimedia**
   - Added miniAlsa example
-
-- **Debug**
+  - Refined miniAlsa API and xcodec integration
+  - Added mm_track feature
   - Added codec debug CLI commands
 
 - **BL616**
@@ -45,11 +54,16 @@
 
 ### Bug Fixes
 
+- **NetHub / BL618DG**
+  - Fixed BL618DG low-power mode for NetHub
+
 - **PEC / Display**
   - Fixed bandwidth issue with PEC v2 SRGB mode
 
-- **DBI**
+- **DBI / Multimedia**
   - Fixed YUV format errors in DBI interface
+  - Reverted ADC v2 changes that introduced regressions
+  - Fixed NV12/NV21 UV block count rounding for half-block chroma
 
 - **WiFi**
   - Filtered duplicate AP management frames
@@ -59,27 +73,36 @@
 - **WLAN MAC**
   - Fixed lost packet counter not being cleared on valid RX data
   - Fixed connection loss timer not being cleared properly
+  - Fixed duplicate ACK sent on saved messages
+  - Removed BT TX path conflict; added hopping TX
 
 - **Zigbee**
+  - Fixed IAS zone status not triggered when zone is not enrolled
+  - Added default handler for received ZCL server response frames
   - Fixed error in `zb_getGroupTableByGroupId()` API
   - Fixed compile error due to interface changes
 
 - **Low Power (BL616CL)**
+  - Refined external DCDC low-power flow
   - Aligned wakeup trigger mode lookup for BL616CL
   - Refined IO wakeup DCDC flow
   - Aligned IO wakeup examples with new trigger mode configuration
 
 - **Manufacturing**
   - Fixed touch chip version confirmation not being set
+  - Fixed manufacturing test compile errors
 
 - **Build / Tooling**
   - Fixed FOTA compile failure due to undefined `CONFIG_SHELL`
   - Fixed `bl_crt_bundle` build failure
+  - Fixed BL618DG A1 compilation error
 
 ### Improvements
 
 - WiFi MQTT now supports auto test framework
-- Fixed compile warnings across multiple components (lwIP, host_router, macsw, wifi4 firmware/manager, wifi6, bl602, bl616CL)
+- Updated multimedia library to support BL618DG A1
+- Removed `CONFIG_STRICT` from app defconfig
+- Fixed compile warnings across multiple components (lwIP, host_router, macsw, wifi4 firmware/manager, wifi6, bl602, bl616CL, BL618DG)
 - LHAL: Renamed BL616D references to BL618DG
 
 ## v2.3.23 — since v2.3.22 (2026-04-11 → 2026-04-17)

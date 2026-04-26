@@ -11,7 +11,7 @@ target_sources(app PRIVATE
                    app/bt/app_bt.c
                    app/player/app_player.c
                    app/player/cli_player.c
-                   multimedia_port.c
+                   ../common/multimedia_port_common.c
                    )
 
 sdk_add_include_directories(. app app/bt app/wifi app/player)

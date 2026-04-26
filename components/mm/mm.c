@@ -15,6 +15,10 @@
 #include <string.h>
 #include <errno.h>
 
+#if CONFIG_MM_ENABLE_TRACKING
+#include "mm_track.h"
+#endif
+
 #define DBG_TAG "MM"
 #ifdef CONFIG_MM_LOG_LEVEL
 #define CONFIG_LOG_LEVEL CONFIG_MM_LOG_LEVEL
@@ -300,6 +304,18 @@ void *kmalloc(size_t size, uint32_t flags)
 
     irq_flags = mm_lock_save();
 
+#if CONFIG_MM_ENABLE_TRACKING
+    if (size + MM_TRACK_SLOT_BYTES < size) {
+        LOG_E("Allocation size overflow: %zu\r\n", (size_t)size);
+        mm_unlock_restore(irq_flags);
+        return NULL;
+    }
+
+    if (mm_track_is_started()) {
+        size = size + MM_TRACK_SLOT_BYTES;
+    }
+#endif
+
     /* Heap allocation loop */
     for (uint32_t i = start_idx; i < end_idx; i++) {
         heap = manager->heaps[i];
@@ -314,6 +330,11 @@ void *kmalloc(size_t size, uint32_t flags)
         }
 
         ptr = allocator->malloc(heap, size, flags);
+#if CONFIG_MM_ENABLE_TRACKING
+        if (mm_track_is_started() && ptr != NULL) {
+            mm_track_malloc(ptr, allocator->get_block_size(heap, ptr));
+        }
+#endif
         if (ptr != NULL) {
             break;
         }
@@ -389,6 +410,12 @@ void kfree(void *ptr)
         LOG_E("Allocator %u not found for heap %u\r\n", heap->allocator_id, heap->heap_id);
         return;
     }
+
+#if CONFIG_MM_ENABLE_TRACKING
+    if (mm_track_is_started()) {
+        mm_track_free(ptr, allocator->get_block_size(heap, ptr));
+    }
+#endif
     allocator->free(heap, ptr);
 
 #if CONFIG_MM_ENABLE_STATISTICS
@@ -434,6 +461,21 @@ void *krealloc(void *ptr, size_t newsize)
 
     irq_flags = mm_lock_save();
 
+#if CONFIG_MM_ENABLE_TRACKING
+    bool is_untracked = false;
+    size_t block_size = 0;
+    if (newsize + MM_TRACK_SLOT_BYTES < newsize) {
+        LOG_E("Allocation size overflow: %zu\r\n", (size_t)newsize);
+        mm_unlock_restore(irq_flags);
+        return NULL;
+    }
+
+    if (mm_track_is_started()) {
+        is_untracked = mm_track_is_untracked_ptr(ptr);
+        newsize = newsize + MM_TRACK_SLOT_BYTES;
+    }
+#endif
+
     /* Find corresponding heap by address */
     heap = mm_find_heap_by_addr(ptr);
     if (!heap) {
@@ -450,8 +492,24 @@ void *krealloc(void *ptr, size_t newsize)
         return NULL;
     }
 
+#if CONFIG_MM_ENABLE_TRACKING
+    if (mm_track_is_started()) {
+        block_size = allocator->get_block_size(heap, ptr);
+        mm_track_free(ptr, block_size);
+    }
+#endif
+
     /* Call allocator's realloc implementation */
     new_ptr = allocator->realloc(heap, ptr, newsize);
+
+#if CONFIG_MM_ENABLE_TRACKING
+    if (mm_track_is_started() && new_ptr != NULL) {
+        mm_track_malloc(new_ptr, allocator->get_block_size(heap, new_ptr));
+    }
+    if (mm_track_is_started() && new_ptr == NULL) {
+        mm_track_free_revoke(ptr, block_size, is_untracked);
+    }
+#endif
 
 #if CONFIG_MM_ENABLE_STATISTICS
     if (new_ptr) {
@@ -533,7 +591,6 @@ size_t kmalloc_size(void *ptr)
     }
 
     irq_flags = mm_lock_save();
-
     heap = mm_find_heap_by_addr(ptr);
     if (!heap) {
         mm_unlock_restore(irq_flags);
@@ -547,6 +604,11 @@ size_t kmalloc_size(void *ptr)
     }
 
     size = allocator->get_block_size(heap, ptr);
+#if CONFIG_MM_ENABLE_TRACKING
+    if (mm_track_is_started() && !mm_track_is_untracked_ptr(ptr)) {
+        size -= MM_TRACK_SLOT_BYTES;
+    }
+#endif
     mm_unlock_restore(irq_flags);
 
     return size;
@@ -616,6 +678,37 @@ size_t kfree_size(uint32_t heap_id)
     mm_unlock_restore(irq_flags);
 
     return total_free;
+}
+
+int mm_walk_allocated_blocks(mm_allocated_block_walker_t walker, void *user)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t irq_flags;
+
+    if (!walker || !manager->initialized) {
+        return -EINVAL;
+    }
+
+    irq_flags = mm_lock_save();
+
+    for (uint32_t i = 1; i < CONFIG_MM_HEAP_COUNT; i++) {
+        mm_heap_t *heap = manager->heaps[i];
+        const mm_allocator_t *allocator;
+
+        if (!heap || !heap->is_active || heap->allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+            continue;
+        }
+
+        allocator = manager->allocators[heap->allocator_id];
+        if (!allocator || !allocator->walk_allocated_blocks) {
+            continue;
+        }
+
+        allocator->walk_allocated_blocks(heap, walker, user);
+    }
+
+    mm_unlock_restore(irq_flags);
+    return 0;
 }
 
 #if CONFIG_MM_ENABLE_MIN_FREE_TRACKING

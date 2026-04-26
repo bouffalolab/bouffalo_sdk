@@ -1,45 +1,35 @@
 #include "transport_usb.h"
+#include "usb_backend.h"
 
 #define DBG_TAG "NETHUB_USB"
 #include "log.h"
-
-static int transport_usb_not_supported(const char *what)
-{
-    LOG_E("%s not implemented\r\n", what);
-    return NETHUB_ERR_NOT_SUPPORTED;
-}
-
-static int transport_usb_init(void)
-{
-    return transport_usb_not_supported("usb host backend");
-}
 
 static nethub_route_result_t transport_usb_input(nethub_frame_t *frame, void *arg)
 {
     NETHUB_UNUSED(frame);
     NETHUB_UNUSED(arg);
-    return NETHUB_ROUTE_ERROR;
+    return NETHUB_ROUTE_CONTINUE;
+}
+
+static int transport_usb_init(void)
+{
+    return nh_usb_backend_init();
 }
 
 static nethub_route_result_t transport_usb_output(nethub_frame_t *frame, void *arg)
 {
-    NETHUB_UNUSED(frame);
     NETHUB_UNUSED(arg);
-    return NETHUB_ROUTE_ERROR;
+    return nh_usb_backend_output(frame);
 }
 
 static int transport_usb_ctrlpath_upld_send(uint8_t *data_buff, uint32_t data_size)
 {
-    NETHUB_UNUSED(data_buff);
-    NETHUB_UNUSED(data_size);
-    return transport_usb_not_supported("usb ctrl upld");
+    return nh_usb_backend_ctrl_upld_send(data_buff, data_size);
 }
 
 static int transport_usb_ctrlpath_dnld_register(nethub_ctrl_rx_cb_t dnld_cb, void *cbpri_arg)
 {
-    NETHUB_UNUSED(dnld_cb);
-    NETHUB_UNUSED(cbpri_arg);
-    return transport_usb_not_supported("usb ctrl dnld");
+    return nh_usb_backend_ctrl_dnld_register(dnld_cb, cbpri_arg);
 }
 
 const struct nhif_ops nhusb_ops = {

@@ -34,8 +34,6 @@ static int enable_tickless = 0;
 
 extern int ps_resume_flag;
 
-extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
-
 int pds_wakeup_overhead = 0;
 static uint64_t ulLowPowerTimeEnterFunction;
 static uint64_t ulLowPowerTimeAfterSleep;

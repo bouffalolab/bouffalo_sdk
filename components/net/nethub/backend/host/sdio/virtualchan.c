@@ -24,6 +24,7 @@
 #define FRAME_BUFFER_ATTR __ALIGNED(64) ATTR_NOCACHE_NOINIT_RAM_SECTION
 
 #define NETHUB_VCHAN_SLOT_CNT (4)
+#define NETHUB_VCHAN_DBG      (0)
 
 #pragma pack(push, 1)
 struct nethub_vchan_data_hdr {
@@ -54,9 +55,9 @@ static int nethub_vchan_type_is_valid(nethub_vchan_type_t type)
 static int virtualchan_dnld_data_output(mr_virtualchan_priv_t *priv, mr_virtualchan_msg_t *virtualchan_msg_pkt)
 {
     struct nethub_vchan_data_hdr *hdr;
-    uint16_t data_len;
-
-    data_len = MR_VIRTUALCHAN_MSG_PACKET_GET_DATA_SIZE(virtualchan_msg_pkt);
+#if NETHUB_VCHAN_DBG
+    uint16_t data_len = MR_VIRTUALCHAN_MSG_PACKET_GET_DATA_SIZE(virtualchan_msg_pkt);
+#endif
 
     hdr = (struct nethub_vchan_data_hdr *)virtualchan_msg_pkt->data;
     if (nethub_vchan_type_is_valid((nethub_vchan_type_t)hdr->data_type)) {
@@ -70,11 +71,11 @@ static int virtualchan_dnld_data_output(mr_virtualchan_priv_t *priv, mr_virtualc
     } else {
         LOG_E("arg err\r\n");
     }
-
+#if NETHUB_VCHAN_DBG
     LOG_I("VIRTUALCHAN %s dnld %dByte (hdr->len:%d):\r\n",
           priv->virtualchan_cfg.name, data_len, hdr->len);
     DBG_HEXDUMP(virtualchan_msg_pkt->data, data_len);
-
+#endif
     mr_virtualchan_dnld_elem_free(priv, virtualchan_msg_pkt);
 
     return 0;
@@ -191,6 +192,7 @@ static int cmd_virtualchan(int argc, char **argv)
             temp_buff[i] = (uint8_t)i;
         }
 
+#if NETHUB_VCHAN_DBG
         LOG_I("Preparing to send %d bytes (type=%d): ", data_len, data_type);
         for (i = 0; i < data_len && i < 16; i++) {
             printf("%02X ", temp_buff[i]);
@@ -199,7 +201,7 @@ static int cmd_virtualchan(int argc, char **argv)
             printf("... (total %d bytes)", data_len);
         }
         printf("\r\n");
-
+#endif
         ret = nethub_vchan_send(data_type, temp_buff, data_len);
         free(temp_buff);
 
@@ -294,6 +296,14 @@ int nethub_vchan_at_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg)
     return nethub_vchan_recv_register(NETHUB_VCHAN_TYPE_AT, recv_cb, cb_arg);
 }
 
+/**< Reset callback (optional) */
+int virtualchan_reset(mr_virtualchan_priv_t *priv)
+{
+    printf("========================= %s =========================\r\n");
+
+    return 0;
+}
+
 int nethub_vchan_backend_init(mr_msg_ctrl_priv_t *msg_ctrl)
 {
     mr_virtualchan_cfg_t virtualchan_cfg = {
@@ -307,6 +317,7 @@ int nethub_vchan_backend_init(mr_msg_ctrl_priv_t *msg_ctrl)
         .upld_credit_update_threshold = NETHUB_VCHAN_SLOT_CNT / 2,
         .dnld_output_cb = virtualchan_dnld_data_output,
         .upld_done_cb = NULL,
+        .virtualchan_reset_cb = virtualchan_reset,
         .task_stack_size = 512,
         .task_priority = 10,
         .task_period_max_ms = portMAX_DELAY,

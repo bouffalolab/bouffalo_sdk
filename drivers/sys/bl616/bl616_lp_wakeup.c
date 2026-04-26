@@ -410,9 +410,9 @@ int bl_lp_wakeup_io_get_mode(uint8_t io_num)
     }
 }
 
-int bl_lp_io_wakeup_cfg(bl_lp_io_cfg_t *io_wakeup_cfg)
+int bl_lp_io_wakeup_cfg(void *io_wakeup_cfg)
 {
-    gp_lp_io_cfg = io_wakeup_cfg;
+    gp_lp_io_cfg = (bl_lp_io_cfg_t *)io_wakeup_cfg;
     return 0;
 }
 

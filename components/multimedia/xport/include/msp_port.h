@@ -39,8 +39,16 @@ int msp_gpio_output_config(uint8_t pin, uint8_t pull_type);
 int msp_gpio_output_set(uint8_t pin, uint8_t value);
 
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+typedef struct msp_i2s_device_cfg {
+    uint32_t sample_rate;
+    uint32_t channels;
+    uint32_t bit_width;
+    uint32_t slot_width;
+} msp_i2s_device_cfg_t;
+
 void msp_i2s_tx_enable(void);
 void msp_i2s_rx_enable(void);
+int msp_i2s_device_config(const msp_i2s_device_cfg_t *config);
 void msp_i2s_device_init(uint32_t sample_rate);
 void msp_i2s_port_init(void);
 #else

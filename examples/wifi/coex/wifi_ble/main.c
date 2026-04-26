@@ -6,8 +6,7 @@
 #include "bluetooth.h"
 #include "conn.h"
 #include "conn_internal.h"
-#include "ble_lib_api.h"
-#include "bl602_glb.h"
+#include "btble_lib_api.h"
 #include "rfparam_adapter.h"
 
 #include "ble_cli_cmds.h"

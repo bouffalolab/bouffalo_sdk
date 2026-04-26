@@ -316,6 +316,49 @@ static void tlsf_allocator_get_usage_info(struct mm_heap *heap, struct mm_usage_
     }
 }
 
+struct tlsf_walk_ctx {
+    struct mm_heap *heap;
+    mm_allocated_block_walker_t walker;
+    void *user;
+};
+
+static void tlsf_allocated_block_walker(void *ptr, size_t size, int used, void *user)
+{
+    struct tlsf_walk_ctx *ctx = (struct tlsf_walk_ctx *)user;
+
+    if (!ctx || !ctx->walker || !used) {
+        return;
+    }
+
+    ctx->walker(ctx->heap, ptr, size, ctx->user);
+}
+
+static void tlsf_allocator_walk_allocated_blocks(struct mm_heap *heap, mm_allocated_block_walker_t walker, void *user)
+{
+    tlsf_t tlsf_handle;
+    pool_t pool;
+    struct tlsf_walk_ctx ctx;
+
+    if (!heap || !walker) {
+        return;
+    }
+
+    tlsf_handle = (tlsf_t)heap->allocator_priv;
+    if (!tlsf_handle) {
+        return;
+    }
+
+    pool = tlsf_get_pool(tlsf_handle);
+    if (!pool) {
+        return;
+    }
+
+    ctx.heap = heap;
+    ctx.walker = walker;
+    ctx.user = user;
+    tlsf_walk_pool(pool, tlsf_allocated_block_walker, &ctx);
+}
+
 /**
  * @brief TLSF allocator complete definition
  */
@@ -333,6 +376,7 @@ const mm_allocator_t g_tlsf_allocator = {
     .get_free_size = tlsf_allocator_get_free_size,
 
     .get_usage_info = tlsf_allocator_get_usage_info,
+    .walk_allocated_blocks = tlsf_allocator_walk_allocated_blocks,
 
     .validate_pool = NULL,
     .dump_pool = NULL,

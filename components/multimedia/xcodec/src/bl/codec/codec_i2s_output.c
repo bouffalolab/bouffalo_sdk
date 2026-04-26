@@ -44,6 +44,46 @@ static uint64_t auo_now_ns(void)
     return now_us * 1000ULL;
 }
 
+static uint32_t auo_dma_transfer_bytes(const auo_ch_t *context)
+{
+    uint32_t slot_width;
+    uint32_t slot_bytes;
+
+    if (context == NULL || context->sound_channel_num == 0U) {
+        return 0;
+    }
+
+    slot_width = context->slot_width ? context->slot_width : context->bit_width;
+    slot_bytes = (slot_width + 7U) / 8U;
+    if ((slot_bytes != 1U) && (slot_bytes != 2U) && (slot_bytes != 4U)) {
+        return 0;
+    }
+
+    if (context->sound_channel_num == 1U) {
+        return slot_bytes;
+    }
+
+    if (context->sound_channel_num == 2U) {
+        return (slot_bytes == 1U) ? 2U : 4U;
+    }
+
+    return 0;
+}
+
+static int auo_dma_width_from_bytes(uint32_t transfer_bytes)
+{
+    switch (transfer_bytes) {
+        case 1U:
+            return DMA_DATA_WIDTH_8BIT;
+        case 2U:
+            return DMA_DATA_WIDTH_16BIT;
+        case 4U:
+            return DMA_DATA_WIDTH_32BIT;
+        default:
+            return -1;
+    }
+}
+
 static void _auo_recv(auo_ch_t *context)
 {
     static uint64_t old_time = 0, tmp_time = 0;
@@ -108,6 +148,7 @@ static void _auo_recv(auo_ch_t *context)
         user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
             ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
     } else {
+        context->submitted_bytes_total += ret;
 #if CODEC_OUTPUT_DEBUG_TRACE
         context->debug.bytes_read += ret;
 #endif
@@ -222,6 +263,8 @@ int auo_channel_config(auo_ch_t *context, auo_cfg_t *config)
             config->bit_width);
 
     context->bit_width = config->bit_width;
+    context->slot_width = config->slot_width ? config->slot_width : config->bit_width;
+    context->sample_rate_hz = config->sample_rate;
     context->buffer = config->buffer;
     context->buffer_size = config->buffer_size;
     context->per_node_size = config->per_node_size;
@@ -255,8 +298,10 @@ static int _auo_tx_dma_link_destroy(auo_ch_t *context, void *dma)
 static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
 {
     int i;
+    int dma_width;
     uint8_t dma_id, dma_ch;
     uint32_t min_buf_size, dma_node_num, node_size;
+    uint32_t transfer_bytes;
     uint8_t *pbuf, *node_pbuf, *hw_node_addr, *hw_buff_addr;
 
     if (NULL == context || NULL == context->buffer) {
@@ -265,27 +310,23 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
     }
 
     node_size = context->per_node_size;
+    transfer_bytes = auo_dma_transfer_bytes(context);
+    dma_width = auo_dma_width_from_bytes(transfer_bytes);
+    if ((transfer_bytes == 0U) || (dma_width < 0) || ((node_size % transfer_bytes) != 0U)) {
+        printf("unsupported i2s tx format, channels:%u bit_width:%u slot_width:%u period:%u\r\n",
+               context->sound_channel_num, context->bit_width, context->slot_width, context->per_node_size);
+        return -1;
+    }
 
     union bflb_dma_lli_control_s audio_dma_ctrl = {0};
-    audio_dma_ctrl.bits.TransferSize = node_size / 2;
+    audio_dma_ctrl.bits.TransferSize = node_size / transfer_bytes;
     audio_dma_ctrl.bits.SBSize       = DMA_BURST_INCR4;
     audio_dma_ctrl.bits.DBSize       = DMA_BURST_INCR4;
-    audio_dma_ctrl.bits.SWidth       = DMA_DATA_WIDTH_16BIT;
-    audio_dma_ctrl.bits.DWidth       = DMA_DATA_WIDTH_16BIT;
+    audio_dma_ctrl.bits.SWidth       = dma_width;
+    audio_dma_ctrl.bits.DWidth       = dma_width;
     audio_dma_ctrl.bits.SI           = DMA_ADDR_INCREMENT_ENABLE;
     audio_dma_ctrl.bits.DI           = DMA_ADDR_INCREMENT_DISABLE;
     audio_dma_ctrl.bits.I            = 1;
-
-    if (context->sound_channel_num == 1) {
-        audio_dma_ctrl.bits.TransferSize = node_size / 2;
-        audio_dma_ctrl.bits.SWidth = DMA_DATA_WIDTH_16BIT;
-        audio_dma_ctrl.bits.DWidth = DMA_DATA_WIDTH_16BIT;
-    } else if (context->sound_channel_num == 2) {
-        audio_dma_ctrl.bits.TransferSize = node_size / 4;
-        audio_dma_ctrl.bits.SWidth = DMA_DATA_WIDTH_32BIT;
-        audio_dma_ctrl.bits.DWidth = DMA_DATA_WIDTH_32BIT;
-    } else {
-    }
 
     dma_id = context->ctrl_id;
     dma_ch = context->ch_id;
@@ -314,8 +355,8 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE,
         .src_burst_count = DMA_BURST_INCR4,
         .dst_burst_count = DMA_BURST_INCR4,
-        .src_width = DMA_DATA_WIDTH_16BIT,
-        .dst_width = DMA_DATA_WIDTH_16BIT,
+        .src_width = dma_width,
+        .dst_width = dma_width,
     };
     bflb_dma_channel_init(device_dma, &tx_config);
 

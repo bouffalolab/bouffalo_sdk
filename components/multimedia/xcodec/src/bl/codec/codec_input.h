@@ -38,6 +38,7 @@ typedef struct _aui_segment {
 typedef struct {
     uint32_t                sample_rate;                ///< Output data sample rate
     uint32_t                bit_width;                  ///< Onput data sample width
+    uint32_t                slot_width;                 ///< Input slot width in bits
     uint8_t                 *buffer;                    ///< The buffer used to save audio data
     uint32_t                buffer_size;                ///< Output buffer size
     uint32_t                per_node_size;
@@ -102,6 +103,7 @@ struct _aui_ch {
     uint32_t                  maxcount;         /* max node num */
     uint32_t                  sound_channel_num; ///< Number of sound channel
     uint32_t                  bit_width;                  ///< Onput data sample width
+    uint32_t                  slot_width;                 ///< Input slot width in bits
     aui_dma_t                 *dma;              ///< Dma channel handle
     void                      *device_dma;      //bsdk neeed
     //csi_state_t               state;             ///< Codec output channel current state
@@ -140,4 +142,3 @@ uint32_t aui_read(aui_ch_t *context, const void *data, uint32_t size);
  #endif
 
  #endif /* _BL_AUDIO_INPUT_H_ */
-

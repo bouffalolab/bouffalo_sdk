@@ -107,7 +107,7 @@ static void test_close(int sig)
 
 static int example_mqtt(int argc, const char *argv[])
 {
-    const char* port;
+    const char* port = NULL;
     const char* topic;
 
     int ret = 0;
@@ -178,6 +178,7 @@ static int example_mqtt(int argc, const char *argv[])
     /* exit */
     test_close(SHELL_SIGINT);
 
+    return 0;
 }
 
 static void publish_callback_1(void** unused, struct mqtt_response_publish *published)

@@ -672,7 +672,7 @@ static void cmd_io_wakeup(int argc, char **argv)
         printf("  pull: none\r\n");
     }
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
 #elif defined(BL616CL)
     /* BL616CL: lp_gpio_cfg_type with per-GPIO trig_mode */
     lp_wake_io_cfg.io_ie = (uint64_t)1 << io_num;
@@ -690,7 +690,7 @@ static void cmd_io_wakeup(int argc, char **argv)
         printf("  pull: none\r\n");
     }
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
 #elif defined(BL618DG)
     /* BL618DG: lp_gpio_cfg_type with 8-GPIO-group trig_mode */
     lp_wake_io_cfg.io_ie = (uint64_t)1 << io_num;
@@ -722,7 +722,7 @@ static void cmd_io_wakeup(int argc, char **argv)
         printf("  pull: none\r\n");
     }
 
-    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_io_wakeup_cfg((void *)&lp_wake_io_cfg);
 #endif
 
     bl_lp_wakeup_io_int_register(test_wakeup_io_callback);

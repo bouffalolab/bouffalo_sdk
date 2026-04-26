@@ -77,7 +77,6 @@ extern BL_Err_Type GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, uint8_t mcuClk
 extern void board_recovery(void);
 extern int macswl_ps_sleep_check(void);
 extern int macswl_connected_enter_ops(void);
-extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
 extern void macswl_regs_save_ops(void);
 
 static uint64_t get_mtime(void)

@@ -47,7 +47,7 @@ static struct {
     uint32_t last_switch_time; /* Last image switch time (ms) */
     int32_t fixed_img_idx;     /* Fixed image index (-1 = rotate, 0-3 = fixed) */
     uint32_t max_fps;          /* Max frame rate (0 = unlimited) */
-} g_test_ctx = { .fixed_img_idx = -1, .max_fps = 30 };
+} g_test_ctx = { .fixed_img_idx = -1, .max_fps = 60 };
 
 static const char *sender_state_str(hb_sender_state_t state)
 {

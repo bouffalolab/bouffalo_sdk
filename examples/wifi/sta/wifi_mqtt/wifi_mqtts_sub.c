@@ -27,6 +27,7 @@
 #include "mqtt.h"
 #include "shell.h"
 #include "certs.h"
+#include "bflb_sec_trng.h"
 
 static uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 static uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
@@ -72,7 +73,7 @@ static int ssl_random(void *prng, unsigned char *output, size_t output_len)
     return 0;
 }
 
-static int tcp_client_connect(char *ip, char *port_str)
+static int tcp_client_connect(const char *ip, const char *port_str)
 {
     int fd;
     int res;
@@ -116,7 +117,7 @@ static int tcp_client_connect(char *ip, char *port_str)
     return fd;
 }
 
-static int ssl_client_connect(char *ip, char *port, ssl_param_t *ssl_param)
+static int ssl_client_connect(const char *ip, const char *port, ssl_param_t *ssl_param)
 {
     int fd, ret;
     ssl_conn_param_t param = {0};
@@ -270,7 +271,7 @@ static void test_close(int sig)
 
 static int example_mqtt(int argc, const char *argv[])
 {
-    const char* port;
+    const char* port = NULL;
     const char* topic;
 
     int ret = 0;
@@ -341,6 +342,7 @@ static int example_mqtt(int argc, const char *argv[])
     /* exit */
     test_close(SHELL_SIGINT);
 
+    return 0;
 }
 
 static void publish_callback_1(void** unused, struct mqtt_response_publish *published)
