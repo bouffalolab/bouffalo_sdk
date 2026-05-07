@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "wl80211.h"
-#include "supplicant_api.h"
+#include "supplicant.h"
 #include "wl80211_platform.h"
 #include "wifi_mgmr.h"
 #include "macsw.h" // for export_XXX

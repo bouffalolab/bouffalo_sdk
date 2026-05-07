@@ -6,7 +6,7 @@
 #include "wl80211.h"
 #include "macsw.h"
 
-#include "supplicant_api.h"
+#include "supplicant.h"
 #include "wl80211_platform.h"
 #include "timeout.h"
 #include "bl_lp.h"

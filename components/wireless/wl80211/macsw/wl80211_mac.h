@@ -47,7 +47,6 @@ struct wl80211_mac_rx_desc {
 
 int wl80211_mac_rx_buffer_init(size_t payload_len);
 
-int wl80211_eapol_input(uint8_t vif_type, uint8_t *payload, size_t len);
 int wl80211_mac_mgmt_input(uint8_t vif, uint8_t *payload, size_t len);
 int wl80211_mac_disconnect(uint16_t reason_code, uint16_t status_code);
 void wl80211_mac_sta_deauth_handler(uint8_t *payload, uint32_t len);
