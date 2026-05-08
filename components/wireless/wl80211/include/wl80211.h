@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <sys/queue.h>
-#include <sys/tree.h>
+#include "queue/queue.h"
+#include "tree/tree.h"
 
 //#define INVARIANTS
 #define COMPAT_WIFI_MGMR

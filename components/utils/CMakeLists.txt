@@ -1,5 +1,7 @@
 sdk_generate_library()
 
+sdk_add_include_directories(.)
+
 if(NOT DEFINED CONFIG_LOG_LEVEL)
     sdk_add_compile_definitions(-DCONFIG_LOG_LEVEL=3)
 endif()
