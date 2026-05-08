@@ -117,7 +117,7 @@ void *hostap_init(wifi_ap_parm_t *parm)
     hostapd_setup_wpa_psk(hapd->conf);
 
     hapd->wpa_auth = wpa_init(parm->vif_idx, parm->mac, auth_conf, NULL);
-    bl_wifi_set_appie_internal(parm->vif_idx, WIFI_APPIE_WPA_RSN, hapd->wpa_auth->wpa_ie, (uint16_t)hapd->wpa_auth->wpa_ie_len, false);
+    wl80211_supplicant_set_appie_internal(parm->vif_idx, WIFI_APPIE_WPA_RSN, hapd->wpa_auth->wpa_ie, (uint16_t)hapd->wpa_auth->wpa_ie_len, false);
     os_free(auth_conf);
 
     return (void *)hapd;
@@ -134,7 +134,7 @@ bool hostap_deinit(void *data)
         return true;
     }
 
-    bl_wifi_unset_appie_internal(hapd->vif_idx, WIFI_APPIE_WPA_RSN);
+    wl80211_supplicant_unset_appie_internal(hapd->vif_idx, WIFI_APPIE_WPA_RSN);
 
 #if 0 // wpa_ie is from ROM
     os_free(hapd->wpa_auth->wpa_ie);

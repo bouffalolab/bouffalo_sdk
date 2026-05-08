@@ -75,43 +75,97 @@ typedef	__uint64_t	uint64_t;
 /*
  * General byte order swapping functions.
  */
+#ifndef bswap16
 #define	bswap16(x)	__bswap16(x)
+#endif
+#ifndef bswap32
 #define	bswap32(x)	__bswap32(x)
+#endif
+#ifndef bswap64
 #define	bswap64(x)	__bswap64(x)
+#endif
 
 /*
  * Host to big endian, host to little endian, big endian to host, and little
  * endian to host byte order functions as detailed in byteorder(9).
  */
 #if BYTE_ORDER == _LITTLE_ENDIAN
+#ifndef htobe16
 #define	htobe16(x)	bswap16((x))
+#endif
+#ifndef htobe32
 #define	htobe32(x)	bswap32((x))
+#endif
+#ifndef htobe64
 #define	htobe64(x)	bswap64((x))
+#endif
+#ifndef htole16
 #define	htole16(x)	((uint16_t)(x))
+#endif
+#ifndef htole32
 #define	htole32(x)	((uint32_t)(x))
+#endif
+#ifndef htole64
 #define	htole64(x)	((uint64_t)(x))
+#endif
 
+#ifndef be16toh
 #define	be16toh(x)	bswap16((x))
+#endif
+#ifndef be32toh
 #define	be32toh(x)	bswap32((x))
+#endif
+#ifndef be64toh
 #define	be64toh(x)	bswap64((x))
+#endif
+#ifndef le16toh
 #define	le16toh(x)	((uint16_t)(x))
+#endif
+#ifndef le32toh
 #define	le32toh(x)	((uint32_t)(x))
+#endif
+#ifndef le64toh
 #define	le64toh(x)	((uint64_t)(x))
+#endif
 
 #else /* _BYTE_ORDER != _LITTLE_ENDIAN */
+#ifndef htobe16
 #define	htobe16(x)	((uint16_t)(x))
+#endif
+#ifndef htobe32
 #define	htobe32(x)	((uint32_t)(x))
+#endif
+#ifndef htobe64
 #define	htobe64(x)	((uint64_t)(x))
+#endif
+#ifndef htole16
 #define	htole16(x)	bswap16((x))
+#endif
+#ifndef htole32
 #define	htole32(x)	bswap32((x))
+#endif
+#ifndef htole64
 #define	htole64(x)	bswap64((x))
+#endif
 
+#ifndef be16toh
 #define	be16toh(x)	((uint16_t)(x))
+#endif
+#ifndef be32toh
 #define	be32toh(x)	((uint32_t)(x))
+#endif
+#ifndef be64toh
 #define	be64toh(x)	((uint64_t)(x))
+#endif
+#ifndef le16toh
 #define	le16toh(x)	bswap16((x))
+#endif
+#ifndef le32toh
 #define	le32toh(x)	bswap32((x))
+#endif
+#ifndef le64toh
 #define	le64toh(x)	bswap64((x))
+#endif
 #endif /* _BYTE_ORDER == _LITTLE_ENDIAN */
 
 /* Alignment-agnostic encode/decode bytestream to/from little/big endian. */

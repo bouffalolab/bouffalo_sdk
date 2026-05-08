@@ -13,7 +13,7 @@
  */
 
 #include "os.h"
-#include <supplicant_api.h>
+#include <supplicant.h>
 #ifndef WPA_COMMON_H
 #define WPA_COMMON_H
 

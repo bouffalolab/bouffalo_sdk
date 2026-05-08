@@ -42,7 +42,7 @@ extern struct wpa_sm gWpaSm;
 void wpa_install_key(uint8_t vif_idx, uint8_t sta_idx, enum wpa_alg alg,
                      int key_idx, int set_tx, u8 *seq, size_t seq_len, u8 *key,
                      size_t key_len, bool pairwise) {
-  bl_wifi_set_sta_key_internal(vif_idx, sta_idx, alg, key_idx, set_tx, seq,
+  wl80211_supplicant_set_sta_key_internal(vif_idx, sta_idx, alg, key_idx, set_tx, seq,
                                seq_len, key, key_len, pairwise);
 }
 
@@ -92,7 +92,7 @@ void wpa_sendto_wrapper(bool is_sta, void *buffer, u16 len,
 
 void wpa_deauthenticate(uint8_t sta_idx, u8 reason_code) {
   wpa_clear_4way_handshake_timer();
-  bl_wifi_auth_done_internal(sta_idx, reason_code);
+  wl80211_supplicant_auth_done_internal(sta_idx, reason_code);
 }
 
 #if 0
@@ -140,22 +140,18 @@ int wpa_config_bss(wifi_connect_parm_t *parm) {
   return ret;
 }
 
-uint8_t *g_assoc_rsn_ie = NULL;
-uint16_t g_assoc_rsn_ie_len = 0;
-
 void wpa_config_assoc_ie(uint8_t vif_idx, u8 proto, u8 *assoc_buf,
                          u32 assoc_wpa_ie_len) {
-  g_assoc_rsn_ie = assoc_buf;
-  g_assoc_rsn_ie_len = assoc_wpa_ie_len;
+  wl80211_supplicant_set_assoc_ie(assoc_buf, assoc_wpa_ie_len);
   #if 0
-  bl_wifi_set_appie_internal(vif_idx, WIFI_APPIE_WPA_RSN, assoc_buf,
+  wl80211_supplicant_set_appie_internal(vif_idx, WIFI_APPIE_WPA_RSN, assoc_buf,
                              assoc_wpa_ie_len, 1);
   #endif
 }
 
 void wpa_neg_complete(uint8_t sta_idx) {
   wpa_clear_4way_handshake_timer();
-  bl_wifi_auth_done_internal(sta_idx, 0);
+  wl80211_supplicant_auth_done_internal(sta_idx, 0);
 }
 
 bool wpa_attach(void) {
@@ -280,7 +276,7 @@ static void wpa_sta_disconnected_cb(uint8_t reason_code) {
   {
     struct wpa_sm *sm = &gWpaSm;
     /* Delete group keys (GTK: key_idx 0~3, IGTK: key_idx 4~5) */
-    bl_wifi_set_sta_key_internal(sm->vif_idx, 255, WIFI_WPA_ALG_NONE, 0, 0, NULL, 0, NULL, 0, false);
+    wl80211_supplicant_set_sta_key_internal(sm->vif_idx, 255, WIFI_WPA_ALG_NONE, 0, 0, NULL, 0, NULL, 0, false);
   }
 }
 
@@ -321,7 +317,7 @@ static const struct wpa_funcs wpa_cb = {
 int bl_supplicant_init(void) {
   int ret = 0;
 
-  bl_wifi_register_wpa_cb_internal(&wpa_cb);
+  wl80211_supplicant_register_wpa_cb_internal(&wpa_cb);
 
 #if CONFIG_WPA_WAPI_PSK
   ret = esp_wifi_internal_wapi_init();
@@ -332,4 +328,4 @@ int bl_supplicant_init(void) {
   return ret;
 }
 
-int bl_supplicant_deinit(void) { return bl_wifi_unregister_wpa_cb_internal(); }
+int bl_supplicant_deinit(void) { return wl80211_supplicant_unregister_wpa_cb_internal(); }

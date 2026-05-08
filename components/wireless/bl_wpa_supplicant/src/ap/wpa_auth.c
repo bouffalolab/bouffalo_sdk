@@ -118,7 +118,7 @@ static inline int wpa_auth_get_eapol(struct wpa_authenticator *wpa_auth,
 static inline const u8 * wpa_auth_get_psk(struct wpa_authenticator *wpa_auth,
                       const u8 *addr, const u8 *prev_psk)
 {
-    struct hostapd_data *hapd = (struct hostapd_data *)bl_wifi_get_hostap_private_internal();
+    struct hostapd_data *hapd = (struct hostapd_data *)wl80211_supplicant_get_hostap_private_internal();
 
     if (!hapd){
         return NULL;
@@ -139,7 +139,7 @@ static inline int wpa_auth_set_key(struct wpa_authenticator *wpa_auth,
                    enum wpa_alg alg, const u8 *addr, int idx,
                    u8 *key, size_t key_len, bool pairwise)
 {
-    return bl_wifi_set_ap_key_internal(vif_idx, sta_idx, alg, idx, key, key_len, pairwise);
+    return wl80211_supplicant_set_ap_key_internal(vif_idx, sta_idx, alg, idx, key, key_len, pairwise);
 }
 
 
@@ -185,7 +185,7 @@ static void wpa_sta_disconnect(struct wpa_authenticator *wpa_auth,
                    const u8 *addr, uint8_t vif_idx, uint8_t sta_idx)
 {
     wpa_printf(MSG_DEBUG, "wpa_sta_disconnect STA " MACSTR, MAC2STR(addr));
-    bl_wifi_ap_deauth_internal(vif_idx, sta_idx, WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
+    wl80211_supplicant_ap_deauth_internal(vif_idx, sta_idx, WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
     return;
 }
 
@@ -1862,7 +1862,7 @@ SM_STATE(WPA_PTK, PTKINITDONE)
 
 
 {
-    bl_wifi_wpa_ptk_init_done_internal(sm->sta_idx);
+    wl80211_supplicant_wpa_ptk_init_done_internal(sm->sta_idx);
 }
 #ifdef CONFIG_IEEE80211R
     wpa_ft_push_pmk_r1(sm->wpa_auth, sm->addr);
@@ -2393,7 +2393,7 @@ static int wpa_sm_step(struct wpa_state_machine *sm)
 
 bool wpa_ap_join(void **sm, uint8_t *mac, uint8_t *wpa_ie, uint8_t wpa_ie_len)
 {
-    struct hostapd_data *hapd = (struct hostapd_data*)bl_wifi_get_hostap_private_internal();
+    struct hostapd_data *hapd = (struct hostapd_data*)wl80211_supplicant_get_hostap_private_internal();
     struct wpa_state_machine **wpa_sm;
     struct wpa_state_machine *wpa_sm_new;
 
@@ -2430,7 +2430,7 @@ bool wpa_ap_join(void **sm, uint8_t *mac, uint8_t *wpa_ie, uint8_t wpa_ie_len)
 
 void wpa_ap_sta_associated(void *wpa_sm, uint8_t sta_idx)
 {
-    struct hostapd_data *hapd = (struct hostapd_data*)bl_wifi_get_hostap_private_internal();
+    struct hostapd_data *hapd = (struct hostapd_data*)wl80211_supplicant_get_hostap_private_internal();
     struct wpa_state_machine *sm = (struct wpa_state_machine *)wpa_sm;
 
     if (!hapd || !wpa_sm) {

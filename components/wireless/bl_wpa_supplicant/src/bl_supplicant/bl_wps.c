@@ -31,12 +31,12 @@ struct wps_sm *wps_sm_get(void)
 
 int wps_get_status(void)
 {
-    return bl_wifi_get_wps_status_internal();
+    return wl80211_supplicant_get_wps_status_internal();
 }
 
 int wps_set_status(uint32_t status)
 {
-    bl_wifi_set_wps_status_internal(status);
+    wl80211_supplicant_set_wps_status_internal(status);
     return 0;
 }
 
@@ -99,7 +99,7 @@ static void wps_build_ic_appie_wps_pr_(void)
     memcpy(sm->wps_ie_probe_request, wpabuf_head(extra_ie), extra_ie->used);
     sm->wps_ie_probe_request_len = extra_ie->used;
     wpabuf_free(extra_ie);
-    bl_wifi_set_appie_internal(0xff, WIFI_APPIE_WPS_PR, sm->wps_ie_probe_request, sm->wps_ie_probe_request_len, true);
+    wl80211_supplicant_set_appie_internal(0xff, WIFI_APPIE_WPS_PR, sm->wps_ie_probe_request, sm->wps_ie_probe_request_len, true);
 }
 
 static void wps_build_ic_appie_wps_ar_(void)
@@ -113,7 +113,7 @@ static void wps_build_ic_appie_wps_ar_(void)
         memcpy(sm->wps_ie_association_request, wpabuf_head(buf), buf->used);
         sm->wps_ie_association_request_len = buf->used;
         wpabuf_free(buf);
-        bl_wifi_set_appie_internal(0xff, WIFI_APPIE_WPS_AR, sm->wps_ie_association_request, sm->wps_ie_association_request_len, true);
+        wl80211_supplicant_set_appie_internal(0xff, WIFI_APPIE_WPS_AR, sm->wps_ie_association_request, sm->wps_ie_association_request_len, true);
     }
 }
 
@@ -222,9 +222,9 @@ static void prepare_stop_(void)
 {
     wps_set_status(WPS_STATUS_DISABLE);
 
-    bl_wifi_set_appie_internal(0xff, WIFI_APPIE_WPS_PR, NULL, 0, true);
-    bl_wifi_set_appie_internal(0xff, WIFI_APPIE_WPS_AR, NULL, 0, true);
-    bl_wifi_set_wps_cb_internal(NULL);
+    wl80211_supplicant_set_appie_internal(0xff, WIFI_APPIE_WPS_PR, NULL, 0, true);
+    wl80211_supplicant_set_appie_internal(0xff, WIFI_APPIE_WPS_AR, NULL, 0, true);
+    wl80211_supplicant_set_wps_cb_internal(NULL);
 
     wifi_mgmr_sta_disconnect();
     vTaskDelay(1000);
@@ -721,7 +721,7 @@ static int wps_send_eap_identity_rsp_(u8 id)
         goto _err;
     }
 
-    ret = bl_wifi_get_assoc_bssid_internal(sm->vif_idx, bssid);
+    ret = wl80211_supplicant_get_assoc_bssid_internal(sm->vif_idx, bssid);
     if (ret != 0) {
         wpa_printf(MSG_ERROR, "bssid is empty!");
         return -1;
@@ -763,7 +763,7 @@ static int wps_send_frag_ack_(u8 id)
         return -1;
     }
 
-    ret = bl_wifi_get_assoc_bssid_internal(sm->vif_idx, bssid);
+    ret = wl80211_supplicant_get_assoc_bssid_internal(sm->vif_idx, bssid);
     if (ret != 0) {
         wpa_printf(MSG_ERROR, "bssid is empty!");
         return ret;
@@ -931,7 +931,7 @@ static int wps_send_wps_mX_rsp_(u8 id)
         return -1;
     }
 
-    ret = bl_wifi_get_assoc_bssid_internal(sm->vif_idx, bssid);
+    ret = wl80211_supplicant_get_assoc_bssid_internal(sm->vif_idx, bssid);
     if (ret != 0) {
         wpa_printf(MSG_ERROR, "bssid is empty!");
         return ret;
@@ -1175,7 +1175,7 @@ static int wps_tx_start_(void)
         return -1;
     }
 
-    ret = bl_wifi_get_assoc_bssid_internal(sm->vif_idx, bssid);
+    ret = wl80211_supplicant_get_assoc_bssid_internal(sm->vif_idx, bssid);
     if (ret != 0) {
         wpa_printf(MSG_ERROR, "bssid is empty!");
         return ret;
@@ -1280,7 +1280,7 @@ static int wifi_station_wps_init_(void)
 
     sm->scan_cnt = 0;
 
-    bl_wifi_set_wps_cb_internal(&wps_cb);
+    wl80211_supplicant_set_wps_cb_internal(&wps_cb);
 
     return 0;
 

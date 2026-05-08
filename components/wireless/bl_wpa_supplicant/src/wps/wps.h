@@ -17,7 +17,7 @@
 #include "wps_defs.h"
 #include "utils/common.h"
 #include <bl_wps.h>
-#include <supplicant_api.h>
+#include <supplicant.h>
 /* #include "esp_wifi_types.h" */
 
 /**

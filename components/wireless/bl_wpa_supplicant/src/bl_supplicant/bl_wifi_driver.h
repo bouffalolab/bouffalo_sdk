@@ -15,7 +15,7 @@
 #ifndef BL_WIFI_DRIVER_H
 #define BL_WIFI_DRIVER_H
 
-#include <supplicant_api.h>
+#include <supplicant.h>
 #include "wl80211.h"
 
 #if CONFIG_NEWLIB_NANO_FORMAT

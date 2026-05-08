@@ -906,7 +906,7 @@ static bool wpa_supplicant_gtk_in_use(struct wpa_sm *sm, struct wpa_gtk_data *gd
     wpa_printf(MSG_DEBUG, "WPA: Judge GTK: (keyidx=%d len=%d).", gd->keyidx, gd->gtk_len);
     #endif
 
-    if (bl_wifi_get_sta_gtk(sm->vif_idx, gtk_get, &gtk_len_get) == 0) {
+    if (wl80211_supplicant_get_sta_gtk(sm->vif_idx, gtk_get, &gtk_len_get) == 0) {
         if (gd->gtk_len == gtk_len_get && memcmp(_gtk, gtk_get, gd->gtk_len) == 0) {
             wpa_printf(MSG_DEBUG, "GTK %d is already in use, it may be an attack, ignore it.", gd->keyidx);
             return true;
@@ -1050,7 +1050,7 @@ int ieee80211w_set_keys(struct wpa_sm *sm,
             return -1;
         }
         // keylen 16
-        return bl_wifi_set_igtk_internal(sm->vif_idx, sm->sta_idx, keyidx, igtk->pn, (uint8_t *)igtk->igtk);
+        return wl80211_supplicant_set_igtk_internal(sm->vif_idx, sm->sta_idx, keyidx, igtk->pn, (uint8_t *)igtk->igtk);
     }
     return 0;
 #else
@@ -2202,11 +2202,11 @@ int wpa_set_bss(u8 vif_idx, u8 sta_idx, char *macddr, char *bssid, u8 pairwise_c
     sm->renew_snonce = true;
     memcpy(sm->own_addr, macddr, ETH_ALEN);
     memcpy(sm->bssid, bssid, ETH_ALEN);
-    sm->ap_notify_completed_rsne = bl_wifi_sta_is_ap_notify_completed_rsne_internal();
+    sm->ap_notify_completed_rsne = wl80211_supplicant_sta_is_ap_notify_completed_rsne_internal();
 
     if (sm->key_mgmt == WPA_KEY_MGMT_SAE ||
         is_wpa2_enterprise_connection()) {
-        if (!bl_wifi_skip_supp_pmkcaching()) {
+        if (!wl80211_supplicant_skip_supp_pmkcaching()) {
 #ifdef CONFIG_PMKSA_CACHE
             pmksa_cache_set_current(sm, NULL, (const u8*) bssid, 0, 0);
 #endif
@@ -2422,7 +2422,7 @@ void eapol_txcb(void *eb)
     struct wpa_sm *sm = &gWpaSm;
     u8 isdeauth = 0;  //no_zero value is the reason for deauth
 
-    if (false == bl_wifi_sta_is_running_internal()){
+    if (false == wl80211_supplicant_sta_is_running_internal()){
         return;
     }
 
@@ -2504,7 +2504,7 @@ static void fourway_hs_timeout_handler_(void *arg)
 {
     struct wpa_sm *sm = &gWpaSm;
 
-    bl_wifi_auth_done_internal(sm->sta_idx, WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
+    wl80211_supplicant_auth_done_internal(sm->sta_idx, WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
 }
 
 void wpa_set_4way_handshake_timer(u8 quick_conn)
