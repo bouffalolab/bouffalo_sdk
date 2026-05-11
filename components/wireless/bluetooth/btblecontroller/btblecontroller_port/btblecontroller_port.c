@@ -269,7 +269,9 @@ __attribute__((weak)) int btblecontroller_putchar(int c)
      extern int bl_putchar(int c);
      return bl_putchar(c);
      #else
+     #if !defined(BL618DG)
      extern int putchar(int c);
+     #endif
      return putchar(c);
      #endif
 }
@@ -279,6 +281,17 @@ __attribute__((weak)) void btblecontroller_puts(const char *str)
 {
     extern int puts(const char *s);
     puts(str);
+}
+
+__attribute__((weak)) uint64_t btblecontroller_mtimer_get_time_us(void)
+{
+#if defined(BL702L)
+    extern uint64_t bl_timer_now_us64(void);
+    return bl_timer_now_us64();
+#else
+    extern uint64_t bflb_mtimer_get_time_us(void);
+    return bflb_mtimer_get_time_us();
+#endif
 }
 
 

@@ -11,34 +11,17 @@
 // #define CONFIG_USB_PINGPONG_ENABLE
 // #define CONFIG_USB_TRIPLE_ENABLE
 
-#if defined(BL616)  
-#define BFLB_USB_BASE           ((uint32_t)0x20072000)
-#define BFLB_PDS_BASE           ((uint32_t)0x2000E000)
-#define BFLB_USB_IRQ_NUM        37
-#define PDS_USB_CTL_OFFSET      (0x500) /* usb_ctl */
-#define PDS_USB_PHY_CTRL_OFFSET (0x504) /* usb_phy_ctrl */
-#elif defined(BL616CL)
-#define BFLB_USB_BASE            ((uint32_t)0x20072000)
-#define BFLB_PDS_BASE            ((uint32_t)0x2000E000)
-#define BFLB_USB_IRQ_NUM         37
-#define PDS_USB_CTL_OFFSET       (0x500) /* usb_ctl */
-#define PDS_USB_PHY0_CTRL_OFFSET (0x504) /* usb_phy0_ctrl */
-#define PDS_USB_PHY1_CTRL_OFFSET (0x508) /* usb_phy1_ctrl */
-#define PDS_USB_PHY2_CTRL_OFFSET (0x50C) /* usb_phy2_ctrl */
-#define PDS_USB_PHY3_CTRL_OFFSET (0x510) /* usb_phy3_ctrl */
-#elif defined(BL618DG)
-#define BFLB_USB_BASE            ((uint32_t)0x20087000)
-#define BFLB_PDS_BASE            ((uint32_t)0x2008E000)
-#define BFLB_USB_IRQ_NUM         19
-#define PDS_USB_CTL_OFFSET       (0x500) /* usb_ctl */
-#define PDS_USB_PHY0_CTRL_OFFSET (0x504) /* usb_phy0_ctrl */
-#define PDS_USB_PHY1_CTRL_OFFSET (0x508) /* usb_phy1_ctrl */
-#define PDS_USB_PHY2_CTRL_OFFSET (0x50C) /* usb_phy2_ctrl */
-#define PDS_USB_PHY3_CTRL_OFFSET (0x510) /* usb_phy3_ctrl */
-#endif
+#if defined(BL616)
+/* BL616 */
+#include "bl616_irq.h"
+#include "bl616_memorymap.h"
 
-#if defined(BL616)  
+#define BFLB_USB_BASE                USB_BASE
+#define BFLB_PDS_BASE                PDS_BASE
+#define BFLB_USB_IRQ_NUM             BL616_IRQ_USB
+
 /* 0x500 : usb_ctl */
+#define PDS_USB_CTL_OFFSET           (0x500)
 #define PDS_REG_USB_SW_RST_N         (1 << 0U)
 #define PDS_REG_USB_EXT_SUSP_N       (1 << 1U)
 #define PDS_REG_USB_WAKEUP           (1 << 2U)
@@ -47,6 +30,7 @@
 #define PDS_REG_USB_IDDIG            (1 << 5U)
 
 /* 0x504 : usb_phy_ctrl */
+#define PDS_USB_PHY_CTRL_OFFSET      (0x504)
 #define PDS_REG_USB_PHY_PONRST       (1 << 0U)
 #define PDS_REG_USB_PHY_OSCOUTEN     (1 << 1U)
 #define PDS_REG_USB_PHY_XTLSEL_SHIFT (2U)
@@ -54,32 +38,85 @@
 #define PDS_REG_USB_PHY_OUTCLKSEL    (1 << 4U)
 #define PDS_REG_USB_PHY_PLLALIV      (1 << 5U)
 #define PDS_REG_PU_USB20_PSW         (1 << 6U)
-#endif
 
-#if defined(BL618DG) || defined(BL616CL)
+#elif defined(BL616CL)
+/* BL616CL */
+#include "bl616cl_irq.h"
+#include "bl616cl_memorymap.h"
+
+#define BFLB_USB_BASE                     USB_BASE
+#define BFLB_PDS_BASE                     PDS_BASE
+#define BFLB_USB_IRQ_NUM                  BL616CL_IRQ_USB
+
 /* 0x500 : usb_ctl */
-#define PDS_REG_USB_SW_RST_N (1 << 0U)
-#if defined(BL618DG)
-#define PDS_REG_USB_IDDIG (1 << 1U)
-#endif
-#define PDS_REG_USB_L1_WAKEUP            (1 << 2U)
-#define PDS_REG_USB_WAKEUP               (1 << 3U)
-#define PDS_REG_USB_VBUS_VALID_FORCE     (1 << 4U)
-#define PDS_REG_USB_VBUS_VALID_FROM_PHY  (1 << 5U)
-#define PDS_REG_USB_VBUS_VALID_FROM_GPIO (1 << 6U)
-#define PDS_REG_USB_LP_MODE_UCLK_DISABLE (1 << 7U)
-#define PDS_REG_USB_EXIT_SUSPEND_N       (1 << 8U)
-#if defined(BL616CL)
-#define PDS_REG_USB_IDDIG (1 << 16U)
-#endif
+#define PDS_USB_CTL_OFFSET                (0x500)
+#define PDS_REG_USB_SW_RST_N              (1 << 0U)
+#define PDS_REG_USB_L1_WAKEUP             (1 << 2U)
+#define PDS_REG_USB_WAKEUP                (1 << 3U)
+#define PDS_REG_USB_VBUS_VALID_FORCE      (1 << 4U)
+#define PDS_REG_USB_VBUS_VALID_FROM_PHY   (1 << 5U)
+#define PDS_REG_USB_VBUS_VALID_FROM_GPIO  (1 << 6U)
+#define PDS_REG_USB_LP_MODE_UCLK_DISABLE  (1 << 7U)
+#define PDS_REG_USB_EXIT_SUSPEND_N        (1 << 8U)
+#define PDS_REG_USB_IDDIG                 (1 << 16U)
 #define PDS_REG_PU_USB20_PSW              (1 << 31U)
+
+/* 0x504 : usb_phy0_ctrl */
+#define PDS_USB_PHY0_CTRL_OFFSET          (0x504)
+
 /* 0x508 : usb_phy1_ctrl */
+#define PDS_USB_PHY1_CTRL_OFFSET          (0x508)
 #define PDS_REG_USB_PHY_SUSPENDM0_USE_REG (1 << 0U)
 #define PDS_REG_USB_PHY_SIDDQ             (1 << 28U)
+
 /* 0x50C : usb_phy2_ctrl */
+#define PDS_USB_PHY2_CTRL_OFFSET          (0x50C)
 #define PDS_REG_USB_PHY_VBUS_VLD_EXT_SEL0 (1 << 18U)
+
 /* 0x510 : usb_phy3_ctrl */
+#define PDS_USB_PHY3_CTRL_OFFSET          (0x510)
 #define PDS_REG_USB_PHY_POR               (1 << 31U)
+
+#elif defined(BL618DG)
+/* BL618DG */
+#include "bl618dg_irq.h"
+#include "bl618dg_memorymap.h"
+
+#define BFLB_USB_BASE                     USB_BASE
+#define BFLB_PDS_BASE                     PDS_BASE
+#define BFLB_USB_IRQ_NUM                  BL618DG_IRQ_USB
+
+/* 0x500 : usb_ctl */
+#define PDS_USB_CTL_OFFSET                (0x500)
+#define PDS_REG_USB_SW_RST_N              (1 << 0U)
+#define PDS_REG_USB_IDDIG                 (1 << 1U)
+#define PDS_REG_USB_L1_WAKEUP             (1 << 2U)
+#define PDS_REG_USB_WAKEUP                (1 << 3U)
+#define PDS_REG_USB_VBUS_VALID_FORCE      (1 << 4U)
+#define PDS_REG_USB_VBUS_VALID_FROM_PHY   (1 << 5U)
+#define PDS_REG_USB_VBUS_VALID_FROM_GPIO  (1 << 6U)
+#define PDS_REG_USB_LP_MODE_UCLK_DISABLE  (1 << 7U)
+#define PDS_REG_USB_EXIT_SUSPEND_N        (1 << 8U)
+#define PDS_REG_PU_USB20_PSW              (1 << 31U)
+
+/* 0x504 : usb_phy0_ctrl */
+#define PDS_USB_PHY0_CTRL_OFFSET          (0x504)
+
+/* 0x508 : usb_phy1_ctrl */
+#define PDS_USB_PHY1_CTRL_OFFSET          (0x508)
+#define PDS_REG_USB_PHY_SUSPENDM0_USE_REG (1 << 0U)
+#define PDS_REG_USB_PHY_SIDDQ             (1 << 28U)
+
+/* 0x50C : usb_phy2_ctrl */
+#define PDS_USB_PHY2_CTRL_OFFSET          (0x50C)
+#define PDS_REG_USB_PHY_VBUS_VLD_EXT_SEL0 (1 << 18U)
+
+/* 0x510 : usb_phy3_ctrl */
+#define PDS_USB_PHY3_CTRL_OFFSET          (0x510)
+#define PDS_REG_USB_PHY_POR               (1 << 31U)
+
+#else
+#error "No support USB_V2 for this chip"
 #endif
 
 #define USB_SOF_TIMER_MASK_AFTER_RESET_HS (0x44C)
@@ -96,7 +133,7 @@ static void bflb_usb_phy_init(void)
 {
     uint32_t regval;
 
-#if defined(BL616)  
+#if defined(BL616)
     /* USB_PHY_CTRL[3:2] reg_usb_phy_xtlsel=0                             */
     /* 2000e504 = 0x40; #100; USB_PHY_CTRL[6] reg_pu_usb20_psw=1 (VCC33A) */
     /* 2000e504 = 0x41; #500; USB_PHY_CTRL[0] reg_usb_phy_ponrst=1        */
@@ -277,7 +314,7 @@ uint8_t usbh_get_port_speed(const uint8_t port)
 #define USB_VDMA_DIR_FIFO2MEM 0
 #define USB_VDMA_DIR_MEM2FIFO 1
 
-#if defined(BL616)  
+#if defined(BL616)
 #define USB_MAX_EP_WITH_EP0     5
 #define USB_MAX_EP_EXCLUDE_EP0  4
 #define USB_NUM_BIDIR_ENDPOINTS 5
@@ -861,7 +898,7 @@ int usb_dc_deinit(uint8_t busid)
     regval |= USB_UNPLUG;
     putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
-#if defined(BL616)  
+#if defined(BL616)
     regval = getreg32(BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
     regval &= ~PDS_REG_USB_PHY_XTLSEL_MASK;
     putreg32(regval, BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
@@ -944,7 +981,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor *ep)
 
     uint8_t ep_idx = USB_EP_GET_IDX(ep_addr);
 
-#if defined(BL616)  
+#if defined(BL616)
     if ((ep_idx > 4) && (ep_idx < 9)) {
         return 0;
     }

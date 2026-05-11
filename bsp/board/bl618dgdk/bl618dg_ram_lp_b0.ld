@@ -20,8 +20,8 @@ HeapMinSize  = 0x1000; /*  4KB */
 MEMORY
 {
     /* fw_header_memory  (rx)  : ORIGIN = 0x00010000, LENGTH = 256+16 */
-    code_memory  (rx)  : ORIGIN = 0x00010000, LENGTH = 48K
-    ram_memory  (!rx) : ORIGIN = 0x0001C000, LENGTH = 16K /* reserved 1k for security */
+    code_memory  (rx)  : ORIGIN = 0x00010000, LENGTH = 54K
+    ram_memory  (!rx) : ORIGIN = 0x0001D800, LENGTH = 10K
 }
 
 SECTIONS
@@ -66,6 +66,12 @@ SECTIONS
         . = ALIGN(4);
         __usbh_class_info_end__ = .;
 
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+
         /* section information for components's version */
         . = ALIGN(4);
         _version_info_section_start = .;
@@ -73,6 +79,11 @@ SECTIONS
         _version_info_section_end = .;
 
         /*put .rodata**/
+        *(.tcm_code.*)
+        *(.tcm_const.*)
+        *(.sclock_rlt_code.*)
+        *(.sclock_rlt_const.*)
+
         *(.rodata*)
 
         *(.srodata)
@@ -138,10 +149,8 @@ SECTIONS
         __tcm_data_end__ = .;
     } > ram_memory
 
-    __ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
-
     /* Data section */
-    RAM_DATA : AT (__ram_load_addr)
+    RAM_DATA :
     {
         . = ALIGN(4);
         __ram_data_start__ = .;
@@ -178,7 +187,8 @@ SECTIONS
     } > ram_memory
 
 
-    __etext_final = (__ram_load_addr + SIZEOF (RAM_DATA));
+    __ram_load_addr = LOADADDR(RAM_DATA);
+    __etext_final = (__dtcm_load_addr + SIZEOF(.dtcm_region));
     ASSERT(__etext_final <= ORIGIN(code_memory) + LENGTH(code_memory), "code memory overflow")
 
     .stack (NOLOAD):

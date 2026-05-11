@@ -3190,9 +3190,7 @@ static void remote_name_request_complete(struct net_buf *buf)
 	int i;
 	BT_DBG("remote name:%s", evt->name);
 
-	if (evt->name) {
-		remote_name_complete(evt->name);
-	}
+	remote_name_complete(evt->name);
 
 	result = get_result_slot(&evt->bdaddr, 0xff);
 	if (!result) {

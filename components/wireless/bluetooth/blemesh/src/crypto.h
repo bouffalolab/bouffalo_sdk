@@ -92,7 +92,7 @@ static inline int bt_mesh_private_beacon_key(const uint8_t net_key[16],
 #endif /* CONFIG_BT_MESH_V1d1 */
 
 int bt_mesh_beacon_auth(const u8_t beacon_key[16], u8_t flags,
-			const u8_t net_id[16], u32_t iv_index,
+			const u8_t net_id[8], u32_t iv_index,
 			u8_t auth[8]);
 
 static inline int bt_mesh_app_id(const u8_t app_key[16], u8_t app_id[1])

@@ -4,7 +4,6 @@ BL_SDK_BASE ?= $(abspath  ./../../..)
 export BL_SDK_BASE
 
 BOARD ?= ${CHIP}dk
-CROSS_COMPILE ?= riscv64-unknown-elf-
 
 # add custom cmake definition
 cmake_definition+=-DOT_FTD=1

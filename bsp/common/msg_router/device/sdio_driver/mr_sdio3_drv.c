@@ -217,7 +217,7 @@ static int sdio3_driver_init(mr_msg_ctrl_priv_t *msg_ctrl)
     sdio3_hd = bflb_device_get_by_name("sdio3");
     if (sdio3_hd == NULL) {
         LOG_E("get device failed\r\n");
-        return NULL;
+        return -1;
     }
 
     sdio3_ready_flag = false;

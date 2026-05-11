@@ -53,7 +53,12 @@ else()
         sdk_library_add_sources(vsnprintf.c)
     endif()
 
-    sdk_add_link_options(-Wl,-wrap,snprintf -Wl,-wrap,sprintf)
+    sdk_add_link_options(
+        -Wl,-wrap,snprintf
+        -Wl,-wrap,sprintf
+        -Wl,-u,__wrap_snprintf
+        -Wl,-u,__wrap_sprintf
+    )
 
     if(CONFIG_STACK_SWITCH_CALL_SSCANF)
         sdk_library_add_sources(sscanf.c)

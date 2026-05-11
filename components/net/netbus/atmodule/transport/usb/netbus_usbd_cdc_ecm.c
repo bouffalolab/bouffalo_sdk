@@ -17,7 +17,6 @@
 #include <stdio.h>
 
 //#include "usb.h"
-#include "utils.h"
 
 #include "bflb_mtimer.h"
 #include "bflb_emac.h"

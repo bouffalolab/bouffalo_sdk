@@ -2119,12 +2119,21 @@ struct apm_probe_client_cfm
 };
 
 /// Structure containing the parameters of the @ref ME_RC_SET_RATE_REQ message.
+#define ME_RC_SET_RATE_FIXED_RATE_BIT      CO_BIT(0)
+#define ME_RC_SET_RATE_RETRY_MIN_RATE_BIT  CO_BIT(1)
+#define ME_RC_SET_RATE_RETRY_MAX_RATE_BIT  CO_BIT(2)
 struct me_rc_set_rate_req
 {
     /// Index of the station for which the fixed rate is requested
     uint8_t sta_idx;
+    /// Bitmap of fields to update
+    uint8_t update_flags;
     /// Fixed rate configuration
     uint16_t fixed_rate_cfg;
+    /// Minimum rate configuration for retry chain - 0xFFFF if disabled
+    uint16_t retry_min_rate_cfg;
+    /// Maximum rate configuration for retry chain - 0xFFFF if disabled
+    uint16_t retry_max_rate_cfg;
 };
 
 struct me_get_edca_req

@@ -10,6 +10,8 @@
 #ifndef AT_MAIN_H
 #define AT_MAIN_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -128,4 +130,3 @@ int at_workq_dowork(int eventid, int timeout);
 #endif
 
 #endif/* AT_MAIN_H */
-

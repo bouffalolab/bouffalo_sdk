@@ -25,6 +25,7 @@ void board_dvp_gpio_init(void);
 void board_dpi_gpio_init(void);
 void board_i2s_gpio_init(void);
 void board_timer_gpio_init(void);
+void board_canfd_gpio_init(int idx);
 
 #define BOARD_USB_VIA_GPIO
 void board_usb_gpio_init(void);

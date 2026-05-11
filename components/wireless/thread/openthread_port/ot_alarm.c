@@ -43,6 +43,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     assert(aT0 <= OT_ALARM_MAX_MILLI_SEC);
 
     zb_timer_stop(ZB_TIMER_THREAD_MS);
+    ot_alarm_timer_milli_sec_cnt = 0;
 
     tag = otrEnterCrit();
     current = ((uint64_t)zb_timer_get_current_time() << ZB_TIMER_BITNUM_PER_TICK) / 1000;
@@ -53,9 +54,14 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
         ot_alarm_timer_milli_sec_cnt = (delta + OT_ALARM_MAX_MILLI_SEC - 1) / OT_ALARM_MAX_MILLI_SEC;
     }
-    else {
-        otrNotifyEvent(OT_SYSTEM_EVENT_ALARM_MS_EXPIRED);
+
+    current = ((uint64_t)zb_timer_get_current_time() << ZB_TIMER_BITNUM_PER_TICK) / 1000;
+    if (current - aT0 >= aDt) {
+        zb_timer_stop(ZB_TIMER_THREAD_MS);
+        ot_alarm_timer_milli_sec_cnt = 0;
+        otPlatALarm_msTimerCallback();
     }
+
     otrExitCrit(tag);
 }
 
@@ -83,7 +89,7 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 ATTR_TCM_SECTION
-static void otPlatALarm_usTimerCallback(void) 
+static void otPlatALarm_usTimerCallback(void)
 {
     zb_timer_stop(ZB_TIMER_THREAD_US);
     otrNotifyEvent(OT_SYSTEM_EVENT_ALARM_US_EXPIRED);
@@ -99,11 +105,14 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     tag = otrEnterCrit();
     current = zb_timer_get_current_time() << ZB_TIMER_BITNUM_PER_TICK;
     if (current - aT0 < aDt) {
-        delta = (current - aT0 + aDt + (1 << ZB_TIMER_BITNUM_PER_TICK) / 2) >> ZB_TIMER_BITNUM_PER_TICK;
+        delta = ((uint64_t)(aDt - (current - aT0)) + (1 << ZB_TIMER_BITNUM_PER_TICK) / 2) >> ZB_TIMER_BITNUM_PER_TICK;
         zb_timer_start(ZB_TIMER_THREAD_US, zb_timer_get_current_time() + delta, otPlatALarm_usTimerCallback);
     }
-    else {
-        otrNotifyEvent(OT_SYSTEM_EVENT_ALARM_US_EXPIRED);
+
+    current = zb_timer_get_current_time() << ZB_TIMER_BITNUM_PER_TICK;
+    if (current - aT0 >= aDt) {
+        zb_timer_stop(ZB_TIMER_THREAD_US);
+        otPlatALarm_usTimerCallback();
     }
     otrExitCrit(tag);
 }
@@ -131,7 +140,7 @@ void ot_alarmTask(ot_system_event_t sevent)
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    if (OT_SYSTEM_EVENT_ALARM_US_EXPIRED & sevent) 
+    if (OT_SYSTEM_EVENT_ALARM_US_EXPIRED & sevent)
     {
         otPlatAlarmMicroFired(otrGetInstance());
     }

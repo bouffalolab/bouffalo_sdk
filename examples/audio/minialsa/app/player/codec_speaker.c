@@ -18,7 +18,6 @@ static xcodec_t codec;
 static xcodec_output_t codec_output_ch;
 
 static uint8_t g_start_run = 0;
-static uint32_t dma_ch_output_handle;
 
 static m_ringbuf_t loop_output_ring_buffer;
 
@@ -50,7 +49,6 @@ static void _codec_output_task(void *arg)
     }
 
     uint8_t *output_buf = NULL;
-    uint8_t *p_buf = NULL;
 
     output_buf = msp_malloc(OUTPUT_BUF_SIZE);
 

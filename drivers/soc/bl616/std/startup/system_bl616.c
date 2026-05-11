@@ -6,6 +6,8 @@
 #include "rv_hart.h"
 #include "rv_pmp.h"
 
+extern void sysinit_run_all(void);
+
 /* sf_ctrl_2 */
 #define SF_CTRL_2_OFFSET       (0x70)
 #define SF_CTRL_SF_IF_BK2_MODE (1 << 29U)
@@ -277,6 +279,8 @@ void System_Post_Init(void)
 #endif
 
     system_setup_xtal_config();
+
+    sysinit_run_all();
 
 #ifndef CONFIG_FREERTOS
     /* global IRQ enable */

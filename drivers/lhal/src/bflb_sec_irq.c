@@ -6,12 +6,86 @@ struct bflb_sec_irq_callback {
     void *arg;
 };
 
-#if defined(BL702) || defined(BL602) || defined(BL702L)
-#define BFLB_SEC_ENG_BASE ((uint32_t)0x40004000)
-#elif defined(BL616) || defined(BL616CL)  
-#define BFLB_SEC_ENG_BASE ((uint32_t)0x20004000)
-#elif  defined(BL618DG)
-#define BFLB_SEC_ENG_BASE ((uint32_t)0x20080000)
+#if defined(BL602)
+/* BL602 */
+#include "bl602_irq.h"
+#include "bl602_memorymap.h"
+
+#define BFLB_SEC_ENG_BASE                  SEC_ENG_BASE
+#define BFLB_SEC_ENG_IRQ_MODE_SOURCE_SPLIT 1
+#define BFLB_SEC_ENG_IRQ_SRC_GMAC          BL602_IRQ_SEC_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_CDET          BL602_IRQ_SEC_CDET
+#define BFLB_SEC_ENG_IRQ_SRC_PKA           BL602_IRQ_SEC_PKA
+#define BFLB_SEC_ENG_IRQ_SRC_TRNG          BL602_IRQ_SEC_TRNG
+#define BFLB_SEC_ENG_IRQ_SRC_AES           BL602_IRQ_SEC_AES
+#define BFLB_SEC_ENG_IRQ_SRC_SHA           BL602_IRQ_SEC_SHA
+
+#elif defined(BL702)
+/* BL702 */
+#include "bl702_irq.h"
+#include "bl702_memorymap.h"
+
+#define BFLB_SEC_ENG_BASE                  SEC_ENG_BASE
+#define BFLB_SEC_ENG_IRQ_MODE_SOURCE_SPLIT 1
+#define BFLB_SEC_ENG_IRQ_SRC_GMAC          BL702_IRQ_SEC_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_CDET          BL702_IRQ_SEC_CDET
+#define BFLB_SEC_ENG_IRQ_SRC_PKA           BL702_IRQ_SEC_PKA
+#define BFLB_SEC_ENG_IRQ_SRC_TRNG          BL702_IRQ_SEC_TRNG
+#define BFLB_SEC_ENG_IRQ_SRC_AES           BL702_IRQ_SEC_AES
+#define BFLB_SEC_ENG_IRQ_SRC_SHA           BL702_IRQ_SEC_SHA
+
+#elif defined(BL702L)
+/* BL702L */
+#include "bl702l_irq.h"
+#include "bl702l_memorymap.h"
+
+#define BFLB_SEC_ENG_BASE                  SEC_ENG_BASE
+#define BFLB_SEC_ENG_IRQ_MODE_SOURCE_SPLIT 1
+#define BFLB_SEC_ENG_IRQ_SRC_GMAC          BL702L_IRQ_SEC_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_CDET          BL702L_IRQ_SEC_CDET
+#define BFLB_SEC_ENG_IRQ_SRC_PKA           BL702L_IRQ_SEC_PKA
+#define BFLB_SEC_ENG_IRQ_SRC_TRNG          BL702L_IRQ_SEC_TRNG
+#define BFLB_SEC_ENG_IRQ_SRC_AES           BL702L_IRQ_SEC_AES
+#define BFLB_SEC_ENG_IRQ_SRC_SHA           BL702L_IRQ_SEC_SHA
+
+#elif defined(BL616)
+/* BL616 */
+#include "bl616_irq.h"
+#include "bl616_memorymap.h"
+
+#define BFLB_SEC_ENG_BASE                              SEC_ENG_BASE
+#define BFLB_SEC_ENG_IRQ_MODE_ID_SPLIT                 1
+#define BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID1 BL616_IRQ_SEC_ENG_ID1_SHA_AES_TRNG_PKA_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID0 BL616_IRQ_SEC_ENG_ID0_SHA_AES_TRNG_PKA_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_CDET_ID1                  BL616_IRQ_SEC_ENG_ID1_CDET
+#define BFLB_SEC_ENG_IRQ_SRC_CDET_ID0                  BL616_IRQ_SEC_ENG_ID0_CDET
+
+#elif defined(BL616CL)
+/* BL616CL */
+#include "bl616cl_irq.h"
+#include "bl616cl_memorymap.h"
+
+#define BFLB_SEC_ENG_BASE                              SEC_ENG_BASE
+#define BFLB_SEC_ENG_IRQ_MODE_ID_SPLIT                 1
+#define BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID1 BL616CL_IRQ_SEC_ENG_ID1_SHA_AES_TRNG_PKA_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID0 BL616CL_IRQ_SEC_ENG_ID0_SHA_AES_TRNG_PKA_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_CDET_ID1                  BL616CL_IRQ_SEC_ENG_ID1_CDET
+#define BFLB_SEC_ENG_IRQ_SRC_CDET_ID0                  BL616CL_IRQ_SEC_ENG_ID0_CDET
+
+#elif defined(BL618DG)
+/* BL618DG */
+#include "bl618dg_irq.h"
+#include "bl618dg_memorymap.h"
+
+#define BFLB_SEC_ENG_BASE                              SEC_ENG_BASE
+#define BFLB_SEC_ENG_IRQ_MODE_ID_SPLIT                 1
+#define BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID1 BL618DG_IRQ_SEC_ENG_ID1_SHA_AES_TRNG_PKA_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID0 BL618DG_IRQ_SEC_ENG_ID0_SHA_AES_TRNG_PKA_GMAC
+#define BFLB_SEC_ENG_IRQ_SRC_CDET_ID1                  BL618DG_IRQ_SEC_ENG_ID1_CDET
+#define BFLB_SEC_ENG_IRQ_SRC_CDET_ID0                  BL618DG_IRQ_SEC_ENG_ID0_CDET
+
+#else
+#error "No support SEC_IRQ for this chip"
 #endif
 
 struct bflb_sec_irq_callback sec_eng_callback[6];
@@ -133,38 +207,34 @@ void bflb_sec_irq_attach(uint8_t sec_type, void (*callback)(void *arg), void *ar
 {
     sec_eng_callback[sec_type].handler = callback;
     sec_eng_callback[sec_type].arg = arg;
-#if defined(BL702) || defined(BL602) || defined(BL702L)
-    bflb_irq_attach(25, sec_eng_isr, NULL);
-    bflb_irq_attach(26, sec_eng_isr, NULL);
-    bflb_irq_attach(27, sec_eng_isr, NULL);
-    bflb_irq_attach(28, sec_eng_isr, NULL);
-    bflb_irq_attach(29, sec_eng_isr, NULL);
-    bflb_irq_attach(30, sec_eng_isr, NULL);
-    bflb_irq_enable(25);
-    bflb_irq_enable(26);
-    bflb_irq_enable(27);
-    bflb_irq_enable(28);
-    bflb_irq_enable(29);
-    bflb_irq_enable(30);
-#elif (0 ) && (defined(CPU_M0) || defined(CPU_LP))
-    bflb_irq_attach(25, sec_eng_isr, NULL);
-    bflb_irq_attach(26, sec_eng_isr, NULL);
-    bflb_irq_attach(27, sec_eng_isr, NULL);
-    bflb_irq_attach(28, sec_eng_isr, NULL);
-    bflb_irq_enable(25);
-    bflb_irq_enable(26);
-    bflb_irq_enable(27);
-    bflb_irq_enable(28);
-#elif defined(BL616) || defined(BL616CL) || defined(BL618DG) 
-    bflb_irq_attach(25, sec_eng_isr, NULL);
-    bflb_irq_attach(26, sec_eng_isr, NULL);
-    bflb_irq_attach(27, sec_eng_isr, NULL);
-    bflb_irq_attach(28, sec_eng_isr, NULL);
-    bflb_irq_enable(25);
-    bflb_irq_enable(26);
-    bflb_irq_enable(27);
-    bflb_irq_enable(28);
+
+#if defined(BFLB_SEC_ENG_IRQ_MODE_SOURCE_SPLIT)
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_GMAC, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_CDET, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_PKA, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_TRNG, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_AES, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_SHA, sec_eng_isr, NULL);
+
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_GMAC);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_CDET);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_PKA);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_TRNG);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_AES);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_SHA);
+
+#elif defined(BFLB_SEC_ENG_IRQ_MODE_ID_SPLIT)
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID1, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID0, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_CDET_ID1, sec_eng_isr, NULL);
+    bflb_irq_attach(BFLB_SEC_ENG_IRQ_SRC_CDET_ID0, sec_eng_isr, NULL);
+
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID1);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_SHA_AES_TRNG_PKA_GMAC_ID0);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_CDET_ID1);
+    bflb_irq_enable(BFLB_SEC_ENG_IRQ_SRC_CDET_ID0);
 #endif
+
     bflb_sec_int_mask(sec_type, false);
 }
 

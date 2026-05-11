@@ -39,4 +39,5 @@ void btblecontroller_sys_reset(void);
 int btblecontroller_putchar(int c);
 #endif
 void btblecontroller_puts(const char *str);
+uint64_t btblecontroller_mtimer_get_time_us(void);
 #endif

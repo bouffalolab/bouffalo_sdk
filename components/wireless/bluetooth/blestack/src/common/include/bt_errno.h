@@ -21,9 +21,10 @@
 extern "C" {
 #endif
 
-
+#ifndef errno
 extern int *__errno(void);
 #define errno (*__errno())
+#endif
 
 /*
  * POSIX Error codes

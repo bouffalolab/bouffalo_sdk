@@ -197,8 +197,6 @@ int aui_channel_config(aui_ch_t *context, aui_cfg_t *config)
 
 static int _aui_rx_dma_link_destroy(aui_ch_t *context, void *dma)
 {
-    uint8_t dma_id, dma_ch;
-
     if (NULL == context) {
         user_log("error!\r\n");
         return -1;
@@ -206,8 +204,6 @@ static int _aui_rx_dma_link_destroy(aui_ch_t *context, void *dma)
 
     user_log("context = %p\r\n", context);
 
-    dma_id = context->ctrl_id;
-    dma_ch = context->ch_id;
     msp_free(context->priv);
 
     bflb_dma_channel_irq_detach(context->device_dma);
@@ -405,7 +401,6 @@ uint32_t aui_buffer_remain(aui_ch_t *context)
 uint32_t aui_buffer_reset(aui_ch_t *context)
 {
     int i;
-    uint8_t dma_id, dma_ch;
     uint32_t node_size = context->per_node_size;
 #if CODEC_INPUT_DEBUG_TRACE
     context->debug.count_reset++;
@@ -413,10 +408,7 @@ uint32_t aui_buffer_reset(aui_ch_t *context)
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
 
     user_log("context = %p\r\n", context);
-    dma_id = context->ctrl_id;
-    dma_ch = context->ch_id;
-
-     bflb_dma_channel_stop(context->device_dma);
+    bflb_dma_channel_stop(context->device_dma);
 
     for (i = 0; i < context->maxcount; i ++) {
         memset((void *)context->dma->node[i].dma_cfg.dst_addr, 0, node_size);

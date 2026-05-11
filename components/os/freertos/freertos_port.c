@@ -79,15 +79,13 @@ __attribute__((weak)) void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTime
     *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
 
-#ifndef _REENT_ONLY
 int *__errno()
 {
-    #if(configUSE_POSIX_ERRNO == 1)
+    //#if(configUSE_POSIX_ERRNO == 1)
       {
       extern int FreeRTOS_errno;
       return &FreeRTOS_errno;
       }
-    #endif
-    return &_REENT->_errno;
+    //#endif
+    //return &_REENT->_errno;
 }
-#endif

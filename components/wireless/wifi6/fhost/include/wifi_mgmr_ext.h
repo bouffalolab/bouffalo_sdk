@@ -1142,6 +1142,13 @@ int wifi_mgmr_sta_twt_teardown(twt_teardown_params_struct_t *twt_teardown_params
 int wifi_mgmr_sta_twt_statusget(struct twt_status_info *conf, uint8_t *twt_num);
 
 /**
+ * @brief Get active STA TWT flow count.
+ *
+ * @return Active TWT flow count, or 0 when TWT is not enabled.
+ */
+int wifi_mgmr_sta_twt_flow_get(void);
+
+/**
  * wifi_mgmr_sta_set_listen_itv
  * Set listen interval
  * return:
@@ -1332,22 +1339,96 @@ int wifi_mgmr_null_data_send(void);
  */
 int wifi_mgmr_psk_cal(char *password, const uint8_t *ssid, int ssid_len, char *output);
 
+/*
+ * Rate index constants for wifi_mgmr_rate_config fields.
+ */
+#define WIFI_RC_IDX_NO_UPDATE   (0)
+#define WIFI_RC_IDX_AUTO        (-1)
+
+/* 11b (CCK) */
+#define WIFI_RC_IDX_1M          (1)
+#define WIFI_RC_IDX_2M          (3)
+#define WIFI_RC_IDX_5M5         (5)
+#define WIFI_RC_IDX_11M         (7)
+
+/* 11g (OFDM) */
+#define WIFI_RC_IDX_6M          (8)
+#define WIFI_RC_IDX_9M          (9)
+#define WIFI_RC_IDX_12M         (10)
+#define WIFI_RC_IDX_18M         (11)
+#define WIFI_RC_IDX_24M         (12)
+#define WIFI_RC_IDX_36M         (13)
+#define WIFI_RC_IDX_48M         (14)
+#define WIFI_RC_IDX_54M         (15)
+
+/* 11n HT20 1SS LGI */
+#define WIFI_RC_IDX_HT20_MCS0   (16)
+#define WIFI_RC_IDX_HT20_MCS1   (20)
+#define WIFI_RC_IDX_HT20_MCS2   (24)
+#define WIFI_RC_IDX_HT20_MCS3   (28)
+#define WIFI_RC_IDX_HT20_MCS4   (32)
+#define WIFI_RC_IDX_HT20_MCS5   (36)
+#define WIFI_RC_IDX_HT20_MCS6   (40)
+#define WIFI_RC_IDX_HT20_MCS7   (44)
 /**
  * wifi_mgmr_rate_config
- * param: fixed_rate_cfg
+ * param:
+ *  cfg: pointer to rate config parameters
+ *
+ * Rate index values (used by fixed_rate_idx and retry_min_rate_idx):
  * 11ax: MCS9-893, MCS8-881, MCS7-869, MCS6-857, MCS5-845, MCS4-833, MCS3-821, MCS2-809, MCS1-797, MCS0-785;
  * 11n: MCS7-44, MCS6-40, MCS5-36, MCS4-32, MCS3-28, MCS2-24, MCS1-20, MCS0-16;
  * 11g: 54M-15, 48M-14, 36M-13, 24M-12, 18M-11, 12M-10, 9M-9, 6M-8;
  * 11b: 11M-7, 5.5M-5, 2M-3, 1M-1
  *
+ * retry_min_rate_idx only supports 11b/11g legacy rate (see WIFI_RC_IDX_1M ~ WIFI_RC_IDX_54M).
+ * Applies to all current peers:
+ * - STA mode: the connected AP peer
+ * - AP mode: all associated stations; if new STA connects, set again after association
+ *
+ * Example:
+ *  // set min rate = 6Mbps, keep fixed rate unchanged
+ *  wifi_mgmr_rate_config(&(struct wifi_mgmr_rate_config){
+ *      .fixed_rate_idx = WIFI_RC_IDX_NO_UPDATE,
+ *      .retry_min_rate_idx = WIFI_RC_IDX_6M,
+ *  });
+ *
+ *  // clear fixed rate, set min rate = 6Mbps
+ *  wifi_mgmr_rate_config(&(struct wifi_mgmr_rate_config){
+ *      .fixed_rate_idx = WIFI_RC_IDX_AUTO,
+ *      .retry_min_rate_idx = WIFI_RC_IDX_6M,
+ *  });
+ *
+ *  // set fixed rate = MCS4, min rate = 6Mbps
+ *  wifi_mgmr_rate_config(&(struct wifi_mgmr_rate_config){
+ *      .fixed_rate_idx = WIFI_RC_IDX_HT20_MCS4,
+ *      .retry_min_rate_idx = WIFI_RC_IDX_6M,
+ *  });
+ *
  * return:
  *  0 : Success
  *  -1 : Failed
- *  Others is Failed
- *0xFFFF: disable fixed rate
  */
-int wifi_mgmr_rate_config(uint16_t fixed_rate_cfg);
+struct wifi_mgmr_rate_config {
+    int fixed_rate_idx;         ///< > 0: set, WIFI_RC_IDX_NO_UPDATE(0): skip, WIFI_RC_IDX_AUTO(-1): clear
+    int retry_min_rate_idx;     ///< > 0: set, WIFI_RC_IDX_NO_UPDATE(0): skip, WIFI_RC_IDX_AUTO(-1): clear
+};
+
+int wifi_mgmr_rate_config(const struct wifi_mgmr_rate_config *cfg);
+
+
 int wifi_mgmr_rate_config_sta(uint16_t fixed_rate_cfg);
+
+/// Rate control parameters for RC_SET_RATE command
+struct fhost_rc_params {
+    uint8_t update_flags;       ///< ME_RC_SET_RATE_*_BIT bitmask
+    int fixed_rate_idx;         ///< >= 0: set rate, -1: auto/clear
+    uint8_t gi;                 ///< 0xFF: no change, else GI override for fixed rate
+    int retry_min_rate_idx;     ///< >= 0: set rate, -1: auto/clear
+    int retry_max_rate_idx;     ///< >= 0: set rate, -1: auto/clear
+};
+
+int fhost_rc_set_rate_sta(void *sta, const struct fhost_rc_params *params);
 
 /**
  * wifi_mgmr_set_ht40_enable

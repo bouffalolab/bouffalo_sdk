@@ -6,6 +6,8 @@
 #include "rv_hart.h"
 #include "rv_pmp.h"
 
+extern void sysinit_run_all(void);
+
 /* sf_ctrl_2 */
 #define SF_CTRL_2_OFFSET       (0x70)
 #define SF_CTRL_SF_IF_BK2_MODE (1 << 29U)
@@ -197,6 +199,8 @@ void System_Post_Init(void)
 {
     __cpu_post_init();
 
+    sysinit_run_all();
+
     PDS_Trim_RC32M();
 }
 
@@ -214,5 +218,7 @@ void SystemInit(void)
 void System_Post_Init(void)
 {
     __cpu_post_init();
+
+    sysinit_run_all();
 }
 #endif

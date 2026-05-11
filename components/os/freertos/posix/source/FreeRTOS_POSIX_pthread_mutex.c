@@ -34,9 +34,13 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "FreeRTOS_POSIX/errno.h"
+#include "errno.h"
 #include "FreeRTOS_POSIX/pthread.h"
-#include "FreeRTOS_POSIX/utils.h"
+#include "FreeRTOS_POSIX/posix_utils.h"
+
+#if defined( __GNUC__ )
+    #pragma GCC diagnostic ignored "-Waddress"
+#endif
 
 /**
  * @brief Initialize a PTHREAD_MUTEX_INITIALIZER mutex.

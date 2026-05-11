@@ -161,7 +161,7 @@ static void *heap5_allocator_malloc(struct mm_heap *heap, size_t size, uint32_t 
     alignment = heap5_allocator_get_alignment(flags);
     ptr = heap5_allocator_alloc_aligned(heap, size, alignment, flags);
 
-#if CONFIG_MM_ENABLE_STATISTICS
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     if (ptr != NULL) {
         heap->stats.alloc_count++;
     }
@@ -192,7 +192,7 @@ static void heap5_allocator_free(struct mm_heap *heap, void *ptr)
 
     heap5_free(heap5_handle, header->raw_ptr);
 
-#if CONFIG_MM_ENABLE_STATISTICS
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     heap->stats.free_count++;
 #endif
 }
@@ -299,6 +299,7 @@ const mm_allocator_t g_heap5_allocator = {
     .get_free_size = heap5_allocator_get_free_size,
 
     .get_usage_info = heap5_allocator_get_usage_info,
+    .walk_allocated_blocks = NULL,
 
     .validate_pool = NULL,
     .dump_pool = NULL,

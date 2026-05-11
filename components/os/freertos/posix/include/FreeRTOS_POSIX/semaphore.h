@@ -34,7 +34,7 @@
 #define _FREERTOS_POSIX_SEMAPHORE_H_
 
 /* FreeRTOS+POSIX includes. */
-#include "FreeRTOS_POSIX/time.h"
+#include "posix_time.h"
 #include "FreeRTOS_POSIX_types.h"
 
 #ifdef __cplusplus

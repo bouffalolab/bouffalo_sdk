@@ -29,3 +29,4 @@ CONFIG_LMAC154              	=y
 CONFIG_THREAD               	=y
 CONFIG_COREDUMP             	=y
 CONFIG_THREAD_TPERF         	=n
+CONFIG_LMAC154_DBG_ALL          =0

@@ -90,6 +90,54 @@ pm_enter_lp 0
 pm_enter_lp 1
 
 
+### Test TWT PDS15:
+
+1.Reset board
+
+2.Connect to a TWT-capable Wi-Fi 6 AP, and got ip.
+
+3.Setup TWT.
+
+The following setup requests a 32 ms service period and an 8 s wakeup interval:
+
+```bash
+wifi_mgmr_sta_twt_setup -s 1 -t 1 -e 9 -d 0 -n 125 -m 15625
+```
+
+Parameter calculation:
+
+```text
+Service period = 125 * 256 us = 32 ms
+Wakeup interval = 15625 << 9 us = 8000000 us = 8 s
+```
+
+4.Optional: check the negotiated TWT flow.
+
+```bash
+wifi_mgmr_sta_twt_statusget
+```
+
+5.Enter lowpower.
+
+```bash
+pm_enter_lp 0
+```
+
+6.Teardown TWT.
+
+Teardown all TWT flows:
+
+```bash
+wifi_mgmr_sta_twt_teardown -n 0 -a 1 -i 0
+```
+
+Or teardown a specified TWT flow after checking `flow_id` with `wifi_mgmr_sta_twt_statusget`:
+
+```bash
+wifi_mgmr_sta_twt_teardown -n 0 -a 0 -i <flow_id>
+```
+
+
 ### WiFi Benchmark：
 
 | Mode       | uA  |

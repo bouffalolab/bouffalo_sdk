@@ -1,6 +1,6 @@
 all:
-	make -C $(APP_NAME)_np BUILD_DIR=../$(BUILD_DIR)/np;				      \
-	make -C $(APP_NAME)_ap BUILD_DIR=../$(BUILD_DIR)/ap CONFIG_DUALCORE_NP_IMAGE=../np/build_out/$(APP_NAME)_$(CHIP)_np.bin;                                                                                     \
+	make -C $(APP_NAME)_np BUILD_DIR=../$(BUILD_DIR)/np CPU_ID=np;				      \
+	make -C $(APP_NAME)_ap BUILD_DIR=../$(BUILD_DIR)/ap CPU_ID=ap CONFIG_DUALCORE_NP_IMAGE=../np/build_out/$(APP_NAME)_$(CHIP)_np.bin;                                                                                     \
 	cp $(BUILD_DIR)/ap/build_out/$(APP_NAME)_$(CHIP)_ap.bin $(BUILD_DIR)/$(APP_NAME)_$(CHIP).bin
 
 clean:

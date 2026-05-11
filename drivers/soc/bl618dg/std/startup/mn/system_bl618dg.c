@@ -10,11 +10,14 @@
 #include <nmsis_core.h>
 #endif
 
+extern void sysinit_run_all(void);
+
 /* sf_ctrl_2 */
 #define SF_CTRL_2_OFFSET       (0x70)
 #define SF_CTRL_SF_IF_BK2_MODE (1 << 29U)
 #define SF_CTRL_SF_IF_BK2_EN   (1 << 30U)
 
+#ifndef CPU_NP /* for AP */
 static void Tzc_Sec_PSRAMB_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, uint32_t endAddr, uint8_t group)
 {
     uint32_t tmpVal = 0;
@@ -33,6 +36,7 @@ static void Tzc_Sec_PSRAMB_Access_Set_Not_Lock(uint8_t region, uint32_t startAdd
     //tmpVal |= 1<<(region+24);
     BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_PSRAMB_TZSRG_CTRL, tmpVal);
 }
+#endif
 
 #if 0
 static void Tzc_Sec_ROM_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
@@ -182,6 +186,7 @@ static void pmp_init(void)
 }
 #endif /* (!defined(CONFIG_PMP_NO_INIT) && !defined(CONFIG_BOOT2)) */
 
+#ifndef CPU_NP /* for AP */
 static void flash_bank2_access_init(void)
 {
     uint32_t reg_base = 0;
@@ -192,6 +197,7 @@ static void flash_bank2_access_init(void)
     regval |= SF_CTRL_SF_IF_BK2_MODE;
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
+#endif
 
 static void __cpu_pre_init(void)
 {
@@ -267,11 +273,19 @@ void SystemInit(void)
 
     BL_WR_REG(GLB_BASE, GLB_UART_CFG1, 0xffffffff);
     BL_WR_REG(GLB_BASE, GLB_UART_CFG2, 0x0000ffff);
+    /* make all slave unprotected */
+    *(volatile uint32_t *)0x2000033C = 0x0;
+
+    /* halt mini cpu as default */    
+    *(volatile uint32_t *)0x20000548 |= (1 << 3);
+
 }
 
 void System_Post_Init(void)
 {
     __cpu_post_init();
+
+    sysinit_run_all();
 
     PDS_Trim_RC32M();
 }
@@ -290,5 +304,7 @@ void SystemInit(void)
 void System_Post_Init(void)
 {
     __cpu_post_init();
+
+    sysinit_run_all();
 }
 #endif

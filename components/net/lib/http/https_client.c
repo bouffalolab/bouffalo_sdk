@@ -36,6 +36,7 @@ struct http_client {
     char                   *query;
 };
 
+#if !defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
 static bool host_is_ip_literal(const char *host)
 {
     ip_addr_t addr;
@@ -46,18 +47,30 @@ static bool host_is_ip_literal(const char *host)
 
     return ipaddr_aton(host, &addr) != 0;
 }
+#endif
 
 static int connect_https(struct http_client *client,
                          const char *ca_pem, size_t ca_len,
                          const char *client_cert_pem, size_t client_cert_len,
-                         const char *client_key_pem, size_t client_key_len)
+                         const char *client_key_pem, size_t client_key_len,
+                         int *socket)
 {
     https_wrapper_handle_t https = NULL;
+#if !defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
     http_wrapper_ssl_param_t ssl_param = {0};
+#endif
+
+    if (socket == NULL) {
+        return -EINVAL;
+    }
 
     if (strcasecmp(client->scheme, "http") == 0) {
         https = https_wrapper_connect(client->host, client->port, NULL);
     } else if (strcasecmp(client->scheme, "https") == 0) {
+#if defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
+        LOG_ERR("HTTPS client support is disabled\r\n");
+        return -ENOTSUP;
+#else
         ssl_param.ca_cert = ca_pem;
         ssl_param.ca_cert_len = ca_len;
         /* Only use SNI/hostname verification for DNS names. */
@@ -72,8 +85,18 @@ static int connect_https(struct http_client *client,
         ssl_param.private_cert_len = client_key_len;
 
         https = https_wrapper_connect(client->host, client->port, &ssl_param);
+#endif
+    } else {
+        LOG_ERR("Unsupported URL scheme: %s\r\n", client->scheme ? client->scheme : "(null)");
+        return -EPROTONOSUPPORT;
     }
-    return (int)https;
+
+    if (https == NULL) {
+        return -ECONNREFUSED;
+    }
+
+    *socket = (int)https;
+    return 0;
 }
 
 static void http_client_clean(struct http_client *client)
@@ -269,12 +292,12 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
         goto __end;
     }
 
-    client.socket = connect_https(&client,
-                                  request->ca_pem, request->ca_len,
-                                  request->client_cert_pem, request->client_cert_len,
-                                  request->client_key_pem, request->client_key_len);
-    if (!client.socket) {
-        ret = -ECONNREFUSED;
+    ret = connect_https(&client,
+                        request->ca_pem, request->ca_len,
+                        request->client_cert_pem, request->client_cert_len,
+                        request->client_key_pem, request->client_key_len,
+                        &client.socket);
+    if (ret < 0) {
         LOG_ERR("https connect failed, host=%s scheme=%s port=%d\r\n",
                 client.host ? client.host : "(null)",
                 client.scheme ? client.scheme : "(null)",

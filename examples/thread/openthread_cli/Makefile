@@ -4,11 +4,10 @@ BL_SDK_BASE ?= $(abspath  ./../../..)
 export BL_SDK_BASE
 
 BOARD ?= ${CHIP}dk
-CROSS_COMPILE ?= riscv64-unknown-elf-
-CONFIG_LMAC154_DBG ?= n
 
-OT_FTD ?= 1 
+OT_FTD ?= 1
 OT_SERIAL ?= SYS_CLI
+CONFIG_LMAC154_DBG ?= 0
 
 # add custom cmake definition
 cmake_definition+=-DOT_FTD=${OT_FTD}
@@ -20,6 +19,7 @@ ifeq ("$(OT_SERIAL)", "SYS_CLI")
 endif
 cmake_definition+=-DOT_SERIAL=${OT_SERIAL}
 
+cmake_definition+=-DCONFIG_LMAC154_DBG=${CONFIG_LMAC154_DBG}
 cmake_definition+=-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-proj-config.h\"
 cmake_definition+=-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-platform-config-check.h\"
 

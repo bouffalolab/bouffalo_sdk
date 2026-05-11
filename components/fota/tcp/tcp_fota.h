@@ -18,18 +18,36 @@
 extern "C" {
 #endif
 
+#define TCP_FOTA_DEFAULT_PORT "3365" /**< Default OTA server port */
+
+#ifndef CONFIG_FOTA_TCP_RETRY_CNT_MAX
+#define CONFIG_FOTA_TCP_RETRY_CNT_MAX 10
+#endif
+
+#ifndef CONFIG_FOTA_TCP_RETRY_DELAY_MS
+#define CONFIG_FOTA_TCP_RETRY_DELAY_MS 1000
+#endif
+
+#ifndef CONFIG_FOTA_TCP_TASK_STACK_SIZE
+#define CONFIG_FOTA_TCP_TASK_STACK_SIZE 2048
+#endif
+
+#ifndef CONFIG_FOTA_TCP_TASK_PRIORITY
+#define CONFIG_FOTA_TCP_TASK_PRIORITY 20
+#endif
+
 /**
  * @brief TCP FOTA operation status codes
  */
 typedef enum {
-    TCP_FOTA_SUCCESS = 0,           /**< Operation completed successfully */
-    TCP_FOTA_START,                 /**< FOTA process started */
-    TCP_FOTA_SERVER_CONNECT_FAIL,   /**< Failed to connect to server */
-    TCP_FOTA_PROCESS_TRANSFER,      /**< Firmware transfer in progress */
-    TCP_FOTA_TRANSFER_FINISH,       /**< Firmware transfer completed */
-    TCP_FOTA_IMAGE_VERIFY,          /**< Firmware image verification started */
-    TCP_FOTA_IMAGE_VERIFY_FAIL,     /**< Firmware image verification failed */
-    TCP_FOTA_ABORT,                 /**< FOTA process aborted */
+    TCP_FOTA_SUCCESS = 0,         /**< Operation completed successfully */
+    TCP_FOTA_START,               /**< FOTA process started */
+    TCP_FOTA_SERVER_CONNECT_FAIL, /**< Failed to connect to server */
+    TCP_FOTA_PROCESS_TRANSFER,    /**< Firmware transfer in progress */
+    TCP_FOTA_TRANSFER_FINISH,     /**< Firmware transfer completed */
+    TCP_FOTA_IMAGE_VERIFY,        /**< Firmware image verification started */
+    TCP_FOTA_IMAGE_VERIFY_FAIL,   /**< Firmware image verification failed */
+    TCP_FOTA_ABORT,               /**< FOTA process aborted */
 } tcp_fota_status_t;
 
 /**
@@ -39,16 +57,12 @@ typedef enum {
  */
 typedef void (*pfn_tcp_fota_t)(void *arg, tcp_fota_status_t event);
 
-#define TCP_FOTA_DEFAULT_PORT       "3365"  /**< Default OTA server port */
-#define TCP_FOTA_MAX_RETRY          10      /**< Max connection retry count */
-#define TCP_FOTA_RETRY_DELAY_MS     1000    /**< Delay between retries in ms */
-
 /**
  * @brief Configuration structure for TCP FOTA
  */
 struct tcp_fota_config {
-    pfn_tcp_fota_t callback;        /**< Status callback function */
-    void *user_arg;                 /**< User context passed to callback */
+    pfn_tcp_fota_t callback; /**< Status callback function */
+    void *user_arg;          /**< User context passed to callback */
 };
 
 /** Opaque handle for TCP FOTA session */

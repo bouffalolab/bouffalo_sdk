@@ -20,8 +20,10 @@ release_list = [
 [r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk CONFIG_ANTI_ROLLBACK=y CONFIG_DEBUG=y',"bl616","debug"],
 [r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CONFIG_DEBUG=n',"bl618dg","release"],
 [r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CONFIG_DEBUG=y',"bl618dg","debug"],
-[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=n',"bl616cl","release"],
-[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_DEBUG=y',"bl616cl","debug"],
+[r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CPU_MODEL=b0 CONFIG_DEBUG=n',"bl618dg_b0","release","bl618dg"],
+[r'make clean;make CHIP=bl618dg CPU_ID=ap BOARD=bl618dgdk CPU_MODEL=b0 CONFIG_DEBUG=y',"bl618dg_b0","debug","bl618dg"],
+[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_ANTI_ROLLBACK=y CONFIG_DEBUG=n',"bl616cl","release"],
+[r'make clean;make CHIP=bl616cl BOARD=bl616cldk CONFIG_ANTI_ROLLBACK=y CONFIG_DEBUG=y',"bl616cl","debug"],
 ]
 
 def zipDir(dirpath,outFullName):
@@ -69,14 +71,15 @@ def boot2_release(cmd, ver):
     target_dir = f'boot2_isp_{cmd[1]}_v{ver}'
     for root, dirs, files in os.walk("./build/build_out", topdown=False):
         for file in files:
-            if file.endswith(".bin") and cmd[1] in file and "boot2_isp" in file:
+            match_chip = cmd[3] if len(cmd) > 3 else cmd[1]
+            if file.endswith(".bin") and match_chip in file and "boot2_isp" in file:
                 src = os.path.join(root, file)
                 dest = os.path.join(
                     target_dir,
                     f'boot2_{cmd[1]}_isp_{cmd[2]}_v{ver}.bin'
                 )
                 shutil.copy(src, dest)
-                print(f"Copied: {src} -> {dest}\\n")
+                print(f"Copied: {src} -> {dest}\n")
                 return
 
 def get_release_ver(chip):
@@ -103,7 +106,7 @@ def get_latest_boot2_tag():
     get latest boot2_* tag info (tag, chip, ver)
     eg: boot2_{chip}_v{ver}
     """
-    git_cmd = "git tag | grep '^boot2_' | sort | tail -n 1"
+    git_cmd = "git tag --sort=-creatordate -l 'boot2_*' | head -n 1"
     print("get latest boot2 tag")
     try:
         output = subprocess.check_output(git_cmd, shell=True, text=True).strip()
@@ -115,7 +118,7 @@ def get_latest_boot2_tag():
         print("no boot2 tag found")
         return None, None, None
 
-    m = re.match(r'^boot2_([a-z0-9]+)_v(.+)$', output, re.IGNORECASE)
+    m = re.match(r'^boot2_(.+)_v(.+)$', output, re.IGNORECASE)
     if not m:
         print(f"tag '{output}' does not match expected pattern 'boot2_{'{chip}'}_v{{ver}}'")
         return output, None, None

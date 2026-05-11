@@ -3,4 +3,6 @@
 
 #include "macsw.h"
 
+int twt_get_flow_num(void);
+
 #endif /*__BL_FW_API_H__*/

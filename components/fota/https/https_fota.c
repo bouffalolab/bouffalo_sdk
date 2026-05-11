@@ -32,14 +32,13 @@
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 #endif
 
-#define HTTPS_FOTA_STATUS_CALLBACK(handle, s)                 \
-        if (handle->status != s) {                            \
-            handle->status  = s;                              \
-            if (handle->cb) {                                 \
-                handle->cb(handle->cb_arg, handle->status);   \
-            }                                                 \
-        }
-
+#define HTTPS_FOTA_STATUS_CALLBACK(handle, s)           \
+    if (handle->status != s) {                          \
+        handle->status = s;                             \
+        if (handle->cb) {                               \
+            handle->cb(handle->cb_arg, handle->status); \
+        }                                               \
+    }
 
 struct https_fota {
     const char *url;
@@ -100,8 +99,8 @@ static int __attribute__((unused)) payload_cb(int sock, struct http_request *req
 }
 
 static void response_cb(struct http_response *rsp,
-			enum http_final_call final_data,
-			void *user_data)
+                        enum http_final_call final_data,
+                        void *user_data)
 {
     struct https_fota *fota = (struct https_fota *)user_data;
     int ret;
@@ -153,7 +152,6 @@ static void response_cb(struct http_response *rsp,
     }
 }
 
-
 static void fota_service_start(void *arg)
 {
     int ret;
@@ -172,15 +170,15 @@ static void fota_service_start(void *arg)
     req.client_cert_len = fota->config.client_cert_len;
     req.client_key_pem = fota->config.client_key_pem;
     req.client_key_len = fota->config.client_key_len;
-    req.buffer_size = HTTPS_FOTA_BUFFER_SIZE;
+    req.buffer_size = CONFIG_FOTA_HTTPS_BUFFER_SIZE;
     req.cancel = https_fota_cancel_requested;
 
-    fota->file_size      = 0;
+    fota->file_size = 0;
     fota->abort_requested = 0;
     fota->trailing_fragment_logged = 0;
     fota->last_error = 0;
     HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_START)
-    ret = https_client_request(&req, HTTPS_FOTA_REQUEST_TIMEOUT_MS, fota);
+    ret = https_client_request(&req, CONFIG_FOTA_HTTPS_REQUEST_TIMEOUT_MS, fota);
     if (ret < 0 && !fota->abort_requested) {
         LOG_E("FOTA http request fail ret:%d\r\n", ret);
         HTTPS_FOTA_STATUS_CALLBACK(fota, HTTPS_FOTA_SERVER_CONNECTE_FAIL)
@@ -243,28 +241,28 @@ int https_fota_start(https_fota_handle_t fota)
 {
     int ret = 0;
 
-    ret = xTaskCreate(fota_service_start, "fota_service", 2048, (void *)fota, 10, NULL);
+    ret = xTaskCreate(fota_service_start, "fota_service", CONFIG_FOTA_HTTPS_TASK_STACK_SIZE, (void *)fota, CONFIG_FOTA_HTTPS_TASK_PRIORITY, NULL);
     if (ret != pdPASS) {
         LOG_E("FOTA start fail ret:%d\r\n", ret);
         return -1;
     }
 
-	return 0;
+    return 0;
 }
 
 int https_fota_callback_register(https_fota_handle_t fota, pfn_https_fota_t pfn, void *arg)
 {
-	struct https_fota *https_fota = (struct https_fota *)fota;
+    struct https_fota *https_fota = (struct https_fota *)fota;
 
-	https_fota->cb = pfn;
-	https_fota->cb_arg = arg;
-	return 0;
+    https_fota->cb = pfn;
+    https_fota->cb_arg = arg;
+    return 0;
 }
 
 int https_fota_finish(https_fota_handle_t fota, bool reboot)
 {
     int ret = 0;
-	struct https_fota *https_fota = (struct https_fota *)fota;
+    struct https_fota *https_fota = (struct https_fota *)fota;
 
     if (https_fota->status != HTTPS_FOTA_TRANSFER_FINISH) {
         LOG_E("Transmission not completed\r\n");
@@ -288,7 +286,7 @@ __end:
 
 int https_fota_abort(https_fota_handle_t fota)
 {
-	struct https_fota *https_fota = (struct https_fota *)fota;
+    struct https_fota *https_fota = (struct https_fota *)fota;
 
     ota_abort(https_fota->ota);
     free((void *)https_fota->url);

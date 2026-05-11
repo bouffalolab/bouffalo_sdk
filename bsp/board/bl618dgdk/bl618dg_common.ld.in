@@ -14,25 +14,55 @@
 
 /* 4M */
 #ifndef CONFIG_FLASH_XIP_ADDRESS
+#ifdef CPU_MODEL_A0
 #define CONFIG_FLASH_XIP_ADDRESS 0x80000000
+#else
+#define CONFIG_FLASH_XIP_ADDRESS 0xB0000000
+#endif
 #endif
 #ifndef CONFIG_FLASH_XIP_LENGTH
 #define CONFIG_FLASH_XIP_LENGTH 4096 * 1024
 #endif
 
 /* 4M */
+#ifdef CPU_MODEL_A0
 #define CONFIG_PSRAM_ADDRESS 0x88000000
+#else
+#define CONFIG_PSRAM_ADDRESS 0xB8000000
+#endif
 #ifndef CONFIG_PSRAM_LENGTH
 #define CONFIG_PSRAM_LENGTH 4096 * 1024
 #endif
 
 /* 320K */
+#ifdef CPU_MODEL_A0
 #define CONFIG_WRAM_ADDRESS 0x21050000
+#else
+#define CONFIG_WRAM_ADDRESS 0x21070000
+#endif
 #define CONFIG_WRAM_LENGTH 320 * 1024
 
+#if(CONFIG_DVP_RASTER)
+#ifdef CPU_MODEL_A0
+/* 192K */
+#define CONFIG_RAM_ADDRESS 0x61020000
+#define CONFIG_RAM_LENGTH 192 * 1024
+#else
+/* 320K */
+#define CONFIG_RAM_ADDRESS 0xA1020000
+#define CONFIG_RAM_LENGTH 320 * 1024
+#endif
+#else
+#ifdef CPU_MODEL_A0
 /* 320K */
 #define CONFIG_RAM_ADDRESS 0x61000000
 #define CONFIG_RAM_LENGTH 320 * 1024
+#else
+/* 448K */
+#define CONFIG_RAM_ADDRESS 0xA1000000
+#define CONFIG_RAM_LENGTH 448 * 1024
+#endif
+#endif
 
 /* 0K */
 #ifndef CONFIG_WRAM_FOR_AP_SIZE
@@ -146,8 +176,8 @@ SECTIONS
 
         . = ORIGIN(rom_header) + 512;
         __multi_bins__ = ABSOLUTE(.);
-        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_start__ + LENGTH(fw_header) + LENGTH(rom_header))
         __dualcore_images__ = ABSOLUTE(.) + 12;
+        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_start__ + LENGTH(fw_header) + LENGTH(rom_header))
         LONG(0x0000504E) LONG(0x00000000) /*NP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x0000504C) LONG(0x00000000) /*LP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
@@ -300,6 +330,13 @@ SECTIONS
         . = ALIGN(4);
     } > ram AT > rom
 
+    SECTION_DATA_PROLOGUE(ram_tdata, ,)
+    {
+        . = ALIGN(4);
+        *(.tdata)
+        *(.tdata.*)
+    } > ram AT >rom
+
     SECTION_DATA_PROLOGUE(ram_data, ,)
     {
         . = ALIGN(4);
@@ -331,6 +368,13 @@ SECTIONS
         . = ALIGN(4);
         __bflb_log_tags_end__ = .;
     } > ram AT > rom
+
+    SECTION_BSS_PROLOGUE(ram_tbss, (NOLOAD),)
+    {
+        *(.tbss)
+        *(.tbss.*)
+        *(.tcommon)
+    } >ram
 
     SECTION_BSS_PROLOGUE(ram_bss, (NOLOAD),)
     {
@@ -368,8 +412,10 @@ SECTIONS
         . = ALIGN(4);
     } > ram
 
+#if CONFIG_FLASH_XIP_ADDRESS
     __HeapBase = ABSOLUTE(.);
     __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
+#endif
     GROUP_END(ram)
 
 
@@ -520,6 +566,12 @@ SECTIONS
         . = ALIGN(4);
         __usbh_class_info_end__ = .;
 
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+
         *(.srodata*)
 
         /* global object for c++ */
@@ -554,4 +606,16 @@ SECTIONS
     } > rom
 #endif
     GROUP_END(rom)
+
+#if !CONFIG_FLASH_XIP_ADDRESS
+    /* In RAM-only images, "rom" is aliased onto RAM, so the heap must start
+     * after the linked code/data image to avoid corrupting .text/.rodata.
+     */
+    __HeapBase = ABSOLUTE(ALIGN(., 64));
+    __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
+#endif
+
+    /DISCARD/ : {
+        *(.riscv.attributes)
+    }
 }

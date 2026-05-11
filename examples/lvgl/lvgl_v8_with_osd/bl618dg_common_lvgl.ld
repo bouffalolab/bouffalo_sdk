@@ -473,6 +473,12 @@ SECTIONS
         . = ALIGN(4);
         __usbh_class_info_end__ = .;
 
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+
         *(.srodata*)
 
         /* global object for c++ */

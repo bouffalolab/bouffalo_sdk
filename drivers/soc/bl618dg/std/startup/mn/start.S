@@ -132,10 +132,6 @@ cpu_np_start:
     call SystemInit_NP
     
     call np_board_main
-
-    lui	a5,0x20000
-    li	a4,-1
-    sw	a4,1352(a5) # 20000548 <remain_wifi_ram+0x1ffe0548>
 cpu_np_loop:
     j      cpu_np_loop
 #endif

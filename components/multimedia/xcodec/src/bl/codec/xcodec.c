@@ -16,6 +16,10 @@
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
 #include <bflb_i2s.h>
 #endif
+#if defined(BL616) && defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+#include "bl616_glb.h"
+#include "hardware/i2s_reg.h"
+#endif
 #include <xutils/xringbuffer.h>
 #include <msp/kernel.h>
 #include <msp_port.h>
@@ -51,10 +55,12 @@
 #define XCODEC_INPUT_TASK_STACK_SIZE    (8192)
 #define XCODEC_INPUT_EVENT_TIMEROUT     (20)
 
+#ifndef DMA_BASE
 #ifdef BL618DG
 #define DMA_BASE 0x20081000
 #elif defined(BL616) || defined(BL616CL)
 #define DMA_BASE 0x2000c000
+#endif
 #endif
 
 static uint32_t xcodec_default_slot_width(uint32_t bit_width)
@@ -90,6 +96,10 @@ static uint32_t xcodec_normalize_slot_width(uint32_t bit_width, uint32_t slot_wi
 static aui_ch_t rx_context;
 static struct bflb_device_s *audac_dev = NULL;
 static uint32_t g_xcodec_output_clock_mhz;
+
+#if defined(BL616) && defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+static void xcodec_try_apply_i2s_output_clock(uint32_t freq_mHz);
+#endif
 
 #ifndef CONFIG_CODEC_USE_I2S
 int codec_aupwm_pinmux_config(uint8_t pin)
@@ -542,9 +552,15 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
 
     if (ret) {
         return XCODEC_ERROR;
-    } else {
-        return XCODEC_OK;
     }
+
+#if defined(BL616)
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+    xcodec_try_apply_i2s_output_clock(g_xcodec_output_clock_mhz);
+#endif
+#endif
+
+    return XCODEC_OK;
 }
 
 void xcodec_tx_user_cb(auo_ch_t *context, audio_codec_event_t event, void *arg)
@@ -778,10 +794,84 @@ xcodec_error_t xcodec_output_get_timing_info(xcodec_output_timing_info_t *info)
     return XCODEC_OK;
 }
 
+#if defined(BL616)
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+#define SDMIN_FACTOR    (204.8f)
+#define AUPLL_OTHER_DIV (20)        //AUDIO PLL is set to 491.52M,  aupll_other clock source 491.52M /20 = 24.576M
+
+static uint8_t Clock_I2S_Div_Get(void)
+{
+    uint32_t tmpVal = BL_RD_REG(GLB_BASE, GLB_I2S_CFG0);
+    return (uint8_t)BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_REF_CLK_DIV);
+}
+
+static uint32_t Clock_I2S_BCLK_Div_Get(void)
+{
+    uint32_t reg = BL_RD_WORD(I2S_BASE + I2S_BCLK_CONFIG_OFFSET);
+    uint32_t div_l = (reg & I2S_CR_BCLK_DIV_L_MASK) >> I2S_CR_BCLK_DIV_L_SHIFT;
+    uint32_t div_h = (reg & I2S_CR_BCLK_DIV_H_MASK) >> I2S_CR_BCLK_DIV_H_SHIFT;
+    return div_l + div_h;
+}
+
+static void xcodec_try_apply_i2s_output_clock(uint32_t freq_mHz)
+{
+    uint32_t slot_width;
+    uint32_t sound_channel_num;
+    uint32_t sample_rate_hz;
+    uint32_t frame_slots;
+    uint32_t sdmin;
+    uint8_t i2s_div;
+    uint32_t i2s_bclk_div;
+    double vco_Mhz;
+    int has_mutex;
+
+    if (freq_mHz == 0U) {
+        return;
+    }
+
+    has_mutex = msp_mutex_is_valid(&tx_context.mutex);
+    if (has_mutex) {
+        msp_mutex_lock(&(tx_context.mutex), MSP_WAIT_FOREVER);
+    }
+
+    sample_rate_hz = tx_context.sample_rate_hz;
+    slot_width = tx_context.slot_width;
+    sound_channel_num = tx_context.sound_channel_num;
+
+    if (has_mutex) {
+        msp_mutex_unlock(&(tx_context.mutex));
+    }
+
+    if ((sample_rate_hz == 0U) || (slot_width == 0U) || (sound_channel_num == 0U)) {
+        return;
+    }
+
+    frame_slots = (sound_channel_num == 1U) ? 2U : sound_channel_num;
+    i2s_div = Clock_I2S_Div_Get() + 1U;
+    i2s_bclk_div = Clock_I2S_BCLK_Div_Get() + 2U;
+
+    /* GLB_AUDIO_PLL_fine_tuning_sdmin() expects:
+     *   sdmin = vco_frequency(MHz) * 204.8
+     * while freq_mHz here carries the requested sample rate in milli-Hz.
+     */
+    vco_Mhz = ((double)freq_mHz * (double)slot_width * (double)frame_slots *
+               (double)i2s_bclk_div * (double)i2s_div * (double)AUPLL_OTHER_DIV) / 1000000000.0;
+    sdmin = (uint32_t)(vco_Mhz * SDMIN_FACTOR + 0.5);
+    GLB_AUDIO_PLL_fine_tuning_sdmin(sdmin);
+}
+#endif
+#endif
+
 xcodec_error_t xcodec_set_audio_output_clock_mHz(uint32_t freq_mHz)
 {
     g_xcodec_output_clock_mhz = freq_mHz;
     tx_context.clock_freq_mhz = freq_mHz;
+
+#if defined(BL616)
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+    xcodec_try_apply_i2s_output_clock(freq_mHz);
+#endif
+#endif
 
     return XCODEC_OK;
 }

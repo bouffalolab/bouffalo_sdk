@@ -76,6 +76,7 @@ endif
 
 # USB
 ifeq ($(CONFIG_NETHUB_PROFILE_USB),y)
+    CONFIG_BSP_USB                  =y
     CONFIG_CHERRYUSB                =y
     CONFIG_CHERRYUSB_DEVICE         =y
     CONFIG_CHERRYUSB_DEVICE_CDC     =y

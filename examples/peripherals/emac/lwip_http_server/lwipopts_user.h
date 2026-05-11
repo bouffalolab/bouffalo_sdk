@@ -128,8 +128,6 @@ a lot of data that needs to be copied, this should be set high. */
 
 #define LWIP_ERRNO_STDINCLUDE    1
 // #define LWIP_SOCKET_SET_ERRNO     1
-extern int *__errno(void);
-#define errno                    (*__errno())
 
 /* ---------- link callback options ---------- */
 /* LWIP_NETIF_LINK_CALLBACK==1: Support a callback function from an interface

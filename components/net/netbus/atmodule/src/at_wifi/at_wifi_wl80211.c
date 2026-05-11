@@ -17,7 +17,7 @@ extern int at_wifi_main_init(void);
 #include <timers.h>
 #include "wl80211.h"
 #include "wifi_mgmr.h"
-#include "supplicant_api.h"
+#include "supplicant.h"
 #include "bl_wpa.h"
 #include "async_event.h"
 #include <lwip/etharp.h>

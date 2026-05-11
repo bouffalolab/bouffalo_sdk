@@ -65,6 +65,8 @@ void wifi_mgmr_ap_acl_set_cmd(int argc, char **argv);
 void wifi_mgmr_ap_acl_enable_cmd(int argc, char **argv);
 void cmd_wifi_stats(int argc, char **argv);
 void cmd_wifi_get_tx_remaining(int argc, char *argv[]);
+void cmd_wifi_power_get(int argc, char **argv);
+void cmd_wifi_channel_get(int argc, char **argv);
 #ifdef CONFIG_ANTDIV_STATIC
 void wifi_antenna_scan_cmd(int argc, char *argv[]);
 void wifi_antenna_scan_connect_cmd(int argc, char *argv[]);

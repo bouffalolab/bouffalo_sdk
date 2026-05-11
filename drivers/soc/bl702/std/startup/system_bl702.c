@@ -25,6 +25,8 @@
 #include "bl702_aon.h"
 #include <arch/risc-v/e24/clic.h>
 
+extern void sysinit_run_all(void);
+
 void SystemInit(void)
 {
     uint32_t *p;
@@ -109,6 +111,9 @@ void System_Post_Init(void)
 {
     PDS_Trim_RC32M();
     HBN_Trim_RC32K();
+
+    sysinit_run_all();
+
     /* global IRQ enable */
     __enable_irq();
 }

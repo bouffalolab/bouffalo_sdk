@@ -88,6 +88,13 @@ SECTIONS
         *(.rodata.*)
         *(.srodata)
         *(.srodata.*)
+
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+
         *(.tcm_code.*)
         *(.tcm_const.*)
         *(.sclock_rlt_code.*)

@@ -8,7 +8,7 @@ string(TOUPPER "${CHIP}" upper_case_chip)
 
 sdk_add_compile_definitions(-DOPENTHREAD_CONFIG_PLATFORM_INFO=\"${upper_case_chip}\")
 
-if ("${CONFIG_LMAC154_DBG}")
+if (${CONFIG_LMAC154_DBG})
     sdk_add_compile_definitions(-DAPP_PRINT=lmac154_dbg_trace)
 else()
     sdk_add_compile_definitions(-DAPP_PRINT=printf)

@@ -5,7 +5,6 @@ export BL_SDK_BASE
 
 CHIP ?= bl616
 BOARD ?= bl616dk
-CROSS_COMPILE ?= riscv64-unknown-elf-
 MACSW_CONFIG_SELECT ?= default
 
 # add custom cmake definition

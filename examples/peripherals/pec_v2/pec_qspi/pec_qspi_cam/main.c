@@ -63,8 +63,8 @@ int main(void)
     config.dst_req = DMA_REQUEST_NONE;
     config.src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
     config.dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
-    config.src_burst_count = DMA_BURST_INCR4;
-    config.dst_burst_count = DMA_BURST_INCR4;
+    config.src_burst_count = DMA_BURST_INCR8;
+    config.dst_burst_count = DMA_BURST_INCR8;
     config.src_width = DMA_DATA_WIDTH_16BIT;
     config.dst_width = DMA_DATA_WIDTH_16BIT;
     bflb_dma_channel_init(dma0_ch0, &config);

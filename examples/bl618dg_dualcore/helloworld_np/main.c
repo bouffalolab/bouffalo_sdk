@@ -11,7 +11,6 @@ extern void shell_init_with_task(struct bflb_device_s *shell);
 
 int main(void)
 {
-    int ch;
     board_init();
     configASSERT((configMAX_PRIORITIES > 4));
     uart0 = bflb_device_get_by_name("uart1");

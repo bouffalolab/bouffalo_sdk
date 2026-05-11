@@ -547,7 +547,6 @@ int auo_stop(auo_ch_t *context)
 
 int auo_pause(auo_ch_t *context)
 {
-    uint32_t val;
 #if CODEC_OUTPUT_DEBUG_TRACE
     context->debug.count_pause++;
 #endif

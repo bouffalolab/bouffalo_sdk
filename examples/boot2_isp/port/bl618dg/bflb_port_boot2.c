@@ -56,12 +56,24 @@
 void hal_boot2_init_clock(void)
 {
     GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL | GLB_PLL_CPUPLL);
+#if defined(CPU_MODEL_A0)
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
     HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
     GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_CPUPLL_DIV1, 0, 2);
+#else
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_CPUPLL_DIV1);
+    HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
+    GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2, 0, 1);
+#endif
     GLB_Set_WL_XCLK_Sel(GLB_WL_MCU_XCLK_XTAL);
+#if !defined(CPU_MODEL_A0)
+    /* RC32M=32M */
+    AON_Set_RC32M_Speed_As_8M(0);
+#else
+    /* RC32M=32M */
     //AON_Set_RC32M_Speed_As_8M(0);
     *(volatile uint32_t *)(0x2008F994) = 0x5A000000;
+#endif
 
     CPU_Reset_MTimer();
     /* set mtimer clock 1M */
@@ -228,7 +240,7 @@ uint8_t hal_boot2_psram_rw_check(void)
 *******************************************************************************/
 static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num, uint16_t *psram_id)
 {
-    int16_t before_ef = 0;
+    //int16_t before_ef = 0;
     int32_t left_flag = 0, right_flag = 0, c_val = 0;
     int32_t dqs_win_min = 16, dqs_win_max = 0;
     uint32_t temp_min = 16;
@@ -257,7 +269,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num, uint1
 #ifdef CONFIG_DEBUG
     printf("r ef:0x%08lx\r\n", g_efuse_cfg.psram_dqs_cfg);
 #endif
-    before_ef = g_efuse_cfg.psram_dqs_cfg;
+    //before_ef = g_efuse_cfg.psram_dqs_cfg;
     if (g_efuse_cfg.psram_dqs_cfg != 0xffff) {
         left_flag = ((g_efuse_cfg.psram_dqs_cfg & (0xf0)) >> 0x4);
         right_flag = (g_efuse_cfg.psram_dqs_cfg & (0xf));
@@ -494,7 +506,11 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
 void hal_boot2_reset_sec_eng(void)
 {
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SEC_ENG);
+#if defined(CPU_MODEL_A0)
     GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_160M);
+#else
+    GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_320M);
+#endif
 }
 
 /****************************************************************************/ /**

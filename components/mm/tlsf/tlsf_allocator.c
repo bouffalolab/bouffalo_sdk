@@ -140,7 +140,7 @@ static void *tlsf_allocator_malloc(struct mm_heap *heap, size_t size, uint32_t f
     }
 
     /* Update heap-level statistics - optional */
-#if CONFIG_MM_ENABLE_STATISTICS
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     if (ptr != NULL) {
         heap->stats.alloc_count++;
     }
@@ -176,7 +176,7 @@ static void tlsf_allocator_free(struct mm_heap *heap, void *ptr)
     tlsf_free(tlsf_handle, ptr);
 
     /* Update heap-level statistics - optional */
-#if CONFIG_MM_ENABLE_STATISTICS
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     heap->stats.free_count++;
 #endif
 

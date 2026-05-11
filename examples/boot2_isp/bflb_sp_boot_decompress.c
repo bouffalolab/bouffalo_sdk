@@ -138,6 +138,32 @@ static int32_t bflb_sp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_a
         if (ret == XZ_OK) {
             continue;
         }
+
+        if (ret != XZ_STREAM_END) {
+            switch (ret) {
+                case XZ_MEM_ERROR:
+                    goto error;
+
+                case XZ_MEMLIMIT_ERROR:
+                    goto error;
+
+                case XZ_FORMAT_ERROR:
+                    BOOT2_MSG("Not a .xz file\r\n");
+                    goto error;
+
+                case XZ_OPTIONS_ERROR:
+                    goto error;
+
+                case XZ_DATA_ERROR:
+                case XZ_BUF_ERROR:
+                    BOOT2_MSG("File is corrupt\r\n");
+                    goto error;
+
+                default:
+                    BOOT2_MSG("XZ Bug!\r\n");
+                    goto error;
+            }
+        }
         if (b.out_pos == 0) {
             if (dest_max_size == 0) {
                 parse_ret = bflb_sp_mediaboot_parse_one_group_xz(&boot_img_cfg, 0, 0, NULL, 0, 1);
@@ -168,33 +194,8 @@ static int32_t bflb_sp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_a
             *p_dest_size += b.out_pos;
         }
 
-        switch (ret) {
-            case XZ_STREAM_END:
-                xz_dec_end(s);
-                return 0;
-
-            case XZ_MEM_ERROR:
-                goto error;
-
-            case XZ_MEMLIMIT_ERROR:
-                goto error;
-
-            case XZ_FORMAT_ERROR:
-                BOOT2_MSG("Not a .xz file\r\n");
-                goto error;
-
-            case XZ_OPTIONS_ERROR:
-                goto error;
-
-            case XZ_DATA_ERROR:
-            case XZ_BUF_ERROR:
-                BOOT2_MSG("File is corrupt\r\n");
-                goto error;
-
-            default:
-                BOOT2_MSG("XZ Bug!\r\n");
-                goto error;
-        }
+        xz_dec_end(s);
+        return 0;
     }
 
 error:

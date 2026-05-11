@@ -2,9 +2,10 @@
  * @file nethub_vchan.h
  * @brief NetHub virtual channel userspace interface
  *
- * Provides a Netlink-based logical channel between host userspace and the
- * kernel/msg_router stack. Multiple payload types are multiplexed on the same
- * host link, including SYSTEM, USER and AT.
+ * Provides packet-oriented logical channels between host userspace and the
+ * active NetHub host link. By default it auto-probes SDIO netlink first, then
+ * USB ACM. NETHUB_VCHAN_TRANSPORT=netlink|usb can force a transport, with
+ * optional NETHUB_VCHAN_DEV=/dev/ttyACM0 for USB.
  */
 
 #ifndef NETHUB_VCHAN_H
@@ -17,7 +18,7 @@
 extern "C" {
 #endif
 
-/* Message header length */
+/* Legacy SDIO/netlink header length; USB ACM wire framing is internal. */
 #define NETHUB_VCHAN_DATA_HDR_LEN   (4)  /* sizeof(data_type) + sizeof(reserved) + sizeof(len) */
 
 /* Maximum data length per message */
@@ -95,7 +96,7 @@ int nethub_vchan_deinit(void);
  * @param type Data type (NETHUB_VCHAN_DATA_TYPE_*)
  * @param data Pointer to data
  * @param len Data length
- * @return 0 for success, negative for failure
+ * @return Sent bytes for success, negative for failure
  */
 int nethub_vchan_send(uint8_t type, const void *data, size_t len);
 
@@ -149,7 +150,7 @@ int nethub_vchan_register_link_event_callback(nethub_vchan_link_event_callback_t
  * @brief Send USER type data
  * @param data Pointer to data
  * @param len Data length
- * @return 0 for success, negative for failure
+ * @return Sent bytes for success, negative for failure
  */
 int nethub_vchan_user_send(const void *data, size_t len);
 
@@ -166,7 +167,7 @@ int nethub_vchan_user_register_callback(nethub_vchan_recv_callback_t callback);
  * @brief Send AT type data
  * @param data Pointer to data
  * @param len Data length
- * @return 0 for success, negative for failure
+ * @return Sent bytes for success, negative for failure
  */
 int nethub_vchan_at_send(const void *data, size_t len);
 

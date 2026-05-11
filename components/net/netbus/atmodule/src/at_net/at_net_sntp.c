@@ -342,10 +342,6 @@ sntp_process(const struct sntp_timestamps *timestamps)
   if (ntp_time_sync_cb)
     ntp_time_sync_cb();
   
-  struct timespec timespec;
-  timespec.tv_sec = ntp_sec;
-  timespec.tv_nsec = SNTP_FRAC_TO_US(ntp_frag) * 1000;
-  clock_settime(0, &timespec);
   //bx_sys_time_update(((uint64_t)ntp_sec) * 1000 + ntp_frag / 1000);
   taskEXIT_CRITICAL();
 
@@ -933,4 +929,3 @@ void sntp_setupdatedelay(uint32_t delay)
 }
 
 #endif /* LWIP_UDP */
-

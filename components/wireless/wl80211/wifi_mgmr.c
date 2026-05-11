@@ -13,6 +13,7 @@
 
 #ifdef COMPAT_WIFI_MGMR
 #include "wifi_mgmr.h"
+#include "wl80211_mac.h"
 
 #if !defined(__NuttX__)
 #include "async_event.h"
@@ -265,11 +266,11 @@ static void wl80211_event_handler(async_input_event_t ev, void *priv)
             break;
 
         case WL80211_EVT_AP_STA_ADDED:
-            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STA_ADD, 0);
+            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STA_ADD, ev->value);
             break;
 
         case WL80211_EVT_AP_STA_DEL:
-            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STA_DEL, 0);
+            async_post_event(EV_WIFI, CODE_WIFI_ON_AP_STA_DEL, ev->value);
             break;
     }
 
@@ -1109,4 +1110,149 @@ int wifi_mgmr_ap_stop(void)
 
     return 0;
 }
+
+/**
+ * @brief Convert WIFI_RC_IDX rate index to hardware rate configuration value
+ *
+ * Converts user-friendly rate indices (WIFI_RC_IDX_*) to the hardware rate
+ * config format expected by the MAC firmware's me_rc_set_rate_req.
+ *
+ * @param[in] idx Rate index (WIFI_RC_IDX_* constant)
+ * @return uint16_t hardware rate config, or 0xFFFF for auto/clear/invalid
+ */
+static uint16_t wifi_mgmr_idx_to_rate_cfg(int idx)
+{
+    union {
+        struct {
+            uint32_t mcs_idx            : 7;
+            uint32_t bw_tx              : 2;
+            uint32_t gi_and_pre_type_tx : 2;
+            uint32_t format_mod_tx      : 3;
+            uint32_t dcm_tx             : 1;
+        };
+        uint32_t value;
+    } cfg;
+
+    if (idx < 0) {
+        return (uint16_t)-1;
+    }
+
+    cfg.value = 0;
+
+    if (idx < FIRST_OFDM) {
+        /* CCK: WIFI_RC_IDX_1M,2M,5M5,11M => mcs = idx/2, gi = (idx&1)<<1 */
+        cfg.format_mod_tx = 0;
+        cfg.gi_and_pre_type_tx = (idx & 1) << 1;
+        cfg.mcs_idx = idx / 2;
+    } else if (idx < FIRST_HT) {
+        /* OFDM: WIFI_RC_IDX_6M..54M => mcs = idx - N_CCK + 4 */
+        cfg.format_mod_tx = 0;
+        cfg.mcs_idx = idx - N_CCK + 4;
+    } else if (idx < FIRST_VHT) {
+        /* HT: WIFI_RC_IDX_HT20_MCS0..MCS7 */
+        idx -= FIRST_HT;
+        cfg.format_mod_tx = FORMATMOD_HT_MF;
+        cfg.mcs_idx = (idx % (8 * 4)) / 4;
+        cfg.bw_tx = ((idx % (8 * 4)) % 4) / 2;
+        cfg.gi_and_pre_type_tx = idx & 1;
+    } else {
+        return (uint16_t)-1;
+    }
+
+    return (uint16_t)cfg.value;
+}
+
+int wifi_mgmr_rate_config(const struct wifi_mgmr_rate_config *cfg)
+{
+    struct wl80211_rate_config rate_cfg = { .sta_idx = -1 };
+
+    if (!cfg) {
+        return -1;
+    }
+
+    if (!wl80211_glb.link_up && !wl80211_glb.ap_en) {
+        return -1;
+    }
+
+    if (cfg->fixed_rate_idx != WIFI_RC_IDX_NO_UPDATE) {
+        rate_cfg.update_flags |= ME_RC_SET_RATE_FIXED_RATE_BIT;
+        rate_cfg.fixed_rate_cfg = wifi_mgmr_idx_to_rate_cfg(cfg->fixed_rate_idx);
+    }
+
+    if (cfg->retry_min_rate_idx != WIFI_RC_IDX_NO_UPDATE) {
+        rate_cfg.update_flags |= ME_RC_SET_RATE_RETRY_MIN_RATE_BIT | ME_RC_SET_RATE_RETRY_MAX_RATE_BIT;
+        rate_cfg.retry_min_rate_cfg = wifi_mgmr_idx_to_rate_cfg(cfg->retry_min_rate_idx);
+        rate_cfg.retry_max_rate_cfg = (uint16_t)-1;
+    }
+
+    if (rate_cfg.update_flags == 0) {
+        return -1;
+    }
+
+    /* STA mode: apply rate config to the connected AP peer */
+    if (wl80211_glb.link_up) {
+        struct mac_addr bssid_addr;
+        int vif_idx = wl80211_mac_vif[WL80211_VIF_STA];
+
+        assert(wl80211_glb.last_connect_params != NULL);
+        memcpy(bssid_addr.array, wl80211_glb.last_connect_params->bssid, sizeof(bssid_addr.array));
+        rate_cfg.sta_idx = _macsw_get_staid(vif_idx, &bssid_addr, false);
+
+        wl80211_cntrl(WL80211_CTRL_RATE_CONFIG, &rate_cfg);
+    }
+
+    /* AP mode: apply rate config to all associated STAs */
+    if (wl80211_glb.ap_en) {
+        int i;
+        for (i = 0; i < (int)(sizeof(wl80211_glb.aid_list) / sizeof(wl80211_glb.aid_list[0])); i++) {
+            if (wl80211_glb.aid_list[i].used) {
+                rate_cfg.sta_idx = wl80211_glb.aid_list[i].sta_idx;
+                wl80211_cntrl(WL80211_CTRL_RATE_CONFIG, &rate_cfg);
+            }
+        }
+    }
+
+    return 0;
+}
+
+int wifi_mgmr_ap_sta_rate_config(const uint8_t mac[6], const struct wifi_mgmr_rate_config *cfg)
+{
+    int i;
+    struct wl80211_rate_config rate_cfg = { .sta_idx = -1 };
+
+    if (!cfg || !mac || !wl80211_glb.ap_en) {
+        return -1;
+    }
+
+    /* find the STA by MAC address */
+    for (i = 0; i < (int)(sizeof(wl80211_glb.aid_list) / sizeof(wl80211_glb.aid_list[0])); i++) {
+        if (wl80211_glb.aid_list[i].used && !memcmp(wl80211_glb.aid_list[i].mac, mac, 6)) {
+            rate_cfg.sta_idx = wl80211_glb.aid_list[i].sta_idx;
+            break;
+        }
+    }
+
+    if (rate_cfg.sta_idx < 0) {
+        return -1;
+    }
+
+    if (cfg->fixed_rate_idx != WIFI_RC_IDX_NO_UPDATE) {
+        rate_cfg.update_flags |= ME_RC_SET_RATE_FIXED_RATE_BIT;
+        rate_cfg.fixed_rate_cfg = wifi_mgmr_idx_to_rate_cfg(cfg->fixed_rate_idx);
+    }
+
+    if (cfg->retry_min_rate_idx != WIFI_RC_IDX_NO_UPDATE) {
+        rate_cfg.update_flags |= ME_RC_SET_RATE_RETRY_MIN_RATE_BIT | ME_RC_SET_RATE_RETRY_MAX_RATE_BIT;
+        rate_cfg.retry_min_rate_cfg = wifi_mgmr_idx_to_rate_cfg(cfg->retry_min_rate_idx);
+        rate_cfg.retry_max_rate_cfg = (uint16_t)-1;
+    }
+
+    if (rate_cfg.update_flags == 0) {
+        return -1;
+    }
+
+    wl80211_cntrl(WL80211_CTRL_RATE_CONFIG, &rate_cfg);
+    return 0;
+}
+
 #endif /* COMPAT_WIFI_MGMR */

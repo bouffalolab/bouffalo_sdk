@@ -1,4 +1,5 @@
 #include "bl_lp_internal.h"
+#include "bflb_l1c.h"
 
 static ATTR_NOCACHE_RAM_SECTION struct bl_lp_info_s lp_info_struct = { 0 };
 static ATTR_NOCACHE_RAM_SECTION lp_fw_wifi_para_t wifi_param = { 0 };
@@ -208,9 +209,21 @@ void ATTR_TCM_SECTION __attribute__((aligned(16))) lp_fw_restore_cpu_para(uint32
                          "lw      x29, 116(a0)\n\t"
                          "lw      x30, 120(a0)\n\t"
                          "lw      x31, 124(a0)\n\t"
-                         "la      a0, freertos_risc_v_trap_handler\n\t" // mcu default_trap_handler
+#if defined(CONFIG_FREERTOS)
+                         "la      a0, freertos_risc_v_trap_handler\n\t"
+#else
+                         "la      a0, default_trap_handler\n\t"
+#endif
+#if defined(CPU_MODEL_A0)
                          "ori     a0, a0, 3\n\t"
                          "csrw    mtvec, a0\n\t");
+#else
+                         "li      t0, 0x3f\n\t"
+                         "and     t0, a0, t0\n\t"
+                         "ori     t0, t0, 3\n\t"
+                         "csrw    mtvec, t0\n\t"
+#endif
+                         );
 }
 
 static void rtc_wakeup_init(uint64_t rtc_wakeup_cmp_cnt, uint64_t sleep_us)
@@ -596,7 +609,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     bl_lp_vtime_before_sleep();
 
-    csi_dcache_clean();
+    bflb_l1c_dcache_clean_all();
 
     /* Gets the current rtc time */
     HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
@@ -677,7 +690,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         }
     }
 
-    csi_dcache_clean();
+    bflb_l1c_dcache_clean_all();
 
     BL_LP_LOG("pds_sleep_us:%ld\r\n", pds_sleep_us);
     // BL_LP_LOG("last_beacon_stamp_rtc_us: %lld\r\n", iot2lp_para->last_beacon_stamp_rtc_us);
@@ -744,6 +757,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
                          "csrw    mstatus, t0\n\t");
     /* csrwi   fcsr, 0 */
 #endif
+#if defined(CPU_MODEL_A0)
     /* enable mstatus FS */
     uint32_t mstatus = __get_MSTATUS();
     mstatus |= (1 << 13);
@@ -774,6 +788,33 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     uint32_t mexstatus = __get_MEXSTATUS();
     mexstatus &= ~(0x3 << 16);
     __set_MEXSTATUS(mexstatus);
+#else
+    /* NMI causes map to 0xFFF, shared with mtvec */
+    __RV_CSR_SET(CSR_MMISC_CTL, MMISC_CTL_NMI_CAUSE_FFF);
+    /* Enable Branch Prediction Unit */
+    __RV_CSR_SET(CSR_MMISC_CTL, MMISC_CTL_BPU);
+    /* Enable mcycle and minstret counters */
+    __RV_CSR_CLEAR(CSR_MCOUNTINHIBIT, 0x5);
+
+    /* enable mstatus FS */
+    __enable_FPU();
+
+    ECLIC_SetCfgNlbits(__ECLIC_GetInfoCtlbits());
+
+    for (int i = 0; i < IRQn_LAST; i++) {
+#ifdef CONFIG_IRQ_USE_VECTOR
+        ECLIC_SetShvIRQ(i, 1);
+#else
+        ECLIC_SetShvIRQ(i, 0);
+#endif
+    }
+
+#ifdef CONFIG_IRQ_USE_VECTOR
+    ECLIC_SetShvIRQ(MSOFT_IRQn, 1);
+#else
+    ECLIC_SetShvIRQ(MSOFT_IRQn, 0);
+#endif
+#endif
 
     bl_lp_vtime_after_sleep();
 
@@ -821,7 +862,7 @@ int bl_lp_get_wake_reason(void)
     return (int)iot2lp_para->wakeup_reason_info->wakeup_reason;
 }
 
-void bl_lp_debug_record_time(iot2lp_para_t *iot_lp_para, char *info_str)
+void ATTR_TCM_SECTION bl_lp_debug_record_time(iot2lp_para_t *iot_lp_para, char *info_str)
 {
 #if BL_LP_TIME_DEBUG
     uint64_t rtc_cnt, rtc_now_us;

@@ -50,7 +50,7 @@ int bl_lpfw_ram_load(void)
     }
 
     uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000;
-    uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
+    uint32_t lpfw_size = *(uint32_t *)((uintptr_t)__lpfw_load_addr - 7 * sizeof(uint32_t));
 
     BL_LP_LOG("lpfw_addr:0x%08x\r\n", lpfw_addr);
     BL_LP_LOG("lpfw_size:%d\r\n", lpfw_size);
@@ -83,8 +83,8 @@ int bl_lpfw_ram_verify(void)
     }
 
     uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000;
-    uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
-    uint8_t *lpfw_sha256 = (uint8_t *)(__lpfw_load_addr - 16);
+    uint32_t lpfw_size = *(uint32_t *)((uintptr_t)__lpfw_load_addr - 7 * sizeof(uint32_t));
+    uint8_t *lpfw_sha256 = (uint8_t *)((uintptr_t)__lpfw_load_addr - 16 * sizeof(uint32_t));
     uint8_t result[32];
 
     lpfw_sec_sha256(lpfw_addr, lpfw_size, result);

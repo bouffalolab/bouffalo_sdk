@@ -161,7 +161,7 @@ static int ota_erase(ota_handle_t handle, uint32_t offset, uint32_t len)
             ret = bflb_flash_erase(handle->ota_addr + index * OTA_ERASE_BLOCK_SIZE, OTA_ERASE_BLOCK_SIZE);
 #endif
             if (ret) {
-                LOG_E("mtd erase failed\r\n");
+                LOG_E("mtd erase failed: %d, addr: 0x%08x\r\n", ret, handle->ota_addr + index * OTA_ERASE_BLOCK_SIZE);
                 return -1;
             }
             handle->sector_erased[index / 32] |= (1U << (index % 32));

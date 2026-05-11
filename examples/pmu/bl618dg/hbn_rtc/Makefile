@@ -10,7 +10,6 @@ CPU_ID ?= ap
 BOARD ?= bl618dgdk
 # BOARD ?= bl618dgdk
 # BOARD_DIR ?= $(BL_SDK_BASE_PATH)/chiptest/bl618dg
-CROSS_COMPILE ?= riscv64-unknown-elf-
 
 
 

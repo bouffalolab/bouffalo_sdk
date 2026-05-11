@@ -10,7 +10,7 @@ extern "C" {
 
 #define VERSION_OT_SRC_MAJOR 1
 #define VERSION_OT_SRC_MINOR 7
-#define VERSION_OT_SRC_PATCH 4
+#define VERSION_OT_SRC_PATCH 5
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 
@@ -62,20 +62,11 @@ typedef enum _ot_system_event {
         OT_SYSTEM_EVENT_RADIO_RX_DONE | OT_SYSTEM_EVENT_RADIO_RX_CRC_FIALED,
     OT_SYSTEM_EVENT_RADIO_ALL_MASK                      = OT_SYSTEM_EVENT_RADIO_TX_ALL_MASK | OT_SYSTEM_EVENT_RADIO_RX_ALL_MASK,
 
-    OT_SYSTEM_EVENT_POLL                                = 0x00010000,
-    OT_SYSTEM_EVENT_POLL_DATA_TIMEOUT                   = 0x00020000,
-    OT_SYSTEM_EVENT_FULL_STACK                          = 0x00040000,
-    OT_SYSTEM_EVENT_RESET_NEXT_POLL                     = 0x00080000,
-    OT_SYSTEM_EVENT_MAC_TX_RETRY                        = 0x00100000,
-    OT_SYSTEM_EVENT_CSL_TIMER                           = 0x00200000,
-
     OT_SYSTEM_EVENT_OTBR_MASK                           = 0x00800000,
     OT_SYSTEM_EVENT_APP_MASK                            = 0xff000000,
 
     OT_SYSTEM_EVENT_ALL                                 = 0xffffffff,
 } ot_system_event_t;
-
-extern ot_system_event_t ot_system_event_var;
 
 /****************************************************************************//**
  * @brief  Start OpenThread task.
@@ -158,6 +149,18 @@ void ot_alarmTask(ot_system_event_t sevent);
  *
 *******************************************************************************/
 void ot_radioInit(void);
+
+/****************************************************************************//**
+ * @brief  Set CSL TX SFD offset compensation value
+ *
+ * @param  aOffsetSymCnt: compensation in symbol count, added to the
+ *         estimated TX SFD time when computing CSL IE phase. Positive
+ *         means the actual TX SFD is later than the hardware estimate.
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ot_radioSetCslTxOffset(int8_t aOffsetSymCnt);
 
 /****************************************************************************//**
  * @brief  Init uart.
@@ -288,16 +291,6 @@ void otrExitCrit(uint32_t tag);
  *
 *******************************************************************************/
 void otrNotifyEvent(ot_system_event_t sevent);
-
-/****************************************************************************//**
- * @brief  Get system event posted by otrNotifyEvent, and clean system event.
- *
- * @param  None
- *
- * @return system event
- *
-*******************************************************************************/
-ot_system_event_t otrGetNotifyEvent(void);
 
 /****************************************************************************//**
  * @brief  Get OTBR hostname

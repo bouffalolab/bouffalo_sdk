@@ -25,6 +25,28 @@
 #include "hw_features.h"
 
 
+static bool hostapd_hw_feature_uses_static_rates(const int *rates)
+{
+#ifdef CONFIG_DRIVER_MACSW
+	if (macsw_hw_feature_uses_static_rates(rates))
+		return true;
+#endif /* CONFIG_DRIVER_MACSW */
+
+	return false;
+}
+
+static bool hostapd_hw_feature_uses_static_channels(
+	const struct hostapd_channel_data *channels)
+{
+#ifdef CONFIG_DRIVER_MACSW
+	if (macsw_hw_feature_uses_static_channels(channels))
+		return true;
+#endif /* CONFIG_DRIVER_MACSW */
+
+	return false;
+}
+
+
 void hostapd_free_hw_features(struct hostapd_hw_modes *hw_features,
 			      size_t num_hw_features)
 {
@@ -34,8 +56,10 @@ void hostapd_free_hw_features(struct hostapd_hw_modes *hw_features,
 		return;
 
 	for (i = 0; i < num_hw_features; i++) {
-		os_free(hw_features[i].channels);
-		os_free(hw_features[i].rates);
+		if (!hostapd_hw_feature_uses_static_channels(hw_features[i].channels))
+			os_free(hw_features[i].channels);
+		if (!hostapd_hw_feature_uses_static_rates(hw_features[i].rates))
+			os_free(hw_features[i].rates);
 	}
 
 	os_free(hw_features);

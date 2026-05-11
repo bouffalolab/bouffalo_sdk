@@ -27,7 +27,7 @@
 
 #endif
 
-static int bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
+__UNUSED static int bflb_dbi_format_set(struct bflb_device_s *dev, uint8_t format)
 {
     uint32_t reg_base;
     uint32_t regval;

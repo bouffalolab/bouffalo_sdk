@@ -9,6 +9,7 @@
 #include "task.h"
 
 #include "bl616_glb.h"
+#include <msp_port.h>
 
 void vAssertCalled(void)
 {
@@ -32,10 +33,8 @@ void app_main_entry(void *arg)
     app_minialsa_init();
 
 #if CONFIG_CODEC_USE_I2S
-    extern msp_i2s_port_init(void);
     msp_i2s_port_init();
 #endif
 
     vTaskDelete(NULL);
 }
-

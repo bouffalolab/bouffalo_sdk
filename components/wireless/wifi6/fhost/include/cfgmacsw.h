@@ -418,8 +418,14 @@ struct cfgmacsw_rc_set_rate {
     struct cfgmacsw_msg_hdr hdr;
     /// Sta idx
     uint16_t sta_idx;
+    /// Bitmap of fields to update
+    uint8_t update_flags;
     /// Fixed rate configuration
     uint16_t fixed_rate_cfg;
+    /// Minimum rate configuration for retry chain - 0xFFFF if disabled
+    uint16_t retry_min_rate_cfg;
+    /// Maximum rate configuration for retry chain - 0xFFFF if disabled
+    uint16_t retry_max_rate_cfg;
 };
 
 /// structure for CFGMACSW_SCAN_RESULT_EVENT

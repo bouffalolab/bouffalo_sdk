@@ -24,12 +24,9 @@
 #define VENDOR_IE_NEST_OUI                  0x18b430
 #define VENDOR_IE_NEST_TIME                 1
 
-#define OT_PDS_10_SYMBOL_US                 (LMAC154_US_PER_SYMBOL * 10)
-#define OT_PDS_CSL_STATE_IDLE               0
-#define OT_PDS_CSL_STATE_SAMPLE             1
-#define OT_PDS_CSL_STATE_SLEEP              2
-
-#define LMAC154_ALAMR_PDS_TIMER_ID          (0)
+#ifndef OT_RADIO_CSL_DEBUG
+#define OT_RADIO_CSL_DEBUG                  0
+#endif
 
 typedef struct _otRadio_rxFrame_t {
     utils_dlist_t       dlist;
@@ -113,16 +110,6 @@ void ot_radioEnable(void);
  *
 *******************************************************************************/
 void ot_setRxPromiscuousMode(bool isEnable, bool isEnhancedMode);
-
-/****************************************************************************//**
- * @brief  frame send
- *
- * @param  aFrame, a frame to send
- *
- * @return None
- *
-*******************************************************************************/
-int ot_radioSend(otRadioFrame *aFrame);
 
 void ot_radioTxDoneCallback (lmac154_tx_status_t tx_status, uint32_t * ack_frame, uint32_t ack_frame_len);
 void ot_radioRxDoneCallback(lmac154_rx_status_t status, lmac154_receiveInfo_t *recvInfo, uint32_t *frame);

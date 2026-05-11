@@ -196,7 +196,7 @@ void mbedtls_sha512_finish( mbedtls_sha512_context *ctx,
 }
 #else
 int mbedtls_sha512_finish( mbedtls_sha512_context *ctx,
-                            unsigned char output[64] )
+                            unsigned char *output )
 {
     return mbedtls_sha512_finish_ret( ctx, output );
 }

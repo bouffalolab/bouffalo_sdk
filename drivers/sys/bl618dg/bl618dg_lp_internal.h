@@ -12,7 +12,7 @@
 
 #if (1)
 #define BL_LP_LOG        printf
-#define BL_LP_TIME_DEBUG 1
+#define BL_LP_TIME_DEBUG 0
 #else
 #define BL_LP_LOG(...)
 #define BL_LP_TIME_DEBUG 0
@@ -26,5 +26,8 @@ struct lp_env *bl_lp_env_get(void);
 void bl_lp_env_init(void);
 void bl618dg_lp_soft_irq_trigger(void);
 void bl618dg_lp_io_wakeup_prepare(void);
+
+void lp_fw_save_cpu_para(uint32_t save_addr);
+void lp_fw_restore_cpu_para(uint32_t save_addr);
 
 #endif

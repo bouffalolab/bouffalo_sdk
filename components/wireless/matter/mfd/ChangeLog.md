@@ -1,5 +1,18 @@
 # change log on Matter MFD module
 
+## 2026/5/8
+- Version: 1.6.2
+- Changes
+  - Refactored to support all Bouffalo chip series (BL616/BL616CL/BL602/BL702/BL702L)
+  - Renamed all source files and APIs from `bl_mfd` to `bflb_mfd` prefix
+  - Removed build-system-level platform configuration, using compile-time chip selection instead
+  - Added BL616CL platform support
+  - Added `bflb_mfd_encrypt` public API for all platforms
+  - Added product appearance attributes (`mfd_getProductFinish`, `mfd_getProductPrimaryColor`)
+  - Merged encrypt/decrypt implementations to reduce code size
+  - Replaced hardcoded AES device name with `BFLB_NAME_SEC_AES` constant
+  - Fixed bouffalo.mk source file name mismatch
+
 ## 2024/7/5
 - Version: 1.6.1
 - Changes

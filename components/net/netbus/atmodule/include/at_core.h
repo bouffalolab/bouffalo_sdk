@@ -10,6 +10,8 @@
 #ifndef AT_CORE_H
 #define AT_CORE_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -165,4 +167,3 @@ int at_arg_get_string(const char *arg, char *string, int max);
 #endif
 
 #endif/* AT_CORE_H */
-

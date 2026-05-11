@@ -103,10 +103,10 @@ typedef enum {
 #define MM_FLAG_ALIGN_256BYTE (0x07 << MM_FLAG_ALIGN_SHIFT) ///< 256-byte alignment
 
 /* CPU architecture detection */
-#if defined(CONFIG_CPU_RISCV32) || defined(CONFIG_CPU_ARM)
+#if IS_ENABLED(CONFIG_CPU_RISCV32) || IS_ENABLED(CONFIG_CPU_ARM)
 #define MM_FLAG_ALIGN_PTR   MM_FLAG_ALIGN_4BYTE
 #define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_32BYTE ///< 32-bit CPU: 32-byte alignment
-#elif defined(CONFIG_CPU_RISCV64) || defined(CONFIG_CPU_ARM64)
+#elif IS_ENABLED(CONFIG_CPU_RISCV64) || IS_ENABLED(CONFIG_CPU_ARM64)
 #define MM_FLAG_ALIGN_PTR   MM_FLAG_ALIGN_8BYTE
 #define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_64BYTE ///< 64-bit CPU: 64-byte alignment
 #else
@@ -204,7 +204,7 @@ typedef struct mm_heap {
     /* Heap state management */
     bool is_active; ///< Whether the heap is active
 
-#if CONFIG_MM_ENABLE_STATISTICS
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     /* Basic statistics information (optional, controlled by configuration) */
     struct {
         uint32_t alloc_count; ///< Allocation count
@@ -225,7 +225,10 @@ typedef struct mem_manager {
     /* Heap instance storage - stores pointers to dynamically created heap instances */
     mm_heap_t *heaps[CONFIG_MM_HEAP_COUNT]; ///< Array of heap instance pointers
 
-#if CONFIG_MM_ENABLE_STATISTICS
+    /* Global heap allocation priority used by kmalloc(MM_FLAG_HEAP_ANY). */
+    uint32_t heap_alloc_order[CONFIG_MM_HEAP_COUNT];
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     /* Global statistics information (optional, controlled by configuration) */
     struct {
         uint32_t total_malloc_successes; ///< Total successful malloc count
@@ -234,7 +237,7 @@ typedef struct mem_manager {
     } stats;
 #endif
 
-#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
     /* Global memory watermark tracking */
     size_t min_free_size; ///< Minimum observed remaining free bytes
 #endif
@@ -244,7 +247,7 @@ typedef struct mem_manager {
 } mem_manager_t;
 
 /* ======================================================================== */
-/*                      Weak Function Definitions - Critical Section Protection                                */
+/*        Weak Function Definitions - Critical Section Protection           */
 /* ======================================================================== */
 
 /**
@@ -268,7 +271,7 @@ uintptr_t mm_lock_save(void);
 void mm_unlock_restore(uintptr_t flags);
 
 /* ======================================================================== */
-/*                      Core API declarations                              */
+/*                       Core API declarations                              */
 /* ======================================================================== */
 
 /**
@@ -299,6 +302,35 @@ int mm_register_allocator(uint32_t allocator_id, const mm_allocator_t *allocator
  */
 mm_heap_t *mm_register_heap(uint32_t heap_id, const char *name, uint32_t allocator_id,
                             void *start_addr, size_t size);
+
+/**
+ * @brief Set the automatic heap selection list.
+ *
+ * The provided heap IDs are copied into the internal automatic-allocation
+ * list in the specified order. Entries with value 0 disable that slot, and
+ * heaps not present in the list are not used by kmalloc(MM_FLAG_HEAP_ANY).
+ * Passing NULL with count 0 resets the list to the default ascending heap-ID
+ * order, which matches the order of mm_heap_type_t.
+ *
+ * @param heap_list Array of heap IDs ordered by automatic allocation priority.
+ * @param count Number of entries in heap_list.
+ * @return 0 on success, negative value on failure.
+ */
+int mm_heap_set_auto_list(const uint32_t *heap_list, size_t count);
+
+/**
+ * @brief Get the current automatic heap selection list.
+ *
+ * Copies the current automatic-allocation list into the caller-provided
+ * buffer. The output buffer must contain at least CONFIG_MM_HEAP_COUNT
+ * entries so all configured slots, including zero-valued disabled slots,
+ * can be copied out.
+ *
+ * @param heap_list Output array receiving the current automatic allocation list.
+ * @param count Number of entries available in heap_list.
+ * @return 0 on success, negative value on failure.
+ */
+int mm_heap_get_auto_list(uint32_t *heap_list, size_t count);
 
 /**
  * @brief Find the heap corresponding to a given address
@@ -352,6 +384,10 @@ void *krealloc(void *ptr, size_t newsize);
  */
 void *kmemalign(size_t size, size_t align);
 
+/* ======================================================================== */
+/*                       Debug and Diagnostics                              */
+/* ======================================================================== */
+
 /**
  * @brief Query the usable payload size of an allocated block.
  *
@@ -368,9 +404,19 @@ size_t kmalloc_size(void *ptr);
  */
 size_t kfree_size(uint32_t heap_id);
 
+/**
+ * @brief Walk all allocated blocks across active heaps.
+ *
+ * Invokes allocator-specific block walkers for each active heap that supports
+ * allocated-block traversal.
+ *
+ * @param walker Callback invoked for each allocated block.
+ * @param user User context passed through to the callback.
+ * @return 0 on success, negative value on failure.
+ */
 int mm_walk_allocated_blocks(mm_allocated_block_walker_t walker, void *user);
 
-#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
 /**
  * @brief Get the minimum free-memory watermark.
  *
@@ -392,6 +438,7 @@ size_t kmin_free_size_reset(void);
 
 /* TLSF allocator local declaration */
 extern const mm_allocator_t g_tlsf_allocator;
+/* Heap5 allocator local declaration */
 extern const mm_allocator_t g_heap5_allocator;
 
 /* Global manager instance - the only global variable */

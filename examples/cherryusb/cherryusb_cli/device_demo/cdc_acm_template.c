@@ -110,6 +110,14 @@ volatile bool usb_acm_ready_flag = false;
 static volatile bool acm_tx_busy_flag = false;
 static volatile bool acm_rx_busy_flag = false;
 
+/* stress test statistics */
+volatile uint32_t acm_stats_rx_bytes = 0;
+volatile uint32_t acm_stats_tx_bytes = 0;
+volatile uint32_t acm_stats_rx_overflow = 0;
+volatile uint32_t acm_stats_rx_cnt = 0;
+volatile uint32_t acm_stats_tx_cnt = 0;
+static volatile uint32_t acm_stats_start_ms = 0;
+
 TaskHandle_t usbd_cdc_acm_handle = NULL;
 
 void usbd_cdc_acm_event_trig(void)
@@ -184,12 +192,15 @@ void usbd_cdc_acm_bulk_out(uint8_t busid, uint8_t ep, uint32_t nbytes)
 
     if (Ring_Buffer_Get_Empty_Length(&loopback_rb) < nbytes) {
         LOG_W("ringbuff FULL\r\n");
+        acm_stats_rx_overflow++;
         nbytes = Ring_Buffer_Get_Empty_Length(&loopback_rb);
     }
 
     /* save to ringbuff */
     if (nbytes) {
         Ring_Buffer_Write(&loopback_rb, (uint8_t *)read_buffer, nbytes);
+        acm_stats_rx_bytes += nbytes;
+        acm_stats_rx_cnt++;
     }
 
     /* setup next out ep read transfer */
@@ -209,6 +220,8 @@ void usbd_cdc_acm_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
         usbd_ep_start_write(busid, CDC_IN_EP, NULL, 0);
     } else {
         acm_tx_busy_flag = false;
+        acm_stats_tx_bytes += nbytes;
+        acm_stats_tx_cnt++;
         usbd_cdc_acm_event_trig();
         // USB_LOG_RAW("upld done\r\n");
     }
@@ -314,6 +327,12 @@ void cdc_acm_data_send_task(void *param)
                 dtr_enable = false;
                 acm_tx_busy_flag = false;
                 acm_rx_busy_flag = false;
+                acm_stats_rx_bytes = 0;
+                acm_stats_tx_bytes = 0;
+                acm_stats_rx_overflow = 0;
+                acm_stats_rx_cnt = 0;
+                acm_stats_tx_cnt = 0;
+                acm_stats_start_ms = bflb_mtimer_get_time_ms();
                 Ring_Buffer_Init(&loopback_rb, (uint8_t *)loopback_rb_buffer, sizeof(loopback_rb_buffer), rb_lock_cb, rb_unlock_cb);
 
                 usbd_acm_send_sta = ACM_SEND_STA_WAIT_USBD_CFG;

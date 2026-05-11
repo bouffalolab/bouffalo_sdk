@@ -27,6 +27,26 @@
  */
 /* void unlz4(const void *aSource, void *aDestination, uint32_t FileLen); */
 
+#if !defined(BFLB_LZ4_NO_XTHEAD) && (defined(__riscv_xthead) || defined(__riscv_xtheadc))
+.macro lbu_inc dst, ptr
+                    lbuia               \dst, (\ptr), 1, 0
+.endm
+
+.macro sb_inc src, ptr
+                    sbia                \src, (\ptr), 1, 0
+.endm
+#else
+.macro lbu_inc dst, ptr
+                    lbu                 \dst, 0(\ptr)
+                    addi                \ptr, \ptr, 1
+.endm
+
+.macro sb_inc src, ptr
+                    sb                  \src, 0(\ptr)
+                    addi                \ptr, \ptr, 1
+.endm
+#endif
+
                     .func               unlz4
 
                     .global             unlz4
@@ -73,7 +93,7 @@ blockStart:
                     add                 s5,s2,s0            /* point a5 to end of compressed data */
 
 getToken:
-                    lbuia               s6,(s0),1,0         /* get token */
+                    lbu_inc             s6, s0              /* get token */
 
                                                             /* advance source pointer */
 
@@ -87,7 +107,7 @@ getLiteralLen:                                              /* if length is 15, 
 
                     bne                 s10,s4,gotLiteralLen/* jump forward if we have the complete length */
 
-getLiteralLenLoop:  lbuia               s3,(s0),1,0         /* read another byte */
+getLiteralLenLoop:  lbu_inc             s3, s0              /* read another byte */
 
                                                             /* advance source pointer */
 
@@ -101,13 +121,13 @@ gotLiteralLen:
 
                                                             /* copy literal */
 copy_literal:
-                    lbuia               s3, (s0), 1, 0
+                    lbu_inc             s3, s0
                     addi                s4, s4, -1
-                    sbia                s3, (s1), 1, 0
+                    sb_inc              s3, s1
                     beqz                s4, copy_literal_done
-                    lbuia               s3, (s0), 1, 0
+                    lbu_inc             s3, s0
                     addi                s4, s4, -1
-                    sbia                s3, (s1), 1, 0
+                    sb_inc              s3, s1
                     bnez                s4, copy_literal
 copy_literal_done:
 
@@ -125,7 +145,7 @@ getMatchLen:
                                                             /* if length is 15, then more length info follows */
                     bne                 s10,s8,gotMatchLen  /* jump forward if we have the complete length */
 
-getMatchLenLoop:    lbuia               s3,(s0),1,0         /* read another byte */
+getMatchLenLoop:    lbu_inc             s3, s0              /* read another byte */
 
                                                             /* advance source pointer */
 
@@ -140,21 +160,21 @@ gotMatchLen:
                                                             /* minimum match length is 4 bytes */
                                                             /* copy 4 bytes */
 copy_4bytes:
-                    lbuia               s3, (s2), 1, 0
-                    sbia                s3, (s1), 1, 0
-                    lbuia               s3, (s2), 1, 0
-                    sbia                s3, (s1), 1, 0
-                    lbuia               s3, (s2), 1, 0
-                    sbia                s3, (s1), 1, 0
-                    lbuia               s3, (s2), 1, 0
-                    sbia                s3, (s1), 1, 0
+                    lbu_inc             s3, s2
+                    sb_inc              s3, s1
+                    lbu_inc             s3, s2
+                    sb_inc              s3, s1
+                    lbu_inc             s3, s2
+                    sb_inc              s3, s1
+                    lbu_inc             s3, s2
+                    sb_inc              s3, s1
 
                     beqz                s8, copy_match_done
                                                             /* copy left match data */
 copy_match:
-                    lbuia               s3, (s2), 1, 0
+                    lbu_inc             s3, s2
                     addi                s8, s8, -1
-                    sbia                s3, (s1), 1, 0
+                    sb_inc              s3, s1
                     bnez                s8, copy_match
 
 copy_match_done:

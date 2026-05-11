@@ -167,7 +167,7 @@ void bt_mesh_msg_cache_del(u16_t addr)
 		}
 	}
 
-	return false;
+	return;
 }
 
 struct bt_mesh_subnet *bt_mesh_subnet_get(u16_t net_idx)

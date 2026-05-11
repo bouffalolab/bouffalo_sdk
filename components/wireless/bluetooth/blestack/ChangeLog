@@ -1,4 +1,7 @@
 # Changes
+## 2026-05-07
+1.[blestack] split HCI UART transport into reusable layers .
+
 ## 2026-04-17
 1.[blestack] serialize mtu and data len exchange for oad and atvv.
 

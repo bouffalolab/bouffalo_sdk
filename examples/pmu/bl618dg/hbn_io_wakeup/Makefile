@@ -8,7 +8,6 @@ BL_SDK_BASE_PATH = $(realpath $(BL_SDK_BASE))
 CPU_ID ?= ap
 BOARD ?= bl618dgdk
 
-CROSS_COMPILE ?= riscv64-unknown-elf-
 
 
 

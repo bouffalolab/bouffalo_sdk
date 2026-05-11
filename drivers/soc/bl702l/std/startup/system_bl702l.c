@@ -23,6 +23,8 @@
 #include "bl702l_glb.h"
 #include <arch/risc-v/e24/clic.h>
 
+extern void sysinit_run_all(void);
+
 void SystemInit(void)
 {
     uint32_t *p;
@@ -75,6 +77,9 @@ void System_Post_Init(void)
     GLB_Trim_RC32M();
     HBN_Trim_RC32K();
     GLB_GPIO_O_Latch_Mode_Set(1);
+
+    sysinit_run_all();
+
     /* global IRQ enable */
     __enable_irq();
 }

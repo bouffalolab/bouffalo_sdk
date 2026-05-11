@@ -18,6 +18,7 @@ sdk_library_add_sources_ifdef(CONFIG_WL80211 backend/wifi/nh_wifi_backend_wl8021
 sdk_library_add_sources_ifdef(CONFIG_FHOST backend/wifi/nh_wifi_backend_fhost.c)
 sdk_library_add_sources_ifdef(CONFIG_NETHUB_PROFILE_USB backend/host/usb/transport_usb.c)
 sdk_library_add_sources_ifdef(CONFIG_NETHUB_PROFILE_USB backend/host/usb/usb_backend.c)
+sdk_library_add_sources_ifdef(CONFIG_NETHUB_PROFILE_USB backend/host/usb/virtualchan_usb.c)
 sdk_library_add_sources_ifdef(CONFIG_NETHUB_PROFILE_SDIO backend/host/spi/transport_spi.c)
 
 sdk_add_include_directories(include)
@@ -31,4 +32,6 @@ sdk_add_private_include_directories(backend/host/spi)
 
 sdk_add_compile_definitions(-DCONFIG_NETHUB_DEBUG)
 
-add_subdirectory(backend/host/sdio)
+if(CONFIG_NETHUB_PROFILE_SDIO OR (NOT CONFIG_NETHUB_PROFILE_USB AND NOT CONFIG_NETHUB_PROFILE_SPI))
+    add_subdirectory(backend/host/sdio)
+endif()

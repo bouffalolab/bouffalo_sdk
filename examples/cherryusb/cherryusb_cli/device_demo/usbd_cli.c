@@ -100,6 +100,31 @@ int shell_usbd_cdc_acm_test(int argc, char **argv)
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(shell_usbd_cdc_acm_test, usbd_cdc_acm_test, usbd cdc_acm test.);
+
+extern volatile uint32_t acm_stats_rx_bytes;
+extern volatile uint32_t acm_stats_tx_bytes;
+extern volatile uint32_t acm_stats_rx_overflow;
+extern volatile uint32_t acm_stats_rx_cnt;
+extern volatile uint32_t acm_stats_tx_cnt;
+
+int shell_usbd_cdc_acm_stats(int argc, char **argv)
+{
+    if (usbd_run_flag == false) {
+        LOG_W("usb device not running\r\n");
+        return 0;
+    }
+
+    LOG_I("=== CDC ACM Statistics ===\r\n");
+    LOG_I("  RX bytes:    %u\r\n", acm_stats_rx_bytes);
+    LOG_I("  TX bytes:    %u\r\n", acm_stats_tx_bytes);
+    LOG_I("  RX packets:  %u\r\n", acm_stats_rx_cnt);
+    LOG_I("  TX packets:  %u\r\n", acm_stats_tx_cnt);
+    LOG_I("  RX overflow: %u\r\n", acm_stats_rx_overflow);
+
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(shell_usbd_cdc_acm_stats, usbd_cdc_acm_stats, show cdc_acm stress test statistics.);
+
 #endif /* CONFIG_CHERRYUSB_DEVICE_CDC_ACM */
 
 /***********************************************************************************/

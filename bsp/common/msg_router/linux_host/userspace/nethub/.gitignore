@@ -2,11 +2,15 @@
 output/
 *.o
 *.a
+*.so
 *.ko
+*.d
 
 # Executables
 bflbwifictrl/app/bflbwifid
 bflbwifictrl/app/bflbwifictrl
+host_ctrl/daemon/bflbwifid
+host_ctrl/cli/bflbwifictrl
 virtualchan/nethub_vchan_app
 
 # Runtime files

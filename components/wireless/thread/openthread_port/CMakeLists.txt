@@ -57,8 +57,6 @@ elseif ("${OT_SERIAL}" STREQUAL "NXSPI")
     set(NXSPI_OPENTHREAD_RADIO 0)
     sdk_library_add_sources(./ot_nxspi.c)
   endif()
-else ()
-  message (FATAL_ERROR "openthread_port: ${OT_SERIAL} is not available for OT_SERIAL.")
 endif()
 sdk_add_compile_definitions(-DNXSPI_OPENTHREAD_RADIO=${NXSPI_OPENTHREAD_RADIO})
 

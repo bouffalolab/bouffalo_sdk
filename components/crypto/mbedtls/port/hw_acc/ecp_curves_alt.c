@@ -604,7 +604,7 @@ static int ecp_group_load( mbedtls_ecp_group *grp,
 }
 #endif /* ECP_LOAD_GROUP */
 
-#if defined(MBEDTLS_ECP_NIST_OPTIM) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_NIST_OPTIM) && defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
 /* Forward declarations */
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
 static int ecp_mod_p192( mbedtls_mpi * );
@@ -627,7 +627,7 @@ static int ecp_mod_p521( mbedtls_mpi * );
 #define NIST_MODP( P )
 #endif /* MBEDTLS_ECP_NIST_OPTIM && MBEDTLS_ECP_ALT_KEEP_ORIGINAL */
 
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
 /* Additional forward declarations */
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
 static int ecp_mod_p255( mbedtls_mpi * );
@@ -811,7 +811,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
         case MBEDTLS_ECP_DP_SECP192K1:
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
             grp->modp = ecp_mod_p192k1;
 #endif
             return( LOAD_GROUP_A( secp192k1 ) );
@@ -819,7 +819,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 
 #if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
         case MBEDTLS_ECP_DP_SECP224K1:
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
             grp->modp = ecp_mod_p224k1;
 #endif
             return( LOAD_GROUP_A( secp224k1 ) );
@@ -827,7 +827,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
         case MBEDTLS_ECP_DP_SECP256K1:
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
             grp->modp = ecp_mod_p256k1;
 #endif
             return( LOAD_GROUP_A( secp256k1 ) );
@@ -850,7 +850,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
         case MBEDTLS_ECP_DP_CURVE25519:
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
             grp->modp = ecp_mod_p255;
 #endif
             return( ecp_use_curve25519( grp ) );
@@ -858,7 +858,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 
 #if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
         case MBEDTLS_ECP_DP_CURVE448:
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
             grp->modp = ecp_mod_p448;
 #endif
             return( ecp_use_curve448( grp ) );
@@ -870,7 +870,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
     }
 }
 
-#if MBEDTLS_ECP_ALT_KEEP_ORIGINAL
+#if defined(MBEDTLS_ECP_ALT_KEEP_ORIGINAL) && MBEDTLS_ECP_ALT_KEEP_ORIGINAL
 
 #if defined(MBEDTLS_ECP_NIST_OPTIM)
 /*

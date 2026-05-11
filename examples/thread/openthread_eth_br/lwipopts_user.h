@@ -97,12 +97,6 @@
 
 #define LWIP_ERRNO_STDINCLUDE     1
 #define LWIP_SOCKET_SET_ERRNO     1
-#ifdef __cplusplus
-extern "C" int *__errno(void);
-#else
-extern int *__errno(void);
-#endif
-#define errno                         (*__errno())
 
 /* ---------- link callback options ---------- */
 /* LWIP_NETIF_LINK_CALLBACK==1: Support a callback function from an interface

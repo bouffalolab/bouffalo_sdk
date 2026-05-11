@@ -26,6 +26,9 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread_port.h>
 #include <ot_radio_trx.h>
+#if OT_RADIO_CSL_DEBUG
+#include <lmac154_dbg.h>
+#endif
 
 #define VERSION_STRING_HELPER(x, y, z) #x "." #y "." #z
 #define VERSION_STRING(x, y, z) VERSION_STRING_HELPER(x, y, z)
@@ -75,7 +78,13 @@ void ot_radioInit(void)
 
     ot_link_metrics_init(IEEE802_15_4_RADIO_RECEIVE_SENSITIVITY);
 
+    ot_radio_ctx.tx_param.csl_opt.csl_tx_offset_sym_cnt = 3;
     otrExitCrit(tag);
+}
+
+void ot_radioSetCslTxOffset(int8_t aOffsetSymCnt)
+{
+    ot_radio_ctx.tx_param.csl_opt.csl_tx_offset_sym_cnt = aOffsetSymCnt;
 }
 
 void ot_radioTask(ot_system_event_t trxEvent)
@@ -152,7 +161,7 @@ bool otr_isStackIdle(void)
     }
     otrExitCrit(tag);
 
-    if (ot_system_event_var == 0 && NULL == pframe) {
+    if (NULL == pframe) {
         radioeState = otPlatRadioGetState(ot_radio_ctx.instance);
         if ( radioeState == OT_RADIO_STATE_DISABLED || otPlatRadioGetState(ot_radio_ctx.instance) == OT_RADIO_STATE_SLEEP ) {
             return true;
@@ -161,6 +170,44 @@ bool otr_isStackIdle(void)
 
     return false;
 }
+
+#if OT_RADIO_CSL_DEBUG
+static lmac154_ie_csl_t *ot_radio_find_csl_ie(uint32_t *frame, uint8_t len, uint8_t mac_hdr_size)
+{
+    uint16_t fcf = frame[0] & 0xFFFF;
+
+    if (!LMAC154_FRAME_IS_FRAME_2015(fcf) || !LMAC154_FRAME_IS_IE_EXIST(fcf)) {
+        return NULL;
+    }
+
+    uint8_t *ie_ptr = (uint8_t *)frame + mac_hdr_size;
+
+    /* skip aux security header if present */
+    if (fcf & LMAC154_FRAME_SECURITY_MASK) {
+        lmac154_aux_hdr_t *aux = (lmac154_aux_hdr_t *)ie_ptr;
+        static const uint8_t key_id_len[] = {0, 1, 5, 9};
+        uint8_t kid_mode = aux->key_id_mode;
+        if (kid_mode > 3) kid_mode = 3;
+        ie_ptr += sizeof(lmac154_aux_hdr_t) - sizeof(aux->key_id) + key_id_len[kid_mode];
+    }
+
+    while (ie_ptr + sizeof(lmac154_ie_hdr_t) <= (uint8_t *)frame + len) {
+        lmac154_ie_hdr_t *hdr = (lmac154_ie_hdr_t *)ie_ptr;
+        uint8_t ie_len = hdr->length;
+
+        if (ie_len == 0 || ie_ptr + sizeof(lmac154_ie_hdr_t) + ie_len > (uint8_t *)frame + len) {
+            break;
+        }
+
+        if (hdr->element_id == LMAC154_IE_CSL_ID && ie_len >= 4) {
+            return (lmac154_ie_csl_t *)ie_ptr;
+        }
+
+        ie_ptr += sizeof(lmac154_ie_hdr_t) + ie_len;
+    }
+    return NULL;
+}
+#endif
 
 /************************************ LMAC 15.4 event function ***********************************/
 void ot_radioTxDoneCallback (lmac154_tx_status_t tx_status, uint32_t * ack_frame, uint32_t ack_frame_len)
@@ -190,19 +237,31 @@ void ot_radioTxDoneCallback (lmac154_tx_status_t tx_status, uint32_t * ack_frame
         else {
             otrNotifyEvent(OT_SYSTEM_EVENT_RADIO_TX_ERROR);
         }
+
+#if OT_RADIO_CSL_DEBUG
+        if (tx_status == LMAC154_TX_STATUS_ACKED || tx_status == LMAC154_TX_STATUS_NO_ACK) {
+            uint32_t actual_shr = (uint32_t)(lmac154_get_tx_done_timestamp() >> 4) - (((uint32_t)ot_radio_ctx.tx_param.pkt_length + 1) << 1) - LMAC154_SHR_LEN;
+            if (ot_radio_ctx.tx_param.csl_opt.csl_period) {
+                lmac154_dbg_trace("csl child txd: %ld, tx seq: %d %d, tx ts: %d, period: %lu, tx phase: %u, tx drift: %d\r\n",
+                        zb_timer_get_current_time(), ot_radio_ctx.tx_frame->mPsdu[2], tx_status, actual_shr,
+                        ot_radio_ctx.tx_param.csl_opt.csl_period, ot_radio_ctx.tx_param.csl_opt.csl_sample_time,
+                        ot_radio_ctx.tx_param.csl_opt.dbg_csl_tx_phase,
+                        ot_radio_ctx.tx_param.csl_opt.dbg_csl_drift_tx);
+            } 
+            else {
+                lmac154_ie_csl_t *csl = ot_radio_find_csl_ie(ack_frame, ack_frame_len, 3);
+                if (tx_status == LMAC154_TX_STATUS_ACKED && csl != NULL) {
+                    uint32_t expected_shr = ot_radio_ctx.tx_param.tx_timing.base_time + ot_radio_ctx.tx_param.tx_timing.delay_time;
+                    int32_t drift = expected_shr? (int32_t)(expected_shr - actual_shr) : 0;
+                    lmac154_dbg_trace("csl parent txd: %ld,  tx seq: %d, tx ts: %d, phase: %u, period: %lu, expected %lu, timing drift: %d sym\r\n",
+                        zb_timer_get_current_time(), ot_radio_ctx.tx_frame->mPsdu[2], actual_shr,
+                        csl->bf.phase, csl->bf.period, expected_shr, drift);
+                }
+            }
+        }
+#endif
     }
 }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint16_t ot_radioGetCslPhase(void)
-{
-    uint32_t curTime       = (uint32_t)otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = ot_radio_ctx.tx_param.tx_opt.csl.csl_period * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((ot_radio_ctx.tx_param.tx_opt.csl.csl_sample_time % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
-
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
-}
-#endif
 
 static inline uint32_t ot_radio_prepare_enh_ack(lmac154_receiveInfo_t *rx_info, uint32_t *rx_buf, 
                                                 int8_t rssi, int8_t lqi, uint8_t ** p_ack)
@@ -269,9 +328,10 @@ static inline uint32_t ot_radio_prepare_enh_ack(lmac154_receiveInfo_t *rx_info, 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     uint8_t *p = ack_ptr + ack_len;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (ot_radio_ctx.tx_param.tx_opt.csl.csl_period > 0) {
-        p += lmac154_gen_csl_ie(p, ot_radio_ctx.tx_param.tx_opt.csl.csl_period,
-                                ot_radioGetCslPhase());
+    if (ot_radio_ctx.tx_param.csl_opt.csl_period > 0) {
+        uint32_t tx_sfd_sym = rx_info->rx_done_symbol_cnt + rx_info->enh_ack_time + LMAC154_SHR_LEN;
+        rx_info->dbg_csl_ack_phase = lmac154_gen_csl_ie(ot_radio_ctx.tx_param.csl_opt.csl_period, ot_radio_ctx.tx_param.csl_opt.csl_sample_time, (lmac154_ie_csl_t *)p, tx_sfd_sym);
+        p += sizeof(lmac154_ie_csl_t);
     }
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -328,13 +388,23 @@ void ot_radioRxDoneCallback(lmac154_rx_status_t status, lmac154_receiveInfo_t *i
     otRadio_rxFrame_t *     rx_frame;
     int8_t                  lqi, rssi;
     uint8_t *               p_ack = NULL;
-    static int              ack_len = 0;
+    int                     ack_len = 0;
 
     if (LMAC154_RX_STATUS_ACK_ERR == status) {
         return;
     }
 
     if (LMAC154_RX_STATUS_RX_DONE == status) {
+#if OT_RADIO_CSL_DEBUG
+        if (info->rx_error) {
+            if (ot_radio_ctx.tx_param.csl_opt.csl_period) {
+                lmac154_dbg_trace("csl child rx error: %ld,  mpdu: %08lx, rx ts: %d, error: %x\r\n",
+                        zb_timer_get_current_time(), frame[0], info->rx_done_symbol_cnt - ((uint32_t)(info->rx_length + 1) << 1), info->rx_error);
+            }
+            return;
+        }
+#endif
+
         if (info->rx_error) {
             return;
         }
@@ -347,6 +417,7 @@ void ot_radioRxDoneCallback(lmac154_rx_status_t status, lmac154_receiveInfo_t *i
             if (ack_len <= 2 || lmac154_writeTxAckFrame(p_ack, ack_len) < 0) {
                 return;
             }
+            info->dbg_ack_len = ack_len + 2;
         }
 
         if (utils_dlist_empty(&ot_radio_ctx.frame_list)) {
@@ -370,21 +441,31 @@ void ot_radioRxDoneCallback(lmac154_rx_status_t status, lmac154_receiveInfo_t *i
     }
 
     if (LMAC154_RX_STATUS_ACK_SENT == status || !info->is_tx_acking) {
-        //if (LMAC154_RX_STATUS_ACK_SENT == status) {
-        //    int ack_time;
-        //    if (ack_len == 0) {
-        //        ack_time = (uint32_t)(lmac154_get_tx_done_timestamp() >> 4) 
-        //                    - ((3 + 2) << 1) - 12 
-        //                    - info->rx_done_symbol_cnt;
-        //    }
-        //    else {
-        //        ack_time = (uint32_t)(lmac154_get_tx_done_timestamp() >> 4) 
-        //                    - ((ack_len + 2) << 1) - 12 
-        //                    - info->rx_done_symbol_cnt;
-        //    }
-        //    printf ("ack %d %d %d %d\r\n", 
-        //        (uint8_t)(frame[0] >> 16), ack_len, info->dbg_ack_cost, ack_time);
-        //}
+#if OT_RADIO_CSL_DEBUG
+        uint32_t rx_sfd_sym = info->rx_done_symbol_cnt - ((uint32_t)(info->rx_length + 1) << 1);
+        if (ot_radio_ctx.tx_param.csl_opt.csl_period) {
+            uint32_t actual_shr = (uint32_t)(lmac154_get_tx_done_timestamp() >> 4) - (((uint32_t)ot_radio_ctx.tx_param.pkt_length + 1) << 1) - LMAC154_SHR_LEN;
+            uint32_t period_sym = (uint32_t)ot_radio_ctx.tx_param.csl_opt.csl_period * 10;
+            uint32_t sample_phase = ot_radio_ctx.tx_param.csl_opt.csl_sample_time % period_sym;
+            uint32_t rx_phase = rx_sfd_sym % period_sym;
+            int32_t rx_drift_sym = (int32_t)(rx_phase - sample_phase);
+            if (rx_drift_sym > (int32_t)(period_sym / 2)) rx_drift_sym -= period_sym;
+            if (rx_drift_sym < -(int32_t)(period_sym / 2)) rx_drift_sym += period_sym;
+            lmac154_dbg_trace("csl child rxd: %ld, seq: %u, acked: %u, period: %lu, ack phase: %u, sample time: %lu, rxd: %lu, ack drift: %d, rx drift: %d sym\r\n",
+                   zb_timer_get_current_time(), (uint8_t)(frame[0] >> 16), actual_shr,
+                   ot_radio_ctx.tx_param.csl_opt.csl_period, info->dbg_csl_ack_phase, ot_radio_ctx.tx_param.csl_opt.csl_sample_time, rx_sfd_sym, 
+                   info->dbg_csl_drift_ack, rx_drift_sym);
+        }
+        else {
+            lmac154_ie_csl_t *csl = ot_radio_find_csl_ie(frame, info->rx_length, info->mac_hdr_size);
+            if (csl) {
+                lmac154_dbg_trace("csl parent rxd: %d seq: %u, phase: %u, period: %u, rxd: %ld",
+                    zb_timer_get_current_time(), (uint8_t)(frame[0] >> 16),
+                    csl->bf.phase, csl->bf.period, rx_sfd_sym);
+            }
+        }
+        info->dbg_csl_ack_phase = 0;
+#endif
 
         if (utils_dlist_empty(&ot_radio_ctx.frame_list)) {
             return;
@@ -413,7 +494,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    int                 iret;
+    int                 iret = 0;
     uint32_t            tag;
     uint32_t            mhr_len = 0;
     uint32_t            aux_len = 0;
@@ -429,7 +510,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     ot_radio_ctx.tx_param.is_base_param = false;
     ot_radio_ctx.tx_param.is_tx_security = 0;
-    ot_radio_ctx.tx_param.is_tx_csl = 0;
+    ot_radio_ctx.tx_param.tx_timing.base_time = 0;
+    ot_radio_ctx.tx_param.tx_timing.delay_time = 0;
+    ot_radio_ctx.tx_param.csl_opt.csl_ie_offset = 0;
+#if OT_RADIO_CSL_DEBUG
+    ot_radio_ctx.tx_param.dbg_plat_entry_sym = zb_timer_get_current_time();
+#endif
 
     fcf = *(uint16_t *)aFrame->mPsdu;
     if (LMAC154_FRAME_IS_FRAME_2015(fcf)) {
@@ -443,19 +529,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     ot_radio_ctx.tx_param.pkt_length = aFrame->mLength - 2;
     ot_radio_ctx.tx_param.tx_channel = aFrame->mChannel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
     ot_radio_ctx.tx_param.resume_channel = ot_radio_ctx.tx_param.tx_channel;
-    ot_radio_ctx.tx_param.tx_opt.timing.base_time = aFrame->mInfo.mTxInfo.mTxDelayBaseTime >> ZB_TIMER_BITNUM_PER_TICK;
-    ot_radio_ctx.tx_param.tx_opt.timing.delay_time = aFrame->mInfo.mTxInfo.mTxDelay >> ZB_TIMER_BITNUM_PER_TICK;
     ot_radio_ctx.tx_param.csma_ca_max_backoff = aFrame->mInfo.mTxInfo.mMaxCsmaBackoffs;
-    if (aFrame->mInfo.mTxInfo.mTxDelayBaseTime || aFrame->mInfo.mTxInfo.mTxDelay) {
-        ot_radio_ctx.tx_param.is_base_param = false;
-        ot_radio_ctx.tx_param.is_tx_timeing = true;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (ot_radio_ctx.tx_param.tx_opt.csl.csl_period) {
-            return OT_ERROR_INVALID_ARGS;
-        }
-#endif
-    }
-
     ot_radio_ctx.tx_param.is_cca = aFrame->mInfo.mTxInfo.mCsmaCaEnabled;
     ot_radio_ctx.tx_param.tx_done_cb = ot_radioTxDoneCallback;
     ot_radio_ctx.tx_param.next = NULL;
@@ -479,33 +553,28 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             ot_radio_ctx.frame_cnt.value ++;
             ot_radio_ctx.tx_param.sec.key = (uint32_t *)ot_radio_ctx.keys[p_aux->key_id[0] & 3].mKeyMaterial.mKey.m8;
             ot_radio_ctx.tx_param.pkt_length = ot_radio_ctx.tx_param.pkt_length - (4 << ((ot_radio_ctx.tx_param.sec.nonce.security_level & 3) - 1));
-            ot_radio_ctx.tx_param.is_base_param = false;
             ot_radio_ctx.tx_param.is_tx_security = true;
-            aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
         }
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (ot_radio_ctx.tx_param.tx_opt.csl.csl_period > 0 && !aFrame->mInfo.mTxInfo.mIsHeaderUpdated) {
-
+    if (ot_radio_ctx.tx_param.csl_opt.csl_period > 0 && !aFrame->mInfo.mTxInfo.mIsHeaderUpdated) {
         uint8_t *ie_start = (uint8_t *)ot_radio_ctx.tx_param.pkt + mhr_len + aux_len;
-        uint32_t ie_len = ot_radio_ctx.tx_param.pkt_length - mhr_len - aux_len;
+        ie_len = ot_radio_ctx.tx_param.pkt_length - mhr_len - aux_len;
         lmac154_ie_hdr_t *csl_ie = NULL;
 
         ie_len = lmac154_traverse_ie(ie_start, ie_len, LMAC154_IE_CSL_ID, &csl_ie);
         if (ie_len > 0 && csl_ie) {
-            ot_radio_ctx.tx_param.tx_opt.csl.csl_ie_offset = (uint32_t)csl_ie - (uint32_t)(ot_radio_ctx.tx_param.pkt);
-            // lmac154_gen_csl_ie((uint8_t *)csl_ie, (uint16_t)ot_radio_ctx.tx_param.tx_opt.csl.csl_period, ot_radioGetCslPhase());
-            ot_radio_ctx.tx_param.is_base_param = false;
-            ot_radio_ctx.tx_param.is_tx_csl = true;
+            ot_radio_ctx.tx_param.csl_opt.csl_ie_offset = (uint32_t)csl_ie - (uint32_t)(ot_radio_ctx.tx_param.pkt);
             aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
         }
     }
 #endif
     if (ot_radio_ctx.tx_param.is_tx_security) {
+        aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
         ot_radio_ctx.tx_param.sec.a_data_length = mhr_len + aux_len + ie_len;
         if (LMAC154_FRAME_IS_CMD(fcf) && !LMAC154_FRAME_IS_FRAME_2015(fcf)) {
-            /** command is is a_data in 2003/2006 */
+            /** command id is is a_data in 2003/2006 */
             ot_radio_ctx.tx_param.sec.a_data_length += 1;
         }
         ot_radio_ctx.tx_param.sec.m_data_length = ot_radio_ctx.tx_param.pkt_length - ot_radio_ctx.tx_param.sec.a_data_length;
@@ -532,65 +601,37 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         aFrame->mInfo.mTxInfo.mIsSecurityProcessed = true;
     }
 
-    // if (aFrame->mInfo.mTxInfo.mAesKey && !aFrame->mInfo.mTxInfo.mIsSecurityProcessed) {
-    //     ot_radio_ctx.tx_param
-    //     ot_radio_ctx.tx_param.is_tx_security = 1;
-    //     ot_radio_ctx.tx_param.sec.nonce.frame_cnt++;
-    //     ot_radio_ctx.enh_ack_sec.nonce.frame_cnt = ot_radio_ctx.tx_param.sec.nonce.frame_cnt;
-
-    //     ot_radio_ctx.tx_param.sec
-
-
-    //     // Set security level based on frame control
-    //     uint16_t fcf = *(uint16_t *)aFrame->mPsdu;
-    //     if (fcf & LMAC154_FRAME_SECURITY_MASK) {
-    //         // Parse auxiliary security header to get security level and key ID
-    //         uint32_t mhr_len = lmac154_get_mhr_len(aFrame->mPsdu);
-    //         lmac154_aux_hdr_t *pAuxHdr = NULL;
-    //         if (lmac154_parse_aux_hdr(aFrame->mPsdu, mhr_len, &pAuxHdr) > 0 && pAuxHdr) {
-    //             ot_radio_ctx.tx_param.sec.security_level = pAuxHdr->sec_lvl;
-    //             ot_radio_ctx.tx_param.sec.nonce.key_id = pAuxHdr->key_id[0];
-
-    //             if ((uint8_t)(pAuxHdr->key_id[0] - ot_radio_ctx.mac_key_id + 1) > 2) {
-    //                 return OT_ERROR_INVALID_ARGS;
-    //             }
-    //             ot_radio_ctx.tx_param.sec.key = (uint32_t *)ot_radio_ctx.keys[pAuxHdr->key_id[0] & 3].mKeyMaterial.mKey.m8;
-    //         }
-    //     }
-    // } else {
-    //     ot_radio_ctx.tx_param.is_tx_security = 0;
-    // }
-
-// #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-//         // Seek the time sync offset and update the rendezvous time
-//         if (aFrame->mInfo.mTxInfo.mIeInfo && aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0 && !aFrame->mInfo.mTxInfo.mIsHeaderUpdated) {
-//             uint8_t *timeIe = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
-//             uint64_t time   = otPlatAlarmMicroGetNow() + aFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
-
-//             *timeIe ++ = aFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
-//             memcpy(timeIe, &time, sizeof(uint64_t));
-//             *(++timeIe) = (uint8_t)(time & 0xff);
-//         }
-// #endif
-
-// #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-//         if (ot_radio_ctx.tx_param.tx_opt.csl.csl_period > 0 && !aFrame->mInfo.mTxInfo.mIsHeaderUpdated) {
-
-//             uint8_t *ie_start = aFrame->mPsdu + mhr_len;
-//             uint32_t ie_len = aFrame->mLength - mhr_len;
-//             lmac154_ie_hdr_t *csl_ie = NULL;
-
-//             if (lmac154_traverse_ie(ie_start, ie_len, LMAC154_IE_CSL_ID, &csl_ie) > 0 && found_ie) {
-//                 lmac154_gen_csl_ie((uint8_t *)csl_ie, (uint16_t)ot_radio_ctx.tx_param.tx_opt.csl.csl_period, ot_radioGetCslPhase());
-//             }
-//         }
-// #endif
+    if (ot_radio_ctx.tx_param.csl_opt.csl_ie_offset && (ot_radio_ctx.tx_param.tx_timing.base_time || ot_radio_ctx.tx_param.tx_timing.delay_time)) {
+        return OT_ERROR_INVALID_ARGS;
+    }
 
     ot_radio_ctx.tx_frame = aFrame;
 
     tag = otrEnterCrit();
-    iret = lmac154_triggerParamTxExt(&ot_radio_ctx.tx_param);
+
+    if (aFrame->mInfo.mTxInfo.mTxDelayBaseTime || aFrame->mInfo.mTxInfo.mTxDelay) {
+
+        uint32_t base_symbol = zb_timer_get_current_time();
+
+        ot_radio_ctx.tx_param.tx_timing.delay_time = (aFrame->mInfo.mTxInfo.mTxDelay >> ZB_TIMER_BITNUM_PER_TICK) - 
+                                                     ((uint32_t)(base_symbol & 0xfffffff) - 
+                                                     ((uint32_t)(aFrame->mInfo.mTxInfo.mTxDelayBaseTime >> ZB_TIMER_BITNUM_PER_TICK)) - LMAC154_SHR_LEN);
+        ot_radio_ctx.tx_param.tx_timing.base_time = base_symbol;
+        if (ot_radio_ctx.tx_param.tx_timing.delay_time > (OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US >> ZB_TIMER_BITNUM_PER_TICK)) {
+            iret = -255;
+        }
+    }
+
+    if (iret >= 0) {
+        iret = lmac154_triggerParamTxExt(&ot_radio_ctx.tx_param);
+    }
     otrExitCrit(tag);
+#if OT_RADIO_CSL_DEBUG
+    lmac154_dbg_trace("csl send: %ld, seq: %u, period: %lu, sample time: %lu, %s, %d\r\n",
+           zb_timer_get_current_time(), aFrame->mPsdu[2], 
+           ot_radio_ctx.tx_param.csl_opt.csl_period, ot_radio_ctx.tx_param.csl_opt.csl_sample_time,
+           LMAC154_FRAME_IS_CMD(fcf)? "cmd": "data", iret);
+#endif
 
     if (iret >= 0) {
         otPlatRadioTxStarted(aInstance, aFrame);
@@ -773,7 +814,6 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
     }
 
     if (ot_radio_ctx.tx_frame) {
-        /** mac layer retring doesn't get done */
         return OT_RADIO_STATE_TRANSMIT;
     }
 
@@ -823,16 +863,46 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     lmac154_enableRx();
 
+#if OT_RADIO_CSL_DEBUG
+    if (ot_radio_ctx.tx_param.csl_opt.csl_period) {
+        lmac154_dbg_trace("m154_rx_open %10ld ch%d %d\n", zb_timer_get_current_time(), aChannel, lmac154_getRFState());
+    }
+#endif
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
+    bool is_rx_on_when_idle = false;
 #if (OPENTHREAD_FTD) || (OPENTHREAD_MTD)
-    lmac154_setRxStateWhenIdle(otThreadGetLinkMode(aInstance).mRxOnWhenIdle);
+    is_rx_on_when_idle = otThreadGetLinkMode(aInstance).mRxOnWhenIdle;
 #endif
+    lmac154_setRxStateWhenIdle(is_rx_on_when_idle);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint32_t tag = otrEnterCrit();
+    lmac154_rf_state_t rf_state = lmac154_getRFState();
+    if (!is_rx_on_when_idle && ot_radio_ctx.tx_param.csl_opt.csl_period) {
+
+        /* Skip disableRx if RF is busy receiving to avoid truncating
+         * an in-progress frame. This allows OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER
+         * to cover the actual frame reception time rather than being cut short
+         * by the timer-based sleep. */
+        if (rf_state != LMAC154_RF_STATE_RX_DOING && rf_state != LMAC154_RF_STATE_ACK_DOING) {
+            lmac154_disableRx();
+        }
+    }
+    otrExitCrit(tag);
+#if OT_RADIO_CSL_DEBUG
+    if (ot_radio_ctx.tx_param.csl_opt.csl_period) {
+        lmac154_dbg_trace("m154_rx_sleep %10ld %d=>%d ts=%ld",
+            zb_timer_get_current_time(), rf_state, lmac154_getRFState(), ot_radio_ctx.tx_param.csl_opt.csl_sample_time);
+    }
+#endif
+#else
     lmac154_disableRx();
+#endif
     return OT_ERROR_NONE;
 }
 
@@ -947,14 +1017,15 @@ otError otPlatRadioEnableCsl(otInstance *        aInstance,
     OT_UNUSED_VARIABLE(aShortAddr);
     OT_UNUSED_VARIABLE(aExtAddr);
 
-    ot_radio_ctx.tx_param.tx_opt.csl.csl_period = aCslPeriod;
+    ot_radio_ctx.tx_param.csl_opt.csl_period = aCslPeriod;
+    lmac154_setRxFiltering(true);
 
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioResetCsl(otInstance *aInstance)
 {
-    ot_radio_ctx.tx_param.tx_opt.csl.csl_period = 0;
+    ot_radio_ctx.tx_param.csl_opt.csl_period = 0;
 
     return OT_ERROR_NONE;
 }
@@ -963,21 +1034,18 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    ot_radio_ctx.tx_param.tx_opt.csl.csl_sample_time = aCslSampleTime;
+    ot_radio_ctx.tx_param.csl_opt.csl_sample_time = aCslSampleTime / LMAC154_US_PER_SYMBOL;
 }
 
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    return 40;
-    // return BFLB_RADIO_CSL_ACCURACY;
+    return BFLB_RADIO_CSL_ACCURACY;
 }
 
 uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return 40;
-    // return BFLB_RADIO_CSL_UNCERTAINTY;
+    return BFLB_RADIO_CSL_UNCERTAINTY;
 }
 #endif

@@ -393,11 +393,14 @@ void solution_init(void)
     /************** image transmission *************** */
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_HIBOOSTER_TX)
-    hb_sender_init(8800);
+    /* Default startup of the sending end (server) */
+    hb_sender_init(0);
 #endif
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_HIBOOSTER_RX)
-    hb_recv_init(9000);
+    /* From the application initiating the receiving end */
+    // hb_recv_init(0, 0U, 0U, 0U, 0U, 0);
+    // hb_recv_start();
 #endif
 
     xTaskCreate(fps_printf_task, (char *)"fps_printf", 512, NULL, 2, NULL);

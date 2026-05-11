@@ -26,15 +26,15 @@
 #define DBG_TAG "TCP_FOTA"
 #include "log.h"
 
-#define TCP_FOTA_RECV_SIZE  512
+#define TCP_FOTA_RECV_SIZE 512
 
-#define TCP_FOTA_STATUS_CALLBACK(handle, s)                   \
-        if (handle->status != s) {                            \
-            handle->status  = s;                              \
-            if (handle->cb) {                                 \
-                handle->cb(handle->cb_arg, handle->status);   \
-            }                                                 \
-        }
+#define TCP_FOTA_STATUS_CALLBACK(handle, s)             \
+    if (handle->status != s) {                          \
+        handle->status = s;                             \
+        if (handle->cb) {                               \
+            handle->cb(handle->cb_arg, handle->status); \
+        }                                               \
+    }
 
 struct tcp_fota {
     char *ip;
@@ -72,8 +72,8 @@ static int tcp_fota_connect(struct tcp_fota *fota)
 
     fota->sock = -1;
 
-    for (int retry = 0; retry < TCP_FOTA_MAX_RETRY; retry++) {
-        LOG_I("Connection attempt %d/%d\r\n", retry + 1, TCP_FOTA_MAX_RETRY);
+    for (int retry = 0; retry < CONFIG_FOTA_TCP_RETRY_CNT_MAX; retry++) {
+        LOG_I("Connection attempt %d/%d\r\n", retry + 1, CONFIG_FOTA_TCP_RETRY_CNT_MAX);
 
         fota->sock = socket(AF_INET, SOCK_STREAM, 0);
         if (fota->sock < 0) {
@@ -88,12 +88,12 @@ static int tcp_fota_connect(struct tcp_fota *fota)
             fota->sock = -1;
         }
 
-        if (retry < TCP_FOTA_MAX_RETRY - 1) {
-            vTaskDelay(pdMS_TO_TICKS(TCP_FOTA_RETRY_DELAY_MS));
+        if (retry < CONFIG_FOTA_TCP_RETRY_CNT_MAX - 1) {
+            vTaskDelay(pdMS_TO_TICKS(CONFIG_FOTA_TCP_RETRY_DELAY_MS));
         }
     }
 
-    LOG_E("Failed to connect after %d attempts\r\n", TCP_FOTA_MAX_RETRY);
+    LOG_E("Failed to connect after %d attempts\r\n", CONFIG_FOTA_TCP_RETRY_CNT_MAX);
     return -1;
 }
 

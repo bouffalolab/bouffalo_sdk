@@ -26,6 +26,7 @@ static void mbedtls_timing_update_alarm( void )
     }
 }
 
+#ifndef BL618DG
 #ifndef CONFIG_NEWLIB
 #include <bflb_rtc.h>
 static struct bflb_device_s *rtc = NULL;
@@ -35,7 +36,7 @@ static struct timezone tz = {
     .tz_minuteswest = 0
 };
 
-int _gettimeofday_r(struct _reent *reent, struct timeval *tp, void *tzvp)
+int _gettimeofday_r(void *nop, struct timeval *tp, void *tzvp)
 {
     struct timezone *tzp = tzvp;
 
@@ -56,6 +57,7 @@ int _gettimeofday_r(struct _reent *reent, struct timeval *tp, void *tzvp)
 
     return 0;
 }
+#endif
 #endif
 
 unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )

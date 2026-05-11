@@ -6160,6 +6160,8 @@ extern const struct wpa_driver_ops wpa_driver_none_ops; /* driver_none.c */
 #endif /* CONFIG_DRIVER_NONE */
 #ifdef CONFIG_DRIVER_MACSW
 extern const struct wpa_driver_ops wpa_driver_macsw_ops; /* driver_macsw.c */
+bool macsw_hw_feature_uses_static_rates(const int *rates);
+bool macsw_hw_feature_uses_static_channels(const struct hostapd_channel_data *channels);
 #endif /* CONFIG_DRIVER_MACSW */
 
 uint16_t wpa_supplicant_get_status_code(void *ctx);

@@ -138,8 +138,6 @@ void sys_thread_sem_deinit(void);
 #define LWIP_NETCONN_THREAD_SEM_ALLOC() sys_thread_sem_init()
 #define LWIP_NETCONN_THREAD_SEM_FREE() sys_thread_sem_deinit()
 
-extern int *__errno(void);
-#define errno                         (*__errno())
 #define LWIP_NETIF_STATUS_CALLBACK    1
 #define LWIP_NETIF_API                1
 

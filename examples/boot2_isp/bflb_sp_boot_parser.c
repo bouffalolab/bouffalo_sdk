@@ -110,7 +110,7 @@ fih_ret bflb_sp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *dat
         boot_pk_sha384_config *cfg = (boot_pk_sha384_config *)data;
 
         if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_sha384_config) - 4)) {
-            /* Check public key with data info in OTP using SHA384 */
+            /* Check public key with data info using SHA384 */
             bflb_sha512_update(sha, &ctx_sha384, data, HAL_BOOT2_ECC_KEYXSIZE_SHA384 + HAL_BOOT2_ECC_KEYYSIZE_SHA384);
             bflb_sha512_finish(sha, &ctx_sha384, (uint8_t *)pk_hash);
 
@@ -141,7 +141,7 @@ fih_ret bflb_sp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *dat
         boot_pk_config *cfg = (boot_pk_config *)data;
 
         if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_config) - 4)) {
-            /* Check public key with data info in OTP using SHA256 */
+            /* Check public key with data info using SHA256 */
             bflb_sha256_update(sha, &ctx_sha256, data, HAL_BOOT2_ECC_KEYXSIZE + HAL_BOOT2_ECC_KEYYSIZE);
             bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)pk_hash);
 

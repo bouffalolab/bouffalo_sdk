@@ -1,11 +1,11 @@
 # POST_PROC combine
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
+if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
     set(TOOL_SUFFIX ".exe")
     set(CMAKE ${BL_SDK_BASE}/tools/cmake/bin/cmake.exe)
-elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+elseif("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
     set(TOOL_SUFFIX "-ubuntu")
     set(CMAKE cmake)
-elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+elseif("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Darwin")
     set(TOOL_SUFFIX "-macos")
     set(CMAKE cmake)
 endif()
@@ -128,6 +128,18 @@ if(CONFIG_DUALCORE_NP_IMAGE)
 	        ${BIN_FILE}
                 --append NP
                 ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DUALCORE_NP_IMAGE}
+		--output ${BIN_FILE}
+                --align 0x400
+        )
+endif()
+
+if(CONFIG_THIRDCORE_LP_IMAGE)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[dualcore] append CONFIG_THIRDCORE_LP_IMAGE"
+	COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
+	        ${BIN_FILE}
+                --append LP
+                ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_THIRDCORE_LP_IMAGE}
 		--output ${BIN_FILE}
                 --align 0x400
         )

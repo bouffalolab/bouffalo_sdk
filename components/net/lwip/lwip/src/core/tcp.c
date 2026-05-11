@@ -1638,7 +1638,7 @@ tcp_keepalive_start:
     if (ip_get_option(pcb, SOF_KEEPALIVE)
           && ((pcb->state == ESTABLISHED) || (pcb->state == CLOSE_WAIT))) {
       if ((u32_t)pcb->keep_cnt_sent > TCP_KEEPCNT_DEFAULT) {
-        LWIP_DEBUGF(TCP_DEBUG, ("tcp_keepalive_tmr: KEEPALIVE timeout. Aborting connection to ")); ip_addr_debug_print(TCP_DEBUG, &pcb->remote_ip); LWIP_DEBUGF(TCP_DEBUG, ("\n"));
+        LWIP_DEBUGF(TCP_DEBUG, ("tcp_keepalive_tmr: KEEPALIVE timeout. Aborting connection to ")); ip_addr_debug_print_val(TCP_DEBUG, pcb->remote_ip); LWIP_DEBUGF(TCP_DEBUG, ("\n"));
         ++pcb_remove;
         ++pcb_reset;
         tcp_keepalive_timer_stop(pcb);

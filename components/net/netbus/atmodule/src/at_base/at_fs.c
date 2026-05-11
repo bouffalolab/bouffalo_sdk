@@ -1,5 +1,4 @@
 #include <errno.h>
-#include <reent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -137,4 +136,3 @@ int at_load_file(const char *path, char **buf, int *n)
     }
     return 0;
 }
-

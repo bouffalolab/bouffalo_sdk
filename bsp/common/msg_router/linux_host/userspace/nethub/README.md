@@ -187,17 +187,26 @@ Current implementation:
 
 `build.sh` builds userspace with `ENABLE_NETIF_AUTO_CONFIG=1` by default.
 
-After the device reports `GOTIP`, the host tries to configure:
+After the device reports `GOTIP`, the host tries to configure the Linux
+network interface selected by `NETHUB_NETIF_NAME`.
 
-- the IP address of `mr_eth0`
+- the IP address and netmask
 - the default gateway
 - DNS
+
+If `NETHUB_NETIF_NAME` is unset, SDIO/netlink defaults to `mr_eth0`.
+USB mode requires the actual Linux netdev name, for example:
+
+```bash
+export NETHUB_VCHAN_TRANSPORT=usb
+export NETHUB_NETIF_NAME=usb0
+```
 
 If `connect_ap` succeeds but the host still cannot reach the network,
 check:
 
 - whether `status` has reached `GOTIP`
-- whether `mr_eth0` has an address
+- whether the selected netdev has an address
 - whether services such as NetworkManager or `dhcpcd` override the
   NetHub configuration
 

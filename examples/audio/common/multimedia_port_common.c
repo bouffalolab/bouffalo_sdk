@@ -14,8 +14,10 @@
 #include <bflb_gpio.h>
 #if defined(BL616CL)
 #include <bl616cl_gpio.h>
+#include <bl616cl_glb.h>
 #elif defined(BL616)
 #include <bl616_gpio.h>
+#include <bl616_glb.h>
 #endif
 uint32_t g_pa_delay_1 = 5;
 uint32_t g_pa_delay_2 = 90;     /* this is time set according to the pa manual */

@@ -480,17 +480,18 @@ int32_t bflb_sp_mediaboot_parse_one_group_xz(boot2_image_config *boot_img_cfg, u
     } else {
         if (boot_img_cfg->basic_cfg.no_segment) {
             /* Flash image */
+#if defined(CONFIG_ANTI_ROLLBACK)
+            if ((input != NULL) && (g_boot2_parse_xz_image_status == 1)) {
+                ret = bflb_sp_mediaboot_version_check(input, NULL);
+                if (ret != SUCCESS) {
+                    return BFLB_BOOT2_IMG_Roll_Back;
+                }
+                g_boot2_parse_xz_image_status = 2;
+            }
+#endif
             if (!boot_img_cfg->basic_cfg.hash_ignore) {
                 //MSG("xz Cal hash len %d\r\n",boot_img_cfg->basic_cfg.img_len_cnt);
                 if(input != NULL){
-#ifdef CONFIG_ANTI_ROLLBACK
-                    if (g_boot2_parse_xz_image_status == 1) {
-                        ret = bflb_sp_mediaboot_version_check(input, NULL);
-                        if (ret != SUCCESS) {
-                            return BFLB_BOOT2_IMG_Roll_Back;
-                        }
-                    }
-#endif
 #if HAL_BOOT2_SUPPORT_SIGN_SHA384
                     if (boot_img_cfg->basic_cfg.sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
                         bflb_sha512_update(sha, &ctx_sha384, input, len);

@@ -23,6 +23,11 @@
 
 #include "eloop_rtos.h"
 
+#if MACSW_WFA
+/* Sentinel symbol for CI verification: nm <elf> | grep __ci_wfa_sentinel */
+volatile int __ci_wfa_sentinel = 1;
+#endif
+
 #define TX_FRAME_TO_MS 300
 
 #define MAC_FMT "%02X:%02X:%02X:%02X:%02X:%02X"
@@ -290,29 +295,32 @@ static void wpa_macsw_driver_release_tx_frame(struct wpa_mac_tx_frame *tx_frame)
 	os_free(tx_frame);
 }
 
+static const int macsw_legacy_rates[] =
+	{ 10, 20, 55, 110, 60, 90, 120, 180, 240, 360, 480, 540 };
+static const int macsw_legacy_rates_11b_only[] = { 10, 20, 55, 110 };
+static struct hostapd_channel_data macsw_2g_11b_channels[14];
+
 static int *macsw_init_rates(int *num, bool is_11b_only)
 {
-	int leg_rate[] = {10, 20, 55, 110, 60, 90, 120, 180, 240, 360, 480, 540};
-	int leg_rate_11b_only[] = {10, 20, 55, 110};
-	int *rates;
-
 	/* Assume all legacy rates are supported */
-    if (is_11b_only) {
-	    rates = os_malloc(sizeof(leg_rate_11b_only));
-    } else {
-	    rates = os_malloc(sizeof(leg_rate));
-    }
-	if (!rates)
-		return NULL;
+	if (is_11b_only) {
+		*num = ARRAY_SIZE(macsw_legacy_rates_11b_only);
+		return (int *) macsw_legacy_rates_11b_only;
+	}
 
-    if (is_11b_only) {
-	    os_memcpy(rates, leg_rate_11b_only, sizeof(leg_rate_11b_only));
-	    *num = sizeof(leg_rate_11b_only) / sizeof(int);
-    } else {
-	    os_memcpy(rates, leg_rate, sizeof(leg_rate));
-	    *num = sizeof(leg_rate) / sizeof(int);
-    }
-	return rates;
+	*num = ARRAY_SIZE(macsw_legacy_rates);
+	return (int *) macsw_legacy_rates;
+}
+
+bool macsw_hw_feature_uses_static_rates(const int *rates)
+{
+	return rates == macsw_legacy_rates ||
+		rates == macsw_legacy_rates_11b_only;
+}
+
+bool macsw_hw_feature_uses_static_channels(const struct hostapd_channel_data *channels)
+{
+	return channels == macsw_2g_11b_channels;
 }
 
 static void macsw_ht_capabilities_init(struct hostapd_hw_modes *mode,
@@ -1413,6 +1421,46 @@ int wpa_macsw_driver_control_bcn(struct wpa_macsw_driver_itf_data *drv,
        return res;
 }
 
+static int macsw_populate_2g_mode(struct hostapd_hw_modes *mode,
+				  const struct cfgmacsw_hw_feature *feat,
+				  enum hostapd_hw_mode hw_mode,
+				  bool is_11b_only_rates)
+{
+	struct hostapd_channel_data *chan;
+	struct mac_chan_def *chan_tag;
+	int i;
+
+	mode->mode = hw_mode;
+	mode->num_channels = feat->chan->chan2G4_cnt;
+	if (hw_mode == HOSTAPD_MODE_IEEE80211B) {
+		mode->channels = macsw_2g_11b_channels;
+	} else {
+		mode->channels = os_malloc(feat->chan->chan2G4_cnt *
+				   sizeof(struct hostapd_channel_data));
+		if (!mode->channels)
+			return -1;
+	}
+
+	chan = mode->channels;
+	chan_tag = feat->chan->chan2G4;
+	for (i = 0; i < feat->chan->chan2G4_cnt; i++, chan++, chan_tag++)
+		macsw_to_hostapd_channel(chan_tag, chan);
+
+	mode->rates = macsw_init_rates(&mode->num_rates, is_11b_only_rates);
+	if (!mode->rates)
+		return -1;
+
+	if (hw_mode == HOSTAPD_MODE_IEEE80211G && feat->me_config.ht_supp) {
+		macsw_ht_capabilities_init(mode, (struct mac_htcapability *)&feat->me_config.ht_cap);
+
+		if (feat->me_config.he_supp)
+			macsw_he_capabilities_init(mode, (struct mac_hecapability *)&feat->me_config.he_cap);
+	}
+
+	return 0;
+}
+
+
 static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 								    u16 *num_modes,
 								    u16 *flags, u8 *dfs)
@@ -1434,43 +1482,30 @@ static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &feat.hdr))
 		return NULL;
 
-	/* Don't create mode in B */
-	if (feat.chan->chan2G4_cnt && feat.chan->chan5G_cnt) {
-		modes = os_zalloc(2 * sizeof(struct hostapd_hw_modes));
-		*num_modes = 2;
-	} else {
-		modes = os_zalloc(sizeof(struct hostapd_hw_modes));
-		*num_modes = 1;
-	}
+	*num_modes = 0;
+	if (feat.chan->chan2G4_cnt)
+		*num_modes += 2;
+	if (feat.chan->chan5G_cnt)
+		*num_modes += 1;
+	modes = os_zalloc(*num_modes * sizeof(struct hostapd_hw_modes));
 	if (!modes)
 		return NULL;
 
 	mode = modes;
 	if (feat.chan->chan2G4_cnt) {
-        // support work on channel 14
-        mode->mode = HOSTAPD_MODE_IEEE80211B;
-		mode->num_channels = feat.chan->chan2G4_cnt;
-		mode->channels = os_malloc(feat.chan->chan2G4_cnt *
-					   sizeof(struct hostapd_channel_data));
-		if (!mode->channels)
+		/*
+		 * Export 2.4 GHz primarily as 11g so STA/AP capability
+		 * derivation keeps using the normal ERP path. Add a separate
+		 * 11b mode for channel 14 and explicit 11b-only AP operation.
+		 */
+		if (macsw_populate_2g_mode(mode, &feat, HOSTAPD_MODE_IEEE80211G,
+					   feat.ap_11b_only))
 			goto err;
+		mode++;
 
-		chan = mode->channels;
-		chan_tag = feat.chan->chan2G4;
-		for (i = 0 ; i < feat.chan->chan2G4_cnt ; i++, chan++, chan_tag++) {
-			macsw_to_hostapd_channel(chan_tag, chan);
-		}
-
-		mode->rates = macsw_init_rates(&mode->num_rates, feat.ap_11b_only);
-		if (!mode->rates)
+		if (macsw_populate_2g_mode(mode, &feat, HOSTAPD_MODE_IEEE80211B,
+					   true))
 			goto err;
-
-		if (feat.me_config.ht_supp) {
-			macsw_ht_capabilities_init(mode, &feat.me_config.ht_cap);
-
-			if (feat.me_config.he_supp)
-				macsw_he_capabilities_init(mode, &feat.me_config.he_cap);
-		}
 		mode++;
 	}
 
@@ -1488,7 +1523,7 @@ static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 			macsw_to_hostapd_channel(chan_tag, chan);
 		}
 
-		mode->rates = macsw_init_rates(&mode->num_rates, feat.ap_11b_only);
+		mode->rates = macsw_init_rates(&mode->num_rates, false);
 		if (!mode->rates)
 			goto err;
 
@@ -1507,10 +1542,10 @@ static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 	return modes;
 
 err:
-	for (i = 0 ; i < *num_modes; i++) {
-		if (modes[i].channels)
+	for (i = 0; i < *num_modes; i++) {
+		if (!macsw_hw_feature_uses_static_channels(modes[i].channels))
 			os_free(modes[i].channels);
-		if (modes[i].rates)
+		if (!macsw_hw_feature_uses_static_rates(modes[i].rates))
 			os_free(modes[i].rates);
 	}
 
@@ -1594,6 +1629,7 @@ static int wpa_macsw_driver_get_capa(void *priv, struct wpa_driver_capa *capa)
 #endif
 #if MACSW_WFA
     capa->flags |= WPA_DRIVER_FLAGS_OBSS_SCAN;
+    printf("CI: WFA macro active, sentinel=%d\r\n", __ci_wfa_sentinel);
 #endif
 
 	capa->wmm_ac_supported = 0;

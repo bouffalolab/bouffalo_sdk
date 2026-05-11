@@ -19,6 +19,7 @@ endif
 
 #CONFIG_ROMFS                 =y
 #CONFIG_POST_BUILDS_GENERATE_ROMFS=y
+CONFIG_GCC_OPTIMISE_LEVEL =-Os
 
 # ============ BT ============
 CONFIG_BLUETOOTH =y

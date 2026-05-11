@@ -5,9 +5,9 @@ export BL_SDK_BASE
 
 BL_SDK_BASE_PATH = $(realpath $(BL_SDK_BASE))
 
-CPU_ID ?= np
+CHIP ?= bl618dg
 BOARD ?= bl618dgdk
-CROSS_COMPILE ?= riscv64-unknown-elf-
+CPU_ID ?= np
 
 
 include $(BL_SDK_BASE)/project.build

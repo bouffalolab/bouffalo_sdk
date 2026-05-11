@@ -74,6 +74,14 @@ SECTIONS
 
     } > code_memory
 
+    .sysinit.array :
+    {
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+    } > code_memory
+
     . = ALIGN(4);
     __itcm_load_addr = .;
 
@@ -190,5 +198,8 @@ SECTIONS
     PROVIDE( __wifi_bss_start = 0 );
     PROVIDE( __wifi_bss_end = 0 );
 
+    /* EM size */
+    __EM_SIZE = DEFINED(ble_controller_init) ? 8K : 0K;
+    PROVIDE( __LD_CONFIG_EM_SEL = __EM_SIZE );
 }
 

@@ -34,7 +34,7 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "FreeRTOS_POSIX/errno.h"
+#include "errno.h"
 #include "FreeRTOS_POSIX/pthread.h"
 
 /**
@@ -217,6 +217,7 @@ int pthread_attr_setdetachstate( pthread_attr_t * attr,
 
 /*-----------------------------------------------------------*/
 
+int sched_get_priority_max( int policy );
 int pthread_attr_setschedparam( pthread_attr_t * attr,
                                 const struct sched_param * param )
 {

@@ -12,6 +12,8 @@ if(CCACHE_PROGRAM)
   message(STATUS "Enable ccache")
 endif()
 
+set(CMAKE_SYSTEM_NAME Generic)
+
 # specify cross compilers and tools
 SET(CMAKE_C_COMPILER ${CROSS_COMPILE}gcc${TOOLCHAIN_SUFFIX} CACHE INTERNAL "")
 SET(CMAKE_CXX_COMPILER ${CROSS_COMPILE}g++${TOOLCHAIN_SUFFIX} CACHE INTERNAL "")

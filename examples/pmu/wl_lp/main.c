@@ -8,7 +8,15 @@
 #include <lwip/etharp.h>
 
 #include "bl_fw_api.h"
+
+#if defined(CONFIG_FHOST)
 #include "fhost_api.h"
+#elif defined(CONFIG_WL80211)
+/* lwip/sockets.h above already defined struct iovec; tell wl80211.h to skip it */
+#define IOVEC_DEFINED
+#include "wl80211.h"
+#endif
+
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
 
@@ -81,6 +89,31 @@ extern void wifi_event_handler(async_input_event_t ev, void *priv);
  * Functions
  ****************************************************************************/
 
+#if defined(CONFIG_WL80211)
+/* wl80211 path: fhost's platform_post_event lazy-inits async_event for us,
+ * but wl80211 does not go through that path, so we must init it ourselves.
+ */
+static void async_event_handler(void *arg1, uint32_t arg2)
+{
+    vTaskSuspendAll();
+    async_event_loop();
+    xTaskResumeAll();
+}
+
+static void async_event_loop_wake(void)
+{
+    BaseType_t xReturn;
+    TickType_t wait = portMAX_DELAY;
+
+    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
+        wait = 0;
+    }
+
+    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
+    configASSERT(xReturn == pdPASS);
+}
+#endif
+
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
     /* If the buffers to be provided to the Idle task are declared inside this
@@ -123,10 +156,20 @@ void wifi_start_firmware_task(void *param)
 
     wifi_task_create();
 
+#if defined(CONFIG_FHOST)
     LOG_I("Starting fhost ...\r\n");
-
     fhost_init();
-
+#elif defined(CONFIG_WL80211)
+    LOG_I("Starting wl80211 ...\r\n");
+    /* Without this, async_post_event() from inside wl80211_init() calls a
+     * NULL notify_cb -> instruction access fault at PC=0.
+     */
+    async_event_init(async_event_loop_wake);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    wl80211_init();
+    async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
+    async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
+#endif
     vTaskDelete(NULL);
 }
 
@@ -140,7 +183,9 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
+#if defined(CONFIG_FHOST)
             wifi_mgmr_task_start();
+#endif
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
@@ -371,7 +416,12 @@ static int test_tcp_keepalive(int argc, char **argv)
     if (argc > 2) {
         bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
 
+#if defined(CONFIG_FHOST)
         printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
+#else
+        wifi_mgmr_sta_ps_enter();
+        printf("sta_ps entered\r\n");
+#endif
         tickless_enter();
     }
 #endif
@@ -635,7 +685,12 @@ int main(void)
 
     tcpip_init(tcpip_init_done, NULL);
 
+    /* wl80211 init path needs a larger stack than fhost (ieee80211 attach + wpa_sm_init) */
+#if defined(CONFIG_WL80211)
+    xTaskCreate(wifi_start_firmware_task, "wifi init", 2048, NULL, 10, NULL);
+#elif defined(CONFIG_FHOST)
     xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
+#endif
 
     HBN_Enable_RTC_Counter();
 #if defined(BL616)

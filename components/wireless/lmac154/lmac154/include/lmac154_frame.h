@@ -129,6 +129,7 @@ typedef union {
 #define LMAC154_TURNAROUND              12
 #define LMAC154_PKT_MAX_LEN             127
 #define LMAC154_PREAMBLE_LEN            8
+#define LMAC154_SHR_LEN                 10
 #define LMAC154_US_PER_SYMBOL           16
 #define LMAC154_US_PER_SYMBOL_BITS      4
 
@@ -438,13 +439,14 @@ static inline uint32_t lmac154_parse_aux_hdr(uint8_t *pkt, uint32_t mhr_len,
 }
 
 /**
- * lmac154_traverse_ie - Ultra-fast IE section length calculator
+ * lmac154_traverse_ie - IE section traversal
  * @ie_start: Pointer to the start of IE section
  * @ie_len: Maximum length to search (buffer limit)
- * @target_id: Target IE ID (use 0xff to calculate total IE section size)
- * @found_ie: Output pointer to the matched IE header
+ * @target_id: Target IE ID to locate; @found_ie is set on first match
+ * @found_ie: Output pointer to the matched IE header (NULL if not found)
  *
- * Return: Total bytes from ie_start to the end of target IE or termination.
+ * Return: Total bytes from ie_start to the end of the Termination IE.
+ * Always traverses the full IE section regardless of target match.
  * Returns 0 if a structural error (truncation) is detected.
  */
 static inline uint32_t lmac154_traverse_ie(uint8_t *ie_start, uint32_t ie_len,
@@ -476,13 +478,10 @@ static inline uint32_t lmac154_traverse_ie(uint8_t *ie_start, uint32_t ie_len,
         if (cur + total_sz > limit)
             return 0;
 
-        /* 3. Target Matching */
+        /* 3. Target Matching - record first occurrence, continue traversal */
         if (id == target_id) {
-            if (found_ie)
+            if (found_ie && !*found_ie)
                 *found_ie = (lmac154_ie_hdr_t *)cur;
-            
-            /* Return total length up to the end of this matched IE */
-            return (uint32_t)((cur + total_sz) - ie_start);
         }
 
         /* 4. Advance pointer */
@@ -494,77 +493,29 @@ static inline uint32_t lmac154_traverse_ie(uint8_t *ie_start, uint32_t ie_len,
 }
 
 /**
- * @brief Callback function prototype for IE traversal
- * @param ie_hdr Pointer to the start of the current IE header
+ * @brief  Generate CSL IE and return the computed phase value.
+ * @note   CslPhase = ceil((sample_time - tx_sfd_sym) % period / 10),
+ *         in 10-symbol units per IEEE 802.15.4-2015.
+ * @param  csl_period     CSL period in 10-symbol units.
+ * @param  csl_sample_time  CSL sample time in symbol count.
+ * @param  csl_ie         Output CSL IE buffer.
+ * @param  tx_sfd_sym     Estimated TX SFD time in symbol count.
+ * @return CSL phase value written to the IE.
  */
-typedef void (*lmac154_ie_cb_t)(lmac154_ie_hdr_t *ie_hdr);
-
-static inline uint32_t lmac154_traverse_ies(uint8_t *ie_start, uint32_t ie_len,
-                                           lmac154_ie_cb_t cb)
+static inline uint16_t lmac154_gen_csl_ie(uint16_t csl_period, uint32_t csl_sample_time,
+                                           lmac154_ie_csl_t *csl_ie, uint32_t tx_sfd_sym)
 {
-    uint8_t *cur = ie_start;
-    uint8_t *limit = ie_start + ie_len;
+    uint32_t period_sym = (uint32_t)csl_period * 10;
+    uint32_t delta_sym  = (csl_sample_time - tx_sfd_sym) % period_sym;
+    uint16_t csl_phase  = (uint16_t)((delta_sym + 9) / 10);
 
-    /* Loop while there is enough data for at least a 2-byte Header IE */
-    while (cur + 2 <= limit) {
-        /* RISC-V Safe: Byte-by-byte 16-bit header fetch
-         * Bits: [0:6] Length, [7:14] ID, [15] Type
-         */
-        uint32_t hdr = (uint32_t)(cur[0] | (cur[1] << 8));
-        uint32_t len = hdr & 0x7F;
-        uint32_t id  = (hdr >> 7) & 0xFF;
-        uint32_t total_sz = len + 2;
+    csl_ie->bf.hdr.length     = 4;
+    csl_ie->bf.hdr.element_id = LMAC154_IE_CSL_ID;
+    csl_ie->bf.hdr.type       = 0;
+    csl_ie->bf.phase          = csl_phase;
+    csl_ie->bf.period         = csl_period;
 
-        /* 1. Fast Termination Check: 0x7E or 0x7F indicates end of Header IEs */
-        if ((id & 0xFE) == 0x7E) {
-            cur += 2;
-            break;
-        }
-
-        /* 2. Boundary Validation: Ensure IE content does not exceed limit */
-        if (cur + total_sz > limit) {
-            break;
-        }
-
-        /* 3. Execute Callback */
-        if (cb) {
-            cb((lmac154_ie_hdr_t *)cur);
-        }
-
-        /* 4. Advance pointer to the next IE */
-        cur += total_sz;
-    }
-
-    /* Return total length of all traversed IEs (including termination) */
-    return (uint32_t)(cur - ie_start);
-}
-
-/**
- * lmac154_gen_csl_ie - Generate CSL IE into a buffer using direct assignment
- * @period: CSL Period (160us units)
- * @phase: CSL Phase
- * @data: Target buffer (minimum 6 bytes)
- *
- * Return: Bytes written (6).
- */
-static inline uint32_t lmac154_gen_csl_ie(uint8_t *data, uint16_t period, uint16_t phase)
-{
-    /* Thread CSL Header: ID=0x1a, Len=4, Type=0 (Header IE)
-     * Bits: [15] Type(0), [14:7] ID(0x1a), [6:0] Len(4)
-     * Hex: 0x0d04 (Little Endian: 0x04, 0x0d)
-     */
-    data[0] = 0x04;
-    data[1] = 0x0d;
-
-    /* Phase (16-bit Little Endian) */
-    data[2] = (uint8_t)(phase & 0xFF);
-    data[3] = (uint8_t)(phase >> 8);
-
-    /* Period (16-bit Little Endian) */
-    data[4] = (uint8_t)(period & 0xFF);
-    data[5] = (uint8_t)(period >> 8);
-
-    return 6;
+    return csl_phase;
 }
 
 #endif /* __LMAC154_FRAME_H__ */

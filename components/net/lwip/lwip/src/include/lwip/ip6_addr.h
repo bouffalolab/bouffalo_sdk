@@ -193,7 +193,7 @@ typedef struct ip6_addr ip6_addr_t;
                                      ((ip6addr).addr[1] == 0) && \
                                      ((ip6addr).addr[2] == 0) && \
                                      ((ip6addr).addr[3] == 0))
-#define ip6_addr_isany(ip6addr) (((ip6addr) == NULL) || ip6_addr_isany_val(*(ip6addr)))
+#define ip6_addr_isany(ip6addr) (((mem_ptr_t)(ip6addr) == 0) || ip6_addr_isany_val(*(ip6addr)))
 
 #define ip6_addr_isloopback(ip6addr) (((ip6addr)->addr[0] == 0UL) && \
                                       ((ip6addr)->addr[1] == 0UL) && \

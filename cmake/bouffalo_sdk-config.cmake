@@ -1,10 +1,10 @@
 
 if(MINGW OR CYGWIN OR WIN32)
-SET(CMAKE_SYSTEM_NAME Generic)
+    SET(CMAKE_SYSTEM_NAME Generic)
 elseif(APPLE)
-SET(CMAKE_SYSTEM_NAME Darwin)
+    SET(CMAKE_SYSTEM_NAME Darwin)
 elseif(UNIX)
-SET(CMAKE_SYSTEM_NAME Linux)
+    SET(CMAKE_SYSTEM_NAME Linux)
 endif()
 SET(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR RISCV)
@@ -31,12 +31,12 @@ add_library(app STATIC)
 target_link_libraries(app sdk_intf_lib)
 
 if(CONFIG_LOG_DISABLE)
-# Disable printf for non-app targets introduced via add_subdirectory below.
-add_compile_options("-Dprintf(...)=")
-add_compile_options("-Dputs(...)=")
-# Keep printf enabled in app.
-target_compile_options(app PRIVATE "-Uprintf")
-target_compile_options(app PRIVATE "-Uputs")
+    # Disable printf for non-app targets introduced via add_subdirectory below.
+    add_compile_options("-Dprintf(...)=")
+    add_compile_options("-Dputs(...)=")
+    # Keep printf enabled in app.
+    target_compile_options(app PRIVATE "-Uprintf")
+    target_compile_options(app PRIVATE "-Uputs")
 endif()
 
 include(${BL_SDK_BASE}/cmake/toolchain.cmake)

@@ -170,12 +170,14 @@
 /* -- MEMP_NUM_SYS_TIMEOUT options --- */
 #define MEMP_NUM_SYS_TIMEOUT          (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 8 + 3 + OTBR_MAX_RIO_ROUTE)
 
+#ifndef errno
 #ifdef __cplusplus
 extern "C" int *__errno(void);
 #else
 extern int *__errno(void);
 #endif
 #define errno                         (*__errno())
+#endif
 
 #define ETHARP_SUPPORT_STATIC_ENTRIES 1
 #define LWIP_HTTPD_FILE_EXTENSION 1

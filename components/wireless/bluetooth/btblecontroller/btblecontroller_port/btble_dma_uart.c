@@ -6,6 +6,9 @@
 #if defined(BL616)
 #include "bl616_l1c.h"
 #endif
+#if defined(BL618DG)
+#include "bl618dg_glb.h"
+#endif
 
 #if defined(BL616) || defined(BL616CL)
 #define UART_NAME                  "uart1"
@@ -19,10 +22,10 @@
 #if defined(BL618DG)
 #define UART_NAME                  "uart1"
 #define UART_BAUDRATE              2000000
-#define UART_TXD_PIN               27
-#define UART_RXD_PIN               28
-#define UART_CTS_PIN               25
-#define UART_RTS_PIN               26
+#define UART_TXD_PIN               15
+#define UART_RXD_PIN               16
+#define UART_CTS_PIN               17
+#define UART_RTS_PIN               18
 #endif
 
 #if defined(BL702L)
@@ -34,8 +37,13 @@
 #define UART_RTS_PIN               26
 #endif
 
+#if defined(BL618DG)
+#define DMA_RX_NAME                "dma1_ch0"
+#define DMA_TX_NAME                "dma1_ch1"
+#else
 #define DMA_RX_NAME                "dma0_ch2"
 #define DMA_TX_NAME                "dma0_ch3"
+#endif
 
 #if defined(BL702L)
 #define UART_FLOW_CTRL_ENABLE      0
@@ -100,7 +108,6 @@ static void dma_tx_isr(void *arg)
 {
     btble_dma_uart_tx_event();
 }
-
 
 static void dma_rx_copy(uint8_t *data, uint32_t len)
 {
@@ -197,7 +204,12 @@ static void dma_tx_init(void)
 
 static void dma_init(void)
 {
+    #if defined(BL618DG)
+    GLB_Set_Peripheral_DMA_CN(GLB_PERI_DMA_UART1_TX, GLB_PERI_DMA_CN_SEL_DMA1);
+    GLB_Set_Peripheral_DMA_CN(GLB_PERI_DMA_UART1_RX, GLB_PERI_DMA_CN_SEL_DMA1);
+    #else
     PERIPHERAL_CLOCK_DMA0_ENABLE();
+    #endif
 
     dma_rx_init();
     dma_tx_init();

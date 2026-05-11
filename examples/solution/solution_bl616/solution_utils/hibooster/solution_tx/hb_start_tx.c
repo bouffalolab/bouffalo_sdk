@@ -12,6 +12,8 @@
 #define DBG_TAG "HB_TRANS"
 #include "log.h"
 
+#define HB_TX_DEFAULT_LOCAL_PORT  8800
+
 #define HB_TX_DEFAULT_FRAME_DEPTH 4
 
 volatile uint32_t g_hb_tx_total_frame_cnt = 0;
@@ -105,7 +107,7 @@ int hb_sender_init(uint16_t local_port)
     }
 
     if (local_port == 0) {
-        local_port = 8800;
+        local_port = HB_TX_DEFAULT_LOCAL_PORT;
         LOG_I("No port specified, using default local=%u\r\n", local_port);
     } else {
         LOG_I("Using specified local port=%u\r\n", local_port);

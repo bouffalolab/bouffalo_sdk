@@ -2,6 +2,8 @@
 struct bflb_pec_qspi_cam_s cam_cfg_bf20a6 = {
     .mem = 0,                                /*!< memory address of first instruction */
     .div = 0,                                /*!< divisor, N = div + 1 */
+    .dma_enable = true,                      /*!< enable or disable dma */
+    .fifo_threshold = 8 - 1,                 /*!< tx fifo threshold */
     .pixel_bits = 16,                        /*!< clock count of every pixel */
     .pin_pclk = PEC_QSPI_CAM_PCLK_PIN,       /*!< QSPI CAM PCLK pin index */
     .pin_d0 = PEC_QSPI_CAM_D0_PIN,           /*!< QSPI CAM D0 pin index */

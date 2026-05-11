@@ -21,6 +21,7 @@
 #include <zb_timer.h>
 #if CONFIG_LMAC154_DBG
 #include <lmac154_dbg.h>
+#include <shell.h>
 #endif
 
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
@@ -81,7 +82,7 @@ static void lmac154_app_init(void)
     lmac154_setStd2015Extra(true);
     lmac154_setTxRetry(0);
     lmac154_fptClear();
-    lmac154_setEnhAckWaitTime((LMAC154_AIFS + 10 + (6 + 42) * 2) << LMAC154_US_PER_SYMBOL_BITS);
+    lmac154_setEnhAckWaitTime((LMAC154_AIFS + (6 + 39) * 2 + 20) << LMAC154_US_PER_SYMBOL_BITS);
     lmac154_setRxStateWhenIdle(true);
 
 #if defined(BL702L)
@@ -174,4 +175,8 @@ int main(void)
     while (1) {
     }
 }
+
+#if CONFIG_LMAC154_DBG
+SHELL_CMD_EXPORT_ALIAS(lmac154_dbg_cli, m154, m154 diagnostic cli.);
+#endif
 

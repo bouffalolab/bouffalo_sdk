@@ -132,8 +132,6 @@ void sys_thread_sem_deinit(void);
 #define LWIP_IGMP                       1
 #endif
 
-extern int *__errno(void);
-#define errno                         (*__errno())
 #define LWIP_NETIF_STATUS_CALLBACK    1
 #define LWIP_NETIF_API                1
 

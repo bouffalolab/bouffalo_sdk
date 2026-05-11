@@ -23,6 +23,7 @@
 #ifndef __BFLB_ROMFS_H__
 #define __BFLB_ROMFS_H__
 
+#include <stdint.h>
 #include "stdio.h"
 #include "string.h"
 

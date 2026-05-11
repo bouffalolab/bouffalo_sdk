@@ -1,6 +1,6 @@
 sdk_generate_library()
 
-sdk_library_add_sources(cli_al.c)
+sdk_library_add_sources_ifdef(CONFIG_SHELL cli_al.c)
 sdk_library_add_sources(net_al.c)
 sdk_library_add_sources(pbuf_custom_ref.c)
 sdk_library_add_sources(net_al_ext.c)

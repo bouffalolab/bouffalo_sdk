@@ -529,3 +529,58 @@ BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, uint8_t rsvd, uint32_t mas
 
     return SUCCESS;
 }
+
+/****************************************************************************/ /**
+ * @brief  Efuse read/write lock AES key
+ *
+ * @param  key_index: AES key slot index
+ * @param  rd_lock: read lock enable
+ * @param  wr_lock: write lock enable
+ *
+ * @return 0 for success
+ *
+*******************************************************************************/
+int bflb_efuse_rw_lock_aes_key(uint8_t key_index, uint8_t rd_lock, uint8_t wr_lock)
+{
+    uint32_t tmpval = 0;
+
+    if (0 == key_index) {
+        if (wr_lock) {
+            tmpval |= (1 << 17);
+        }
+        if (rd_lock) {
+            tmpval |= (1 << 27);
+        }
+    } else if (1 == key_index) {
+        if (wr_lock) {
+            tmpval |= (1 << 18);
+        }
+        if (rd_lock) {
+            tmpval |= (1 << 28);
+        }
+    } else if (2 == key_index) {
+        if (wr_lock) {
+            tmpval |= ((1 << 19) | (1 << 20) | (1 << 21));
+        }
+        if (rd_lock) {
+            tmpval |= ((1 << 29) | (1 << 30) | (1 << 31));
+        }
+    } else if (3 == key_index) {
+        if (wr_lock) {
+            tmpval |= ((1 << 22) | (1 << 23));
+        }
+        if (rd_lock) {
+            tmpval |= (1 << 14);
+        }
+    } else if (4 == key_index) {
+        if (wr_lock) {
+            tmpval |= (1 << 24);
+        }
+        if (rd_lock) {
+            tmpval |= (1 << 25);
+        }
+    }
+    bflb_ef_ctrl_write_direct(NULL, 0x7C, &tmpval, 1, 1);
+
+    return 0;
+}

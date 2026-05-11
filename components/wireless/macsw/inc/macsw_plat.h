@@ -6,6 +6,7 @@
  ****************************************************************************************
  */
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 //#include "FreeRTOS.h"
@@ -112,6 +113,10 @@ void wifi_task_resume(bool isr);
  ****************************************************************************************
  */
 uint32_t wifi_sys_now_ms(bool isr);
+
+#if MACSW_TWT && defined(CFG_WIFI_TWT_PDS15_ENABLE)
+int macsw_platform_get_time_us(uint64_t *time_us);
+#endif
 
 
 /**

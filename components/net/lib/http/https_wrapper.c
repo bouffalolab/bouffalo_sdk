@@ -19,6 +19,17 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#define CONNECT_TCP_DNS_RETRY 3
+#define CONNECT_TCP_DNS_RETRY_DELAY_MS 500
+
+#if defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
+
+typedef struct {
+    int fd;
+} https_wrapper_ctx_t;
+
+#else
+
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
 #else
@@ -47,8 +58,6 @@
 #endif
 
 #define MBEDTLS_DEBUG_LEVEL 3
-#define CONNECT_TCP_DNS_RETRY 3
-#define CONNECT_TCP_DNS_RETRY_DELAY_MS 500
 
 #if defined(MBEDTLS_THREADING_ALT)
 static bool s_mbedtls_threading_alt_ready = false;
@@ -65,6 +74,11 @@ typedef struct {
     mbedtls_ctr_drbg_context ctr_drbg;
     int ssl_inited;
 } ssl_param_t;
+
+typedef struct {
+    int fd;
+    ssl_param_t *ssl;
+} https_wrapper_ctx_t;
 
 static int ssl_data_send(void *ssl, const unsigned char *buffer, size_t length);
 static int ssl_data_recv(void *ssl, unsigned char *buffer, size_t length);
@@ -558,6 +572,8 @@ static int ssl_close(void *ssl)
     return 0;
 }
 
+#endif
+
 
 static int connect_tcp(const char *host_name, uint16_t port)
 {
@@ -620,10 +636,8 @@ static int connect_tcp(const char *host_name, uint16_t port)
 
 https_wrapper_handle_t https_wrapper_connect(const char *host_name, uint16_t port, http_wrapper_ssl_param_t *param)
 {
-    int rv = 0;
     int sockfd;
-    mbedtls_net_context net_ctx;
-    ssl_param_t *ctx;
+    https_wrapper_ctx_t *ctx;
 
     sockfd = connect_tcp(host_name, port);
     if (sockfd < 0) {
@@ -631,79 +645,126 @@ https_wrapper_handle_t https_wrapper_connect(const char *host_name, uint16_t por
         return NULL;
     }
 
-    if (param == NULL) {
-        ctx = (ssl_param_t *)calloc(sizeof(ssl_param_t), 1);
-        if (NULL == ctx) {
-            LOG_ERR("[MBEDTLS] ssl connect: malloc(%d) fail\r\n", sizeof(ssl_param_t));
-            return NULL;
-        }
-        ctx->net.fd = sockfd;
-        return (https_wrapper_handle_t)ctx;
-    }
-
-    net_ctx.fd = sockfd;
-    rv = mbedtls_net_set_block(&net_ctx);
-    if (rv != 0) {
+    ctx = (https_wrapper_ctx_t *)calloc(1, sizeof(https_wrapper_ctx_t));
+    if (ctx == NULL) {
+        LOG_ERR("https wrapper: malloc(%d) fail\r\n", sizeof(https_wrapper_ctx_t));
         close(sockfd);
         return NULL;
     }
+    ctx->fd = sockfd;
 
-    LOG_DBG("TLS connect host=%s port=%u sni=%s ca=%s alpn_num=%d\r\n",
-            host_name,
-            port,
-            param->sni ? param->sni : "(null)",
-            (param->ca_cert && param->ca_cert_len > 0) ? "yes" : "no",
-            param->alpn_num);
-
-    ctx = ssl_connect(net_ctx.fd, param);
-
-    if (ctx == NULL) {
-        LOG_ERR("ssl_connect handle NULL, fd:%d\r\n", sockfd);
-        close(sockfd);
+    if (param == NULL) {
+        return (https_wrapper_handle_t)ctx;
     }
 
-    rv = mbedtls_net_set_nonblock(&net_ctx);
-    if (rv != 0) {
-        ssl_close(ctx);
-        close(sockfd);
+#if defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
+    LOG_ERR("HTTPS support is disabled in HTTP client\r\n");
+    close(sockfd);
+    free(ctx);
+    return NULL;
+#else
+    {
+        int rv = 0;
+        mbedtls_net_context net_ctx;
+        ssl_param_t *ssl_ctx;
+
+        net_ctx.fd = sockfd;
+        rv = mbedtls_net_set_block(&net_ctx);
+        if (rv != 0) {
+            close(sockfd);
+            free(ctx);
+            return NULL;
+        }
+
+        LOG_DBG("TLS connect host=%s port=%u sni=%s ca=%s alpn_num=%d\r\n",
+                host_name,
+                port,
+                param->sni ? param->sni : "(null)",
+                (param->ca_cert && param->ca_cert_len > 0) ? "yes" : "no",
+                param->alpn_num);
+
+        ssl_ctx = ssl_connect(net_ctx.fd, param);
+        if (ssl_ctx == NULL) {
+            LOG_ERR("ssl_connect handle NULL, fd:%d\r\n", sockfd);
+            close(sockfd);
+            free(ctx);
+            return NULL;
+        }
+
+        rv = mbedtls_net_set_nonblock(&net_ctx);
+        if (rv != 0) {
+            ssl_close(ssl_ctx);
+            close(sockfd);
+            free(ctx);
+            return NULL;
+        }
+
+        ctx->ssl = ssl_ctx;
     }
+#endif
 
     return (https_wrapper_handle_t)ctx;
 }
 
 int https_wrapper_send(https_wrapper_handle_t https, const void *data, uint16_t size, int flags)
 {
-    ssl_param_t *ctx = (ssl_param_t *)https;
-    if (ctx->ssl_inited) {
-        return mbedtls_ssl_send(ctx, data, size);
+    https_wrapper_ctx_t *ctx = (https_wrapper_ctx_t *)https;
+
+    if (ctx == NULL) {
+        return -1;
     }
-    return send(ctx->net.fd, data, size, flags);
+
+#if !defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
+    if (ctx->ssl != NULL) {
+        return mbedtls_ssl_send(ctx->ssl, data, size);
+    }
+#endif
+
+    return send(ctx->fd, data, size, flags);
 }
 
 int https_wrapper_recv(https_wrapper_handle_t https, uint8_t *data, uint32_t size, int flags)
 {
-    ssl_param_t *ctx = (ssl_param_t *)https;
-    if (ctx->ssl_inited) {
-        return mbedtls_ssl_recv(ctx, data, size);
+    https_wrapper_ctx_t *ctx = (https_wrapper_ctx_t *)https;
+
+    if (ctx == NULL) {
+        return -1;
     }
-    return recv(ctx->net.fd, data, size, flags);
+
+#if !defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
+    if (ctx->ssl != NULL) {
+        return mbedtls_ssl_recv(ctx->ssl, data, size);
+    }
+#endif
+
+    return recv(ctx->fd, data, size, flags);
 }
 
 int https_wrapper_destroy(https_wrapper_handle_t https)
 {
-    ssl_param_t *ctx = (ssl_param_t *)https;
-    int fd = ctx->net.fd;
+    https_wrapper_ctx_t *ctx = (https_wrapper_ctx_t *)https;
+    int fd;
 
-    if (ctx->ssl_inited) {
-        ssl_close(ctx);
-    } else {
-        free(ctx);
+    if (ctx == NULL) {
+        return 0;
     }
+
+    fd = ctx->fd;
+
+#if !defined(CONFIG_HTTP_CLIENT_NO_HTTPS)
+    if (ctx->ssl != NULL) {
+        ssl_close(ctx->ssl);
+    }
+#endif
+
+    free(ctx);
     close(fd);
     return 0;
 }
 
 int https_wrapper_socketfd_get(https_wrapper_handle_t https)
 {
-    return ((ssl_param_t *)https)->net.fd;
+    https_wrapper_ctx_t *ctx = (https_wrapper_ctx_t *)https;
+
+    return ctx ? ctx->fd : -1;
 }

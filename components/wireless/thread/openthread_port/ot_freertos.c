@@ -9,11 +9,10 @@
 #include <openthread/tasklet.h>
 #include <ot_radio_trx.h>
 
-ot_system_event_t                   ot_system_event_var = OT_SYSTEM_EVENT_NONE;
 static SemaphoreHandle_t            ot_extLock          = NULL;
 static TaskHandle_t                 ot_taskHandle       = NULL;
 
-uint32_t otrEnterCrit(void) 
+uint32_t otrEnterCrit(void)
 {
     if (xPortIsInsideInterrupt()) {
         return taskENTER_CRITICAL_FROM_ISR();
@@ -24,7 +23,7 @@ uint32_t otrEnterCrit(void)
     }
 }
 
-void otrExitCrit(uint32_t tag) 
+void otrExitCrit(uint32_t tag)
 {
     if (xPortIsInsideInterrupt()) {
         taskEXIT_CRITICAL_FROM_ISR(tag);
@@ -32,18 +31,6 @@ void otrExitCrit(uint32_t tag)
     else {
         taskEXIT_CRITICAL();
     }
-}
-
-ot_system_event_t otrGetNotifyEvent(void) 
-{
-    ot_system_event_t sevent = 0;
-
-    taskENTER_CRITICAL();
-    sevent = ot_system_event_var;
-    ot_system_event_var = 0;
-    taskEXIT_CRITICAL();
-
-    return sevent;
 }
 
 void otrLock(void)
@@ -56,36 +43,30 @@ void otrUnlock(void)
     xSemaphoreGiveRecursive(ot_extLock);
 }
 
-bool otrIsThreadTask(void) 
+bool otrIsThreadTask(void)
 {
     return ot_taskHandle == xTaskGetCurrentTaskHandle();
 }
 
 void otSysEventSignalPending(void)
 {
-    if (xPortIsInsideInterrupt())
-    {
-        BaseType_t pxHigherPriorityTaskWoken = pdTRUE;
-        vTaskNotifyGiveFromISR( ot_taskHandle, &pxHigherPriorityTaskWoken);
+    if (xPortIsInsideInterrupt()) {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xTaskNotifyFromISR(ot_taskHandle, 0, eSetBits, &xHigherPriorityTaskWoken);
     }
-    else
-    {
-        xTaskNotifyGive(ot_taskHandle);
+    else {
+        xTaskNotify(ot_taskHandle, 0, eSetBits);
     }
 }
 
-void otrNotifyEvent(ot_system_event_t sevent) 
+void otrNotifyEvent(ot_system_event_t sevent)
 {
     if (xPortIsInsideInterrupt()) {
-        ot_system_event_var |= sevent;
-        BaseType_t pxHigherPriorityTaskWoken = pdTRUE;
-        vTaskNotifyGiveFromISR( ot_taskHandle, &pxHigherPriorityTaskWoken);
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xTaskNotifyFromISR(ot_taskHandle, (uint32_t)sevent, eSetBits, &xHigherPriorityTaskWoken);
     }
     else {
-        taskENTER_CRITICAL();
-        ot_system_event_var |= sevent;
-        taskEXIT_CRITICAL();
-        xTaskNotifyGive(ot_taskHandle);
+        xTaskNotify(ot_taskHandle, (uint32_t)sevent, eSetBits);
     }
 }
 
@@ -107,17 +88,6 @@ otInstance *otrGetInstance()
     return ot_radio_ctx.instance;
 }
 
-void otSysProcessDrivers(otInstance *aInstance) 
-{
-    ot_system_event_t sevent = otrGetNotifyEvent();
-
-    ot_alarmTask(sevent);
-    ot_radioTask(sevent);
-    ot_serialProcess(sevent);
-    otbr_event_process(sevent);
-    otrAppProcess(sevent);
-}
-
 void otrStackInit(void)
 {
     ot_radio_ctx.instance = otInstanceInitSingle();
@@ -126,15 +96,10 @@ void otrStackInit(void)
 
 static void otrStackTask(void *p_arg)
 {
-    /** This task is an example to handle both main event loop of openthread task lets and
-     * hardware drivers for openthread, such as radio, alarm timer and also uart shell.
-     * Customer can implement own task for both of two these missions with other privoded APIs.  */
     (void)p_arg;
 
     otrLock();
     otrUnlock();
-
-    ot_system_event_var = OT_SYSTEM_EVENT_NONE;
 
     OT_THREAD_SAFE (
         ot_alarmInit();
@@ -146,12 +111,18 @@ static void otrStackTask(void *p_arg)
 
     while (true)
     {
+        ot_system_event_t sevent = OT_SYSTEM_EVENT_NONE;
+        xTaskNotifyWait(0, 0xFFFFFFFF, (uint32_t *)&sevent, portMAX_DELAY);
+
         OT_THREAD_SAFE (
             otTaskletsProcess(ot_radio_ctx.instance);
-            otSysProcessDrivers(ot_radio_ctx.instance);
+            ot_alarmTask(sevent);
+            ot_radioTask(sevent);
+            ot_serialProcess(sevent);
+            otbr_event_process(sevent);
+            otrAppProcess(sevent);
             otbr_netif_process(ot_radio_ctx.instance);
         );
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
 
     otInstanceFinalize(ot_radio_ctx.instance);

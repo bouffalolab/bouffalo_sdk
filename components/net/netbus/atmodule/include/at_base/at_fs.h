@@ -1,6 +1,7 @@
 #ifndef __AT_FS_H__
 #define __AT_FS_H__
 
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/stat.h>
 

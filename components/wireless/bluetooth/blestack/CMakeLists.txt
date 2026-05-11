@@ -155,9 +155,15 @@ sdk_library_add_sources(
 if(CONFIG_BT_HOST_HCI_TL)
     sdk_library_add_sources(
         src/hci_tl/bflb_hci_tl.c
+        src/hci_tl/bflb_hci_transport.c
+        src/hci_tl/hci_h4.c
         src/hci_tl/bflb_hci_uart_dma.c
     )
+    if(CONFIG_BT_HCI_UART_INT)
+        sdk_library_add_sources(src/hci_tl/bflb_hci_uart_int.c)
+    endif()
 	sdk_add_include_directories(src/hci_tl)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_HCI_UART_INT -DCONFIG_BT_HCI_UART_INT)
 else()
     sdk_library_add_sources(
         src/bl_hci_wrapper/bl_hci_wrapper.c

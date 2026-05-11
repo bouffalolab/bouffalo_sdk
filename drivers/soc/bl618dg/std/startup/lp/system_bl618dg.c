@@ -1,5 +1,7 @@
 #include "bl618dg.h"
 
+extern void sysinit_run_all(void);
+
 void SystemInit(void)
 {
     uint32_t i = 0;
@@ -32,6 +34,8 @@ void SystemInit(void)
 
 void System_Post_Init(void)
 {
+    sysinit_run_all();
+
     /* global IRQ enable */
     __enable_irq();
 }

@@ -12,7 +12,7 @@
 
 volatile float coe[ADC_COUNTS];
 volatile int32_t offset[ADC_COUNTS];
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
 volatile uint32_t tsen_offset = 2400;
 #else
 volatile uint32_t tsen_offset = 0;
@@ -56,7 +56,7 @@ void bflb_adc_common_init(const struct bflb_adc_common_config_s *config)
     }
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC2_FIFO_ENABLE_OFFSET);
 
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
     regval = getreg32(ADC_AON_BASE + AON_GPADC1_REG_CONFIG2_OFFSET);
     regval |= AON_GPADC1_GLOBAL_EN;
     putreg32(regval, ADC_AON_BASE + AON_GPADC1_REG_CONFIG2_OFFSET);
@@ -129,7 +129,7 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
         regval &= ~AON_GPADC1_DIFF_MODE;
         regval |= AON_GPADC1_NEG_GND;
     }
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
     if (config->vref == ADC_VREF_INTERNAL_1P25) {
 #else
     if (config->vref == ADC_VREF_EXTERNAL_1P25) {
@@ -155,7 +155,7 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     if (config->continuous_conv_mode) {
         regval |= AON_GPADC1_CONT_CONV_EN;
     }
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
     regval |= (1 << AON_GPADC1_CONV_DELAY_SHIFT); /* delay 2(=1+1) clk */
 #endif
     putreg32(regval, reg_base + AON_GPADC1_REG_CTRL_0_OFFSET);
@@ -322,7 +322,7 @@ int bflb_adc_channel_config_external(struct bflb_device_s *dev, struct bflb_adc_
         regval = getreg32(reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
         regval &= ~AON_GPADC1_EXT_POS_SEL_MASK;
         regval &= ~AON_GPADC1_EXT_NEG_SEL_MASK;
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
         if (dev->idx == 0) {
             regval |= (chan->pos_chan << AON_GPADC1_EXT_POS_SEL_SHIFT);
             regval |= (chan->neg_chan << AON_GPADC1_EXT_NEG_SEL_SHIFT);
@@ -349,7 +349,7 @@ int bflb_adc_channel_config_external(struct bflb_device_s *dev, struct bflb_adc_
                 regval |= (0xF << (i * 4));
                 regval2 |= (0xF << (i * 4));
             }
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
             if (dev->idx == 0) {
                 putreg32(regval, reg_base + AON_GPADC1_REG_SCAN_0_OFFSET);
                 putreg32(regval2, reg_base + AON_GPADC1_REG_SCAN_2_OFFSET);
@@ -368,7 +368,7 @@ int bflb_adc_channel_config_external(struct bflb_device_s *dev, struct bflb_adc_
                 regval |= (chan[i].pos_chan << (i * 4));
                 regval2 |= (chan[i].neg_chan << (i * 4));
             }
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
             if (dev->idx == 0) {
                 putreg32(regval, reg_base + AON_GPADC1_REG_SCAN_0_OFFSET);
                 putreg32(regval2, reg_base + AON_GPADC1_REG_SCAN_2_OFFSET);
@@ -391,7 +391,7 @@ int bflb_adc_channel_config_external(struct bflb_device_s *dev, struct bflb_adc_
                 regval |= (0xF << (i * 4));
                 regval2 |= (0xF << (i * 4));
             }
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
             if (dev->idx == 0) {
                 putreg32(regval, reg_base + AON_GPADC1_REG_SCAN_1_OFFSET);
                 putreg32(regval2, reg_base + AON_GPADC1_REG_SCAN_3_OFFSET);
@@ -478,7 +478,7 @@ int bflb_adc_channel_config_external_inject(struct bflb_device_s *dev, struct bf
 
         regval = 0;
         for (uint8_t i = 0; i < channels; i++) {
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
             if (dev->idx == 0) {
                 regval |= (chan[i].pos_chan << (i * 4));
                 regval |= (chan[i].neg_chan << (i * 4 + 16));
@@ -619,7 +619,7 @@ uint32_t bflb_adc_read_raw(struct bflb_device_s *dev)
 #ifdef romapi_bflb_adc_read_raw
     return romapi_bflb_adc_read_raw(dev);
 #else
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
     uint32_t data, pos_sel, neg_sel;
     if ((dev->idx == 1) && bflb_adc_fifo1_is_enabled()) {
         data = getreg32(ADC_GPIP_BASE + GPIP_GPADC_REGULAR_FIFO2_OFFSET) & GPIP_GPADC_RGLR_FIFO2_RDATA_MASK;
@@ -655,7 +655,7 @@ uint32_t bflb_adc_read_raw_inject(struct bflb_device_s *dev, uint8_t idx)
     } else {
         reg_addr = ADC_GPIP_BASE + GPIP_GPADC_INJECTION_FIFO0_OFFSET;
     }
-#if defined(BL618DG_VERSION_A0)
+#if defined(CPU_MODEL_A0)
     uint32_t data, pos_sel, neg_sel;
     data = getreg32(reg_addr + idx * 4) & GPIP_GPADC_IJCT_FIFO0_RDATA_MASK;
     if (data & (1 << 29)) {

@@ -932,8 +932,8 @@ static int net_socket_ipd(net_ipdinfo_type ipd, int id, void *buffer, int length
         if (at_get_work_mode() != AT_WORK_MODE_THROUGHPUT ||  at_base_config->sysmsg_cfg.bit.link_state_msg) {
             if (at_base_config->sysmsg_cfg.bit.link_msg_type) {
                 char type[8];
-                uint16_t local_port;
-                uint8_t tetype;
+                uint16_t local_port = 0;
+                uint8_t tetype = 0;
 
                 at_net_client_get_info(id, type, 8, NULL, NULL, &local_port, &tetype);
                 if (at_net_config->wips_enable) {

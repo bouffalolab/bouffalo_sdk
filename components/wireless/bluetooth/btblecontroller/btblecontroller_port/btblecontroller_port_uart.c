@@ -50,10 +50,10 @@
 #endif
 
 #if defined(BL618DG)
-#define UART_TXD_PIN               27
-#define UART_RXD_PIN               28
-#define UART_CTS_PIN               25
-#define UART_RTS_PIN               26
+#define UART_TXD_PIN               15
+#define UART_RXD_PIN               16
+#define UART_CTS_PIN               17
+#define UART_RTS_PIN               18
 #endif
 
 #if defined(BL702L)
@@ -123,7 +123,6 @@ static void uart_isr(int irq, void *arg)
     void *data = NULL;
 
     uint32_t intstatus = bflb_uart_get_intstatus(btble_uart);
-
     if (intstatus & UART_INTSTS_RX_FIFO) {
         while (bflb_uart_rxavailable(btble_uart) && uart_env.rx.remain_size) {
             p = uart_env.rx.remain_data;
@@ -250,7 +249,6 @@ __attribute__((weak)) void btble_uart_init(uint8_t uartid)
     struct bflb_uart_config_s cfg;
 
     btble_uart_pin_config(uartid, UART_TXD_PIN, UART_RXD_PIN, UART_CTS_PIN, UART_RTS_PIN);
-
     uart_id = uartid;
     snprintf((char *)uart_name,sizeof(uart_name)-1, "uart%d", uartid);
     btble_uart = bflb_device_get_by_name(uart_name);

@@ -72,11 +72,11 @@ static void dvp_start_task(void *pvParameters)
         /* alloc new frame buff */
         ret = frame_queue_alloc_lock(g_img_raw_out_frame_ctrl, (frame_elem_t *)&pbuff_frame, 1000);
         if (ret < 0) {
-            DVP_INFO("img_raw alloc timeout %d, continue wait... \r\n", ret);
+            DVP_INFO("img_raw_out alloc timeout %d, continue wait... \r\n", ret);
             continue;
         }
 
-        DVP_DBG("img_raw alloc: id %d, addr 0x%08X, size %d\r\n", pbuff_frame.elem_base.frame_id, pbuff_frame.elem_base.frame_addr, pbuff_frame.elem_base.frame_size);
+        DVP_DBG("img_raw_out alloc: id %d, addr 0x%08X, size %d\r\n", pbuff_frame.elem_base.frame_id, pbuff_frame.elem_base.frame_addr, pbuff_frame.elem_base.frame_size);
 
         cam_config.output_bufaddr = (uint32_t)pbuff_frame.elem_base.frame_addr;
         cam_config.output_bufsize = pbuff_frame.elem_base.frame_size;

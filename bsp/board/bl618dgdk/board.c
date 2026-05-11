@@ -77,7 +77,7 @@ static void __attribute__((unused)) system_bod_isr(int irq, void *arg)
     }
 }
 
-static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
+static void ATTR_CLOCK_SECTION __attribute__((noinline, unused)) system_clock_init(void)
 {
     if (GLB_CORE_ID_AP == GLB_Get_Core_Type()) {
         /* wifipll/cpupll */
@@ -115,7 +115,7 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
 }
 
 #ifndef LP_APP
-static void peripheral_clock_init(void)
+static void __attribute__((unused)) peripheral_clock_init(void)
 {
     if (GLB_CORE_ID_AP == GLB_Get_Core_Type()) {
         PERIPHERAL_CLOCK_ADC_DAC_ENABLE();
@@ -364,7 +364,7 @@ extern void bflb_wo_set_console(struct bflb_device_s *dev);
 extern void bflb_uart_set_console(struct bflb_device_s *dev);
 #endif
 
-static void console_init()
+static void __attribute__((unused)) console_init()
 {
 #ifdef CONFIG_CONSOLE_WO
     wo = bflb_device_get_by_name("wo");
@@ -475,39 +475,38 @@ extern uint32_t __start;
 
 void boot_up_np()
 {
-#ifndef CONFIG_BOOT_NP_ASYNC
     uint32_t ap_offset;
+#ifndef CONFIG_BOOT_NP_ASYNC
     /* AP & NP run in the same code */
     bflb_l1c_dcache_clean_all();
     ap_offset = bflb_sf_ctrl_get_flash_image_offset(0, 0);
     bflb_sf_ctrl_set_flash_image_offset(ap_offset, 1, 0);
 #else
+    Tzc_Sec_Set_Master_Group(TZC_SEC_MASTER_NP, 1);
     /* AP & NP run in the different code */
-    int ret;
-    uint32_t boot_addr = 0, boot_len;
-    ret = bflb_boot2_partition_addr_active("FW0", &boot_addr, &boot_len);
-    if (ret != 0 || boot_addr == 0x0) {
-        printf("ERROR: FW0 bootaddr not found ret:%d\r\n", ret);
-        return;
-    }
+    uint32_t boot_addr = ap_offset = bflb_sf_ctrl_get_flash_image_offset(0, 0);
     extern uint32_t __dualcore_images__;
-    uint32_t image_ap_1Kalign_size = *(uint32_t *)(&__dualcore_images__) + 0x1000;
-    boot_addr += image_ap_1Kalign_size + 0x1000; // FW0 header size is 0x1000
-
-    printf("NP bootaddr get success 0x%08x\r\n", boot_addr);
+    uint32_t image_ap_1Kalign_size = *(uint32_t *)(&__dualcore_images__);
+    boot_addr += image_ap_1Kalign_size;
+    printf("AP image offset: 0x%08x, AP image 1K align size: 0x%08x, NP boot address: 0x%08x\r\n", ap_offset,
+           image_ap_1Kalign_size, boot_addr);
     bflb_sf_ctrl_set_flash_image_offset(boot_addr, 1, 0);
 #endif
     GLB_Set_CPU_Reset_Address(GLB_CORE_ID_NP, (uint32_t)&__start);
     GLB_Release_CPU(GLB_CORE_ID_NP);
 }
 
-__attribute__((weak)) const uint8_t gmini_sysData[4] = { 0 };
-__attribute__((weak)) const uint32_t gmini_sysSize;
-
 static void __attribute__((noinline, unused)) boot_up_lp(uint32_t address)
 {
-    //Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_LP, 0);
-    if (gmini_sysData[0] != 0) {
+    extern uint32_t __multi_bins__;
+    uint32_t mini_code_start = *(uint32_t *)((uint32_t)&__multi_bins__ + 40);
+    uint32_t mini_code_end = *(uint32_t *)((uint32_t)&__multi_bins__ + 44);
+    uint32_t mini_code_len = mini_code_end - mini_code_start;
+
+    printf("mini code start: 0x%08x, end: 0x%08x, len: %d\r\n", mini_code_start, mini_code_end, mini_code_len);
+    Tzc_Sec_Set_Master_Group(TZC_SEC_MASTER_LP, 0);
+
+    if (mini_code_start != 0) {
         GLB_Release_Mini_Sys();
 #if defined(CPU_MODEL_A0)
         GLB_Set_MINI_FCLK(ENABLE, GLB_MINI_FCLK_XCLK, 0);
@@ -517,9 +516,14 @@ static void __attribute__((noinline, unused)) boot_up_lp(uint32_t address)
         //GLB_Select_LPCPU_Jtag();
         arch_delay_us(10);
 
-        memcpy((void *)address, gmini_sysData, gmini_sysSize);
+        uint32_t mini_xip_addr = BFLB_FLASH_XIP_BASE + mini_code_start - bflb_sf_ctrl_get_flash_image_offset(0, 0);
+
+        memcpy((void *)address, (void *)mini_xip_addr, mini_code_len);
         bflb_l1c_dcache_clean_all();
-        printf("Copy gmini_sysData to 0x0,[1][31:0]=%08x,len=%d\r\n", *(uint32_t *)(address + 4), gmini_sysSize);
+
+        __asm__ volatile("" : "+r"(address));
+        printf("Copy gmini_sysData to 0x%08x,[1][31:0]=%08x,len=%d\r\n", address,
+               *(volatile uint32_t *)((uintptr_t)address + 4), mini_code_len);
 
         GLB_Set_CPU_Reset_Address(GLB_CORE_ID_LP, (uint32_t)address);
 
@@ -683,14 +687,11 @@ void board_init(void)
 #else
     boot_up_np();
 #endif
-
-    if (GLB_Get_Mini_System_Status() == SET) { //first read the value of the register address,it release
-        GLB_Halt_Mini_Sys();
-        GLB_Halt_CPU(GLB_CORE_ID_LP);
-        boot_up_lp(0x0);
-    } else { //After release, the value reads 0 and is no longer reset
-        printf("already release lp\r\n");
-    }
+#if defined(CPU_MODEL_A0)
+    boot_up_lp(0x0);
+#else
+    boot_up_lp(0x10000);
+#endif
     bflb_irq_restore(flag);
 
     printf("board init done\r\n");
@@ -823,6 +824,7 @@ static void show_sys_version_cmd(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(show_sys_version_cmd, sysver, show sys version);
 
+#if !defined(CPU_LP)
 extern int bl_sys_reset_por(void);
 
 static void reboot_cmd(int argc, char **argv)
@@ -857,6 +859,7 @@ static void mfg_cmd(int argc, char **argv)
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
+#endif
 
 #ifdef LP_APP
 #include "bl_lp.h"
@@ -864,7 +867,6 @@ SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
 static void test_io_wakeup_status(uint8_t io_num)
 {
     int wakeup_mode;
-
 
     wakeup_mode = bl_lp_wakeup_io_get_mode(io_num);
 
@@ -928,8 +930,8 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
     };
 
     /* wake up unmask */
-    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 0); /* gpio 0 */
-    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 1); /* gpio 1 */
+    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 0);  /* gpio 0 */
+    lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 1);  /* gpio 1 */
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 10); /* gpio 10 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 18); /* gpio 18 */
     // lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << 19); /* gpio 19 */

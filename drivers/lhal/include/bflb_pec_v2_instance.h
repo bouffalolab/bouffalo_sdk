@@ -313,6 +313,8 @@ struct bflb_pec_qspi_cam_s {
     uint16_t div;                 /*!< divisor, N = div + 1 */
     uint16_t resolution_x;        /*!< camera horizontal resolution */
     uint16_t resolution_y;        /*!< camera vertical resolution */
+    uint8_t dma_enable;           /*!< enable or disable dma */
+    uint8_t fifo_threshold;       /*!< tx fifo threshold */
     uint8_t pixel_bits;           /*!< clock count of every pixel */
     uint8_t pin_pclk;             /*!< QSPI CAM PCLK pin index */
     uint8_t pin_d0;               /*!< QSPI CAM D0 pin index */

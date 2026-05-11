@@ -18,18 +18,34 @@
 extern "C" {
 #endif
 
+#ifndef CONFIG_FOTA_HTTPS_BUFFER_SIZE
+#define CONFIG_FOTA_HTTPS_BUFFER_SIZE (4096)
+#endif
+
+#ifndef CONFIG_FOTA_HTTPS_REQUEST_TIMEOUT_MS
+#define CONFIG_FOTA_HTTPS_REQUEST_TIMEOUT_MS (4 * 1000)
+#endif
+
+#ifndef CONFIG_FOTA_HTTPS_TASK_STACK_SIZE
+#define CONFIG_FOTA_HTTPS_TASK_STACK_SIZE (2048)
+#endif
+
+#ifndef CONFIG_FOTA_HTTPS_TASK_PRIORITY
+#define CONFIG_FOTA_HTTPS_TASK_PRIORITY (20)
+#endif
+
 /**
  * @brief HTTPS FOTA operation status codes
  */
 typedef enum {
-    HTTPS_FOTA_SUCCESS = 0,         /**< Operation completed successfully */
-    HTTPS_FOTA_START,               /**< FOTA process started */
-    HTTPS_FOTA_SERVER_CONNECTE_FAIL,/**< Failed to connect to server */
-    HTTPS_FOTA_PROCESS_TRANSFER,    /**< Firmware transfer in progress */
-    HTTPS_FOTA_TRANSFER_FINISH,     /**< Firmware transfer completed */
-    HTTPS_FOTA_IMAGE_VERIFY,        /**< Firmware image verification started */
-    HTTPS_FOTA_IMAGE_VERIFY_FAIL,   /**< Firmware image verification failed */
-    HTTPS_FOTA_ABORT,               /**< FOTA process aborted */
+    HTTPS_FOTA_SUCCESS = 0,          /**< Operation completed successfully */
+    HTTPS_FOTA_START,                /**< FOTA process started */
+    HTTPS_FOTA_SERVER_CONNECTE_FAIL, /**< Failed to connect to server */
+    HTTPS_FOTA_PROCESS_TRANSFER,     /**< Firmware transfer in progress */
+    HTTPS_FOTA_TRANSFER_FINISH,      /**< Firmware transfer completed */
+    HTTPS_FOTA_IMAGE_VERIFY,         /**< Firmware image verification started */
+    HTTPS_FOTA_IMAGE_VERIFY_FAIL,    /**< Firmware image verification failed */
+    HTTPS_FOTA_ABORT,                /**< FOTA process aborted */
 } https_fota_status_t;
 
 /**
@@ -39,22 +55,19 @@ typedef enum {
  */
 typedef void (*pfn_https_fota_t)(void *arg, https_fota_status_t event);
 
-#define HTTPS_FOTA_BUFFER_SIZE         (4096)      /**< Default buffer size for FOTA operations */
-#define HTTPS_FOTA_REQUEST_TIMEOUT_MS  (8*1000)    /**< Default timeout for HTTP requests in milliseconds */
-
 /**
  * @brief Configuration structure for HTTPS FOTA
  */
 struct https_fota_config {
-    pfn_https_fota_t callback;      /**< Status callback function */
-    void *user_arg;                 /**< User context passed to callback */
+    pfn_https_fota_t callback; /**< Status callback function */
+    void *user_arg;            /**< User context passed to callback */
 
-    const char *ca_pem;             /**< SSL server CA certificate in PEM format (for server verification) */
-    size_t      ca_len;             /**< Length of CA certificate */
-    const char *client_cert_pem;    /**< SSL client certificate in PEM format (for mutual TLS) */
-    size_t      client_cert_len;    /**< Length of client certificate */
-    const char *client_key_pem;     /**< SSL client private key in PEM format (for mutual TLS) */
-    size_t      client_key_len;     /**< Length of client private key */
+    const char *ca_pem;          /**< SSL server CA certificate in PEM format (for server verification) */
+    size_t ca_len;               /**< Length of CA certificate */
+    const char *client_cert_pem; /**< SSL client certificate in PEM format (for mutual TLS) */
+    size_t client_cert_len;      /**< Length of client certificate */
+    const char *client_key_pem;  /**< SSL client private key in PEM format (for mutual TLS) */
+    size_t client_key_len;       /**< Length of client private key */
 };
 
 /** Opaque handle for FOTA session */
@@ -156,7 +169,6 @@ int https_fota(const char *url, const struct https_fota_config *config);
  *
  */
 int https_ota_rollback(void);
-
 
 #ifdef __cplusplus
 }

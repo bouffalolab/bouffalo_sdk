@@ -11,7 +11,7 @@
     } while (0)
 
 #if !defined(BL616CL)
-static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, uint8_t *subaddr,
+__UNUSED static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, uint8_t *subaddr,
                                           uint8_t subaddr_size, bool is_addr_10bit)
 {
     uint32_t regval;

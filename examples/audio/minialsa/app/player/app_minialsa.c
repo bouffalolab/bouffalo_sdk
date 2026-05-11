@@ -6,17 +6,37 @@
  *
  * API self-test command:
  *   minialsa_api_test [all|playback|capture|set_params] [wa|sin]
+ *
+ * Output clock test command:
+ *   minialsa_output_clock_test <sample_rate_hz>
  */
 
 #include <stdio.h>
 #include <errno.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <devices/drv_snd_bl616.h>
 
 #include <msp/kernel.h>
 #include <alsa/pcm.h>
+#include <bflb_mtimer.h>
 #include <shell.h>
+#include <xcodec.h>
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+#include "hardware/i2s_reg.h"
+#include "hardware/glb_reg.h"
+#if defined(BL616)
+#include "hardware/bl616.h"
+#elif defined(BL616CL)
+#include "hardware/bl616cl.h"
+#elif defined(BL618DG)
+#include "hardware/bl618dg.h"
+#elif defined(BL702)
+#include "hardware/bl702.h"
+#endif
+#endif
 
 #include "audio_file.h"
 
@@ -30,6 +50,15 @@
 #define ALSA_TEST_PLAYBACK_MS   2000
 #define ALSA_TEST_CAPTURE_POLL_MS 100
 #define ALSA_TEST_CAPTURE_POLL_STEP_MS 20
+#define ALSA_TEST_MAX_RATE_HZ   192000
+#define ALSA_CLOCK_TEST_CHANNELS           1U
+#define ALSA_CLOCK_TEST_BIT_WIDTH          16U
+#define ALSA_CLOCK_TEST_SLOT_WIDTH         16U
+#define ALSA_CLOCK_TEST_PERIOD_BYTES       1024U
+#define ALSA_CLOCK_TEST_HOLD_MS            10000U
+#define ALSA_CLOCK_TEST_MIN_PERIOD_BYTES    32U
+#define ALSA_CLOCK_TEST_BUFFER_PERIODS      8U
+#define ALSA_CLOCK_TEST_BUFFER_PADDING      1024U
 
 /* ─── Audio sample descriptor ─────────────────────────── */
 typedef struct {
@@ -61,9 +90,26 @@ typedef struct {
     int run_set_params;
 } alsa_api_test_cfg_t;
 
+typedef struct {
+    uint32_t sample_rate_hz;
+} alsa_output_clock_test_cfg_t;
+
 static void alsa_api_test_print_usage(void)
 {
     printf("usage: minialsa_api_test [all|playback|capture|set_params] [wa|sin]\r\n");
+}
+
+static void alsa_output_clock_test_print_usage(void)
+{
+    printf("usage: minialsa_output_clock_test <sample_rate_hz>\r\n");
+    printf("fixed: channels=%u bit_width=%u slot_width=%u period=%u hold_ms=%u\r\n",
+           ALSA_CLOCK_TEST_CHANNELS,
+           ALSA_CLOCK_TEST_BIT_WIDTH,
+           ALSA_CLOCK_TEST_SLOT_WIDTH,
+           ALSA_CLOCK_TEST_PERIOD_BYTES,
+           ALSA_CLOCK_TEST_HOLD_MS);
+    printf("note : command keeps silence output for scope measurement only\r\n");
+    printf("example : minialsa_output_clock_test 48000\r\n");
 }
 
 static const alsa_sample_t *alsa_find_sample(const char *name)
@@ -81,6 +127,110 @@ static const alsa_sample_t *alsa_find_sample(const char *name)
     }
 
     return NULL;
+}
+
+static int alsa_parse_u32_arg(const char *text, uint32_t *value)
+{
+    char *end = NULL;
+    unsigned long parsed;
+
+    if (text == NULL || value == NULL || text[0] == '\0') {
+        return -1;
+    }
+
+    errno = 0;
+    parsed = strtoul(text, &end, 0);
+    if (errno != 0 || end == text || (end != NULL && *end != '\0')) {
+        return -1;
+    }
+
+    *value = (uint32_t)parsed;
+    return 0;
+}
+
+static uint32_t alsa_clock_test_transfer_bytes(uint32_t channels, uint32_t slot_width)
+{
+    uint32_t slot_bytes = (slot_width + 7U) / 8U;
+
+    if ((slot_bytes != 1U) && (slot_bytes != 2U) && (slot_bytes != 4U)) {
+        return 0U;
+    }
+
+    if (channels == 1U) {
+        return slot_bytes;
+    }
+
+    if (channels == 2U) {
+        return (slot_bytes == 1U) ? 2U : 4U;
+    }
+
+    return 0U;
+}
+
+static uint32_t alsa_clock_test_buffer_bytes(uint32_t period_bytes)
+{
+    uint64_t total = (uint64_t)period_bytes * ALSA_CLOCK_TEST_BUFFER_PERIODS +
+                     ALSA_CLOCK_TEST_BUFFER_PADDING;
+
+    if (total > UINT32_MAX) {
+        return 0U;
+    }
+
+    return (uint32_t)total;
+}
+
+static int alsa_validate_output_clock_test_cfg(const alsa_output_clock_test_cfg_t *cfg)
+{
+    uint32_t transfer_bytes;
+
+    if (cfg == NULL) {
+        return -1;
+    }
+
+    if ((cfg->sample_rate_hz == 0U) ||
+        (cfg->sample_rate_hz > ALSA_TEST_MAX_RATE_HZ) ||
+        (cfg->sample_rate_hz > (UINT32_MAX / 1000U))) {
+        printf("[clock_test] invalid sample_rate_hz=%lu, expected 1..%u\r\n",
+               (unsigned long)cfg->sample_rate_hz, ALSA_TEST_MAX_RATE_HZ);
+        return -1;
+    }
+
+    if ((cfg->sample_rate_hz % 8000U) != 0U) {
+        printf("[clock_test] unsupported sample_rate_hz=%lu, expected multiple of 8000 Hz\r\n",
+               (unsigned long)cfg->sample_rate_hz);
+        return -1;
+    }
+
+    if (ALSA_CLOCK_TEST_PERIOD_BYTES < ALSA_CLOCK_TEST_MIN_PERIOD_BYTES ||
+        (ALSA_CLOCK_TEST_PERIOD_BYTES & (ALSA_CLOCK_TEST_MIN_PERIOD_BYTES - 1U)) != 0U) {
+        printf("[clock_test] invalid period_bytes=%lu, expected multiple of %u and >= %u\r\n",
+               (unsigned long)ALSA_CLOCK_TEST_PERIOD_BYTES,
+               ALSA_CLOCK_TEST_MIN_PERIOD_BYTES,
+               ALSA_CLOCK_TEST_MIN_PERIOD_BYTES);
+        return -1;
+    }
+
+    transfer_bytes = alsa_clock_test_transfer_bytes(ALSA_CLOCK_TEST_CHANNELS, ALSA_CLOCK_TEST_SLOT_WIDTH);
+    if ((transfer_bytes == 0U) || ((ALSA_CLOCK_TEST_PERIOD_BYTES % transfer_bytes) != 0U)) {
+        printf("[clock_test] invalid period_bytes=%lu for channels=%lu slot_width=%lu\r\n",
+               (unsigned long)ALSA_CLOCK_TEST_PERIOD_BYTES,
+               (unsigned long)ALSA_CLOCK_TEST_CHANNELS,
+               (unsigned long)ALSA_CLOCK_TEST_SLOT_WIDTH);
+        return -1;
+    }
+
+    if (ALSA_CLOCK_TEST_HOLD_MS == 0U) {
+        printf("[clock_test] invalid hold_ms=0\r\n");
+        return -1;
+    }
+
+    if (alsa_clock_test_buffer_bytes(ALSA_CLOCK_TEST_PERIOD_BYTES) == 0U) {
+        printf("[clock_test] buffer size overflow, period_bytes=%lu\r\n",
+               (unsigned long)ALSA_CLOCK_TEST_PERIOD_BYTES);
+        return -1;
+    }
+
+    return 0;
 }
 
 static int alsa_test_expect_ret(alsa_test_stats_t *stats, const char *name, int ret)
@@ -127,6 +277,104 @@ static int alsa_test_expect_positive(alsa_test_stats_t *stats, const char *name,
 static size_t alsa_frame_bytes(unsigned int channels, snd_pcm_format_t format)
 {
     return ((size_t)channels * (size_t)snd_pcm_format_physical_width(format)) / 8U;
+}
+
+static unsigned int alsa_sample_bit_width(const alsa_sample_t *sample)
+{
+    if (sample == NULL) {
+        return 0U;
+    }
+
+    return (unsigned int)snd_pcm_format_width(sample->format);
+}
+
+static unsigned int alsa_sample_slot_width(const alsa_sample_t *sample)
+{
+    if (sample == NULL) {
+        return 0U;
+    }
+
+    return (unsigned int)snd_pcm_format_physical_width(sample->format);
+}
+
+static unsigned int alsa_calc_bclk_hz(unsigned int rate, unsigned int channels, unsigned int slot_width)
+{
+    unsigned int frame_slots = (channels == 1U) ? 2U : channels;
+
+    return rate * frame_slots * slot_width;
+}
+
+static void alsa_dump_sample_config(const char *tag, const alsa_sample_t *sample)
+{
+    unsigned int bit_width;
+    unsigned int slot_width;
+    unsigned int bclk_hz;
+
+    if (sample == NULL) {
+        printf("[%s] sample=<null>\r\n", tag);
+        return;
+    }
+
+    bit_width = alsa_sample_bit_width(sample);
+    slot_width = alsa_sample_slot_width(sample);
+    bclk_hz = alsa_calc_bclk_hz(sample->rate, sample->channels, slot_width);
+
+    printf("[%s] sample=%s fmt=%d bit_width=%u slot_width=%u ch=%u rate=%u wire_bclk=%u len=%u bytes\r\n",
+           tag,
+           sample->name,
+           sample->format,
+           bit_width,
+           slot_width,
+           sample->channels,
+           sample->rate,
+           bclk_hz,
+           (unsigned int)(sample->len ? *sample->len : 0U));
+}
+
+static void alsa_dump_i2s_bclk_div(const char *tag)
+{
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S && \
+    (defined(BL616) || defined(BL616CL) || defined(BL618DG) || defined(BL702))
+    uint32_t reg;
+    uint32_t div_l;
+    uint32_t div_h;
+    uint32_t div;
+
+    reg = *(volatile uint32_t *)(uintptr_t)(I2S_BASE + I2S_BCLK_CONFIG_OFFSET);
+    div_l = (reg & I2S_CR_BCLK_DIV_L_MASK) >> I2S_CR_BCLK_DIV_L_SHIFT;
+    div_h = (reg & I2S_CR_BCLK_DIV_H_MASK) >> I2S_CR_BCLK_DIV_H_SHIFT;
+    div = div_l + div_h;
+
+    printf("[%s] I2S_BCLK_CONFIG=0x%08lx div_l=%lu div_h=%lu div=%lu ratio=%lu\r\n",
+           tag,
+           (unsigned long)reg,
+           (unsigned long)div_l,
+           (unsigned long)div_h,
+           (unsigned long)div,
+           (unsigned long)(div + 2U));
+#else
+    printf("[%s] I2S_CR_BCLK_DIV dump unsupported on this build\r\n", tag);
+#endif
+}
+
+static void alsa_dump_i2s_ref_clk_div(const char *tag)
+{
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S && \
+    (defined(BL616) || defined(BL616CL) || defined(BL618DG) || defined(BL702))
+    uint32_t reg;
+    uint32_t ref_div;
+
+    reg = *(volatile uint32_t *)(uintptr_t)(GLB_BASE + GLB_I2S_CFG0_OFFSET);
+    ref_div = (reg & GLB_REG_I2S_REF_CLK_DIV_MSK) >> GLB_REG_I2S_REF_CLK_DIV_POS;
+
+    printf("[%s] GLB_I2S_CFG0=0x%08lx ref_clk_div=%lu ratio=%lu\r\n",
+           tag,
+           (unsigned long)reg,
+           (unsigned long)ref_div,
+           (unsigned long)(ref_div + 1U));
+#else
+    printf("[%s] I2S ref clk div dump unsupported on this build\r\n", tag);
+#endif
 }
 
 static size_t alsa_fill_period_buffer(const alsa_sample_t *sample, size_t *offset,
@@ -201,6 +449,13 @@ static int alsa_test_capture_poll_avail(msp_pcm_t *pcm, msp_pcm_uframes_t period
     return (int)avail;
 }
 
+static void alsa_clock_test_output_event_cb(xcodec_output_t *output, xcodec_event_t event, void *arg)
+{
+    (void)output;
+    (void)event;
+    (void)arg;
+}
+
 /* ─── Playback task ───────────────────────────────────── */
 static void alsa_play_task(void *arg)
 {
@@ -218,6 +473,8 @@ static void alsa_play_task(void *arg)
     unsigned int      rate        = 0;
     unsigned int      channels    = 0;
     snd_pcm_format_t  format      = SND_PCM_FORMAT_UNKNOWN;
+
+    alsa_dump_sample_config("alsa_play", s);
 
     /* ── 1. Open PCM device ──────────────────────────── */
     ret = msp_pcm_open(&pcm, ALSA_PLAY_PCM_NAME, MSP_PCM_STREAM_PLAYBACK, 0);
@@ -306,6 +563,8 @@ static void alsa_play_task(void *arg)
         printf("[alsa_play] hw_params -> %d\r\n", ret);
         goto out_free_hw;
     }
+    alsa_dump_i2s_ref_clk_div("alsa_play");
+    alsa_dump_i2s_bclk_div("alsa_play");
     msp_pcm_hw_params_free(hw);
     hw = NULL;
 
@@ -444,8 +703,10 @@ static int alsa_test_playback_refined_api(const alsa_sample_t *sample, alsa_test
     msp_pcm_uframes_t chunk_frames;
     int dir = -1;
     int ret;
+    unsigned int slot_width = 0;
 
     printf("[api_test] playback refined api begin\r\n");
+    alsa_dump_sample_config("api_test", sample);
 
     ret = msp_pcm_open(&pcm, ALSA_PLAY_PCM_NAME, MSP_PCM_STREAM_PLAYBACK, 0);
     if (alsa_test_expect_ret(stats, "msp_pcm_open(playback)", ret) < 0) {
@@ -565,6 +826,22 @@ static int alsa_test_playback_refined_api(const alsa_sample_t *sample, alsa_test
         alsa_test_expect_eq(stats, "current playback channels", cur_hw->channels, sample->channels) < 0) {
         goto out;
     }
+
+    slot_width = (cur_hw->channels > 0) ? (unsigned int)(cur_hw->frame_bits / cur_hw->channels) : 0U;
+    printf("[api_test] playback hw: fmt=%d width=%d bits slot_width=%u ch=%d rate=%d wire_bclk=%u period=%d buf=%d play_ms=%d\r\n",
+           cur_hw->format,
+           cur_hw->sample_bits,
+           slot_width,
+           cur_hw->channels,
+           cur_hw->rate,
+           alsa_calc_bclk_hz((unsigned int)cur_hw->rate,
+                             (unsigned int)cur_hw->channels,
+                             slot_width),
+           cur_hw->period_size,
+           cur_hw->buffer_size,
+           ALSA_TEST_PLAYBACK_MS);
+    alsa_dump_i2s_ref_clk_div("api_test");
+    alsa_dump_i2s_bclk_div("api_test");
 
     ret = msp_pcm_recover(pcm, -EPIPE, 0);
     if (alsa_test_expect_ret(stats, "msp_pcm_recover(playback)", ret) < 0) {
@@ -1066,6 +1343,198 @@ static void alsa_api_test_task(void *arg)
     msp_task_exit(0);
 }
 
+static void alsa_output_clock_test_task(void *arg)
+{
+    alsa_output_clock_test_cfg_t cfg;
+    alsa_test_stats_t stats = { 0 };
+    xcodec_t codec = { 0 };
+    xcodec_output_t output_ch = { 0 };
+    xcodec_output_config_t output_cfg = { 0 };
+    m_ringbuf_t ring_buffer = { 0 };
+    xcodec_dma_ch_t *dma_hdl = NULL;
+    uint8_t *output_buf = NULL;
+    uint8_t *silence_buf = NULL;
+    uint32_t output_clock_mhz;
+    uint32_t current_clock_mhz = 0;
+    uint32_t buffer_bytes;
+    uint64_t start_us;
+    uint64_t end_us;
+    uint64_t total_written = 0;
+    uint64_t elapsed_us = 0;
+    uint32_t frame_slots;
+    uint32_t expected_bclk_hz;
+    int clear_ret;
+    int output_opened = 0;
+    int callback_attached = 0;
+    int dma_linked = 0;
+    int ret = 0;
+
+    if (arg == NULL) {
+        printf("[clock_test] invalid config\r\n");
+        ret = -1;
+        goto out;
+    }
+    cfg = *(alsa_output_clock_test_cfg_t *)arg;
+    msp_free(arg);
+
+    if (alsa_validate_output_clock_test_cfg(&cfg) != 0) {
+        ret = -1;
+        goto out;
+    }
+
+    output_clock_mhz = cfg.sample_rate_hz * 1000U;
+    frame_slots = (ALSA_CLOCK_TEST_CHANNELS == 1U) ? 2U : ALSA_CLOCK_TEST_CHANNELS;
+    expected_bclk_hz = alsa_calc_bclk_hz(cfg.sample_rate_hz, ALSA_CLOCK_TEST_CHANNELS, ALSA_CLOCK_TEST_SLOT_WIDTH);
+    buffer_bytes = alsa_clock_test_buffer_bytes(ALSA_CLOCK_TEST_PERIOD_BYTES);
+
+    printf("[clock_test] request: fs=%lu Hz clock=%lu mHz ch=%u bit_width=%u slot_width=%u period=%u hold=%u ms\r\n",
+           (unsigned long)cfg.sample_rate_hz,
+           (unsigned long)output_clock_mhz,
+           ALSA_CLOCK_TEST_CHANNELS,
+           ALSA_CLOCK_TEST_BIT_WIDTH,
+           ALSA_CLOCK_TEST_SLOT_WIDTH,
+           ALSA_CLOCK_TEST_PERIOD_BYTES,
+           ALSA_CLOCK_TEST_HOLD_MS);
+    printf("[clock_test] expected: fs=%lu Hz frame_slots=%lu wire_bclk=%lu Hz buffer=%lu bytes\r\n",
+           (unsigned long)cfg.sample_rate_hz,
+           (unsigned long)frame_slots,
+           (unsigned long)expected_bclk_hz,
+           (unsigned long)buffer_bytes);
+
+    dma_hdl = msp_zalloc_check(sizeof(*dma_hdl));
+    output_buf = msp_zalloc_check(buffer_bytes);
+    silence_buf = msp_zalloc_check(ALSA_CLOCK_TEST_PERIOD_BYTES);
+    if ((dma_hdl == NULL) || (output_buf == NULL) || (silence_buf == NULL)) {
+        printf("[clock_test] alloc buffer failed\r\n");
+        ret = -1;
+        goto out;
+    }
+
+    ret = xcodec_set_audio_output_clock_mHz(0U);
+    if (alsa_test_expect_ret(&stats, "xcodec_set_audio_output_clock_mHz(clear before start)", ret) < 0) {
+        goto out;
+    }
+
+    codec.output_chs = &output_ch;
+    output_ch.dma = dma_hdl;
+    output_ch.sound_channel_num = ALSA_CLOCK_TEST_CHANNELS;
+    output_ch.ring_buf = &ring_buffer;
+
+    ret = xcodec_init(&codec, 0);
+    if (alsa_test_expect_ret(&stats, "xcodec_init(clock_test)", ret) < 0) {
+        goto out;
+    }
+
+    ret = xcodec_output_open(&codec, &output_ch, 0);
+    if (alsa_test_expect_ret(&stats, "xcodec_output_open(clock_test)", ret) < 0) {
+        goto out;
+    }
+    output_opened = 1;
+
+    ret = xcodec_output_attach_callback(&output_ch, alsa_clock_test_output_event_cb, NULL);
+    if (alsa_test_expect_ret(&stats, "xcodec_output_attach_callback(clock_test)", ret) < 0) {
+        goto out;
+    }
+    callback_attached = 1;
+
+    output_cfg.bit_width = ALSA_CLOCK_TEST_BIT_WIDTH;
+    output_cfg.slot_width = ALSA_CLOCK_TEST_SLOT_WIDTH;
+    output_cfg.sample_rate = cfg.sample_rate_hz;
+    output_cfg.buffer = output_buf;
+    output_cfg.buffer_size = buffer_bytes;
+    output_cfg.period = ALSA_CLOCK_TEST_PERIOD_BYTES;
+    output_cfg.mode = XCODEC_OUTPUT_DIFFERENCE;
+    output_cfg.sound_channel_num = ALSA_CLOCK_TEST_CHANNELS;
+
+    ret = xcodec_output_config(&output_ch, &output_cfg);
+    if (alsa_test_expect_ret(&stats, "xcodec_output_config(clock_test)", ret) < 0) {
+        goto out;
+    }
+    alsa_dump_i2s_ref_clk_div("clock_test");
+    alsa_dump_i2s_bclk_div("clock_test");
+
+    ret = xcodec_output_link_dma(&output_ch, dma_hdl);
+    if (alsa_test_expect_ret(&stats, "xcodec_output_link_dma(clock_test)", ret) < 0) {
+        goto out;
+    }
+    dma_linked = 1;
+
+    ret = xcodec_output_start(&output_ch);
+    if (alsa_test_expect_ret(&stats, "xcodec_output_start(clock_test)", ret) < 0) {
+        goto out;
+    }
+
+    ret = xcodec_set_audio_output_clock_mHz(output_clock_mhz);
+    if (alsa_test_expect_ret(&stats, "xcodec_set_audio_output_clock_mHz", ret) < 0) {
+        goto out;
+    }
+
+    ret = xcodec_get_audio_output_clock_mHz(&current_clock_mhz);
+    if (alsa_test_expect_ret(&stats, "xcodec_get_audio_output_clock_mHz", ret) < 0 ||
+        alsa_test_expect_eq(&stats, "output_clock current mHz",
+                            current_clock_mhz, output_clock_mhz) < 0) {
+        goto out;
+    }
+
+    printf("[clock_test] current output_clock=%lu mHz\r\n", (unsigned long)current_clock_mhz);
+    alsa_dump_i2s_ref_clk_div("clock_test");
+    alsa_dump_i2s_bclk_div("clock_test");
+    printf("[clock_test] silence output started, measure FS/BCLK now\r\n");
+
+    start_us = bflb_mtimer_get_time_us();
+    end_us = start_us + ((uint64_t)ALSA_CLOCK_TEST_HOLD_MS * 1000ULL);
+    while (bflb_mtimer_get_time_us() < end_us) {
+        uint32_t written = xcodec_output_write_async(&output_ch, silence_buf, ALSA_CLOCK_TEST_PERIOD_BYTES);
+
+        if (written == 0U) {
+            msp_msleep(2);
+            continue;
+        }
+
+        total_written += written;
+        if (written < ALSA_CLOCK_TEST_PERIOD_BYTES) {
+            msp_msleep(1);
+        }
+    }
+    elapsed_us = bflb_mtimer_get_time_us() - start_us;
+    printf("[clock_test] silence queued=%llu bytes elapsed=%llu us\r\n",
+           (unsigned long long)total_written,
+           (unsigned long long)elapsed_us);
+
+out:
+    if (dma_linked) {
+        xcodec_output_stop(&output_ch);
+        xcodec_output_link_dma(&output_ch, NULL);
+    }
+    if (callback_attached) {
+        xcodec_output_detach_callback(&output_ch);
+    }
+    if (output_opened) {
+        xcodec_output_close(&output_ch);
+        xcodec_uninit(&codec);
+    }
+
+    clear_ret = xcodec_set_audio_output_clock_mHz(0U);
+    if (clear_ret == XCODEC_OK) {
+        if (xcodec_get_audio_output_clock_mHz(&current_clock_mhz) == XCODEC_OK) {
+            printf("[clock_test] clear output_clock -> %lu mHz\r\n",
+                   (unsigned long)current_clock_mhz);
+        }
+    } else {
+        printf("[clock_test] clear output_clock failed -> %d\r\n", clear_ret);
+    }
+
+    printf("[clock_test] summary pass=%u fail=%u result=%s\r\n",
+           stats.passed, stats.failed,
+           (ret == 0 && stats.failed == 0) ? "PASS" : "FAIL");
+
+    msp_free(silence_buf);
+    msp_free(output_buf);
+    msp_free(dma_hdl);
+    g_alsa_api_test_running = 0;
+    msp_task_exit(0);
+}
+
 /* ─── Shell command entry ─────────────────────────────── */
 int cmd_minialsa_play(int argc, char **argv)
 {
@@ -1172,6 +1641,54 @@ int cmd_minialsa_api_test(int argc, char **argv)
 
 SHELL_CMD_EXPORT_ALIAS(cmd_minialsa_api_test, minialsa_api_test,
                        test minialsa apis [all|playback|capture|set_params] [wa|sin]);
+
+int cmd_minialsa_output_clock_test(int argc, char **argv)
+{
+    alsa_output_clock_test_cfg_t *cfg;
+
+    if (g_alsa_running || g_alsa_api_test_running) {
+        printf("[clock_test] another minialsa task is already running\r\n");
+        return 0;
+    }
+
+    if (argc < 2 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 ||
+        strcmp(argv[1], "--help") == 0) {
+        alsa_output_clock_test_print_usage();
+        return (argc < 2) ? -1 : 0;
+    }
+
+    cfg = msp_zalloc_check(sizeof(*cfg));
+    if (cfg == NULL) {
+        printf("[clock_test] alloc config failed\r\n");
+        return -1;
+    }
+
+    if (alsa_parse_u32_arg(argv[1], &cfg->sample_rate_hz) < 0 || cfg->sample_rate_hz == 0U) {
+        printf("[clock_test] invalid sample_rate_hz '%s'\r\n", argv[1]);
+        alsa_output_clock_test_print_usage();
+        msp_free(cfg);
+        return -1;
+    }
+
+    if (alsa_validate_output_clock_test_cfg(cfg) != 0) {
+        alsa_output_clock_test_print_usage();
+        msp_free(cfg);
+        return -1;
+    }
+
+    g_alsa_api_test_running = 1;
+    if (msp_task_new("alsa_clock_test", alsa_output_clock_test_task, cfg, 6144) < 0) {
+        g_alsa_api_test_running = 0;
+        msp_free(cfg);
+        printf("[clock_test] create task failed\r\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+SHELL_CMD_EXPORT_ALIAS(cmd_minialsa_output_clock_test, minialsa_output_clock_test,
+                       keep silence and tune xcodec output clock for scope measurement);
 
 static void board_audio_init(void)
 {

@@ -66,7 +66,7 @@ static void mm_dump_info(uint32_t heap_id)
           (uint32_t)usage.free_node,
           usage.max_free_size);
 
-#if (CONFIG_MM_ENABLE_STATISTICS)
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
     LOG_I("%10s  %10s  %10s  %12s  %11s\r\n",
           "Start_Addr", "End_Addr", "Total_Size", "Alloc_Count", "Free_Count");
     LOG_I("0x%08X  0x%08X  %10u  %12u  %11u\r\n",
@@ -105,14 +105,22 @@ int cmd_mm_info(int argc, char **argv)
     if (argc == 1) {
         LOG_I("\033[32mGlobal Statistics\033[0m: \r\n");
         LOG_I("  Total free bytes      : %u\r\n", (uint32_t)kfree_size(0));
-#if CONFIG_MM_ENABLE_MIN_FREE_TRACKING
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
         LOG_I("  Total min free bytes  : %u\r\n", (uint32_t)kmin_free_size());
 #endif
-#if (CONFIG_MM_ENABLE_STATISTICS)
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
         LOG_I("  Total malloc successes: %u\r\n", g_mem_manager.stats.total_malloc_successes);
         LOG_I("  Total free successes  : %u\r\n", g_mem_manager.stats.total_free_successes);
         LOG_I("  Total malloc failures : %u\r\n", g_mem_manager.stats.total_malloc_failures);
 #endif
+        LOG_I("  Automatic heap order  : \r\n");
+        for (uint32_t i = 0; i < CONFIG_MM_HEAP_COUNT; i++) {
+            uint32_t heap_id = g_mem_manager.heap_alloc_order[i];
+            if (heap_id && heap_id < CONFIG_MM_HEAP_COUNT &&
+                g_mem_manager.heaps[heap_id] && g_mem_manager.heaps[heap_id]->is_active) {
+                LOG_I("    [%u]: %s (%d)\r\n", i, g_mem_manager.heaps[heap_id]->name, heap_id);
+            }
+        }
         LOG_I("\r\n");
 
         /* dump all heaps info */
@@ -141,7 +149,7 @@ int cmd_mm_info(int argc, char **argv)
     return 0;
 }
 
-#if defined(CONFIG_SHELL)
+#if IS_ENABLED(CONFIG_SHELL)
 #include <shell.h>
 
 SHELL_CMD_EXPORT_ALIAS(cmd_mm_info, mm_info, show memory usage);

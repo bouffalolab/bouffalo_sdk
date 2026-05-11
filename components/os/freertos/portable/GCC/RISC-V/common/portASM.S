@@ -59,6 +59,10 @@
 
 #include "portContext.h"
 
+#ifndef CSR_MINTSTATUS
+#define CSR_MINTSTATUS 0x346
+#endif
+
 /* Check the freertos_risc_v_chip_specific_extensions.h and/or command line
 definitions. */
 #if defined( portasmHAS_CLINT ) && defined( portasmHAS_MTIME )
@@ -416,7 +420,7 @@ low_level_irq:
     load_x sp, xISRStackTop
 
     load_x  t3, pLowIrqContext
-    csrr t0, mintstatus
+    csrr t0, CSR_MINTSTATUS
     store_x t0, 1 * portWORD_SIZE( t3 )
     csrr t0, mcause
     store_x t0, 2 * portWORD_SIZE( t3 )
@@ -430,7 +434,7 @@ low_level_irq:
     load_x  t0, 2 * portWORD_SIZE( t3 )
     csrw mcause, t0
     load_x  t0, 1 * portWORD_SIZE( t3 )
-    csrw mintstatus, t0
+    csrw CSR_MINTSTATUS, t0
 
     j processed_source
 #else

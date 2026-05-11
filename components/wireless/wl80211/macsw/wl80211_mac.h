@@ -77,6 +77,7 @@ int wl80211_mac_clr_gtk(uint8_t vif_idx, uint8_t sta_idx);
 
 int wl80211_mac_ctrl_port(uint8_t sta_id, int control_port_open);
 int wl80211_mac_set_ps_mode(int enable);
+int wl80211_mac_set_rate(const struct wl80211_rate_config *cfg);
 int wl80211_mac_chan_config_update(uint8_t channel24G_num, const uint8_t *channel24G_chan, uint8_t channel5G_num,
                                    const uint8_t *channel5G_chan);
 struct mac_chan_def *wl80211_mac_chan_get(int freq);

@@ -141,8 +141,6 @@
 #define DNS_FRAG_TIMER_PRECISE_NEEDED   1
 #define DNS_TIMER_PRECISE_NEEDED        1
 
-extern int *__errno(void);
-#define errno                         (*__errno())
 #define LWIP_NETIF_STATUS_CALLBACK    1
 #define LWIP_NETIF_API                1
 

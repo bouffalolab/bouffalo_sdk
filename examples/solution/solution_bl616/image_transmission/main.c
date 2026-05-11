@@ -75,7 +75,9 @@ static void main_init_task(void *param)
 
 #if IS_ENABLED(CONFIG_SOLUTION_FUNC_HIBOOSTER_RX)
     /* hibooster rx start */
+    int hb_recv_init(uint16_t local_port, uint8_t peer_ip0, uint8_t peer_ip1, uint8_t peer_ip2, uint8_t peer_ip3, uint16_t peer_port);
     extern int hb_recv_start(void);
+    hb_recv_init(9000, 192, 168, 169, 1, 8800);
     hb_recv_start();
 #endif
 

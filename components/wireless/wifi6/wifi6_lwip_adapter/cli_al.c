@@ -1125,7 +1125,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_wifi_raw_send, wifi_raw_send, wifi raw send test);
 #endif
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_wps_pbc, wps_pbc, Start wps pbc for sta);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_stats, wifi_stats, Get/Clear stats for wifi);
-SHELL_CMD_EXPORT_ALIAS(cmd_rc, rc, Print the Rate Control Table);
+SHELL_CMD_EXPORT_ALIAS(cmd_rc, rc, Print or configure the Rate Control Table);
 SHELL_CMD_EXPORT_ALIAS(cmd_rate, rate, set g_fw_rate);
 SHELL_CMD_EXPORT_ALIAS(cmd_non_pref_chan, non_pref_chan, set non_pref_chan);
 SHELL_CMD_EXPORT_ALIAS(cmd_non_pref_chan_notify, non_pref_chan_notify, notify non_pref_chan change);
@@ -1134,6 +1134,8 @@ SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_teardown, wifi_mgmr_sta_twt_teardow
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_statusget, wifi_mgmr_sta_twt_statusget, Get WiFi Manager STA TWT status);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mode_set, wifi_mode_set, set ap/sta mode);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_get_tx_remaining, get_tx_remaining, get tx remaining);
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_power_get, wifi_power_get, get 20MHz tx power for mode/mcs);
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_channel_get, wifi_channel_get, get current country code channel information);
 #if WIFI_STATISTIC_ENABLE
 SHELL_CMD_EXPORT_ALIAS(cmd_fw_dbg, fw_dbg, fw debug param);
 #endif

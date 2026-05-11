@@ -4,7 +4,6 @@ BL_SDK_BASE ?= $(abspath  ./../../..)
 export BL_SDK_BASE
 
 BOARD ?= ${CHIP}dk
-CROSS_COMPILE ?= riscv64-unknown-elf-
 
 OT_NCP ?= 0
 OT_FTD ?= 1

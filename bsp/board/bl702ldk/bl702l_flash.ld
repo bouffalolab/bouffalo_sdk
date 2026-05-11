@@ -109,6 +109,14 @@ SECTIONS
         __text_code_end__ = .;
     } > xip_memory
 
+    .sysinit.array :
+    {
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+    } > xip_memory
+
     .build_id :
     {
         . = ALIGN(4);

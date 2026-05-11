@@ -679,10 +679,11 @@ int bflb_efuse_enable_aes(uint8_t aes_type, uint8_t xts_mode)
 }
 
 /****************************************************************************/ /**
- * @brief  Efuse write AES key lock
+ * @brief  Efuse read/write lock AES key
  *
- * @param  aes_type: aes type
- * @param  xts_mode: xts type
+ * @param  key_index: AES key slot index
+ * @param  rd_lock: read lock enable
+ * @param  wr_lock: write lock enable
  *
  * @return 0 for success
  *
@@ -712,8 +713,21 @@ int bflb_efuse_rw_lock_aes_key(uint8_t key_index, uint8_t rd_lock, uint8_t wr_lo
         if(rd_lock){
             tmpval |= ((1 << 29) | (1 << 30) |(1 << 31));
         }
+    }else if(3 == key_index){
+        if(wr_lock){
+            tmpval |= ((1 << 22) | (1 << 23));
+        }
+        if(rd_lock){
+            tmpval |= (1 << 14);
+        }
+    }else if(4 == key_index){
+        if(wr_lock){
+            tmpval |= (1 << 24);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 25);
+        }
     }
-
     bflb_ef_ctrl_write_direct(NULL, 0x7C, &tmpval, 1, 1);
 
     return 0;

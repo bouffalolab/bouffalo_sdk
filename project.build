@@ -2,7 +2,7 @@ include $(BL_SDK_BASE)/board.build
 
 # avoid 'Entering|Leaving directory' messages
 ifndef VERBOSE
-MAKEFLAGS += --no-print-directory
+	MAKEFLAGS += --no-print-directory
 endif
 
 BUILD_DIR?=build
@@ -74,8 +74,39 @@ endif
 # The command to remove a file.
 RM = $(CMAKE) -E remove_directory
 
+# include case config if exist
+ifneq ($(wildcard $(SDK_DEMO_PATH)/defconfig),)
+	include $(SDK_DEMO_PATH)/defconfig
+endif
+
+# BL616DG
+ifeq ($(CHIP), bl618dg)
+	CPU_ID ?=ap
+	CPU_MODEL ?=b0
+	CONFIG_PEC_V2 ?=y
+	CONFIG_DVP_RASTER ?=n
+	CONFIG_MULTIMEDIA_VIDEO ?=y
+
+	ifeq ($(CPU_MODEL), b0)
+		CROSS_COMPILE ?=riscv64-zephyr-elf-
+	endif
+endif
+
+# BL616CL
+ifeq ($(CHIP), bl616cl)
+	CONFIG_PEC_V2 ?=y
+	CONFIG_MULTIMEDIA_VIDEO ?=y
+endif
+
+# BL616
+ifeq ($(CHIP), bl616)
+	ifeq ($(CONFIG_FREERTOS),y)
+		CONFIG_BACKTRACE ?=y
+	endif
+endif
+
 CPU_ID ?=
-CPU_MODEL ?=a0
+CROSS_COMPILE ?=riscv64-unknown-elf-
 CONFIG_ROMAPI ?=y
 CONFIG_DEBUG ?=y
 CONFIG_TLSF ?=y
@@ -91,15 +122,7 @@ BOARD_DIR ?=
 VSCODE_PARSE_EN ?=y
 COMPILE_COMMANDS ?=n
 
-ifneq ($(wildcard $(SDK_DEMO_PATH)/defconfig),)
-include $(SDK_DEMO_PATH)/defconfig
-endif
-ifeq ($(CHIP) $(CONFIG_FREERTOS),bl616 y)
-  CONFIG_BACKTRACE ?=y
-endif
-
 CONFIG_VARS := $(filter CONFIG_%,$(.VARIABLES))
-
 
 #cmake definition config
 cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
@@ -115,7 +138,7 @@ cmake_definition+= -DVSCODE_PARSE_EN=$(VSCODE_PARSE_EN)
 cmake_definition+= -DSDK_DEMO_PATH=$(SDK_DEMO_PATH)
 
 ifneq ($(strip $(PROJECT_SDK_VERSION)),)
-cmake_definition+= -DPROJECT_SDK_VERSION=$(PROJECT_SDK_VERSION)
+	cmake_definition+= -DPROJECT_SDK_VERSION=$(PROJECT_SDK_VERSION)
 endif
 
 $(BUILD_DIR): Makefile cmake_cache library_build

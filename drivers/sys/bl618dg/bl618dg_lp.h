@@ -389,4 +389,6 @@ void bl_lp_info_clear(struct bl_lp_info_s *lp_info);
 
 void bl_lp_rc32k_save_code(uint32_t code);
 
+int bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t sleep_time);
+
 #endif

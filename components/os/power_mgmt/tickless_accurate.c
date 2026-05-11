@@ -78,6 +78,7 @@ extern void board_recovery(void);
 extern int macswl_ps_sleep_check(void);
 extern int macswl_connected_enter_ops(void);
 extern void macswl_regs_save_ops(void);
+extern uint32_t wifi_get_next_wakeup_timer_time(void);
 
 static uint64_t get_mtime(void)
 {
@@ -394,6 +395,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
     eSleepModeStatus eSleepStatus;
     int32_t ble_sleep_rtc __attribute__((unused)) = 0;
     uint64_t delta;
+    uint64_t twt_wakeup = 0;
     uint32_t wake_reason __attribute__((unused));
     int connected;
 
@@ -411,15 +413,10 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
     /* 1 Tick must equal to 1 ms */
     rtc_sleep_remain = BL_MS_TO_PDS_CNT(xExpectedIdleTime);
 
-    /* Enable DTIM when WiFi connected*/
+    /* Enable DTIM by default when WiFi is connected. TWT PDS15 can disable it
+     * only after a valid wakeup deadline is found for this sleep. */
     connected = !!(wifi_mgmr_sta_get_bssid(lpfw_cfg.bssid) == 0);
-
-    //if (connected && wifi_mgmr_sta_twt_flow_get() == 0) {
-    if (connected) {
-        lpfw_cfg.tim_wakeup_en = 1;
-    } else {
-        lpfw_cfg.tim_wakeup_en = 0;
-    }
+    lpfw_cfg.tim_wakeup_en = connected ? 1 : 0;
 #if defined(CFG_BLE_ENABLE)
     if (likely(rw_main_task_hdl != 0)) {
         /* Get BLE sleep time */
@@ -510,21 +507,23 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
         }
     }
 
-    //uint32_t wifi_get_next_wakeup_timer_time(void);
-    //uint64_t twt_wakeup = (uint64_t)wifi_get_next_wakeup_timer_time();
-    //if (twt_wakeup) {
-    //  if (twt_wakeup < WAKEUP_AHEAD_US) {
-    //      portENABLE_INTERRUPTS();
-    //      tickless_info("Sleep Abort! %d", __LINE__);
-    //      ___WFI();
-    //      return;
-    //  }
-    //  twt_wakeup = BL_US_TO_PDS_CNT(twt_wakeup);
+    if (likely(connected)) {
+        twt_wakeup = (uint64_t)wifi_get_next_wakeup_timer_time();
+    }
+    if (twt_wakeup) {
+        if (twt_wakeup < WAKEUP_AHEAD_US) {
+            portENABLE_INTERRUPTS();
+            tickless_info("Sleep Abort! %d", __LINE__);
+            ___WFI();
+            return;
+        }
 
-    //  if (twt_wakeup < rtc_sleep_remain) {
-    //      rtc_sleep_remain = twt_wakeup;
-    //  }
-    //}
+        lpfw_cfg.tim_wakeup_en = 0;
+        twt_wakeup = BL_US_TO_PDS_CNT(twt_wakeup);
+        if (twt_wakeup < rtc_sleep_remain) {
+            rtc_sleep_remain = twt_wakeup;
+        }
+    }
 
     macswl_regs_save_ops();
 

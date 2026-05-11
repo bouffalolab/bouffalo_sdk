@@ -126,8 +126,6 @@
 #define DHCP_TIMER_PRECISE_NEEDED       1
 #define LWIP_DHCP_DOES_ACD_CHECK        0
 
-extern int *__errno(void);
-#define errno                         (*__errno())
 #define LWIP_NETIF_STATUS_CALLBACK    1
 #define LWIP_NETIF_API                1
 

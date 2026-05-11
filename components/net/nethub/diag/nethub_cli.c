@@ -39,14 +39,10 @@ static void nethub_print_stats(void)
         return;
     }
 
-    printf("dnld total=%u drop=%u ok=%u\n",
-           status.statistics.dnld_total_packets,
-           status.statistics.dnld_total_dropped,
+    printf("dnld total=%u drop=%u ok=%u\n", status.statistics.dnld_total_packets, status.statistics.dnld_total_dropped,
            status.statistics.dnld_total_success);
-    printf("upld total=%u producer=%u free=%u\n",
-           status.statistics.upld_total_packets,
-           status.statistics.upld_producer_count,
-           status.statistics.upld_free_count);
+    printf("upld total=%u producer=%u free=%u\n", status.statistics.upld_total_packets,
+           status.statistics.upld_producer_count, status.statistics.upld_free_count);
 }
 
 static int cmd_nethub(int argc, char **argv)
@@ -72,4 +68,24 @@ static int cmd_nethub(int argc, char **argv)
 
 SHELL_CMD_EXPORT_ALIAS(cmd_nethub, nethub, nethub status);
 
+#if !CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE
+static void cmd_nethub_set_wifi_channel(int argc, char **argv)
+{
+    if (argc < 2 || argv[1] == NULL) {
+        printf("Usage: nethub_set_wifi_channel <sta|ap>\r\n");
+        return;
+    }
+
+    if (strcmp(argv[1], "sta") == 0) {
+        nethub_set_active_wifi_channel(NETHUB_CHANNEL_WIFI_STA);
+        printf("Active WiFi channel set to STA\r\n");
+    } else if (strcmp(argv[1], "ap") == 0) {
+        nethub_set_active_wifi_channel(NETHUB_CHANNEL_WIFI_AP);
+        printf("Active WiFi channel set to AP\r\n");
+    } else {
+        printf("Invalid argument: %s (use 'sta' or 'ap')\r\n", argv[1]);
+    }
+}
+SHELL_CMD_EXPORT_ALIAS(cmd_nethub_set_wifi_channel, nethub_set_wifi_channel, set active wifi channel to sta or ap);
+#endif
 #endif

@@ -38,7 +38,7 @@ int main(void)
 
     if (num == 0) {
         /* wdt init */
-        AON_Wdg_Init(WDG_RESET_TIME_1S76);
+        AON_Wdg_Init(WDG_RESET_TIME_2S00);
 
         AON_Wdg_Start();
 

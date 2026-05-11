@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include <semphr.h>
 
 #include "at_main.h"
 #include "at_core.h"
@@ -1545,4 +1546,3 @@ bool at_base_cmd_regist(void)
     else
         return false;
 }
-

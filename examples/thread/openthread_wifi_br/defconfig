@@ -17,6 +17,8 @@ CONFIG_LITTLEFS              =y
 # thread
 CONFIG_LMAC154               =y
 CONFIG_THREAD                =y
+CONFIG_LMAC154_DBG           =0
+CONFIG_LMAC154_DBG_ALL       =0
 
 CONFIG_OTBR                  =y
 CONFIG_IPV6                  =y

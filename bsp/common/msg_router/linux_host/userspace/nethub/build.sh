@@ -13,7 +13,7 @@ KERNEL_DIR="${SCRIPT_DIR}/../../kernel"
 MODULE_NAME="mr_sdio"
 OUTPUT_DIR="${SCRIPT_DIR}/output"
 VCHAN_DIR="${SCRIPT_DIR}/virtualchan"
-BFLBWIFICTRL_DIR="${SCRIPT_DIR}/bflbwifictrl"
+HOST_CTRL_DIR="${SCRIPT_DIR}/host_ctrl"
 
 # Color output
 RED='\033[0;31m'
@@ -31,7 +31,7 @@ usage() {
     echo ""
     echo "Commands:"
     echo "  build  - Build kernel modules and userspace apps to output/"
-    echo "  clean  - Clean build artifacts in kernel/, virtualchan/, bflbwifictrl/ and output/"
+    echo "  clean  - Clean build artifacts in kernel/, virtualchan/, host_ctrl/ and output/"
     echo "  load   - Load kernel module from output/ (sudo insmod)"
     echo "  unload - Unload kernel module (sudo rmmod)"
     echo "Examples:"
@@ -56,8 +56,8 @@ check_dirs() {
         echo -e "${RED}Error: Virtualchan directory not found: ${VCHAN_DIR}${NC}"
         exit 1
     fi
-    if [ ! -d "${BFLBWIFICTRL_DIR}" ]; then
-        echo -e "${RED}Error: Bflbwifictrl directory not found: ${BFLBWIFICTRL_DIR}${NC}"
+    if [ ! -d "${HOST_CTRL_DIR}" ]; then
+        echo -e "${RED}Error: host_ctrl directory not found: ${HOST_CTRL_DIR}${NC}"
         exit 1
     fi
 }
@@ -189,7 +189,7 @@ dump_unload_diagnostics() {
 do_build() {
     echo -e "${BLUE}========================================${NC}"
     echo -e "${GREEN}==> Building all artifacts to output/${NC}"
-    echo -e "${CYAN}==> Kernel/userspace support: tty + vchan${NC}"
+    echo -e "${CYAN}==> Kernel/userspace support: vchan only; transport is hidden by nethub_vchan${NC}"
     echo -e "${BLUE}========================================${NC}"
     check_dirs
 
@@ -203,13 +203,10 @@ do_build() {
     echo -e "${YELLOW}==> [1/4] Building kernel module...${NC}"
     cd "${KERNEL_DIR}" || exit 1
 
-    # Always build both control backends. Runtime selection happens in bflbwifid.
     make \
         CONFIG_MR_NETDEV=y \
         CONFIG_MR_NETDEV_WIFI=y \
-        CONFIG_MR_VIRTUALCHAN=y \
-        CONFIG_MR_TTY=y \
-        CONFIG_MR_TTY_CMD=y
+        CONFIG_MR_VIRTUALCHAN=y
     cd - || exit 1
 
     # Copy kernel module to output
@@ -243,31 +240,45 @@ do_build() {
         echo -e "${YELLOW}    Warning: ${VCHAN_DIR}/libnethub_vchan.a not found${NC}"
     fi
 
-    # Build bflbwifictrl userspace app
+    # Build common host control userspace apps
     echo ""
-    echo -e "${YELLOW}==> [4/4] Building bflbwifictrl userspace app (unified backend build)...${NC}"
-    cd "${BFLBWIFICTRL_DIR}" || exit 1
-    run_make_step "bflbwifictrl userspace build" make ENABLE_NETIF_AUTO_CONFIG=1
+    echo -e "${YELLOW}==> [4/4] Building host control userspace app (nethub_vchan API only)...${NC}"
+    cd "${HOST_CTRL_DIR}" || exit 1
+    run_make_step "host_ctrl userspace build" make
     cd - || exit 1
 
-    # Copy bflbwifictrl apps from app/ subdirectory to output
+    # Copy host control apps and public API library to output
     copied_count=0
-    if [ -f "${BFLBWIFICTRL_DIR}/app/bflbwifictrl" ]; then
-        copy_artifact "${BFLBWIFICTRL_DIR}/app/bflbwifictrl" "${OUTPUT_DIR}/bflbwifictrl"
+    if [ -f "${HOST_CTRL_DIR}/cli/bflbwifictrl" ]; then
+        copy_artifact "${HOST_CTRL_DIR}/cli/bflbwifictrl" "${OUTPUT_DIR}/bflbwifictrl"
         copied_count=$((copied_count + 1))
     else
-        echo -e "${YELLOW}    Warning: ${BFLBWIFICTRL_DIR}/app/bflbwifictrl not found${NC}"
+        echo -e "${YELLOW}    Warning: ${HOST_CTRL_DIR}/cli/bflbwifictrl not found${NC}"
     fi
 
-    if [ -f "${BFLBWIFICTRL_DIR}/app/bflbwifid" ]; then
-        copy_artifact "${BFLBWIFICTRL_DIR}/app/bflbwifid" "${OUTPUT_DIR}/bflbwifid"
+    if [ -f "${HOST_CTRL_DIR}/daemon/bflbwifid" ]; then
+        copy_artifact "${HOST_CTRL_DIR}/daemon/bflbwifid" "${OUTPUT_DIR}/bflbwifid"
         copied_count=$((copied_count + 1))
     else
-        echo -e "${YELLOW}    Warning: ${BFLBWIFICTRL_DIR}/app/bflbwifid not found${NC}"
+        echo -e "${YELLOW}    Warning: ${HOST_CTRL_DIR}/daemon/bflbwifid not found${NC}"
+    fi
+
+    if [ -f "${HOST_CTRL_DIR}/libnethub_wifi.a" ]; then
+        copy_artifact "${HOST_CTRL_DIR}/libnethub_wifi.a" "${OUTPUT_DIR}/libnethub_wifi.a"
+    fi
+
+    if [ -f "${HOST_CTRL_DIR}/libnethub_wifi.so" ]; then
+        copy_artifact "${HOST_CTRL_DIR}/libnethub_wifi.so" "${OUTPUT_DIR}/libnethub_wifi.so"
+    fi
+
+    mkdir -p "${OUTPUT_DIR}/include"
+    if [ -f "${HOST_CTRL_DIR}/include/nethub_wifi.h" ] && [ -f "${HOST_CTRL_DIR}/include/nethub_wifi_types.h" ]; then
+        copy_artifact "${HOST_CTRL_DIR}/include/nethub_wifi.h" "${OUTPUT_DIR}/include/nethub_wifi.h"
+        copy_artifact "${HOST_CTRL_DIR}/include/nethub_wifi_types.h" "${OUTPUT_DIR}/include/nethub_wifi_types.h"
     fi
 
     if [ $copied_count -eq 0 ]; then
-        echo -e "${YELLOW}    No bflbwifictrl apps found to copy${NC}"
+        echo -e "${YELLOW}    No host control apps found to copy${NC}"
     fi
 
     # Summary
@@ -277,18 +288,16 @@ do_build() {
     echo -e "${BLUE}========================================${NC}"
     echo ""
     echo -e "${GREEN}Output files in ${OUTPUT_DIR}:${NC}"
-    ls -lh "${OUTPUT_DIR}" | grep -E "${MODULE_NAME}.ko|nethub_vchan_app|bflbwifictrl|bflbwifid|libnethub_vchan.a" || echo "    (no files found)"
+    ls -lh "${OUTPUT_DIR}" | grep -E "${MODULE_NAME}.ko|nethub_vchan_app|bflbwifictrl|bflbwifid|libnethub_vchan.a|libnethub_wifi" || echo "    (no files found)"
     echo ""
     echo -e "${YELLOW}Build Configuration:${NC}"
-    echo -e "  Kernel backend support: ${CYAN}tty + vchan${NC}"
-    echo -e "  Userspace backend support: ${CYAN}tty + vchan${NC}"
-    echo -e "  Default daemon backend: ${CYAN}tty (/dev/ttyAT0)${NC}"
+    echo -e "  Kernel backend support: ${CYAN}vchan${NC}"
+    echo -e "  Userspace control API: ${CYAN}nethub_vchan only${NC}"
+    echo -e "  nethub_vchan transport: ${CYAN}auto probe (SDIO netlink / USB ACM)${NC}"
     echo ""
     echo -e "${YELLOW}Next steps:${NC}"
     echo -e "  1. Load module: ${GREEN}sudo $0 load${NC}"
-    echo -e "  2. Run bflbwifid daemon (default tty): ${GREEN}sudo ${OUTPUT_DIR}/bflbwifid${NC}"
-    echo -e "     Or select vchan explicitly: ${GREEN}sudo ${OUTPUT_DIR}/bflbwifid -c vchan${NC}"
-    echo -e "     If tty device is not /dev/ttyAT0, use: ${GREEN}sudo ${OUTPUT_DIR}/bflbwifid -c tty -p <dev>${NC}"
+    echo -e "  2. Run bflbwifid daemon: ${GREEN}sudo ${OUTPUT_DIR}/bflbwifid${NC}"
     echo -e "  3. Run bflbwifictrl cli: ${GREEN}sudo ${OUTPUT_DIR}/bflbwifictrl${NC}"
     echo ""
 }
@@ -316,10 +325,10 @@ do_clean() {
     cd - || exit 1
     echo -e "${GREEN}    Done${NC}"
 
-    # Clean bflbwifictrl build
+    # Clean host_ctrl build
     echo ""
-    echo -e "${YELLOW}==> [3/5] Cleaning bflbwifictrl build...${NC}"
-    cd "${BFLBWIFICTRL_DIR}" || exit 1
+    echo -e "${YELLOW}==> [3/5] Cleaning host_ctrl build...${NC}"
+    cd "${HOST_CTRL_DIR}" || exit 1
     make clean 2>/dev/null || echo -e "${YELLOW}    (No Makefile, skipping)${NC}"
     cd - || exit 1
     echo -e "${GREEN}    Done${NC}"
@@ -420,7 +429,7 @@ main() {
         case "$arg" in
             CHANNEL=*)
                 if [ "${warned_legacy_channel}" -eq 0 ]; then
-                    echo -e "${YELLOW}Warning: CHANNEL=... is deprecated and ignored; tty + vchan are always built${NC}"
+                    echo -e "${YELLOW}Warning: CHANNEL=... is deprecated and ignored; nethub_vchan auto-probes the transport${NC}"
                     warned_legacy_channel=1
                 fi
                 ;;

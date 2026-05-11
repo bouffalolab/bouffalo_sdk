@@ -83,6 +83,12 @@ SECTIONS
         *(.srodata)
         *(.srodata.*)
 
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+
         . = ALIGN(4);
         __text_code_end__ = .;
     } > xip_memory1

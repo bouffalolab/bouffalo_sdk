@@ -57,7 +57,7 @@ uint64_t msp_gettick_count(void);
 #define BYTE_TO_BITS            (8)
 #define SECOND_TO_MILLISECONDS  (1000)
 
-#define CONST_TX_OUTPUT_BUFSIZE     ((24+512)*16 + 2*32) // output
+//#define CONST_TX_OUTPUT_BUFSIZE     ((24+512)*16 + 2*32) // output
 
 #if 0
 #define CONST_TX_DMA_CTRL_ID        (0)
@@ -255,7 +255,10 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
 #ifdef CONST_TX_OUTPUT_BUFSIZE
     uint8_t *send = msp_malloc(CONST_TX_OUTPUT_BUFSIZE);
 #else
-    uint8_t *send = msp_malloc(params->buffer_bytes);
+    uint32_t node = params->buffer_bytes / params->period_bytes;
+    //24 is equal sizeof(auo_segment_t), 2 * 32 for 32bytes alignment
+    uint32_t buf_size = params->buffer_bytes + 24 * node + 2 * 32;
+    uint8_t *send = msp_malloc(buf_size);
 #endif
     if (send == NULL) {
         goto pcmp_err0;
@@ -281,7 +284,7 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
 #ifdef CONST_TX_OUTPUT_BUFSIZE
     playback->output_config->buffer_size = CONST_TX_OUTPUT_BUFSIZE;
 #else
-    playback->output_config->buffer_size = params->buffer_bytes;
+    playback->output_config->buffer_size = buf_size;
 #endif
     playback->output_config->period = params->period_bytes;
     //output_config.period = 2048;

@@ -323,7 +323,7 @@ __UNUSED static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r0(struct bflb_
  *
 *******************************************************************************/
 #ifdef EF_CTRL_EFUSE_R1_SIZE
-static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s *dev)
+__UNUSED static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
 
@@ -514,7 +514,7 @@ __UNUSED static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_dev
  *
 *******************************************************************************/
 #ifdef EF_CTRL_EFUSE_R1_SIZE
-static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *dev)
+__UNUSED static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
 

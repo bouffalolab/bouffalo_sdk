@@ -145,7 +145,7 @@ struct netif;
 #define ip4_addr_cmp(addr1, addr2) ((addr1)->addr == (addr2)->addr)
 
 #define ip4_addr_isany_val(addr1)   ((addr1).addr == IPADDR_ANY)
-#define ip4_addr_isany(addr1) ((addr1) == NULL || ip4_addr_isany_val(*(addr1)))
+#define ip4_addr_isany(addr1) (((mem_ptr_t)(addr1) == 0) || ip4_addr_isany_val(*(addr1)))
 
 #define ip4_addr_isbroadcast(addr1, netif) ip4_addr_isbroadcast_u32((addr1)->addr, netif)
 u8_t ip4_addr_isbroadcast_u32(u32_t addr, const struct netif *netif);

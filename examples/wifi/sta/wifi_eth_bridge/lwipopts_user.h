@@ -288,8 +288,6 @@
 // #define LWIP_PROVIDE_ERRNO           1
 #define LWIP_ERRNO_STDINCLUDE           1
 #define LWIP_SOCKET_SET_ERRNO           1
-extern int *__errno(void);
-#define errno                           (*__errno())
 #define LWIP_RAND()                     ((u32_t)random())
 #define osPriorityRealtime              28 // XXX: priority: realtime (highest)
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

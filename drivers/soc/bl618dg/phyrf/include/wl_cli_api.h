@@ -17,6 +17,7 @@ void cmd_tx_stop_register( int argc, char **argv);
 void cmd_tx11b_start_register( int argc, char **argv);
 void cmd_tx11g_start_register( int argc, char **argv);
 void cmd_tx11n_start_register( int argc, char **argv);
+void cmd_tx11ac_start_register( int argc, char **argv);
 void cmd_rx_start_at( int argc, char **argv);
 void cmd_rx_poll_stat_at( int argc, char **argv);
 void cmd_rx_stop_at( int argc, char **argv);

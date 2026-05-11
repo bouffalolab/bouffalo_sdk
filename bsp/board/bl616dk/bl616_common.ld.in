@@ -327,8 +327,10 @@ SECTIONS
         . = ALIGN(4);
     } > ram
 
+#if CONFIG_FLASH_XIP_ADDRESS
     __HeapBase = ABSOLUTE(.);
     __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
+#endif
     GROUP_END(ram)
 
 
@@ -488,6 +490,12 @@ SECTIONS
         . = ALIGN(4);
         __usbh_class_info_end__ = .;
 
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+
         *(.srodata*)
 
         /* global object for c++ */
@@ -525,4 +533,12 @@ SECTIONS
     } > rom
 #endif
     GROUP_END(rom)
+
+#if !CONFIG_FLASH_XIP_ADDRESS
+    /* In RAM-only images, "rom" is aliased onto RAM, so the heap must start
+     * after the linked code/data image to avoid corrupting .text/.rodata.
+     */
+    __HeapBase = ABSOLUTE(ALIGN(., 64));
+    __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
+#endif
 }

@@ -17,6 +17,8 @@ void dhcpd_clear_dns_server(void* netif);
 err_t dhcpd_add_dns_server(void* netif, const ip_addr_t *dnsserver);
 err_t dhcpd_remove_dns_server(void* netif, const ip_addr_t *dnsserver);
 
+void dhcpd_release_client_by_mac(const struct netif *netif, const uint8_t *mac);
+
 #ifdef __cplusplus
 }
 #endif

@@ -49,8 +49,13 @@
 #define BEACON_STAMP_APP    2
 
 /* soft interrupt */
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
+#define BL_LP_SOFT_INT_TRIG  (ECLIC_SetPendingIRQ(MSOFT_IRQn))
+#define BL_LP_SOFT_INT_CLEAR (ECLIC_ClearPendingIRQ(MSOFT_IRQn))
+#else
 #define BL_LP_SOFT_INT_TRIG  (csi_vic_set_pending_irq(MSOFT_IRQn))
 #define BL_LP_SOFT_INT_CLEAR (csi_vic_clear_pending_irq(MSOFT_IRQn))
+#endif
 
 #define PROTECT_AF_MS        (10)
 #define PROTECT_BF_MS        (5)

@@ -6,9 +6,13 @@
 #include "bl618dg_hbn.h"
 #include "bl618dg_aon.h"
 #include "bl618dg_pm.h"
+#include "bl_lp.h"
 
-#define PDS_RTC_WAKEUP_TIME (5 * 1000 * 1000 / 32)
+#define PDS_RTC_WAKEUP_TIME (10 * 1000 * 1000 / 32)
 #define PDS_PRINT_DELAY     200
+
+/* PDS round counter, retained across PDS1/2/3/7/15 wake-up via context restore */
+static uint32_t g_pds_round = 0;
 
 void HBN_OUT0_IRQ_Handler(void)
 {
@@ -55,7 +59,6 @@ void HBN_OUT0_IRQ_Handler(void)
 
 int main(void)
 {
-    uint32_t tmpVal = 0;
     uint32_t num = 0;
     uint32_t rtc_val_l = 0;
     uint32_t rtc_val_h = 0;
@@ -63,6 +66,9 @@ int main(void)
     board_init();
 
     HBN_32K_Sel(HBN_32K_RC);
+
+    // AON_Power_On_Xtal_32K();
+    // HBN_32K_Sel(HBN_32K_XTAL);
 
     while (1) {
         HBN_Get_RTC_Timer_Val(&rtc_val_l, &rtc_val_h);
@@ -80,50 +86,48 @@ int main(void)
         HBN_Pin_WakeUp_Mask(0xF);
         PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_HBN_IRQ_OUT, UNMASK);
 
-        tmpVal = BL_RD_REG(HBN_BASE, HBN_RSV0);
-        num = tmpVal;
-        BL_WR_REG(AON_BASE, HBN_RSV0, (num + 1));
+        num = g_pds_round++;
         printf("num is %d\r\n", num);
 
         if (num == 0) {
             pm_pds_irq_register();
             printf("enter pds1 mode\r\n");
             arch_delay_us(PDS_PRINT_DELAY);
-            pm_pds_mode_enter(PM_PDS_LEVEL_1, 0);
+            bl_lp_pds_enter_with_restore(PM_PDS_LEVEL_1, 0);
             printf("pds1 wakeup\r\n");
             /* will excute delay */
-            arch_delay_ms(10000);
+            arch_delay_ms(1000);
         } else if (num == 1) {
             printf("enter pds2 mode\r\n");
             arch_delay_us(PDS_PRINT_DELAY);
-            pm_pds_mode_enter(PM_PDS_LEVEL_2, 0);
+            bl_lp_pds_enter_with_restore(PM_PDS_LEVEL_2, 0);
             printf("pds2 wakeup\r\n");
             /* will NOT excute delay */
-            arch_delay_ms(10000);
+            arch_delay_ms(1000);
         } else if (num == 2) {
             printf("enter pds3 mode\r\n");
             arch_delay_us(PDS_PRINT_DELAY);
-            pm_pds_mode_enter(PM_PDS_LEVEL_3, 0);
+            bl_lp_pds_enter_with_restore(PM_PDS_LEVEL_3, 0);
             printf("pds3 wakeup\r\n");
             /* will NOT excute delay */
-            arch_delay_ms(10000);
+            arch_delay_ms(1000);
         } else if (num == 3) {
             printf("enter pds7 mode\r\n");
             arch_delay_us(PDS_PRINT_DELAY);
-            pm_pds_mode_enter(PM_PDS_LEVEL_7, 0);
+            bl_lp_pds_enter_with_restore(PM_PDS_LEVEL_7, 0);
             printf("pds7 wakeup\r\n");
             /* will NOT excute delay */
-            arch_delay_ms(10000);
+            arch_delay_ms(1000);
         } else if (num == 4) {
             printf("enter pds15 mode\r\n");
             arch_delay_us(PDS_PRINT_DELAY);
-            pm_pds_mode_enter(PM_PDS_LEVEL_15, 0);
+            bl_lp_pds_enter_with_restore(PM_PDS_LEVEL_15, 0);
             printf("pds15 wakeup\r\n");
             /* will NOT excute delay */
-            arch_delay_ms(10000);
+            arch_delay_ms(1000);
         } else {
             printf("SUCCESS\r\n");
-            BL_WR_REG(AON_BASE, HBN_RSV0, 0);
+            g_pds_round = 0;
             while (1) {
             }
         }

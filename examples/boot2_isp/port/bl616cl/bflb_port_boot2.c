@@ -178,6 +178,40 @@ static void hal_boot2_clear_app_pkhash(boot2_efuse_hw_config *efuse_cfg, uint32_
 }
 
 /****************************************************************************/ /**
+ * @brief  load one app public key hash directly from efuse
+ *
+ * @param  efuse_cfg: boot2 efuse config pointer
+ * @param  group: cpu group index
+ *
+ * @return none
+ *
+ *******************************************************************************/
+static void hal_boot2_load_app_pkhash_from_efuse_direct(boot2_efuse_hw_config *efuse_cfg, uint32_t group)
+{
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    if (efuse_cfg->sign[group] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        bflb_ef_ctrl_read_direct(NULL, 0x40, (uint32_t *)efuse_cfg->pk_hash_cpu[group],
+                                 HAL_BOOT2_PK_HASH_SIZE / 4, 0);
+        bflb_ef_ctrl_read_direct(NULL,
+                                 0x1C,
+                                 (uint32_t *)((uint8_t *)efuse_cfg->pk_hash_cpu[group] + HAL_BOOT2_PK_HASH_SIZE),
+                                 4,
+                                 0);
+        return;
+    }
+#endif
+
+    if (efuse_cfg->pkhash_len == 0) {
+        /* pkhash len is 192 bits */
+        bflb_ef_ctrl_read_direct(NULL, 0x48, (uint32_t *)efuse_cfg->pk_hash_cpu[group],
+                                 HAL_BOOT2_PK_HASH_SIZE_LEN192 / 4, 0);
+    } else {
+        bflb_ef_ctrl_read_direct(NULL, 0x40, (uint32_t *)efuse_cfg->pk_hash_cpu[group],
+                                 HAL_BOOT2_PK_HASH_SIZE / 4, 0);
+    }
+}
+
+/****************************************************************************/ /**
  * @brief  get TLVC type and default app public key hash length from sign type
  *
  * @param  efuse_cfg: boot2 efuse config pointer
@@ -844,23 +878,7 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
                 efuse_cfg->sign[i] = (uint8_t)sw_cfg0.sign_cfg;
                 switch (efuse_cfg->pkhash_sel) {
                     case HAL_APP_SIGN_PKHASH_FROM_EFUSE:
-                        /* read from efuse directly */
-                        if (sw_cfg1.pkhash_len == 0) {
-                            /* pkhash len is 192 bits */
-                            bflb_ef_ctrl_read_direct(NULL, 0x48, (uint32_t *)efuse_cfg->pk_hash_cpu[i],
-                                                     HAL_BOOT2_PK_HASH_SIZE_LEN192 / 4, 0);
-                        } else {
-                            bflb_ef_ctrl_read_direct(NULL, 0x40, (uint32_t *)efuse_cfg->pk_hash_cpu[i],
-                                                     HAL_BOOT2_PK_HASH_SIZE / 4, 0);
-                        }
-#if HAL_BOOT2_SUPPORT_SIGN_SHA384
-                        if (efuse_cfg->sign[i] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
-                            /* Read additional 16 bytes (4 words) for SHA384 pk hash at offset 32 bytes */
-                            bflb_ef_ctrl_read_direct(
-                                NULL, 0x1C, (uint32_t *)((uint8_t *)efuse_cfg->pk_hash_cpu[i] + HAL_BOOT2_PK_HASH_SIZE),
-                                4, 0);
-                        }
-#endif
+                        hal_boot2_load_app_pkhash_from_efuse_direct(efuse_cfg, i);
                         break;
                     case HAL_APP_SIGN_PKHASH_FROM_FLASH_OTP:
                         /* defer public key hash loading until flash init is complete */

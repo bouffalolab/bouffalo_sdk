@@ -2276,7 +2276,7 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
         return -1;
     }
     /* VAD callback path is heavier than plain copy; keep capture task stack sufficient. */
-    (void)xTaskCreate(audio_cap_proc, (char *)"audio_cap", 1024, NULL, 2, &g_audio.cap_task);
+    (void)xTaskCreate(audio_cap_proc, (char *)"audio_cap", 2048, NULL, 2, &g_audio.cap_task);
 #endif
 
     return 0;

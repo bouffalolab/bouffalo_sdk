@@ -56,8 +56,18 @@
 #define CFG_PLATFORM_DMA_ENABLE 1
 #endif
 
+/*
+ * Include the selected macsw configuration before common feature defaults.
+ * For WFA builds, macsw_wfa_config.h defines CFG_WFA here so TWT PDS15 is
+ * excluded by the common rule below, instead of relying on a later #undef.
+ */
 #if defined(CONFIG_MACSW_SELECT_INCLUDE)
 #include CONFIG_MACSW_SELECT_INCLUDE
+#endif
+
+/* Enable TWT PDS15 by default for non-WFA macsw configurations. */
+#if !defined(CFG_WFA) && !defined(CFG_WIFI_TWT_PDS15_ENABLE)
+#define CFG_WIFI_TWT_PDS15_ENABLE
 #endif
 
 /* enable ps by default */

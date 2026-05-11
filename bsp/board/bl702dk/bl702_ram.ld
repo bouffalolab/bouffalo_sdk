@@ -71,6 +71,14 @@ SECTIONS
         __text_code_end__ = .;
     } > code_memory
 
+    .sysinit.array :
+    {
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
+    } > ram_memory
+
     . = ALIGN(4);
     __itcm_load_addr = .;
 

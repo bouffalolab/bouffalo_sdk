@@ -295,6 +295,7 @@
 #define GPIO_FUNC_SPI0      (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI1      (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2S       (3 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_CANFD     (4 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2C0      (5 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2C1      (5 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2C2      (6 << GPIO_FUNC_SHIFT)

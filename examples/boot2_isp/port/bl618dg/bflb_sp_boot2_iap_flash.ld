@@ -21,17 +21,28 @@ StackSize = 0x1000; /*  4KB */
 
 VerOffset = 0xC00;
 Boot2Size = 0xC000;
+#ifdef CPU_MODEL_A0
+Boot2XipBase = 0x80000000;
+Boot2PsramBase = 0x88000000;
+Boot2RamBase = 0x61000000;
+Boot2NocacheBase = 0x21000000;
+#else
+Boot2XipBase = 0xB0000000;
+Boot2PsramBase = 0xB8000000;
+Boot2RamBase = 0xA1000000;
+Boot2NocacheBase = 0x21000000;
+#endif
 /* Not pass para to app since it will get itself */
 PROVIDE(__boot2_pass_param_addr = 0);
 MEMORY
 {
-    fw_header_memory  (rx)  : ORIGIN = 0x80000000 - 0x2000, LENGTH = 8K
-    xip_memory     (rx)  : ORIGIN = 0x80000000, LENGTH = 3K
-    ver_memory     (rx)  : ORIGIN = 0x80000000 + VerOffset, LENGTH = 256
-    ram_psram      (wxa) : ORIGIN = 0x88000000, LENGTH = 0K
-    xip_memory1    (rx)  : ORIGIN = 0x80000d00, LENGTH = 44K + 768
-    ram_memory     (!rx) : ORIGIN = 0x61000000, LENGTH = 280K
-    nocache_memory (!rx) : ORIGIN = 0x21000000, LENGTH = 280K
+    fw_header_memory  (rx)  : ORIGIN = Boot2XipBase - 0x2000, LENGTH = 8K
+    xip_memory     (rx)  : ORIGIN = Boot2XipBase, LENGTH = 3K
+    ver_memory     (rx)  : ORIGIN = Boot2XipBase + VerOffset, LENGTH = 256
+    ram_psram      (wxa) : ORIGIN = Boot2PsramBase, LENGTH = 0K
+    xip_memory1    (rx)  : ORIGIN = Boot2XipBase + 0xd00, LENGTH = 44K + 768
+    ram_memory     (!rx) : ORIGIN = Boot2RamBase, LENGTH = 280K
+    nocache_memory (!rx) : ORIGIN = Boot2NocacheBase, LENGTH = 280K
 }
 
 SECTIONS
@@ -80,6 +91,12 @@ SECTIONS
         *(.rodata.*)
         *(.srodata)
         *(.srodata.*)
+
+        /* section information for sysinit */
+        . = ALIGN(4);
+        __sysinit_array_start = .;
+        KEEP(*(SORT_BY_NAME(.sysinit.*)))
+        __sysinit_array_stop = .;
 
         . = ALIGN(4);
         __text_code_end__ = .;

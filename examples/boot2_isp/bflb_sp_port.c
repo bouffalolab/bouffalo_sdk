@@ -59,10 +59,10 @@ uint8_t g_log_out_buf[BFLB_BOOT2_LOG_OUT_BUF_SIZE];
 #define MFG_VER_INFO_BASE (BFLB_SP_BOOT2_XIP_BASE + 0xc00)
 
 #define COMPILE_TIME __DATE__ " " __TIME__
-char ver_name[5] __attribute__ ((section(".verinfo"))) = "boot2";
-char git_commit[41] __attribute__ ((section(".verinfo"))) = GIT_COMMIT;
-char time_info[30] __attribute__ ((section(".verinfo"))) = COMPILE_TIME;
-const bflb_verinf_t boot2_ver __attribute__ ((section(".bflb_verinf"))) = {
+char ver_name[5] __attribute__ ((used, section(".verinfo"))) = "boot2";
+char git_commit[41] __attribute__ ((used, section(".verinfo"))) = GIT_COMMIT;
+char time_info[30] __attribute__ ((used, section(".verinfo"))) = COMPILE_TIME;
+const bflb_verinf_t boot2_ver __attribute__ ((used, section(".bflb_verinf"))) = {
 #if BOOT2_ANTI_ROLLBACK_VER
     .anti_rollback = BOOT2_ANTI_ROLLBACK_VER,
 #else

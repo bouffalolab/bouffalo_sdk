@@ -8,13 +8,9 @@
 
 #define VERSION_LMAC154_MAJOR 1
 #define VERSION_LMAC154_MINOR 7
-#define VERSION_LMAC154_PATCH 6
+#define VERSION_LMAC154_PATCH 7
 
 // #define VERSION_LMAC154_SRC_EXTRA_INFO "customer-1"
-
-#ifndef CONFIG_LMAC154_DBG
-#define CONFIG_LMAC154_DBG 0
-#endif
 
 #define M154_RD_WORD(addr)                          (*((volatile uint32_t *)(uintptr_t)(addr)))
 #define M154_WR_WORD(addr, val)                     ((*(volatile uint32_t *)(uintptr_t)(addr)) = (val))
@@ -195,26 +191,31 @@ typedef struct lmac154_receiveInfo lmac154_receiveInfo_t;
 typedef void (*lmac154_rxDoneCallback_t)(lmac154_rx_status_t, lmac154_receiveInfo_t *, uint32_t *);
 
 struct lmac154_receiveInfo {
-    uint32_t                    rx_length:8;
-    uint32_t                    nbr_idx:8;
-    uint32_t                    mac_hdr_size:8;
-    uint32_t                    is_tx_acking:1;
-    uint32_t                    is_enh_ack_requested:1;
-    uint32_t                    is_frame_pended:1;
-    uint32_t                    is_src_saddr:1;
-    uint32_t                    is_src_xaddr:1;
-    uint32_t                    stack_msk:2;
-    uint32_t                    unused:1;
-    uint32_t                    enh_ack_time:8;
-    uint32_t                    dbg_ack_cost:8;
-    uint32_t                    rx_error:16;
-    uint32_t                    rx_done_symbol_cnt;
+    uint32_t                        rx_length:8;
+    uint32_t                        nbr_idx:8;
+    uint32_t                        mac_hdr_size:8;
+    uint32_t                        is_tx_acking:1;
+    uint32_t                        is_enh_ack_requested:1;
+    uint32_t                        is_frame_pended:1;
+    uint32_t                        is_src_saddr:1;
+    uint32_t                        is_src_xaddr:1;
+    uint32_t                        stack_msk:2;
+    uint32_t                        unused:1;
+    uint16_t                        rx_error;
+    uint8_t                         enh_ack_time;
+    uint8_t                         dbg_en:1;
+    uint8_t                         dbg_rx_filter_en:1;
+    uint8_t                         dbg_ack_len:6;
+    int8_t                          dbg_ack_cost;
+    int8_t                          dbg_csl_drift_ack;
+    uint16_t                        dbg_csl_ack_phase;
+    uint32_t                        rx_done_symbol_cnt;
     union {
-        uint16_t                saddr;
-        uint32_t                xaddr[2];
-        uint8_t                 addr[8];
+        uint16_t                    saddr;
+        uint32_t                    xaddr[2];
+        uint8_t                     addr[8];
     } src_addr;
-    lmac154_rxDoneCallback_t    callback[2];
+    lmac154_rxDoneCallback_t        callback[2];
 };
 
 /****************************************************************************//**
@@ -227,18 +228,33 @@ typedef enum {
 } lmac154_stack_idx_t;
 
 typedef struct {
-    uint32_t *                  key;
-    uint8_t                     a_data_length;
-    uint8_t                     m_data_length;
+    uint32_t *                      key;
+    uint8_t                         a_data_length;
+    uint8_t                         m_data_length;
     struct {
-        uint32_t                ext_addr[2];
-        uint32_t                frame_cnt;
-        uint8_t                 security_level;
-    }                           nonce;
-    uint32_t *                  a_data;      /* Authentication data (header) */
-    uint32_t *                  m_data;      /* Message data */
-    uint32_t *                  c_data;      /* Encrypted output buffer */
+        uint32_t                    ext_addr[2];
+        uint32_t                    frame_cnt;
+        uint8_t                     security_level;
+    }                               nonce;
+    uint32_t *                      a_data;      /* Authentication data (header) */
+    uint32_t *                      m_data;      /* Message data */
+    uint32_t *                      c_data;      /* Encrypted output buffer */
 } lmac154_security_t;
+
+typedef struct {
+    uint32_t                        base_time;
+    uint32_t                        delay_time;
+} lmac154_tx_timing_t;
+
+typedef struct {
+    uint8_t                         csl_retry;
+    uint8_t                         csl_ie_offset;
+    uint16_t                        csl_period;
+    uint32_t                        csl_sample_time;
+    int8_t                          csl_tx_offset_sym_cnt;
+    int8_t                          dbg_csl_drift_tx;
+    uint16_t                        dbg_csl_tx_phase;
+} lmac154_csl_opt_t;
 
 typedef struct __lmac154_txParam_ext { 
     uint32_t *                      pkt;
@@ -253,27 +269,17 @@ typedef struct __lmac154_txParam_ext {
     uint32_t                        is_last_tx:1;
     uint32_t                        is_base_param:1;
     uint32_t                        is_tx_security:1;
-    uint32_t                        is_tx_timeing:1;
-    uint32_t                        is_tx_csl:1;
-    uint32_t                        unused:3;
+    uint32_t                        unused:5;
     uint32_t                        ack_rx_done_symbol_cnt;
     lmac154_txDoneCallback_t        tx_done_cb;
     struct __lmac154_txParam_ext *  next;
 
     lmac154_security_t              sec;
-
-    union {
-        struct {
-            uint32_t                base_time;
-            uint32_t                delay_time;
-        } timing;
-        struct {
-            uint8_t                 csl_retry;
-            uint8_t                 csl_ie_offset;
-            uint16_t                csl_period;
-            uint32_t                csl_sample_time;
-        } csl;
-    } tx_opt;
+    lmac154_tx_timing_t             tx_timing;
+    lmac154_csl_opt_t               csl_opt;
+#if CONFIG_LMAC154_DBG
+    uint32_t                        dbg_plat_entry_sym;
+#endif
 } lmac154_txParam_ext_t;
 
 typedef struct __lmac154_txParam {
@@ -549,7 +555,6 @@ void lmac154_forceEnableRX(void);
 *******************************************************************************/
 void lmac154_disableRx(void);
 
-
 /****************************************************************************//**
  * @brief  Set rx on/off state when idle state
  *
@@ -597,14 +602,28 @@ void lmac154_triggerTx(uint8_t *DataPtr, uint8_t length, uint8_t csma);
 
 
 /****************************************************************************//**
- * @brief  Trigger TX with paramter, which is required critical section protection
+ * @brief  Trigger TX with base parameter set (no CSL/extended options).
+ *         Wraps lmac154_triggerParamTxExt with is_base_param flag set.
+ *         Must be called within critical section.
  *
- * @param  txParam: paramter to trigger tx
+ * @param  txParam: pointer to lmac154_txParam_t
  *
  * @return 0 is Success
  *
 *******************************************************************************/
 int lmac154_triggerParamTx(lmac154_txParam_t * txParam);
+
+/****************************************************************************//**
+ * @brief  Trigger TX with extended parameter set.
+ *         Performs CSMA-CA backoff (hardware or software), sets up the MPDU,
+ *         configures CSL IE if applicable, and triggers the radio transmit.
+ *         Must be called within critical section.
+ *
+ * @param  txParam: pointer to lmac154_txParam_ext_t
+ *
+ * @return 0 is Success
+ *
+*******************************************************************************/
 int lmac154_triggerParamTxExt(lmac154_txParam_ext_t * txParam);
 
 /****************************************************************************//**
@@ -1392,7 +1411,40 @@ void lmac154_setMaxCsmaBackoff(uint8_t maxBackoff);
 *******************************************************************************/
 void lmac154_setTxRxTransTime(uint8_t timeInUs);
 
-uint64_t lmac154_get_current_timestamp(void);
+/****************************************************************************//**
+ * @brief  Enable Rx filtering (default enabled)
+ *         Will only receive frames that pass crc check
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+void lmac154_enableRxFiltering(void);
+
+/****************************************************************************//**
+ * @brief  Disable rx filtering (default enabled)
+ *         Will receive all frames ignoring crc check
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+void lmac154_disableRxFiltering(void);
+
+
+/****************************************************************************//**
+ * @brief  Enable/Disable rx filtering (default enabled) for dual stacks
+ *         Will receive all frames ignoring crc check
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+void lmac154_setRxFiltering(bool is_enable);
+
 uint64_t lmac154_get_rx_start_timestamp(void);
 uint64_t lmac154_get_rx_done_timestamp(void);
 uint64_t lmac154_get_tx_done_timestamp(void);

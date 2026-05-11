@@ -28,7 +28,7 @@
 #include "hardware/sf_ctrl_reg.h"
 #include "bflb_efuse.h"
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
 static uint32_t flash1_size = 4 * 1024 * 1024;
 static uint32_t flash2_size = 2 * 1024 * 1024;
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -332,7 +332,7 @@ static void ATTR_TCM_SECTION flash_set_l1c_wrap(spi_flash_cfg_type *p_flash_cfg)
     }
 }
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
 static void ATTR_TCM_SECTION bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
 {
     struct sf_ctrl_cmds_cfg cmds_cfg;
@@ -394,7 +394,7 @@ static int ATTR_TCM_SECTION flash_config_init(spi_flash_cfg_type *p_flash_cfg, u
 #endif
 #endif
     /* Set flash controler from p_flash_cfg */
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
     bflb_flash_set_cmds(p_flash_cfg);
 #endif
     flash_set_qspi_enable(p_flash_cfg);
@@ -471,7 +471,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
             g_jedec_id = jedec_id;
             g_flash_cfg.mid = (jedec_id & 0xff);
             flash_get_clock_delay(&g_flash_cfg);
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
             flash1_size = flash_get_size_from_jedecid(g_jedec_id);
             flash2_size = 0;
 #endif
@@ -489,7 +489,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 #endif
 #endif
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
     flash1_size = flash_get_size_from_jedecid(g_jedec_id);
     flash2_size = 0;
 #endif
@@ -507,7 +507,7 @@ uint32_t bflb_flash_get_size(void)
     return flash_get_size_from_jedecid(g_jedec_id);
 }
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 uint32_t bflb_flash2_get_size(void)
 {
@@ -540,7 +540,7 @@ void ATTR_TCM_SECTION bflb_flash_set_iomode(uint8_t iomode)
         g_flash_cfg.io_mode |= iomode;
     }
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG)   
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
     bflb_flash_set_cmds(&g_flash_cfg);
 #endif
     flash_set_qspi_enable(&g_flash_cfg);
@@ -571,7 +571,7 @@ int ATTR_TCM_SECTION bflb_flash_erase(uint32_t startaddr, uint32_t len)
     int stat = -1;
     uintptr_t flag;
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
     if ((startaddr + len) > (flash1_size + flash2_size)) {
         return -ENOMEM;
     } else if ((startaddr + len) <= flash1_size) {
@@ -632,7 +632,7 @@ int ATTR_TCM_SECTION bflb_flash_write(uint32_t addr, uint8_t *data, uint32_t len
     int stat = -1;
     uintptr_t flag;
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
     if ((addr + len) > (flash1_size + flash2_size)) {
         return -ENOMEM;
     } else if ((addr + len) <= flash1_size) {
@@ -693,7 +693,7 @@ int ATTR_TCM_SECTION bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len)
     int stat = -1;
     uintptr_t flag;
 
-#if defined(BL616) || defined(BL616CL) || defined(BL618DG) 
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
     if ((addr + len) > (flash1_size + flash2_size)) {
         return -ENOMEM;
     } else if ((addr + len) <= flash1_size) {
@@ -815,9 +815,15 @@ void ATTR_TCM_SECTION bflb_flash_aes_init(struct bflb_flash_aes_config_s *config
 {
     uint8_t hw_key_enable = 0;
 
+#if defined(BL616CL)
+    if (config->key != NULL) {
+        return;
+    }
+#else
     if (config->key == NULL) {
         hw_key_enable = 1;
     }
+#endif
 
     bflb_sf_ctrl_aes_set_key_be(config->region, (uint8_t *)config->key, config->keybits);
     bflb_sf_ctrl_aes_set_iv_be(config->region, (uint8_t *)config->iv, config->start_addr);

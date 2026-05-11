@@ -99,10 +99,10 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     /* clock cfg */
     .clk_cfg.magiccode = 0x47464350,
     .clk_cfg.cfg.xtal_type = 0x04,      /*!< 0:None,1:24M,2:32M,3:38.4M,4:40M,5:26M,6:RC32M  */
-    .clk_cfg.cfg.mcu_clk = 0x05,        /*!< mcu_clk 0:RC32M;1:XTAL;2:cpupll_div2;3:cpupll_div3;4:wifipll_240M;5:wifipll_320M */
+    .clk_cfg.cfg.mcu_clk = 0x02,        /*!< mcu_clk 0:RC32M;1:XTAL;2:cpupll_div1(640m);3:cpupll_div3(213.3m);4:wifipll_480M;5:wifipll_320M */
     .clk_cfg.cfg.mcu_clk_div = 0x00,    /*!< mcu_clk divider */
     .clk_cfg.cfg.rsvd0 = 0x00,   /*!< mcu_bclk divider */
-    .clk_cfg.cfg.mcu_pbclk_div = 0x01,  /*!< mcu_pclk divider */
+    .clk_cfg.cfg.mcu_pbclk_div = 0x03,  /*!< mcu_pclk divider */
     .clk_cfg.cfg.emi_clk = 0x02,        /*!< 0:mcu pbclk,1:cpupll 200M,2:wifipll 320M,3:cpupll 400M */
     .clk_cfg.cfg.emi_clk_div = 0x01,    /*!< emi clock divider */
     .clk_cfg.cfg.flash_clk_type = 0x01, /*!< 0:wifipll_120M;1:xtal;2:wifipll_48M;3:wifipll_80M;4:bclk;5:wifipll_96M */

@@ -4,6 +4,43 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
+ * Rate index constants for wifi_mgmr_rate_config fields.
+ */
+#define WIFI_RC_IDX_NO_UPDATE (0)
+#define WIFI_RC_IDX_AUTO      (-1)
+
+/* 11b (CCK) */
+#define WIFI_RC_IDX_1M        (1)
+#define WIFI_RC_IDX_2M        (3)
+#define WIFI_RC_IDX_5M5       (5)
+#define WIFI_RC_IDX_11M       (7)
+
+/* 11g (OFDM) */
+#define WIFI_RC_IDX_6M        (8)
+#define WIFI_RC_IDX_9M        (9)
+#define WIFI_RC_IDX_12M       (10)
+#define WIFI_RC_IDX_18M       (11)
+#define WIFI_RC_IDX_24M       (12)
+#define WIFI_RC_IDX_36M       (13)
+#define WIFI_RC_IDX_48M       (14)
+#define WIFI_RC_IDX_54M       (15)
+
+/* 11n HT20 1SS LGI */
+#define WIFI_RC_IDX_HT20_MCS0 (16)
+#define WIFI_RC_IDX_HT20_MCS1 (20)
+#define WIFI_RC_IDX_HT20_MCS2 (24)
+#define WIFI_RC_IDX_HT20_MCS3 (28)
+#define WIFI_RC_IDX_HT20_MCS4 (32)
+#define WIFI_RC_IDX_HT20_MCS5 (36)
+#define WIFI_RC_IDX_HT20_MCS6 (40)
+#define WIFI_RC_IDX_HT20_MCS7 (44)
+
+struct wifi_mgmr_rate_config {
+    int fixed_rate_idx;     ///< > 0: set, WIFI_RC_IDX_NO_UPDATE(0): skip, WIFI_RC_IDX_AUTO(-1): clear
+    int retry_min_rate_idx; ///< > 0: set, WIFI_RC_IDX_NO_UPDATE(0): skip, WIFI_RC_IDX_AUTO(-1): clear
+};
+
 /* WiFi async event */
 #define EV_WIFI                                      ((uintptr_t)wifi_mgmr_init)
 
@@ -316,5 +353,9 @@ char *wifi_mgmr_cipher_to_str(uint8_t cipher);
 const char *wifi_mgmr_get_sm_status_code_str(uint16_t status_code);
 /* Convert or check MAC address string to byte array */
 int wifi_mgmr_mac_str_to_addr(const char *str, uint8_t addr[]);
+
+/* Rate Control Configuration */
+int wifi_mgmr_rate_config(const struct wifi_mgmr_rate_config *cfg);
+int wifi_mgmr_ap_sta_rate_config(const uint8_t mac[6], const struct wifi_mgmr_rate_config *cfg);
 
 #endif

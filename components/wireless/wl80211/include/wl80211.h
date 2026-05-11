@@ -12,7 +12,7 @@
 #define COMPAT_WIFI_MGMR
 
 #ifndef container_of
-#define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
+#define container_of(ptr, type, member) ((type *)((char *)(ptr)-offsetof(type, member)))
 #endif
 
 /* async event type */
@@ -313,6 +313,8 @@ enum {
     WL80211_CTRL_MONITOR_STOP,
 
     WL80211_CTRL_INJECT_FRAME,
+
+    WL80211_CTRL_RATE_CONFIG,
 };
 
 // wl80211 control api
@@ -671,6 +673,20 @@ struct wl80211_inject_frame_params {
     uint16_t freq;      /**< Channel frequency in MHz */
     void (*cb)(void *); /**< Optional completion callback */
     void *opaque;       /**< User data for callback */
+};
+
+/**
+ * Rate configuration for STA rate control
+ *
+ * Sets fixed rate and/or retry rate bounds on a per-STA basis.
+ * Passed to wl80211_cntrl() with WL80211_CTRL_RATE_CONFIG.
+ */
+struct wl80211_rate_config {
+    int sta_idx;                 /**< STA index to apply rate config to */
+    uint8_t update_flags;        /**< Bitmask of rate fields to update (ME_RC_SET_RATE_*_BIT) */
+    uint16_t fixed_rate_cfg;     /**< Fixed rate value, 0xFFFF to leave unchanged */
+    uint16_t retry_min_rate_cfg; /**< Retry min rate value, 0xFFFF to leave unchanged */
+    uint16_t retry_max_rate_cfg; /**< Retry max rate value, 0xFFFF to leave unchanged */
 };
 
 /**

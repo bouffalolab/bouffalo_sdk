@@ -195,7 +195,7 @@ void mbedtls_sha256_finish( mbedtls_sha256_context *ctx,
 }
 #else
 int mbedtls_sha256_finish( mbedtls_sha256_context *ctx,
-                            unsigned char output[32] )
+                            unsigned char *output )
 {
     return mbedtls_sha256_finish_ret( ctx, output );
 }

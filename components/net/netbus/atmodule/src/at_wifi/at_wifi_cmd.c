@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <stdint.h>
 extern struct tm *localtime(const time_t *_timer);
 extern size_t strftime(char *s, size_t maxsize, const char *fmt, const struct tm *t);
 extern uint32_t rtos_now(bool isr);

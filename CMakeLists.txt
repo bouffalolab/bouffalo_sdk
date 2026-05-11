@@ -67,8 +67,6 @@ if(("${CHIP}" STREQUAL "bl618dg") AND ("${CPU_MODEL}" STREQUAL "a0"))
     sdk_add_compile_definitions(-DCPU_MODEL_A0)
 endif()
 
-sdk_add_compile_definitions(-DBL618DG_VERSION_A0)
-
 # If it's an internal development repository, then enable strict mode.
 if(IS_SYMLINK "${CMAKE_CURRENT_SOURCE_DIR}/.git")
     message(STATUS "Auto strict build mode for develop.")
@@ -82,7 +80,7 @@ add_subdirectory(drivers/lhal)
 add_subdirectory(drivers/soc/${CHIP}/std)
 
 set(SYS_DRV_EXCLUDED_CHIPS)
-if(NOT "${CHIP}" IN_LIST SYS_DRV_EXCLUDED_CHIPS)
+if((NOT "${CHIP}" IN_LIST SYS_DRV_EXCLUDED_CHIPS) AND (NOT "${CPU_ID}" STREQUAL "lp"))
     add_subdirectory(drivers/sys)
 endif()
 

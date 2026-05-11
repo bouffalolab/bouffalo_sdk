@@ -120,8 +120,13 @@ static void hb_recv_loop_cb(void *arg)
     return;
 }
 
-/* Init and start receiver, local_port=0 means default port */
-int hb_recv_init(uint16_t local_port)
+/* Init receiver, local_port=0 means default port, peer_ip0~3 all 0 means default peer ip */
+int hb_recv_init(uint16_t local_port,
+                 uint8_t peer_ip0,
+                 uint8_t peer_ip1,
+                 uint8_t peer_ip2,
+                 uint8_t peer_ip3,
+                 uint16_t peer_port)
 {
     if (s_ctx.receiver) {
         LOG_W("HiBooster receiver already initialized\r\n");
@@ -131,23 +136,34 @@ int hb_recv_init(uint16_t local_port)
     if (local_port == 0U) {
         local_port = HB_RX_DEFAULT_LOCAL_PORT;
     }
+    if (peer_port == 0U) {
+        peer_port = HB_RX_DEFAULT_PEER_PORT;
+    }
 
     /* Create receiver */
     hb_recv_config_t cfg = {
         .local_port = local_port,
-        .peer_port = HB_RX_DEFAULT_PEER_PORT,
+        .peer_port = peer_port,
         .frame_depth = HB_RX_DEFAULT_FRAME_DEPTH,
-        .ack_interval_ms = 20U,
+        .ack_interval_ms = 15U,
         .frame_timeout_ms = 2000U,
         .task_priority = 20,
         .loop_cb = hb_recv_loop_cb,
         .loop_cb_arg = NULL,
     };
-    IP_ADDR4(&cfg.peer_addr,
-             HB_RX_DEFAULT_PEER_IP0,
-             HB_RX_DEFAULT_PEER_IP1,
-             HB_RX_DEFAULT_PEER_IP2,
-             HB_RX_DEFAULT_PEER_IP3);
+    if ((peer_ip0 == 0U) && (peer_ip1 == 0U) && (peer_ip2 == 0U) && (peer_ip3 == 0U)) {
+        IP_ADDR4(&cfg.peer_addr,
+                 HB_RX_DEFAULT_PEER_IP0,
+                 HB_RX_DEFAULT_PEER_IP1,
+                 HB_RX_DEFAULT_PEER_IP2,
+                 HB_RX_DEFAULT_PEER_IP3);
+    } else {
+        IP_ADDR4(&cfg.peer_addr,
+                 peer_ip0,
+                 peer_ip1,
+                 peer_ip2,
+                 peer_ip3);
+    }
 
     s_ctx.receiver = hb_receiver_create(&cfg);
     if (s_ctx.receiver == NULL) {

@@ -7,6 +7,8 @@ target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fw_header.c)
 
 if(CONFIG_RF)
     target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_rf.c)
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/wireless_regdb.c)
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/wireless_spur.c)
 endif()
 
 if(CONFIG_CUSTOM_LINKSCRIPT)

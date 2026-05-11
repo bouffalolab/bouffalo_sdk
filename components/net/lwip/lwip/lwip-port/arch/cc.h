@@ -33,6 +33,7 @@
 #define __CC_H__
 
 #include "cpu.h"
+#include "sys/time.h"
 
 typedef int sys_prot_t;
 #if 0

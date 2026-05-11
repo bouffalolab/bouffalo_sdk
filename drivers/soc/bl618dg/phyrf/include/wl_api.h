@@ -138,7 +138,6 @@ struct wl_efuse_t
     uint8_t     chip_version;
     uint8_t     iptat_code;
     uint8_t     icx_code;
-    uint8_t     dcdc_vout_trim_aon;
     int8_t      Temperature_MP; // temperature of Tsensor while power cal at production line
 };
 
@@ -347,6 +346,32 @@ void wl_rf_set_channel_pwr_comp(uint8_t channel_idx);
 void wl_rf_set_bz_channel_pwr_comp(void);
 void wl_rf_set_status(uint8_t rf_en);// turn on/off rf domain
 void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
+
+// config for rf 
+
+// if bz stand-alone chain enable(BZ_STAND_ALONE_RF_EN=1), the ss0 bz(combo-bz) will be disbaled
+#ifndef BZ_STAND_ALONE_RF_EN
+#define BZ_STAND_ALONE_RF_EN (0)
+#endif
+
+// if build the LPFW, please define 1 
+#ifndef LPFW_CFG_RF
+#define LPFW_CFG_RF (0)
+#endif
+
+// rf log config
+#ifndef WL_RF_LOG_EN
+#ifndef PHYRF_LOG_EN
+#define WL_RF_LOG_EN (1)
+#else
+#define WL_RF_LOG_EN PHYRF_LOG_EN
+#endif
+#endif
+
+// // 0: disable the function(cw..) only for mfg to save code size
+// #ifndef MFG_FUNC_ONLY
+// #define MFG_FUNC_ONLY (1)
+// #endif
 /*
 * rf driver api end
 */
@@ -373,3 +398,4 @@ uint32_t wl_cal_read(void);
 const char* wl_get_version(void);
 
 #endif
+

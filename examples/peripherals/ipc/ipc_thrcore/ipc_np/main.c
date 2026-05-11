@@ -22,12 +22,12 @@ void np_ipc_isr(int irq, void *arg)
 
     if (ipc_intsta & 0xffff0000) {
         LOG_I("AP->NP interrupt trigger!\r\n");
-        LOG_I("Status=0x%08X\r\n", irq, (ipc_intsta & 0xffff0000) >> 16);
+        LOG_I("Status=0x%08X\r\n", (ipc_intsta & 0xffff0000) >> 16);
     }
 
     if (ipc_intsta & 0x0000ffff) {
         LOG_I("LP->NP interrupt trigger!\r\n");
-        LOG_I("Status=0x%08X\r\n", irq, ipc_intsta & 0xffff);
+        LOG_I("Status=0x%08X\r\n", ipc_intsta & 0xffff);
     }
 
     bflb_ipc_clear(np_ipc, ipc_intsta);

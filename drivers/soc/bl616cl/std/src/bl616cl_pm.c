@@ -2,6 +2,7 @@
 #include "bflb_flash.h"
 #include "bl616cl_clock.h"
 #include "bflb_rtc.h"
+#include "bflb_gpio.h"
 #include "bl616cl_glb.h"
 #include "bl616cl_hbn.h"
 #include "bl616cl_pds.h"
@@ -97,6 +98,31 @@ static int is_flash_io(uint8_t pin, uint32_t sf_pin_select)
     }
 
     return 0;
+}
+
+static int is_gpio_with_expected_cfg(uint8_t pin, uint8_t ie, uint8_t pu, uint8_t pd)
+{
+    uint32_t gpio_cfg;
+    uint32_t func_sel;
+
+    if (pin >= GPIO_PIN_MAX) {
+        return 0;
+    }
+
+    if (pu) {
+        pd = 0;
+    } else if (pd) {
+        pu = 0;
+    }
+
+    gpio_cfg = BL_RD_WORD(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2));
+    func_sel = BL_GET_REG_BITS_VAL(gpio_cfg, GLB_REG_GPIO_0_FUNC_SEL);
+
+    return (((gpio_cfg & GLB_REG_GPIO_0_IE_MSK) != 0U) == (ie != 0U)) &&
+           ((gpio_cfg & GLB_REG_GPIO_0_OE_MSK) == 0U) &&
+           (((gpio_cfg & GLB_REG_GPIO_0_PU_MSK) != 0U) == (pu != 0U)) &&
+           (((gpio_cfg & GLB_REG_GPIO_0_PD_MSK) != 0U) == (pd != 0U)) &&
+           (func_sel == GPIO_FUNC_GPIO);
 }
 
 static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel1 = {
@@ -845,7 +871,6 @@ BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie)
             bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
         }
     } else {
-        bflb_gpio_init(gpio, pin, GPIO_ANALOG | GPIO_FLOAT | GPIO_DRV_0);
     }
 
     if (pin < 6) {
@@ -858,6 +883,9 @@ BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie)
         aonPadCfg.pullDown = pd;
 
         HBN_Aon_Pad_Cfg(pin, &aonPadCfg);
+
+        /* AON IO configuration needs 100us delay to take effect */
+        arch_delay_us(100);
     } else {
         PDS_Enable_GPIO_Keep(pin);
     }
@@ -893,18 +921,23 @@ int pm_lowpower_gpio_cfg(lp_gpio_cfg_type *gpio_cfg)
         unmask = (gpio_cfg->io_wakeup_unmask >> i) & 0x1;
         trig_mode = gpio_cfg->io_0_36_trig_mode[i];
 
-        if (unmask) {
-            if (!ie) {
-                return -1;
-            }
-            pm_set_gpio_pu_pd_ie(io, pu, pd, ie);
-            arch_delay_us(100);
-            pm_set_gpio_trig_mode_int_mask(io, trig_mode, UNMASK);
+
+        /* Wakeup detection requires io_ie to be enabled.
+        * We intentionally do not reject unmask=1 && ie=0 here:
+        * that combination is treated as an application-layer bug. */
+        if ((io >= GPIO_PIN_6) && is_gpio_with_expected_cfg(io, ie, pu, pd)) {
+            PDS_Enable_GPIO_Keep(io);
         } else {
             pm_set_gpio_pu_pd_ie(io, pu, pd, ie);
+        }
+
+        if (unmask) {
+            pm_set_gpio_trig_mode_int_mask(io, trig_mode, UNMASK);
+        } else {
             pm_set_gpio_int_mask(io, MASK);
         }
     }
+
     return 0;
 }
 

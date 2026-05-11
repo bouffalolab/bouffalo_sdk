@@ -469,8 +469,14 @@ void free_hw_features(struct wpa_supplicant *wpa_s)
 		return;
 
 	for (i = 0; i < wpa_s->hw.num_modes; i++) {
-		os_free(wpa_s->hw.modes[i].channels);
-		os_free(wpa_s->hw.modes[i].rates);
+#ifdef CONFIG_DRIVER_MACSW
+		if (!macsw_hw_feature_uses_static_channels(wpa_s->hw.modes[i].channels))
+#endif /* CONFIG_DRIVER_MACSW */
+			os_free(wpa_s->hw.modes[i].channels);
+#ifdef CONFIG_DRIVER_MACSW
+		if (!macsw_hw_feature_uses_static_rates(wpa_s->hw.modes[i].rates))
+#endif /* CONFIG_DRIVER_MACSW */
+			os_free(wpa_s->hw.modes[i].rates);
 	}
 
 	os_free(wpa_s->hw.modes);

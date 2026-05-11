@@ -44,6 +44,9 @@
 #if __riscv_xlen == 64
 #define configMTIME_BASE_ADDRESS    (0)
 #define configMTIMECMP_BASE_ADDRESS ((0xE4000000UL) + 0x4000UL)
+#elif defined(BL618DG) && defined(CPU_MODEL_B0)
+#define configMTIME_BASE_ADDRESS    (0x18030000UL)
+#define configMTIMECMP_BASE_ADDRESS (0x18030008UL)
 #else
 #define configMTIME_BASE_ADDRESS    ((0xE0000000UL) + 0xBFF8UL)
 #define configMTIMECMP_BASE_ADDRESS ((0xE0000000UL) + 0x4000UL)

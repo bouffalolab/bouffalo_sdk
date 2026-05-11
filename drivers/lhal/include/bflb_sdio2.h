@@ -69,9 +69,16 @@
 #endif
 
 /* support sdio2 soft reset */
-#if defined(BL616) || defined(BL616CL)
+#if defined(BL616)
+#include "bl616_irq.h"
 #define SDIO2_SOFT_RST_INT_SUP (1)
-#define SDIO2_SOFT_RST_IRQ_NUM (19)
+#define SDIO2_SOFT_RST_IRQ_NUM BL616_IRQ_SDU_SOFT_RST
+#elif defined(BL616CL)
+#include "bl616cl_irq.h"
+#define SDIO2_SOFT_RST_INT_SUP (1)
+#define SDIO2_SOFT_RST_IRQ_NUM BL616CL_IRQ_SDU_SOFT_RST
+#else
+// #warning "sdio2 soft reset int not support for this chip"
 #endif
 
 /** @defgroup SDIO2_STA_FLAG sdio system status and mode type.

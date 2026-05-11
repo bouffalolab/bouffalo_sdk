@@ -16,7 +16,7 @@
 
 /* DHCP server option */
 #define DHCP_CLIENT_PORT  68
-#define DHCP_SERVER_PORT  67 
+#define DHCP_SERVER_PORT  67
 
 /* allocated client ip range */
 #ifndef DHCPD_CLIENT_IP_MIN
@@ -421,11 +421,13 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
             }
 #endif /* DHCP_DNS_SERVER_IP */
 
+#ifndef CONFIG_DHCPD_NO_ROUTER
             *opt_buf++ = DHCP_OPTION_ROUTER;
             *opt_buf++ = 4;
             //FIXME we use ip_addr_t as ip4_addr_t here
             SMEMCPY(opt_buf, &ip_2_ip4(&dhcp_server->netif->ip_addr)->addr, 4);
             opt_buf += 4;
+#endif
 
             /* add option end */
             *opt_buf++ = DHCP_OPTION_END;
@@ -520,11 +522,13 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
                         }
 #endif /* DHCP_DNS_SERVER_IP */
 
+#ifndef CONFIG_DHCPD_NO_ROUTER
                         *opt_buf++ = DHCP_OPTION_ROUTER;
                         *opt_buf++ = 4;
                         //FIXME we use ip_addr_t as ip4_addr_t here
                         SMEMCPY(opt_buf, &ip_2_ip4(&dhcp_server->netif->ip_addr)->addr, 4);
                         opt_buf += 4;
+#endif
 
                         /* add option end */
                         *opt_buf++ = DHCP_OPTION_END;
@@ -923,4 +927,60 @@ void dhcpd_stop_with_netif(const struct netif *netif)
     if (res != ERR_OK) {
         DEBUG_PRINTF("dhcp_server_stop res: %d.\r\n", res);
     }
+}
+
+struct dhcp_release_client_arg {
+    struct netif *netif;
+    uint8_t mac[DHCP_MAX_HLEN];
+};
+
+static void dhcp_server_release_client_by_mac(void *ctx)
+{
+    struct dhcp_release_client_arg *arg = (struct dhcp_release_client_arg *)ctx;
+    struct dhcp_server *dhcp_server;
+    struct dhcp_client_node *node, *node_prev;
+
+    for (dhcp_server = lw_dhcp_server; dhcp_server != NULL; dhcp_server = dhcp_server->next) {
+        if (dhcp_server->netif == arg->netif) {
+            break;
+        }
+    }
+
+    if (dhcp_server == NULL) {
+        goto _exit;
+    }
+
+    node_prev = NULL;
+    for (node = dhcp_server->node_list; node != NULL; node = node->next) {
+        if (memcmp(node->chaddr, arg->mac, DHCP_MAX_HLEN) == 0) {
+            if (node == dhcp_server->node_list) {
+                dhcp_server->node_list = node->next;
+            } else {
+                node_prev->next = node->next;
+            }
+            mem_free(node);
+            break;
+        }
+        node_prev = node;
+    }
+
+_exit:
+    free(ctx);
+}
+
+void dhcpd_release_client_by_mac(const struct netif *netif, const uint8_t *mac)
+{
+    struct dhcp_release_client_arg *arg;
+
+    if (!netif || !mac) {
+        return;
+    }
+
+    arg = (struct dhcp_release_client_arg *)malloc(sizeof(struct dhcp_release_client_arg));
+    if (arg == NULL) {
+        return;
+    }
+    arg->netif = (struct netif *)netif;
+    memcpy(arg->mac, mac, DHCP_MAX_HLEN);
+    tcpip_callback((tcpip_callback_fn)dhcp_server_release_client_by_mac, arg);
 }
