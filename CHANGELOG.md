@@ -1,5 +1,144 @@
 # CHANGELOG
 
+## v2.3.25 — since v2.3.24 (2026-04-26 → 2026-05-11)
+
+### New Features
+
+- **BL618DG (B0 Silicon)**
+  - Added toolchain B0 support for new silicon revision
+  - Added B0 boot2 build support
+  - Enabled ROM driver support
+  - Added phyrf B0 library
+  - Added PDS BOD example
+  - Added PDS app recovery and unified A0/B0 low-power paths
+
+- **BL616CL**
+  - Released boot2 v8.2.1
+  - Added LP firmware phyrf library
+
+- **WiFi**
+  - Added STA index notification on association/disassociation (AP mode)
+  - Added custom TX rate profiler support
+  - Added retry rate min/max constraint configuration
+  - Added retry rate range CLI and API
+  - Added AMSDU RX/TX support (host and MAC)
+
+- **Thread / 802.15.4**
+  - Added CSL TX/RX support and enhanced-ACK improvements
+  - Added CSL IE generation support, debug traces and build fixes
+
+- **DHCP Server**
+  - Added support for disabling router advertisement
+  - Added API for removing client by MAC address
+
+- **System**
+  - Added SYSINIT framework for unified system initialization across all chips
+  - Added support for custom heap order list
+  - Added network interface auto-configuration
+  - Added AP/STA selection CLI when ATModule is disabled
+
+- **Peripherals**
+  - Added CANFD driver and example
+  - Added DMA enable and FIFO threshold for PEC QSPI camera
+  - Added USB control-path VCHAN API
+  - Added USB statistics information
+
+- **Audio**
+  - Updated audio output clock mHz API
+
+- **Examples**
+  - Updated PDS RTC example to use unified LP API
+  - Updated IPC example for BL618DG
+  - Added audio output clock mHz test
+
+- **Other**
+  - Reduced ADC key polling interval
+  - Replaced `BL618DG_VERSION_A0` with `CPU_MODEL_A0`
+  - Updated fw_post_proc to v1.4.2
+
+### Bug Fixes
+
+- **BL618DG**
+  - Fixed MFG test for BZ antenna switch and TX power setting
+  - Brought up B0 silicon manufacturing test support
+  - Fixed DBI issue for BL616CL and BL618DG (DRV_1)
+  - Fixed NP core ROM driver support
+  - Set unprotect all slaves as default
+  - Fixed incorrect interrupt number
+  - Fixed USB initialization blocking
+
+- **BL616CL**
+  - Disabled DCDC by default
+  - Added AES rw lock for slot3 and slot4
+  - Removed flash SW AES key function for A0 silicon
+  - Fixed power level configuration
+  - Optimized PDS GPIO config and added AON IO delay note
+
+- **WiFi**
+  - Updated TWT feature for PDS15 low-power mode
+  - Fixed rate control when performing single-rate mode testing
+  - Fixed out-of-bounds access in replay_counter buffer
+  - Fixed undefined reference for fhost_rc_set_rate export
+  - Fixed 2.4 GHz/11g mode rate table export
+  - Fixed duplicate AddBA handling during BA delete
+  - Fixed eFUSE read steps for BL616CL
+  - Fixed host TL compilation error
+  - Fixed blmp command over ioctl
+
+- **Network**
+  - Fixed AT module main task stack overflow when enabling AP mode
+  - Fixed custreg feature compatibility on some platforms
+
+- **Build / Tooling**
+  - Fixed macOS build failure
+  - Fixed errno standard symbol conflict
+  - Fixed heap overlap with RAM code in common linker script
+  - Fixed missing symbols in ram.ld
+  - Fixed `CPU_MODEL` not taking effect at build time
+  - Added missing config symbols (`CONFIG_PEC_V2`, `CONFIG_MULTIMEDIA_VEDIO`, `CONFIG_DVP_RASTER`)
+
+- **Boot2**
+  - Enforced anti-rollback check and reject malformed XZ images
+  - Added anti-rollback support for BL616CL
+
+- **Audio**
+  - Fixed audio config to resample properly
+  - Fixed ALSA param to set player buffer size
+
+- **Manufacturing**
+  - Fixed mfg test commands
+  - Fixed race condition during Touchuan mfg upload
+  - Fixed Touchuan mfg to use only one SDIO port
+
+- **Examples**
+  - Fixed AON WDT example
+  - Fixed queue/tree file name for backwards compatibility
+
+- **Linker**
+  - Updated BL618DG common linker script for B0 flash compilation
+
+- **Solution**
+  - Updated image transmission IP configuration
+
+- **LP Core**
+  - Fixed BL618DG LP core build by skipping drivers/sys
+
+### Improvements
+
+- Refactored supplicant_api.c for independence
+- Moved low-power code to common location for better reuse across chips
+- Unified LMAC154 and Thread examples configuration and build
+- Moved Matter MFD component to common location across SDK
+- Split HCI UART transport into reusable layers (Bluetooth)
+- Made WiFi6 CLI module conditional on `CONFIG_SHELL`
+- Enabled stricter warning checks in WiFi6 build
+- Added BL616CL wireless configuration and parameter test
+- Improved GPIO test scheme in manufacturing
+- Added BL616CL country code support in wireless parameters
+- Brought up BL618DG B0 BT/BLE support
+- Reduced HTTP/OTA code size
+- Changed default optimization level to `-O2`
+
 ## v2.3.24 — since v2.3.23 (2026-04-17 → 2026-04-25)
 
 ### New Features
