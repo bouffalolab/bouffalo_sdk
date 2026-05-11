@@ -1,0 +1,133 @@
+# C Library Implementation Selection
+
+choice LIBC_IMPLEMENTATION
+    prompt "C Library Implementation"
+    default LIBC_PICOLIBC
+    help
+        Select which C library implementation to use.
+
+config LIBC_PICOLIBC
+    bool "Picolibc (Zephyr SDK)"
+    select PICOLIBC
+    help
+        Use pure picolibc from Zephyr SDK toolchain.
+        Provides complete stdio, stdlib, string, and math functions.
+        Recommended for new projects.
+
+        Features:
+        - Complete C99/C11 standard library
+        - Optimized printf/scanf with full float support
+        - Efficient string and memory functions
+        - Smaller code size compared to custom implementations
+
+config LIBC_NEWLIB
+    bool "Newlib (Legacy)"
+    select NEWLIB
+    help
+        Use newlib with custom Bouffalo implementations.
+        Legacy mode for existing projects.
+
+        This mode uses:
+        - Newlib-nano or standard newlib
+        - Custom printf implementations
+        - Nuttx stdlib and string functions
+
+endchoice
+
+if LIBC_PICOLIBC
+
+config PICOLIBC_FLOAT_SUPPORT
+    bool "Enable floating point in printf/scanf"
+    default y
+    help
+        Enable %f, %e, %g format specifiers in printf/scanf.
+        Automatically enabled with picolibc for full C99 support.
+
+config PICOLIBC_LONG_LONG
+    bool "Enable long long support"
+    default y
+    help
+        Enable %lld, %llu, %llx, %lld format specifiers.
+        Automatically enabled with picolibc.
+
+config PICOLIBC_WCHAR
+    bool "Enable wide character support"
+    default y
+    help
+        Enable wide character functions (wchar_t).
+        Automatically enabled with picolibc.
+
+endif
+
+if LIBC_NEWLIB
+
+# Keep existing NEWLIB options for backward compatibility
+config NEWLIB
+    bool
+    default y
+
+config NEWLIB_STANDARD
+    bool "Use standard newlib (not nano)"
+    default y
+    help
+        Use full newlib instead of newlib-nano.
+        Standard newlib provides more features but larger code size.
+
+config VSNPRINTF_NANO
+    bool "Use nano vsnprintf"
+    default n
+    help
+        Use newlib-nano's vsnprintf implementation.
+        Only affects newlib-nano mode.
+
+config VSNPRINTF_FLOAT
+    bool "Enable float in vsnprintf"
+    default y
+    help
+        Enable %f, %F format specifiers in custom vsnprintf.
+
+config VSNPRINTF_FLOAT_EX
+    bool "Enable extended float in vsnprintf"
+    default y
+    help
+        Enable %e, %E, %g, %G format specifiers in custom vsnprintf.
+
+config VSNPRINTF_LONG_LONG
+    bool "Enable long long in vsnprintf"
+    default y
+    help
+        Enable %lld, %llu, %llx, %llX format specifiers in custom vsnprintf.
+
+config SCANF_FLOAT
+    bool "Enable float in scanf"
+    default y
+    help
+        Enable %f, %F format specifiers in scanf.
+
+config SCANF_FLOAT_EX
+    bool "Enable extended float in scanf"
+    default y
+    help
+        Enable %e, %E, %g, %G format specifiers in scanf.
+
+config SCANF_LONG_LONG
+    bool "Enable long long in scanf"
+    default y
+    help
+        Enable %lld, %llu format specifiers in scanf.
+
+endif
+
+# Common filesystem support (shared by both libc implementations)
+config NEWLIB_FATFS
+    bool "Enable FATFS filesystem support"
+    help
+        Enable FATFS filesystem support for file operations.
+        This enables the file I/O port (open, close, read, write, etc.).
+
+# Stdatomic support (C11)
+config STDATOMIC
+    bool "Enable C11 stdatomic.h support"
+    help
+        Enable C11 atomic operations support.
+        Required for multi-threaded applications using atomics.
