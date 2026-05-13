@@ -18,10 +18,11 @@ err_t dhcpd_add_dns_server(void* netif, const ip_addr_t *dnsserver);
 err_t dhcpd_remove_dns_server(void* netif, const ip_addr_t *dnsserver);
 
 void dhcpd_release_client_by_mac(const struct netif *netif, const uint8_t *mac);
+void dhcpd_alive_client_by_mac(const struct netif *netif, const uint8_t *mac);
+void dhcpd_release_client_except_alive(const struct netif *netif);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

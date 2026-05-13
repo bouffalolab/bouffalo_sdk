@@ -65,6 +65,7 @@ struct dhcp_client_node
     u8_t chaddr[DHCP_MAX_HLEN];
     ip4_addr_t ipaddr;
     u32_t lease_end;
+    u8_t alive:1;
 };
 
 /**
@@ -716,6 +717,18 @@ err_t dhcp_server_stop(struct netif *netif)
     if (dhcp_server->pcb) {
         udp_remove(dhcp_server->pcb);
     }
+
+    /*clean client node list*/
+    {
+        struct dhcp_client_node *node = dhcp_server->node_list;
+        while (node != NULL) {
+            struct dhcp_client_node *next = node->next;
+            mem_free(node);
+            node = next;
+        }
+        dhcp_server->node_list = NULL;
+    }
+
     /*clean linked list*/
     //FIXME no linked list, just one pointer
     lw_dhcp_server = NULL;
@@ -983,4 +996,91 @@ void dhcpd_release_client_by_mac(const struct netif *netif, const uint8_t *mac)
     arg->netif = (struct netif *)netif;
     memcpy(arg->mac, mac, DHCP_MAX_HLEN);
     tcpip_callback((tcpip_callback_fn)dhcp_server_release_client_by_mac, arg);
+}
+
+static void dhcp_server_alive_client_by_mac(void *ctx)
+{
+    struct dhcp_release_client_arg *arg = (struct dhcp_release_client_arg *)ctx;
+    struct dhcp_server *dhcp_server;
+    struct dhcp_client_node *node;
+
+    for (dhcp_server = lw_dhcp_server; dhcp_server != NULL; dhcp_server = dhcp_server->next) {
+        if (dhcp_server->netif == arg->netif) {
+            break;
+        }
+    }
+
+    if (dhcp_server == NULL) {
+        goto _exit;
+    }
+
+    for (node = dhcp_server->node_list; node != NULL; node = node->next) {
+        if (memcmp(node->chaddr, arg->mac, DHCP_MAX_HLEN) == 0) {
+            node->alive = 1;
+            break;
+        }
+    }
+
+_exit:
+    free(ctx);
+}
+
+void dhcpd_alive_client_by_mac(const struct netif *netif, const uint8_t *mac)
+{
+    struct dhcp_release_client_arg *arg;
+
+    if (!netif || !mac) {
+        return;
+    }
+
+    arg = (struct dhcp_release_client_arg *)malloc(sizeof(struct dhcp_release_client_arg));
+    if (arg == NULL) {
+        return;
+    }
+    arg->netif = (struct netif *)netif;
+    memcpy(arg->mac, mac, DHCP_MAX_HLEN);
+    tcpip_callback((tcpip_callback_fn)dhcp_server_alive_client_by_mac, arg);
+}
+
+static void dhcp_server_release_client_except_alive(void *ctx)
+{
+    struct netif *netif = (struct netif *)ctx;
+    struct dhcp_server *dhcp_server;
+    struct dhcp_client_node *node, *node_prev;
+
+    for (dhcp_server = lw_dhcp_server; dhcp_server != NULL; dhcp_server = dhcp_server->next) {
+        if (dhcp_server->netif == netif) {
+            break;
+        }
+    }
+
+    if (dhcp_server == NULL) {
+        return;
+    }
+
+    node_prev = NULL;
+    node = dhcp_server->node_list;
+    while (node != NULL) {
+        struct dhcp_client_node *next = node->next;
+        if (node->alive == 0) {
+            if (node == dhcp_server->node_list) {
+                dhcp_server->node_list = next;
+            } else {
+                node_prev->next = next;
+            }
+            mem_free(node);
+        } else {
+            node->alive = 0;
+            node_prev = node;
+        }
+        node = next;
+    }
+}
+
+void dhcpd_release_client_except_alive(const struct netif *netif)
+{
+    if (!netif) {
+        return;
+    }
+    tcpip_callback((tcpip_callback_fn)dhcp_server_release_client_except_alive, (void *)netif);
 }
