@@ -322,10 +322,10 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
         } break;
         case CODE_WIFI_ON_AP_STA_ADD: {
-            wl80211_printf("[APP] [EVT] [AP] [ADD] %lld\r\n", rtos_now(0));
+            wl80211_printf("[APP] [EVT] [AP] [ADD] %ld\r\n", rtos_now(0));
         } break;
         case CODE_WIFI_ON_AP_STA_DEL: {
-            wl80211_printf("[APP] [EVT] [AP] [DEL] %lld\r\n", rtos_now(0));
+            wl80211_printf("[APP] [EVT] [AP] [DEL] %ld\r\n", rtos_now(0));
         } break;
         default: {
             wl80211_printf("[APP] [EVT] Unknown code %u \r\n", ev->code);
