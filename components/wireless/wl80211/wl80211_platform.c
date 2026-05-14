@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "bflb_irq.h"
 #include "mm.h"
 
 #include "wl80211_mac.h"
@@ -238,11 +239,54 @@ int platform_get_mac(uint8_t vif_type, uint8_t mac[6])
 #if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
 static size_t g_wl80211_wram_mem_size_malloced;
 static size_t g_wl80211_wram_mem_size_freed;
+
+static size_t wl80211_wram_mem_size_usage_snapshot(void)
+{
+    size_t usage;
+    uintptr_t flags = bflb_irq_save();
+    usage = g_wl80211_wram_mem_size_malloced - g_wl80211_wram_mem_size_freed;
+    bflb_irq_restore(flags);
+    return usage;
+}
+static void wl80211_wram_mem_size_add_malloced(size_t size)
+{
+    uintptr_t flags = bflb_irq_save();
+    g_wl80211_wram_mem_size_malloced += size;
+    bflb_irq_restore(flags);
+}
+static void wl80211_wram_mem_size_add_freed(size_t size)
+{
+    uintptr_t flags = bflb_irq_save();
+    g_wl80211_wram_mem_size_freed += size;
+    bflb_irq_restore(flags);
+}
 #endif
+
 /* The total memory count limit used by WL80211 */
 #if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
 static size_t g_wl80211_wram_mem_cnt_malloced;
 static size_t g_wl80211_wram_mem_cnt_freed;
+
+static size_t wl80211_wram_mem_cnt_usage_snapshot(void)
+{
+    size_t usage;
+    uintptr_t flags = bflb_irq_save();
+    usage = g_wl80211_wram_mem_cnt_malloced - g_wl80211_wram_mem_cnt_freed;
+    bflb_irq_restore(flags);
+    return usage;
+}
+static void wl80211_wram_mem_cnt_add_malloced(void)
+{
+    uintptr_t flags = bflb_irq_save();
+    g_wl80211_wram_mem_cnt_malloced += 1;
+    bflb_irq_restore(flags);
+}
+static void wl80211_wram_mem_cnt_add_freed(void)
+{
+    uintptr_t flags = bflb_irq_save();
+    g_wl80211_wram_mem_cnt_freed += 1;
+    bflb_irq_restore(flags);
+}
 #endif
 
 /**
@@ -260,13 +304,13 @@ void *wl80211_platform_malloc_wram(size_t size)
 {
     /* Check memory size limit */
 #if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
-    if (g_wl80211_wram_mem_size_malloced - g_wl80211_wram_mem_size_freed + size > CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT) {
+    if (wl80211_wram_mem_size_usage_snapshot() + size > CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT) {
         return NULL;
     }
 #endif
     /* Check memory count limit */
 #if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
-    if (g_wl80211_wram_mem_cnt_malloced - g_wl80211_wram_mem_cnt_freed + 1 > CONFIG_WL80211_WRAM_MEM_CNT_LIMIT) {
+    if (wl80211_wram_mem_cnt_usage_snapshot() + 1 > CONFIG_WL80211_WRAM_MEM_CNT_LIMIT) {
         return NULL;
     }
 #endif
@@ -278,11 +322,11 @@ void *wl80211_platform_malloc_wram(size_t size)
 
     /* Update memory usage size */
 #if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
-    g_wl80211_wram_mem_size_malloced += kmalloc_size(ptr);
+    wl80211_wram_mem_size_add_malloced(kmalloc_size(ptr));
 #endif
     /* Update memory usage count */
 #if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
-    g_wl80211_wram_mem_cnt_malloced += 1;
+    wl80211_wram_mem_cnt_add_malloced();
 #endif
 
     return ptr;
@@ -303,11 +347,11 @@ void wl80211_platform_free_wram(void *ptr)
 
     /* Update memory freed size */
 #if CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT
-    g_wl80211_wram_mem_size_freed += kmalloc_size(ptr);
+    wl80211_wram_mem_size_add_freed(kmalloc_size(ptr));
 #endif
     /* Update memory freed count */
 #if CONFIG_WL80211_WRAM_MEM_CNT_LIMIT
-    g_wl80211_wram_mem_cnt_freed += 1;
+    wl80211_wram_mem_cnt_add_freed();
 #endif
 
     kfree(ptr);
@@ -320,7 +364,7 @@ void wl80211_platform_free_wram(void *ptr)
  */
 size_t wl80211_platform_get_wram_mem_size_usage(void)
 {
-    return g_wl80211_wram_mem_size_malloced - g_wl80211_wram_mem_size_freed;
+    return wl80211_wram_mem_size_usage_snapshot();
 }
 #endif
 
@@ -331,7 +375,7 @@ size_t wl80211_platform_get_wram_mem_size_usage(void)
  */
 size_t wl80211_platform_get_wram_mem_cnt_usage(void)
 {
-    return g_wl80211_wram_mem_cnt_malloced - g_wl80211_wram_mem_cnt_freed;
+    return wl80211_wram_mem_cnt_usage_snapshot();
 }
 #endif
 
