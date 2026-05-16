@@ -229,7 +229,7 @@ bool wl80211_supplicant_sta_is_running_internal(void)
     // FIXME
     return true;
 }
-			
+
 int wl80211_supplicant_set_assoc_ie(uint8_t *ie, uint16_t ie_len)
 {
     g_assoc_ie = ie;
@@ -291,7 +291,7 @@ bool wl80211_supplicant_wpa_ptk_init_done_internal(uint8_t sta_idx)
     wl80211_printf("%s: sta_idx %u\r\n", __FUNCTION__, sta_idx);
 #endif
 
-    wl80211_mac_ap_ctrl_port(sta_idx, 1);
+    wl80211_mac_ctrl_port(sta_idx, 1);
     return true;
 }
 

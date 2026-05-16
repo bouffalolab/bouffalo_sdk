@@ -1111,6 +1111,22 @@ int wifi_mgmr_ap_stop(void)
     return 0;
 }
 
+int wifi_mgmr_ap_sta_delete(uint8_t sta_idx)
+{
+    return wl80211_ap_deauth_sta(sta_idx, 5 /* WLAN_REASON_DISASSOC_AP_BUSY */);
+}
+
+void wifi_mgmr_ap_set_max_idle_time(uint16_t idle_time)
+{
+    wl80211_ap_set_max_idle_time(idle_time);
+}
+
+int wifi_mgmr_conf_max_sta(uint8_t max_sta_supported)
+{
+    wl80211_ap_set_max_sta_count(max_sta_supported);
+    return 0;
+}
+
 /**
  * @brief Convert WIFI_RC_IDX rate index to hardware rate configuration value
  *

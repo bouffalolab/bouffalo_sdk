@@ -148,6 +148,7 @@ void rpmsg_set_default_rpc(struct rpmsg_rpc_data *rpc)
 	rpmsg_default_rpc = rpc;
 }
 
+#if 0
 /*************************************************************************
  *
  *   FUNCTION
@@ -347,3 +348,4 @@ int _close(int fd)
 
 	return ret;
 }
+#endif

@@ -1,9 +1,12 @@
 #include "bflb_l1c.h"
 #include "bflb_core.h"
 
-#if (defined(BL616) || defined(BL616CL) || defined(BL618DG)   ) && !defined(CPU_LP)
-#if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
+#if defined(BL616) ||   \
+    defined(BL616CL) || \
+    (defined(BL618DG) && defined(CPU_MODEL_A0) && !defined(CPU_LP))
+/* Xuantie T-head  */
 #include "csi_core.h"
+
 void bflb_l1c_icache_enable(void)
 {
 #ifdef romapi_bflb_l1c_icache_enable
@@ -120,8 +123,10 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 #endif
 }
 
-#else
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0) && !defined(CPU_LP))
+/* Nuclei */
 #include "nmsis_core.h"
+
 void bflb_l1c_icache_enable(void)
 {
 #ifdef romapi_bflb_l1c_icache_enable
@@ -261,9 +266,9 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
     }
 #endif
 }
-#endif
 
-#else
+#elif defined(BL602) || defined(BL702) || defined(BL702L)
+/* Private cache implementation */
 
 #if defined(BL702) || defined(BL702L)
 extern void L1C_Cache_Enable_Set(uint8_t wayDisable);
@@ -342,6 +347,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
     bflb_sflash_cache_flush();
 #endif
 }
+
 #if defined(BL702) || defined(BL702L)
 /****************************************************************************/ /**
  * @brief  L1C cache write set
@@ -412,4 +418,6 @@ uint32_t ATTR_TCM_SECTION bflb_l1c_miss_count_get(void)
     return getreg32(0x40009000 + 0xC);
 }
 
+#else
+#error "Unsupported chip or CPU model for L1C driver"
 #endif

@@ -1,14 +1,17 @@
+#include <stdio.h>
+#include <stdarg.h>
+
 #ifdef CONFIG_CONSOLE_WO
 #include "bflb_wo.h"
 #else
 #include "bflb_uart.h"
 #endif
-#include "stdarg.h"
 
 #undef printf
 #undef puts
+#undef putchar
 
-struct bflb_device_s *console = NULL;
+extern struct bflb_device_s *console;
 
 int putchar(int c)
 {
@@ -160,13 +163,4 @@ void bflb_dump(uint8_t *data, uint32_t len)
 void bflb_regdump(uint32_t addr)
 {
     printf("%08lx[31:0]=%08lx\r\n", addr, *(volatile uint32_t *)(uintptr_t)(addr));
-}
-
-#ifdef CONFIG_CONSOLE_WO
-void bflb_wo_set_console(struct bflb_device_s *dev)
-#else
-void bflb_uart_set_console(struct bflb_device_s *dev)
-#endif
-{
-    console = dev;
 }

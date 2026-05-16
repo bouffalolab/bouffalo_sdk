@@ -2,3 +2,21 @@ mainmenu "SDK Configuration"
 
 source "$BL_SDK_BASE/Kconfig"
 
+menu "I2S codec example"
+
+config I2S_DSP_MODE
+    bool "Use I2S DSP/TDM mode"
+    default n
+    help
+      Select this for the JY6316 board profile. Capture uses a DSP/TDM
+      frame with playback reference plus JY6166 stereo microphone slots.
+
+config WAVE_PLAYER_I2S_DSP_LR_MERGE
+    bool "Pack two 16-bit DSP slots into one I2S FIFO entry"
+    depends on I2S_DSP_MODE
+    default y
+    help
+      Enable I2S FIFO LR merge in DSP/TDM mode. With 16-bit DSP slots,
+      every two adjacent slots are packed into one 32-bit FIFO/DMA entry.
+
+endmenu

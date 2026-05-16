@@ -66,8 +66,8 @@
 #define HAL_BOOT2_SUPPORT_USB_IAP             0 /* 1 support IAP, 0 not support */
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM   0 /* 1 support eflash loader ram, 0 not support */
 #define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH 0 /* 1 support eflash loader flash, 0 not support */
-#define HAL_BOOT2_SUPPORT_SIGN_ENCRYPT        0 /* 1 support sign and encrypt, 0 not support */
-#define HAL_BOOT2_SUPPORT_SIGN_SHA384         0 /* 1 support SHA384 sign, 0 not support */
+#define HAL_BOOT2_SUPPORT_SIGN_ENCRYPT        1 /* 1 support sign and encrypt, 0 not support */
+#define HAL_BOOT2_SUPPORT_SIGN_SHA384         1 /* 1 support SHA384 sign, 0 not support */
 
 #define HAL_BOOT2_CPU_GROUP_MAX               1
 #define HAL_BOOT2_CPU_MAX                     1
@@ -84,7 +84,7 @@
 #define HAL_BOOT2_PSRAM_INFO_MASK             (0x3000000)
 #define HAL_BOOT2_PSRAM_INFO_POS              (24)
 
-#define HAL_BOOT2_FLASH_XIP_BASE              BL618DG_FLASH_XIP_BASE
+#define HAL_BOOT2_FLASH_XIP_BASE              BFLB_FLASH_XIP_BASE
 
 #define HAL_BOOT2_UINT32_BIT_LEN              (32)
 #define HAL_BOOT2_UINT64_BIT_LEN              (64)
@@ -128,7 +128,12 @@ struct __attribute__((packed, aligned(4))) boot_efuse_sw_cfg0_t {
     uint32_t pidvid_sel       : 1; /* ef_sw_usage_0 bit [7] */
 
     uint32_t dcache_disable : 1; /* ef_sw_usage_0 bit [8] */
+#if defined(CPU_MODEL_A0)
     uint32_t jtag_cfg       : 3; /* ef_sw_usage_0 bit [11:9] */
+#else
+    uint32_t jtag_cfg       : 2; /* ef_sw_usage_0 bit [10:9] */
+    uint32_t sdio_vdd       : 1; /* ef_sw_usage_0 bit [11] */
+#endif
 
     uint32_t fix_key_sel : 1; /* ef_sw_usage_0 bit [12] */
 
@@ -165,13 +170,22 @@ struct __attribute__((packed, aligned(4))) boot_efuse_sw_cfg1_t {
     uint32_t sdu_pin_cfg  : 1; /* ef_sw_usage_1 bit [14] */
     uint32_t sdh_pin_cfg  : 1; /* ef_sw_usage_1 bit [15] */
     uint32_t isp_dgb_mode : 2; /* ef_sw_usage_1 bit [17:16] */
+#if defined(CPU_MODEL_A0)
     uint32_t sign_cfg     : 2; /* ef_sw_usage_1 bit [19:18] */
+#else
+    uint32_t reserved18   : 2; /* reserved [19:18] */
+#endif
     uint32_t sdio_sig1v8  : 1; /* ef_sw_usage_1 bit [20] */
     uint32_t sdio_fn2_en  : 1; /* ef_sw_usage_1 bit [21] */
 
     uint32_t uart_download_cfg : 1; /* ef_sw_usage_1 bit [22] */
+#if defined(CPU_MODEL_A0)
     uint32_t flash_clk_type    : 3; /* ef_sw_usage_1 bit [25:23] */
     uint32_t flash_clk_div     : 1; /* ef_sw_usage_1 bit [26] */
+#else
+    uint32_t uart_baudrate_sel : 1; /* ef_sw_usage_1 bit [23] */
+    uint32_t sign_cfg          : 3; /* ef_sw_usage_1 bit [26:24] */
+#endif
 
     uint32_t ldo18io_cfg_dis    : 1; /* ef_sw_usage_1 bit [27] */
     uint32_t bootlog_pin_cfg    : 1; /* ef_sw_usage_1 bit [28] */

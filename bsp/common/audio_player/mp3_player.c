@@ -276,7 +276,7 @@ static void audio_player_mp3_task(void *arg)
         }
 
         if (!playback_started) {
-            uint32_t tx_block_bytes = AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS * sizeof(int16_t);
+            uint32_t tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
 #if MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES > 0U
             if (WAVE_PLAYER_FIX_SAMPLE_RATE != 0U && (uint32_t)hz != WAVE_PLAYER_FIX_SAMPLE_RATE &&
                 tx_block_bytes > MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES) {

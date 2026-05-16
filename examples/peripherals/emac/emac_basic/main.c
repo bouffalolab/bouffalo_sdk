@@ -159,13 +159,13 @@ int emac_test_init(void)
     }
     if (speed_mode == EPHY_SPEED_MODE_10M_HALF_DUPLEX || speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
 #ifdef BL618DG
-        bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_10M, NULL);
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_10M, true);
 #else
         LOG_E("10M speed not supported!!!!\r\n");
         while(1);
 #endif
     } else {
-        bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_100M, NULL);
+        bflb_emac_feature_control(emacx, EMAC_CMD_SET_SPEED_100M, true);
     }
 
 #if 0

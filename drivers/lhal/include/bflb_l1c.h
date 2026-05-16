@@ -11,15 +11,25 @@
   * @{
   */
 
-#if (defined(BL616) || defined(BL616CL) || defined(BL618DG)   ) && !defined(CPU_LP)
-#if ((0 ) && defined(CPU_D0))
-#define BFLB_CACHE_LINE_SIZE 64
-#else
+#if defined(BL616) ||   \
+    defined(BL616CL) || \
+    (defined(BL618DG) && defined(CPU_MODEL_A0) && !defined(CPU_LP))
+
+/* Xuantie T-head E907 */
 #define BFLB_CACHE_LINE_SIZE 32
-#endif
-#else
-/* just align to word */
+
+#elif (defined(BL618DG) && !defined(CPU_MODEL_A0) && !defined(CPU_LP))
+
+/* Nuclei N900 */
+#define BFLB_CACHE_LINE_SIZE 64
+
+#elif defined(BL602) || defined(BL702) || defined(BL702L)
+
+/* Private cache implementation */
 #define BFLB_CACHE_LINE_SIZE 4
+
+#else
+// #error "Unsupported chip or CPU model for L1C driver"
 #endif
 
 /**

@@ -1,8 +1,13 @@
 #include "bflb_audac.h"
-#include "bflb_gpio.h"
 #include "bflb_dma.h"
 
+#if defined(BL616)
 #include "bl616_glb.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
+#elif defined(BL618DG)
+#include "bl618dg_glb.h"
+#endif
 #include "board.h"
 
 // clang-format off
@@ -34,28 +39,17 @@ void audio_dma_callback(void *arg)
     printf("scyle_n:%d\r\n", num);
 }
 
-/* audio gpio init*/
-void audac_gpio_init(void)
+void audio_isr_cb(int irq, void *arg)
 {
-    struct bflb_device_s *gpio;
+    uint32_t int_status;
 
-    gpio = bflb_device_get_by_name("gpio");
+    int_status = bflb_audac_get_intstatus(audac_hd);
+    printf("audac isr come: 0x%08x, fifo_cnt:%d\r\n",
+           int_status,
+           bflb_audac_feature_control(audac_hd, AUDAC_CMD_GET_TX_FIFO_CNT, 0));
 
-    /* audac pwm output mode */
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
-    // bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    // bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
-    // bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    // bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
-    /* PA enable */
-    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
-    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
-    bflb_gpio_set(gpio, GPIO_PIN_10);
-    bflb_gpio_set(gpio, GPIO_PIN_11);
+    bflb_audac_int_clear(audac_hd, int_status);
+    bflb_irq_disable(audac_hd->irq_num);
 }
 
 void audac_dma_init(void)
@@ -109,7 +103,9 @@ static void audac_init(void)
     };
 
     /* clock cfg */
+#if defined(BL616)
     GLB_Config_AUDIO_PLL_To_491P52M();
+#endif
     GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
 
     /* audac init */
@@ -119,6 +115,9 @@ static void audac_init(void)
     bflb_audac_volume_init(audac_hd, &audac_volume_cfg);
     /* audac enable dma */
     bflb_audac_link_rxdma(audac_hd, true);
+
+    bflb_irq_attach(audac_hd->irq_num, audio_isr_cb, audac_hd);
+    bflb_irq_enable(audac_hd->irq_num);
 }
 
 int main(void)
@@ -129,7 +128,7 @@ int main(void)
     printf("audac case start \r\n");
 
     /* gpio init */
-    audac_gpio_init();
+    board_audac_gpio_init();
 
     /* audac init */
     audac_init();

@@ -365,6 +365,80 @@ void wifi_sta_list_cmd(int argc, char **argv)
     wl80211_printf("========================================\r\n");
 }
 
+void wifi_ap_deauth_sta_cmd(int argc, char **argv)
+{
+    extern struct wl80211_global_state wl80211_glb;
+    int opt;
+    getopt_env_t getopt_env;
+    uint8_t mac[6];
+    const char *mac_str = NULL;
+    uint8_t sta_idx = (uint8_t)-1;
+    int ret;
+
+    utils_getopt_init(&getopt_env, 0);
+
+    while ((opt = utils_getopt(&getopt_env, argc, argv, "b:")) >= 0) {
+        switch (opt) {
+            case 'b':
+                mac_str = getopt_env.optarg;
+                break;
+            default:
+                wl80211_printf("unknown option: %c\r\n", getopt_env.optopt);
+                wl80211_printf("Usage: wifi_ap_deauth_sta -b <MAC>\r\n");
+                return;
+        }
+    }
+
+    if (mac_str == NULL) {
+        wl80211_printf("Error: MAC address is required\r\n");
+        wl80211_printf("Usage: wifi_ap_deauth_sta -b <MAC>\r\n");
+        return;
+    }
+
+    if (wifi_mgmr_mac_str_to_addr(mac_str, mac) < 0) {
+        wl80211_printf("Error: Invalid MAC address format. Use XX:XX:XX:XX:XX:XX\r\n");
+        return;
+    }
+
+    for (int i = 0; i < (int)(sizeof(wl80211_glb.aid_list) / sizeof(wl80211_glb.aid_list[0])); i++) {
+        if (wl80211_glb.aid_list[i].used && !memcmp(wl80211_glb.aid_list[i].mac, mac, 6)) {
+            sta_idx = wl80211_glb.aid_list[i].sta_idx;
+            break;
+        }
+    }
+
+    if (sta_idx == (uint8_t)-1) {
+        wl80211_printf("Error: STA %s not found\r\n", mac_str);
+        return;
+    }
+
+    ret = wifi_mgmr_ap_sta_delete(sta_idx);
+    if (ret == 0) {
+        wl80211_printf("STA %s (sta_idx=%u) deleted\r\n", mac_str, sta_idx);
+    } else {
+        wl80211_printf("Error: Failed to delete STA %s (ret=%d)\r\n", mac_str, ret);
+    }
+}
+
+void wifi_ap_set_max_sta_cmd(int argc, char **argv)
+{
+    uint8_t count;
+
+    if (argc != 2) {
+        wl80211_printf("Usage: wifi_ap_max_sta <num>\r\n");
+        wl80211_printf("  0 = no limit (use default)\r\n");
+        return;
+    }
+
+    count = (uint8_t)atoi(argv[1]);
+    wifi_mgmr_conf_max_sta(count);
+    if (count == 0) {
+        wl80211_printf("AP max STA count: unlimited\r\n");
+    } else {
+        wl80211_printf("Conf Max Sta to %u\r\n", count);
+    }
+}
+
 void wifi_sta_ps_enter_cmd(int argc, char **argv)
 {
     if (!wifi_mgmr_sta_state_get()) {
@@ -489,6 +563,20 @@ void wifi_keyram_cmd(int argc, char **argv)
 {
     void mm_sec_keydump(void);
     mm_sec_keydump();
+}
+
+void wifi_ap_set_max_idle_time_cmd(int argc, char **argv)
+{
+    if (argc != 2) {
+        wl80211_printf("Usage: wifi_ap_set_max_idle_time <idle_time>\r\n");
+        wl80211_printf("  idle_time: max idle time in x5 seconds (0 to disable)\r\n");
+        wl80211_printf("  Example: wifi_ap_set_max_idle_time 12 (60 seconds)\r\n");
+        return;
+    }
+
+    uint16_t idle_time = (uint16_t)atoi(argv[1]);
+    wifi_mgmr_ap_set_max_idle_time(idle_time);
+    wl80211_printf("AP max idle time set to %u (x5 seconds)\r\n", idle_time);
 }
 
 /* CLI command registration moved to wl80211_platform.c (platform-specific) */

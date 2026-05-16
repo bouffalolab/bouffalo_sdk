@@ -13,12 +13,12 @@ This is an example for OpenThread command line example.
 - BL616/BL618
     - Build for OpenThread FTD example
         ```shell
-        make CHIP=bl616 BOARD=bl616dk OT_FTD=1
+        make CHIP=bl616 BOARD=bl616dk CONFIG_OT_FTD=y CONFIG_OT_MTD=n
         ```
-    
+
     - Build for OpenThread MTD example
         ```shell
-        make CHIP=bl616 BOARD=bl616dk OT_FTD=0
+        make CHIP=bl616 BOARD=bl616dk CONFIG_OT_FTD=n CONFIG_OT_MTD=y
         ```
 
 - OpenThread feature options

@@ -1,4 +1,22 @@
 sdk_generate_library()
+
+# MTIME base addresses for different chips
+if("${CHIP}" STREQUAL "bl602" OR "${CHIP}" STREQUAL "bl702" OR "${CHIP}" STREQUAL "bl702l")
+    set(MTIME_BASE "0x0200BFF8UL")
+    set(MTIMECMP_BASE "0x02004000UL")
+elseif("${CHIP}" STREQUAL "bl618dg" AND NOT "${CPU_MODEL}" STREQUAL "a0")
+    set(MTIME_BASE "0x18030000UL")
+    set(MTIMECMP_BASE "0x18030008UL")
+else()
+    set(MTIME_BASE "0xE000BFF8UL")
+    set(MTIMECMP_BASE "0xE0004000UL")
+endif()
+
+sdk_add_compile_definitions(
+    -DconfigMTIME_BASE_ADDRESS=${MTIME_BASE}
+    -DconfigMTIMECMP_BASE_ADDRESS=${MTIMECMP_BASE}
+)
+
 sdk_library_add_sources(croutine.c)
 sdk_library_add_sources(event_groups.c)
 sdk_library_add_sources(list.c)

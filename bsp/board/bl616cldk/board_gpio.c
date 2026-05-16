@@ -382,6 +382,12 @@ void board_audac_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 
+    /* PA enable */
+    // bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    // bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    // bflb_gpio_set(gpio, GPIO_PIN_10);
+    // bflb_gpio_set(gpio, GPIO_PIN_11);
+
 }
 void board_i2s_codec_gpio_init(void)
 {

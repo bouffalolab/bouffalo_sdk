@@ -32,4 +32,20 @@ if (CONFIG_TICKLESS_ACCURATE)
     sdk_add_compile_definitions(-DconfigEXPECTED_IDLE_TIME_BEFORE_SLEEP=40)
     sdk_add_compile_definitions(-Dconfig_CUSTOM_TICKLESS=2)
     sdk_library_add_sources(tickless_accurate.c)
+
+    # MTIME base addresses for tickless_accurate.c
+    if("${CHIP}" STREQUAL "bl602" OR "${CHIP}" STREQUAL "bl702" OR "${CHIP}" STREQUAL "bl702l")
+        set(MTIME_BASE "0x0200BFF8UL")
+        set(MTIMECMP_BASE "0x02004000UL")
+    elseif("${CHIP}" STREQUAL "bl618dg" AND NOT "${CPU_MODEL}" STREQUAL "a0")
+        set(MTIME_BASE "0x18030000UL")
+        set(MTIMECMP_BASE "0x18030008UL")
+    else()
+        set(MTIME_BASE "0xE000BFF8UL")
+        set(MTIMECMP_BASE "0xE0004000UL")
+    endif()
+    sdk_add_compile_definitions(
+        -DconfigMTIME_BASE_ADDRESS=${MTIME_BASE}
+        -DconfigMTIMECMP_BASE_ADDRESS=${MTIMECMP_BASE}
+    )
 endif()

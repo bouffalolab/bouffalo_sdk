@@ -468,10 +468,12 @@ int bflb_efuse_enable_aes(uint8_t aes_type, uint8_t xts_mode) {
     return RomDriver_bflb_efuse_enable_aes(aes_type, xts_mode);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 int bflb_efuse_rw_lock_aes_key(uint8_t key_index, uint8_t rd_lock, uint8_t wr_lock) {
     return RomDriver_bflb_efuse_rw_lock_aes_key(key_index, rd_lock, wr_lock);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 int bflb_efuse_rw_lock_dbg_key(uint8_t rd_lock, uint8_t wr_lock) {
@@ -1788,10 +1790,12 @@ void Tzc_Sec_Set_Glb_Ctrl_Group(TZC_SEC_GLB_Ctrl_Type slaveType, uint8_t group) 
     return RomDriver_Tzc_Sec_Set_Glb_Ctrl_Group(slaveType, group);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group) {
     return RomDriver_Tzc_Sec_Set_CPU_Group(cpu, group);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_ROM_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {

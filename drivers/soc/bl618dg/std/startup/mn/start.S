@@ -27,11 +27,18 @@ __start:
     csrc CSR_MSTATUS, MSTATUS_MIE
 
     /* Initialize GP and TP and jump table base when zcmt enabled */
-    .option push
-    .option norelax
+.option push
+.option norelax
     la gp, __global_pointer$
+.option pop
 
-    .option pop
+#if defined(__riscv_flen)
+    /* FP: initial state */
+    li t0, MSTATUS_FS
+    csrc CSR_MSTATUS, t0
+    li t0, MSTATUS_FS_INITIAL
+    csrs CSR_MSTATUS, t0
+#endif
 
 #ifndef CPU_NP
     /* jump to np */
@@ -42,10 +49,6 @@ __start:
     xor t2, t0, t1
     beq t2, x0, cpu_np_start
 #endif
-
-    .weak __StackTop
-    la      sp, __StackTop
-    csrw    mscratch, sp
 
     /*
      * Set the the NMI base mnvec to share
@@ -61,12 +64,8 @@ __start:
      * will share common entry.
      */
     la t0, default_trap_handler
+    ori t0, t0, 3
     csrw CSR_MTVEC, t0
-
-    /* Set the interrupt processing mode to ECLIC mode */
-    li t0, 0x3f
-    csrc CSR_MTVEC, t0
-    csrs CSR_MTVEC, 0x3
 
 #ifdef CONFIG_IRQ_USE_VECTOR
     /*
@@ -88,11 +87,9 @@ __start:
     /* Enable mcycle and minstret counter */
     csrci CSR_MCOUNTINHIBIT, 0x5
 
-    .size __start, . - __start
-
-.globl _start_premain
-.type _start_premain, @function
-_start_premain:
+    .weak __StackTop
+    la      sp, __StackTop
+    csrw    mscratch, sp
 
     call SystemInit
 
@@ -100,8 +97,6 @@ _start_premain:
     call     start_load
 
     call     System_Post_Init
-
-    .size _start_premain, . - _start_premain
 
     /* BPU cold bringup need time, so enable BPU before enter to main */
     li t0, MMISC_CTL_BPU
@@ -130,7 +125,7 @@ cpu_np_start:
     csrw    mscratch, sp
 
     call SystemInit_NP
-    
+
     call np_board_main
 cpu_np_loop:
     j      cpu_np_loop
@@ -138,3 +133,5 @@ cpu_np_loop:
 
 __exit_np:
     j      __exit_np
+
+    .size __start, . - __start

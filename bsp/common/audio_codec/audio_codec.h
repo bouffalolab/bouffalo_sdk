@@ -29,6 +29,8 @@ typedef uint8_t audio_codec_type_t;
 #define AUDIO_CODEC_TYPE_WM8978  ((audio_codec_type_t)4)
 #define AUDIO_CODEC_TYPE_JY6311  ((audio_codec_type_t)5)
 #define AUDIO_CODEC_TYPE_BL      ((audio_codec_type_t)6)
+#define AUDIO_CODEC_TYPE_JY6166  ((audio_codec_type_t)7)
+#define AUDIO_CODEC_TYPE_JY6316  ((audio_codec_type_t)8)
 
 typedef uint8_t audio_codec_i2s_fmt_t;
 #define AUDIO_CODEC_I2S_FMT_I2S     ((audio_codec_i2s_fmt_t)0)
@@ -57,7 +59,7 @@ typedef uint8_t audio_codec_work_mode_t;
 
 typedef struct {
     uint32_t sample_rate_hz;
-    uint8_t channels; /* 1 or 2 */
+    uint8_t channels; /* Codec-specific channel count. Typical I2S codecs use 1 or 2. */
     audio_codec_i2s_fmt_t i2s_fmt;
     audio_codec_bits_t bits;
     bool codec_master; /* codec outputs BCLK/LRCK when true */

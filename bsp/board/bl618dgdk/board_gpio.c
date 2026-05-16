@@ -107,17 +107,21 @@ void board_adc_gpio_init(void)
     /* ADC0_CH1 */
     bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH2 */
-    // bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by UART_TX of CPU_NP */
+    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH3 */
-    // bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by UART_TX of CPU_LP */
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH4 */
+#if defined(CPU_MODEL_A0)
     bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#else
+    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#endif
     /* ADC0_CH5 */
     bflb_gpio_init(gpio, GPIO_PIN_31, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH6 */
-    // bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by JTAG_TMS */
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH7 */
-    // bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by JTAG_TDO */
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH8 */
     bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH9 */
@@ -125,23 +129,44 @@ void board_adc_gpio_init(void)
     /* ADC0_CH10 */
     bflb_gpio_init(gpio, GPIO_PIN_9, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC0_CH11 */
+#if defined(CPU_MODEL_A0)
     bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#else
+    bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#endif
     /* ADC1_CH0 */
     // bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by UART_RX of CPU_AP */
     /* ADC1_CH1 */
+#if defined(CPU_MODEL_A0)
     bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#else
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#endif
     /* ADC1_CH2 */
-    // bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by UART_RX of CPU_NP */
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#if defined(CPU_MODEL_A0)
     /* ADC1_CH3 */
     bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC1_CH4 */
     bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC1_CH5 */
     bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#else
+    /* ADC1_CH3 */
+    bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC1_CH4 */
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC1_CH5 */
+    bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#endif
     /* ADC1_CH6 */
-    // bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by JTAG_TCK */
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC1_CH7 */
-    // bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* occupied by JTAG_TDI */
+#if defined(CPU_MODEL_A0)
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#else
+    bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#endif
     /* ADC1_CH8 */
     bflb_gpio_init(gpio, GPIO_PIN_6, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC1_CH9 */
@@ -149,7 +174,11 @@ void board_adc_gpio_init(void)
     /* ADC1_CH10 */
     bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC1_CH11 */
+#if defined(CPU_MODEL_A0)
     bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#else
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+#endif
 }
 
 void board_dac_gpio_init(void)
@@ -161,6 +190,30 @@ void board_dac_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* DAC_CHB */
     bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+}
+
+void board_audac_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    /* clock cfg */
+    GLB_Set_Audio_AUTO_CLK(false);
+
+    /* 638.976MHz / 26 = 24.576MHz */
+    GLB_Set_CPUPLL_PostOut(true, 26);
+
+    /* 24.576MHz / 32 = 768KHz */
+    GLB_Set_Audio_SOLO_CLK(true, 31);
+
+    gpio = bflb_device_get_by_name("gpio");
+
+    /* audac pwm output mode */
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+
+    /* PA enable */
+    // bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    // bflb_gpio_set(gpio, GPIO_PIN_11);
 }
 
 void board_emac_gpio_init(void)
@@ -180,7 +233,7 @@ void board_emac_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_FUNC_EMAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_FUNC_EMAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_31, GPIO_FUNC_EMAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_33, GPIO_FUNC_EMAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_FUNC_EMAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
 void board_emac1_gpio_init(void)

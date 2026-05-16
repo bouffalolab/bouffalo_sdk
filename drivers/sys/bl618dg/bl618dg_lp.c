@@ -214,16 +214,8 @@ void ATTR_TCM_SECTION __attribute__((aligned(16))) lp_fw_restore_cpu_para(uint32
 #else
                          "la      a0, default_trap_handler\n\t"
 #endif
-#if defined(CPU_MODEL_A0)
                          "ori     a0, a0, 3\n\t"
                          "csrw    mtvec, a0\n\t");
-#else
-                         "li      t0, 0x3f\n\t"
-                         "and     t0, a0, t0\n\t"
-                         "ori     t0, t0, 3\n\t"
-                         "csrw    mtvec, t0\n\t"
-#endif
-                         );
 }
 
 static void rtc_wakeup_init(uint64_t rtc_wakeup_cmp_cnt, uint64_t sleep_us)
@@ -758,11 +750,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     /* csrwi   fcsr, 0 */
 #endif
 #if defined(CPU_MODEL_A0)
-    /* enable mstatus FS */
-    uint32_t mstatus = __get_MSTATUS();
-    mstatus |= (1 << 13);
-    __set_MSTATUS(mstatus);
-
     /* enable mxstatus THEADISAEE */
     uint32_t mxstatus = __get_MXSTATUS();
     mxstatus |= (1 << 22);
@@ -795,9 +782,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     __RV_CSR_SET(CSR_MMISC_CTL, MMISC_CTL_BPU);
     /* Enable mcycle and minstret counters */
     __RV_CSR_CLEAR(CSR_MCOUNTINHIBIT, 0x5);
-
-    /* enable mstatus FS */
-    __enable_FPU();
 
     ECLIC_SetCfgNlbits(__ECLIC_GetInfoCtlbits());
 

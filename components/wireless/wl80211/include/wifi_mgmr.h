@@ -342,6 +342,40 @@ int wifi_mgmr_ap_start(const wifi_mgmr_ap_params_t *config);
  */
 int wifi_mgmr_ap_stop(void);
 
+/**
+ * Delete/deauthenticate a connected STA from AP mode
+ *
+ * Sends an 802.11 deauthentication frame to the specified station and removes it
+ * from the AP's station list.
+ *
+ * @param sta_idx STA index of the station to delete
+ *
+ * @return 0 on success, negative on error:
+ *         -1 : AP mode not enabled
+ *         -2 : STA not found
+ *         -3 : MACSW VIF error
+ */
+int wifi_mgmr_ap_sta_delete(uint8_t sta_idx);
+
+/**
+ * Set AP station max idle time before deauthentication
+ *
+ * When a connected STA has no activity for longer than this threshold,
+ * the AP will deauthenticate it. Unit is x5 seconds. Set 0 to disable.
+ *
+ * @param idle_time max idle time in units of 5 seconds, 0 to disable
+ */
+void wifi_mgmr_ap_set_max_idle_time(uint16_t idle_time);
+
+/*
+ * Configure AP max associated STA count
+ *
+ * @param max_sta_supported Maximum number of stations allowed (0 = use default)
+ *
+ * @return 0 on success
+ */
+int wifi_mgmr_conf_max_sta(uint8_t max_sta_supported);
+
 /* String Conversion Utilities */
 /* Convert WiFi mode to string (e.g., "BGN", "BGNAX") */
 char *wifi_mgmr_mode_to_str(uint32_t mode);

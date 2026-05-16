@@ -67,10 +67,6 @@ static int is_flash_io(uint8_t pin, uint32_t sf_pin_select);
 static void ATTR_TCM_SECTION bl_lp_system_init(void)
 {
 #if defined(CPU_MODEL_A0)
-    uint32_t mstatus = __get_MSTATUS();
-    mstatus |= (1 << 13);
-    __set_MSTATUS(mstatus);
-
     uint32_t mxstatus = __get_MXSTATUS();
     mxstatus |= (1 << 22);
     mxstatus |= (1 << 15);
@@ -105,9 +101,6 @@ static void ATTR_TCM_SECTION bl_lp_system_init(void)
     __RV_CSR_SET(CSR_MMISC_CTL, MMISC_CTL_BPU);
     /* Enable mcycle and minstret counters */
     __RV_CSR_CLEAR(CSR_MCOUNTINHIBIT, 0x5);
-
-    /* enable mstatus FS */
-    __enable_FPU();
 
     ECLIC_SetCfgNlbits(__ECLIC_GetInfoCtlbits());
 
@@ -146,7 +139,7 @@ static void ATTR_TCM_SECTION bl_lp_system_clock_init(void)
     lp_fw_clock_t *clock_cfg = &pds_resume_clock_cfg;
 
     if ((clock_cfg->xclk_sel == HBN_MCU_XCLK_XTAL) || (clock_cfg->mcu_clk_sel != GLB_MCU_SYS_CLK_RC32M)) {
-        GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL);
+        GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL | GLB_PLL_CPUPLL);
     }
 
     HBN_Set_MCU_XCLK_Sel(clock_cfg->xclk_sel);
@@ -214,10 +207,8 @@ static void ATTR_TCM_SECTION pds_wakeup_recover(void)
 #else
         "la a0, default_trap_handler\n\t"
 #endif
-        "li     t0, 0x3f\n\t"
-        "and    t0, a0, t0\n\t"
-        "ori    t0, t0, 3\n\t"
-        "csrw   mtvec, t0\n\t"
+        "ori     a0, a0, 3\n\t"
+        "csrw    mtvec, a0\n\t"
 #ifdef CONFIG_IRQ_USE_VECTOR
         "la      a0, __Vectors\n\t"
         "csrw    mtvt, a0\n\t"
@@ -231,6 +222,11 @@ static void ATTR_TCM_SECTION pds_wakeup_recover(void)
         "csrw    mstatus, t0\n\t"
 #endif
     );
+
+    AON_Set_Ldo18_AON_Power_Switch_For_FLASH(1);
+    AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(1);
+    AON_Power_On_MBG();
+    AON_Power_On_SFReg();
 
     bl_lp_system_init();
     bl_lp_system_clock_init();
@@ -274,6 +270,26 @@ static void bl_lp_runtime_clock_snapshot(void)
     pds_resume_clock_cfg.mcu_clk_sel = bl_lp_get_current_mcu_clk_sel();
 }
 
+static uint8_t bl_lp_uart_sig_func_get(uint8_t sig)
+{
+    uint32_t cfg;
+
+    if (sig < 8) {
+        cfg = BL_RD_REG(GLB_BASE, GLB_UART_CFG1);
+        return (cfg >> (sig * 4)) & 0x0F;
+    }
+
+    cfg = BL_RD_REG(GLB_BASE, GLB_UART_CFG2);
+    return (cfg >> ((sig - 8) * 4)) & 0x0F;
+}
+
+static uint8_t bl_lp_gpio_func_get(uint8_t pin)
+{
+    uint32_t cfg = BL_RD_WORD(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2));
+
+    return BL_GET_REG_BITS_VAL(cfg, GLB_REG_GPIO_0_FUNC_SEL);
+}
+
 static void bl_lp_runtime_uart_baudrate_snapshot(void)
 {
     struct bflb_device_s *uart0 = bflb_device_get_by_name("uart0");
@@ -281,6 +297,8 @@ static void bl_lp_runtime_uart_baudrate_snapshot(void)
     uint32_t bit_prd = getreg32(reg_base + UART_BIT_PRD_OFFSET);
     uint32_t div = (bit_prd & UART_CR_UTX_BIT_PRD_MASK) >> UART_CR_UTX_BIT_PRD_SHIFT;
     uint32_t uart_clk = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_UART, uart0->idx);
+    uint8_t tx_sig = 0xFF;
+    uint8_t rx_sig = 0xFF;
 
     div += 1;
     if (div == 0) {
@@ -289,25 +307,32 @@ static void bl_lp_runtime_uart_baudrate_snapshot(void)
 
     pds_resume_uart_cfg.baudrate = (uart_clk + (div / 2)) / div;
 
-    /* Parse UART0 TX/RX pin from GLB_UART_CFG1/2 */
     pds_resume_uart_cfg.tx_pin = 0xFF;
     pds_resume_uart_cfg.rx_pin = 0xFF;
 
-    uint32_t cfg1 = BL_RD_REG(GLB_BASE, GLB_UART_CFG1);
-    uint32_t cfg2 = BL_RD_REG(GLB_BASE, GLB_UART_CFG2);
-    for (uint8_t i = 0; i < 12; i++) {
-        uint8_t func;
-        if (i < 8) {
-            func = (cfg1 >> (i * 4)) & 0x0F;
-        } else {
-            func = (cfg2 >> ((i - 8) * 4)) & 0x0F;
-        }
+    for (uint8_t sig = 0; sig < 12; sig++) {
+        uint8_t func = bl_lp_uart_sig_func_get(sig);
+
         if (func == GPIO_UART_FUNC_UART0_TX) {
-            pds_resume_uart_cfg.tx_pin = i;
+            tx_sig = sig;
         } else if (func == GPIO_UART_FUNC_UART0_RX) {
-            pds_resume_uart_cfg.rx_pin = i;
+            rx_sig = sig;
         }
     }
+
+    for (uint8_t pin = 0; pin < GPIO_PIN_MAX; pin++) {
+        if (bl_lp_gpio_func_get(pin) != (GPIO_FUNC_UART >> GPIO_FUNC_SHIFT)) {
+            continue;
+        }
+
+        if ((pin % 12) == tx_sig) {
+            pds_resume_uart_cfg.tx_pin = pin;
+        } else if ((pin % 12) == rx_sig) {
+            pds_resume_uart_cfg.rx_pin = pin;
+        }
+    }
+
+    // printf("[LP] uart tx_pin:%u rx_pin:%u\r\n", pds_resume_uart_cfg.tx_pin, pds_resume_uart_cfg.rx_pin);
 }
 
 static void bl_lp_runtime_peripheral_clock_snapshot(void)
@@ -364,8 +389,8 @@ static uint32_t ATTR_TCM_SECTION get_sf_pin_select(void)
 {
     uint32_t tmpVal;
 
-    tmpVal = BL_RD_WORD(0x20056000 + 0x74);
-    return (tmpVal >> 5) & 0x3f;
+    tmpVal = BL_RD_WORD(0x2000C000 + 0x5C);
+    return (tmpVal >> 14) & 0x3f;
 }
 
 int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t sleep_time)

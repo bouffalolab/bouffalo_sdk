@@ -1,5 +1,93 @@
 # CHANGELOG
 
+## v2.3.26 — since v2.3.25 (2026-05-11 → 2026-05-16)
+
+### New Features
+
+- **BL618DG (B0 Silicon)**
+  - Updated boot2 image to v8.2.4
+  - Updated OpenOCD to support BL618DG
+  - Updated ADC v3 driver and examples for B0 silicon
+  - Added PDS LP wakeup example
+  - Brought up B0 BT/BLE support
+
+- **BL616CL**
+  - Added LP firmware phyrf library
+
+- **WiFi (AP Mode)**
+  - Added maximum associate station limit
+  - Added deauth station API
+  - Added automatic detection and deauth of lost stations
+
+- **Audio**
+  - Added JY6316 codec support
+
+- **Peripherals**
+  - Added GPIO-simulated MDIO support
+
+- **Network**
+  - Added DHCP server API to remove client by flag
+
+- **Thread**
+  - Added mbedTLS V3 config options
+
+- **Tools**
+  - Updated FlashCube to v1.4.2
+
+### Bug Fixes
+
+- **BL618DG**
+  - Fixed PSRAM base address
+  - Fixed EMAC0 GPIO pin configuration
+  - Fixed cache consistency issue
+  - Fixed mtvec mode setup
+  - Fixed TZC CPU group setting and eFUSE read/write lock
+  - Fixed low-power clock restore
+  - Fixed mini misc clock ID
+  - Fixed UART RX pin restore after PDS wakeup
+  - Fixed encryption and signing support for B0 silicon
+
+- **BL616 / BL616CL**
+  - Removed duplicate FPU initialization
+
+- **WiFi**
+  - Fixed WRAM malloc abnormal memory size and counter limit
+  - Fixed print format specifier in debug output
+  - Fixed BTSDU read/write handling to use event handler instead of ISR
+  - Fixed BA creation gating on recent traffic to prevent spurious negotiation
+  - Fixed Linux driver to default to BL616CL with AMSDU enabled
+  - Fixed counter clearing for subsequent loops in Linux driver
+  - Made customer1 the default WLAN customer configuration
+
+- **Bluetooth / BLE**
+  - Fixed extended advertising support on BL702L
+  - Updated hardware adaptations for BL618DG B0
+  - Increased ACL TX buffer count for BL618DG and BL616
+  - Switched BL702L to use driver API for time retrieval
+
+- **Thread**
+  - Simplified mDNS TXT record publishing
+  - Fixed HTTP server file setup
+
+- **Low Power**
+  - Removed unnecessary LP firmware mstatus FS bit enable
+
+- **Build System**
+  - Added `CONFIG_GCC_COMPILE_LTO` to control LTO at build time
+  - Fixed USB driver warnings when LTO is enabled
+  - Unified mtimer address definition in FreeRTOS configuration
+  - Merged libc and libc_n900 into a single library
+  - Disabled POSIX I/O symbols in open-amp to avoid conflicts
+
+- **AUPWM**
+  - Updated test case for BL618DG
+
+### Improvements
+
+- Refactored Thread build system to use `CONFIG_OT_*` options
+- APM now uses `reason_code` instead of `status_code`
+- Updated stdatomic and thread examples for SPI-WiFi build compatibility
+
 ## v2.3.25 — since v2.3.24 (2026-04-26 → 2026-05-11)
 
 ### New Features

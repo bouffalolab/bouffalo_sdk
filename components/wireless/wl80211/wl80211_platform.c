@@ -444,11 +444,14 @@ extern void wifi_country_code_set_cmd(int argc, char **argv);
 extern void wifi_ap_start_cmd(int argc, char **argv);
 extern void wifi_ap_stop_cmd(int argc, char **argv);
 extern void wifi_sta_list_cmd(int argc, char **argv);
+extern void wifi_ap_deauth_sta_cmd(int argc, char **argv);
+extern void wifi_ap_set_max_sta_cmd(int argc, char **argv);
 extern void wifi_sta_ps_enter_cmd(int argc, char **argv);
 extern void wifi_sta_ps_exit_cmd(int argc, char **argv);
 extern void wifi_sta_info_cmd(int argc, char **argv);
 extern void set_ipv4_cmd(int argc, char **argv);
 extern void wifi_keyram_cmd(int argc, char **argv);
+extern void wifi_ap_set_max_idle_time_cmd(int argc, char **argv);
 
 /* CLI command exports - automatically registered when shell component is enabled */
 SHELL_CMD_EXPORT_ALIAS(wifi_connect_cmd, wifi_sta_connect, wifi station connect);
@@ -462,10 +465,13 @@ SHELL_CMD_EXPORT_ALIAS(wifi_country_code_set_cmd, wifi_country_code_set, wifi se
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_start_cmd, wifi_ap_start, wifi ap start);
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_stop_cmd, wifi_ap_stop, wifi ap stop);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_list_cmd, wifi_sta_list, wifi ap sta list);
+SHELL_CMD_EXPORT_ALIAS(wifi_ap_deauth_sta_cmd, wifi_ap_deauth_sta, wifi ap deauth sta);
+SHELL_CMD_EXPORT_ALIAS(wifi_ap_set_max_sta_cmd, wifi_ap_max_sta, config AP max sta);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_enter_cmd, wifi_sta_ps_enter, wifi sta enter ps mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_exit_cmd, wifi_sta_ps_exit, wifi sta exit ps mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_sta_info_cmd, wifi_sta_info, show wifi sta info);
 SHELL_CMD_EXPORT_ALIAS(set_ipv4_cmd, set_ipv4, set sta netif static ipv4);
 SHELL_CMD_EXPORT_ALIAS(wifi_keyram_cmd, wifi_keyram, show keyram);
+SHELL_CMD_EXPORT_ALIAS(wifi_ap_set_max_idle_time_cmd, wifi_ap_set_max_idle_time, wifi ap set max idle time);
 
 #endif /* CONFIG_SHELL */

@@ -3,7 +3,7 @@
 #include "board.h"
 
 struct bflb_adc_channel_s chan[] = {
-    {.pos_chan = ADC_EXTERNAL_CHANNEL_4, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO28 -> GND */
+    {.pos_chan = ADC_EXTERNAL_CHANNEL_9, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO7  -> GND */
     {.pos_chan = ADC_EXTERNAL_CHANNEL_1, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO13 -> GND */
     {.pos_chan = ADC_EXTERNAL_CHANNEL_5, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO31 -> GND */
 };

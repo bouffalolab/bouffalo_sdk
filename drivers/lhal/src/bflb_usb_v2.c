@@ -241,7 +241,7 @@ void USBH_IRQ(int irq, void *arg)
     USBH_IRQHandler(0);
 }
 
-void usb_hc_low_level_init(uint8_t busid)
+void usb_hc_low_level_init(struct usbh_bus *bus)
 {
     uint32_t regval;
 
@@ -275,11 +275,11 @@ void usb_hc_low_level_init(uint8_t busid)
     putreg32(regval, BFLB_USB_BASE + USB_GLB_INT_OFFSET);
 }
 
-void usb_hc_low_level_deinit(uint8_t busid)
+void usb_hc_low_level_deinit(struct usbh_bus *bus)
 {
 }
 
-uint8_t usbh_get_port_speed(const uint8_t port)
+uint8_t usbh_get_port_speed(struct usbh_bus *bus, const uint8_t port)
 {
     uint8_t speed = 3;
 

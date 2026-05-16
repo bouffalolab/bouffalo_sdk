@@ -441,19 +441,21 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
             case HAL_APP_SIGN_SAME_AS_BOOT2:
                 efuse_cfg->sign[i] = ((struct boot_efuse_sw_cfg1_t)sw_cfg1).sign_cfg;
                 bflb_ef_ctrl_read_direct(NULL, 0x1C, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
-                if (efuse_cfg->sign[i] == 2) {
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+                if (efuse_cfg->sign[i] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
                     /* Read additional 16 bytes (4 words) for SHA384 pk hash at offset 32 bytes */
                     bflb_ef_ctrl_read_direct(NULL, 0xC0, (uint32_t *)((uint8_t *)efuse_cfg->pk_hash_cpu[i] + HAL_BOOT2_PK_HASH_SIZE), 4, 0);
                 }
+#endif
                 break;
 #if defined(BL618DG) && !defined(CPU_MODEL_A0)
             case HAL_APP_SIGN_INDIVIDUAL_SHA256:
-                efuse_cfg->sign[i] = 1;
-                bflb_ef_ctrl_read_direct(NULL, 0x80, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
+                efuse_cfg->sign[i] = HAL_BOOT_SIGN_TYPE_ECC_SHA256;
+                bflb_ef_ctrl_read_direct(NULL, 0x1C0, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
                 break;
             case HAL_APP_SIGN_INDIVIDUAL_SHA384:
-                efuse_cfg->sign[i] = 2;
-                bflb_ef_ctrl_read_direct(NULL, 0x80, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4, 0);
+                efuse_cfg->sign[i] = HAL_BOOT_SIGN_TYPE_ECC_SHA384;
+                bflb_ef_ctrl_read_direct(NULL, 0x1C0, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4, 0);
                 break;
 #endif
             case HAL_APP_NO_SIGN:

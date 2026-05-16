@@ -53,10 +53,12 @@ int bl_lp_wakeup_io_get_mode(uint8_t io_num)
 
     if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_FALLING_EDGE) {
         return BL_LP_IO_WAKEUP_MODE_FALLING;
-    } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_HIGH_LEVEL) {
-        return BL_LP_IO_WAKEUP_MODE_HIGH;
     } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_RISING_EDGE || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_RISING_EDGE) {
         return BL_LP_IO_WAKEUP_MODE_RISING;
+    } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_LOW_LEVEL || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_LOW_LEVEL) {
+            return BL_LP_IO_WAKEUP_MODE_LOW;
+    } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_HIGH_LEVEL || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_HIGH_LEVEL) {
+        return BL_LP_IO_WAKEUP_MODE_HIGH;
     } else if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_RISING_FALLING_EDGE) {
         return BL_LP_IO_WAKEUP_MODE_RISING_FALLING;
     } else {

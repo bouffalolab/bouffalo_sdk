@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <reent.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "bflb_rtc.h"
 

@@ -31,7 +31,7 @@
 #define UHS_PSRAM_ADDR       (0x50000000)
 #define BL616_X8_PSRAM_ADDR  (0xA8000000)
 #define BL616CL_X8_PSRAM_ADDR (0x88000000)
-#define BL618DG_X8_PSRAM_ADDR (0x88000000)
+#define BL618DG_X8_PSRAM_ADDR (0xB8000000)
 #define MEMTESTER_M0
 // #define MEMTESTER_D0
 
@@ -115,7 +115,8 @@ int main(void)
 #if defined(MEMTESTER_M0)
     if (!testConfig.enableCache) {
         /* Disable D cache */
-        csi_dcache_disable();
+        bflb_l1c_dcache_clean_all();
+        bflb_l1c_dcache_disable();
     }
 
     printf("\r\n########## Print out from target board ##########\r\n");

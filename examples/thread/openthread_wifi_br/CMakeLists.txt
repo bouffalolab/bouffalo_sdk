@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.15)
 
-
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 sdk_add_compile_definitions(-DAPP_PRINT=printf)
 sdk_add_compile_definitions(-DWL_NIC=0)
-sdk_add_compile_definitions(-DMBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT=0)
+
+sdk_add_compile_definitions(-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-proj-config.h\")
+sdk_add_compile_definitions(-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-platform-config-check.h\")
 
 get_target_property(SDK_INTF_LIB_LINK_OPTIONS sdk_intf_lib INTERFACE_LINK_OPTIONS)
 list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS -nostartfiles)

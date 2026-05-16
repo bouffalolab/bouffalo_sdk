@@ -103,15 +103,21 @@ typedef enum {
 #define MM_FLAG_ALIGN_256BYTE (0x07 << MM_FLAG_ALIGN_SHIFT) ///< 256-byte alignment
 
 /* CPU architecture detection */
-#if IS_ENABLED(CONFIG_CPU_RISCV32) || IS_ENABLED(CONFIG_CPU_ARM)
-#define MM_FLAG_ALIGN_PTR   MM_FLAG_ALIGN_4BYTE
-#define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_32BYTE ///< 32-bit CPU: 32-byte alignment
-#elif IS_ENABLED(CONFIG_CPU_RISCV64) || IS_ENABLED(CONFIG_CPU_ARM64)
-#define MM_FLAG_ALIGN_PTR   MM_FLAG_ALIGN_8BYTE
-#define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_64BYTE ///< 64-bit CPU: 64-byte alignment
+#if (__riscv_xlen == 64)
+#define MM_FLAG_ALIGN_PTR MM_FLAG_ALIGN_8BYTE
+#elif (__riscv_xlen == 32)
+#define MM_FLAG_ALIGN_PTR MM_FLAG_ALIGN_4BYTE
 #else
-#define MM_FLAG_ALIGN_PTR   MM_FLAG_ALIGN_4BYTE
-#define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_32BYTE ///< Other architectures: 32-byte alignment
+#define MM_FLAG_ALIGN_PTR MM_FLAG_ALIGN_4BYTE
+#endif
+/* Cache line size detection */
+#include "bflb_l1c.h"
+#if (BFLB_CACHE_LINE_SIZE == 64)
+#define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_64BYTE
+#elif (BFLB_CACHE_LINE_SIZE == 32)
+#define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_32BYTE
+#else
+#define MM_FLAG_ALIGN_CACHE MM_FLAG_ALIGN_PTR
 #endif
 
 /* ======================================================================== */

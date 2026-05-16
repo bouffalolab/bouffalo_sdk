@@ -23,6 +23,7 @@
 int ot_uart_vfs_file_handle = -1;
 extern hosal_uart_dev_t uart_stdio;
 
+#ifdef SYS_AOS_CLI_ENABLE
 static void ot_uartCli(char* pcWriteBuffer, int xWriteBufferLen, int argc, char** argv)
 {
     char* buf = argv[1];
@@ -37,22 +38,18 @@ static void ot_uartCli(char* pcWriteBuffer, int xWriteBufferLen, int argc, char*
     len = strlen(buf);
     buf[len] = '\r';
 
-#ifdef CFG_PREFIX
-    otPlatUartSend((const uint8_t *)CFG_PREFIX, strlen(CFG_PREFIX));
+    otPlatUartSend((const uint8_t *)"otc", strlen("otc"));
     otPlatUartSend((const uint8_t *)" ", 1);
-#endif
+
     OT_THREAD_SAFE(
         otPlatUartReceived((uint8_t *)buf, len+1); 
     );
 }
 
 const struct cli_command otcCliSet[] STATIC_CLI_CMD_ATTRIBUTE = {
-#ifdef CFG_PREFIX
-    { CFG_PREFIX, "orignal openthread command line", ot_uartCli},
-#else
     { "otc", "orignal openthread command line", ot_uartCli},
-#endif
 };
+#endif
 
 static void ot_uart_cb_read(int fd, void *param)
 {
@@ -255,7 +252,7 @@ void ot_uartTask (ot_system_event_t sevent)
 
 void ot_uartLog(const char *fmt, va_list argp)
 {
-#if CFG_USB_CDC_ENABLE || ! defined (CONFIG_NCP)
+#if CFG_USB_CDC_ENABLE || (CONFIG_OT_NCP || CONFIG_OT_RCP)
     static char *str;
     static char string[384];
     int ch;

@@ -68,10 +68,6 @@ static int ATTR_TCM_SECTION is_uart_io(uint8_t pin);
 
 static void ATTR_TCM_SECTION bl_lp_system_init(void)
 {
-    uint32_t mstatus = __get_MSTATUS();
-    mstatus |= (1 << 13);
-    __set_MSTATUS(mstatus);
-
     uint32_t mxstatus = __get_MXSTATUS();
     mxstatus |= (1 << 22);
     mxstatus |= (1 << 15);

@@ -134,6 +134,12 @@ void board_audac_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 
+    /* PA enable */
+    // bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    // bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    // bflb_gpio_set(gpio, GPIO_PIN_10);
+    // bflb_gpio_set(gpio, GPIO_PIN_11);
+
     /* clock cfg */
     GLB_Config_AUDIO_PLL_To_491P52M();
     GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);

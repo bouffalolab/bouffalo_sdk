@@ -15,11 +15,8 @@ else()
 endif()
 sdk_add_compile_definitions(-DWL_NIC=0)
 
-if ("${OT_SERIAL}" STREQUAL "SYS_CLI")
-    sdk_add_compile_definitions(-DOT_SERIAL_SHELL)
-elseif ("${OT_SERIAL}" STREQUAL "UART") 
-    sdk_add_compile_definitions(-DOT_SERIAL_UART)
-endif()
+sdk_add_compile_definitions(-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-proj-config.h\")
+sdk_add_compile_definitions(-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-platform-config-check.h\")
 
 get_target_property(SDK_INTF_LIB_LINK_OPTIONS sdk_intf_lib INTERFACE_LINK_OPTIONS)
 list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS -nostartfiles)

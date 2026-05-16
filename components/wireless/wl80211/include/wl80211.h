@@ -236,6 +236,7 @@ struct wl80211_global_state {
     unsigned int authenticating : 1;
     unsigned int link_up        : 1;
     unsigned int ap_en          : 1;
+    unsigned int ap_hidden_ssid : 1;
     unsigned int monitor_en     : 1;
 
     /* station settings */
@@ -255,13 +256,15 @@ struct wl80211_global_state {
     uint8_t ap_ssid[33];
     uint8_t ap_password[65];
     uint8_t ap_chan_band;
+    uint8_t ap_max_sta_count;
     uint16_t ap_chan_freq;
     uint16_t ap_beacon_interval;
-    uint8_t ap_hidden_ssid;
     uint8_t *ap_ie;
     uint16_t ap_ie_len;
-    uint8_t assoc_sta_count;
+    /* station max idle time before send deauth (x5 seconds) */
+    uint16_t ap_max_idle_time;
     struct aid_list_entry aid_list[4];
+    uint8_t assoc_sta_count;
 };
 extern struct wl80211_global_state wl80211_glb;
 
@@ -315,6 +318,8 @@ enum {
     WL80211_CTRL_INJECT_FRAME,
 
     WL80211_CTRL_RATE_CONFIG,
+
+    WL80211_CTRL_AP_DEAUTH_STA,
 };
 
 // wl80211 control api
@@ -626,6 +631,56 @@ static inline int wl80211_ap_stop(void)
 static inline int wl80211_ap_status(void)
 {
     return wl80211_glb.ap_en;
+}
+
+/**
+ * Set AP max associated STA count (0 = use default MACSW_REMOTE_STA_MAX)
+ */
+static inline void wl80211_ap_set_max_sta_count(uint8_t count)
+{
+    wl80211_glb.ap_max_sta_count = count;
+}
+
+/**
+ * Get AP max associated STA count
+ */
+static inline uint8_t wl80211_ap_get_max_sta_count(void)
+{
+    return wl80211_glb.ap_max_sta_count;
+}
+
+/**
+ * Deauthenticate a connected STA in AP mode
+ *
+ * Sends a deauthentication frame to the specified STA and removes it from the AP's
+ * station list.
+ *
+ * @param sta_idx STA index of the station to deauthenticate
+ * @param reason 802.11 reason code (e.g., 1=unspecified, 2=prev_auth_not_valid)
+ *
+ * @return 0 on success, negative value on error:
+ *         -1 : AP mode not enabled
+ *         -2 : STA not found in AID list
+ *         -3 : MACSW VIF check failed
+ */
+static inline int wl80211_ap_deauth_sta(uint8_t sta_idx, uint16_t reason)
+{
+    return wl80211_cntrl(WL80211_CTRL_AP_DEAUTH_STA, (unsigned int)sta_idx, (unsigned int)reason);
+}
+
+/**
+ * Set AP station max idle time before deauthentication
+ *
+ * When a connected STA has no activity for longer than this threshold,
+ * the AP will send a deauthentication frame with reason code
+ * MAC_RS_DIASSOC_INACTIVITY. The unit is x5 seconds (e.g., value 12 = 60 seconds).
+ * Set to 0 to disable idle timeout (default).
+ *
+ * @param idle_time max idle time in units of 5 seconds, 0 to disable
+ */
+static inline void wl80211_ap_set_max_idle_time(uint16_t idle_time)
+{
+    wl80211_glb.ap_max_idle_time = idle_time;
 }
 
 /**

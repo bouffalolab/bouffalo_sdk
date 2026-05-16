@@ -330,13 +330,6 @@ SECTIONS
         . = ALIGN(4);
     } > ram AT > rom
 
-    SECTION_DATA_PROLOGUE(ram_tdata, ,)
-    {
-        . = ALIGN(4);
-        *(.tdata)
-        *(.tdata.*)
-    } > ram AT >rom
-
     SECTION_DATA_PROLOGUE(ram_data, ,)
     {
         . = ALIGN(4);
@@ -368,6 +361,13 @@ SECTIONS
         . = ALIGN(4);
         __bflb_log_tags_end__ = .;
     } > ram AT > rom
+
+    SECTION_DATA_PROLOGUE(ram_tdata, ,)
+    {
+        . = ALIGN(4);
+        *(.tdata)
+        *(.tdata.*)
+    } > ram AT >rom
 
     SECTION_BSS_PROLOGUE(ram_tbss, (NOLOAD),)
     {

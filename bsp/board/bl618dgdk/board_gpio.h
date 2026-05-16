@@ -16,6 +16,7 @@ void board_spi0_gpio_init(void);
 void board_pwm_gpio_init(void);
 void board_adc_gpio_init(void);
 void board_dac_gpio_init(void);
+void board_audac_gpio_init(void);
 void board_emac_gpio_init(void);
 void board_emac1_gpio_init(void);
 void board_sdh_gpio_init(void);

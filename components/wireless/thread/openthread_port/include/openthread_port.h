@@ -10,7 +10,7 @@ extern "C" {
 
 #define VERSION_OT_SRC_MAJOR 1
 #define VERSION_OT_SRC_MINOR 7
-#define VERSION_OT_SRC_PATCH 5
+#define VERSION_OT_SRC_PATCH 7
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 
@@ -28,6 +28,10 @@ extern "C" {
 
 #ifndef OTRADIO_RX_FRAME_BUFFER_NUM
 #define OTRADIO_RX_FRAME_BUFFER_NUM         8
+#endif
+
+#ifndef CONFIG_NXSPI_OPENTHREAD_RADIO
+#define CONFIG_NXSPI_OPENTHREAD_RADIO       0
 #endif
 
 typedef enum _ot_system_event {
@@ -392,7 +396,7 @@ void otrAppProcess(ot_system_event_t sevent);
  * @return None
  *
 *******************************************************************************/
-#if NXSPI_OPENTHREAD_RADIO
+#if CONFIG_NXSPI_OPENTHREAD_RADIO
 void ot_nxspi_notify_rxd(void);
 #endif
 

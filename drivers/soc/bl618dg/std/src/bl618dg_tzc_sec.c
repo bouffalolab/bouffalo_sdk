@@ -346,16 +346,22 @@ void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group)
     uint32_t tmpVal;
     uint32_t tmpVal2;
 
-    if (cpu == GLB_CORE_ID_AP) {
-        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
-        tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
+    tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
+    tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
 
+    if (cpu == GLB_CORE_ID_AP) {
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_CPU_TZMID, group);
         tmpVal2 = BL_SET_REG_BITS_VAL(tmpVal2, TZC_SEC_TZC_CPU_TZMID_LOCK, 1);
-
-        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
-        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
+    } else if (cpu == GLB_CORE_ID_NP) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_WMCU_TZMID, group);
+        tmpVal2 = BL_SET_REG_BITS_VAL(tmpVal2, TZC_SEC_TZC_WMCU_TZMID_LOCK, 1);
+    } else if (cpu == GLB_CORE_ID_LP) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_PICO_TZMID, group);
+        tmpVal2 = BL_SET_REG_BITS_VAL(tmpVal2, TZC_SEC_TZC_PICO_TZMID_LOCK, 1);
     }
+
+    BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
+    BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
 }
 
 /****************************************************************************/ /**

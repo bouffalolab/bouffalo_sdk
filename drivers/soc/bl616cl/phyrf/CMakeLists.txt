@@ -9,6 +9,8 @@ endif()
 
 if(CONFIG_MFG_SDIO OR CONFIG_MFG_USB)
 sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616cl_phyrf4wlan_mfg.a)
+elseif(CONFIG_PHY_LPFW)
+sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616cl_phyrf_lpfw.a)
 else()
 sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616cl_phyrf.a)
 endif()

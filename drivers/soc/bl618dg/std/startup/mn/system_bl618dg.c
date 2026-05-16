@@ -207,9 +207,6 @@ static void __cpu_pre_init(void)
     pmp_init();
 #endif
 
-    /* enable mstatus FS */
-    __enable_FPU();
-
     /* get interrupt level from info */
     __ECLIC_SetCfgNlbits(__ECLIC_GetInfoCtlbits());
 

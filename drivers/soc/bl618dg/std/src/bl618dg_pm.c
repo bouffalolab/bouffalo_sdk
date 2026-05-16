@@ -957,6 +957,7 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
     AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(0);
 
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
+    GLB_Set_WL_MCU_System_CLK(HBN_MCU_XCLK_RC32M, 0, 0);
 
     /* power off mbg and sfreg */
     AON_Power_Off_MBG();
@@ -1015,7 +1016,8 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
     AON_Power_On_SFReg();
 
     GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL | GLB_PLL_CPUPLL);
-    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_CPUPLL_DIV1);
+    GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2, 0, 1);
 
     if (p->powerDownFlash) {
         if (p->pdsLevel < PM_PDS_LEVEL_2) {
@@ -1163,9 +1165,17 @@ void ATTR_TCM_SECTION pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level,
 
 void pm_set_wakeup_callback(void (*wakeup_callback)(void))
 {
+#if defined(CPU_MODEL_A0)
     BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
     /* Set HBN flag */
     BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+#else
+    BL_WR_WORD(BL618DG_WRAM_BASE + 319 * 1024 + 8, (uint32_t)wakeup_callback);
+    /* Set HBN flag */
+    BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+    BL_WR_WORD(BL618DG_WRAM_BASE + 319 * 1024, 0x4e42484d);
+    BL_WR_WORD(BL618DG_WRAM_BASE + 319 * 1024 + 4, 0x4e42484d);
+#endif
 }
 
 void pm_set_boot2_app_jump_para(uint32_t para)

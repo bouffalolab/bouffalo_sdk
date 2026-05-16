@@ -36,11 +36,33 @@
 #include "bflb_emac_v2.h"
 #include "bflb_emac_common.h"
 #include "bflb_clock.h"
+#include "bflb_gpio.h"
 #include "bflb_l1c.h"
 
 #define DEFAULT_LOOP_VARIABLE  1000
 #define DEFAULT_DELAY_VARIABLE 10
 #define emac_v2_delay_us       bflb_mtimer_delay_us
+
+#ifndef BFLB_EMAC_MDIO_USE_GPIO
+/* Set to 0 to keep using the original EMAC GMII register MDIO path. */
+#define BFLB_EMAC_MDIO_USE_GPIO 0
+#endif
+
+#ifndef BFLB_EMAC_MDIO_GPIO_MDC_PIN
+#define BFLB_EMAC_MDIO_GPIO_MDC_PIN  GPIO_PIN_18 //GPIO_PIN_14 GPIO_PIN_18
+#endif
+
+#ifndef BFLB_EMAC_MDIO_GPIO_MDIO_PIN
+#define BFLB_EMAC_MDIO_GPIO_MDIO_PIN GPIO_PIN_17 //GPIO_PIN_13 GPIO_PIN_17
+#endif
+
+#ifndef BFLB_EMAC_MDIO_GPIO_DELAY_US
+#define BFLB_EMAC_MDIO_GPIO_DELAY_US  1
+#endif
+
+#ifndef BFLB_EMAC_MDIO_GPIO_READ_RETRY
+#define BFLB_EMAC_MDIO_GPIO_READ_RETRY 3
+#endif
 
 #if 0
 #define EMAC_V2_DBG_ENABLE       1
@@ -3738,6 +3760,7 @@ int bflb_emac_v2_bd_rx_dequeue(struct bflb_device_s *dev, uint32_t flags, uint32
     return 0;
 }
 
+#if !BFLB_EMAC_MDIO_USE_GPIO
 /**
  * @brief bflb emac_v2 phy register read
  *
@@ -3832,7 +3855,177 @@ int bflb_emac_md_write(struct bflb_device_s *dev, uint8_t phy_addr, uint16_t phy
 
     return 0;
 }
+#else
 
+static void bflb_emac_mdio_gpio_delay(void)
+{
+    emac_v2_delay_us(BFLB_EMAC_MDIO_GPIO_DELAY_US);
+}
+
+static void bflb_emac_mdio_gpio_mdc_low(struct bflb_device_s *gpio)
+{
+    bflb_gpio_reset(gpio, BFLB_EMAC_MDIO_GPIO_MDC_PIN);
+}
+
+static void bflb_emac_mdio_gpio_mdc_high(struct bflb_device_s *gpio)
+{
+    bflb_gpio_set(gpio, BFLB_EMAC_MDIO_GPIO_MDC_PIN);
+}
+
+static void bflb_emac_mdio_gpio_mdio_output(struct bflb_device_s *gpio)
+{
+    bflb_gpio_init(gpio, BFLB_EMAC_MDIO_GPIO_MDIO_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+static void bflb_emac_mdio_gpio_mdio_input(struct bflb_device_s *gpio)
+{
+    bflb_gpio_init(gpio, BFLB_EMAC_MDIO_GPIO_MDIO_PIN, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+static void bflb_emac_mdio_gpio_write_bit(struct bflb_device_s *gpio, uint8_t bit)
+{
+    if (bit) {
+        bflb_gpio_set(gpio, BFLB_EMAC_MDIO_GPIO_MDIO_PIN);
+    } else {
+        bflb_gpio_reset(gpio, BFLB_EMAC_MDIO_GPIO_MDIO_PIN);
+    }
+
+    bflb_emac_mdio_gpio_delay();
+    bflb_emac_mdio_gpio_mdc_high(gpio);
+    bflb_emac_mdio_gpio_delay();
+    bflb_emac_mdio_gpio_mdc_low(gpio);
+}
+
+static uint8_t bflb_emac_mdio_gpio_read_bit(struct bflb_device_s *gpio)
+{
+    uint8_t bit;
+
+    bflb_emac_mdio_gpio_delay();
+    bflb_emac_mdio_gpio_mdc_high(gpio);
+    bflb_emac_mdio_gpio_delay();
+    bit = bflb_gpio_read(gpio, BFLB_EMAC_MDIO_GPIO_MDIO_PIN) ? 1 : 0;
+    bflb_emac_mdio_gpio_mdc_low(gpio);
+
+    return bit;
+}
+
+static void bflb_emac_mdio_gpio_write_bits(struct bflb_device_s *gpio, uint32_t value, uint8_t bits)
+{
+    for (int i = bits - 1; i >= 0; i--) {
+        bflb_emac_mdio_gpio_write_bit(gpio, (value >> i) & 0x1);
+    }
+}
+
+static struct bflb_device_s *bflb_emac_mdio_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    if (gpio == NULL) {
+        return NULL;
+    }
+
+    bflb_gpio_init(gpio, BFLB_EMAC_MDIO_GPIO_MDC_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_emac_mdio_gpio_mdio_output(gpio);
+    bflb_emac_mdio_gpio_mdc_low(gpio);
+    bflb_gpio_set(gpio, BFLB_EMAC_MDIO_GPIO_MDIO_PIN);
+
+    return gpio;
+}
+
+static void bflb_emac_mdio_gpio_preamble(struct bflb_device_s *gpio)
+{
+    bflb_emac_mdio_gpio_mdio_output(gpio);
+
+    for (uint8_t i = 0; i < 32; i++) {
+        bflb_emac_mdio_gpio_write_bit(gpio, 1);
+    }
+}
+
+static void bflb_emac_mdio_gpio_release(struct bflb_device_s *gpio)
+{
+    bflb_emac_mdio_gpio_mdio_input(gpio);
+    bflb_emac_mdio_gpio_delay();
+    bflb_emac_mdio_gpio_mdc_low(gpio);
+}
+
+int bflb_emac_md_read(struct bflb_device_s *dev, uint8_t phy_addr, uint16_t phy_reg, uint16_t *data)
+{
+    struct bflb_device_s *gpio;
+    uint16_t value = 0;
+    uint8_t turn_around;
+
+    (void)dev;
+
+    if (data == NULL) {
+        return -1;
+    }
+
+    gpio = bflb_emac_mdio_gpio_init();
+    if (gpio == NULL) {
+        return -1;
+    }
+
+    for (uint8_t retry = 0; retry < BFLB_EMAC_MDIO_GPIO_READ_RETRY; retry++) {
+        value = 0;
+
+        bflb_emac_mdio_gpio_preamble(gpio);
+
+        bflb_emac_mdio_gpio_write_bits(gpio, 0x01, 2);          /* start: 01 */
+        bflb_emac_mdio_gpio_write_bits(gpio, 0x02, 2);          /* read: 10 */
+        bflb_emac_mdio_gpio_write_bits(gpio, phy_addr & 0x1f, 5);
+        bflb_emac_mdio_gpio_write_bits(gpio, phy_reg & 0x1f, 5);
+
+        bflb_emac_mdio_gpio_mdio_input(gpio);
+        turn_around = bflb_emac_mdio_gpio_read_bit(gpio);       /* turn-around: 0 or Z */
+        if (turn_around != 0) {
+            turn_around = bflb_emac_mdio_gpio_read_bit(gpio);   /* wait for PHY driven TA=0 */
+        }
+
+        if (turn_around != 0) {
+            bflb_emac_mdio_gpio_release(gpio);
+            continue;
+        }
+
+        for (uint8_t i = 0; i < 16; i++) {
+            value = (uint16_t)((value << 1) | bflb_emac_mdio_gpio_read_bit(gpio));
+        }
+
+        bflb_emac_mdio_gpio_release(gpio);
+        *data = value;
+
+        return 0;
+    }
+
+    *data = 0xffff;
+
+    return -1;
+}
+
+int bflb_emac_md_write(struct bflb_device_s *dev, uint8_t phy_addr, uint16_t phy_reg, uint16_t phy_reg_val)
+{
+    struct bflb_device_s *gpio;
+
+    (void)dev;
+
+    gpio = bflb_emac_mdio_gpio_init();
+    if (gpio == NULL) {
+        return -1;
+    }
+
+    bflb_emac_mdio_gpio_preamble(gpio);
+
+    bflb_emac_mdio_gpio_write_bits(gpio, 0x01, 2);              /* start: 01 */
+    bflb_emac_mdio_gpio_write_bits(gpio, 0x01, 2);              /* write: 01 */
+    bflb_emac_mdio_gpio_write_bits(gpio, phy_addr & 0x1f, 5);
+    bflb_emac_mdio_gpio_write_bits(gpio, phy_reg & 0x1f, 5);
+    bflb_emac_mdio_gpio_write_bits(gpio, 0x02, 2);              /* turn-around: 10 */
+    bflb_emac_mdio_gpio_write_bits(gpio, phy_reg_val, 16);
+
+    bflb_emac_mdio_gpio_release(gpio);
+
+    return 0;
+}
+#endif
 /**
  * @brief bflb emac_v2 feature control
  *

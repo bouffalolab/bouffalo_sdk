@@ -603,9 +603,11 @@ typedef enum {
     ((int (*)(const void *s1, const void *s2, uint32_t n)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_arch_memcmp])
 
+#if 0
 #define romapi_bflb_check_cache_addr_aligned \
     ((bool (*)(uintptr_t addr)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_check_cache_addr_aligned])
+#endif
 
 #define romapi_bflb_soft_crc16 \
     ((uint16_t (*)(void *in, uint32_t len)) \

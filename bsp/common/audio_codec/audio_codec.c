@@ -9,14 +9,22 @@
 #include "audio_codec_es8389.h"
 #include "audio_codec_es8388.h"
 #include "audio_codec_wm8978.h"
+#ifdef CONFIG_AUDIO_CODEC_JY6316_ENABLE
+#include "audio_codec_jy6316.h"
+#endif
 #include "audio_codec_jy6311.h"
+#include "audio_codec_jy6166.h"
 #ifdef CONFIG_BSP_AUDIO_CODEC_BL_ENABLE
 #include "audio_codec_bl.h"
 #endif
 
 static const audio_codec_driver_t *g_drivers[] = {
     NULL,
+#ifdef CONFIG_AUDIO_CODEC_JY6316_ENABLE
+    &audio_codec_jy6316_driver,
+#endif
     &audio_codec_jy6311_driver,
+    &audio_codec_jy6166_driver,
     &audio_codec_es8311_driver,
     &audio_codec_es8389_driver,
     &audio_codec_es8388_driver,

@@ -5,7 +5,7 @@
 #include "board.h"
 
 struct bflb_adc_channel_s chan[] = {
-    {.pos_chan = ADC_EXTERNAL_CHANNEL_4, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO28 -> GND */
+    {.pos_chan = ADC_EXTERNAL_CHANNEL_9, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO7  -> GND */
     {.pos_chan = ADC_EXTERNAL_CHANNEL_1, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO13 -> GND */
     {.pos_chan = ADC_EXTERNAL_CHANNEL_5, .neg_chan = ADC_EXTERNAL_CHANNEL_NULL,}, /* GPIO31 -> GND */
 };
@@ -56,7 +56,7 @@ int main(void)
     bflb_irq_attach(adc->irq_num, adc_isr, NULL);
     bflb_irq_enable(adc->irq_num);
 
-    pwm = bflb_device_get_by_name("pwm_v2");
+    pwm = bflb_device_get_by_name(BFLB_NAME_PWM_V2_0);
     printf("pwm = 0x%08lX\r\n", pwm);
     struct bflb_pwm_v2_config_s pwm_cfg;
     pwm_cfg.clk_source = BFLB_SYSTEM_PBCLK;

@@ -117,11 +117,6 @@ static void __cpu_pre_init(void)
 
     //pmp_init();
 
-    /* enable mstatus FS */
-    uint32_t mstatus = __get_MSTATUS();
-    mstatus |= (1 << 13);
-    __set_MSTATUS(mstatus);
-
     /* enable mxstatus THEADISAEE */
     uint32_t mxstatus = __get_MXSTATUS();
     mxstatus |= (1 << 22);

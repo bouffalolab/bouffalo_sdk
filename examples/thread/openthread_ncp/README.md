@@ -22,17 +22,17 @@ This is an example for OpenThread NCP and RCP example.
 
     - Build for OpenThread RCP example
         ```shell
-        make CHIP=bl616 BOARD=bl616dk OT_NCP=0
+        make CHIP=bl616 BOARD=bl616dk CONFIG_OT_RCP=y CONFIG_OT_NCP=n CONFIG_OT_FTD=n CONFIG_OT_MTD=n
         ```
-    
+
     - Build for OpenThread NCP example with FTD
         ```shell
-        make CHIP=bl616 BOARD=bl616dk OT_NCP=1 OT_FTD=1
+        make CHIP=bl616 BOARD=bl616dk CONFIG_OT_RCP=n CONFIG_OT_NCP=y CONFIG_OT_FTD=y CONFIG_OT_MTD=n
         ```
-    
+
     - Build for OpenThread NCP example with MTD
         ```shell
-        make CHIP=bl616 BOARD=bl616dk OT_NCP=1 OT_FTD=0
+        make CHIP=bl616 BOARD=bl616dk CONFIG_OT_RCP=n CONFIG_OT_NCP=y CONFIG_OT_FTD=n CONFIG_OT_MTD=y
         ```
 
 - OpenThread feature options

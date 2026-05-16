@@ -36,6 +36,7 @@
 
 #include "bl618dg_romapi_patch.h"
 #include "bl618dg_romdriver_e907.h"
+#include "bflb_ef_ctrl.h"
 
 /****************************************************************************/ /**
  * @brief  swap SPI1 MOSI with MISO
@@ -162,4 +163,119 @@ float bflb_efuse_get_adc_gain_trim(struct bflb_device_s *dev)
         }
     }
     return coe;
+}
+
+/****************************************************************************/ /**
+ * @brief  Efuse set AES key read/write lock
+ *
+ * @param  key_index: AES key index
+ * @param  rd_lock: read lock enable
+ * @param  wr_lock: write lock enable
+ *
+ * @return 0 for success, -1 for unsupported key index
+ *
+*******************************************************************************/
+int bflb_efuse_rw_lock_aes_key(uint8_t key_index, uint8_t rd_lock, uint8_t wr_lock)
+{
+    uint32_t tmpval = 0;
+
+    if(0 == key_index){
+        if(wr_lock){
+            tmpval |= (1 << 17);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 27);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0x7C, &tmpval, 1, 1);
+    }else if(1 == key_index){
+        if(wr_lock){
+            tmpval |= (1 << 18);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 28);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0x7C, &tmpval, 1, 1);
+    }else if(2 == key_index){
+         if(wr_lock){
+            tmpval |= (1 << 19);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 29);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0x7C, &tmpval, 1, 1);
+    }else if(3 == key_index){
+         if(wr_lock){
+            tmpval |= (1 << 20);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 30);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0x7C, &tmpval, 1, 1);
+    }else if(4 == key_index){
+        if(wr_lock){
+            tmpval |= (1 << 15);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 25);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0xFC, &tmpval, 1, 1);
+    }else if(5 == key_index){
+         if(wr_lock){
+            tmpval |= (1 << 16);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 26);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0xFC, &tmpval, 1, 1);
+    }else if(6 == key_index){
+         if(wr_lock){
+            tmpval |= (1 << 17);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 27);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0xFC, &tmpval, 1, 1);
+    }else if(7 == key_index){
+         if(wr_lock){
+            tmpval |= (1 << 18);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 28);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0xFC, &tmpval, 1, 1);
+    }else if(10 == key_index){
+         if(wr_lock){
+            tmpval |= (1 << 21);
+        }
+        if(rd_lock){
+            tmpval |= (1 << 31);
+        }
+        bflb_ef_ctrl_write_direct(NULL, 0xFC, &tmpval, 1, 1);
+    }else{
+        return -1;
+    }
+    return 0;
+}
+
+void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group)
+{
+    uint32_t tmpVal;
+    uint32_t tmpVal2;
+
+    tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
+    tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
+
+    if (cpu == GLB_CORE_ID_AP) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_CPU_TZMID, group);
+        tmpVal2 = BL_SET_REG_BITS_VAL(tmpVal2, TZC_SEC_TZC_CPU_TZMID_LOCK, 1);
+    } else if (cpu == GLB_CORE_ID_NP) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_WMCU_TZMID, group);
+        tmpVal2 = BL_SET_REG_BITS_VAL(tmpVal2, TZC_SEC_TZC_WMCU_TZMID_LOCK, 1);
+    } else if (cpu == GLB_CORE_ID_LP) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_PICO_TZMID, group);
+        tmpVal2 = BL_SET_REG_BITS_VAL(tmpVal2, TZC_SEC_TZC_PICO_TZMID_LOCK, 1);
+    }
+
+    BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
+    BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
 }

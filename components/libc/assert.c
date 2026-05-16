@@ -3,7 +3,11 @@
 
 /* for exit() and abort() */
 void __attribute__ ((noreturn))
+#if defined(__PICOLIBC__)
+__assert (const char *file, const char *cond, int line)
+#else
 __assert (const char *file, int line, const char *cond)
+#endif
 {
     printf("Assertion Failed: %s, in %s:%d\r\n", cond, file, line);
     asm("ebreak");

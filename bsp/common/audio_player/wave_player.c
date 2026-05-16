@@ -64,6 +64,10 @@ typedef struct {
     size_t src_len;
     Ring_Buffer_Type *rb;
     SemaphoreHandle_t sem_wave_rb_space;
+#if WAVE_PLAYER_ENABLE_REC
+    bool restore_rec_enable;
+    bool rec_enable_after_done;
+#endif
 } wave_src_task_cfg_t;
 
 typedef struct {
@@ -72,6 +76,7 @@ typedef struct {
     uint32_t src_sample_rate_hz;
     uint32_t output_sample_rate_hz;
     uint32_t tx_block_bytes;
+    uint32_t logical_tx_block_bytes;
     uint8_t src_channels;
     uint8_t out_channels;
     SemaphoreHandle_t sem_tx_dma_done;
@@ -120,6 +125,35 @@ typedef struct {
 #endif
 #endif
 
+#define WAVE_PLAYER_MAX_U32(a, b) (((a) > (b)) ? (a) : (b))
+#define WAVE_PLAYER_DMA_LLI_SEGMENT_MAX_BYTES 4064U
+
+#if WAVE_PLAYER_I2S_DSP_MODE
+#if (WAVE_PLAYER_I2S_TX_SLOTS > 0U)
+#define WAVE_PLAYER_TX_SLOT_MAX WAVE_PLAYER_I2S_TX_SLOTS
+#elif WAVE_PLAYER_ENABLE_REC
+#define WAVE_PLAYER_TX_SLOT_MAX WAVE_PLAYER_MAX_U32(WAVE_PLAYER_OUT_CHANNELS, WAVE_PLAYER_REC_CHANNELS)
+#else
+#define WAVE_PLAYER_TX_SLOT_MAX WAVE_PLAYER_OUT_CHANNELS
+#endif
+#if WAVE_PLAYER_I2S_DSP_LR_MERGE
+#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(int16_t))
+#else
+#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(uint32_t))
+#endif
+#else
+#define WAVE_PLAYER_TX_SLOT_MAX WAVE_PLAYER_OUT_CHANNELS
+#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(int16_t))
+#endif
+
+#define WAVE_PLAYER_TX_PCM_BYTES_MAX \
+    ((uint32_t)WAVE_PLAYER_OUT_SAMPLES * (uint32_t)WAVE_PLAYER_TX_SLOT_MAX * WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX)
+#define WAVE_PLAYER_TX_PCM_SAMPLES_MAX \
+    ((WAVE_PLAYER_TX_PCM_BYTES_MAX + (uint32_t)sizeof(int16_t) - 1U) / (uint32_t)sizeof(int16_t))
+#define WAVE_PLAYER_TX_LLI_COUNT \
+    (2U * ((WAVE_PLAYER_TX_PCM_BYTES_MAX + WAVE_PLAYER_DMA_LLI_SEGMENT_MAX_BYTES - 1U) / \
+           WAVE_PLAYER_DMA_LLI_SEGMENT_MAX_BYTES))
+
 typedef struct {
     struct bflb_device_s *i2s_dev;
     struct bflb_device_s *i2c_dev;
@@ -127,7 +161,7 @@ typedef struct {
     struct bflb_device_s *auadc_dev;
     struct bflb_device_s *dma_ch_tx;
     struct bflb_device_s *dma_ch_rx;
-    struct bflb_dma_channel_lli_pool_s tx_llipool[2 * (AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS + 4063) / 4064];
+    struct bflb_dma_channel_lli_pool_s tx_llipool[WAVE_PLAYER_TX_LLI_COUNT];
     audio_codec_dev_t play_codec;
     audio_codec_dev_t cap_codec;
     wave_player_backend_t playback_backend;
@@ -139,18 +173,21 @@ typedef struct {
     uint8_t out_channels;
     uint8_t cap_channels;
     uint32_t tx_block_bytes;
+    uint32_t logical_tx_block_bytes;
     uint32_t rx_block_bytes;
+    uint8_t tx_slot_count;
+    uint8_t tx_slot_word_bytes;
     uint8_t volume;
     bool muted;
     bool io_started;
     SemaphoreHandle_t sem_tx_dma_done;
     SemaphoreHandle_t sem_wave_rb_space;
     Ring_Buffer_Type wave_rb;
-    uint8_t wave_src_buf[AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS * 8 * sizeof(int16_t)];
+    uint8_t wave_src_buf[WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * 8 * sizeof(int16_t)];
     volatile bool stop;
     volatile bool paused;
-    int16_t pcm_ping[AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
-    int16_t pcm_pong[AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
+    int16_t pcm_ping[WAVE_PLAYER_TX_PCM_SAMPLES_MAX] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
+    int16_t pcm_pong[WAVE_PLAYER_TX_PCM_SAMPLES_MAX] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
     wave_player_cfg_t wave_cfg;
     TaskHandle_t wave_task;
     TaskHandle_t wave_src_task;
@@ -223,7 +260,10 @@ static wave_player_ctx_t g_audio = {
     .out_channels = 0,
     .cap_channels = 0,
     .tx_block_bytes = 0,
+    .logical_tx_block_bytes = 0,
     .rx_block_bytes = 0,
+    .tx_slot_count = 0,
+    .tx_slot_word_bytes = 0,
     .playback_backend = WAVE_PLAYER_BACKEND_AUTO,
     .capture_backend = WAVE_PLAYER_BACKEND_AUTO,
     .volume = 50,
@@ -266,9 +306,9 @@ static wave_player_diag_t g_wave_diag = { 0 };
 
 #define WAVE_PLAYER_TX_DONE_NOTIFY_BIT (1UL << 0)
 
-#if WAVE_PLAYER_TEST_WAVE || WAVE_PLAYER_ENABLE_REC
-static void wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_t sample_rate_hz,
-                                      uint8_t src_channels);
+#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
+static int wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_t sample_rate_hz,
+                                     uint8_t src_channels, bool restore_rec_enable, bool rec_enable_after_done);
 #endif
 
 #if WAVE_PLAYER_DIAG
@@ -477,7 +517,23 @@ static void sem_drain(SemaphoreHandle_t sem)
 
 static inline uint8_t audio_channel_mode_from_count(uint8_t channels)
 {
+#if WAVE_PLAYER_I2S_DSP_MODE
+    switch (channels) {
+        case 1U:
+            return I2S_CHANNEL_MODE_NUM_1;
+        case 3U:
+            return I2S_CHANNEL_MODE_NUM_3;
+        case 4U:
+            return I2S_CHANNEL_MODE_NUM_4;
+        case 6U:
+            return I2S_CHANNEL_MODE_NUM_6;
+        case 2U:
+        default:
+            return I2S_CHANNEL_MODE_NUM_2;
+    }
+#else
     return (channels <= 1U) ? I2S_CHANNEL_MODE_NUM_1 : I2S_CHANNEL_MODE_NUM_2;
+#endif
 }
 
 static inline uint8_t audio_channel_count_clamp(uint8_t channels)
@@ -485,6 +541,11 @@ static inline uint8_t audio_channel_count_clamp(uint8_t channels)
     if (channels == 0U) {
         return 1U;
     }
+#if WAVE_PLAYER_I2S_DSP_MODE
+    if (channels == 3U || channels == 4U || channels == 6U) {
+        return channels;
+    }
+#endif
     if (channels > 2U) {
         return 2U;
     }
@@ -514,7 +575,7 @@ static uint8_t wave_player_default_playback_channels(void)
         return 1U;
     }
 
-    return audio_channel_count_clamp((uint8_t)AUDIO_OUT_CHANNELS);
+    return audio_channel_count_clamp((uint8_t)WAVE_PLAYER_OUT_CHANNELS);
 }
 
 static uint8_t wave_player_default_capture_channels(void)
@@ -530,18 +591,58 @@ static uint8_t wave_player_default_capture_channels(void)
 #endif
 }
 
+static uint8_t wave_player_i2s_tx_slot_count(uint8_t i2s_channels, uint8_t out_channels)
+{
+#if WAVE_PLAYER_I2S_DSP_MODE
+#if (WAVE_PLAYER_I2S_TX_SLOTS > 0U)
+    uint8_t slots = audio_channel_count_clamp((uint8_t)WAVE_PLAYER_I2S_TX_SLOTS);
+    (void)i2s_channels;
+#else
+    uint8_t slots = audio_channel_count_clamp(i2s_channels);
+#endif
+    if (slots < out_channels) {
+        slots = out_channels;
+    }
+    return slots;
+#else
+    (void)i2s_channels;
+    return out_channels;
+#endif
+}
+
+static uint8_t wave_player_i2s_tx_slot_word_bytes(void)
+{
+#if WAVE_PLAYER_I2S_DSP_MODE
+#if WAVE_PLAYER_I2S_DSP_LR_MERGE
+    return (uint8_t)sizeof(int16_t);
+#else
+    return (uint8_t)sizeof(uint32_t);
+#endif
+#else
+    return (uint8_t)sizeof(int16_t);
+#endif
+}
+
 static void audio_fill_i2s_cfg(struct bflb_i2s_config_s *cfg, uint32_t samplerate_hz, uint8_t channels)
 {
     if (cfg == NULL) {
         return;
     }
-    if (channels == 0) {
-        channels = 1;
-    }
-    if (channels > 2) {
-        channels = 2;
-    }
+    channels = audio_channel_count_clamp(channels);
 
+#if WAVE_PLAYER_I2S_DSP_MODE
+    *cfg = (struct bflb_i2s_config_s){
+        .bclk_freq_hz = samplerate_hz * 16U * (uint32_t)channels,
+        .role = I2S_ROLE_MASTER,
+        .format_mode = I2S_MODE_DSP_SHORT_FRAME_SYNC,
+        .channel_mode = audio_channel_mode_from_count(channels),
+        .frame_width = I2S_SLOT_WIDTH_16,
+        .data_width = I2S_SLOT_WIDTH_16,
+        .fs_offset_cycle = 1,
+        .tx_fifo_threshold = 0,
+        .rx_fifo_threshold = 0,
+    };
+#else
     *cfg = (struct bflb_i2s_config_s){
         .bclk_freq_hz = samplerate_hz * 32U * (uint32_t)channels,
         .role = I2S_ROLE_MASTER,
@@ -553,6 +654,7 @@ static void audio_fill_i2s_cfg(struct bflb_i2s_config_s *cfg, uint32_t samplerat
         .tx_fifo_threshold = 0,
         .rx_fifo_threshold = 0,
     };
+#endif
 }
 
 static void audio_fill_dma_tx_cfg(struct bflb_dma_channel_config_s *cfg)
@@ -1017,6 +1119,12 @@ void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_
     const uint32_t sample_bytes = (uint32_t)sizeof(int16_t);
     const uint32_t requested_tx_block_bytes = tx_block_bytes;
     uint32_t tx_frame_bytes = 0;
+    uint32_t tx_dma_frame_bytes = 0;
+    uint32_t logical_tx_block_bytes = tx_block_bytes;
+    uint32_t tx_samples_per_ch = 0;
+    uint8_t i2s_channels = 0;
+    uint8_t tx_slot_count = 0;
+    uint8_t tx_slot_word_bytes = (uint8_t)sample_bytes;
     bool rec_path_enable = false;
     bool builtin_tx_block_adjusted = false;
 #if WAVE_PLAYER_ENABLE_REC
@@ -1047,12 +1155,13 @@ void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_
     cap_channels = audio_channel_count_clamp(cap_channels);
 
     if (g_audio.playback_backend == WAVE_PLAYER_BACKEND_BL_CODEC) {
-        uint32_t preferred_tx_block_bytes = (uint32_t)AUDIO_OUT_SAMPLES * (uint32_t)out_channels * sample_bytes;
+        uint32_t preferred_tx_block_bytes = (uint32_t)WAVE_PLAYER_OUT_SAMPLES * (uint32_t)out_channels * sample_bytes;
         if (preferred_tx_block_bytes != 0U && tx_block_bytes > preferred_tx_block_bytes) {
             tx_block_bytes = preferred_tx_block_bytes;
             builtin_tx_block_adjusted = true;
         }
     }
+    logical_tx_block_bytes = tx_block_bytes;
 
 #if (WAVE_PLAYER_FIX_SAMPLE_RATE > 0U)
     out_hz = (uint32_t)WAVE_PLAYER_FIX_SAMPLE_RATE;
@@ -1089,16 +1198,55 @@ void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_
     }
 #endif
 
+    i2s_channels = out_channels;
+#if WAVE_PLAYER_ENABLE_REC
+    {
+        bool i2s_tx_enable_pre = (g_audio.playback_backend == WAVE_PLAYER_BACKEND_I2S_CODEC);
+        bool i2s_rx_enable_pre =
+            rec_path_enable && g_audio.capture_backend == WAVE_PLAYER_BACKEND_I2S_CODEC && g_audio.dma_ch_rx != NULL &&
+            rx_block_bytes > 0U;
+        if (!i2s_tx_enable_pre && i2s_rx_enable_pre) {
+            i2s_channels = cap_channels;
+        } else if (i2s_tx_enable_pre && i2s_rx_enable_pre && cap_channels > i2s_channels) {
+            i2s_channels = cap_channels;
+        }
+    }
+#endif
+    tx_slot_count = out_channels;
+    tx_slot_word_bytes = (uint8_t)sample_bytes;
+    if (g_audio.playback_backend == WAVE_PLAYER_BACKEND_I2S_CODEC) {
+        tx_slot_count = wave_player_i2s_tx_slot_count(i2s_channels, out_channels);
+        tx_slot_word_bytes = wave_player_i2s_tx_slot_word_bytes();
+        if (tx_slot_count > i2s_channels) {
+            i2s_channels = tx_slot_count;
+        }
+    }
+#if WAVE_PLAYER_I2S_DSP_MODE && WAVE_PLAYER_I2S_DSP_LR_MERGE
+    if ((i2s_channels & 0x01U) != 0U) {
+        printf("wave_player: dsp lr merge requires an even slot count, got %u\r\n", i2s_channels);
+        return;
+    }
+#endif
+
     tx_frame_bytes = (uint32_t)out_channels * sample_bytes;
-    if (tx_block_bytes == 0U || tx_block_bytes > sizeof(g_audio.pcm_ping) || (tx_block_bytes % tx_frame_bytes) != 0U) {
-        printf("wave_player: bad tx_block_bytes=%u, frame=%u, max=%u\r\n", tx_block_bytes, tx_frame_bytes,
+    if (logical_tx_block_bytes == 0U || (logical_tx_block_bytes % tx_frame_bytes) != 0U) {
+        printf("wave_player: bad logical tx_block_bytes=%u, frame=%u\r\n", logical_tx_block_bytes, tx_frame_bytes);
+        return;
+    }
+    tx_samples_per_ch = logical_tx_block_bytes / tx_frame_bytes;
+    tx_dma_frame_bytes = (uint32_t)tx_slot_count * (uint32_t)tx_slot_word_bytes;
+    tx_block_bytes = tx_samples_per_ch * tx_dma_frame_bytes;
+    if (tx_dma_frame_bytes == 0U || tx_block_bytes == 0U || tx_block_bytes > sizeof(g_audio.pcm_ping)) {
+        printf("wave_player: bad tx_dma_block=%u, dma_frame=%u, max=%u\r\n", tx_block_bytes, tx_dma_frame_bytes,
                (unsigned)sizeof(g_audio.pcm_ping));
         return;
     }
 
     if (g_audio.src_hz == source_hz && g_audio.out_hz == out_hz && g_audio.src_channels == src_channels &&
         g_audio.out_channels == out_channels && g_audio.tx_block_bytes == tx_block_bytes &&
-        g_audio.rx_block_bytes == rx_block_bytes && g_audio.cap_hz == cap_hz && g_audio.cap_channels == cap_channels &&
+        g_audio.logical_tx_block_bytes == logical_tx_block_bytes && g_audio.rx_block_bytes == rx_block_bytes &&
+        g_audio.cap_hz == cap_hz && g_audio.cap_channels == cap_channels &&
+        g_audio.tx_slot_count == tx_slot_count && g_audio.tx_slot_word_bytes == tx_slot_word_bytes &&
 #if WAVE_PLAYER_ENABLE_REC
         g_audio.rec_path_enabled == rec_path_enable &&
 #endif
@@ -1132,6 +1280,10 @@ void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_
         printf("[AUDIO][INFO] builtin playback downmixes %u ch source to %u ch output; spatial effect may differ from i2s codec\r\n",
                src_channels, out_channels);
     }
+    if (tx_block_bytes != logical_tx_block_bytes) {
+        printf("[AUDIO][INFO] i2s dsp tx expands logical_tx=%u to dma_tx=%u, slots=%u, slot_word=%u\r\n",
+               logical_tx_block_bytes, tx_block_bytes, tx_slot_count, tx_slot_word_bytes);
+    }
 
     printf("audio_io_start: play=%s cap=%s src_hz=%u play_hz=%u cap_hz=%u tx_block=%u rx_block=%u src_ch=%u out_ch=%u cap_ch=%u rec=%u\r\n",
            wave_player_backend_name(g_audio.playback_backend), wave_player_backend_name(g_audio.capture_backend), source_hz,
@@ -1155,22 +1307,14 @@ void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_
     }
 
     if (i2s_tx_enable || i2s_rx_enable) {
-        uint8_t i2s_channels = out_channels;
-#if WAVE_PLAYER_ENABLE_REC
-        if (!i2s_tx_enable) {
-            i2s_channels = cap_channels;
-        } else if (i2s_rx_enable && cap_channels > i2s_channels) {
-            i2s_channels = cap_channels;
-        }
-#endif
-
         board_audio_pll_config_for_rate(i2s_tx_enable ? out_hz : cap_hz);
 
         struct bflb_i2s_config_s i2s_cfg;
         audio_fill_i2s_cfg(&i2s_cfg, i2s_tx_enable ? out_hz : cap_hz, i2s_channels);
 
         bflb_i2s_init(i2s0, &i2s_cfg);
-        bflb_i2s_feature_control(i2s0, I2S_CMD_CHANNEL_LR_MERGE, true);
+        bflb_i2s_feature_control(i2s0, I2S_CMD_CHANNEL_LR_MERGE,
+                                  WAVE_PLAYER_I2S_DSP_MODE ? WAVE_PLAYER_I2S_DSP_LR_MERGE : true);
         bflb_i2s_link_txdma(i2s0, i2s_tx_enable);
         bflb_i2s_link_rxdma(i2s0, i2s_rx_enable);
     }
@@ -1262,7 +1406,10 @@ void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_
     g_audio.out_channels = out_channels;
     g_audio.cap_channels = cap_channels;
     g_audio.tx_block_bytes = tx_block_bytes;
+    g_audio.logical_tx_block_bytes = logical_tx_block_bytes;
     g_audio.rx_block_bytes = rx_block_bytes;
+    g_audio.tx_slot_count = tx_slot_count;
+    g_audio.tx_slot_word_bytes = tx_slot_word_bytes;
 
 #if WAVE_PLAYER_ENABLE_REC
     g_audio.rec_path_enabled = rec_path_enable && (rx_block_bytes > 0U);
@@ -1393,6 +1540,51 @@ static void pcm_fill_pcm_block(int16_t *dst, const int16_t *src, uint32_t src_by
         dst_channels = 2U;
     }
 
+#if WAVE_PLAYER_I2S_DSP_MODE
+    if (g_audio.playback_backend == WAVE_PLAYER_BACKEND_I2S_CODEC &&
+        g_audio.tx_slot_count >= dst_channels &&
+        (g_audio.tx_slot_word_bytes == (uint8_t)sizeof(uint32_t) ||
+         g_audio.tx_slot_word_bytes == (uint8_t)sizeof(int16_t))) {
+        uint8_t slot_count = g_audio.tx_slot_count;
+        uint32_t frame_words = (uint32_t)slot_count;
+        uint32_t n = src_bytes / (src_channels * (uint32_t)sizeof(int16_t));
+        uint32_t max_n = dst_block_bytes / (frame_words * (uint32_t)g_audio.tx_slot_word_bytes);
+        uint32_t *dst32 = (uint32_t *)(uintptr_t)dst;
+
+        if (n > max_n) {
+            n = max_n;
+        }
+        memset(dst, 0, dst_block_bytes);
+        if (src != NULL && n > 0U) {
+            for (uint32_t i = 0; i < n; i++) {
+                int16_t l;
+                int16_t r;
+
+                if (src_channels == 2U) {
+                    l = src[i * 2U + 0U];
+                    r = src[i * 2U + 1U];
+                } else {
+                    l = src[i];
+                    r = l;
+                }
+
+                if (g_audio.tx_slot_word_bytes == (uint8_t)sizeof(uint32_t)) {
+                    for (uint8_t slot = 0U; slot < slot_count; slot++) {
+                        int16_t sample = ((slot & 0x01U) != 0U && dst_channels >= 2U) ? r : l;
+                        dst32[i * frame_words + slot] = (uint32_t)(uint16_t)sample;
+                    }
+                } else {
+                    for (uint8_t slot = 0U; slot < slot_count; slot++) {
+                        dst[i * frame_words + slot] = ((slot & 0x01U) != 0U && dst_channels >= 2U) ? r : l;
+                    }
+                }
+            }
+        }
+        bflb_l1c_dcache_clean_range((void *)dst, dst_block_bytes);
+        return;
+    }
+#endif
+
     uint32_t n = src_bytes / (src_channels * sizeof(int16_t));
     const uint32_t max_n = dst_block_bytes / (dst_channels * sizeof(int16_t));
     if (n > max_n) {
@@ -1488,17 +1680,24 @@ static void wave_player_task(void *arg)
     uint32_t out_samples_per_ch = 0;
     uint32_t src_block_bytes = 0;
     uint32_t src_alloc_bytes = 0U;
+    uint32_t logical_tx_block_bytes = 0U;
 
     tx_block_bytes = cfg->tx_block_bytes;
+    logical_tx_block_bytes = cfg->logical_tx_block_bytes;
+    if (logical_tx_block_bytes == 0U) {
+        logical_tx_block_bytes = tx_block_bytes;
+    }
 
-    if (tx_block_bytes == 0U || tx_block_bytes > sizeof(g_audio.pcm_ping) || (tx_block_bytes % out_frame_bytes) != 0U) {
-        printf("wave_player: bad tx_block_bytes=%u, frame=%u, max=%u\r\n", tx_block_bytes, out_frame_bytes,
+    if (tx_block_bytes == 0U || tx_block_bytes > sizeof(g_audio.pcm_ping) || logical_tx_block_bytes == 0U ||
+        (logical_tx_block_bytes % out_frame_bytes) != 0U) {
+        printf("wave_player: bad tx_block=%u logical=%u, frame=%u, max=%u\r\n", tx_block_bytes,
+               logical_tx_block_bytes, out_frame_bytes,
                (unsigned)sizeof(g_audio.pcm_ping));
         stop_audio = true;
         goto cleanup;
     }
 
-    out_samples_per_ch = tx_block_bytes / out_frame_bytes;
+    out_samples_per_ch = logical_tx_block_bytes / out_frame_bytes;
     if (out_samples_per_ch == 0U) {
         printf("wave_player: out_samples_per_ch is zero\r\n");
         stop_audio = true;
@@ -1995,6 +2194,13 @@ static void audio_cap_proc(void *arg)
             for (uint32_t i = 0; i < chunk; i++) {
                 uint32_t src_idx = (processed + i) * ch;
                 if (rec_active) {
+#if WAVE_PLAYER_I2S_DSP_MODE
+                    uint32_t mono_idx = (uint32_t)WAVE_PLAYER_REC_MONO_SOURCE;
+                    if (mono_idx >= ch) {
+                        mono_idx = 0U;
+                    }
+                    int16_t mono = buf_stereo[src_idx + mono_idx];
+#else
                     int16_t mono = buf_stereo[src_idx];
                     if (ch > 1U) {
 #if (WAVE_PLAYER_REC_MONO_SOURCE == 0U)
@@ -2007,6 +2213,7 @@ static void audio_cap_proc(void *arg)
                         mono = (int16_t)((l + r) / 2);
 #endif
                     }
+#endif
                     mono_frame[i] = mono;
 
 #if WAVE_PLAYER_ENABLE_REC_RB
@@ -2020,6 +2227,13 @@ static void audio_cap_proc(void *arg)
                 }
 #if WAVE_PLAYER_ENABLE_REC_LOOPBACK
                 if (loopback_active) {
+#if WAVE_PLAYER_I2S_DSP_MODE
+                    uint32_t loopback_src = (uint32_t)WAVE_PLAYER_REC_LOOPBACK_SOURCE;
+                    if (loopback_src >= ch) {
+                        loopback_src = 0U;
+                    }
+                    uint32_t loopback_idx = src_idx + loopback_src;
+#else
                     uint32_t loopback_idx = src_idx;
                     if (ch > 1U) {
 #if (WAVE_PLAYER_REC_LOOPBACK_SOURCE == 0U)
@@ -2028,6 +2242,7 @@ static void audio_cap_proc(void *arg)
                         loopback_idx = src_idx + 1U;
 #endif
                     }
+#endif
                     loopback_frame[i] = buf_stereo[loopback_idx];
                 }
 #endif
@@ -2186,6 +2401,28 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
             return -1;
         }
 
+        if (ext_codec.type == AUDIO_CODEC_TYPE_JY6316) {
+#if WAVE_PLAYER_I2S_DSP_MODE
+            ext_codec_cfg.i2s_fmt = AUDIO_CODEC_I2S_FMT_DSP;
+            ext_codec_cfg.bits = AUDIO_CODEC_BITS_16;
+            ext_codec_cfg.channels = need_ext_cap ? wave_player_default_capture_channels() :
+                                                    wave_player_default_playback_channels();
+#else
+            printf("JY6316 requires CONFIG_I2S_DSP_MODE=1\r\n");
+            return -1;
+#endif
+        } else if (ext_codec.type == AUDIO_CODEC_TYPE_JY6166) {
+#if WAVE_PLAYER_I2S_DSP_MODE
+            ext_codec_cfg.i2s_fmt = AUDIO_CODEC_I2S_FMT_DSP;
+            ext_codec_cfg.bits = AUDIO_CODEC_BITS_16;
+#else
+            ext_codec_cfg.i2s_fmt = AUDIO_CODEC_I2S_FMT_LEFT_J;
+            ext_codec_cfg.bits = AUDIO_CODEC_BITS_32;
+#endif
+            ext_codec_cfg.channels = need_ext_cap ? wave_player_default_capture_channels() :
+                                                    wave_player_default_playback_channels();
+        }
+
         ext_codec_cfg.enable_dac = need_ext_play;
         ext_codec_cfg.enable_adc = need_ext_cap;
         if (0 != audio_codec_init(&ext_codec, &ext_codec_cfg)) {
@@ -2260,6 +2497,8 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
     g_audio.cap_hz = cap_codec_cfg.sample_rate_hz;
     g_audio.out_channels = wave_player_default_playback_channels();
     g_audio.cap_channels = wave_player_default_capture_channels();
+    g_audio.tx_slot_count = g_audio.out_channels;
+    g_audio.tx_slot_word_bytes = (uint8_t)sizeof(int16_t);
     g_audio.sem_tx_dma_done = xSemaphoreCreateBinary();
     g_audio.sem_wave_rb_space = xSemaphoreCreateBinary();
 
@@ -2362,6 +2601,7 @@ int wave_player_start(void)
     g_audio.wave_cfg.src_sample_rate_hz = g_audio.src_hz;
     g_audio.wave_cfg.output_sample_rate_hz = (uint32_t)g_audio.out_hz;
     g_audio.wave_cfg.tx_block_bytes = g_audio.tx_block_bytes;
+    g_audio.wave_cfg.logical_tx_block_bytes = g_audio.logical_tx_block_bytes;
     g_audio.wave_cfg.src_channels = g_audio.src_channels;
     g_audio.wave_cfg.out_channels = g_audio.out_channels;
     g_audio.wave_cfg.sem_tx_dma_done = g_audio.sem_tx_dma_done;
@@ -2494,8 +2734,8 @@ int wave_record_enable(bool enable)
     bool changed = (g_audio.rec_enable != enable);
     g_audio.rec_enable = enable;
 
-    if (changed && g_audio.io_started && g_audio.tx_block_bytes > 0U && g_audio.src_hz > 0U) {
-        wave_player_config(g_audio.src_hz, g_audio.tx_block_bytes, g_audio.rx_block_bytes, g_audio.src_channels);
+    if (changed && g_audio.io_started && g_audio.logical_tx_block_bytes > 0U && g_audio.src_hz > 0U) {
+        wave_player_config(g_audio.src_hz, g_audio.logical_tx_block_bytes, g_audio.rx_block_bytes, g_audio.src_channels);
     }
 
     return 0;
@@ -2512,8 +2752,8 @@ int wave_loopback_enable(bool enable)
     bool changed = (g_audio.rec_loopback_enable != enable);
     g_audio.rec_loopback_enable = enable;
 
-    if (changed && g_audio.io_started && g_audio.tx_block_bytes > 0U && g_audio.src_hz > 0U) {
-        wave_player_config(g_audio.src_hz, g_audio.tx_block_bytes, g_audio.rx_block_bytes, g_audio.src_channels);
+    if (changed && g_audio.io_started && g_audio.logical_tx_block_bytes > 0U && g_audio.src_hz > 0U) {
+        wave_player_config(g_audio.src_hz, g_audio.logical_tx_block_bytes, g_audio.rx_block_bytes, g_audio.src_channels);
     }
 
     return 0;
@@ -2596,7 +2836,7 @@ int wave_player_rec_start(uint32_t duration_ms, uint32_t sample_rate_hz, uint8_t
 #if WAVE_PLAYER_ENABLE_REC_RB
     memset(g_audio.rec_mono_buf, 0, sizeof(g_audio.rec_mono_buf));
 #endif
-    uint32_t tx_block_bytes = AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS * sizeof(int16_t);
+    uint32_t tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
     wave_player_config(sample_rate_hz, tx_block_bytes, tx_block_bytes, channels);
     wave_player_start();
 
@@ -2670,11 +2910,11 @@ static int cmd_rec_play(int argc, char **argv)
     }
     g_audio.rec_write = out_samples;
     g_audio.rec_filled = 0;
+    bool prev_rec_enable = wave_record_is_enabled();
     wave_player_stop();
-    wave_record_enable(0);
-    wave_player_play_one_wave((const uint8_t *)g_audio.rec_mono_buf, out_samples * (uint32_t)sizeof(int16_t),
-                              sample_rate, (uint8_t)channels);
-    return 0;
+    wave_record_enable(false);
+    return wave_player_play_one_wave((const uint8_t *)g_audio.rec_mono_buf, out_samples * (uint32_t)sizeof(int16_t),
+                                     sample_rate, (uint8_t)channels, true, prev_rec_enable);
 #endif
 }
 
@@ -2753,10 +2993,11 @@ static int cmd_audio_info(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
-    printf("audio: playing=%u play=%s cap=%s src_hz=%u play_hz=%u cap_hz=%u out_ch=%u cap_ch=%u volume=%u mute=%u\r\n",
+    printf("audio: playing=%u play=%s cap=%s src_hz=%u play_hz=%u cap_hz=%u out_ch=%u cap_ch=%u tx=%u/%u slot=%ux%u volume=%u mute=%u\r\n",
            (g_audio.wave_task != NULL) ? 1U : 0U, wave_player_backend_name(g_audio.playback_backend),
            wave_player_backend_name(g_audio.capture_backend), g_audio.src_hz, g_audio.out_hz, g_audio.cap_hz,
-           g_audio.out_channels, g_audio.cap_channels, g_audio.volume, g_audio.muted ? 1U : 0U);
+           g_audio.out_channels, g_audio.cap_channels, g_audio.logical_tx_block_bytes, g_audio.tx_block_bytes,
+           g_audio.tx_slot_count, g_audio.tx_slot_word_bytes, g_audio.volume, g_audio.muted ? 1U : 0U);
     return 0;
 }
 
@@ -2806,14 +3047,9 @@ static int cmd_audio_diag(int argc, char **argv)
 #endif
 }
 
+#if WAVE_PLAYER_CODEC_REG_CLI
 static int cmd_codec_reg(int argc, char **argv)
 {
-#if !WAVE_PLAYER_CODEC_REG_CLI
-    (void)argc;
-    (void)argv;
-    printf("codec_reg: disabled (CONFIG_WAVE_PLAYER_CODEC_REG_CLI=0)\r\n");
-    return 0;
-#else
     bool capture = false;
     bool is_write = false;
     audio_codec_dev_t *codec;
@@ -2901,8 +3137,8 @@ static int cmd_codec_reg(int argc, char **argv)
     }
 
     return 0;
-#endif
 }
+#endif
 
 #if WAVE_PLAYER_ENABLE_REC
 static int cmd_rec_vol(int argc, char **argv)
@@ -2962,9 +3198,10 @@ static int cmd_rec_en(int argc, char **argv)
     }
     return ret;
 }
+
 #endif
 
-#if WAVE_PLAYER_TEST_WAVE || WAVE_PLAYER_ENABLE_REC
+#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
 static void wave_src_sink(void *arg)
 {
     wave_src_task_cfg_t *cfg = (wave_src_task_cfg_t *)arg;
@@ -3012,37 +3249,77 @@ static void wave_src_sink(void *arg)
         vTaskDelay(pdMS_TO_TICKS(10));
     }
     printf("wave_src_sink: done feeding\r\n");
+    bool restore_rec_enable = false;
+    bool rec_enable_after_done = false;
+#if WAVE_PLAYER_ENABLE_REC
+    restore_rec_enable = cfg->restore_rec_enable;
+    rec_enable_after_done = cfg->rec_enable_after_done;
+#endif
     vPortFree(cfg);
     wave_player_stop();
+#if WAVE_PLAYER_ENABLE_REC
+    if (restore_rec_enable) {
+        wave_record_enable(rec_enable_after_done);
+    }
+#endif
     g_audio.wave_src_task = NULL;
     vTaskDelete(NULL);
 }
 #endif
 
-#if WAVE_PLAYER_TEST_WAVE || WAVE_PLAYER_ENABLE_REC
-static void wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_t sample_rate_hz, uint8_t src_channels)
+#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
+static int wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_t sample_rate_hz, uint8_t src_channels,
+                                     bool restore_rec_enable, bool rec_enable_after_done)
 {
     if (src == NULL || src_len == 0) {
         printf("play_one_wave: empty src\r\n");
-        return;
+        return -1;
     }
 
-    uint32_t tx_block_bytes = AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS * sizeof(int16_t);
+    uint32_t tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
     wave_player_config(sample_rate_hz, tx_block_bytes, tx_block_bytes, src_channels);
-    wave_player_start();
+    if (wave_player_start() != 0) {
+#if WAVE_PLAYER_ENABLE_REC
+        if (restore_rec_enable) {
+            wave_record_enable(rec_enable_after_done);
+        }
+#endif
+        return -1;
+    }
 
     wave_src_task_cfg_t *src_cfg = (wave_src_task_cfg_t *)pvPortMalloc(sizeof(*src_cfg));
     if (src_cfg == NULL) {
         printf("play_one_wave: no mem for src_cfg\r\n");
-        return;
+        wave_player_stop();
+#if WAVE_PLAYER_ENABLE_REC
+        if (restore_rec_enable) {
+            wave_record_enable(rec_enable_after_done);
+        }
+#endif
+        return -1;
     }
     *src_cfg = (wave_src_task_cfg_t){
         .src = src,
         .src_len = src_len,
         .rb = &g_audio.wave_rb,
         .sem_wave_rb_space = g_audio.sem_wave_rb_space,
+#if WAVE_PLAYER_ENABLE_REC
+        .restore_rec_enable = restore_rec_enable,
+        .rec_enable_after_done = rec_enable_after_done,
+#endif
     };
-    (void)xTaskCreate(wave_src_sink, (char *)"wave_src", 256, src_cfg, 2, &g_audio.wave_src_task);
+    if (xTaskCreate(wave_src_sink, (char *)"wave_src", 256, src_cfg, 2, &g_audio.wave_src_task) != pdPASS) {
+        printf("play_one_wave: create src task failed\r\n");
+        vPortFree(src_cfg);
+        wave_player_stop();
+#if WAVE_PLAYER_ENABLE_REC
+        if (restore_rec_enable) {
+            wave_record_enable(rec_enable_after_done);
+        }
+#endif
+        return -1;
+    }
+    return 0;
 }
 #endif
 
@@ -3111,8 +3388,7 @@ static int wave_player_play_wave_buffer(const uint8_t *buf, size_t len)
     }
 
     wave_player_stop();
-    wave_player_play_one_wave(data, data_size, sample_rate, (uint8_t)channels);
-    return 0;
+    return wave_player_play_one_wave(data, data_size, sample_rate, (uint8_t)channels, false, false);
 }
 
 static int cmd_audio_play0(int argc, char **argv)

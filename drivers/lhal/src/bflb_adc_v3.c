@@ -56,14 +56,12 @@ void bflb_adc_common_init(const struct bflb_adc_common_config_s *config)
     }
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC2_FIFO_ENABLE_OFFSET);
 
-#if defined(CPU_MODEL_A0)
     regval = getreg32(ADC_AON_BASE + AON_GPADC1_REG_CONFIG2_OFFSET);
     regval |= AON_GPADC1_GLOBAL_EN;
     putreg32(regval, ADC_AON_BASE + AON_GPADC1_REG_CONFIG2_OFFSET);
     regval = getreg32(ADC_AON_BASE + AON_GPADC2_REG_CONFIG2_OFFSET);
     regval |= AON_GPADC2_GLOBAL_EN;
     putreg32(regval, ADC_AON_BASE + AON_GPADC2_REG_CONFIG2_OFFSET);
-#endif
 
     bflb_adc_int_watchdog_mask(NULL, ADC_INT_WATCHDOG_ALL, true);
     bflb_adc_int_watchdog_clear(NULL, ADC_INT_WATCHDOG_ALL);
@@ -155,9 +153,7 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     if (config->continuous_conv_mode) {
         regval |= AON_GPADC1_CONT_CONV_EN;
     }
-#if defined(CPU_MODEL_A0)
     regval |= (1 << AON_GPADC1_CONV_DELAY_SHIFT); /* delay 2(=1+1) clk */
-#endif
     putreg32(regval, reg_base + AON_GPADC1_REG_CTRL_0_OFFSET);
 
     /* calibration offset */

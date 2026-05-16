@@ -1,3 +1,17 @@
+
+= Release 1.4.2 =
+Released: 2026-05
+
+== FlashCube ==
+Features:
+1. GUI supports ram download
+2. Exit with an error if the auto-detected chip type does not match the input value
+
+Bug Fixes:
+1. Fix bug of ram download
+2. Fix the issue of write_and_verify_all_data
+
+
 = Release 1.4.1 =
 Released: 2026-03
 

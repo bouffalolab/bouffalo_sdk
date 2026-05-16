@@ -1066,7 +1066,12 @@ err_t http_setup_file(void * connection, http_accept_type_t accept_type, http_re
 
 err_t http_init_error_file(void *hs, http_resp_state_t resp_state)
 {
-  return ERR_OK == http_setup_file(hs, http_accept_type_json, resp_state, NULL);
+  struct http_state *s = (struct http_state *)hs;
+  err_t rc = http_setup_file(s, http_accept_type_json, resp_state, NULL);
+  if (rc != ERR_OK) {
+    return ERR_ARG;
+  }
+  return http_init_file(s, &s->file_handle, 0, NULL);
 }
 /**
  * @ingroup openthread_httpd_init

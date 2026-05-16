@@ -26,40 +26,6 @@ static void mbedtls_timing_update_alarm( void )
     }
 }
 
-#ifndef BL618DG
-#ifndef CONFIG_NEWLIB
-#include <bflb_rtc.h>
-static struct bflb_device_s *rtc = NULL;
-static uint32_t timestamp_base = 0;
-static struct timezone tz = {
-    .tz_dsttime = 0,
-    .tz_minuteswest = 0
-};
-
-int _gettimeofday_r(void *nop, struct timeval *tp, void *tzvp)
-{
-    struct timezone *tzp = tzvp;
-
-    if (rtc == NULL) {
-        rtc = bflb_device_get_by_name("rtc");
-    }
-
-    if (tp) {
-        uint64_t ticks = bflb_rtc_get_time(rtc);
-        tp->tv_sec = ticks / 32768 + timestamp_base;
-        tp->tv_usec = (ticks & 0x7fff) * 31;
-    }
-
-    if (tzp) {
-        tzp->tz_minuteswest = tz.tz_minuteswest;
-        tzp->tz_dsttime = tz.tz_dsttime;
-    }
-
-    return 0;
-}
-#endif
-#endif
-
 unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )
 {
     struct _hr_time *t = (struct _hr_time *) val;

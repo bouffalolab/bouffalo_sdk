@@ -35,7 +35,9 @@
 static struct bflb_device_s *uart0;
 
 extern void __libc_init_array(void);
+#if CONFIG_SHELL
 extern void shell_init_with_task(struct bflb_device_s *shell);
+#endif
 
 static void ot_stateChangedCallback(otChangedFlags aFlags, void *aContext)
 {
@@ -152,7 +154,11 @@ int main(void)
     board_init();
 
     uart0 = bflb_device_get_by_name("uart0");
+#if CONFIG_SHELL
     shell_init_with_task(uart0);
+#else
+    ot_uart_init(uart0);
+#endif
 
     __libc_init_array();
 

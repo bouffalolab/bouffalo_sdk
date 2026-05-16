@@ -836,11 +836,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         "csrw    mstatus, t0\n\t");
     /* csrwi   fcsr, 0 */
 #endif
-    /* enable mstatus FS */
-    uint32_t mstatus = __get_MSTATUS();
-    mstatus |= (1 << 13);
-    __set_MSTATUS(mstatus);
-
     /* enable mxstatus THEADISAEE */
     uint32_t mxstatus = __get_MXSTATUS();
     mxstatus |= (1 << 22);

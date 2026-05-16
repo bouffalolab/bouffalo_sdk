@@ -47,7 +47,7 @@
 #include <openthread_port.h>
 #include <openthread_br.h>
 #include <otbr_rtos_lwip.h>
-#if CONFIG_OTBR_REST
+#if CONFIG_OTBR
 #include <openthread_rest.h>
 #endif
 
@@ -212,7 +212,7 @@ static void netif_config(void *arg)
 
     netif_set_status_callback(&gnetif, netif_status_callback);
 
-#if CONFIG_OTBR_REST
+#if CONFIG_OTBR
     openthread_httpd_init(8081);
 #endif
 

@@ -6,7 +6,6 @@ sdk_add_compile_options(
     -fdata-sections
     -fmessage-length=0
     -fstrict-volatile-bitfields
-    # -flto
     -MMD
     -Wall
     -Wchar-subscripts
@@ -48,6 +47,10 @@ sdk_add_compile_options(
 
 if(NOT DEFINED CONFIG_NO_SHORT_ENUMS)
     sdk_add_compile_options(-fshort-enums)
+endif()
+
+if(CONFIG_GCC_COMPILE_LTO)
+    sdk_add_compile_options(-flto)
 endif()
 
 sdk_add_link_options(

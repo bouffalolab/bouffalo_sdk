@@ -1,9 +1,9 @@
 #include <FreeRTOS.h>
 #include <ring_buffer.h>
 #include <bflb_uart.h>
+#include <utils/uart.h>
 
 #include <openthread_port.h>
-#include <utils/uart.h>
 
 #ifndef OT_SERIAL_BUFFER_SIZE
 #define OT_SERIAL_BUFFER_SIZE 512

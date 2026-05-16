@@ -4,9 +4,15 @@
 #include <sys/time.h>
 #include <sys/times.h>
 #include <sys/stat.h>
+#include <stddef.h>
 
-#undef errno
-int errno;
+#include <reent.h>
+
+/* Global reentrant structure */
+#if defined(__PICOLIBC__)
+static struct _reent _global_reent = {0};
+struct _reent *_impure_ptr = &_global_reent;
+#endif
 
 char *__env[1] = { 0 };
 char **environ = __env;
@@ -142,3 +148,53 @@ int _write(int file, char *ptr, int len)
     errno = ENOSYS;
     return -1;
 }
+
+#if defined(__PICOLIBC__)
+int chroot(const char *path)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+int open(const char *path, int flags, ...)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+int close(int fd)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+_ssize_t read(int fd, void *ptr, size_t size)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+_ssize_t write(int fd, const void *ptr, size_t size)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+_off_t lseek(int fd, _off_t offset, int whence)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+int unlink(const char *path)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+int rename(const char *oldpath, const char *newpath)
+{
+    errno = ENOSYS;
+    return -1;
+}
+#endif

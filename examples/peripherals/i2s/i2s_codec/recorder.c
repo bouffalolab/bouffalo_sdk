@@ -998,7 +998,7 @@ static int rec_sd_play_file_locked(const char *path)
         return -1;
     }
 
-    tx_block_bytes = AUDIO_OUT_SAMPLES * AUDIO_OUT_CHANNELS * sizeof(int16_t);
+    tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
     wave_player_stop();
     wave_player_config(wav.sample_rate_hz, tx_block_bytes, 0, (uint8_t)wav.channels);
     if (wave_player_start() != 0) {

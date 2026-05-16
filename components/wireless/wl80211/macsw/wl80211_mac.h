@@ -99,8 +99,7 @@ int wl80211_mac_start_ap(struct wl80211_ap_settings *ap_settings);
  * Return value: 0 on success
  */
 int wl80211_mac_stop_ap(void);
-int wl80211_mac_ap_del_sta(uint8_t sta_idx);
-int wl80211_mac_ap_ctrl_port(uint8_t sta_id, int control_port_open);
+int wl80211_mac_ap_deauth_sta(uint8_t sta_idx, uint16_t reason);
 // AP mode process auth packet
 void wl80211_mac_ap_auth_handler(void *frame_payload, uint32_t frame_length);
 // AP mode process assoc packet
@@ -180,6 +179,7 @@ void *_ap_get_wpa_sm(uint8_t *mac);
 
 int _external_auth_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 int _ap_start_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int _ap_stop_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 int _sta_add_cfm(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 int _credits_update_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 #endif

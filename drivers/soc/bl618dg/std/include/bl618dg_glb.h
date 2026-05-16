@@ -1073,15 +1073,15 @@ typedef struct {
   */
 
 #define GLB_MINI_MISC_FCLK                 (0)
-#if defined(CPU_MODEL_A0)
-#define GLB_MINI_MISC_BCLK_SPI1            (1)
-#else
-#define GLB_MINI_MISC_BCLK_SPI3            (1)
-#endif
-#define GLB_MINI_MISC_BCLK_UART3           (2)
+#define GLB_MINI_MISC_BCLK_PWM1            (1)
+#define GLB_MINI_MISC_BCLK_I2C2            (2)
 #define GLB_MINI_MISC_BCLK_TIM1            (3)
-#define GLB_MINI_MISC_BCLK_I2C2            (4)
-#define GLB_MINI_MISC_BCLK_PWM1            (5)
+#define GLB_MINI_MISC_BCLK_UART3           (4)
+#if defined(CPU_MODEL_A0)
+#define GLB_MINI_MISC_BCLK_SPI1            (5)
+#else
+#define GLB_MINI_MISC_BCLK_SPI3            (5)
+#endif
 
 /** @defgroup GLB MINI MISC software reset type definition
   * @{

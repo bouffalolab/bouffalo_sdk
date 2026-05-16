@@ -14,16 +14,25 @@
 #include "port_file_littlefs.h"
 #endif
 
+
+/* Global reentrant structure */
+#if defined(__PICOLIBC__)
+static struct _reent _global_reent = {0};
+struct _reent *_impure_ptr = &_global_reent;
+#endif
+
 /*****************************************************************************
 * @brief        get thread reent
 * 
 * 
 * @retval struct _reent*    pointer to reentrant struct
 *****************************************************************************/
+#if !defined(__PICOLIBC__)
 struct _reent *__getreent(void)
 {
     return _impure_ptr;
 }
+#endif
 
 /*****************************************************************************
 * @brief        exit
@@ -119,8 +128,8 @@ int _wait_r(struct _reent *reent, int *status)
 ----------------------------------------------------------------------------*/
 extern int _open_tty_r(struct _reent *reent, const char *path, int flags, int mode);
 extern int _close_tty_r(struct _reent *reent, int fd);
-extern _ssize_t _read_tty_r(struct _reent *reent, int fd, void *ptr, size_t size);
-extern _ssize_t _write_tty_r(struct _reent *reent, int fd, const void *ptr, size_t size);
+extern ssize_t _read_tty_r(struct _reent *reent, int fd, void *ptr, size_t size);
+extern ssize_t _write_tty_r(struct _reent *reent, int fd, const void *ptr, size_t size);
 extern int _fstat_tty_r(struct _reent *reent, int fd, struct stat *st);
 extern int _stat_tty_r(struct _reent *reent, const char *path, struct stat *st);
 
@@ -158,8 +167,8 @@ static int _chroot_file_lfs_r(struct _reent *reent, const char *path)
 #else
 extern int _open_file_r(struct _reent *reent, const char *path, int flags, int mode);
 extern int _close_file_r(struct _reent *reent, int fd);
-extern _ssize_t _read_file_r(struct _reent *reent, int fd, void *ptr, size_t size);
-extern _ssize_t _write_file_r(struct _reent *reent, int fd, const void *ptr, size_t size);
+extern ssize_t _read_file_r(struct _reent *reent, int fd, void *ptr, size_t size);
+extern ssize_t _write_file_r(struct _reent *reent, int fd, const void *ptr, size_t size);
 extern _off_t _lseek_file_r(struct _reent *reent, int fd, _off_t offset, int whence);
 extern int _rename_file_r(struct _reent *reent, const char *oldname, const char *newname);
 extern int _unlink_file_r(struct _reent *reent, const char *path);
@@ -252,9 +261,9 @@ int _close_r(struct _reent *reent, int fd)
 * @param[in]    ptr         pointer to buffer
 * @param[in]    size        number of bytes read
 * 
-* @retval _ssize_t          actual number of bytes read
+* @retval ssize_t          actual number of bytes read
 *****************************************************************************/
-_ssize_t _read_r(struct _reent *reent, int fd, void *ptr, size_t size)
+ssize_t _read_r(struct _reent *reent, int fd, void *ptr, size_t size)
 {
     if (ptr == NULL) {
         reent->_errno = EINVAL;
@@ -276,9 +285,9 @@ _ssize_t _read_r(struct _reent *reent, int fd, void *ptr, size_t size)
 * @param[in]    ptr         pointer to buffer
 * @param[in]    size        number of bytes write
 * 
-* @retval _ssize_t          actual number of bytes write
+* @retval ssize_t          actual number of bytes write
 *****************************************************************************/
-_ssize_t _write_r(struct _reent *reent, int fd, const void *ptr, size_t size)
+ssize_t _write_r(struct _reent *reent, int fd, const void *ptr, size_t size)
 {
     if (ptr == NULL) {
         reent->_errno = EINVAL;
@@ -570,10 +579,54 @@ int _chroot_r(struct _reent *reent, const char *path)
     return _chroot_file_r(reent, path);
 }
 
+#if defined(__PICOLIBC__)
 int chroot(const char *path)
 {
     return _chroot_r(_REENT, path);
 }
+
+int open(const char *path, int flags, ...)
+{
+    va_list ap;
+    int mode = 0;
+
+    va_start(ap, flags);
+    mode = va_arg(ap, int);
+    va_end(ap);
+
+    return _open_r(_REENT, path, flags, mode);
+}
+
+int close(int fd)
+{
+    return _close_r(_REENT, fd);
+}
+
+_ssize_t read(int fd, void *ptr, size_t size)
+{
+    return _read_r(_REENT, fd, ptr, size);
+}
+
+_ssize_t write(int fd, const void *ptr, size_t size)
+{
+    return _write_r(_REENT, fd, ptr, size);
+}
+
+_off_t lseek(int fd, _off_t offset, int whence)
+{
+    return _lseek_r(_REENT, fd, offset, whence);
+}
+
+int unlink(const char *path)
+{
+    return _unlink_r(_REENT, path);
+}
+
+int rename(const char *oldpath, const char *newpath)
+{
+    return _rename_r(_REENT, oldpath, newpath);
+}
+#endif
 
 /*---------------------------------------------------------------------------
 * @}            file_stub

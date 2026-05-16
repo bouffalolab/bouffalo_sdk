@@ -1,44 +1,29 @@
 sdk_generate_library()
 
+set(OT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/openthread)
+
+# ============================================================
+# Shared include directories (all build configurations)
+# ============================================================
+sdk_add_include_directories(${OT_SOURCE_DIR}/include)
+sdk_add_include_directories(${OT_SOURCE_DIR}/src/core)
+sdk_add_include_directories(${OT_SOURCE_DIR}/examples/platforms)
+sdk_add_private_include_directories(${OT_SOURCE_DIR}/src)
+sdk_add_private_include_directories(${OT_SOURCE_DIR}/src/include)
+sdk_add_private_include_directories(${OT_SOURCE_DIR}/src/lib/platform)
+
 add_subdirectory(openthread_port)
-if (DEFINED OT_NCP)
-  add_subdirectory(openthread_ncp)
-endif()
 sdk_add_subdirectory_ifdef(CONFIG_OTBR_REST openthread_rest)
 
-if (DEFINED OT_NCP AND OT_CLI)
-  message(FATAL_ERROR "OT_NCP can't be defined with OT_CLI set true.")
-endif()
-
-if (DEFINED OT_NCP AND NOT OT_NCP)
-  sdk_add_compile_definitions(-DOPENTHREAD_FTD=0)
-  sdk_add_compile_definitions(-DOPENTHREAD_MTD=0)
-  sdk_add_compile_definitions(-DOPENTHREAD_RADIO=1)
-else()
-  sdk_add_compile_definitions(-DOPENTHREAD_RADIO=0)
-  if (OT_FTD) 
-    sdk_add_compile_definitions(-DOPENTHREAD_FTD=1)
-    sdk_add_compile_definitions(-DOPENTHREAD_MTD=0)
-  else()
-    sdk_add_compile_definitions(-DOPENTHREAD_FTD=0)
-    sdk_add_compile_definitions(-DOPENTHREAD_MTD=1)
-  endif()
-endif()
-
-sdk_add_compile_definitions(-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=${OPENTHREAD_PROJECT_CORE_CONFIG_FILE})
-sdk_add_compile_definitions(-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=${OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE})
-
-if (DEFINED OT_SERIAL_BUFFER_SIZE)
-  sdk_add_compile_definitions(-DOT_SERIAL_BUFFER_SIZE=${OT_SERIAL_BUFFER_SIZE})
-endif()
-if (DEFINED OT_SERIAL_LINE_SIZE)
-  sdk_add_compile_definitions(-DOT_SERIAL_LINE_SIZE=${OT_SERIAL_LINE_SIZE})
+if (CONFIG_MATTER AND NOT CONFIG_NO_SHORT_ENUMS)
+  sdk_add_high_prior_compile_options(-fno-short-enums)
 endif()
 
 sdk_add_private_compile_definitions(-DOPENTHREAD_PLATFORM_NEXUS=0)
 
-set(PROJECT_SOURCE_DIR openthread)
-
+# ============================================================
+# Source file lists
+# ============================================================
 set(CLI_SOURCES
     cli.cpp
     cli_bbr.cpp
@@ -346,7 +331,7 @@ set(RADIO_CORE_SOURCES
 )
 
 set(PLATFORM_SOURCES
-  exit_code.c
+    exit_code.c
 )
 
 set(TCPLP_SOURCES
@@ -369,45 +354,76 @@ set(EXAMPLE_CLI_SOURCES
     cli_uart.cpp
 )
 
-sdk_add_include_directories(${PROJECT_SOURCE_DIR}/include)
-sdk_add_include_directories(${PROJECT_SOURCE_DIR}/src/core)
-sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/src)
-sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/src/include)
+# ============================================================
+# Add source files
+# ============================================================
 
-if (OT_CLI)
+# CLI mode: include CLI sources
+if (CONFIG_OT_CLI)
   foreach(source_file ${CLI_SOURCES})
-    sdk_library_add_sources(${PROJECT_SOURCE_DIR}/src/cli/${source_file})
+    sdk_library_add_sources(${OT_SOURCE_DIR}/src/cli/${source_file})
+  endforeach()
+  foreach(source_file ${EXAMPLE_CLI_SOURCES})
+    sdk_library_add_sources(${OT_SOURCE_DIR}/examples/apps/cli/${source_file})
   endforeach()
 endif()
 
-if (DEFINED OT_NCP AND NOT OT_NCP)
+# NCP / RCP mode: include NCP (HDLC + Spinel + NCP core)
+if (CONFIG_OT_NCP OR CONFIG_OT_RCP)
+  sdk_add_include_directories(${OT_SOURCE_DIR}/src/lib/hdlc)
+  sdk_add_include_directories(${OT_SOURCE_DIR}/src/lib/spinel)
+  sdk_add_include_directories(${OT_SOURCE_DIR}/src/lib)
+  sdk_add_include_directories(${OT_SOURCE_DIR}/src/ncp)
+
+  if(CONFIG_OT_NCP)
+    sdk_add_private_compile_definitions(-DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1)
+  else()
+    sdk_add_private_compile_definitions(-DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0)
+  endif()
+
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/hdlc/hdlc.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/spinel/spinel.c)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/spinel/spinel_buffer.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/spinel/spinel_decoder.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/spinel/spinel_encoder.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/spinel/spinel_helper.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/spinel/spinel_prop_codec.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/changed_props_set.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/multipan_platform.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_base.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_base_dispatcher.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_base_radio.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_spi.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_hdlc.cpp)
+  if(CONFIG_OT_NCP)
+    sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_base_ftd.cpp)
+    sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/ncp_base_mtd.cpp)
+  endif()
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/platform/dnssd.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/ncp/platform/infra_if.cpp)
+  sdk_library_add_sources(${OT_SOURCE_DIR}/examples/apps/ncp/ncp.c)
+endif()
+
+# RCP mode: use RADIO_CORE_SOURCES (no TCP/IP stack)
+if(CONFIG_OT_RCP)
   foreach(source_file ${RADIO_CORE_SOURCES})
-    sdk_library_add_sources(${PROJECT_SOURCE_DIR}/src/core/${source_file})
+    sdk_library_add_sources(${OT_SOURCE_DIR}/src/core/${source_file})
   endforeach()
 else()
+  # FTD/MTD mode: use full CORE_SOURCES + TCP stack
   foreach(source_file ${CORE_SOURCES})
-    sdk_library_add_sources(${PROJECT_SOURCE_DIR}/src/core/${source_file})
+    sdk_library_add_sources(${OT_SOURCE_DIR}/src/core/${source_file})
   endforeach()
-
   sdk_add_private_compile_definitions(-Dtcp_input=ot_tcp_input)
   sdk_add_private_compile_definitions(-Dtcp_output=ot_tcp_output)
   sdk_add_private_compile_definitions(-Dtcp_close=ot_tcp_close)
-
-  sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/third_party/tcplp)
+  sdk_add_private_include_directories(${OT_SOURCE_DIR}/third_party/tcplp)
   foreach(source_file ${TCPLP_SOURCES})
-    sdk_library_add_sources(${PROJECT_SOURCE_DIR}/third_party/tcplp/${source_file})
+    sdk_library_add_sources(${OT_SOURCE_DIR}/third_party/tcplp/${source_file})
   endforeach()
 endif()
 
-sdk_add_private_include_directories(${PROJECT_SOURCE_DIR}/src/lib/platform)
+# Platform sources
 foreach(source_file ${PLATFORM_SOURCES})
-  sdk_library_add_sources(${PROJECT_SOURCE_DIR}/src/lib/platform/${source_file})
+  sdk_library_add_sources(${OT_SOURCE_DIR}/src/lib/platform/${source_file})
 endforeach()
-
-if (OT_CLI)
-  sdk_add_include_directories(${PROJECT_SOURCE_DIR}/examples/platforms)
-  foreach(source_file ${EXAMPLE_CLI_SOURCES})
-    sdk_library_add_sources(${PROJECT_SOURCE_DIR}/examples/apps/cli/${source_file})
-  endforeach()
-endif()
-

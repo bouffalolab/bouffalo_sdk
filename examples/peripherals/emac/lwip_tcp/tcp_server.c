@@ -194,7 +194,7 @@ void tcp_server_process(int conn)
 {
     int buflen;
     // int ret;
-    int flag;
+    int flag = 0;
     setsockopt(conn, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(int));
 
     while (1) {

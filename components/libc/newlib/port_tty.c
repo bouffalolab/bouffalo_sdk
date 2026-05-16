@@ -191,7 +191,7 @@ static inline int _ttyin_fifo_get(struct _ttyin_fifo *fifo)
 /*---------------------------------------------------------------------------
 * @}            ttyin_fifo
 ----------------------------------------------------------------------------*/
-struct bflb_device_s *console = NULL;
+extern struct bflb_device_s *console;
 
 static TTYIN_FIFO_DEFINE(stdin_fifo, 512);
 
@@ -212,21 +212,6 @@ void console_receive_isr(int irq, void *arg)
         }
         bflb_uart_int_clear(console, UART_INTCLR_RTO);
     }
-}
-#endif
-
-#ifdef CONFIG_CONSOLE_WO
-void bflb_wo_set_console(struct bflb_device_s *dev)
-{
-    console = dev;
-}
-#else
-void bflb_uart_set_console(struct bflb_device_s *dev)
-{
-    console = dev;
-    // bflb_uart_rxint_mask(console, false);
-    // bflb_irq_attach(console->irq_num, console_receive_isr, console);
-    // bflb_irq_enable(console->irq_num);
 }
 #endif
 
