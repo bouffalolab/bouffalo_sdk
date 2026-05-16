@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+SELF_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+export LD_LIBRARY_PATH="$SELF_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$SELF_DIR/openocd.bin" "$@"
