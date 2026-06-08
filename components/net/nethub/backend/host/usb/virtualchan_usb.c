@@ -1,5 +1,8 @@
 #include "nethub_vchan.h"
+#include "usb_backend.h"
+#include "nh_profile.h"
 #include "nethub_defs.h"
+#include "nethub.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -20,9 +23,6 @@
 #define NETHUB_VCHAN_USB_FRAME_MAX \
     (NETHUB_VCHAN_USB_HDR_LEN + NETHUB_VCHAN_MAX_DATA_LEN + NETHUB_VCHAN_USB_CHECKSUM_LEN)
 #define NETHUB_VCHAN_USB_RX_TYPE      NETHUB_VCHAN_TYPE_AT
-
-int nh_usb_backend_ctrl_upld_send(uint8_t *data_buff, uint32_t data_size);
-int nh_usb_backend_ctrl_dnld_register(nethub_ctrl_rx_cb_t dnld_cb, void *cbpri_arg);
 
 static nethub_vchan_recv_cb_t g_nethub_vchan_usb_recv_cb[NETHUB_VCHAN_TYPE_MAX];
 static void *g_nethub_vchan_usb_recv_arg[NETHUB_VCHAN_TYPE_MAX];
@@ -133,6 +133,7 @@ static void nethub_vchan_usb_stream_process(void)
             continue;
         }
 
+        (void)nethub_set_active_host_link(NETHUB_CHANNEL_USB);
         nethub_vchan_usb_dispatch(NETHUB_VCHAN_USB_RX_TYPE,
                                   &g_nethub_vchan_usb_rx_buf[NETHUB_VCHAN_USB_HDR_LEN],
                                   payload_len);
@@ -163,7 +164,7 @@ static int nethub_vchan_usb_dnld_cb(void *arg, uint8_t *data_buff, uint32_t data
 
 struct mr_msg_ctrl_priv_s;
 
-int nethub_vchan_backend_init(struct mr_msg_ctrl_priv_s *msg_ctrl)
+int nethub_usb_vchan_backend_init(struct mr_msg_ctrl_priv_s *msg_ctrl)
 {
     int ret;
 
@@ -171,7 +172,7 @@ int nethub_vchan_backend_init(struct mr_msg_ctrl_priv_s *msg_ctrl)
 
     g_nethub_vchan_usb_rx_len = 0U;
     g_nethub_vchan_usb_initialized = false;
-    ret = nh_usb_backend_ctrl_dnld_register(nethub_vchan_usb_dnld_cb, NULL);
+    ret = nh_usb_backend_acm_recv_register(nethub_vchan_usb_dnld_cb, NULL);
     if (ret == NETHUB_OK) {
         g_nethub_vchan_usb_initialized = true;
     }
@@ -179,9 +180,9 @@ int nethub_vchan_backend_init(struct mr_msg_ctrl_priv_s *msg_ctrl)
     return ret;
 }
 
-int nethub_vchan_recv_register(nethub_vchan_type_t type,
-                               nethub_vchan_recv_cb_t recv_cb,
-                               void *arg)
+static int nethub_usb_vchan_recv_register(nethub_vchan_type_t type,
+                                          nethub_vchan_recv_cb_t recv_cb,
+                                          void *arg)
 {
     if (!nethub_vchan_usb_type_is_valid(type)) {
         return NETHUB_ERR_INVALID_PARAM;
@@ -193,7 +194,7 @@ int nethub_vchan_recv_register(nethub_vchan_type_t type,
     return NETHUB_OK;
 }
 
-int nethub_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len)
+static int nethub_usb_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len)
 {
     uint8_t *frame;
     uint16_t frame_len;
@@ -217,28 +218,13 @@ int nethub_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len)
     }
 
     nethub_vchan_usb_frame_build(frame, data, len);
-    ret = nh_usb_backend_ctrl_upld_send(frame, frame_len);
+    ret = nh_usb_backend_acm_send(frame, frame_len);
     free(frame);
 
     return (ret < 0) ? ret : NETHUB_OK;
 }
 
-int nethub_vchan_user_send(const void *data, uint16_t len)
-{
-    return nethub_vchan_send(NETHUB_VCHAN_TYPE_USER, data, len);
-}
-
-int nethub_vchan_user_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg)
-{
-    return nethub_vchan_recv_register(NETHUB_VCHAN_TYPE_USER, recv_cb, cb_arg);
-}
-
-int nethub_vchan_at_send(const void *data, uint16_t len)
-{
-    return nethub_vchan_send(NETHUB_VCHAN_TYPE_AT, data, len);
-}
-
-int nethub_vchan_at_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg)
-{
-    return nethub_vchan_recv_register(NETHUB_VCHAN_TYPE_AT, recv_cb, cb_arg);
-}
+const nh_vchan_ops_t nhusb_vchan_ops = {
+    .send = nethub_usb_vchan_send,
+    .recv_register = nethub_usb_vchan_recv_register,
+};

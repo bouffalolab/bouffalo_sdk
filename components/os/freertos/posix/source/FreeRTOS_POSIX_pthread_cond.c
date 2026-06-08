@@ -33,15 +33,11 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
+#include "FreeRTOS_POSIX/errno.h"
 #include "FreeRTOS_POSIX/pthread.h"
-#include "FreeRTOS_POSIX/posix_utils.h"
+#include "FreeRTOS_POSIX/utils.h"
 
 #include "atomic_rtos.h"
-
-#if defined( __GNUC__ )
-    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
 
 /**
  * @brief Initialize a PTHREAD_COND_INITIALIZER cond.
@@ -52,90 +48,75 @@
  *
  * @return nothing
  */
-static void prvInitializeStaticCond( pthread_cond_internal_t * pxCond );
+static bool prvInitializeStaticCond( pthread_cond_internal_t * pxCond );
 
 /*-----------------------------------------------------------*/
 
-static void prvInitializeStaticCond( pthread_cond_internal_t * pxCond )
+static bool prvInitializeStaticCond( pthread_cond_internal_t * pxCond )
 {
+    int i = 0;
+
     /* Check if the condition variable needs to be initialized. */
     if( pxCond->xIsInitialized == pdFALSE )
     {
         /* Cond initialization must be in a critical section to prevent two threads
          * from initializing it at the same time. */
-        taskENTER_CRITICAL();
+        vTaskSuspendAll();
 
         /* Check again that the cond is still uninitialized, i.e. it wasn't
          * initialized while this function was waiting to enter the critical
          * section. */
-        if( pxCond->xIsInitialized == pdFALSE )
+        if( (pxCond->xIsInitialized == pdFALSE) && (pxCond->tasksLenth > 0) )
         {
-            /* Set the members of the cond. The semaphore create calls will never fail
-             * when their arguments aren't NULL. */
-            pxCond->xIsInitialized = pdTRUE;
-            ( void ) xSemaphoreCreateCountingStatic( INT_MAX, 0U, &pxCond->xCondWaitSemaphore );
-            pxCond->iWaitingThreads = 0;
+            pxCond->xTasksWaiting = pvPortMalloc( sizeof(TaskHandle_t) * pxCond->tasksLenth );
+            if( pxCond->xTasksWaiting != NULL )
+            {
+                /* Initialize Task List to NULL */
+                for ( i = 0; i < pxCond->tasksLenth; i++ )
+                {
+                    pxCond->xTasksWaiting[i] = NULL;
+                }
+
+                pxCond->xIsInitialized = pdTRUE;
+            }
         }
 
         /* Exit the critical section. */
-        taskEXIT_CRITICAL();
+        xTaskResumeAll();
     }
-}
 
-/**
- * @brief Check "atomically" if iLocalWaitingThreads == pxCond->iWaitingThreads and decrement.
- */
-static void prvTestAndDecrement( pthread_cond_t * pxCond,
-                                 unsigned iLocalWaitingThreads )
-{
-    /* Test local copy of threads waiting is larger than zero. */
-    while( iLocalWaitingThreads > 0 )
-    {
-        /* Test-and-set. Atomically check whether the copy in memory has changed.
-         * And, if not decrease the copy of threads waiting in memory. */
-        if( ATOMIC_COMPARE_AND_SWAP_SUCCESS == Atomic_CompareAndSwap_u32( ( uint32_t * ) &pxCond->iWaitingThreads, ( uint32_t ) iLocalWaitingThreads - 1, ( uint32_t ) iLocalWaitingThreads ) )
-        {
-            /* Signal one succeeded. Break. */
-            break;
-        }
-
-        /* Local copy may be out dated. Reload, and retry. */
-        iLocalWaitingThreads = pxCond->iWaitingThreads;
-    }
+    return pxCond->xIsInitialized;
 }
 
 /*-----------------------------------------------------------*/
 
 int pthread_cond_broadcast( pthread_cond_t * cond )
 {
-    unsigned i = 0;
+    int i = 0;
     pthread_cond_internal_t * pxCond = ( pthread_cond_internal_t * ) ( cond );
 
     /* If the cond is uninitialized, perform initialization. */
-    prvInitializeStaticCond( pxCond );
-
-    /* Local copy of number of threads waiting. */
-    unsigned iLocalWaitingThreads = pxCond->iWaitingThreads;
-
-    /* Test local copy of threads waiting is larger than zero. */
-    while( iLocalWaitingThreads > 0 )
+    if ( prvInitializeStaticCond( pxCond ) == pdFALSE )
     {
-        /* Test-and-set. Atomically check whether the copy in memory has changed.
-         * And, if not set the copy of threads waiting in memory to zero. */
-        if( ATOMIC_COMPARE_AND_SWAP_SUCCESS == Atomic_CompareAndSwap_u32( ( uint32_t * ) &pxCond->iWaitingThreads, 0, ( uint32_t ) iLocalWaitingThreads ) )
-        {
-            /* Unblock all. */
-            for( i = 0; i < iLocalWaitingThreads; i++ )
-            {
-                ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxCond->xCondWaitSemaphore );
-            }
-
-            break;
-        }
-
-        /* Local copy is out dated. Reload, and retry. */
-        iLocalWaitingThreads = pxCond->iWaitingThreads;
+        return ENOMEM;
     }
+
+    /* Enter critical section to protect task list access and
+     * prevent this task from being switched out while notifying
+     * all blocked tasks */
+    taskENTER_CRITICAL();
+
+    for( i = 0; i < pxCond->tasksLenth; i++ )
+    {
+        if ( pxCond->xTasksWaiting[i] != NULL )
+        {
+            xTaskNotify(pxCond->xTasksWaiting[i], 0, eNoAction);
+            pxCond->xTasksWaiting[i] = NULL;
+        }
+    }
+
+    /* Exit the critical section. */
+    taskEXIT_CRITICAL();
 
     return 0;
 }
@@ -147,7 +128,7 @@ int pthread_cond_destroy( pthread_cond_t * cond )
     pthread_cond_internal_t * pxCond = ( pthread_cond_internal_t * ) ( cond );
 
     /* Free all resources in use by the cond. */
-    vSemaphoreDelete( ( SemaphoreHandle_t ) &pxCond->xCondWaitSemaphore );
+    vPortFree(pxCond->xTasksWaiting);
 
     return 0;
 }
@@ -157,11 +138,15 @@ int pthread_cond_destroy( pthread_cond_t * cond )
 int pthread_cond_init( pthread_cond_t * cond,
                        const pthread_condattr_t * attr )
 {
+    int i = 0;
     int iStatus = 0;
     pthread_cond_internal_t * pxCond = ( pthread_cond_internal_t * ) cond;
 
     /* Silence warnings about unused parameters. */
     ( void ) attr;
+
+    /* Configure default settings */
+    pxCond->tasksLenth = posixconfigPTHREAD_COND_MAX_WAITERS;
 
     if( pxCond == NULL )
     {
@@ -170,12 +155,20 @@ int pthread_cond_init( pthread_cond_t * cond,
 
     if( iStatus == 0 )
     {
-        /* Set the members of the cond. The semaphore create calls will never fail
-         * when their arguments aren't NULL. */
-        pxCond->xIsInitialized = pdTRUE;
-
-        ( void ) xSemaphoreCreateCountingStatic( INT_MAX, 0U, &pxCond->xCondWaitSemaphore );
-        pxCond->iWaitingThreads = 0;
+        pxCond->xTasksWaiting = pvPortMalloc( sizeof(TaskHandle_t) * pxCond->tasksLenth );
+        if( pxCond->xTasksWaiting != NULL )
+        {
+            /* Initialize Task List to NULL */
+            for ( i = 0; i < pxCond->tasksLenth; i++ )
+            {
+                pxCond->xTasksWaiting[i] = NULL;
+            }
+            pxCond->xIsInitialized = pdTRUE;
+        }
+        else
+        {
+            iStatus = ENOMEM;
+        }
     }
 
     return iStatus;
@@ -185,31 +178,56 @@ int pthread_cond_init( pthread_cond_t * cond,
 
 int pthread_cond_signal( pthread_cond_t * cond )
 {
+    int i = 0;
+    TaskHandle_t* xTaskToNotify = NULL;
     pthread_cond_internal_t * pxCond = ( pthread_cond_internal_t * ) ( cond );
 
     /* If the cond is uninitialized, perform initialization. */
-    prvInitializeStaticCond( pxCond );
-
-    /* Local copy of number of threads waiting. */
-    unsigned iLocalWaitingThreads = pxCond->iWaitingThreads;
-
-    /* Test local copy of threads waiting is larger than zero. */
-    while( iLocalWaitingThreads > 0 )
+    if ( prvInitializeStaticCond( pxCond ) == pdFALSE )
     {
-        /* Test-and-set. Atomically check whether the copy in memory has changed.
-         * And, if not decrease the copy of threads waiting in memory. */
-        if( ATOMIC_COMPARE_AND_SWAP_SUCCESS == Atomic_CompareAndSwap_u32( ( uint32_t * ) &pxCond->iWaitingThreads, ( uint32_t ) iLocalWaitingThreads - 1, ( uint32_t ) iLocalWaitingThreads ) )
-        {
-            /* Unblock one. */
-            ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxCond->xCondWaitSemaphore );
-
-            /* Signal one succeeded. Break. */
-            break;
-        }
-
-        /* Local copy may be out dated. Reload, and retry. */
-        iLocalWaitingThreads = pxCond->iWaitingThreads;
+        return ENOMEM;
     }
+
+    /* Enter critical section to protect task list access and
+     * prevent this task from being switched out while notifying
+     * the blocked task */
+    taskENTER_CRITICAL();
+
+    for( i = 0; i < pxCond->tasksLenth; i++ )
+    {
+        if ( pxCond->xTasksWaiting[i] != NULL )
+        {
+            if ( xTaskToNotify == NULL)
+            {
+                xTaskToNotify = &pxCond->xTasksWaiting[i];
+                continue;
+            }
+
+            /* POSIX Specification states that the scheduling policy shall determine the order
+             * in which threads are unblocked. Since signal only unblocks one task, we need to make
+             * sure that the thread that is unblocked is of the highest priority that is waiting.
+             * Note the specification does not mention the order a thread is unblocked of the same
+             * priority.
+             *
+             * An alternative would be to unblock all threads of the same priority as "spurious"
+             * wakeups are allowed, thus allowing the threads to block on the mutex and condition
+             * check. */
+            if ( uxTaskPriorityGet( *xTaskToNotify ) < uxTaskPriorityGet( pxCond->xTasksWaiting[i] ) )
+            {
+                xTaskToNotify = &pxCond->xTasksWaiting[i];
+            }
+
+        }
+    }
+
+    if ( xTaskToNotify != NULL )
+    {
+        xTaskNotify(*xTaskToNotify, 0, eNoAction);
+        *xTaskToNotify = NULL;
+    }
+
+    /* Exit the critical section. */
+    taskEXIT_CRITICAL();
 
     return 0;
 }
@@ -220,13 +238,18 @@ int pthread_cond_timedwait( pthread_cond_t * cond,
                             pthread_mutex_t * mutex,
                             const struct timespec * abstime )
 {
-    unsigned iLocalWaitingThreads;
+    int i = 0;
     int iStatus = 0;
+    bool iSet = pdFALSE;
     pthread_cond_internal_t * pxCond = ( pthread_cond_internal_t * ) ( cond );
     TickType_t xDelay = portMAX_DELAY;
 
+
     /* If the cond is uninitialized, perform initialization. */
-    prvInitializeStaticCond( pxCond );
+    if ( prvInitializeStaticCond( pxCond ) == pdFALSE )
+    {
+        return ENOMEM;
+    }
 
     /* Convert abstime to a delay in TickType_t if provided. */
     if( abstime != NULL )
@@ -244,21 +267,45 @@ int pthread_cond_timedwait( pthread_cond_t * cond,
         }
     }
 
-    /* Increase the counter of threads blocking on condition variable, then
-     * unlock mutex. */
     if( iStatus == 0 )
     {
-        /* Atomically increments thread waiting by 1, and
-         * stores number of threads waiting before increment. */
-        iLocalWaitingThreads = Atomic_Increment_u32( ( uint32_t * ) &pxCond->iWaitingThreads );
+        /* Enter critical section to protect task list access and
+         * prevent this task from being switched out while adding
+         * itself to the notify list */
+        taskENTER_CRITICAL();
 
-        iStatus = pthread_mutex_unlock( mutex );
+        for( i = 0; i < pxCond->tasksLenth; i++ )
+        {
+            if ( pxCond->xTasksWaiting[i] == NULL )
+            {
+                pxCond->xTasksWaiting[i] = xTaskGetCurrentTaskHandle();
+                iSet = pdTRUE;
+                break;
+            }
+        }
+
+        /* Exit the critical section. */
+        taskEXIT_CRITICAL();
+
+        /* Verify the task was added to the list */
+        if ( iSet == pdFALSE )
+        {
+            /* Note: ENOMEM is not part of the return value list for
+             * pthread_cond_timedwait, but the specification only
+             * states that EINTR can NOT be returned */
+            iStatus = ENOMEM;
+        }
+
+        if ( iStatus == 0 )
+        {
+            iStatus = pthread_mutex_unlock( mutex );
+        }
 
         /* Wait on the condition variable. */
         if( iStatus == 0 )
         {
-            if( xSemaphoreTake( ( SemaphoreHandle_t ) &pxCond->xCondWaitSemaphore,
-                                xDelay ) == pdPASS )
+
+            if( xTaskNotifyWait( 0, 0, NULL, xDelay ) == pdPASS )
             {
                 /* When successful, relock mutex. */
                 iStatus = pthread_mutex_lock( mutex );
@@ -268,21 +315,23 @@ int pthread_cond_timedwait( pthread_cond_t * cond,
                 /* Timeout. Relock mutex and decrement number of waiting threads. */
                 iStatus = ETIMEDOUT;
                 ( void ) pthread_mutex_lock( mutex );
-
-                /* Atomically decrements thread waiting by 1.
-                * If iLocalWaitingThreads is updated by other thread(s) in between,
-                * this implementation guarantees to decrement by 1 based on the
-                * value currently in pxCond->iWaitingThreads. */
-                prvTestAndDecrement( pxCond, iLocalWaitingThreads + 1 );
             }
-        }
-        else
-        {
-            /* Atomically decrements thread waiting by 1.
-            * If iLocalWaitingThreads is updated by other thread(s) in between,
-            * this implementation guarantees to decrement by 1 based on the
-            * value currently in pxCond->iWaitingThreads. */
-            prvTestAndDecrement( pxCond, iLocalWaitingThreads + 1 );
+
+            /* Enter critical section to protect task list access and
+             * remove the task from the waiting list */
+            taskENTER_CRITICAL();
+
+            for( i = 0; i < pxCond->tasksLenth; i++ )
+            {
+                if ( pxCond->xTasksWaiting[i] == xTaskGetCurrentTaskHandle() )
+                {
+                    pxCond->xTasksWaiting[i] = NULL;
+                    break;
+                }
+            }
+
+            /* Exit the critical section. */
+            taskEXIT_CRITICAL();
         }
     }
 

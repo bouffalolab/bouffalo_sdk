@@ -24,6 +24,7 @@
 #include "wl_api.h"
 #endif
 #include "bl618dg_pds.h"
+#include "bflb_gpio.h"
 #endif
 
 #if defined(BL616CL)
@@ -293,5 +294,21 @@ __attribute__((weak)) uint64_t btblecontroller_mtimer_get_time_us(void)
     return bflb_mtimer_get_time_us();
 #endif
 }
+
+#if defined(BL618DG)
+__attribute__((weak)) void btblecontroller_gpio_config(uint8_t pin, uint8_t is_high)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, pin, GPIO_FUNC_GPIO | GPIO_OUTPUT);
+
+    if (is_high) {
+        bflb_gpio_set(gpio, pin);
+    } else {
+        bflb_gpio_reset(gpio, pin);
+    }
+}
+#endif
 
 

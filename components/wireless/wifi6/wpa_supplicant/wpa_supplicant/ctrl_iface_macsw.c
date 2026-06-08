@@ -45,6 +45,8 @@ struct wpa_macsw_driver_itf_data {
     u8 ssid_len;
     // Next authentication alg to try (used when connect with several algos)
     int next_auth_alg;
+    // DTIM period cached from set_ap, reused when building CSA beacon
+    u8 dtim_period;
 };
 
 /**

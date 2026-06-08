@@ -2,8 +2,21 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+// Config header must be FIRST so CFG_BARX/CFG_REORD_BUF are defined before macsw.h
+#if defined(CONFIG_MACSW_SELECT_INCLUDE)
+#include CONFIG_MACSW_SELECT_INCLUDE
+#endif
+
 #include "macsw.h"
+
 #include "fhost_rx_def.h"
+
+// MACSW_MAX_BA_RX is not defined by macsw.h; derive from config value
+#ifdef CFG_BARX
+#define MACSW_MAX_BA_RX CFG_BARX
+#else
+#define MACSW_MAX_BA_RX 1
+#endif
 
   /// RX Packet Reordering Buffer Size
   #define MACSW_AMPDU_RX_BUF_SIZE CFG_REORD_BUF

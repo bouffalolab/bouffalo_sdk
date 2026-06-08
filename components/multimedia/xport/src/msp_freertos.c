@@ -168,7 +168,7 @@ int msp_sem_new(msp_sem_t *sem, int count)
         return -1;
     }
 
-    SemaphoreHandle_t s = xSemaphoreCreateCounting(count, 0);
+    SemaphoreHandle_t s = xSemaphoreCreateCounting(1024, count);
     *sem = s;
 
     return 0;

@@ -3,9 +3,9 @@
 GDB Local Target Server
 
 This script runs a standalone GDB RSP server for post-mortem debugging.
-It parses the input log through crash_capture.py, loads the last valid
-coredump into a sparse virtual memory bus, and starts GDB against the
-provided ELF.
+It loads file-backed PT_LOAD data from the ELF at LMA, parses the input
+log through crash_capture.py, overlays the last valid coredump at VMA,
+and starts GDB against the provided ELF.
 
 Usage:
     python tools/byai/coredump.py <log_file> <elf_file> [options]
@@ -18,16 +18,16 @@ Usage:
 
 The script will automatically:
 1. Ask the OS for a free local port
-2. Parse the log and load the last valid coredump into virtual memory
-3. Start the GDB server
-4. Start riscv64-unknown-elf-gdb with the ELF file
-5. Run `file`, `target remote`, and `restore`
-6. Source `tools/bouffalo_sdk.gdb` and any extra `-x` init file
+2. Load ELF PT_LOAD file data at LMA
+3. Parse the log and load the last valid coredump at VMA
+4. Start the GDB server
+5. Start riscv64-unknown-elf-gdb with the ELF file
+6. Run `file` and `target remote`
+7. Source `tools/bouffalo_sdk.gdb` and any extra `-x` init file
 
 If you need to connect manually from GDB:
     (gdb) file firmware.elf
     (gdb) target remote localhost:<port>
-    (gdb) restore firmware.elf
     (gdb) source tools/bouffalo_sdk.gdb
     (gdb) x/10x 0x23000000
     (gdb) info registers
@@ -45,6 +45,114 @@ from typing import Optional, Tuple, List
 from dataclasses import dataclass
 
 from crash_capture import parse_coredump_sections
+
+
+def stop_gdb_process(gdb_process: Optional[subprocess.Popen]) -> None:
+    """Stop the auto-started GDB process without blocking indefinitely."""
+    if gdb_process is None:
+        return
+
+    ret = gdb_process.poll()
+    if ret is not None:
+        print("GDB client stopped.")
+        return
+
+    print("Stopping GDB client...")
+    gdb_process.terminate()
+    try:
+        gdb_process.wait(timeout=0.2)
+    except subprocess.TimeoutExpired:
+        print("GDB client did not exit, killing it...")
+        gdb_process.kill()
+        gdb_process.wait()
+    print("GDB client stopped.")
+
+
+def parse_elf_lma_blocks(elf_file):
+    """Read file-backed ELF PT_LOAD segments and return blocks at LMA."""
+    elf_path = Path(elf_file)
+    if not elf_path.exists():
+        print(f"Error: ELF file not found: {elf_file}", file=sys.stderr)
+        return None
+
+    print(f"Loading ELF PT_LOAD data from: {elf_file}", file=sys.stderr)
+    try:
+        elf_data = elf_path.read_bytes()
+        if len(elf_data) < 16 or elf_data[:4] != b"\x7fELF":
+            print(f"Error: Not an ELF file: {elf_file}", file=sys.stderr)
+            return None
+
+        elf_class = elf_data[4]
+        elf_encoding = elf_data[5]
+        if elf_encoding == 1:
+            endian = "<"
+        elif elf_encoding == 2:
+            endian = ">"
+        else:
+            print(f"Error: Unsupported ELF data encoding: {elf_encoding}", file=sys.stderr)
+            return None
+
+        if elf_class == 1:
+            header_fmt = endian + "HHIIIIIHHHHHH"
+            ph_fmt = endian + "IIIIIIII"
+        elif elf_class == 2:
+            header_fmt = endian + "HHIQQQIHHHHHH"
+            ph_fmt = endian + "IIQQQQQQ"
+        else:
+            print(f"Error: Unsupported ELF class: {elf_class}", file=sys.stderr)
+            return None
+
+        header_size = 16 + struct.calcsize(header_fmt)
+        if len(elf_data) < header_size:
+            print("Error: Truncated ELF header", file=sys.stderr)
+            return None
+
+        header = struct.unpack(header_fmt, elf_data[16:header_size])
+        e_phoff = header[4]
+        e_phentsize = header[8]
+        e_phnum = header[9]
+        ph_size = struct.calcsize(ph_fmt)
+        if e_phentsize < ph_size:
+            print("Error: Program header entry is smaller than expected", file=sys.stderr)
+            return None
+
+        blocks = []
+        total_bytes = 0
+        for idx in range(e_phnum):
+            ph_start = e_phoff + idx * e_phentsize
+            ph_end = ph_start + e_phentsize
+            if ph_end > len(elf_data):
+                print(f"Warning: Skipping truncated program header {idx}", file=sys.stderr)
+                continue
+
+            ph = struct.unpack(ph_fmt, elf_data[ph_start:ph_start + ph_size])
+            if elf_class == 1:
+                p_type, p_offset, p_vaddr, p_paddr, p_filesz, _p_memsz, _p_flags, _p_align = ph
+            else:
+                p_type, _p_flags, p_offset, p_vaddr, p_paddr, p_filesz, _p_memsz, _p_align = ph
+
+            if p_type != 1 or p_filesz == 0:
+                continue
+
+            file_end = p_offset + p_filesz
+            if file_end > len(elf_data):
+                print(f"Warning: Skipping truncated PT_LOAD segment {idx}", file=sys.stderr)
+                continue
+
+            seg_data = elf_data[p_offset:file_end]
+            blocks.append((p_paddr, seg_data, f"ELF PT_LOAD[{idx}] LMA=0x{p_paddr:08x} VMA=0x{p_vaddr:08x}"))
+            total_bytes += len(seg_data)
+
+    except Exception as exc:
+        print(f"Failed to parse ELF file: {exc}", file=sys.stderr)
+        return None
+
+    if not blocks:
+        print("No file-backed PT_LOAD segments found in ELF", file=sys.stderr)
+        return None
+
+    print(f"Loaded {len(blocks)} ELF PT_LOAD segments, {total_bytes} bytes at LMA", file=sys.stderr)
+    return blocks
 
 
 def find_free_port() -> int:
@@ -163,6 +271,15 @@ class MemoryBus:
         self._initialized = True
         self._last_append_idx = len(self.blocks) - 1
 
+    def load_blocks(self, blocks: List[tuple]):
+        """Load blocks in order, allowing later blocks to overwrite earlier data."""
+        count = 0
+        for addr, data, _name in blocks:
+            if self.store(addr, data):
+                count += 1
+        self._initialized = bool(self.blocks)
+        return count
+
     def _find_block(self, addr: int, size: int) -> Optional[int]:
         """Find a block that contains the address range [addr, addr+size)."""
         for i, block in enumerate(self.blocks):
@@ -195,44 +312,43 @@ class MemoryBus:
         return None
 
     def store(self, addr: int, data: bytes) -> bool:
-        """
-        Store data to address range [addr, addr+len(data)).
-
-        Match gdbstub.c behavior for sequential restore writes:
-        - overwrite inside an existing block
-        - append to the end of an existing block
-        - create a new block if no existing block matches
-
-        Returns False when block table is full, True otherwise.
-        """
+        """Store data and merge adjacent or overlapping memory blocks."""
         addr &= self.ADDR_MASK
         size = len(data)
 
         if size == 0:
             return True
 
-        if self._last_append_idx is not None:
-            last_block = self.blocks[self._last_append_idx]
-            if last_block.base + last_block.length == addr:
-                last_block.chunk.append(data)
-                last_block.length = last_block.chunk.length
-                return True
+        end = addr + size
+        new_base = addr
+        new_end = end
+        overlapping = []
 
         for i, block in enumerate(self.blocks):
-            if block.contains(addr, size):
-                block.chunk.write(addr - block.base, data)
-                block.length = block.chunk.length
-                self._last_append_idx = i
-                return True
+            block_end = block.base + block.length
+            if block_end < addr or block.base > end:
+                continue
+            overlapping.append(i)
+            new_base = min(new_base, block.base)
+            new_end = max(new_end, block_end)
 
-            if block.base + block.length == addr:
-                block.chunk.append(data)
-                block.length = block.chunk.length
-                self._last_append_idx = i
-                return True
+        merged = bytearray(new_end - new_base)
+        for i in overlapping:
+            block = self.blocks[i]
+            offset = block.base - new_base
+            merged[offset:offset + block.length] = block.data
 
-        self.blocks.append(MemoryBlock(addr, size, MemoryChunk.from_bytes(data)))
-        self._last_append_idx = len(self.blocks) - 1
+        offset = addr - new_base
+        merged[offset:offset + size] = data
+
+        new_block = MemoryBlock(new_base, len(merged), MemoryChunk.from_bytes(bytes(merged)))
+        for i in reversed(overlapping):
+            del self.blocks[i]
+
+        self.blocks.append(new_block)
+        self.blocks.sort(key=lambda block: block.base)
+        self._last_append_idx = self.blocks.index(new_block)
+        self._initialized = True
         return True
 
 def parse_coredump_blocks(log_file):
@@ -308,7 +424,7 @@ class GdbClientHandler:
 
     RSP_BUFF_LEN = 4096  # Larger buffer for SREC restore
 
-    def __init__(self, conn: socket.socket, addr: Tuple[str, int], server_ref, log_file: Optional[str] = None):
+    def __init__(self, conn: socket.socket, addr: Tuple[str, int], server_ref, log_file: Optional[str] = None, elf_file: Optional[str] = None):
         self.conn = conn
         self.addr = addr
         self.server = server_ref
@@ -318,12 +434,20 @@ class GdbClientHandler:
         self.regs = RiscvRegs()
         self.running = True
 
-        # Parse log file and init memory bus if provided
+        # Load ELF data at LMA first; coredump blocks below overlay runtime VMA.
+        if elf_file:
+            blocks = parse_elf_lma_blocks(elf_file)
+            if blocks:
+                count = self.memory.load_blocks(blocks)
+                print(f"Initialized {count} ELF PT_LOAD segments at LMA from {elf_file}")
+            else:
+                print(f"Warning: Failed to load ELF data from {elf_file}")
+
         if log_file:
             blocks = parse_coredump_blocks(log_file)
             if blocks:
-                count = self.memory.init_blocks(blocks)
-                print(f"Initialized {count} memory blocks from {log_file}")
+                count = self.memory.load_blocks(blocks)
+                print(f"Loaded {count} coredump memory blocks at VMA from {log_file}")
             else:
                 print(f"Warning: Failed to parse coredump from {log_file}")
 
@@ -393,16 +517,24 @@ class GdbClientHandler:
 
     def handle_write_memory(self, packet: str) -> bool:
         try:
-            parts = packet.split(",")
-            addr = self.hex_to_int(parts[0])
-            length_parts = parts[1].split(":")
-            length = self.hex_to_int(length_parts[0])
+            comma_idx = packet.find(",")
+            colon_idx = packet.find(":", comma_idx + 1)
+            if comma_idx < 0 or colon_idx < 0:
+                self.send_reply(b"E06")
+                return False
+
+            addr = self.hex_to_int(packet[:comma_idx])
+            length = self.hex_to_int(packet[comma_idx + 1:colon_idx])
 
             if length == 0:
                 self.send_reply(b"OK")
                 return True
 
-            data_hex = length_parts[1].split("#")[0]
+            data_hex = packet[colon_idx + 1:]
+            if len(data_hex) != length * 2:
+                self.send_reply(b"E06")
+                return False
+
             data = self.hex_to_bytes(data_hex)
 
             ret = self.memory.store(addr, data)
@@ -419,17 +551,22 @@ class GdbClientHandler:
     def handle_write_memory_binary(self, packet: str) -> bool:
         """Handle 'X' write memory (binary, used by restore command)."""
         try:
-            parts = packet.split(",")
-            addr = self.hex_to_int(parts[0])
-            length_parts = parts[1].split(":")
-            length = self.hex_to_int(length_parts[0])
+            comma_idx = packet.find(",")
+            colon_idx = packet.find(":", comma_idx + 1)
+            if comma_idx < 0 or colon_idx < 0:
+                self.send_reply(b"E06")
+                return False
+
+            addr = self.hex_to_int(packet[:comma_idx])
+            length = self.hex_to_int(packet[comma_idx + 1:colon_idx])
 
             if length == 0:
                 self.send_reply(b"OK")
                 return True
 
-            # Extract binary data with escape handling
-            data_str = length_parts[1].split("#")[0]
+            # The X packet payload is binary data. It may contain ',' or ':',
+            # so only the fixed header above can be parsed with delimiters.
+            data_str = packet[colon_idx + 1:]
             data = bytearray()
             i = 0
             while i < len(data_str):
@@ -440,6 +577,10 @@ class GdbClientHandler:
                 else:
                     data.append(ord(data_str[i]))
                 i += 1
+
+            if len(data) != length:
+                self.send_reply(b"E06")
+                return False
 
             ret = self.memory.store(addr, bytes(data))
             if ret:
@@ -643,9 +784,10 @@ class GdbClientHandler:
 class LocalTargetServer:
     """Local GDB RSP server."""
 
-    def __init__(self, port: int, log_file: Optional[str] = None):
+    def __init__(self, port: int, log_file: Optional[str] = None, elf_file: Optional[str] = None):
         self.port = port
         self.log_file = log_file
+        self.elf_file = elf_file
         self.sock = None
         self.thread = None
         self.running = False
@@ -665,7 +807,7 @@ class LocalTargetServer:
                 try:
                     self.sock.settimeout(1.0)
                     conn, addr = self.sock.accept()
-                    client = GdbClientHandler(conn, addr, self, self.log_file)
+                    client = GdbClientHandler(conn, addr, self, self.log_file, self.elf_file)
                     with self.lock:
                         self.clients.append(client)
                     thread = threading.Thread(target=client.run)
@@ -741,13 +883,12 @@ def main():
 
     # Create and start server
     print(f"Starting local GDB server on port {port}...")
-    server = LocalTargetServer(port, log_file)
+    server = LocalTargetServer(port, log_file, elf_file)
     server.start()
 
     print(f"GDB server ready. Connect from GDB using:")
     print(f"  (gdb) file {elf_file}")
     print(f"  (gdb) target remote localhost:{port}")
-    print(f"  (gdb) restore {elf_file}")
     if default_gdb_init.exists():
         print(f"  (gdb) source {default_gdb_init}")
 
@@ -759,7 +900,6 @@ def main():
     gdb_cmd = ['riscv64-unknown-elf-gdb']
     gdb_cmd.extend(['-ex', f'file {elf_file}'])
     gdb_cmd.extend(['-ex', f'target remote localhost:{port}'])
-    gdb_cmd.extend(['-ex', f'restore {elf_file}'])
     if default_gdb_init.exists():
         gdb_cmd.extend(['-x', str(default_gdb_init)])
     else:
@@ -772,7 +912,7 @@ def main():
     try:
         gdb_process = subprocess.Popen(gdb_cmd)
     except FileNotFoundError:
-        print(f"Warning: {args.gdb} not found. Please start GDB manually.")
+        print("Warning: riscv64-unknown-elf-gdb not found. Please start GDB manually.")
         gdb_process = None
     except Exception as e:
         print(f"Warning: Failed to start GDB: {e}")
@@ -790,6 +930,7 @@ def main():
                     gdb_process = None
                     # Shutdown server when GDB exits
                     break
+            time.sleep(0.1)
 
         # Normal exit after GDB disconnects
         if server.running:
@@ -801,14 +942,7 @@ def main():
         print("\nShutting down server...")
         server.stop()
 
-        # Wait for GDB process to exit
-        if gdb_process is not None:
-            ret = gdb_process.poll()
-            if ret is None:
-                print("Waiting for GDB client to exit...")
-                gdb_process.wait()
-            print("GDB client stopped.")
-
+        stop_gdb_process(gdb_process)
         print("Server stopped.")
 
 

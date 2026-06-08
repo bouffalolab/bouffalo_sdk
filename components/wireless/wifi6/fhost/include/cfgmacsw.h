@@ -240,11 +240,9 @@ enum cfgmacsw_msg_index {
     CFGMACSW_CLR_STATS_CMD,
 
     CFGMACSW_STATS_RESP,
-#ifdef CFG_BL_WIFI_PS_ENABLE
     /// Requset to send null packet
     CFGMACSW_NULL_DATA_SEND_CMD,
     CFGMACSW_NULL_DATA_SEND_RESP,
-#endif
     /// Request to enable WiFi/BLE coexistence (param: @ref cfgmacsw_coex_enable)
     CFGMACSW_COEX_ENABLE_CMD,
     /// Response to CFGMACSW_COEX_ENABLE_CMD (param: @ref cfgmacsw_resp)
@@ -257,6 +255,8 @@ enum cfgmacsw_msg_index {
     CFGMACSW_COEX_DUTY_SET_CMD,
     /// Response to CFGMACSW_COEX_DUTY_SET_CMD (param: @ref cfgmacsw_resp)
     CFGMACSW_COEX_DUTY_SET_RESP,
+    /// Event sent when AP CSA completes (param: @ref cfgmacsw_csa_finish_event)
+    CFGMACSW_CSA_FINISH_EVENT,
 };
 
 /// CFGMACSW status
@@ -488,14 +488,12 @@ struct cfgmacsw_raw_send {
     cfgmacsw_adhoc_tx_cfm cb_cfm;
 };
 
-#ifdef CFG_BL_WIFI_PS_ENABLE
 struct cfgmacsw_null_data_send {
     /// header
     struct cfgmacsw_msg_hdr hdr;
     /// Vif idx
     int fhost_vif_idx;
 };
-#endif
 
 /// structure for CFGMACSW_SCAN_CMD
 struct cfgmacsw_scan {
@@ -1300,6 +1298,18 @@ struct cfgmacsw_ftm_done_event {
     struct mac_ftm_results results;
 };
 #endif
+
+/// structure for CFGMACSW_CSA_FINISH_EVENT
+struct cfgmacsw_csa_finish_event {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
+    /// Frequency of the new channel in MHz
+    uint16_t freq;
+    /// Status (0 = success)
+    uint8_t status;
+};
 
 /**
  ****************************************************************************************

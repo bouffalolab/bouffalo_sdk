@@ -12679,6 +12679,9 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
          }
      } else if (os_strncmp(buf, "ENABLE_ACL ", 11) == 0) {
              ap_ctrl_iface_acl_enable(wpa_s, buf + 11);
+	} else if (os_strncmp(buf, "CHAN_SWITCH ", 12) == 0) {
+		if (ap_ctrl_iface_chanswitch(wpa_s, buf + 12))
+			reply_len = -1;
 #endif /* CONFIG_AP */
 	} else if (os_strncmp(buf, "STA_AUTOCONNECT ", 16) == 0) {
 		wpa_s->auto_reconnect_disabled = atoi(buf + 16) == 0;

@@ -179,6 +179,22 @@ static int msg_upld_send_cmd_packet(mr_netdev_priv_t *priv, uint8_t eth_flag, ui
     return 0;
 }
 
+/**
+ * @brief Reset runtime link state after host/device reset or stop
+ * @details Clears the software handshake state and restores credit tracking
+ *          to the configured default. Packet queues and hardware resources are
+ *          left untouched; callers handle those paths according to the reset
+ *          source.
+ * @param[in] priv Pointer to network device private structure
+ */
+static void netdev_reset_runtime_state(mr_netdev_priv_t *priv)
+{
+    priv->netdev_status = MR_NETDEV_DSTA_IDLE;
+    priv->netdev_ready = false;
+    priv->device_dnld_credit_limit = priv->netdev_cfg.dnld_credit_max;
+    priv->credit_limit_update_last = 0;
+}
+
 /*****************************************************************************
  * Network Device Daemon Thread
  *****************************************************************************/
@@ -245,7 +261,11 @@ static void netdev_proc_task(void *arg)
             notified_value &= ~notified_mask;
             LOG_W("%s processing reset request \r\n", priv->netdev_cfg.name);
 
-            priv->netdev_status = MR_NETDEV_DSTA_IDLE;
+            netdev_reset_runtime_state(priv);
+            ret = msg_upld_send_cmd_packet(priv, MR_NETDEV_FLAG_DEVICE_RESET, NULL, 0);
+            if (ret < 0) {
+                LOG_E("%s Failed to send DEVICE_RESET message\r\n", priv->netdev_cfg.name);
+            }
         }
 
         /* dnld_done event */
@@ -266,9 +286,7 @@ static void netdev_proc_task(void *arg)
             LOG_W("%s received host %s command\r\n", priv->netdev_cfg.name,
                   netdev_msg_pkt->flag == MR_NETDEV_FLAG_HOST_RESET ? "RESET" : "STOP");
 
-            priv->netdev_status = MR_NETDEV_DSTA_IDLE;
-            priv->device_dnld_credit_limit = priv->netdev_cfg.dnld_credit_max;
-            priv->credit_limit_update_last = 0;
+            netdev_reset_runtime_state(priv);
 
             mr_netdev_dnld_elem_free(priv, netdev_msg_pkt);
             netdev_msg_pkt = NULL;
@@ -307,6 +325,7 @@ static void netdev_proc_task(void *arg)
                 }
 
                 priv->netdev_status = MR_NETDEV_DSTA_DEVICE_RUN;
+                priv->netdev_ready = true;
                 break;
 
             case MR_NETDEV_DSTA_DEVICE_RUN:
@@ -317,7 +336,7 @@ static void netdev_proc_task(void *arg)
                     if (ret < 0) {
                         LOG_E("%s Failed to send DEVICE_STOP message\r\n", priv->netdev_cfg.name);
                     }
-                    priv->netdev_status = MR_NETDEV_DSTA_IDLE;
+                    netdev_reset_runtime_state(priv);
                 }
 
                 if (netdev_msg_pkt == NULL) {

@@ -106,8 +106,9 @@ def get_all_functions(elf_file):
     try:
         result = subprocess.run(
             ['riscv64-unknown-elf-nm', '--defined-only', '--format=posix', '--numeric-sort', elf_file],
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             check=True
         )
     except subprocess.CalledProcessError as e:
@@ -133,8 +134,9 @@ def parse_objdump_frames(elf_file):
     try:
         result = subprocess.run(
             ['riscv64-unknown-elf-objdump', '--dwarf=frames', elf_file],
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             check=True
         )
     except subprocess.CalledProcessError as e:
@@ -247,8 +249,9 @@ def get_function_names(elf_file):
     try:
         result = subprocess.run(
             ['riscv64-unknown-elf-nm', '--defined-only', '--format=posix', elf_file],
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             check=True
         )
     except subprocess.CalledProcessError as e:

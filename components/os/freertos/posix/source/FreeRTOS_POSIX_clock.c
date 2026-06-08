@@ -34,9 +34,9 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
-#include "posix_time.h"
-#include "FreeRTOS_POSIX/posix_utils.h"
+#include "FreeRTOS_POSIX/errno.h"
+#include "FreeRTOS_POSIX/time.h"
+#include "FreeRTOS_POSIX/utils.h"
 
 /* Declaration of snprintf. The header stdio.h is not included because it
  * includes conflicting symbols on some platforms. */
@@ -202,7 +202,11 @@ int clock_settime( clockid_t clock_id,
 
     /* This function is currently unsupported. It will always return -1 and
      * set errno to EPERM. */
-    errno = EPERM;
+    #if ( configUSE_POSIX_ERRNO == 1 )
+    {
+        errno = EPERM;
+    }
+    #endif
 
     return -1;
 }
@@ -221,7 +225,11 @@ int nanosleep( const struct timespec * rqtp,
     /* Check rqtp. */
     if( UTILS_ValidateTimespec( rqtp ) == false )
     {
-        errno = EINVAL;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EINVAL;
+        }
+        #endif
         iStatus = -1;
     }
 

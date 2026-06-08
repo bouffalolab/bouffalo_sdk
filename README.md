@@ -32,47 +32,47 @@
 
 Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706/BL702L | BL616/BL618/BL616CL/BL618DG |
-|:------------:|:--------------:|:--------------------:|:-----------:|
-|  ADC         |      ○         |      √             |   √           |
-|  CAM         |      -         |      √             |   √           |
-|  CKS         |      ○         |      √             |   √           |
-|  CSI         |      -         |      -             |   -           |
-|  DAC         |      ○         |      √             |   √           |
-|  DMA         |      ○         |      √             |   √           |
-|  EFUSE       |      ×         |      √             |   √           |
-|  EMAC        |      -         |      √             |   √           |
-|  FLASH       |      √         |      √             |   √           |
-|  GPIO        |      ○         |      √             |   √           |
-|  I2C         |      ○         |      √             |   √           |
-|  I2S         |      ○         |      ○             |   √           |
-|  IR          |      ○         |      √             |   √           |
-|  MJPEG       |      ×         |      ×             |   √           |
-|  PWM_v1      |      ○         |      √             |   -           |
-|  PWM_v2      |      -         |      -             |   √           |
-|  RTC         |      ○         |      √             |   √           |
-|  SEC_AES     |      ○         |      √             |   √           |
-|  SEC_SHA     |      ○         |      √             |   √           |
-|  SEC_TRNG    |      ○         |      √             |   √           |
-|  SEC_PKA     |      ○         |      √             |   √           |
-|  SPI         |      ○         |      √             |   √           |
-|  TIMER       |      ○         |      √             |   √           |
-|  UART        |      √         |      √             |   √           |
-|  USB_v1      |      -         |      √             |   -           |
-|  USB_v2      |      -         |      -             |   √           |
-|  WDG         |      ○         |      √             |   √           |
+|   Peripheral |    BL602 |    BL702/BL702L/BL704L | BL616C/CL | BL618M/BL618DG |
+|:------------:|:--------------:|:--------------------:|:-----------:|:-----------:|
+|  ADC         |      ○         |      √             |   √           |   √           |
+|  CAM         |      -         |      √             |   √           |   √           |
+|  CKS         |      ○         |      √             |   √           |   √           |
+|  CSI         |      -         |      -             |   -           |   -           |
+|  DAC         |      ○         |      √             |   √           |   √           |
+|  DMA         |      ○         |      √             |   √           |   √           |
+|  EFUSE       |      ×         |      √             |   √           |   √           |
+|  EMAC        |      -         |      √             |   √           |   √           |
+|  FLASH       |      √         |      √             |   √           |   √           |
+|  GPIO        |      ○         |      √             |   √           |   √           |
+|  I2C         |      ○         |      √             |   √           |   √           |
+|  I2S         |      ○         |      ○             |   √           |   √           |
+|  IR          |      ○         |      √             |   √           |   √           |
+|  MJPEG       |      ×         |      ×             |   √           |   √           |
+|  PWM_v1      |      ○         |      √             |   -           |   -           |
+|  PWM_v2      |      -         |      -             |   √           |   √           |
+|  RTC         |      ○         |      √             |   √           |   √           |
+|  SEC_AES     |      ○         |      √             |   √           |   √           |
+|  SEC_SHA     |      ○         |      √             |   √           |   √           |
+|  SEC_TRNG    |      ○         |      √             |   √           |   √           |
+|  SEC_PKA     |      ○         |      √             |   √           |   √           |
+|  SPI         |      ○         |      √             |   √           |   √           |
+|  TIMER       |      ○         |      √             |   √           |   √           |
+|  UART        |      √         |      √             |   √           |   √           |
+|  USB_v1      |      -         |      √             |   -           |   -           |
+|  USB_v2      |      -         |      -             |   √           |   √           |
+|  WDG         |      ○         |      √             |   √           |   √           |
 
 # Wireless Support
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL702L | BL616/BL618 | BL616CL | BL618DG |
-|:------------:|:--------------:|:--------------------:|:------:|:-----------:|:-------:|:-------:|
-|  WIFI4       |      √         |      -             |   -    |   -         |   -     |   -     |
-|  WIFI6       |      -         |      -             |   -    |   √         |   √     |   √     |
-|  BT          |      -         |      -             |   -    |   √         |   √     |   √     |
-|  BLE         |      √         |      ×             |   ×    |   √         |   √     |   √     |
-|  ZIGBEE      |      -         |      -             |   √    |   √         |   -     |   √     |
-|  THREAD      |      -         |      -             |   √    |   √         |   -     |   √     |
-|  MATTER      |      √         |      √             |   √    |   √         |   ○     |   ○     |
+|   Peripheral |    BL602 |    BL702/BL702L/BL704L | BL616C/CL | BL618M/BL618DG |
+|:------------:|:--------------:|:--------------------:|:------:|:-----------:|
+|  WIFI4       |      √         |      -             |   -    |   -         |
+|  WIFI6       |      -         |      -             |   √    |   √         |
+|  BT          |      -         |      -             |   √    |   √         |
+|  BLE         |      √         |      ×             |   √    |   √         |
+|  ZIGBEE      |      -         |      √             |   √    |   √         |
+|  THREAD      |      -         |      √             |   √    |   √         |
+|  MATTER      |      √         |      √             |   √    |   ○         |
 
 Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
@@ -114,13 +114,14 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 - [riscv64-unknown-elf-gcc](https://github.com/bouffalolab/toolchain_gcc_t-head_linux) toolchain used in linux.
 - T-HEAD official does not provide macos toolchain, so you should build by yourself, refer to [build_toolchain_macos](https://github.com/p4ddy1/pine_ox64/blob/main/build_toolchain_macos.md).
 - [linux-riscv64-linux-gcc](https://gitee.com/bouffalolab/linuxtoolchain_gcc_t-head) toolchain used for compiling linux code.
+- [riscv64-zephyr-elf](https://github.com/zephyrproject-rtos/sdk-ng/releases/tag/v1.0.0) toolchain used for compiling BL618DG.
 
 ## Command Line Development
 
 Before compiling with the command line, you need to select the corresponding toolchain according to your operating system, configure it to the system environment variables, and install the **make** or **ninja**, then you can do the following. For the details, you can visit [BouffaloSDK Environment Setup](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/get_started.html).
 
 - Go to the demo directory where you want to compile and there are `main.c` and `Makefile` files in that directory
-- Just execute the following command, take **BL616** as an example
+- Just execute the following command, take **BL616C/CL** as an example
 
 ```
 cd examples/helloworld
@@ -134,14 +135,14 @@ cd examples/helloworld
 make CHIP=bl602 BOARD=bl602dk
 ```
 
-- If you use **BL702L** , you can try
+- If you use **BL702L/BL704L** , you can try
 
 ```
 cd examples/helloworld
 make CHIP=bl702l BOARD=bl702ldk
 ```
 
-- For multi-core chip **BL618DG** , you need to specify the CPU core
+- For multi-core chip **BL618M/BL618DG** , you need to specify the CPU core
 
 ```
 cd examples/bl618dg_dualcore
@@ -174,7 +175,7 @@ usermod -aG dialout xxx # xxx is your own name
 
 ```
 cd examples/helloworld
-make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl702l/bl616/bl616cl/bl618dg, COMX in Windows, /dev/ttyxxx in Linux
+make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl702l/bl616/bl616cl/bl618dg (CHIP values remain unchanged), COMX in Windows, /dev/ttyxxx in Linux
 ```
 
 If flash using serial port rather than USB, different USB2TTL chips support different max baudrates, need to pay attention to when flashing.

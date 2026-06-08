@@ -691,6 +691,11 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 #endif
         case UART_CMD_SET_DEGLITCH_CNT:
+#if !defined(BL616CL)
+            /* Temporarily disable RX to avoid abnormal FIFO data when enabling de-glitch. */
+            tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+            putreg32(tmp & ~UART_CR_URX_EN, reg_base + UART_URX_CONFIG_OFFSET);
+#endif
 #if defined(BL616CL) || defined(BL618DG)
             rx_tmp = getreg32(reg_base + UART_DATA_CONFIG_OFFSET);
 #else
@@ -705,6 +710,12 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 #if defined(BL616CL) || defined(BL618DG)
             putreg32(rx_tmp, reg_base + UART_DATA_CONFIG_OFFSET);
 #else
+            putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+#endif
+#if !defined(BL616CL)
+            rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+            rx_tmp &= ~UART_CR_URX_EN;
+            rx_tmp |= tmp & UART_CR_URX_EN;
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
 #endif
             break;

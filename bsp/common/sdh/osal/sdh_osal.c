@@ -4,6 +4,7 @@
 /* FreeRTOS */
 #include <FreeRTOS.h>
 #include "semphr.h"
+#include "task.h"
 #else
 /* no os */
 #include "bflb_mtimer.h"
@@ -102,3 +103,100 @@ int sdh_osal_semb_give(void *semb)
 }
 
 #endif
+
+void *sdh_osal_rmutex_create(void)
+{
+#if (SDH_OSAL_TYPE == 1)
+    return (void *)xSemaphoreCreateRecursiveMutex();
+#else
+    /* no os: no preemption inside driver, return a non-null sentinel
+     * so callers' NULL checks pass. */
+    static uint8_t rmutex_stub;
+    return (void *)&rmutex_stub;
+#endif
+}
+
+int sdh_osal_rmutex_delete(void *rmutex)
+{
+#if (SDH_OSAL_TYPE == 1)
+    if (rmutex != NULL) {
+        vSemaphoreDelete((SemaphoreHandle_t)rmutex);
+    }
+#else
+    (void)rmutex;
+#endif
+    return 0;
+}
+
+int sdh_osal_rmutex_take(void *rmutex)
+{
+#if (SDH_OSAL_TYPE == 1)
+    if ((rmutex == NULL) || xPortIsInsideInterrupt()) {
+        return -1;
+    }
+
+    return (xSemaphoreTakeRecursive((SemaphoreHandle_t)rmutex, portMAX_DELAY) == pdTRUE) ? 0 : -1;
+#else
+    (void)rmutex;
+    return 0;
+#endif
+}
+
+int sdh_osal_rmutex_give(void *rmutex)
+{
+#if (SDH_OSAL_TYPE == 1)
+    if ((rmutex == NULL) || xPortIsInsideInterrupt()) {
+        return -1;
+    }
+
+    return (xSemaphoreGiveRecursive((SemaphoreHandle_t)rmutex) == pdTRUE) ? 0 : -1;
+#else
+    (void)rmutex;
+    return 0;
+#endif
+}
+
+void *sdh_osal_task_create(const char *name,
+                           sdh_osal_task_entry_t entry,
+                           void *arg,
+                           uint32_t stack_size,
+                           uint32_t priority)
+{
+#if (SDH_OSAL_TYPE == 1)
+    TaskHandle_t handle = NULL;
+    /* stack_size here is bytes; FreeRTOS expects words */
+    uint32_t stack_words = stack_size / sizeof(StackType_t);
+    if (stack_words == 0) {
+        stack_words = configMINIMAL_STACK_SIZE;
+    }
+    if (xTaskCreate((TaskFunction_t)entry, name, stack_words, arg,
+                    (UBaseType_t)priority, &handle) != pdPASS) {
+        return NULL;
+    }
+    return (void *)handle;
+#else
+    (void)name; (void)entry; (void)arg; (void)stack_size; (void)priority;
+    return NULL;
+#endif
+}
+
+int sdh_osal_task_delete(void *task)
+{
+#if (SDH_OSAL_TYPE == 1)
+    if (task == NULL) {
+        return -1;
+    }
+    vTaskDelete((TaskHandle_t)task);
+    return 0;
+#else
+    (void)task;
+    return 0;
+#endif
+}
+
+void sdh_osal_task_exit_self(void)
+{
+#if (SDH_OSAL_TYPE == 1)
+    vTaskDelete(NULL);
+#endif
+}

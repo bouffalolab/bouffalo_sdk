@@ -34,13 +34,9 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
+#include "FreeRTOS_POSIX/errno.h"
 #include "FreeRTOS_POSIX/pthread.h"
-#include "FreeRTOS_POSIX/posix_utils.h"
-
-#if defined( __GNUC__ )
-    #pragma GCC diagnostic ignored "-Waddress"
-#endif
+#include "FreeRTOS_POSIX/utils.h"
 
 /**
  * @brief Initialize a PTHREAD_MUTEX_INITIALIZER mutex.
@@ -152,18 +148,8 @@ int pthread_mutex_init( pthread_mutex_t * mutex,
             ( void ) xSemaphoreCreateMutexStatic( &pxMutex->xMutex );
         }
 
-        /* Ensure that the FreeRTOS mutex was successfully created. */
-        if( ( SemaphoreHandle_t ) &pxMutex->xMutex == NULL )
-        {
-            /* Failed to create mutex. Set error EAGAIN and free mutex object. */
-            iStatus = EAGAIN;
-            vPortFree( pxMutex );
-        }
-        else
-        {
-            /* Mutex successfully created. */
-            pxMutex->xIsInitialized = pdTRUE;
-        }
+        /* Mutex successfully created. */
+        pxMutex->xIsInitialized = pdTRUE;
     }
 
     return iStatus;
@@ -296,7 +282,7 @@ int pthread_mutex_unlock( pthread_mutex_t * mutex )
     if( iStatus == 0 )
     {
         /* Suspend the scheduler so that
-         * mutex is unlocked AND owner is updated atomically */
+         * mutex is unlocked AND owner is updated atomic_rtosally */
         vTaskSuspendAll();
 
         /* Call the correct FreeRTOS mutex unlock function based on mutex type. */

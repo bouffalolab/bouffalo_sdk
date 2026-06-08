@@ -183,6 +183,7 @@ uint8_t wave_player_get_volume(void);
 int wave_player_set_mute(bool mute);
 bool wave_player_get_mute(void);
 int wave_player_set_record_volume(uint8_t volume);
+int wave_player_set_record_pga(uint8_t pga);
 int wave_player_feed(uint8_t *data, uint32_t len);
 uint32_t wave_player_feed_blocking(uint8_t *data, uint32_t len);
 void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_t rx_block_bytes, uint8_t channels);

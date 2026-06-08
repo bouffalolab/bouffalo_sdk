@@ -2700,6 +2700,15 @@ int wave_player_set_record_volume(uint8_t volume)
     return audio_codec_set_record_volume(&g_audio.cap_codec, volume);
 }
 
+int wave_player_set_record_pga(uint8_t pga)
+{
+    if (pga > 100) {
+        pga = 100;
+    }
+
+    return wave_player_apply_rec_mic_pga(pga);
+}
+
 /* Get volume (0-100) */
 uint8_t wave_player_get_volume(void)
 {

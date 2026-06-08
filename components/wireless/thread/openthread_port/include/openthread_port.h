@@ -10,7 +10,7 @@ extern "C" {
 
 #define VERSION_OT_SRC_MAJOR 1
 #define VERSION_OT_SRC_MINOR 7
-#define VERSION_OT_SRC_PATCH 7
+#define VERSION_OT_SRC_PATCH 8
 
 // #define VERSION_OT_SRC_EXTRA_INFO "customer-1"
 
@@ -153,6 +153,16 @@ void ot_alarmTask(ot_system_event_t sevent);
  *
 *******************************************************************************/
 void ot_radioInit(void);
+
+/****************************************************************************//**
+ * @brief  Set OpenThread instance used by radio event callbacks.
+ *
+ * @param  instance, OpenThread instance created by upper stack
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ot_radioSetInstance(otInstance *instance);
 
 /****************************************************************************//**
  * @brief  Set CSL TX SFD offset compensation value

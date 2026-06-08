@@ -220,27 +220,35 @@ class CustomBinManager:
 
     @staticmethod
     def append_bin(main_bin_path: str,
-                   append_bin_path: str,
+                   append_bin_path: Optional[str],
                    descriptor_name: str,
                    array_offset: Optional[int] = None,
                    alignment: Optional[int] = None,
-                   output_bin_path: Optional[str] = None):
+                   output_bin_path: Optional[str] = None,
+                   append_size: Optional[int] = None,
+                   tail_alignment: Optional[int] = None):
         """
         追加 bin 文件到主固件末尾，并更新描述符
 
         参数:
             main_bin_path: 主 bin 文件路径
-            append_bin_path: 要追加的 bin 文件路径
+            append_bin_path: 要追加的 bin 文件路径；为 None 时使用 append_size 生成空数据
             descriptor_name: 描述符名称（最多7字符）
             array_offset: 数组偏移量（None 则使用默认值）
             alignment: 地址对齐大小（None 则使用默认值 4KB）
             output_bin_path: 输出文件路径（如果为None则覆盖原文件）
+            append_size: 指定预留数据大小，仅在 append_bin_path 为 None 时有效
+            tail_alignment: 追加数据末尾对齐大小，None 或 0 表示不补齐末尾
         """
         if array_offset is None:
             array_offset = CustomBinManager.DEFAULT_ARRAY_OFFSET
 
         if alignment is None:
             alignment = CustomBinManager.DEFAULT_ALIGNMENT
+        if tail_alignment is None:
+            tail_alignment = 0
+        if tail_alignment < 0:
+            raise ValueError(f"--tail-align 必须大于等于 0: {tail_alignment}")
 
         # 验证名称长度（最多8字符，8字符时无需null终止符）
         if len(descriptor_name) > 8:
@@ -256,11 +264,20 @@ class CustomBinManager:
         if debug:
             print(f"  主 bin 大小: {main_bin_size} 字节 (0x{main_bin_size:X})")
 
-        # 读取要追加的 bin 文件
-        if debug:
-            print(f"读取追加 bin 文件: {append_bin_path}")
-        with open(append_bin_path, 'rb') as f:
-            append_bin_data = f.read()
+        # 读取要追加的 bin 文件，或按 append_size 生成预留数据
+        if append_bin_path is None:
+            if append_size is None:
+                raise ValueError("未指定追加 bin 文件时必须指定 --append-size")
+            if append_size <= 0:
+                raise ValueError(f"--append-size 必须大于 0: {append_size}")
+            append_bin_data = b'\x00' * append_size
+        else:
+            if append_size is not None:
+                raise ValueError("--append-size 不能和追加 bin 文件同时使用")
+            if debug:
+                print(f"读取追加 bin 文件: {append_bin_path}")
+            with open(append_bin_path, 'rb') as f:
+                append_bin_data = f.read()
 
         append_bin_size = len(append_bin_data)
         if debug:
@@ -283,8 +300,13 @@ class CustomBinManager:
             print(f"  起始地址: 0x{start_addr:08X} (对齐到 0x{alignment:X})")
 
         # 计算结束地址
-        end_addr = start_addr + append_bin_size
+        data_end_addr = start_addr + append_bin_size
+        if tail_alignment:
+            end_addr = CustomBinManager.align_up(data_end_addr, tail_alignment)
+        else:
+            end_addr = data_end_addr
         if debug:
+            print(f"  数据结束地址: 0x{data_end_addr:08X}")
             print(f"  结束地址: 0x{end_addr:08X}")
             print(f"  数据大小: {append_bin_size} 字节")
 
@@ -297,6 +319,12 @@ class CustomBinManager:
 
         # 追加新 bin 数据
         main_bin_data.extend(append_bin_data)
+
+        tail_padding_size = end_addr - data_end_addr
+        if tail_padding_size > 0:
+            main_bin_data.extend(b'\x00' * tail_padding_size)
+            if debug:
+                print(f"  末尾填充: {tail_padding_size} 字节 (0x{tail_padding_size:X})")
 
         new_total_size = len(main_bin_data)
         if debug:
@@ -377,6 +405,8 @@ def main():
   2. 追加 bin 文件到主固件:
      %(prog)s firmware.bin --append APP app.bin
      %(prog)s firmware.bin --append KERNEL kernel.bin --output new.bin --align 0x1000
+     %(prog)s firmware.bin --append AUTOLIST --append-size 128
+     %(prog)s firmware.bin --append AUTOLIST autolist.txt --tail-align 0x1000
 
 说明:
   数组位置: 在 bin 文件的指定偏移处（默认 0x1200）
@@ -398,9 +428,15 @@ def main():
     # 追加模式
     parser.add_argument(
         "-a", "--append",
-        nargs=2,
+        nargs="+",
         metavar=('NAME', 'BIN_FILE'),
-        help="追加 bin 文件: --append <名称> <bin文件路径>"
+        help="追加 bin 文件: --append <名称> [bin文件路径]"
+    )
+
+    parser.add_argument(
+        "--append-size",
+        type=str,
+        help="指定预留数据大小；仅在未指定 bin 文件时生成该大小的 0 填充数据"
     )
 
     # 数组偏移参数（支持 0x 格式）
@@ -417,6 +453,12 @@ def main():
         type=str,
         default="0x1000",
         help="地址对齐大小（支持 0x 格式，默认: 0x1000 = 4KB）"
+    )
+
+    parser.add_argument(
+        "--tail-align",
+        type=str,
+        help="追加数据末尾对齐大小（支持 0x 格式；默认不补齐末尾）"
     )
 
     # 位置参数
@@ -440,14 +482,16 @@ def main():
 
     args = parser.parse_args()
 
-    # 根据 verbose 参数设置 debug 全局变量
+    # 查看模式默认显示文件结构；追加模式仍由 verbose 控制详细日志。
     global debug
-    debug = 1 if args.verbose else 0
+    debug = 1 if (args.verbose or args.show) else 0
 
     # 解析偏移量和对齐值
     try:
         array_offset = CustomBinManager.parse_offset(args.offset)
         alignment = CustomBinManager.parse_offset(args.align)
+        append_size = CustomBinManager.parse_offset(args.append_size) if args.append_size else None
+        tail_alignment = CustomBinManager.parse_offset(args.tail_align) if args.tail_align else None
     except ValueError as e:
         print(f"错误: 无效的数值: {e}")
         return 1
@@ -466,25 +510,32 @@ def main():
     elif args.append:
         if not args.bin_file:
             print("错误：追加模式需要指定主 bin 文件")
-            print("用法：python3 multi_bins.py <主bin文件> --append <名称> <追加bin文件>")
+            print("用法：python3 multi_bins.py <主bin文件> --append <名称> [追加bin文件|--append-size 大小]")
             return 1
 
         if not os.path.exists(args.bin_file):
             print(f"错误: 主 bin 文件不存在: {args.bin_file}")
             return 1
 
-        if not os.path.exists(args.append[1]):
-            print(f"错误: 追加 bin 文件不存在: {args.append[1]}")
+        if len(args.append) not in (1, 2):
+            print("错误: --append 参数格式为 <名称> [bin文件路径]")
             return 1
 
         try:
+            append_bin_path = args.append[1] if len(args.append) == 2 else None
+            if append_bin_path is not None and not os.path.exists(append_bin_path):
+                print(f"错误: 追加 bin 文件不存在: {append_bin_path}")
+                return 1
+
             CustomBinManager.append_bin(
                 args.bin_file,
-                args.append[1],
+                append_bin_path,
                 args.append[0],
                 array_offset,
                 alignment,
-                args.output
+                args.output,
+                append_size,
+                tail_alignment
             )
             return 0
         except Exception as e:

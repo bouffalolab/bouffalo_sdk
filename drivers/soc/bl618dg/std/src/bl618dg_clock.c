@@ -738,6 +738,17 @@ static inline uint32_t Clock_SPI_Clk_Mux_Output(uint8_t sel)
     }
 }
 
+static inline uint32_t Clock_SPI3_Clk_Mux_Output(uint8_t sel)
+{
+    if (sel == 0) {
+        /* mux 160Mkz */
+        return Clock_160M_Clk_Mux_Output(Clock_Get_Muxpll_160M_Sel_Val());
+    } else {
+        /* xclk */
+        return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MINI_XCLK);
+    }
+}
+
 #if defined(CPU_MODEL_A0)
 static inline uint8_t Clock_Get_SPI0_Clk_Sel_Val(void)
 #else
@@ -1386,7 +1397,7 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
 
         /*!< spi3 clock */
         case BL_PERIPHERAL_CLOCK_SPI3:
-            clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI3_Clk_Sel_Val());
+            clock = Clock_SPI3_Clk_Mux_Output(Clock_Get_SPI3_Clk_Sel_Val());
             div = Clock_Get_SPI3_Div_Val();
 #else
             clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI1_Clk_Sel_Val());

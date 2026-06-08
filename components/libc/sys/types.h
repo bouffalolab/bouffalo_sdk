@@ -110,7 +110,7 @@ typedef	_CLOCK_T_	clock_t;
 #endif
 
 #if !defined(__time_t_defined) && !defined(_TIME_T_DECLARED)
-typedef	_TIME_T_	time_t;
+typedef _TIME_T_        time_t;
 #define	__time_t_defined
 #define	_TIME_T_DECLARED
 #endif
@@ -202,7 +202,7 @@ typedef	__clockid_t	clockid_t;
 #endif
 
 #if !defined(__timer_t_defined) && !defined(_TIMER_T_DECLARED)
-typedef	__timer_t	timer_t;
+typedef	void          * timer_t;
 #define	__timer_t_defined
 #define	_TIMER_T_DECLARED
 #endif

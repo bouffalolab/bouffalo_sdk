@@ -111,9 +111,10 @@ Filter override in `nethub_filter.h`:
 API reality note:
 
 - `nethub_vchan.h` is intentionally transport-neutral as a public API
-- the current in-tree implementation behind that API is still SDIO-based
-- documentation should therefore distinguish API intent from current
-  backend coverage
+- SDIO and USB provide device-side vchan backends behind that API
+- the current in-tree end-to-end USER virtual channel flow is still
+  SDIO-centered because the host userspace wrapper is not yet aligned with
+  USB ACM
 
 ## 5. Internal Layers
 
@@ -156,13 +157,14 @@ Key points:
 
 ## 7. Control Path
 
-The control path is intentionally split into two layers:
+The control path is intentionally layered on top of the virtual channel API:
 
 1. core facade
    - `nethub_ctrl_upld_send()`
    - `nethub_ctrl_dnld_register()`
-2. interface-specific implementation
-   - selected by `nh_profile_get_ctrlpath_ops()`
+2. transport-neutral virtual channel
+   - carried as `NETHUB_VCHAN_TYPE_AT`
+   - selected by the active profile's `vchan_ops`
 
 This keeps `nethub` decoupled from any specific control consumer.
 
@@ -171,16 +173,19 @@ Current backend reality:
 - `SDIO`
   - implemented through the SDIO virtual channel path
 - `USB`
-  - device-side ACM transport plumbing exists in the USB backend
+  - implemented through the USB ACM virtual channel path
 - `SPI`
   - not implemented
 
 Example composition:
 
 - `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y`
-  - enables the example-level `ATModule` control solution
+  - enables the example-level `ATModule` control solution over the `AT`
+    virtual channel
 - `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n`
-  - keeps NetHub usable as a data-path-focused build
+  - disables the public `nethub_ctrl_*` facade; NetHub remains usable as a
+    data-path-focused build and `nethub_vchan_*` remains available for
+    project-defined usage
 
 `CONFIG_NETHUB_AT_USE_VCHAN` still appears in the example configuration,
 but it should be described as an example or legacy SDIO control path
@@ -195,12 +200,14 @@ Current implementation status:
 
 - device-side implementation lives in
   `components/net/nethub/backend/host/sdio/virtualchan.c`
+- USB device-side implementation lives in
+  `components/net/nethub/backend/host/usb/virtualchan_usb.c`
 - host userspace `nethub_vchan` is also aligned with the SDIO msg_router
   and netlink path today
 - therefore, end-to-end USER virtual channel is currently an SDIO
   capability on the default interface
-- USB ACM is the likely long-term carrier for a USB control or vchan-like
-  path, but the in-tree host wrapper is not yet aligned with that path
+- USB ACM carries the device-side USB vchan path, but the in-tree host
+  wrapper is not yet aligned with that path
 
 ## 9. USB-Specific Notes
 
@@ -209,7 +216,8 @@ Current implementation status:
 Current USB device-side behavior:
 
 - data-path is exposed through `USB CDC ECM`
-- control transport plumbing is exposed through `USB CDC ACM`
+- virtual-channel transport is exposed through `USB CDC ACM`
+- the public control facade uses the `AT` virtual channel
 - the backend is selected through `CONFIG_NETHUB_PROFILE_USB`
 
 What is not yet finished end-to-end:
@@ -223,8 +231,8 @@ NetHub low power is currently platform-limited.
 
 In the example configuration:
 
-- `CONFIG_NETHUB_LOWPOWER_ENABLE` is supported only on `BL618DG`
-- non-`BL618DG` builds automatically disable it
+- `CONFIG_NETHUB_LOWPOWER_ENABLE` is enabled by default only on `BL616`
+- `BL616CL` and `BL618DG` builds automatically disable it
 
 Do not document low power as universally available across all NetHub
 target chips.
@@ -238,7 +246,8 @@ When documenting the current codebase, use these statements:
 - `USB` device-side backend is implemented with `ECM + ACM`
 - `SPI` is not implemented yet
 - end-to-end USER virtual channel is currently available on `SDIO`
-- low power is currently `BL618DG`-only
+- low power is currently validated for `BL616`; `BL616CL` and `BL618DG`
+  remain TODO for NetHub low power
 
 ## 12. Related Documents
 

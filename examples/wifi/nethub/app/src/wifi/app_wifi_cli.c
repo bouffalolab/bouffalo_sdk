@@ -25,6 +25,7 @@
 #include <tickless.h>
 #include <wifi_mgmr.h>
 #include <wifi_mgmr_ext.h>
+#include <nethub.h>
 
 #ifdef BL616
 #include <bl616_glb.h>
@@ -77,40 +78,9 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackTyp
 static int lp_enter(void *arg)
 {
     (void)arg;
-    return 0;
-}
-
-static void set_cpu_bclk_80m_and_gate_clk(void)
-{
-#if defined(BL616)
-    uint32_t tmpVal = 0;
-
-    GLB_Set_MCU_System_CLK_Div(0, 3);
-    CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_CLK,
-                       Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_CLK) / 1000000 - 1);
-
-    tmpVal = 0;
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_CPU, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_DMA, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_SEC, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_M_SDU, 1);
-    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG0, tmpVal);
-
-    tmpVal = 0;
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EF_CTRL, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_SF_CTRL, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_DMA, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_UART0, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1A_UART1, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_SEC_ENG, 1);
-    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG1, tmpVal);
-
-    tmpVal = 0;
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S2_WIFI, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_EMI_MISC, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CGEN_S1_EXT_PIO, 1);
-    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG2, tmpVal);
+#if defined(CONFIG_MR_SDIO_DRIVER) && defined(CONFIG_NETHUB_PROFILE_SDIO)
 #endif
+    return 0;
 }
 
 static int lp_exit(void *arg)
@@ -118,11 +88,9 @@ static int lp_exit(void *arg)
     int wakeup_reason;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     extern TaskHandle_t rxl_process_task_hd;
-
     (void)arg;
 
-    set_cpu_bclk_80m_and_gate_clk();
-
+    /* recovery system_clock_init\peripheral_clock_init\console_init*/
     board_recovery();
 
 #if defined(BL616)
@@ -136,6 +104,9 @@ static int lp_exit(void *arg)
     bflb_uart_rxint_mask(uart_shell, false);
     bflb_irq_attach(uart_shell->irq_num, (irq_callback)uart_shell_isr, NULL);
     bflb_irq_enable(uart_shell->irq_num);
+
+#if defined(CONFIG_MR_SDIO_DRIVER) && defined(CONFIG_NETHUB_PROFILE_SDIO)
+#endif
 
     wakeup_reason = bl_lp_get_wake_reason();
     if (wakeup_reason & LPFW_WAKEUP_WIFI_BROADCAST) {
@@ -992,4 +963,61 @@ SHELL_CMD_EXPORT_ALIAS(cmd_io_wakeup, io_wakeup, configure io wakeup source);
 #if !defined(BL616)
 SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_uart_cfg, lpfw_uart, cmd lpfw_uart);
 SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_clock_cfg, lpfw_clock, cmd lpfw_clock);
+#endif
+
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+static void __enter_pds15_witharg(uint8_t dtm, int broadcast)
+{
+    lpfw_cfg.dtim_origin = dtm;
+    if (broadcast != 0) {
+        enable_multicast_broadcast = 1;
+        lpfw_cfg.bcmc_dtim_mode = 1;
+    } else {
+        enable_multicast_broadcast = 0;
+        lpfw_cfg.bcmc_dtim_mode = 0;
+    }
+
+    printf("dtim_origin: %d, broadcast: %d\r\n", lpfw_cfg.dtim_origin, broadcast);
+
+    pm_enable_tickless();
+}
+static void lp_test_window_entry(void *pvParameters)
+{
+    if (!nethub_host_link_is_idle()) {
+        printf("nethub host link is busy, skip low power window.\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    if (nethub_host_link_lowpower_prepare() != NETHUB_OK) {
+        printf("nethub host low power prepare failed.\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    __enter_pds15_witharg(10, 1);
+
+    printf("=================== pm_disable_tickless 1\r\n");
+    vTaskDelay(pdMS_TO_TICKS(10000));// 10 S
+
+    printf("=================== pm_disable_tickless 2\r\n");
+    pm_disable_tickless();
+    if (nethub_host_link_lowpower_resume() != NETHUB_OK) {
+        printf("nethub host low power resume failed.\r\n");
+    }
+
+    vTaskDelete(NULL);
+}
+
+static void cmd_tickless_window(int argc, char **argv)
+{
+    BaseType_t ret;
+
+    ret = xTaskCreate(lp_test_window_entry, "lp_test_window", 2048, NULL,
+                      15, NULL);
+    if (ret != pdPASS) {
+        printf("Failed to create low power test window task.\r\n");
+    }
+}
+SHELL_CMD_EXPORT_ALIAS(cmd_tickless_window, tickless_window, timed tickless test window);
 #endif

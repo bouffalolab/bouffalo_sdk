@@ -7,6 +7,8 @@
 #include "bl616cl_psram_recovery.h"
 
 typedef int (*bl_lp_cb_t)(void *arg);
+typedef struct PM_DCDC_SOC_CFG_Type PM_DCDC_SOC_CFG_Type;
+typedef struct PM_DCDC_SYS_CFG_Type PM_DCDC_SYS_CFG_Type;
 
 #define IOT2LP_PARA_ADDR     (0x20010000 + 0x0400)
 // #define LP_FW_MAX_SIZE            30 * 1024
@@ -266,6 +268,8 @@ typedef struct {
 
     uint8_t em_size;
     uint8_t dcdc_sel_pin;
+    PM_DCDC_SOC_CFG_Type *dcdc_soc_cfg;
+    PM_DCDC_SYS_CFG_Type *dcdc_sys_cfg;
 
     uint32_t mcu_sts;
 

@@ -728,9 +728,7 @@ int app_pm_init(void)
     pm_rc32k_auto_cal_init();
 
 #ifdef LP_APP
-#if defined(CFG_BL_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
     bl_lp_init();
-#endif
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
 #endif
 

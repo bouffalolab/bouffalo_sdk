@@ -1,34 +1,56 @@
 #include "nh_internal.h"
 
-static const nh_ctrlpath_ops_t *nh_ctrlpath_get_ops(void)
-{
-    nethub_context_t *ctx = nh_ctx_get();
+#if defined(CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE) && CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE
+static nethub_ctrl_rx_cb_t g_ctrlpath_dnld_cb;
+static void *g_ctrlpath_dnld_arg;
 
-    if (ctx->profile != NULL && ctx->profile->ctrlpath_ops != NULL) {
-        return ctx->profile->ctrlpath_ops;
+static int nethub_ctrlpath_vchan_recv(void *arg, uint8_t *data_buff, uint16_t data_size)
+{
+    NETHUB_UNUSED(arg);
+
+    if (g_ctrlpath_dnld_cb == NULL) {
+        return NETHUB_OK;
     }
 
-    return nh_profile_get_ctrlpath_ops();
+    return g_ctrlpath_dnld_cb(g_ctrlpath_dnld_arg, data_buff, (uint32_t)data_size);
 }
+#endif
 
 int nethub_ctrl_upld_send(uint8_t *data_buff, uint32_t data_size)
 {
-    const nh_ctrlpath_ops_t *ops = nh_ctrlpath_get_ops();
-
-    if (ops == NULL || ops->upld_send == NULL) {
-        return NETHUB_ERR_NOT_SUPPORTED;
+#if defined(CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE) && CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE
+    if (data_size > NETHUB_VCHAN_MAX_DATA_LEN) {
+        return NETHUB_ERR_INVALID_PARAM;
     }
 
-    return ops->upld_send(data_buff, data_size);
+    return nethub_vchan_at_send(data_buff, (uint16_t)data_size);
+#else
+    NETHUB_UNUSED(data_buff);
+    NETHUB_UNUSED(data_size);
+    return NETHUB_ERR_NOT_SUPPORTED;
+#endif
 }
 
 int nethub_ctrl_dnld_register(nethub_ctrl_rx_cb_t dnld_cb, void *cbpri_arg)
 {
-    const nh_ctrlpath_ops_t *ops = nh_ctrlpath_get_ops();
+#if defined(CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE) && CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE
+    nethub_ctrl_rx_cb_t old_cb = g_ctrlpath_dnld_cb;
+    void *old_arg = g_ctrlpath_dnld_arg;
+    int ret;
 
-    if (ops == NULL || ops->dnld_register == NULL) {
-        return NETHUB_ERR_NOT_SUPPORTED;
+    g_ctrlpath_dnld_cb = dnld_cb;
+    g_ctrlpath_dnld_arg = cbpri_arg;
+
+    ret = nethub_vchan_at_recv_register(dnld_cb ? nethub_ctrlpath_vchan_recv : NULL, NULL);
+    if (ret != NETHUB_OK) {
+        g_ctrlpath_dnld_cb = old_cb;
+        g_ctrlpath_dnld_arg = old_arg;
     }
 
-    return ops->dnld_register(dnld_cb, cbpri_arg);
+    return ret;
+#else
+    NETHUB_UNUSED(dnld_cb);
+    NETHUB_UNUSED(cbpri_arg);
+    return NETHUB_ERR_NOT_SUPPORTED;
+#endif
 }

@@ -18,5 +18,6 @@ bool nethub_is_started(void);
 const char *nethub_profile_name(void);
 nethub_channel_t nethub_host_channel(void);
 nethub_channel_t nethub_get_active_wifi_channel(void);
+bool nethub_is_host_link_active(nethub_channel_t host_link);
 
 #endif

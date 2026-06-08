@@ -35,6 +35,8 @@ include(${BL_SDK_BASE}/cmake/toolchain.cmake)
 include(${BL_SDK_BASE}/cmake/extension.cmake)
 include(${BL_SDK_BASE}/cmake/compiler_flags.cmake)
 
+sdk_add_compile_definitions_ifdef(CONFIG_LPAPP -DLP_APP)
+
 enable_language(C CXX ASM)
 
 add_subdirectory(${BL_SDK_BASE} ${build_dir})

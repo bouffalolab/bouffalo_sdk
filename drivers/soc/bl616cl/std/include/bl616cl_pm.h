@@ -17,6 +17,32 @@ typedef struct {
     uint8_t rsv           : 3;
 } PM_PWR_Cfg;
 
+typedef struct {
+    uint64_t io_ie;
+    uint64_t io_pu;
+    uint64_t io_pd;
+    uint8_t io_0_36_trig_mode[37];
+    uint64_t io_wakeup_unmask;
+} lp_gpio_cfg_type;
+
+typedef struct PM_DCDC_SOC_CFG_Type {
+    uint8_t dcdc_soc_vsel_pin;        /*!< GPIO0~36 used to select DCDC SOC voltage, 0xFF means not used */
+    uint8_t dcdc_soc_enable_pin;      /*!< GPIO0~36 used to enable DCDC SOC output, 0xFF means not used */
+    uint8_t dcdc_soc_pds_enable;      /*!< Whether enable DCDC SOC output in PDS mode */
+    uint8_t dcdc_soc_pds_level;       /*!< DCDC SOC voltage level in PDS mode */
+    uint8_t ldo_soc_active_level;     /*!< LDO SOC voltage level in active mode */
+    uint8_t ldo_soc_enter_pds_level;  /*!< LDO SOC voltage level before entering PDS */
+    uint8_t ldo_soc_pds_level;        /*!< LDO SOC voltage level in PDS mode */
+} PM_DCDC_SOC_CFG_Type;
+
+typedef struct PM_DCDC_SYS_CFG_Type {
+    uint8_t dcdc_sys_enable_pin;      /*!< GPIO0~36 used to enable DCDC SYS output, 0xFF means not used */
+    uint8_t dcdc_sys_pds_enable;      /*!< Whether enable DCDC SYS output in PDS mode */
+} PM_DCDC_SYS_CFG_Type;
+
+#define PM_DCDC_SOC_LEVEL_0P7 0 /*!< DCDC SOC 0.7V, vsel GPIO output low */
+#define PM_DCDC_SOC_LEVEL_0P9 1 /*!< DCDC SOC 0.9V, vsel GPIO output high */
+
 typedef struct
 {
     uint8_t pdsLevel;             /*!< PDS level */
@@ -28,7 +54,8 @@ typedef struct
     uint8_t turnoffWifiPLL;       /*!< Whether trun off WiFi PLL */
     uint8_t pdsClkType;           /*!< pds_clk type */
     uint8_t pdsGpioDetClkType;    /*!< pds gpio det clk type */
-    uint8_t dcdc_sel_pin;         /*!< external dcdc control pin, 0xFF means not used */
+    PM_DCDC_SOC_CFG_Type *dcdc_soc_cfg; /*!< DCDC SOC GPIO and voltage config */
+    PM_DCDC_SYS_CFG_Type *dcdc_sys_cfg; /*!< DCDC SYS GPIO config */
     PM_PWR_Cfg ldo_sys_cfg;       /*!< Power Config of ldo_sys */
     PM_PWR_Cfg ldo_soc_cfg;       /*!< Power Config of ldo_soc */
     uint16_t ldo_sys_lp_en_cnt;   /*!< delay_cnt before ldo_sys enable lowpower mode */
@@ -40,14 +67,6 @@ typedef struct
     void (*preCbFun)(void);       /*!< Pre callback function */
     void (*postCbFun)(void);      /*!< Post callback function */
 } PM_PDS_CFG_Type;
-
-typedef struct {
-    uint64_t io_ie;
-    uint64_t io_pu;
-    uint64_t io_pd;
-    uint8_t io_0_36_trig_mode[37];
-    uint64_t io_wakeup_unmask;
-} lp_gpio_cfg_type;
 
 /* PDS sleep level defines */
 #define PM_PDS_LEVEL_1   (1)
@@ -106,6 +125,15 @@ typedef struct {
 
 void pm_pds_dcdc_soc_set_0v7(uint32_t pin);
 void pm_pds_dcdc_soc_set_0v9(uint32_t pin);
+const PM_DCDC_SOC_CFG_Type *pm_dcdc_soc_default_cfg_get(void);
+const PM_DCDC_SYS_CFG_Type *pm_dcdc_sys_default_cfg_get(void);
+BL_Err_Type pm_dcdc_soc_enable_ctrl(uint32_t pin, BL_Fun_Type enable);
+void pm_dcdc_soc_vsel_ctrl(uint32_t pin, uint8_t high);
+void pm_dcdc_soc_enter_pds(const PM_DCDC_SOC_CFG_Type *cfg);
+void pm_dcdc_soc_exit_pds(const PM_DCDC_SOC_CFG_Type *cfg);
+BL_Err_Type pm_dcdc_sys_enable_ctrl(uint32_t pin, BL_Fun_Type enable);
+void pm_dcdc_sys_enter_pds(const PM_DCDC_SYS_CFG_Type *cfg);
+void pm_dcdc_sys_exit_pds(const PM_DCDC_SYS_CFG_Type *cfg);
 BL_Err_Type pm_disable_gpio_keep(uint32_t pin);
 BL_Err_Type pm_pds_wakeup_src_en(uint32_t WakeupType);
 BL_Err_Type pm_pds_wakeup_src_disable(uint32_t WakeupType);

@@ -1,10 +1,11 @@
 #ifndef PLATFORM_AL_H_
 #define PLATFORM_AL_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include "rtos_def.h"
 
-#if defined(CFG_BL_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
+#if defined(LP_APP)
 #include <bl_lp.h>
 #else
 enum PSM_EVENT {
@@ -12,7 +13,9 @@ enum PSM_EVENT {
     PSM_EVENT_CONNECT,
     PSM_EVENT_DISCONNECT,
     PSM_EVENT_PS,
+    PSM_EVENT_AP,
     PSM_EVENT_APP,
+    PSM_EVENT_LP_BUF_REUSED,
 };
 #endif
 
@@ -70,7 +73,12 @@ int platform_delete_schedule_event(platform_event_handler_t handler);
 
 void platform_post_event(int catalogue, int code1, int code2);
 
-#define PLATFORM_HOOK(x, ...) if( &platform_hook_##x ) {platform_hook_##x(__VA_ARGS__);}
+#define PLATFORM_HOOK(x, ...) do { \
+    typeof(platform_hook_##x) * volatile hook = platform_hook_##x; \
+    if (hook) { \
+        hook(__VA_ARGS__); \
+    } \
+} while (0)
 /**
 ****************************************************************************************
 * @brief hook for receive beacon

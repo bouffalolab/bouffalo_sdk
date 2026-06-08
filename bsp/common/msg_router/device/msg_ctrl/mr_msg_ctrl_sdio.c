@@ -66,7 +66,7 @@ int msg_ctrl_sdio_init(mr_msg_ctrl_priv_t **msg_ctrl)
         /* Processing task configuration */
         .task_priority = 20,       /* FreeRTOS priority */
         .task_stack_size = 1024,   /* Stack size in bytes */
-        .task_period_max_ms = 100, /* 100ms max wait when idle */
+        .task_period_max_ms = portMAX_DELAY, /* 100ms max wait when idle */
         .msg_task_cb = NULL,       /* No custom task callback */
     };
 

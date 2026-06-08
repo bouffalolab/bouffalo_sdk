@@ -127,6 +127,13 @@ int nethub_ctrl_link_send(const void *data, size_t len)
     return (ret < 0) ? NETHUB_WIFI_ERR_LINK_DOWN : 0;
 }
 
+int nethub_ctrl_link_recover(int timeout_ms)
+{
+    int ret = nethub_vchan_recover(timeout_ms);
+
+    return (ret < 0) ? NETHUB_WIFI_ERR_LINK_DOWN : NETHUB_WIFI_OK;
+}
+
 int nethub_ctrl_link_get_state(nethub_wifi_link_state_t *state)
 {
     nethub_vchan_state_snapshot_t snapshot;

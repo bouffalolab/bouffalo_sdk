@@ -1307,6 +1307,76 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t di
 }
 
 /****************************************************************************/ /**
+ * @brief  GLB set CPUPLL to 632.2176M
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPUPLL_To_632P2176M_By_Sdmin(void)
+{
+    uint32_t tmpVal, sdmin;
+    uint8_t xtalType;
+
+    if (HBN_Get_Xtal_Type(&xtalType) == SUCCESS) {
+        switch (xtalType) {
+            case GLB_XTAL_24M: sdmin = 0x1A57A; break;
+            case GLB_XTAL_32M: sdmin = 0x27837; break;
+            case GLB_XTAL_52M: sdmin = 0x1850E; break;
+            case GLB_XTAL_40M: sdmin = 0x1F9C6; break;
+            case GLB_XTAL_26M: sdmin = 0x1850E; break;
+            case GLB_XTAL_RC32M: sdmin = 0x27837; break;
+            default: sdmin = 0x1F9C6; break;
+        }
+    } else {
+        sdmin = 0x1F9C6;
+    }
+
+    /* set cpupll_sdmin */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_SDM_IN, sdmin);
+    BL_WR_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  GLB set CPUPLL to 638.976M
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPUPLL_To_638P976M_By_Sdmin(void)
+{
+    uint32_t tmpVal, sdmin;
+    uint8_t xtalType;
+
+    if (HBN_Get_Xtal_Type(&xtalType) == SUCCESS) {
+        switch (xtalType) {
+            case GLB_XTAL_24M: sdmin = 0x1A9FB; break;
+            case GLB_XTAL_32M: sdmin = 0x27EF9; break;
+            case GLB_XTAL_52M: sdmin = 0x18937; break;
+            case GLB_XTAL_40M: sdmin = 0x1FF2E; break;
+            case GLB_XTAL_26M: sdmin = 0x18937; break;
+            case GLB_XTAL_RC32M: sdmin = 0x27EF9; break;
+            default: sdmin = 0x1FF2E; break;
+        }
+    } else {
+        sdmin = 0x1FF2E;
+    }
+
+    /* set cpupll_sdmin */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_SDM_IN, sdmin);
+    BL_WR_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  GLB set WIFIPLL post out
  *
  * @param  enable: Enable or disable
@@ -4470,90 +4540,6 @@ uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
 }
 
 /****************************************************************************/ /**
- * @brief  trim LDO18IO vout sel
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioVoutSel(void)
-{
-    bflb_ef_ctrl_com_trim_t trim;
-    int32_t tmpVal = 0;
-    struct bflb_device_s *ef_ctrl;
-
-    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
-    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo18_sel", &trim, 1);
-    if (trim.en) {
-        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 4)) {
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_VOUT_SEL, trim.value);
-            BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
-            return SUCCESS;
-        }
-    }
-
-    return ERROR;
-}
-
-/****************************************************************************/ /**
- * @brief  trim LDO18IO bypass
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioBypass(void)
-{
-    bflb_ef_ctrl_com_trim_t trim;
-    int32_t tmpVal = 0;
-    struct bflb_device_s *ef_ctrl;
-
-    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
-    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo18_bypass", &trim, 1);
-    if (trim.en) {
-        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 1)) {
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_BYPASS, trim.value);
-            BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
-            return SUCCESS;
-        }
-    }
-
-    return ERROR;
-}
-
-/****************************************************************************/ /**
- * @brief  trim LDO18IO vout
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioVoutTrim(void)
-{
-    bflb_ef_ctrl_com_trim_t trim;
-    int32_t tmpVal = 0;
-    struct bflb_device_s *ef_ctrl;
-
-    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
-    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo18_trim", &trim, 1);
-    if (trim.en) {
-        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 4)) {
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_VOUT_TRIM, trim.value);
-            BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
-            return SUCCESS;
-        }
-    }
-
-    return ERROR;
-}
-
-/****************************************************************************/ /**
  * @brief  power down LDO18IO vout
  *
  * @param  None
@@ -5622,6 +5608,116 @@ void GLB_Set_NP2MINI_Interrupt_Clear(uint8_t irq)
     } else {
         return;
     }
+}
+
+/****************************************************************************/ /**
+ * @brief  mask or unmask np interrupt
+ *
+ * @param  enable: MASK or UNMASK
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void GLB_Set_NP_Interrupt_Mask(uint8_t irq, uint8_t mask)
+{
+    uint32_t tmpVal;
+
+    if (GLB_CORE_ID_LP == GLB_Get_Core_Type()) {
+        if (irq < (16 + 31)) {
+            return;
+        } else if (irq == (16 + 31)) {
+            if (mask) {
+                BL_WR_REG(GLB_BASE, GLB_CORE_CFG18, 0xFFFFFFFF);
+                BL_WR_REG(GLB_BASE, GLB_CORE_CFG19, 0xFFFFFFFF);
+            } else {
+                BL_WR_REG(GLB_BASE, GLB_CORE_CFG18, 0);
+                BL_WR_REG(GLB_BASE, GLB_CORE_CFG19, 0);
+            }
+            return;
+        } else {
+            irq = irq - 16 - 32;
+        }
+    } else {
+        if (irq < 16) {
+            return;
+        } else {
+            irq = irq - 16;
+        }
+    }
+    if (irq < 32) {
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_CORE_CFG18);
+        if (mask) {
+            tmpVal |= (1 << irq);
+        } else {
+            tmpVal &= ~(1 << irq);
+        }
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG18, tmpVal);
+    } else if (irq < 64) {
+        irq = irq - 32;
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_CORE_CFG19);
+        if (mask) {
+            tmpVal |= (1 << irq);
+        } else {
+            tmpVal &= ~(1 << irq);
+        }
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG19, tmpVal);
+    } else {
+        return;
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  clear and rearm one lp level2 np interrupt source
+ *
+ * @param  irq: IRQ number
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void GLB_Clear_And_Rearm_NP_Interrupt(uint8_t irq)
+{
+    uint32_t tmpVal;
+    uint32_t bit;
+
+    irq = irq - 16 - 32;
+
+    if (irq < 32) {
+        bit = 1U << irq;
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG20, bit);
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_CORE_CFG18);
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG18, tmpVal | bit);
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG18, tmpVal & ~bit);
+    } else if (irq < 64) {
+        irq = irq - 32;
+        bit = 1U << irq;
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG21, bit);
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_CORE_CFG19);
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG19, tmpVal | bit);
+        BL_WR_REG(GLB_BASE, GLB_CORE_CFG19, tmpVal & ~bit);
+    } else {
+        return;
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  Get np interrupt mask
+ *
+ * @param  NONE
+ *
+ * @return np interrupt mask value
+ *
+*******************************************************************************/
+uint64_t GLB_Get_NP_Interrupt_Mask(void)
+{
+    uint64_t mask;
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CORE_CFG19);
+    mask = (uint64_t)tmpVal << 32;
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CORE_CFG18);
+    mask |= (uint64_t)tmpVal;
+
+    return mask;
 }
 
 /****************************************************************************/ /**

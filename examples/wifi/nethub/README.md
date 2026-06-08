@@ -15,7 +15,7 @@ continue with the documents under `docs/`.
 | SPI interface | not implemented |
 | USER virtual channel | default interface is `SDIO` |
 | Optional AT control solution | available through example composition, not a core NetHub dependency |
-| Low power | currently `BL618DG` only |
+| Low power | see `docs/NetHub.md`, "Current Support Matrix" |
 
 Important notes:
 
@@ -66,10 +66,13 @@ Important options:
   - use the default `fhost` Wi-Fi backend
 - `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y`
   - enable the optional example AT control solution
+- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n`
+  - disable the optional AT control solution; `nethub_ctrl_*` returns
+    unsupported and the host must provide any required private control flow
 - `CONFIG_MR_VIRTUALCHAN=y`
   - required for the current in-tree SDIO USER virtual channel path
 - `CONFIG_NETHUB_LOWPOWER_ENABLE=y`
-  - currently meaningful only on `BL618DG`
+  - enabled by default for `BL616`; `BL616CL` and `BL618DG` keep it off by default in the NetHub example
 
 About `CONFIG_NETHUB_AT_USE_VCHAN`:
 
@@ -106,5 +109,6 @@ Online wiki:
 Recommended reading order:
 
 1. `docs/NetHubQuickBringup.md`
-2. `docs/NetHubArchitecture.md`
-3. `docs/NetHubVirtualChannel.md`
+2. `docs/NetHub.md`
+3. `docs/NetHubArchitecture.md`
+4. `docs/NetHubVirtualChannel.md`

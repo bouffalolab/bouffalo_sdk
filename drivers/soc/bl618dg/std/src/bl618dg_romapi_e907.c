@@ -6,10 +6,12 @@ uint32_t bflb_clk_get_system_clock(uint8_t type) {
     return RomDriver_bflb_clk_get_system_clock(type);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t bflb_clk_get_peripheral_clock(uint8_t type, uint8_t idx) {
     return RomDriver_bflb_clk_get_peripheral_clock(type, idx);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t bflb_peripheral_clock_get_by_id(uint8_t peri) {
@@ -306,6 +308,7 @@ void AON_Set_RC32M_Code_Fr_Ext2(uint8_t code) {
     return RomDriver_AON_Set_RC32M_Code_Fr_Ext2(code);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type AON_Trim_Ldo_Soc_Vout(void) {
     return RomDriver_AON_Trim_Ldo_Soc_Vout();
@@ -320,6 +323,7 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type AON_Trim_Ldo18_Aon_Vout(void) {
     return RomDriver_AON_Trim_Ldo18_Aon_Vout();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Trim_Dcdc12_Sys_Vout(void) {
@@ -331,10 +335,12 @@ uint32_t Clock_System_Clock_Get(BL_System_Clock_Type type) {
     return RomDriver_Clock_System_Clock_Get(type);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type) {
     return RomDriver_Clock_Peripheral_Clock_Get(type);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t SystemCoreClockGet(void) {
@@ -396,6 +402,7 @@ BL_Err_Type CPU_MTimer_Delay_MS(uint32_t cnt) {
     return RomDriver_CPU_MTimer_Delay_MS(cnt);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void ASM_Delay_Us(uint32_t core, uint32_t cnt, uint32_t loopT) {
     return RomDriver_ASM_Delay_Us(core, cnt, loopT);
@@ -410,11 +417,14 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 void arch_delay_ms(uint32_t cnt) {
     return RomDriver_arch_delay_ms(cnt);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **ptrim_list) {
     return RomDriver_bflb_ef_ctrl_get_common_trim_list(ptrim_list);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info) {
@@ -436,10 +446,12 @@ uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload) {
     return RomDriver_bflb_efuse_is_mac_address_slot_empty(slot, reload);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program) {
     return RomDriver_bflb_efuse_write_mac_address_opt(slot, mac, program);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload) {
@@ -1645,10 +1657,12 @@ void PDS_Clear_SW_Wakeup_PDS(void) {
     return RomDriver_PDS_Clear_SW_Wakeup_PDS();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Trim_RC32M(void) {
     return RomDriver_PDS_Trim_RC32M();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Trim_USB20(void) {
@@ -1797,10 +1811,12 @@ void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group) {
 }
 #endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_ROM_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
     return RomDriver_Tzc_Sec_ROM_Access_Set(region, startAddr, length, group);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_ROM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
@@ -1857,10 +1873,12 @@ void Tzc_Sec_Mini_Ram_Access_Set_Regionx(uint8_t group) {
     return RomDriver_Tzc_Sec_Mini_Ram_Access_Set_Regionx(group);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_Flash_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
     return RomDriver_Tzc_Sec_Flash_Access_Set(region, startAddr, length, group);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_Flash_Access_Set_Regionx(uint8_t group) {
@@ -1872,10 +1890,12 @@ void Tzc_Sec_Flash_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32
     return RomDriver_Tzc_Sec_Flash_Access_Set_Advance(region, startAddr, length, group);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_PSRAMB_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group) {
     return RomDriver_Tzc_Sec_PSRAMB_Access_Set(region, startAddr, length, group);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void Tzc_Sec_PSRAMB_Access_Release(void) {

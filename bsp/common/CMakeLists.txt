@@ -16,8 +16,8 @@ if(CONFIG_BSP_MR)
     add_subdirectory(msg_router/device)
 endif()
 
-# sdh sdcard driver
-if(CONFIG_BSP_SDH_SD)
+# sdh host/common driver
+if(CONFIG_BSP_SDH_SD OR CONFIG_BSP_SDH_SDIO)
     #sdk_add_compile_definitions(-D CONFIG_BSP_SDH_SD)
     #if(CONFIG_BSP_SDH_OSAL_POLLING_MODE)
     #    sdk_add_compile_definitions(-D CONFIG_BSP_SDH_OSAL_POLLING_MODE=${CONFIG_BSP_SDH_OSAL_POLLING_MODE})
@@ -27,13 +27,23 @@ if(CONFIG_BSP_SDH_SD)
     #endif()
     target_sources(app PRIVATE sdh/osal/sdh_osal.c)
     target_sources(app PRIVATE sdh/host/sdh_host.c)
-    target_sources(app PRIVATE sdh/sd/sdh_sd.c)
     sdk_add_include_directories(sdh/osal)
     sdk_add_include_directories(sdh/host)
-    sdk_add_include_directories(sdh/sd)
 
     string(TOLOWER ${CHIP} CHIP_NAME_STR)
     sdk_add_compile_definitions(-D CHIP_GLB_HEADER="${CHIP_NAME_STR}_glb.h")
+endif()
+
+# sdh sdcard driver
+if(CONFIG_BSP_SDH_SD)
+    target_sources(app PRIVATE sdh/sd/sdh_sd.c)
+    sdk_add_include_directories(sdh/sd)
+endif()
+
+# sdh sdio driver
+if(CONFIG_BSP_SDH_SDIO)
+    target_sources(app PRIVATE sdh/sdio/sdh_sdio.c)
+    sdk_add_include_directories(sdh/sdio)
 endif()
 
 # spi sdcard driver

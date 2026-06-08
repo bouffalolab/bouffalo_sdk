@@ -540,7 +540,7 @@ int sdh_sd_send_status(struct sd_card_s *sd_card, uint32_t *r1_data)
     cmd_cfg.cmd_type = SDH_CMD_TPYE_NORMAL;
     cmd_cfg.resp_type = SDH_RESP_TPYE_R1;
     cmd_cfg.argument = sd_card->sd_rca << 16;
-    transfer.data_cfg = NULL;
+    transfer.data = NULL;
 
     ret = sdh_host_transfer(sd_card->host, &transfer);
     if (ret < 0) {

@@ -13,8 +13,6 @@ CONFIG_WIFI_IPERF=y
 ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI             =n
     CONFIG_DUALCORE_DISABLE   =y
-    CONFIG_WRAM_FOR_AP_SIZE   = 0x50000
-    CONFIG_RAM_FOR_AP_SIZE    = 0x50000
 endif
 
 #CONFIG_ROMFS                 =y

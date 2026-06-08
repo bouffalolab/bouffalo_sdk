@@ -30,7 +30,7 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "sched.h"
+#include "FreeRTOS_POSIX/sched.h"
 
 /*-----------------------------------------------------------*/
 

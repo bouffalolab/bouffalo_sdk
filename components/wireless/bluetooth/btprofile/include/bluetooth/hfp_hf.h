@@ -50,6 +50,17 @@ enum bt_hfp_hf_at_cmd {
 #define HFP_HF_CMD_CME_ERROR      2
 #define HFP_HF_CMD_UNKNOWN_ERROR  4
 
+/** @brief CLCC current call entry (+CLCC response) */
+struct bt_hfp_clcc_info {
+	uint8_t  idx;       /* Call index 1-7 */
+	uint8_t  dir;       /* 0=MO, 1=MT */
+	uint8_t  status;    /* 0=active,1=held,2=dialing,3=alerting,4=incoming,5=waiting */
+	uint8_t  mode;      /* 0=voice, 1=data, 2=fax */
+	uint8_t  mpty;      /* 0=not multiparty, 1=multiparty */
+	char     number[32];
+	uint8_t  type;      /* 129=unknown, 145=international */
+};
+
 /** @brief HFP HF Command completion field */
 struct bt_hfp_hf_cmd_complete {
 	/* Command complete status */
@@ -150,6 +161,34 @@ struct bt_hfp_hf_cb {
 	 */
 	void (*vgm_indication)(struct bt_conn *conn, uint32_t value);
 
+	/** BSIR in-band ring tone setting callback
+	 *
+	 *  Called when AG sends +BSIR unsolicited result code.
+	 *
+	 *  @param conn Connection object.
+	 *  @param inband 1 = in-band ring tone enabled, 0 = disabled.
+	 */
+	void (*bsir_indication)(struct bt_conn *conn, uint8_t inband);
+
+	/** CLIP calling line identification callback
+	 *
+	 *  Called when AG sends +CLIP unsolicited result code.
+	 *
+	 *  @param conn Connection object.
+	 *  @param number Calling phone number string.
+	 *  @param type   Number type (129=unknown, 145=international).
+	 */
+	void (*clip_indication)(struct bt_conn *conn, const char *number, uint8_t type);
+
+	/** CCWA call waiting callback
+	 *
+	 *  Called when AG sends +CCWA unsolicited result code.
+	 *
+	 *  @param conn Connection object.
+	 *  @param number Waiting call phone number string.
+	 *  @param type   Number type (129=unknown, 145=international).
+	 */
+	void (*ccwa_indication)(struct bt_conn *conn, const char *number, uint8_t type);
 
 	/** HF incoming call Ring indication callback to application
 	 *
@@ -168,6 +207,25 @@ struct bt_hfp_hf_cb {
 	 */
 	void (*cmd_complete_cb)(struct bt_conn *conn,
 			      struct bt_hfp_hf_cmd_complete *cmd);
+
+	/** BVRA voice recognition status callback
+	 *
+	 *  Called when AG sends +BVRA unsolicited result code.
+	 *
+	 *  @param conn   Connection object.
+	 *  @param active 1 = voice recognition activated, 0 = deactivated.
+	 */
+	void (*bvra_indication)(struct bt_conn *conn, uint8_t active);
+
+	/** CLCC current calls list callback
+	 *
+	 *  Called once per call entry in response to AT+CLCC.
+	 *
+	 *  @param conn Connection object.
+	 *  @param info Parsed call entry. NULL signals end of list (OK received).
+	 */
+	void (*clcc_indication)(struct bt_conn *conn,
+				const struct bt_hfp_clcc_info *info);
 };
 
 /** @brief Register HFP HF profile

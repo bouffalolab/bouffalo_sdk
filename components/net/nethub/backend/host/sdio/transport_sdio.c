@@ -6,42 +6,13 @@
 #include "msg_ctrl_sdio.h"
 #include "nh_vchan_backend.h"
 #include "netdev_wifi.h"
-// #include "tty_atcmd.h"
-#include "nethub_vchan.h"
+
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+#include "mr_sdio_drv.h"
+#endif
 
 #define DBG_TAG "NETHUB_SDIO"
 #include "log.h"
-
-static nethub_ctrl_rx_cb_t g_transport_sdio_ctrl_dnld_cb;
-static void *g_transport_sdio_ctrl_dnld_arg;
-
-static int transport_sdio_ctrlpath_dnld_dispatch(void *arg, uint8_t *data_buff, uint16_t data_size)
-{
-    NETHUB_UNUSED(arg);
-
-    if (g_transport_sdio_ctrl_dnld_cb == NULL) {
-        return NETHUB_OK;
-    }
-
-    return g_transport_sdio_ctrl_dnld_cb(g_transport_sdio_ctrl_dnld_arg, data_buff, data_size);
-}
-
-static int transport_sdio_ctrlpath_upld_send(uint8_t *data_buff, uint32_t data_size)
-{
-    return nethub_vchan_at_send(data_buff, (uint16_t)data_size);
-}
-
-static int transport_sdio_ctrlpath_dnld_register(nethub_ctrl_rx_cb_t dnld_cb, void *cbpri_arg)
-{
-    g_transport_sdio_ctrl_dnld_cb = dnld_cb;
-    g_transport_sdio_ctrl_dnld_arg = cbpri_arg;
-
-    if (dnld_cb == NULL) {
-        return nethub_vchan_at_recv_register(NULL, NULL);
-    }
-
-    return nethub_vchan_at_recv_register(transport_sdio_ctrlpath_dnld_dispatch, NULL);
-}
 
 static int transport_sdio_init(void)
 {
@@ -59,7 +30,7 @@ static int transport_sdio_init(void)
         return ret < 0 ? ret : -1;
     }
 
-    ret = nethub_vchan_backend_init(g_msg_sdio_ctrl);
+    ret = nethub_sdio_vchan_backend_init(g_msg_sdio_ctrl);
     if (ret < 0) {
         LOG_E("nethub_vchan_backend_init failed\r\n");
         return ret < 0 ? ret : -1;
@@ -82,15 +53,32 @@ static nethub_route_result_t sdio_output_callback(nethub_frame_t *frame, void *a
     return NETHUB_ROUTE_CONTINUE;
 }
 
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+static bool transport_sdio_lp_is_idle(void)
+{
+    return true;
+}
+
+static int transport_sdio_lp_prepare(void)
+{
+    return mr_sdio_drv_lowpower_prepare();
+}
+
+static int transport_sdio_lp_resume(void)
+{
+    return mr_sdio_drv_lowpower_restore();
+}
+#endif
+
 const struct nhif_ops nhsdio_ops = {
     .type = NETHUB_CHANNEL_SDIO,
     .init = transport_sdio_init,
     .deinit = NULL,
     .input = sdio_input_callback,
     .output = sdio_output_callback,
-};
-
-const nh_ctrlpath_ops_t nhsdio_ctrlpath_ops = {
-    .upld_send = transport_sdio_ctrlpath_upld_send,
-    .dnld_register = transport_sdio_ctrlpath_dnld_register,
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+    .is_idle = transport_sdio_lp_is_idle,
+    .lowpower_prepare = transport_sdio_lp_prepare,
+    .lowpower_resume = transport_sdio_lp_resume,
+#endif
 };

@@ -3,6 +3,15 @@
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
 
+static uintptr_t bl_lpfw_ram_addr(void)
+{
+#if defined(BL618DG) && !defined(CPU_MODEL_A0)
+    return ((uintptr_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0xA0000000;
+#else
+    return ((uintptr_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000;
+#endif
+}
+
 bl_lp_fw_info_t *bl_lpfw_bin_get_info(void)
 {
     return (bl_lp_fw_info_t *)__lpfw_load_addr;
@@ -49,7 +58,7 @@ int bl_lpfw_ram_load(void)
         assert(0);
     }
 
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000;
+    uint32_t lpfw_addr = bl_lpfw_ram_addr();
     uint32_t lpfw_size = *(uint32_t *)((uintptr_t)__lpfw_load_addr - 7 * sizeof(uint32_t));
 
     BL_LP_LOG("lpfw_addr:0x%08x\r\n", lpfw_addr);
@@ -82,7 +91,7 @@ int bl_lpfw_ram_verify(void)
         assert(0);
     }
 
-    uint32_t lpfw_addr = ((uint32_t)__lpfw_share_start__ & 0x0FFFFFFF) | 0x60000000;
+    uint32_t lpfw_addr = bl_lpfw_ram_addr();
     uint32_t lpfw_size = *(uint32_t *)((uintptr_t)__lpfw_load_addr - 7 * sizeof(uint32_t));
     uint8_t *lpfw_sha256 = (uint8_t *)((uintptr_t)__lpfw_load_addr - 16 * sizeof(uint32_t));
     uint8_t result[32];

@@ -84,7 +84,7 @@ void bl_lp_wifi_param_update(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         iot2lp_para->mtimer_parameter->mtimer_timeout_max_us = bl_lp_fw_cfg->mtimer_timeout_max_us;
 
         /* take rc32k error rate as default */
-        if (!(*((volatile uint32_t *)0x2000f030) & (1 << 3))) {
+        if (!BL_GET_REG_BITS_VAL(BL_RD_REG(HBN_BASE, HBN_GLB), HBN_F32K_SEL)) {
             /* rc32k 1500-ppm */
             iot2lp_para->rtc32k_jitter_error_ppm = 1200;
         } else {
@@ -430,7 +430,10 @@ void bl_lp_fw_init(void)
 int bl_lp_init(void)
 {
     bl_lp_env_init();
+
+#ifdef CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW
     bl_lp_fw_init();
+#endif
 
     return 0;
 }

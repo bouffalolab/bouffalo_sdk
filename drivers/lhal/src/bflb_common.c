@@ -26,7 +26,11 @@
 #define ANTI_ROLLBACK_ENABLE_MASK          (0x01)
 #define ANTI_ROLLBACK_ENABLE_POS           (12)
 #define ANTI_ROLLBACK_BOOT2_VERSION_OFFSET (0x64)
+#if defined(CPU_MODEL_A0)
 #define ANTI_ROLLBACK_APP_VERSION_OFFSET   (0xE0)
+#else
+#define ANTI_ROLLBACK_APP_VERSION_OFFSET   (0x100)
+#endif
 #elif defined(BL616CL)
 #define ANTI_ROLLBACK_ENABLE_OFFSET        (0x00)
 #define ANTI_ROLLBACK_ENABLE_MASK          (0x01)

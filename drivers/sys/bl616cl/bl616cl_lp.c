@@ -16,6 +16,8 @@ static ATTR_NOCACHE_RAM_SECTION lp_fw_bcn_loss_t beacon_loss_info = { 0 };
 static ATTR_NOCACHE_RAM_SECTION lp_fw_jtag_t lp_fw_jtag_parameter = { 0 };
 static ATTR_NOCACHE_RAM_SECTION lp_fw_uart_t lp_fw_uart_cfg = { 0 };
 static ATTR_NOCACHE_RAM_SECTION lp_fw_clock_t lp_fw_clock_cfg = { 0 };
+static ATTR_NOCACHE_RAM_SECTION PM_DCDC_SOC_CFG_Type lp_fw_dcdc_soc_cfg = { 0 };
+static ATTR_NOCACHE_RAM_SECTION PM_DCDC_SYS_CFG_Type lp_fw_dcdc_sys_cfg = { 0 };
 #if (BL_LP_TIME_DEBUG)
 ATTR_NOCACHE_RAM_SECTION lp_fw_time_debug_t time_debug_buff[TIME_DEBUG_NUM_MAX] = { 0 };
 #endif
@@ -437,8 +439,11 @@ void bl_lp_fw_init(void)
     lp_fw_clock_cfg.xclk_sel = HBN_MCU_XCLK_XTAL;
     iot2lp_para->clock_config = &lp_fw_clock_cfg;
 
-
     iot2lp_para->dcdc_sel_pin = BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED;
+    memcpy(&lp_fw_dcdc_soc_cfg, pm_dcdc_soc_default_cfg_get(), sizeof(lp_fw_dcdc_soc_cfg));
+    iot2lp_para->dcdc_soc_cfg = &lp_fw_dcdc_soc_cfg;
+    memcpy(&lp_fw_dcdc_sys_cfg, pm_dcdc_sys_default_cfg_get(), sizeof(lp_fw_dcdc_sys_cfg));
+    iot2lp_para->dcdc_sys_cfg = &lp_fw_dcdc_sys_cfg;
 
     /* lpfw info */
     memset(&lp_info_struct, 0, sizeof(lp_info_struct));
@@ -466,7 +471,9 @@ int bl_lp_init(void)
 {
     bl_lp_env_init();
 
+#ifdef CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW
     bl_lp_fw_init();
+#endif
 
     return 0;
 }
@@ -607,10 +614,6 @@ static int board_dcdc_exit_pds(void *arg)
 
 void board_ext_dcdc_init(void)
 {
-#if defined (PM_EXT_DCDC_SOC_CTRL_PIN) && (PM_EXT_DCDC_SOC_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
-    iot2lp_para->dcdc_sel_pin = PM_EXT_DCDC_SOC_CTRL_PIN;
-    return;
-#endif
 #if (BL_EXT_DCDC_OUTPUT_CTRL_PIN != BL_EXT_DCDC_OUTPUT_CTRL_PIN_DISABLED)
     iot2lp_para->dcdc_sel_pin = BL_EXT_DCDC_OUTPUT_CTRL_PIN;
     bl_ext_dcdc_pds_cfg_t cfg = {

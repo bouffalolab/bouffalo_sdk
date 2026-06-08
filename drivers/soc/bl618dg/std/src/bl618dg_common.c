@@ -75,9 +75,8 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core, uint32_t cnt, uint32_t loopT)
 
     if (core >= 1 * 1000 * 1000) {
         /* CPU clock >= 1MHz */
-        speed = core / (100 * 1000);
+        speed = core / (1000 * 1000);
         cycNum = speed * cnt;
-        cycNum = cycNum / 10;
         cycNum = cycNum / divVal;
         /* cycNum >= 0 */
     } else {
@@ -101,9 +100,14 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core, uint32_t cnt, uint32_t loopT)
         "nop\n\t"
         ".align 4\n\t"
         "1  :\n"
+#if defined(CPU_MODEL_A0)
         "beq      a5,a4,2f\n\t"
         "addi     a5,a5,0x1\n\t"
         "j        1b\n\t"
+#else
+        "addi     a5,a5,0x1\n\t"
+        "bne      a5,a4,1b\n\t"
+#endif
         "nop\n\t"
         "nop\n\t"
         "2   :\n\t"
@@ -127,7 +131,11 @@ __WEAK
 void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
 {
     uint32_t coreFreq;
+#if defined(CPU_MODEL_A0)
     uint32_t loopTick = 3;
+#else
+    uint32_t loopTick = 1;
+#endif
 #if defined(__riscv_xthead) || defined(__riscv_xtheadc)
 #if ((__ICACHE_PRESENT == 1U) && (__DCACHE_PRESENT == 1U))
     uint32_t iCacheEn;
@@ -138,15 +146,27 @@ void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
     iCacheEn = (__get_MHCR() & CACHE_MHCR_IE_Msk) >> CACHE_MHCR_IE_Pos;
     dCacheEn = (__get_MHCR() & CACHE_MHCR_DE_Msk) >> CACHE_MHCR_DE_Pos;
 
-    if(iCacheEn && dCacheEn){
+#if defined(CPU_MODEL_A0)
+    if (iCacheEn && dCacheEn) {
         loopTick = 3;
-    }else if(iCacheEn && !dCacheEn){
+    } else if (iCacheEn && !dCacheEn) {
         loopTick = 4;
-    }else if(!iCacheEn && !dCacheEn){
+    } else if (!iCacheEn && !dCacheEn) {
         loopTick = 24;
-    }else{
+    } else {
         /* not recommend */
     }
+#else
+    if (iCacheEn && dCacheEn) {
+        loopTick = 1;
+    } else if (iCacheEn && !dCacheEn) {
+        loopTick = 4;
+    } else if (!iCacheEn && !dCacheEn) {
+        loopTick = 24;
+    } else {
+        /* not recommend */
+    }
+#endif
 #endif
 #endif
 

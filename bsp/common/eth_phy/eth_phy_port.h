@@ -4,9 +4,87 @@
 
 #include "stdint.h"
 
+#ifndef CONFIG_BSP_EMAC_RMII_DEFAULT_PORT
+#define CONFIG_BSP_EMAC_RMII_DEFAULT_PORT 0
+#endif
+
+#ifndef CONFIG_BSP_EMAC_MDIO_DEFAULT_PORT
+#define CONFIG_BSP_EMAC_MDIO_DEFAULT_PORT CONFIG_BSP_EMAC_RMII_DEFAULT_PORT
+#endif
+
+#ifdef CONFIG_BSP_EMAC_RMII_SECOND_PORT
+#ifndef CONFIG_BSP_EMAC_MDIO_SECOND_PORT
+#define CONFIG_BSP_EMAC_MDIO_SECOND_PORT CONFIG_BSP_EMAC_RMII_SECOND_PORT
+#endif
+#define BSP_EMAC_SECOND_ENABLED 1
+#else
+#define BSP_EMAC_SECOND_ENABLED 0
+#endif
+
+#if CONFIG_BSP_EMAC_RMII_DEFAULT_PORT > 1
+#error "CONFIG_BSP_EMAC_RMII_DEFAULT_PORT must be 0 or 1"
+#endif
+
+#if CONFIG_BSP_EMAC_MDIO_DEFAULT_PORT > 1
+#error "CONFIG_BSP_EMAC_MDIO_DEFAULT_PORT must be 0 or 1"
+#endif
+
+#if BSP_EMAC_SECOND_ENABLED
+#if CONFIG_BSP_EMAC_RMII_SECOND_PORT > 1
+#error "CONFIG_BSP_EMAC_RMII_SECOND_PORT must be 0 or 1"
+#endif
+
+#if CONFIG_BSP_EMAC_MDIO_SECOND_PORT > 1
+#error "CONFIG_BSP_EMAC_MDIO_SECOND_PORT must be 0 or 1"
+#endif
+
+#if CONFIG_BSP_EMAC_RMII_SECOND_PORT == CONFIG_BSP_EMAC_RMII_DEFAULT_PORT
+#error "CONFIG_BSP_EMAC_RMII_SECOND_PORT must differ from CONFIG_BSP_EMAC_RMII_DEFAULT_PORT"
+#endif
+#endif
+
+#if !defined(BL618DG)
+#if CONFIG_BSP_EMAC_RMII_DEFAULT_PORT != 0 || CONFIG_BSP_EMAC_MDIO_DEFAULT_PORT != 0
+#error "This chip only supports EMAC port 0"
+#endif
+
+#if BSP_EMAC_SECOND_ENABLED
+#error "This chip only supports one EMAC port"
+#endif
+#endif
+
+#define BSP_EMAC_RMII_DEFAULT_PORT CONFIG_BSP_EMAC_RMII_DEFAULT_PORT
+#define BSP_EMAC_MDIO_DEFAULT_PORT CONFIG_BSP_EMAC_MDIO_DEFAULT_PORT
+
+#if BSP_EMAC_SECOND_ENABLED
+#define BSP_EMAC_RMII_SECOND_PORT CONFIG_BSP_EMAC_RMII_SECOND_PORT
+#define BSP_EMAC_MDIO_SECOND_PORT CONFIG_BSP_EMAC_MDIO_SECOND_PORT
+#endif
+
+#ifdef CONFIG_BSP_EMAC_PHY_DEFAULT_ADDR
+#define BSP_EMAC_PHY_DEFAULT_SCAN_START CONFIG_BSP_EMAC_PHY_DEFAULT_ADDR
+#define BSP_EMAC_PHY_DEFAULT_SCAN_END   CONFIG_BSP_EMAC_PHY_DEFAULT_ADDR
+#else
+#define BSP_EMAC_PHY_DEFAULT_SCAN_START 0
+#define BSP_EMAC_PHY_DEFAULT_SCAN_END   31
+#endif
+
+#ifdef CONFIG_BSP_EMAC_PHY_SECOND_ADDR
+#define BSP_EMAC_PHY_SECOND_SCAN_START CONFIG_BSP_EMAC_PHY_SECOND_ADDR
+#define BSP_EMAC_PHY_SECOND_SCAN_END   CONFIG_BSP_EMAC_PHY_SECOND_ADDR
+#else
+#define BSP_EMAC_PHY_SECOND_SCAN_START 0
+#define BSP_EMAC_PHY_SECOND_SCAN_END   31
+#endif
+
+struct bflb_device_s;
+
 void eth_phy_delay_ms(uint32_t ms);
 
-int eth_phy_mdio_read(uint8_t phy_addr, uint8_t reg_addr, uint16_t *data);
-int eth_phy_mdio_write(uint8_t phy_addr, uint8_t reg_addr, uint16_t data);
+const char *bsp_emac_get_device_name(uint8_t port);
+struct bflb_device_s *bsp_emac_get_device(uint8_t port);
+
+int eth_phy_mdio_read(struct bflb_device_s *mac_mdio_dev, uint8_t phy_addr, uint8_t reg_addr, uint16_t *data);
+int eth_phy_mdio_write(struct bflb_device_s *mac_mdio_dev, uint8_t phy_addr, uint8_t reg_addr, uint16_t data);
 
 #endif

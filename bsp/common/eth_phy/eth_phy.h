@@ -44,6 +44,7 @@
 struct eth_phy_drv_s;
 struct eth_phy_ctrl_s;
 struct eth_phy_init_cfg_s;
+struct bflb_device_s;
 
 /* eth_phy driver */
 typedef struct eth_phy_drv_s {
@@ -58,6 +59,7 @@ typedef struct eth_phy_drv_s {
 
 /* eth_phy ctrl */
 typedef struct eth_phy_ctrl_s {
+    struct bflb_device_s *mac_mdio_dev;
     uint8_t phy_addr;
     uint32_t phy_id;
 

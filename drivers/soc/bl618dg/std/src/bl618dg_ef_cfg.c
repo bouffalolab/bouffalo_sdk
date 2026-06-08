@@ -38,6 +38,16 @@
 #define  WHO_AM_I    (0x60f82800)
 #define  I_AM_A0     (0x0616d001)
 
+#if defined(CPU_MODEL_A0)
+#define EFUSE_TRIM_PSRAM_OFFSET      0xB4
+#define EFUSE_TRIM_LDO_RC32M_OFFSET  0xB8
+#define EFUSE_TRIM_XTAL_OFFSET       0xBC
+#else
+#define EFUSE_TRIM_PSRAM_OFFSET      0x1F0
+#define EFUSE_TRIM_LDO_RC32M_OFFSET  0x1F4
+#define EFUSE_TRIM_XTAL_OFFSET       0x1F8
+#endif
+
 static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
         .name = "auadc_gain_ext",
@@ -90,58 +100,58 @@ static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     },
     {
         .name = "psram_trim",
-        .en_addr = 0xB4 * 8 + 12,
-        .parity_addr = 0xB4 * 8 + 11,
-        .value_addr = 0xB4 * 8 + 0,
+        .en_addr = EFUSE_TRIM_PSRAM_OFFSET * 8 + 12,
+        .parity_addr = EFUSE_TRIM_PSRAM_OFFSET * 8 + 11,
+        .value_addr = EFUSE_TRIM_PSRAM_OFFSET * 8 + 0,
         .value_len = 11,
     },
     {
         .name = "ldo09",
-        .en_addr = 0xB8 * 8 + 30,
-        .parity_addr = 0xB8 * 8 + 31,
-        .value_addr = 0xB8 * 8 + 26,
+        .en_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 30,
+        .parity_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 31,
+        .value_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 26,
         .value_len = 4,
     },
     {
         .name = "ldo08",
-        .en_addr = 0xB8 * 8 + 24,
-        .parity_addr = 0xB8 * 8 + 25,
-        .value_addr = 0xB8 * 8 + 20,
+        .en_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 24,
+        .parity_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 25,
+        .value_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 20,
         .value_len = 4,
     },
     {
         .name = "ldo18",
-        .en_addr = 0xB8 * 8 + 18,
-        .parity_addr = 0xB8 * 8 + 19,
-        .value_addr = 0xB8 * 8 + 14,
+        .en_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 18,
+        .parity_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 19,
+        .value_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 14,
         .value_len = 4,
     },
     {
         .name = "rc32m",
-        .en_addr = 0xB8 * 8 + 12,
-        .parity_addr = 0xB8 * 8 + 13,
-        .value_addr = 0xB8 * 8 + 4,
+        .en_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 12,
+        .parity_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 13,
+        .value_addr = EFUSE_TRIM_LDO_RC32M_OFFSET * 8 + 4,
         .value_len = 8,
     },
     {
         .name = "xtal0",
-        .en_addr = 0xBC * 8 + 30,
-        .parity_addr = 0xBC * 8 + 31,
-        .value_addr = 0xBC * 8 + 22,
+        .en_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 30,
+        .parity_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 31,
+        .value_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 22,
         .value_len = 8,
     },
     {
         .name = "xtal1",
-        .en_addr = 0xBC * 8 + 20,
-        .parity_addr = 0xBC * 8 + 21,
-        .value_addr = 0xBC * 8 + 12,
+        .en_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 20,
+        .parity_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 21,
+        .value_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 12,
         .value_len = 8,
     },
     {
         .name = "xtal2",
-        .en_addr = 0xBC * 8 + 10,
-        .parity_addr = 0xBC * 8 + 11,
-        .value_addr = 0xBC * 8 + 2,
+        .en_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 10,
+        .parity_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 11,
+        .value_addr = EFUSE_TRIM_XTAL_OFFSET * 8 + 2,
         .value_len = 8,
     },
     {
@@ -893,4 +903,3 @@ int bflb_efuse_write_lock_usb_pid_vid(void)
 
     return 0;
 }
-

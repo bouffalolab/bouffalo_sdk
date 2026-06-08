@@ -184,6 +184,31 @@ if(CONFIG_X509_CERTIFICATE_BUNDLE)
         )
 endif()
 
+if(CONFIG_SHELL)
+    set(SHELL_AUTOLIST_APPEND_ARGS --append AUTOLIST)
+    if(CONFIG_SHELL_AUTOLIST_FILE)
+        if(IS_ABSOLUTE "${CONFIG_SHELL_AUTOLIST_FILE}")
+            set(SHELL_AUTOLIST_FILE "${CONFIG_SHELL_AUTOLIST_FILE}")
+        else()
+            set(SHELL_AUTOLIST_FILE "${SDK_DEMO_PATH}/${CONFIG_SHELL_AUTOLIST_FILE}")
+        endif()
+
+        list(APPEND SHELL_AUTOLIST_APPEND_ARGS "${SHELL_AUTOLIST_FILE}")
+    else()
+        list(APPEND SHELL_AUTOLIST_APPEND_ARGS --append-size 0x1000)
+    endif()
+
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[shell_auto] ${SHELL_AUTOLIST_APPEND_ARGS}"
+        COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
+            ${BIN_FILE}
+            ${SHELL_AUTOLIST_APPEND_ARGS}
+            --output ${BIN_FILE}
+            --align 0x1000
+            --tail-align 0x1000
+        )
+endif()
+
 if(CONFIG_POST_BUILDS_GENERATE_LITTLEFS)
     list(APPEND post_build_cmds
         COMMAND ${CMAKE} -E echo "[littlefs] generate littlefs.bin using littlefs directory, size=${CONFIG_POST_BUILDS_LITTLEFS_SIZE}"

@@ -470,7 +470,8 @@ void usbd_rndis_emac_init(void)
     cdc_rndis_init(0, 0);
 
     /* eth emac init */
-    board_emac_gpio_init();
+    board_emac_rmii_gpio_init(BSP_EMAC_RMII_DEFAULT_PORT);
+    board_emac_mdio_gpio_init(BSP_EMAC_MDIO_DEFAULT_PORT);
     eth_emac_init();
     eth_emac_event_cb_register(usbd_emac_event_cb);
 

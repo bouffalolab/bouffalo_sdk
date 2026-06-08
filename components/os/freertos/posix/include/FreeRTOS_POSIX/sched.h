@@ -48,10 +48,12 @@ extern "C" {
  * @brief Scheduling parameters required for implementation of each supported
  * scheduling policy.
  */
+#if !defined( posixconfigENABLE_SCHED_PARAM ) || ( posixconfigENABLE_SCHED_PARAM == 1 )
 struct sched_param
 {
     int sched_priority; /**< Process or thread execution scheduling priority. */
 };
+#endif
 
 /**
  * @brief Get priority limit (max).

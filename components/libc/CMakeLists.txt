@@ -2,6 +2,10 @@ sdk_generate_library()
 
 sdk_add_include_directories(.)
 
+if(CONFIG_POSIX)
+sdk_add_include_directories(./posix)
+endif()
+
 if("${CHIP}" STREQUAL "bl618dg" AND "${CPU_MODEL}" STREQUAL "b0")
     sdk_add_include_directories(picolibc)
     sdk_library_add_sources(picolibc/port_errno.c)

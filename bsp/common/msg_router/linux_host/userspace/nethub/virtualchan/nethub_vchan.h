@@ -101,6 +101,13 @@ int nethub_vchan_deinit(void);
 int nethub_vchan_send(uint8_t type, const void *data, size_t len);
 
 /**
+ * @brief Recover the active virtual channel after device/link reset
+ * @param timeout_ms Maximum time to wait for link up
+ * @return 0 for success, negative for failure
+ */
+int nethub_vchan_recover(int timeout_ms);
+
+/**
  * @brief Register data receive callback function
  * @param data_type Data type (NETHUB_VCHAN_DATA_TYPE_*)
  * @param callback Callback function pointer

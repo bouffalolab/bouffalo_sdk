@@ -19,6 +19,11 @@
  */
 
 #include "shell.h"
+#include "bflb_mtimer.h"
+#if IS_ENABLED(CONFIG_FREERTOS)
+#include "FreeRTOS.h"
+#include "task.h"
+#endif
 #if defined(SHELL_USING_FS)
 #include "ff.h"
 #endif
@@ -115,6 +120,53 @@ static int shell_memtrace(int argc, char **argv)
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(shell_memtrace, memtrace, memory trace.);
+
+static int shell_sleep(int argc, char **argv)
+{
+    char *end;
+    uint32_t ms;
+    unsigned long value;
+
+    if (argc < 2) {
+        SHELL_DGB("usage: sleep <ms|Ns>\r\n");
+        return 0;
+    }
+
+    value = strtoul(argv[1], &end, 0);
+    if (end == argv[1]) {
+        SHELL_E("invalid sleep time: %s\r\n", argv[1]);
+        return -1;
+    }
+
+    if (strcmp(end, "s") == 0) {
+        if (value > UINT32_MAX / 1000UL) {
+            SHELL_E("sleep time too large.\r\n");
+            return -1;
+        }
+        ms = (uint32_t)(value * 1000UL);
+    } else if (*end == '\0' || strcmp(end, "ms") == 0) {
+        if (value > UINT32_MAX) {
+            SHELL_E("sleep time too large.\r\n");
+            return -1;
+        }
+        ms = (uint32_t)value;
+    } else {
+        SHELL_E("invalid sleep unit: %s\r\n", end);
+        return -1;
+    }
+
+#if IS_ENABLED(CONFIG_FREERTOS)
+    if (ms > 0) {
+        TickType_t ticks = pdMS_TO_TICKS(ms);
+        vTaskDelay(ticks ? ticks : 1);
+    }
+#else
+    bflb_mtimer_delay_ms(ms);
+#endif
+
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(shell_sleep, sleep, sleep milliseconds.);
 
 static char *shell_get_prompt(void)
 {
@@ -919,6 +971,7 @@ void shell_init(void)
     shell_set_prompt(SHELL_DEFAULT_NAME);
     shell_set_print((void (*)(char *fmt, ...))printf);
     SHELL_PRINTF(shell_get_prompt());
+    shell_auto_start();
 }
 
 shell_sig_func_ptr shell_signal(int sig, shell_sig_func_ptr func)
@@ -951,4 +1004,12 @@ __attribute__((weak)) void shell_dup_line(char *cmd, uint32_t length)
 {
     (void)cmd;
     (void)length;
+}
+__attribute__((weak)) int shell_wait_exec_done(uint32_t timeout_ms)
+{
+    (void)timeout_ms;
+    return 0;
+}
+__attribute__((weak)) void shell_auto_start(void)
+{
 }

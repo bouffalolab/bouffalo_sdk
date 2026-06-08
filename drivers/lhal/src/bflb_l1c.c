@@ -126,6 +126,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 #elif (defined(BL618DG) && !defined(CPU_MODEL_A0) && !defined(CPU_LP))
 /* Nuclei */
 #include "nmsis_core.h"
+#include <risc-v/bflb_rv_privilege.h>
 
 void bflb_l1c_icache_enable(void)
 {
@@ -133,7 +134,7 @@ void bflb_l1c_icache_enable(void)
     romapi_bflb_l1c_icache_enable();
 #else
     uintptr_t flag = bflb_irq_save();
-    EnableICache();
+    bflb_rv_icache_enable();
     bflb_irq_restore(flag);
 #endif
 }
@@ -144,7 +145,7 @@ void bflb_l1c_icache_disable(void)
     romapi_bflb_l1c_icache_disable();
 #else
     uintptr_t flag = bflb_irq_save();
-    DisableICache();
+    bflb_rv_icache_disable();
     bflb_irq_restore(flag);
 #endif
 }
@@ -155,7 +156,7 @@ ATTR_TCM_SECTION void bflb_l1c_icache_invalid_all(void)
     romapi_bflb_l1c_icache_invalid_all();
 #else
     uintptr_t flag = bflb_irq_save();
-    MInvalICache();
+    bflb_rv_icache_invalid_all();
     bflb_irq_restore(flag);
 #endif
 }
@@ -167,7 +168,7 @@ ATTR_TCM_SECTION void bflb_l1c_icache_invalid_range(void *addr, uint32_t size)
 #else
     if (bflb_check_cache_addr(addr)) {
         uintptr_t flag = bflb_irq_save();
-        MInvalICacheRange((unsigned long)addr, size);
+        bflb_rv_icache_invalid_range((unsigned long)addr, size);
         bflb_irq_restore(flag);
     }
 #endif
@@ -179,7 +180,7 @@ void bflb_l1c_dcache_enable(void)
     romapi_bflb_l1c_dcache_enable();
 #else
     uintptr_t flag = bflb_irq_save();
-    EnableDCache();
+    bflb_rv_dcache_enable();
     bflb_irq_restore(flag);
 #endif
 }
@@ -190,7 +191,7 @@ void bflb_l1c_dcache_disable(void)
     romapi_bflb_l1c_dcache_disable();
 #else
     uintptr_t flag = bflb_irq_save();
-    DisableDCache();
+    bflb_rv_dcache_disable();
     bflb_irq_restore(flag);
 #endif
 }
@@ -201,7 +202,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_all(void)
     romapi_bflb_l1c_dcache_clean_all();
 #else
     uintptr_t flag = bflb_irq_save();
-    MFlushDCache();
+    bflb_rv_dcache_clean_all();
     bflb_irq_restore(flag);
 #endif
 }
@@ -212,7 +213,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_all(void)
     romapi_bflb_l1c_dcache_invalidate_all();
 #else
     uintptr_t flag = bflb_irq_save();
-    MInvalDCache();
+    bflb_rv_dcache_invalidate_all();
     bflb_irq_restore(flag);
 #endif
 }
@@ -223,7 +224,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_all(void)
     romapi_bflb_l1c_dcache_clean_invalidate_all();
 #else
     uintptr_t flag = bflb_irq_save();
-    MFlushInvalDCache();
+    bflb_rv_dcache_clean_invalidate_all();
     bflb_irq_restore(flag);
 #endif
 }
@@ -235,7 +236,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
 #else
     if (bflb_check_cache_addr(addr)) {
         uintptr_t flag = bflb_irq_save();
-        MFlushDCacheRange((unsigned long)addr, size);
+        bflb_rv_dcache_clean_range((unsigned long)addr, size);
         bflb_irq_restore(flag);
     }
 #endif
@@ -248,7 +249,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size
 #else
     if (bflb_check_cache_addr(addr)) {
         uintptr_t flag = bflb_irq_save();
-        MInvalDCacheRange((unsigned long)addr, size);
+        bflb_rv_dcache_invalidate_range((unsigned long)addr, size);
         bflb_irq_restore(flag);
     }
 #endif
@@ -261,7 +262,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 #else
     if (bflb_check_cache_addr(addr)) {
         uintptr_t flag = bflb_irq_save();
-        MFlushInvalDCacheRange((unsigned long)addr, size);
+        bflb_rv_dcache_clean_invalidate_range((unsigned long)addr, size);
         bflb_irq_restore(flag);
     }
 #endif
@@ -419,5 +420,5 @@ uint32_t ATTR_TCM_SECTION bflb_l1c_miss_count_get(void)
 }
 
 #else
-#error "Unsupported chip or CPU model for L1C driver"
+//#error "Unsupported chip or CPU model for L1C driver"
 #endif

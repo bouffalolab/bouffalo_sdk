@@ -11,7 +11,7 @@ sdk_add_private_compile_options(
     -Wno-error=discarded-qualifiers
 )
 
-if(CONFIG_WFA)
+if(CONFIG_MACSW_SELECT STREQUAL "wfa")
 set(MACSW_WFA 1)
 endif()
 
@@ -73,7 +73,9 @@ sdk_library_add_sources(src/l2_packet/l2_packet_macsw.c)
 sdk_library_add_sources(src/rsn_supp/wpa.c)
 sdk_library_add_sources(src/rsn_supp/wpa_ie.c)
 sdk_library_add_sources(src/rsn_supp/preauth.c)
+if(MACSW_WFA)
 sdk_library_add_sources(src/rsn_supp/pmksa_cache.c)
+endif()
 sdk_library_add_sources(src/eapol_supp/eapol_supp_sm.c)
 sdk_library_add_sources(src/drivers/drivers.c)
 sdk_library_add_sources(src/drivers/driver_common.c)
@@ -139,9 +141,7 @@ sdk_library_add_sources(src/eap_peer/eap.c)
 sdk_library_add_sources(src/eap_peer/eap_wsc.c)
 sdk_library_add_sources(src/eap_peer/eap_methods.c)
 sdk_library_add_sources(src/eap_common/eap_wsc_common.c)
-sdk_library_add_sources(src/eap_peer/eap_methods.c)
 sdk_library_add_sources(src/ap/ctrl_iface_ap.c)
-sdk_library_add_sources(src/eapol_supp/eapol_supp_sm.c)
 sdk_library_add_sources(src/wps/wps_attr_process.c)
 sdk_library_add_sources(src/wps/wps_enrollee.c)
 

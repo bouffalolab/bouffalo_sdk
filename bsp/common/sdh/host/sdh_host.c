@@ -1,8 +1,10 @@
 #include "sdh_osal.h"
 #include "sdh_host.h"
 
+#include "hardware/sdh_reg.h"
 #include "bflb_sdh.h"
 #include "bflb_clock.h"
+#include "bflb_gpio.h"
 
 #include CHIP_GLB_HEADER
 
@@ -19,14 +21,52 @@ static __ALIGNED(32) ATTR_NOCACHE_RAM_SECTION uint8_t internal_buffer[SDH_HOST_I
 
 #if (CONFIG_BSP_SDH_OSAL_POLLING_MODE == 0)
 
+#define SDH_WAIT_STATUS(_status_mask, _irq_mask, _timeout_log)               \
+    do {                                                                     \
+            sta = bflb_sdh_sta_get(host->sdh_dev);                           \
+            if (sta & (_status_mask)) {                                      \
+                break;                                                       \
+            }                                                                \
+            bflb_sdh_sta_int_en(host->sdh_dev, (_irq_mask), true);           \
+            ret = sdh_osal_semb_take(host->osal_semb, 0);                    \
+            if (ret != 0) {                                                  \
+                LOG_W(_timeout_log "\r\n", transfer->cmd->index);            \
+                sta = bflb_sdh_sta_get(host->sdh_dev);                       \
+                break;                                                       \
+            }                                                                \
+    } while (1)
+
 static void sdh_irq(int irq, void *arg)
 {
     struct sdh_host_s *host = (struct sdh_host_s *)arg;
+    uint32_t sta;
+    uint32_t wait_irq_mask = 0;
 
-    /* diable all int (normal and error) */
-    bflb_sdh_sta_int_en(host->sdh_dev, 0xffffffff, false);
+    (void)irq;
+    sta = bflb_sdh_sta_get(host->sdh_dev);
+    if (sta & SDH_NORMAL_STA_CMD_COMP) {
+        wait_irq_mask |= SDH_NORMAL_STA_CMD_COMP;
+    }
+    if (sta & SDH_NORMAL_STA_TRAN_COMP) {
+        wait_irq_mask |= SDH_NORMAL_STA_TRAN_COMP;
+    }
+    if (sta & SDH_NORMAL_STA_ERROR) {
+        wait_irq_mask |= SDH_ERROR_ALL_MASK;
+    }
+    if (wait_irq_mask != 0) {
+        /* CARD_INT shares the same CPU IRQ line. Do not mask CMD/TRAN/error
+         * on a pure card interrupt, or the waiter may never be woken again. */
+        bflb_sdh_sta_int_en(host->sdh_dev, wait_irq_mask, false);
+    }
+
+    if (host->async_irq_handler != NULL) {
+        host->async_irq_handler(host, host->async_irq_arg);
+    }
+
     /* give semb */
-    sdh_osal_semb_give(host->osal_semb);
+    if (sta & (SDH_NORMAL_STA_CMD_COMP | SDH_NORMAL_STA_ERROR | SDH_NORMAL_STA_TRAN_COMP)) {
+        sdh_osal_semb_give(host->osal_semb);
+    }
 }
 
 #endif
@@ -66,6 +106,10 @@ int sdh_host_init(struct sdh_host_s *host)
     bflb_irq_attach(host->sdh_dev->irq_num, sdh_irq, host);
     bflb_irq_enable(host->sdh_dev->irq_num);
 #endif
+
+    /* Recursive mutex: aligns with Linux sdio_claim_host semantics,
+     * allowing the same task to nest claim/release calls. */
+    host->osal_mutex = sdh_osal_rmutex_create();
 
     /* internal buffer */
     host->internal_buff = internal_buffer;
@@ -113,6 +157,7 @@ int sdh_host_init(struct sdh_host_s *host)
 
     sdh_set_bus_clock(host, 400 * 1000, NULL);
 
+    host->max_blk_size = SDH_HOST_INTER_BLK_BUFF_SEZE;
     /* sd bus enable */
     bflb_sdh_feature_control(host->sdh_dev, SDH_CMD_SET_SD_BUS_POWER, true);
 
@@ -121,11 +166,19 @@ int sdh_host_init(struct sdh_host_s *host)
 
 int sdh_host_deinit(struct sdh_host_s *host)
 {
+    sdh_host_irq_handler_set(host, NULL, NULL);
+
 #if (CONFIG_BSP_SDH_OSAL_POLLING_MODE == 0)
     if (host->osal_semb) {
         sdh_osal_semb_delete(host->osal_semb);
+        host->osal_semb = NULL;
     }
 #endif
+
+    if (host->osal_mutex) {
+        sdh_osal_rmutex_delete(host->osal_mutex);
+        host->osal_mutex = NULL;
+    }
 
     /* disable sdh */
 #if defined(BL616)
@@ -144,11 +197,11 @@ int sdh_host_transfer(struct sdh_host_s *host, struct sdh_host_transfer_s *trans
     int ret;
 
     LOG_D("host_transfer CMD%d, agr 0x%08X, data:%s\r\n",
-          transfer->cmd_cfg->index, transfer->cmd_cfg->argument, transfer->data_cfg ? "ture" : "false");
+          transfer->cmd->index, transfer->cmd->argument, transfer->data ? "ture" : "false");
 
-    if (transfer->data_cfg && transfer->data_cfg->adma2_hw_desc == NULL) {
-        transfer->data_cfg->adma2_hw_desc = host->adma2_hw_desc;
-        transfer->data_cfg->adma2_hw_desc_cnt = host->adma2_hw_desc_num;
+    if (transfer->data && transfer->data->adma2_hw_desc == NULL) {
+        transfer->data->adma2_hw_desc = host->adma2_hw_desc;
+        transfer->data->adma2_hw_desc_cnt = host->adma2_hw_desc_num;
     }
 
     /* clr comp sta */
@@ -157,10 +210,10 @@ int sdh_host_transfer(struct sdh_host_s *host, struct sdh_host_transfer_s *trans
     bflb_sdh_sta_clr(host->sdh_dev, SDH_ERROR_ALL_MASK);
 
     /*  */
-    ret = bflb_sdh_tranfer_start(host->sdh_dev, transfer->cmd_cfg, transfer->data_cfg);
+    ret = bflb_sdh_tranfer_start(host->sdh_dev, transfer->cmd, transfer->data);
 
     if (ret < 0) {
-        LOG_W("CMD%d send failed, agr 0x%08X\r\n", transfer->cmd_cfg->index, transfer->cmd_cfg->argument);
+        LOG_W("CMD%d send failed, agr 0x%08X\r\n", transfer->cmd->index, transfer->cmd->argument);
     }
 
     return ret;
@@ -179,24 +232,23 @@ int sdh_host_wait_done(struct sdh_host_s *host, struct sdh_host_transfer_s *tran
     } while ((sta & (SDH_NORMAL_STA_CMD_COMP | SDH_NORMAL_STA_ERROR)) == 0);
 #else
     /* Interrupt mode */
-    bflb_sdh_sta_int_en(host->sdh_dev, SDH_NORMAL_STA_CMD_COMP | SDH_ERROR_ALL_MASK, true);
-    sdh_osal_semb_take(host->osal_semb, 0);
-
-    sta = bflb_sdh_sta_get(host->sdh_dev);
+    SDH_WAIT_STATUS(SDH_NORMAL_STA_CMD_COMP | SDH_NORMAL_STA_ERROR | SDH_ERROR_ALL_MASK,
+                    SDH_NORMAL_STA_CMD_COMP | SDH_ERROR_ALL_MASK,
+                    "CMD%d wait CMD_COMP irq timeout");
 #endif
 
     /* get resp */
     if (sta & SDH_NORMAL_STA_CMD_COMP) {
         bflb_sdh_sta_clr(host->sdh_dev, SDH_NORMAL_STA_CMD_COMP);
-        bflb_sdh_get_resp(host->sdh_dev, transfer->cmd_cfg);
+        bflb_sdh_get_resp(host->sdh_dev, transfer->cmd);
     } else {
         ret = -1;
         goto wait_exit;
     }
 
-    if (transfer->data_cfg == NULL &&
-        transfer->cmd_cfg->resp_type != SDH_RESP_TPYE_R1b &&
-        transfer->cmd_cfg->resp_type != SDH_RESP_TPYE_R5b) {
+    if (transfer->data == NULL &&
+        transfer->cmd->resp_type != SDH_RESP_TPYE_R1b &&
+        transfer->cmd->resp_type != SDH_RESP_TPYE_R5b) {
         /* no data and busy, end */
         ret = 0;
         goto wait_exit;
@@ -210,10 +262,9 @@ int sdh_host_wait_done(struct sdh_host_s *host, struct sdh_host_transfer_s *tran
     } while ((sta & (SDH_NORMAL_STA_TRAN_COMP | SDH_NORMAL_STA_ERROR)) == 0);
 #else
     /* Interrupt mode */
-    bflb_sdh_sta_int_en(host->sdh_dev, SDH_NORMAL_STA_TRAN_COMP | SDH_ERROR_ALL_MASK, true);
-    sdh_osal_semb_take(host->osal_semb, 0);
-
-    sta = bflb_sdh_sta_get(host->sdh_dev);
+    SDH_WAIT_STATUS(SDH_NORMAL_STA_TRAN_COMP | SDH_NORMAL_STA_ERROR | SDH_ERROR_ALL_MASK,
+                    SDH_NORMAL_STA_TRAN_COMP | SDH_ERROR_ALL_MASK,
+                    "CMD%d wait TRAN_COMP irq timeout");
 #endif
 
     if (sta & SDH_NORMAL_STA_TRAN_COMP) {
@@ -227,9 +278,8 @@ int sdh_host_wait_done(struct sdh_host_s *host, struct sdh_host_transfer_s *tran
 
 wait_exit:
     if (ret < 0) {
-        LOG_W("CMD%d wait failed, agr: 0x%08X, sta: 0x%08X\r\n", transfer->cmd_cfg->index, transfer->cmd_cfg->argument, sta);
-    } else {
-        LOG_D("transfer CMD%d done, \r\n", transfer->cmd_cfg->index);
+        LOG_W("CMD%d wait failed, agr: 0x%08X, sta: 0x%08X sta_en:%08x sta_int_en:%08x\r\n", transfer->cmd->index, transfer->cmd->argument, sta,
+                bflb_sdh_sta_en_get(host->sdh_dev), bflb_sdh_sta_int_en_get(host->sdh_dev));
     }
 
     return ret;
@@ -270,16 +320,16 @@ int sdh_set_bus_clock(struct sdh_host_s *host, uint32_t freq, uint32_t *actual_f
 
     actual_freq_hz = 96000000 / div;
 
-    if (actual_freq) {
-        *actual_freq = actual_freq_hz;
-    }
-
     GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, div - 1);
 
     host->clk_src_hz = actual_freq_hz;
-    host->sdh_div = 1;
+    host->sdh_div = (host->clk_src_hz + freq - 1) / freq;
 
-    bflb_sdh_feature_control(host->sdh_dev, SDH_CMD_SET_BUS_CLK_DIV, 0);
+    if (actual_freq) {
+        *actual_freq = host->clk_src_hz / host->sdh_div;
+    }
+
+    bflb_sdh_feature_control(host->sdh_dev, SDH_CMD_SET_BUS_CLK_DIV, host->sdh_div - 1);
 
 #elif defined(SDH_STD_V3_SMIH)
     uint32_t div = (host->clk_src_hz + freq - 1) / freq;
@@ -384,7 +434,11 @@ int sdh_set_data_timeout_ms(struct sdh_host_s *host, uint16_t timeout_ms, uint32
 
 int sdh_get_signal_status(struct sdh_host_s *host)
 {
-    return 0;
+    if ((host == NULL) || (host->sdh_dev == NULL)) {
+        return -1;
+    }
+
+    return (int)getreg32(host->sdh_dev->reg_base + SDH_PRESENT_STATE_1_OFFSET);
 }
 
 int sdh_force_clock(struct sdh_host_s *host, bool en)
@@ -397,5 +451,57 @@ int sdh_force_clock(struct sdh_host_s *host, bool en)
 
 int sdh_switch_voltage(struct sdh_host_s *host, uint32_t voltage)
 {
+    (void)host;
+    (void)voltage;
     return 0;
+}
+
+int sdh_host_claim(struct sdh_host_s *host)
+{
+    if (host == NULL) {
+        return -1;
+    }
+
+    return sdh_osal_rmutex_take(host->osal_mutex);
+}
+
+int sdh_host_release(struct sdh_host_s *host)
+{
+    if (host == NULL) {
+        return -1;
+    }
+
+    return sdh_osal_rmutex_give(host->osal_mutex);
+}
+
+void sdh_host_irq_handler_set(struct sdh_host_s *host,
+                              sdh_host_irq_handler_t handler,
+                              void *arg)
+{
+    if (host == NULL) {
+        return;
+    }
+
+    host->async_irq_handler = handler;
+    host->async_irq_arg = arg;
+}
+
+void sdh_gpio_set_value(uint8_t pin, uint8_t value)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_init(gpio, pin, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    if (value) {
+        bflb_gpio_set(gpio, pin);
+    } else {
+        bflb_gpio_reset(gpio, pin);
+    }
+}
+
+int sdh_gpio_get_value(uint8_t pin)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN);
+    return bflb_gpio_read(gpio, pin) ? 1 : 0;
 }

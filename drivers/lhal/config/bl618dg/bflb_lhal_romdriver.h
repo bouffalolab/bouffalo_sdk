@@ -621,6 +621,7 @@ typedef enum {
     ((uint32_t (*)(void *in, uint32_t len)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_soft_crc32])
 
+#if 0
 #define romapi_bflb_get_app_version_from_efuse \
     ((int32_t (*)(uint8_t *version)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_get_app_version_from_efuse])
@@ -628,6 +629,7 @@ typedef enum {
 #define romapi_bflb_set_app_version_to_efuse \
     ((int32_t (*)(uint8_t version)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_set_app_version_to_efuse])
+#endif
 
 #define romapi_bflb_get_boot2_version_from_efuse \
     ((int32_t (*)(uint8_t *version)) \
@@ -717,17 +719,21 @@ typedef enum {
     ((int (*)(struct bflb_device_s *dev, int cmd, size_t arg)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_dbi_feature_control])
 
+#if 0
 #define romapi_bflb_dma_channel_init \
     ((void (*)(struct bflb_device_s *dev, const struct bflb_dma_channel_config_s *config)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_dma_channel_init])
+#endif
 
 #define romapi_bflb_dma_channel_deinit \
     ((void (*)(struct bflb_device_s *dev)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_dma_channel_deinit])
 
+#if 0
 #define romapi_bflb_dma_channel_lli_reload \
     ((int (*)(struct bflb_device_s *dev, struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t max_lli_count, struct bflb_dma_channel_lli_transfer_s *transfer, uint32_t count)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_dma_channel_lli_reload])
+#endif
 
 #define romapi_bflb_dma_channel_lli_link_head \
     ((void (*)(struct bflb_device_s *dev, struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t used_lli_count)) \
@@ -781,14 +787,17 @@ typedef enum {
     ((int (*)(bflb_ef_ctrl_para_t *para)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_ef_ctrl_set_para])
 
+#if 0
 #define romapi_bflb_ef_ctrl_write_direct \
     ((void (*)(struct bflb_device_s *dev, uint32_t offset, uint32_t *pword, uint32_t count, uint8_t program)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_ef_ctrl_write_direct])
+#endif
 
 #define romapi_bflb_ef_ctrl_read_direct \
     ((void (*)(struct bflb_device_s *dev, uint32_t offset, uint32_t *pword, uint32_t count, uint8_t reload)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_ef_ctrl_read_direct])
 
+#if 0
 #define romapi_bflb_ef_ctrl_read_common_trim \
     ((void (*)(struct bflb_device_s *dev, char *name, bflb_ef_ctrl_com_trim_t *trim, uint8_t reload)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_ef_ctrl_read_common_trim])
@@ -796,6 +805,7 @@ typedef enum {
 #define romapi_bflb_ef_ctrl_write_common_trim \
     ((void (*)(struct bflb_device_s *dev, char *name, uint32_t value, uint8_t program)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_ef_ctrl_write_common_trim])
+#endif
 
 #define romapi_bflb_ef_ctrl_is_all_bits_zero \
     ((uint8_t (*)(uint32_t val, uint8_t start, uint8_t len)) \

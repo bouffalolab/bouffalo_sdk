@@ -103,6 +103,18 @@ COMPONENT_SRCS := \
     src/eap_common/eap_common.c \
     src/ap/ctrl_iface_ap.c \
 
+ifeq ($(CONFIG_MACSW_SELECT),wfa)
+COMPONENT_SRCS += \
+    src/rsn_supp/pmksa_cache.c
+endif
+
+COMPONENT_SRCS += \
+    src/eapol_supp/eapol_supp_sm.c \
+    src/eap_peer/eap.c \
+    src/eap_peer/eap_wsc.c \
+    src/eap_peer/eap_methods.c \
+    src/eap_common/eap_wsc_common.c
+
 COMPONENT_OBJS := $(patsubst %.c,%.o, $(COMPONENT_SRCS))
 
 COMPONENT_SRCDIRS := \

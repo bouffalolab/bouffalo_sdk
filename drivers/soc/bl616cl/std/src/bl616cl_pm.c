@@ -43,6 +43,14 @@
 #define PM_PDS_LDO_SOC_LEVEL_DEFAULT HBN_LDO_SOC_LEVEL_0P700V
 #endif
 
+#ifndef PM_PDS_LDO_SOC_ACTIVE_LEVEL
+#define PM_PDS_LDO_SOC_ACTIVE_LEVEL HBN_LDO_SOC_LEVEL_0P900V
+#endif
+
+#ifndef PM_PDS_LDO_SOC_ENTER_LEVEL
+#define PM_PDS_LDO_SOC_ENTER_LEVEL HBN_LDO_SOC_LEVEL_0P900V
+#endif
+
 #ifndef PM_PDS_LDO_SYS_LEVEL_DEFAULT
 #define PM_PDS_LDO_SYS_LEVEL_DEFAULT HBN_LDO_SYS_LEVEL_1P300V
 #endif
@@ -62,6 +70,51 @@
 #ifndef PM_EXT_DCDC_SOC_CTRL_PIN
 #define PM_EXT_DCDC_SOC_CTRL_PIN 0xFF
 #endif
+
+#ifndef PM_EXT_DCDC_SOC_ENABLE_PIN
+#define PM_EXT_DCDC_SOC_ENABLE_PIN 0xFF
+#endif
+
+#ifndef PM_EXT_DCDC_SYS_ENABLE_PIN
+#define PM_EXT_DCDC_SYS_ENABLE_PIN 0xFF
+#endif
+
+#ifndef PM_PDS_DCDC_SYS_ENABLE
+#define PM_PDS_DCDC_SYS_ENABLE 1
+#endif
+
+#ifndef PM_PDS_DCDC_SOC_LEVEL
+#define PM_PDS_DCDC_SOC_LEVEL PM_DCDC_SOC_LEVEL_0P7
+#endif
+
+#ifndef PM_PDS_DCDC_SOC_ENABLE
+#define PM_PDS_DCDC_SOC_ENABLE 1
+#endif
+
+static PM_DCDC_SOC_CFG_Type pm_dcdc_soc_default_cfg = {
+    .dcdc_soc_vsel_pin = PM_EXT_DCDC_SOC_CTRL_PIN,
+    .dcdc_soc_enable_pin = PM_EXT_DCDC_SOC_ENABLE_PIN,
+    .dcdc_soc_pds_enable = PM_PDS_DCDC_SOC_ENABLE,
+    .dcdc_soc_pds_level = PM_PDS_DCDC_SOC_LEVEL,
+    .ldo_soc_active_level = PM_PDS_LDO_SOC_ACTIVE_LEVEL,
+    .ldo_soc_enter_pds_level = PM_PDS_LDO_SOC_ENTER_LEVEL,
+    .ldo_soc_pds_level = PM_PDS_LDO_SOC_LEVEL_DEFAULT,
+};
+
+static PM_DCDC_SYS_CFG_Type pm_dcdc_sys_default_cfg = {
+    .dcdc_sys_enable_pin = PM_EXT_DCDC_SYS_ENABLE_PIN,
+    .dcdc_sys_pds_enable = PM_PDS_DCDC_SYS_ENABLE,
+};
+
+const PM_DCDC_SOC_CFG_Type *ATTR_TCM_SECTION pm_dcdc_soc_default_cfg_get(void)
+{
+    return &pm_dcdc_soc_default_cfg;
+}
+
+const PM_DCDC_SYS_CFG_Type *ATTR_TCM_SECTION pm_dcdc_sys_default_cfg_get(void)
+{
+    return &pm_dcdc_sys_default_cfg;
+}
 
 static char *trig_mode_desc[] = {
     "sync falling edge trigger",
@@ -676,47 +729,134 @@ BL_Err_Type ATTR_TCM_SECTION pm_disable_gpio_keep(uint32_t pin)
     return SUCCESS;
 }
 
+static BL_Err_Type ATTR_TCM_SECTION pm_gpio_output_keep(uint32_t pin, uint8_t high);
+
 void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v7(uint32_t pin)
 {
-    uint32_t tmpVal = 0;
-
-    if (pin < GPIO_PIN_6 || pin > GPIO_PIN_36) {
-        return;
-    }
-
-    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
-    tmpVal &= ~(1 << (pin - 6));
-    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
-
-    /* gpio output low */
-    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2))) = 0x40400b42;
-    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG140_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
-
-    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
-    tmpVal |= (1 << (pin - 6));
-    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+    (void)pm_gpio_output_keep(pin, 0);
 }
-
 
 void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v9(uint32_t pin)
 {
+    (void)pm_gpio_output_keep(pin, 1);
+}
+
+static BL_Err_Type ATTR_TCM_SECTION pm_gpio_output_keep(uint32_t pin, uint8_t high)
+{
     uint32_t tmpVal = 0;
 
-    if (pin < GPIO_PIN_6 || pin > GPIO_PIN_36) {
+    if (pin == 0xFF) {
+        return SUCCESS;
+    }
+
+    if (pin >= GPIO_PIN_MAX) {
+        return ERROR;
+    }
+
+
+    if (pin <= GPIO_PIN_5) {
+        uint32_t aonVal = 0;
+
+        aonVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_0);
+        aonVal |= (1U << (HBN_REG_EN_AON_CTRL_GPIO_POS + pin));
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_IE_SMT_POS + pin));
+        aonVal &= ~(0x7U << (HBN_REG_AON_LED_SEL_POS + ((pin % 3) * 3)));
+        BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_0, aonVal);
+
+        aonVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_1);
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_OE_POS + pin));
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_PD_POS + pin));
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_PU_POS + pin));
+        if (high) {
+            aonVal |= (1U << (HBN_REG_AON_PAD_PU_POS + pin));
+        } else {
+            aonVal |= (1U << (HBN_REG_AON_PAD_PD_POS + pin));
+        }
+        BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_1, aonVal);
+
+        return SUCCESS;
+    } else {
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+        tmpVal &= ~(1 << (pin - 6));
+        BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+
+        /* gpio output */
+        (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2))) = 0x40400b42;
+        if (high) {
+            (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG138_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+        } else {
+            (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG140_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+        }
+
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+        tmpVal |= (1 << (pin - 6));
+        BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+
+        return SUCCESS;
+    }
+}
+
+BL_Err_Type ATTR_TCM_SECTION pm_dcdc_soc_enable_ctrl(uint32_t pin, BL_Fun_Type enable)
+{
+    if (pin == 0xFF) {
+        return SUCCESS;
+    }
+
+    return pm_gpio_output_keep(pin, enable ? 1 : 0);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_soc_vsel_ctrl(uint32_t pin, uint8_t high)
+{
+    pm_gpio_output_keep(pin, high ? 1 : 0);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_soc_enter_pds(const PM_DCDC_SOC_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
         return;
     }
 
-    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
-    tmpVal &= ~(1 << (pin - 6));
-    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+    HBN_SW_Set_Ldo_Soc_Vout(cfg->ldo_soc_enter_pds_level);
+    pm_dcdc_soc_vsel_ctrl(cfg->dcdc_soc_vsel_pin, cfg->dcdc_soc_pds_level == PM_DCDC_SOC_LEVEL_0P9);
+    pm_dcdc_soc_enable_ctrl(cfg->dcdc_soc_enable_pin, cfg->dcdc_soc_pds_enable);
+}
 
-    /* gpio output high */
-    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2))) = 0x40400b42;
-    (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG138_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+void ATTR_TCM_SECTION pm_dcdc_soc_exit_pds(const PM_DCDC_SOC_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
 
-    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
-    tmpVal |= (1 << (pin - 6));
-    BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+    pm_dcdc_soc_enable_ctrl(cfg->dcdc_soc_enable_pin, ENABLE);
+    pm_dcdc_soc_vsel_ctrl(cfg->dcdc_soc_vsel_pin, 1);
+    HBN_SW_Set_Ldo_Soc_Vout(cfg->ldo_soc_active_level);
+}
+
+BL_Err_Type ATTR_TCM_SECTION pm_dcdc_sys_enable_ctrl(uint32_t pin, BL_Fun_Type enable)
+{
+    if (pin == 0xFF) {
+        return SUCCESS;
+    }
+
+    return pm_gpio_output_keep(pin, enable ? 1 : 0);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_sys_enter_pds(const PM_DCDC_SYS_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
+
+    pm_dcdc_sys_enable_ctrl(cfg->dcdc_sys_enable_pin, cfg->dcdc_sys_pds_enable);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_sys_exit_pds(const PM_DCDC_SYS_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
+
+    pm_dcdc_sys_enable_ctrl(cfg->dcdc_sys_enable_pin, ENABLE);
 }
 
 
@@ -1071,7 +1211,8 @@ void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time)
         .turnoffWifiPLL = PM_PDS_PLL_POWER_OFF,         /*!< Whether trun off WiFi PLL */
         .pdsClkType = PM_PDS_CLK_DEFAULT_SEL,           /*!< pds_clk type */
         .pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K, /*!< pds gpio det clk type */
-        .dcdc_sel_pin = PM_EXT_DCDC_SOC_CTRL_PIN,       /*!< DCDC sel pin, 0xFF means not use */
+        .dcdc_soc_cfg = &pm_dcdc_soc_default_cfg,        /*!< DCDC SOC GPIO and voltage config */
+        .dcdc_sys_cfg = &pm_dcdc_sys_default_cfg,        /*!< DCDC SYS GPIO config */
         .ldo_sys_cfg = ldosys_cfg,                      /*!< Power Config of ldo_sys */
         .ldo_soc_cfg = ldosoc_cfg,                      /*!< Power Config of ldo_soc */
         .ldo_sys_lp_en_cnt = 0,                         /*!< delay_cnt before ldo_sys enable lowpower mode */
@@ -1279,11 +1420,22 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
 
     PDS_Default_Level_Config(pPdsCfg, p->sleepTime);
 
-    pm_pds_dcdc_soc_set_0v7(p->dcdc_sel_pin);
+    if (p->dcdc_soc_cfg) {
+        p->dcdc_soc_cfg->ldo_soc_pds_level = p->ldo_soc_cfg.voltage_level;
+        pm_dcdc_soc_enter_pds(p->dcdc_soc_cfg);
+    }
+    if (p->dcdc_sys_cfg) {
+        pm_dcdc_sys_enter_pds(p->dcdc_sys_cfg);
+    }
 
     __WFI();
 
-    pm_pds_dcdc_soc_set_0v9(p->dcdc_sel_pin);
+    if (p->dcdc_sys_cfg) {
+        pm_dcdc_sys_exit_pds(p->dcdc_sys_cfg);
+    }
+    if (p->dcdc_soc_cfg) {
+        pm_dcdc_soc_exit_pds(p->dcdc_soc_cfg);
+    }
 
     /******************************* Wakeup Flow *******************************/
     if (p->turnoffRC32M == DISABLE) {

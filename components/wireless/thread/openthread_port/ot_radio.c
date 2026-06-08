@@ -87,6 +87,11 @@ void ot_radioSetCslTxOffset(int8_t aOffsetSymCnt)
     ot_radio_ctx.tx_param.csl_opt.csl_tx_offset_sym_cnt = aOffsetSymCnt;
 }
 
+void ot_radioSetInstance(otInstance *instance)
+{
+    ot_radio_ctx.instance = instance;
+}
+
 void ot_radioTask(ot_system_event_t trxEvent)
 {
     otRadio_rxFrame_t   *pframe;
@@ -385,7 +390,7 @@ static inline uint32_t ot_radio_prepare_enh_ack(lmac154_receiveInfo_t *rx_info, 
 
 void ot_radioRxDoneCallback(lmac154_rx_status_t status, lmac154_receiveInfo_t *info, uint32_t *frame)
 {
-    otRadio_rxFrame_t *     rx_frame;
+    otRadio_rxFrame_t *     rx_frame = NULL;
     int8_t                  lqi, rssi;
     uint8_t *               p_ack = NULL;
     int                     ack_len = 0;

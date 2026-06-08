@@ -11,7 +11,7 @@ static const nh_profile_t g_usb_bridge_profile = {
         .default_action = NH_PROFILE_BUILTIN_WIFI_RX_DEFAULT_ACTION,
     },
     .host_endpoint_ops = &nhusb_ops,
-    .ctrlpath_ops = &nhusb_ctrlpath_ops,
+    .vchan_ops = &nhusb_vchan_ops,
 };
 
 const nh_profile_t *nh_profile_usb_get(void)

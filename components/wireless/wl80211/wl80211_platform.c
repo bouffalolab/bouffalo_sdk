@@ -3,11 +3,26 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+/* Pull in buffer-size config macros (CFG_BARX, CFG_REORD_BUF, ...) FIRST
+ * before any header that transitively includes macsw.h, so that
+ * MACSW_MAX_BA_RX below expands to the actual config value. */
+#if defined(CONFIG_MACSW_SELECT_INCLUDE)
+#include CONFIG_MACSW_SELECT_INCLUDE
+#endif
+
 #include "bflb_irq.h"
 #include "mm.h"
 
 #include "wl80211_mac.h"
 #include "wl80211_platform.h"
+
+/* MACSW_MAX_BA_RX is not defined by macsw.h (no hard-coded value there);
+ * derive it from the config value that was pulled in above. */
+#ifdef CFG_BARX
+#define MACSW_MAX_BA_RX CFG_BARX
+#else
+#define MACSW_MAX_BA_RX 2  /* safe fallback */
+#endif
 
 #include "FreeRTOS.h"
 #include "queue.h"

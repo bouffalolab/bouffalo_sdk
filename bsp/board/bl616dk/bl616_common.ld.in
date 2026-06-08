@@ -7,6 +7,7 @@
  * CONFIG_RAM_LENGTH
  * CONFIG_PSRAM_ADDRESS
  * CONFIG_PSRAM_LENGTH
+ * CONFIG_PMP_ALIGN_SIZE
  */
 
 /* 4M */
@@ -31,6 +32,10 @@
 #endif
 #endif
 
+#ifndef CONFIG_PMP_ALIGN_SIZE
+#define CONFIG_PMP_ALIGN_SIZE 4
+#endif
+
 __EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
 
 /* 160K */
@@ -47,9 +52,8 @@ __EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
 #define GROUP_START(name) __##name##_start__ = ABSOLUTE(ORIGIN(name)); . = ABSOLUTE(ORIGIN(name));
 #define GROUP_END(name) __##name##_end__ = ABSOLUTE(.);
 
-#define SECTION_CODE_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); __##name##_load__ = ABSOLUTE(LOADADDR(name)); name attr:
-#define SECTION_DATA_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); __##name##_load__ = ABSOLUTE(LOADADDR(name)); name attr:
-#define SECTION_BSS_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); name attr:
+#define SECTION_LOAD_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); __##name##_load__ = ABSOLUTE(LOADADDR(name)); name attr:
+#define SECTION_PROLOGUE(name, attr, n) __##name##_start__ = ABSOLUTE(ADDR(name)); __##name##_end__ = ABSOLUTE(ADDR(name) + SIZEOF(name)); name attr:
 
 #ifdef CONFIG_LPAPP
 __LPFW_SIZE = 30K;
@@ -112,11 +116,12 @@ SECTIONS
 
         . = ORIGIN(rom_header) + 512;
         __multi_bins__ = ABSOLUTE(.);
-        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_start__ + LENGTH(fw_header) + LENGTH(rom_header))
+        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_header_start__ + LENGTH(fw_header))
         LONG(0x0000504C) LONG(0x00000000) /*LP*/        LONG(0x00000000) LONG(0x00000000)
         LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
         LONG(0x464D4F52) LONG(0x00000053) /*ROMFS*/     LONG(0x00000000) LONG(0x00000000)
         LONG(0x54524543) LONG(0x00000053) /*CERTS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0x4F545541) LONG(0x5453494C) /*AUTOLIST*/  LONG(0x00000000) LONG(0x00000000)
         LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)               LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)
     } > rom_header
 
@@ -162,8 +167,64 @@ SECTIONS
     } > rom_header
     GROUP_END(rom_header)
 
+    GROUP_START(ram_psram)
+#ifdef CONFIG_PSRAM_COPY_CODE
+    . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    SECTION_LOAD_PROLOGUE(psram_text, ,)
+    {
+        *(.text*)
+        . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    } > ram_psram AT > rom
+
+    . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    SECTION_LOAD_PROLOGUE(psram_rodata, ,)
+    {
+        *(.rodata*)
+        . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    } > ram_psram AT > rom
+#endif
+
+    SECTION_LOAD_PROLOGUE(psram_data, ,)
+    {
+        . = ALIGN(32);
+
+        KEEP(*(.psram_code*))
+
+        . = ALIGN(32);
+
+        KEEP(*(.psram_data*))
+#ifdef CONFIG_GCOV_DUMP
+        KEEP(*(.data.__gcov_*))
+        KEEP(*(.data..LPBX*))
+#endif
+        . = ALIGN(32);
+    } > ram_psram AT > rom
+
+    SECTION_LOAD_PROLOGUE(psram_bss, ,)
+    {
+        . = ALIGN(32);
+#ifdef CONFIG_GCOV_DUMP
+        KEEP(*(.bss.__gcov*))
+#endif
+        . = ALIGN(32);
+    } > ram_psram AT > rom
+
+    SECTION_PROLOGUE(psram_noinit_data, (NOLOAD),)
+    {
+        . = ALIGN(32);
+        KEEP(*(.psram_noinit*))
+        KEEP(*(.img_buf*))
+
+        . = ALIGN(32);
+        KEEP(*(.psram_heap*))
+
+        . = ALIGN(32);
+    } > ram_psram
+    GROUP_END(ram_psram)
+
+
     GROUP_START(ram_nocache)
-    SECTION_DATA_PROLOGUE(ram_nocache_data, ,)
+    SECTION_LOAD_PROLOGUE(ram_nocache_data, ,)
     {
         . = ALIGN(4);
 
@@ -172,7 +233,7 @@ SECTIONS
         . = ALIGN(4);
     } > ram_nocache AT > rom
 
-    SECTION_BSS_PROLOGUE(ram_nocache_noinit, (NOLOAD),)
+    SECTION_PROLOGUE(ram_nocache_noinit, (NOLOAD),)
     {
         . = ALIGN(4);
         *(.nocache_noinit_ram)
@@ -182,6 +243,7 @@ SECTIONS
     } > ram_nocache
     GROUP_END(ram_nocache)
 
+    GROUP_START(ram)
     /* Skip the nocache region */
     .ram_skip_nocache_region (NOLOAD) :
     {
@@ -189,47 +251,59 @@ SECTIONS
         . = ALIGN(32);
     } > ram
 
-    GROUP_START(ram)
-    SECTION_DATA_PROLOGUE(itcm, ,)
+    . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    SECTION_LOAD_PROLOGUE(tcm_text, ,)
     {
-        . = ALIGN(4);
-
 #if defined(CONFIG_WFA) && !defined(CONFIG_PSRAM_COPY_CODE)
         INCLUDE run_in_ram_function.ld.in
 
         *libfreertos.a:*.o*(.text*)
+
+        /* *libbl616_phyrf.a:*.o*(.text*) */
+
+        *wifi6_lwip_adapter.a:net_tg_al.c.o*(.text*)
+        *lwip.a:udp.c.o*(.text*)
+
+        *libc.a:lib_a-memset.c.o*(.text)
+        *libc.a:lib_a-memcpy.c.o*(.text)
+        *libc.a:lib_a-memcpy-asm.c.o*(.text)
+        *libc.a:lib_vikmemcpy.c.o*(.text*)
+        *libc.a:lib_memset.c.o*(.text*)
+        *libgcc.a:_clzsi2.o*(.text)
+        *libgcc.a:_clz.o*(.text)
+#endif
+
+        *(.tcm_code*)
+        *(.sclock_rlt_code*)
+
+        *_udivdi3*.o*(.text*)
+
+        . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    } > ram AT > rom
+
+    . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    SECTION_LOAD_PROLOGUE(tcm_rodata, ,)
+    {
+#if defined(CONFIG_WFA) && !defined(CONFIG_PSRAM_COPY_CODE)
         *libfreertos.a:*.o*(.rodata.CSWTCH*)
         *libfreertos.a:*.o*(.rodata.ullMachineTimerCompareRegisterBase)
         *libfreertos.a:*.o*(.rodata.uxTimerIncrementsForOneTick)
         *libfreertos.a:*.o*(.rodata.uxTimerIncrementsForOneTick)
         *libfreertos.a:*.o*(.rodata.xISRStackTop)
 
-        /* *libbl616_phyrf.a:*.o*(.text*) */
         /* *libbl616_phyrf.a:*.o*(.rodata*) */
 
-        *wifi6_lwip_adapter.a:net_tg_al.c.o*(.text*)
-        *lwip.a:udp.c.o*(.text*)
-
-        *libc.a:lib_a-memset.c.o*(.text)
         *libc.a:lib_a-memset.c.o*(.rodata)
-        *libc.a:lib_a-memcpy.c.o*(.text)
         *libc.a:lib_a-memcpy.c.o*(.rodata)
-        *libc.a:lib_a-memcpy-asm.c.o*(.text)
         *libc.a:lib_a-memcpy-asm.c.o*(.rodata)
-        *libc.a:lib_vikmemcpy.c.o*(.text*)
         *libc.a:lib_vikmemcpy.c.o*(.rodata*)
-        *libc.a:lib_memset.c.o*(.text*)
         *libc.a:lib_memset.c.o*(.rodata*)
-        *libgcc.a:_clzsi2.o*(.text)
         *libgcc.a:_clzsi2.o*(.rodata)
-        *libgcc.a:_clz.o*(.text)
         *libgcc.a:_clz.o*(.rodata)
 #endif
 
-        *(.tcm_code.*)
-        *(.tcm_const.*)
-        *(.sclock_rlt_code.*)
-        *(.sclock_rlt_const.*)
+        *(.tcm_const*)
+        *(.sclock_rlt_const*)
 
         *bl616_glb*.o*(.rodata*)
         *bl616_pds*.o*(.rodata*)
@@ -245,14 +319,12 @@ SECTIONS
         *bflb_flash*.o*(.rodata*)
         *bl616_romapi_patch*.o*(.rodata*)
 
-        *_udivdi3*.o*(.text*)
-
-        PROVIDE( __global_pointer$ = . + 0x800 );
-
-        . = ALIGN(4);
+        . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
     } > ram AT > rom
 
-    SECTION_DATA_PROLOGUE(dtcm, ,)
+
+    PROVIDE( __global_pointer$ = . + 0x800 );
+    SECTION_LOAD_PROLOGUE(tcm_data, ,)
     {
         . = ALIGN(4);
 
@@ -262,7 +334,7 @@ SECTIONS
         . = ALIGN(4);
     } > ram AT > rom
 
-    SECTION_DATA_PROLOGUE(ram_data, ,)
+    SECTION_LOAD_PROLOGUE(ram_data, ,)
     {
         . = ALIGN(4);
 
@@ -294,7 +366,7 @@ SECTIONS
         __bflb_log_tags_end__ = .;
     } > ram AT > rom
 
-    SECTION_BSS_PROLOGUE(ram_bss, (NOLOAD),)
+    SECTION_PROLOGUE(ram_bss, (NOLOAD),)
     {
         . = ALIGN(4);
 
@@ -302,14 +374,14 @@ SECTIONS
         *(.sbss*)
         *(COMMON)
 
-	__lp_mon_start = .;
+        __lp_mon_start = .;
         *(.lp_mon_ctx)
-	__lp_mon_end = .;
+        __lp_mon_end = .;
 
         . = ALIGN(4);
     } > ram
 
-    SECTION_BSS_PROLOGUE(ram_noinit, (NOLOAD),)
+    SECTION_PROLOGUE(ram_noinit, (NOLOAD),)
     {
         . = ALIGN(16);
         . = . + 0x1000;
@@ -326,64 +398,21 @@ SECTIONS
         KEEP(*(.heap*))
         . = ALIGN(4);
     } > ram
-
-#if CONFIG_FLASH_XIP_ADDRESS
-    __HeapBase = ABSOLUTE(.);
-    __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
-#endif
     GROUP_END(ram)
-
-
-    GROUP_START(ram_psram)
-#ifdef CONFIG_PSRAM_COPY_CODE
-    SECTION_DATA_PROLOGUE(psram_code, ,)
-    {
-        *(.text*)
-        *(.rodata*)
-    } > ram_psram AT > rom
-#endif
-
-    SECTION_DATA_PROLOGUE(psram_data, ,)
-    {
-        . = ALIGN(32);
-
-        KEEP(*(.psram_code*))
-
-        . = ALIGN(32);
-
-        KEEP(*(.psram_data*))
-
-        . = ALIGN(32);
-    } > ram_psram AT > rom
-
-    SECTION_BSS_PROLOGUE(psram_noinit_data, (NOLOAD),)
-    {
-        . = ALIGN(4);
-        KEEP(*(.psram_noinit*))
-        KEEP(*(.img_buf*))
-
-        . = ALIGN(32);
-        KEEP(*(.psram_heap*))
-
-        . = ALIGN(4);
-    } > ram_psram
-    __psram_heap_base = ABSOLUTE(ALIGN(., 32));
-    __psram_limit = ABSOLUTE(ORIGIN(ram_psram) + LENGTH(ram_psram));
-    GROUP_END(ram_psram)
 
     GROUP_START(ram_wifi)
 /*
-    SECTION_BSS_PROLOGUE(wifi_code, ,)
+    SECTION_PROLOGUE(wifi_code, ,)
     {
     } > ram_wifi AT > rom
 
-    SECTION_BSS_PROLOGUE(wifi_data, ,)
+    SECTION_PROLOGUE(wifi_data, ,)
     {
     } > ram_wifi AT > rom
 */
 
 #ifdef CONFIG_LPAPP
-    SECTION_BSS_PROLOGUE(lpfw_share, (NOLOAD),)
+    SECTION_PROLOGUE(lpfw_share, (NOLOAD),)
     {
         _sshram = . ;
         *(.lpfw_share_nocache_noinit*)
@@ -392,7 +421,7 @@ SECTIONS
     } > ram_wifi
 #endif
 
-    SECTION_BSS_PROLOGUE(wifi_bss, (NOLOAD),)
+    SECTION_PROLOGUE(wifi_bss, (NOLOAD),)
     {
 #ifndef CONFIG_LPAPP
         _sshram = . ;
@@ -403,23 +432,40 @@ SECTIONS
       _eshram = . ;
       . = ALIGN(16);
     } > ram_wifi
-
-    PROVIDE( _heap_wifi_start = . );
-    PROVIDE( _heap_wifi_size = ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start );
     GROUP_END(ram_wifi)
 
     GROUP_START(hbn_memory)
-    SECTION_DATA_PROLOGUE(hbn_ram, ,)
+    SECTION_LOAD_PROLOGUE(hbn_ram, ,)
     {
         . = ALIGN(32);
         KEEP(*(.hbn_code.*))
         KEEP(*(.hbn_data.*))
         . = ALIGN(32);
     } > hbn_memory  AT > rom
-    GROUP_START(hbn_memory)
+    GROUP_END(hbn_memory)
 
-    GROUP_START(rom)
-    SECTION_BSS_PROLOGUE(rom_code, ,)
+    /* GROUP_START(rom) */
+    /* get rom end */
+    .get_rom_lma 0x0:
+    {
+    } AT > rom
+    __rom_start__ = ORIGIN(rom);
+    . = LOADADDR(.get_rom_lma);
+
+    . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    SECTION_LOAD_PROLOGUE(rom_text, ,)
+    {
+        *(.text*)
+
+#if defined(CONFIG_WIFI6) && !defined(CONFIG_PSRAM_COPY_CODE)
+        INCLUDE macsw_cache_affinity.ld.in
+#endif
+
+        . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    } > rom
+
+    . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
+    SECTION_LOAD_PROLOGUE(rom_data, ,)
     {
         . = ALIGN(4); __mem_sections = ABSOLUTE(.);
         LONG(__ram_nocache_start__); LONG(__ram_nocache_end__); LONG(__ram_nocache_end__);
@@ -433,11 +479,13 @@ SECTIONS
 
         . = ALIGN(4); __mem_copy_sections = ABSOLUTE(.);
         LONG(__ram_nocache_data_start__);   LONG(__ram_nocache_data_end__);   LONG(__ram_nocache_data_load__);
-        LONG(__itcm_start__);               LONG(__itcm_end__);               LONG(__itcm_load__);
-        LONG(__dtcm_start__);               LONG(__dtcm_end__);               LONG(__dtcm_load__);
+        LONG(__tcm_text_start__);           LONG(__tcm_text_end__);           LONG(__tcm_text_load__);
+        LONG(__tcm_rodata_start__);         LONG(__tcm_rodata_end__);         LONG(__tcm_rodata_load__);
+        LONG(__tcm_data_start__);           LONG(__tcm_data_end__);           LONG(__tcm_data_load__);
         LONG(__ram_data_start__);           LONG(__ram_data_end__);           LONG(__ram_data_load__);
 #ifdef CONFIG_PSRAM_COPY_CODE
-        LONG(__psram_code_start__);         LONG(__psram_code_end__);         LONG(__psram_code_load__);
+        LONG(__psram_text_start__);         LONG(__psram_text_end__);         LONG(__psram_text_load__);
+        LONG(__psram_rodata_start__);       LONG(__psram_rodata_end__);       LONG(__psram_rodata_load__);
 #endif
         LONG(__psram_data_start__);         LONG(__psram_data_end__);         LONG(__psram_data_load__);
         LONG(0xffffffff);                   LONG(0xffffffff);                 LONG(0xffffffff);
@@ -445,6 +493,7 @@ SECTIONS
         . = ALIGN(4); __mem_setz_sections = ABSOLUTE(.);
         LONG(__ram_bss_start__);            LONG(__ram_bss_end__);
         LONG(__wifi_bss_start__);           LONG(__wifi_bss_end__);
+        LONG(__psram_bss_start__);          LONG(__psram_bss_end__);
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         . = ALIGN(4); __mem_noinit_sections = ABSOLUTE(.);
@@ -463,11 +512,6 @@ SECTIONS
 #endif
         LONG(0xffffffff);                   LONG(0xffffffff);
 
-#if defined(CONFIG_WIFI6) && !defined(CONFIG_PSRAM_COPY_CODE)
-        INCLUDE macsw_cache_affinity.ld.in
-#endif
-
-        *(.text*)
         *(.rodata*)
 
 #ifdef CONFIG_SHELL
@@ -513,14 +557,18 @@ SECTIONS
         . = ALIGN(4);
         *(.gcc_except_table.*)
 
+#ifdef CONFIG_GCOV_DUMP
         __gcov_info_start = .;
         KEEP (*(.gcov_info))
         KEEP (*(.gcov_info.*))
         __gcov_info_end = .;
+#endif
+
+        . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
     } > rom
 
 #ifdef CONFIG_LPAPP
-    SECTION_DATA_PROLOGUE(lpfw, ,)
+    SECTION_LOAD_PROLOGUE(lpfw, ,)
     {
         /* For DMA Burst copy lpfw binary from flash to ram */
         . = ALIGN(32);
@@ -532,13 +580,26 @@ SECTIONS
         __lpfw_load_addr = .;
     } > rom
 #endif
+
+    .last_section :
+    {
+        . = ALIGN(1024);
+    } > rom
     GROUP_END(rom)
 
-#if !CONFIG_FLASH_XIP_ADDRESS
-    /* In RAM-only images, "rom" is aliased onto RAM, so the heap must start
-     * after the linked code/data image to avoid corrupting .text/.rodata.
-     */
-    __HeapBase = ABSOLUTE(ALIGN(., 64));
+/* define some heap init symbol */
+
+#if CONFIG_FLASH_XIP_ADDRESS
+    __HeapBase = ABSOLUTE((__ram_end__ + 3) & ~3);
+    __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
+#else
+    __HeapBase = ABSOLUTE((__rom_end__ + 63) & ~63);
     __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
 #endif
+
+    __psram_heap_base = ABSOLUTE((__ram_psram_end__ + 31) & ~31);
+    __psram_limit = ABSOLUTE(ORIGIN(ram_psram) + LENGTH(ram_psram));
+
+    _heap_wifi_start = __ram_wifi_end__;
+    _heap_wifi_size = ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start;
 }

@@ -35,7 +35,11 @@ extern int wifi_mgmr_sta_mac_get(uint8_t mac[6]);
 #define NH_USB_MAX_POWER            100U
 #define NH_USB_LANGID_STRING        1033U
 #define NH_USB_MAC_STRING_INDEX     4U
+#if defined(CONFIG_NETHUB_PROFILE_SDIO) && defined(CONFIG_NETHUB_PROFILE_USB)
+#define NH_USB_RX_SLOT_CNT          2U
+#else
 #define NH_USB_RX_SLOT_CNT          8U
+#endif
 #define NH_USB_TX_QUEUE_DEPTH       8U
 #define NH_USB_FRAME_MAX_LEN        (1536U)
 #define NH_USB_ACM_STREAM_SIZE      2048U
@@ -46,6 +50,11 @@ extern int wifi_mgmr_sta_mac_get(uint8_t mac[6]);
 #define NH_USB_IDLE_POLL_MS         20U
 #define NH_USB_TASK_STACK_SIZE      1024U
 #define NH_USB_TASK_PRIORITY        25U
+#define NH_USB_NOTIFY_ALL_BITS      0xFFFFFFFFUL
+#define NH_USB_EVENT_RX_DONE        (1UL << 0)
+#define NH_USB_EVENT_CONFIG_CHANGE  (1UL << 1)
+#define NH_USB_EVENT_TX_DONE        (1UL << 0)
+#define NH_USB_EVENT_ACTIVE         (1UL << 1)
 
 #define NH_USB_ACM_DESCRIPTOR_SZ CDC_ACM_DESCRIPTOR_LEN
 #define NH_USB_INTERFACE_COUNT   0x04U
@@ -84,14 +93,14 @@ typedef struct {
 typedef struct {
     bool initialized;
     volatile bool configured;
+    volatile bool active;
     QueueHandle_t dnld_free_queue;
     QueueHandle_t upld_queue;
-    SemaphoreHandle_t rx_done_sem;
-    SemaphoreHandle_t tx_done_sem;
     TaskHandle_t rx_task;
     TaskHandle_t tx_task;
     nh_usb_rx_slot_t *rx_pending_slot;
     volatile uint32_t rx_pending_len;
+    volatile bool tx_pending;
     struct usbd_interface ecm_intf0;
     struct usbd_interface ecm_intf1;
     StreamBufferHandle_t acm_rx_stream;
@@ -99,8 +108,8 @@ typedef struct {
     SemaphoreHandle_t acm_tx_mutex;
     TaskHandle_t acm_rx_task;
     volatile bool acm_read_started;
-    nethub_ctrl_rx_cb_t ctrl_dnld_cb;
-    void *ctrl_dnld_arg;
+    nh_usb_backend_acm_rx_cb_t acm_rx_cb;
+    void *acm_rx_arg;
     struct usbd_interface acm_intf0;
     struct usbd_interface acm_intf1;
 } nh_usb_ctx_t;
@@ -190,6 +199,42 @@ static void transport_usb_rx_slot_release(void *arg)
     }
 }
 
+static void transport_usb_notify_task(TaskHandle_t task, uint32_t events, BaseType_t *woken)
+{
+    if (task != NULL) {
+        if (xPortIsInsideInterrupt()) {
+            xTaskNotifyFromISR(task, events, eSetBits, woken);
+        } else {
+            (void)xTaskNotify(task, events, eSetBits);
+        }
+    }
+}
+
+static void transport_usb_yield_from_isr(BaseType_t woken)
+{
+    if (woken != pdFALSE && xPortIsInsideInterrupt()) {
+        portYIELD_FROM_ISR(woken);
+    }
+}
+
+static void transport_usb_wake_io_tasks(BaseType_t *woken)
+{
+    transport_usb_notify_task(g_transport_usb_ctx.rx_task,
+                              NH_USB_EVENT_CONFIG_CHANGE,
+                              woken);
+    transport_usb_notify_task(g_transport_usb_ctx.tx_task,
+                              NH_USB_EVENT_ACTIVE,
+                              woken);
+}
+
+static void transport_usb_drain_task_events(void)
+{
+    uint32_t events;
+
+    while (xTaskNotifyWait(0, NH_USB_NOTIFY_ALL_BITS, &events, 0) == pdTRUE) {
+    }
+}
+
 static void transport_usb_acm_bulk_out(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     BaseType_t higher_priority_task_woken = pdFALSE;
@@ -270,6 +315,11 @@ static int transport_usb_acm_send(const uint8_t *data, uint32_t len, TickType_t 
             xSemaphoreGive(g_transport_usb_ctx.acm_tx_mutex);
             return NETHUB_ERR_INVALID_STATE;
         }
+        if (!g_transport_usb_ctx.active || !g_transport_usb_ctx.configured) {
+            xSemaphoreGive(g_transport_usb_ctx.acm_tx_done_sem);
+            xSemaphoreGive(g_transport_usb_ctx.acm_tx_mutex);
+            return NETHUB_ERR_INVALID_STATE;
+        }
 
         memcpy(g_transport_usb_acm_write_buffer, data + sent_len, chunk_len);
         if (usbd_ep_start_write(NH_USB_BUSID, NH_USB_ACM_IN_EP,
@@ -283,6 +333,17 @@ static int transport_usb_acm_send(const uint8_t *data, uint32_t len, TickType_t 
         remaining_len -= chunk_len;
     }
 
+    if (xSemaphoreTake(g_transport_usb_ctx.acm_tx_done_sem, timeout) != pdTRUE) {
+        xSemaphoreGive(g_transport_usb_ctx.acm_tx_mutex);
+        return NETHUB_ERR_INVALID_STATE;
+    }
+    if (!g_transport_usb_ctx.active || !g_transport_usb_ctx.configured) {
+        xSemaphoreGive(g_transport_usb_ctx.acm_tx_done_sem);
+        xSemaphoreGive(g_transport_usb_ctx.acm_tx_mutex);
+        return NETHUB_ERR_INVALID_STATE;
+    }
+
+    xSemaphoreGive(g_transport_usb_ctx.acm_tx_done_sem);
     xSemaphoreGive(g_transport_usb_ctx.acm_tx_mutex);
     return (int)sent_len;
 }
@@ -300,8 +361,8 @@ static void transport_usb_acm_rx_task(void *arg)
             continue;
         }
 
-        if (ctx->ctrl_dnld_cb != NULL) {
-            ctx->ctrl_dnld_cb(ctx->ctrl_dnld_arg, rx_buf, (uint32_t)recv_len);
+        if (ctx->acm_rx_cb != NULL) {
+            ctx->acm_rx_cb(ctx->acm_rx_arg, rx_buf, (uint32_t)recv_len);
         }
     }
 }
@@ -320,11 +381,12 @@ void usbd_cdc_ecm_data_send_done(uint32_t len)
 
     NETHUB_UNUSED(len);
 
-    if (g_transport_usb_ctx.tx_done_sem != NULL) {
-        xSemaphoreGiveFromISR(g_transport_usb_ctx.tx_done_sem, &higher_priority_task_woken);
-    }
+    g_transport_usb_ctx.tx_pending = false;
+    transport_usb_notify_task(g_transport_usb_ctx.tx_task,
+                              NH_USB_EVENT_TX_DONE,
+                              &higher_priority_task_woken);
 
-    portYIELD_FROM_ISR(higher_priority_task_woken);
+    transport_usb_yield_from_isr(higher_priority_task_woken);
 }
 
 void usbd_cdc_ecm_data_recv_done(uint32_t len)
@@ -335,15 +397,17 @@ void usbd_cdc_ecm_data_recv_done(uint32_t len)
         g_transport_usb_ctx.rx_pending_len = len;
     }
 
-    if (g_transport_usb_ctx.rx_done_sem != NULL) {
-        xSemaphoreGiveFromISR(g_transport_usb_ctx.rx_done_sem, &higher_priority_task_woken);
-    }
+    transport_usb_notify_task(g_transport_usb_ctx.rx_task,
+                              NH_USB_EVENT_RX_DONE,
+                              &higher_priority_task_woken);
 
-    portYIELD_FROM_ISR(higher_priority_task_woken);
+    transport_usb_yield_from_isr(higher_priority_task_woken);
 }
 
 static void transport_usb_event_handler(uint8_t busid, uint8_t event)
 {
+    BaseType_t higher_priority_task_woken = pdFALSE;
+
     NETHUB_UNUSED(busid);
 
     switch (event) {
@@ -352,12 +416,17 @@ static void transport_usb_event_handler(uint8_t busid, uint8_t event)
             break;
         case USBD_EVENT_DISCONNECTED:
             LOG_W("USBD_EVENT_DISCONNECTED\r\n");
+            g_transport_usb_ctx.configured = false;
+            g_transport_usb_ctx.acm_read_started = false;
+            usbd_cdc_ecm_set_connect(false, NULL);
+            transport_usb_wake_io_tasks(&higher_priority_task_woken);
             break;
         case USBD_EVENT_SUSPEND:
             LOG_W("USBD_EVENT_SUSPEND\r\n");
             g_transport_usb_ctx.configured = false;
             g_transport_usb_ctx.acm_read_started = false;
             usbd_cdc_ecm_set_connect(false, NULL);
+            transport_usb_wake_io_tasks(&higher_priority_task_woken);
             break;
         case USBD_EVENT_RESUME:
             LOG_W("USBD_EVENT_RESUME\r\n");
@@ -373,10 +442,13 @@ static void transport_usb_event_handler(uint8_t busid, uint8_t event)
                 }
             }
             usbd_cdc_ecm_set_connect(true, g_transport_usb_link_speed);
+            transport_usb_wake_io_tasks(&higher_priority_task_woken);
             break;
         default:
             break;
     }
+
+    transport_usb_yield_from_isr(higher_priority_task_woken);
 }
 
 static void transport_usb_desc_register(void)
@@ -392,9 +464,10 @@ static void transport_usb_rx_task(void *arg)
         nh_usb_rx_slot_t *slot = NULL;
         nethub_frame_t frame = { 0 };
         nethub_route_result_t route_result;
+        uint32_t events = 0;
 
         if (!ctx->configured) {
-            vTaskDelay(pdMS_TO_TICKS(NH_USB_IDLE_POLL_MS));
+            xTaskNotifyWait(0, NH_USB_NOTIFY_ALL_BITS, &events, portMAX_DELAY);
             continue;
         }
 
@@ -402,8 +475,7 @@ static void transport_usb_rx_task(void *arg)
             continue;
         }
 
-        while (xSemaphoreTake(ctx->rx_done_sem, 0) == pdTRUE) {
-        }
+        transport_usb_drain_task_events();
 
         ctx->rx_pending_slot = slot;
         ctx->rx_pending_len = 0;
@@ -411,17 +483,18 @@ static void transport_usb_rx_task(void *arg)
         if (usbd_cdc_ecm_start_read(slot->buffer, NH_USB_FRAME_MAX_LEN) != 0) {
             ctx->rx_pending_slot = NULL;
             transport_usb_rx_slot_release(slot);
-            vTaskDelay(pdMS_TO_TICKS(NH_USB_IDLE_POLL_MS));
+            if (ctx->configured) {
+                taskYIELD();
+            }
             continue;
         }
 
-        while (xSemaphoreTake(ctx->rx_done_sem, pdMS_TO_TICKS(NH_USB_WAIT_TIMEOUT_MS)) != pdTRUE) {
-            if (!ctx->configured) {
-                ctx->rx_pending_slot = NULL;
-                transport_usb_rx_slot_release(slot);
-                slot = NULL;
-                break;
-            }
+        events = 0;
+        xTaskNotifyWait(0, NH_USB_NOTIFY_ALL_BITS, &events, portMAX_DELAY);
+        if ((events & NH_USB_EVENT_RX_DONE) == 0U) {
+            ctx->rx_pending_slot = NULL;
+            transport_usb_rx_slot_release(slot);
+            slot = NULL;
         }
 
         if (slot == NULL) {
@@ -454,12 +527,17 @@ static void transport_usb_tx_task(void *arg)
 
     for (;;) {
         nh_usb_tx_msg_t msg;
+        uint32_t events = 0;
 
         if (xQueueReceive(ctx->upld_queue, &msg, portMAX_DELAY) != pdPASS) {
             continue;
         }
 
-        if (!ctx->configured || msg.len == 0U || msg.len > sizeof(g_transport_usb_tx_buffer)) {
+        while (ctx->active && !ctx->configured) {
+            xTaskNotifyWait(0, NH_USB_NOTIFY_ALL_BITS, &events, portMAX_DELAY);
+        }
+
+        if (!ctx->active || msg.len == 0U || msg.len > sizeof(g_transport_usb_tx_buffer)) {
             if (msg.free_cb != NULL) {
                 msg.free_cb(msg.cb_arg);
             }
@@ -468,18 +546,22 @@ static void transport_usb_tx_task(void *arg)
 
         memcpy(g_transport_usb_tx_buffer, msg.data, msg.len);
 
-        while (xSemaphoreTake(ctx->tx_done_sem, 0) == pdTRUE) {
-        }
+        transport_usb_drain_task_events();
 
+        ctx->tx_pending = true;
         if (usbd_cdc_ecm_start_write(g_transport_usb_tx_buffer, msg.len) != 0) {
+            ctx->tx_pending = false;
             if (msg.free_cb != NULL) {
                 msg.free_cb(msg.cb_arg);
             }
             continue;
         }
 
-        if (xSemaphoreTake(ctx->tx_done_sem, pdMS_TO_TICKS(NH_USB_WAIT_TIMEOUT_MS)) != pdTRUE) {
+        events = 0;
+        if (xTaskNotifyWait(0, NH_USB_NOTIFY_ALL_BITS, &events, pdMS_TO_TICKS(NH_USB_WAIT_TIMEOUT_MS)) != pdTRUE ||
+            (events & NH_USB_EVENT_TX_DONE) == 0U) {
             LOG_W("usb tx wait timeout\r\n");
+            ctx->tx_pending = false;
         }
 
         if (msg.free_cb != NULL) {
@@ -499,12 +581,6 @@ static int transport_usb_prepare_runtime(void)
     if (ctx->upld_queue == NULL) {
         ctx->upld_queue = xQueueCreate(NH_USB_TX_QUEUE_DEPTH, sizeof(nh_usb_tx_msg_t));
     }
-    if (ctx->rx_done_sem == NULL) {
-        ctx->rx_done_sem = xSemaphoreCreateBinary();
-    }
-    if (ctx->tx_done_sem == NULL) {
-        ctx->tx_done_sem = xSemaphoreCreateBinary();
-    }
     if (ctx->acm_rx_stream == NULL) {
         ctx->acm_rx_stream = xStreamBufferCreate(NH_USB_ACM_STREAM_SIZE, 1);
     }
@@ -515,8 +591,7 @@ static int transport_usb_prepare_runtime(void)
         ctx->acm_tx_mutex = xSemaphoreCreateMutex();
     }
 
-    if (ctx->dnld_free_queue == NULL || ctx->upld_queue == NULL ||
-        ctx->rx_done_sem == NULL || ctx->tx_done_sem == NULL) {
+    if (ctx->dnld_free_queue == NULL || ctx->upld_queue == NULL) {
         return NETHUB_ERR_NO_MEMORY;
     }
     if (ctx->acm_rx_stream == NULL || ctx->acm_tx_done_sem == NULL || ctx->acm_tx_mutex == NULL) {
@@ -566,6 +641,7 @@ int nh_usb_backend_init(void)
     int ret;
 
     if (g_transport_usb_ctx.initialized) {
+        g_transport_usb_ctx.active = true;
         return NETHUB_OK;
     }
 
@@ -594,6 +670,7 @@ int nh_usb_backend_init(void)
         return NETHUB_ERR_INTERNAL;
     }
 
+    g_transport_usb_ctx.active = true;
     g_transport_usb_ctx.initialized = true;
     LOG_I("usb data path initialized\r\n");
     return NETHUB_OK;
@@ -629,14 +706,114 @@ nethub_route_result_t nh_usb_backend_output(nethub_frame_t *frame)
     return NETHUB_ROUTE_CONTINUE;
 }
 
-int nh_usb_backend_ctrl_upld_send(uint8_t *data_buff, uint32_t data_size)
+int nh_usb_backend_acm_send(const uint8_t *data_buff, uint32_t data_size)
 {
     return transport_usb_acm_send(data_buff, data_size, pdMS_TO_TICKS(NH_USB_WAIT_TIMEOUT_MS));
 }
 
-int nh_usb_backend_ctrl_dnld_register(nethub_ctrl_rx_cb_t dnld_cb, void *cbpri_arg)
+int nh_usb_backend_acm_recv_register(nh_usb_backend_acm_rx_cb_t recv_cb, void *cb_arg)
 {
-    g_transport_usb_ctx.ctrl_dnld_cb = dnld_cb;
-    g_transport_usb_ctx.ctrl_dnld_arg = cbpri_arg;
+    g_transport_usb_ctx.acm_rx_cb = recv_cb;
+    g_transport_usb_ctx.acm_rx_arg = cb_arg;
+    return NETHUB_OK;
+}
+
+bool nh_usb_backend_is_idle(void)
+{
+    nh_usb_ctx_t *ctx = &g_transport_usb_ctx;
+    UBaseType_t free_slots;
+
+    if (!ctx->initialized || !ctx->active || !ctx->configured) {
+        return true;
+    }
+
+    if (ctx->tx_pending ||
+        (ctx->upld_queue != NULL && uxQueueMessagesWaiting(ctx->upld_queue) != 0U)) {
+        return false;
+    }
+
+    if (ctx->dnld_free_queue != NULL) {
+        free_slots = uxQueueMessagesWaiting(ctx->dnld_free_queue);
+        if (ctx->rx_pending_slot != NULL) {
+            return (ctx->rx_pending_len == 0U) &&
+                   (free_slots == (NH_USB_RX_SLOT_CNT - 1U));
+        }
+        return free_slots == NH_USB_RX_SLOT_CNT;
+    }
+
+    return true;
+}
+
+int nh_usb_backend_lowpower_prepare(void)
+{
+    nh_usb_ctx_t *ctx = &g_transport_usb_ctx;
+
+    if (!ctx->initialized || !ctx->active) {
+        return NETHUB_OK;
+    }
+
+    if (!nh_usb_backend_is_idle()) {
+        return NETHUB_ERR_INVALID_STATE;
+    }
+
+    ctx->active = false;
+    ctx->configured = false;
+    ctx->acm_read_started = false;
+    ctx->rx_pending_len = 0U;
+    ctx->tx_pending = false;
+
+    usbd_cdc_ecm_set_connect(false, NULL);
+    (void)usbd_deinitialize(NH_USB_BUSID);
+    if (ctx->acm_tx_done_sem != NULL) {
+        xSemaphoreGive(ctx->acm_tx_done_sem);
+    }
+
+    if (ctx->rx_task != NULL) {
+        xTaskNotify(ctx->rx_task, NH_USB_EVENT_CONFIG_CHANGE, eSetBits);
+    }
+    if (ctx->tx_task != NULL) {
+        xTaskNotify(ctx->tx_task, NH_USB_EVENT_ACTIVE, eSetBits);
+    }
+
+    LOG_I("usb data path suspended\r\n");
+    return NETHUB_OK;
+}
+
+int nh_usb_backend_lowpower_resume(void)
+{
+    nh_usb_ctx_t *ctx = &g_transport_usb_ctx;
+    int ret;
+
+    if (!ctx->initialized) {
+        return NETHUB_OK;
+    }
+
+    transport_usb_fill_mac_string();
+    transport_usb_desc_register();
+    usbd_add_interface(NH_USB_BUSID, usbd_cdc_ecm_init_intf(&ctx->ecm_intf0,
+                                                            NH_USB_ECM_INT_EP,
+                                                            NH_USB_ECM_OUT_EP,
+                                                            NH_USB_ECM_IN_EP));
+    usbd_add_interface(NH_USB_BUSID, usbd_cdc_ecm_init_intf(&ctx->ecm_intf1,
+                                                            NH_USB_ECM_INT_EP,
+                                                            NH_USB_ECM_OUT_EP,
+                                                            NH_USB_ECM_IN_EP));
+    transport_usb_acm_init();
+
+    ret = usbd_initialize(NH_USB_BUSID, 0, transport_usb_event_handler);
+    if (ret != 0) {
+        LOG_E("usb lowpower resume failed: %d\r\n", ret);
+        return NETHUB_ERR_INTERNAL;
+    }
+
+    ctx->active = true;
+    if (ctx->rx_task != NULL) {
+        xTaskNotify(ctx->rx_task, NH_USB_EVENT_CONFIG_CHANGE, eSetBits);
+    }
+    if (ctx->tx_task != NULL) {
+        xTaskNotify(ctx->tx_task, NH_USB_EVENT_ACTIVE, eSetBits);
+    }
+
+    LOG_I("usb data path recovered\r\n");
     return NETHUB_OK;
 }

@@ -1,54 +1,61 @@
 # NetHub
 
-NetHub bridges device-side Wi-Fi capability to a selected host interface.
+NetHub exposes the device-side Wi-Fi function to an external host through one
+selected host interface.
 
-The current solution targets Wi-Fi SoCs such as `BL616 / BL618 / BL616CL / BL618DG`.
+The current customer-facing scope covers `BL616`, `BL616CL`, and `BL618DG` with
+`SDIO` or `USB`.
 
-## Current Status
+## Documents
 
-| Item | Current status |
+| Document | Purpose |
 | --- | --- |
-| Default interface | `SDIO` |
-| USB data-path | device-side `USB ECM` backend implemented |
-| USB control transport | device-side `USB ACM` transport plumbing implemented |
-| SPI | not implemented |
-| USER virtual channel | default interface is `SDIO` |
-| Low power | currently `BL618DG` only |
-| Optional ATModule control solution | available, but not mandatory |
+| [NetHubQuickBringup.md](NetHubQuickBringup.md) | build, flash, interface selection, and basic bring-up |
+| [NetHubArchitecture.md](NetHubArchitecture.md) | NetHub architecture and host-interface model |
+| [NetHubVirtualChannel.md](NetHubVirtualChannel.md) | USER virtual channel scope and APIs |
 
-## Document Guide
+## Current Support Matrix
 
-Use these documents according to what you need:
+Status values:
 
-| Document | Focus |
+- `Supported`: available for customer bring-up and validated end to end.
+- `Build-only`: firmware builds, but end-to-end hardware validation is still pending.
+- `TODO`: not ready for customer use.
+
+| Chip | Interface | NetHub control/data | Low power | Customer guidance |
+| --- | --- | --- | --- | --- |
+| `BL616` | `SDIO` | Supported | Supported | Recommended default bring-up path. |
+| `BL616` | `USB` | Supported | Supported | Use the USB profile when the host connection is USB. |
+| `BL616CL` | `SDIO` | Build-only | TODO | SDIO end-to-end validation is still pending. |
+| `BL616CL` | `USB` | Supported | TODO | Keep low power disabled. |
+| `BL618DG` | `SDIO` | Supported | TODO | Keep low power disabled. |
+| `BL618DG` | `USB` | Supported | TODO | Keep low power disabled. |
+
+## Configuration Summary
+
+Select exactly one host interface in one firmware build.
+
+| Target | Main options |
 | --- | --- |
-| [NetHubQuickBringup.md](NetHubQuickBringup.md) | default interface, main configuration switches, build and flash, SDIO and USB pins |
-| [NetHubArchitecture.md](NetHubArchitecture.md) | internal layering, public APIs, support matrix, and interface differences |
-| [NetHubVirtualChannel.md](NetHubVirtualChannel.md) | USER virtual channel scope, prerequisites, APIs, and limits |
+| `SDIO` | `CONFIG_NETHUB_PROFILE_SDIO=y`, `CONFIG_NETHUB_PROFILE_USB=n` |
+| `USB` | `CONFIG_NETHUB_PROFILE_USB=y`, `CONFIG_NETHUB_PROFILE_SDIO=n` |
+| Low power enabled | `CONFIG_NETHUB_LOWPOWER_ENABLE=y` |
+| Low power disabled | `CONFIG_NETHUB_LOWPOWER_ENABLE=n` |
 
-## Key Points
+Low-power guidance:
 
-- `SDIO` is the current default interface for the in-tree bring-up path.
-- `USB` device-side backend is implemented with `ECM + ACM`.
-- `SPI` is still a stub and is not ready for bring-up.
-- `nethub` core exposes data-path, control path, and virtual channel facades without directly depending on `ATModule`.
-- The optional `ATModule + bflbwifid + bflbwifictrl` flow is available, but not mandatory.
+- enable low power only for the `BL616` combinations listed as supported
+- keep low power disabled for `BL616CL` and `BL618DG`
 
-## In-Repo Reference Directories
+The AT-based control channel is optional:
 
-- `examples/wifi/nethub`
-- `components/net/nethub`
-- `bsp/common/msg_router/linux_host/userspace/nethub`
+| Setting | Behavior |
+| --- | --- |
+| `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y` | Use the example AT control channel over the selected interface. |
+| `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n` | Build without the example AT control channel. The data path remains available, but product software must provide any required private control flow. |
 
-## Local Documentation Source
+## Notes
 
-The in-repo documentation source is:
-
-- `examples/wifi/nethub/docs/`
-
-## Online Wiki
-
-- [NetHub](https://docs.bouffalolab.com/index.php?title=NetHub)
-- [NetHubQuickBringup](https://docs.bouffalolab.com/index.php?title=NetHubQuickBringup)
-- [NetHubArchitecture](https://docs.bouffalolab.com/index.php?title=NetHubArchitecture)
-- [NetHubVirtualChannel](https://docs.bouffalolab.com/index.php?title=NetHubVirtualChannel)
+- `SDIO` is the default interface in the example configuration.
+- `USB` uses ECM for the network data path and ACM for control or message traffic.
+- `SPI` is not supported in the current NetHub customer bring-up flow.

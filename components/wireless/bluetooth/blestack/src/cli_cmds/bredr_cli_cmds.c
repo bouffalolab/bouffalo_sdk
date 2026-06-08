@@ -56,6 +56,7 @@
 #define BT_A2DP_CLI(func) static void a2dp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #define BT_AVRCP_CLI(func) static void avrcp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #define BT_HFP_CLI(func) static void hfp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#define BT_AVDTP_CLI(func) static void avdtp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #define BT_SPP_CLI(func) static void spp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #endif
 #define 		PASSKEY_MAX  		0xF423F
@@ -94,6 +95,7 @@ struct spp_callback_t spp_conn_callbacks={
 };
 #endif
 #if defined(CONFIG_BT_A2DP)
+static bool stream_pause = false;
 static void a2dp_chain(struct bt_conn *conn, uint8_t state);
 static void a2dp_stream(uint8_t state);
 #if defined(CONFIG_BT_A2DP_SOURCE)
@@ -120,7 +122,6 @@ static void avrcp_handle_stop(void);
 static void avrcp_handle_pause(void);
 static void avrcp_handle_next(void);
 static void avrcp_handle_previous(void);
-static bool stream_pause = false;
 
 struct avrcp_pth_handler {
 	uint8_t op;
@@ -210,6 +211,51 @@ BT_AVRCP_CLI(send_play_status);
 #endif
 
 #if defined(CONFIG_BT_HFP)
+static void hfp_bsir_indication(struct bt_conn *conn, uint8_t inband)
+{
+    printf("HFP in-band ring tone: %s\n", inband ? "enabled" : "disabled");
+}
+
+static void hfp_clip_indication(struct bt_conn *conn, const char *number, uint8_t type)
+{
+    printf("HFP CLIP: number=%s type=%u\n", number, type);
+}
+
+static void hfp_ccwa_indication(struct bt_conn *conn, const char *number, uint8_t type)
+{
+    printf("HFP CCWA: number=%s type=%u\n", number, type);
+}
+
+static void hfp_bvra_indication(struct bt_conn *conn, uint8_t active)
+{
+    printf("HFP voice recognition: %s\n", active ? "activated" : "deactivated");
+}
+
+static void hfp_clcc_indication(struct bt_conn *conn,
+                                const struct bt_hfp_clcc_info *info)
+{
+    if (!info) {
+        printf("HFP CLCC: end of list\n");
+        return;
+    }
+    printf("HFP CLCC: idx=%d dir=%s status=%d mode=%d mpty=%d number=%s type=%d\n",
+        info->idx,
+        info->dir ? "MT" : "MO",
+        info->status,
+        info->mode,
+        info->mpty,
+        info->number[0] ? info->number : "(none)",
+        info->type);
+}
+
+static struct bt_hfp_hf_cb hfp_hf_callbacks = {
+    .bsir_indication = hfp_bsir_indication,
+    .clip_indication = hfp_clip_indication,
+    .ccwa_indication = hfp_ccwa_indication,
+    .bvra_indication = hfp_bvra_indication,
+    .clcc_indication = hfp_clcc_indication,
+};
+
 #if defined(BR_EDR_PTS_TEST)
 BT_CLI(rfcomm_test_mode);
 #endif
@@ -360,7 +406,6 @@ const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"bredr_auth_pairing_confirm", "", bredr_auth_pairing_confirm},
     {"bredr_auth_passkey", "", bredr_auth_passkey},
     {"bredr_get_bond_list","",bredr_get_bond_list},
-    {"bredr_start_inquiry", "", bredr_start_inquiry},
     {"bredr_set_tx_pwr","",bredr_set_tx_pwr},
     #if defined(BR_EDR_PTS_TEST)
     {"bredr_sdp_client_connect", "", bredr_sdp_client_connect},
@@ -467,6 +512,9 @@ BT_CLI(init)
 #endif
 #if defined(CONFIG_BT_SPP)
     spp_cb_register(&spp_conn_callbacks);
+#endif
+#if defined(CONFIG_BT_HFP)
+    bt_hfp_hf_register(&hfp_hf_callbacks);
 #endif
     init = true;
     printf("bredr init successfully\n");
@@ -814,8 +862,8 @@ void bt_br_discv_cb(struct bt_br_discovery_result *results,
     }
 
     for (i=0;i<count;i++) {
-        dev_class = (results[i].cod[0] | (results[i].cod[1] << 8) | 
-                     (results[i].cod[1] << 16));
+        dev_class = (results[i].cod[0] | (results[i].cod[1] << 8) |
+                     (results[i].cod[2] << 16));
         bt_addr_to_str(&results[i].addr, addr_str, sizeof(addr_str));
         printf("addr %s,class 0x%lx,rssi %d\r\n",addr_str,
                      dev_class,results[i].rssi);

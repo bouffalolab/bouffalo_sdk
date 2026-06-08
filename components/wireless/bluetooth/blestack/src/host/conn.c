@@ -2125,7 +2125,6 @@ void bt_conn_set_state(struct bt_conn *conn, bt_conn_state_t state)
 			/* this indicate Directed advertising stopped */
 			if (conn->err) {
 				notify_connected(conn);
-				bt_conn_unref(conn);//bouffalo fix:unref the ref is increased in bt_conn_create_slave_le.
 			}
 
 			bt_conn_unref(conn);
@@ -2880,7 +2879,7 @@ start_adv:
 	if (err) {
 		BT_WARN("Directed advertising could not be started: %d", err);
 
-		bt_conn_unref(conn);
+				bt_conn_unref(conn);
 		return NULL;
 	}
 

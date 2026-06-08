@@ -22,6 +22,7 @@
 #include <mbedtls/platform_util.h>
 #include <mbedtls/error.h>
 #include <mbedtls/sha1.h>
+#include "bflb_l1c.h"
 
 /*
  * HMAC(K, M) = H( ( K' ^ opad ) || H( ( K' ^ ipad ) || M ) )
@@ -33,7 +34,7 @@ static int mbedtls_hmac_iter_init( const unsigned char *key, size_t key_len,
     uint32_t *pw, *pw2;
 
     memset(buf, 0, buf_len);
-    uint8_t *buf1 = (uint8_t *)(( (uint32_t)buf + 31 ) & ~( (uint32_t)31 ));
+    uint8_t *buf1 = (uint8_t *)(((uint32_t)buf + BFLB_CACHE_LINE_SIZE - 1) & ~((uint32_t)BFLB_CACHE_LINE_SIZE - 1));
     if( buf_len < buf1 - buf + 256 )
         goto exit;
 
@@ -82,7 +83,7 @@ static int mbedtls_hmac_iter_ret( unsigned char *buf, size_t buf_len,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-    uint8_t *buf1 = (uint8_t *)(( (uint32_t)buf + 31 ) & ~( (uint32_t)31 ));
+    uint8_t *buf1 = (uint8_t *)(((uint32_t)buf + BFLB_CACHE_LINE_SIZE - 1) & ~((uint32_t)BFLB_CACHE_LINE_SIZE - 1));
     uint8_t *buf2 = buf1 + 128;
 
     if( buf_len < buf1 - buf + 256 )
@@ -142,7 +143,7 @@ void mbedtls_hmac( const unsigned char *key, size_t key_len,
                    unsigned char *msg, size_t msg_len,
                    unsigned char output[20] )
 {
-    uint32_t buf[(256 + 28) / 4];
+    uint32_t buf[(256 + BFLB_CACHE_LINE_SIZE - 4) / 4];
 
     mbedtls_hmac_iter_init( key, key_len, (unsigned char *)buf, sizeof(buf) );
     mbedtls_hmac_iter_ret( (unsigned char *)buf, sizeof(buf), msg, msg_len, output, 0 );
@@ -156,7 +157,7 @@ static int pbkdf2_sha1_f(const char *passphrase, const u8 *ssid,
              size_t ssid_len, int iterations, unsigned int count,
              u8 *digest)
 {
-    uint32_t buf[(256 + 28) / 4]; // 28 is for padding 32 bytes align, 256 is inner and outer of sha1 2 blocks
+    uint32_t buf[(256 + BFLB_CACHE_LINE_SIZE - 4) / 4]; // reserve alignment padding, 256 is inner and outer of sha1 2 blocks
     uint8_t *p, msg[32 + 4], output[SHA1_MAC_LEN]; // 32 is max ssid length, 4 is count
     int i, j;
 

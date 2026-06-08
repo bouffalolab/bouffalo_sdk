@@ -18,6 +18,10 @@
 #include "btble_lib_api.h"
 #include "bl618dg_glb.h"
 #include "rfparam_adapter.h"
+#elif defined(BL616CL)
+#include "btble_lib_api.h"
+#include "bl616cl_glb.h"
+#include "rfparam_adapter.h"
 #endif
 
 #include "ble_cli_cmds.h"

@@ -18,6 +18,9 @@ struct nhif_ops {
     int (*deinit)(void);
     nethub_route_cb_t input;
     nethub_route_cb_t output;
+    bool (*is_idle)(void);
+    int (*lowpower_prepare)(void);
+    int (*lowpower_resume)(void);
 };
 
 int nhif_register(const struct nhif_ops *ops, void *private_data);

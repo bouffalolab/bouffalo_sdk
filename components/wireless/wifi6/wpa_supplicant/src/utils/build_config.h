@@ -19,7 +19,6 @@
 
 #include "macsw.h"
 
-#define CONFIG_PMK_CACHE_IN_MGMR
 #define CONFIG_EXTRA_WPA_SSID_FLAG
 
 #define CONFIG_ONLY_STA_AP_MODE
@@ -29,6 +28,8 @@
 #define CONFIG_RANDOM_OPT
 #define CONFIG_EAP_SERVER
 #if MACSW_WFA
+#define CONFIG_PMK_CACHE_IN_MGMR
+#define CONFIG_PMKSA_CACHE
 #define CONFIG_WNM
 #define CONFIG_MBO
 #define CONFIG_RRM
@@ -107,7 +108,6 @@
 #define CONFIG_WNM_AP
 #endif
 #define CONFIG_WPS
-#define IEEE8021X_EAPOL
 #define EAP_WSC
 #if MACSW_P2P
 #define CONFIG_P2P

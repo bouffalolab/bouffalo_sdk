@@ -89,8 +89,36 @@ void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_chan
 #else
     uint32_t regval;
     uint32_t channel_base;
+    uint8_t src_burst_shift;
+    uint8_t dst_burst_shift;
+    uint8_t max_burst_bytes;
 
     channel_base = dev->reg_base;
+    src_burst_shift = config->src_burst_count ? config->src_burst_count + 1 : 0;
+    dst_burst_shift = config->dst_burst_count ? config->dst_burst_count + 1 : 0;
+    max_burst_bytes = 16;
+
+#if defined(BL618DG)
+    if (dev->idx != 1) {
+        if (config->src_width == DMA_DATA_WIDTH_64BIT ||
+            config->dst_width == DMA_DATA_WIDTH_64BIT) {
+            bflb_lhal_assert_func(__FILE__, __LINE__, __FUNCTION__, "only DMA1 supports 64-bit width");
+        }
+    } else if (dev->sub_idx < 2) {
+        max_burst_bytes = 128;
+    }
+#elif defined(BL616CL)
+    if (dev->sub_idx < 2) {
+        max_burst_bytes = 64;
+    } else if (dev->sub_idx < 4) {
+        max_burst_bytes = 32;
+    }
+#endif
+
+    if (((1U << config->src_width) << src_burst_shift) > max_burst_bytes ||
+        ((1U << config->dst_width) << dst_burst_shift) > max_burst_bytes) {
+        bflb_lhal_assert_func(__FILE__, __LINE__, __FUNCTION__, "DMA burst bytes exceed limit");
+    }
 
     /* dma global enable */
     regval = getreg32(dma_base[dev->idx] + DMA_TOP_CONFIG_OFFSET);
@@ -239,6 +267,11 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_chann
         case DMA_DATA_WIDTH_32BIT:
             actual_transfer_offset = 4064 << 2;
             break;
+#if defined(BL618DG)
+        case DMA_DATA_WIDTH_64BIT:
+            actual_transfer_offset = 4064 << 3;
+            break;
+#endif
         default:
             break;
     }
@@ -260,9 +293,14 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_chann
                 }
                 actual_transfer_len = transfer[i].nbytes >> 2;
                 break;
-
-            default:
+#if defined(BL618DG)
+            case DMA_DATA_WIDTH_64BIT:
+                if (transfer[i].nbytes % 8) {
+                    return -1;
+                }
+                actual_transfer_len = transfer[i].nbytes >> 3;
                 break;
+#endif
         }
 
         current_lli_count = actual_transfer_len / 4064 + 1;

@@ -3653,7 +3653,7 @@ int bflb_emac_v2_bd_rx_dequeue(struct bflb_device_s *dev, uint32_t flags, uint32
             EMAC_V2_DRV_DBG("PTP FT\r\n");
         }
 #ifdef EMAC_V2_DBG_ENABLE
-        msg_type = (ext_status & EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE) >> 16;
+        msg_type = (ext_status & EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE) >> EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE_SHIFT;
         EMAC_V2_DRV_DBG("Msg type=%d\r\n", msg_type);
         if ((ext_status & EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE) != 0) {
             p_timestamp = (uint32_t *)(rxdesc->buffer1 + 48);
@@ -4159,7 +4159,7 @@ void bflb_emac_v2_isr(int irq, void *arg)
                         EMAC_V2_DRV_DBG("PTP FT\r\n");
                     }
             #ifdef EMAC_V2_DBG_ENABLE
-                    int msg_type = (ext_status & EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE) >> 16;
+                    int msg_type = (ext_status & EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE) >> EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE_SHIFT;
                     EMAC_V2_DRV_DBG("Msg type=%d\r\n", msg_type);
                     if ((ext_status & EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE) != 0) {
                         uint32_t * p_timestamp = (uint32_t *)((uint8_t*)rx_desc.buff_addr + 48);

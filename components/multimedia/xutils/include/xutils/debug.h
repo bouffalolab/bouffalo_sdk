@@ -8,6 +8,8 @@
 #ifndef __XUTILS_DEBUG_H__
 #define __XUTILS_DEBUG_H__
 
+#include <stdint.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -103,7 +105,7 @@ extern void msp_debug(const char *tag, const char *filename, const long line, co
             debug_print_assert(0, #X, NULL, SHORT_FILE, __LINE__, __PRETTY_FUNCTION__);            \
         }                                                                                          \
     } while (0)
-#define except_process(err) msp_except_process(err, SHORT_FILE, __LINE__,                          \
+#define except_process(err) msp_except_process((int)(intptr_t)(err), SHORT_FILE, __LINE__,                          \
                                 __PRETTY_FUNCTION__,  __builtin_return_address(0))
 
 #if (!defined(unlikely))

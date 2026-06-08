@@ -17,17 +17,25 @@
 #include <bflb_clock.h>
 #include <msp_port.h>
 
+#if defined(BL616)
+#include "bl616_glb.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
+#elif defined(BL618DG)
+#include "bl618dg_glb.h"
+#endif
+
 #include <msp/kernel.h>
 #include <xutils/debug.h>
-#define AUDIO_CONFIG_DEBUG        (0)
+#define AUDIO_CONFIG_DEBUG (0)
 
 #if AUDIO_CONFIG_DEBUG
 
 extern long long msp_now_ms(void);
-#define user_log(M, ...) do {  printf("[%9ld]======[%s:%d] " M "",  \
-                                 (uint32_t)msp_now_ms(), __func__, __LINE__,            \
-                                 ##__VA_ARGS__);                    \
-                               } while(0==1)
+#define user_log(M, ...)                                                                                \
+    do {                                                                                                \
+        printf("[%9ld]======[%s:%d] " M "", (uint32_t)msp_now_ms(), __func__, __LINE__, ##__VA_ARGS__); \
+    } while (0 == 1)
 #else
 #define user_log(M, ...)
 #endif
@@ -53,18 +61,18 @@ static void _auo_recv(auo_ch_t *context)
     uint32_t wi, ri, ar, get_size;
 
 #if CODEC_OUTPUT_DEBUG_TRACE
-        context->debug.count_read++;
+    context->debug.count_read++;
 #endif
     dst = (*((volatile uint32_t *)(uintptr_t)(context->dma->dst_addr)));
-    ar =  ALIGN_TO_32(dst - context->head);
+    ar = ALIGN_TO_32(dst - context->head);
     wi = context->ringbuffer->write_index;
     ri = context->ringbuffer->read_index;
-    if ((wi % 32 !=0) ||(ri %32 !=0)) {
-        user_log("wi:%d,ri:%d\r\n", wi,ri);
+    if ((wi % 32 != 0) || (ri % 32 != 0)) {
+        user_log("wi:%d,ri:%d\r\n", wi, ri);
     }
 
     ret = mringbuffer_data_len(context->ringbuffer);
-    if((context->per_node_size > ret) || (context->per_node_size == ret)) {
+    if ((context->per_node_size > ret) || (context->per_node_size == ret)) {
         memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
         bflb_l1c_dcache_clean_range((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
         bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_SUSPEND, 0);
@@ -79,12 +87,14 @@ static void _auo_recv(auo_ch_t *context)
             } else if (ar <= wi) {
                 get_size = context->ringbuffer->buffer_size - (ri - ar);
                 memset(context->ringbuffer->buffer_ptr + ri, 0, context->ringbuffer->buffer_size - ri);
-                bflb_l1c_dcache_clean_range((uint32_t *)(context->ringbuffer->buffer_ptr + ri), context->ringbuffer->buffer_size - ri);
+                bflb_l1c_dcache_clean_range((uint32_t *)(context->ringbuffer->buffer_ptr + ri),
+                                            context->ringbuffer->buffer_size - ri);
                 memset(context->ringbuffer->buffer_ptr, 0, ar);
                 bflb_l1c_dcache_clean_range((uint32_t *)context->ringbuffer->buffer_ptr, ar);
             } else {
                 memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
-                bflb_l1c_dcache_clean_range((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
+                bflb_l1c_dcache_clean_range((uint32_t *)context->ringbuffer->buffer_ptr,
+                                            context->ringbuffer->buffer_size);
                 /* dma halt */
                 bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_SUSPEND, 0);
                 context->dma->halt_flag = 1;
@@ -97,7 +107,8 @@ static void _auo_recv(auo_ch_t *context)
                 bflb_l1c_dcache_clean_range((uint32_t *)(context->ringbuffer->buffer_ptr + ri), get_size);
             } else {
                 memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
-                bflb_l1c_dcache_clean_range((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
+                bflb_l1c_dcache_clean_range((uint32_t *)context->ringbuffer->buffer_ptr,
+                                            context->ringbuffer->buffer_size);
                 /* dma halt */
                 bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_SUSPEND, 0);
                 context->dma->halt_flag = 1;
@@ -108,8 +119,8 @@ static void _auo_recv(auo_ch_t *context)
     tmp_time = msp_now_ms();
     ret = mringbuffer_get_index(context->ringbuffer, ar);
     if (ret <= 0) {
-        user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
-            ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
+        user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n", ar, context->ringbuffer->read_index,
+                 context->ringbuffer->write_index, ret);
     } else {
         context->submitted_bytes_total += ret;
 #if CODEC_OUTPUT_DEBUG_TRACE
@@ -119,22 +130,22 @@ static void _auo_recv(auo_ch_t *context)
             context->callback(context, BL_EVENT_NODE_WRITE_COMPLETE, context->arg);
         }
 
-        if ((ret > (context->per_node_size + context->per_node_size / 2))
-            || ((old_time != 0) && ((tmp_time - old_time) > 30))) {
-            user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld = %lldms\r\n",
-                ar, context->ringbuffer->read_index, context->ringbuffer->write_index,
-                ret, (tmp_time - old_time));
-            user_log("under run because of no enough data. music end ? wireless network signal instability? or enable wifi/bt but no coex?\r\n");
+        if ((ret > (context->per_node_size + context->per_node_size / 2)) ||
+            ((old_time != 0) && ((tmp_time - old_time) > 30))) {
+            user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld = %lldms\r\n", ar, context->ringbuffer->read_index,
+                     context->ringbuffer->write_index, ret, (tmp_time - old_time));
+            user_log(
+                "under run because of no enough data. music end ? wireless network signal instability? or enable wifi/bt but no coex?\r\n");
         } else {
-            user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
-                ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
+            user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n", ar, context->ringbuffer->read_index,
+                     context->ringbuffer->write_index, ret);
         }
     }
     old_time = tmp_time;
 }
 
-#define EVENT_AU_ISR          (0x00000001)
-#define EVENT_AU_STOP         (0x00000002)
+#define EVENT_AU_ISR  (0x00000001)
+#define EVENT_AU_STOP (0x00000002)
 
 static void auo_task_entry(void *arg)
 {
@@ -143,7 +154,8 @@ static void auo_task_entry(void *arg)
     int res = 0;
 
     while (1) {
-        res = msp_event_get(&(context->event), EVENT_AU_ISR|EVENT_AU_STOP, MSP_EVENT_OR_CLEAR, &flag, context->event_timeout);
+        res = msp_event_get(&(context->event), EVENT_AU_ISR | EVENT_AU_STOP, MSP_EVENT_OR_CLEAR, &flag,
+                            context->event_timeout);
         if (res != 0) {
             continue;
         }
@@ -173,7 +185,6 @@ static void _auo_tx_dma_irq_hander(void *arg)
 
 static void audiopwm_analog_digital_init(uint32_t sample_rate, uint32_t channel_num, uint32_t mode)
 {
-
     struct bflb_audac_volume_config_s aupwm_volume_cfg = {
         .mute_ramp_en = false,
         .mute_up_ramp_rate = AUDAC_RAMP_RATE_FS_2,
@@ -216,6 +227,11 @@ static void audiopwm_analog_digital_init(uint32_t sample_rate, uint32_t channel_
             break;
     }
 
+#if defined(BL616)
+    GLB_Config_AUDIO_PLL_To_491P52M();
+#endif
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
+
     bflb_audac_init(aupwm_dev, &aupwm_cfg);
 
     bflb_audac_volume_init(aupwm_dev, &aupwm_volume_cfg);
@@ -254,9 +270,11 @@ int auo_init(auo_ch_t *context)
     context->task_exit = 0;
     msp_event_new(&(context->event), 0);
 #if defined(CONFIG_MSP_USE_STATIC_RAM) && CONFIG_MSP_USE_STATIC_RAM
-    msp_task_new_static(&(context->task), AUO_TASK, auo_task_entry, context, 1024, context->task_pri, &g_task_buffer, &g_task_handle, 256);//aos_DEFAULT_APP_PRI - 6);
+    msp_task_new_static(&(context->task), AUO_TASK, auo_task_entry, context, 1024, context->task_pri, &g_task_buffer,
+                        &g_task_handle, 256); //aos_DEFAULT_APP_PRI - 6);
 #else
-    msp_task_new_ext(&(context->task), AUO_TASK, auo_task_entry, context, context->stack_size, context->task_pri);//aos_DEFAULT_APP_PRI - 6);
+    msp_task_new_ext(&(context->task), AUO_TASK, auo_task_entry, context, context->stack_size,
+                     context->task_pri); //aos_DEFAULT_APP_PRI - 6);
 #endif
     msp_codec_pa_init();
 
@@ -273,11 +291,8 @@ int auo_channel_config(auo_ch_t *context, auo_cfg_t *config)
     context->debug.count_config++;
 #endif
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
-    user_log("context:%p,rate:%lu,ch:%lu,width:%lu\r\n",
-            context,
-            config->sample_rate,
-            config->sound_channel_num,
-            config->bit_width);
+    user_log("context:%p,rate:%lu,ch:%lu,width:%lu\r\n", context, config->sample_rate, config->sound_channel_num,
+             config->bit_width);
 
     audiopwm_analog_digital_init(config->sample_rate, config->sound_channel_num, config->mode);
 
@@ -327,15 +342,15 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
 
     node_size = context->per_node_size;
 
-    union bflb_dma_lli_control_s audio_dma_ctrl = {0};
+    union bflb_dma_lli_control_s audio_dma_ctrl = { 0 };
     audio_dma_ctrl.bits.TransferSize = node_size / 2;
-    audio_dma_ctrl.bits.SBSize       = DMA_BURST_INCR4;
-    audio_dma_ctrl.bits.DBSize       = DMA_BURST_INCR4;
-    audio_dma_ctrl.bits.SWidth       = DMA_DATA_WIDTH_16BIT;
-    audio_dma_ctrl.bits.DWidth       = DMA_DATA_WIDTH_16BIT;
-    audio_dma_ctrl.bits.SI           = DMA_ADDR_INCREMENT_ENABLE;
-    audio_dma_ctrl.bits.DI           = DMA_ADDR_INCREMENT_DISABLE;
-    audio_dma_ctrl.bits.I            = 1;
+    audio_dma_ctrl.bits.SBSize = DMA_BURST_INCR4;
+    audio_dma_ctrl.bits.DBSize = DMA_BURST_INCR4;
+    audio_dma_ctrl.bits.SWidth = DMA_DATA_WIDTH_16BIT;
+    audio_dma_ctrl.bits.DWidth = DMA_DATA_WIDTH_16BIT;
+    audio_dma_ctrl.bits.SI = DMA_ADDR_INCREMENT_ENABLE;
+    audio_dma_ctrl.bits.DI = DMA_ADDR_INCREMENT_DISABLE;
+    audio_dma_ctrl.bits.I = 1;
 
     dma_id = context->ctrl_id;
     dma_ch = context->ch_id;
@@ -346,7 +361,7 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
         return -1;
     }
     struct bflb_device_s *device_dma;
-    char dma_name[10] = {0};
+    char dma_name[10] = { 0 };
 
     snprintf(dma_name, sizeof(dma_name), "dma%d_ch%d", dma_id, dma_ch);
     printf("dma_dma_name:%s\r\n", dma_name);
@@ -381,19 +396,15 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
     pbuf = hw_node_addr + dma_node_num * sizeof(auo_segment_t);
     hw_buff_addr = (uint8_t *)((intptr_t)(pbuf + AUDIO_ALIGNMENT_BYTES - 1) & ~AUDIO_ALIGNMENT_MASK);
 
-    user_log("output:%p --> hw_node:%p[%lu*%u] --> hw_buf:%p[%lu*%lu]\r\n",
-            node_pbuf,
-            hw_node_addr,
-            dma_node_num, sizeof(auo_segment_t),
-            hw_buff_addr,
-            dma_node_num, node_size);
+    user_log("output:%p --> hw_node:%p[%lu*%u] --> hw_buf:%p[%lu*%lu]\r\n", node_pbuf, hw_node_addr, dma_node_num,
+             sizeof(auo_segment_t), hw_buff_addr, dma_node_num, node_size);
 
     min_buf_size = (uint32_t)(hw_buff_addr + dma_node_num * node_size - 1) - (uint32_t)(context->buffer);
 
     user_log("min_buf-size:%ld, %ld\r\n", min_buf_size, context->buffer_size);
     if (min_buf_size > context->buffer_size) {
         user_log("size too small!\r\n");
-        while(1) {
+        while (1) {
             msp_msleep(100);
             printf("output min_buf-size:%ld, %ld\r\n", min_buf_size, context->buffer_size);
         }
@@ -417,14 +428,12 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
     context->head = context->dma->node[0].dma_cfg.src_addr;
 
     for (i = 0; i < dma_node_num; i++) {
-        user_log("node[%3d] %p --> src:%p dest:%p, next:%p\r\n",
-                i,
-                (void *)&(context->dma->node[i].dma_cfg),
-                (void *)context->dma->node[i].dma_cfg.src_addr,
-                (void *)context->dma->node[i].dma_cfg.dst_addr,
-                (void *)context->dma->node[i].dma_cfg.nextlli);
+        user_log("node[%3d] %p --> src:%p dest:%p, next:%p\r\n", i, (void *)&(context->dma->node[i].dma_cfg),
+                 (void *)context->dma->node[i].dma_cfg.src_addr, (void *)context->dma->node[i].dma_cfg.dst_addr,
+                 (void *)context->dma->node[i].dma_cfg.nextlli);
     }
-        bflb_l1c_dcache_clean_range((uint32_t *)hw_node_addr, (uint32_t)hw_buff_addr + dma_node_num * node_size - 1 - (uint32_t)(hw_node_addr));
+    bflb_l1c_dcache_clean_range((uint32_t *)hw_node_addr,
+                                (uint32_t)hw_buff_addr + dma_node_num * node_size - 1 - (uint32_t)(hw_node_addr));
     dma_id = context->ctrl_id;
     dma_ch = context->ch_id;
 
@@ -436,12 +445,11 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
 
     bflb_dma_channel_tcint_mask(device_dma, false);
 
-
     bflb_audac_feature_control(aupwm_dev, AUDAC_CMD_PLAY_START, 0);
 
     user_log("pbuf:%p, ringbuffer:%p\r\n", pbuf, context->ringbuffer);
-    user_log("hw_node_addr:%p, hw_buff_addr:%p, dma_id:%d,ch:%d, node_size:%ld, dma_node_num:%ld\r\n",
-            hw_node_addr, hw_buff_addr, dma_id, dma_ch, node_size, dma_node_num);
+    user_log("hw_node_addr:%p, hw_buff_addr:%p, dma_id:%d,ch:%d, node_size:%ld, dma_node_num:%ld\r\n", hw_node_addr,
+             hw_buff_addr, dma_id, dma_ch, node_size, dma_node_num);
 
     return 0;
 }
@@ -488,7 +496,6 @@ uint32_t auo_buffer_remain(auo_ch_t *context)
 
 static int _auo_hw_start(auo_ch_t *context)
 {
-
     msp_msleep(30);
     user_log("context = %p\r\n", context);
 
@@ -595,24 +602,18 @@ static int auo_ringbuff_format(auo_ch_t *context)
     mringbuffer_get(context->ringbuffer, (uint8_t *)fmt_buf, fmt_size);
     mringbuffer_reset(context->ringbuffer);
 
-    mv_len = (fmt_size/node_size)*node_size;
+    mv_len = (fmt_size / node_size) * node_size;
 
     if (mv_len > 0) {
-        mringbuffer_put(context->ringbuffer,
-            (uint8_t *)(fmt_buf + fmt_size%node_size),
-            mv_len);
+        mringbuffer_put(context->ringbuffer, (uint8_t *)(fmt_buf + fmt_size % node_size), mv_len);
 
         tmp_buf = (uint8_t *)((uint32_t *)context->dma->node[0].dma_cfg.src_addr);
         memset(tmp_buf + mv_len, 0, node_size * dma_node_num - mv_len);
 
-        bflb_l1c_dcache_clean_range((uint32_t *)context->dma->node[0].dma_cfg.src_addr,
-            node_size * dma_node_num);
+        bflb_l1c_dcache_clean_range((uint32_t *)context->dma->node[0].dma_cfg.src_addr, node_size * dma_node_num);
     } else {
-        memset((uint32_t *)context->dma->node[0].dma_cfg.src_addr,
-            0,
-            node_size * dma_node_num);
-        bflb_l1c_dcache_clean_range((uint32_t *)context->dma->node[0].dma_cfg.src_addr,
-            node_size * dma_node_num);
+        memset((uint32_t *)context->dma->node[0].dma_cfg.src_addr, 0, node_size * dma_node_num);
+        bflb_l1c_dcache_clean_range((uint32_t *)context->dma->node[0].dma_cfg.src_addr, node_size * dma_node_num);
     }
 
     msp_free(fmt_buf);
@@ -634,7 +635,7 @@ int auo_resume(auo_ch_t *context)
 }
 
 #ifdef CONFIG_XCODEC_OUTPUT_CACHE
-#define CACHE_SIZE  (320*20)
+#define CACHE_SIZE (320 * 20)
 #endif
 uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
 {
@@ -656,9 +657,8 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
             mringbuffer_reset(context->ringbuffer);
         }
     }
-    ret = mringbuffer_put_fflush_cache(context->ringbuffer,
-        (uint8_t *)data, size,
-        (cache_operate_t)bflb_l1c_dcache_clean_range);
+    ret = mringbuffer_put_fflush_cache(context->ringbuffer, (uint8_t *)data, size,
+                                       (cache_operate_t)bflb_l1c_dcache_clean_range);
 
     if (context->dma->halt_flag) {
 #ifdef CONFIG_XCODEC_OUTPUT_CACHE
@@ -667,12 +667,14 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
         if (cache_total >= CACHE_SIZE) {
             cache_total = 0;
             cache_flag = 0;
-            bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG, (size_t)(&(context->dma->node[0].dma_cfg)));
+            bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG,
+                                     (size_t)(&(context->dma->node[0].dma_cfg)));
             bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_RESUME, 1);
             context->dma->halt_flag = 0;
         }
 #else
-        bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG, (size_t)(&(context->dma->node[0].dma_cfg)));
+        bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG,
+                                 (size_t)(&(context->dma->node[0].dma_cfg)));
         bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_RESUME, 1);
         context->dma->halt_flag = 0;
 #endif
@@ -681,12 +683,12 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
 
     if (0 == context->st) {
 #ifdef CONFIG_XCODEC_OUTPUT_CACHE
-         cache_total += size;
-         if (cache_total >= CACHE_SIZE) {
+        cache_total += size;
+        if (cache_total >= CACHE_SIZE) {
             cache_total = 0;
             context->st = 1;
             _auo_hw_start(context);
-         }
+        }
 #else
         context->st = 1;
         _auo_hw_start(context);

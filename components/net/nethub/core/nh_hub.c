@@ -146,6 +146,12 @@ nethub_route_result_t nethub_process_input(nethub_frame_t *frame, nethub_channel
         case NETHUB_CHANNEL_SDIO:
         case NETHUB_CHANNEL_USB:
         case NETHUB_CHANNEL_SPI:
+            if (!nethub_is_host_link_active(src_type)) {
+                if (frame->free_cb != NULL) {
+                    frame->free_cb(frame->cb_arg);
+                }
+                return NETHUB_ROUTE_STOP;
+            }
             dst_type = nh_runtime_get_active_wifi_channel();
             break;
         default:
@@ -195,4 +201,36 @@ nethub_channel_t nethub_host_channel(void)
 nethub_channel_t nethub_get_active_wifi_channel(void)
 {
     return nh_runtime_get_active_wifi_channel();
+}
+
+bool nethub_is_host_link_active(nethub_channel_t host_link)
+{
+    return g_nethub_ctx.host_link_type == host_link;
+}
+
+int nethub_set_active_host_link(nethub_channel_t host_link)
+{
+    const nh_profile_t *profile;
+
+    if (!g_nethub_ctx.initialized) {
+        return NETHUB_ERR_NOT_INITIALIZED;
+    }
+
+    profile = nh_profile_get_by_host(host_link);
+    if (profile == NULL || profile->host_endpoint_ops == NULL) {
+        return NETHUB_ERR_NOT_FOUND;
+    }
+
+    if (nhif_find_by_type(host_link) == NULL) {
+        return NETHUB_ERR_NOT_FOUND;
+    }
+
+    if (g_nethub_ctx.host_link_type == host_link) {
+        return NETHUB_OK;
+    }
+
+    g_nethub_ctx.profile = profile;
+    g_nethub_ctx.host_link_type = host_link;
+    LOG_I("active host link switched to %s\r\n", nethub_channel_to_string(host_link));
+    return NETHUB_OK;
 }

@@ -63,7 +63,6 @@
 
 #include <string.h>
 #include <time.h>
-
 #if LWIP_UDP
 
 /* Handle support for more than one server via SNTP_MAX_SERVERS */

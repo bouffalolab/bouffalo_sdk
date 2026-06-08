@@ -63,7 +63,11 @@
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
+#ifdef CONFIG_LPAPP
+#define configUSE_TICKLESS_IDLE                 1
+#else
 #define configUSE_TICKLESS_IDLE                 0
+#endif
 #define configUSE_POSIX_ERRNO                   1
 
 /* Co-routine definitions. */

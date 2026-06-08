@@ -12,7 +12,6 @@ target_sources(app PRIVATE
     wl_ble_lp_app.c
               )
 
-sdk_add_compile_definitions(-DCFG_BL_WIFI_PS_ENABLE)
 sdk_add_include_directories(.)
 
 sdk_set_main_file(main.c)

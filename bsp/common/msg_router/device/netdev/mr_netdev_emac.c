@@ -37,12 +37,6 @@
  * EMAC Hardware Layer
  *****************************************************************************/
 
-#if defined(BL616) || defined(BL616CL) || defined(BL702)
-#define EMAC_DEVICE_NAME BFLB_NAME_EMAC0
-#elif defined(BL618DG)
-#define EMAC_DEVICE_NAME BFLB_NAME_EMAC_V2_1
-#endif
-
 /* Forward declarations for EMAC hardware interface */
 static int emac_tx_frame_push(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt);
 static void emac_tx_done_isr_cb(mr_netdev_priv_t *priv, mr_netdev_msg_t *netdev_msg_pkt, bool success);
@@ -328,21 +322,15 @@ static int emac_phy_init(void)
     int ret;
 
     /* get device */
-    g_emac_dev = bflb_device_get_by_name(EMAC_DEVICE_NAME);
+    g_emac_dev = bsp_emac_get_device(BSP_EMAC_RMII_DEFAULT_PORT);
     if (!g_emac_dev) {
         LOG_E("Failed to get emac device\r\n");
         return -1;
     }
 
     /* gpio init */
-#if defined(BL618DG)
-    if (g_emac_dev->idx == 1) {
-        board_emac1_gpio_init();
-    } else
-#endif
-    {
-        board_emac_gpio_init();
-    }
+    board_emac_rmii_gpio_init(BSP_EMAC_RMII_DEFAULT_PORT);
+    board_emac_mdio_gpio_init(BSP_EMAC_MDIO_DEFAULT_PORT);
 
     /* 初始化EMAC硬件 */
     bflb_emac_init(g_emac_dev, &g_emac_cfg);
@@ -352,7 +340,13 @@ static int emac_phy_init(void)
     bflb_emac_feature_control(g_emac_dev, EMAC_CMD_SET_RX_EN, true);
 
     /* 初始化PHY */
-    ret = eth_phy_scan(&g_phy_ctrl, EPHY_ADDR_MIN, EPHY_ADDR_MAX);
+    g_phy_ctrl.mac_mdio_dev = bsp_emac_get_device(BSP_EMAC_MDIO_DEFAULT_PORT);
+    if (!g_phy_ctrl.mac_mdio_dev) {
+        LOG_E("Failed to get mdio device\r\n");
+        return -1;
+    }
+
+    ret = eth_phy_scan(&g_phy_ctrl, BSP_EMAC_PHY_DEFAULT_SCAN_START, BSP_EMAC_PHY_DEFAULT_SCAN_END);
     if (ret < 0) {
         LOG_E("Failed to scan PHY: %d\r\n", ret);
         return -1;

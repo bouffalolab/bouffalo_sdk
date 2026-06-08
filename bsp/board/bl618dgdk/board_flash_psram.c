@@ -387,7 +387,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
     flash_final_delay = flash_org_delay;
 
     if (0 != flash_org_delay) {
-        if (flash_org_delay >= 120 && flash_org_delay <= 155) {
+        if (flash_org_delay >= 100 && flash_org_delay <= 155) {
             /* flash can run @ 80M @1.5T */
             sf_ctrl_cfg.clk_delay = 1;
             sf_ctrl_cfg.clk_invert = 1;
@@ -395,7 +395,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
             bflb_sflash_init(&sf_ctrl_cfg, NULL);
             GLB_Set_SF_CLK(1, GLB_SFLASH_CLK_WIFIPLL_80M, 0);
             config_change = 1;
-        } else if (flash_org_delay >= 50 && flash_org_delay <= 70) {
+        } else if (flash_org_delay >= 40 && flash_org_delay <= 85) {
             /* flash can run @ 80M @1T */
             sf_ctrl_cfg.clk_delay = 1;
             sf_ctrl_cfg.clk_invert = 1;
@@ -403,7 +403,7 @@ void ATTR_CLOCK_SECTION __attribute__((noinline)) board_set_flash_80m(void)
             bflb_sflash_init(&sf_ctrl_cfg, NULL);
             GLB_Set_SF_CLK(1, GLB_SFLASH_CLK_WIFIPLL_80M, 0);
             config_change = 1;
-        } else if (flash_org_delay > 70 && flash_org_delay < 120) {
+        } else if (flash_org_delay > 85 && flash_org_delay < 100) {
             /* flash can run @ 80M @1.5T with added delay */
             flash_added_delay = 1;
             while (1) {

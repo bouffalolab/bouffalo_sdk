@@ -62,6 +62,10 @@
 
 #include "wifi_mgmr.h"
 
+#if defined(CONFIG_GCOV_DUMP)
+#include "bflb_mtd.h"
+#endif
+
 struct bflb_device_s *gpio;
 
 /****************************************************************************
@@ -79,7 +83,9 @@ struct bflb_device_s *gpio;
 static struct bflb_device_s *uart0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
-
+#if defined(CONFIG_GCOV_DUMP)
+extern int filesystem_init(void);
+#endif
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -126,12 +132,45 @@ static void async_event_loop_wake(void)
     configASSERT(xReturn == pdPASS);
 }
 
+#if defined(CONFIG_GCOV_DUMP)
+struct gcov_info;
+
+extern void __gcov_init(const struct gcov_info *info);
+
+// 声明 linker script 里的起止符号
+extern const struct gcov_info *const __gcov_info_start[];
+extern const struct gcov_info *const __gcov_info_end[];
+
+void register_all_gcov_info(void) {
+    const struct gcov_info *const *info = __gcov_info_start;
+
+    // 遍历数组，挨个注册
+    while (info < __gcov_info_end) {
+        __gcov_init(*info);  // 参数就是取出来的指针
+        info++;
+    }
+}
+#endif
+
 int main(void)
 {
     board_init();
+#if defined(CONFIG_GCOV_DUMP)
+    register_all_gcov_info();
+
+    /* Initialize MTD subsystem (reads partition table from flash) */
+    bflb_mtd_init();
+#endif
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
+
+#if defined(CONFIG_GCOV_DUMP)
+    /* Initialize FatFS on RAM disk (PSRAM) */
+    if (filesystem_init() < 0) {
+        LOG_E("Failed to initialize FatFS filesystem\r\n");
+    }
+#endif
 
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");

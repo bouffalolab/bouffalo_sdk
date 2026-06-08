@@ -13,11 +13,12 @@
 #if defined(CPU_MODEL_A0)
 #define CORE_ID_M0 (0xE9070000)
 #define CORE_ID_M1 (0xE9078000)
+#define CORE_ID_LP (0xDEAD2010)
 #else
 #define CORE_ID_M0 (0xA900A900)
 #define CORE_ID_M1 (0xF900F900)
+#define CORE_ID_LP (0xDEAD300D)
 #endif
-#define CORE_ID_LP (0xDEAD2010)
 
 /**
   * @}

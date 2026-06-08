@@ -39,9 +39,8 @@ extern "C" {
 
 /* FreeRTOS+POSIX includes. POSIX states that this header shall make symbols
  * defined in sched.h and time.h visible. */
-#include "FreeRTOS_POSIX/sys/types.h"
-#include "sched.h"
-#include "posix_time.h"
+#include "FreeRTOS_POSIX/sched.h"
+#include "FreeRTOS_POSIX/time.h"
 
 /**
  * @name pthread detach state.

@@ -160,6 +160,7 @@ RDES1/TDES1  | Control Bits | Byte Count Buffer 2 | Byte Count Buffer 1         
 #define EMAC_V2_EDESC_RX_PTP_VER            0x00002000 /* When set indicates IEEE1584 Version 2 (else Ver1)                                13    */
 #define EMAC_V2_EDESC_RX_PTP_FRAME_TYPE     0x00001000 /* PTP frame type Indicates PTP sent over ethernet                                  12    */
 #define EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE   0x00000F00 /* Message Type                                                                     11:8  */
+#define EMAC_V2_EDESC_RX_PTP_MESSAGE_TYPE_SHIFT 8
 #define EMAC_V2_EDESC_RX_PTP_NO             0x00000000 /* 0000 => No PTP message received                                                        */
 #define EMAC_V2_EDESC_RX_PTP_SYNC           0x00000100 /* 0001 => Sync (all clock types) received                                                */
 #define EMAC_V2_EDESC_RX_PTP_FOLLOW_UP      0x00000200 /* 0010 => Follow_Up (all clock types) received                                           */

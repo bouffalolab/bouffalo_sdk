@@ -161,11 +161,15 @@ struct shell_sysvar {
     SHELL_FUNCTION_EXPORT_CMD(command, alias, desc)
 
 void shell_handler(uint8_t data);
+int shell_exec(char *cmd, uint32_t length);
 int shell_set_prompt(const char *prompt);
 int shell_set_print(void (*shell_printf)(char *fmt, ...));
 int shell_set_echo(bool enabled);
 void shell_init(void);
 void shell_init_with_task(struct bflb_device_s *shell);
 void shell_exe_cmd(uint8_t *cmd, uint16_t len);
+void shell_auto_start(void);
+int shell_auto_run(void);
+int shell_wait_exec_done(uint32_t timeout_ms);
 shell_sig_func_ptr shell_signal(int sig, shell_sig_func_ptr func);
 #endif

@@ -37,6 +37,10 @@
 #define DMA_DATA_WIDTH_8BIT        0
 #define DMA_DATA_WIDTH_16BIT       1
 #define DMA_DATA_WIDTH_32BIT       2
+#if defined(BL618DG)
+/* Only DMA1 supports 64-bit width; DMA0/DMA2 do not support it. */
+#define DMA_DATA_WIDTH_64BIT       3
+#endif
 /**
   * @}
   */
@@ -530,9 +534,16 @@
                                   ((type) == DMA_PERIPH_TO_MEMORY) || \
                                   ((type) == DMA_PERIPH_TO_PERIPH))
 
+#if defined(BL618DG)
+#define IS_DMA_DATA_WIDTH(type)   (((type) == DMA_DATA_WIDTH_8BIT) || \
+                                  ((type) == DMA_DATA_WIDTH_16BIT) || \
+                                  ((type) == DMA_DATA_WIDTH_32BIT) || \
+                                  ((type) == DMA_DATA_WIDTH_64BIT))
+#else
 #define IS_DMA_DATA_WIDTH(type)   (((type) == DMA_DATA_WIDTH_8BIT) || \
                                   ((type) == DMA_DATA_WIDTH_16BIT) || \
                                   ((type) == DMA_DATA_WIDTH_32BIT))
+#endif
 
 #define IS_DMA_BURST_COUNT(type)   (((type) == DMA_BURST_INCR1) || \
                                   ((type) == DMA_BURST_INCR4) || \

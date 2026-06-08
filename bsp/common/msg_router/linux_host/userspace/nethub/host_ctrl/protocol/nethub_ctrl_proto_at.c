@@ -21,6 +21,7 @@
 #define AT_DEFAULT_MS     5000
 #define AT_CONNECT_MS     30000
 #define AT_SCAN_MS        30000
+#define AT_LINK_RECOVER_MS 15000
 #define AT_OTA_DEFAULT_MS 300000
 #define AT_OTA_CHUNK_MS   10000
 #define AT_OTA_FINISH_MS  15000
@@ -129,6 +130,38 @@ static int append_response_locked(const char *line)
     return 0;
 }
 
+static int status_has_ipv4(const nethub_wifi_status_t *status)
+{
+    return status &&
+           status->ip[0] != '\0' &&
+           status->gateway[0] != '\0' &&
+           status->netmask[0] != '\0' &&
+           strcmp(status->ip, "0.0.0.0") != 0 &&
+           strcmp(status->gateway, "0.0.0.0") != 0 &&
+           strcmp(status->netmask, "0.0.0.0") != 0;
+}
+
+static void config_netif_from_status_locked(void)
+{
+    char ip[NETHUB_WIFI_IPV4_MAX_LEN];
+    char netmask[NETHUB_WIFI_IPV4_MAX_LEN];
+    char gateway[NETHUB_WIFI_IPV4_MAX_LEN];
+    char dns[NETHUB_WIFI_IPV4_MAX_LEN];
+
+    if (!status_has_ipv4(&g_at.status)) {
+        return;
+    }
+
+    snprintf(ip, sizeof(ip), "%s", g_at.status.ip);
+    snprintf(netmask, sizeof(netmask), "%s", g_at.status.netmask);
+    snprintf(gateway, sizeof(gateway), "%s", g_at.status.gateway);
+    snprintf(dns, sizeof(dns), "%s", g_at.status.dns);
+
+    pthread_mutex_unlock(&g_at.lock);
+    nethub_netif_config_from_env(ip, netmask, gateway, dns);
+    pthread_mutex_lock(&g_at.lock);
+}
+
 static void set_terminal_locked(int result)
 {
     if (g_at.op_type != AT_OP_NONE && !g_at.op_done) {
@@ -137,16 +170,45 @@ static void set_terminal_locked(int result)
     }
 }
 
-static void clear_station_locked(void)
+static void clear_ipv4_locked(void)
 {
-    g_at.status.ssid[0] = '\0';
-    g_at.status.bssid[0] = '\0';
     g_at.status.ip[0] = '\0';
     g_at.status.gateway[0] = '\0';
     g_at.status.netmask[0] = '\0';
     g_at.status.dns[0] = '\0';
+}
+
+static void clear_ipv4_and_netif_locked(void)
+{
+    clear_ipv4_locked();
+    pthread_mutex_unlock(&g_at.lock);
+    nethub_netif_clear_from_env();
+    pthread_mutex_lock(&g_at.lock);
+}
+
+static void clear_station_locked(void)
+{
+    g_at.status.ssid[0] = '\0';
+    g_at.status.bssid[0] = '\0';
+    clear_ipv4_locked();
     g_at.status.channel = 0;
     g_at.status.rssi = 0;
+}
+
+static void clear_station_and_netif_locked(void)
+{
+    clear_station_locked();
+    pthread_mutex_unlock(&g_at.lock);
+    nethub_netif_clear_from_env();
+    pthread_mutex_lock(&g_at.lock);
+}
+
+static void mark_control_down_locked(void)
+{
+    g_at.link_synced = 0;
+    g_at.status.link_state = NETHUB_WIFI_LINK_DOWN;
+    g_at.status.sta_state = NETHUB_WIFI_STA_IDLE;
+    clear_station_locked();
 }
 
 static void handle_line_locked(const char *line)
@@ -164,23 +226,20 @@ static void handle_line_locked(const char *line)
     if (strcmp(line, "+CW:CONNECTING") == 0) {
         g_at.status.sta_state = NETHUB_WIFI_STA_CONNECTING;
     } else if (strcmp(line, "+CW:CONNECTED") == 0) {
+        clear_station_and_netif_locked();
         g_at.status.sta_state = NETHUB_WIFI_STA_CONNECTED;
     } else if (strncmp(line, "+CW:GOTIP", 9) == 0) {
         if (nethub_at_parse_gotip(line, &g_at.status) == 0 &&
-            g_at.status.ip[0] != '\0' &&
-            g_at.status.gateway[0] != '\0' &&
-            g_at.status.netmask[0] != '\0') {
-            nethub_netif_config_from_env(g_at.status.ip,
-                                         g_at.status.netmask,
-                                         g_at.status.gateway,
-                                         g_at.status.dns);
+            status_has_ipv4(&g_at.status)) {
+            config_netif_from_status_locked();
         }
     } else if (strcmp(line, "+CW:DISCONNECTED") == 0) {
         g_at.status.sta_state = NETHUB_WIFI_STA_DISCONNECTED;
-        clear_station_locked();
+        clear_station_and_netif_locked();
     } else if (strncmp(line, "+CW:ERROR,", 10) == 0) {
         g_at.last_wifi_reason = nethub_at_parse_wifi_error(line);
         g_at.status.sta_state = NETHUB_WIFI_STA_ERROR;
+        clear_station_and_netif_locked();
         if (g_at.op_type == AT_OP_CONNECT) {
             set_terminal_locked(map_wifi_reason(g_at.last_wifi_reason));
         }
@@ -197,11 +256,15 @@ static void handle_line_locked(const char *line)
             set_terminal_locked(map_cwjap_error(reason));
         } else {
             g_at.status.sta_state = NETHUB_WIFI_STA_DISCONNECTED;
-            clear_station_locked();
+            clear_station_and_netif_locked();
         }
     } else if (nethub_at_parse_cwjap(line, &g_at.status) == 0) {
-        if (g_at.op_type == AT_OP_CONNECT) {
-            set_terminal_locked(NETHUB_WIFI_OK);
+        g_at.status.sta_state = status_has_ipv4(&g_at.status) ?
+                                NETHUB_WIFI_STA_GOT_IP :
+                                NETHUB_WIFI_STA_CONNECTED;
+    } else if (nethub_at_parse_cipsta(line, &g_at.status) == 0) {
+        if (status_has_ipv4(&g_at.status)) {
+            g_at.status.sta_state = NETHUB_WIFI_STA_GOT_IP;
         }
     } else if (strcmp(line, "OK") == 0 && g_at.op_type == AT_OP_COMMAND) {
         set_terminal_locked(NETHUB_WIFI_OK);
@@ -212,8 +275,8 @@ static void handle_line_locked(const char *line)
     }
 
     if (g_at.op_type == AT_OP_CONNECT &&
-        (g_at.status.sta_state == NETHUB_WIFI_STA_CONNECTED ||
-         g_at.status.sta_state == NETHUB_WIFI_STA_GOT_IP)) {
+        g_at.status.sta_state == NETHUB_WIFI_STA_GOT_IP &&
+        status_has_ipv4(&g_at.status)) {
         set_terminal_locked(NETHUB_WIFI_OK);
     }
 
@@ -260,6 +323,8 @@ static void at_rx_cb(const uint8_t *data, size_t len, void *user_data)
 
 static void at_link_event_cb(nethub_wifi_link_state_t state, void *user_data)
 {
+    int clear_netif = 0;
+
     (void)user_data;
 
     pthread_mutex_lock(&g_at.lock);
@@ -267,12 +332,19 @@ static void at_link_event_cb(nethub_wifi_link_state_t state, void *user_data)
     if (state == NETHUB_WIFI_LINK_DOWN) {
         g_at.link_synced = 0;
         g_at.line_len = 0;
+        clear_station_locked();
+        g_at.status.sta_state = NETHUB_WIFI_STA_IDLE;
+        clear_netif = 1;
         if (g_at.op_type != AT_OP_NONE) {
             set_terminal_locked(NETHUB_WIFI_ERR_LINK_DOWN);
         }
     }
     pthread_cond_broadcast(&g_at.cond);
     pthread_mutex_unlock(&g_at.lock);
+
+    if (clear_netif) {
+        nethub_netif_clear_from_env();
+    }
 }
 
 static int send_line(const char *cmd)
@@ -371,6 +443,11 @@ static int ensure_link_synced_locked(void)
     pthread_mutex_unlock(&g_at.lock);
     if (!need_sync) {
         return NETHUB_WIFI_OK;
+    }
+
+    ret = nethub_ctrl_link_recover(AT_LINK_RECOVER_MS);
+    if (ret != NETHUB_WIFI_OK) {
+        return ret;
     }
 
     for (i = 0; i < 2; i++) {
@@ -673,8 +750,11 @@ static int send_connect_wait(const char *cmd, int timeout_ms)
     op_begin_locked(AT_OP_CONNECT);
     g_at.last_wifi_reason = 0;
     g_at.last_cwjap_error = 0;
+    clear_station_locked();
     g_at.status.sta_state = NETHUB_WIFI_STA_CONNECTING;
     pthread_mutex_unlock(&g_at.lock);
+
+    nethub_netif_clear_from_env();
 
     ret = send_line(cmd);
     if (ret != 0) {
@@ -754,18 +834,77 @@ static int at_escape_param(const char *src, size_t src_max_len, char *dst, size_
 static int proto_at_get_link_status(nethub_wifi_status_t *status)
 {
     nethub_wifi_link_state_t link_state = NETHUB_WIFI_LINK_DOWN;
+    int clear_netif = 0;
 
     nethub_ctrl_link_get_state(&link_state);
     pthread_mutex_lock(&g_at.lock);
-    if (link_state == NETHUB_WIFI_LINK_DOWN) {
-        g_at.link_synced = 0;
+    if (link_state == NETHUB_WIFI_LINK_DOWN || !g_at.link_synced) {
+        link_state = NETHUB_WIFI_LINK_DOWN;
+        if (g_at.status.ip[0] != '\0' ||
+            g_at.status.ssid[0] != '\0' ||
+            g_at.status.sta_state == NETHUB_WIFI_STA_CONNECTED ||
+            g_at.status.sta_state == NETHUB_WIFI_STA_GOT_IP) {
+            mark_control_down_locked();
+            clear_netif = 1;
+        }
+    } else {
+        g_at.status.link_state = link_state;
     }
     if (status) {
         *status = g_at.status;
         status->link_state = link_state;
     }
     pthread_mutex_unlock(&g_at.lock);
+    if (clear_netif) {
+        nethub_netif_clear_from_env();
+    }
     return 0;
+}
+
+static int sync_sta_status(void)
+{
+    int ret;
+
+    pthread_mutex_lock(&g_at.lock);
+    clear_station_locked();
+    g_at.status.sta_state = NETHUB_WIFI_STA_IDLE;
+    pthread_mutex_unlock(&g_at.lock);
+
+    ret = send_cmd_wait("AT+CWJAP?", 2000, NULL, 0);
+    if (ret != 0) {
+        pthread_mutex_lock(&g_at.lock);
+        mark_control_down_locked();
+        clear_station_and_netif_locked();
+        pthread_mutex_unlock(&g_at.lock);
+        return ret;
+    }
+
+    pthread_mutex_lock(&g_at.lock);
+    if (g_at.status.sta_state != NETHUB_WIFI_STA_CONNECTED &&
+        g_at.status.sta_state != NETHUB_WIFI_STA_GOT_IP) {
+        clear_station_and_netif_locked();
+        pthread_mutex_unlock(&g_at.lock);
+        return NETHUB_WIFI_OK;
+    }
+    clear_ipv4_locked();
+    pthread_mutex_unlock(&g_at.lock);
+
+    ret = send_cmd_wait("AT+CIPSTA?", 2000, NULL, 0);
+    pthread_mutex_lock(&g_at.lock);
+    if (ret != 0) {
+        mark_control_down_locked();
+        clear_station_and_netif_locked();
+    } else if (!status_has_ipv4(&g_at.status)) {
+        clear_ipv4_and_netif_locked();
+        if (g_at.status.sta_state == NETHUB_WIFI_STA_GOT_IP) {
+            g_at.status.sta_state = NETHUB_WIFI_STA_CONNECTED;
+        }
+    } else {
+        g_at.status.sta_state = NETHUB_WIFI_STA_GOT_IP;
+        config_netif_from_status_locked();
+    }
+    pthread_mutex_unlock(&g_at.lock);
+    return ret;
 }
 
 static int proto_at_init(void)
@@ -801,6 +940,7 @@ static int proto_at_init(void)
     g_at.link_synced = 1;
     g_at.status.link_state = NETHUB_WIFI_LINK_UP;
     pthread_mutex_unlock(&g_at.lock);
+    (void)sync_sta_status();
     return 0;
 }
 
@@ -816,12 +956,28 @@ static void proto_at_deinit(void)
 
 static int proto_at_get_status(nethub_wifi_status_t *status)
 {
+    int ret = NETHUB_WIFI_OK;
+
     if (!status) {
         return NETHUB_WIFI_ERR_INVALID_PARAM;
     }
 
     if (nethub_ctrl_link_get_state(&status->link_state) == 0 && status->link_state == NETHUB_WIFI_LINK_UP) {
-        (void)send_cmd_wait("AT+CWJAP?", 1000, NULL, 0);
+        ret = sync_sta_status();
+    } else {
+        pthread_mutex_lock(&g_at.op_mutex);
+        ret = ensure_link_synced_locked();
+        pthread_mutex_unlock(&g_at.op_mutex);
+        if (ret == NETHUB_WIFI_OK) {
+            ret = sync_sta_status();
+        }
+    }
+
+    if (ret != NETHUB_WIFI_OK) {
+        pthread_mutex_lock(&g_at.lock);
+        mark_control_down_locked();
+        pthread_mutex_unlock(&g_at.lock);
+        nethub_netif_clear_from_env();
     }
 
     return proto_at_get_link_status(status);
@@ -903,7 +1059,10 @@ static int proto_at_sta_connect(const nethub_wifi_sta_config_t *cfg, int timeout
         return ret;
     }
 
-    (void)send_cmd_wait("AT+CWJAP?", 2000, NULL, 0);
+    ret = sync_sta_status();
+    if (ret != 0) {
+        return ret;
+    }
     pthread_mutex_lock(&g_at.lock);
     g_at.status.mode = NETHUB_WIFI_MODE_STA;
     if (g_at.status.sta_state == NETHUB_WIFI_STA_CONNECTING) {

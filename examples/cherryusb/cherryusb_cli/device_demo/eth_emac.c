@@ -151,7 +151,7 @@ int eth_emac_init(void)
     int ret;
 
     /* emac init */
-    emac0 = bflb_device_get_by_name("emac0");
+    emac0 = bsp_emac_get_device(BSP_EMAC_RMII_DEFAULT_PORT);
     if (emac0 == NULL) {
         LOG_E("device_get error\r\n");
         return -1;
@@ -161,7 +161,13 @@ int eth_emac_init(void)
     // bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_PROMISCUOUS, false);
 
     /* scan eth_phy */
-    ret = eth_phy_scan(&phy_ctrl, EPHY_ADDR_MIN, EPHY_ADDR_MAX);
+    phy_ctrl.mac_mdio_dev = bsp_emac_get_device(BSP_EMAC_MDIO_DEFAULT_PORT);
+    if (phy_ctrl.mac_mdio_dev == NULL) {
+        LOG_E("mdio device_get error\r\n");
+        return -1;
+    }
+
+    ret = eth_phy_scan(&phy_ctrl, BSP_EMAC_PHY_DEFAULT_SCAN_START, BSP_EMAC_PHY_DEFAULT_SCAN_END);
     if (ret < 0) {
         return -2;
     }

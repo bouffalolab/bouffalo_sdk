@@ -375,44 +375,6 @@ void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group)
  * @return None
  *
 *******************************************************************************/
-void Tzc_Sec_ROM_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
-{
-    uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
-
-    /* check the parameter */
-    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
-    if (region >= 3 || group > TZC_SEC_MAX_AUTH_GRP) {
-        return;
-    }
-    group = 1 << (group);
-
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL);
-    tmpVal &= (~(0xf << (region * 4)));
-    tmpVal |= (group << (region * 4));
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL, tmpVal);
-
-    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
-    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_ROM_TZSRG_R0_OFFSET + region * 4, tmpVal);
-
-    /* set enable and lock */
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL);
-    tmpVal |= 1 << (region + 16);
-    tmpVal |= 1 << (region + 24);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL, tmpVal);
-}
-
-/****************************************************************************/ /**
- * @brief  TrustZone Security set ROM region access configuration
- *
- * @param  region: ROM region index 0-2
- * @param  startAddr: ROM region start address
- * @param  length: ROM region end length
- * @param  group: ROM region auth group type
- *
- * @return None
- *
-*******************************************************************************/
 void Tzc_Sec_ROM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
@@ -791,53 +753,6 @@ void Tzc_Sec_Mini_Ram_Access_Set_Regionx(uint8_t group)
 }
 
 /****************************************************************************/ /**
- * @brief  TrustZone Security set Flash region access configuration
- *
- * @param  region: Flash region index 0-2
- * @param  startAddr: Flash region start address
- * @param  length: Flash region end length
- * @param  group: Flash region auth group type
- *
- * @return None
- *
-*******************************************************************************/
-void Tzc_Sec_Flash_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
-{
-    uint32_t tmpVal = 0;
-    uint32_t tmpVal2 = 0;
-    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
-
-    /* check the parameter */
-    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
-    if (region >= 3 || group > TZC_SEC_MAX_AUTH_GRP) {
-        return;
-    }
-    group = 1 << (group);
-
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL);
-    tmpVal &= (~(0xf << (region * 4)));
-    tmpVal |= (group << (region * 4));
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL, tmpVal);
-
-    /* Set range */
-    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
-    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_SF_TZSRG_R0_OFFSET + region * 4, tmpVal);
-
-    /* Set range MSB */
-    tmpVal = BL_RD_WORD(TZC_SEC_BASE + TZC_SEC_TZC_SF_TZSRG_MSB_OFFSET);
-    tmpVal = tmpVal & (0xff << (8 * region));
-    tmpVal2 = ((alignEnd >> 26) & 0x7) | (((startAddr >> 26) & 0x7) << 3);
-    tmpVal2 = tmpVal2 << (8 * region);
-    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_SF_TZSRG_MSB_OFFSET, tmpVal | tmpVal2);
-
-    /* set enable and lock */
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL);
-    tmpVal |= 1 << (region + 20);
-    tmpVal |= 1 << (region + 25);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL, tmpVal);
-}
-
-/****************************************************************************/ /**
  * @brief  TrustZone Security set Flash regionx access configuration
  *
  * @param  group: Flash region auth group type
@@ -914,44 +829,6 @@ void Tzc_Sec_Flash_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32
     tmpVal |= 1 << (region + 20);
     tmpVal |= 1 << (region + 25);
     BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL, tmpVal);
-}
-
-/****************************************************************************/ /**
- * @brief  TrustZone Security set PSRAMB region access configuration
- *
- * @param  region: PSRAMB region index 0-2
- * @param  startAddr: PSRAMB region start address
- * @param  length: PSRAMB region end length
- * @param  group: PSRAMB region auth group type
- *
- * @return None
- *
-*******************************************************************************/
-void Tzc_Sec_PSRAMB_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
-{
-    uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
-
-    /* check the parameter */
-    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
-    if (region >= 3 || group > TZC_SEC_MAX_AUTH_GRP) {
-        return;
-    }
-    group = 1 << (group);
-
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_PSRAMB_TZSRG_CTRL);
-    tmpVal &= (~(0xf << (region * 4)));
-    tmpVal |= (group << (region * 4));
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_PSRAMB_TZSRG_CTRL, tmpVal);
-
-    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
-    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_PSRAMB_TZSRG_R0_OFFSET + region * 4, tmpVal);
-
-    /* set enable and lock */
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_PSRAMB_TZSRG_CTRL);
-    tmpVal |= 1 << (region + 16);
-    tmpVal |= 1 << (region + 24);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_PSRAMB_TZSRG_CTRL, tmpVal);
 }
 
 /**

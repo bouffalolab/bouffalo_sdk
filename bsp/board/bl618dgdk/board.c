@@ -155,8 +155,7 @@ static void __attribute__((unused)) peripheral_clock_init(void)
         GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_XCLK);
         GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
         GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SINGLE_END);
-        GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK,
-                       bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0) / 2000000 - 1);
+        GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, bflb_clk_get_system_clock(BFLB_SYSTEM_XCLK) / 2000000 - 1);
         GLB_Set_CAM_REF_CLK(ENABLE, GLB_CAM_REF_CLK_WIFIPLL_96M, 3);
         GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_BCLK, 0);
         GLB_Set_Display_CLK(ENABLE, GLB_DP_CLK_WIFIPLL_96M, 3);
@@ -740,7 +739,7 @@ void board_init(void)
 void board_init(void)
 {
     CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK,
-                       Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
+                       Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MINI_XCLK) / 1000000 - 1);
 
     bflb_irq_initialize();
 

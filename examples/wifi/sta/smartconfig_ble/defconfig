@@ -29,9 +29,5 @@ ifeq ($(filter $(CHIP),bl616 bl616cl),)
     CONFIG_COEX                =y
 endif
 
-ifeq ($(CHIP),bl618dg)
-CONFIG_OVERRIDE_PTFILE =partition_cfg_4M.toml
-endif
-
 CONFIG_BFLB_BLESYNC=y
 

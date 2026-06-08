@@ -9,6 +9,7 @@ int nethub_netif_config_from_env(const char *ip,
                                  const char *netmask,
                                  const char *gateway,
                                  const char *dns);
+int nethub_netif_clear_from_env(void);
 
 #ifdef __cplusplus
 }

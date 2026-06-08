@@ -49,8 +49,37 @@ static int cmd_nethub(int argc, char **argv)
 {
     nethub_runtime_status_t status;
 
-    (void)argc;
-    (void)argv;
+    if (argc >= 2) {
+        if (strcmp(argv[1], "host") == 0) {
+            nethub_channel_t host_link;
+            int ret;
+
+            if (argc != 3) {
+                printf("Usage: nethub host <sdio|usb|spi>\n");
+                return -1;
+            }
+
+            if (strcmp(argv[2], "sdio") == 0) {
+                host_link = NETHUB_CHANNEL_SDIO;
+            } else if (strcmp(argv[2], "usb") == 0) {
+                host_link = NETHUB_CHANNEL_USB;
+            } else if (strcmp(argv[2], "spi") == 0) {
+                host_link = NETHUB_CHANNEL_SPI;
+            } else {
+                printf("Invalid host link: %s\n", argv[2]);
+                return -1;
+            }
+
+            ret = nethub_set_active_host_link(host_link);
+            if (ret != NETHUB_OK) {
+                printf("set host link failed: %d\n", ret);
+                return -1;
+            }
+        } else if (strcmp(argv[1], "status") != 0) {
+            printf("Usage: nethub [status|host <sdio|usb|spi>]\n");
+            return -1;
+        }
+    }
 
     if (nethub_get_status(&status) != NETHUB_OK) {
         return -1;
@@ -66,9 +95,9 @@ static int cmd_nethub(int argc, char **argv)
     return 0;
 }
 
-SHELL_CMD_EXPORT_ALIAS(cmd_nethub, nethub, nethub status);
+SHELL_CMD_EXPORT_ALIAS(cmd_nethub, nethub, nethub status|host <sdio|usb|spi>);
 
-#if !CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE
+#if !defined(CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE) || !CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE
 static void cmd_nethub_set_wifi_channel(int argc, char **argv)
 {
     if (argc < 2 || argv[1] == NULL) {

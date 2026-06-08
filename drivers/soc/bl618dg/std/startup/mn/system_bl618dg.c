@@ -275,6 +275,17 @@ void SystemInit(void)
 
     /* halt mini cpu as default */    
     *(volatile uint32_t *)0x20000548 |= (1 << 3);
+    
+    /* clear NP interrupt status and mask all NP2MINI interrupt sources */
+    *(volatile uint32_t *)0x20000060 = 0xFFFFFFFF;
+    *(volatile uint32_t *)0x20000064 = 0xFFFFFFFF;
+    *(volatile uint32_t *)0x20000068 = 0xFFFFFFFF;
+    *(volatile uint32_t *)0x2000006C = 0xFFFFFFFF;
+
+    /* disable boot debug pull on GPIO1 after boot is complete */
+    uint32_t reg_val = *(volatile uint32_t *)0x2008F014;
+    reg_val &= ~(1 << 16);
+    *(volatile uint32_t *)0x2008F014 = reg_val;
 
 }
 

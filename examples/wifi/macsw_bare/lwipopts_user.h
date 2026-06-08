@@ -121,9 +121,6 @@ static inline void *_lwip_calloc(size_t count, size_t size)
 #define LWIP_WND_SCALE                1
 #define TCP_RCV_SCALE                 2
 #define TCP_SNDLOWAT                  LWIP_MIN(LWIP_MAX(((TCP_SND_BUF) / 4), (2 * TCP_MSS) + 1), (TCP_SND_BUF)-1)
-
-#define MEM_MIN_TCP                   (2300 + MEMP_NUM_PBUF * (100 + PBUF_LINK_ENCAPSULATION_HLEN))
-#define MEM_MIN                       MEM_MIN_TCP
 #define MEM_ALIGNMENT                 4
 
 #define LWIP_RAW                  1

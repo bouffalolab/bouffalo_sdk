@@ -1,153 +1,95 @@
 # NetHub Architecture
 
-This document summarizes the current NetHub architecture across the device-side module, the optional host control stack, and the current support boundaries.
-
-## 1. High-Level Model
-
-NetHub runs on the device and bridges already-available Wi-Fi capability onto one selected host interface.
+NetHub runs on the device and bridges the device-side Wi-Fi function to one
+selected host interface.
 
 ![NetHub Architecture Overview](https://docs.bouffalolab.com/images/d/d1/Nethub_arch.gif)
 
 ```text
+Host
+  |
+  | SDIO or USB
+  v
+NetHub host interface backend
+  |
+  v
+NetHub core
+  |
+  v
 Wi-Fi backend + lwIP
-       |
-       v
-     nethub
-  +-----------+
-  | data-path |
-  | filter    |
-  | ctrlpath  |
-  | vchan     |
-  +-----------+
-       |
-       v
-host interface
-(SDIO / USB / SPI)
 ```
 
-Important boundary:
+## 1. Interface Model
 
-- `nethub` core does not directly depend on `ATModule`
-- `ATModule` is an optional example consumer of the NetHub control path
+NetHub uses build-time interface selection. Select one interface in one firmware
+build.
 
-## 2. Current Support Matrix
-
-| Area | SDIO | USB | SPI |
+| Interface | Network data path | Control channel | USER virtual channel |
 | --- | --- | --- | --- |
-| Device-side interface backend | yes | yes | yes |
-| Device-side data-path | yes | yes, through `USB ECM` | no |
-| Device-side control transport plumbing | yes | yes, through `USB ACM` | no |
-| Current in-tree host Linux stack | yes | not yet the main host path | no |
-| End-to-end USER virtual channel | yes | not yet aligned in-tree | no |
-| Default interface today | yes | no | no |
+| `SDIO` | Supported | Supported | Supported |
+| `USB` | Supported through ECM | Supported through ACM | TODO |
+| `SPI` | TODO | TODO | TODO |
 
-## 3. Device-Side Layers
+For per-chip status and low-power support, see
+[NetHub.md](NetHub.md), "Current Support Matrix".
 
-Public headers:
+## 2. Main Blocks
 
-- `components/net/nethub/include/nethub.h`
-- `components/net/nethub/include/nethub_vchan.h`
-- `components/net/nethub/include/nethub_filter.h`
+| Block | Role |
+| --- | --- |
+| NetHub core | lifecycle, active Wi-Fi endpoint, data routing, control facade, virtual channel facade |
+| Host interface backend | SDIO or USB transport implementation |
+| Wi-Fi backend | device-side Wi-Fi connection and packet handling |
+| Optional control module | customer or example control flow carried over the selected interface |
 
-Internal layers:
+## 3. Data Path
 
-- `bootstrap/`
-- `core/`
-- `profile/`
-- `backend/wifi/`
-- `backend/host/sdio/`
-- `backend/host/usb/`
-- `backend/host/spi/`
-
-Main public APIs:
-
-- `nethub_bootstrap()`
-- `nethub_shutdown()`
-- `nethub_get_status()`
-- `nethub_set_active_wifi_channel()`
-- `nethub_ctrl_upld_send()`
-- `nethub_ctrl_dnld_register()`
-- `nethub_vchan_user_send()`
-- `nethub_vchan_user_recv_register()`
-- `nethub_set_wifi_rx_filter()`
-
-## 4. Data-Path
-
-The data-path is the main NetHub function.
+The data path forwards packets between the host interface and the active Wi-Fi
+endpoint.
 
 ```text
-host payload -> host interface backend -> nethub -> active Wi-Fi endpoint
-Wi-Fi RX     -> nethub filter     -> local / host / both
+host packet -> NetHub -> Wi-Fi
+Wi-Fi packet -> NetHub -> host
 ```
 
-Device-side Wi-Fi is already owned by the Wi-Fi backend. NetHub mainly wires the selected host interface to that Wi-Fi backend.
+The default Wi-Fi RX policy handles common local packets on the device and
+forwards host traffic as required by the NetHub profile.
 
-## 5. Control Path
+## 4. Control Path
 
-NetHub exposes a stable control path facade:
+NetHub provides a control facade for software that needs a control channel
+between host and device.
 
-```c
-int nethub_ctrl_upld_send(uint8_t *data_buff, uint32_t data_size);
-int nethub_ctrl_dnld_register(nethub_ctrl_rx_cb_t dnld_cb, void *cbpri_arg);
-```
+The example configuration can use an AT-based control channel:
 
-That facade is implemented per interface.
+| Setting | Behavior |
+| --- | --- |
+| `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y` | enable the example AT control channel |
+| `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n` | build without the example AT control channel |
 
-Current interpretation:
+When the example AT control channel is disabled, the NetHub data path still
+exists. Product software must provide any required private control flow.
 
-- `SDIO`: implemented in-tree
-- `USB`: device-side ACM transport plumbing implemented
-- `SPI`: not implemented
+## 5. Virtual Channel
 
-Main build-time switches related to this area:
+Virtual channels carry message-style payloads over the active host interface.
 
-- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=y`
-  - the example enables `ATModule` plus host `bflbwifid / bflbwifictrl`
-- `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n`
-  - `ATModule` does not participate in the build
+| Type | Purpose |
+| --- | --- |
+| `AT` | control payloads |
+| `USER` | customer application messages |
 
-`CONFIG_NETHUB_AT_USE_VCHAN` should be documented carefully as an example or legacy SDIO-specific control path convention, not as a finished transport-wide selector.
+See [NetHubVirtualChannel.md](NetHubVirtualChannel.md) for USER channel scope
+and APIs.
 
-## 6. Virtual Channel
+## 6. Low Power
 
-NetHub also exposes a logical virtual channel layer for message-style traffic such as `USER`, `AT`, and internal coordination payloads.
+Low-power support is platform-limited.
 
-Architecture role:
+| Chip | NetHub low power |
+| --- | --- |
+| `BL616` | Supported |
+| `BL616CL` | TODO |
+| `BL618DG` | TODO |
 
-- device side uses `components/net/nethub/include/nethub_vchan.h`
-- host side uses `bsp/common/msg_router/linux_host/userspace/nethub/virtualchan/nethub_vchan.h`
-- the API is intentionally transport-neutral across host interfaces
-
-Current implementation boundary:
-
-- the current in-tree end-to-end USER virtual channel path follows the default `SDIO` interface
-- the device-side implementation is still centered on the SDIO backend
-- the host userspace `nethub_vchan` library is also SDIO-based today
-- USB device-side ACM transport exists, but the host-side wrapper is not yet aligned as a finished end-to-end virtual channel path
-
-For prerequisites, detailed APIs, usage order, and limits, read [NetHubVirtualChannel.md](NetHubVirtualChannel.md).
-
-## 7. Host-Side Optional Stack
-
-When the optional AT control solution is used, the typical host-side stack is:
-
-```text
-bflbwifictrl -> bflbwifid -> libbflbwifi -> tty or vchan backend
-```
-
-Notes:
-
-- this stack is not mandatory for NetHub data-path-only products
-- the in-tree host Linux stack is still centered on the SDIO path
-
-## 8. Low-Power Scope
-
-Current low-power support is `BL618DG` only.
-
-The example configuration automatically disables `CONFIG_NETHUB_LOWPOWER_ENABLE` on other chips.
-
-## 9. Recommended Reading
-
-- [NetHub.md](NetHub.md)
-- [NetHubQuickBringup.md](NetHubQuickBringup.md)
-- [NetHubVirtualChannel.md](NetHubVirtualChannel.md)
+Keep `CONFIG_NETHUB_LOWPOWER_ENABLE=n` for platforms marked `TODO`.

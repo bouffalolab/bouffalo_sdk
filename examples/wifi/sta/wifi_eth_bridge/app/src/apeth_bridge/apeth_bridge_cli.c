@@ -133,7 +133,8 @@ int app_emac_init(void)
     emac_config_t cfg;
 
     /* Emac gpio init */
-    board_emac_gpio_init();
+    board_emac_rmii_gpio_init(BSP_EMAC_RMII_DEFAULT_PORT);
+    board_emac_mdio_gpio_init(BSP_EMAC_MDIO_DEFAULT_PORT);
     LOG_I("EMAC GPIO init OK!\r\n");
 
     platform_get_mac(cfg.mac_addr);

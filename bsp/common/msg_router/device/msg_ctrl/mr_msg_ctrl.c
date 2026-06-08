@@ -81,6 +81,22 @@ int mr_msg_host_reset_cb(mr_msg_ctrl_priv_t *msg_ctrl)
 }
 
 /**
+ * @brief Drop pending upload frames waiting for hardware transmission
+ * @details Used when the host link resets before queued upload frames can be
+ *          sent. Frames are returned to their owner pool so stale data is not
+ *          transmitted after the next host/device handshake.
+ * @param[in] msg_ctrl Message controller instance
+ */
+static void msg_ctrl_flush_upld_wait_queue(mr_msg_ctrl_priv_t *msg_ctrl)
+{
+    mr_frame_elem_t *frame_elem;
+
+    while (mr_frame_queue_receive(msg_ctrl->upld_wait_queue, &frame_elem, 0) == 0) {
+        mr_frame_queue_free_elem(frame_elem);
+    }
+}
+
+/**
  * @brief Upload send complete interrupt callback
  * @param msg_ctrl Message controller instance
  * @param frame_elem Frame element that was sent
@@ -321,6 +337,7 @@ wait_ready:
             LOG_W("%s processing reset request \r\n", msg_ctrl->cfg.dev_ops->name);
 
             /* Call application layer reset callbacks */
+            msg_ctrl_flush_upld_wait_queue(msg_ctrl);
             for (int i = 0; i < MR_MSG_TAG_MAX; i++) {
                 if (msg_ctrl->mr_msg_hw_reset_cb[i] != NULL) {
                     msg_ctrl->mr_msg_hw_reset_cb[i](NULL, msg_ctrl->mr_msg_hw_reset_arg[i]);

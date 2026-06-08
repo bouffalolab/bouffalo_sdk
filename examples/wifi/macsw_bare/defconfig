@@ -3,7 +3,7 @@
 # Components
 CONFIG_BFLB_LOG          =n
 CONFIG_FREERTOS          =y
-CONFIG_POSIX             =y
+CONFIG_POSIX             =n
 CONFIG_TLSF              =y
 CONFIG_SHELL             =y
 CONFIG_LWIP              =y
@@ -37,6 +37,23 @@ CONFIG_MACSW_SELECT                  = default
 ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI            =n
     CONFIG_DUALCORE_DISABLE  =y
-    CONFIG_WRAM_FOR_AP_SIZE   = 0x50000
-    CONFIG_RAM_FOR_AP_SIZE    = 0x50000
+endif
+
+# CONFIG_GCOV_DUMP          =y
+
+ifeq ($(CONFIG_GCOV_DUMP),y)
+    # Use LittleFS on Flash instead of FATFS on PSRAM
+    CONFIG_LITTLEFS = y
+    CONFIG_BFLB_MTD = y
+    CONFIG_PARTITION = y
+    CONFIG_SHELL_THREAD_STACK_SIZE = 2048
+
+    # HTTP client support for upload command
+    CONFIG_HTTP=y
+    CONFIG_HTTP_CLIENT=y
+
+    # Enable PSRAM only for GCOV sections; do not expose it as system heap.
+    CONFIG_PSRAM = y
+    CONFIG_PSRAM_SKIP_REGISTER_HEAP = y
+    CONFIG_OVERRIDE_PTFILE = media_8M_flash.toml
 endif

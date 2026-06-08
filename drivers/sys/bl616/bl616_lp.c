@@ -1064,7 +1064,7 @@ int bl_lp_init(void)
 {
     bl_lp_env_init();
 
-#if defined(CFG_BL_WIFI_PS_ENABLE)
+#if defined(CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW)
     bl_lp_fw_init();
 #endif
 

@@ -55,10 +55,16 @@ static const uint8_t* get_cfi_table_base(void)
         if (memcmp(desc->name, "DWARFCFI", 8) == 0) {
             /* Convert firmware-relative offset to XIP mapped address */
             uint32_t cfi_flash_addr = desc->start_addr;
-#ifdef BL616
+#if defined(BL616)
             uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0xA0000000;
-#elif defined(BL618DG)
+#elif defined(BL616CL)
             uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0x80000000;
+#elif defined(BL618DG) && defined(CPU_MODEL_B0)
+            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0xB0000000;
+#elif defined(BL618DG) && defined(CPU_MODEL_A0)
+            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0x80000000;
+#elif defined(BL602) || defined(BL702) || defined(BL702L)
+            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0x23000000;
 #endif
             return (const uint8_t*)cfi_xip_addr;
         }

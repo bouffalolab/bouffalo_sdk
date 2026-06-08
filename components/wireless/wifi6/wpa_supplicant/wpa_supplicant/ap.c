@@ -1707,6 +1707,10 @@ int ap_switch_channel(struct wpa_supplicant *wpa_s,
 	else if (wpa_s->ifmsh)
 		iface = wpa_s->ifmsh;
 
+	wpa_printf(MSG_INFO, "CSA: ap_switch_channel ap_iface=%p ifmsh=%p iface=%p bss0=%p",
+		   wpa_s->ap_iface, wpa_s->ifmsh, iface,
+		   iface ? iface->bss[0] : NULL);
+
 	if (!iface || !iface->bss[0])
 		return -1;
 
@@ -1722,6 +1726,8 @@ int ap_ctrl_iface_chanswitch(struct wpa_supplicant *wpa_s, const char *pos)
 {
 	struct csa_settings settings;
 	int ret = hostapd_parse_csa_settings(pos, &settings);
+
+	wpa_printf(MSG_INFO, "CSA: chanswitch pos='%s' parse_ret=%d", pos, ret);
 
 	if (ret)
 		return ret;

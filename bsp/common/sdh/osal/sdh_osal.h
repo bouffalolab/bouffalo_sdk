@@ -34,4 +34,21 @@ int sdh_osal_semb_take(void *semb, uint32_t timeout_ms);
 int sdh_osal_semb_give(void *semb);
 #endif
 
+/* Recursive mutex: same task can take it multiple times without deadlock.
+ * Semantics aligned with Linux sdio_claim_host / mmc_claim_host. */
+void *sdh_osal_rmutex_create(void);
+int sdh_osal_rmutex_delete(void *rmutex);
+int sdh_osal_rmutex_take(void *rmutex);
+int sdh_osal_rmutex_give(void *rmutex);
+
+/* Task adaptation. Only available when an RTOS is present. */
+typedef void (*sdh_osal_task_entry_t)(void *arg);
+void *sdh_osal_task_create(const char *name,
+                           sdh_osal_task_entry_t entry,
+                           void *arg,
+                           uint32_t stack_size,
+                           uint32_t priority);
+int sdh_osal_task_delete(void *task);
+void sdh_osal_task_exit_self(void);
+
 #endif

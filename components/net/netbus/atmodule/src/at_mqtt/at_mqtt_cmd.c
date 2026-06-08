@@ -1057,7 +1057,7 @@ static int at_setup_cmd_mqttpub(int argc, const char **argv)
     }
 
     if (retain) {
-        publish_flags |= MQTT_CONNECT_WILL_RETAIN;
+        publish_flags |= MQTT_PUBLISH_RETAIN;
     }
    
     if (mqtt_publish(&g_at_mqtt[linkid].client, (const char *)topic_name, msg, strlen(msg), publish_flags) != MQTT_OK) {
@@ -1110,7 +1110,7 @@ static int at_setup_cmd_mqttpubraw(int argc, const char **argv)
     }
 
     if (retain) {
-        publish_flags |= MQTT_CONNECT_WILL_RETAIN;
+        publish_flags |= MQTT_PUBLISH_RETAIN;
     }
  
     buffer = at_malloc(length + 1);

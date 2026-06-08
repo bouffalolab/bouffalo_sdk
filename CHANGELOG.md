@@ -1,5 +1,151 @@
 # CHANGELOG
 
+## v2.3.27 — since v2.3.26 (2026-05-16 → 2026-06-07)
+
+### New Features
+
+- **BL618DG (B0 Silicon)**
+  - Set default RAM size to maximum
+  - Added GDB memory map support
+  - Added SDIO3 low-power example
+  - Improved SDIO recovery after host reload and low-power resume
+  - Added audio PLL rate configuration for various sample rates
+  - Added CPU PLL VCO frequencies 632.2176 MHz and 638.976 MHz
+  - Added Bluetooth compilation and initialization support
+
+- **BL616CL**
+  - Added DCDC low power configuration support
+  - Added low-power support in uart_wifi example
+  - Updated PhyRF library
+
+- **BL602**
+  - Added MFG command support
+
+- **Bluetooth / BLE**
+  - Added AutoPTS support for BL618DG and BL616CL
+
+- **WiFi**
+  - Migrated buffer-related configurations to the configuration layer
+  - Added CSA channel switch support
+  - Added gcov code coverage dump support
+  - PMK cache now compiled only for WFA builds (reduced code size)
+
+- **Network**
+  - Added DHCPD trace logging
+  - Added netbus USB low-power support with SDIO/USB switching
+  - Added nethub SDIO recovery after host reload and low-power resume
+
+- **Audio**
+  - Added `wave_player_set_record_pga` API
+
+- **Peripherals**
+  - Added CPU privilege mode support
+  - Added SDH (SD Host) API
+  - Added GPIO-based IPC performance measurement
+  - Added RMII and MDIO port configuration from Makefile
+
+- **Thread**
+  - Added API to set Thread instance
+
+- **Build System / Core**
+  - Added gcov code coverage dump support
+  - Added shell auto-list (tab-completion) support
+  - Added rodata and text segment PMP alignment support
+
+- **Tools**
+  - Updated fw_post_proc to v1.4.3
+
+### Bug Fixes
+
+- **BL618DG (B0 Silicon)**
+  - Fixed CPU LP mtimer issue on B0 silicon
+  - Fixed flash margin adjustment at 80 MHz operation
+  - Fixed LP firmware RAM address
+  - Fixed LP core ID configuration
+  - Fixed LP level2 IRQ handling
+  - Fixed SPI3 clock domain to use MINI clock
+  - Fixed eFUSE region1 programming and common trim offsets
+  - Fixed arch_delay inaccuracy on B0 silicon
+  - Fixed startup GPIO1 boot debug pull, now released after boot
+  - Fixed smartconfigble support
+  - Fixed low-power handling for nethub
+  - Removed stale temporary partition file from btble_cli
+  - Fixed 5G and Bluetooth coexistence issue
+  - Updated Bluetooth hardware adaptation for B0 silicon
+
+- **BL616CL**
+  - Fixed missing headers in BTBLE examples
+  - Updated PhyRF library
+
+- **WiFi**
+  - Fixed LD section synchronization and AMSDU bit alignment with driver
+  - Fixed buffer config macro definitions for static array sizing in wl80211
+  - Fixed disabled FTM task dispatch
+  - Fixed RX workqueue CPU time usage for USB
+  - Fixed race condition in URB resubmission paths
+  - Fixed MP command expected response handling
+  - Fixed BTSDU data port handling, added dump capability
+  - Added SDIO interrupt polling fallback
+  - Fixed BTSDU write done priority
+  - Fixed cache line size alignment to use BFLB_CACHE_LINE_SIZE
+  - Fixed weak function attribute usage in WLAN driver
+  - Fixed WLAN driver compilation on kernel 3.x
+  - Fixed firmware array weak linking to prevent xxd overwrite
+  - Added BLMP full command set support
+
+- **Bluetooth / BLE**
+  - Fixed redundant unref on directed advertising
+  - Fixed GATT server buffer heap overflow
+  - Hardened BR/EDR profile receive paths and fixed latent bugs
+  - Fixed feature macros and BR/EDR CLI/SPP bugs on BL618DG and BL616CL
+  - Fixed stale pending advertising data not discarded on advertising stop
+  - Temporarily switched RF path to combo mode for BL618DG
+
+- **Low Power**
+  - Optimized and refactored low-power configurations and macros across multiple modules
+  - Removed useless LP firmware mstatus FS bit enable
+  - Fixed L1C API to provide default value for low-power mode
+
+- **Peripherals**
+  - Fixed PTP message type shift error
+  - Fixed UART de-glitch causing abnormal RX FIFO data
+  - Added DMA burst limit checks and BL618DG DMA1 64-bit width support
+  - Fixed eFUSE region1 programming
+  - Fixed local common trim read/write on BL618DG
+  - Fixed LHAL ROMAPI patch enable when CONFIG_ROMAPI is set
+
+- **Network**
+  - Fixed MQTT publish retain flag to use correct constant
+  - Fixed AT module compile error in CI test
+  - Added uart recovery support in AT module
+
+- **Build System / Core**
+  - Fixed ELF overlap in coredump data restoration
+  - Fixed coredump.py handling of missing sections
+  - Fixed mtvec address alignment to 2^8
+  - Fixed LD script sequence for PSRAM, nocache_ram, RAM, and WRAM
+  - Fixed IR clock setting bug
+  - Merged POSIX n900 and normal libraries
+  - Fixed backtrace support for all chips, fixed Python 3.6 compatibility
+  - Fixed FreeRTOS POSIX warnings
+
+- **Zigbee**
+  - Enhanced minimum free heap protection
+  - Fixed general command response handling in OTA server
+
+- **Thread**
+  - Skipped OpenThread logging source for Matter configuration
+
+### Improvements
+
+- Refactored low-power configurations and macros across multiple components
+- Updated FreeRTOS POSIX for new compiler warnings
+- Updated LD file for MFG RAM version
+- Removed unused code in LWIP
+- Updated BL616CL HToL test firmware
+- Updated BL618DG toolchain documentation
+- Updated board audio PLL configuration for BL618DG
+
 ## v2.3.26 — since v2.3.25 (2026-05-11 → 2026-05-16)
 
 ### New Features

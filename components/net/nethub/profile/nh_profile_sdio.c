@@ -11,7 +11,7 @@ static const nh_profile_t g_sdio_bridge_profile = {
         .default_action = NH_PROFILE_BUILTIN_WIFI_RX_DEFAULT_ACTION,
     },
     .host_endpoint_ops = &nhsdio_ops,
-    .ctrlpath_ops = &nhsdio_ctrlpath_ops,
+    .vchan_ops = &nhsdio_vchan_ops,
 };
 
 const nh_profile_t *nh_profile_sdio_get(void)

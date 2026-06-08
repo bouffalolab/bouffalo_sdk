@@ -33,10 +33,10 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
-#include "fcntl.h"
+#include "FreeRTOS_POSIX/errno.h"
+#include "FreeRTOS_POSIX/fcntl.h"
 #include "FreeRTOS_POSIX/mqueue.h"
-#include "FreeRTOS_POSIX/posix_utils.h"
+#include "FreeRTOS_POSIX/utils.h"
 
 /**
  * @brief Element of the FreeRTOS queues that store mq data.
@@ -440,7 +440,11 @@ int mq_close( mqd_t mqdes )
     else
     {
         /* Queue not found; bad descriptor. */
-        errno = EBADF;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EBADF;
+        }
+        #endif
         iStatus = -1;
     }
 
@@ -479,7 +483,11 @@ int mq_getattr( mqd_t mqdes,
     else
     {
         /* Queue not found; bad descriptor. */
-        errno = EBADF;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EBADF;
+        }
+        #endif
         iStatus = -1;
     }
 
@@ -518,7 +526,11 @@ mqd_t mq_open( const char * name,
     if( prvValidateQueueName( name, &xNameLength ) == pdFALSE )
     {
         /* Invalid name. */
-        errno = EINVAL;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EINVAL;
+        }
+        #endif
         xMessageQueue = ( mqd_t ) -1;
     }
 
@@ -528,7 +540,11 @@ mqd_t mq_open( const char * name,
         if( ( oflag & O_CREAT ) && ( attr != NULL ) && ( ( attr->mq_maxmsg <= 0 ) || ( attr->mq_msgsize <= 0 ) ) )
         {
             /* Invalid mq_attr.mq_maxmsg or mq_attr.mq_msgsize. */
-            errno = EINVAL;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = EINVAL;
+            }
+            #endif
             xMessageQueue = ( mqd_t ) -1;
         }
     }
@@ -548,7 +564,11 @@ mqd_t mq_open( const char * name,
              * O_CREAT and O_EXCL. */
             if( ( oflag & O_EXCL ) && ( oflag & O_CREAT ) )
             {
-                errno = EEXIST;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = EEXIST;
+                }
+                #endif
                 xMessageQueue = ( mqd_t ) -1;
             }
             else
@@ -557,7 +577,11 @@ mqd_t mq_open( const char * name,
                 if( ( ( QueueListElement_t * ) xMessageQueue )->xPendingUnlink == pdTRUE )
                 {
                     /* Queue pending deletion. Don't allow it to be re-opened. */
-                    errno = EINVAL;
+                    #if ( configUSE_POSIX_ERRNO == 1 )
+                    {
+                        errno = EINVAL;
+                    }
+                    #endif
                     xMessageQueue = ( mqd_t ) -1;
                 }
                 else
@@ -588,13 +612,21 @@ mqd_t mq_open( const char * name,
                                               name,
                                               xNameLength ) == pdFALSE )
                 {
-                    errno = ENOSPC;
+                    #if ( configUSE_POSIX_ERRNO == 1 )
+                    {
+                        errno = ENOSPC;
+                    }
+                    #endif
                     xMessageQueue = ( mqd_t ) -1;
                 }
             }
             else
             {
-                errno = ENOENT;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = ENOENT;
+                }
+                #endif
                 xMessageQueue = ( mqd_t ) -1;
             }
         }
@@ -651,7 +683,11 @@ ssize_t mq_timedreceive( mqd_t mqdes,
     if( prvFindQueueInList( NULL, NULL, mqdes ) == pdFALSE )
     {
         /* Queue not found; bad descriptor. */
-        errno = EBADF;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EBADF;
+        }
+        #endif
         xStatus = -1;
     }
 
@@ -661,7 +697,11 @@ ssize_t mq_timedreceive( mqd_t mqdes,
         if( msg_len < ( size_t ) pxMessageQueue->xAttr.mq_msgsize )
         {
             /* msg_len too small. */
-            errno = EMSGSIZE;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = EMSGSIZE;
+            }
+            #endif
             xStatus = -1;
         }
     }
@@ -675,7 +715,11 @@ ssize_t mq_timedreceive( mqd_t mqdes,
 
         if( iCalculateTimeoutReturn != 0 )
         {
-            errno = iCalculateTimeoutReturn;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = iCalculateTimeoutReturn;
+            }
+            #endif
             xStatus = -1;
         }
     }
@@ -694,12 +738,20 @@ ssize_t mq_timedreceive( mqd_t mqdes,
             if( pxMessageQueue->xAttr.mq_flags & O_NONBLOCK )
             {
                 /* Set errno to EAGAIN for nonblocking mq. */
-                errno = EAGAIN;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = EAGAIN;
+                }
+                #endif
             }
             else
             {
                 /* Otherwise, set errno to ETIMEDOUT. */
-                errno = ETIMEDOUT;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = ETIMEDOUT;
+                }
+                #endif
             }
 
             xStatus = -1;
@@ -743,7 +795,11 @@ int mq_timedsend( mqd_t mqdes,
     if( prvFindQueueInList( NULL, NULL, mqdes ) == pdFALSE )
     {
         /* Queue not found; bad descriptor. */
-        errno = EBADF;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EBADF;
+        }
+        #endif
         iStatus = -1;
     }
 
@@ -753,7 +809,11 @@ int mq_timedsend( mqd_t mqdes,
         if( msg_len > ( size_t ) pxMessageQueue->xAttr.mq_msgsize )
         {
             /* msg_len too large. */
-            errno = EMSGSIZE;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = EMSGSIZE;
+            }
+            #endif
             iStatus = -1;
         }
     }
@@ -767,7 +827,11 @@ int mq_timedsend( mqd_t mqdes,
 
         if( iCalculateTimeoutReturn != 0 )
         {
-            errno = iCalculateTimeoutReturn;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = iCalculateTimeoutReturn;
+            }
+            #endif
             iStatus = -1;
         }
     }
@@ -785,7 +849,11 @@ int mq_timedsend( mqd_t mqdes,
         if( xSendData.pcData == NULL )
         {
             /* msg_len too large. */
-            errno = EMSGSIZE;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = EMSGSIZE;
+            }
+            #endif
             iStatus = -1;
         }
         else
@@ -806,12 +874,20 @@ int mq_timedsend( mqd_t mqdes,
             if( pxMessageQueue->xAttr.mq_flags & O_NONBLOCK )
             {
                 /* Set errno to EAGAIN for nonblocking mq. */
-                errno = EAGAIN;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = EAGAIN;
+                }
+                #endif
             }
             else
             {
                 /* Otherwise, set errno to ETIMEDOUT. */
-                errno = ETIMEDOUT;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = ETIMEDOUT;
+                }
+                #endif
             }
 
             /* Free the allocated queue data. */
@@ -840,7 +916,11 @@ int mq_unlink( const char * name )
     if( prvValidateQueueName( name, &xNameSize ) == pdFALSE )
     {
         /* Error with mq name. */
-        errno = EINVAL;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EINVAL;
+        }
+        #endif
         iStatus = -1;
     }
 
@@ -873,7 +953,11 @@ int mq_unlink( const char * name )
         else
         {
             /* The named message queue doesn't exist. */
-            errno = ENOENT;
+            #if ( configUSE_POSIX_ERRNO == 1 )
+            {
+                errno = ENOENT;
+            }
+            #endif
             iStatus = -1;
         }
 

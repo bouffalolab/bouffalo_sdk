@@ -34,8 +34,8 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
-#include "FreeRTOS_POSIX/posix_utils.h"
+#include "FreeRTOS_POSIX/errno.h"
+#include "FreeRTOS_POSIX/utils.h"
 
 /*-----------------------------------------------------------*/
 

@@ -31,6 +31,7 @@
 #define NETHUB_VCHAN_USB_RECONNECT_INTERVAL_MS 500
 #define NETHUB_VCHAN_USB_SEND_RETRIES 2
 #define NETHUB_VCHAN_USB_SEND_RETRY_DELAY_MS 100
+#define NETHUB_VCHAN_NETLINK_RECOVER_POLL_MS 500
 
 /*
  * USB ACM framing: magic(A5 5A) + len_le16 + payload + checksum_le32.
@@ -146,6 +147,8 @@ static int nethub_vchan_start_recv_thread(struct nethub_vchan_ctx *ctx);
 static void nethub_vchan_stop_recv_thread(struct nethub_vchan_ctx *ctx);
 static int nethub_vchan_wait_initial_link(struct nethub_vchan_ctx *ctx, int timeout_ms);
 static int nethub_vchan_current_link_is_up(struct nethub_vchan_ctx *ctx);
+static int nethub_vchan_netlink_restart(struct nethub_vchan_ctx *ctx);
+static void nethub_vchan_netlink_mark_down(struct nethub_vchan_ctx *ctx, int expected_fd);
 static int nethub_vchan_auto_transport_enabled(void);
 static int nethub_vchan_usb_candidate_score(int index);
 static int nethub_vchan_usb_try_reconnect_locked(struct nethub_vchan_ctx *ctx);
@@ -418,20 +421,23 @@ static int nethub_vchan_wait_initial_link(struct nethub_vchan_ctx *ctx, int time
         return -1;
     }
 
+    pthread_mutex_lock(&ctx->state_mutex);
+    generation = ctx->state_generation;
+    pthread_mutex_unlock(&ctx->state_mutex);
+
     if (nethub_vchan_send_link_query(ctx) < 0) {
         return -1;
     }
 
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += timeout_ms / 1000;
-    ts.tv_nsec += (timeout_ms % 1000) * 1000000;
-    if (ts.tv_nsec >= 1000000000) {
+    ts.tv_nsec += (long)(timeout_ms % 1000) * 1000000L;
+    if (ts.tv_nsec >= 1000000000L) {
         ts.tv_sec++;
-        ts.tv_nsec -= 1000000000;
+        ts.tv_nsec -= 1000000000L;
     }
 
     pthread_mutex_lock(&ctx->state_mutex);
-    generation = ctx->state_generation;
     while (ctx->state_generation == generation) {
         ret = pthread_cond_timedwait(&ctx->state_cond, &ctx->state_mutex, &ts);
         if (ret == ETIMEDOUT) {
@@ -454,6 +460,54 @@ static int nethub_vchan_current_link_is_up(struct nethub_vchan_ctx *ctx)
     is_up = (ctx->link_state == NETHUB_VCHAN_LINK_UP);
     pthread_mutex_unlock(&ctx->state_mutex);
     return is_up;
+}
+
+static int nethub_vchan_netlink_restart(struct nethub_vchan_ctx *ctx)
+{
+    if (!ctx) {
+        return -1;
+    }
+
+    nethub_vchan_stop_recv_thread(ctx);
+    nethub_vchan_update_state(ctx, NETHUB_VCHAN_LINK_DOWN, NETHUB_VCHAN_HOST_STATE_UNKNOWN);
+
+    if (nethub_vchan_open_netlink(ctx, 1) != 0) {
+        return -1;
+    }
+
+    if (nethub_vchan_start_recv_thread(ctx) != 0) {
+        if (ctx->sock_fd >= 0) {
+            close(ctx->sock_fd);
+            ctx->sock_fd = -1;
+        }
+        return -1;
+    }
+
+    return 0;
+}
+
+static void nethub_vchan_netlink_mark_down(struct nethub_vchan_ctx *ctx, int expected_fd)
+{
+    int fd_to_close = -1;
+
+    if (!ctx) {
+        return;
+    }
+
+    pthread_mutex_lock(&ctx->tx_mutex);
+    if (ctx->transport == NETHUB_VCHAN_TRANSPORT_NETLINK &&
+        ctx->sock_fd >= 0 &&
+        (expected_fd < 0 || ctx->sock_fd == expected_fd)) {
+        fd_to_close = ctx->sock_fd;
+        ctx->sock_fd = -1;
+    }
+    pthread_mutex_unlock(&ctx->tx_mutex);
+
+    if (fd_to_close >= 0) {
+        close(fd_to_close);
+    }
+
+    nethub_vchan_update_state(ctx, NETHUB_VCHAN_LINK_DOWN, NETHUB_VCHAN_HOST_STATE_UNKNOWN);
 }
 
 static void nethub_vchan_usb_mark_down(struct nethub_vchan_ctx *ctx, int expected_fd)
@@ -929,6 +983,7 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
     uint8_t usb_frame[NETHUB_VCHAN_USB_FRAME_MAX];
     char buffer[NLMSG_SPACE(NETHUB_VCHAN_NETLINK_HDR_LEN + NETHUB_VCHAN_MAX_DATA_LEN)];
     int ret;
+    int fd;
     struct nethub_vchan_data_hdr *data_hdr;
 
     if (!ctx) {
@@ -1025,10 +1080,12 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
         pthread_mutex_unlock(&ctx->tx_mutex);
         return -1;
     }
-    ret = sendto(ctx->sock_fd, nlh, nlh->nlmsg_len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    fd = ctx->sock_fd;
+    ret = sendto(fd, nlh, nlh->nlmsg_len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
     pthread_mutex_unlock(&ctx->tx_mutex);
     if (ret < 0) {
         perror("sendto");
+        nethub_vchan_netlink_mark_down(ctx, fd);
         return -1;
     }
 
@@ -1038,6 +1095,41 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
 int nethub_vchan_send(uint8_t data_type, const void *data, size_t len)
 {
     return nethub_vchan_send_raw(g_nethub_vchan_ctx, data_type, data, len);
+}
+
+int nethub_vchan_recover(int timeout_ms)
+{
+    struct nethub_vchan_ctx *ctx = g_nethub_vchan_ctx;
+    int elapsed_ms = 0;
+
+    if (!ctx) {
+        return NETHUB_VCHAN_ERROR_NOT_INIT;
+    }
+
+    if (timeout_ms <= 0) {
+        timeout_ms = NETHUB_VCHAN_NETLINK_RECOVER_POLL_MS;
+    }
+
+    if (nethub_vchan_current_link_is_up(ctx)) {
+        return NETHUB_VCHAN_OK;
+    }
+
+    if (ctx->transport != NETHUB_VCHAN_TRANSPORT_NETLINK) {
+        return NETHUB_VCHAN_ERROR_IO;
+    }
+
+    while (elapsed_ms < timeout_ms) {
+        if (nethub_vchan_netlink_restart(ctx) == 0 &&
+            nethub_vchan_wait_initial_link(ctx, NETHUB_VCHAN_NETLINK_RECOVER_POLL_MS) == 0 &&
+            nethub_vchan_current_link_is_up(ctx)) {
+            return NETHUB_VCHAN_OK;
+        }
+
+        nethub_vchan_sleep_ms(NETHUB_VCHAN_NETLINK_RECOVER_POLL_MS);
+        elapsed_ms += NETHUB_VCHAN_NETLINK_RECOVER_POLL_MS;
+    }
+
+    return NETHUB_VCHAN_ERROR_IO;
 }
 
 /**
@@ -1359,6 +1451,7 @@ static void *nethub_vchan_recv_thread_func(void *arg)
                 nethub_vchan_sleep_ms(NETHUB_VCHAN_USB_RECONNECT_INTERVAL_MS);
                 continue;
             }
+            nethub_vchan_netlink_mark_down(ctx, fd);
             break;
         }
 
@@ -1410,11 +1503,12 @@ static void *nethub_vchan_recv_thread_func(void *arg)
                 if (errno == EINTR) {
                     continue;
                 }
+                nethub_vchan_netlink_mark_down(ctx, fd);
                 break;
             }
 
             if (len == 0) {
-                /* Connection closed */
+                nethub_vchan_netlink_mark_down(ctx, fd);
                 break;
             }
 

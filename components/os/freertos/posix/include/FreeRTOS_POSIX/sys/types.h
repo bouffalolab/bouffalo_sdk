@@ -41,7 +41,6 @@ extern "C" {
 #include <stdint.h>
 
 /* FreeRTOS types include */
-#include "FreeRTOS_POSIX.h"
 #include "FreeRTOS_POSIX_types.h"
 
 /**

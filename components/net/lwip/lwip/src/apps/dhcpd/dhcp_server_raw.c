@@ -40,6 +40,10 @@
     #define DEBUG_PRINTF(...)
 #endif /* DHCP_DEBUG_PRINTF */
 
+#define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
+#define MACSTR    "%02x:%02x:%02x:%02x:%02x:%02x"
+#define IP4STR(a) ip4_addr1(a), ip4_addr2(a), ip4_addr3(a), ip4_addr4(a)
+
 /* we need some routines in the DHCP of lwIP */
 #undef  LWIP_DHCP
 #define LWIP_DHCP   1
@@ -346,12 +350,17 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
         msg_type = *(opt + 2);
         if (msg_type == DHCP_DISCOVER)
         {
+            DEBUG_PRINTF("[%c%c] RECV DISCOVER from " MACSTR "\r\n",
+                dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
             node = dhcp_client_alloc(dhcp_server, msg, opt_buf, length);
             if (node == NULL)
             {
                 goto free_pbuf_and_return;
             }
             node->lease_end = DHCP_DEFAULT_LIVE_TIME;
+            DEBUG_PRINTF("[%c%c] ALLOC %d.%d.%d.%d to " MACSTR "\r\n",
+                dhcp_server->netif->name[0], dhcp_server->netif->name[1],
+                IP4STR(&node->ipaddr), MAC2STR(msg->chaddr));
             /* create dhcp offer and send */
             msg->op = DHCP_BOOTREPLY;
             msg->hops = 0;
@@ -441,6 +450,9 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
 
             ip_2_ip4(&addr)->addr = INADDR_BROADCAST;
             udp_sendto_if(pcb, q, &addr, port, dhcp_server->netif);
+            DEBUG_PRINTF("[%c%c] SEND OFFER %d.%d.%d.%d to " MACSTR "\r\n",
+                dhcp_server->netif->name[0], dhcp_server->netif->name[1],
+                IP4STR(&node->ipaddr), MAC2STR(msg->chaddr));
         }
         else
         {
@@ -448,6 +460,8 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
             {
                 if (msg_type == DHCP_REQUEST)
                 {
+                    DEBUG_PRINTF("[%c%c] RECV REQUEST from " MACSTR "\r\n",
+                        dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
                     node = dhcp_client_find(dhcp_server, msg, opt_buf, length);
                     if (node != NULL)
                     {
@@ -542,10 +556,15 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
 
                         ip_2_ip4(&addr)->addr = INADDR_BROADCAST;
                         udp_sendto_if(pcb, q, &addr, port, dhcp_server->netif);
+                        DEBUG_PRINTF("[%c%c] SEND ACK %d.%d.%d.%d to " MACSTR "\r\n",
+                            dhcp_server->netif->name[0], dhcp_server->netif->name[1],
+                            IP4STR(&node->ipaddr), MAC2STR(msg->chaddr));
                     }
                     else
                     {
                         /* Send no ack */
+                        DEBUG_PRINTF("[%c%c] SEND NAK to " MACSTR " (client not found)\r\n",
+                            dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
                         /* create dhcp offer and send */
                         msg->op = DHCP_BOOTREPLY;
                         msg->hops = 0;
@@ -580,11 +599,16 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
 
                         ip_2_ip4(&addr)->addr = INADDR_BROADCAST;
                         udp_sendto_if(pcb, q, &addr, port, dhcp_server->netif);
+                        DEBUG_PRINTF("[%c%c] SEND NAK to " MACSTR "\r\n",
+                            dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
                     }
                 }
                 else if (msg_type == DHCP_RELEASE)
                 {
                     struct dhcp_client_node *node_prev = NULL;
+
+                    DEBUG_PRINTF("[%c%c] RECV RELEASE from " MACSTR "\r\n",
+                        dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
 
                     for (node = dhcp_server->node_list; node != NULL; node = node->next)
                     {
@@ -606,16 +630,21 @@ dhcp_server_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t
 
                     if (node != NULL)
                     {
+                        DEBUG_PRINTF("[%c%c] RELEASE freed %d.%d.%d.%d " MACSTR "\r\n",
+                            dhcp_server->netif->name[0], dhcp_server->netif->name[1],
+                            IP4STR(&node->ipaddr), MAC2STR(msg->chaddr));
                         mem_free(node);
                     }
                 }
                 else if (msg_type ==  DHCP_DECLINE)
                 {
-                    ;
+                    DEBUG_PRINTF("[%c%c] RECV DECLINE from " MACSTR "\r\n",
+                        dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
                 }
                 else if (msg_type == DHCP_INFORM)
                 {
-                    ;
+                    DEBUG_PRINTF("[%c%c] RECV INFORM from " MACSTR "\r\n",
+                        dhcp_server->netif->name[0], dhcp_server->netif->name[1], MAC2STR(msg->chaddr));
                 }
             }
         }
@@ -876,6 +905,15 @@ void dhcpd_start(struct netif *netif, int start, int limit)
         arg->netif = netif;
         arg->start = ip_start;
         arg->end = ip_end;
+
+        {
+            char server_ip[IP4ADDR_STRLEN_MAX];
+            ip4addr_ntoa_r(netif_ip4_addr(netif), server_ip, sizeof(server_ip));
+            DEBUG_PRINTF("[%c%c] START server=%s pool=%d.%d.%d.%d-%d\r\n",
+                netif->name[0], netif->name[1], server_ip,
+                start_num, end_num);
+        }
+
         res = tcpip_callback((tcpip_callback_fn)dhcp_server_start, arg);
         if (res != ERR_OK)
         {
@@ -918,6 +956,7 @@ void dhcpd_stop(const char *netif_name)
     }
 
     dhcp_server_clear_dns_server();
+    DEBUG_PRINTF("[%c%c] STOP\r\n", netif->name[0], netif->name[1]);
     dhcp_server_stop(netif);
 
 _exit:
@@ -966,6 +1005,9 @@ static void dhcp_server_release_client_by_mac(void *ctx)
     node_prev = NULL;
     for (node = dhcp_server->node_list; node != NULL; node = node->next) {
         if (memcmp(node->chaddr, arg->mac, DHCP_MAX_HLEN) == 0) {
+            DEBUG_PRINTF("[%c%c] RELEASE freed %d.%d.%d.%d " MACSTR "\r\n",
+                dhcp_server->netif->name[0], dhcp_server->netif->name[1],
+                IP4STR(&node->ipaddr), MAC2STR(arg->mac));
             if (node == dhcp_server->node_list) {
                 dhcp_server->node_list = node->next;
             } else {

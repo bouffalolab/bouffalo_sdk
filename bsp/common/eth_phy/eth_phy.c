@@ -35,16 +35,23 @@ static int eth_phy_drv_match(eth_phy_ctrl_t *phy_ctrl)
 
 int eth_phy_scan(eth_phy_ctrl_t *phy_ctrl, uint8_t start_addr, uint8_t end_addr)
 {
-    uint32_t phy_id;
+    uint32_t phy_id = 0;
     uint16_t phy_id_1, phy_id_2;
     uint8_t phy_addr;
+
+    if (!phy_ctrl || !phy_ctrl->mac_mdio_dev) {
+        LOG_E("invalid phy ctrl or mdio device\r\n");
+        return -1;
+    }
 
     start_addr = (start_addr < EPHY_ADDR_MAX) ? start_addr : EPHY_ADDR_MAX;
     end_addr = (end_addr < EPHY_ADDR_MAX) ? end_addr : EPHY_ADDR_MAX;
 
     for (phy_addr = start_addr; phy_addr <= end_addr; phy_addr++) {
-        eth_phy_mdio_read(phy_addr, EPHY_ID1_OFFSET, &phy_id_1);
-        eth_phy_mdio_read(phy_addr, EPHY_ID2_OFFSET, &phy_id_2);
+        if (eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_addr, EPHY_ID1_OFFSET, &phy_id_1) < 0 ||
+            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_addr, EPHY_ID2_OFFSET, &phy_id_2) < 0) {
+            continue;
+        }
 
         phy_id = ((uint32_t)phy_id_1 << 16) | phy_id_2;
 
@@ -70,6 +77,16 @@ int eth_phy_scan(eth_phy_ctrl_t *phy_ctrl, uint8_t start_addr, uint8_t end_addr)
 
 int eth_phy_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
 {
+    if (!phy_ctrl) {
+        LOG_E("invalid phy ctrl\r\n");
+        return -1;
+    }
+
+    if (!phy_ctrl->mac_mdio_dev) {
+        LOG_E("invalid mdio device\r\n");
+        return -1;
+    }
+
     /* no phy_drv, try to match */
     if (phy_ctrl->phy_drv == NULL) {
         LOG_I("no phy_drv, try to match\r\n");

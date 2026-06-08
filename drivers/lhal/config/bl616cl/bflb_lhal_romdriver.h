@@ -323,9 +323,11 @@ typedef enum {
     ((int32_t (*)(uint8_t version)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_set_boot2_version_to_efuse])
 
+#if 0
 #define romapi_bflb_dma_channel_init \
     ((void (*)(struct bflb_device_s *dev, const struct bflb_dma_channel_config_s *config)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_dma_channel_init])
+#endif
 
 #define romapi_bflb_dma_channel_deinit \
     ((void (*)(struct bflb_device_s *dev)) \

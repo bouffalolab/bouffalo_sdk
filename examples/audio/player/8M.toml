@@ -22,7 +22,7 @@ security = 1
 
 [[pt_entry]]
 type = 0
-name = "FW"
+name = "FW0"
 device = 0
 address0 = 0x10000
 size0 = 0x400000

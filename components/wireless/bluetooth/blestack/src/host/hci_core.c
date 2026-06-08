@@ -1612,9 +1612,7 @@ static void enh_conn_complete(struct bt_hci_evt_le_enh_conn_complete *evt)
 		/* for slave we may need to add new connection */
 		if (!conn) {
 			conn = bt_conn_add_le(bt_dev.adv_id, &id_addr);
-		}else if(conn->state == BT_CONN_CONNECT_DIR_ADV){
-			bt_conn_unref(conn);//bouffalo fix:unref the ref increased in bt_conn_create_slave_le.
-        }
+		}
 	}
 
 	if (IS_ENABLED(CONFIG_BT_CENTRAL) &&
@@ -8173,7 +8171,7 @@ int8_t bt_get_tx_pwr(void)
 #endif
 
 
-#if defined(BL702L) || defined(BL616)
+#if defined(BL702L) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
 int bt_le_throughput_calc(bool enable, u8_t interval)
 {
     struct bt_hci_cp_vs_le_throughput_calc set_param;

@@ -103,11 +103,7 @@ int emac_test_init(void)
     };
 
     /* emac init */
-#ifdef BL618DG
-    emacx = bflb_device_get_by_name(BFLB_NAME_EMAC_V2_1);
-#else
-    emacx = bflb_device_get_by_name(BFLB_NAME_EMAC0);
-#endif
+    emacx = bsp_emac_get_device(BSP_EMAC_RMII_DEFAULT_PORT);
     if (emacx == NULL) {
         LOG_E("device_get error\r\n");
         return -1;
@@ -116,7 +112,13 @@ int emac_test_init(void)
     bflb_emac_irq_attach(emacx, emac_irq_cb, NULL);
 
     /* scan eth_phy */
-    ret = eth_phy_scan(&phy_ctrl, EPHY_ADDR_MIN, EPHY_ADDR_MAX);
+    phy_ctrl.mac_mdio_dev = bsp_emac_get_device(BSP_EMAC_MDIO_DEFAULT_PORT);
+    if (phy_ctrl.mac_mdio_dev == NULL) {
+        LOG_E("mdio device_get error\r\n");
+        return -1;
+    }
+
+    ret = eth_phy_scan(&phy_ctrl, BSP_EMAC_PHY_DEFAULT_SCAN_START, BSP_EMAC_PHY_DEFAULT_SCAN_END);
     if (ret < 0) {
         return -1;
     }
@@ -299,11 +301,8 @@ int main(void)
 {
     board_init();
     /* emac gpio init */
-#ifdef BL618DG
-    board_emac1_gpio_init();
-#else
-    board_emac_gpio_init();
-#endif
+    board_emac_rmii_gpio_init(BSP_EMAC_RMII_DEFAULT_PORT);
+    board_emac_mdio_gpio_init(BSP_EMAC_MDIO_DEFAULT_PORT);
 
     bflb_mtimer_delay_ms(100);
 

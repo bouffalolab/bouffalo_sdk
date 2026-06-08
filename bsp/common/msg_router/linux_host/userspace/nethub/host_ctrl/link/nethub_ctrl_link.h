@@ -12,6 +12,7 @@ typedef void (*nethub_ctrl_link_event_cb_t)(nethub_wifi_link_state_t state, void
 int nethub_ctrl_link_init(nethub_ctrl_link_rx_cb_t rx_cb, void *user_data);
 void nethub_ctrl_link_deinit(void);
 int nethub_ctrl_link_send(const void *data, size_t len);
+int nethub_ctrl_link_recover(int timeout_ms);
 int nethub_ctrl_link_get_state(nethub_wifi_link_state_t *state);
 int nethub_ctrl_link_register_event_callback(nethub_ctrl_link_event_cb_t cb, void *user_data);
 

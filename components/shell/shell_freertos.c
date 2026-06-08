@@ -50,6 +50,7 @@ int shell_start_exec(cmd_function_t func, int argc, char *argv[])
     }
     shell_exec_argv[argc] = NULL;
 
+    shell_exec_end = false;
     __ASM volatile("fence");
     xReturned = xTaskCreate(shell_exec_task, (char *)"shell_exec_task", SHELL_EXEC_THREAD_STACK_SIZE, func, SHELL_EXEC_THREAD_PRIO, &shell_exec_handle);
 
@@ -59,6 +60,22 @@ int shell_start_exec(cmd_function_t func, int argc, char *argv[])
         shell_exec_end = true;
         return -1;
     }
+}
+
+int shell_wait_exec_done(uint32_t timeout_ms)
+{
+    TickType_t start_tick = xTaskGetTickCount();
+    TickType_t timeout_ticks = pdMS_TO_TICKS(timeout_ms);
+
+    while (shell_exec_end == false) {
+        if (timeout_ms != portMAX_DELAY &&
+            (xTaskGetTickCount() - start_tick) >= timeout_ticks) {
+            return -1;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    return 0;
 }
 
 #endif

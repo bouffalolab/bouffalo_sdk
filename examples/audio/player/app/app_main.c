@@ -9,47 +9,32 @@
 #include "task.h"
 
 #include <app_wifi.h>
+#if defined(CONFIG_BLUETOOTH)
 #include <app_bt.h>
+#endif
 #include <app_player.h>
 
 #include "rfparam_adapter.h"
-#include "bl616_glb.h"
 #include "bflb_mtd.h"
 #include "easyflash.h"
 #include "bflb_romfs.h"
 
-void vAssertCalled(void)
+#include <sys/time.h>
+#include <reent.h>
+
+extern int _gettimeofday_r(struct _reent *, struct timeval *, void *);
+int gettimeofday(struct timeval *tv, void *tz)
 {
-    printf("vAssertCalled\r\n");
-    __disable_irq();
-
-    while (1);
-}
-
-static int btblecontroller_em_config(void)
-{
-    extern uint8_t __LD_CONFIG_EM_SEL;
-    volatile uint32_t em_size;
-
-    em_size = (uint32_t)&__LD_CONFIG_EM_SEL;
-
-    if (em_size == 0) {
-        GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
-    } else if (em_size == 32*1024) {
-        GLB_Set_EM_Sel(GLB_WRAM128KB_EM32KB);
-    } else if (em_size == 64*1024) {
-        GLB_Set_EM_Sel(GLB_WRAM96KB_EM64KB);
-    } else {
-        GLB_Set_EM_Sel(GLB_WRAM96KB_EM64KB);
-    }
-
-    return 0;
+    return _gettimeofday_r(_REENT, tv, tz);
 }
 
 void app_main_entry(void *arg)
 {
     /* Set ble controller EM Size */
-    btblecontroller_em_config();
+#if defined(CONFIG_BLUETOOTH)
+    extern int bl_sys_em_config(void);
+    bl_sys_em_config();
+#endif
 
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
@@ -73,7 +58,9 @@ void app_main_entry(void *arg)
     app_player_init();
 
     /* Init bt */
+#if CONFIG_BLUETOOTH
     app_bt_init();
+#endif
 
 #if defined(CONFIG_CODEC_USE_I2S)
     extern msp_i2s_port_init(void);
@@ -83,4 +70,3 @@ void app_main_entry(void *arg)
     app_play_fifo_music();
     vTaskDelete(NULL);
 }
-

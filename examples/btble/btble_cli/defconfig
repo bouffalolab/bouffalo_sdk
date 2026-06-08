@@ -39,7 +39,3 @@ else
 endif
 
 CONFIG_BT_STACK_CLI =y
-
-ifeq ($(CHIP),bl618dg)
-CONFIG_OVERRIDE_PTFILE =cfg_4M.toml
-endif

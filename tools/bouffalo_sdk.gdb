@@ -132,3 +132,25 @@ define task_list_wait
   task_list xPendingReadyList
   task_list xSuspendedTaskList
 end
+
+define stailq_len
+  set $cnt = 0
+  set $p = $arg0.stqh_first
+  while $p != 0
+    set $cnt = $cnt + 1
+    set $p = $p->entries.stqe_next
+  end
+  printf "%d\n", $cnt
+end
+
+document stailq_len
+  Count BSD sys/queue STAILQ length.
+  Usage: stailq_len list_head
+  Example: stailq_len macsw_txq[0]
+           stailq_len 'components/wireless/wl80211/src/macsw/tx.c'::macsw_txq[0]
+end
+
+define debug_wl80211
+  printf "macsw_txq[0] len: "
+  stailq_len macsw_txq[0]
+end

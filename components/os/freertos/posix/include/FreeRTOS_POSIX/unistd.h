@@ -37,7 +37,6 @@
 extern "C" {
 #endif
 
-#include_next <unistd.h>
 #include "FreeRTOS_POSIX/sys/types.h"
 
 /**

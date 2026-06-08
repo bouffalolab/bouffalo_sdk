@@ -119,7 +119,7 @@ msp_mixer_elem_t *msp_mixer_last_elem(msp_mixer_t *mixer)
 
 msp_mixer_elem_t *msp_mixer_elem_next(msp_mixer_elem_t *elem_p)
 {
-    msp_check_return_val(elem_p, NULL);
+    msp_check_return_val(elem_p != NULL, NULL);
 
     msp_mixer_elem_t *elem = elem_p->mixer->cur_elem;
 

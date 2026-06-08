@@ -538,20 +538,6 @@ struct bt_sdp_discover_params {
 int bt_sdp_discover(struct bt_conn *conn,
 		    const struct bt_sdp_discover_params *params);
 
-/** @brief Release waiting SDP discovery request.
- *
- *  It can cancel valid waiting SDP client request identified by SDP discovery
- *  parameters object.
- *
- * @param conn Object identifying connection to remote.
- * @param params SDP discovery parameters.
- *
- * @return 0 in case of success or negative value in case of error.
- */
-int bt_sdp_discover_cancel(struct bt_conn *conn,
-			   const struct bt_sdp_discover_params *params);
-
-
 /* Helper types & functions for SDP client to get essential data from server */
 
 /** @brief Protocols to be asked about specific parameters */

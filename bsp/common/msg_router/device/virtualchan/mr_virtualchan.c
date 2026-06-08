@@ -178,6 +178,22 @@ static int msg_upld_send_cmd_packet(mr_virtualchan_priv_t *priv, uint8_t virtual
 }
 
 /**
+ * @brief Reset virtual channel runtime link state
+ * @details Clears the software handshake state and restores credit tracking
+ *          to the configured default. Message queues and transport resources
+ *          are not touched here; reset/stop callers handle those paths
+ *          according to the event source.
+ * @param[in] priv Pointer to virtual channel private structure
+ */
+static void virtualchan_reset_runtime_state(mr_virtualchan_priv_t *priv)
+{
+    priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_IDLE;
+    priv->virtualchan_ready = false;
+    priv->device_dnld_credit_limit = priv->virtualchan_cfg.dnld_credit_max;
+    priv->credit_limit_update_last = 0;
+}
+
+/**
  * @brief Virtual channel processing task (daemon thread)
  * @details Main tasks:
  *   1. Process messages received from host (download path)
@@ -221,7 +237,11 @@ static void virtualchan_proc_task(void *arg)
             notified_value &= ~notified_mask;
             LOG_W("%s processing reset request\r\n", priv->virtualchan_cfg.name);
 
-            priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_IDLE;
+            virtualchan_reset_runtime_state(priv);
+            ret = msg_upld_send_cmd_packet(priv, MR_VIRTUALCHAN_FLAG_DEVICE_RESET, NULL, 0);
+            if (ret < 0) {
+                LOG_E("%s Failed to send DEVICE_RESET command\r\n", priv->virtualchan_cfg.name);
+            }
         }
 
         /* dnld_done event */
@@ -241,9 +261,7 @@ static void virtualchan_proc_task(void *arg)
             LOG_W("%s received host %s command\r\n", priv->virtualchan_cfg.name,
                   virtualchan_msg_pkt->flag == MR_VIRTUALCHAN_FLAG_HOST_RESET ? "RESET" : "STOP");
 
-            priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_IDLE;
-            priv->device_dnld_credit_limit = priv->virtualchan_cfg.dnld_credit_max;
-            priv->credit_limit_update_last = 0;
+            virtualchan_reset_runtime_state(priv);
 
             mr_virtualchan_dnld_elem_free(priv, virtualchan_msg_pkt);
             virtualchan_msg_pkt = NULL;
@@ -274,6 +292,7 @@ static void virtualchan_proc_task(void *arg)
                 }
 
                 priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_DEVICE_RUN;
+                priv->virtualchan_ready = true;
                 break;
 
             case MR_VIRTUALCHAN_DSTA_DEVICE_RUN:
@@ -295,7 +314,7 @@ static void virtualchan_proc_task(void *arg)
 
                 } else if (virtualchan_msg_pkt->flag == MR_VIRTUALCHAN_FLAG_DEVICE_STOP) {
                     LOG_I("%s received DEVICE_STOP message\r\n", priv->virtualchan_cfg.name);
-                    priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_IDLE;
+                    virtualchan_reset_runtime_state(priv);
                     break;
                 }
 

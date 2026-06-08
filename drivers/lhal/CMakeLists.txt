@@ -143,6 +143,7 @@ endif()
 
 # optional
 sdk_library_add_sources(src/bflb_irq.c)
+sdk_library_add_sources(src/bflb_rv_privilege.c)
 sdk_library_add_sources(src/bflb_l1c.c)
 sdk_library_add_sources(src/bflb_mtimer.c)
 
@@ -201,9 +202,11 @@ if((("${CHIP}" STREQUAL "bl618dg") AND (NOT ("${CPU_ID}" STREQUAL "lp"))) OR ("$
     endif()
 endif()
 
- if(("${CHIP}" STREQUAL "bl616cl") OR ("${CHIP}" STREQUAL "bl618dg" AND ("${CPU_ID}" STREQUAL "ap") ))
-    sdk_add_compile_definitions(-D CONFIG_LHAL_ROMAPI)
-    sdk_library_add_sources(config/${CHIP}/bflb_lhal_romapi_patch.c)
+if(CONFIG_ROMAPI)
+    if(("${CHIP}" STREQUAL "bl616cl") OR (("${CHIP}" STREQUAL "bl618dg") AND ("${CPU_ID}" STREQUAL "ap")))
+        sdk_add_compile_definitions(-DCONFIG_LHAL_ROMAPI)
+        sdk_library_add_sources(config/${CHIP}/bflb_lhal_romapi_patch.c)
+    endif()
 endif()
 
 if(CONFIG_LHAL_BOOTROM_ROMDRIVER)

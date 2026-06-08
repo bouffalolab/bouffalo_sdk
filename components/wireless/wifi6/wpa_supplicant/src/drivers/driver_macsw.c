@@ -75,6 +75,8 @@ struct wpa_macsw_driver_itf_data {
 	u8 ssid_len;
 	// Next authentication alg to try (used when connect with several algos)
 	int next_auth_alg;
+	// DTIM period cached from set_ap, reused when building CSA beacon
+	u8 dtim_period;
 };
 
 /**
@@ -1117,6 +1119,33 @@ static void wpa_macsw_driver_new_peer_candidate_event(struct wpa_macsw_driver_da
 
 }
 
+static void wpa_macsw_driver_process_csa_finish_event(struct wpa_macsw_driver_data *gdrv)
+{
+	struct wpa_macsw_driver_itf_data *drv;
+	union wpa_event_data data;
+	struct cfgmacsw_csa_finish_event event;
+	struct cfgmacsw_msg_hdr *msg_hdr;
+	unsigned int msg_len;
+
+	msg_len = eloop_get_request_body((void **)&msg_hdr);
+	memcpy(&event, msg_hdr, msg_len);
+
+	drv = &gdrv->itfs[event.fhost_vif_idx];
+	if (!(drv->status & MACSW_INITIALIZED))
+		return;
+
+	if (event.status == 0) {
+		os_memset(&data, 0, sizeof(data));
+		data.ch_switch.freq = event.freq;
+		data.ch_switch.ht_enabled = 1;
+		data.ch_switch.ch_offset = 0;
+		data.ch_switch.ch_width = CHAN_WIDTH_20;
+		data.ch_switch.cf1 = event.freq;
+		data.ch_switch.cf2 = 0;
+		wpa_supplicant_event(drv->ctx, EVENT_CH_SWITCH, &data);
+	}
+}
+
 /******************************************************************************
  * Send / Receive functions
  *****************************************************************************/
@@ -1171,6 +1200,9 @@ static void wpa_macsw_driver_event(int sock, void *eloop_ctx, void *sock_ctx)
 		break;
 	case CFGMACSW_NEW_PEER_CANDIDATE_EVENT:
 		wpa_macsw_driver_new_peer_candidate_event(gdrv);
+		break;
+	case CFGMACSW_CSA_FINISH_EVENT:
+		wpa_macsw_driver_process_csa_finish_event(gdrv);
 		break;
 	default:
 		fhost_cntrl_cfgmacsw_event_discard(gdrv->resp_queue, msg_hdr);
@@ -1393,7 +1425,7 @@ static int wpa_macsw_driver_update_bcn(struct wpa_macsw_driver_itf_data *drv,
 		cmd.csa_oft[i] = 0;
 	}
 
-	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) && (resp.status != CFGMACSW_SUCCESS))
+	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || resp.status != CFGMACSW_SUCCESS)
 		res = -1;
 
 	os_free(cmd.bcn);
@@ -1415,7 +1447,7 @@ int wpa_macsw_driver_control_bcn(struct wpa_macsw_driver_itf_data *drv,
        cmd.bcn_timer = bcn_timer;
        cmd.bcn_stop = bcn_stop;
 
-       if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) && (resp.status != CFGMACSW_SUCCESS))
+       if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || resp.status != CFGMACSW_SUCCESS)
             res = -1;
 
        return res;
@@ -1612,7 +1644,7 @@ static int wpa_macsw_driver_get_capa(void *priv, struct wpa_driver_capa *capa)
 		       WPA_DRIVER_FLAGS_AP_MLME |
 		       WPA_DRIVER_FLAGS_AP_UAPSD;
 #endif
-		       //WPA_DRIVER_FLAGS_AP_CSA;
+	capa->flags |= WPA_DRIVER_FLAGS_AP_CSA;
 #endif
 #if MACSW_CRYPTOLIB
 	capa->flags |= WPA_DRIVER_FLAGS_SAE;
@@ -2091,6 +2123,8 @@ static int wpa_macsw_driver_set_ap(void *priv, struct wpa_driver_ap_params *para
     g_ap_drv = drv;
 #endif
 
+	drv->dtim_period = params->dtim_period;
+
 	if (drv->status & MACSW_AP_STARTED)
 		return wpa_macsw_driver_update_bcn(drv, params);
 
@@ -2128,6 +2162,54 @@ static int wpa_macsw_driver_set_ap(void *priv, struct wpa_driver_ap_params *para
 		res = 0;
 		drv->status |= MACSW_AP_STARTED;
 	}
+
+	os_free(cmd.bcn);
+	return res;
+}
+
+static int wpa_macsw_driver_switch_channel(void *priv,
+					   struct csa_settings *settings)
+{
+	struct wpa_macsw_driver_itf_data *drv = priv;
+	struct cfgmacsw_bcn_update cmd;
+	struct cfgmacsw_resp resp;
+	struct wpa_driver_ap_params params;
+	int res = 0;
+
+	if (!(drv->status & MACSW_AP_STARTED))
+		return -1;
+
+	/* Build a beacon carrying the CSA IE (settings->beacon_csa). Only the
+	 * head/tail/dtim fields are consumed by wpa_macsw_build_bcn(). */
+	os_memset(&params, 0, sizeof(params));
+	params.head = settings->beacon_csa.head;
+	params.head_len = settings->beacon_csa.head_len;
+	params.tail = settings->beacon_csa.tail;
+	params.tail_len = settings->beacon_csa.tail_len;
+	params.dtim_period = drv->dtim_period;
+
+	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_BCN_UPDATE_CMD, sizeof(cmd));
+	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_BCN_UPDATE_RESP, sizeof(resp));
+
+	cmd.fhost_vif_idx = drv->fhost_vif_idx;
+	cmd.bcn = wpa_macsw_build_bcn(&params, &cmd.bcn_len, &cmd.tim_oft, &cmd.tim_len);
+	if (!cmd.bcn)
+		return -1;
+
+	/* hostapd reports the CSA counter offset relative to the beacon tail,
+	 * while the firmware expects an offset from the start of the beacon
+	 * buffer. wpa_macsw_build_bcn() lays the buffer out as
+	 * [head][TIM][tail], so shift by (tim_oft + tim_len). */
+	for (int i = 0; i < BCN_MAX_CSA_CPT; i++) {
+		if (settings->counter_offset_beacon[i])
+			cmd.csa_oft[i] = cmd.tim_oft + cmd.tim_len +
+					 settings->counter_offset_beacon[i];
+		else
+			cmd.csa_oft[i] = 0;
+	}
+
+	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || resp.status != CFGMACSW_SUCCESS)
+		res = -1;
 
 	os_free(cmd.bcn);
 	return res;
@@ -2718,6 +2800,7 @@ const struct wpa_driver_ops wpa_driver_macsw_ops = {
 	.send_external_auth_status = wpa_macsw_driver_send_external_auth_status,
 	.set_ap = wpa_macsw_driver_set_ap,
 	.deinit_ap = wpa_macsw_driver_deinit_ap,
+	.switch_channel = wpa_macsw_driver_switch_channel,
 	.set_tx_queue_params = wpa_macsw_driver_set_tx_queue_params,
 	.hapd_send_eapol = wpa_macsw_driver_hapd_send_eapol,
 	.sta_add = wpa_macsw_driver_sta_add,

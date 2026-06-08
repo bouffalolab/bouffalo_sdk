@@ -17,7 +17,7 @@
 #define MACSW_PLATFORM_PDS_CNT_TO_US(cnt) ((uint64_t)(cnt) * 15625 / 512)
 #endif
 
-#ifdef CFG_BL_WIFI_PS_ENABLE
+#ifdef LP_APP
 #include "bl_lp.h"
 static volatile iot2lp_para_t *piot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
 
@@ -194,7 +194,7 @@ void bl_tpc_power_table_get(int8_t *power_table)
 }
 #endif
 
-#ifdef CFG_BL_WIFI_PS_ENABLE
+#ifdef LP_APP
 int8_t hal_macsw_lp_rssi_restore(void)
 {
     return piot2lp_para->wifi_parameter->bcn_target_level;
@@ -234,7 +234,6 @@ int hal_macsw_lp_is_wake_by_ap_disconnected(void)
 * @brief hook for receive beacon
 ****************************************************************************************
 */
-#ifdef LP_APP
 static uint8_t _get_leg_rate(uint8_t rate)
 {
     // Retrieve the rate values from the RX vector
@@ -284,11 +283,9 @@ static uint8_t _get_leg_rate(uint8_t rate)
     }
     return leg_rate;
 }
-#endif
 
 void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
 {
-#ifdef LP_APP
     uint64_t rtc_cnt, rtc_stamp_us;
     uint64_t beacon_stamp_us;
     int32_t beacon_delay_us;
@@ -360,7 +357,6 @@ void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
     bl_lp_beacon_interval_update(bcn->bcnint);
     /* update beacon tim */
     bl_lp_beacon_tim_update((uint8_t *)tim, BEACON_STAMP_APP);
-#endif
 
     /************** TODO:  beacon loss debug info ******************/
 #if 0
@@ -430,6 +426,10 @@ int hal_macsw_lp_get_resume_wifi(void)
 }
 
 void hal_macsw_lp_clear_resume_wifi(void)
+{
+}
+
+void hal_macsw_lp_set_resume_wifi(void)
 {
 }
 

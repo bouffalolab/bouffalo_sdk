@@ -89,7 +89,7 @@ static int ble_adv_id;
 BLE_CLI(enable);
 BLE_CLI(set_chan_map);
 BLE_CLI(init);
-#if defined(BL702) || defined (BL616) || defined(BL702L)
+#if defined(BL702) || defined (BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
 BLE_CLI(set_2M_phy);
 BLE_CLI(set_coded_phy);
 BLE_CLI(set_default_phy);
@@ -137,7 +137,7 @@ BLE_CLI(connect_test_psm);
 #endif
 BLE_CLI(read_rssi);
 BLE_CLI(unpair);
-#if defined(BL702L) || defined(BL616)
+#if defined(BL702L) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
 BLE_CLI(ble_throughput_calc);
 #endif
 #endif
@@ -195,7 +195,7 @@ BLE_CLI(le_test_end);
 #if defined(CONFIG_BLE_TP_SERVER)
     SHELL_CMD_EXPORT_ALIAS(blecli_tp_start, ble_tp_start, throughput start Parameter:[TP test 1:enable; 0:disable]);
 #endif /* CONFIG_BLE_TP_SERVER */
-#if defined(BL702) || defined (BL616) || defined(BL702L)
+#if defined(BL702) || defined (BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
 #if defined(CONFIG_BT_CONN)
     SHELL_CMD_EXPORT_ALIAS(blecli_set_default_phy, ble_set_default_phy, ble set default phy Parameter:[defualt phys]);
     SHELL_CMD_EXPORT_ALIAS(blecli_set_2M_phy, ble_set_2M_Phy, ble set 2M Phy Parameter:[defualt phys]);
@@ -271,7 +271,7 @@ BLE_CLI(le_test_end);
         [Conn Interval Max: 0x0006-0C80; e.g.0030] \
         [Conn Latency: 0x0000-01f3; e.g.0004] \
         [Supervision Timeout: 0x000A-0C80; e.g.0010]);
-#if defined(BL702L) || defined(BL616)
+#if defined(BL702L) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
     SHELL_CMD_EXPORT_ALIAS(blecli_ble_throughput_calc, ble_set_throughput_calc, ble set throughputcalc \
         Parameter:[enable];[duration]);
 #endif
@@ -361,7 +361,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
 #if defined(CONFIG_BLE_TP_SERVER)
     {"ble_tp_start", "throughput start\r\nParameter [TP test,1:enable, 0:disable]\r\n", blecli_tp_start},
 #endif
-#if defined(BL702)|| defined (BL616) || defined(BL702L)
+#if defined(BL702)|| defined (BL616) || defined(BL702L) || defined(BL618DG) || defined(BL616CL)
 #if defined(CONFIG_BT_CONN)
     {"ble_set_default_phy", "ble set default phy\r\nParameter [defualt phys]\r\n", blecli_set_default_phy},
     {"ble_set_2M_Phy", "ble set 2M Phy\r\nParameter [defualt phys]\r\n", blecli_set_2M_phy},
@@ -438,7 +438,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     [Conn Interval Max,0x0006-0C80,e.g.0030]\r\n\
     [Conn Latency,0x0000-01f3,e.g.0004]\r\n\
     [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_send_l2cap_conn_param_update_req},
-    #if defined(BL702L) || defined(BL616)
+    #if defined(BL702L) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
     {"ble_set_throughput_calc", "ble set throughputcalc\r\nParameter [enable]\r\n [duration]\r\n", blecli_ble_throughput_calc},
     #endif
     #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
@@ -814,7 +814,7 @@ BLE_CLI(init)
     vOutputString("Init successfully\r\n");
 }
 
-#if defined(BL702) || defined (BL616) ||defined(BL702L)
+#if defined(BL702) || defined (BL616) ||defined(BL702L) || defined(BL618DG) || defined(BL616CL)
 #if defined(CONFIG_BT_CONN)
 BLE_CLI(set_2M_phy)
 {
@@ -1825,7 +1825,7 @@ BLE_CLI(read_rssi)
     }
 }
 
-#if defined(BL702L) || defined(BL616)
+#if defined(BL702L) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
 BLE_CLI(ble_throughput_calc)
 {  
     int err;
@@ -2502,7 +2502,7 @@ BLE_CLI(set_tx_pwr)
         vOutputString("ble_set_tx_pwr, invalid value, value shall be in [%d - %d]\r\n", 0, 21);
         return;
     }
-    #elif defined(BL702) || defined(BL616)
+    #elif defined(BL702) || defined(BL616) || defined(BL618DG) || defined(BL616CL)
     if(power > 14){
         vOutputString("ble_set_tx_pwr, invalid value, value shall be in [%d - %d]\r\n", 0, 14);
         return;

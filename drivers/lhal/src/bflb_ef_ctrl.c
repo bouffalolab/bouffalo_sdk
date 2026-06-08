@@ -718,7 +718,16 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
             bflb_ef_ctrl_switch_ahb_clk_r1(dev);
             /* Add delay for CLK to be stable */
             arch_delay_us(4);
+            bflb_power_on_efuse();
             bflb_ef_ctrl_program_efuse_r1(dev);
+            while (bflb_ef_ctrl_busy_r1(dev) == 1) {
+                timeout--;
+                if (timeout == 0) {
+                    break;
+                }
+                arch_delay_us(10);
+            }
+            bflb_power_off_efuse();
             arch_delay_us(100);
 #endif
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -1094,7 +1103,16 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
                 }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
                 if (trim_list[i].en_addr >= EF_CTRL_EFUSE_R0_SIZE * 8) {
+                    bflb_power_on_efuse();
                     bflb_ef_ctrl_program_efuse_r1(dev);
+                    while (bflb_ef_ctrl_busy_r1(dev) == 1) {
+                        timeout--;
+                        if (timeout == 0) {
+                            break;
+                        }
+                        arch_delay_us(10);
+                    }
+                    bflb_power_off_efuse();
                     arch_delay_us(100);
                 }
 #endif

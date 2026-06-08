@@ -2,6 +2,7 @@
 # ctrl Channel（device use ATModule, host use bflbwifid、bflbwifictrl）
 CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE =y
 CONFIG_NETHUB_LOWPOWER_ENABLE          =y
+CONFIG_NETHUB_PROFILE_DUAL             =n
 CONFIG_NETHUB_PROFILE_SDIO             =y
 CONFIG_NETHUB_PROFILE_USB              =n
 
@@ -39,13 +40,14 @@ CONFIG_MR_NETDEV            =y
 CONFIG_MR_TTY               =n
 CONFIG_MR_VIRTUALCHAN       =y
 
-#CONFIG_IPV6               =y
+CONFIG_IPV6               =y
 CONFIG_NETBUS             =y
 CONFIG_NETHUB             =y
 
-# lowpower todo: now only bl618dg support lowpower.
-ifneq ($(CHIP),bl618dg)
-CONFIG_NETHUB_LOWPOWER_ENABLE          =n
+# lowpower: enabled for bl616 only by default. BL616CL and BL618DG stay off
+# until their NetHub low-power flows are fully validated.
+ifneq ($(CHIP),bl616)
+    CONFIG_NETHUB_LOWPOWER_ENABLE          =n
 endif
 ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
     CONFIG_LPAPP                         =y
@@ -53,7 +55,6 @@ ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
     CONFIG_LWIP_LP                       =y
     CONFIG_DCDC_ENABLE                   =n
     CONFIG_PWRMGMT                       =y
-    CONFIG_TICKLESS_CUSTOMIZE            =y
     CONFIG_TICKLESS_EXT                  =y
     CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
     CONFIG_CLOCK_SOURCE_EF_PARAM         =n
@@ -75,6 +76,10 @@ endif
 
 
 # USB
+ifeq ($(CONFIG_NETHUB_PROFILE_DUAL),y)
+    CONFIG_NETHUB_PROFILE_SDIO =y
+    CONFIG_NETHUB_PROFILE_USB  =y
+endif
 ifeq ($(CONFIG_NETHUB_PROFILE_USB),y)
     CONFIG_BSP_USB                  =y
     CONFIG_CHERRYUSB                =y
@@ -102,7 +107,8 @@ ifeq ($(CONFIG_ATMODULE),y)
     CONFIG_ATMODULE_WIFI_AP   =y
     CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO =y
 endif
-ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
-    CONFIG_ATMODULE_LP                   =y
+ifeq ($(CONFIG_ATMODULE),y)
+    ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
+        CONFIG_ATMODULE_LP               =y
+    endif
 endif
-

@@ -1,4 +1,14 @@
 # Changes
+## 2026-06-04
+1. [blestack] Fix directed advertising refcount over-unref crash. the original "bouffalo fix" unref'd one ref prematurely in enh_conn_complete, causing the crash from excessive unrefs on failure.
+
+## 2026-05-29
+1. [blestack] Add BL618DG and BL616CL to BLE feature macros: hci_core.c/h, ble_cli_cmds.c, hci_vs.h.
+2. [bredr_cli_cmds] Fix duplicate bredr_start_inquiry CLI entry.
+3. [bredr_cli_cmds] Fix cod[1] copy-paste bug, should be cod[2] for device class byte 3.
+4. [bredr_cli_cmds] Add missing BT_AVDTP_CLI macro definition in non-CONFIG_SHELL branch.
+5. [bredr_cli_cmds] Fix stream_pause variable scope: move declaration from CONFIG_BT_AVRCP to CONFIG_BT_A2DP block.
+
 ## 2026-05-07
 1.[blestack] split HCI UART transport into reusable layers .
 

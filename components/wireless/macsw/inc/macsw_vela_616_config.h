@@ -11,11 +11,6 @@
  * - 对于默认配置中已禁用（值为0）的功能，无需任何操作。
  */
 
-// 最大 STA 数量
-
-#undef CFG_STA_MAX
-#define CFG_STA_MAX 2
-
 // TX PBD 数量
 // #define CFG_TX_PBD_CNT 5
 
@@ -24,4 +19,3 @@
 // 为确保它们被禁用，在此处显式取消定义。
 
 #endif // __VELA_616_WIFI_CONFIG_H__
-

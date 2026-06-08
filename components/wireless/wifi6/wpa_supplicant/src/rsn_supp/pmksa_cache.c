@@ -16,7 +16,8 @@
 #include "pmksa_cache.h"
 #include "macsw.h"
 
-#if defined(IEEE8021X_EAPOL) && !defined(CONFIG_NO_WPA)
+#if defined(CONFIG_PMKSA_CACHE) && defined(IEEE8021X_EAPOL) && \
+	!defined(CONFIG_NO_WPA)
 
 static const int pmksa_cache_max_entries = 32;
 
@@ -179,7 +180,6 @@ pmksa_cache_add(struct rsn_pmksa_cache *pmksa, const u8 *pmk, size_t pmk_len,
 	struct rsn_pmksa_cache_entry *entry;
 	struct os_reltime now;
 
-#if MACSW_WFA
 	if (pmk_len > PMK_LEN_MAX)
 		return NULL;
 
@@ -212,9 +212,6 @@ pmksa_cache_add(struct rsn_pmksa_cache *pmksa, const u8 *pmk, size_t pmk_len,
 	entry->network_ctx = network_ctx;
 
 	return pmksa_cache_add_entry(pmksa, entry);
-#else 
-    return NULL;
-#endif
 }
 
 
@@ -750,4 +747,4 @@ void pmksa_cache_reconfig(struct rsn_pmksa_cache *pmksa)
 	}
 }
 
-#endif /* IEEE8021X_EAPOL */
+#endif /* CONFIG_PMKSA_CACHE && IEEE8021X_EAPOL */

@@ -29,12 +29,6 @@
 #define DBG_TAG "LWIP_EMAC"
 #include "log.h"
 
-#if defined(BL616) || defined(BL616CL) || defined(BL702)
-#define EMAC_DEVICE_NAME BFLB_NAME_EMAC0
-#elif defined(BL618DG)
-#define EMAC_DEVICE_NAME BFLB_NAME_EMAC_V2_0
-#endif
-
 /* Network interface name */
 #define IFNAME0 'e'
 #define IFNAME1 'x'
@@ -123,7 +117,7 @@ static int emac_low_level_init(struct netif *netif)
     netif->hwaddr[5] = emac_cfg.mac_addr[5];
 
     /* emac init */
-    emacx = bflb_device_get_by_name(EMAC_DEVICE_NAME);
+    emacx = bsp_emac_get_device(BSP_EMAC_RMII_DEFAULT_PORT);
     if (emacx == NULL) {
         LOG_E("device_get error\r\n");
         return -ERR_IF;
@@ -133,7 +127,13 @@ static int emac_low_level_init(struct netif *netif)
     // bflb_emac_feature_control(emacx, EMAC_CMD_SET_RX_PROMISCUOUS, false);
 
     /* scan eth_phy */
-    ret = eth_phy_scan(&phy_ctrl, EPHY_ADDR_MIN, EPHY_ADDR_MAX);
+    phy_ctrl.mac_mdio_dev = bsp_emac_get_device(BSP_EMAC_MDIO_DEFAULT_PORT);
+    if (phy_ctrl.mac_mdio_dev == NULL) {
+        LOG_E("mdio device_get error\r\n");
+        return -ERR_IF;
+    }
+
+    ret = eth_phy_scan(&phy_ctrl, BSP_EMAC_PHY_DEFAULT_SCAN_START, BSP_EMAC_PHY_DEFAULT_SCAN_END);
     if (ret < 0) {
         return -ERR_IF;
     }

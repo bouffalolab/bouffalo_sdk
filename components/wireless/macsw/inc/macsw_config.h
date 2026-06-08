@@ -28,11 +28,6 @@
 #define CFG_BWLEN
 #define CFG_HE
 
-#define CFG_TWT 8
-#define CFG_BARX 2
-#define CFG_BATX 1
-#define CFG_REORD_BUF 12
-
 #define CFG_UF 1
 #define CFG_MFP 1
 #define CFG_FTM_INIT 1
@@ -69,10 +64,6 @@
 #if !defined(CFG_WFA) && !defined(CFG_WIFI_TWT_PDS15_ENABLE)
 #define CFG_WIFI_TWT_PDS15_ENABLE
 #endif
-
-/* enable ps by default */
-/* TODO: remove this macro, enable by defualt in code? */
-#define CFG_BL_WIFI_PS_ENABLE 1
 
 #ifndef CFG_TX_PBD_CNT
 #define CFG_TX_PBD_CNT 5

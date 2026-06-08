@@ -10,6 +10,14 @@ if(DEFINED PROJECT_SDK_VERSION)
     sdk_add_private_compile_options(-Werror)
     # !! MANDATORY REQUIREMENT !!
 
+    if(CONFIG_GCOV_DUMP)
+        sdk_add_private_compile_options(
+            --coverage
+            -fprofile-dir=/ram
+            -fprofile-info-section
+        )
+    endif()
+
     sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
     sdk_add_private_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/macsw)
 

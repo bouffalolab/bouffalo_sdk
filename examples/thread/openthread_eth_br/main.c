@@ -265,7 +265,8 @@ int main(void)
     __libc_init_array();
 
     /* emac gpio init */
-    board_emac_gpio_init();
+    board_emac_rmii_gpio_init(BSP_EMAC_RMII_DEFAULT_PORT);
+    board_emac_mdio_gpio_init(BSP_EMAC_MDIO_DEFAULT_PORT);
 
     bflb_mtd_init();
 

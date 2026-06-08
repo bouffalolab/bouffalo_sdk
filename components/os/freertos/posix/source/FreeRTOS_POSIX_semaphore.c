@@ -33,9 +33,9 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
+#include "FreeRTOS_POSIX/errno.h"
 #include "FreeRTOS_POSIX/semaphore.h"
-#include "FreeRTOS_POSIX/posix_utils.h"
+#include "FreeRTOS_POSIX/utils.h"
 
 #include "atomic_rtos.h"
 
@@ -59,7 +59,7 @@ int sem_getvalue( sem_t * sem,
 {
     sem_internal_t * pxSem = ( sem_internal_t * ) ( sem );
 
-    /* Get value does not need atomic operation, since -- Open Group
+    /* Get value does not need atomic_rtos operation, since -- Open Group
      * states "the updated value represents an actual semaphore value that
      * occurred at some unspecified time during the call, but it need not be the
      * actual value of the semaphore when it is returned to the calling process."
@@ -84,7 +84,11 @@ int sem_init( sem_t * sem,
     /* Check value parameter. */
     if( value > SEM_VALUE_MAX )
     {
-        errno = EINVAL;
+        #if ( configUSE_POSIX_ERRNO == 1 )
+        {
+            errno = EINVAL;
+        }
+        #endif
         iStatus = -1;
     }
 
@@ -182,11 +186,19 @@ int sem_timedwait( sem_t * sem,
         {
             if( iStatus == 0 )
             {
-                errno = ETIMEDOUT;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = ETIMEDOUT;
+                }
+                #endif
             }
             else
             {
-                errno = iStatus;
+                #if ( configUSE_POSIX_ERRNO == 1 )
+                {
+                    errno = iStatus;
+                }
+                #endif
             }
 
             iStatus = -1;
@@ -214,10 +226,14 @@ int sem_trywait( sem_t * sem )
 
     /* POSIX specifies that this function should set errno to EAGAIN and not
      * ETIMEDOUT. */
-    if( ( iStatus == -1 ) && ( errno == ETIMEDOUT ) )
+    #if ( configUSE_POSIX_ERRNO == 1 )
     {
-        errno = EAGAIN;
+        if( ( iStatus == -1 ) && ( errno == ETIMEDOUT ) )
+        {
+            errno = EAGAIN;
+        }
     }
+    #endif
 
     return iStatus;
 }

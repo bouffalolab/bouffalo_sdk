@@ -44,8 +44,8 @@ Only one `CONFIG_NETHUB_PROFILE_*` interface may be selected in one build.
 
 | Interface | Device-side data path | Device-side control facade | USER virtual channel | Current status |
 | --- | --- | --- | --- | --- |
-| `SDIO` | implemented | implemented | implemented end-to-end in-tree | current default interface |
-| `USB` | implemented through `USB ECM` | implemented transport plumbing through `USB ACM` | API intent exists, but in-tree host `nethub_vchan` is not yet aligned with USB | device-side backend available |
+| `SDIO` | implemented | implemented through AT virtual channel | implemented end-to-end in-tree | current default interface |
+| `USB` | implemented through `USB ECM` | implemented through AT virtual channel over `USB ACM` | device-side ACM vchan path exists, but in-tree host `nethub_vchan` is not yet aligned with USB | device-side backend available |
 | `SPI` | not implemented | not implemented | not implemented | interface stub only |
 
 Notes:
@@ -90,10 +90,12 @@ Typical integrations only need `include/nethub.h`.
 
 Notes:
 
-- `nethub_ctrl_*` is the stable control path facade. Backends decide how
-  the payload is actually carried.
-- `nethub_vchan.h` is designed as a transport-neutral API surface, but
-  the current in-tree implementation is still SDIO-backed.
+- `nethub_ctrl_*` is the stable control path facade layered on
+  `NETHUB_VCHAN_TYPE_AT`.
+- `nethub_vchan.h` is designed as a transport-neutral API surface. SDIO
+  and USB provide device-side vchan backends; the current in-tree
+  end-to-end USER virtual channel flow is still SDIO-centered because the
+  host userspace wrapper is not yet aligned with USB ACM.
 - `nethub_set_wifi_rx_filter()` replaces the built-in Wi-Fi RX policy and
   must be called before `nethub_bootstrap()`.
 
@@ -112,8 +114,8 @@ Notes:
   - current in-tree default backend, including netdev and virtual
     channel integration
 - `backend/host/usb/`
-  - device-side USB backend, including ECM data transport and ACM control
-    transport plumbing
+  - device-side USB backend, including ECM data transport and ACM-backed
+    virtual channel plumbing
 - `backend/host/spi/`
   - interface stub, not implemented yet
 - `diag/`
@@ -141,11 +143,14 @@ Important options:
   - example composition enables `ATModule` plus host `bflbwifid /
     bflbwifictrl`
 - `CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE=n`
-  - example can be reduced to a data-path-focused build
+  - example can be reduced to a data-path-focused build; `nethub_ctrl_*`
+    returns `NETHUB_ERR_NOT_SUPPORTED`, while the data path and
+    `nethub_vchan_*` remain available
 - `CONFIG_MR_VIRTUALCHAN=y`
   - required for the current in-tree SDIO virtual channel path
 - `CONFIG_NETHUB_LOWPOWER_ENABLE=y`
-  - currently meaningful only on `BL618DG`
+  - currently enabled by default for `BL616`; `BL616CL` and `BL618DG`
+    keep it off by default in the NetHub example
 
 About `CONFIG_NETHUB_AT_USE_VCHAN`:
 
@@ -187,9 +192,12 @@ Low power is not a generic NetHub capability across all chips today.
 
 Current status:
 
-- `BL618DG`: supported by the example configuration
-- other chips: the example configuration auto-disables
+- `BL616`: low-power flow is supported by the NetHub example
+- `BL616CL` and `BL618DG`: the example configuration auto-disables
   `CONFIG_NETHUB_LOWPOWER_ENABLE`
+
+For the per-chip and per-interface validation state, see
+`examples/wifi/nethub/docs/NetHub.md`, "Current Support Matrix".
 
 ## 8. Related Documents
 

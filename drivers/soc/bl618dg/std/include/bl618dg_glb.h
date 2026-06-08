@@ -2068,6 +2068,8 @@ BL_Err_Type GLB_Set_DSI_BIT_CLK(uint8_t enable, uint8_t div);
 BL_Err_Type GLB_Config_WIFIPLL(uint8_t xtalType, const GLB_WIFIPLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Config_CPUPLL(uint8_t xtalType, const GLB_CPUPLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t div);
+BL_Err_Type GLB_Config_CPUPLL_To_632P2176M_By_Sdmin(void);
+BL_Err_Type GLB_Config_CPUPLL_To_638P976M_By_Sdmin(void);
 BL_Err_Type GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t div);
 /*----------*/
 BL_Err_Type GLB_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uint8_t mcuPBclkDiv);
@@ -2181,6 +2183,9 @@ void GLB_RC32M_Force_On(uint8_t enable);
 void GLB_RC32M_Force_Off(uint8_t enable);
 uint64_t GLB_Get_NP2MINI_Interrupt_Status(void);
 void GLB_Set_NP2MINI_Interrupt_Clear(uint8_t irq);
+void GLB_Set_NP_Interrupt_Mask(uint8_t irq, uint8_t mask);
+void GLB_Clear_And_Rearm_NP_Interrupt(uint8_t irq);
+uint64_t GLB_Get_NP_Interrupt_Mask(void);
 void GLB_Set_NP2MINI_Interrupt_Mask(uint8_t irq, uint8_t mask);
 uint64_t GLB_Get_NP2MINI_Interrupt_Mask(void);
 /*----------*/

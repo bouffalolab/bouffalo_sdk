@@ -32,13 +32,8 @@
 #define  CODE_WIFI_ON_SCAN_DONE_ONJOIN  10
 #define  CODE_WIFI_ON_AP_STARTED        11
 #define  CODE_WIFI_ON_AP_STOPPED        12
-#define  CODE_WIFI_ON_PROV_SSID         13
-#define  CODE_WIFI_ON_PROV_BSSID        14
-#define  CODE_WIFI_ON_PROV_PASSWD       15
-#define  CODE_WIFI_ON_PROV_CONNECT      16
-#define  CODE_WIFI_ON_PROV_DISCONNECT   17
-#define  CODE_WIFI_ON_PROV_SCAN_START   18
-#define  CODE_WIFI_ON_PROV_STATE_GET    19
+#define  CODE_WIFI_ON_AP_CSA_DONE       13
+#define  CODE_WIFI_ON_STA_CSA_DONE      14
 #define  CODE_WIFI_ON_MGMR_DENOISE      20
 #define  CODE_WIFI_ON_AP_STA_ADD        21
 #define  CODE_WIFI_ON_AP_STA_DEL        22
@@ -256,54 +251,60 @@ typedef struct wifi_mgmr_adhoc_start_params {
     void *cb_tx_cfm;
 } wifi_mgmr_adhoc_start_params_t;
 
-/// ap start params
+/// AP start parameters
 typedef struct wifi_mgmr_ap_params {
-    /// must be setted
+    /// The SSID of the AP. Must be set.
     char *ssid;
-    /// if NULL and the akm is not NULL, the default value "12345678" will be setted
+    /// If NULL and akm is not NULL, the default key is "12345678".
     char *key;
-    /// OPEN/WPA/WPA2 can be supported now, if NULL and the key is not NULL, the default value "WPA2" will be setted
+    /// OPEN/WPA/WPA2; if NULL and key is not NULL, the default AKM is WPA2.
     char *akm;
-    /// if zero, the default value 6 will be setted
+    /// If zero, the default channel is 6.
     uint8_t channel;
-    /// Channel type (@ref mac_chan_bandwidth)
+    /// Channel type, see mac_chan_bandwidth.
     uint8_t type;
-    /// use_ipcfg;
+    /// Whether to configure AP IP settings.
     bool use_ipcfg;
-    /// Whether use dhcpd
+    /// Whether to start DHCP server.
     bool use_dhcpd;
-    /// dhcpd pool start
+    /// DHCP server pool start.
     int start;
-    /// dhcpd pool limit
+    /// DHCP server pool limit.
     int limit;
-    /// ap ip addr
+    /// AP IP address.
     uint32_t ap_ipaddr;
-    /// ap subnet mask
+    /// AP subnet mask.
     uint32_t ap_mask;
-    /// STA MAX inactivity under connection
+    /// STA max inactivity while connected.
     uint32_t ap_max_inactivity;
-    /// whether use hidden ssid
+    /// Whether to use hidden SSID.
     bool hidden_ssid;
-    /// whether enable isolation
+    /// Whether to enable AP isolation.
     bool isolation;
-    /// Beacon interval in TU
+    /// Beacon interval in TU.
     int bcn_interval;
-    /// Additional vendor specific elements for Beacon and Probe Response frames
-    /// a hexdump of the raw information elements (id+len+payload for one or more elements),
-    //  the maximum length supported is MAX_AP_VENDOR_ELEMENTS_LEN,
-    /// ref wap_supplicant.conf
+    /// Additional vendor specific elements for Beacon and Probe Response frames.
+    /// The value is a continuous raw IE hex string:
+    /// element id + length + payload.
+    /// Multiple IEs are supported by concatenating complete raw IE hex strings
+    /// in order, e.g. "dd0411223301dd05aabbcc0203".
+    /// Do not include "0x", spaces, or ':' separators.
+    /// Current SDK limit: strlen(ap_vendor_elements) <= MAX_AP_VENDOR_ELEMENTS_LEN.
+    /// Ref: wpa_supplicant.conf.
     char *ap_vendor_elements;
-    /// bcn_mode:
-    /// 0   Start/Stop beacon transmissions automatically
-    ///         a.Beacon transmission is NOT started when SAP is started.
-    ///         b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
-    ///         c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
-    /// 1   Do not transmit beacon frames
-    /// 2   Transmit beacon frames (Default)
+    /// Beacon transmission mode:
+    /// 0: Start/Stop beacon transmissions automatically. Beacon transmission is
+    ///    not started when SAP is started. After receiving a Probe Request with
+    ///    the same SSID, the AP replies with a Probe Response and starts Beacon
+    ///    transmission. Beacon transmission is stopped again if no STA is
+    ///    associated for more than bcn_timer seconds.
+    /// 1: Do not transmit Beacon frames.
+    /// 2: Transmit Beacon frames. This is the default mode.
     uint8_t bcn_mode;
-    /// Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds
+    /// Beacon transmission is stopped again if no STA is associated for more
+    /// than bcn_timer seconds when bcn_mode is 0.
     int bcn_timer;
-    /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames
+    /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames.
     bool disable_wmm;
 } wifi_mgmr_ap_params_t;
 
@@ -1317,7 +1318,6 @@ int wifi_mgmr_raw_80211_send(const wifi_mgmr_raw_send_params_t *config);
 int wifi_mgmr_get_stats(struct ieee80211_stats *stats, uint8_t num_stats);
 
 int wifi_mgmr_clear_stats(void);
-#ifdef CFG_BL_WIFI_PS_ENABLE
 /**
  * wifi_mgmr_null_data_send
  * Send null packet
@@ -1327,7 +1327,6 @@ int wifi_mgmr_clear_stats(void);
  *  Others is Failed
  */
 int wifi_mgmr_null_data_send(void);
-#endif
 
 /**
  * wifi_mgmr_psk_cal
@@ -1687,5 +1686,35 @@ int wifi_mgmr_channel_valid_check(uint16_t channel);
  *   - -1: Mode is invalid
  */
 int wifi_mgmr_wifimode_valid_check(uint16_t mode);
+
+/**
+ * @brief Trigger an AP Channel Switch Announcement (CSA) to migrate the running
+ *        SoftAP to a new channel without tearing down associated stations.
+ *
+ * Hostapd advertises the upcoming switch by inserting a CSA IE in the next
+ * @p cs_count beacons. The firmware decrements the counter on every beacon TX
+ * and performs the actual channel switch when the counter reaches zero. When
+ * the switch completes, @ref CODE_WIFI_ON_AP_CSA_DONE is posted to the user
+ * event handler with the new channel number carried in @c ev->value.
+ *
+ * @param channel  Target primary channel (2.4 GHz: 1..14, 5 GHz: 36..165).
+ *                 The band is auto-detected from the channel number. The
+ *                 channel is validated against the current regulatory domain
+ *                 via @ref wifi_mgmr_channel_valid_check before being applied.
+ * @param cs_count Number of beacons to send before switching. Unit is one
+ *                 beacon interval (TBTT), i.e. the actual delay is roughly
+ *                 cs_count * beacon_interval (default 100ms per beacon).
+ *                 A value of 0 is replaced by a default of 10 (~1 second).
+ *                 Larger values give associated stations more time to follow
+ *                 the switch.
+ *
+ * @return int
+ *   - 0: Request accepted and forwarded to hostapd
+ *   - -1: AP is not started, channel is invalid, or hostapd rejected the request
+ *
+ * @note The AP must have been started via @ref wifi_mgmr_ap_start before
+ *       calling this function.
+ */
+int wifi_mgmr_ap_chan_switch(int channel, uint8_t cs_count);
 
 #endif

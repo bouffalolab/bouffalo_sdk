@@ -893,6 +893,22 @@ void wifi_mgmr_ap_stop_cmd(int argc, char **argv)
 {
     wifi_mgmr_ap_stop();
 }
+
+void wifi_mgmr_ap_chan_switch_cmd(int argc, char **argv)
+{
+    int channel;
+    uint8_t cs_count = 10;
+
+    if (argc < 2) {
+        printf("Usage: %s <channel> [cs_count]\r\n", argv[0]);
+        return;
+    }
+    channel = atoi(argv[1]);
+    if (argc > 2)
+        cs_count = (uint8_t)atoi(argv[2]);
+
+    wifi_mgmr_ap_chan_switch(channel, cs_count);
+}
 #endif
 
 #if WIFI_STATISTIC_ENABLE
@@ -1098,6 +1114,7 @@ SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_list_get_cmd, wifi_sta_list, get sta list in 
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_delete_cmd, wifi_sta_del, delete one sta in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_start_cmd, wifi_ap_start, start AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_stop_cmd, wifi_ap_stop, stop AP mode);
+SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_chan_switch_cmd, wifi_ap_chan_switch, AP channel switch: <channel> [cs_count]);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_mac_get, wifi_ap_mac_get, get wifi ap mac);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_conf_max_sta, wifi_ap_conf_max_sta, config AP mac sta);
 #endif

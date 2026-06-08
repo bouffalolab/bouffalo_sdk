@@ -20,7 +20,7 @@ static int ephy_general_ability_check(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg
     uint16_t regval;
     uint16_t ability;
 
-    eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
+    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
 
     if (cfg->speed_mode == EPHY_SPEED_MODE_AUTO_NEGOTIATION) {
         /* check auto negotiation */
@@ -103,15 +103,15 @@ int ephy_general_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
     uint32_t negotia_ability = 0;
 
     /* reset */
-    eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
     regval |= EPHY_CSR_SOFT_RESET_BIT;
-    eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+    eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
 
     /* Per the IEEE 802.3u standard, clause 22 (22.2.4.1.1) the reset process will be completed within 0.5s from the setting of this bit. */
     for (int i = 0; i < 500; i++) {
         eth_phy_delay_ms(1);
         /* read reset bit */
-        eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+        eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
         if (!(regval & EPHY_CSR_SOFT_RESET_BIT)) {
             // LOG_I("reset done: %dms\r\n", i);
             break;
@@ -124,9 +124,9 @@ int ephy_general_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
 
     if (cfg->speed_mode != EPHY_SPEED_MODE_AUTO_NEGOTIATION) {
         /* disable Auto-Negotiate */
-        eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+        eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
         regval &= ~EPHY_CSR_AUTO_NEGOTIATION_EN_BIT;
-        eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+        eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
 
         /* half/full duplex mode */
         if (cfg->speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX || cfg->speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
@@ -142,12 +142,12 @@ int ephy_general_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
             regval &= ~EPHY_CSR_SPEED_SEL_LSB_BIT;
         }
 
-        eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+        eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
         return 0;
     }
 
     /* Auto-Negotiation Advertisement Register */
-    eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_AUTONEG_ADVERTISE_OFFSET, &regval);
+    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_AUTONEG_ADVERTISE_OFFSET, &regval);
     /* 10BASE-TX ability */
     if (negotia_ability & EPHY_ABILITY_10M_T) {
         regval |= EPHY_10BASE_TX_ABLE_BIT;
@@ -172,15 +172,15 @@ int ephy_general_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
     } else {
         regval &= ~EPHY_100BASE_TX_FULL_DUPLEX_ABLE_BIT;
     }
-    eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_AUTONEG_ADVERTISE_OFFSET, regval);
+    eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_AUTONEG_ADVERTISE_OFFSET, regval);
 
     /* enable Auto-Negotiate */
-    eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
     regval |= EPHY_CSR_AUTO_NEGOTIATION_EN_BIT;
-    eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+    eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
     /* restart Auto-Negotiate */
     regval |= EPHY_CSR_RESTART_NEGOTIATION_BIT;
-    eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+    eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
 
     return 0;
 }
@@ -200,10 +200,10 @@ int ephy_general_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg)
     switch (cmd) {
         case EPHY_CMD_GET_LINK_STA:
             /* check Auto-Negotiate Enable */
-            eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
             if (regval & EPHY_CSR_AUTO_NEGOTIATION_EN_BIT) {
                 /* check Auto-Negotiate Complete */
-                eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
+                eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
                 if (regval & EPHY_BSR_AUTO_NEGOTIATE_COMPLETE_BIT) {
                     /* check link status */
                     if (regval & EPHY_BSR_LINK_STATUS_BIT) {
@@ -220,7 +220,7 @@ int ephy_general_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg)
                     }
                 }
             } else {
-                eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
+                eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
                 /* check link status */
                 if (regval & EPHY_BSR_LINK_STATUS_BIT) {
                     ret = EPHY_LINK_STA_UP;
@@ -232,15 +232,15 @@ int ephy_general_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg)
 
         case EPHY_CMD_GET_SPEED_MODE:
             /* check Auto-Negotiate Enable */
-            eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
             if (regval & EPHY_CSR_AUTO_NEGOTIATION_EN_BIT) {
                 /* check Auto-Negotiate Complete */
-                eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
+                eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_STATUS_OFFSET, &regval);
                 if (regval & EPHY_BSR_AUTO_NEGOTIATE_COMPLETE_BIT) {
                     /* get Auto-Negotiation Advertisement Register */
-                    eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_AUTONEG_ADVERTISE_OFFSET, &regval1);
+                    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_AUTONEG_ADVERTISE_OFFSET, &regval1);
                     /* get Auto-Negotiation Link Partner Ability Register  */
-                    eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_AUTONEG_LINKPARTNER_OFFSET, &regval2);
+                    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_AUTONEG_LINKPARTNER_OFFSET, &regval2);
                     /* get speed mode */
                     if (regval1 & regval2 & EPHY_100BASE_TX_FULL_DUPLEX_ABLE_BIT) {
                         ret = EPHY_SPEED_MODE_100M_FULL_DUPLEX;
@@ -273,31 +273,31 @@ int ephy_general_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg)
 
         case EPHY_CMD_SET_RESTART_NEGOTIATE:
             /* restart Auto-Negotiate */
-            eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
             regval |= EPHY_CSR_RESTART_NEGOTIATION_BIT;
-            eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+            eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
             break;
 
         case EPHY_CMD_SET_LOOPBACK_MODE:
             /* loopback mode */
-            eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
             if (arg) {
                 regval |= EPHY_CSR_LOOPBACK_BIT;
             } else {
                 regval &= ~EPHY_CSR_LOOPBACK_BIT;
             }
-            eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+            eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
             break;
 
         case EPHY_CMD_SET_POWER_DOWN:
             /* General power down mode */
-            eth_phy_mdio_read(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
             if (arg) {
                 regval |= EPHY_CSR_POWER_DOWN_BIT;
             } else {
                 regval &= ~EPHY_CSR_POWER_DOWN_BIT;
             }
-            eth_phy_mdio_write(phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+            eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
             break;
 
         default:

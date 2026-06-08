@@ -16,6 +16,7 @@
 #include "mr_virtualchan.h"
 
 #include "nh_vchan_backend.h"
+#include "nethub.h"
 #include "nethub_vchan.h"
 
 #define DBG_TAG "VIRTUALCHAN"
@@ -47,6 +48,8 @@ static mr_virtualchan_priv_t *g_virtualchan_priv = NULL;
 static nethub_vchan_recv_cb_t g_nethub_vchan_recv_cb[NETHUB_VCHAN_TYPE_MAX] = {NULL};
 static void *g_nethub_vchan_recv_arg[NETHUB_VCHAN_TYPE_MAX] = {NULL};
 
+static int nethub_sdio_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len);
+
 static int nethub_vchan_type_is_valid(nethub_vchan_type_t type)
 {
     return (type > 0) && (type < NETHUB_VCHAN_TYPE_MAX);
@@ -65,6 +68,7 @@ static int virtualchan_dnld_data_output(mr_virtualchan_priv_t *priv, mr_virtualc
         nethub_vchan_recv_cb_t cb = g_nethub_vchan_recv_cb[type];
         void *arg = g_nethub_vchan_recv_arg[type];
 
+        (void)nethub_set_active_host_link(NETHUB_CHANNEL_SDIO);
         if (cb) {
             cb(arg, hdr->data, hdr->len);
         }
@@ -202,7 +206,7 @@ static int cmd_virtualchan(int argc, char **argv)
         }
         printf("\r\n");
 #endif
-        ret = nethub_vchan_send(data_type, temp_buff, data_len);
+        ret = nethub_sdio_vchan_send(data_type, temp_buff, data_len);
         free(temp_buff);
 
         if (ret < 0) {
@@ -218,9 +222,9 @@ static int cmd_virtualchan(int argc, char **argv)
     return -1;
 }
 
-int nethub_vchan_recv_register(nethub_vchan_type_t type,
-                               nethub_vchan_recv_cb_t recv_cb,
-                               void *arg)
+static int nethub_sdio_vchan_recv_register(nethub_vchan_type_t type,
+                                           nethub_vchan_recv_cb_t recv_cb,
+                                           void *arg)
 {
     if (nethub_vchan_type_is_valid(type)) {
         g_nethub_vchan_recv_cb[type] = recv_cb;
@@ -231,7 +235,7 @@ int nethub_vchan_recv_register(nethub_vchan_type_t type,
     return -1;
 }
 
-int nethub_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len)
+static int nethub_sdio_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len)
 {
     int ret;
     uint16_t total_len;
@@ -276,26 +280,6 @@ int nethub_vchan_send(nethub_vchan_type_t type, const void *data, uint16_t len)
     return 0;
 }
 
-int nethub_vchan_user_send(const void *data, uint16_t len)
-{
-    return nethub_vchan_send(NETHUB_VCHAN_TYPE_USER, data, len);
-}
-
-int nethub_vchan_user_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg)
-{
-    return nethub_vchan_recv_register(NETHUB_VCHAN_TYPE_USER, recv_cb, cb_arg);
-}
-
-int nethub_vchan_at_send(const void *data, uint16_t len)
-{
-    return nethub_vchan_send(NETHUB_VCHAN_TYPE_AT, data, len);
-}
-
-int nethub_vchan_at_recv_register(nethub_vchan_recv_cb_t recv_cb, void *cb_arg)
-{
-    return nethub_vchan_recv_register(NETHUB_VCHAN_TYPE_AT, recv_cb, cb_arg);
-}
-
 /**< Reset callback (optional) */
 int virtualchan_reset(mr_virtualchan_priv_t *priv)
 {
@@ -304,7 +288,7 @@ int virtualchan_reset(mr_virtualchan_priv_t *priv)
     return 0;
 }
 
-int nethub_vchan_backend_init(mr_msg_ctrl_priv_t *msg_ctrl)
+int nethub_sdio_vchan_backend_init(mr_msg_ctrl_priv_t *msg_ctrl)
 {
     mr_virtualchan_cfg_t virtualchan_cfg = {
         .name = "virtualchan",
@@ -332,5 +316,10 @@ int nethub_vchan_backend_init(mr_msg_ctrl_priv_t *msg_ctrl)
 
     return 0;
 }
+
+const nh_vchan_ops_t nhsdio_vchan_ops = {
+    .send = nethub_sdio_vchan_send,
+    .recv_register = nethub_sdio_vchan_recv_register,
+};
 
 SHELL_CMD_EXPORT_ALIAS(cmd_virtualchan, virtualchan, help|status|send <user|at|system> <len> - show help/status or send data);

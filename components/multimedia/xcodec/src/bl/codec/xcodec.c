@@ -5,6 +5,7 @@
  *   2019-03-25  MSP          the first version
  */
 
+#include <stdint.h>
 #include <string.h>
 #include "xcodec.h"
 #include "codec_output.h"
@@ -17,9 +18,17 @@
 #include <bflb_i2s.h>
 #endif
 #if defined(BL616) && defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
-#include "bl616_glb.h"
 #include "hardware/i2s_reg.h"
 #endif
+
+#if defined(BL616)
+#include "bl616_glb.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
+#elif defined(BL618DG)
+#include "bl618dg_glb.h"
+#endif
+
 #include <xutils/xringbuffer.h>
 #include <msp/kernel.h>
 #include <msp_port.h>
@@ -102,20 +111,39 @@ static void xcodec_try_apply_i2s_output_clock(uint32_t freq_mHz);
 #endif
 
 #ifndef CONFIG_CODEC_USE_I2S
-int codec_aupwm_pinmux_config(uint8_t pin)
+int codec_aupwm_pinmux_config(uint8_t positive_pin, uint8_t negative_pin)
 {
     struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+#if defined(BL618DG) && BL618DG
+    GLB_Set_Audio_AUTO_CLK(false);
+    GLB_Set_CPUPLL_PostOut(true, 26);
+    GLB_Set_Audio_SOLO_CLK(true, 31);
 
-    bflb_gpio_init(gpio, pin, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, positive_pin, GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, negative_pin, GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+#elif BL616
+    GLB_Config_AUDIO_PLL_To_491P52M();
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
 
+    bflb_gpio_init(gpio, positive_pin, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, negative_pin, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+#endif
     return 0;
 }
 
-int codec_auadc_pinmux_config(uint8_t pin)
+int codec_auadc_pinmux_config(uint8_t positive_pin, uint8_t negative_pin)
 {
+#if defined(BL618DG) && BL618DG
+    GLB_Set_Audio_SOLO_CLK(ENABLE, 3);
+    GLB_Set_CPUPLL_PostOut(true, 26);
+#elif BL616
+    GLB_Config_AUDIO_PLL_To_491P52M();
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
+#endif
     struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
 
-    bflb_gpio_init(gpio, pin, GPIO_ANALOG | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, positive_pin, GPIO_ANALOG | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, negative_pin, GPIO_ANALOG | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     return 0;
 }
 #endif
@@ -218,13 +246,9 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
     /* means unused pin */
-    if (pin_cfg.input_positive_pin != 255) {
-        codec_auadc_pinmux_config(pin_cfg.input_positive_pin);
+    if (pin_cfg.input_positive_pin != 255 && pin_cfg.input_negative_pin != 255) {
+        codec_auadc_pinmux_config(pin_cfg.input_positive_pin, pin_cfg.input_negative_pin);
     }
-    if (pin_cfg.input_negative_pin != 255) {
-        codec_auadc_pinmux_config(pin_cfg.input_negative_pin);
-    }
-
     cfg.positive_pin = pin_cfg.input_positive_pin;
     cfg.negative_pin = pin_cfg.input_negative_pin;
 #endif
@@ -404,9 +428,8 @@ static uint32_t xcodec_output_pending_bytes_locked(const auo_ch_t *context)
     uint32_t get_size;
     uint32_t dma_addr;
 
-    if ((context == NULL) || (context->dma == NULL) || (context->ringbuffer == NULL)
-        || (context->device_dma == NULL) || (context->head == 0)
-        || (context->st == 0) || (context->first_output_timestamp_ns == 0)) {
+    if ((context == NULL) || (context->dma == NULL) || (context->ringbuffer == NULL) || (context->device_dma == NULL) ||
+        (context->head == 0) || (context->st == 0) || (context->first_output_timestamp_ns == 0)) {
         return 0;
     }
 
@@ -541,11 +564,8 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
     }
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
-    if (pin_cfg.output_negative_pin != 255) {
-        codec_aupwm_pinmux_config(pin_cfg.output_negative_pin);
-    }
-    if (pin_cfg.output_positive_pin != 255) {
-        codec_aupwm_pinmux_config(pin_cfg.output_positive_pin);
+    if (pin_cfg.output_positive_pin != 255 && pin_cfg.output_negative_pin != 255) {
+        codec_aupwm_pinmux_config(pin_cfg.output_positive_pin, pin_cfg.output_negative_pin);
     }
 #endif
     ret = auo_channel_config(&tx_context, &cfg);
@@ -797,7 +817,7 @@ xcodec_error_t xcodec_output_get_timing_info(xcodec_output_timing_info_t *info)
 #if defined(BL616)
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
 #define SDMIN_FACTOR    (204.8f)
-#define AUPLL_OTHER_DIV (20)        //AUDIO PLL is set to 491.52M,  aupll_other clock source 491.52M /20 = 24.576M
+#define AUPLL_OTHER_DIV (20) //AUDIO PLL is set to 491.52M,  aupll_other clock source 491.52M /20 = 24.576M
 
 static uint8_t Clock_I2S_Div_Get(void)
 {
@@ -854,8 +874,9 @@ static void xcodec_try_apply_i2s_output_clock(uint32_t freq_mHz)
      *   sdmin = vco_frequency(MHz) * 204.8
      * while freq_mHz here carries the requested sample rate in milli-Hz.
      */
-    vco_Mhz = ((double)freq_mHz * (double)slot_width * (double)frame_slots *
-               (double)i2s_bclk_div * (double)i2s_div * (double)AUPLL_OTHER_DIV) / 1000000000.0;
+    vco_Mhz = ((double)freq_mHz * (double)slot_width * (double)frame_slots * (double)i2s_bclk_div * (double)i2s_div *
+               (double)AUPLL_OTHER_DIV) /
+              1000000000.0;
     sdmin = (uint32_t)(vco_Mhz * SDMIN_FACTOR + 0.5);
     GLB_AUDIO_PLL_fine_tuning_sdmin(sdmin);
 }

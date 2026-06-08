@@ -148,6 +148,19 @@ int nethub_at_parse_cwjap(const char *line, nethub_wifi_status_t *status)
     return 0;
 }
 
+static void copy_bounded(char *dst, size_t dst_size, const char *src, size_t len)
+{
+    if (!dst || dst_size == 0 || !src) {
+        return;
+    }
+
+    if (len >= dst_size) {
+        len = dst_size - 1u;
+    }
+    memcpy(dst, src, len);
+    dst[len] = '\0';
+}
+
 static void parse_ip_kv(char *dst, size_t dst_size, const char *line, const char *key)
 {
     const char *p;
@@ -164,11 +177,43 @@ static void parse_ip_kv(char *dst, size_t dst_size, const char *line, const char
     }
     p += key_len;
     len = strcspn(p, ",\r\n");
-    if (len >= dst_size) {
-        len = dst_size - 1u;
+    copy_bounded(dst, dst_size, p, len);
+}
+
+int nethub_at_parse_cipsta(const char *line, nethub_wifi_status_t *status)
+{
+    const char *value;
+    const char *end;
+    size_t len;
+
+    if (!line || !status || strncmp(line, "+CIPSTA:", 8) != 0) {
+        return -1;
     }
-    memcpy(dst, p, len);
-    dst[len] = '\0';
+
+    value = strchr(line, '"');
+    if (!value) {
+        return -1;
+    }
+    value++;
+    end = strchr(value, '"');
+    if (!end) {
+        return -1;
+    }
+    len = (size_t)(end - value);
+
+    if (strncmp(line, "+CIPSTA:ip:", 11) == 0) {
+        copy_bounded(status->ip, sizeof(status->ip), value, len);
+    } else if (strncmp(line, "+CIPSTA:gateway:", 16) == 0) {
+        copy_bounded(status->gateway, sizeof(status->gateway), value, len);
+    } else if (strncmp(line, "+CIPSTA:netmask:", 16) == 0) {
+        copy_bounded(status->netmask, sizeof(status->netmask), value, len);
+    } else if (strncmp(line, "+CIPSTA:dns:", 12) == 0) {
+        copy_bounded(status->dns, sizeof(status->dns), value, len);
+    } else {
+        return -1;
+    }
+
+    return 0;
 }
 
 int nethub_at_parse_gotip(const char *line, nethub_wifi_status_t *status)

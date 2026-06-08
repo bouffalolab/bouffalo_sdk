@@ -33,6 +33,7 @@
 #include "bl616_pm.h"
 #include "bl616_hbn.h"
 #elif defined(BL616CL)
+#include "bl616cl_glb.h"
 #include "bl616cl_pm.h"
 #include "bl616cl_hbn.h"
 #elif defined(BL618DG)
@@ -88,6 +89,83 @@ extern void wifi_event_handler(async_input_event_t ev, void *priv);
 /****************************************************************************
  * Functions
  ****************************************************************************/
+
+#if defined(BL616CL)
+static void wl_lp_bl616cl_gpio_ie_disable(uint8_t pin)
+{
+    uint32_t reg_addr;
+    uint32_t gpio_cfg;
+
+    reg_addr = GLB_BASE + GLB_GPIO_CFG0_OFFSET + ((uint32_t)pin << 2);
+    gpio_cfg = BL_RD_WORD(reg_addr);
+    gpio_cfg = BL_CLR_REG_BIT(gpio_cfg, GLB_REG_GPIO_0_IE);
+    BL_WR_WORD(reg_addr, gpio_cfg);
+}
+
+static void wl_lp_bl616cl_pds_gpio_prepare(void)
+{
+    wl_lp_bl616cl_gpio_ie_disable(GPIO_PIN_12);
+    wl_lp_bl616cl_gpio_ie_disable(GPIO_PIN_13);
+    wl_lp_bl616cl_gpio_ie_disable(GPIO_PIN_18);
+}
+
+static void wl_lp_bl616cl_dcdc_init(void)
+{
+#if (PM_EXT_DCDC_SYS_ENABLE_PIN != 0xFF)
+    pm_dcdc_sys_enable_ctrl(PM_EXT_DCDC_SYS_ENABLE_PIN, ENABLE);
+    printf("[PMU] DCDC SYS enable GPIO: GPIO_%d\r\n", PM_EXT_DCDC_SYS_ENABLE_PIN);
+#endif
+
+#if (PM_EXT_DCDC_SOC_CTRL_PIN != 0xFF)
+    pm_dcdc_soc_vsel_ctrl(PM_EXT_DCDC_SOC_CTRL_PIN, 1);
+    printf("[PMU] DCDC SOC vsel GPIO: GPIO_%d, active level 0.9V\r\n", PM_EXT_DCDC_SOC_CTRL_PIN);
+#endif
+
+#if (PM_EXT_DCDC_SOC_ENABLE_PIN != 0xFF)
+    HBN_SW_Set_Ldo_Soc_Vout(PM_PDS_LDO_SOC_ACTIVE_LEVEL);
+    pm_dcdc_soc_enable_ctrl(PM_EXT_DCDC_SOC_ENABLE_PIN, ENABLE);
+    printf("[PMU] DCDC SOC enable GPIO: GPIO_%d\r\n", PM_EXT_DCDC_SOC_ENABLE_PIN);
+#endif
+}
+
+void lp_hook_pre_user(void *arg)
+{
+    (void)arg;
+
+    wl_lp_bl616cl_pds_gpio_prepare();
+}
+#endif
+
+#if defined(WL_LP_AUTO_SHELL_ENABLE)
+static void wl_lp_auto_shell_task(void *pvParameters)
+{
+    static const char *const boot_cmds[] = {
+        WL_LP_AUTO_SHELL_CMD0,
+        WL_LP_AUTO_SHELL_CMD1,
+        WL_LP_AUTO_SHELL_CMD2,
+        WL_LP_AUTO_SHELL_CMD3,
+    };
+
+    (void)pvParameters;
+
+    vTaskDelay(pdMS_TO_TICKS(WL_LP_AUTO_SHELL_DELAY_MS));
+
+    for (uint32_t i = 0; i < sizeof(boot_cmds) / sizeof(boot_cmds[0]); i++) {
+        const char *cmd = boot_cmds[i];
+
+        if (cmd == NULL || cmd[0] == '\0') {
+            continue;
+        }
+
+        printf("[AUTO_SHELL] %s\r\n", cmd);
+        shell_exe_cmd((uint8_t *)cmd, strlen(cmd));
+        shell_exe_cmd((uint8_t *)"\r", 1);
+        vTaskDelay(pdMS_TO_TICKS(WL_LP_AUTO_SHELL_INTERVAL_MS));
+    }
+
+    vTaskDelete(NULL);
+}
+#endif
 
 #if defined(CONFIG_WL80211)
 /* wl80211 path: fhost's platform_post_event lazy-inits async_event for us,
@@ -677,7 +755,7 @@ int main(void)
 #endif
 
 #if defined(BL616CL)
-    bl_ext_dcdc_apply_power_supply_mode();
+    wl_lp_bl616cl_dcdc_init();
 #endif
 
     uart0 = bflb_device_get_by_name("uart0");
@@ -698,22 +776,19 @@ int main(void)
 #endif
 
 #ifdef LP_APP
-#if defined(CFG_BL_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
     pm_sys_init();
     bl_lp_init();
-#endif
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
-#endif
-#if defined(BL616CL)
-    if (BL616CL_POWER_SUPPLY_SOC_USE_EXT_DCDC(BL616CL_POWER_SUPPLY_MODE)) {
-        board_ext_dcdc_init();
-    }
 #endif
     ci_pm_test_init();
 
     /* Create F32K clock init task */
     printf("[OS] Create f32k_clk_init task...\r\n");
     xTaskCreate(f32k_clk_init_task, (char *)"f32k_clk_init", 1024, NULL, 12, NULL);
+
+#if defined(WL_LP_AUTO_SHELL_ENABLE)
+    xTaskCreate(wl_lp_auto_shell_task, (char *)"auto_shell", 1024, NULL, 8, NULL);
+#endif
 
 #if 0
     printf("[OS] Starting proc_hellow_entry task...\r\n");

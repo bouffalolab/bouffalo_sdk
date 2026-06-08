@@ -1,6 +1,5 @@
 #include "nethub_netif.h"
 
-#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +9,57 @@
 #include "nethub_log.h"
 
 #define NETHUB_NETIF_DEFAULT_NAME "mr_eth0"
+#define NETHUB_NETIF_ENV_NAME "NETHUB_NETIF_NAME"
+#define NETHUB_NETIF_NAME_MAX 15
 #define NETHUB_NETIF_ROUTE_METRIC 700
+#define NETHUB_NETIF_ROUTE_TABLE 100
+#define NETHUB_NETIF_RULE_PRIORITY 10000
+
+static int netif_name_char_is_valid(char ch)
+{
+    return (ch >= 'A' && ch <= 'Z') ||
+           (ch >= 'a' && ch <= 'z') ||
+           (ch >= '0' && ch <= '9') ||
+           ch == '_' || ch == '-' || ch == '.' || ch == ':';
+}
+
+static int netif_name_is_valid(const char *name)
+{
+    size_t len;
+
+    if (!name || name[0] == '\0') {
+        return 0;
+    }
+
+    len = strlen(name);
+    if (len > NETHUB_NETIF_NAME_MAX) {
+        return 0;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if (!netif_name_char_is_valid(name[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static const char *netif_name_from_env(void)
+{
+    const char *name = getenv(NETHUB_NETIF_ENV_NAME);
+
+    if (!name || name[0] == '\0') {
+        return NETHUB_NETIF_DEFAULT_NAME;
+    }
+
+    if (!netif_name_is_valid(name)) {
+        NETHUB_LOGE("invalid %s: %s", NETHUB_NETIF_ENV_NAME, name);
+        return NULL;
+    }
+
+    return name;
+}
 
 static int parse_ipv4_addr(const char *addr, uint32_t *value)
 {
@@ -36,30 +85,6 @@ static int parse_ipv4_addr(const char *addr, uint32_t *value)
              ((uint32_t)parts[2] << 8) |
              (uint32_t)parts[3];
     return 0;
-}
-
-static int is_valid_ifname(const char *ifname)
-{
-    size_t len;
-
-    if (!ifname) {
-        return 0;
-    }
-
-    len = strlen(ifname);
-    if (len == 0 || len >= 64) {
-        return 0;
-    }
-
-    for (size_t i = 0; i < len; i++) {
-        unsigned char ch = (unsigned char)ifname[i];
-
-        if (!isalnum(ch) && ch != '_' && ch != '-' && ch != '.' && ch != ':') {
-            return 0;
-        }
-    }
-
-    return 1;
 }
 
 static int mask_to_cidr(const char *mask)
@@ -104,6 +129,27 @@ static int calculate_broadcast(const char *ip, const char *mask, char *broadcast
     return 0;
 }
 
+static int calculate_network(const char *ip, const char *mask, char *network, size_t network_size)
+{
+    uint32_t ip_addr;
+    uint32_t mask_addr;
+    uint32_t network_addr;
+
+    if (!network || network_size < 16 ||
+        parse_ipv4_addr(ip, &ip_addr) != 0 ||
+        parse_ipv4_addr(mask, &mask_addr) != 0) {
+        return -1;
+    }
+
+    network_addr = ip_addr & mask_addr;
+    snprintf(network, network_size, "%u.%u.%u.%u",
+             (network_addr >> 24) & 0xFF,
+             (network_addr >> 16) & 0xFF,
+             (network_addr >> 8) & 0xFF,
+             network_addr & 0xFF);
+    return 0;
+}
+
 static int run_command(const char *cmd, int ignored_exit)
 {
     int ret;
@@ -130,6 +176,14 @@ static int run_command(const char *cmd, int ignored_exit)
     }
 
     return 0;
+}
+
+static int netif_exists(const char *ifname)
+{
+    char cmd[256];
+
+    snprintf(cmd, sizeof(cmd), "ip link show dev %s >/dev/null 2>&1", ifname);
+    return run_command(cmd, 1) == 0;
 }
 
 static int resolv_conf_has_nameserver(void)
@@ -192,21 +246,34 @@ static int configure_dns(const char *dns)
     return 0;
 }
 
-static const char *select_netif_name(void)
+int nethub_netif_clear_from_env(void)
 {
-    const char *ifname = getenv("NETHUB_NETIF_NAME");
-    const char *transport = getenv("NETHUB_VCHAN_TRANSPORT");
+    char cmd[256];
+    const char *ifname = netif_name_from_env();
 
-    if (ifname && ifname[0] != '\0') {
-        return ifname;
+    if (!ifname) {
+        return -1;
     }
 
-    if (transport && strcmp(transport, "usb") == 0) {
-        NETHUB_LOGW("NETHUB_NETIF_NAME is required when NETHUB_VCHAN_TRANSPORT=usb; skip netif auto config");
-        return NULL;
+    snprintf(cmd, sizeof(cmd), "ip rule del priority %d 2>/dev/null", NETHUB_NETIF_RULE_PRIORITY);
+    (void)run_command(cmd, 2);
+
+    snprintf(cmd, sizeof(cmd), "ip route flush table %d 2>/dev/null || true", NETHUB_NETIF_ROUTE_TABLE);
+    (void)run_command(cmd, -1);
+
+    if (!netif_exists(ifname)) {
+        NETHUB_LOGD("netif %s does not exist, skip clear", ifname);
+        return 0;
     }
 
-    return NETHUB_NETIF_DEFAULT_NAME;
+    snprintf(cmd, sizeof(cmd), "ip route del default dev %s 2>/dev/null || true", ifname);
+    (void)run_command(cmd, -1);
+
+    snprintf(cmd, sizeof(cmd), "ip addr flush dev %s 2>/dev/null || true", ifname);
+    (void)run_command(cmd, -1);
+
+    NETHUB_LOGI("cleared netif %s", ifname);
+    return 0;
 }
 
 int nethub_netif_config_from_env(const char *ip,
@@ -214,17 +281,13 @@ int nethub_netif_config_from_env(const char *ip,
                                  const char *gateway,
                                  const char *dns)
 {
-    const char *ifname = select_netif_name();
     char cmd[256];
     char broadcast[16];
+    char network[16];
     int cidr;
+    const char *ifname = netif_name_from_env();
 
     if (!ifname) {
-        return 0;
-    }
-
-    if (!is_valid_ifname(ifname)) {
-        NETHUB_LOGE("invalid netif name: %s", ifname);
         return -1;
     }
 
@@ -242,6 +305,22 @@ int nethub_netif_config_from_env(const char *ip,
 
     if (calculate_broadcast(ip, netmask, broadcast, sizeof(broadcast)) != 0) {
         NETHUB_LOGE("failed to calculate broadcast for ip=%s mask=%s", ip, netmask);
+        return -1;
+    }
+
+    if (calculate_network(ip, netmask, network, sizeof(network)) != 0) {
+        NETHUB_LOGE("failed to calculate network for ip=%s mask=%s", ip, netmask);
+        return -1;
+    }
+
+    snprintf(cmd, sizeof(cmd), "ip rule del priority %d 2>/dev/null", NETHUB_NETIF_RULE_PRIORITY);
+    (void)run_command(cmd, 2);
+
+    snprintf(cmd, sizeof(cmd), "ip route flush table %d 2>/dev/null || true", NETHUB_NETIF_ROUTE_TABLE);
+    (void)run_command(cmd, -1);
+
+    if (!netif_exists(ifname)) {
+        NETHUB_LOGE("netif %s does not exist", ifname);
         return -1;
     }
 
@@ -265,8 +344,26 @@ int nethub_netif_config_from_env(const char *ip,
         return -1;
     }
 
-    snprintf(cmd, sizeof(cmd), "ip route add default via %s dev %s metric %d",
+    snprintf(cmd, sizeof(cmd), "ip route replace default via %s dev %s metric %d",
              gateway, ifname, NETHUB_NETIF_ROUTE_METRIC);
+    if (run_command(cmd, -1) != 0) {
+        return -1;
+    }
+
+    snprintf(cmd, sizeof(cmd), "ip route add %s/%d dev %s src %s table %d",
+             network, cidr, ifname, ip, NETHUB_NETIF_ROUTE_TABLE);
+    if (run_command(cmd, -1) != 0) {
+        return -1;
+    }
+
+    snprintf(cmd, sizeof(cmd), "ip route add default via %s dev %s table %d",
+             gateway, ifname, NETHUB_NETIF_ROUTE_TABLE);
+    if (run_command(cmd, -1) != 0) {
+        return -1;
+    }
+
+    snprintf(cmd, sizeof(cmd), "ip rule add from %s/32 table %d priority %d",
+             ip, NETHUB_NETIF_ROUTE_TABLE, NETHUB_NETIF_RULE_PRIORITY);
     if (run_command(cmd, -1) != 0) {
         return -1;
     }

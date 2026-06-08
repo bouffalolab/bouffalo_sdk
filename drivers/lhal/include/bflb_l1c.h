@@ -29,7 +29,8 @@
 #define BFLB_CACHE_LINE_SIZE 4
 
 #else
-// #error "Unsupported chip or CPU model for L1C driver"
+//#warning "Unsupported chip or CPU model for L1C driver"
+#define BFLB_CACHE_LINE_SIZE 4
 #endif
 
 /**

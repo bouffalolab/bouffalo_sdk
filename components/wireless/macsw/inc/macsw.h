@@ -302,15 +302,13 @@
  * @name TWT Configuration
  *******************************************************************************
  */
-#if MACSW_UMAC_PRESENT && MACSW_HE && CFG_TWT
-    /// TWT support
+#if MACSW_UMAC_PRESENT && MACSW_HE
     #define MACSW_TWT              1
-    /// Maximum Number of Flows
-    #define MACSW_TWT_FLOW_NB      CFG_TWT
+    #define MACSW_TWT_FLOW_NB_MAX  8  /* max/default; actual value from MACSW_CONFIG() */
 #else
     #define MACSW_TWT              0
-    #define MACSW_TWT_FLOW_NB      0
-#endif //MACSW_UMAC_PRESENT && MACSW_HE && defined CFG_TWT
+    #define MACSW_TWT_FLOW_NB_MAX  0
+#endif //MACSW_UMAC_PRESENT && MACSW_HE
 
 /** @} TWT */
 
@@ -390,27 +388,16 @@
 #ifdef CFG_AGG
   /// A-MPDU TX support
   #define MACSW_AMPDU_TX 1
-  #if MACSW_UMAC_PRESENT
-    /// Maximum number of TX Block Ack
-    #define MACSW_MAX_BA_TX CFG_BATX
-    #if (MACSW_MAX_BA_TX == 0)
-      #error "At least one BA TX agreement shall be allowed"
-    #endif
-  #else  // !MACSW_UMAC_PRESENT
-    #define MACSW_MAX_BA_TX 0
-  #endif // MACSW_UMAC_PRESENT
 #else  // !CFG_AGG
   #define MACSW_AMPDU_TX  0
-  #define MACSW_MAX_BA_TX 0
   #undef CFG_BWLEN
   #undef CFG_MU_CNT
   #define CFG_MU_CNT          1
 #endif // CFG_AGG
 
 #if MACSW_UMAC_PRESENT
-  /// Maximum number of RX Block Ack
-  #define MACSW_MAX_BA_RX CFG_BARX
-  #define MACSW_AMPDU_RX CFG_BARX
+  /// A-MPDU RX support (feature flag: always enabled when UMAC present)
+  #define MACSW_AMPDU_RX  1
   /// A-MSDU de-aggregation support
   #ifdef CFG_DEAGG
     #define MACSW_AMSDU_DEAGG 1
@@ -2404,7 +2391,7 @@ struct twt_statusget_cfm
     /// AP DTIM
     uint8_t dtim;
     /// TWT flow configurations
-    struct twt_status_info conf[MACSW_TWT_FLOW_NB];
+    struct twt_status_info conf[MACSW_TWT_FLOW_NB_MAX];
 };
 
 ///////////////////////////////////////////////////////
@@ -3682,8 +3669,6 @@ struct rxu_stat_desc
 
 //// umac/rxu_cntrl
 #if (MACSW_AMPDU_RX)
-/// Size of the pool containing reordering structure
-#define RX_CNTRL_REORD_POOL_SIZE        (MACSW_MAX_BA_RX)
 /// Maximum time we can wait for an SN (in us)
 #define RX_CNTRL_REORD_MAX_WAIT         (50000)
 
@@ -4089,6 +4074,9 @@ MACSW_CONFIG_DECL(uint16_t, MACSW_MAX_AMSDU_RX);
 MACSW_CONFIG_DECL(uint16_t, MACSW_TXDESC_CNT);
 MACSW_CONFIG_DECL(uint16_t, rxl_hw_buffer1size);
 MACSW_CONFIG_DECL(uint16_t, rxl_hw_buffer2size);
+MACSW_CONFIG_DECL(uint16_t, MACSW_MAX_BA_TX);
+MACSW_CONFIG_DECL(uint16_t, MACSW_MAX_BA_RX);
+MACSW_CONFIG_DECL(uint16_t, MACSW_TWT_FLOW_NB);
 
 /// Array of aggregation descriptors for the BK queue
 extern struct tx_agg_desc_pub tx_agg_desc_array0[];

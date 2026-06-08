@@ -30,7 +30,7 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "unistd.h"
+#include "FreeRTOS_POSIX/unistd.h"
 
 /*-----------------------------------------------------------*/
 

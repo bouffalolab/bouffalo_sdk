@@ -11,7 +11,6 @@ static const nh_profile_t g_spi_bridge_profile = {
         .default_action = NH_PROFILE_BUILTIN_WIFI_RX_DEFAULT_ACTION,
     },
     .host_endpoint_ops = &nhspi_ops,
-    .ctrlpath_ops = &nhspi_ctrlpath_ops,
 };
 
 const nh_profile_t *nh_profile_spi_get(void)

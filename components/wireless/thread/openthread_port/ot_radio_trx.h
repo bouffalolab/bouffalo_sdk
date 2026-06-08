@@ -12,7 +12,7 @@
 #define MAX_SIZE_PSDU                       128 
 #define MAX_BUFFER_SIZE_ACK                 64
 #define MAX_BUFFER_SIZE_A_DATA              60
-#define MAX_BUFFER_SIZE_M_DATA              100
+#define MAX_BUFFER_SIZE_M_DATA              MAX_SIZE_PSDU
 
 #define FRAME_OVERHEAD_SIZE                 ((sizeof(otRadio_rxFrame_t) + 3) & 0xfffffffc)
 #define MAC_FRAME_SIZE                      (FRAME_OVERHEAD_SIZE + MAX_SIZE_PSDU)

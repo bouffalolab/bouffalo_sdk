@@ -247,34 +247,118 @@ wifi_ap_start
     Start wifi AP.
 
     Parameters:
-    typedef struct {
-    	/* the SSID of the AP */
-    	char *ssid;
-    	/* if both key and akm are NULL, the default key is 12345678 */
-    	char *key;
-    	/* OPEN/WPA/WPA2 */
-    	char *akm;
-    	/* default channel is 6 */
-    	uint8_t channel;
-    	/* channel type */
-    	uint8_t type;
-    	/* whether start dhcpd */
-    	bool use_dhcpd;
-        /* dhcpd pool start */
-    	int start;
-        /* dhcpd pool limit */
-    	int limit;
-        /* AP IP address */
-    	uint32_t ap_ipaddr;
-        /* AP IP network mask */
-    	uint32_t ap_mask;
-        /* STA max inactivity when connected */
-    	uint32_t ap_max_inactivity;
-    	/* whether use hidden SSID */
-    	bool hidden_ssid;
-    	/* whether enable isolation */
-    	bool isolation;
-    };
+    typedef struct wifi_mgmr_ap_params {
+        /* AP 的 SSID，必须设置。 */
+        char *ssid;
+        /* 如果为 NULL 且 akm 不为 NULL，则默认 key 为 "12345678"。 */
+        char *key;
+        /* OPEN/WPA/WPA2；如果为 NULL 且 key 不为 NULL，则默认 AKM 为 WPA2。 */
+        char *akm;
+        /* 如果为 0，则默认信道为 6。 */
+        uint8_t channel;
+        /* 信道类型，参考 mac_chan_bandwidth。 */
+        uint8_t type;
+        /* 是否配置 AP IP 参数。 */
+        bool use_ipcfg;
+        /* 是否启动 DHCP server。 */
+        bool use_dhcpd;
+        /* DHCP server 地址池起始值。 */
+        int start;
+        /* DHCP server 地址池数量限制。 */
+        int limit;
+        /* AP IP 地址。 */
+        uint32_t ap_ipaddr;
+        /* AP 子网掩码。 */
+        uint32_t ap_mask;
+        /* STA 连接后的最大空闲时间。 */
+        uint32_t ap_max_inactivity;
+        /* 是否隐藏 SSID。 */
+        bool hidden_ssid;
+        /* 是否启用 AP 隔离。 */
+        bool isolation;
+        /* Beacon interval，单位 TU。 */
+        int bcn_interval;
+        /*
+         * Beacon 和 Probe Response 帧中附加的 Vendor Specific IE。
+         * 参数值为原始 IE 的连续十六进制字符串：
+         * element id + length + payload。支持多个 IE，按顺序拼接
+         * 完整 raw IE hex string 即可。
+         *
+         * 单个 IE 示例："dd0411223301"
+         *   dd：Vendor Specific IE
+         *   04：payload 长度
+         *   11223301：payload
+         * 多个 IE 示例："dd0411223301dd05aabbcc0203"
+         *   IE1：dd0411223301
+         *   IE2：dd05aabbcc0203
+         *
+         * 字符串中不要包含 "0x"、空格或 ':' 分隔符。
+         * 当前 SDK 限制：strlen(ap_vendor_elements) <= 564，
+         * 约等于 282 字节原始 IE 数据。
+         */
+        char *ap_vendor_elements;
+        /*
+         * Beacon 发送模式：
+         * 0：自动启动/停止 Beacon 发送。SAP 启动时不立即发送 Beacon；
+         *    收到相同 SSID 的 Probe Request 后回复 Probe Response，并开始
+         *    发送 Beacon；如果超过 bcn_timer 秒没有 STA 关联，则再次停止
+         *    Beacon 发送。
+         * 1：不发送 Beacon 帧。
+         * 2：发送 Beacon 帧，默认模式。
+         */
+        uint8_t bcn_mode;
+        /*
+         * bcn_mode 为 0 时，如果超过 bcn_timer 秒没有 STA 关联，
+         * Beacon 发送会再次停止。
+         */
+        int bcn_timer;
+        /* 禁止在 Beacon/ProbeResponse 帧中广播 WME/WMM Information Element。 */
+        bool disable_wmm;
+    } wifi_mgmr_ap_params_t;
+
+- 使用示例
+
+.. code-block:: C
+
+    void demo_start_ap_with_vendor_elements(void)
+    {
+        wifi_mgmr_ap_params_t config = { 0 };
+
+        config.ssid = "bl_ap_vendor";
+        config.key = "12345678";
+        config.akm = "WPA2";
+        config.channel = 6;
+        config.use_ipcfg = true;
+        config.use_dhcpd = true;
+
+        /*
+         * ap_vendor_elements 是连续 raw IE hex string。不要添加
+         * "0x"、空格或 ':' 分隔符。SDK 内部会自动添加
+         * "SET ap_vendor_elements "。
+         *
+         * 单个 Vendor Specific IE 示例：
+         *   dd0411223301
+         *
+         * IE 结构：
+         *   dd       element id，0xdd 表示 Vendor Specific IE
+         *   04       payload 长度，表示 length 字段后还有 4 字节
+         *   112233   OUI
+         *   01       vendor data
+         *
+         * 支持多个 IE。直接拼接完整 IE hex string：
+         *   dd0411223301dd05aabbcc0203
+         *
+         * 多 IE 结构：
+         *   dd0411223301     IE1，payload 长度为 4 字节
+         *   dd05aabbcc0203   IE2，payload 长度为 5 字节
+         *
+         * 当前 SDK 限制为 strlen(ap_vendor_elements) <= 564，
+         * 约等于 282 字节原始 IE 数据。
+         */
+        config.ap_vendor_elements = "dd0411223301";
+
+        wifi_mgmr_ap_start(&config);
+    }
 
 - 返回
 

@@ -34,7 +34,7 @@
 
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX.h"
-#include "errno.h"
+#include "FreeRTOS_POSIX/errno.h"
 #include "FreeRTOS_POSIX/pthread.h"
 
 /**
@@ -101,10 +101,13 @@ static void prvExitThread( void )
 {
     pthread_internal_t * pxThread = ( pthread_internal_t * ) pthread_self();
 
+    vTaskSuspendAll();
+
     /* If this thread is joinable, wait for a call to pthread_join. */
     if( pthreadIS_JOINABLE( pxThread->xAttr.usSchedPriorityDetachState ) )
     {
         ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier );
+        ( void ) xTaskResumeAll();
 
         /* Suspend until the call to pthread_join. The caller of pthread_join
          * will perform cleanup. */
@@ -112,6 +115,7 @@ static void prvExitThread( void )
     }
     else
     {
+        ( void ) xTaskResumeAll();
         /* For a detached thread, perform cleanup of thread object. */
         vPortFree( pxThread );
         vTaskDelete( NULL );
@@ -217,7 +221,6 @@ int pthread_attr_setdetachstate( pthread_attr_t * attr,
 
 /*-----------------------------------------------------------*/
 
-int sched_get_priority_max( int policy );
 int pthread_attr_setschedparam( pthread_attr_t * attr,
                                 const struct sched_param * param )
 {
@@ -360,7 +363,7 @@ int pthread_create( pthread_t * thread,
         }
 
         /* End the critical section. */
-        xTaskResumeAll();
+        ( void ) xTaskResumeAll();
     }
 
     return iStatus;
@@ -468,7 +471,7 @@ int pthread_join( pthread_t pthread,
         vPortFree( pxThread );
 
         /* End the critical section. */
-        xTaskResumeAll();
+        ( void ) xTaskResumeAll();
     }
 
     return iStatus;
@@ -527,19 +530,10 @@ int pthread_detach(pthread_t pthread)
         }
 
         /* End the critical section. */
-        xTaskResumeAll();
+        ( void ) xTaskResumeAll();
     }
 
     return iStatus;
-}
-
-/*-----------------------------------------------------------*/
-int pthread_cancel( pthread_t pthread )
-{
-    (void)pthread;
-
-    errno = ENOSYS;
-    return ENOSYS;
 }
 
 /*-----------------------------------------------------------*/

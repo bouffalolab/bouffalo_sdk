@@ -7,6 +7,7 @@
 #include <csi_core.h>
 #else
 #include <nmsis_core.h>
+#include <risc-v/bflb_rv_privilege.h>
 #endif
 #endif
 
@@ -25,6 +26,15 @@
 static void (*systick_callback)(void);
 static uint64_t current_set_ticks = 0;
 
+static int bflb_mtimer_irqn(void)
+{
+#if defined(BL618DG) && !defined(CPU_MODEL_A0) && !defined(CPU_LP)
+    return bflb_rv_systimer_irqn();
+#else
+    return 7;
+#endif
+}
+
 static void systick_isr(int irq, void *arg)
 {
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -33,7 +43,7 @@ static void systick_isr(int irq, void *arg)
 #if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
     csi_coret_config(current_set_ticks, 7);
 #else
-    SysTimer_SetCompareValue(SysTimer_GetCompareValue() + current_set_ticks);
+    bflb_rv_systimer_set_compare(bflb_rv_systimer_get_compare() + current_set_ticks);
 #endif
 #endif
     systick_callback();
@@ -41,7 +51,9 @@ static void systick_isr(int irq, void *arg)
 
 void bflb_mtimer_config(uint64_t ticks, void (*interruptfun)(void))
 {
-    bflb_irq_disable(7);
+    int irq = bflb_mtimer_irqn();
+
+    bflb_irq_disable(irq);
 
     current_set_ticks = ticks;
     systick_callback = interruptfun;
@@ -51,12 +63,12 @@ void bflb_mtimer_config(uint64_t ticks, void (*interruptfun)(void))
 #if !defined(BL618DG) || defined(CPU_MODEL_A0) || defined(CPU_LP)
     csi_coret_config_use(ticks, 7);
 #else
-    SysTimer_SetCompareValue(SysTimer_GetLoadValue() + ticks);
+    bflb_rv_systimer_set_compare(bflb_rv_systimer_get_time() + ticks);
 #endif
 #endif
 
-    bflb_irq_attach(7, systick_isr, NULL);
-    bflb_irq_enable(7);
+    bflb_irq_attach(irq, systick_isr, NULL);
+    bflb_irq_enable(irq);
 }
 
 __WEAK uint32_t ATTR_TCM_SECTION bflb_mtimer_get_freq(void)
@@ -97,9 +109,9 @@ uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us(void)
 #endif
 #else
 #ifdef CONFIG_MTIMER_CUSTOM_FREQUENCE
-    return (SysTimer_GetLoadValue() * ((uint64_t)(1 * 1000 * 1000)) / bflb_mtimer_get_freq());
+    return (bflb_rv_systimer_get_time() * ((uint64_t)(1 * 1000 * 1000)) / bflb_mtimer_get_freq());
 #else
-    return (SysTimer_GetLoadValue());
+    return (bflb_rv_systimer_get_time());
 #endif
 #endif
 #endif
