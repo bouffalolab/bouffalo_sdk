@@ -1,0 +1,5 @@
+sleep 3s
+#wifi_sta_connect TP-LINK_B875 12345678
+mm_info
+sleep 10s
+reboot

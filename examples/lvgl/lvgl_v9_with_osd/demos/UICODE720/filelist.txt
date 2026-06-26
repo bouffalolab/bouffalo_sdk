@@ -1,0 +1,11 @@
+screens/ui_Screen1.c
+ui.c
+components/ui_comp_hook.c
+ui_helpers.c
+images/ui_img_sound_png.c
+images/ui_img_stop_png.c
+images/ui_img_fastforward_png.c
+images/ui_img_wifi_png.c
+images/ui_img_bluetooth_png.c
+images/ui_img_comment_png.c
+images/ui_img_speed_png.c
