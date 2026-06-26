@@ -73,7 +73,7 @@ endif
 
 ifeq ($(CHIP),bl618dg)
     CONFIG_CLOCK_SOURCE_EF_PARAM =n
-    CONFIG_ROMAPI            =n
+    CONFIG_ROMAPI            =y
     CONFIG_DUALCORE_DISABLE  =y
 endif
 

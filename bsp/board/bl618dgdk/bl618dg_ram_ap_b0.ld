@@ -17,7 +17,7 @@ ENTRY(__start)
 StackSize    = 0x1000; /*  4KB */
 HeapMinSize  = 0x1000; /*  4KB */
 psram_heap_min_size = 0x1000;
-__EM_SIZE = DEFINED(btble_controller_init) ? 8K : 0K;
+__EM_SIZE = DEFINED(__LD_CONFIG_EM_SIZE) ? (__LD_CONFIG_EM_SIZE * 1024) : 0K;
 __LPCPU_SIZE = 8K;
 wifi_ram_max_size = DEFINED(wifi_main) ? (160K -  __EM_SIZE): 8K;
 

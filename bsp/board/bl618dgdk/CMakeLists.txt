@@ -5,6 +5,15 @@ target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_gpio.c)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board.c)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fw_header.c)
 
+if(CONFIG_GCC_COMPILE_LTO)
+    set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/board_flash_psram.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/board.c
+        TARGET_DIRECTORY app
+        PROPERTIES COMPILE_FLAGS "-fno-lto"
+    )
+endif()
+
 if(CONFIG_RF)
     target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_rf.c)
 endif()

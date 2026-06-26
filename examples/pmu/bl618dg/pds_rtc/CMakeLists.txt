@@ -9,8 +9,10 @@ find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 #sdk_add_compile_definitions(-D PM_PDS_DCDC_SYS_LEVEL_DEFAULT=AON_DCDC_SYS_LEVEL_1P150V)
 #sdk_add_compile_definitions(-D PM_PDS_LDO18_AON_LEVEL_DEFAULT=AON_LDO18_AON_LEVEL_1P75V)
 
+if(CONFIG_PSRAM)
+target_sources(app PRIVATE psram_test.c)
+endif()
 
 sdk_set_main_file(main.c)
 
 project(pds_rtc)
-

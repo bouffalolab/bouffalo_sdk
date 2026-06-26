@@ -104,7 +104,7 @@ void bflb_i2s_init(struct bflb_device_s *dev, const struct bflb_i2s_config_s *co
     regval &= ~I2S_TX_FIFO_TH_MASK;
     regval &= ~I2S_RX_FIFO_TH_MASK;
     regval |= (config->tx_fifo_threshold << I2S_TX_FIFO_TH_SHIFT) & I2S_TX_FIFO_TH_MASK;
-    regval |= (config->tx_fifo_threshold << I2S_RX_FIFO_TH_SHIFT) & I2S_RX_FIFO_TH_MASK;
+    regval |= (config->rx_fifo_threshold << I2S_RX_FIFO_TH_SHIFT) & I2S_RX_FIFO_TH_MASK;
     putreg32(regval, reg_base + I2S_FIFO_CONFIG_1_OFFSET);
 
     regval = getreg32(reg_base + I2S_FIFO_CONFIG_0_OFFSET);
@@ -131,15 +131,6 @@ void bflb_i2s_init(struct bflb_device_s *dev, const struct bflb_i2s_config_s *co
     regval &= ~I2S_CR_I2S_RXD_INV;
     regval &= ~I2S_CR_I2S_TXD_INV;
     putreg32(regval, reg_base + I2S_IO_CONFIG_OFFSET);
-
-    /* enable I2S, but disable tx and rx */
-    regval = getreg32(reg_base + I2S_CONFIG_OFFSET);
-    if (config->role == I2S_ROLE_MASTER) {
-        regval |= I2S_CR_I2S_M_EN;
-    } else {
-        regval |= I2S_CR_I2S_S_EN;
-    }
-    putreg32(regval, reg_base + I2S_CONFIG_OFFSET);
 #endif
 }
 
@@ -323,19 +314,37 @@ int bflb_i2s_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + I2S_IO_CONFIG_OFFSET);
             break;
 
-        case I2S_CMD_DATA_ENABLE:
-            /* data enable, arg: use @ref I2S_CMD_DATA_ENABLE_TYPE */
+        case I2S_CMD_ENABLE_CONTROL:
+            /* data enable, arg: use @ref I2S_ARG_CMD */
             regval = getreg32(reg_base + I2S_CONFIG_OFFSET);
-            /* enable tx data signal */
-            if (arg & I2S_CMD_DATA_ENABLE_TX) {
+            if (arg & I2S_ARG_CMD_MASTER) {
+                regval |= I2S_CR_I2S_M_EN;
+            }
+            if (arg & I2S_ARG_CMD_SLAVE) {
+                regval |= I2S_CR_I2S_S_EN;
+            }
+            if (arg & I2S_ARG_CMD_TX) {
                 regval |= I2S_CR_I2S_TXD_EN;
-            } else {
+            }
+            if (arg & I2S_ARG_CMD_RX) {
+                regval |= I2S_CR_I2S_RXD_EN;
+            }
+            putreg32(regval, reg_base + I2S_CONFIG_OFFSET);
+            break;
+
+        case I2S_CMD_DISABLE_CONTROL:
+            /* data disable, arg: use @ref I2S_ARG_CMD */
+            regval = getreg32(reg_base + I2S_CONFIG_OFFSET);
+            if (arg & I2S_ARG_CMD_MASTER) {
+                regval &= ~I2S_CR_I2S_M_EN;
+            }
+            if (arg & I2S_ARG_CMD_SLAVE) {
+                regval &= ~I2S_CR_I2S_S_EN;
+            }
+            if (arg & I2S_ARG_CMD_TX) {
                 regval &= ~I2S_CR_I2S_TXD_EN;
             }
-            /* enable rx data signal */
-            if (arg & I2S_CMD_DATA_ENABLE_RX) {
-                regval |= I2S_CR_I2S_RXD_EN;
-            } else {
+            if (arg & I2S_ARG_CMD_RX) {
                 regval &= ~I2S_CR_I2S_RXD_EN;
             }
             putreg32(regval, reg_base + I2S_CONFIG_OFFSET);

@@ -7,6 +7,9 @@
 #include "bl618dg_aon.h"
 #include "bl618dg_pm.h"
 #include "bl_lp.h"
+#ifdef CONFIG_PSRAM
+#include "psram_test.h"
+#endif
 
 #define PDS_RTC_WAKEUP_TIME (10 * 1000 * 1000 / 32)
 #define PDS_PRINT_DELAY     200
@@ -89,6 +92,10 @@ int main(void)
         num = g_pds_round++;
         printf("num is %d\r\n", num);
 
+#ifdef CONFIG_PSRAM
+        psram_test_prepare();
+#endif
+
         if (num == 0) {
             pm_pds_irq_register();
             printf("enter pds1 mode\r\n");
@@ -131,5 +138,15 @@ int main(void)
             while (1) {
             }
         }
+
+#ifdef CONFIG_PSRAM
+        if (psram_test_verify() != 0) {
+            printf("PSRAM PDS RTC test FAILED\r\n");
+            while (1) {
+            }
+        }
+#endif
+        /* will NOT excute delay */
+        arch_delay_ms(10000);
     }
 }

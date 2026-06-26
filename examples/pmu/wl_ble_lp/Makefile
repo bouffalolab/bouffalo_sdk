@@ -10,7 +10,7 @@ MACSW_CONFIG_SELECT ?= default
 # add custom cmake definition
 # cmake_definition+=-Dxxx=sss
 
-CONFIG_BLE_ENABLE ?= 1
+CONFIG_BLE_ENABLE ?= y
 cmake_definition+=-DCONFIG_BLE_ENABLE=$(CONFIG_BLE_ENABLE)
 
 CONFIG_USBH_MSC ?= 0

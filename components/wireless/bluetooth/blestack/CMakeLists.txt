@@ -226,8 +226,12 @@ sdk_library_add_sources_ifdef(CONFIG_BT_OAD_SERVER
 # ifeq ($(CONFIG_BT_SPP_SERVER),1)
 # ble_stack_srcs   += src/services/spp.c
 # endif
-sdk_library_add_sources_ifdef(CONFIG_BT_SPP_SERVER 
+sdk_library_add_sources_ifdef(CONFIG_BT_SPP_SERVER
 	src/services/ble_spp.c
+)
+
+sdk_library_add_sources_ifdef(CONFIG_BT_SPP
+	src/services/spp_throughput.c
 )
 # 
 # 

@@ -2,6 +2,7 @@
 #define __BL618DG_LP_H__
 #include <stdint.h>
 #include "bl618dg_xip_recovery.h"
+#include "bl618dg_psram_recovery.h"
 #include <stdbool.h>
 
 typedef int (*bl_lp_cb_t)(void *arg);
@@ -247,6 +248,8 @@ typedef struct {
 typedef struct {
     uint32_t pattern; /*0xAA5555AA*/
     lp_fw_static_variable_t *lpfw_static_val;
+    /* psram recovery */
+    bl_lp_psram_cfg_t *psram_parameter;
     /* flash recovery */
     sf_recovery_para_t *flash_parameter;
     /* sec information */

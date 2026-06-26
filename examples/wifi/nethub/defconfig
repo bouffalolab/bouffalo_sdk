@@ -47,7 +47,9 @@ CONFIG_NETHUB             =y
 # lowpower: enabled for bl616 only by default. BL616CL and BL618DG stay off
 # until their NetHub low-power flows are fully validated.
 ifneq ($(CHIP),bl616)
+ifneq ($(CHIP),bl618dg)
     CONFIG_NETHUB_LOWPOWER_ENABLE          =n
+endif
 endif
 ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
     CONFIG_LPAPP                         =y

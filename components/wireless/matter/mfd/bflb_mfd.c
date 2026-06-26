@@ -19,10 +19,10 @@
 
 typedef enum {
     ELEMENT_TYPE_SKIP = 0,
-    ELEMENT_TYPE_EFUSE_AES_IV = 1,                  /** not Matter factory data, which is for credential data decryption. 
-                                                        It must be placed in plaintext area with type id 0x8001 */
-    ELEMENT_TYPE_ELEMENT_START = 2,
-    ELEMENT_TYPE_DAC_CERT = ELEMENT_TYPE_ELEMENT_START,
+    ELEMENT_TYPE_ELEMENT_START = 1,
+    ELEMENT_TYPE_EFUSE_AES_IV = ELEMENT_TYPE_ELEMENT_START, /** not Matter factory data, which is for credential data decryption. 
+                                                            It must be placed in plaintext area with type id 0x8001 */
+    ELEMENT_TYPE_DAC_CERT = 2,
     ELEMENT_TYPE_DAC_PRIVATE_KEY,
     ELEMENT_TYPE_PASSCODE,
     ELEMENT_TYPE_PAI_CERT, 
@@ -95,16 +95,13 @@ static bool mfd_parsePartitionData(uint32_t size, uint8_t *pData, uint8_t *pIv)
         p = NULL;
 
         id = ELEMENT_TYPE_ID_MASK & tlv.type_id;
-        if (ELEMENT_TYPE_EFUSE_AES_IV == id) {
-            if ((tlv.type_id & ELEMENT_TYPE_PLAIN_FLAG) && MFD_EFUSE_AES_IV_LEN == tlv.value_len) {
+
+        if (ELEMENT_TYPE_ELEMENT_START <= id && id <= ELEMENT_TYPE_ELEMENT_END && tlv.value_len) {
+            if (ELEMENT_TYPE_EFUSE_AES_IV == id
+                && (tlv.type_id & ELEMENT_TYPE_PLAIN_FLAG) && MFD_EFUSE_AES_IV_LEN == tlv.value_len) {
                 /** efuse aes iv must be placed in plaintext data area with a fixed length MFD_EFUSE_AES_IV_LEN */
                 memcpy(pIv, pData + offset + offsetof(ElementTlv_t, value), tlv.value_len);
             }
-
-            offset += (offsetof(ElementTlv_t, value) + tlv.value_len);
-            continue;
-        }
-        else if (ELEMENT_TYPE_ELEMENT_START <= id && id <= ELEMENT_TYPE_ELEMENT_END && tlv.value_len) {
 
             p = &(g_mfd_var.item[id - ELEMENT_TYPE_ELEMENT_START]);
             if (IS_FLASH_ADDR(pData + offset + offsetof(ElementTlv_t, value))) {

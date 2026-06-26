@@ -47,6 +47,8 @@
 /** @defgroup  PARTITION_Private_Macros
  *  @{
  */
+#define PT_ENTRY_AGE_BOOT_RETRY_MASK  0xFF000000
+#define PT_ENTRY_AGE_VALUE_MASK       0x00FFFFFF
 
 /*@} end of group PARTITION_Private_Macros */
 
@@ -354,6 +356,39 @@ pt_table_error_type pt_table_update_entry(pt_table_id_type target_table_id,
     }
 
     return PT_ERROR_SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Mark firmware boot success by clearing retry flag in partition entry age
+ *
+ * @param  type: Partition entry type
+ *
+ * @return Partition update result
+ *
+*******************************************************************************/
+pt_table_error_type pt_table_set_fw_boot_success(pt_table_entry_type type)
+{
+    pt_table_stuff_config pt_stuff[2];
+    pt_table_entry_config pt_entry;
+    pt_table_id_type active_table_id;
+    pt_table_error_type ret;
+
+    active_table_id = pt_table_get_active_partition_need_lock(pt_stuff);
+    if (active_table_id == PT_TABLE_ID_INVALID) {
+        return PT_ERROR_TABLE_NOT_VALID;
+    }
+
+    ret = pt_table_get_active_entries_by_id(&pt_stuff[active_table_id], type, &pt_entry);
+    if (ret != PT_ERROR_SUCCESS) {
+        return ret;
+    }
+
+    if ((pt_entry.age & PT_ENTRY_AGE_BOOT_RETRY_MASK) == 0) {
+        return PT_ERROR_SUCCESS;
+    }
+
+    pt_entry.age &= PT_ENTRY_AGE_VALUE_MASK;
+    return pt_table_update_entry(active_table_id, &pt_stuff[active_table_id], &pt_entry);
 }
 
 /****************************************************************************/ /**

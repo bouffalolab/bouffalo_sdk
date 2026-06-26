@@ -462,7 +462,7 @@
   #define MACSW_P2P_VIF_MAX     CFG_P2P
 
   /// P2P GO Support
-  #ifdef CFG_P2P_GO
+  #if CFG_P2P_GO
     // Beaconing modes shall be supported
     #if !MACSW_BEACONING
       #error 'Beaconing (BCN) must be enabled'
@@ -470,7 +470,7 @@
     #define MACSW_P2P_GO 1
   #else
     #define MACSW_P2P_GO 0
-  #endif //(GFG_P2P_GO)
+  #endif //(CFG_P2P_GO)
 #else
   #define MACSW_P2P         0
   #define MACSW_P2P_VIF_MAX 0

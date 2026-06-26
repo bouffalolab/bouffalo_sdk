@@ -3,13 +3,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-/* Pull in buffer-size config macros (CFG_BARX, CFG_REORD_BUF, ...) FIRST
- * before any header that transitively includes macsw.h, so that
- * MACSW_MAX_BA_RX below expands to the actual config value. */
-#if defined(CONFIG_MACSW_SELECT_INCLUDE)
-#include CONFIG_MACSW_SELECT_INCLUDE
-#endif
-
 #include "bflb_irq.h"
 #include "mm.h"
 

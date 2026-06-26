@@ -687,6 +687,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
     uint32_t timeout = EF_CTRL_DFT_TIMEOUT_VAL;
 
 #ifdef EF_CTRL_EFUSE_R1_SIZE
+    uint32_t value_0x1fc = 0;
     total_size += EF_CTRL_EFUSE_R1_SIZE;
 #else
     (void)region1_count;
@@ -788,7 +789,20 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
         /* Add delay for CLK to be stable */
         arch_delay_us(4);
 
-        arch_memcpy4(pefuse_start, pword, region1_count);
+        uint32_t region1_end_offset = offset + (region0_count + region1_count) * 4;
+
+        /* save 0x1fc value */
+        if (region1_end_offset > 0x1FC) {
+            uint32_t tmp_data[EF_CTRL_EFUSE_R1_SIZE/4];
+            value_0x1fc = getreg32(BFLB_EF_CTRL_BASE + 0x1fc);
+            arch_memcpy4(tmp_data, pword, region1_count);
+            uint32_t pos = ((uint32_t )pefuse_start)-BFLB_EF_CTRL_BASE;
+            pos = (0x1fc - pos) / 4;
+            tmp_data[pos] |= value_0x1fc;
+            arch_memcpy4(pefuse_start, tmp_data, region1_count);
+        } else {
+            arch_memcpy4(pefuse_start, pword, region1_count);
+        }
 
         if (program) {
 #if defined(BL618DG) && !defined(CPU_MODEL_A0)

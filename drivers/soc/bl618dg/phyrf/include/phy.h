@@ -32,6 +32,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+//for __INLINE
+//#include <compiler/compiler_gcc.h>
+
+
 /*
  * DEFINES
  ****************************************************************************************
@@ -116,10 +120,11 @@ enum phy_mac_chan_bandwidth
 };
 
 enum {
-    SMALLBW_NOT = 0,
-    SMALLBW_10M = 1,
-    SMALLBW_5M 	= 2,
+	SMALLBW_NOT = 0,
+	SMALLBW_10M = 1,
+	SMALLBW_5M 	= 2,
 };
+
 /// Operating Channel
 struct phy_mac_chan_op
 {

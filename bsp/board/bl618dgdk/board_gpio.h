@@ -17,8 +17,9 @@ void board_i2c0_gpio_init(void);
 void board_spi0_gpio_init(void);
 void board_pwm_gpio_init(void);
 void board_adc_gpio_init(void);
-void board_dac_gpio_init(void);
 void board_audac_gpio_init(void);
+void board_auadc_gpio_init(void);
+void board_audio_pll_config_for_rate(unsigned int samplerate_hz);
 void board_emac_rmii_gpio_init(uint8_t port);
 void board_emac_mdio_gpio_init(uint8_t port);
 void board_sdh_gpio_init(void);
@@ -56,6 +57,13 @@ void board_pec_spi_gpio_init(void);
 #define PEC_UART_RX_PIN         GPIO_PIN_10
 void board_pec_uart_gpio_init(void);
 
+#define PEC_QSPI_CAM_D0_PIN   GPIO_PIN_24
+#define PEC_QSPI_CAM_D1_PIN   GPIO_PIN_25
+#define PEC_QSPI_CAM_D2_PIN   GPIO_PIN_26
+#define PEC_QSPI_CAM_D3_PIN   GPIO_PIN_27
+#define PEC_QSPI_CAM_PCLK_PIN GPIO_PIN_28
+void board_pec_qspi_cam_gpio_init(void);
+
 #define PEC_DPI_DATA0_PIN       GPIO_PIN_12
 #define PEC_DPI_DATA1_PIN       GPIO_PIN_13
 #define PEC_DPI_DATA2_PIN       GPIO_PIN_14
@@ -90,6 +98,21 @@ void board_pec_uart_gpio_init(void);
 #define PEC_DPI_DE_PIN          GPIO_PIN_3
 
 void board_pec_dpi_gpio_init(void);
+
+#define PEC_SRGB_DATA0_PIN GPIO_PIN_16
+#define PEC_SRGB_DATA1_PIN GPIO_PIN_17
+#define PEC_SRGB_DATA2_PIN GPIO_PIN_18
+#define PEC_SRGB_DATA3_PIN GPIO_PIN_19
+#define PEC_SRGB_DATA4_PIN GPIO_PIN_20
+#define PEC_SRGB_DATA5_PIN GPIO_PIN_21
+#define PEC_SRGB_DATA6_PIN GPIO_PIN_22
+#define PEC_SRGB_DATA7_PIN GPIO_PIN_23
+#define PEC_SRGB_CLK_PIN   GPIO_PIN_24
+#define PEC_SRGB_HSYNC_PIN GPIO_PIN_25
+#define PEC_SRGB_VSYNC_PIN GPIO_PIN_26
+#define PEC_SRGB_DE_PIN    GPIO_PIN_27
+void board_pec_srgb_gpio_init(void);
+
 void board_i2s_codec_gpio_init(void);
 
 #if defined(CONFIG_BSP_LCD)

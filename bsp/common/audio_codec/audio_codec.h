@@ -31,6 +31,7 @@ typedef uint8_t audio_codec_type_t;
 #define AUDIO_CODEC_TYPE_BL      ((audio_codec_type_t)6)
 #define AUDIO_CODEC_TYPE_JY6166  ((audio_codec_type_t)7)
 #define AUDIO_CODEC_TYPE_JY6316  ((audio_codec_type_t)8)
+#define AUDIO_CODEC_TYPE_AC101S  ((audio_codec_type_t)9)
 
 typedef uint8_t audio_codec_i2s_fmt_t;
 #define AUDIO_CODEC_I2S_FMT_I2S     ((audio_codec_i2s_fmt_t)0)

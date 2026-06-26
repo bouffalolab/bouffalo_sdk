@@ -951,9 +951,11 @@ typedef enum {
     ((int (*)(struct bflb_device_s *dev, int cmd, size_t arg)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_i2c_feature_control])
 
+#if 0
 #define romapi_bflb_i2s_init \
     ((void (*)(struct bflb_device_s *dev, const struct bflb_i2s_config_s *config)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_i2s_init])
+#endif
 
 #define romapi_bflb_i2s_deinit \
     ((void (*)(struct bflb_device_s *dev)) \
@@ -983,9 +985,11 @@ typedef enum {
     ((uint32_t (*)(struct bflb_device_s *dev)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_i2s_get_intstatus])
 
+#if 0
 #define romapi_bflb_i2s_feature_control \
     ((int (*)(struct bflb_device_s *dev, int cmd, size_t arg)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_i2s_feature_control])
+#endif
 
 #define romapi_bflb_ir_tx_init \
     ((void (*)(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s *config)) \

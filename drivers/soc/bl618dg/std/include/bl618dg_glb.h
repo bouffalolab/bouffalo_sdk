@@ -2196,7 +2196,9 @@ BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_MINI_PER_Clock_Gate(uint32_t clk);
 BL_Err_Type GLB_MINI_PER_Clock_UnGate(uint32_t clk);
 BL_Err_Type GLB_Select_LPCPU_Jtag(void);
+#if defined(CPU_MODEL_A0)
 BL_Err_Type GLB_Select_NPCPU_Jtag(void);
+#endif
 BL_Err_Type GLB_SET_JTAG_CHAIN(uint8_t enable);
 BL_Err_Type GLB_Halt_CPU(uint8_t coreID);
 BL_Err_Type GLB_Release_CPU(uint8_t coreID);

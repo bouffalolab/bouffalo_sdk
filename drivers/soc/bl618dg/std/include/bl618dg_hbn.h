@@ -557,6 +557,8 @@ BL_Err_Type HBN_Set_Aon_Pad_IntMask(uint8_t pad, BL_Mask_Type intMask);
 BL_Err_Type HBN_Aon_Pad_Ctrl(uint32_t aonPadCtl1, uint32_t aonPadCtl2);
 BL_Err_Type HBN_Aon_Pad_Cfg(uint8_t aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg);
 BL_Err_Type HBN_Aon_Pad_Cfg_Set(uint8_t aonPadHwCtrlEn, uint8_t aonGpio);
+BL_Err_Type HBN_Enable_Dcdc09(uint8_t gpio);
+BL_Err_Type HBN_Set_Ldo09_Aon_Force_Off(uint8_t enable);
 BL_Err_Type HBN_Enable_BOD_IRQ(void);
 BL_Err_Type HBN_Disable_BOD_IRQ(void);
 BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, uint8_t trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec);

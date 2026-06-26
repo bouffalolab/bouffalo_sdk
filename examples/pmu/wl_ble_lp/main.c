@@ -90,7 +90,6 @@ static void ble_connected(struct bt_conn *conn, u8_t err)
 
 static void ble_disconnected(struct bt_conn *conn, u8_t reason)
 {
-    int ret;
     if(conn->type != BT_CONN_TYPE_LE)
     {
         return;
@@ -169,23 +168,24 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackTyp
     *pulIdleTaskStackSize = 1024;
 }
 
-int wifi_start_firmware_task(void)
+static void wifi_start_firmware_task(void *pvParameters)
 {
+    (void)pvParameters;
     LOG_I("Starting wifi ...\r\n");
 
     /* set ble controller EM Size */
-
+#ifdef CFG_BLE_ENABLE
     GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+#endif
 
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");
-	vTaskDelete(NULL);
+        vTaskDelete(NULL);
     }
 
     LOG_I("PHY RF init success!\r\n");
 
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
-
 
     wifi_task_create();
 
@@ -374,9 +374,8 @@ static void cmd_tickless(int argc, char **argv)
 }
 
 static void cmd_set_dtim(int argc, char **argv)
-{	
-	int dtim = 10;
-    int broadcast = 0;
+{
+    int dtim = 10;
 
     if ((argc > 1) && (argv[1] != NULL)) {
         printf("%s\r\n", argv[1]);

@@ -47,6 +47,12 @@ from dataclasses import dataclass
 from crash_capture import parse_coredump_sections
 
 
+BIN_COREDUMP_MAGIC = b"BKCD"
+BIN_COREDUMP_VERSION = 1
+BIN_COREDUMP_HEADER_FMT = "<4sII"
+BIN_COREDUMP_SEG_DESC_FMT = "<QQ"
+
+
 def stop_gdb_process(gdb_process: Optional[subprocess.Popen]) -> None:
     """Stop the auto-started GDB process without blocking indefinitely."""
     if gdb_process is None:
@@ -353,7 +359,7 @@ class MemoryBus:
 
 def parse_coredump_blocks(log_file):
     """
-    Parse coredump from log file and return memory blocks directly.
+    Parse coredump from a text log or BIN v1 file and return memory blocks directly.
 
     Returns:
         List of (address, data_bytes, name) tuples, or None if parsing failed.
@@ -363,7 +369,10 @@ def parse_coredump_blocks(log_file):
         print(f"Error: Log file not found: {log_file}", file=sys.stderr)
         return None
 
-    print(f"Parsing coredump from: {log_file}", file=sys.stderr)
+    if is_bin_coredump_file(log_path):
+        return parse_bin_coredump_blocks(log_path)
+
+    print(f"Parsing LOG coredump from: {log_file}", file=sys.stderr)
     try:
         coredumps = parse_coredump_sections(log_path)
     except Exception as exc:
@@ -382,6 +391,90 @@ def parse_coredump_blocks(log_file):
     print(f"Found {len(coredumps)} COREDUMP sections, processing the last one", file=sys.stderr)
     print(f"Parsed {len(data_blocks)} memory blocks", file=sys.stderr)
     return data_blocks
+
+
+def is_bin_coredump_file(path: Path) -> bool:
+    """Return True when the input starts with the BIN v1 completed magic."""
+    try:
+        with path.open("rb") as f:
+            return f.read(len(BIN_COREDUMP_MAGIC)) == BIN_COREDUMP_MAGIC
+    except OSError as exc:
+        print(f"Failed to read coredump file header: {exc}", file=sys.stderr)
+        return False
+
+
+def parse_bin_coredump_blocks(path: Path) -> Optional[List[tuple]]:
+    """
+    Parse BIN v1 coredump data emitted by components/utils/coredump/bin_fmt_v1.c.
+
+    Layout:
+        struct binfmt_header { uint8_t magic[4]; uint32_t version; uint32_t segment_count; }
+        struct binfmt_seg_desc { uint64_t addr; uint64_t length; }[segment_count]
+        uint8_t segment_data[][length]
+    """
+    print(f"Parsing BIN coredump from: {path}", file=sys.stderr)
+
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        print(f"Failed to read BIN coredump: {exc}", file=sys.stderr)
+        return None
+
+    header_size = struct.calcsize(BIN_COREDUMP_HEADER_FMT)
+    desc_size = struct.calcsize(BIN_COREDUMP_SEG_DESC_FMT)
+    if len(data) < header_size:
+        print("Invalid BIN coredump: truncated header", file=sys.stderr)
+        return None
+
+    magic, version, segment_count = struct.unpack_from(BIN_COREDUMP_HEADER_FMT, data, 0)
+    if magic != BIN_COREDUMP_MAGIC:
+        print(f"Invalid BIN coredump magic: {magic!r}", file=sys.stderr)
+        return None
+    if version != BIN_COREDUMP_VERSION:
+        print(f"Unsupported BIN coredump version: {version}", file=sys.stderr)
+        return None
+
+    desc_table_size = segment_count * desc_size
+    data_offset = header_size + desc_table_size
+    if data_offset > len(data):
+        print(
+            f"Invalid BIN coredump: descriptor table exceeds file size "
+            f"(segments={segment_count}, size={len(data)})",
+            file=sys.stderr,
+        )
+        return None
+
+    descriptors = []
+    for idx in range(segment_count):
+        desc_offset = header_size + idx * desc_size
+        addr, length = struct.unpack_from(BIN_COREDUMP_SEG_DESC_FMT, data, desc_offset)
+        descriptors.append((addr, length))
+
+    blocks = []
+    cursor = data_offset
+    for idx, (addr, length) in enumerate(descriptors):
+        next_cursor = cursor + length
+        if next_cursor > len(data):
+            print(
+                f"Invalid BIN coredump: segment {idx} at 0x{addr:08x} "
+                f"length 0x{length:x} exceeds file size",
+                file=sys.stderr,
+            )
+            return None
+        blocks.append((addr, data[cursor:next_cursor], f"BIN segment[{idx}]"))
+        cursor = next_cursor
+
+    if not blocks:
+        print("No memory blocks found in BIN coredump", file=sys.stderr)
+        return None
+
+    trailing = len(data) - cursor
+    if trailing:
+        print(f"Warning: ignoring {trailing} trailing bytes in BIN coredump", file=sys.stderr)
+
+    total_bytes = sum(len(block[1]) for block in blocks)
+    print(f"Parsed {len(blocks)} BIN memory blocks, {total_bytes} bytes", file=sys.stderr)
+    return blocks
 
 # ==============================================================================
 # RISC-V Register State
@@ -424,32 +517,21 @@ class GdbClientHandler:
 
     RSP_BUFF_LEN = 4096  # Larger buffer for SREC restore
 
-    def __init__(self, conn: socket.socket, addr: Tuple[str, int], server_ref, log_file: Optional[str] = None, elf_file: Optional[str] = None):
+    def __init__(
+        self,
+        conn: socket.socket,
+        addr: Tuple[str, int],
+        server_ref,
+        memory: MemoryBus,
+    ):
         self.conn = conn
         self.addr = addr
         self.server = server_ref
         self.state = RspState.INIT
         self.no_ack_mode = False
-        self.memory = MemoryBus()
+        self.memory = memory
         self.regs = RiscvRegs()
         self.running = True
-
-        # Load ELF data at LMA first; coredump blocks below overlay runtime VMA.
-        if elf_file:
-            blocks = parse_elf_lma_blocks(elf_file)
-            if blocks:
-                count = self.memory.load_blocks(blocks)
-                print(f"Initialized {count} ELF PT_LOAD segments at LMA from {elf_file}")
-            else:
-                print(f"Warning: Failed to load ELF data from {elf_file}")
-
-        if log_file:
-            blocks = parse_coredump_blocks(log_file)
-            if blocks:
-                count = self.memory.load_blocks(blocks)
-                print(f"Loaded {count} coredump memory blocks at VMA from {log_file}")
-            else:
-                print(f"Warning: Failed to parse coredump from {log_file}")
 
     def send_ack(self, ack: bytes):
         if not self.no_ack_mode:
@@ -793,8 +875,34 @@ class LocalTargetServer:
         self.running = False
         self.clients = []
         self.lock = threading.Lock()
+        self.preloaded_memory: Optional[MemoryBus] = None
+        self.active_client = False
+
+    def prepare_memory(self) -> None:
+        """Build the target memory image before accepting GDB connections."""
+        memory = MemoryBus()
+
+        # Load ELF data at LMA first; coredump blocks below overlay runtime VMA.
+        if self.elf_file:
+            blocks = parse_elf_lma_blocks(self.elf_file)
+            if blocks:
+                count = memory.load_blocks(blocks)
+                print(f"Initialized {count} ELF PT_LOAD segments at LMA from {self.elf_file}")
+            else:
+                print(f"Warning: Failed to load ELF data from {self.elf_file}")
+
+        if self.log_file:
+            blocks = parse_coredump_blocks(self.log_file)
+            if blocks:
+                count = memory.load_blocks(blocks)
+                print(f"Loaded {count} coredump memory blocks at VMA from {self.log_file}")
+            else:
+                print(f"Warning: Failed to parse coredump from {self.log_file}")
+
+        self.preloaded_memory = memory
 
     def start(self):
+        self.prepare_memory()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(("127.0.0.1", self.port))
@@ -807,7 +915,17 @@ class LocalTargetServer:
                 try:
                     self.sock.settimeout(1.0)
                     conn, addr = self.sock.accept()
-                    client = GdbClientHandler(conn, addr, self, self.log_file, self.elf_file)
+                    with self.lock:
+                        if self.active_client:
+                            print(
+                                f"Rejecting extra GDB client from {addr[0]}:{addr[1]}: "
+                                "only one client is supported"
+                            )
+                            conn.close()
+                            continue
+                        self.active_client = True
+
+                    client = GdbClientHandler(conn, addr, self, self.preloaded_memory)
                     with self.lock:
                         self.clients.append(client)
                     thread = threading.Thread(target=client.run)
@@ -825,6 +943,7 @@ class LocalTargetServer:
     def notify_client_done(self):
         with self.lock:
             self.clients = [c for c in self.clients if c.running]
+            self.active_client = bool(self.clients)
 
     def stop(self):
         self.running = False

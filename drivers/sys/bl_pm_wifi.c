@@ -65,6 +65,11 @@ int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg)
         return -1;
     }
 
+    ret = wifi_mgmr_sta_mac_get(pcfg->mac);
+    if (ret) {
+        return -1;
+    }
+
     ret = wifi_mgmr_sta_channel_get(&channel);
     if (ret) {
         return -1;

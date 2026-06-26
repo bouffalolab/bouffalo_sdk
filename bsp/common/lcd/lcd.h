@@ -165,6 +165,15 @@
 #define LCD_COLOR_DEPTH              ST7701S_DPI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) st7701s_dpi_##_func(__VA_ARGS__)
 
+#elif defined LCD_DPI_JD9165BA
+
+#include "mipi_dpi/jd9165ba_dpi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DPI
+#define LCD_W                        JD9165BA_DPI_W
+#define LCD_H                        JD9165BA_DPI_H
+#define LCD_COLOR_DEPTH              JD9165BA_DPI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) jd9165ba_dpi_##_func(__VA_ARGS__)
+
 #elif defined LCD_DPI_STANDARD
 
 #include "mipi_dpi/standard_dpi.h"
@@ -182,6 +191,42 @@
 #define LCD_H                        ILI9881C_DSI_H
 #define LCD_COLOR_DEPTH              ILI9881C_DSI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9881c_dsi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DSI_ILI9881C_KD050020
+
+#include "mipi_dsi/ili9881c_kd050020_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        ILI9881C_KD050020_DSI_W
+#define LCD_H                        ILI9881C_KD050020_DSI_H
+#define LCD_COLOR_DEPTH              ILI9881C_KD050020_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) ili9881c_kd050020_dsi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DSI_ILI9881C_KD050023W4
+
+#include "mipi_dsi/ili9881c_kd050023w4_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        ILI9881C_KD050023W4_DSI_W
+#define LCD_H                        ILI9881C_KD050023W4_DSI_H
+#define LCD_COLOR_DEPTH              ILI9881C_KD050023W4_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) ili9881c_kd050023w4_dsi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DSI_ST7102_YH494
+
+#include "mipi_dsi/st7102_yh494_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        ST7102_YH494_DSI_W
+#define LCD_H                        ST7102_YH494_DSI_H
+#define LCD_COLOR_DEPTH              ST7102_YH494_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st7102_yh494_dsi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DSI_AXS15231B_HS035
+
+#include "mipi_dsi/axs15231b_hs035_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        AXS15231B_HS035_DSI_W
+#define LCD_H                        AXS15231B_HS035_DSI_H
+#define LCD_COLOR_DEPTH              AXS15231B_HS035_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) axs15231b_hs035_dsi_##_func(__VA_ARGS__)
 
 #elif defined LCD_SPI_GC9307
 

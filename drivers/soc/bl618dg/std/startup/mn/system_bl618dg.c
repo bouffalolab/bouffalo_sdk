@@ -276,7 +276,9 @@ void SystemInit(void)
     /* halt mini cpu as default */    
     *(volatile uint32_t *)0x20000548 |= (1 << 3);
     
-    /* clear NP interrupt status and mask all NP2MINI interrupt sources */
+    /* clear AP/NP-to-MINI interrupt forwarding status and mask forwarding sources/routes */
+    *(volatile uint32_t *)0x20000058 = 0xFFFFFFFF;
+    *(volatile uint32_t *)0x2000005C = 0xFFFFFFFF;
     *(volatile uint32_t *)0x20000060 = 0xFFFFFFFF;
     *(volatile uint32_t *)0x20000064 = 0xFFFFFFFF;
     *(volatile uint32_t *)0x20000068 = 0xFFFFFFFF;

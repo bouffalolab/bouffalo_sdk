@@ -1012,14 +1012,34 @@ static void audio_i2s_update_data_enable(bool tx_enable, bool rx_enable)
         return;
     }
 
-    uint32_t data_enable = 0U;
-    if (tx_enable) {
-        data_enable |= I2S_CMD_DATA_ENABLE_TX;
+    uint32_t disable_control = 0U;
+    uint32_t enable_control = 0U;
+
+    if (!tx_enable) {
+        disable_control |= I2S_ARG_CMD_TX;
     }
-    if (rx_enable) {
-        data_enable |= I2S_CMD_DATA_ENABLE_RX;
+    if (!rx_enable) {
+        disable_control |= I2S_ARG_CMD_RX;
     }
-    bflb_i2s_feature_control(g_audio.i2s_dev, I2S_CMD_DATA_ENABLE, data_enable);
+    if (!tx_enable && !rx_enable) {
+        disable_control |= I2S_ARG_CMD_MASTER;
+    }
+
+    if (disable_control) {
+        bflb_i2s_feature_control(g_audio.i2s_dev, I2S_CMD_DISABLE_CONTROL, disable_control);
+    }
+
+    if (tx_enable || rx_enable) {
+        enable_control |= I2S_ARG_CMD_MASTER;
+        if (tx_enable) {
+            enable_control |= I2S_ARG_CMD_TX;
+        }
+        if (rx_enable) {
+            enable_control |= I2S_ARG_CMD_RX;
+        }
+
+        bflb_i2s_feature_control(g_audio.i2s_dev, I2S_CMD_ENABLE_CONTROL, enable_control);
+    }
 }
 
 static void audio_transport_stop(void)

@@ -101,7 +101,7 @@ int _settimeofday_r(struct _reent *reent, const struct timeval *tp, const struct
     return 0;
 }
 
-int settimeofday(const struct timeval *tp, const struct timezone *tzp)
+__attribute__((weak)) int settimeofday(const struct timeval *tp, const struct timezone *tzp)
 {
     return _settimeofday_r(_REENT, tp, tzp);
 }

@@ -5392,6 +5392,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Select_LPCPU_Jtag(void)
     return SUCCESS;
 }
 
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  select npcpu jtag
  *
@@ -5408,6 +5409,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Select_NPCPU_Jtag(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  halt cpu

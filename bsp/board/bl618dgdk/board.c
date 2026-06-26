@@ -161,8 +161,7 @@ static void __attribute__((unused)) peripheral_clock_init(void)
         GLB_Set_Display_CLK(ENABLE, GLB_DP_CLK_WIFIPLL_96M, 3);
         GLB_Set_PEC_CLK(ENABLE, GLB_PEC_CLK_MUXPLL_160M, 0);
         GLB_Set_Audio_AUTO_CLK(DISABLE);
-        GLB_Set_Audio_ADC_CLK(ENABLE, 2);
-        GLB_Set_Audio_SOLO_CLK(ENABLE, 2);
+        // GLB_Set_Audio_ADC_CLK(ENABLE, 2);
 #if defined(CPU_MODEL_A0)
         GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_160M);
 #else

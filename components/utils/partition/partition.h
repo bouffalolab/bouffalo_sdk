@@ -194,6 +194,7 @@ pt_table_error_type pt_table_get_active_entries_by_name(pt_table_stuff_config *p
 pt_table_error_type pt_table_update_entry(pt_table_id_type target_table_id,
                                           pt_table_stuff_config *pt_stuff,
                                           pt_table_entry_config *pt_entry);
+pt_table_error_type pt_table_set_fw_boot_success(pt_table_entry_type type);
 pt_table_error_type pt_table_create(pt_table_id_type pt_id);
 pt_table_error_type pt_table_dump(void);
 pt_table_error_type pt_table_get_iap_para(pt_table_iap_param_type *para);

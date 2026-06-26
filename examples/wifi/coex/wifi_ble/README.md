@@ -6,9 +6,12 @@ This is a Wi-Fi & BLE coexistence example.
 
 ## Support CHIP
 
-| CHIP  | Remark |
-|:-----:|:------:|
-| BL602 |        |
+| CHIP    | Remark |
+|:-------:|:------:|
+| BL602   |        |
+| BL616   |        |
+| BL616CL |        |
+| BL618DG |        |
 
 ## Compile
 
@@ -16,6 +19,24 @@ This is a Wi-Fi & BLE coexistence example.
 
 ```
 make CHIP=bl602 BOARD=bl602dk
+```
+
+- BL616
+
+```
+make CHIP=bl616 BOARD=bl616dk
+```
+
+- BL616CL
+
+```
+make CHIP=bl616cl BOARD=bl616cldk
+```
+
+- BL618DG
+
+```
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 ## Flash

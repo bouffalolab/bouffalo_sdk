@@ -155,6 +155,7 @@ static uint64_t rtc_prologue_time_max = 0, rtc_epilogue_time_max = 0;
 
 /* Sleep time remaining. */
 static uint64_t rtc_sleep_remain;
+static TickType_t sleep_expected_idle_ticks;
 
 #ifdef TICKLESS_DEBUG
 const char *wake_task_name = NULL;
@@ -356,8 +357,21 @@ void lp_hook_post_sys(iot2lp_para_t *param)
     HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_after_sleep, (uint32_t *)&rtc_after_sleep + 1);
 
     /* Compensation Tick */
-    tickless_info("early compensate tick: %" __PRI64(u), (uint64_t)pdMS_TO_TICKS(BL_PDS_CNT_TO_MS(rtc_after_sleep - rtc_enter_tickless)));
-    vTaskStepTick(pdMS_TO_TICKS(BL_PDS_CNT_TO_MS(rtc_after_sleep - rtc_enter_tickless)));
+    TickType_t elapsed_ticks = pdMS_TO_TICKS(BL_PDS_CNT_TO_MS(rtc_after_sleep - rtc_enter_tickless));
+    TickType_t compensate_ticks = elapsed_ticks;
+
+    if (sleep_expected_idle_ticks && compensate_ticks > sleep_expected_idle_ticks) {
+        compensate_ticks = sleep_expected_idle_ticks;
+        printf("[LP][ERROR] late wake detected, elapsed:%" __PRI64(u) ", expect:%" __PRI64(u) ", compensate:%" __PRI64(u) ", reason:0x%lx\r\n",
+               (uint64_t)elapsed_ticks,
+               (uint64_t)sleep_expected_idle_ticks,
+               (uint64_t)compensate_ticks,
+               (unsigned long)param->wakeup_reason);
+    }
+
+    tickless_info("early compensate tick: %" __PRI64(u) ", expect:%" __PRI64(u),
+                  (uint64_t)elapsed_ticks, (uint64_t)sleep_expected_idle_ticks);
+    vTaskStepTick(compensate_ticks);
 
     /* Init mtimer handler */
     vPortSetupTimerInterrupt();
@@ -409,6 +423,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
 
     /* Record current time */
     HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_enter_tickless, (uint32_t *)&rtc_enter_tickless + 1);
+    sleep_expected_idle_ticks = xExpectedIdleTime;
 
     /* 1 Tick must equal to 1 ms */
     rtc_sleep_remain = BL_MS_TO_PDS_CNT(xExpectedIdleTime);

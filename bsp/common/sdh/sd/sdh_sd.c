@@ -894,8 +894,10 @@ int sdh_sd_card_init(struct sd_card_s *sd_card, struct sdh_host_s *sdh_host)
     }
     LOG_D("send_scr success\r\n");
 
-    /* 4-bit bus mode */
-#if SDH_HOST_SUP_BUS_WIDTH_4
+    /* 4-bit bus mode.
+     * Define CONFIG_SDH_BUS_WIDTH_1LINE to force 1-line (DAT0 only) operation
+     * even on 4-bit-capable cards. */
+#if SDH_HOST_SUP_BUS_WIDTH_4 && !defined(CONFIG_SDH_BUS_WIDTH_1LINE)
     if (sd_card->card_flag & SDH_SD_FLAG_SUP_4BIT) {
         sdh_sd_set_bus_width(sd_card, 4);
     }

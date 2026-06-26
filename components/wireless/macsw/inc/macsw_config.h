@@ -24,7 +24,7 @@
 #define CFG_MU_CNT 1
 #define CFG_KEYCFG
 #define CFG_P2P 0
-#define CFG_P2P_GO
+#define CFG_P2P_GO 0
 #define CFG_BWLEN
 #define CFG_HE
 

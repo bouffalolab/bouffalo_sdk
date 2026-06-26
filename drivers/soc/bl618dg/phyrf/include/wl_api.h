@@ -96,8 +96,11 @@ struct wl_param_pwrcal_t
 {
     int8_t      channel_pwrcomp_wlan[NUM_WLAN_CHANNELS];
     int8_t      channel_lp_pwrcomp_wlan[NUM_WLAN_CHANNELS]; // power compensation at low power mode
+    int8_t      channel_5g_pwrcomp_wlan[8];
+    int8_t      channel_5g_lp_pwrcomp_wlan[8]; // power compensation at low power mode
     int8_t      Temperature_MP; // temperature of sensor while power cal at production line
     int8_t      channel_pwrcomp_bz[NUM_BZ_CH_PWRCOMP];
+    int8_t      channel_pwrcomp_bz_only[NUM_BZ_CH_PWRCOMP];
 };
 
 // Power vs Rate table in 0.25dBm
@@ -344,12 +347,14 @@ int8_t wl_rf_set_154_tx_power_with_power_limit(uint32_t target_pwr_dbm, uint8_t 
 void wl_rf_cfg_init(void);//set default values to rf members of struct, //by Lx
 void wl_rf_set_channel_pwr_comp(uint8_t channel_idx);
 void wl_rf_set_bz_channel_pwr_comp(void);
-void wl_rf_set_status(uint8_t rf_en);// turn on/off rf domain
+void wl_rf_set_status(uint8_t combo_rf_en);// turn on/off combo rf domain
+void wl_standalone_rf_set_status(uint8_t standalone_rf_en);// turn on/off standalone rf domain
 void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
 
 // config for rf 
 
-// if bz stand-alone chain enable(BZ_STAND_ALONE_RF_EN=1), the ss0 bz(combo-bz) will be disbaled
+// *BZ_STAND_ALONE_RF_EN=1 : standalone-bz rf and combo-bz rf both enable, but default bz rf is standalone bz rf 
+// *BZ_STAND_ALONE_RF_EN=0 : combo-bz rf both enable, and disable stand-alone bz rf 
 #ifndef BZ_STAND_ALONE_RF_EN
 #define BZ_STAND_ALONE_RF_EN (0)
 #endif
@@ -361,11 +366,7 @@ void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
 
 // rf log config
 #ifndef WL_RF_LOG_EN
-#ifndef PHYRF_LOG_EN
-#define WL_RF_LOG_EN (1)
-#else
-#define WL_RF_LOG_EN PHYRF_LOG_EN
-#endif
+#define WL_RF_LOG_EN (0)
 #endif
 
 // // 0: disable the function(cw..) only for mfg to save code size

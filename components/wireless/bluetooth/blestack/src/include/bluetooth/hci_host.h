@@ -485,6 +485,20 @@ struct bt_hci_cp_write_default_link_policy {
 	u16_t link_policy;
 } __packed;
 
+#define BT_HCI_OP_SNIFF_MODE                    BT_OP(BT_OGF_LINK_POLICY, 0x0003)
+struct bt_hci_cp_sniff_mode {
+	u16_t handle;
+	u16_t max_interval;   /* in 0.625ms slots */
+	u16_t min_interval;   /* in 0.625ms slots */
+	u16_t attempt;        /* in 0.625ms slots */
+	u16_t timeout;        /* in 0.625ms slots */
+} __packed;
+
+#define BT_HCI_OP_EXIT_SNIFF_MODE               BT_OP(BT_OGF_LINK_POLICY, 0x0004)
+struct bt_hci_cp_exit_sniff_mode {
+	u16_t handle;
+} __packed;
+
 #define BT_HCI_OP_SET_EVENT_MASK                BT_OP(BT_OGF_BASEBAND, 0x0001)
 struct bt_hci_cp_set_event_mask {
 	u8_t  events[8];
@@ -2051,6 +2065,17 @@ struct bt_hci_evt_role_change {
 struct bt_hci_evt_num_completed_packets {
 	u8_t  num_handles;
 	struct bt_hci_handle_count h[0];
+} __packed;
+
+#define BT_HCI_EVT_MODE_CHANGE                  0x14
+#define BT_HCI_MODE_ACTIVE                      0x00
+#define BT_HCI_MODE_HOLD                        0x01
+#define BT_HCI_MODE_SNIFF                       0x02
+struct bt_hci_evt_mode_change {
+	u8_t  status;
+	u16_t handle;
+	u8_t  mode;       /* BT_HCI_MODE_* */
+	u16_t interval;   /* in 0.625ms slots */
 } __packed;
 
 #define BT_HCI_EVT_PIN_CODE_REQ                 0x16

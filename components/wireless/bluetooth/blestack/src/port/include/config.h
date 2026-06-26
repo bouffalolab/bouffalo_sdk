@@ -867,4 +867,16 @@ then it does disconnected flow once more. This will cause hardfault issue becaus
  * so reused channel structs get fresh allocation on next connection. */
 #define BFLB_BREDR_PATCH_CLEAR_L2CAP_BR_STALE_CID
 
+/* Add BR/EDR sniff mode support: host APIs to enter/exit sniff and a Mode
+ * Change event handler, so an idle/low-rate link can release radio time to
+ * active links in a multi-connection scenario. */
+#define BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE
+
+/* Fix BR/EDR discovery stuck after stop during name resolution: the inquiry has
+ * completed but BT_DEV_INQUIRY is still set, so Inquiry Cancel returns -EACCES
+ * and the next start fails. Treat -EACCES as a successful stop -- cancel the
+ * in-flight name requests, clear the discovery state, and return 0 so a restart
+ * works. Late name completions are dropped via the detached-callback guards. */
+#define BFLB_BREDR_PATCH_FIX_DISCOVERY_STOP_DURING_NAME_RESOLVE
+
 #endif /* BLE_CONFIG_H */

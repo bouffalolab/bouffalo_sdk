@@ -155,7 +155,7 @@ lv_disp_drv_t *lv_port_disp_init(void)
 
     /*Used to copy the buffer's content to the display*/
     disp_drv_dsc.flush_cb = disp_flush;
-#if LCD_DPI_V2_USE_OSD_LAYER_SWITCH
+#if defined (CONFIG_LVGL8_OSD_LAYER)
     disp_drv_dsc.screen_transp = 1;
 #endif
     /*Finally register the driver*/

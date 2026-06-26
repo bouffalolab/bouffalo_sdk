@@ -7,6 +7,14 @@ sdk_library_add_sources(startup/start_load.c)
 sdk_library_add_sources(startup/system_bl616cl.c)
 sdk_library_add_sources(startup/interrupt.c)
 
+if(CONFIG_GCC_COMPILE_LTO)
+    set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/startup/start_load.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/startup/system_bl616cl.c
+        PROPERTIES COMPILE_FLAGS "-fno-lto"
+    )
+endif()
+
 # set CONFIG_ROMAPI n before chip tapeout
 # unset(CONFIG_ROMAPI CACHE)
 # set(CONFIG_ROMAPI

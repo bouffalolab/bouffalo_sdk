@@ -987,6 +987,31 @@ struct esco_para {
  */
 struct bt_conn *bt_conn_create_sco(const bt_addr_t *peer,const struct esco_para *para);
 
+#if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+/** @brief Put a BR/EDR connection into sniff mode.
+ *
+ *  Intervals are in 0.625ms slots (e.g. 160 = 100ms). Sniff mode reduces the
+ *  radio time an idle/low-rate link consumes, freeing bandwidth for active
+ *  links in a multi-connection scenario.
+ *
+ *  @param conn         BR/EDR connection object.
+ *  @param min_interval Minimum sniff interval in 0.625ms slots.
+ *  @param max_interval Maximum sniff interval in 0.625ms slots.
+ *
+ *  @return 0 on success or negative value on error.
+ */
+int bt_br_conn_enter_sniff(struct bt_conn *conn, u16_t min_interval,
+			   u16_t max_interval);
+
+/** @brief Exit sniff mode, returning the connection to active mode.
+ *
+ *  @param conn BR/EDR connection object.
+ *
+ *  @return 0 on success or negative value on error.
+ */
+int bt_br_conn_exit_sniff(struct bt_conn *conn);
+#endif /* BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE */
+
 #endif
 #if defined (BFLB_BLE_GAP_SET_PERIPHERAL_PREF_PARAMS)
 /** @brief Set peripheral preferred connection parameters

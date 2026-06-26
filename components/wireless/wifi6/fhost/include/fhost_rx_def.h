@@ -58,7 +58,26 @@ struct fhost_rx_buf_tag
     uint32_t payload[CO_ALIGN4_HI(FHOST_RX_BUF_SIZE)/sizeof(uint32_t)];
 
 };
+
+#if MACSW_UF_EN
+/// FHOST UF environment structure
+struct fhost_rx_uf_buf_tag
+{
+    /// Network stack buffer element - must be the first one in this structure !!!
+    uint8_t fnet_buf[64];
+    /// Structure containing the information about the received payload
+    struct rx_info info;
+    /// Payload buffer space (empty in case of UF buffer)
+    uint32_t payload[0];
+};
+
+/// Structure used, when receiving UF, for the buffer elements exchanged between the FHOST RX and the MAC thread
+struct fhost_rx_uf_buf_desc_tag
+{
+    /// Id of the RX buffer
+    uint32_t host_id;
+};
+#endif // MACSW_UF_EN
 /// @}
 
 #endif // _FHOST_RX_DEF_H_
-

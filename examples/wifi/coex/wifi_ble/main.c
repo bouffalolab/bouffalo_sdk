@@ -5,9 +5,13 @@
 
 #include "bluetooth.h"
 #include "conn.h"
-#include "conn_internal.h"
-#include "btble_lib_api.h"
 #include "rfparam_adapter.h"
+
+#if defined(BL602)
+#include "ble_lib_api.h"
+#else
+#include "btble_lib_api.h"
+#endif
 
 #include "ble_cli_cmds.h"
 #include "hci_driver.h"
@@ -16,7 +20,14 @@
 #include "bflb_mtd.h"
 #include "easyflash.h"
 
+#include <lwip/tcpip.h>
+
 #include "wifi_mgmr_ext.h"
+#ifndef BL602
+#include "fhost_api.h"
+#include "wifi_mgmr.h"
+#endif
+#include "mm.h"
 
 #define DBG_TAG "MAIN"
 #include "log.h"
@@ -30,23 +41,19 @@ static struct bflb_device_s *uart0;
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
 
+#ifdef BL602
+extern void wifi_task_create(void);
+extern int wifi_mgmr_task_start(void);
+#endif
+
 static void ble_connected(struct bt_conn *conn, u8_t err)
 {
-    if(err || conn->type != BT_CONN_TYPE_LE)
-    {
-        return;
-    }
     printf("%s",__func__);
 }
 
 static void ble_disconnected(struct bt_conn *conn, u8_t reason)
 {
     int ret;
-
-    if(conn->type != BT_CONN_TYPE_LE)
-    {
-        return;
-    }
 
     printf("%s",__func__);
 
@@ -104,8 +111,10 @@ void wifi_start_firmware_task(void *param)
 
     wifi_task_create();
 
+    #ifndef BL602
     LOG_I("Starting fhost ...\r\n");
     fhost_init();
+    #endif
 
     vTaskDelete(NULL);
 }

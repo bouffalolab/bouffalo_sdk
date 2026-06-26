@@ -510,6 +510,9 @@ BL_Err_Type PSram_Ctrl_ApMem_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_
 void PSram_Ctrl_ApMem_Reset(PSRAM_ID_Type PSRAM_ID);
 void PSram_Ctrl_CK_Sel(PSRAM_ID_Type PSRAM_ID, PSRAM_Clock_Type clkSel);
 void PSram_Ctrl_Winbond_Reset(PSRAM_ID_Type PSRAM_ID);
+BL_Err_Type PSram_Ctrl_Winbond_Hybrid_Sleep_Set(PSRAM_ID_Type PSRAM_ID, PSRAM_Hybrid_Sleep_Mode sleepMode);
+BL_Err_Type PSram_Ctrl_Winbond_Enter_Hybrid_Sleep(PSRAM_ID_Type PSRAM_ID);
+BL_Err_Type PSram_Ctrl_Winbond_Exit_Hybrid_Sleep(PSRAM_ID_Type PSRAM_ID);
 uint8_t PSram_Ctrl_Get_Timeout_Flag(PSRAM_ID_Type PSRAM_ID);
 void PSram_Ctrl_Clear_Timout_Flag(PSRAM_ID_Type PSRAM_ID);
 void PSram_Ctrl_Debug_Timout(PSRAM_ID_Type PSRAM_ID, uint8_t enable, uint32_t timeoutThr);

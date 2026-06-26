@@ -19,4 +19,5 @@ struct bflb_pec_qspi_cam_s cam_cfg_gc6153 = {
     .skip_clk_first_line = (12 + 9) * 8,     /*!< skip clock count before first line */
     .skip_dly = 3,                           /*! delay count in every clock skip */
     .sample_dly = 3,                         /*!< QSPI CAM data sample delay time after clock pin edge, in unit of PEC clock */
+    .one_shot_mode = 0,                      /*!< one shot mode or not, in one shot mode, PEC will stop after one frame data is captured */
 };

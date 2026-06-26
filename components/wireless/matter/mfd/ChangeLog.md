@@ -1,5 +1,10 @@
 # change log on Matter MFD module
 
+## 2026/6/8
+- Version: 1.6.3
+- Changes
+  - Support to get efuse aes iv using the mfd_getElementById() API.
+
 ## 2026/5/8
 - Version: 1.6.2
 - Changes

@@ -1,4 +1,12 @@
 # Changes
+## 2026-06-18
+1. [BR/EDR] Fix discovery being stuck after stop during the name-resolution window: when the inquiry has already completed and the host is resolving device names, Inquiry Cancel returns Command Disallowed (-EACCES); treat this as a successful stop -- detach the callback, cancel the in-flight remote name requests, clear the discovery state, and return 0 so a subsequent start works. Late name completions racing with the cancels are dropped via the detached-callback guards instead of being reported after stop.
+
+## 2026-06-09
+1. [blestack] Add BR/EDR sniff mode support.
+2. [bredr_cli_cmds] Add bredr_sniff/bredr_unsniff CLI commands.
+3. [bredr_cli_cmds] Add spp_tp_start/spp_tp_stop SPP throughput test commands with per-link rate limiting.
+
 ## 2026-06-04
 1. [blestack] Fix directed advertising refcount over-unref crash. the original "bouffalo fix" unref'd one ref prematurely in enh_conn_complete, causing the crash from excessive unrefs on failure.
 

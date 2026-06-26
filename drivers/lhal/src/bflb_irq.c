@@ -85,15 +85,16 @@ int bflb_irq_attach(int irq, irq_callback isr, void *arg)
         return -EINVAL;
     }
 #ifndef BL_IOT_SDK
+    g_irqvector[irq].handler = isr;
+    g_irqvector[irq].arg = arg;
 #if (defined(BL618DG) && defined(CPU_LP))
     if (irq > BL618DG_IRQ_LEVEL2_BASE) {
         g_irqvector[BL618DG_IRQ_LEVEL2_BASE].handler = bl618dg_level2_irq_handler;
         g_irqvector[BL618DG_IRQ_LEVEL2_BASE].arg = NULL;
+        GLB_Set_NP_Interrupt_Mask(irq, 0);
         GLB_Set_NP2MINI_Interrupt_Mask(irq, 0);
     }
 #endif
-    g_irqvector[irq].handler = isr;
-    g_irqvector[irq].arg = arg;
 #else
     extern void bl_irq_register_with_ctx(int irqnum, void *handler, void *ctx);
     bl_irq_register_with_ctx(irq, (void *)isr, arg);
@@ -110,6 +111,7 @@ int bflb_irq_detach(int irq)
 #if (defined(BL618DG) && defined(CPU_LP))
     if (irq > BL618DG_IRQ_LEVEL2_BASE) {
         GLB_Set_NP2MINI_Interrupt_Mask(irq, 1);
+        GLB_Set_NP_Interrupt_Mask(irq, 1);
     }
 #endif
     g_irqvector[irq].handler = irq_unexpected_isr;

@@ -1,6 +1,7 @@
 #ifndef __BL_LP_H__
 #define __BL_LP_H__
 #include <stdint.h>
+#include "bflb_irq.h"
 
 #if defined(BL702)
 #include "bl702_lp.h"
@@ -50,8 +51,8 @@
 
 /* soft interrupt */
 #if defined(BL618DG) && !defined(CPU_MODEL_A0)
-#define BL_LP_SOFT_INT_TRIG  (ECLIC_SetPendingIRQ(MSOFT_IRQn))
-#define BL_LP_SOFT_INT_CLEAR (ECLIC_ClearPendingIRQ(MSOFT_IRQn))
+#define BL_LP_SOFT_INT_TRIG  (bflb_irq_set_pending(MSOFT_IRQn))
+#define BL_LP_SOFT_INT_CLEAR (bflb_irq_clear_pending(MSOFT_IRQn))
 #else
 #define BL_LP_SOFT_INT_TRIG  (csi_vic_set_pending_irq(MSOFT_IRQn))
 #define BL_LP_SOFT_INT_CLEAR (csi_vic_clear_pending_irq(MSOFT_IRQn))

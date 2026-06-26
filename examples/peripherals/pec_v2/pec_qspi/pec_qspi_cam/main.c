@@ -18,7 +18,7 @@ void dma0_ch0_isr(void *arg)
     static uint32_t dma_tc_flag0 = 0;
     printf("tc done, flag = %u\r\n", dma_tc_flag0++);
     if ((dma_tc_flag0 % 50) == 0) {
-        bflb_pec_qspi_cam_stop(pec_cam);
+        bflb_pec_qspi_cam_stop(pec_cam, cam_cfg);
         bflb_l1c_dcache_invalidate_range(framebuffer, sizeof(framebuffer));
         for (int i = 0; i < cam_cfg->resolution_x * cam_cfg->resolution_y * cam_cfg->pixel_bits / 8; i++) {
             if (i % 16 == 0) {
@@ -63,10 +63,35 @@ int main(void)
     config.dst_req = DMA_REQUEST_NONE;
     config.src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
     config.dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
-    config.src_burst_count = DMA_BURST_INCR8;
-    config.dst_burst_count = DMA_BURST_INCR8;
-    config.src_width = DMA_DATA_WIDTH_16BIT;
-    config.dst_width = DMA_DATA_WIDTH_16BIT;
+    if (cam_cfg->fifo_threshold == (1 - 1)) {
+        config.src_burst_count = DMA_BURST_INCR1;
+        config.dst_burst_count = DMA_BURST_INCR1;
+    } else if (cam_cfg->fifo_threshold == (4 - 1)) {
+        config.src_burst_count = DMA_BURST_INCR4;
+        config.dst_burst_count = DMA_BURST_INCR4;
+    } else if (cam_cfg->fifo_threshold == (8 - 1)) {
+        config.src_burst_count = DMA_BURST_INCR8;
+        config.dst_burst_count = DMA_BURST_INCR8;
+    } else if (cam_cfg->fifo_threshold == (16 - 1)) {
+        config.src_burst_count = DMA_BURST_INCR16;
+        config.dst_burst_count = DMA_BURST_INCR16;
+    } else  {
+        printf("not support this fifo threshold: %d\r\n", cam_cfg->fifo_threshold);
+        while (1) {}
+    }
+    if (cam_cfg->bits_every_push == 8) {
+        config.src_width = DMA_DATA_WIDTH_8BIT;
+        config.dst_width = DMA_DATA_WIDTH_8BIT;
+    } else if (cam_cfg->bits_every_push == 16) {
+        config.src_width = DMA_DATA_WIDTH_16BIT;
+        config.dst_width = DMA_DATA_WIDTH_16BIT;
+    } else if (cam_cfg->bits_every_push == 32) {
+        config.src_width = DMA_DATA_WIDTH_32BIT;
+        config.dst_width = DMA_DATA_WIDTH_32BIT;
+    } else {
+        printf("not support this bits_every_push: %d\r\n", cam_cfg->bits_every_push);
+        while (1) {}
+    }
     bflb_dma_channel_init(dma0_ch0, &config);
     bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
     transfers[0].src_addr = (uint32_t)DMA_ADDR_PEC_SM0_RDR;

@@ -28,6 +28,7 @@
 #endif
 #if defined(CONFIG_BT_SPP)
 #include <spp.h>
+#include "spp_throughput.h"
 #endif
 #if defined(CONFIG_SHELL)
 #include "shell.h"
@@ -75,17 +76,17 @@ static struct bt_conn_cb conn_callbacks = {
 };
 #if defined(CONFIG_BT_SPP)
 
-static void bt_recv_callback(u8_t *data, u16_t length)
+static void bt_recv_callback(struct bt_conn *conn, u8_t *data, u16_t length)
 {
-    BT_WARN("len %u data %s",length,bt_hex(data,length));
+    BT_WARN("conn %p len %u data %s", conn, length, bt_hex(data, length));
 };
-static void bt_spp_connected(void)
+static void bt_spp_connected(struct bt_conn *conn)
 {
-    BT_WARN("");
+    BT_WARN("conn %p", conn);
 };
-static void bt_spp_disconnected(void)
+static void bt_spp_disconnected(struct bt_conn *conn)
 {
-    BT_WARN("");
+    BT_WARN("conn %p", conn);
 };
 
 struct spp_callback_t spp_conn_callbacks={
@@ -171,6 +172,10 @@ BT_CLI(start_inquiry);
 BT_CLI(stop_inquiry);
 BT_CLI(set_min_enc_key_size);
 BT_CLI(set_tx_pwr);
+#if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+BT_CLI(sniff);
+BT_CLI(unsniff);
+#endif
 
 #if defined(BR_EDR_PTS_TEST)
 BT_CLI(sdp_client_connect);
@@ -284,6 +289,8 @@ BT_HFP_CLI(hf_update_indicator);
 BT_SPP_CLI(send);
 BT_SPP_CLI(disconnect);
 BT_SPP_CLI(connect);
+BT_SPP_CLI(throughput_start);
+BT_SPP_CLI(throughput_stop);
 #endif
 
 #if defined(CONFIG_SHELL)
@@ -302,6 +309,10 @@ BT_SPP_CLI(connect);
                             bredr_remote_name Parameter:[Null]);
     SHELL_CMD_EXPORT_ALIAS(bredr_set_min_enc_key_size,bredr_set_min_enc_key_size, brder_set_min_enc_key_size Parameter:[key size]);
     SHELL_CMD_EXPORT_ALIAS(bredr_set_tx_pwr,bredr_set_tx_pwr, bredr_set_tx_pwr Parameter:[br_power:1 octet; value:0~10; edr_power:1 octet; value:0~8;0xff:use default power;]);
+    #if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+    SHELL_CMD_EXPORT_ALIAS(bredr_sniff,bredr_sniff,bredr_sniff Parameter:[address] [interval_ms]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_unsniff,bredr_unsniff,bredr_unsniff Parameter:[address]);
+    #endif
     SHELL_CMD_EXPORT_ALIAS(bredr_l2cap_send_test_data,bredr_l2cap_send_test_data,"");
     SHELL_CMD_EXPORT_ALIAS(bredr_l2cap_echo_req,bredr_l2cap_echo_req,"");
     SHELL_CMD_EXPORT_ALIAS(bredr_l2cap_disconnect,bredr_l2cap_disconnect_req,"");
@@ -378,6 +389,8 @@ BT_SPP_CLI(connect);
     SHELL_CMD_EXPORT_ALIAS(spp_send,spp_send,"");
     SHELL_CMD_EXPORT_ALIAS(spp_connect,spp_connect,"");
     SHELL_CMD_EXPORT_ALIAS(spp_disconnect,spp_disconnect,"");
+    SHELL_CMD_EXPORT_ALIAS(spp_throughput_start,spp_tp_start,spp_tp_start Parameter:[idx|all] [len] [rate_kbps]);
+    SHELL_CMD_EXPORT_ALIAS(spp_throughput_stop,spp_tp_stop,spp_tp_stop Parameter:[idx|all]);
     #endif
 
 #else
@@ -407,6 +420,10 @@ const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"bredr_auth_passkey", "", bredr_auth_passkey},
     {"bredr_get_bond_list","",bredr_get_bond_list},
     {"bredr_set_tx_pwr","",bredr_set_tx_pwr},
+    #if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+    {"bredr_sniff","",bredr_sniff},
+    {"bredr_unsniff","",bredr_unsniff},
+    #endif
     #if defined(BR_EDR_PTS_TEST)
     {"bredr_sdp_client_connect", "", bredr_sdp_client_connect},
     #endif
@@ -466,6 +483,8 @@ const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"spp_send","",spp_send},
     {"spp_connect","",spp_connect},
     {"spp_disconnect","",spp_disconnect},
+    {"spp_tp_start","",spp_throughput_start},
+    {"spp_tp_stop","",spp_throughput_stop},
     #endif
 };
 #endif /* CONFIG_SHELL */
@@ -946,6 +965,85 @@ BT_CLI(set_tx_pwr)
 	}
 
 }
+
+#if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+/* bredr_sniff <addr> [interval_ms]
+ *   Put the BR/EDR link with the given address into sniff mode so an idle or
+ *   low-rate link stops hogging radio time. interval_ms default 100.
+ */
+BT_CLI(sniff)
+{
+    u8_t addr_val[6];
+    bt_addr_t peer_addr;
+    struct bt_conn *conn;
+    uint16_t interval_ms = 100;
+    int err;
+
+    if (argc < 2) {
+        printf("Usage: bredr_sniff <addr> [interval_ms]\r\n");
+        return;
+    }
+
+    get_bytearray_from_string(&argv[1], addr_val, 6);
+    reverse_bytearray(addr_val, peer_addr.val, 6);
+
+    if (argc >= 3) {
+        get_uint16_from_string(&argv[2], &interval_ms);
+    }
+
+    conn = bt_conn_lookup_addr_br(&peer_addr);
+    if (!conn) {
+        printf("bredr_sniff, no BR/EDR connection for this address\r\n");
+        return;
+    }
+
+    /* interval in 0.625ms slots; give a small min/max window around it */
+    uint16_t slots = (uint16_t)(((uint32_t)interval_ms * 1000) / 625);
+    uint16_t min_slots = slots > 16 ? slots - 16 : slots;
+
+    err = bt_br_conn_enter_sniff(conn, min_slots, slots);
+    if (err) {
+        printf("bredr_sniff, enter sniff failed (err %d)\r\n", err);
+    } else {
+        printf("bredr_sniff, sniff requested (%u ms, %u slots)\r\n",
+               interval_ms, slots);
+    }
+
+    bt_conn_unref(conn);
+}
+
+/* bredr_unsniff <addr>  -- return the link to active mode */
+BT_CLI(unsniff)
+{
+    u8_t addr_val[6];
+    bt_addr_t peer_addr;
+    struct bt_conn *conn;
+    int err;
+
+    if (argc < 2) {
+        printf("Usage: bredr_unsniff <addr>\r\n");
+        return;
+    }
+
+    get_bytearray_from_string(&argv[1], addr_val, 6);
+    reverse_bytearray(addr_val, peer_addr.val, 6);
+
+    conn = bt_conn_lookup_addr_br(&peer_addr);
+    if (!conn) {
+        printf("bredr_unsniff, no BR/EDR connection for this address\r\n");
+        return;
+    }
+
+    err = bt_br_conn_exit_sniff(conn);
+    if (err) {
+        printf("bredr_unsniff, exit sniff failed (err %d)\r\n", err);
+    } else {
+        printf("bredr_unsniff, exit sniff requested\r\n");
+    }
+
+    bt_conn_unref(conn);
+}
+#endif /* BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE */
 
 #if defined(BR_EDR_PTS_TEST)
 BT_CLI(sdp_client_connect)
@@ -1936,7 +2034,7 @@ BT_SPP_CLI(send)
         return;
     }
     
-    err=bt_spp_send(spp_test_buffer,len);
+    err=bt_spp_send(default_conn, spp_test_buffer, len);
     if(err)
         printf("bt spp send err:%d\r\n", err);
     else
@@ -1969,6 +2067,53 @@ BT_SPP_CLI(disconnect)
         printf("bt spp disconnect err:%d\r\n", err);
     else
         printf("bt spp disconnect successfully\r\n");
+}
+
+/* spp_tp_start <idx|all> [len] [rate_kbps]
+ *   idx       : SPP link index, or "all" for every connected link
+ *   len       : per-send payload size, default 672
+ *   rate_kbps : per-link target rate in KB/s, default 0 (full speed)
+ */
+BT_SPP_CLI(throughput_start)
+{
+    int idx = -1;
+    uint16_t len = 672;
+    uint16_t rate_kbps = 0;
+
+    if (argc < 2) {
+        printf("Usage: spp_tp_start <idx|all> [len] [rate_kbps]\r\n");
+        return;
+    }
+
+    if (strcmp(argv[1], "all") != 0) {
+        uint8_t v = 0;
+        get_uint8_from_string(&argv[1], &v);
+        idx = v;
+    }
+
+    if (argc >= 3) {
+        get_uint16_from_string(&argv[2], &len);
+    }
+
+    if (argc >= 4) {
+        get_uint16_from_string(&argv[3], &rate_kbps);
+    }
+
+    spp_tp_start(idx, len, (uint32_t)rate_kbps * 1024);
+}
+
+/* spp_tp_stop [idx|all]  (default all) */
+BT_SPP_CLI(throughput_stop)
+{
+    int idx = -1;
+
+    if (argc >= 2 && strcmp(argv[1], "all") != 0) {
+        uint8_t v = 0;
+        get_uint8_from_string(&argv[1], &v);
+        idx = v;
+    }
+
+    spp_tp_stop(idx);
 }
 #endif
 static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)

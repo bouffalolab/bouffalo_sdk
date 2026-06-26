@@ -40,6 +40,7 @@
 #include "bflb_efuse.h"
 #include "bl602_ef_cfg.h"
 // #include "risc-v/Core/Include/clic.h"
+#include <risc-v/e24/clic.h>
 
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
@@ -263,8 +264,8 @@ void ATTR_TCM_SECTION HBN_Enable_Ext(uint8_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoL
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_PWR_ON_OPTION);
     BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
 
-    bflb_irq_clear_pending(HBN_OUT0_IRQn);
-    bflb_irq_clear_pending(HBN_OUT1_IRQn);
+    putreg8(0, CLIC_HART0_BASE + CLIC_INTIP_OFFSET + HBN_OUT0_IRQn);
+    putreg8(0, CLIC_HART0_BASE + CLIC_INTIP_OFFSET + HBN_OUT1_IRQn);
 
     BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
     BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);

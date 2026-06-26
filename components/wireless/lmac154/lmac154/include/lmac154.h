@@ -8,7 +8,7 @@
 
 #define VERSION_LMAC154_MAJOR 1
 #define VERSION_LMAC154_MINOR 7
-#define VERSION_LMAC154_PATCH 7
+#define VERSION_LMAC154_PATCH 8
 
 // #define VERSION_LMAC154_SRC_EXTRA_INFO "customer-1"
 
@@ -882,6 +882,13 @@ lmac154_data_rate_t lmac154_getRxDataRate(void);
 *******************************************************************************/
 void lmac154_setCCAMode(lmac154_cca_mode_t mode);
 
+/****************************************************************************//**
+ * @brief  Get CCA mode
+ *
+ * @return lmac154_cca_mode_t
+ *
+*******************************************************************************/
+lmac154_cca_mode_t lmac154_getCCAMode(void);
 
 /****************************************************************************//**
  * @brief  Set CCA ED threshold (default -71dBm)

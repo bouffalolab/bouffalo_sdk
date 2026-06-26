@@ -184,29 +184,16 @@ if(CONFIG_X509_CERTIFICATE_BUNDLE)
         )
 endif()
 
-if(CONFIG_SHELL)
-    set(SHELL_AUTOLIST_APPEND_ARGS --append AUTOLIST)
-    if(CONFIG_SHELL_AUTOLIST_FILE)
-        if(IS_ABSOLUTE "${CONFIG_SHELL_AUTOLIST_FILE}")
-            set(SHELL_AUTOLIST_FILE "${CONFIG_SHELL_AUTOLIST_FILE}")
-        else()
-            set(SHELL_AUTOLIST_FILE "${SDK_DEMO_PATH}/${CONFIG_SHELL_AUTOLIST_FILE}")
-        endif()
-
-        list(APPEND SHELL_AUTOLIST_APPEND_ARGS "${SHELL_AUTOLIST_FILE}")
-    else()
-        list(APPEND SHELL_AUTOLIST_APPEND_ARGS --append-size 0x1000)
-    endif()
-
+if(CONFIG_SHELL AND CONFIG_SHELL_AUTOLIST_FILE)
     list(APPEND post_build_cmds
-        COMMAND ${CMAKE} -E echo "[shell_auto] ${SHELL_AUTOLIST_APPEND_ARGS}"
+        COMMAND ${CMAKE} -E echo "[shell_auto] auto execute shell commands ${CONFIG_SHELL_AUTOLIST_FILE} after boot"
         COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
             ${BIN_FILE}
-            ${SHELL_AUTOLIST_APPEND_ARGS}
+            --append AUTOLIST
+            ${CONFIG_SHELL_AUTOLIST_FILE}
             --output ${BIN_FILE}
-            --align 0x1000
-            --tail-align 0x1000
-        )
+            --align 0x100
+    )
 endif()
 
 if(CONFIG_POST_BUILDS_GENERATE_LITTLEFS)

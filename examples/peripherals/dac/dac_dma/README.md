@@ -8,7 +8,6 @@
 | BL602/BL604       |        |
 | BL702/BL704/BL706 |        |
 | BL616/BL618       |        |
-| BL618DG           |        |
 
 
 ## Compile
@@ -29,13 +28,6 @@ make CHIP=bl702 BOARD=bl702dk
 
 ```
 make CHIP=bl616 BOARD=bl616dk
-```
-
-- BL618DG
-
-```
-make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
-make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
 ```
 ## Flash
 

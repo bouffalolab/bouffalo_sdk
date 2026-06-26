@@ -906,10 +906,6 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
         AON_Set_Ldo18_Aon_Mode(AON_LDO18_AON_NORMAL_MODE);
         AON_Set_Ldo18_Aon_Vout(p->ldo18_aon_cfg.voltage_level);
     }
-    /************************ PDS INT SET ***********************/
-    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
-    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);
-
     if (p->sleepTime) {
         PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_TIMER, UNMASK); // unmask pds sleep time wakeup
     } else {
@@ -953,8 +949,10 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
         /* Turn Off Flash/PSRAM PAD IE */
         /* psram io config */
     }
+#ifndef CONFIG_PSRAM
     /* power off psram */
     AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(0);
+#endif
 
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
     GLB_Set_WL_MCU_System_CLK(HBN_MCU_XCLK_RC32M, 0, 0);
@@ -1011,7 +1009,9 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
     __WFI(); /* if(.wfiMask==0){CPU won't power down until PDS module had seen __wfi} */
 
     AON_Set_Ldo18_AON_Power_Switch_For_FLASH(1);
+#ifndef CONFIG_PSRAM
     AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(1);
+#endif
     AON_Power_On_MBG();
     AON_Power_On_SFReg();
 
@@ -1123,6 +1123,9 @@ void ATTR_TCM_SECTION pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level,
 
     irq_flag = irq_flag;
 
+    AON_Ctrl_Ldo18_Aon_Mode_by_HW(1);
+    AON_Set_Ldo08_Aon_Vout(AON_LDO08_AON_LEVEL_0P800V);
+
     bflb_irq_clear_pending(HBN_OUT0_IRQn);
     bflb_irq_clear_pending(HBN_OUT1_IRQn);
 
@@ -1150,7 +1153,12 @@ void ATTR_TCM_SECTION pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level,
     bflb_flash_get_cfg((uint8_t **)&flash_cfg, &flash_cfg_len);
 
     HBN_Power_Down_Flash(flash_cfg);
+
+    AON_Set_Ldo18_AON_Power_Switch_For_FLASH(0);
 #endif
+
+    AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(0);
+    AON_Set_Switch_For_Efuse(0);
 
     /* Set HBN flag */
     BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);

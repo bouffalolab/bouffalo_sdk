@@ -1,5 +1,123 @@
 # CHANGELOG
 
+## v2.3.28 — since v2.3.27 (2026-06-07 → 2026-06-26)
+
+### New Features
+
+- **BL616CL**
+  - Added USB enumeration as EMAC, HID, and UAC (USB Audio Class)
+  - Updated PhyRF library
+
+- **BL618DG**
+  - Added integrated LP firmware entry point
+  - Added PSRAM hybrid sleep support
+  - Added PSRAM PDS recovery and RTC test
+  - Updated PhyRF library
+
+- **Display / Graphics**
+  - Added DSI v2 panel framework and LVGL v9 OSD demo
+  - Updated PEC QSPI camera example
+
+- **Audio**
+  - Added AC101 codec driver
+  - Added AUADC peripheral support and example
+
+- **WiFi**
+  - Coexistence examples now support BL616, BL616CL, and BL618DG
+  - Added P2P configuration header in MACSW
+  - Added log output when AP deauthenticates a station
+
+- **Bluetooth / BLE**
+  - SPP now supports up to 7 concurrent connections (was 1)
+  - Added continuous TX codes 0xC0-0xC7 for testing
+
+- **Thread / 802.15.4**
+  - Updated debug and neighbor functions for BL618DG
+
+- **Matter**
+  - Added API to retrieve eFUSE AES IV via MFD
+
+- **Build / Core**
+  - Added firmware boot success marker in partition support
+  - coredump.py now supports BKCD binary format
+  - `settimeofday` marked as weak symbol in libc
+  - Added CANFD CIA603 and TTCAN examples
+
+- **Manufacturing**
+  - Added ADC temperature sensor function for HToL test
+
+### Bug Fixes
+
+- **BL618DG**
+  - Fixed PDS sleep time calculation
+  - Fixed PDS GPIO interrupt trigger types
+  - Fixed HBN IRQ status preservation during PDS enable
+  - Fixed HBN DCDC and power configuration
+  - Fixed WL LP IO wakeup support
+  - Fixed LP softirq restore after wakeup
+  - Disabled all interrupts before B0 silicon sleep
+  - Fixed forwarded IRQ masking at boot (unmasked on attach)
+  - Removed NP JTAG pinmux to avoid conflicts
+  - Fixed BLE RX failure at sniff anchor point
+  - Fixed BLE EBQ issues on B0 silicon
+  - Enhanced Bluetooth and 5G coexistence
+
+- **BL616CL**
+  - Fixed BLE throughput rate and average display
+
+- **BL602**
+  - Fixed XIP access collision when clearing HBN IRQ pending
+
+- **WiFi**
+  - Fixed WEP encryption restore in low-power mode
+  - Fixed AP deauth triggered by transient unexpected frames
+  - Validated MACSW configuration counts
+  - Fixed keyram dump to reflect exact stored content
+  - Fixed UF buffer configuration build
+  - Set A-MSDU supported bit in ADDBA request
+  - Updated WL LP and wl80211 flow
+  - Removed deprecated configuration code
+
+- **Bluetooth / BLE**
+  - Fixed discovery restart after stop during name resolution (BR/EDR)
+  - Fixed connection reference issue in central demo
+  - Fixed BLE EBQ issues across multiple chips
+
+- **Display / Graphics**
+  - Updated DPI framebuffer case handling
+  - Updated OSD and DVP raster driver
+
+- **Low Power**
+  - Optimized and refactored low-power receive BCMC feature
+  - Fixed WEP encryption key restoration during LP resume
+
+- **Build System**
+  - Fixed `CONFIG_GCC_COMPILE_LTO` incorrectly applying to board, flash PSRAM, and startup code
+  - Set BL618DG default optimization level to `-O2`
+  - Generated VERSION files for WiFi6 and MACSW libraries
+
+- **Peripherals**
+  - Fixed DMA burst size limitation
+  - Prevented I2S channel misalignment by enabling I2S after DMA start
+  - Preserved eFUSE lock word when programming bit 31
+
+- **Thread**
+  - Guarded idle check against NULL instance
+  - Avoided idle sleep when TX frame is pending
+
+- **Shell**
+  - Reserved autolist read only (tab-completion improvement)
+
+- **Examples**
+  - Fixed compile error on wl_ble_lp example
+  - Updated BL618DG HBN RTC example
+
+### Improvements
+
+- Refactored low-power receive BCMC feature across system drivers for better maintainability
+- Updated HToL TX test configuration
+- Improved cross-platform build compatibility
+
 ## v2.3.27 — since v2.3.26 (2026-05-16 → 2026-06-07)
 
 ### New Features

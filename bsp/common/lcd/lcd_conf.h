@@ -31,9 +31,14 @@
     LCD_DPI_GC9503V
     LCD_DPI_ST7701S
     LCD_DPI_STANDARD
+    LCD_DPI_JD9165BA  (JD9165BA TTL 24-bit RGB, software SPI init, e.g. 1024x600, BL618DG)
 
   mipi dsi vidio interface
     LCD_DSI_VIDIO_ILI9881C
+    LCD_DSI_ILI9881C_KD050020  (ILI9881C 720x1280, RGB565, 4-lane, e.g. KD050HDFIA020, BL618DG)
+    LCD_DSI_ILI9881C_KD050023W4  (ILI9881C 720x1280, RGB565, 2-lane, e.g. KD050HDFIA023-W4, BL618DG)
+    LCD_DSI_ST7102_YH494          (ST7102 480x960, RGB565, 2-lane, e.g. YH-494BSAC002N1, BL618DG)
+    LCD_DSI_AXS15231B_HS035        (AXS15231B 172x640, RGB565 link, ARGB8888 OSD, 1-lane, firmware-init, BL618DG)
 
   spi interface
     LCD_SPI_GC9307
@@ -566,6 +571,40 @@
     /* ILI9488 LCD width and height */
     #define ST7701S_DPI_W 480
     #define ST7701S_DPI_H 480
+
+
+/* dpi jd9165ba config */
+#elif defined LCD_DPI_JD9165BA
+
+    /* Selecting DPI working mode
+        3. DPI v2 peripheral (support: bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 3
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bits)
+        2: nrgb8888 (32-bits, output rgb888)
+    */
+    #define JD9165BA_DPI_PIXEL_FORMAT 2
+
+    /* RGB-BGR Order control
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define JD9165BA_DPI_RGB_ORDER_MODE 0
+
+    /* JD9165BA LCD width and height */
+    #define JD9165BA_DPI_W 1024
+    #define JD9165BA_DPI_H 600
+
+    /* RGB timing and frame rate are fixed by the panel and defined in jd9165ba_dpi.c */
 
 
 /* dpi ili9488 config */

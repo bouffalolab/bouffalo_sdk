@@ -3044,6 +3044,14 @@ static void report_discovery_results(void)
 
 	atomic_clear_bit(bt_dev.flags, BT_DEV_INQUIRY);
 
+#if defined(BFLB_BREDR_PATCH_FIX_DISCOVERY_STOP_DURING_NAME_RESOLVE)
+	/* Discovery stopped while resolving names; callback already detached. */
+	if (!discovery_cb) {
+		BT_WARN("Discovery stopped, skip result callback");
+		return;
+	}
+#endif
+
 	discovery_cb(discovery_results, discovery_results_count);
 
 	discovery_cb = NULL;
@@ -3256,6 +3264,14 @@ check_names:
 	/* all names resolved, report discovery results */
 	atomic_clear_bit(bt_dev.flags, BT_DEV_INQUIRY);
 
+#if defined(BFLB_BREDR_PATCH_FIX_DISCOVERY_STOP_DURING_NAME_RESOLVE)
+	/* Discovery stopped while resolving names; callback already detached. */
+	if (!discovery_cb) {
+		BT_WARN("Discovery stopped, skip result callback");
+		return;
+	}
+#endif
+
 	discovery_cb(discovery_results, discovery_results_count);
 
 	discovery_cb = NULL;
@@ -3435,6 +3451,48 @@ static void role_change(struct net_buf *buf)
 
 	bt_conn_unref(conn);
 }
+
+#if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+static void mode_change(struct net_buf *buf)
+{
+	struct bt_hci_evt_mode_change *evt = (void *)buf->data;
+	u16_t handle = sys_le16_to_cpu(evt->handle);
+	u16_t interval = sys_le16_to_cpu(evt->interval);
+	struct bt_conn *conn;
+	const char *mode_str;
+
+	if (evt->status) {
+		BT_WARN("Mode change failed, handle %u status 0x%02x",
+			handle, evt->status);
+		return;
+	}
+
+	switch (evt->mode) {
+	case BT_HCI_MODE_ACTIVE:
+		mode_str = "active";
+		break;
+	case BT_HCI_MODE_HOLD:
+		mode_str = "hold";
+		break;
+	case BT_HCI_MODE_SNIFF:
+		mode_str = "sniff";
+		break;
+	default:
+		mode_str = "unknown";
+		break;
+	}
+
+	conn = bt_conn_lookup_handle(handle);
+	if (conn) {
+		BT_WARN("Mode change: conn %p now %s (interval %u slots, %u ms)",
+			conn, mode_str, interval, (interval * 625) / 1000);
+		bt_conn_unref(conn);
+	} else {
+		BT_WARN("Mode change: handle %u now %s (interval %u slots)",
+			handle, mode_str, interval);
+	}
+}
+#endif /* BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE */
 #endif /* CONFIG_BT_BREDR */
 
 #if defined(CONFIG_BT_SMP)
@@ -4520,6 +4578,10 @@ static const struct event_handler normal_events[] = {
 		      sizeof(struct bt_hci_evt_remote_ext_features)),
 	EVENT_HANDLER(BT_HCI_EVT_ROLE_CHANGE, role_change,
 		      sizeof(struct bt_hci_evt_role_change)),
+#if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+	EVENT_HANDLER(BT_HCI_EVT_MODE_CHANGE, mode_change,
+		      sizeof(struct bt_hci_evt_mode_change)),
+#endif /* BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE */
 	EVENT_HANDLER(BT_HCI_EVT_SYNC_CONN_COMPLETE, synchronous_conn_complete,
 		      sizeof(struct bt_hci_evt_sync_conn_complete)),
 #endif /* CONFIG_BT_BREDR */
@@ -8463,9 +8525,27 @@ int bt_br_discovery_stop(void)
 	}
 
 	err = bt_hci_cmd_send_sync(BT_HCI_OP_INQUIRY_CANCEL, NULL, NULL);
+#if defined(BFLB_BREDR_PATCH_FIX_DISCOVERY_STOP_DURING_NAME_RESOLVE)
+	/* Inquiry already completed while the host is still resolving names:
+	 * Inquiry Cancel returns Command Disallowed (-EACCES). Treat it as a
+	 * successful stop -- fall through to cancel the in-flight name requests
+	 * and clear the discovery state so a restart works, then return 0.
+	 */
+	if (err && err != -EACCES) {
+		return err;
+	}
+#else
 	if (err) {
 		return err;
 	}
+#endif
+
+	/* Detach the callback before issuing the cancels below: a name-resolution
+	 * completion may race in while we wait on Remote Name Cancel, and we must
+	 * not report results after stop. The !discovery_cb guards in the report
+	 * paths drop such late completions.
+	 */
+	discovery_cb = NULL;
 
 	for (i = 0; i < discovery_results_count; i++) {
 		struct discovery_priv *priv;
@@ -8492,7 +8572,6 @@ int bt_br_discovery_stop(void)
 
 	atomic_clear_bit(bt_dev.flags, BT_DEV_INQUIRY);
 
-	discovery_cb = NULL;
 	discovery_results = NULL;
 	discovery_results_size = 0;
 	discovery_results_count = 0;
@@ -8613,6 +8692,59 @@ int bt_br_write_eir(u8_t fec, u8_t *data)
 
     return bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_EXT_INQUIRY_RESP, buf, NULL);
 }
+
+#if defined(BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE)
+int bt_br_conn_enter_sniff(struct bt_conn *conn, u16_t min_interval,
+			   u16_t max_interval)
+{
+	struct bt_hci_cp_sniff_mode *cp;
+	struct net_buf *buf;
+
+	if (!conn || conn->type != BT_CONN_TYPE_BR) {
+		return -EINVAL;
+	}
+
+	buf = bt_hci_cmd_create(BT_HCI_OP_SNIFF_MODE, sizeof(*cp));
+	if (!buf) {
+		return -ENOBUFS;
+	}
+
+	cp = net_buf_add(buf, sizeof(*cp));
+	cp->handle = sys_cpu_to_le16(conn->handle);
+	cp->max_interval = sys_cpu_to_le16(max_interval);
+	cp->min_interval = sys_cpu_to_le16(min_interval);
+	/* attempt/timeout: number of slots the slave listens around the
+	 * sniff anchor. Keep small but non-zero so the link stays alive.
+	 */
+	cp->attempt = sys_cpu_to_le16(4);
+	cp->timeout = sys_cpu_to_le16(1);
+
+	/* Sniff Mode is an asynchronous command: the controller replies with
+	 * Command Status and later a Mode Change event. Use the non-sync send.
+	 */
+	return bt_hci_cmd_send(BT_HCI_OP_SNIFF_MODE, buf);
+}
+
+int bt_br_conn_exit_sniff(struct bt_conn *conn)
+{
+	struct bt_hci_cp_exit_sniff_mode *cp;
+	struct net_buf *buf;
+
+	if (!conn || conn->type != BT_CONN_TYPE_BR) {
+		return -EINVAL;
+	}
+
+	buf = bt_hci_cmd_create(BT_HCI_OP_EXIT_SNIFF_MODE, sizeof(*cp));
+	if (!buf) {
+		return -ENOBUFS;
+	}
+
+	cp = net_buf_add(buf, sizeof(*cp));
+	cp->handle = sys_cpu_to_le16(conn->handle);
+
+	return bt_hci_cmd_send(BT_HCI_OP_EXIT_SNIFF_MODE, buf);
+}
+#endif /* BFLB_BREDR_PATCH_ENABLE_SNIFF_MODE */
 
 int bt_br_internal_update_a2dp_status(u16_t conHandle,u8_t status)
 {

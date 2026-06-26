@@ -6,6 +6,10 @@
 #include "bflb_gpio.h"
 #include "bflb_l1c.h"
 #include "hardware/uart_reg.h"
+#ifdef CONFIG_PSRAM
+#include "bl618dg_psram.h"
+#include "bl618dg_psram_recovery.h"
+#endif
 
 static ATTR_NOCACHE_RAM_SECTION lp_fw_clock_t pds_resume_clock_cfg = {
     .mcu_clk_sel = GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M,
@@ -116,8 +120,10 @@ static void ATTR_TCM_SECTION bl_lp_system_init(void)
 
 #ifdef CONFIG_IRQ_USE_VECTOR
     ECLIC_SetShvIRQ(MSOFT_IRQn, 1);
+    ECLIC_SetTrigIRQ(MSOFT_IRQn, 1);
 #else
     ECLIC_SetShvIRQ(MSOFT_IRQn, 0);
+    ECLIC_SetTrigIRQ(MSOFT_IRQn, 1);
 #endif
 #endif
 
@@ -406,6 +412,9 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
     bl_lp_debug_clean_time(iot2lp_para);
     bl_lp_debug_record_time(iot2lp_para, "pds enter start");
 
+#ifdef CONFIG_PSRAM
+    bl_lp_psram_para_save();
+#endif
     bl_lp_xip_para_save();
     bl_lp_runtime_clock_snapshot();
     if (pds_level > 1) {
@@ -424,6 +433,12 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
         pm_set_wakeup_callback(pds_cpu_wakeup_cb);
         bflb_l1c_dcache_clean_all();
 
+#ifdef CONFIG_PSRAM
+        if (BL618DG_PSRAM_INIT_DONE) {
+            PSram_Ctrl_Winbond_Enter_Hybrid_Sleep(PSRAM0_ID);
+        }
+#endif
+
         bl_lp_debug_record_time(iot2lp_para, "pds enter end");
         pm_pds_mode_enter(pds_level, sleep_time);
     }
@@ -438,6 +453,12 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
         GLB_Set_MCU_System_CLK(pds_resume_clock_cfg.mcu_clk_sel);
         GLB_Set_MCU_System_CLK_Div(pds_resume_clock_cfg.hclk_div, pds_resume_clock_cfg.bclk_div);
     }
+
+#ifdef CONFIG_PSRAM
+    bl_lp_debug_record_time(iot2lp_para, "psram resume start");
+    ret = bl_lp_psram_resume(pds_level);
+    bl_lp_debug_record_time(iot2lp_para, "psram resume end");
+#endif
 
     bl_lp_debug_record_time(iot2lp_para, "restore context end");
 

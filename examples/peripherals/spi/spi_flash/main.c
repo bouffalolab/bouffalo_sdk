@@ -16,7 +16,7 @@ static struct bflb_spi_config_s spi_cfg = {
     .mode = SPI_MODE0,
     .data_width = SPI_DATA_WIDTH_8BIT,
     .bit_order = SPI_BIT_MSB,
-    .byte_order = SPI_BYTE_MSB,
+    .byte_order = SPI_BYTE_LSB,
     .tx_fifo_threshold = 0,
     .rx_fifo_threshold = 0,
 };

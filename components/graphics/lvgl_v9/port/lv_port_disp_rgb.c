@@ -112,6 +112,10 @@ lv_display_t *lv_port_disp_init(void)
      * Both LV_DISPLAY_RENDER_MODE_DIRECT and LV_DISPLAY_RENDER_MODE_FULL works, see their comments*/
     lv_display_set_buffers(disp, draw_buf_1, draw_buf_2, DRAW_BUFF_SIZE, LV_DISPLAY_RENDER_MODE_FULL);
 
+#if defined (CONFIG_LVGL9_OSD_LAYER)
+    lv_display_set_color_format(disp, LV_COLOR_FORMAT_ARGB8888);
+#endif
+
 #if LCD_LVGL_RGB_TRIPLE_BUFF_MODE
     displpay_drv_p = disp;
 #endif

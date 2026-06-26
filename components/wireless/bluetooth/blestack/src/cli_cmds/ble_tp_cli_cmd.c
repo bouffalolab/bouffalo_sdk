@@ -674,8 +674,8 @@ static void show_task(void *pvParameters)
                 }
                 rate = (tmp_ntf_tx_cnt[i] - pre_ntf_tx_cnt[i]);
                 ntf_tx_rate[i][index_get(ntf_tx_idx[i]++)] = rate;
-                printf("Slave:%s  notify tx, total:%10ld, rate:%3.2lfKb/s, average;%3.2lfKb/s\r\n",
-                        get_conn_dst_addr(i), tmp_ntf_tx_cnt[i], rate/128.0, get_averge_rate(ntf_tx_rate[i], ntf_tx_idx[i])/128.0);
+                printf("Slave:%s  notify tx, total:%10lu, rate:%luKb/s, average;%luKb/s\r\n",
+                        get_conn_dst_addr(i), tmp_ntf_tx_cnt[i], rate/128, get_averge_rate(ntf_tx_rate[i], ntf_tx_idx[i])/128);
                 pre_ntf_tx_cnt[i] = tmp_ntf_tx_cnt[i];
             }
             for(i = 0; i < CONFIG_BT_MAX_CONN; ++i){
@@ -684,8 +684,8 @@ static void show_task(void *pvParameters)
                 }
                 rate = (tmp_wrt_rx_cnt[i] - pre_wrt_rx_cnt[i]);
                 wrt_rx_rate[i][index_get(wrt_rx_idx[i]++)] = rate;
-                printf("Slave:%s  write  rx, total:%10ld, rate:%3.2lfKb/s, average;%3.2lfKb/s\r\n",
-                        get_conn_dst_addr(i), tmp_wrt_rx_cnt[i], rate/128.0, get_averge_rate(wrt_rx_rate[i], wrt_rx_idx[i])/128.0);
+                printf("Slave:%s  write  rx, total:%10lu, rate:%luKb/s, average;%luKb/s\r\n",
+                        get_conn_dst_addr(i), tmp_wrt_rx_cnt[i], rate/128, get_averge_rate(wrt_rx_rate[i], wrt_rx_idx[i])/128);
                 pre_wrt_rx_cnt[i] = tmp_wrt_rx_cnt[i];
             }
         }
@@ -696,8 +696,8 @@ static void show_task(void *pvParameters)
                 }
                 rate = (tmp_ntf_rx_cnt[i] - pre_ntf_rx_cnt[i]);
                 ntf_rx_rate[i][index_get(ntf_rx_idx[i]++)] = rate;
-                printf("Master:%s notify rx, total:%10ld, rate:%3.2lfKb/s, average;%3.2lfKb/s\r\n",
-                        get_conn_dst_addr(i), tmp_ntf_rx_cnt[i], rate/128.0, get_averge_rate(ntf_rx_rate[i], ntf_rx_idx[i])/128.0);
+                printf("Master:%s notify rx, total:%10lu, rate:%luKb/s, average;%luKb/s\r\n",
+                        get_conn_dst_addr(i), tmp_ntf_rx_cnt[i], rate/128, get_averge_rate(ntf_rx_rate[i], ntf_rx_idx[i])/128);
                 pre_ntf_rx_cnt[i] = tmp_ntf_rx_cnt[i];
             }
             for(i = 0; i < CONFIG_BT_MAX_CONN; ++i){
@@ -706,8 +706,8 @@ static void show_task(void *pvParameters)
                 }
                 rate = (tmp_wrt_tx_cnt[i] - pre_wrt_tx_cnt[i]);
                 wrt_tx_rate[i][index_get(wrt_tx_idx[i]++)] = rate;
-                printf("Master:%s write  tx, total:%10ld, rate:%3.2lfKb/s, average;%3.2lfKb/s\r\n",
-                        get_conn_dst_addr(i), tmp_wrt_tx_cnt[i], rate/128.0, get_averge_rate(wrt_tx_rate[i], wrt_tx_idx[i])/128.0);
+                printf("Master:%s write  tx, total:%10lu, rate:%luKb/s, average;%luKb/s\r\n",
+                        get_conn_dst_addr(i), tmp_wrt_tx_cnt[i], rate/128, get_averge_rate(wrt_tx_rate[i], wrt_tx_idx[i])/128);
                 pre_wrt_tx_cnt[i] = tmp_wrt_tx_cnt[i];
             }
         }

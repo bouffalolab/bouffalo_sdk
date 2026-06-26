@@ -187,7 +187,7 @@ static void async_event_loop_wake(void)
         wait = 0;
     }
 
-    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, NULL, wait);
+    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, 0, wait);
     configASSERT(xReturn == pdPASS);
 }
 #endif
@@ -245,8 +245,7 @@ void wifi_start_firmware_task(void *param)
     async_event_init(async_event_loop_wake);
     vTaskDelay(pdMS_TO_TICKS(500));
     wl80211_init();
-    async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
-    async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
+    wifi_mgmr_init();
 #endif
     vTaskDelete(NULL);
 }

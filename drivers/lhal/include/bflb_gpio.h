@@ -294,6 +294,7 @@
 #define GPIO_FUNC_SPI       (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0      (1 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI1      (1 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PDM       (2 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2S       (3 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_CANFD     (4 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2C0      (5 << GPIO_FUNC_SHIFT)
@@ -309,7 +310,9 @@
 #define GPIO_FUNC_PWM       (16 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_PWM0      (16 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_PWM1      (16 << GPIO_FUNC_SHIFT)
+#if defined(CPU_MODEL_A0)
 #define GPIO_FUNC_JTAG_M1   (17 << GPIO_FUNC_SHIFT)
+#endif
 #define GPIO_FUNC_JTAG_LP   (17 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_UART3     (18 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_AUDAC     (21 << GPIO_FUNC_SHIFT)

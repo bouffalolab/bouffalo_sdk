@@ -528,6 +528,7 @@ BL_Err_Type AON_Set_Ldo08_Aon_Vout(uint8_t level);
 BL_Err_Type AON_SW_Trim_Ldo08_Aon_Vout(uint8_t trim);
 BL_Err_Type AON_Set_Ldo_Soc_Vout(uint8_t level);
 BL_Err_Type AON_SW_Trim_Ldo_Soc_Vout(uint8_t trim);
+BL_Err_Type AON_Set_Ldo09_Soc_Slow_Pulldown(uint8_t enable);
 BL_Err_Type AON_Set_Dcdc_Sys_Vout(uint8_t level);
 BL_Err_Type AON_SW_Trim_Dcdc_Sys_Vout(uint8_t trim);
 /*----------*/

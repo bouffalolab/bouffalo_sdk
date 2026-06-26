@@ -16,9 +16,7 @@ enum pm_pds_sleep_level {
 };
 
 enum pm_hbn_sleep_level {
-    PM_HBN_LEVEL_0,
-    PM_HBN_LEVEL_1,
-    PM_HBN_LEVEL_2,
+    PM_HBN_LEVEL_0
 };
 
 enum pm_event_type {

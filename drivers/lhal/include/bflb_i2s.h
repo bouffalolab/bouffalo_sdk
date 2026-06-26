@@ -72,22 +72,24 @@
 #define I2S_CMD_GET_TX_FIFO_CNT       (0x03)
 #define I2S_CMD_GET_RX_FIFO_CNT       (0x04)
 #define I2S_CMD_SET_DEGLITCH_CNT      (0x05)
-#define I2S_CMD_DATA_ENABLE           (0x06)
-#define I2S_CMD_CHANNEL_LR_MERGE      (0x07)
-#define I2S_CMD_CHANNEL_LR_EXCHG      (0x08)
-#define I2S_CMD_MUTE                  (0x09)
-#define I2S_CMD_BIT_REVERSE           (0x0A)
-#define I2S_CMD_MONO_CHANEL_SEL       (0x0B)
+#define I2S_CMD_ENABLE_CONTROL        (0x06)
+#define I2S_CMD_DISABLE_CONTROL       (0x07)
+#define I2S_CMD_CHANNEL_LR_MERGE      (0x08)
+#define I2S_CMD_CHANNEL_LR_EXCHG      (0x09)
+#define I2S_CMD_MUTE                  (0x0A)
+#define I2S_CMD_BIT_REVERSE           (0x0B)
+#define I2S_CMD_MONO_CHANEL_SEL       (0x0C)
 /**
   * @}
   */
 
-/** @defgroup I2S_CMD_DATA_ENABLE_TYPE i2s data enable type
+/** @defgroup I2S_ARG_CMD i2s command argument definition
   * @{
   */
-#define I2S_CMD_DATA_ENABLE_TX        (1 << 1)
-#define I2S_CMD_DATA_ENABLE_RX        (1 << 2)
-
+#define I2S_ARG_CMD_MASTER           (1 << 0)
+#define I2S_ARG_CMD_SLAVE            (1 << 1)
+#define I2S_ARG_CMD_TX               (1 << 2)
+#define I2S_ARG_CMD_RX               (1 << 3)
 /**
   * @}
   */

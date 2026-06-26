@@ -1052,10 +1052,12 @@ BL_Err_Type GLB_Select_LPCPU_Jtag(void) {
     return RomDriver_GLB_Select_LPCPU_Jtag();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Select_NPCPU_Jtag(void) {
     return RomDriver_GLB_Select_NPCPU_Jtag();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Halt_CPU(uint8_t coreID) {
@@ -1609,7 +1611,7 @@ BL_Err_Type PDS_Disable_Ctrl_Ram(void) {
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Default_Level_Config(PDS_DEFAULT_LV_CFG_Type *defaultLvCfg, uint32_t pdsSleepCnt) {
-    return RomDriver_PDS_Default_Level_Config(defaultLvCfg, pdsSleepCnt);
+    return RomDriver_PDS_Default_Level_Config(defaultLvCfg, pdsSleepCnt ? (pdsSleepCnt + PDS_LDO_MIN_PU_CNT - 1) : 0);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

@@ -856,6 +856,31 @@ BL_Err_Type ATTR_TCM_SECTION AON_SW_Trim_Ldo_Soc_Vout(uint8_t trim)
     return SUCCESS;
 }
 
+/****************************************************************************/ /**
+ * @brief  AON set LDO09 SOC slow pulldown
+ *
+ * @param  enable: ENABLE or DISABLE
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Set_Ldo09_Soc_Slow_Pulldown(uint8_t enable)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_LDO09SOC);
+
+    if (enable == ENABLE) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO09SOC_SLOW_PLD_AON);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, AON_LDO09SOC_SLOW_PLD_AON);
+    }
+
+    BL_WR_REG(AON_BASE, AON_LDO09SOC, tmpVal);
+
+    return SUCCESS;
+}
+
 BL_Err_Type ATTR_TCM_SECTION AON_Set_Switch_For_Efuse(uint8_t enable)
 {
     uint32_t tmpVal;

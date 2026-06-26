@@ -8,18 +8,17 @@
 #include "conn_internal.h"
 #if defined(BL702) || defined(BL602)
 #include "ble_lib_api.h"
-#elif defined(BL616)
+#else
 #include "btble_lib_api.h"
+#include "rfparam_adapter.h"
+#endif
+
+#if defined(BL616)
 #include "bl616_glb.h"
-#include "rfparam_adapter.h"
 #elif defined(BL618DG)
-#include "btble_lib_api.h"
 #include "bl618dg_glb.h"
-#include "rfparam_adapter.h"
 #elif defined(BL616CL)
-#include "btble_lib_api.h"
 #include "bl616cl_glb.h"
-#include "rfparam_adapter.h"
 #endif
 
 #include "hci_driver.h"
@@ -261,10 +260,6 @@ static void ble_disconnected(struct bt_conn *conn, u8_t reason)
     printf("Disconnected: %s (reason %u) \r\n", addr, reason);
 
     if (default_conn == conn) {
-        #if defined(CONFIG_BT_CENTRAL)
-        if(conn->role == BT_HCI_ROLE_MASTER)
-            bt_conn_unref(conn);
-        #endif
         default_conn = NULL;
     }
 
@@ -417,13 +412,11 @@ int main(void)
     /* ble stack need easyflash kv */
     easyflash_init();
 
-#if defined(BL616)||defined(BL618DG)||defined(BL602)||defined(BL616CL)
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return 0;
     }
-#endif
 
     xTaskCreate(app_start_task, (char *)"app_start", 1024, NULL, configMAX_PRIORITIES - 2, &app_start_handle);
 

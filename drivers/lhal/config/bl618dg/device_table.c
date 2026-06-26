@@ -593,7 +593,7 @@ const struct bflb_device_s bl618dg_device_table[] = {
     { .name = BFLB_NAME_DVP_RASTER,
       .reg_base = RASTER2BLOCK_BASE,
 #if !defined(CPU_LP)
-      .irq_num = BL618DG_IRQ_RASTER2BLOCK,
+      .irq_num = BL618DG_IRQ_MM_SEOF1,
 #else
       .irq_num = 0xff,
 #endif

@@ -24,16 +24,6 @@
   * @}
   */
 
-/** @defgroup DVP_RASTER_INT dvp raster interrupt definition
-  * @{
-  */
-#define DVP_RASTER_INT_FRAME_DONE    (1 << 0)
-#define DVP_RASTER_INT_RAM_OVERWRITE (1 << 1)
-#define DVP_RASTER_INT_ALL           (DVP_RASTER_INT_FRAME_DONE | DVP_RASTER_INT_RAM_OVERWRITE)
-/**
-  * @}
-  */
-
 /** @defgroup DVP_RASTER_CMD dvp raster feature control cmd definition
   * @{
   */
@@ -127,27 +117,24 @@ void bflb_dvp_raster_sw_mode_output_rgb(struct bflb_device_s *dev, bool enable);
  * @brief Enable or disable dvp raster interrupt.
  *
  * @param [in] dev device handle
- * @param [in] int_type type of dvp raster interrupt, use @ref DVP_RASTER_INT
  * @param [in] mask true means disable, false means enable
  */
-void bflb_dvp_raster_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask);
+void bflb_dvp_raster_int_mask(struct bflb_device_s *dev, bool mask);
 
 /**
  * @brief Get dvp raster interrupt status.
  *
  * @param [in] dev device handle
- * @param [in] int_type type of dvp raster interrupt, use @ref DVP_RASTER_INT
  * @return interrupt status
  */
-bool bflb_dvp_raster_get_intstatus(struct bflb_device_s *dev, uint32_t int_type);
+bool bflb_dvp_raster_get_intstatus(struct bflb_device_s *dev);
 
 /**
  * @brief Clear dvp raster interrupt status.
  *
  * @param [in] dev device handle
- * @param [in] int_type type of dvp raster interrupt, use @ref DVP_RASTER_INT
  */
-void bflb_dvp_raster_int_clear(struct bflb_device_s *dev, uint32_t int_type);
+void bflb_dvp_raster_int_clear(struct bflb_device_s *dev);
 
 /**
  * @brief Crop vsync.

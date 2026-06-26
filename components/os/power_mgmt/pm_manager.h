@@ -1,10 +1,7 @@
-#ifndef LINEAR_ALLOCATOR_H
-#define LINEAR_ALLOCATOR_H
+#ifndef PM_MANAGER_H
+#define PM_MANAGER_H
 
-#include <stddef.h>
 #include <stdint.h>
-
-#define LINEAR_ALLOCATOR_MAX_PTRS 12
 
 /**
  * @brief Maximum number of sleep check callbacks that can be registered
@@ -31,33 +28,10 @@ typedef struct {
     uint8_t enabled;            /**< Whether this entry is enabled/registered */
 } pm_sleep_check_entry_t;
 
-typedef struct {
-    uint8_t *buffer;
-    size_t size;
-    size_t offset;
-
-    void *ptrs[LINEAR_ALLOCATOR_MAX_PTRS];
-    size_t bsize[LINEAR_ALLOCATOR_MAX_PTRS];
-    size_t ptr_count;
-    size_t iter_index;
-} linear_allocator;
-
-/* Forward declaration - struct pm_wrap is defined in pm_manager.c */
-struct pm_wrap;
-
-void linear_allocator_init(linear_allocator *alloc, void *buffer, size_t size);
-void *linear_allocator_alloc(linear_allocator *alloc, size_t size, size_t align);
-size_t linear_allocator_get_ptrs(linear_allocator *alloc, void **out_ptrs, size_t max_ptrs);
-void *linear_allocator_next(linear_allocator *alloc, size_t *size_out);
-void linear_allocator_reset(linear_allocator *alloc);
-void linear_allocator_iter_reset(linear_allocator *alloc);
-
 int pm_sys_init(void);
 int pm_mem_pool_alloc(void);
 int pm_mem_pool_free(void);
 uint32_t pm_manager_handle_get(void);
-struct pbuf;
-void pm_pbuf_free_cb(struct pbuf *p);
 int pm_pbufc_check(void);
 int pm_enter_lp_perparation(void);
 int pm_exit_lp_perparation(void);
@@ -94,4 +68,4 @@ int pm_sleep_check_unregister(const char *name);
  */
 int pm_sleep_check_dispatch(void);
 
-#endif // LINEAR_ALLOCATOR_H
+#endif // PM_MANAGER_H

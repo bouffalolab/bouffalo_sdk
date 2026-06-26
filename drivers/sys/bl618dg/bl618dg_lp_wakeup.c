@@ -12,6 +12,10 @@ void bl_lp_io_wakeup_init(lp_fw_gpio_cfg_t *cfg)
 {
     int ret = 0;
 
+    if (cfg == NULL) {
+        return;
+    }
+
     ret = pm_lowpower_gpio_cfg((lp_gpio_cfg_type *)cfg);
     if (ret) {
         BL_LP_LOG("[LP] io wakeup init fail!\r\n");
@@ -21,6 +25,8 @@ void bl_lp_io_wakeup_init(lp_fw_gpio_cfg_t *cfg)
 void bl618dg_lp_io_wakeup_prepare(void)
 {
     lp_fw_gpio_cfg_t *cfg = gp_lp_io_cfg;
+
+    iot2lp_para->wakeup_source_parameter->io_wakeup_parameter = NULL;
 
     if (cfg) {
         iot2lp_para->wakeup_source_parameter->io_wakeup_parameter = (void *)cfg;
@@ -38,9 +44,6 @@ int bl_lp_wakeup_io_get_mode(uint8_t io_num)
     uint64_t wakeup_io_bits = iot2lp_para->wakeup_reason_info->wakeup_io_bits;
     uint8_t trig_mode;
 
-    b_lp_io_cfg_bak = (lp_fw_gpio_cfg_t *)iot2lp_para->wakeup_source_parameter->io_wakeup_parameter;
-    p_trig_modes = (uint8_t *)&b_lp_io_cfg_bak->io_0_7_trig_mode;
-
     if (io_num >= BL_LP_WAKEUP_IO_MAX_NUM) {
         return -1;
     }
@@ -49,6 +52,12 @@ int bl_lp_wakeup_io_get_mode(uint8_t io_num)
         return 0;
     }
 
+    b_lp_io_cfg_bak = (lp_fw_gpio_cfg_t *)iot2lp_para->wakeup_source_parameter->io_wakeup_parameter;
+    if (b_lp_io_cfg_bak == NULL) {
+        return -1;
+    }
+
+    p_trig_modes = (uint8_t *)&b_lp_io_cfg_bak->io_0_7_trig_mode;
     trig_mode = p_trig_modes[io_num / 8];
 
     if (trig_mode == BL_LP_PDS_IO_TRIG_SYNC_FALLING_EDGE || trig_mode == BL_LP_PDS_IO_TRIG_ASYNC_FALLING_EDGE) {

@@ -19,7 +19,7 @@ uint32_t pic_len;
 extern struct bflb_device_s *console;
 
 __attribute__((aligned(32))) ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t yuv_buffer[2][X * 2 * 8 * KICK_CNT];
-__attribute__((aligned(32))) ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t mjpeg_buffer[250 * 1024];
+__attribute__((aligned(32))) ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t mjpeg_buffer[240 * 1024];
 
 void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
 {

@@ -922,6 +922,7 @@ int bt_br_write_local_name(char *name);
   * write extern inquiry response.
   */
 int bt_br_write_eir(u8_t fec, u8_t *data);
+
 /** Update a2dp status to controller.
   *
   * @param conHandle        connection handle

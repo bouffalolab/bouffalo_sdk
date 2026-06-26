@@ -12,6 +12,9 @@ target_sources(app PRIVATE
     wl_ble_lp_app.c
               )
 
+if (CONFIG_BLUETOOTH)
+    sdk_add_compile_definitions(-DCFG_BLE_ENABLE)
+endif()
 sdk_add_include_directories(.)
 
 sdk_set_main_file(main.c)

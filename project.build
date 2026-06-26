@@ -96,6 +96,7 @@ endif
 ifeq ($(CHIP), bl616cl)
 	CONFIG_PEC_V2 ?=y
 	CONFIG_MULTIMEDIA_VIDEO ?=y
+	CONFIG_GCC_OPTIMISE_LEVEL ?=-Os
 endif
 
 # BL616
@@ -103,6 +104,7 @@ ifeq ($(CHIP), bl616)
 	ifeq ($(CONFIG_FREERTOS),y)
 		CONFIG_BACKTRACE ?=y
 	endif
+	CONFIG_GCC_OPTIMISE_LEVEL ?=-Os
 endif
 
 CPU_ID ?=
@@ -151,20 +153,14 @@ cmake_cache: cmake_config
 	$(MAKE) library_cmake_cache
 	$(CMAKE) -S . -B $(BUILD_DIR) -G $(cmake_generator) $(cmake_definition)
 
-cmake_config:
+$(BUILD_DIR)/generated:
 	$(CMAKE) -E make_directory $(BUILD_DIR)/generated
+
+cmake_config: | $(BUILD_DIR)/generated
 	$(CMAKE) -E touch $(BUILD_DIR)/generated/defconfig.cmake
 ifneq ($(CONFIG_VARS),)
-	$(CMAKE) -E rm -rf $(BUILD_DIR)/generated/defconfig.cmake.new
-ifeq ($(OS),Windows_NT)
-	@$(foreach var,$(CONFIG_VARS), \
-	$(CMAKE) -E echo "set($(var) $(value $(var)))" >> $(BUILD_DIR)/generated/defconfig.cmake.new& \
-	)
-else
-	@$(foreach var,$(CONFIG_VARS), \
-	$(CMAKE) -E echo "set($(var) $(value $(var)))" >> $(BUILD_DIR)/generated/defconfig.cmake.new; \
-	)
-endif
+	$(file >$(BUILD_DIR)/generated/defconfig.cmake.new)
+	$(foreach var,$(CONFIG_VARS),$(file >>$(BUILD_DIR)/generated/defconfig.cmake.new,set($(var) $(value $(var)))))
 	$(CMAKE) -E rename $(BUILD_DIR)/generated/defconfig.cmake.new $(BUILD_DIR)/generated/defconfig.cmake
 endif
 

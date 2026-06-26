@@ -1724,6 +1724,64 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Aon_Pad_Cfg_Set(uint8_t aonPadHwCtrlEn, uint8_t
     BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_0, tmpVal);
     return SUCCESS;
 }
+
+/****************************************************************************/ /**
+ * @brief  HBN enable external DCDC09 power request path
+ *
+ * @param  gpio: AON GPIO index used as power request source, 0 to 7
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Enable_Dcdc09(uint8_t gpio)
+{
+    uint32_t tmpVal;
+    uint32_t pwrReqMask;
+    uint32_t pwrReqEn;
+
+    CHECK_PARAM((gpio <= 7));
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_2);
+
+    pwrReqMask = BL_GET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_MASK);
+    pwrReqEn = BL_GET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_EN);
+
+    pwrReqMask &= ~(1U << gpio);
+    pwrReqEn |= (1U << gpio);
+
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_MASK, pwrReqMask);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_EN, pwrReqEn);
+
+    BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_2, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN force internal LDO09 AON power-up signal to zero
+ *
+ * @param  enable: ENABLE or DISABLE
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Ldo09_Aon_Force_Off(uint8_t enable)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_2);
+
+    if (enable == ENABLE) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_LDO09_AON_4S0);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_PU_LDO09_AON_4S0);
+    }
+
+    BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_2, tmpVal);
+
+    return SUCCESS;
+}
+
 /****************************************************************************/ /**
  * @brief  HBN enable BOD interrupt
  *

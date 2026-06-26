@@ -142,6 +142,10 @@ ifeq ($(CONFIG_BT_SPP_SERVER),1)
 ble_stack_srcs   += src/services/ble_spp.c
 endif
 
+ifeq ($(CONFIG_BT_SPP),1)
+ble_stack_srcs   += src/services/spp_throughput.c
+endif
+
 ifeq ($(CONFIG_DYNAMIC_GATTS),1)
 ble_stack_srcs   += src/host/dynamic_gatts.c
 endif

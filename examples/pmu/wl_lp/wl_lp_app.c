@@ -37,9 +37,19 @@
 #include "shell.h"
 #include "pm_manager.h"
 
-#define SLEEP_PDS_US        80
-#define ACTIVE_LPFW_US      38000
-#define ACTIVE_APP_US       57000
+#ifdef BL616
+#define SLEEP_PDS_UA        80
+#define ACTIVE_LPFW_UA      38000
+#define ACTIVE_APP_UA       57000
+#elif defined(BL616CL)
+#define SLEEP_PDS_UA        55
+#define ACTIVE_LPFW_UA      32000
+#define ACTIVE_APP_UA       50000
+#elif defined(BL618DG)
+#define SLEEP_PDS_UA        155
+#define ACTIVE_LPFW_UA      36000
+#define ACTIVE_APP_UA       52000
+#endif
 
 int pwr_info_clear(void)
 {
@@ -65,7 +75,7 @@ uint64_t pwr_info_get(void)
     printf("LPFW active: %lldms\r\n", lp_info.active_lpfw_us / 1000);
     printf("APP active: %lldms\r\n", lp_info.active_app_us / 1000);
 
-    uint64_t current = (lp_info.sleep_pds_us * SLEEP_PDS_US + lp_info.active_lpfw_us * ACTIVE_LPFW_US + lp_info.active_app_us * ACTIVE_APP_US) / lp_info.time_total_us;
+    uint64_t current = (lp_info.sleep_pds_us * SLEEP_PDS_UA + lp_info.active_lpfw_us * ACTIVE_LPFW_UA + lp_info.active_app_us * ACTIVE_APP_UA) / lp_info.time_total_us;
 
     printf("Predict current: %llduA\r\n", current);
 

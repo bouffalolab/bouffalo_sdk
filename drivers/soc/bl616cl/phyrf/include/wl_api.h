@@ -96,7 +96,6 @@ struct wl_param_pwrcal_t
 {
     int8_t      channel_pwrcomp_wlan[NUM_WLAN_CHANNELS];
     int8_t      channel_lp_pwrcomp_wlan[NUM_WLAN_CHANNELS]; // power compensation at low power mode
-    int8_t      Temperature_MP; // temperature of sensor while power cal at production line
     int8_t      channel_pwrcomp_bz[NUM_BZ_CH_PWRCOMP];
 };
 
@@ -138,7 +137,6 @@ struct wl_efuse_t
     uint8_t     chip_version;
     uint8_t     iptat_code;
     uint8_t     icx_code;
-    uint8_t     dcdc_vout_trim_aon;
     int8_t      Temperature_MP; // temperature of sensor while power cal at production line
 };
 
@@ -364,7 +362,31 @@ void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
 
 // 0: disable the function(cw..) only for mfg to save code size
 #ifndef MFG_FUNC_ONLY
-#define MFG_FUNC_ONLY (0)
+#define MFG_FUNC_ONLY (1)
+#endif
+
+// 0: disable MUMIMO TX
+#ifndef RW_MUMIMO_TX_EN
+#define RW_MUMIMO_TX_EN (0)
+#endif
+
+// 0: disable MUMIMO SEC_USER
+
+#ifndef RW_MUMIMO_SEC_USER1_EN
+#define RW_MUMIMO_SEC_USER1_EN (0)
+#endif
+
+#ifndef RW_MUMIMO_SEC_USER2_EN
+#define RW_MUMIMO_SEC_USER2_EN (0)
+#endif
+
+#ifndef RW_MUMIMO_SEC_USER3_EN
+#define RW_MUMIMO_SEC_USER3_EN (0)
+#endif
+
+// 0: disable WL_BB_CE_LOG
+#ifndef WL_BB_CE_LOG
+#define WL_BB_CE_LOG (0)
 #endif
 
 /*

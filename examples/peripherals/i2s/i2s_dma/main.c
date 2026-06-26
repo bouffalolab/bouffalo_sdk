@@ -140,7 +140,7 @@ int main(void)
 #endif
 
     /* enable i2s tx and rx */
-    bflb_i2s_feature_control(i2s0, I2S_CMD_DATA_ENABLE, I2S_CMD_DATA_ENABLE_TX | I2S_CMD_DATA_ENABLE_RX);
+    bflb_i2s_feature_control(i2s0, I2S_CMD_ENABLE_CONTROL, I2S_ARG_CMD_MASTER | I2S_ARG_CMD_TX | I2S_ARG_CMD_RX);
 
     printf("\n\rtest end\n\r");
 

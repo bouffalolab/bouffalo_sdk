@@ -19,4 +19,5 @@ struct bflb_pec_qspi_cam_s cam_cfg_bf20a6 = {
     .skip_clk_first_line = 8 - 1,            /*!< skip clock count before first line */
     .skip_dly = 0,                           /*! delay count in every clock skip */
     .sample_dly = 0,                         /*!< QSPI CAM data sample delay time after clock pin edge, in unit of PEC clock */
+    .one_shot_mode = 0,                      /*!< one shot mode or not, in one shot mode, PEC will stop after one frame data is captured */
 };

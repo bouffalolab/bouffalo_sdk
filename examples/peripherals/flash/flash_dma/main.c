@@ -75,6 +75,30 @@ static uint8_t dst_width[] = {
     DMA_DATA_WIDTH_32BIT,
 };
 
+#if defined(BL618DG)
+static uint8_t dma_config_supported(struct bflb_device_s *dma_ch,
+                                    struct bflb_dma_channel_config_s *config)
+{
+    uint8_t max_burst_bytes = 16;
+    uint8_t src_burst_shift = config->src_burst_count ? config->src_burst_count + 1 : 0;
+    uint8_t dst_burst_shift = config->dst_burst_count ? config->dst_burst_count + 1 : 0;
+    uint32_t src_burst_bytes = (1U << config->src_width) << src_burst_shift;
+    uint32_t dst_burst_bytes = (1U << config->dst_width) << dst_burst_shift;
+
+    if (dma_ch->idx == 1 && dma_ch->sub_idx < 2) {
+        max_burst_bytes = 128;
+    }
+
+    if (src_burst_bytes > max_burst_bytes || dst_burst_bytes > max_burst_bytes) {
+        printf("skip: burst bytes exceed dma%u_ch%u limit\r\n",
+               dma_ch->idx, dma_ch->sub_idx);
+        return 0;
+    }
+
+    return 1;
+}
+#endif
+
 void dma0_ch0_isr(void *arg)
 {
     printf("cost time:%d us\r\n", (uint32_t)(bflb_mtimer_get_time_us() - start_time));
@@ -112,6 +136,13 @@ int main(void)
         config.dst_burst_count = dst_burst[i];
         config.src_width = src_width[i];
         config.dst_width = dst_width[i];
+
+#if defined(BL618DG)
+        if (!dma_config_supported(dma0_ch0, &config)) {
+            continue;
+        }
+#endif
+
         bflb_dma_channel_init(dma0_ch0, &config);
 
         bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);

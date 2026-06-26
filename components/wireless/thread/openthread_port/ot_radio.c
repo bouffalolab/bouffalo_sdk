@@ -156,21 +156,22 @@ void ot_radioTask(ot_system_event_t trxEvent)
 
 bool otr_isStackIdle(void)
 {
-    otRadio_rxFrame_t *pframe = NULL;
-    otRadioState radioeState = -1;
+    bool is_trx_frames_empty = false;
+    otRadioState radioState = OT_RADIO_STATE_DISABLED;
+
+    if (ot_radio_ctx.instance == NULL) {
+        return true;
+    }
 
     uint32_t tag = otrEnterCrit();
-    if (!utils_dlist_empty(&ot_radio_ctx.rx_frame_list)) {
-        pframe = (otRadio_rxFrame_t *)ot_radio_ctx.rx_frame_list.next;
-        utils_dlist_del(&pframe->dlist);
+    is_trx_frames_empty = (utils_dlist_empty(&ot_radio_ctx.rx_frame_list)) && (ot_radio_ctx.tx_frame == NULL);
+    if (otThreadGetDeviceRole(ot_radio_ctx.instance) != OT_DEVICE_ROLE_DISABLED) {
+        radioState = otPlatRadioGetState(ot_radio_ctx.instance);
     }
     otrExitCrit(tag);
 
-    if (NULL == pframe) {
-        radioeState = otPlatRadioGetState(ot_radio_ctx.instance);
-        if ( radioeState == OT_RADIO_STATE_DISABLED || otPlatRadioGetState(ot_radio_ctx.instance) == OT_RADIO_STATE_SLEEP ) {
-            return true;
-        }
+    if (is_trx_frames_empty && (radioState == OT_RADIO_STATE_DISABLED || radioState == OT_RADIO_STATE_SLEEP)) {
+        return true;
     }
 
     return false;

@@ -2,11 +2,6 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-// Config header must be FIRST so CFG_BARX/CFG_REORD_BUF are defined before macsw.h
-#if defined(CONFIG_MACSW_SELECT_INCLUDE)
-#include CONFIG_MACSW_SELECT_INCLUDE
-#endif
-
 #include "macsw.h"
 
 #include "fhost_rx_def.h"

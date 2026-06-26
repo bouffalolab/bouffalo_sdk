@@ -10,13 +10,16 @@
 #include "bl616_glb.h"
 #include "bl616_aon.h"
 #include "bl616_hbn.h"
+#include "bl616_sys.h"
 #elif defined(BL616CL)
 #include "bl616cl_glb.h"
 #include "bl616cl_aon.h"
 #include "bl616cl_hbn.h"
+#include "bl616cl_sys.h"
 #elif defined(BL618DG)
 #include "bl618dg_glb.h"
 #include "bl618dg_aon.h"
+#include "bl618dg_sys.h"
 #endif
 #include "bflb_rtc.h"
 #include "bflb_mtimer.h"
@@ -30,6 +33,7 @@
 #define CLOCK_SOURCE_KEY "clock_src"
 #define RC_CAL_DATA_KEY  "rc_cal"
 
+#if !defined(CONFIG_CLOCK_SOURCE_EF_PARAM) || !CONFIG_CLOCK_SOURCE_EF_PARAM
 static bool clock_source_xtal_supported(void)
 {
 #if defined(BL616)
@@ -38,6 +42,7 @@ static bool clock_source_xtal_supported(void)
     return false;
 #endif
 }
+#endif
 
 #if defined(BL616CL) || defined(BL618DG)
 #define RC32K_PPM_THRESHOLD              (200)

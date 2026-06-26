@@ -259,7 +259,7 @@ void bflb_osd_blend_replace_palette_index(struct bflb_device_s *dev, bool enable
                                           struct bflb_osd_blend_replace_s *replace);
 
 /**
- * @brief Replace osd blend color value with target value.
+ * @brief Replace osd blend color value with target value only when its A, R, G, and B values all match the range.
  *
  * @param [in] dev device handle
  * @param [in] enable enable or disable replace function

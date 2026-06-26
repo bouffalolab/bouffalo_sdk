@@ -1,13 +1,5 @@
 #include "bflb_audac.h"
 #include "bflb_dma.h"
-
-#if defined(BL616)
-#include "bl616_glb.h"
-#elif defined(BL616CL)
-#include "bl616cl_glb.h"
-#elif defined(BL618DG)
-#include "bl618dg_glb.h"
-#endif
 #include "board.h"
 
 // clang-format off
@@ -101,12 +93,6 @@ static void audac_init(void)
         .volume_ramp_rate = AUDAC_RAMP_RATE_FS_128,
         .volume_zero_cross_timeout = AUDAC_RAMP_RATE_FS_128,
     };
-
-    /* clock cfg */
-#if defined(BL616)
-    GLB_Config_AUDIO_PLL_To_491P52M();
-#endif
-    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
 
     /* audac init */
     audac_hd = bflb_device_get_by_name("audac");

@@ -7,6 +7,14 @@ sdk_library_add_sources(startup/start_load.c)
 sdk_library_add_sources(startup/system_bl616.c)
 sdk_library_add_sources(startup/interrupt.c)
 
+if(CONFIG_GCC_COMPILE_LTO)
+    set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/startup/start_load.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/startup/system_bl616.c
+        PROPERTIES COMPILE_FLAGS "-fno-lto"
+    )
+endif()
+
 if(CONFIG_ROMAPI)
     sdk_library_add_sources(src/bl616_romapi_e907.c)
     sdk_library_add_sources(src/bl616_romapi_patch.c)

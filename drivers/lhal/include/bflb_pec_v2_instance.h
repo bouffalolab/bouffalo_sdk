@@ -330,10 +330,11 @@ struct bflb_pec_qspi_cam_s {
     uint16_t skip_clk_first_line; /*!< skip clock count before first line */
     uint8_t skip_dly;             /*!< delay count in every clock skip */
     uint8_t sample_dly;           /*!< QSPI CAM data sample delay time after clock pin edge, in unit of PEC clock */
+    uint8_t one_shot_mode;        /*!< one shot mode or not, in one shot mode, PEC will stop after one frame data is captured */
 };
 
 int bflb_pec_qspi_cam_init(struct bflb_device_s *dev, struct bflb_pec_qspi_cam_s *cam);
 void bflb_pec_qspi_cam_start(struct bflb_device_s *dev, struct bflb_pec_qspi_cam_s *cam);
-void bflb_pec_qspi_cam_stop(struct bflb_device_s *dev);
+void bflb_pec_qspi_cam_stop(struct bflb_device_s *dev, struct bflb_pec_qspi_cam_s *cam);
 
 #endif /* __BFLB_PEC_V2_INSTANCE_H__ */

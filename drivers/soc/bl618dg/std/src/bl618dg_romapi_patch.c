@@ -37,11 +37,13 @@
 #include "bl618dg_romapi_patch.h"
 #include "bl618dg_romdriver_e907.h"
 #include "bl618dg_aon.h"
+#include "bl618dg_hbn.h"
 #include "bl618dg_pds.h"
 #include "bflb_ef_ctrl.h"
 
 #define  WHO_AM_I    (0x60f82800)
 #define  I_AM_A0     (0x0616d001)
+#define  PSRAM_X8_CTRL_WAIT_TIMEOUT 1000
 
 #if defined(CPU_MODEL_A0)
 #define EFUSE_TRIM_PSRAM_OFFSET      0xB4
@@ -52,6 +54,80 @@
 #define EFUSE_TRIM_LDO_RC32M_OFFSET  0x1F4
 #define EFUSE_TRIM_XTAL_OFFSET       0x1F8
 #endif
+
+static void PSram_Ctrl_Request(PSRAM_ID_Type PSRAM_ID)
+{
+    uint32_t tmpVal = 0;
+    uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+    uint32_t time_out = 0;
+
+    tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PSRAM_REG_CONFIG_REQ, 1);
+    BL_WR_REG(psram_base, PSRAM_CONFIGURE, tmpVal);
+
+    do {
+        tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            break;
+        }
+    } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_REG_CONFIG_GNT));
+}
+
+static void PSram_Ctrl_Release(PSRAM_ID_Type PSRAM_ID)
+{
+    uint32_t tmpVal = 0;
+    uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+
+    tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PSRAM_REG_CONFIG_REQ, 0);
+    BL_WR_REG(psram_base, PSRAM_CONFIGURE, tmpVal);
+}
+
+BL_Err_Type PSram_Ctrl_Winbond_Hybrid_Sleep_Set(PSRAM_ID_Type PSRAM_ID, PSRAM_Hybrid_Sleep_Mode sleepMode)
+{
+    uint32_t tmpVal = 0;
+    uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+    uint32_t time_out = 0;
+
+    CHECK_PARAM(IS_PSRAM_ID_TYPE(PSRAM_ID));
+    CHECK_PARAM(IS_PSRAM_HYBRID_SLEEP_MODE(sleepMode));
+
+    PSram_Ctrl_Request(PSRAM_ID);
+
+    tmpVal = BL_RD_REG(psram_base, PSRAM_WINBOND_PSRAM_CONFIGURE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PSRAM_REG_WB_HYBRID_SLP, sleepMode);
+    BL_WR_REG(psram_base, PSRAM_WINBOND_PSRAM_CONFIGURE, tmpVal);
+
+    tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PSRAM_REG_WB_REG_SEL, PSRAM_WINBOND_REG_CR1);
+    BL_WR_REG(psram_base, PSRAM_CONFIGURE, tmpVal);
+
+    tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PSRAM_REG_CONFIG_W_PUSLE, 1);
+    BL_WR_REG(psram_base, PSRAM_CONFIGURE, tmpVal);
+
+    do {
+        tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            PSram_Ctrl_Release(PSRAM_ID);
+            return TIMEOUT;
+        }
+    } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_STS_CONFIG_W_DONE));
+
+    PSram_Ctrl_Release(PSRAM_ID);
+
+    return SUCCESS;
+}
+
+BL_Err_Type PSram_Ctrl_Winbond_Enter_Hybrid_Sleep(PSRAM_ID_Type PSRAM_ID)
+{
+    return PSram_Ctrl_Winbond_Hybrid_Sleep_Set(PSRAM_ID, PSRAM_HYBRID_SLEEP_ENABLE);
+}
+
+BL_Err_Type PSram_Ctrl_Winbond_Exit_Hybrid_Sleep(PSRAM_ID_Type PSRAM_ID)
+{
+    return PSram_Ctrl_Winbond_Hybrid_Sleep_Set(PSRAM_ID, PSRAM_HYBRID_SLEEP_DISABLE);
+}
 
 static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
@@ -216,6 +292,64 @@ static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
         .value_len = 24,
     }
 };
+
+BL_Err_Type ATTR_TCM_SECTION AON_Set_Ldo09_Soc_Slow_Pulldown(uint8_t enable)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_LDO09SOC);
+
+    if (enable == ENABLE) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO09SOC_SLOW_PLD_AON);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, AON_LDO09SOC_SLOW_PLD_AON);
+    }
+
+    BL_WR_REG(AON_BASE, AON_LDO09SOC, tmpVal);
+
+    return SUCCESS;
+}
+
+BL_Err_Type ATTR_TCM_SECTION HBN_Enable_Dcdc09(uint8_t gpio)
+{
+    uint32_t tmpVal;
+    uint32_t pwrReqMask;
+    uint32_t pwrReqEn;
+
+    CHECK_PARAM((gpio <= 7));
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_2);
+
+    pwrReqMask = BL_GET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_MASK);
+    pwrReqEn = BL_GET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_EN);
+
+    pwrReqMask &= ~(1U << gpio);
+    pwrReqEn |= (1U << gpio);
+
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_MASK, pwrReqMask);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_GPIO_PWR_REQ_EN, pwrReqEn);
+
+    BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_2, tmpVal);
+
+    return SUCCESS;
+}
+
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Ldo09_Aon_Force_Off(uint8_t enable)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_2);
+
+    if (enable == ENABLE) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_LDO09_AON_4S0);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_PU_LDO09_AON_4S0);
+    }
+
+    BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_2, tmpVal);
+
+    return SUCCESS;
+}
 
 uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **ptrim_list)
 {

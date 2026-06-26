@@ -85,10 +85,21 @@ if(CONFIG_BSP_LCD)
     target_sources(app PRIVATE lcd/mipi_dpi/ili9488_dpi.c)
     target_sources(app PRIVATE lcd/mipi_dpi/gc9503v_dpi.c)
     target_sources(app PRIVATE lcd/mipi_dpi/st7701s_dpi.c)
+    target_sources(app PRIVATE lcd/mipi_dpi/jd9165ba_dpi.c)
 
     # MIPI DSI BSP compatibility wrappers and panel drivers
     target_sources(app PRIVATE lcd/mipi_dsi/mipi_dsi.c)
     target_sources(app PRIVATE lcd/mipi_dsi/ili9881c_dsi.c)
+    # DSI v2 framework + panels are BL618DG-specific (include bl618dg_glb.h), so
+    # only compile them for that chip; other chips/LCD examples would fail to find
+    # the SoC header otherwise.
+    if("${CHIP}" STREQUAL "bl618dg")
+        target_sources(app PRIVATE lcd/mipi_dsi/mipi_dsi_v2.c)
+        target_sources(app PRIVATE lcd/mipi_dsi/ili9881c_kd050020_dsi.c)
+        target_sources(app PRIVATE lcd/mipi_dsi/ili9881c_kd050023w4_dsi.c)
+        target_sources(app PRIVATE lcd/mipi_dsi/st7102_yh494_dsi.c)
+        target_sources(app PRIVATE lcd/mipi_dsi/axs15231b_hs035_dsi.c)
+    endif()
     sdk_add_include_directories(lcd/mipi_dsi)
 
     sdk_add_include_directories(lcd)
@@ -119,6 +130,7 @@ endif()
 # audio codec driver
 if(CONFIG_BSP_AUDIO_CODEC)
     target_sources(app PRIVATE audio_codec/audio_codec.c)
+    target_sources(app PRIVATE audio_codec/audio_codec_ac101s.c)
     target_sources(app PRIVATE audio_codec/audio_codec_es8311.c)
     target_sources(app PRIVATE audio_codec/audio_codec_es8388.c)
     target_sources(app PRIVATE audio_codec/audio_codec_es8389.c)

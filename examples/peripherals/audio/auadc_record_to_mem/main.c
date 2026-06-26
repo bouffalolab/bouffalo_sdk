@@ -1,8 +1,6 @@
 #include "bflb_auadc.h"
 #include "bflb_gpio.h"
 #include "bflb_dma.h"
-
-#include "bl616_glb.h"
 #include "board.h"
 
 #define AUADC_SAMPLING_NUM (48 * 1024)
@@ -43,10 +41,6 @@ void audio_dma_callback(void *arg)
 
 void auadc_init(void)
 {
-    /* clock config */
-    GLB_Config_AUDIO_PLL_To_491P52M();
-    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
-
     /* auadc init */
     auadc_hd = bflb_device_get_by_name("auadc");
     bflb_auadc_init(auadc_hd, &auadc_init_cfg);
@@ -83,43 +77,14 @@ void auadc_dma_init(void)
     bflb_dma_channel_lli_reload(auadc_dma_hd, lli_pool, 20, transfers, 1);
 }
 
-/* gpio init */
-void auadc_gpio_init(void)
-{
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-
-#ifdef CONFIG_AUDIO_MIC_PDM_MODE
-    /* data */
-    bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* clk */
-    bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-
-#else
-    /* auadc ch0 */
-    //bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
- 
-    /* auadc ch3 */
-    //bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-
-    /* auadc ch4 */
-    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-
-    /* auadc ch7 */
-    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-#endif
-}
-
 int main(void)
 {
     /* board init */
     board_init();
-
     printf("auadc record to mem start \r\n");
 
     /* gpio init */
-    auadc_gpio_init();
+    board_auadc_gpio_init();
 
     /* auadc init */
     auadc_init();

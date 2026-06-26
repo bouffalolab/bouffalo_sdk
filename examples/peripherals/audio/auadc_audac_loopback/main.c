@@ -2,8 +2,6 @@
 #include "bflb_audac.h"
 #include "bflb_gpio.h"
 #include "bflb_dma.h"
-
-#include "bl616_glb.h"
 #include "board.h"
 
 struct bflb_device_s *auadc_dma_hd;
@@ -23,44 +21,6 @@ void auadc_dma_callback(void *arg)
     printf("scyle_n:%d\r\n", num);
 }
 
-/* audio gpio init*/
-void audio_gpio_init(void)
-{
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-#ifdef CONFIG_AUDIO_MIC_PDM_MODE
-    /* data */
-    bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* clk */
-    bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-
-#else
-    /* auadc ch0 */
-    //bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* auadc ch3 */
-    //bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* auadc ch4 */
-    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* auadc ch7 */
-    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-#endif
-
-    /* audac pwm output mode */
-    // bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    // bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
-    // bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    // bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
-    // bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    // bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-
-    /* audac gpdac output mode */
-    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
-    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
-}
-
 /* audio adc init */
 static void auadc_init(void)
 {
@@ -75,10 +35,6 @@ static void auadc_init(void)
         .data_format = AUADC_DATA_FORMAT_16BIT,
         .fifo_threshold = 3,
     };
-
-    /* clock cfg */
-    GLB_Config_AUDIO_PLL_To_491P52M();
-    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
 
     /* auadc init */
     auadc_hd = bflb_device_get_by_name("auadc");
@@ -151,10 +107,6 @@ static void audac_init(void)
         .volume_zero_cross_timeout = AUDAC_RAMP_RATE_FS_128,
     };
 
-    /* clock cfg */
-    GLB_Config_AUDIO_PLL_To_491P52M();
-    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_AUDIO);
-
     /* audac init */
     audac_hd = bflb_device_get_by_name("audac");
     bflb_audac_init(audac_hd, &audac_init_cfg);
@@ -200,7 +152,8 @@ int main(void)
     printf("audac case start \r\n");
 
     /* gpio init */
-    audio_gpio_init();
+    board_auadc_gpio_init();
+    board_audac_gpio_init();
 
     /* auadc init */
     auadc_init();
