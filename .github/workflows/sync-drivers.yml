@@ -1,0 +1,48 @@
+name: Sync drivers to bouffalo_drivers
+
+on:
+  push:
+    branches:
+      - sync-drivers-test
+    paths:
+      - "drivers/**"
+      - ".github/workflows/sync-drivers.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-bouffalo-drivers
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout bouffalo_sdk
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split drivers subtree
+        run: |
+          set -euo pipefail
+          git subtree split --prefix=drivers HEAD -b drivers-split
+
+      - name: Check sync token
+        env:
+          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${TOKEN}"
+
+      - name: Push to bouffalo_drivers test branch
+        env:
+          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          git remote add bouffalo-drivers \
+            "https://x-access-token:${TOKEN}@github.com/bouffalolab/bouffalo_drivers.git"
+          git push bouffalo-drivers drivers-split:sync-drivers-test
