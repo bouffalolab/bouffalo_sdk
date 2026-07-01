@@ -829,7 +829,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_All_WRAM_Retention(void)
     BL_WR_REG(PDS_BASE, PDS_RAM2, tmpVal);
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_RAM2);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_WRAM_RET, 0x3FF);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_WRAM_RET, 0xFFF);
     BL_WR_REG(PDS_BASE, PDS_RAM2, tmpVal);
 
     return SUCCESS;

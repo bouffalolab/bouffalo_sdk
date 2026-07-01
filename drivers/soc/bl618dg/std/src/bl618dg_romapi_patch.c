@@ -1105,3 +1105,28 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPUPLL_To_638P976M_By_Sdmin(void)
 
     return SUCCESS;
 }
+
+/****************************************************************************/ /**
+ * @brief  PDS Set All WRAM(320KB) Retention
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_All_WRAM_Retention(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_RAM1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_RAM_CLK);
+    BL_WR_REG(PDS_BASE, PDS_RAM1, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_RAM2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_WRAM_SLP, 0);
+    BL_WR_REG(PDS_BASE, PDS_RAM2, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_RAM2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_WRAM_RET, 0xFFF);
+    BL_WR_REG(PDS_BASE, PDS_RAM2, tmpVal);
+
+    return SUCCESS;
+}

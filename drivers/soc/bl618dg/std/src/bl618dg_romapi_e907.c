@@ -1584,10 +1584,12 @@ BL_Err_Type PDS_RAM_Config(PDS_CTRL_RAM1_Type *ram1Cfg, PDS_CTRL_RAM2_Type *ram2
     return RomDriver_PDS_RAM_Config(ram1Cfg, ram2Cfg, ram3Cfg, ram4Cfg);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_All_WRAM_Retention(void) {
     return RomDriver_PDS_Set_All_WRAM_Retention();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_All_OCRAM_Retention(void) {

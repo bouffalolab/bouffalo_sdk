@@ -559,12 +559,12 @@
 #define PDS_RAM2_OFFSET                           (0x28)
 #define PDS_CR_WRAM_SLP                           PDS_CR_WRAM_SLP
 #define PDS_CR_WRAM_SLP_POS                       (0U)
-#define PDS_CR_WRAM_SLP_LEN                       (10U)
+#define PDS_CR_WRAM_SLP_LEN                       (12U)
 #define PDS_CR_WRAM_SLP_MSK                       (((1U << PDS_CR_WRAM_SLP_LEN) - 1) << PDS_CR_WRAM_SLP_POS)
 #define PDS_CR_WRAM_SLP_UMSK                      (~(((1U << PDS_CR_WRAM_SLP_LEN) - 1) << PDS_CR_WRAM_SLP_POS))
 #define PDS_CR_WRAM_RET                           PDS_CR_WRAM_RET
-#define PDS_CR_WRAM_RET_POS                       (10U)
-#define PDS_CR_WRAM_RET_LEN                       (10U)
+#define PDS_CR_WRAM_RET_POS                       (16U)
+#define PDS_CR_WRAM_RET_LEN                       (12U)
 #define PDS_CR_WRAM_RET_MSK                       (((1U << PDS_CR_WRAM_RET_LEN) - 1) << PDS_CR_WRAM_RET_POS)
 #define PDS_CR_WRAM_RET_UMSK                      (~(((1U << PDS_CR_WRAM_RET_LEN) - 1) << PDS_CR_WRAM_RET_POS))
 
