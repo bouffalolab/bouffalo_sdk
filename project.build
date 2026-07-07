@@ -149,7 +149,11 @@ $(BUILD_DIR): Makefile cmake_cache library_build
 	$(MAKE) -C $(BUILD_DIR) post_build
 	$(MAKE) -C $(BUILD_DIR) combine
 
-cmake_cache: cmake_config
+_cmake_reset_cache:
+	-$(CMAKE) -E remove $(BUILD_DIR)/CMakeCache.txt
+	-$(CMAKE) -E remove_directory $(BUILD_DIR)/CMakeFiles
+
+cmake_cache: cmake_config _cmake_reset_cache
 	$(MAKE) library_cmake_cache
 	$(CMAKE) -S . -B $(BUILD_DIR) -G $(cmake_generator) $(cmake_definition)
 
@@ -167,7 +171,7 @@ endif
 app_deps:
 	@DIR=$(BUILD_DIR) sh -c 'find $${DIR} -mindepth 4 -name CMakeFiles |while read x; do y=$${x##$${DIR}/build_out/}; echo $${y%%CMakeFiles}; done'
 
-ninja:Makefile
+ninja:Makefile cmake_config _cmake_reset_cache
 	$(CMAKE) -S . -B $(BUILD_DIR) -G Ninja $(cmake_definition)
 	cd $(BUILD_DIR) && ninja && ninja combine
 
