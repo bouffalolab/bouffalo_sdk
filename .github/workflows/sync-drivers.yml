@@ -1,4 +1,4 @@
-name: Sync drivers to bouffalo_drivers
+name: Sync drivers to bouffalo_sdk-drivers
 
 on:
   push:
@@ -45,5 +45,5 @@ jobs:
         run: |
           set -euo pipefail
           git remote add bouffalo-drivers \
-            "https://x-access-token:${TOKEN}@github.com/bouffalolab/bouffalo_drivers.git"
+            "https://x-access-token:${TOKEN}@github.com/bouffalolab/bouffalo_sdk-drivers.git"
           git push bouffalo-drivers drivers-split:master
