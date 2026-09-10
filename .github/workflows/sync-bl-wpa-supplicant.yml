@@ -1,0 +1,75 @@
+name: Sync bl_wpa_supplicant to bouffalo_sdk-bl_wpa_supplicant
+
+# Mirror contract (v1)
+# - The mirror content is exactly `git subtree split` of
+#   components/wireless/bl_wpa_supplicant at the pushed master commit.
+#   No extra files are added, removed or rewritten; the mirror is generated,
+#   never edited by hand. All source changes go to bouffalo_sdk master.
+# - The mirror carries the subtree's own COPYING (wpa_supplicant BSD terms).
+#   Parent-level license changes do not affect the mirror, because the parent
+#   LICENSE (Apache-2.0) is not part of the exported subtree. If a parent-level
+#   NOTICE ever becomes required for this subtree, add it to `paths` below and
+#   revisit the export rule.
+# - Failures never advance the mirror: verification runs before the push and
+#   the push is a plain fast-forward (no force), so a rewritten upstream
+#   history is reported instead of being forced over the mirror.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "components/wireless/bl_wpa_supplicant/**"
+      - ".github/workflows/sync-bl-wpa-supplicant.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-bouffalo-sdk-bl-wpa-supplicant
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout bouffalo_sdk
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Split bl_wpa_supplicant subtree
+        run: |
+          set -euo pipefail
+          git subtree split --prefix=components/wireless/bl_wpa_supplicant HEAD -b supplicant-split
+
+      - name: Verify split against upstream subtree
+        run: |
+          set -euo pipefail
+          prefix=components/wireless/bl_wpa_supplicant
+          split_tree=$(git rev-parse supplicant-split^{tree})
+          upstream_tree=$(git rev-parse "HEAD:${prefix}")
+          test "${split_tree}" = "${upstream_tree}"
+          test -f "${prefix}/COPYING"
+          files=$(git ls-tree -r --name-only supplicant-split | wc -l)
+          test "${files}" -gt 0
+          echo "verified tree=${split_tree} files=${files} parent=$(git rev-parse HEAD)"
+
+      - name: Check sync token
+        env:
+          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${TOKEN}"
+
+      - name: Push to bouffalo_sdk-bl_wpa_supplicant master branch
+        env:
+          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          git remote add bouffalo-supplicant \
+            "https://x-access-token:${TOKEN}@github.com/bouffalolab/bouffalo_sdk-bl_wpa_supplicant.git"
+          git push bouffalo-supplicant supplicant-split:master
