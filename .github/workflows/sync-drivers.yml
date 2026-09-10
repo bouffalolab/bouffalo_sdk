@@ -32,6 +32,16 @@ jobs:
           set -euo pipefail
           git subtree split --prefix=drivers HEAD -b drivers-split
 
+      - name: Verify split against upstream subtree
+        run: |
+          set -euo pipefail
+          split_tree=$(git rev-parse drivers-split^{tree})
+          upstream_tree=$(git rev-parse "HEAD:drivers")
+          test "${split_tree}" = "${upstream_tree}"
+          files=$(git ls-tree -r --name-only drivers-split | wc -l)
+          test "${files}" -gt 0
+          echo "verified tree=${split_tree} files=${files} parent=$(git rev-parse HEAD)"
+
       - name: Check sync token
         env:
           TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
