@@ -5,10 +5,13 @@
 #include "board_overlay.h"
 #else
 
+#include "bflb_rtc.h"
 #include "board_gpio.h"
 #include "board_flash_psram.h"
 
 void board_init(void);
+
+enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void);
 
 void board_acomp_init(void);
 
@@ -42,7 +45,7 @@ void board_acomp_init(void);
 #define DEFAULT_TEST_UART_DMA_RX_REQUEST DMA_REQUEST_UART1_RX
 #define DEFAULT_TEST_UART_DMA_TDR        DMA_ADDR_UART1_TDR
 #define DEFAULT_TEST_UART_DMA_RDR        DMA_ADDR_UART1_RDR
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 void board_recovery(void);
 void cmd_io_test(char *buf, int len, int argc, char **argv);
 void cmd_acomp_test(char *buf, int len, int argc, char **argv);

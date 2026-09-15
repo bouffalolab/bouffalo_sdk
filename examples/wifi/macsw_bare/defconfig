@@ -53,8 +53,7 @@ ifeq ($(CONFIG_GCOV_DUMP),y)
     CONFIG_HTTP=y
     CONFIG_HTTP_CLIENT=y
 
-    # Enable PSRAM only for GCOV sections; do not expose it as system heap.
+    # Enable PSRAM for GCOV sections.
     CONFIG_PSRAM = y
-    CONFIG_PSRAM_SKIP_REGISTER_HEAP = y
     CONFIG_OVERRIDE_PTFILE = media_8M_flash.toml
 endif

@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-/* Legacy SDIO/netlink header length; USB ACM wire framing is internal. */
+/* Logical vchan header carried by both SDIO/netlink and USB ACM. */
 #define NETHUB_VCHAN_DATA_HDR_LEN   (4)  /* sizeof(data_type) + sizeof(reserved) + sizeof(len) */
 
 /* Maximum data length per message */

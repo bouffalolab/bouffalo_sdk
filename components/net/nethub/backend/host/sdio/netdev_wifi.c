@@ -60,8 +60,21 @@ static void wifi_tx_done_cb(void *arg)
     }
 }
 
+static void nethub_frame_free_cb(mr_frame_elem_t *frame_elem, void *arg)
+{
+    nethub_frame_t *frame_record = (nethub_frame_t *)((uintptr_t)frame_elem - sizeof(nethub_frame_t));
+
+    NETHUB_UNUSED(arg);
+    if (frame_record->free_cb) {
+        frame_record->free_cb(frame_record->cb_arg);
+    }
+}
+
 int netdev_wifi_upld(nethub_frame_t *frame, void *arg)
 {
+    static mr_frame_queue_ctrl_t frame_ctrl = {
+        .custom_free_cb = nethub_frame_free_cb,
+    };
     int ret;
     mr_netdev_priv_t *priv = g_netdev_wifi_priv;
     mr_netdev_msg_t *netdev_msg_pkt;
@@ -83,7 +96,7 @@ int netdev_wifi_upld(nethub_frame_t *frame, void *arg)
     netdev_msg_pkt = (mr_netdev_msg_t *)((uintptr_t)frame->data - sizeof(mr_netdev_msg_t));
     frame_elem = MR_NETDEV_MSG_PACKET_TO_FRAME_ELEM_ADDR(netdev_msg_pkt);
 
-    frame_elem->frame_ctrl = NULL;
+    frame_elem->frame_ctrl = &frame_ctrl;
     frame_elem->frame_type = 0;
     frame_elem->frame_id = 0;
     frame_elem->buff_addr = (void *)netdev_msg_pkt;

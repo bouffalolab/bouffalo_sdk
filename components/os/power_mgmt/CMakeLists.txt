@@ -1,6 +1,7 @@
 sdk_generate_library()
 sdk_library_add_sources(clock_manager.c)
 sdk_library_add_sources(pm_manager.c)
+sdk_library_add_sources_ifdef(CONFIG_PM_HELPER_CLI pm_helper_cli.c)
 if (CONFIG_TICKLESS_EXT)
     sdk_add_compile_definitions(-DconfigEXPECTED_IDLE_TIME_BEFORE_SLEEP=40)
 

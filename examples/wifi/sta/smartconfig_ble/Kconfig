@@ -3,6 +3,7 @@ mainmenu "SDK Configuration"
 config BFLB_BLESYNC
     bool "Build BLE smartconfig synchronization"
     default n
+    depends on BLUETOOTH
     help
       Build the BLE synchronization service used by this example.
 

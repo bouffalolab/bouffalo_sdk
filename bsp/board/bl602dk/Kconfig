@@ -1,8 +1,0 @@
-config BOARD_BOOT2FILE
-    default "$BL_SDK_BASE/bsp/board/bl602dk/config/boot2_bl602_release_v8.1.3.bin"
-
-config BOARD_PTFILE
-    default "$BL_SDK_BASE/bsp/board/bl602dk/config/partition_cfg_2M.toml"
-
-config BOARD_DTSFILE
-    default "$BL_SDK_BASE/bsp/board/bl602dk/config/bl_factory_params_IoTKitA_40M.dts"

@@ -310,6 +310,7 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupllBasicCfg_32M_40M_
 #if !defined(CPU_MODEL_A0)
     .momUpdatePeriod = 3,
     .coarseGain = 3,
+    .resv0_5_4 = 1,
 #endif
 };
 
@@ -334,6 +335,7 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll320MCfg_32M_40M_5
 #if !defined(CPU_MODEL_A0)
     .momUpdatePeriod = 3,
     .coarseGain = 3,
+    .resv0_5_4 = 1,
 #endif
 };
 
@@ -358,6 +360,7 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll640MCfg_32M_40M_5
 #if !defined(CPU_MODEL_A0)
     .momUpdatePeriod = 3,
     .coarseGain = 3,
+    .resv0_5_4 = 1,
 #endif
 };
 
@@ -413,21 +416,22 @@ const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_320M[GLB_XTAL_MAX] 
  */
 
 const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll1400MCfg_32M_40M_52M = {
-    .refdiv_ratio   = 4,  /* XTAL pre-div so that PFD stays in valid range */
+    .refdiv_ratio   = 2,  /* XTAL pre-div so that PFD stays in valid range */
     .vco_speed      = 6,  /* VCO range index (device-specific table) */
     .vco_idac_extra = 2,  /* Extra bias current trim for VCO */
     .tdc_dly_sel    = 0,  /* TDC delay chain select */
     .dtc_r_sel      = 0,  /* DTC resolution window select */
-    .lf_alpha_base  = 0,  /* Loop filter alpha base (integral weight coarse) */
+    .lf_alpha_base  = 1,  /* Loop filter alpha base (integral weight coarse) */
     .lf_alpha_exp   = 2,  /* Alpha exponent scaling (bandwidth control) */
-    .lf_alpha_fast  = 3,  /* Fast-lock extra alpha gain */
-    .lf_beta_base   = 3,  /* Beta base (proportional weight) */
-    .lf_beta_exp    = 1,  /* Beta exponent scaling */
-    .lf_beta_fast   = 1,  /* Fast-lock beta boost enable */
-    .spd_gain       = 0,  /* TDC speed gain index */
+    .lf_alpha_fast  = 1,  /* Fast-lock extra alpha gain */
+    .lf_beta_base   = 0,  /* Beta base (proportional weight) */
+    .lf_beta_exp    = 3,  /* Beta exponent scaling */
+    .lf_beta_fast   = 0,  /* Fast-lock beta boost enable */
+    .spd_gain       = 2,  /* TDC speed gain index */
     .lms_ext_en     = 0,  /* Use internal LMS (0) */
     .lms_ext_value  = 32, /* External LMS coefficient (ignored if lms_ext_en=0) */
     .bitclk_div     = 2,  /* Output bit clock divider */
+    .resv0_1_0      = 1,
 };
 
 const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll1400MCfg_24M_26M = {
@@ -446,14 +450,15 @@ const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll1400MCfg_24M_26M 
     .lms_ext_en     = 0,  /* Internal LMS */
     .lms_ext_value  = 32, /* External LMS coefficient placeholder */
     .bitclk_div     = 2,  /* Output bit clock divider */
+    .resv0_1_0      = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_1400M[GLB_XTAL_MAX] = {
     { NULL, 0x0 },                            /*!< XTAL is None */
     { &dsipll1400MCfg_24M_26M, 0x3A555 },     /*!< XTAL is 24M */
     { &dsipll1400MCfg_32M_40M_52M, 0x57800 }, /*!< XTAL is 32M */
-    { &dsipll1400MCfg_32M_40M_52M, 0x35D89 }, /*!< XTAL is 52M */
-    { &dsipll1400MCfg_32M_40M_52M, 0x46000 }, /*!< XTAL is 40M */
+    { &dsipll1400MCfg_32M_40M_52M, 0x1AEC4 }, /*!< XTAL is 52M */
+    { &dsipll1400MCfg_32M_40M_52M, 0x23000 }, /*!< XTAL is 40M */
     { &dsipll1400MCfg_24M_26M, 0x35D89 },     /*!< XTAL is 26M */
     { &dsipll1400MCfg_32M_40M_52M, 0x57800 }, /*!< XTAL is RC32M */
 };
@@ -964,6 +969,10 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_CPUPLL(const GLB_CPUPLL_Cfg_Type *co
     val = BL_GET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_RESV0);
     val &= ~6;
     val |= cfg->basicCfg->vcoIdacExtra << 1;
+#if !defined(CPU_MODEL_A0)
+    val &= ~30;
+    val |= cfg->basicCfg->resv0_5_4 << 4;
+#endif
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_RESV0, val);
     BL_WR_WORD(CCI_BASE + CCI_CPUPLL_RESV_OFFSET, tmpVal);
 
@@ -1067,6 +1076,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_DSIPLL_Ref_Clk_Sel(uint8_t refClk)
 *******************************************************************************/
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *const cfg, uint8_t waitStable)
 {
+    uint32_t val = 0;
     uint32_t tmpVal = 0;
 
     /* Step1:config parameter */
@@ -1109,10 +1119,18 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *co
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, DSIPLL_LMS_EXT_VALUE, cfg->basicCfg->lms_ext_value);
     BL_WR_WORD(DSI_PLL_BASE + DSIPLL_SDM_LMS_OFFSET, tmpVal);
 
-    /* set lms_ext_en, lms_ext_value */
+    /* set bitclk_div */
     tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, DSIPLL_BICLK_DIV, cfg->basicCfg->bitclk_div);
     BL_WR_WORD(DSI_PLL_BASE + DSIPLL_CLKTREE_OFFSET, tmpVal);
+
+    /* set resv0 */
+    tmpVal = BL_RD_WORD(DSI_PLL_BASE + DSIPLL_RESERVE_OFFSET);
+    val = BL_GET_REG_BITS_VAL(tmpVal, DSIPLL_RESV0);
+    val &= ~0x3;
+    val |= cfg->basicCfg->resv0_1_0 << 0;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, DSIPLL_RESV0, val);
+    BL_WR_WORD(DSI_PLL_BASE + DSIPLL_RESERVE_OFFSET, tmpVal);
 
     /* Step2:config pu */
     /* pu_DSIpll=1, DSIpll_rstb=1 */
@@ -4694,10 +4712,6 @@ BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, uint8_t clkSel, uint8_t div)
 
     CHECK_PARAM(IS_GLB_PSRAMB_PLL_TYPE(clkSel));
     CHECK_PARAM((div <= 0x3));
-
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PSRAM_CLK_EN);
-    BL_WR_REG(GLB_BASE, GLB_SYS_CFG2, tmpVal);
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_PSRAM_CLK_SEL, clkSel);

@@ -14,7 +14,7 @@
 #include "at_main.h"
 #include "at_core.h"
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr_coex.h"
 

@@ -1,7 +1,5 @@
 -include $(BL_SDK_BASE)/examples/bl618dg_dualcore/defconfig
 
-CONFIG_NEWLIB               =n
-CONFIG_NEWLIB_STANDARD      =n
 
 CONFIG_VSNPRINTF_NANO       =n
 CONFIG_VSNPRINTF_FLOAT      =y

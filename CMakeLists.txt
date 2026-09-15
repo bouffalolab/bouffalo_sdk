@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-sdk_add_compile_definitions(-D CONFIG_BOUFFALO_SDK)
-
 message(STATUS "Project SDK Version: ${CONFIG_PROJECT_SDK_VERSION}")
 
 find_package(Git QUIET)
@@ -37,37 +35,7 @@ set(SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 sdk_add_compile_options("-fmacro-prefix-map=${SOURCE_PATH}=.")
 sdk_add_compile_options("-fdebug-prefix-map=${SOURCE_PATH}=.")
 
-if(("${CHIP}" STREQUAL "bl618dg") AND ("${CPU_MODEL}" STREQUAL "a0"))
-    sdk_add_compile_definitions(-DCPU_MODEL_A0)
-endif()
-
 sdk_add_compile_options_ifdef(CONFIG_STRICT -Werror)
-
-if(CONFIG_BSP_CONSOLE_USB_CDC)
-    set(USB_CONSOLE_MISSING_CONFIGS "")
-
-    foreach(required_config
-            CONFIG_FREERTOS
-            CONFIG_SHELL
-            CONFIG_CHERRYUSB
-            CONFIG_CHERRYUSB_DEVICE
-            CONFIG_CHERRYUSB_DEVICE_CDC_ACM)
-        if(NOT DEFINED ${required_config} OR NOT "${${required_config}}" STREQUAL "y")
-            list(APPEND USB_CONSOLE_MISSING_CONFIGS "${required_config}=y")
-        endif()
-    endforeach()
-
-    if(NOT "${CONFIG_CHERRYUSB_OSAL}" STREQUAL "freertos")
-        list(APPEND USB_CONSOLE_MISSING_CONFIGS "CONFIG_CHERRYUSB_OSAL=freertos")
-    endif()
-
-    if(USB_CONSOLE_MISSING_CONFIGS)
-        list(JOIN USB_CONSOLE_MISSING_CONFIGS "\n  " USB_CONSOLE_MISSING_CONFIGS_TEXT)
-        message(FATAL_ERROR
-            "CONFIG_BSP_CONSOLE_USB_CDC=y requires the following defconfig settings:\n"
-            "  ${USB_CONSOLE_MISSING_CONFIGS_TEXT}")
-    endif()
-endif()
 
 add_subdirectory(bsp)
 add_subdirectory(components)

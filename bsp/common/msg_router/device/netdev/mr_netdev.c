@@ -134,7 +134,11 @@ static int msg_hw_reset_cb(mr_frame_elem_t *unused, void *arg)
 {
     mr_netdev_priv_t *priv = (mr_netdev_priv_t *)arg;
 
-    netdev_proc_task_wakeup(priv, NETDEV_EVENT_RESET);
+    priv->netdev_status = MR_NETDEV_DSTA_IDLE;
+    priv->netdev_ready = false;
+    if (unused == NULL) {
+        netdev_proc_task_wakeup(priv, NETDEV_EVENT_RESET);
+    }
 
     LOG_W("Received hw reset request\r\n");
 
@@ -291,6 +295,12 @@ static void netdev_proc_task(void *arg)
             mr_netdev_dnld_elem_free(priv, netdev_msg_pkt);
             netdev_msg_pkt = NULL;
             continue;
+        }
+
+        if (netdev_msg_pkt && netdev_msg_pkt->flag == MR_NETDEV_FLAG_HOST_READY &&
+            priv->netdev_status == MR_NETDEV_DSTA_DEVICE_RUN) {
+            priv->netdev_status = MR_NETDEV_DSTA_HOST_READY;
+            priv->netdev_ready = false;
         }
 
         /* State machine processing */

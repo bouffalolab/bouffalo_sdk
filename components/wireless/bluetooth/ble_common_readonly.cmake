@@ -14,6 +14,26 @@ elseif("${CHIP}" STREQUAL "bl602")
 else()
 	sdk_ifndef(PRIV_CONFIG_GEN_BLE ${CONFIG_BTBLECONTROLLER_LIB})
 endif()
+
+# Whitelist of the controller library variants provided per chip; keep in
+# sync with the per-library preset blocks below.
+if(PRIV_CONFIG_GEN_BLE)
+	if("${CHIP}" STREQUAL "bl602" OR "${CHIP}" STREQUAL "bl702")
+		set(_ble_valid_libs "m0s0sp;m0s1;m0s1p;m0s1s;m16s1;m1s1;m2s1;m8s1")
+	elseif("${CHIP}" STREQUAL "bl616" OR "${CHIP}" STREQUAL "bl618dg")
+		set(_ble_valid_libs "ble1m0s1bredr0;ble1m0s1sbredr0;ble1m0s1sbredr1;ble1m10s1bredr0;ble1m10s1bredr1;ble1m2s1bredr0;ble1m2s1bredr1;ble1m4s1bredr1;blespihci;bleuarthci;mfg;uarthci;wlanif")
+	elseif("${CHIP}" STREQUAL "bl702l")
+		set(_ble_valid_libs "m0s1p;m0s1rp;m0s1sp;m0s2p;m0s4p;m1s1p;m1s1t10;m2s1p;m4s1p;m8s1p;uarthci;uarthcilp")
+	elseif("${CHIP}" STREQUAL "bl616cl")
+		set(_ble_valid_libs "m0b1;m0s1;m2s1;mfg;uarthci;wlanif")
+	endif()
+	if(_ble_valid_libs AND NOT ";${_ble_valid_libs};" MATCHES ";${PRIV_CONFIG_GEN_BLE};")
+		message(FATAL_ERROR
+			"Unknown controller library '${PRIV_CONFIG_GEN_BLE}' for chip ${CHIP}. "
+			"Valid libraries: ${_ble_valid_libs}")
+	endif()
+	unset(_ble_valid_libs)
+endif()
 endif()
 
 ####################################################################################################################################
@@ -29,13 +49,14 @@ endif()
 ####################################################################################################################################
 
 macro(_check_conflict name value)
-  if(DEFINED ${name} AND NOT "${${name}}" STREQUAL "${value}")
-    message(FATAL_ERROR
-      "BLE controller config conflict: ${name} expected '${value}', but current value is '${${name}}'")
-  endif()
   set(${name} ${value})
+  string(APPEND BLE_CONTROLLER_CONFIG_HEADER "#undef ${name}\n")
+  if("${value}" STREQUAL "y")
+    string(APPEND BLE_CONTROLLER_CONFIG_HEADER "#define ${name} 1\n")
+  elseif(NOT "${value}" STREQUAL "n")
+    string(APPEND BLE_CONTROLLER_CONFIG_HEADER "#define ${name} ${value}\n")
+  endif()
 endmacro()
-
 
 # 
 # CHIP_LIST := BL702 BL602
@@ -352,6 +373,35 @@ if("${CHIP}" STREQUAL "bl702l")
 		_check_conflict(CONFIG_BLE_PDS y)
 		_check_conflict(CONFIG_BT_CONN 1)
 		_check_conflict(CONFIG_BLE_TX_BUFF_DATA 2)
+		_check_conflict(CONFIG_BLE_ACT_MAX 5)
+		_check_conflict(CONFIG_BT_ALLROLES y)
+		_check_conflict(CONFIG_DISABLE_BT_HOST_PRIVACY y)
+		_check_conflict(CONFIG_DISABLE_BLE_CONTROLLER_TEST_MODE n)
+		_check_conflict(CONFIG_EM_SIZE 8)
+		_check_conflict(CONFIG_LONG_RANG n)
+		_check_conflict(CONFIG_CLK_ACC n)
+		_check_conflict(CONFIG_LE_PING n)
+	endif()
+#
+# ifeq ($(PRIV_CONFIG_GEN_BLE),m1s1t10)
+# CONFIG_BUILD_BLE_ROM_CODE := 1
+# CONFIG_BLE_PDS := 1
+# CONFIG_BT_CONN := 1
+# CONFIG_BLE_TX_BUFF_DATA := 10
+# CONFIG_BLE_ACT_MAX := 5
+# CONFIG_BT_ALLROLES := 1
+# CONFIG_DISABLE_BT_HOST_PRIVACY := 1
+# CONFIG_DISABLE_BLE_CONTROLLER_TEST_MODE := 0
+# CONFIG_EM_SIZE = 8
+# CONFIG_LONG_RANG := 0
+# CONFIG_CLK_ACC := 0
+# CONFIG_LE_PING := 0
+# endif
+	if("${PRIV_CONFIG_GEN_BLE}" STREQUAL "m1s1t10")
+		_check_conflict(CONFIG_BUILD_BLE_ROM_CODE y)
+		_check_conflict(CONFIG_BLE_PDS y)
+		_check_conflict(CONFIG_BT_CONN 1)
+		_check_conflict(CONFIG_BLE_TX_BUFF_DATA 10)
 		_check_conflict(CONFIG_BLE_ACT_MAX 5)
 		_check_conflict(CONFIG_BT_ALLROLES y)
 		_check_conflict(CONFIG_DISABLE_BT_HOST_PRIVACY y)
@@ -1099,7 +1149,7 @@ if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl618dg"))
 		_check_conflict(CONFIG_CLK_ACC n)
 		_check_conflict(CONFIG_LE_PING n)
 		_check_conflict(CONFIG_LE_PWR_CTRL n)
-		_check_conflict(CONFIG_DISABLE_BLE_CONTROLLER_SEC_CON 1)
+		_check_conflict(CONFIG_DISABLE_BLE_CONTROLLER_SEC_CON y)
 		_check_conflict(CONFIG_DISABLE_CONTROLLER_BLE_PRIVACY n)
 		_check_conflict(CONFIG_BT_OBSERVER n)
 		_check_conflict(CONFIG_ADV_EXTENSION n)
@@ -1131,7 +1181,7 @@ if(("${CHIP}" STREQUAL "bl616cl"))
 		_check_conflict(CONFIG_CLK_ACC n)
 		_check_conflict(CONFIG_LE_PING n)
 		_check_conflict(CONFIG_LE_PWR_CTRL n)
-		_check_conflict(CONFIG_DISABLE_BLE_CONTROLLER_SEC_CON 1)
+		_check_conflict(CONFIG_DISABLE_BLE_CONTROLLER_SEC_CON y)
 		_check_conflict(CONFIG_DISABLE_CONTROLLER_BLE_PRIVACY n)
 		_check_conflict(CONFIG_BT_OBSERVER n)
 		_check_conflict(CONFIG_ADV_EXTENSION n)
@@ -1235,6 +1285,17 @@ if(("${CHIP}" STREQUAL "bl616cl"))
 		_check_conflict(CONFIG_LE_PWR_CTRL n)
 		_check_conflict(CONFIG_DISABLE_BLE_CONTROLLER_SEC_CON y)
 	endif()
+endif()
+
+# The legacy build always disabled the hardware security engine whenever
+# controller low-power support was enabled.
+if(CONFIG_BLE_PDS)
+	_check_conflict(CONFIG_HW_SEC_ENG_DISABLE y)
+endif()
+
+# Apply controller-library values after Kconfig values in the generated header.
+if(BLE_CONTROLLER_CONFIG_HEADER AND EXISTS "${CMAKE_BINARY_DIR}/generated/autoconfig.h")
+  file(APPEND "${CMAKE_BINARY_DIR}/generated/autoconfig.h" "\n${BLE_CONTROLLER_CONFIG_HEADER}")
 endif()
 
 # Pass EM_SIZE to linker script

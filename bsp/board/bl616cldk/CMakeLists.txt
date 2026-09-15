@@ -28,12 +28,3 @@ sdk_set_linker_script_macro(bl616cl_common.ld.in)
 endif()
 
 sdk_add_link_options(-ufw_header)
-
-# fw tools board directory select
-if(CONFIG_CUSTOMIZE_BOARD_DIR)
-    set_property(GLOBAL PROPERTY FW_TOOL_CUSTOM_BOARD_DIR ${CONFIG_CUSTOMIZE_BOARD_DIR})
-else()
-    set_property(GLOBAL PROPERTY FW_TOOL_CUSTOM_BOARD_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-endif()
-
-set_property(GLOBAL PROPERTY FW_TOOL_CUSTOM_BOARD_CONFIG config)

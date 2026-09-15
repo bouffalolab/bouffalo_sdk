@@ -24,6 +24,8 @@ CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW  =y
 CONFIG_PM                             =y
 CONFIG_LWIP_LP                        =y
 CONFIG_PWRMGMT                        =y
+CONFIG_TICKLESS_EXT                   =y
+CONFIG_PM_HELPER_CLI                  =y
 
 # DCDC ENABLE
 CONFIG_DCDC_ENABLE                    =n

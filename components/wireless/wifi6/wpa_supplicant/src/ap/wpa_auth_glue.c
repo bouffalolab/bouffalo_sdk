@@ -263,6 +263,13 @@ static int hostapd_wpa_auth_mic_failure_report(void *ctx, const u8 *addr)
 static void hostapd_wpa_auth_psk_failure_report(void *ctx, const u8 *addr)
 {
 	struct hostapd_data *hapd = ctx;
+	struct sta_info *sta = ap_get_sta(hapd, addr);
+
+	if (sta && sta->credential_mismatch_reported)
+		return;
+	if (sta)
+		sta->credential_mismatch_reported = 1;
+
 	wpa_msg(hapd->msg_ctx, MSG_INFO, AP_STA_POSSIBLE_PSK_MISMATCH MACSTR,
 		MAC2STR(addr));
 }

@@ -8,11 +8,13 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "bflb_emac.h"
 
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "task.h"
 
 #include "lwip/opt.h"
@@ -25,6 +27,7 @@
 
 #include "board.h"
 #include "eth_phy.h"
+#include "ephy_general.h"
 #include "lwip_netif_emac.h"
 #include "lwip_emac_start.h"
 
@@ -165,6 +168,36 @@ static lwip_emac_port_ctx_t emac_ctx[LWIP_EMAC_MAX_PORT_COUNT] = {
     },
 #endif
 };
+
+/* Serialize management and polling across ports, including shared MDIO engines. */
+typedef struct {
+    SemaphoreHandle_t handle;
+    StaticSemaphore_t storage;
+} lwip_emac_mgmt_lock_t;
+
+static lwip_emac_mgmt_lock_t emac_mgmt_lock;
+
+static void emac_mgmt_lock_lock(void)
+{
+    xSemaphoreTake(emac_mgmt_lock.handle, portMAX_DELAY);
+}
+
+static void emac_mgmt_lock_unlock(void)
+{
+    xSemaphoreGive(emac_mgmt_lock.handle);
+}
+
+/** @brief Map a physical EMAC port id to its slot index; -1 if not configured. */
+static int emac_slot_by_port(uint8_t port)
+{
+    for (uint8_t i = 0; i < lwip_emac_port_count; i++) {
+        if (emac_ctx[i].cfg.port == port) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 /* Per-port DMA buffer pools. Each port gets its own arrays so the buffer
  * count / frame size / alignment can differ between ports. */
 static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(CONFIG_EMAC0_BUFFER_ALIGNMENT)
@@ -295,7 +328,12 @@ static void lwip_emac_status_task(void *pvParameters)
     while (1) {
         vTaskDelay(LWIP_EMAC_STATUS_POLL_TICKS);
         for (uint8_t i = 0; i < lwip_emac_port_count; i++) {
-            eth_link_state_update(&gnetif[i]);
+            emac_mgmt_lock_lock();
+            /* Keep disabled ports down while holding the management lock. */
+            if (emac_ctx[i].mac_enabled && emac_ctx[i].phy_powered) {
+                eth_link_state_update(&gnetif[i]);
+            }
+            emac_mgmt_lock_unlock();
         }
     }
 }
@@ -376,7 +414,7 @@ int lwip_emac_start(const lwip_emac_port_cfg_t *port_cfgs, uint8_t port_count)
 
         memcpy(cfg.emac_cfg.mac_addr, factory_mac, sizeof(factory_mac));
         cfg.emac_cfg.mac_addr[0] &= (uint8_t)~0x01u;
-#if LWIP_EMAC_MAX_PORT_COUNT > 1
+#if defined(BL618DG) && LWIP_EMAC_MAX_PORT_COUNT > 1
         if (cfg.port != LWIP_EMAC_FACTORY_MAC_PORT) {
             cfg.emac_cfg.mac_addr[0] |= 0x02u;
             cfg.emac_cfg.mac_addr[5] ^= LWIP_EMAC_DERIVED_MAC_XOR;
@@ -393,6 +431,14 @@ int lwip_emac_start(const lwip_emac_port_cfg_t *port_cfgs, uint8_t port_count)
     if (lwip_emac_netif_config() < 0) {
         return -1;
     }
+
+    /* Initialize management state and locks before starting link polling. */
+    for (uint8_t i = 0; i < lwip_emac_port_count; i++) {
+        emac_ctx[i].mac_enabled = true;
+        emac_ctx[i].phy_powered = true;
+    }
+
+    emac_mgmt_lock.handle = xSemaphoreCreateMutexStatic(&emac_mgmt_lock.storage);
 
     /* create the task that monitors the PHY link state and updates lwIP */
     ret = xTaskCreate(lwip_emac_status_task, "lwip_sta_update", LWIP_EMAC_STATUS_TASK_STACK_SIZE, NULL,
@@ -411,7 +457,7 @@ int lwip_emac_start(const lwip_emac_port_cfg_t *port_cfgs, uint8_t port_count)
 /**
  * @brief Show the link state of every enabled EMAC port.
  *
- * Reads the link state and speed cached by lwip_emac_status_task().
+ * Reads physical PHY state through the public management API.
  */
 static int lwip_emac_link_cmd(int argc, char **argv)
 {
@@ -421,11 +467,14 @@ static int lwip_emac_link_cmd(int argc, char **argv)
     for (uint8_t i = 0; i < lwip_emac_port_count; i++) {
         uint8_t port = emac_ctx[i].cfg.port;
 
-        if (emac_ctx[i].link_sta == EPHY_LINK_STA_UP) {
+        int link_sta, speed_mode;
+        if (lwip_emac_start_link_get(port, &link_sta, &speed_mode) < 0)
+            return -1;
+        if (link_sta == EPHY_LINK_STA_UP) {
             const char *speed = "100M";
             const char *duplex = "full";
 
-            switch (emac_ctx[i].speed_mode) {
+            switch (speed_mode) {
                 case EPHY_SPEED_MODE_10M_HALF_DUPLEX:
                     speed = "10M";
                     duplex = "half";
@@ -452,17 +501,372 @@ static int lwip_emac_link_cmd(int argc, char **argv)
 SHELL_CMD_EXPORT_ALIAS(lwip_emac_link_cmd, lwip_emac_link, show emac link status);
 #endif
 
-uint8_t lwip_emac_started_count(void)
+/* Clear both flags in one tcpip call, avoiding a partially applied shutdown. */
+static void emac_netif_down(struct netif *netif)
 {
-    return lwip_emac_port_count;
+    netif_set_link_down(netif);
+    netif_set_down(netif);
 }
 
-lwip_emac_port_ctx_t *lwip_emac_started_ctx(uint8_t index)
+int lwip_emac_start_mac_set(uint8_t port, bool enabled)
 {
-    return (index < lwip_emac_port_count) ? &emac_ctx[index] : NULL;
+    int slot = emac_slot_by_port(port);
+    if (slot < 0)
+        return LWIP_EMAC_START_ERR_PARAM;
+    lwip_emac_port_ctx_t *ctx = &emac_ctx[slot];
+    err_t netif_ret = ERR_OK;
+
+    emac_mgmt_lock_lock();
+    if (ctx->mac_enabled == enabled) {
+        emac_mgmt_lock_unlock();
+        return LWIP_EMAC_START_OK;
+    }
+
+    /* Stop lwIP producers before gating; in-flight DMA may still complete. */
+    if (!enabled) {
+        netif_ret = netifapi_netif_common(&gnetif[slot], emac_netif_down, NULL);
+        if (netif_ret != ERR_OK) {
+            emac_mgmt_lock_unlock();
+            return LWIP_EMAC_START_ERR_HW;
+        }
+    } else if (ctx->phy_powered) {
+        netif_ret = netifapi_netif_set_up(&gnetif[slot]);
+        if (netif_ret != ERR_OK) {
+            emac_mgmt_lock_unlock();
+            return LWIP_EMAC_START_ERR_HW;
+        }
+    }
+    /* Gate MAC TX/RX without restarting DMA descriptor traversal. */
+    bflb_emac_feature_control(ctx->emac_dev, EMAC_CMD_SET_TX_EN, enabled);
+    bflb_emac_feature_control(ctx->emac_dev, EMAC_CMD_SET_RX_EN, enabled);
+
+    ctx->mac_enabled = enabled;
+    if (!enabled) {
+        ctx->link_sta = 0;
+        ctx->speed_mode = 0;
+    }
+
+    emac_mgmt_lock_unlock();
+    return LWIP_EMAC_START_OK;
 }
 
-struct netif *lwip_emac_started_netif(uint8_t index)
+int lwip_emac_start_phy_set(uint8_t port, bool up)
 {
-    return (index < lwip_emac_port_count) ? &gnetif[index] : NULL;
+    int slot = emac_slot_by_port(port);
+    if (slot < 0)
+        return LWIP_EMAC_START_ERR_PARAM;
+    lwip_emac_port_ctx_t *ctx = &emac_ctx[slot];
+    int ret;
+
+    emac_mgmt_lock_lock();
+    if (ctx->phy_powered == up) {
+        emac_mgmt_lock_unlock();
+        return LWIP_EMAC_START_OK;
+    }
+
+    /* Withdraw both flags before changing PHY power; retain its configuration. */
+    if (netifapi_netif_common(&gnetif[slot], emac_netif_down, NULL) != ERR_OK) {
+        emac_mgmt_lock_unlock();
+        return LWIP_EMAC_START_ERR_HW;
+    }
+    ctx->link_sta = 0;
+    ctx->speed_mode = 0;
+    ret = up ? eth_phy_init(&ctx->phy_ctrl, &ctx->cfg.phy_cfg) : eth_phy_deinit(&ctx->phy_ctrl);
+    if (ret == 0) {
+        ctx->phy_powered = up;
+        if (up && ctx->mac_enabled && netifapi_netif_set_up(&gnetif[slot]) != ERR_OK) {
+            ret = LWIP_EMAC_START_ERR_HW;
+        }
+    }
+
+    emac_mgmt_lock_unlock();
+    return ret;
 }
+
+/* Caller holds the management lock; only the PHY is reinitialized. */
+static int emac_phy_reinit(int slot, eth_phy_init_cfg_t *next)
+{
+    lwip_emac_port_ctx_t *ctx = &emac_ctx[slot];
+
+    if (!ctx->phy_powered)
+        return LWIP_EMAC_START_ERR_STATE;
+    if (netifapi_netif_set_link_down(&gnetif[slot]) != ERR_OK)
+        return LWIP_EMAC_START_ERR_HW;
+    ctx->link_sta = 0;
+    ctx->speed_mode = 0;
+    if (eth_phy_init(&ctx->phy_ctrl, next) < 0)
+        return LWIP_EMAC_START_ERR_HW;
+    ctx->cfg.phy_cfg = *next;
+    return LWIP_EMAC_START_OK;
+}
+
+int lwip_emac_start_speed_set(uint8_t port, const eth_phy_init_cfg_t *cfg)
+{
+    int slot = emac_slot_by_port(port);
+    int ret;
+    eth_phy_init_cfg_t next;
+    const uint32_t speeds = EPHY_ABILITY_10M_T | EPHY_ABILITY_10M_FULL_DUPLEX |
+                            EPHY_ABILITY_100M_TX | EPHY_ABILITY_100M_FULL_DUPLEX;
+
+    if (slot < 0 || cfg == NULL || cfg->speed_mode > EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    next = *cfg;
+#if !defined(EMAC_SPEED_10M_SUPPORT) || !EMAC_SPEED_10M_SUPPORT
+    if (next.speed_mode == EPHY_SPEED_MODE_10M_HALF_DUPLEX ||
+        next.speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX)
+        return LWIP_EMAC_START_ERR_PARAM;
+    next.local_auto_negotiation_ability &= ~(EPHY_ABILITY_10M_T | EPHY_ABILITY_10M_FULL_DUPLEX);
+#endif
+    if (next.speed_mode == EPHY_SPEED_MODE_AUTO_NEGOTIATION &&
+        !(next.local_auto_negotiation_ability & speeds))
+        return LWIP_EMAC_START_ERR_PARAM;
+    emac_mgmt_lock_lock();
+    ret = emac_phy_reinit(slot, &next);
+    emac_mgmt_lock_unlock();
+    return ret;
+}
+
+int lwip_emac_start_speed_get(uint8_t port, eth_phy_init_cfg_t *cfg)
+{
+    int slot = emac_slot_by_port(port);
+    if (slot < 0 || cfg == NULL)
+        return LWIP_EMAC_START_ERR_PARAM;
+    emac_mgmt_lock_lock();
+    *cfg = emac_ctx[slot].cfg.phy_cfg;
+    emac_mgmt_lock_unlock();
+    return LWIP_EMAC_START_OK;
+}
+
+int lwip_emac_start_phy_reset(uint8_t port)
+{
+    int slot = emac_slot_by_port(port);
+    int ret;
+    if (slot < 0)
+        return LWIP_EMAC_START_ERR_PARAM;
+    emac_mgmt_lock_lock();
+    ret = emac_phy_reinit(slot, &emac_ctx[slot].cfg.phy_cfg);
+    emac_mgmt_lock_unlock();
+    return ret;
+}
+
+int lwip_emac_start_mac_get(uint8_t port, bool *enabled)
+{
+    int slot = emac_slot_by_port(port);
+    if (slot < 0 || enabled == NULL)
+        return LWIP_EMAC_START_ERR_PARAM;
+    emac_mgmt_lock_lock();
+    *enabled = emac_ctx[slot].mac_enabled;
+    emac_mgmt_lock_unlock();
+    return LWIP_EMAC_START_OK;
+}
+
+int lwip_emac_start_phy_get(uint8_t port, bool *powered)
+{
+    int slot = emac_slot_by_port(port);
+    if (slot < 0 || powered == NULL)
+        return LWIP_EMAC_START_ERR_PARAM;
+    emac_mgmt_lock_lock();
+    *powered = emac_ctx[slot].phy_powered;
+    emac_mgmt_lock_unlock();
+    return LWIP_EMAC_START_OK;
+}
+
+int lwip_emac_start_link_get(uint8_t port, int *link_sta, int *speed_mode)
+{
+    int slot = emac_slot_by_port(port);
+    int ret = LWIP_EMAC_START_OK;
+    int link = EPHY_LINK_STA_DOWN;
+    int speed = 0;
+    if (slot < 0 || link_sta == NULL || speed_mode == NULL)
+        return LWIP_EMAC_START_ERR_PARAM;
+    emac_mgmt_lock_lock();
+    if (emac_ctx[slot].phy_powered) {
+        link = eth_phy_ctrl(&emac_ctx[slot].phy_ctrl, EPHY_CMD_GET_LINK_STA, 0);
+        if (link < 0) ret = LWIP_EMAC_START_ERR_HW;
+        if (link == EPHY_LINK_STA_UP) {
+            speed = eth_phy_ctrl(&emac_ctx[slot].phy_ctrl, EPHY_CMD_GET_SPEED_MODE, 0);
+            if (speed < EPHY_SPEED_MODE_10M_HALF_DUPLEX ||
+                speed > EPHY_SPEED_MODE_100M_FULL_DUPLEX) ret = LWIP_EMAC_START_ERR_HW;
+        }
+    }
+    if (ret == 0) {
+        *link_sta = link;
+        *speed_mode = speed;
+    }
+    emac_mgmt_lock_unlock();
+    return ret;
+}
+
+int lwip_emac_start_stats_get(uint8_t port, struct lwip_emac_debug_info_s *stats)
+{
+    int slot = emac_slot_by_port(port);
+    uintptr_t flags;
+    if (slot < 0 || stats == NULL)
+        return LWIP_EMAC_START_ERR_PARAM;
+    flags = bflb_irq_save();
+    *stats = emac_ctx[slot].debug_info;
+    bflb_irq_restore(flags);
+    return LWIP_EMAC_START_OK;
+}
+
+int lwip_emac_start_stats_clear(uint8_t port)
+{
+    int slot = emac_slot_by_port(port);
+    uintptr_t flags;
+    if (slot < 0)
+        return LWIP_EMAC_START_ERR_PARAM;
+    flags = bflb_irq_save();
+    memset((void *)&emac_ctx[slot].debug_info, 0, sizeof(emac_ctx[slot].debug_info));
+    bflb_irq_restore(flags);
+    return LWIP_EMAC_START_OK;
+}
+
+#ifdef CONFIG_SHELL
+
+static int lwip_emac_reset_cmd(int argc, char **argv)
+{
+    unsigned long port;
+    char *end;
+
+    if (argc != 2) {
+        LOG_I("%s %s\r\n", argv[0], "<port> (PHY only)");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    port = strtoul(argv[1], &end, 0);
+    if (end == argv[1] || *end != '\0' || *argv[1] == '-' || port > UINT8_MAX) {
+        LOG_I("%s %s\r\n", argv[0], "<port> (PHY only)");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    return lwip_emac_start_phy_reset(port);
+}
+SHELL_CMD_EXPORT_ALIAS(lwip_emac_reset_cmd, lwip_emac_reset, reset emac PHY);
+
+static int lwip_emac_state_cmd(int argc, char **argv, bool mac)
+{
+    int ret;
+    unsigned long port;
+    char *end;
+    bool enabled;
+    if (argc < 2) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [up|down]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    port = strtoul(argv[1], &end, 0);
+    if (end == argv[1] || *end != '\0' || *argv[1] == '-' || port > UINT8_MAX) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [up|down]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    if (argc == 2) {
+        ret = mac ? lwip_emac_start_mac_get(port, &enabled) : lwip_emac_start_phy_get(port, &enabled);
+        if (ret == 0)
+            LOG_I("[EMAC%lu] %s: %s\r\n", port, argv[0], enabled ? "up" : "down");
+        return ret;
+    }
+    if (argc != 3 || (strcmp(argv[2], "up") && strcmp(argv[2], "down"))) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [up|down]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    enabled = !strcmp(argv[2], "up");
+    return mac ? lwip_emac_start_mac_set(port, enabled) : lwip_emac_start_phy_set(port, enabled);
+}
+
+static int lwip_emac_mac_cmd(int argc, char **argv)
+{
+    return lwip_emac_state_cmd(argc, argv, true);
+}
+SHELL_CMD_EXPORT_ALIAS(lwip_emac_mac_cmd, lwip_emac_mac, get or set emac mac state);
+
+static int lwip_emac_phy_cmd(int argc, char **argv)
+{
+    return lwip_emac_state_cmd(argc, argv, false);
+}
+SHELL_CMD_EXPORT_ALIAS(lwip_emac_phy_cmd, lwip_emac_phy, get or set emac phy state);
+
+static int lwip_emac_speed_cmd(int argc, char **argv)
+{
+    int ret;
+    unsigned long port;
+    char *end;
+    unsigned long val;
+    static const char *const modes[] = { "auto", "10h", "10f", "100h", "100f" };
+    eth_phy_init_cfg_t cfg;
+
+    if (argc < 2) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [auto|10h|10f|100h|100f] [ability]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    port = strtoul(argv[1], &end, 0);
+    if (end == argv[1] || *end != '\0' || *argv[1] == '-' || port > UINT8_MAX) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [auto|10h|10f|100h|100f] [ability]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    if (argc > 4) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [auto|10h|10f|100h|100f] [ability]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    ret = lwip_emac_start_speed_get(port, &cfg);
+    if (ret < 0)
+        return ret;
+    if (argc == 2) {
+        LOG_I("[EMAC%lu] configured speed_mode:%u ability:0x%08x\r\n", port,
+              cfg.speed_mode, (unsigned int)cfg.local_auto_negotiation_ability);
+        return 0;
+    }
+    for (val = 0; val < sizeof(modes) / sizeof(modes[0]); val++) {
+        if (!strcmp(argv[2], modes[val]))
+            break;
+    }
+    if (val == sizeof(modes) / sizeof(modes[0])) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [auto|10h|10f|100h|100f] [ability]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    cfg.speed_mode = val;
+    if (argc == 4) {
+        val = strtoul(argv[3], &end, 0);
+        if (end == argv[3] || *end != '\0' || *argv[3] == '-' || val > UINT32_MAX) {
+            LOG_I("%s <port> [auto|10h|10f|100h|100f] [ability]\r\n", argv[0]);
+            return LWIP_EMAC_START_ERR_PARAM;
+        }
+        cfg.local_auto_negotiation_ability = val;
+    }
+    return lwip_emac_start_speed_set(port, &cfg);
+}
+
+SHELL_CMD_EXPORT_ALIAS(lwip_emac_speed_cmd, lwip_emac_speed, manage emac speed);
+
+static int lwip_emac_stats_cmd(int argc, char **argv)
+{
+    int ret;
+    unsigned long port;
+    char *end;
+    struct lwip_emac_debug_info_s stats;
+    if (argc < 2) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [clear]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    port = strtoul(argv[1], &end, 0);
+    if (end == argv[1] || *end != '\0' || *argv[1] == '-' || port > UINT8_MAX) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [clear]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    if (argc == 3 && !strcmp(argv[2], "clear"))
+        return lwip_emac_start_stats_clear(port);
+    if (argc != 2) {
+        LOG_I("%s %s\r\n", argv[0], "<port> [clear]");
+        return LWIP_EMAC_START_ERR_PARAM;
+    }
+    ret = lwip_emac_start_stats_get(port, &stats);
+    if (ret == 0) {
+        LOG_I("[EMAC%lu] TX pkts:%u err:%u bytes:%llu\r\n", port,
+              stats.tx.success_cnt, stats.tx.error_cnt, stats.tx.total_size);
+        LOG_I("[EMAC%lu] RX pkts:%u err:%u busy:%u pbuf:%u bytes:%llu\r\n", port,
+              stats.rx.success_cnt, stats.rx.error_cnt, stats.rx.eamc_busy_cnt,
+              stats.rx.pbuf_busy_cnt, stats.rx.total_size);
+    }
+    return ret;
+}
+
+SHELL_CMD_EXPORT_ALIAS(lwip_emac_stats_cmd, lwip_emac_stats, manage emac stats);
+
+#endif /* CONFIG_SHELL */

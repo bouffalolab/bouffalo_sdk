@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>BL616 Web Flash</title>
+  <title>Bouffalo Web Flash</title>
   <style>
     :root {
       font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
@@ -89,6 +89,7 @@
     .setting-row + .setting-row { border-top: 1px solid #e0e4e0; }
     .setting-copy strong { display: block; font-size: 13px; }
     .setting-copy span { display: block; margin-top: 3px; color: #758078; font-size: 11px; }
+    .chip-select { width: 132px; min-height: 32px; padding: 0 8px; border: 1px solid #b8c1ba; border-radius: 4px; color: #26352d; background: #fff; font-size: 12px; }
     .switch { position: relative; flex: 0 0 auto; width: 38px; height: 22px; }
     .switch input { position: absolute; opacity: 0; }
     .switch-track { position: absolute; inset: 0; border-radius: 11px; background: #bdc5bf; transition: background .15s; }
@@ -148,7 +149,7 @@
     <div class="brand">
       <span class="brand-mark">BL</span>
       <h1>bflb_flash_web</h1>
-      <span class="chip-label">BL616 / whole.bin</span>
+      <span class="chip-label">多芯片 UART Flash</span>
     </div>
     <div class="status" aria-live="polite">
       <span id="status-dot" class="status-dot" data-status="idle"></span>
@@ -165,12 +166,21 @@
       <section class="panel">
         <div class="panel-body">
           <h2 class="panel-title">固件</h2>
+          <label class="setting-row">
+            <span class="setting-copy"><strong>芯片</strong><span>留空时由 BootROM 自动检测</span></span>
+            <select id="chip-select" class="chip-select">
+              <option value="">自动检测</option>
+              <option value="bl602">BL602</option>
+              <option value="bl616">BL616</option>
+              <option value="bl616cl">BL616CL</option>
+            </select>
+          </label>
           <div id="drop-zone" class="drop-zone">
             <input id="bin-file" class="file-input" type="file" accept=".bin,application/octet-stream">
             <div>
               <div class="file-symbol">BIN</div>
               <p id="file-name" class="file-name">选择或拖入 whole.bin</p>
-              <p id="file-meta" class="file-meta">BL616 · 写入地址 0x00000000</p>
+              <p id="file-meta" class="file-meta">whole.bin · 写入地址 0x00000000</p>
             </div>
           </div>
 
@@ -180,7 +190,7 @@
               <span class="switch"><input id="auto-reset" type="checkbox" checked><span class="switch-track"></span></span>
             </label>
             <label class="setting-row">
-              <span class="setting-copy"><strong>完成后运行</strong><span>校验通过后复位芯片</span></span>
+              <span class="setting-copy"><strong>完成后通过 RTS 运行</strong><span>校验通过后使用 RTS/DTR 复位芯片</span></span>
               <span class="switch"><input id="run-after-flash" type="checkbox" checked><span class="switch-track"></span></span>
             </label>
           </div>
@@ -230,11 +240,13 @@
     </div>
   </main>
 
-  <script src="protocol.js"></script>
-  <script src="targets/common.js"></script>
-  <script src="targets/bl616.js"></script>
-  <script src="targets/index.js"></script>
-  <script src="loader.js"></script>
-  <script src="app.js"></script>
+  <script src="protocol.js?v=20260902-2"></script>
+  <script src="targets/common.js?v=20260902-2"></script>
+  <script src="targets/bl602.js?v=20260902-2"></script>
+  <script src="targets/bl616.js?v=20260902-2"></script>
+  <script src="targets/bl616cl.js?v=20260902-2"></script>
+  <script src="targets/index.js?v=20260902-2"></script>
+  <script src="loader.js?v=20260902-2"></script>
+  <script src="app.js?v=20260902-2"></script>
 </body>
 </html>

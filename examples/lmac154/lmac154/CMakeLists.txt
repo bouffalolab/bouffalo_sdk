@@ -7,5 +7,6 @@ sdk_add_include_directories(.)
 target_sources(app PRIVATE lmac154_example.c)
 
 sdk_set_main_file(main.c)
+sdk_set_flash_erase(2)
 
 project(lmac154)

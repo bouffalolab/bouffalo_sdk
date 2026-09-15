@@ -12,6 +12,13 @@ struct ieee80211_dot_d;
 
 #define WIFI_MGMR_CONFIG_SCAN_ITEM_TIMEOUT    (15000)
 #define WIFI_MGMR_SCAN_ITEMS_MAX (50)
+#define WIFI_MGMR_AP_STA_AUTH_FAIL_QUEUE_DEPTH (8)
+#define WIFI_MGMR_CHANNEL_SURVEY_MAX (64)
+
+typedef struct wifi_mgmr_channel_survey_cache {
+    wifi_mgmr_channel_survey_t result;
+    uint8_t is_used;
+} wifi_mgmr_channel_survey_cache_t;
 
 typedef struct mode{
     char* mode_str;
@@ -48,6 +55,11 @@ typedef struct wifi_mgmr {
     rtos_mutex scan_items_lock;
     rtos_mutex ap_sta_info_lock;
     wifi_mgmr_scan_item_t scan_items[WIFI_MGMR_SCAN_ITEMS_MAX];
+    wifi_ap_sta_auth_fail_info_t ap_sta_auth_fail_queue[WIFI_MGMR_AP_STA_AUTH_FAIL_QUEUE_DEPTH];
+    uint8_t ap_sta_auth_fail_head;
+    uint8_t ap_sta_auth_fail_tail;
+    uint8_t ap_sta_auth_fail_count;
+    wifi_mgmr_channel_survey_cache_t channel_surveys[WIFI_MGMR_CHANNEL_SURVEY_MAX];
     //the params info for sta connecting
     wifi_mgmr_sta_connect_params_t sta_connect_param;
     //router info for sta mode
@@ -127,6 +139,8 @@ int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint
 char *wifi_mgmr_auth_to_str(uint8_t auth);
 char *wifi_mgmr_cipher_to_str(uint8_t cipher);
 int wifi_mgmr_scan_beacon_save( wifi_mgmr_scan_item_t *scan );
+void wifi_mgmr_scan_channel_surveys_clear(void);
+void wifi_mgmr_scan_channel_survey_update(uint8_t channel, uint8_t utilization);
 void wifi_mgmr_sta_info_reset();
 void wifi_mgmr_sta_info_upatestatus(uint16_t status_code, uint16_t reason_code);
 void wifi_mgmr_sta_info_save(void *param);
@@ -135,4 +149,5 @@ void wifi_mgmr_ap_sta_info_del(uint8_t sta_idx);
 void wifi_mgmr_ap_sta_info_add(uint8_t sta_idx, uint16_t aid, struct mac_addr *addr);
 void wifi_mgmr_scan_frame_notify(const uint8_t *data, uint16_t length, uint16_t frequency, int16_t rssi);
 void wifi_mgmr_scan_frame_callback_clear(void);
+int wifi_mgmr_ap_sta_auth_fail_notify(const wifi_ap_sta_auth_fail_info_t *info);
 #endif

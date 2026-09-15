@@ -16,7 +16,7 @@
 #define SDIO_RX_BUF_SIZE     2048
 #define SDIO_TX_BUF_SIZE     2048
 
-#ifndef CONFIG_BOUFFALO_SDK
+#ifndef BOUFFALO_SDK
 
 #define LP_FW_START_ADDR    0x23026800 // XXX duplicated
 #define LP_FW_MAX_SIZE      (37 * 1024)

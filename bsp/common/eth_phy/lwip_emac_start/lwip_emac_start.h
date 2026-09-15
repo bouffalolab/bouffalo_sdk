@@ -6,6 +6,7 @@
 #ifndef LWIP_EMAC_START_H
 #define LWIP_EMAC_START_H
 
+#include <stdbool.h>
 #include "lwip_netif_emac.h"
 #include "eth_phy.h"
 
@@ -137,27 +138,36 @@ extern "C" {
  */
 int lwip_emac_start(const lwip_emac_port_cfg_t *port_cfgs, uint8_t port_count);
 
-/**
- * @brief Number of EMAC ports started by lwip_emac_start().
- * @return Port count (0 before lwip_emac_start()).
- */
-uint8_t lwip_emac_started_count(void);
+/* Management APIs use physical port IDs and are independent of CONFIG_SHELL.
+ * Call from task context, never from an ISR or the tcpip thread: the management
+ * lock may be held while waiting for netifapi. Return 0 on success, or a negative
+ * parameter, state or hardware error. */
+#define LWIP_EMAC_START_OK         (0)
+#define LWIP_EMAC_START_ERR_PARAM  (-1)
+#define LWIP_EMAC_START_ERR_STATE  (-2)
+#define LWIP_EMAC_START_ERR_HW     (-3)
 
-/**
- * @brief Get the port context of a started port, by slot index.
- *
- * @param[in] index Slot index, 0 .. lwip_emac_started_count() - 1.
- * @return Port context, NULL when index is out of range.
- */
-lwip_emac_port_ctx_t *lwip_emac_started_ctx(uint8_t index);
+/* MAC TX/RX enable and PHY power are separate; getters return managed state. */
+int lwip_emac_start_mac_set(uint8_t port, bool enabled);
+int lwip_emac_start_mac_get(uint8_t port, bool *enabled);
+int lwip_emac_start_phy_set(uint8_t port, bool powered);
+int lwip_emac_start_phy_get(uint8_t port, bool *powered);
+/* Both outputs are required. link_sta is EPHY_LINK_STA_*, independent of MAC enable.
+ * speed_mode is EPHY_SPEED_MODE_*, valid only while link is UP. */
+int lwip_emac_start_link_get(uint8_t port, int *link_sta, int *speed_mode);
 
-/**
- * @brief Get the lwIP netif of a started port, by slot index.
- *
- * @param[in] index Slot index, 0 .. lwip_emac_started_count() - 1.
- * @return Network interface, NULL when index is out of range.
- */
-struct netif *lwip_emac_started_netif(uint8_t index);
+/* Reuse eth_phy_init_cfg_t: AUTO requires a nonempty 10/100M ability mask;
+ * forced modes use speed_mode. get returns the last successfully set configuration,
+ * not hardware readback; use link_get for actual speed. set reinitializes only a
+ * powered PHY, without automatic rollback. Success does not imply link UP. */
+int lwip_emac_start_speed_set(uint8_t port, const eth_phy_init_cfg_t *cfg);
+int lwip_emac_start_speed_get(uint8_t port, eth_phy_init_cfg_t *cfg);
+/* Reset only a powered PHY with its current configuration; retain MAC/DMA/netif/tasks. */
+int lwip_emac_start_phy_reset(uint8_t port);
+
+/* Reuse existing counters; get and clear are individually atomic, not a combined operation. */
+int lwip_emac_start_stats_get(uint8_t port, struct lwip_emac_debug_info_s *stats);
+int lwip_emac_start_stats_clear(uint8_t port);
 
 #ifdef __cplusplus
 }

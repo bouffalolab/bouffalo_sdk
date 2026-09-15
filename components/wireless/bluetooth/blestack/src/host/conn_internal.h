@@ -39,10 +39,8 @@ enum {
 	#if defined(BFLB_BLE_AVOID_REMOVE_GATT_SUBSCRIPTION_RISK)
 	BT_CONN_GATT_REMOVE_SUBSCRIPTION_GOING,
 	#endif
-	#if defined(BFLB_BREDR_PATCH_FIX_BREDR_CONN_REF_AFTER_ROLE_SWITCH)
-	/* BR/EDR: original master role, survives role switch */
+	/* BR/EDR: locally initiated connection, survives role switch. */
 	BT_CONN_BR_INITIAL_MASTER,
-	#endif
 	/* Total number of flags - must be at the end of the enum */
 	BT_CONN_NUM_FLAGS,
 };

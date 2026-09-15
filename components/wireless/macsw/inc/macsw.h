@@ -1689,6 +1689,19 @@ struct mm_csa_finish_ind
     uint8_t chan_idx;
 };
 
+/// Structure containing the parameters of the @ref MM_CHANNEL_SURVEY_IND message
+struct mm_channel_survey_ind
+{
+    /// Frequency of the channel
+    uint16_t freq;
+    /// Noise in dbm
+    int8_t noise_dbm;
+    /// Amount of time spent on the channel (in ms)
+    uint32_t chan_time_ms;
+    /// Amount of time the primary channel was sensed busy (in ms)
+    uint32_t chan_time_busy_ms;
+};
+
 /// Structure containing the parameters of the @ref MM_ADD_IF_REQ message.
 struct mm_add_if_req
 {

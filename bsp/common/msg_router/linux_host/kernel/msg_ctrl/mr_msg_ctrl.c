@@ -13,6 +13,35 @@
 #include "mr_msg_ctrl.h"
 #include "mr_debugfs.h"
 
+#define MR_MSG_KEEPALIVE_PERIOD_MS (500U)
+
+static void mr_msg_keepalive_work(struct work_struct *work)
+{
+    struct mr_msg_ctrl *msg_ctrl = container_of(to_delayed_work(work), struct mr_msg_ctrl, keepalive_work);
+    struct sk_buff *skb;
+    struct mr_msg_pkt *msg_pkt;
+
+    if (!msg_ctrl->keepalive_enabled) {
+        return;
+    }
+
+    if (!msg_ctrl->keepalive_pending && (skb = dev_alloc_skb(sizeof(struct mr_msg_pkt))) != NULL) {
+        msg_pkt = (struct mr_msg_pkt *)skb_put(skb, sizeof(struct mr_msg_pkt));
+        msg_pkt->tag = MR_MSG_TAG_SYS;
+        msg_pkt->sub_tag = MR_MSG_SYS_KEEPALIVE;
+        msg_pkt->len = 0;
+        msg_ctrl->keepalive_pending = true;
+        if (mr_msg_ctrl_send(msg_ctrl, skb) < 0) {
+            msg_ctrl->keepalive_pending = false;
+            dev_kfree_skb_any(skb);
+        }
+    }
+
+    if (msg_ctrl->keepalive_enabled) {
+        schedule_delayed_work(&msg_ctrl->keepalive_work, msecs_to_jiffies(MR_MSG_KEEPALIVE_PERIOD_MS));
+    }
+}
+
 /**
  * @brief Message receive callback function with race condition protection
  * @param[in] msg_ctrl Pointer to message controller structure
@@ -236,6 +265,12 @@ static int mr_msg_dnld_send_cplt_cb(struct sk_buff *skb, bool success, void *arg
     }
     spin_unlock(&msg_ctrl->stats_lock);
 
+    if (msg_tag == MR_MSG_TAG_SYS && msg_pkt->sub_tag == MR_MSG_SYS_KEEPALIVE && msg_pkt->len == 0) {
+        msg_ctrl->keepalive_pending = false;
+        dev_kfree_skb_any(skb);
+        return 0;
+    }
+
     if (success) {
         skb_queue_tail(&msg_ctrl->dnld_skb_head, skb);
         queue_work(msg_ctrl->recv_workqueue, &msg_ctrl->recv_work);
@@ -407,6 +442,7 @@ static struct mr_msg_ctrl *mr_msg_ctrl_create(void)
         goto err_exit;
     }
     INIT_WORK(&msg_ctrl->recv_work, mr_msg_workqueue_func);
+    INIT_DELAYED_WORK(&msg_ctrl->keepalive_work, mr_msg_keepalive_work);
 
     skb_queue_head_init(&msg_ctrl->upld_skb_head);
     skb_queue_head_init(&msg_ctrl->dnld_skb_head);
@@ -440,6 +476,9 @@ int mr_sdio_msg_ctrl_deinit(struct mr_msg_ctrl *msg_ctrl)
     if (!msg_ctrl) {
         return -EINVAL;
     }
+
+    msg_ctrl->keepalive_enabled = false;
+    cancel_delayed_work_sync(&msg_ctrl->keepalive_work);
 
     if (msg_ctrl->sdio_manage) {
         /* unregister both upload and download callbacks */
@@ -488,6 +527,8 @@ int mr_sdio_msg_ctrl_init(struct mr_msg_ctrl **mr_msg_ctrl, struct mr_sdio_manag
     sdio_manage->msg_ctrl = msg_ctrl;
 
     *mr_msg_ctrl = msg_ctrl;
+    msg_ctrl->keepalive_enabled = true;
+    schedule_delayed_work(&msg_ctrl->keepalive_work, msecs_to_jiffies(MR_MSG_KEEPALIVE_PERIOD_MS));
 
     MSG_CTRL_INFO(msg_ctrl, "mr_msg_ctrl_init success, msg_hw_mode: %d", msg_ctrl->msg_hw_mode);
     return 0;

@@ -7,7 +7,7 @@
 #include <bl702l_phy.h>
 #endif
 
-#ifdef CONFIG_BOUFFALO_SDK
+#ifdef BOUFFALO_SDK
 #include <bflb_common.h>
 #include <bflb_l1c.h>
 #include <bflb_efuse.h>
@@ -363,7 +363,7 @@ static inline uint32_t ot_radio_prepare_enh_ack(lmac154_receiveInfo_t *rx_info, 
         ot_radio_ctx.enh_ack_sec.nonce.security_level = p_ack_aux->sec_lvl;
         ot_radio_ctx.frame_cnt.value ++;
 
-#if defined (CONFIG_BOUFFALO_SDK) && defined (BL616)
+#if defined (BOUFFALO_SDK) && defined (BL616)
         bflb_l1c_dcache_clean_invalidate_range(otRadio_ack_buff, sizeof(otRadio_ack_buff));
         ot_radio_ctx.enh_ack_sec.a_data = (uint32_t *)bflb_get_no_cache_addr(ack_ptr);
         ot_radio_ctx.enh_ack_sec.c_data = (uint32_t *)bflb_get_no_cache_addr(otRadio_ack_buff);
@@ -439,7 +439,7 @@ void ot_radioRxDoneCallback(lmac154_rx_status_t status, lmac154_receiveInfo_t *i
 
         rx_frame->frame.mInfo.mRxInfo.mRssi = rssi;
         rx_frame->frame.mInfo.mRxInfo.mLqi = lqi;
-        rx_frame->frame.mChannel = lmac154_getChannel();
+        rx_frame->frame.mChannel = lmac154_getChannel() + OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
         rx_frame->frame.mLength = info->rx_length;
         rx_frame->frame.mInfo.mRxInfo.mAckedWithFramePending = info->is_frame_pended;
         rx_frame->frame.mInfo.mRxInfo.mAckedWithSecEnhAck =
@@ -585,7 +585,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         }
         ot_radio_ctx.tx_param.sec.m_data_length = ot_radio_ctx.tx_param.pkt_length - ot_radio_ctx.tx_param.sec.a_data_length;
 
-#if defined (CONFIG_BOUFFALO_SDK) && defined (BL616)
+#if defined (BOUFFALO_SDK) && defined (BL616)
         bflb_l1c_dcache_clean_invalidate_range(otRadio_tx_buff, sizeof(otRadio_tx_buff));
         ot_radio_ctx.tx_param.sec.a_data = (uint32_t *)bflb_get_no_cache_addr(a_data);
         ot_radio_ctx.tx_param.sec.m_data = (uint32_t *)bflb_get_no_cache_addr(m_data);
@@ -674,7 +674,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64) 
 {
-#ifdef CONFIG_BOUFFALO_SDK
+#ifdef BOUFFALO_SDK
     int i;
     uint32_t flash_id = 0;
 

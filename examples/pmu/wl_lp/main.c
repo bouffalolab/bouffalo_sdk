@@ -7,7 +7,6 @@
 #include <lwip/tcpip.h>
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
-#include <lwip/etharp.h>
 
 #include "bl_fw_api.h"
 
@@ -52,7 +51,6 @@
 #include "board.h"
 #include "board_rf.h"
 #include "shell.h"
-#include "assert.h"
 
 #include "pm_manager.h"
 #include "clock_manager.h"
@@ -93,8 +91,6 @@ extern void wifi_event_handler(async_input_event_t ev, void *priv);
  ****************************************************************************/
 
 #if defined(BL616CL)
-static PM_LOWPOWER_CFG_Type app_lowpower_cfg;
-
 static void wl_lp_bl616cl_gpio_ie_disable(uint8_t pin)
 {
     uint32_t reg_addr;
@@ -120,24 +116,6 @@ void lp_hook_pre_user(void *arg)
     wl_lp_bl616cl_pds_gpio_prepare();
 }
 
-static int app_lowpower_mode_load(uint8_t mode)
-{
-    const PM_LOWPOWER_CFG_Type *mode_cfg;
-
-    mode_cfg = pm_power_mode_cfg_get(mode);
-    if (mode_cfg == NULL) {
-        return -1;
-    }
-
-    app_lowpower_cfg = *mode_cfg;
-
-    return 0;
-}
-
-const PM_LOWPOWER_CFG_Type *bl616cl_lowpower_cfg_get(void)
-{
-    return &app_lowpower_cfg;
-}
 #endif
 
 #if defined(WL_LP_AUTO_SHELL_ENABLE)
@@ -388,50 +366,6 @@ int cmd_wifi_lp(int argc, char **argv)
 
 extern bl_lp_fw_cfg_t lpfw_cfg;
 
-static void cmd_tickless(int argc, char **argv)
-{
-    int broadcast = 0;
-
-    if (argc > 2) {
-        if (argv[2] != NULL) {
-            broadcast = atoi(argv[2]);
-        } else {
-            broadcast = 0;
-        }
-
-        if (broadcast == 0) {
-            if (argv[1] != NULL) {
-                lpfw_cfg.dtim_origin = atoi(argv[1]);
-            } else {
-                lpfw_cfg.dtim_origin = 10;
-            }
-        }
-    } else if (argc > 1) {
-        broadcast = 0;
-        if (argv[1] != NULL) {
-            lpfw_cfg.dtim_origin = atoi(argv[1]);
-        } else {
-            lpfw_cfg.dtim_origin = 10;
-        }
-    } else {
-        lpfw_cfg.dtim_origin = 10;
-        broadcast = 0;
-    }
-
-    printf("dtim_origin: %d\r\n", lpfw_cfg.dtim_origin);
-    printf("broadcast: %d\r\n", broadcast);
-
-    if (broadcast) {
-        enable_multicast_broadcast = 1;
-        lpfw_cfg.bcmc_dtim_mode = 1;
-    } else {
-        enable_multicast_broadcast = 0;
-        lpfw_cfg.bcmc_dtim_mode = 0;
-    }
-
-    pm_enable_tickless();
-}
-
 static int test_tcp_keepalive(int argc, char **argv)
 {
     int sockfd;
@@ -493,7 +427,7 @@ static int test_tcp_keepalive(int argc, char **argv)
     memset(buffer, 'A', sizeof(buffer) - 1);
 
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     if (argc > 2) {
         bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
 
@@ -586,262 +520,9 @@ static void cmd_hbn_test(int argc, char **argv)
 #endif
 }
 
-static void cmd_io_dbg(int argc, char **argv)
-{
-    iot2lp_para_t *iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
-
-    if (argc != 2) {
-        printf("cmd_io_dbg err\r\n");
-        return;
-    }
-
-    if (atoi(argv[1]) <= 34) {
-#ifdef BL616
-        iot2lp_para->debug_io = atoi(argv[1]);
-#else
-        iot2lp_para->wifi_debug_io = atoi(argv[1]);
-#endif
-    } else {
-#ifdef BL616
-        iot2lp_para->debug_io = 0xFF;
-#else
-        iot2lp_para->wifi_debug_io = 0xFF;
-#endif
-    }
-}
-
-TimerHandle_t xArpTimer = NULL;
-static void arp_send(TimerHandle_t xTimer) {
-
-    if (!wifi_mgmr_sta_state_get()) {
-        return;
-    }
-
-    LOCK_TCPIP_CORE();
-    do {
-        assert(netif_default != NULL);
-        etharp_request(netif_default, &netif_default->gw);
-    } while(0);
-    UNLOCK_TCPIP_CORE();
-}
-
-static void cmd_send_arp(int argc, char **argv)
-{
-    if (argc != 2) {
-    printf("Need param\r\n");
-    return;
-    }
-
-    if (atoi(argv[1])) {
-        if (xArpTimer) {
-            printf("Arp timer already created.\r\n");
-            return;
-        }
-        xArpTimer = xTimerCreate("traffic probe",  pdMS_TO_TICKS(55*1000), pdFALSE, (void*)0, arp_send);
-
-        xTimerStart(xArpTimer, 0);
-        printf("create period 55s arp timer success.\r\n");
-    } else {
-        if (xArpTimer) {
-            xTimerDelete(xArpTimer, portMAX_DELAY);
-            xArpTimer = NULL;
-            printf("Delete arp timer.\r\n");
-        }
-    }
-
-    return;
-
-}
-
-
-#if !defined(BL616)
-static void cmd_lpfw_uart_cfg(int argc, char **argv)
-{
-    if (argc != 5) {
-        printf("Need param\r\n");
-        return;
-    }
-
-    iot2lp_para->uart_config->debug_log_en = atoi(argv[1]);
-    iot2lp_para->uart_config->uart_tx_io = atoi(argv[2]);
-    iot2lp_para->uart_config->uart_rx_io = atoi(argv[3]);
-    iot2lp_para->uart_config->baudrate = atoi(argv[4]);
-}
-
-static void cmd_lpfw_clock_cfg(int argc, char **argv)
-{
-    if (argc != 5) {
-        printf("Need param\r\n");
-        printf("mcu_clk_sel:\n\t0:GLB_MCU_SYS_CLK_RC32M\r");
-        printf("\n\t1:GLB_MCU_SYS_CLK_XTAL\r");
-        printf("\n\t2:GLB_MCU_SYS_CLK_WIFIPLL_96M\r");
-        printf("\n\t3:GLB_MCU_SYS_CLK_WIFIPLL_192M\r");
-        printf("\n\t4:GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M\r");
-        printf("\n\t5:GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M\r\n");
-
-        printf("xclk_sel:\n\t0:HBN_MCU_XCLK_RC32M\r");
-        printf("\n\t1:HBN_MCU_XCLK_XTAL\r");
-
-        return;
-    }
-
-    iot2lp_para->clock_config->mcu_clk_sel = atoi(argv[1]);
-    iot2lp_para->clock_config->hclk_div = atoi(argv[2]);
-    iot2lp_para->clock_config->bclk_div = atoi(argv[3]);
-    iot2lp_para->clock_config->xclk_sel = atoi(argv[4]);
-}
-#endif
-
-#if defined(BL616CL)
-static int parse_u8_arg(const char *arg, uint8_t *value)
-{
-    char *endptr;
-    unsigned long val;
-
-    if ((arg == NULL) || (value == NULL)) {
-        return -1;
-    }
-
-    val = strtoul(arg, &endptr, 0);
-    if ((endptr == arg) || (*endptr != '\0') || (val > 0xFF)) {
-        return -1;
-    }
-
-    *value = (uint8_t)val;
-    return 0;
-}
-
-static void cmd_pm_power(int argc, char **argv)
-{
-    uint8_t mode;
-    uint8_t dcdc_sys_enable_pin;
-    uint8_t dcdc_soc_enable_pin;
-    uint8_t dcdc_soc_vsel_pin;
-    uint8_t lp_mask;
-    uint8_t pds_clk;
-    const PM_LOWPOWER_CFG_Type *cfg;
-    PM_LOWPOWER_CFG_Type new_cfg;
-
-    if ((argc == 2) && (strcmp(argv[1], "list") == 0)) {
-        for (uint8_t i = 0; i < PM_POWER_MODE_MAX; i++) {
-            cfg = pm_power_mode_cfg_get(i);
-            if (cfg != NULL) {
-                printf("%u: %s\r\n", i, cfg->name);
-            }
-        }
-        return;
-    }
-
-    if ((argc == 2) && (strcmp(argv[1], "get") == 0)) {
-        printf("pm_power cfg: %s\r\n", app_lowpower_cfg.name ? app_lowpower_cfg.name : "");
-        printf("  dcdc_sys_gpio          : 0x%02x\r\n", app_lowpower_cfg.sys_cfg.dcdc_sys_enable_pin);
-        printf("  dcdc_sys_pds_enable    : %u\r\n", app_lowpower_cfg.sys_cfg.dcdc_sys_pds_enable);
-        printf("  ldo_sys_active_level   : %u\r\n", app_lowpower_cfg.sys_cfg.ldo_sys_active_level);
-        printf("  ldo_sys_pds_level      : %u\r\n", app_lowpower_cfg.sys_cfg.ldo_sys_pds_level);
-        printf("  dcdc_soc_gpio          : 0x%02x\r\n", app_lowpower_cfg.soc_cfg.dcdc_soc_enable_pin);
-        printf("  dcdc_soc_vsel_gpio     : 0x%02x\r\n", app_lowpower_cfg.soc_cfg.dcdc_soc_vsel_pin);
-        printf("  dcdc_soc_pds_enable    : %u\r\n", app_lowpower_cfg.soc_cfg.dcdc_soc_pds_enable);
-        printf("  dcdc_soc_pds_level     : %u\r\n", app_lowpower_cfg.soc_cfg.dcdc_soc_pds_level);
-        printf("  ldo_soc_active_level   : %u\r\n", app_lowpower_cfg.soc_cfg.ldo_soc_active_level);
-        printf("  ldo_soc_enter_pds      : %u\r\n", app_lowpower_cfg.soc_cfg.ldo_soc_enter_pds_level);
-        printf("  ldo_soc_pds_level      : %u\r\n", app_lowpower_cfg.soc_cfg.ldo_soc_pds_level);
-        printf("  pds_gpio_keep_en       : %u\r\n", app_lowpower_cfg.lp_cfg.pds_gpio_keep_en);
-        printf("  hbn_gpio_keep_en       : %u\r\n", app_lowpower_cfg.lp_cfg.hbn_gpio_keep_en);
-        printf("  pds_flash_power_off    : %u\r\n", app_lowpower_cfg.lp_cfg.pds_flash_power_off);
-        printf("  pll_power_off          : %u\r\n", app_lowpower_cfg.lp_cfg.pll_power_off);
-        printf("  rf_power_off           : %u\r\n", app_lowpower_cfg.lp_cfg.rf_power_off);
-        printf("  clk_default_sel        : %u\r\n", app_lowpower_cfg.lp_cfg.clk_default_sel);
-        printf("  set_all_ram_ret_en     : %u\r\n", app_lowpower_cfg.lp_cfg.set_all_ram_ret_en);
-        printf("  hbn_flash_power_off    : %u\r\n", app_lowpower_cfg.lp_cfg.hbn_flash_power_off);
-        printf("  ldo18io_power_down     : %u\r\n", app_lowpower_cfg.lp_cfg.ldo18io_power_down);
-        return;
-    }
-
-    if ((argc == 5) || (argc == 7)) {
-        if ((parse_u8_arg(argv[1], &mode) != 0) ||
-            (parse_u8_arg(argv[2], &dcdc_sys_enable_pin) != 0) ||
-            (parse_u8_arg(argv[3], &dcdc_soc_enable_pin) != 0) ||
-            (parse_u8_arg(argv[4], &dcdc_soc_vsel_pin) != 0)) {
-            printf("invalid argument\r\n");
-            return;
-        }
-
-        cfg = pm_power_mode_cfg_get(mode);
-        if (cfg == NULL) {
-            printf("invalid mode\r\n");
-            return;
-        }
-        new_cfg = *cfg;
-
-        if (((new_cfg.sys_cfg.dcdc_sys_enable_pin == 0xFF) && (dcdc_sys_enable_pin != 0xFF)) ||
-            ((new_cfg.soc_cfg.dcdc_soc_enable_pin == 0xFF) && (dcdc_soc_enable_pin != 0xFF)) ||
-            ((new_cfg.soc_cfg.dcdc_soc_vsel_pin == 0xFF) && (dcdc_soc_vsel_pin != 0xFF)) ||
-            ((dcdc_sys_enable_pin != 0xFF) && (dcdc_sys_enable_pin >= GPIO_PIN_MAX)) ||
-            ((dcdc_soc_enable_pin != 0xFF) && (dcdc_soc_enable_pin >= GPIO_PIN_MAX)) ||
-            ((dcdc_soc_vsel_pin != 0xFF) && (dcdc_soc_vsel_pin >= GPIO_PIN_MAX)) ||
-            ((dcdc_sys_enable_pin != 0xFF) && (dcdc_sys_enable_pin == dcdc_soc_enable_pin)) ||
-            ((dcdc_sys_enable_pin != 0xFF) && (dcdc_sys_enable_pin == dcdc_soc_vsel_pin)) ||
-            ((dcdc_soc_enable_pin != 0xFF) && (dcdc_soc_enable_pin == dcdc_soc_vsel_pin))) {
-            printf("invalid GPIO config for current mode\r\n");
-            return;
-        }
-
-        new_cfg.sys_cfg.dcdc_sys_enable_pin = dcdc_sys_enable_pin;
-        new_cfg.soc_cfg.dcdc_soc_enable_pin = dcdc_soc_enable_pin;
-        new_cfg.soc_cfg.dcdc_soc_vsel_pin = dcdc_soc_vsel_pin;
-
-        if (argc == 7) {
-            if ((parse_u8_arg(argv[5], &lp_mask) != 0) ||
-                (parse_u8_arg(argv[6], &pds_clk) != 0) ||
-                (pds_clk > PM_PDS_CLK_RC16M)) {
-                printf("invalid LP config\r\n");
-                return;
-            }
-
-            new_cfg.lp_cfg.pds_gpio_keep_en = (lp_mask >> 0) & 0x1;
-            new_cfg.lp_cfg.hbn_gpio_keep_en = (lp_mask >> 1) & 0x1;
-            new_cfg.lp_cfg.pds_flash_power_off = (lp_mask >> 2) & 0x1;
-            new_cfg.lp_cfg.pll_power_off = (lp_mask >> 3) & 0x1;
-            new_cfg.lp_cfg.rf_power_off = (lp_mask >> 4) & 0x1;
-            new_cfg.lp_cfg.clk_default_sel = pds_clk;
-            new_cfg.lp_cfg.set_all_ram_ret_en = (lp_mask >> 5) & 0x1;
-            new_cfg.lp_cfg.hbn_flash_power_off = (lp_mask >> 6) & 0x1;
-            new_cfg.lp_cfg.ldo18io_power_down = (lp_mask >> 7) & 0x1;
-        }
-
-        app_lowpower_cfg = new_cfg;
-        pm_dcdc_sys_exit_pds(&app_lowpower_cfg.sys_cfg);
-        pm_dcdc_soc_exit_pds(&app_lowpower_cfg.soc_cfg);
-        printf("power config updated: %u %s\r\n", mode, app_lowpower_cfg.name ? app_lowpower_cfg.name : "");
-        return;
-    }
-
-    {
-        printf("usage: pm_power list\r\n");
-        printf("usage: pm_power get\r\n");
-        printf("usage: pm_power <mode> <dcdc_sys_gpio> <dcdc_soc_gpio> <dcdc_soc_vsel_gpio>\r\n");
-        printf("usage: pm_power <mode> <dcdc_sys_gpio> <dcdc_soc_gpio> <dcdc_soc_vsel_gpio> <lp_mask> <pds_clk>\r\n");
-        printf("       use 0xff for unused GPIO\r\n");
-        printf("       lp_mask bit0=pds_gpio_keep bit1=hbn_gpio_keep bit2=pds_flash_off bit3=pll_off bit4=rf_off bit5=ram_ret bit6=hbn_flash_off bit7=ldo18io_down\r\n");
-        printf("       pds_clk: 0=f32k, 1=rc32m, 2=xtal, 3=xtal_lp, 4=rc8m, 5=rc16m\r\n");
-        return;
-    }
-}
-#endif
-
-SHELL_CMD_EXPORT_ALIAS(cmd_tickless, tickless, cmd tickless);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_lp, wifi_lp_test, wifi low power test);
 SHELL_CMD_EXPORT_ALIAS(test_tcp_keepalive, lpfw_tcp_keepalive, tcp keepalive test);
 SHELL_CMD_EXPORT_ALIAS(cmd_hbn_test, hbn_test, hbn test);
-SHELL_CMD_EXPORT_ALIAS(cmd_io_dbg, io_debug, cmd io_debug);
-SHELL_CMD_EXPORT_ALIAS(cmd_send_arp, arp_send, cmd send arp);
-#if !defined(BL616)
-SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_uart_cfg, lpfw_uart, cmd lpfw_uart);
-SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_clock_cfg, lpfw_clock, cmd lpfw_clock);
-#endif
-#if defined(BL616CL)
-SHELL_CMD_EXPORT_ALIAS(cmd_pm_power, pm_power, cmd pm_power);
-#endif
 #endif
 
 static void f32k_clk_init_task(void *pvParameters)
@@ -870,7 +551,7 @@ static void proc_hellow_entry(void *pvParameters)
     while (1) {
         printf("%s: RISC-V rv64imafc\r\n", __func__);
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
         bl_lp_info_t lp_info;
         /* get lp info */
         bl_lp_info_get(&lp_info);
@@ -903,9 +584,6 @@ void tcpip_init_done(void *arg)
 int main(void)
 {
     board_init();
-#if defined(BL616CL)
-    app_lowpower_mode_load(PM_LDO13_LDO07_PDSLDO07);
-#endif
 #if defined(BL616)
     uint8_t soc_v, rt_v, aon_v;
     hal_pm_ldo11_cfg(PM_PDS_LDO_LEVEL_SOC_DEFAULT, PM_PDS_LDO_LEVEL_RT_DEFAULT, PM_PDS_LDO_LEVEL_AON_DEFAULT);
@@ -930,7 +608,7 @@ int main(void)
     pm_rc32k_auto_cal_init();
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     pm_sys_init();
     bl_lp_init();
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);

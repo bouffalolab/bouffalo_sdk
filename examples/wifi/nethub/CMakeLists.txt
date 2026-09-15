@@ -8,7 +8,6 @@ sdk_add_link_options(-L${CMAKE_CURRENT_SOURCE_DIR})
 
 sdk_add_compile_definitions(-DTICKLESS_DEBUG=4)
 sdk_add_compile_definitions(-DPM_PDS_LDO18IO_POWER_DOWN)
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 sdk_add_compile_definitions(-DCONFIG_RWNX_LWIP)
 sdk_add_compile_definitions(-DconfigEXPECTED_IDLE_TIME_BEFORE_SLEEP=40)
 sdk_add_compile_definitions(-DWPA_SUPPLICANT_CLEANUP_INTERVAL=1800)
@@ -35,14 +34,16 @@ if (CONFIG_WL80211)
     target_sources(app PRIVATE app/src/wifi/app_wifi_wl80211.c)
 else ()
     target_sources(app PRIVATE app/src/wifi/app_wifi_fhost.c)
-    if (CONFIG_LPAPP)
+endif()
+
+if (CONFIG_LPAPP)
     target_sources(app PRIVATE app/src/wifi/app_wifi_cli.c)
-    endif()
 endif()
 
 sdk_add_include_directories(.)
 sdk_add_include_directories(./app/include)
 
 sdk_set_main_file(main.c)
+sdk_set_flash_erase(2)
 
 project(nethub)

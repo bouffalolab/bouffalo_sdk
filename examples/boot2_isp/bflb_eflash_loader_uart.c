@@ -215,7 +215,11 @@ int32_t ATTR_TCM_SECTION bflb_eflash_loader_uart_handshake_poll(uint32_t timeout
     bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", sizeof("Boot2 ISP Ready")-1);
     bflb_mtimer_delay_ms(2);
     hal_reboot_config(HAL_REBOOT_FROM_INTERFACE);
+#if defined(CHIP_BL618DG)
+    GLB_SW_POR_Reset();
+#else
     GLB_SW_System_Reset();
+#endif
     while (1)
         ;
 #endif

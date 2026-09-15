@@ -77,6 +77,7 @@ static void bredr_discovery_result_cb(struct bt_br_discovery_result *result);
 #endif
 
 static bool init = false;
+static bool auto_role_switch = false;
 static struct bt_conn_info conn_info;
 static struct bt_conn *default_conn = NULL;
 
@@ -287,6 +288,7 @@ static struct avrcp_callback avrcp_callbacks =
 static void pcm(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
 #endif
 BT_CLI(init);
+BT_CLI(role_switch);
 #if defined(BFLB_BREDR_PATCH_DEINIT_CLEANUP)
 BT_CLI(deinit);
 #endif
@@ -453,6 +455,8 @@ BT_SPP_CLI(throughput_stop);
 
 #if defined(CONFIG_SHELL)
     SHELL_CMD_EXPORT_ALIAS(bredr_init,bredr_init,BREDR Initialize Parameter:[Null]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_role_switch,bredr_role_switch,
+                            bredr_role_switch Parameter:[1:enable 0:disable]);
     #if defined(BFLB_BREDR_PATCH_DEINIT_CLEANUP)
     SHELL_CMD_EXPORT_ALIAS(bredr_deinit,bredr_deinit,Reset bredr demo init state so next bredr_init re-registers callbacks);
     #endif
@@ -566,6 +570,7 @@ const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"pcm", "", pcm},
     #endif
     {"bredr_init", "", bredr_init},
+    {"bredr_role_switch", "", bredr_role_switch},
     #if defined(BFLB_BREDR_PATCH_DEINIT_CLEANUP)
     {"bredr_deinit", "", bredr_deinit},
     #endif
@@ -734,6 +739,16 @@ BT_CLI(init)
     init = true;
     printf("bredr init successfully\n");
 }
+BT_CLI(role_switch)
+{
+    if (argc != 2 || (strcmp(argv[1], "0") && strcmp(argv[1], "1"))) {
+        printf("Usage: bredr_role_switch [1:enable 0:disable]\n");
+        return;
+    }
+    auto_role_switch = !strcmp(argv[1], "1");
+    printf("bredr role switch after connection: %s\n",
+           auto_role_switch ? "enabled" : "disabled");
+}
 
 #if defined(BFLB_BREDR_PATCH_DEINIT_CLEANUP)
 /* bredr_deinit — clear this file's local demo-CLI "init" guard and the
@@ -778,6 +793,19 @@ static void bredr_connected(struct bt_conn *conn, u8_t err)
     }
 
     printf("bredr connected: %s \r\n", addr);
+
+#if defined(CONFIG_BT_A2DP_SINK)
+    /* Sink interoperability: only switch locally initiated ACL connections.
+     * Use asynchronous HCI submission from the connection callback.
+     */
+    if (auto_role_switch &&
+        atomic_test_bit(conn->flags, BT_CONN_BR_INITIAL_MASTER) &&
+        conn->role == BT_CONN_ROLE_MASTER) {
+        int ret = bt_conn_br_switch_role(conn, BT_CONN_ROLE_SLAVE);
+
+        BT_WARN("[BR_ROLE] request slave: %s queue_result=%d", addr, ret);
+    }
+#endif
 
     if (!default_conn)
     {

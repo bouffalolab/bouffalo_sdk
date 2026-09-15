@@ -2,7 +2,7 @@
   "use strict";
 
   const { concatBytes, bytesToHex, formatErrorCode } = window.BflbFlashProtocol;
-  const { BL616Flasher, BAUD_RATE } = window.BflbFlasher;
+  const { BflbFlasher, BAUD_RATE } = window.BflbFlasher;
 
   const elements = {
     supportNotice: document.querySelector("#support-notice"),
@@ -12,6 +12,7 @@
     dropZone: document.querySelector("#drop-zone"),
     fileName: document.querySelector("#file-name"),
     fileMeta: document.querySelector("#file-meta"),
+    chipSelect: document.querySelector("#chip-select"),
     autoReset: document.querySelector("#auto-reset"),
     runAfterFlash: document.querySelector("#run-after-flash"),
     flashButton: document.querySelector("#flash-button"),
@@ -133,17 +134,32 @@
     }
 
     async releaseStreams() {
+      let cleanupError = null;
       if (this.reader) {
-        await this.reader.cancel();
-        if (this.readLoop) await this.readLoop;
-        this.reader.releaseLock();
-        this.reader = null;
+        const reader = this.reader;
+        try {
+          await reader.cancel();
+          if (this.readLoop) await this.readLoop;
+        } catch (_) {
+          // Still try to release the lock so writer cleanup is not skipped.
+        }
+        try {
+          reader.releaseLock();
+          this.reader = null;
+        } catch (error) {
+          cleanupError = error;
+        }
       }
       if (this.writer) {
-        this.writer.releaseLock();
-        this.writer = null;
+        try {
+          this.writer.releaseLock();
+          this.writer = null;
+        } catch (error) {
+          cleanupError ||= error;
+        }
       }
-      this.readLoop = null;
+      if (!this.reader) this.readLoop = null;
+      if (cleanupError) throw cleanupError;
     }
 
     clearInput() {
@@ -173,10 +189,9 @@
     async close() {
       this.closed = true;
       this.wakeWaiters();
-      try {
-        await this.releaseStreams();
-      } catch (_) {
-        // The serial device may already have been unplugged.
+      await this.releaseStreams();
+      if (this.port.readable?.locked || this.port.writable?.locked) {
+        throw new Error("串口数据流仍被锁定");
       }
       if (this.port.readable || this.port.writable) await this.port.close();
     }
@@ -221,20 +236,20 @@
 
   function updateControls() {
     const connected = Boolean(transport);
+    const usable = connected && !transport.closed;
     elements.connectButton.disabled = connected || flashing;
     elements.disconnectButton.disabled = !connected || flashing;
     elements.fileInput.disabled = flashing;
-    elements.flashButton.disabled = !connected || !image || flashing;
+    elements.chipSelect.disabled = flashing;
+    elements.flashButton.disabled = !usable || !image || flashing;
     elements.cancelButton.hidden = !flashing;
   }
 
   async function chooseFile(file) {
     if (!file) return;
     const data = new Uint8Array(await file.arrayBuffer());
-    if (data.length < 256) throw new Error("文件太小，不是有效的 BL616 whole.bin");
-    if (String.fromCharCode(...data.slice(0, 4)) !== "BFNP") {
-      throw new Error("文件 0x0 处没有 BL616 Boot Header (BFNP)");
-    }
+    if (data.length < 256) throw new Error("文件太小，不是有效的 whole.bin");
+    if (String.fromCharCode(...data.slice(0, 4)) !== "BFNP") throw new Error("文件 0x0 处没有 Bouffalo Boot Header (BFNP)");
     image = data;
     elements.fileName.textContent = file.name;
     elements.fileMeta.textContent = `${formatSize(file.size)} · 写入地址 0x00000000`;
@@ -266,15 +281,16 @@
   async function disconnect() {
     if (!transport) return;
     const current = transport;
-    transport = null;
     try {
       await current.close();
+      transport = null;
+      port = null;
+      setStatus("idle", "未连接");
+      log("串口已断开");
     } catch (error) {
       log(`关闭串口失败：${error.message}`, "error");
+      setStatus("error", "断开失败，请重试");
     }
-    port = null;
-    setStatus("idle", "未连接");
-    log("串口已断开");
     updateControls();
   }
 
@@ -304,7 +320,7 @@
     setStatus("working", "正在烧写");
     setProgress(1, "进入 BootROM");
     try {
-      const flasher = new BL616Flasher(transport, {
+      const flasher = new BflbFlasher(transport, {
         onLog: (message, level) => {
           log(message, level);
           if (message.startsWith("串口使用")) setStatus("working", "正在烧写 · 2,000,000 baud");
@@ -313,11 +329,12 @@
         isCancelled: () => cancelled,
       });
       const result = await flasher.flashWhole(image, {
+        chip: elements.chipSelect.value || undefined,
         autoReset: elements.autoReset.checked,
         runAfterFlash: elements.runAfterFlash.checked,
       });
       const seconds = (result.elapsedMs / 1000).toFixed(1);
-      setStatus("success", `烧写完成 · ${seconds} s`);
+      setStatus("success", `${result.chip.toUpperCase()} 烧写完成 · ${seconds} s`);
       log(`烧写和校验完成，用时 ${seconds} 秒`, "success");
     } catch (error) {
       const wasCancelled = error.name === "AbortError";
@@ -341,6 +358,9 @@
     elements.connectButton.addEventListener("click", connect);
     elements.disconnectButton.addEventListener("click", disconnect);
     elements.flashButton.addEventListener("click", flash);
+    elements.chipSelect.addEventListener("change", () => {
+      if (image) elements.fileMeta.textContent = `${formatSize(image.length)} · ${elements.chipSelect.value ? elements.chipSelect.value.toUpperCase() : "自动检测"} · 写入地址 0x00000000`;
+    });
     elements.cancelButton.addEventListener("click", () => {
       cancelled = true;
       elements.cancelButton.disabled = true;

@@ -9,9 +9,10 @@ This example runs the `mquickjs` VM component on BL616/BL618 with LittleFS POSIX
 - `pack_js_media.sh`: example-local media pack/flash helper
 
 The normal SDK build generates `build/build_out/littlefs.bin` directly from the
-example-local `lfs/` tree, and `flash_prog_cfg.ini` flashes it to the `media`
-partition with `address = @partition`. On a 4MB BL616DK flash, the example now
-uses the board default partition table directly.
+example-local `lfs/` tree. The CMake project registers it to the `media`
+partition, and the SDK generates `build/flash_prog_cfg.ini` from the active
+partition table. On a 4MB BL616DK flash, the example uses the board default
+partition table directly.
 
 ## Build
 

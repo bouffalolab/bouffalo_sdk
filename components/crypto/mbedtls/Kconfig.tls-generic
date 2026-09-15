@@ -5,12 +5,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menu "Mbed TLS configuration"
-	depends on MBEDTLS_BUILTIN && MBEDTLS_CFG_FILE = "config-tls-generic.h"
+	depends on MBEDTLS_CFG_FILE = "config-tls-generic.h"
 
 menu "TLS"
 
 config MBEDTLS_TLS_VERSION_1_2
 	bool "Support for TLS 1.2 (DTLS 1.2)"
+	default y
 	select MBEDTLS_CIPHER
 	select MBEDTLS_MD
 
@@ -35,6 +36,7 @@ if MBEDTLS_TLS_VERSION_1_2 || MBEDTLS_TLS_VERSION_1_3
 
 config MBEDTLS_SSL_ALPN
 	bool "Support for setting the supported Application Layer Protocols"
+	default y
 
 endif # MBEDTLS_TLS_VERSION_1_2 || MBEDTLS_TLS_VERSION_1_3
 
@@ -125,6 +127,7 @@ config MBEDTLS_KEY_EXCHANGE_ALL_ENABLED
 
 config MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 	bool "PSK based ciphersuite modes"
+	default y
 
 config MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
 	bool "DHE-PSK based ciphersuite modes"
@@ -145,6 +148,7 @@ config MBEDTLS_PSK_MAX_LEN
 
 config MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 	bool "RSA-only based ciphersuite modes"
+	default y
 	default y if UOSCORE || UEDHOC
 	select MBEDTLS_MD
 	select PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY if PSA_CRYPTO_CLIENT
@@ -154,17 +158,21 @@ config MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 
 config MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
 	bool "DHE-RSA based ciphersuite modes"
+	default y
 
 config MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
 	bool "ECDHE-RSA based ciphersuite modes"
+	default y
 	depends on MBEDTLS_ECDH_C
 
 config MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 	bool "ECDHE-ECDSA based ciphersuite modes"
+	default y
 	depends on MBEDTLS_ECDH_C && MBEDTLS_ECDSA_C || (PSA_WANT_ALG_ECDH && PSA_WANT_ALG_ECDSA)
 
 config MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
 	bool "ECDH-ECDSA based ciphersuite modes"
+	default y
 	depends on (MBEDTLS_ECDH_C && MBEDTLS_ECDSA_C) || (PSA_WANT_ALG_ECDH && PSA_WANT_ALG_ECDSA)
 
 config MBEDTLS_ECDSA_DETERMINISTIC
@@ -172,6 +180,7 @@ config MBEDTLS_ECDSA_DETERMINISTIC
 
 config MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
 	bool "ECDH-RSA based ciphersuite modes"
+	default y
 	depends on MBEDTLS_ECDH_C
 
 config MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
@@ -198,10 +207,12 @@ comment "Elliptic curve libraries"
 
 config MBEDTLS_ECDH_C
 	bool "Elliptic curve Diffie-Hellman library"
+	default y
 	depends on MBEDTLS_ECP_C
 
 config MBEDTLS_ECDSA_C
 	bool "Elliptic curve DSA library"
+	default y
 	depends on MBEDTLS_ECP_C
 
 config MBEDTLS_ECJPAKE_C
@@ -210,6 +221,7 @@ config MBEDTLS_ECJPAKE_C
 
 config MBEDTLS_ECP_C
 	bool "Elliptic curve over GF(p) library"
+	default y
 	default y if UOSCORE || UEDHOC
 
 if MBEDTLS_ECP_C
@@ -242,6 +254,7 @@ config MBEDTLS_ECP_DP_SECP224R1_ENABLED
 
 config MBEDTLS_ECP_DP_SECP256R1_ENABLED
 	bool "SECP256R1 elliptic curve"
+	default y
 	default y if UOSCORE || UEDHOC
 
 config MBEDTLS_ECP_DP_SECP384R1_ENABLED
@@ -276,6 +289,7 @@ config MBEDTLS_ECP_DP_CURVE448_ENABLED
 
 config MBEDTLS_ECP_NIST_OPTIM
 	bool "NSIT curves optimization"
+	default y
 
 endif
 
@@ -313,12 +327,14 @@ config MBEDTLS_SOME_CIPHER_ENABLED
 
 config MBEDTLS_CIPHER_AES_ENABLED
 	bool "AES block cipher"
+	default y
 	default y if PSA_WANT_KEY_TYPE_AES && MBEDTLS_PSA_CRYPTO_C
 
 if MBEDTLS_CIPHER_AES_ENABLED
 
 config MBEDTLS_AES_ROM_TABLES
 	bool "Use precomputed AES tables stored in ROM."
+	default y
 
 config MBEDTLS_AES_FEWER_TABLES
 	bool "Reduce the size of precomputed AES tables by ~6kB"
@@ -340,6 +356,7 @@ config MBEDTLS_CIPHER_CAMELLIA_ENABLED
 
 config MBEDTLS_CIPHER_DES_ENABLED
 	bool "DES block cipher"
+	default y
 
 config MBEDTLS_CIPHER_CHACHA20_ENABLED
 	bool "ChaCha20 stream cipher"
@@ -352,6 +369,7 @@ config MBEDTLS_CIPHER_CCM_ENABLED
 
 config MBEDTLS_CIPHER_GCM_ENABLED
 	bool "Galois/Counter Mode (GCM) for symmetric ciphers"
+	default y
 
 endif # MBEDTLS_SOME_AEAD_CIPHER_ENABLED
 
@@ -359,6 +377,7 @@ if MBEDTLS_SOME_CIPHER_ENABLED
 
 config MBEDTLS_CIPHER_MODE_CBC_ENABLED
 	bool "Cipher Block Chaining mode (CBC) for symmetric ciphers"
+	default y
 	default y if !NET_L2_OPENTHREAD
 
 config MBEDTLS_CIPHER_MODE_CFB_ENABLED
@@ -366,6 +385,7 @@ config MBEDTLS_CIPHER_MODE_CFB_ENABLED
 
 config MBEDTLS_CIPHER_MODE_CTR_ENABLED
 	bool "Counter Block Cipher mode (CTR) for symmetric ciphers"
+	default y
 
 config MBEDTLS_CIPHER_MODE_OFB_ENABLED
 	bool "Output Feedback mode (OFB) for symmetric ciphers"
@@ -395,12 +415,15 @@ config MBEDTLS_HASH_ALL_ENABLED
 
 config MBEDTLS_MD5
 	bool "MD5 hash algorithm"
+	default y
 
 config MBEDTLS_SHA1
 	bool "SHA-1 hash algorithm"
+	default y
 
 config MBEDTLS_SHA224
 	bool "SHA-224 hash algorithm"
+	default y
 
 config MBEDTLS_SHA256
 	bool "SHA-256 hash algorithm"
@@ -416,9 +439,11 @@ config MBEDTLS_SHA256_SMALLER
 
 config MBEDTLS_SHA384
 	bool "SHA-384 hash algorithm"
+	default y
 
 config MBEDTLS_SHA512
 	bool "SHA-512 hash algorithm"
+	default y
 
 config MBEDTLS_SHA3
 	bool "SHA-3 hash algorithm"
@@ -443,16 +468,20 @@ comment "Other configurations"
 
 config MBEDTLS_CIPHER
 	bool "generic cipher layer."
+	default y
 	default y if PSA_WANT_ALG_CMAC
 
 config MBEDTLS_MD
 	bool "generic message digest layer."
+	default y
 
 config MBEDTLS_GENPRIME_ENABLED
 	bool "prime-number generation code."
+	default y
 
 config MBEDTLS_PEM_CERTIFICATE_FORMAT
 	bool "Support for PEM certificate format"
+	default y
 	help
 	  By default only DER (binary) format of certificates is supported. Enable
 	  this option to enable support for PEM format.
@@ -467,6 +496,7 @@ config MBEDTLS_HAVE_ASM
 
 config MBEDTLS_ENTROPY_C
 	bool "Mbed TLS entropy accumulator"
+	default y
 	depends on MBEDTLS_SHA256 || MBEDTLS_SHA384 || MBEDTLS_SHA512
 	help
 	  This module gathers entropy data from enabled entropy sources. It's
@@ -509,12 +539,14 @@ config MBEDTLS_USER_CONFIG_FILE
 
 config MBEDTLS_SERVER_NAME_INDICATION
 	bool "Support for RFC 6066 server name indication (SNI) in SSL"
+	default y
 	help
 	  Enable this to support RFC 6066 server name indication (SNI) in SSL.
 	  This requires that MBEDTLS_X509_CRT_PARSE_C is also set.
 
 config MBEDTLS_PK_WRITE_C
 	bool "The generic public (asymmetric) key writer"
+	default y
 	help
 	  Enable generic public key write functions.
 
@@ -534,6 +566,7 @@ config MBEDTLS_HAVE_TIME_DATE
 
 config MBEDTLS_PKCS5_C
 	bool "Password-based encryption functions"
+	default y
 	select MBEDTLS_MD
 	help
 	  Enable PKCS5 functions
@@ -712,6 +745,7 @@ config MBEDTLS_NIST_KW_C
 
 config MBEDTLS_DHM_C
 	bool "Diffie-Hellman-Merkle mode"
+	default y
 	help
 	  Used by the following key exchanges,
 	  DHE-RSA, DHE-PSK

@@ -3457,8 +3457,9 @@ static void role_change(struct net_buf *buf)
 	struct bt_hci_evt_role_change *evt = (void *)buf->data;
 	struct bt_conn *conn;
 
-	BT_DBG("status 0x%02x role %u addr %s", evt->status, evt->role,
-	       bt_addr_str(&evt->bdaddr));
+	BT_WARN("[BR_ROLE] changed: %s status=0x%02x role=%u (0=master,1=slave)",
+	       bt_addr_str(&evt->bdaddr), evt->status, evt->role);
+
 
 	if (evt->status) {
 		return;

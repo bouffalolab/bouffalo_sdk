@@ -33,10 +33,7 @@ else
 endif
 
 whole:
-	cmake -E copy flash_prog_cfg.ini $(BUILD_DIR)/flash_prog_cfg.ini
-	sed -i 's/\.\/build/\./g' $(BUILD_DIR)/flash_prog_cfg.ini
-	sed -i 's/$$(CHIPNAME)/$(CHIP)/g' $(BUILD_DIR)/flash_prog_cfg.ini
-	cmake -E chdir $(BUILD_DIR) $(FLASH_CMD) --chipname=$(CHIP) --config=flash_prog_cfg.ini --build
+	$(FLASH_CMD) --chipname=$(CHIP) --config=$(BUILD_DIR)/ap/flash_prog_cfg.ini --build
 	cmake -E copy $(BL_SDK_BASE)/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
 
 flash: whole

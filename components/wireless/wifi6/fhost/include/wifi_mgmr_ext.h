@@ -46,6 +46,7 @@
 #define  CODE_WIFI_ON_GOT_IP_ABORT      29
 #define  CODE_WIFI_ON_SCAN_DONE_CONNECTING  31
 #define  CODE_WIFI_ON_PARAMS_ERROR      32
+#define  CODE_WIFI_ON_AP_STA_AUTH_FAIL  33
 
 #define WIFI_MGMR_STA_RECONNECT_DEFAULT_AUTH_FAIL_THRESHOLD 10
 #define WIFI_MGMR_STA_RECONNECT_DEFAULT_FIXED_INTERVAL_SEC  15
@@ -75,6 +76,17 @@ typedef struct wifi_mgmr_sta_reconnect_policy
 #define WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE        6
 #define WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK_WPA3_SAE 7
 #define WIFI_EVENT_BEACON_IND_AUTH_UNKNOWN      0xff
+
+typedef enum {
+    WIFI_AP_STA_AUTH_FAIL_PSK_MISMATCH = 1,
+    WIFI_AP_STA_AUTH_FAIL_SAE_CONFIRM_MISMATCH = 5,
+} wifi_ap_sta_auth_fail_reason_t;
+
+typedef struct {
+    uint8_t sta_mac[6];
+    uint8_t auth_mode;
+    uint8_t reason;
+} wifi_ap_sta_auth_fail_info_t;
 
 #define WIFI_EVENT_BEACON_IND_CIPHER_NONE           0
 #define WIFI_EVENT_BEACON_IND_CIPHER_WEP            1
@@ -114,6 +126,16 @@ typedef enum
     DENY_UNLESS_ACCEPTED
 } ap_acl_perm;
 
+/* AP-advertised operating bandwidth, independent of local PHY capabilities. */
+typedef enum {
+    WIFI_MGMR_SCAN_BW_UNKNOWN = 0,
+    WIFI_MGMR_SCAN_BW_20,
+    WIFI_MGMR_SCAN_BW_40,
+    WIFI_MGMR_SCAN_BW_80,
+    WIFI_MGMR_SCAN_BW_160,
+    WIFI_MGMR_SCAN_BW_80P80,
+} wifi_mgmr_scan_bw_t;
+
 typedef struct wifi_mgmr_scan_item {
     uint32_t mode;
     uint32_t timestamp_lastseen;
@@ -130,7 +152,19 @@ typedef struct wifi_mgmr_scan_item {
     uint8_t is_used;
     uint8_t wps;
     uint8_t best_antenna;
+    uint8_t bandwidth; /* wifi_mgmr_scan_bw_t */
 } wifi_mgmr_scan_item_t;
+
+/**
+ * @brief Channel utilization measured during a scan.
+ *
+ * One entry is generated for each scanned channel, including channels where
+ * no AP was found. Results remain valid until the next scan starts.
+ */
+typedef struct wifi_mgmr_channel_survey {
+    uint8_t channel;       /**< IEEE 802.11 channel number. */
+    uint8_t utilization;   /**< Channel utilization from 0 to 100 percent. */
+} wifi_mgmr_channel_survey_t;
 
 typedef struct wifi_mgmr_sniffer_item {
     /// interface index
@@ -575,6 +609,12 @@ int wifi_sta_disconnect(void);
 /**
  * Set IPv4 address of STA interface
  *
+ * param:
+ *  ip   : IPv4 address in network byte order
+ *  mask : IPv4 subnet mask in network byte order
+ *  gw   : IPv4 gateway address in network byte order
+ *  dns  : IPv4 DNS server address in network byte order
+ *
  * return 0 on success or -1 on error
  */
 int wifi_mgmr_sta_ip_set(uint32_t ip, uint32_t mask, uint32_t gw, uint32_t dns);
@@ -782,15 +822,57 @@ int wifi_mgmr_sta_scanlist(void);
 uint32_t wifi_mgmr_sta_scanlist_nums_get(void);
 
 /**
- * wifi_mgmr_sta_scanlist_dump
- * Get the scan results
- * param:
- *  param1 : addr for store scan results
- *  param2 : max number of items can be used for storing the scan results
- * return:
- *  Number of scan results
+ * @brief Copy AP results from the scan cache.
+ *
+ * Call after receiving the EV_WIFI/CODE_WIFI_ON_SCAN_DONE event. For example:
+ * @code
+ * uint32_t num = wifi_mgmr_sta_scanlist_nums_get();
+ * if (num > 0) {
+ *     wifi_mgmr_scan_item_t results[num];
+ *     num = wifi_mgmr_sta_scanlist_dump(results, num);
+ * }
+ * @endcode
+ * The caller provides the result array.
+ *
+ * @param results    Destination array of wifi_mgmr_scan_item_t entries.
+ * @param resultNums Number of entries available in @p results.
+ *
+ * @return Number of entries copied.
  */
 uint32_t wifi_mgmr_sta_scanlist_dump(void * results, uint32_t resultNums);
+
+/**
+ * @brief Get the number of channel survey results from the latest scan.
+ *
+ * Call this after receiving the EV_WIFI/CODE_WIFI_ON_SCAN_DONE event to size
+ * the buffer passed to
+ * wifi_mgmr_scan_channel_survey_dump().
+ *
+ * @return Number of valid channel survey results.
+ */
+uint32_t wifi_mgmr_scan_channel_survey_nums_get(void);
+
+/**
+ * @brief Copy channel survey results from the latest scan.
+ *
+ * Call after receiving the EV_WIFI/CODE_WIFI_ON_SCAN_DONE event. For example:
+ * @code
+ * uint32_t num = wifi_mgmr_scan_channel_survey_nums_get();
+ * if (num > 0) {
+ *     wifi_mgmr_channel_survey_t results[num];
+ *     num = wifi_mgmr_scan_channel_survey_dump(results, num);
+ * }
+ * @endcode
+ * Each returned entry contains a channel number and its utilization percentage.
+ * The caller provides the result array.
+ *
+ * @param results     Destination array of wifi_mgmr_channel_survey_t entries.
+ * @param result_nums Number of entries available in @p results.
+ *
+ * @return Number of entries copied. Returns 0 for an invalid or empty buffer.
+ */
+uint32_t wifi_mgmr_scan_channel_survey_dump(wifi_mgmr_channel_survey_t *results,
+                                            uint32_t result_nums);
 
 /**
  * wifi_mgmr_scan_filter_hidden_ssid
@@ -827,6 +909,18 @@ int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb);
 int wifi_mgmr_ap_start(const wifi_mgmr_ap_params_t *config);
 
 /**
+ * Get the oldest pending SoftAP station credential mismatch record.
+ *
+ * Drain pending records on CODE_WIFI_ON_AP_STA_AUTH_FAIL. Reports
+ * PSK_MISMATCH or SAE_CONFIRM_MISMATCH. auth_mode uses
+ * WIFI_EVENT_BEACON_IND_AUTH_*.
+ *
+ * @return 0 on success, -1 if WiFi is not ready, the queue is empty,
+ *         or input is invalid.
+ */
+int wifi_mgmr_ap_sta_auth_fail_get(wifi_ap_sta_auth_fail_info_t *info);
+
+/**
  * wifi_mgmr_ap_stop
  * Stop AP mode
  * return:
@@ -835,6 +929,25 @@ int wifi_mgmr_ap_start(const wifi_mgmr_ap_params_t *config);
  *  Others is Failed
  */
 int wifi_mgmr_ap_stop(void);
+
+/**
+ * Set IPv4 address of AP interface
+ *
+ * This API can be used to update the AP static IPv4 configuration after AP mode
+ * has been started.
+ *
+ * The Wi-Fi manager and AP must be started, and the AP DHCP server must be
+ * disabled before calling this API.
+ *
+ * param:
+ *  ip   : IPv4 address in network byte order
+ *  mask : IPv4 subnet mask in network byte order
+ *  gw   : IPv4 gateway address in network byte order
+ *  dns  : IPv4 DNS server address in network byte order
+ *
+ * return 0 on success or -1 on error
+ */
+int wifi_mgmr_ap_ip_set(uint32_t ip, uint32_t mask, uint32_t gw, uint32_t dns);
 
 /**
  * wifi_mgmr_ap_acl_enable

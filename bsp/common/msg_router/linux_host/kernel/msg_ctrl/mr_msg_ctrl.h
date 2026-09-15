@@ -10,6 +10,7 @@
 
 #include "mr_sdio_manage.h"
 #include "mr_debugfs.h"
+#include <linux/workqueue.h>
 
 /** @defgroup MR_MSG_TAGS Message Tags
  * @brief Message routing tags for different subsystems
@@ -38,6 +39,8 @@ enum {
 
     MR_MSG_TAG_MAX /**< Maximum message tag */
 };
+
+#define MR_MSG_SYS_KEEPALIVE (1)
 
 /** @defgroup MR_MSG_CTRL_MACROS Message Control Macros
  * @{
@@ -126,6 +129,9 @@ struct mr_msg_ctrl {
      * @{
      */
     struct work_struct recv_work;            /**< Receive work structure */
+    struct delayed_work keepalive_work;      /**< Host keepalive work */
+    bool keepalive_enabled;                  /**< Host keepalive enable flag */
+    bool keepalive_pending;                  /**< Host keepalive queued for transfer */
     struct workqueue_struct *recv_workqueue; /**< Receive work queue */
     /** @} */
 

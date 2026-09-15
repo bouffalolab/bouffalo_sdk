@@ -1,7 +1,5 @@
 
 CONFIG_SHELL                	=y
-CONFIG_NEWLIB               	=n
-CONFIG_NEWLIB_STANDARD      	=n
 
 CONFIG_VSNPRINTF_NANO       	=n
 CONFIG_VSNPRINTF_FLOAT      	=y

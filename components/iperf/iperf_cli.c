@@ -12,25 +12,41 @@
 #include <FreeRTOS.h>
 #include <lwip/ip4_addr.h>
 #include <shell.h>
-#include <timers.h>
+#include <semphr.h>
+#include <task.h>
 #include <utils_getopt.h>
 
+/** @brief Logging category for shell lifecycle and argument errors. */
 #define DBG_TAG "IPERF_CLI"
 #include "log.h"
 
 #include "bflb_iperf.h"
 
-/** @brief Interval between asynchronous instance destruction attempts. */
-#define IPERF_DESTROY_RETRY_MS 10U
+/** @brief Dynamic one-shot reaper stack depth in StackType_t units. */
+#define IPERF_CLEANUP_STACK 512U
+/** @brief Reaper priority, one level above the idle task. */
+#define IPERF_CLEANUP_PRIORITY (tskIDLE_PRIORITY + 1U)
 
-/** @brief Single iPerf instance managed by the shell command. */
+/** @brief Mutex-protected ownership state of the single CLI instance slot. */
+typedef enum {
+    IPERF_CLI_EMPTY = 0, /**< No owned instance; a new create may claim the slot. */
+    IPERF_CLI_ACTIVE,   /**< Create succeeded; completion not yet recorded by CLI. */
+    IPERF_CLI_FINISHED, /**< Completion recorded; still owns a handle to reap. */
+    IPERF_CLI_CLOSING,  /**< One owner claimed destroy and may be waiting unlocked. */
+} iperf_cli_state_t;
+
+/* The SDK shell serializes command entry. Create this permanent mutex in the
+ * first command, before any worker exists; never lazily initialize in callbacks.
+ * All slot fields below are read/written with this mutex held. */
+/** @brief Permanent mutex initialized by serialized shell entry, never deleted. */
+static SemaphoreHandle_t s_cli_lock;
+/** @brief Owned slot handle, published by create while the CLI mutex is held. */
 static bflb_iperf_t *s_cli_iperf;
-
-/** @brief True while a completed instance awaits asynchronous destruction. */
-static volatile bool s_cli_releasing;
-
-/** @brief Reusable periodic timer that destroys completed CLI instances. */
-static TimerHandle_t s_cli_destroy_timer;
+/** @brief Slot ownership state; all runtime access holds s_cli_lock. */
+static iperf_cli_state_t s_cli_state;
+/* Zero is unused. Refuse new instances at UINTPTR_MAX rather than reuse a token. */
+/** @brief Monotonic nonzero generation token; never wraps or reuses a value. */
+static uintptr_t s_cli_generation;
 
 /** @brief User-visible usage text for the iperf shell command. */
 #define IPERF_USAGE                                                          \
@@ -51,61 +67,88 @@ static TimerHandle_t s_cli_destroy_timer;
     "  -S tos    IPv4 TOS value\r\n"                                         \
     "  -N        disable Nagle for TCP client\r\n"                           \
     "  -B addr   bind local IPv4 address\r\n"                                \
-    "  -a        stop the running test\r\n"
+    "  -a        synchronously stop and destroy the current test\r\n"
 
 /**
- * @brief Destroy a completed CLI instance outside its completion callback.
- * @param[in] timer Periodic cleanup timer holding the completed instance.
- * @note A busy result means backend completion publication is still finishing;
- * the timer retries after IPERF_DESTROY_RETRY_MS. Commands remain blocked
- * until destruction.
+ * @brief Claim the slot and destroy outside the CLI mutex.
+ * @return bflb_iperf_destroy() status; zero on release, otherwise its error code.
+ * @pre s_cli_lock held, state ACTIVE or FINISHED, pointer non-NULL.
+ * @post Returns with s_cli_lock held; on error the handle remains owned.
+ * @note CLOSING excludes other owners while the mutex is dropped for the
+ * blocking destroy wait. The mutex is reacquired before updating slot state.
+ * @warning Task context only, never the instance event callback.
  */
-static void iperf_destroy_timer_cb(TimerHandle_t timer)
+static int iperf_cli_destroy_locked(void)
 {
-    bflb_iperf_t *iperf = pvTimerGetTimerID(timer);
+    bflb_iperf_t *iperf = s_cli_iperf;
     int result;
 
-    if (!s_cli_releasing || iperf == NULL) {
-        xTimerStop(timer, 0U);
-        return;
-    }
+    s_cli_state = IPERF_CLI_CLOSING;
+    xSemaphoreGive(s_cli_lock);
     result = bflb_iperf_destroy(iperf);
+    xSemaphoreTake(s_cli_lock, portMAX_DELAY);
+    if (result == BFLB_IPERF_OK) {
+        s_cli_iperf = NULL;
+        s_cli_state = IPERF_CLI_EMPTY;
+        LOG_I("iperf instance destroyed\r\n");
+    } else {
+        /* No other path can take CLOSING. Public destroy errors leave a valid
+         * instance unchanged. FINISHED may have arrived while unlocked, so do
+         * not blindly restore ACTIVE and lose the opportunity to reclaim it. */
+        bflb_iperf_state_t state = bflb_iperf_get_state(iperf);
 
-    if (result == BFLB_IPERF_ERR_BUSY) {
-        LOG_W("instance cleanup still in progress, retrying\r\n");
-        return;
+        s_cli_state = (state == BFLB_IPERF_STATE_DONE || state == BFLB_IPERF_STATE_ERROR) ?
+                          IPERF_CLI_FINISHED : IPERF_CLI_ACTIVE;
+        LOG_E("unexpected destroy failure: %d; handle retained\r\n", result);
     }
-    if (result != BFLB_IPERF_OK) {
-        xTimerStop(timer, 0U);
-        LOG_E("failed to destroy completed instance: %d\r\n", result);
-        return;
-    }
-
-    vTimerSetTimerID(timer, NULL);
-    s_cli_iperf = NULL;
-    s_cli_releasing = false;
-    if (xTimerStop(timer, 0U) != pdPASS) {
-        LOG_E("failed to stop instance cleanup timer\r\n");
-    }
-    LOG_I("iperf instance destroyed\r\n");
+    return result;
 }
 
 /**
- * @brief Schedule asynchronous destruction of a completed CLI instance.
- *
- * @param[in] iperf Completed CLI-owned instance.
- * @param[in] result Immutable final result snapshot.
- * @param[in] user_data Opaque callback value; unused by the CLI.
- *
- * @note This callback runs in the backend worker task and therefore must not
- * destroy the instance directly.
+ * @brief Reap only the generation captured by value when this task was created.
+ * @param[in] arg Generation encoded as a pointer value, never dereferenced.
+ * @post Matching FINISHED slot is offered for destruction; this task then
+ * self-deletes even if stale or destruction fails.
+ * @note Never dereference an old instance or rely on reused allocator addresses.
  */
-static void iperf_done_cb(bflb_iperf_t *iperf,
-                          const bflb_iperf_result_t *result,
-                          void *user_data)
+static void iperf_cli_cleanup_task(void *arg)
 {
-    (void)user_data;
+    uintptr_t generation = (uintptr_t)arg;
 
+    xSemaphoreTake(s_cli_lock, portMAX_DELAY);
+    if (s_cli_generation == generation && s_cli_state == IPERF_CLI_FINISHED) {
+        iperf_cli_destroy_locked();
+    }
+    xSemaphoreGive(s_cli_lock);
+    vTaskDelete(NULL);
+}
+
+/**
+ * @brief Schedule one temporary reaper after completion, never wait for it.
+ * @param[in] iperf Callback instance; unused, not retained by the reaper.
+ * @param[in] event Lifecycle event; STARTED is ignored.
+ * @param[in] result Callback-lifetime snapshot used for failure logging.
+ * @param[in] user_data Generation encoded by value at create time.
+ * @pre The permanent CLI mutex exists before any worker can emit events.
+ * @post Matching ACTIVE becomes FINISHED; task allocation failure keeps
+ * FINISHED and its handle for -a or a later command to reclaim.
+ * @note CLOSING already has a destroy owner. This callback never destroys or
+ * waits for a reaper; FINISHED must return before core completion is signalled.
+ * @note create runs under s_cli_lock but never waits for this callback. The
+ * task may start immediately and block on the mutex; task creation does not
+ * join it, so no lock cycle is introduced.
+ */
+static void iperf_cli_event_cb(bflb_iperf_t *iperf,
+                                bflb_iperf_event_t event,
+                                const bflb_iperf_result_t *result,
+                                void *user_data)
+{
+    uintptr_t generation = (uintptr_t)user_data;
+
+    (void)iperf;
+    if (event != BFLB_IPERF_EVENT_FINISHED) {
+        return;
+    }
     if (result->error != 0) {
         LOG_E("iperf test failed: state=%d error=%d bytes=%llu duration_us=%llu\r\n",
               result->state, result->error,
@@ -113,32 +156,23 @@ static void iperf_done_cb(bflb_iperf_t *iperf,
               (unsigned long long)result->duration_us);
     }
 
-    s_cli_releasing = true;
-    vTimerSetTimerID(s_cli_destroy_timer, iperf);
-    if (xTimerStart(s_cli_destroy_timer, portMAX_DELAY) != pdPASS) {
-        LOG_E("failed to schedule instance cleanup\r\n");
+    xSemaphoreTake(s_cli_lock, portMAX_DELAY);
+    if (s_cli_generation == generation && s_cli_state == IPERF_CLI_ACTIVE) {
+        s_cli_state = IPERF_CLI_FINISHED;
+        if (xTaskCreate(iperf_cli_cleanup_task, "iperf_cleanup",
+                        IPERF_CLEANUP_STACK, (void *)generation,
+                        IPERF_CLEANUP_PRIORITY, NULL) != pdPASS) {
+            /* Keep FINISHED: -a or any subsequent command can reclaim it. */
+            LOG_E("cleanup task allocation failed; next command will reclaim instance\r\n");
+        }
     }
-}
-
-/**
- * @brief Ensure the reusable asynchronous-destruction timer exists.
- * @retval 0 The timer is ready.
- * @retval -1 Timer allocation failed.
- */
-static int iperf_prepare_destroy_timer(void)
-{
-    if (s_cli_destroy_timer != NULL) {
-        return 0;
-    }
-    s_cli_destroy_timer = xTimerCreate("iperf_cleanup",
-                                       pdMS_TO_TICKS(IPERF_DESTROY_RETRY_MS),
-                                       pdTRUE, NULL,
-                                       iperf_destroy_timer_cb);
-    return s_cli_destroy_timer != NULL ? 0 : -1;
+    /* CLOSING already has an owner waiting for this callback to return. */
+    xSemaphoreGive(s_cli_lock);
 }
 
 /**
  * @brief Parse an unsigned 64-bit integer with C base-prefix support.
+ * @pre value is non-NULL; output is unchanged on failure.
  * @param[in] text NUL-terminated numeric string.
  * @param[out] value Parsed value.
  * @retval 0 Parse succeeded.
@@ -163,6 +197,7 @@ static int iperf_parse_u64(const char *text, uint64_t *value)
 
 /**
  * @brief Parse an unsigned 32-bit integer.
+ * @pre value is non-NULL; output is unchanged on failure.
  * @param[in] text NUL-terminated numeric string.
  * @param[out] value Parsed value.
  * @retval 0 Parse succeeded.
@@ -181,6 +216,7 @@ static int iperf_parse_u32(const char *text, uint32_t *value)
 
 /**
  * @brief Parse an unsigned 16-bit integer.
+ * @pre value is non-NULL; output is unchanged on failure.
  * @param[in] text NUL-terminated numeric string.
  * @param[out] value Parsed value.
  * @retval 0 Parse succeeded.
@@ -199,6 +235,7 @@ static int iperf_parse_u16(const char *text, uint16_t *value)
 
 /**
  * @brief Parse an unsigned 8-bit integer.
+ * @pre value is non-NULL; output is unchanged on failure.
  * @param[in] text NUL-terminated numeric string.
  * @param[out] value Parsed value.
  * @retval 0 Parse succeeded.
@@ -217,10 +254,11 @@ static int iperf_parse_u8(const char *text, uint8_t *value)
 
 /**
  * @brief Parse an IPv4 address into lwIP network byte order.
- * @param[in] text Dotted-decimal IPv4 string.
+ * @param[in] text Non-NULL IPv4 string in a form accepted by ip4addr_aton().
  * @param[out] address Parsed IPv4 address in network byte order.
  * @retval 0 Parse succeeded.
  * @retval -1 Input is not a valid IPv4 address.
+ * @pre address is non-NULL; output is unchanged on failure.
  */
 static int iperf_parse_ip4(const char *text, uint32_t *address)
 {
@@ -240,6 +278,7 @@ static int iperf_parse_ip4(const char *text, uint32_t *address)
  * @retval 0 Parse succeeded.
  * @retval -1 Input is invalid or exceeds UINT32_MAX.
  * @note K and M use decimal multipliers of 1000 and 1000000.
+ * @pre value is non-NULL; output is unchanged on failure.
  */
 static int iperf_parse_bandwidth(const char *text, uint32_t *value)
 {
@@ -272,12 +311,17 @@ static int iperf_parse_bandwidth(const char *text, uint32_t *value)
 /**
  * @brief Parse the iperf shell command and invoke the public API.
  *
- * The command manages one instance. The -a option is a standalone stop
- * request; a completed instance is destroyed asynchronously. Client and bind
- * addresses must be dotted-decimal IPv4 literals.
+ * The command manages one instance. The -a option synchronously stops and
+ * destroys it; a completed instance is reaped by a temporary task. Client and bind
+ * addresses are parsed by lwIP's ip4addr_aton(), not resolved as hostnames.
  *
  * @param[in] argc Number of shell arguments.
  * @param[in] argv Shell argument vector.
+ * @pre SDK shell serializes command entry, including first mutex creation.
+ * @note The mutex is permanent. Creation publishes the output handle before
+ * worker execution; callbacks cannot inspect the slot until ACTIVE is committed
+ * and the mutex released. Generation exhaustion rejects new instances instead
+ * of allowing an old reaper token to match a reused allocation.
  *
  * @note Commands are rejected while asynchronous destruction is pending.
  */
@@ -293,16 +337,32 @@ static void iperf_cmd(int argc, char **argv)
     uint8_t amount_set = 0U;
     int option;
 
+    /* Initialization is serialized by the single SDK shell command task. */
+    if (s_cli_lock == NULL) {
+        s_cli_lock = xSemaphoreCreateMutex();
+        if (s_cli_lock == NULL) {
+            LOG_E("failed to create CLI mutex\r\n");
+            return;
+        }
+    }
+    xSemaphoreTake(s_cli_lock, portMAX_DELAY);
+    if (s_cli_state == IPERF_CLI_CLOSING) {
+        xSemaphoreGive(s_cli_lock);
+        LOG_E("previous test is still releasing\r\n");
+        return;
+    }
+    if (s_cli_state == IPERF_CLI_FINISHED &&
+        iperf_cli_destroy_locked() != BFLB_IPERF_OK) {
+        xSemaphoreGive(s_cli_lock);
+        return;
+    }
+    xSemaphoreGive(s_cli_lock);
+
     if (argc <= 1 ||
         (argc == 2 && strcmp(argv[1], "-h") == 0)) {
         LOG_I(IPERF_USAGE);
         return;
     }
-    if (s_cli_releasing) {
-        LOG_E("previous test is still releasing\r\n");
-        return;
-    }
-
     /* Start from public API defaults, then override only explicit CLI options. */
     bflb_iperf_config_init(&config);
     utils_getopt_init(&env, 0);
@@ -407,13 +467,15 @@ static void iperf_cmd(int argc, char **argv)
             LOG_E("-a cannot be combined with -c or -s\r\n");
             return;
         }
-        if (s_cli_iperf == NULL) {
+        xSemaphoreTake(s_cli_lock, portMAX_DELAY);
+        if (s_cli_state == IPERF_CLI_CLOSING) {
+            LOG_E("previous test is still releasing\r\n");
+        } else if (s_cli_state == IPERF_CLI_EMPTY) {
             LOG_I("no iperf test exists\r\n");
-            return;
+        } else {
+            iperf_cli_destroy_locked();
         }
-        if (bflb_iperf_stop(s_cli_iperf) < 0) {
-            LOG_E("stop request failed\r\n");
-        }
+        xSemaphoreGive(s_cli_lock);
         return;
     }
     /* Exactly one endpoint role is required before building the API request. */
@@ -439,29 +501,35 @@ static void iperf_cmd(int argc, char **argv)
     if (config.proto == BFLB_IPERF_PROTO_UDP && config.bandwidth_bps == 0U) {
         config.bandwidth_bps = BFLB_IPERF_DEFAULT_UDP_RATE_BPS;
     }
-    config.done_cb = iperf_done_cb;
-    config.user_data = NULL;
+    config.event_cb = iperf_cli_event_cb;
 
     /* The core supports many instances; this CLI explicitly owns one slot. */
-    if (s_cli_iperf != NULL) {
-        LOG_E("an iperf test is already active\r\n");
+    xSemaphoreTake(s_cli_lock, portMAX_DELAY);
+    if (s_cli_state == IPERF_CLI_FINISHED &&
+        iperf_cli_destroy_locked() != BFLB_IPERF_OK) {
+        xSemaphoreGive(s_cli_lock);
         return;
     }
-    if (iperf_prepare_destroy_timer() < 0) {
-        LOG_E("failed to create instance cleanup timer\r\n");
+    if (s_cli_state != IPERF_CLI_EMPTY) {
+        xSemaphoreGive(s_cli_lock);
+        LOG_E("an iperf test is active or closing\r\n");
         return;
     }
-    if (bflb_iperf_create(&config, &s_cli_iperf) < 0) {
+    if (s_cli_generation == UINTPTR_MAX) {
+        xSemaphoreGive(s_cli_lock);
+        LOG_E("CLI generation exhausted; refusing token reuse\r\n");
+        return;
+    }
+    config.user_data = (void *)++s_cli_generation;
+    /* Output handle is published by create before worker visibility. The
+     * callback cannot inspect the slot until ACTIVE is committed and unlocked. */
+    if (bflb_iperf_create(&config, &s_cli_iperf) == BFLB_IPERF_OK) {
+        s_cli_state = IPERF_CLI_ACTIVE;
+    } else {
+        s_cli_state = IPERF_CLI_EMPTY;
         LOG_E("create failed (invalid config or no resources)\r\n");
-        return;
     }
-    if (bflb_iperf_start(s_cli_iperf) < 0) {
-        LOG_E("start failed (invalid state or no backend resources)\r\n");
-        if (bflb_iperf_destroy(s_cli_iperf) == BFLB_IPERF_OK) {
-            s_cli_iperf = NULL;
-        }
-        return;
-    }
+    xSemaphoreGive(s_cli_lock);
     return;
 
 invalid_value:

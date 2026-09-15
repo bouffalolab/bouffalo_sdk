@@ -1,5 +1,3 @@
-CONFIG_NEWLIB               =y
-CONFIG_NEWLIB_STANDARD      =y
 CONFIG_NEWLIB_FATFS         =y
 
 # sdh lhal driver

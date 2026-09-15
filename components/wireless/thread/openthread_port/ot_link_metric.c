@@ -1,6 +1,6 @@
 
 #include <string.h>
-#ifdef CONFIG_BOUFFALO_SDK
+#ifdef BOUFFALO_SDK
 #include <compiler/compiler_ld.h>
 #include <bflb_common.h>
 #else

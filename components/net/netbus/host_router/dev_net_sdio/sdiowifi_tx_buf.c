@@ -42,7 +42,7 @@ typedef struct {
     uint32_t  txpbuf_payload[(TX_PBUF_PAYLOAD_LEN + 3) / 4];
 } sdio_txbuf_payload_t;
 
-#ifdef CONFIG_BOUFFALO_SDK
+#ifdef BOUFFALO_SDK
 #include "bflb_core.h"
 #if defined(SDIO_RX_MAX_PORT_NUM) && (SDIO_RX_MAX_PORT_NUM == 8)
 #define SDIO_TX_NORMAL_BUFFER_COUNT (11)
@@ -303,4 +303,3 @@ bool sdiowifi_tx_buf_is_all_free(struct sdiowifi_tx_buf *tb)
     sdiowifi_exit_critical(0);
     return free;
 }
-

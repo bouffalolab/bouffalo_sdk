@@ -22,4 +22,11 @@ config TLSF
     help
       Legacy switch kept for compatibility with older configurations.
 
+config MM_ENABLE_MIN_FREE_TRACKING
+    bool "Track minimum free heap size"
+    default n
+    help
+      Track the lowest total free heap size observed at runtime. This adds a
+      free-heap query after allocation and reallocation operations.
+
 endmenu

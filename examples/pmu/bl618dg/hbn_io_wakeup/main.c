@@ -66,6 +66,10 @@ int hbn_io_wakeup_test(int argc, char **argv)
     }
 
     hbn_mode = atoi(argv[1]);
+    if (hbn_mode != PM_HBN_LEVEL_0) {
+        printf("[ERR]BL618DG only supports hbn_mode 0\r\n");
+        return 0;
+    }
     test_io = atoi(argv[2]);
     if (test_io >= GPIO_PIN_MAX) {
         printf("test_io must be less than %d\r\n", GPIO_PIN_MAX);
@@ -105,22 +109,9 @@ int hbn_io_wakeup_test(int argc, char **argv)
 
     pm_lowpower_gpio_cfg((lp_gpio_cfg_type *)&lp_wake_io_cfg);
 
-    switch (hbn_mode) {
-        case 0:
-            printf("enter hbn0 mode\r\n");
-            arch_delay_us(50);
-            pm_hbn_mode_enter(PM_HBN_LEVEL_0, 0);
-            break;
-        case 1:
-            printf("enter hbn1 mode\r\n");
-            arch_delay_us(50);
-            pm_hbn_mode_enter(PM_HBN_LEVEL_1, 0);
-        default:
-            printf("enter hbn0 mode\r\n");
-            arch_delay_us(50);
-            pm_hbn_mode_enter(PM_HBN_LEVEL_0, 0);
-            break;
-    }
+    printf("enter hbn0 mode\r\n");
+    arch_delay_us(50);
+    pm_hbn_mode_enter(PM_HBN_LEVEL_0, 0);
     return 0;
 }
-SHELL_CMD_EXPORT_ALIAS(hbn_io_wakeup_test, hbn_io_wake_up, pds io wakeup test);
+SHELL_CMD_EXPORT_ALIAS(hbn_io_wakeup_test, hbn_io_wake_up, hbn io wakeup test);

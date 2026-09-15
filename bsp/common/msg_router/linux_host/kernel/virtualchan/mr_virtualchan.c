@@ -435,8 +435,18 @@ static void mr_virtualchan_recv_from_userspace(struct sk_buff *skb)
         return;
     }
 
+    data_hdr = nlmsg_data(nlh);
+    if (data_len < sizeof(*data_hdr) ||
+        data_hdr->data_type == 0u ||
+        data_hdr->data_type > NETHUB_VCHAN_DATA_TYPE_SYSTEM ||
+        data_hdr->reserved != 0u ||
+        data_hdr->len == 0u ||
+        sizeof(*data_hdr) + data_hdr->len != data_len) {
+        VIRTUALCHAN_ERR(priv, "Invalid vchan packet: len=%u\n", data_len);
+        return;
+    }
+
     if (data_len >= sizeof(*data_hdr) + sizeof(*ctrl_msg)) {
-        data_hdr = nlmsg_data(nlh);
         if (data_hdr->data_type == NETHUB_VCHAN_DATA_TYPE_SYSTEM &&
             data_hdr->len >= sizeof(*ctrl_msg) &&
             sizeof(*data_hdr) + data_hdr->len <= data_len) {

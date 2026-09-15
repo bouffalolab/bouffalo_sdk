@@ -121,6 +121,7 @@
 extern eth_phy_drv_t ephy_general_drv;
 
 int ephy_general_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg);
+int ephy_general_deinit(eth_phy_ctrl_t *phy_ctrl);
 int ephy_general_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg);
 
 #endif /* __PHY_8720_H__ */

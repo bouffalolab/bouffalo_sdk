@@ -12,7 +12,7 @@
 #include <bl_os_private.h>
 #include "bl_sec_trng.h"
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #include "bl_lp.h"
 #include "bl616_clock.h"
 #include "mac_frame.h"
@@ -148,7 +148,7 @@ int platform_delete_schedule_event(platform_event_handler_t handler)
 * @brief hook for receive beacon
 ****************************************************************************************
 */
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 
 uint8_t platform_get_leg_rate(uint8_t rate)
 {

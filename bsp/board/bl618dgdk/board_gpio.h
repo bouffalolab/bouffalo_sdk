@@ -1,11 +1,40 @@
 #ifndef _BOARD_GPIO_H_
 #define _BOARD_GPIO_H_
 
+#include <stdint.h>
+
+/** @brief Board-specific KYS v2 matrix GPIO mapping. */
+struct board_kys_v2_gpio_config_s {
+    uint8_t row_count;       /*!< Number of KEY_SCAN_DRIVE rows */
+    uint8_t col_count;       /*!< Number of KEY_SCAN_IN columns */
+    const uint8_t *row_pins; /*!< KEY_SCAN_DRIVE GPIOs */
+    const uint8_t *col_pins; /*!< KEY_SCAN_IN GPIOs */
+};
+
+/** @brief Return the board-specific KYS v2 matrix GPIO mapping. */
+const struct board_kys_v2_gpio_config_s *board_kys_v2_gpio_config_get(void);
+
+/** @brief Board-specific low-power GPIO wakeup configuration. */
+struct board_lp_gpio_wakeup_config_s {
+    uint64_t io_ie;             /*!< GPIO input-enable mask */
+    uint64_t io_pu;             /*!< GPIO pull-up mask */
+    uint64_t io_pd;             /*!< GPIO pull-down mask */
+    uint64_t io_wakeup_unmask;  /*!< GPIO wakeup-enable mask */
+    uint8_t io_0_7_trig_mode;   /*!< Shared trigger mode for GPIO0-GPIO7 */
+    uint8_t io_8_15_trig_mode;  /*!< Shared trigger mode for GPIO8-GPIO15 */
+    uint8_t io_16_23_trig_mode; /*!< Shared trigger mode for GPIO16-GPIO23 */
+    uint8_t io_24_31_trig_mode; /*!< Shared trigger mode for GPIO24-GPIO31 */
+    uint8_t io_32_39_trig_mode; /*!< Shared trigger mode for GPIO32-GPIO39 */
+    uint8_t io_40_47_trig_mode; /*!< Shared trigger mode for GPIO40-GPIO47 */
+    uint8_t io_48_52_trig_mode; /*!< Shared trigger mode for GPIO48-GPIO52 */
+};
+
+/** @brief Return the board-specific low-power GPIO wakeup configuration. */
+const struct board_lp_gpio_wakeup_config_s *board_lp_gpio_wakeup_config_get(void);
+
 #if __has_include("board_gpio_overlay.h")
 #include "board_gpio_overlay.h"
 #else
-
-#include <stdint.h>
 
 #include "bflb_gpio.h"
 

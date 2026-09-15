@@ -660,6 +660,17 @@ const struct bflb_device_s bl618dg_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_TOUCH_V2,
       .user_data = NULL },
+    { .name = BFLB_NAME_KYS_V2,
+      .reg_base = KYS_BASE,
+#if !defined(CPU_LP)
+      .irq_num = BL618DG_IRQ_KYS,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_KYS,
+      .user_data = NULL },
 #endif
 };
 

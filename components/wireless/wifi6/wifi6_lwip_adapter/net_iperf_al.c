@@ -38,7 +38,7 @@
 
 #include <assert.h>
 #undef TRACE_APP
-#define TRACE_APP(err, ...) {printf(__VA_ARGS__); assert(0);}
+#define TRACE_APP(err, ...) do { printf(__VA_ARGS__); } while (0)
 
 #define co_ntohs ntohs
 #define co_htons htons
@@ -1494,7 +1494,7 @@ static err_t net_iperf_pcb_config(void *pcb, struct fhost_iperf_stream *stream)
  **/
 static void* net_iperf_init(struct fhost_iperf_stream* stream)
 {
-    void* pcb;
+    void* pcb = NULL;
 
     // For client ensure that server is reachable first
     if (!stream->iperf_settings.flags.is_server)
@@ -1504,31 +1504,64 @@ static void* net_iperf_init(struct fhost_iperf_stream* stream)
         struct netif *netif;
         const ip4_addr_t *ip_ret;
         ip_addr_t rip;
+        ip4_addr_t arp_ip;
+        char ip_str[IP4ADDR_STRLEN_MAX];
+        err_t arp_err;
 
         ip = stream->iperf_settings.host_ip;
         ip_addr_set_ip4_u32_val(rip,  ip);
+        ip4addr_ntoa_r(ip_2_ip4(&rip), ip_str, sizeof(ip_str));
 
         /* Don't call ip_route() with IP_ANY_TYPE */
         LOCK_TCPIP_CORE();
         netif = ip4_route_src(ip_2_ip4(IP46_ADDR_ANY(IP_GET_TYPE(&rip))), ip_2_ip4(&rip));
-        UNLOCK_TCPIP_CORE();
         if (netif == NULL)
+        {
+            UNLOCK_TCPIP_CORE();
+            fhost_printf("IPERF: no route to host %s\r\n", ip_str);
             return NULL;
+        }
 
-        found = (etharp_find_addr(netif, ip_2_ip4(&rip), &eth_ret, &ip_ret) != -1);
+        /* ARP resolves the next hop. Use the configured gateway for off-link destinations. */
+        arp_ip = *ip_2_ip4(&rip);
+        if (!ip4_addr_netcmp(&arp_ip, netif_ip4_addr(netif), netif_ip4_netmask(netif)) &&
+            !ip4_addr_islinklocal(&arp_ip))
+        {
+            if (ip4_addr_isany(netif_ip4_gw(netif)))
+            {
+                UNLOCK_TCPIP_CORE();
+                fhost_printf("IPERF: no gateway for host %s\r\n", ip_str);
+                return NULL;
+            }
+            arp_ip = *netif_ip4_gw(netif);
+        }
+
+        found = (etharp_find_addr(netif, &arp_ip, &eth_ret, &ip_ret) != -1);
+        UNLOCK_TCPIP_CORE();
         while (!found && tries < 3)
         {
             LOCK_TCPIP_CORE();
-            etharp_request(netif, ip_2_ip4(&rip));
+            arp_err = etharp_request(netif, &arp_ip);
             UNLOCK_TCPIP_CORE();
+
+            if (arp_err != ERR_OK)
+            {
+                fhost_printf("IPERF: ARP request for host %s failed (%d)\r\n", ip_str, arp_err);
+                return NULL;
+            }
 
             // It is not possible to use a callback for the ARP reply, set a timeout
             rtos_task_suspend(ARP_REPLY_TO);
             tries++;
-            found = (etharp_find_addr(netif, ip_2_ip4(&rip), &eth_ret, &ip_ret) != -1);
+            LOCK_TCPIP_CORE();
+            found = (etharp_find_addr(netif, &arp_ip, &eth_ret, &ip_ret) != -1);
+            UNLOCK_TCPIP_CORE();
         }
         if (!found)
+        {
+            fhost_printf("IPERF: ARP timeout for host %s\r\n", ip_str);
             return NULL;
+        }
     }
 
     LOCK_TCPIP_CORE();
@@ -1558,7 +1591,10 @@ static void* net_iperf_init(struct fhost_iperf_stream* stream)
     if (net_iperf_pcb_config(pcb, stream) != ERR_OK)
     {
         if (stream->iperf_settings.flags.is_udp)
+        {
             udp_remove(pcb);
+            stream->arg = NULL;
+        }
         else
             tcp_close(pcb);
         pcb = NULL;
@@ -1951,6 +1987,7 @@ exit:
 int net_iperf_tcp_server_run(struct fhost_iperf_stream* stream)
 {
     struct tcp_pcb *pcb;
+    struct tcp_pcb *listen_pcb;
 
     // Create and configure TCP Protocol Control Block
     pcb = net_iperf_init(stream);
@@ -1962,14 +1999,15 @@ int net_iperf_tcp_server_run(struct fhost_iperf_stream* stream)
 
     LOCK_TCPIP_CORE();
     // Listening for TCP clients to connect
-    pcb = tcp_listen_with_backlog(pcb, 1);
-    if (pcb == NULL)
+    listen_pcb = tcp_listen_with_backlog(pcb, 1);
+    if (listen_pcb == NULL)
     {
-        fhost_printf("IPERF: Server pcb is NULLs\n");
+        fhost_printf("IPERF: failed to allocate TCP listen pcb\n");
         tcp_close(pcb);
         UNLOCK_TCPIP_CORE();
         return -1;
     }
+    pcb = listen_pcb;
 
     // Register argument for acceptance callback
     tcp_arg(pcb, stream);

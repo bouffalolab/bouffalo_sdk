@@ -119,6 +119,7 @@ struct sae_data {
 	int group;
 	unsigned int sync; /* protocol instance variable: Sync */
 	u16 rc; /* protocol instance variable: Rc (received send-confirm) */
+	unsigned int confirm_mismatch:1; /* received Confirm does not match verifier */
 #ifndef CONFIG_SAE_BASIC_ONLY
 	unsigned int h2e:1;
 	unsigned int pk:1;

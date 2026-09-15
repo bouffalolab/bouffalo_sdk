@@ -35,6 +35,10 @@
 #include "mbedtls/platform.h"
 #include "bflb_sec_mutex.h"
 
+#ifdef BL618DG
+#include "bl618dg_glb.h"
+#endif
+
 #ifdef CONFIG_MBEDTLS_V2
 #define SHA1_VALIDATE_RET(cond)                             \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
@@ -99,7 +103,14 @@ void mbedtls_sha1_init( mbedtls_sha1_context *ctx )
     ctx->sha = sha;
 
     bflb_sec_sha_mutex_take();
-    bflb_group0_request_sha_access(sha);
+#ifdef BL618DG
+    if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+        bflb_group1_request_sha_access(sha);
+    } else
+#endif
+    {
+        bflb_group0_request_sha_access(sha);
+    }
     bflb_sha_link_init(sha);
     bflb_sec_sha_mutex_give();
 }
@@ -108,7 +119,7 @@ void mbedtls_sha1_free( mbedtls_sha1_context *ctx )
 {
     if( ctx == NULL )
         return;
-    
+
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha1_context ) );
 }
 
@@ -249,7 +260,14 @@ void mbedtls_sha1_once_padded_init( void )
     sha = bflb_device_get_by_name(BFLB_NAME_SEC_SHA);
 
     bflb_sec_sha_mutex_take();
-    bflb_group0_request_sha_access(sha);
+#ifdef BL618DG
+    if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+        bflb_group1_request_sha_access(sha);
+    } else
+#endif
+    {
+        bflb_group0_request_sha_access(sha);
+    }
     bflb_sec_sha_mutex_give();
 }
 

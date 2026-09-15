@@ -93,6 +93,7 @@
 extern eth_phy_drv_t ephy_lan8720_drv;
 
 int ephy_lan8720_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg);
+int ephy_lan8720_deinit(eth_phy_ctrl_t *phy_ctrl);
 int ephy_lan8720_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg);
 
 #endif /* __PHY_8720_H__ */

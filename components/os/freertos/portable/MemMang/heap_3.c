@@ -63,7 +63,7 @@ void * pvPortMalloc( size_t xWantedSize )
 
     vTaskSuspendAll();
     {
-        pvReturn = kmalloc( xWantedSize, 0 );
+        pvReturn = kmalloc( xWantedSize, MM_FLAG_HEAP_OCRAM_0 );
         traceMALLOC( pvReturn, xWantedSize );
     }
     ( void ) xTaskResumeAll();

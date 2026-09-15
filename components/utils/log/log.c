@@ -1,7 +1,3 @@
-#ifdef CONFIG_NEWLIB
-#include <stdio.h>
-#endif
-
 #include "console_output.h"
 
 #ifdef CONFIG_BFLB_LOG
@@ -25,12 +21,6 @@ static uint16_t console_output(void *ptr, uint16_t size)
 
 void log_start(void)
 {
-#if defined(CONFIG_NEWLIB)
-    setvbuf(stdin, NULL, _IONBF, 0);
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-#endif
-
 #ifdef CONFIG_BFLB_LOG
     void *record = (void *)&__bflb_log_recorder;
     void *direct = (void *)&bflb_log_direct_stream;

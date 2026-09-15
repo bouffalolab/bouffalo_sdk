@@ -17,7 +17,7 @@
 #define MACSW_PLATFORM_PDS_CNT_TO_US(cnt) ((uint64_t)(cnt) * 15625 / 512)
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #include "bl_lp.h"
 static volatile iot2lp_para_t *piot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
 
@@ -115,7 +115,7 @@ uint32_t wifi_sys_now_ms(bool isr)
 #undef wifi_syslog
 void wifi_syslog(int priority, const char *fmt, ...)
 {
-#ifndef CONFIG_NO_FW_BL_LOG_PRINT
+#ifndef CONFIG_MACSW_LOG_NO_PRINT
     static const struct {
         const char *level;
         const char *color_start;
@@ -194,7 +194,7 @@ void bl_tpc_power_table_get(int8_t *power_table)
 }
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 int8_t hal_macsw_lp_rssi_restore(void)
 {
     return piot2lp_para->wifi_parameter->bcn_target_level;

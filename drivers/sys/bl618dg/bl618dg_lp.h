@@ -504,6 +504,10 @@ void bl_lp_rc32k_save_code(uint32_t code);
 void bl_lp_rc32k_restore_code(uint32_t state);
 
 int bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t sleep_time);
+/** Return wakeup-source bits captured by the latest restored PDS entry. */
+uint32_t bl_lp_pds_get_wakeup_source(void);
+/** Return GPIO pad bits captured by the latest restored PDS entry. */
+uint64_t bl_lp_pds_get_wakeup_gpio(void);
 uint8_t lp_fw_wake_plan_capability_get(const uint8_t wifi_channel, const uint8_t dfe_mode);
 int lp_fw_wake_plan_build(const lp_fw_wake_sched_t *sched, uint8_t capability_flags, lp_fw_wake_plan_t *plan);
 void bl_lp_sched_publish(uint32_t id,uint32_t lead_us, uint32_t window_us, uint64_t target_at);

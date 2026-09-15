@@ -13,16 +13,31 @@ eth_phy_drv_t ephy_lan8720_drv = {
 
     .phy_init = ephy_lan8720_init,
     .phy_ctrl = ephy_lan8720_ctrl,
+    .phy_deinit = ephy_lan8720_deinit,
 };
+
+int ephy_lan8720_deinit(eth_phy_ctrl_t *phy_ctrl)
+{
+    uint16_t regval;
+
+    eth_phy_mdio_read(phy_ctrl, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, &regval);
+
+    /* LAN8720 requires auto-negotiation disabled before power-down. */
+    regval &= ~EPHY_CSR_AUTO_NEGOTIATION_EN_BIT;
+    eth_phy_mdio_write(phy_ctrl, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+
+    regval |= EPHY_CSR_POWER_DOWN_BIT;
+    return eth_phy_mdio_write(phy_ctrl, phy_ctrl->phy_addr, EPHY_BASIC_CONTROL_OFFSET, regval);
+}
 
 int ephy_lan8720_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
 {
     uint16_t regval;
 
     /* close all capable */
-    eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, LAN8720_SPECIAL_MODE_OFFSET, &regval);
+    eth_phy_mdio_read(phy_ctrl, phy_ctrl->phy_addr, LAN8720_SPECIAL_MODE_OFFSET, &regval);
     regval &= ~LAN8720_MODE_MASK;
-    eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, LAN8720_SPECIAL_MODE_OFFSET, regval);
+    eth_phy_mdio_write(phy_ctrl, phy_ctrl->phy_addr, LAN8720_SPECIAL_MODE_OFFSET, regval);
 
     ephy_general_init(phy_ctrl, cfg);
 
@@ -48,13 +63,13 @@ int ephy_lan8720_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg)
 
     switch (cmd) {
         case EPHY_CMD_LAN8720_SET_FAR_LOOPBACK:
-            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, LAN8720_MODE_CTRL_STA_OFFSET, &regval);
+            eth_phy_mdio_read(phy_ctrl, phy_ctrl->phy_addr, LAN8720_MODE_CTRL_STA_OFFSET, &regval);
             if (arg) {
                 regval |= LAN8720_FARLOOPBACK_BIT;
             } else {
                 regval &= ~LAN8720_FARLOOPBACK_BIT;
             }
-            eth_phy_mdio_write(phy_ctrl->mac_mdio_dev, phy_ctrl->phy_addr, LAN8720_MODE_CTRL_STA_OFFSET, regval);
+            eth_phy_mdio_write(phy_ctrl, phy_ctrl->phy_addr, LAN8720_MODE_CTRL_STA_OFFSET, regval);
             break;
 
         default:

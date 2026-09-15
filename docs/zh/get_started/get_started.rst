@@ -224,7 +224,7 @@ windows 环境请用后缀带 .exe 文件，其余同理
    :alt:
 
 - 双击打开
-- 点击 Broswe，导入烧录文件（位于每个 demo 下，名称为 flash_prog_cfg.ini）
+- 点击 Broswe，导入构建生成的烧录文件（``build/flash_prog_cfg.ini``）
 - 选择芯片型号
 - 选择烧录的串口号
 - 选择波特率

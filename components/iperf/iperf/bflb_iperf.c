@@ -8,14 +8,14 @@
 
 #include <bflb_irq.h>
 
-#include "iperf_common.h"
+#include "iperf_internal.h"
 
 /** @brief Default worker priority, clamped to the configured FreeRTOS range. */
 #define IPERF_DEFAULT_TASK_PRIORITY ((configMAX_PRIORITIES > 10U) ? 10U : (configMAX_PRIORITIES - 1U))
 /** @brief Maximum generic Socket I/O buffer size, in bytes. */
-#define IPERF_MAX_BUFFER_LEN        16384U
+#define IPERF_MAX_BUFFER_LEN        8192U
 /** @brief Maximum UDP datagram size accepted by all backends, in bytes. */
-#define IPERF_MAX_UDP_LEN           1470U
+#define IPERF_MAX_UDP_LEN           4096U
 
 /**
  * @brief Immutable protocol/backend operation dispatch table.
@@ -96,54 +96,10 @@ static int iperf_validate_config(bflb_iperf_config_t *config)
 }
 
 /**
- * @brief Enter a public API call before waiting for the instance mutex.
- *
- * @param[in,out] iperf Instance whose lifetime and mutex are acquired.
- *
- * @retval BFLB_IPERF_OK The lifetime reference and mutex were acquired.
- * @retval BFLB_IPERF_ERR_INVALID The instance is NULL or destruction started.
- *
- * @note On success, the caller must use iperf_call_leave() or an equivalent
- * path to release both active_calls and lock. This function may block and must
- * not be called from an ISR.
+ * @brief Initialize defaults for a TCP Raw server.
+ * @param[out] config Configuration to reset; NULL is ignored.
+ * @note Zero buffer length defers protocol-specific sizing until create.
  */
-static int iperf_call_enter(bflb_iperf_t *iperf)
-{
-    uintptr_t irq_flags;
-
-    if (iperf == NULL) {
-        return BFLB_IPERF_ERR_INVALID;
-    }
-
-    /* Count mutex waiters so destroy cannot delete a mutex beneath a caller. */
-    irq_flags = bflb_irq_save();
-    if (iperf->destroy_started) {
-        bflb_irq_restore(irq_flags);
-        return BFLB_IPERF_ERR_INVALID;
-    }
-    iperf->active_calls++;
-    bflb_irq_restore(irq_flags);
-    xSemaphoreTake(iperf->lock, portMAX_DELAY);
-    return BFLB_IPERF_OK;
-}
-
-/**
- * @brief Leave a public API call and release its lifetime reference.
- *
- * @param[in,out] iperf Instance entered by iperf_call_enter().
- *
- * @pre The current path holds iperf->lock and owns one active_calls reference.
- * @post The reference is released and the instance mutex is unlocked.
- */
-static void iperf_call_leave(bflb_iperf_t *iperf)
-{
-    uintptr_t irq_flags = bflb_irq_save();
-
-    iperf->active_calls--;
-    bflb_irq_restore(irq_flags);
-    xSemaphoreGive(iperf->lock);
-}
-
 void bflb_iperf_config_init(bflb_iperf_config_t *config)
 {
     if (config == NULL) {
@@ -159,16 +115,31 @@ void bflb_iperf_config_init(bflb_iperf_config_t *config)
     config->task_priority = IPERF_DEFAULT_TASK_PRIORITY;
 }
 
+/**
+ * @brief Allocate, publish and immediately launch one owned test instance.
+ * @param[in] config Settings copied and normalized before launch.
+ * @param[out] iperf Output slot; set to NULL on failure when non-NULL.
+ * @retval BFLB_IPERF_OK Worker created; connection/traffic may not yet exist.
+ * @retval BFLB_IPERF_ERR_INVALID Invalid arguments or allocation/launch failure.
+ * @pre Task context; the external owner serializes creation and handle lifetime.
+ * @post Synchronous failure leaves no worker, runtime resources or events.
+ * @note The output slot is written before launch. Either event may run before
+ * this function returns; successful launch performs no further context writes.
+ * The owner must destroy even a naturally completed instance.
+ */
 int bflb_iperf_create(const bflb_iperf_config_t *config,
                       bflb_iperf_t **iperf)
 {
     bflb_iperf_config_t checked;
     bflb_iperf_t *created;
 
-    if (config == NULL || iperf == NULL) {
+    if (iperf == NULL) {
         return BFLB_IPERF_ERR_INVALID;
     }
     *iperf = NULL;
+    if (config == NULL) {
+        return BFLB_IPERF_ERR_INVALID;
+    }
     checked = *config;
     if (iperf_validate_config(&checked) != BFLB_IPERF_OK) {
         return BFLB_IPERF_ERR_INVALID;
@@ -183,216 +154,272 @@ int bflb_iperf_create(const bflb_iperf_config_t *config,
         free(created);
         return BFLB_IPERF_ERR_INVALID;
     }
+    /* xSemaphoreCreateBinary() creates an EMPTY semaphore, unlike the legacy
+     * vSemaphoreCreateBinary() macro. Completion cannot precede worker exit. */
+    created->worker_done = xSemaphoreCreateBinary();
+    if (created->worker_done == NULL) {
+        vSemaphoreDelete(created->lock);
+        free(created);
+        return BFLB_IPERF_ERR_INVALID;
+    }
     created->config = checked;
-    created->state = BFLB_IPERF_STATE_IDLE;
-    created->backend_released = true;
+    created->state = BFLB_IPERF_STATE_STARTING;
     created->ops = s_backends[checked.proto][checked.backend];
     created->backend_context = calloc(1, created->ops->context_size);
     if (created->backend_context == NULL) {
+        vSemaphoreDelete(created->worker_done);
         vSemaphoreDelete(created->lock);
         free(created);
         return BFLB_IPERF_ERR_INVALID;
     }
 
+    /* Publish before launch: a higher-priority worker may run immediately.
+     * launch must not write task handles/context after successful xTaskCreate;
+     * the worker publishes its own handle before its first event. */
     *iperf = created;
+    if (created->ops->launch(created, created->backend_context) < 0) {
+        *iperf = NULL;
+        free(created->backend_context);
+        vSemaphoreDelete(created->worker_done);
+        vSemaphoreDelete(created->lock);
+        free(created);
+        return BFLB_IPERF_ERR_INVALID;
+    }
     return BFLB_IPERF_OK;
 }
 
-int bflb_iperf_start(bflb_iperf_t *iperf)
-{
-    uintptr_t irq_flags;
-    int result;
-
-    if (iperf_call_enter(iperf) != BFLB_IPERF_OK) {
-        return BFLB_IPERF_ERR_INVALID;
-    }
-    if (iperf->state != BFLB_IPERF_STATE_IDLE) {
-        iperf_call_leave(iperf);
-        return BFLB_IPERF_ERR_INVALID;
-    }
-
-    iperf->state = BFLB_IPERF_STATE_STARTING;
-    iperf->backend_released = false;
-    iperf->stop_requested = false;
-    /* Keep the lifetime reference while allowing asynchronous completion. */
-    xSemaphoreGive(iperf->lock);
-
-    result = iperf->ops->start(iperf, iperf->backend_context);
-    if (result < 0) {
-        /* A failed start contractually leaves no asynchronous backend owner. */
-        xSemaphoreTake(iperf->lock, portMAX_DELAY);
-        if (!iperf->backend_released) {
-            iperf->error = result;
-            iperf->state = BFLB_IPERF_STATE_ERROR;
-            iperf->backend_released = true;
-        }
-        xSemaphoreGive(iperf->lock);
-    }
-    xSemaphoreTake(iperf->lock, portMAX_DELAY);
-    irq_flags = bflb_irq_save();
-    iperf->active_calls--;
-    bflb_irq_restore(irq_flags);
-    xSemaphoreGive(iperf->lock);
-    return result;
-}
-
-int bflb_iperf_stop(bflb_iperf_t *iperf)
-{
-    bflb_iperf_state_t previous;
-    uintptr_t irq_flags;
-    int result = BFLB_IPERF_OK;
-
-    if (iperf_call_enter(iperf) != BFLB_IPERF_OK) {
-        return BFLB_IPERF_ERR_INVALID;
-    }
-    previous = iperf->state;
-    if (previous != BFLB_IPERF_STATE_STARTING &&
-        previous != BFLB_IPERF_STATE_RUNNING) {
-        iperf_call_leave(iperf);
-        return BFLB_IPERF_OK;
-    }
-    iperf->stop_requested = true;
-    iperf->state = BFLB_IPERF_STATE_STOPPING;
-    if (previous == BFLB_IPERF_STATE_STARTING &&
-        iperf->config.backend == BFLB_IPERF_BACKEND_RAW) {
-        /* The already queued Raw start callback consumes this stop flag. */
-        iperf_call_leave(iperf);
-        return BFLB_IPERF_OK;
-    }
-    /* Hold the lifetime reference until the backend stop request returns. */
-    xSemaphoreGive(iperf->lock);
-
-    result = iperf->ops->stop(iperf, iperf->backend_context);
-    if (result < 0) {
-        xSemaphoreTake(iperf->lock, portMAX_DELAY);
-        if (iperf->state == BFLB_IPERF_STATE_STOPPING) {
-            iperf->stop_requested = false;
-            iperf->state = BFLB_IPERF_STATE_RUNNING;
-        }
-        xSemaphoreGive(iperf->lock);
-    }
-    xSemaphoreTake(iperf->lock, portMAX_DELAY);
-    irq_flags = bflb_irq_save();
-    iperf->active_calls--;
-    bflb_irq_restore(irq_flags);
-    xSemaphoreGive(iperf->lock);
-    return result;
-}
-
+/**
+ * @brief Copy lifecycle state and an IRQ-protected statistics snapshot.
+ * @param[in] iperf Live instance to inspect.
+ * @param[out] result Caller-owned snapshot destination.
+ * @retval BFLB_IPERF_OK Snapshot copied without clearing counters.
+ * @retval BFLB_IPERF_ERR_INVALID Either argument is NULL.
+ * @pre Task context; external callers must not overlap destroy.
+ * @note Worker event callbacks may query while the owner waits in destroy.
+ */
 int bflb_iperf_get_result(bflb_iperf_t *iperf,
                           bflb_iperf_result_t *result)
 {
-    if (result == NULL || iperf_call_enter(iperf) != BFLB_IPERF_OK) {
+    if (result == NULL || iperf == NULL) {
         return BFLB_IPERF_ERR_INVALID;
     }
+    xSemaphoreTake(iperf->lock, portMAX_DELAY);
     iperf_result_snapshot(iperf, result);
-    iperf_call_leave(iperf);
+    xSemaphoreGive(iperf->lock);
     return BFLB_IPERF_OK;
 }
 
+/**
+ * @brief Read the lifecycle state under the instance mutex.
+ * @param[in] iperf Live instance, or NULL.
+ * @return Current state, or BFLB_IPERF_STATE_ERROR for NULL.
+ * @pre Task context; external callers serialize access against destroy.
+ */
 bflb_iperf_state_t bflb_iperf_get_state(bflb_iperf_t *iperf)
 {
     bflb_iperf_state_t state;
 
-    if (iperf_call_enter(iperf) != BFLB_IPERF_OK) {
+    if (iperf == NULL) {
         return BFLB_IPERF_STATE_ERROR;
     }
+    xSemaphoreTake(iperf->lock, portMAX_DELAY);
     state = iperf->state;
-    iperf_call_leave(iperf);
+    xSemaphoreGive(iperf->lock);
     return state;
 }
 
+/**
+ * @brief Request cooperative stop, join completion and release the instance.
+ * @param[in] iperf Owned live instance; invalid after successful destruction.
+ * @retval BFLB_IPERF_OK FINISHED returned and all owned storage was freed.
+ * @retval BFLB_IPERF_ERR_INVALID iperf is NULL.
+ * @retval BFLB_IPERF_ERR_SELF Called by this instance's worker; no change made.
+ * @pre One external owner serializes this call with every external handle API,
+ * including create and other destroy calls; no ISR, scheduler or core lock.
+ * @note Waits on worker_done without the lifecycle mutex, allowing callbacks
+ * to query results. Backend notification/timeout behavior determines latency;
+ * there is no fixed completion deadline.
+ * @warning Never destroy from a worker callback or wait there for a destroying
+ * task: completion is signalled only after FINISHED returns.
+ */
 int bflb_iperf_destroy(bflb_iperf_t *iperf)
 {
-    uintptr_t irq_flags;
-
     if (iperf == NULL) {
         return BFLB_IPERF_ERR_INVALID;
     }
-    if (xSemaphoreTake(iperf->lock, 0U) != pdTRUE) {
-        return BFLB_IPERF_ERR_BUSY;
-    }
-
-    irq_flags = bflb_irq_save();
-    if (iperf->active_calls != 0U) {
-        bflb_irq_restore(irq_flags);
+    xSemaphoreTake(iperf->lock, portMAX_DELAY);
+    if (iperf->worker == xTaskGetCurrentTaskHandle()) {
         xSemaphoreGive(iperf->lock);
-        return BFLB_IPERF_ERR_BUSY;
+        return BFLB_IPERF_ERR_SELF;
     }
-    if (iperf->destroy_started) {
-        bflb_irq_restore(irq_flags);
-        xSemaphoreGive(iperf->lock);
-        return BFLB_IPERF_ERR_INVALID;
+    iperf->stop_requested = true;
+    if (iperf->state == BFLB_IPERF_STATE_STARTING ||
+        iperf->state == BFLB_IPERF_STATE_RUNNING) {
+        iperf->state = BFLB_IPERF_STATE_STOPPING;
     }
-    bflb_irq_restore(irq_flags);
-
-    if (!iperf->backend_released || iperf->callback_running ||
-        iperf->state == BFLB_IPERF_STATE_STARTING ||
-        iperf->state == BFLB_IPERF_STATE_RUNNING ||
-        iperf->state == BFLB_IPERF_STATE_STOPPING) {
-        xSemaphoreGive(iperf->lock);
-        return BFLB_IPERF_ERR_BUSY;
-    }
-
-    /* Publish destruction before releasing the mutex to reject later callers. */
-    irq_flags = bflb_irq_save();
-    if (iperf->active_calls != 0U) {
-        bflb_irq_restore(irq_flags);
-        xSemaphoreGive(iperf->lock);
-        return BFLB_IPERF_ERR_BUSY;
-    }
-    iperf->destroy_started = true;
-    bflb_irq_restore(irq_flags);
     xSemaphoreGive(iperf->lock);
 
+    /* Never hold lock while joining: both event callbacks may query results.
+     * Context remains allocated even if the worker has already finished. */
+    iperf->ops->request_stop(iperf, iperf->backend_context);
+    xSemaphoreTake(iperf->worker_done, portMAX_DELAY);
     free(iperf->backend_context);
+    vSemaphoreDelete(iperf->worker_done);
     vSemaphoreDelete(iperf->lock);
     free(iperf);
     return BFLB_IPERF_OK;
 }
 
-bool iperf_backend_started(bflb_iperf_t *iperf)
+/** @name Client budget and stop management
+ * @{
+ */
+
+/**
+ * @brief Read the remaining byte budget using an IRQ-protected counter.
+ * @param[in] iperf Live instance with immutable normalized configuration.
+ * @return Remaining bytes, zero when exhausted, or UINT64_MAX without a byte
+ * limit (a duration limit may still apply).
+ */
+uint64_t iperf_bytes_remaining(const bflb_iperf_t *iperf)
 {
+    uint64_t bytes;
+    uintptr_t irq_flags;
+
+    if (iperf->config.amount_bytes == 0U) {
+        return UINT64_MAX;
+    }
+    irq_flags = bflb_irq_save();
+    bytes = iperf->stats.bytes;
+    bflb_irq_restore(irq_flags);
+    return bytes < iperf->config.amount_bytes ?
+               iperf->config.amount_bytes - bytes :
+               0U;
+}
+
+/**
+ * @brief Determine whether traffic generation must stop.
+ * @param[in] iperf Instance whose stop flag and configured client limits are
+ * inspected.
+ * @param[in] now_us Current monotonic timestamp in microseconds.
+ * @retval true A stop request, byte limit, or duration limit was reached.
+ * @retval false Traffic may continue.
+ * @note Servers ignore local duration and byte limits and terminate on peer
+ * protocol events.
+ */
+bool iperf_limit_reached(const bflb_iperf_t *iperf, uint64_t now_us)
+{
+    uint64_t bytes;
+    uint64_t start_us;
+    uintptr_t irq_flags;
+
+    if (iperf->stop_requested) {
+        return true;
+    }
+    /* Servers terminate on TCP close or UDP FIN rather than local client limits. */
+    if (iperf->config.role == BFLB_IPERF_ROLE_SERVER) {
+        return false;
+    }
+    irq_flags = bflb_irq_save();
+    bytes = iperf->stats.bytes;
+    start_us = iperf->stats.start_us;
+    bflb_irq_restore(irq_flags);
+    if (iperf->config.amount_bytes != 0U && bytes >= iperf->config.amount_bytes) {
+        return true;
+    }
+    if (iperf->config.duration_s == 0U || start_us == 0U) {
+        return false;
+    }
+    if (now_us >= start_us && (now_us - start_us) >= (uint64_t)iperf->config.duration_s * 1000000ULL) {
+        return true;
+    }
+    return false;
+}
+
+/** @} */
+
+/**
+ * @brief Publish the worker and emit STARTED outside the lifecycle mutex.
+ * @param[in,out] iperf Instance owned by the entering worker.
+ * @return true if execution may proceed after the callback; false on stop.
+ * @pre Called exactly once by a successfully launched worker.
+ * @note STARTED is not a connection notification and can carry STOPPING.
+ * Cancellation is rechecked after the callback, which may precede create return.
+ */
+bool iperf_worker_enter(bflb_iperf_t *iperf)
+{
+    bflb_iperf_result_t result;
     bool run;
 
     xSemaphoreTake(iperf->lock, portMAX_DELAY);
+    iperf->worker = xTaskGetCurrentTaskHandle();
+    iperf->state = iperf->stop_requested ? BFLB_IPERF_STATE_STOPPING : BFLB_IPERF_STATE_RUNNING;
+    iperf_result_snapshot(iperf, &result);
+    xSemaphoreGive(iperf->lock);
+
+    if (iperf->config.event_cb != NULL) {
+        iperf->config.event_cb(iperf, BFLB_IPERF_EVENT_STARTED, &result,
+                               iperf->config.user_data);
+    }
+    /* Recheck after the callback: destroy may have requested cancellation
+     * before STARTED, while it ran, or before the worker published its handle. */
+    xSemaphoreTake(iperf->lock, portMAX_DELAY);
     run = !iperf->stop_requested;
-    iperf->state = run ? BFLB_IPERF_STATE_RUNNING : BFLB_IPERF_STATE_STOPPING;
     xSemaphoreGive(iperf->lock);
     return run;
 }
 
-void iperf_backend_finished(bflb_iperf_t *iperf, int error)
+/**
+ * @brief Notify a published worker while preventing concurrent handle revocation.
+ * @param[in,out] iperf Live instance whose worker may be NULL.
+ * @pre Task context, without the lifecycle mutex held.
+ * @note This wakes task-notification waits, not arbitrary socket or queue waits.
+ */
+void iperf_worker_wake(bflb_iperf_t *iperf)
 {
-    bflb_iperf_done_cb_t done_cb;
-    bflb_iperf_result_t result;
-    void *user_data;
+    xSemaphoreTake(iperf->lock, portMAX_DELAY);
+    if (iperf->worker != NULL) {
+        /* Revocation uses this same mutex, so this TCB cannot be deleted
+         * between the handle check and notification. No blocking I/O here. */
+        xTaskNotifyGive(iperf->worker);
+    }
+    xSemaphoreGive(iperf->lock);
+}
 
-    /* Freeze all backend-owned data before releasing its lifetime ownership. */
+/**
+ * @brief Freeze results, emit FINISHED, revoke the worker and signal completion.
+ * @param[in,out] iperf Instance completing its single worker lifecycle.
+ * @param[in] error Final backend result; zero selects DONE, otherwise ERROR.
+ * @pre Worker context outside the core lock; transport callbacks detached,
+ * runtime resources released and all traffic accounting complete.
+ * @post FINISHED has returned before worker_done is given.
+ * @warning The completion give is the final instance-related access and allows
+ * immediate owner destruction. After this call only task self-deletion may
+ * follow; neither instance nor private context may be dereferenced.
+ */
+void iperf_worker_exit(bflb_iperf_t *iperf, int error)
+{
+    bflb_iperf_result_t result;
+    SemaphoreHandle_t worker_done;
+
+    /* All transport callbacks have been detached; no further accounting. */
     iperf_test_end(iperf);
     iperf_test_report_finish(iperf);
     xSemaphoreTake(iperf->lock, portMAX_DELAY);
-    if (iperf->backend_released) {
-        xSemaphoreGive(iperf->lock);
-        return;
-    }
     iperf->error = error;
     iperf->state = error == 0 ? BFLB_IPERF_STATE_DONE : BFLB_IPERF_STATE_ERROR;
-    done_cb = iperf->config.done_cb;
-    user_data = iperf->config.user_data;
     iperf_result_snapshot(iperf, &result);
-    iperf->callback_running = done_cb != NULL;
     xSemaphoreGive(iperf->lock);
 
-    /* Invoke user code without the instance mutex to allow result inspection. */
-    if (done_cb != NULL) {
-        done_cb(iperf, &result, user_data);
-        xSemaphoreTake(iperf->lock, portMAX_DELAY);
-        iperf->callback_running = false;
-    } else {
-        xSemaphoreTake(iperf->lock, portMAX_DELAY);
+    if (iperf->config.event_cb != NULL) {
+        iperf->config.event_cb(iperf, BFLB_IPERF_EVENT_FINISHED, &result,
+                               iperf->config.user_data);
     }
-    /* Publish destroyability only after user callback execution is complete. */
-    iperf->backend_released = true;
+
+    xSemaphoreTake(iperf->lock, portMAX_DELAY);
+    iperf->worker = NULL;
+    worker_done = iperf->worker_done;
     xSemaphoreGive(iperf->lock);
+    /* The owner may free everything as soon as this give wakes it. Only the
+     * worker's own stack and vTaskDelete(NULL) may be used from here onward. */
+    xSemaphoreGive(worker_done);
 }

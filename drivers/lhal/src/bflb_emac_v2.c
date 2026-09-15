@@ -1854,6 +1854,10 @@ int bflb_emac_v2_set_rx_qptr(struct bflb_device_s *dev, uint32_t buffer1, uint32
     /* idle rx descriptor is incremented by one as it will be handed over to DMA */
     (handle->rx_idle_cnt)++;
 
+    if ((bflb_emac_v2_get_interrupt_status(dev) & EMAC_V2_DMA_RX_STATE) == EMAC_V2_DMA_RX_SUSPENDED) {
+        bflb_emac_v2_resume_dma_rx(dev);
+    }
+
     return rxnext;
 }
 
@@ -4158,11 +4162,19 @@ int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     reg_base = dev->reg_base;
     switch (cmd) {
         case EMAC_CMD_SET_TX_EN:
-            bflb_emac_v2_tx_enable(dev);
+            if (arg) {
+                ret = bflb_emac_v2_tx_enable(dev);
+            } else {
+                ret = bflb_emac_v2_tx_disable(dev);
+            }
             break;
 
         case EMAC_CMD_SET_RX_EN:
-            bflb_emac_v2_rx_enable(dev);
+            if (arg) {
+                ret = bflb_emac_v2_rx_enable(dev);
+            } else {
+                ret = bflb_emac_v2_rx_disable(dev);
+            }
             break;
         case EMAC_CMD_SET_FULL_DUPLEX:
             if (arg) {
@@ -4305,6 +4317,22 @@ static void bflb_emac_v2_handle_irq(struct bflb_emac_v2_ctx_s *ctx)
                 }
             } else {
                 EMAC_V2_DRV_WARN("!!!!!!!!!!!!!!!!RX descriptor is invalid, status=%08x\r\n", status);
+                /* get_rx_qptr() consumed this buffer even when the frame is bad. */
+                rx_desc.data_len = 0;
+                rx_desc.attr_flag = 0;
+                rx_desc.err_status = 0;
+                if (status & EMAC_V2_DESC_RX_CRC) {
+                    rx_desc.err_status |= EMAC_RX_STA_ERR_CRC;
+                }
+                if (status & EMAC_V2_DESC_RX_COLLISION) {
+                    rx_desc.err_status |= EMAC_RX_STA_ERR_COLLISION;
+                }
+                if (status & EMAC_V2_DESC_RX_LEN_ERROR) {
+                    rx_desc.err_status |= EMAC_RX_STA_ERR_LONG_FRAME;
+                }
+                if (ctx->irq_event_cb != NULL) {
+                    ctx->irq_event_cb(ctx->irq_arg, EMAC_IRQ_EVENT_RX_ERR_FRAME, &rx_desc);
+                }
             }
         }
     }

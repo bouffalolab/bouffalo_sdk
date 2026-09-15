@@ -4,10 +4,16 @@
 
 mainmenu "Bouffalo SDK Configuration"
 
-# Load board defaults before the common fallback defaults below.
-osource "$BL_SDK_BASE/bsp/board/$BOARD/Kconfig"
+# Load centralized board defaults before the common fallback defaults below.
+source "$BL_SDK_BASE/bsp/board/Kconfig"
 
 menu "Build Options"
+
+config BOUFFALO_SDK
+    bool
+    default y
+    help
+      Identify builds that use the Bouffalo SDK integration.
 
 config CHIP
     string "SoC name"
@@ -46,12 +52,6 @@ config CPU_MODEL
     default ""
     help
       CPU model or silicon revision selected by the board.
-
-config BOARD_DIR
-    string "Custom board root"
-    default ""
-    help
-      Optional directory containing an external board implementation.
 
 config VSCODE_PARSE_EN
     bool "Generate VS Code parse data"
@@ -148,3 +148,5 @@ endmenu
 #
 source "$BL_SDK_BASE/components/Kconfig"
 source "$BL_SDK_BASE/bsp/Kconfig"
+osource "$BL_SDK_BASE/drivers/soc/Kconfig"
+osource "$BL_SDK_BASE/drivers/rfparam/Kconfig"

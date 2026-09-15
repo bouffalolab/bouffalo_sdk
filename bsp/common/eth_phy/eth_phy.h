@@ -55,6 +55,7 @@ typedef struct eth_phy_drv_s {
 
     int (*phy_init)(struct eth_phy_ctrl_s *phy_ctrl, struct eth_phy_init_cfg_s *cfg);
     int (*phy_ctrl)(struct eth_phy_ctrl_s *phy_ctrl, uint32_t cmd, uint32_t arg);
+    int (*phy_deinit)(struct eth_phy_ctrl_s *phy_ctrl);
 } eth_phy_drv_t;
 
 /* eth_phy ctrl */
@@ -64,6 +65,9 @@ typedef struct eth_phy_ctrl_s {
     uint32_t phy_id;
 
     eth_phy_drv_t *phy_drv;
+#if CONFIG_EMAC_MDIO_LOCK
+    eth_phy_mdio_lock_t mdio_lock;
+#endif
 } eth_phy_ctrl_t;
 
 /* eth_phy init_cfg */
@@ -74,6 +78,7 @@ typedef struct eth_phy_init_cfg_s {
 
 int eth_phy_scan(struct eth_phy_ctrl_s *phy_ctrl, uint8_t start_addr, uint8_t end_addr);
 int eth_phy_init(struct eth_phy_ctrl_s *phy_ctrl, struct eth_phy_init_cfg_s *cfg);
+int eth_phy_deinit(struct eth_phy_ctrl_s *phy_ctrl);
 int eth_phy_ctrl(struct eth_phy_ctrl_s *phy_ctrl, uint32_t cmd, uint32_t arg);
 
 #endif

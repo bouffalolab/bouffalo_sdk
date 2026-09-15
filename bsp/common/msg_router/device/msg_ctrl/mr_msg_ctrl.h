@@ -8,6 +8,9 @@
 
 #include "bflb_core.h"
 #include "mr_frame_buff_ctrl.h"
+#include "timers.h"
+
+#define MR_MSG_SYS_KEEPALIVE (1)
 
 /*****************************************************************************
  * Type Definitions
@@ -124,11 +127,15 @@ typedef struct mr_msg_ctrl_priv_s {
 
     /* Task and synchronization */
     TaskHandle_t msg_proc_task; /**< Message processing task handle */
+    TimerHandle_t keepalive_timer; /**< Host keepalive watchdog timer */
+    volatile bool keepalive_paused; /**< Keepalive watchdog pause flag */
+    volatile uint8_t keepalive_miss_count; /**< Consecutive missed host keepalives */
 
     /* Message queues */
     QueueHandle_t dnld_done_queue; /**< Download done queue (from ISR to msg_proc_task for callback) */
     QueueHandle_t upld_wait_queue; /**< Upload wait queue (from application to msg_proc_task for transmission) */
     QueueHandle_t upld_done_queue; /**< Upload done queue (from ISR to msg_proc_task for callback) */
+    QueueHandle_t upld_fail_queue; /**< Upload failed queue (from ISR to msg_proc_task for release) */
 
     /* Buffer management */
     mr_frame_queue_ctrl_t *dnld_queue_ctrl; /**< Download frame buffer pool controller */
@@ -169,5 +176,7 @@ int mr_msg_cb_unregister(mr_msg_ctrl_priv_t *msg_ctrl, uint8_t tag); /**< Unregi
 int mr_msg_upld_send_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success); /**< Upload complete callback */
 int mr_msg_dnld_recv_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success); /**< Download complete callback */
 int mr_msg_host_reset_cb(mr_msg_ctrl_priv_t *msg_ctrl);                                                /**< Hardware reset callback */
+void mr_msg_ctrl_keepalive_pause(mr_msg_ctrl_priv_t *msg_ctrl);                                         /**< Pause host keepalive watchdog */
+void mr_msg_ctrl_keepalive_resume(mr_msg_ctrl_priv_t *msg_ctrl);                                        /**< Resume host keepalive watchdog */
 
 #endif /* __MR_MSG_CTRL___ */

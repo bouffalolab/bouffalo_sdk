@@ -1,6 +1,7 @@
 #include "bl_lp.h"
 #include "bl616_glb.h"
 #include "bl616_hbn.h"
+#include "bl616_pds.h"
 #include "bl616_psram.h"
 #include "bl_sys.h"
 
@@ -95,11 +96,19 @@ int bl_sys_em_config(void)
 
 int bl_sys_reset_por(void)
 {
+    uint32_t tmpVal;
+
     HBN_32K_Sel(0); // f32k select rc32k
     arch_delay_ms(1);
     HBN_Power_Off_Xtal_32K();
     bl_sys_rstinfo_set(BL_RST_SOFTWARE);
     __disable_irq();
+
+    /* Software POR does not reset PDS USB state. Restore the hardware-reset
+     * default role so BootROM can start its USB device download interface. */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_USB_CTL);
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_REG_USB_IDDIG);
+    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
 
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_WIFI);
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_BTDM);

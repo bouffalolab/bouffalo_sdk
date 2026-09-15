@@ -189,9 +189,6 @@ int ek79007_wks70wsv114_dsi_screen_switch(ek79007_wks70wsv114_dsi_color_t *scree
     }
 
 #if (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
-    bflb_l1c_dcache_clean_range(
-        screen_buffer,
-        EK79007_WKS70WSV114_DSI_W * EK79007_WKS70WSV114_DSI_H * sizeof(*screen_buffer));
     return mipi_dsi_v2_rgb565_screen_switch(screen_buffer);
 #else
     return mipi_dsi_v2_screen_switch(screen_buffer);

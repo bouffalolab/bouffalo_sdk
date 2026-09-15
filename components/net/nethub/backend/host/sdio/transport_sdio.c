@@ -61,12 +61,24 @@ static bool transport_sdio_lp_is_idle(void)
 
 static int transport_sdio_lp_prepare(void)
 {
-    return mr_sdio_drv_lowpower_prepare();
+    int ret;
+
+    mr_msg_ctrl_keepalive_pause(g_msg_sdio_ctrl);
+    ret = mr_sdio_drv_lowpower_prepare();
+    if (ret != 0) {
+        mr_msg_ctrl_keepalive_resume(g_msg_sdio_ctrl);
+    }
+    return ret;
 }
 
 static int transport_sdio_lp_resume(void)
 {
-    return mr_sdio_drv_lowpower_restore();
+    int ret = mr_sdio_drv_lowpower_restore();
+
+    if (ret == 0) {
+        mr_msg_ctrl_keepalive_resume(g_msg_sdio_ctrl);
+    }
+    return ret;
 }
 #endif
 

@@ -38,6 +38,7 @@
 #include "rfparam_adapter.h"
 
 #include "board.h"
+#include "mm.h"
 #include "shell.h"
 
 #include "wl80211.h"
@@ -156,6 +157,11 @@ int main(void)
 {
     board_init();
 #if defined(CONFIG_GCOV_DUMP)
+    if (mm_heap_unregister(MM_HEAP_PSRAM_0) != 0) {
+        LOG_E("Failed to unregister PSRAM heap\r\n");
+        return -1;
+    }
+
     register_all_gcov_info();
 
     /* Initialize MTD subsystem (reads partition table from flash) */

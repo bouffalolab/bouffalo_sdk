@@ -1004,6 +1004,13 @@ static int sae_sm_step(struct hostapd_data *hapd, struct sta_info *sta,
 	if (auth_transaction != 1 && auth_transaction != 2)
 		return WLAN_STATUS_UNSPECIFIED_FAILURE;
 
+	/* A Commit starting or restarting SAE begins a new attempt. */
+	if (auth_transaction == 1 &&
+	    (sta->sae->state == SAE_NOTHING ||
+	     sta->sae->state == SAE_CONFIRMED ||
+	     sta->sae->state == SAE_ACCEPTED))
+		sta->credential_mismatch_reported = 0;
+
 	wpa_printf(MSG_DEBUG, "SAE: Peer " MACSTR " state=%s auth_trans=%u",
 		   MAC2STR(sta->addr), sae_state_txt(sta->sae->state),
 		   auth_transaction);
@@ -1441,6 +1448,8 @@ static void handle_auth_sae(struct hostapd_data *hapd, struct sta_info *sta,
 
 		if (!(hapd->conf->mesh & MESH_ENABLED) &&
 		    sta->sae->state == SAE_COMMITTED) {
+			/* The existing restart path below begins a new attempt. */
+			sta->credential_mismatch_reported = 0;
 			/* This is needed in the infrastructure BSS case to
 			 * address a sequence where a STA entry may remain in
 			 * hostapd across two attempts to do SAE authentication
@@ -1566,6 +1575,13 @@ static void handle_auth_sae(struct hostapd_data *hapd, struct sta_info *sta,
 			}
 
 			if (sae_check_confirm(sta->sae, var, var_len) < 0) {
+				if (sta->sae->confirm_mismatch &&
+				    !sta->credential_mismatch_reported) {
+					sta->credential_mismatch_reported = 1;
+					wpa_msg(hapd->msg_ctx, MSG_INFO,
+						AP_STA_POSSIBLE_SAE_CREDENTIAL_MISMATCH
+						MACSTR, MAC2STR(sta->addr));
+				}
 				resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
 				goto reply;
 			}

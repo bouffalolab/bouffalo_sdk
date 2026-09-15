@@ -171,7 +171,7 @@ extern int sys_current_is_tcpip(void);
 #define MEM_ALIGNMENT                 4
 #if defined(CFG_SDIOWIFI)
 #undef MEM_MIN
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #define MEM_MIN                       (14 * 1024)
 #else
 #define MEM_MIN                       (48 * 1024)
@@ -301,7 +301,7 @@ extern int * __errno(void);
 #endif
 #endif
 
-#if defined(CONFIG_LWIP_LP) || defined(LP_APP)
+#if defined(CONFIG_LWIP_LP) || defined(CONFIG_LPAPP)
 #define TCP_TIMER_PRECISE_NEEDED        1
 #define DHCP_TIMER_PRECISE_NEEDED       1
 #define ARP_TIMER_PRECISE_NEEDED        1

@@ -802,6 +802,8 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     iot2lp_para->app_entry = (uintptr_t)lp_fw_restore_cpu_para;
     iot2lp_para->args[0] = GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR;
     iot2lp_para->wakeup_reason_info->wakeup_reason = LPFW_WAKEUP_UNKOWN;
+    iot2lp_para->lpfw_wakeup_cnt = 0;
+
     /* cacheable */
     pm_set_wakeup_callback((void (*)(void))bl618dg_lpfw_ram_addr());
 

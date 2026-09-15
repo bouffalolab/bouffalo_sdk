@@ -78,6 +78,12 @@ static uint32_t bflb_sp_boot_parse_is_pkhash_valid(uint8_t pk_src, uint8_t *pkha
     }
 #endif
 
+#if defined(CHIP_BL618DG) && !defined(CPU_MODEL_A0)
+    if (g_efuse_cfg.app_sign_type == HAL_APP_SIGN_SAME_AS_BOOT2) {
+        return hal_boot2_is_pkhash_valid(&g_efuse_cfg, pkhash, sign_type);
+    }
+#endif
+
     for (i = 0; i < HAL_BOOT2_CPU_GROUP_MAX; i++) {
         if ((pk_src == i) && (0 == memcmp(g_efuse_cfg.pk_hash_cpu[i], pkhash, hash_size))) {
             return 1;

@@ -64,6 +64,10 @@ sdk_add_link_options(
     -Wl,--print-memory-usage
 )
 
+if(CONFIG_GCC_LINK_NO_RELAX)
+    sdk_add_link_options(-Wl,--no-relax)
+endif()
+
 if("${CHIP}" STREQUAL "bl618dg" AND "${CPU_MODEL}" STREQUAL "b0")
     sdk_add_link_options(
         --specs=picolibc.specs

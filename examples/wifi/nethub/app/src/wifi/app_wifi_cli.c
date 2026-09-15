@@ -6,21 +6,18 @@
 #include <task.h>
 #include <timers.h>
 
-#include <lwip/etharp.h>
-#include <lwip/netif.h>
 #include <lwip/tcpip.h>
 
 #include <bl_lp.h>
 #include <bflb_clock.h>
 #include <bflb_gpio.h>
 #include <bflb_irq.h>
-#include <bflb_mtimer.h>
-#include <bflb_rtc.h>
 #include <bflb_uart.h>
 #include <board.h>
 #include <board_rf.h>
 #include <clock_manager.h>
 #include <pm_manager.h>
+#include <pm_helper_cli.h>
 #include <shell.h>
 #include <tickless.h>
 #include <wifi_mgmr.h>
@@ -33,6 +30,7 @@
 #include <bl616_pm.h>
 #elif defined(BL616CL)
 #include <bl616cl_aon.h>
+#include <bl616cl_glb.h>
 #include <bl616cl_hbn.h>
 #include <bl616cl_pm.h>
 #elif defined(BL618DG)
@@ -45,12 +43,8 @@
 #define ACTIVE_LPFW_UA              (35000)
 #define ACTIVE_APP_UA               (55000)
 
-static TimerHandle_t xArpTimer;
 static TimerHandle_t keepalive_timer;
 static uint32_t lp_timeouts_ms;
-#if defined(BL616CL) || defined(BL618DG)
-static struct bflb_device_s *rtc;
-#endif
 #if defined(BL616)
 static bl_lp_hbn_fw_cfg_t hbn_test_cfg = {
     .hbn_sleep_cnt = 0,
@@ -93,7 +87,7 @@ static int lp_exit(void *arg)
     /* recovery system_clock_init\peripheral_clock_init\console_init*/
     board_recovery();
 
-#if defined(BL616)
+#if defined(BL616) || defined(BL616CL)
     GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
 #endif
 
@@ -115,69 +109,6 @@ static int lp_exit(void *arg)
     } else {
         pm_alloc_mem_reset();
     }
-
-    return 0;
-}
-
-static void app_arp_send(void)
-{
-    if (!wifi_mgmr_sta_state_get()) {
-        return;
-    }
-
-    if (netif_default == NULL || ip4_addr_isany_val(*netif_ip4_addr(netif_default))) {
-        printf("IP address not assigned. ARP announcement skipped.\n");
-        return;
-    }
-
-    LOCK_TCPIP_CORE();
-    do {
-        ip_addr_t src_ip = netif_default->ip_addr;
-        ip_addr_t dest_ip;
-        err_t result;
-
-        ip_addr_copy(dest_ip, src_ip);
-        result = etharp_request(netif_default, ip_2_ip4(&dest_ip));
-        if (result != ERR_OK) {
-            printf("Failed to send ARP request. Error: %d\n", result);
-        }
-    } while (0);
-    UNLOCK_TCPIP_CORE();
-}
-
-static void arp_send(TimerHandle_t xTimer)
-{
-    (void)xTimer;
-    app_arp_send();
-}
-
-int app_pm_create_arp_announce_timer(uint32_t seconds)
-{
-    if (xArpTimer != NULL) {
-        return -1;
-    }
-
-    app_arp_send();
-
-    xArpTimer = xTimerCreate("traffic probe", pdMS_TO_TICKS(seconds * 1000), pdTRUE, NULL, arp_send);
-    if (xArpTimer == NULL) {
-        return -1;
-    }
-
-    return xTimerStart(xArpTimer, 0) == pdPASS ? 0 : -1;
-}
-
-int app_pm_delete_arp_announce_timer(void)
-{
-    if (xArpTimer == NULL) {
-        printf("Arp timer has not been created.\r\n");
-        return 0;
-    }
-
-    xTimerStop(xArpTimer, 0);
-    xTimerDelete(xArpTimer, portMAX_DELAY);
-    xArpTimer = NULL;
-    printf("Delete arp timer.\r\n");
 
     return 0;
 }
@@ -279,14 +210,19 @@ void app_pm_enter_hbn(int level)
 #endif
 }
 
-void app_pm_enter_pds15(void)
+static int app_pm_enter_pds15_impl(void)
 {
     if (lp_timeouts_ms != 0) {
         app_pm_start_timeout_timer(lp_timeouts_ms);
         lp_timeouts_ms = 0;
     }
 
-    pm_enable_tickless();
+    return pm_enable_tickless();
+}
+
+void app_pm_enter_pds15(void)
+{
+    (void)app_pm_enter_pds15_impl();
 }
 
 void app_pm_exit_pds15(void)
@@ -363,148 +299,6 @@ int app_pm_twt_param_set(int s, int t, int e, int n, int m)
 
     return wifi_mgmr_sta_twt_setup(&param);
 }
-
-static void cmd_tickless(int argc, char **argv)
-{
-    int broadcast = 0;
-
-    if (argc > 2 && argv[2] != NULL) {
-        broadcast = atoi(argv[2]);
-    }
-
-    if (argc > 1 && argv[1] != NULL) {
-        lpfw_cfg.dtim_origin = atoi(argv[1]);
-    } else {
-        lpfw_cfg.dtim_origin = 10;
-    }
-
-    printf("dtim_origin: %d\r\n", lpfw_cfg.dtim_origin);
-    printf("broadcast: %d\r\n", broadcast);
-
-    if (broadcast != 0) {
-        enable_multicast_broadcast = 1;
-        lpfw_cfg.bcmc_dtim_mode = 1;
-    } else {
-        enable_multicast_broadcast = 0;
-        lpfw_cfg.bcmc_dtim_mode = 0;
-    }
-
-    app_pm_enter_pds15();
-}
-
-static void cmd_wakeup_timer(int argc, char **argv)
-{
-    uint32_t timeout_ms;
-    int enable_bcmd;
-
-    if (argc <= 2 || argv[1] == NULL || argv[2] == NULL) {
-        printf("Need timeouts.\r\n");
-        return;
-    }
-
-    timeout_ms = (uint32_t)atoi(argv[1]);
-    enable_bcmd = atoi(argv[2]);
-
-    enable_multicast_broadcast = (enable_bcmd != 0) ? 1 : 0;
-
-    app_lp_timer_config(0, timeout_ms);
-    app_pm_enter_pds15();
-    pwr_info_clear();
-}
-
-static void cmd_set_dtim(int argc, char **argv)
-{
-    int dtim = 10;
-
-    if (argc > 1 && argv[1] != NULL) {
-        dtim = atoi(argv[1]);
-    }
-
-    set_dtim_config(dtim);
-}
-
-static void cmd_io_dbg(int argc, char **argv)
-{
-    iot2lp_para_t *iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
-
-    if (argc != 2) {
-        printf("cmd_io_dbg err\r\n");
-        return;
-    }
-
-    if (atoi(argv[1]) <= 34) {
-#ifdef BL616
-        iot2lp_para->debug_io = atoi(argv[1]);
-#else
-        iot2lp_para->wifi_debug_io = atoi(argv[1]);
-#endif
-    } else {
-#ifdef BL616
-        iot2lp_para->debug_io = 0xFF;
-#else
-        iot2lp_para->wifi_debug_io = 0xFF;
-#endif
-    }
-}
-
-static void cmd_send_arp(int argc, char **argv)
-{
-    if (argc != 2) {
-        printf("Need param\r\n");
-        return;
-    }
-
-    if (atoi(argv[1]) != 0) {
-        if (app_pm_create_arp_announce_timer(55) == 0) {
-            printf("create period 55s arp timer success.\r\n");
-        } else {
-            printf("Arp timer already created.\r\n");
-        }
-        return;
-    }
-
-    app_pm_delete_arp_announce_timer();
-}
-
-#if !defined(BL616)
-static void cmd_lpfw_uart_cfg(int argc, char **argv)
-{
-    iot2lp_para_t *iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
-
-    if (argc != 5) {
-        printf("Need param\r\n");
-        return;
-    }
-
-    iot2lp_para->uart_config->debug_log_en = atoi(argv[1]);
-    iot2lp_para->uart_config->uart_tx_io = atoi(argv[2]);
-    iot2lp_para->uart_config->uart_rx_io = atoi(argv[3]);
-    iot2lp_para->uart_config->baudrate = atoi(argv[4]);
-}
-
-static void cmd_lpfw_clock_cfg(int argc, char **argv)
-{
-    iot2lp_para_t *iot2lp_para = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
-
-    if (argc != 5) {
-        printf("Need param\r\n");
-        printf("mcu_clk_sel:\n\t0:GLB_MCU_SYS_CLK_RC32M\r");
-        printf("\n\t1:GLB_MCU_SYS_CLK_XTAL\r");
-        printf("\n\t2:GLB_MCU_SYS_CLK_WIFIPLL_96M\r");
-        printf("\n\t3:GLB_MCU_SYS_CLK_WIFIPLL_192M\r");
-        printf("\n\t4:GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M\r");
-        printf("\n\t5:GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M\r\n");
-        printf("xclk_sel:\n\t0:HBN_MCU_XCLK_RC32M\r");
-        printf("\n\t1:HBN_MCU_XCLK_XTAL\r");
-        return;
-    }
-
-    iot2lp_para->clock_config->mcu_clk_sel = atoi(argv[1]);
-    iot2lp_para->clock_config->hclk_div = atoi(argv[2]);
-    iot2lp_para->clock_config->bclk_div = atoi(argv[3]);
-    iot2lp_para->clock_config->xclk_sel = atoi(argv[4]);
-}
-#endif
 
 /**********************************************************
     io wakeup configuration
@@ -759,146 +553,6 @@ int lp_delete_wakeup_by_io(uint8_t io)
 #endif
 }
 
-#if defined(BL616CL) || defined(BL618DG)
-int32_t rc32k_accuracy_ppm_calculate(uint32_t expect_time, uint32_t rc32k_actual_time);
-bool rc32k_check_accuracy(int32_t actual_ppm, int32_t threshold_ppm);
-void rc32k_get_trim_code(uint32_t *c_code, uint32_t *r_code);
-
-static void rc32k_coarse_trim_task(void *pvParameters)
-{
-    uint32_t retry_cnt = 0;
-    uint64_t timeout_start __attribute__((unused));
-    uint64_t rtc_cnt;
-    uint64_t rtc_record_us;
-    uint64_t rtc_now_us;
-    uint64_t mtimer_record_us;
-    uint64_t mtimer_now_us;
-    uint32_t rtc_us;
-    uint32_t mtimer_us;
-    uint32_t c_code;
-    uint32_t r_code = 0;
-    uint32_t rc32k_code;
-    int error_ppm;
-    int last_error_ppm = 0;
-    int last_diff_code = 0;
-    int first_measure = 1;
-    bool ret = false;
-
-    (void)pvParameters;
-
-    HBN_Trim_RC32K();
-    rc32k_get_trim_code(&c_code, &r_code);
-    //    printf("c_code=%d,r_code=%d\r\n", c_code, r_code);
-
-    HBN_32K_Sel(HBN_32K_RC);
-#if defined(BL616CL)
-    HBN_Set_RTC_CLK_Sel(HBN_RTC_CLK_F32K);
-#endif
-
-    rtc = bflb_device_get_by_name("rtc");
-    bflb_rtc_set_time(rtc, 0);
-
-    //    printf("rc32k_coarse_trim task enable, freq_mtimer must be 1MHz!\r\n");
-    timeout_start = bflb_mtimer_get_time_us();
-
-    vTaskDelay(20);
-
-    while (retry_cnt < 100) {
-        int diff_code;
-        int is_diverging = 0;
-
-        retry_cnt++;
-
-        __disable_irq();
-        mtimer_record_us = bflb_mtimer_get_time_us();
-        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-        __enable_irq();
-
-        rtc_record_us = BL_PDS_CNT_TO_US(rtc_cnt);
-        vTaskDelay(100);
-
-        __disable_irq();
-        mtimer_now_us = bflb_mtimer_get_time_us();
-        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-        __enable_irq();
-
-        rtc_now_us = BL_PDS_CNT_TO_US(rtc_cnt);
-        rtc_us = (uint32_t)(rtc_now_us - rtc_record_us);
-        mtimer_us = (uint32_t)(mtimer_now_us - mtimer_record_us);
-        error_ppm = rc32k_accuracy_ppm_calculate(mtimer_us, rtc_us);
-
-        //        printf("rc32k_coarse_trim: mtimer_us:%d, rtc_us:%d\r\n", mtimer_us, rtc_us);
-
-        ret = rc32k_check_accuracy(error_ppm, 200);
-        rc32k_get_trim_code(&c_code, &r_code);
-        //        printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, r_code=%d",
-        //               retry_cnt,
-        //               error_ppm,
-        //               r_code);
-
-        if (ret) {
-            printf(", finish!\r\n");
-            break;
-        }
-
-        if (abs(error_ppm) <= 500) {
-            printf("\r\n");
-            break;
-        }
-
-        if (!first_measure && abs(error_ppm) > abs(last_error_ppm) && abs(last_error_ppm) > 1) {
-            is_diverging = 1;
-        }
-
-        if (is_diverging) {
-            //            printf(" (diverging, rollback)\r\n");
-            rc32k_code = HBN_Get_RC32K_R_Code();
-            rc32k_code = (uint32_t)((int)rc32k_code - last_diff_code);
-            diff_code = (last_error_ppm < 0) ? -1 : 1;
-            rc32k_code = (uint32_t)((int)rc32k_code + diff_code);
-            HBN_Set_RC32K_R_Code(rc32k_code);
-            //            printf("rc32k_coarse_trim: adjust code=%u (diff=%d)\r\n", rc32k_code, diff_code);
-            last_diff_code = diff_code;
-            first_measure = 0;
-            vTaskDelay(10);
-            continue;
-        }
-
-        diff_code = error_ppm / 800;
-        if (diff_code > 5) {
-            diff_code = 5;
-        }
-        if (diff_code < -5) {
-            diff_code = -5;
-        }
-        if (diff_code == 0 && abs(error_ppm) > 400) {
-            diff_code = (error_ppm > 0) ? 1 : -1;
-        }
-
-        rc32k_code = HBN_Get_RC32K_R_Code();
-        rc32k_code = (uint32_t)((int)rc32k_code + diff_code);
-        HBN_Set_RC32K_R_Code(rc32k_code);
-
-        //        printf(" (adjust code=%u, diff=%d)\r\n", rc32k_code, diff_code);
-        last_error_ppm = error_ppm;
-        last_diff_code = diff_code;
-        first_measure = 0;
-        vTaskDelay(10);
-    }
-
-    if (retry_cnt >= 100) {
-        //        printf("rc32k_coarse_trim: timeout!\r\n");
-    }
-
-    //    printf("rc32k coarse trim success!, total time:%dms\r\n",
-    //           (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
-    bl_lp_rc32k_save_code(HBN_Get_RC32K_R_Code());
-    bl_lp_set_32k_clock_ready(1);
-    vTaskDelete(NULL);
-}
-#endif
-
-#if defined(BL616)
 static void f32k_clk_init_task(void *pvParameters)
 {
     (void)pvParameters;
@@ -911,10 +565,51 @@ static void f32k_clk_init_task(void *pvParameters)
 
     vTaskDelete(NULL);
 }
-#endif
+
+static int nethub_wakeup_timer_start(uint32_t timeout_ms, int broadcast, void *arg)
+{
+    (void)broadcast;
+    (void)arg;
+
+    if (app_lp_timer_config(0, timeout_ms) != 0) {
+        return -1;
+    }
+    if (app_pm_enter_pds15_impl() != 0) {
+        return -1;
+    }
+    pwr_info_clear();
+
+    return 0;
+}
+
+static int nethub_tickless_start(void *arg)
+{
+    (void)arg;
+    return app_pm_enter_pds15_impl();
+}
+
+int app_pm_create_arp_announce_timer(uint32_t seconds)
+{
+    return pm_helper_cli_arp_timer_start(seconds);
+}
+
+int app_pm_delete_arp_announce_timer(void)
+{
+    return pm_helper_cli_arp_timer_stop();
+}
 
 int app_pm_init(void)
 {
+    static const pm_helper_cli_cfg_t helper_cfg = {
+        .wakeup_timer_cb = nethub_wakeup_timer_start,
+        .tickless_cb = nethub_tickless_start,
+        .arg = NULL,
+        .arp_target = PM_HELPER_CLI_ARP_LOCAL_IP,
+        .arp_period_seconds = 55,
+        .arp_send_immediately = true,
+        .arp_periodic = true,
+    };
+
 #if defined(BL616CL)
     uint32_t tmpVal;
 
@@ -943,27 +638,18 @@ int app_pm_init(void)
     bl_lp_init();
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
 
-#if defined(BL616CL) || defined(BL618DG)
-    puts("[OS] Create rc32k_coarse_trim task...\r\n");
-    xTaskCreate(rc32k_coarse_trim_task, "rc32k_coarse_trim", 512, NULL, 11, NULL);
-#elif defined(BL616)
+    if (pm_helper_cli_init(&helper_cfg) != 0) {
+        printf("pm helper cli init failed.\r\n");
+        return -1;
+    }
+
     printf("[OS] Create f32k_clk_init task...\r\n");
     xTaskCreate(f32k_clk_init_task, "f32k_clk_init", 1024, NULL, 12, NULL);
-#endif
 
     return 0;
 }
 
-SHELL_CMD_EXPORT_ALIAS(cmd_tickless, tickless, cmd tickless);
-SHELL_CMD_EXPORT_ALIAS(cmd_wakeup_timer, wakeup_timer, wakeup timer);
-SHELL_CMD_EXPORT_ALIAS(cmd_set_dtim, wifi_lp_set_dtim, cmd_set_dtim);
-SHELL_CMD_EXPORT_ALIAS(cmd_io_dbg, io_debug, cmd io_debug);
-SHELL_CMD_EXPORT_ALIAS(cmd_send_arp, send_arp, send arp timer);
 SHELL_CMD_EXPORT_ALIAS(cmd_io_wakeup, io_wakeup, configure io wakeup source);
-#if !defined(BL616)
-SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_uart_cfg, lpfw_uart, cmd lpfw_uart);
-SHELL_CMD_EXPORT_ALIAS(cmd_lpfw_clock_cfg, lpfw_clock, cmd lpfw_clock);
-#endif
 
 #if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
 static void __enter_pds15_witharg(uint8_t dtm, int broadcast)

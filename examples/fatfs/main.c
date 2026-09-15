@@ -251,7 +251,7 @@ void fatfs_test_main(void *param)
             break;
         }
 
-#if defined(CONFIG_NEWLIB) && CONFIG_NEWLIB && defined(CONFIG_NEWLIB_FATFS) && CONFIG_NEWLIB_FATFS
+#if defined(CONFIG_NEWLIB_FATFS) && CONFIG_NEWLIB_FATFS
         FILE *fp;
         fp = fopen("/sd/hellotest.txt", "w+");
         fprintf(fp, "hello world\r\n");

@@ -544,7 +544,11 @@ SECTIONS
     {
 #if defined(CONFIG_NETHUB_HOTCODE_IN_FLASH)
         INCLUDE nethub_hotcode.ld.in
-#elif defined(CONFIG_WIFI6) && !defined(CONFIG_PSRAM_COPY_CODE)
+#elif defined(CONFIG_WIFI6)
+
+#if defined(CONFIG_FHOST)
+        INCLUDE wifi6_wlip_cache_affinity.ld.in
+#endif
         INCLUDE macsw_cache_affinity.ld.in
 #endif
 

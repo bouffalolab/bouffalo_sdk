@@ -9,7 +9,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : window, function (common) {
   "use strict";
 
-  const CONFIG = common.uartConfig({ chip: "bl616" });
+  const CONFIG = common.uartConfig({ chip: "bl616", flashClock: 0x41, flashClockDelay: 1 });
   const VERSION_IDS = Object.freeze({
     "01001606": "a0",
     "02001606": "a1",

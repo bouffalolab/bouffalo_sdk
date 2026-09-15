@@ -951,6 +951,20 @@ struct bt_br_conn_param {
 struct bt_conn *bt_conn_create_br(const bt_addr_t *peer,
 				  const struct bt_br_conn_param *param);
 
+/** @brief Queue a BR/EDR role switch without blocking.
+ *
+ * @param conn Connected BR/EDR ACL connection.
+ * @param role BT_CONN_ROLE_MASTER or BT_CONN_ROLE_SLAVE.
+ * @return 0 if queued, -EALREADY if already in the requested role,
+ *         -EINVAL for invalid arguments, -ENOTCONN if disconnected,
+ *         or a negative error if command submission fails.
+ *
+ * Completion is asynchronous: the HCI Role Change event reports the result
+ * and updates the connection role on success. Safe from connection callbacks.
+ */
+int bt_conn_br_switch_role(struct bt_conn *conn, u8_t role);
+
+
 #if defined(BFLB_BLE)
 #if defined(CONFIG_BT_BREDR)
 struct esco_para {

@@ -2,11 +2,46 @@
 #define WIRELESS_CONFIG_H
 
 #include <stdint.h>
+#include "wl_api.h"
 
 #define WIRELESS_ERR_INVALID_PARAM 0x01
 
-// Helper macro to define channel power limits
-#define DEFINE_WLAN_CHANNEL_POWER(pv_chan, pv_dsss, pv_cck, pv_g, pv_n20, pv_n40, pv_ax20, pv_ax40) \
+#define WLAN_2G_POWER_CHANNELS            14
+#define WLAN_5G_20M_POWER_CHANNELS        28
+#define WLAN_5G_40M_POWER_CHANNELS        14
+#define WLAN_5G_80M_POWER_CHANNELS        7
+#define WLAN_5G_POWER_CHANNELS            (WLAN_5G_20M_POWER_CHANNELS + WLAN_5G_40M_POWER_CHANNELS + WLAN_5G_80M_POWER_CHANNELS)
+
+static inline uint8_t wlan_channel_to_power_index(uint8_t channel)
+{
+    static const uint8_t wlan_5g_channels[] = {
+        // 20M channels
+        36, 40, 44, 48, 52, 56, 60, 64,
+        100, 104, 108, 112, 116, 120, 124, 128,
+        132, 136, 140, 144, 149, 153, 157, 161,
+        165, 169, 173, 177,
+        // 40M channels
+        38, 46, 54, 62, 102, 110, 118, 126,
+        134, 142, 151, 159, 167, 175,
+        // 80M channels
+        42, 58, 106, 122, 138, 155, 171,
+    };
+
+    if (channel >= 1 && channel <= WLAN_2G_POWER_CHANNELS) {
+        return channel - 1;
+    }
+
+    for (uint8_t i = 0; i < sizeof(wlan_5g_channels) / sizeof(wlan_5g_channels[0]); i++) {
+        if (channel == wlan_5g_channels[i]) {
+            return WLAN_2G_POWER_CHANNELS + i;
+        }
+    }
+
+    return NUM_WLAN_CHANNELS;
+}
+
+// Helper macros to define channel power limits
+#define DEFINE_WLAN_CHANNEL_POWER(pv_chan, pv_dsss, pv_cck, pv_g, pv_n20, pv_ac20, pv_ax20, pv_n40, pv_ac40, pv_ax40, pv_ac80, pv_ax80) \
     { \
         .channel = pv_chan, \
         .limits = { \
@@ -14,9 +49,13 @@
             .b_cck = pv_cck, \
             .g = pv_g, \
             .n20 = pv_n20, \
-            .n40 = pv_n40, \
+            .ac20 = pv_ac20, \
             .ax20 = pv_ax20, \
+            .n40 = pv_n40, \
+            .ac40 = pv_ac40, \
             .ax40 = pv_ax40, \
+            .ac80 = pv_ac80, \
+            .ax80 = pv_ax80, \
         } \
     }
 
@@ -60,9 +99,13 @@ struct reg_power_limits_t {
         int8_t b_cck;      // Power limit for 802.11b CCK
         int8_t g;          // Power limit for 802.11g
         int8_t n20;        // Power limit for 802.11n 20MHz
-        int8_t n40;        // Power limit for 802.11n 40MHz
+        int8_t ac20;       // Power limit for 802.11ac 20MHz
         int8_t ax20;       // Power limit for 802.11ax 20MHz
+        int8_t n40;        // Power limit for 802.11n 40MHz
+        int8_t ac40;       // Power limit for 802.11ac 40MHz
         int8_t ax40;       // Power limit for 802.11ax 40MHz
+        int8_t ac80;       // Power limit for 802.11ac 80MHz
+        int8_t ax80;       // Power limit for 802.11ax 80MHz
     } limits;
 };
 
@@ -107,6 +150,7 @@ struct spur_rule_t {
     uint8_t channel;      // WiFi channel number
     uint32_t cfg20;        // Configuration for 20MHz mode
     uint32_t cfg40;        // Configuration for 40MHz mode
+    uint32_t cfg80;        // Configuration for 80MHz mode
 };
 
 // Spur mitigation database
@@ -163,4 +207,3 @@ void wireless_spur_init(void);
 #define WL_CFG_VERBOSE(fmt, ...) WL_CFG_LOG(WL_CFG_LOG_VERBOSE, fmt, ##__VA_ARGS__)
 
 #endif // WIRELESS_CONFIG_H 
-

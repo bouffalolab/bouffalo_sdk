@@ -69,6 +69,9 @@ struct mr_frame_queue_ctrl_s {
     uint16_t frame_elem_size;     /**< Frame element size */
     uint16_t frame_elem_hdr_size; /**< Frame element header size */
 
+    mr_frame_queue_free_cb_t custom_free_cb; /**< Custom buffer release callback */
+    void *custom_free_arg;
+
     mr_frame_queue_free_cb_t before_free_cb; /**< Before free callback */
     void *before_free_cb_arg;                /**< Before free callback argument */
 

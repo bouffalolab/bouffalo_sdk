@@ -1642,7 +1642,7 @@ static void net_poll_recv(void)
 
     timeout.tv_sec= 0;
     timeout.tv_usec= 10000;
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     (void)timeout;
     if(select(maxfd+1, &fdR, NULL, NULL, NULL) > 0) {
 #else

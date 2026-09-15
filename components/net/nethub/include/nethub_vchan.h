@@ -19,6 +19,17 @@ typedef uint8_t nethub_vchan_type_t;
 #define NETHUB_VCHAN_TYPE_SYSTEM  ((nethub_vchan_type_t)3U)
 #define NETHUB_VCHAN_TYPE_MAX     (4U)
 
+#pragma pack(push, 1)
+typedef struct {
+    uint8_t data_type;
+    uint8_t reserved;
+    uint16_t len;
+    uint8_t data[];
+} __attribute__((packed)) nethub_vchan_data_hdr_t;
+#pragma pack(pop)
+
+#define NETHUB_VCHAN_DATA_HDR_LEN ((uint16_t)sizeof(nethub_vchan_data_hdr_t))
+
 typedef int (*nethub_vchan_recv_cb_t)(void *cb_arg, uint8_t *data_buff, uint16_t data_size);
 
 /* Send one payload on the specified logical virtual channel. */

@@ -1,14 +1,56 @@
 #include "bflb_rtc.h"
-#include "hardware/rtc_reg.h"
 #include "time.h"
 
-#if defined(BL602) || defined(BL702) || defined(BL702L)
+#if defined(BL602)
+#include "bl602_hbn.h"
 #define BFLB_RTC_BASE 0x4000F000
-#elif  defined(BL616) || defined(BL616CL)
+#elif defined(BL702)
+#include "bl702_hbn.h"
+#define BFLB_RTC_BASE 0x4000F000
+#elif defined(BL702L)
+#include "bl702l_hbn.h"
+#define BFLB_RTC_BASE 0x4000F000
+#elif defined(BL616)
+#include "bl616_hbn.h"
+#define BFLB_RTC_BASE 0x2000F000
+#elif defined(BL616CL)
+#include "bl616cl_hbn.h"
 #define BFLB_RTC_BASE 0x2000F000
 #elif  defined(BL618DG)
+#include "bl618dg_hbn.h"
 #define BFLB_RTC_BASE 0x2008F000
 #endif
+
+#define BFLB_RTC_ENABLE              (1U << 0U)
+#define BFLB_RTC_CTL_SHIFT           (1U)
+#define BFLB_RTC_BIT39_0_COMPARE     (1U << BFLB_RTC_CTL_SHIFT)
+#define BFLB_RTC_TIME_LATCH          (1U << 31U)
+
+#if defined(BL602) || defined(BL702)
+#define BFLB_RTC_CTL_MASK            (0x3fU << BFLB_RTC_CTL_SHIFT)
+#define BFLB_RTC_DLY_OPTION          (1U << 24U)
+#else
+#define BFLB_RTC_CTL_MASK            (0x7U << BFLB_RTC_CTL_SHIFT)
+#define BFLB_RTC_DLY_OPTION          (1U << 4U)
+#endif
+
+void bflb_rtc_init(struct bflb_device_s *dev, enum bflb_rtc_32k_clk_type clk_type)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    LHAL_PARAM_ASSERT(clk_type == BFLB_RTC_32K_CLK_RC ||
+                      clk_type == BFLB_RTC_32K_CLK_XTAL ||
+                      clk_type == BFLB_RTC_32K_CLK_DIG);
+
+    reg_base = BFLB_RTC_BASE;
+
+    HBN_32K_Sel(clk_type);
+
+    regval = getreg32(reg_base + HBN_CTL_OFFSET);
+    regval |= BFLB_RTC_ENABLE;
+    putreg32(regval, reg_base + HBN_CTL_OFFSET);
+}
 
 void bflb_rtc_disable(struct bflb_device_s *dev)
 {
@@ -22,7 +64,7 @@ void bflb_rtc_disable(struct bflb_device_s *dev)
 
     /* Clear & Disable RTC counter */
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
-    regval &= ~HBN_RTC_ENABLE;
+    regval &= ~BFLB_RTC_ENABLE;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
 #endif
 }
@@ -40,18 +82,18 @@ void bflb_rtc_set_time(struct bflb_device_s *dev, uint64_t time)
 
     /* Clear RTC Control */
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
-    regval &= ~HBN_RTC_CTL_MASK;
+    regval &= ~BFLB_RTC_CTL_MASK;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
 
-    regval |= HBN_RTC_DLY_OPTION;
-    regval |= HBN_RTC_BIT39_0_COMPARE;
+    regval |= BFLB_RTC_DLY_OPTION;
+    regval |= BFLB_RTC_BIT39_0_COMPARE;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
 
     /* Tigger RTC val read */
     regval = getreg32(reg_base + HBN_RTC_TIME_H_OFFSET);
-    regval |= HBN_RTC_TIME_LATCH;
+    regval |= BFLB_RTC_TIME_LATCH;
     putreg32(regval, reg_base + HBN_RTC_TIME_H_OFFSET);
-    regval &= ~HBN_RTC_TIME_LATCH;
+    regval &= ~BFLB_RTC_TIME_LATCH;
     putreg32(regval, reg_base + HBN_RTC_TIME_H_OFFSET);
 
     /* Read RTC val */
@@ -86,7 +128,7 @@ void bflb_rtc_set_time(struct bflb_device_s *dev, uint64_t time)
 
     /* Enable RTC Counter */
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
-    regval |= HBN_RTC_ENABLE;
+    regval |= BFLB_RTC_ENABLE;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
 #endif
 }
@@ -105,9 +147,9 @@ uint64_t bflb_rtc_get_time(struct bflb_device_s *dev)
 
     /* Tigger RTC val read */
     regval = getreg32(reg_base + HBN_RTC_TIME_H_OFFSET);
-    regval |= HBN_RTC_TIME_LATCH;
+    regval |= BFLB_RTC_TIME_LATCH;
     putreg32(regval, reg_base + HBN_RTC_TIME_H_OFFSET);
-    regval &= ~HBN_RTC_TIME_LATCH;
+    regval &= ~BFLB_RTC_TIME_LATCH;
     putreg32(regval, reg_base + HBN_RTC_TIME_H_OFFSET);
 
     /* Read RTC val */

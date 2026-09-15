@@ -45,6 +45,77 @@
 #include "bflb_flash.h"
 #include "bflb_sp_port.h"
 
+#if !defined(CPU_MODEL_A0)
+static uint32_t hal_boot2_get_boot2_pk_hash_offset(uint32_t slot)
+{
+    switch (slot) {
+        case 0U:
+            return HAL_BOOT2_PK0_HASH_OFFSET;
+        case 1U:
+            return HAL_BOOT2_PK1_HASH_OFFSET;
+        case 2U:
+            return HAL_BOOT2_PK2_HASH_OFFSET;
+        case 3U:
+            return HAL_BOOT2_PK3_HASH_OFFSET;
+        default:
+            return 0U;
+    }
+}
+
+static void hal_boot2_read_boot2_pk_hash(uint32_t slot, uint32_t hash_size, uint32_t *pk_hash)
+{
+    if (slot == 0U) {
+        bflb_ef_ctrl_read_direct(NULL, hal_boot2_get_boot2_pk_hash_offset(slot), pk_hash,
+                                 HAL_BOOT2_PK_HASH_SIZE / 4U, 0);
+        if (hash_size == HAL_BOOT2_PK_HASH_SIZE_SHA384) {
+            bflb_ef_ctrl_read_direct(NULL, HAL_BOOT2_PK0_HASH_EXT_OFFSET,
+                                     pk_hash + HAL_BOOT2_PK_HASH_SIZE / 4U,
+                                     (HAL_BOOT2_PK_HASH_SIZE_SHA384 - HAL_BOOT2_PK_HASH_SIZE) / 4U, 0);
+        }
+    } else {
+        bflb_ef_ctrl_read_direct(NULL, hal_boot2_get_boot2_pk_hash_offset(slot),
+                                 pk_hash, hash_size / 4U, 0);
+    }
+}
+
+uint32_t hal_boot2_is_pkhash_valid(const boot2_efuse_hw_config *efuse_cfg, const uint8_t *pkhash, uint8_t sign_type)
+{
+    uint32_t efuse_pk_hash[HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4U];
+    uint32_t hash_size;
+
+    if (sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA256) {
+        hash_size = HAL_BOOT2_PK_HASH_SIZE;
+#if HAL_BOOT2_SUPPORT_SIGN_SHA384
+    } else if (sign_type == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
+        hash_size = HAL_BOOT2_PK_HASH_SIZE_SHA384;
+#endif
+    } else {
+        return 0;
+    }
+
+    BOOT2_MSG_DBG("PK revoke[0-3]:%d %d %d %d\r\n",
+                  (int)((efuse_cfg->pk_hash_revoke >> 0U) & 1U),
+                  (int)((efuse_cfg->pk_hash_revoke >> 1U) & 1U),
+                  (int)((efuse_cfg->pk_hash_revoke >> 2U) & 1U),
+                  (int)((efuse_cfg->pk_hash_revoke >> 3U) & 1U));
+
+    for (uint32_t slot = 0; slot < HAL_BOOT2_PK_HASH_SLOT_COUNT; slot++) {
+        if ((efuse_cfg->pk_hash_revoke & (1U << slot)) != 0U) {
+            continue;
+        }
+
+        hal_boot2_read_boot2_pk_hash(slot, hash_size, efuse_pk_hash);
+        if (memcmp(efuse_pk_hash, pkhash, hash_size) == 0) {
+            BOOT2_MSG_DBG("PK hash matched slot %d\r\n", (int)slot);
+            return 1;
+        }
+    }
+
+    BOOT2_MSG_DBG("PK hash no valid slot matched\r\n");
+    return 0;
+}
+#endif
+
 /****************************************************************************/ /**
  * @brief  init boot2 system clock
  *
@@ -394,6 +465,9 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
     struct boot_efuse_sw_cfg0_t sw_cfg0;
     struct boot_efuse_sw_cfg1_t sw_cfg1;
     uint32_t tmpval = 0;
+#if !defined(CPU_MODEL_A0)
+    uint32_t pk_hash_revoke = 0;
+#endif
 
     /* get app encrypt and sign type */
     bflb_ef_ctrl_read_direct(NULL, 0x7C, (uint32_t *)&app_encrypt_sign, 1, 0);
@@ -440,6 +514,11 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
         switch (efuse_cfg->app_sign_type) {
             case HAL_APP_SIGN_SAME_AS_BOOT2:
                 efuse_cfg->sign[i] = ((struct boot_efuse_sw_cfg1_t)sw_cfg1).sign_cfg;
+#if !defined(CPU_MODEL_A0)
+                bflb_ef_ctrl_read_direct(NULL, HAL_BOOT2_PK_HASH_REVOKE_OFFSET, &pk_hash_revoke, 1, 0);
+                efuse_cfg->pk_hash_revoke = (pk_hash_revoke >> HAL_BOOT2_PK_HASH_REVOKE_POS) &
+                                            HAL_BOOT2_PK_HASH_REVOKE_MASK;
+#else
                 bflb_ef_ctrl_read_direct(NULL, 0x1C, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
 #if HAL_BOOT2_SUPPORT_SIGN_SHA384
                 if (efuse_cfg->sign[i] == HAL_BOOT_SIGN_TYPE_ECC_SHA384) {
@@ -447,15 +526,16 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
                     bflb_ef_ctrl_read_direct(NULL, 0xC0, (uint32_t *)((uint8_t *)efuse_cfg->pk_hash_cpu[i] + HAL_BOOT2_PK_HASH_SIZE), 4, 0);
                 }
 #endif
+#endif
                 break;
 #if defined(BL618DG) && !defined(CPU_MODEL_A0)
             case HAL_APP_SIGN_INDIVIDUAL_SHA256:
                 efuse_cfg->sign[i] = HAL_BOOT_SIGN_TYPE_ECC_SHA256;
-                bflb_ef_ctrl_read_direct(NULL, 0x1C0, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
+                bflb_ef_ctrl_read_direct(NULL, HAL_BOOT2_APP_PK0_HASH_OFFSET, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE / 4, 0);
                 break;
             case HAL_APP_SIGN_INDIVIDUAL_SHA384:
                 efuse_cfg->sign[i] = HAL_BOOT_SIGN_TYPE_ECC_SHA384;
-                bflb_ef_ctrl_read_direct(NULL, 0x1C0, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4, 0);
+                bflb_ef_ctrl_read_direct(NULL, HAL_BOOT2_APP_PK0_HASH_OFFSET, (uint32_t *)efuse_cfg->pk_hash_cpu[i], HAL_BOOT2_PK_HASH_SIZE_SHA384 / 4, 0);
                 break;
 #endif
             case HAL_APP_NO_SIGN:

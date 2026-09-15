@@ -124,6 +124,7 @@ elseif("${CHIP}" STREQUAL "bl618dg")
         src/bflb_dpi.c
         src/bflb_sec_gmac.c
         src/bflb_touch_v2.c
+        src/bflb_kys_v2.c
         src/bflb_auadc.c
         src/bflb_audac.c
         src/bflb_multi_core_sync.c

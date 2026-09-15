@@ -14,7 +14,7 @@ BAUDRATE ?= 2000000
 COMX ?= COM5
 
 command_flash = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
-	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --config=flash_prog_cfg.ini
+	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --config=$(BUILD_DIR)/flash_prog_cfg.ini
 command_ram = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
 	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --firmware=$(BUILD_DIR)/build_out/$(PROJ_NAME)*.bin --ram
 command_efuse = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
@@ -71,9 +71,7 @@ ram:
 	$(command_ram)
 
 whole:
-	$(CMAKE) -E copy flash_prog_cfg.ini $(BUILD_DIR)/flash_prog_cfg.ini
-	sed -i 's/\.\/build/\./g' $(BUILD_DIR)/flash_prog_cfg.ini
-	$(CMAKE) -E chdir $(BUILD_DIR) $(command_flash) --build
+	$(command_flash) --build
 	$(CMAKE) -E copy ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
 
 efuse:

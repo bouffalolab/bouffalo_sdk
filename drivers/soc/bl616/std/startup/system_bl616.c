@@ -277,6 +277,8 @@ void System_Post_Init(void)
 
     sysinit_run_all();
 
+    HBN_Trim_RC32K();
+
 #ifndef CONFIG_FREERTOS
     /* global IRQ enable */
     __enable_irq();

@@ -190,6 +190,7 @@ static void sdio2_reset_irq_callback(void *arg)
     LOG_W("\r\n***** sdio2 reset! *****\r\n");
     sdio2_lowpower_prepare();
     sdio2_lowpower_restore();
+    mr_msg_host_reset_cb((mr_msg_ctrl_priv_t *)arg);
 }
 #endif
 

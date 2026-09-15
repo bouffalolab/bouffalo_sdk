@@ -11,7 +11,6 @@
 #include <wifi_mgmr.h>
 
 #include <bflb_irq.h>
-#include <bflb_mtimer.h>
 #include <board.h>
 #include <bl_lp.h>
 #include <bl616_pm.h>
@@ -19,7 +18,11 @@
 #include <bl616_glb.h>
 #include <bl616_glb_gpio.h>
 #include <bl616_hbn.h>
+#include "clock_manager.h"
+#include "pm_helper_cli.h"
 #include "pm_manager.h"
+#include "tickless.h"
+#include "tickless_hook.h"
 
 #include <board.h>
 #include <board_rf.h>
@@ -27,10 +30,12 @@
 #include <bl616_glb.h>
 
 
-extern int tickless_enter(void);
-extern int tickless_exit(void);
 extern void vPortSetupTimerInterrupt(void);
 void __attribute__((weak)) spisync_wakeup(void *arg) { (void)arg; }
+
+#ifdef BL_HOSTROUTER_ENABLE
+#include "sdiowifi_mgmr.h"
+#endif
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
@@ -172,52 +177,6 @@ int cmd_wifi_lp(int argc, char **argv)
     return 0;
 }
 
-extern bl_lp_fw_cfg_t lpfw_cfg;
-
-static void cmd_tickless(int argc, char **argv)
-{
-    int broadcast = 0;
-
-    if (argc > 2) {
-        if (argv[2] != NULL) {
-            broadcast = atoi(argv[2]);
-        } else {
-            broadcast = 0;
-        }
-
-        if (broadcast == 0) {
-            if (argv[1] != NULL) {
-                lpfw_cfg.dtim_origin = atoi(argv[1]);
-            } else {
-                lpfw_cfg.dtim_origin = 10;
-            }
-        }
-    } else if (argc > 1) {
-        broadcast = 0;
-        if (argv[1] != NULL) {
-            lpfw_cfg.dtim_origin = atoi(argv[1]);
-        } else {
-            lpfw_cfg.dtim_origin = 10;
-        }
-    } else {
-        lpfw_cfg.dtim_origin = 10;
-        broadcast = 0;
-    }
-
-    printf("dtim_origin: %d\r\n", lpfw_cfg.dtim_origin);
-    printf("broadcast: %d\r\n", broadcast);
-
-    if (broadcast) {
-        enable_multicast_broadcast = 1;
-        lpfw_cfg.bcmc_dtim_mode = 1;
-    } else {
-        enable_multicast_broadcast = 0;
-        lpfw_cfg.bcmc_dtim_mode = 0;
-    }
-
-    pm_enable_tickless();
-}
-
 static int test_tcp_keepalive(int argc, char **argv)
 {
     int sockfd;
@@ -276,12 +235,9 @@ static int test_tcp_keepalive(int argc, char **argv)
     /*---Get "Hello?"---*/
     memset(buffer, 'A', sizeof(buffer) - 1);
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     if (argc > 2) {
-        bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
-
-        printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
-        tickless_enter();
+        pm_enable_tickless();
     }
 #endif
 
@@ -314,20 +270,6 @@ static int test_tcp_keepalive(int argc, char **argv)
 
     close(sockfd);
     return 0;
-}
-
-static void cmd_io_dbg(int argc, char **argv)
-{
-    if (argc != 2) {
-        printf("cmd_io_dbg err\r\n");
-        return;
-    }
-
-    if (atoi(argv[1]) <= 34) {
-        iot2lp_para->debug_io = atoi(argv[1]);
-    } else {
-        iot2lp_para->debug_io = 0xFF;
-    }
 }
 
 static void lp_io_wakeup_callback(uint64_t wake_up_io_bits)
@@ -396,275 +338,45 @@ int lp_delete_wakeup_by_io(uint8_t io)
     return 0;
 }
 
-SHELL_CMD_EXPORT_ALIAS(cmd_tickless, tickless, cmd tickless);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_lp, wifi_lp_test, wifi low power test);
 SHELL_CMD_EXPORT_ALIAS(test_tcp_keepalive, lpfw_tcp_keepalive, tcp keepalive test);
-SHELL_CMD_EXPORT_ALIAS(cmd_io_dbg, io_debug, cmd io_debug);
 #endif
 
-static TaskHandle_t rc32k_coarse_trim_task_hd = NULL;
-static TaskHandle_t xtal32k_check_entry_task_hd = NULL;
-
-/**********************************************************
-    rc32k coarse trim task func
- **********************************************************/
-static void rc32k_coarse_trim_task(void *pvParameters)
+static void f32k_clk_init_task(void *pvParameters)
 {
-    uint32_t retry_cnt = 0;
-    uint64_t timeout_start;
+    (void)pvParameters;
 
-    uint64_t rtc_cnt, rtc_record_us, rtc_now_us;
-    uint64_t mtimer_record_us, mtimer_now_us;
-
-    uint32_t rtc_us, mtimer_us;
-    int error_ppm;
-
-    printf("rc32k_coarse_trim task enable, freq_mtimer must be 1MHz!\r\n");
-    timeout_start = bflb_mtimer_get_time_us();
-
-    vTaskDelay(20);
-
-    while(1){
-        retry_cnt += 1;
-
-        /* disable irq */
-        __disable_irq();
-
-        mtimer_record_us = bflb_mtimer_get_time_us();
-        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-
-        /* enable irq */
-        __enable_irq();
-
-        rtc_record_us = BL_PDS_CNT_TO_US(rtc_cnt);
-
-        /* delay */
-        vTaskDelay(50);
-
-        /* disable irq */
-        __disable_irq();
-
-        mtimer_now_us = bflb_mtimer_get_time_us();
-        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-
-        /* enable irq */
-        __enable_irq();
-
-        rtc_now_us = BL_PDS_CNT_TO_US(rtc_cnt);
-
-        /* calculate */
-        rtc_us = (uint32_t)(rtc_now_us - rtc_record_us);
-        mtimer_us = (uint32_t)(mtimer_now_us - mtimer_record_us);
-        /* call coarse_adj */
-        error_ppm = bl_lp_rtc_rc32k_coarse_adj(mtimer_us, rtc_us);
-
-        printf("rc32k_coarse_trim: mtimer_us:%d, rtc_us:%d\r\n", mtimer_us, rtc_us);
-
-        if(error_ppm > 2000 || error_ppm < -2000){
-            /*  */
-            printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, continue...\r\n", retry_cnt, error_ppm);
-            vTaskDelay(5);
-        }else{
-            /* finish */
-            printf("rc32k_coarse_trim: retry_cnt:%d, ppm:%d, finish!\r\n", retry_cnt, error_ppm);
-            break;
-        }
+    if (app_clock_init() != 0) {
+        printf("F32K clock initialization failed!\r\n");
+    } else {
+        printf("F32K clock initialization success!\r\n");
     }
 
-    printf("rc32k coarse trim success!, total time:%dms\r\n", (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
-
-    /* coarse_adj success */
-    if(xtal32k_check_entry_task_hd){
-        /* resume xtal32k_check task */
-        printf("rc32k_coarse_trim: Resume xtal32k_check task!\r\n");
-        xTaskNotifyGive(xtal32k_check_entry_task_hd);
-    }else{
-        /* set bl_lp 32k clock ready */
-        printf("rc32k_coarse_trim: set lp_32k ready!\r\n");
-        bl_lp_set_32k_clock_ready(1);
-    }
-
-    printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_trim_parameter->rc32k_fr_ext);
-
-    printf("rc32k_coarse task: vTaskDelete\r\n");
     vTaskDelete(NULL);
 }
 
-/**********************************************************
-    xtal32k check task func
- **********************************************************/
-static void xtal32k_check_entry_task(void *pvParameters)
+static void app_pm_timeout_callback(TimerHandle_t timer)
 {
-    uint32_t xtal32_regulator_flag = 0;
-
-    uint64_t timeout_start;
-
-    uint32_t retry_cnt = 0;
-
-    uint64_t rtc_cnt, rtc_record_us, rtc_now_us;
-    uint64_t mtimer_record_us, mtimer_now_us;
-
-    uint32_t rtc_us, mtimer_us;
-    int32_t diff_us;
-
-    uint32_t success_flag = 0;
-
-    vTaskDelay(10);
-    printf("xtal32k_check_entry task enable, freq_mtimer must be 1MHz!\r\n");
-
-    GLB_GPIO_Cfg_Type gpioCfg = {
-        .gpioPin = GLB_GPIO_PIN_0,
-        .gpioFun = GPIO_FUN_ANALOG,
-        .gpioMode = GPIO_MODE_ANALOG,
-        .pullType = GPIO_PULL_NONE,
-        .drive = 1,
-        .smtCtrl = 1
-    };
-    gpioCfg.gpioPin = 16;
-    GLB_GPIO_Init(&gpioCfg);
-    gpioCfg.gpioPin = 17;
-    GLB_GPIO_Init(&gpioCfg);
-
-    /* power on */
-    HBN_Set_Xtal_32K_Inverter_Amplify_Strength(3);
-    HBN_Power_On_Xtal_32K();
-
-    timeout_start = bflb_mtimer_get_time_us();
-
-    printf("xtal32k_check: delay 100 ms\r\n");
-    vTaskDelay(500);
-
-    if(rc32k_coarse_trim_task_hd){
-        printf("xtal32k_check: wait rc32k_coarse_trim finish\r\n");
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    }
-
-    printf("xtal32k_check: start check\r\n");
-
-    HBN_32K_Sel(1);
-    vTaskDelay(2);
-
-    while(1){
-        retry_cnt += 1;
-
-        /* disable irq */
-        __disable_irq();
-
-        mtimer_record_us = bflb_mtimer_get_time_us();
-        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-
-        /* enable irq */
-        __enable_irq();
-
-        rtc_record_us = BL_PDS_CNT_TO_US(rtc_cnt);
-
-        /* delay */
-        vTaskDelay(10);
-
-         /* disable irq */
-        __disable_irq();
-
-        mtimer_now_us = bflb_mtimer_get_time_us();
-        HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
-
-        /* enable irq */
-        __enable_irq();
-
-        rtc_now_us = BL_PDS_CNT_TO_US(rtc_cnt);
-
-        /* calculate */
-        rtc_us = (uint32_t)(rtc_now_us - rtc_record_us);
-        mtimer_us = (uint32_t)(mtimer_now_us - mtimer_record_us);
-        diff_us = rtc_us - mtimer_us;
-
-        printf("xtal32k_check: mtimer_us:%d, rtc_us:%d\r\n", mtimer_us, rtc_us);
-
-        if(diff_us < -100 || diff_us > 100){
-            /* continue */
-            printf("xtal32k_check: retry_cnt:%d, diff_us:%d, continue...\r\n", retry_cnt, diff_us);
-            vTaskDelay(10);
-        }else{
-            /* finish */
-            printf("xtal32k_check: retry_cnt:%d, diff_us:%d, finish!\r\n", retry_cnt, diff_us);
-            success_flag = 1;
-            break;
-        }
-
-        /* 1sec, set xtal regulator */
-        if((xtal32_regulator_flag == 0) && (bflb_mtimer_get_time_us() - timeout_start > 1000*1000)){
-            printf("xtal32K_check: reset xtal32k regulator\r\n");
-            xtal32_regulator_flag = 1;
-
-            HBN_32K_Sel(0);
-            HBN_Power_Off_Xtal_32K();
-
-            vTaskDelay(10);
-
-            HBN_Set_Xtal_32K_Regulator(3);
-            HBN_Power_On_Xtal_32K();
-            HBN_32K_Sel(1);
-        }
-
-        if(bflb_mtimer_get_time_us() - timeout_start > 3 * 1000 * 1000){
-            success_flag = 0;
-            break;
-        }
-    }
-
-    if(success_flag){
-        printf("xtal32k_check: success!, total time:%dms\r\n", (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
-
-        /* GPIO17 no pull */
-        *((volatile uint32_t *)0x2000F014) &= ~(1 << 16);
-
-        printf("select xtal32k\r\n");
-
-    }else{
-        printf("xtal32k_check: failure!, total time:%dms\r\n", (int)(bflb_mtimer_get_time_us() - timeout_start) / 1000);
-        printf("xtal32k_check: select rc32k, and xtal32k poweroff \r\n");
-        HBN_32K_Sel(0);
-        HBN_Power_Off_Xtal_32K();
-    }
-
-    /* */
-    printf("xtal32k_check: set lp_32k ready!\r\n");
-    bl_lp_set_32k_clock_ready(1);
-
-    printf("xtal32k_check task: vTaskDelete\r\n");
-    vTaskDelete(NULL);
+    pm_disable_tickless();
+    xTimerDelete(timer, 0);
 }
 
-void timerCallback(TimerHandle_t xTimer)
+static int app_pm_start_timeout_timer(uint32_t timeout_ms)
 {
-    tickless_exit();
-    xTimerDelete(xTimer, portMAX_DELAY);
+    TimerHandle_t timer;
 
-    //if (wifi_mgmr_sta_state_get()) {
-    //    wifi_mgmr_sta_ps_exit();
-    //}
-    spisync_wakeup(NULL);
-}
-
-void createAndStartTimer(const char* timerName, TickType_t timerPeriod)
-{
-    TimerHandle_t timer = xTimerCreate(timerName,
-                                       timerPeriod,
-                                       pdTRUE,
-                                       0,
-                                       timerCallback
-                                    );
-
-    if (timer == NULL)
-    {
-        printf("Failed to create timer.\n");
-        return;
+    timer = xTimerCreate("PwrTimer", pdMS_TO_TICKS(timeout_ms), pdFALSE, NULL,
+                         app_pm_timeout_callback);
+    if (timer == NULL) {
+        return -1;
     }
 
-    if (xTimerStart(timer, 0) != pdPASS)
-    {
-        printf("Failed to start timer.\n");
-        return;
+    if (xTimerStart(timer, 0) != pdPASS) {
+        xTimerDelete(timer, 0);
+        return -1;
     }
+
+    return 0;
 }
 
 static bl_lp_hbn_fw_cfg_t hbn_test_cfg={
@@ -704,20 +416,81 @@ void app_pm_enter_hbn(int level)
 void app_pm_enter_pds15(void)
 {
     if (lp_timerouts_ms) {
-        TickType_t timerPeriod = pdMS_TO_TICKS(lp_timerouts_ms);
-
-        char timerName[32];
-        snprintf(timerName, sizeof(timerName), "PwrTimer_%u", (unsigned int)timerPeriod);
-
-        createAndStartTimer(timerName, timerPeriod);
+        (void)app_pm_start_timeout_timer(lp_timerouts_ms);
         lp_timerouts_ms = 0;
     }
 
-    tickless_enter();
+    pm_enable_tickless();
 }
+
+void app_pm_exit_pds15(void)
+{
+    pm_disable_tickless();
+}
+
+int app_pm_create_arp_announce_timer(uint32_t seconds)
+{
+    return pm_helper_cli_arp_timer_start(seconds);
+}
+
+int app_pm_delete_arp_announce_timer(void)
+{
+    return pm_helper_cli_arp_timer_stop();
+}
+
+int app_create_keepalive_timer(uint32_t period_seconds)
+{
+    return pm_helper_cli_keepalive_timer_start(period_seconds);
+}
+
+int app_delete_keepalive_timer(void)
+{
+    return pm_helper_cli_keepalive_timer_stop();
+}
+
+int app_pm_twt_param_set(int s, int t, int e, int n, int m)
+{
+    return pm_helper_cli_twt_setup(s, t, e, n, m);
+}
+
+static int sdio_wifi_wakeup_timer_start(uint32_t timeout_ms, int broadcast, void *arg)
+{
+    (void)broadcast;
+    (void)arg;
+
+    if (app_lp_timer_config(0, timeout_ms) != 0) {
+        return -1;
+    }
+    app_pm_enter_pds15();
+    return 0;
+}
+
+static int sdio_wifi_tickless_start(void *arg)
+{
+    (void)arg;
+    app_pm_enter_pds15();
+    return 0;
+}
+
+#ifdef BL_HOSTROUTER_ENABLE
+static bool sdio_wifi_prepare_sleep(void *arg)
+{
+    (void)arg;
+    return sdiowifi_mgmr_ps_prepare() == 0;
+}
+#endif
 
 int app_pm_init(void)
 {
+    static const pm_helper_cli_cfg_t helper_cfg = {
+        .wakeup_timer_cb = sdio_wifi_wakeup_timer_start,
+        .tickless_cb = sdio_wifi_tickless_start,
+        .arg = NULL,
+        .arp_target = PM_HELPER_CLI_ARP_LOCAL_IP,
+        .arp_period_seconds = 55,
+        .arp_send_immediately = true,
+        .arp_periodic = true,
+    };
     uint8_t soc_v, rt_v, aon_v;
 
     hal_pm_ldo11_cfg(PM_PDS_LDO_LEVEL_SOC_DEFAULT, PM_PDS_LDO_LEVEL_RT_DEFAULT, PM_PDS_LDO_LEVEL_AON_DEFAULT);
@@ -727,18 +500,22 @@ int app_pm_init(void)
     HBN_Enable_RTC_Counter();
     pm_rc32k_auto_cal_init();
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     bl_lp_init();
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
 #endif
 
-    /* coarse trim rc32k */
-    puts("[OS] Create rc32k_coarse_trim task...\r\n");
-    xTaskCreate(rc32k_coarse_trim_task, (char*)"rc32k_coarse_trim", 512, NULL, 31, &rc32k_coarse_trim_task_hd);
+#ifdef BL_HOSTROUTER_ENABLE
+    tickless_hooks_register(NULL, NULL, sdio_wifi_prepare_sleep, NULL, NULL, NULL);
+#endif
 
-    /* auto check xtal32k, only test */
-    puts("[OS] Create xtal32k_check_entry task...\r\n");
-    xTaskCreate(xtal32k_check_entry_task, (char*)"xtal32k_check_entry", 512, NULL, 31, &xtal32k_check_entry_task_hd);
+    if (pm_helper_cli_init(&helper_cfg) != 0) {
+        printf("pm helper cli init failed.\r\n");
+        return -1;
+    }
+
+    puts("[OS] Create f32k_clk_init task...\r\n");
+    xTaskCreate(f32k_clk_init_task, (char *)"f32k_clk_init", 1024, NULL, 12, NULL);
 
     return 0;
 }

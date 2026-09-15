@@ -207,7 +207,38 @@ function(sdk_add_static_library_ifdef feature)
   endif()
 endfunction()
 
+function(sdk_add_flash_partition_image)
+  cmake_parse_arguments(FLASH_IMAGE "" "PARTITION;FILE" "" ${ARGN})
+  if(FLASH_IMAGE_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR
+      "sdk_add_flash_partition_image() received unknown arguments: ${FLASH_IMAGE_UNPARSED_ARGUMENTS}")
+  endif()
+  if(NOT FLASH_IMAGE_PARTITION)
+    message(FATAL_ERROR "sdk_add_flash_partition_image() requires PARTITION")
+  endif()
+  if(NOT FLASH_IMAGE_FILE)
+    message(FATAL_ERROR "sdk_add_flash_partition_image() requires FILE")
+  endif()
+
+  if(NOT IS_ABSOLUTE "${FLASH_IMAGE_FILE}")
+    get_filename_component(FLASH_IMAGE_FILE
+      "${CMAKE_CURRENT_SOURCE_DIR}/${FLASH_IMAGE_FILE}" ABSOLUTE)
+  endif()
+  set_property(GLOBAL APPEND PROPERTY SDK_FLASH_PARTITION_IMAGES
+    "${FLASH_IMAGE_PARTITION}" "${FLASH_IMAGE_FILE}")
+endfunction()
+
+function(sdk_set_flash_erase mode)
+  if(NOT "${mode}" MATCHES "^[012]$")
+    message(FATAL_ERROR "sdk_set_flash_erase() requires 0, 1, or 2")
+  endif()
+  set_property(GLOBAL PROPERTY SDK_FLASH_ERASE "${mode}")
+endfunction()
+
 macro(sdk_ifndef define val)
+  if("${define}" MATCHES "^CONFIG_")
+    message(FATAL_ERROR "sdk_ifndef cannot define Kconfig variable ${define}")
+  endif()
   if(NOT DEFINED ${define})
     set(${define} ${val})
   endif()
@@ -347,70 +378,13 @@ macro(project name)
   include(${BL_SDK_BASE}/cmake/bflb_flash.cmake)
   include(${BL_SDK_BASE}/cmake/footprint.cmake)
 
-  file(REMOVE "${BUILD_DIR}/generated/autoconf_new.h")
-  file(APPEND "${BUILD_DIR}/generated/autoconf_new.h"
-       "#define _ZERO_WITH_COMMA_1 0,\n"
-       "#define _second_arg(__ignored, val, ...) val\n"
-       "#define _is_enabled(x)                __is_enabled(x)\n"
-       "#define __is_enabled(val)             ___is_enabled(_ZERO_WITH_COMMA_##val)\n"
-       "#define ___is_enabled(junk_or_comma)  _second_arg(junk_or_comma 1, 0)\n"
-       "#define IS_ENABLED(config)            _is_enabled(config)\n")
-
-  get_cmake_property(varNames VARIABLES)
-  foreach(varName ${varNames})
-    if(varName MATCHES "^CONFIG_")
-      set(varValue ${${varName}})
-      if("${varValue}" MATCHES "^(0[xX])?[0-9a-fA-F]+$")
-        file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#define ${varName} ${varValue}\n")
-      elseif("${varValue}" STREQUAL "y")
-        file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#define ${varName} 1\n")
-      elseif("${varValue}" STREQUAL "n")
-        file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#undef ${varName}\n")
-      else()
-        file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#define ${varName} \"${varValue}\"\n")
-      endif()
-    endif()
-
-    if(varName MATCHES "^CHIP$")
-      string(TOUPPER ${CHIP} CHIP_NAME)
-      file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#define ${CHIP_NAME} 1\n")
-    endif()
-
-    if(varName MATCHES "^CPU_ID$")
-      if(NOT ${CPU_ID} STREQUAL "")
-        string(TOUPPER ${CPU_ID} CPU_ID_NAME)
-        file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#define CPU_${CPU_ID_NAME} 1\n")
-      endif()
-    endif()
-
-    if(varName MATCHES "^CPU_MODEL$")
-      if(NOT "${CPU_MODEL}" STREQUAL "")
-        string(TOUPPER ${CPU_MODEL} CPU_MODEL_NAME)
-        file(APPEND "${BUILD_DIR}/generated/autoconf_new.h" "#define CPU_MODEL_${CPU_MODEL_NAME} 1\n")
-      endif()
-    endif()
-  endforeach()
-
-  if(EXISTS "${BUILD_DIR}/generated/autoconf.h")
-  file(MD5 "${BUILD_DIR}/generated/autoconf.h" HASH1)
-  file(MD5 "${BUILD_DIR}/generated/autoconf_new.h" HASH2)
-    if(NOT ("${HASH1}" STREQUAL "${HASH2}"))
-    file(REMOVE "${BUILD_DIR}/generated/autoconf.h")
-    file(RENAME "${BUILD_DIR}/generated/autoconf_new.h" "${BUILD_DIR}/generated/autoconf.h")
-    else()
-    file(REMOVE "${BUILD_DIR}/generated/autoconf_new.h")
-    endif()
-  else()
-  file(RENAME "${BUILD_DIR}/generated/autoconf_new.h" "${BUILD_DIR}/generated/autoconf.h")
-  endif()
-
   if(EXISTS ${LINKER_SCRIPT_IN_PROPERTY})
     execute_process(
-        COMMAND ${CMAKE_C_COMPILER} -E -P -include ${BUILD_DIR}/generated/autoconf.h -x assembler-with-cpp ${LINKER_SCRIPT_IN_PROPERTY} -o ${BUILD_DIR}/generated/linker.ld
+        COMMAND ${CMAKE_C_COMPILER} -E -P -include ${BUILD_DIR}/generated/autoconfig.h -x assembler-with-cpp ${LINKER_SCRIPT_IN_PROPERTY} -o ${BUILD_DIR}/generated/linker.ld
     )
   endif()
 
-  sdk_add_compile_options(-include ${CMAKE_BINARY_DIR}/generated/autoconf.h)
+  sdk_add_compile_options(-include ${CMAKE_BINARY_DIR}/generated/autoconfig.h)
   sdk_add_include_directories(.)
 
 endmacro()

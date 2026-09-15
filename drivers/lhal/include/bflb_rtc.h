@@ -14,6 +14,12 @@
 #define BFLB_RTC_SEC2TIME(s)    (s * bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_RTC, 0))
 #define BFLB_RTC_TIME2SEC(time) (time / bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_RTC, 0))
 
+enum bflb_rtc_32k_clk_type {
+  BFLB_RTC_32K_CLK_RC = 0,
+  BFLB_RTC_32K_CLK_XTAL,
+  BFLB_RTC_32K_CLK_DIG = 3,
+};
+
 /* This struct is the same with struct tm */
 struct bflb_tm {
     int tm_sec;
@@ -29,6 +35,14 @@ struct bflb_tm {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Select the RTC 32 kHz clock source and enable the RTC counter.
+ *
+ * @param [in] dev device handle
+ * @param [in] clk_type RTC 32 kHz clock source, selected by the board
+ */
+void bflb_rtc_init(struct bflb_device_s *dev, enum bflb_rtc_32k_clk_type clk_type);
 
 /**
  * @brief clear and disable rtc.

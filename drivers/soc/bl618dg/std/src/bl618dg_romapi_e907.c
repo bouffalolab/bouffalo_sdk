@@ -538,10 +538,12 @@ BL_Err_Type GLB_CPUPLL_Ref_Clk_Sel(uint8_t refClk) {
     return RomDriver_GLB_CPUPLL_Ref_Clk_Sel(refClk);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Power_On_CPUPLL(const GLB_CPUPLL_Cfg_Type *const cfg, uint8_t waitStable) {
     return RomDriver_GLB_Power_On_CPUPLL(cfg, waitStable);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Power_Off_DSIPLL(void) {
@@ -553,10 +555,12 @@ BL_Err_Type GLB_DSIPLL_Ref_Clk_Sel(uint8_t refClk) {
     return RomDriver_GLB_DSIPLL_Ref_Clk_Sel(refClk);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *const cfg, uint8_t waitStable) {
     return RomDriver_GLB_Power_On_DSIPLL(cfg, waitStable);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Power_On_DSIPLL_Clk(uint8_t xtalType) {

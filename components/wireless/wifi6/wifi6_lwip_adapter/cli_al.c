@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "utils_getopt.h"
 #include "utils_hex.h"
 #ifdef IOT_SDK_ADAPTER
@@ -47,6 +49,24 @@ void utils_al_parse_number_adv(const char *str, char sep, uint8_t *buf, int bufl
 void utils_al_parse_number(const char *str, char sep, uint8_t *buf, int buflen, int base)
 {
     utils_parse_number(str, sep, buf, buflen, base);
+}
+
+bool utils_al_parse_long(const char *text, long min, long max, long *value)
+{
+    char *end;
+    long parsed;
+
+    if (!text || !text[0] || !value || min > max)
+        return false;
+
+    errno = 0;
+    parsed = strtol(text, &end, 10);
+    if (errno == ERANGE || end == text || *end != '\0' ||
+        parsed < min || parsed > max)
+        return false;
+
+    *value = parsed;
+    return true;
 }
 
 int utils_al_getopt_init(getopt_env_t *env, int opterr)
@@ -749,9 +769,7 @@ void wifi_sta_info_cmd(int argc, char **argv)
     wifi_mgmr_get_country_code(country_code);
     wifi_sta_ip4_addr_get(&addr.addr, &mask.addr, &gw.addr, &dns.addr);
     wifi_mgmr_sta_rssi_get(&rssi);
-#ifndef BL618DG
     wifi_mgmr_tpc_pwr_get(&power_table);
-#endif
     fhost_printf("================================================================\r\n");
     #ifdef CONFIG_ANTDIV_STATIC
     fhost_printf("ANT :    %d\r\n", antenna_hal_get_current_antenna());
@@ -813,11 +831,55 @@ void wifi_sta_info_cmd(int argc, char **argv)
     fhost_printf("================================================================\r\n");
 }
 
+void wifi_mgmr_ap_ip_set_cmd(int argc, char **argv)
+{
+    char *addr, *mask, *gw, *dns;
+
+    if (argc < 2) {
+        printf("[USAGE]: %s <ip> [mask] [gw] [dns]\r\n", argv[0]);
+        return;
+    }
+
+    addr = argv[1];
+    mask = (argc > 2) ? argv[2] : "255.255.255.0";
+    gw = (argc > 3) ? argv[3] : "0.0.0.0";
+    dns = (argc > 4) ? argv[4] : "0.0.0.0";
+
+    wifi_mgmr_ap_ip_set(inet_addr(addr), inet_addr(mask), inet_addr(gw), inet_addr(dns));
+}
+
 #if MACSW_BEACONING
+static void wifi_mgmr_ap_start_usage(const char *command)
+{
+    printf("[USAGE]: %s -s <ssid> [-k <key>] [-a <akm>] "
+           "[-c <channel>] [-b <bandwidth>]\r\n", command);
+    printf("               [-t <inactivity_s>] [-h <0|1>] [-i <0|1>] "
+           "[-g <0|1>] [-d <0|1>]\r\n");
+    printf("               [-I <ipv4_addr>] [-S <pool_start>] "
+           "[-L <pool_limit>] [-n <beacon_TU>] [-w <0|1>]\r\n");
+    printf("  -s: SSID (required)\r\n");
+    printf("  -k: key; omitted for an open AP\r\n");
+    printf("  -a: AKM, e.g. OPEN, WPA, WPA2/RSN, or WPA3/SAE; OPEN cannot use -k\r\n");
+    printf("  -c: primary channel; default is 6\r\n");
+    printf("  -b: bandwidth, 0=20MHz (default), 1=40MHz, 2=80MHz\r\n");
+    printf("  -t: maximum station inactivity in seconds\r\n");
+    printf("  -h: hidden SSID, 0=disabled (default), 1=enabled\r\n");
+    printf("  -i: AP isolation, 0=disabled (default), 1=enabled\r\n");
+    printf("  -g: configure AP IPv4, 0=disabled, 1=enabled (default)\r\n");
+    printf("  -d: DHCP server, 0=disabled, 1=enabled (default)\r\n");
+    printf("  -I: AP IPv4 address; subnet mask is fixed to 255.255.255.0\r\n");
+    printf("  -S: DHCP pool start host number\r\n");
+    printf("  -L: DHCP pool lease count\r\n");
+    printf("  -n: beacon interval in TU; 0 selects the default 100 TU\r\n");
+    printf("  -w: disable WMM, 0=keep enabled (default), 1=disable\r\n");
+}
+
 void wifi_mgmr_ap_start_cmd(int argc, char **argv)
 {
     getopt_env_t getopt_env;
     int opt;
+    int ret;
+    long value;
     wifi_mgmr_ap_params_t config;
 
     if (argc < 2) {
@@ -834,7 +896,13 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
     while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:w:")) != -1) {
         switch (opt) {
 	case 'b':
-	    config.type = (uint8_t)atoi(getopt_env.optarg);
+	    if (!getopt_env.optarg || getopt_env.optarg[0] < '0' ||
+                getopt_env.optarg[0] > '9' ||
+                !utils_al_parse_long(getopt_env.optarg, 0, 2, &value)) {
+                printf("Invalid bandwidth: expected 0, 1, or 2\r\n");
+                goto _ERROUT;
+            }
+            config.type = (uint8_t)value;
 	    break;
 
 	case 's':
@@ -846,7 +914,13 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
 	    break;
 
 	case 'c':
-	    config.channel = (uint8_t)atoi(getopt_env.optarg);
+	    if (!getopt_env.optarg || getopt_env.optarg[0] < '0' ||
+                getopt_env.optarg[0] > '9' ||
+                !utils_al_parse_long(getopt_env.optarg, 0, UINT8_MAX, &value)) {
+                printf("Invalid channel: expected a decimal value from 0 to 255\r\n");
+                goto _ERROUT;
+            }
+            config.channel = (uint8_t)value;
 	    break;
 
 	case 'a':
@@ -904,12 +978,21 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
         goto _ERROUT;
     }
 
-    wifi_mgmr_ap_start(&config);
+    if (config.akm != NULL && config.key != NULL &&
+        strcmp(config.akm, "OPEN") == 0) {
+        printf("OPEN AKM cannot be used with a key\r\n");
+        goto _ERROUT;
+    }
+
+    ret = wifi_mgmr_ap_start(&config);
+    if (ret) {
+        printf("\r\nwifi_ap_start failed, ret=%d\r\n", ret);
+    }
 
     return;
 
  _ERROUT:
-    printf("[USAGE]: %s -s <ssid> [-k <key>] [-c <channel>] [-a <akm>] [-I <ipv4_addr>] [-S <dhcpd_start>] [-L <dhcpd_limit>] [-n <bcn_interval>]\r\n", argv[0]);
+    wifi_mgmr_ap_start_usage(argv[0]);
     return;
 }
 
@@ -1145,6 +1228,7 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_info_cmd, wifi_sta_info, wifi sta info);
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_list_get_cmd, wifi_sta_list, get sta list in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_ap_sta_delete_cmd, wifi_sta_del, delete one sta in AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_start_cmd, wifi_ap_start, start AP mode);
+SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_ip_set_cmd, wifi_ap_set_ip, set AP static IP);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_stop_cmd, wifi_ap_stop, stop AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_chan_switch_cmd, wifi_ap_chan_switch, AP channel switch: <channel> [cs_count]);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_mac_get, wifi_ap_mac_get, get wifi ap mac);

@@ -1,8 +1,0 @@
-config BOARD_BOOT2FILE
-    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/boot2_bl702l_isp_release_v8.1.5.bin"
-
-config BOARD_PTFILE
-    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/partition_cfg_2M_boot2_isp.toml"
-
-config BOARD_DTSFILE
-    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/bl_factory_params_IoTKitA_32M.dts"

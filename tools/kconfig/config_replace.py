@@ -11,6 +11,9 @@ REPLACEMENTS = {
     "BOARD": "CONFIG_BOARD",
     "CPU_ID": "CONFIG_CPU_ID",
     "CPU_MODEL": "CONFIG_CPU_MODEL",
+    "ARCH_RISCV": "CONFIG_ARCH_RISCV",
+    "BOUFFALO_SDK": "CONFIG_BOUFFALO_SDK",
+    "BFLB_USE_HAL_DRIVER": "CONFIG_BFLB_USE_HAL_DRIVER",
 }
 CONFIG_TO_OUTPUT = {value: key for key, value in REPLACEMENTS.items()}
 SET_RE = re.compile(r"^(\s*set\(\s*)([A-Za-z_][A-Za-z0-9_]*)(\s+.*)$")

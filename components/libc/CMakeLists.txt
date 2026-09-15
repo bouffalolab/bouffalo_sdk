@@ -66,21 +66,6 @@ if(CONFIG_STACK_SWITCH_CALL_SSCANF)
     sdk_add_link_options(-Wl,-wrap,sscanf)
 endif()
 
-# vsnprintf %f %F
-if(CONFIG_VSNPRINTF_FLOAT)
-    sdk_add_compile_definitions(-D CONFIG_LIBC_FLOAT=1)
-else()
-    sdk_add_compile_definitions(-D CONFIG_LIBC_FLOAT=0)
-endif()
-# vsnprintf %g %G %e %E
-if(CONFIG_VSNPRINTF_FLOAT_EX)
-    sdk_add_compile_definitions(-D CONFIG_LIBC_FLOAT_EX=1)
-endif()
-# vsnprintf %lld %lli %llu %llx %llX %llo
-if(CONFIG_VSNPRINTF_LONG_LONG)
-    sdk_add_compile_definitions(-D CONFIG_LIBC_LONG_LONG=1)
-endif()
-
 sdk_library_add_sources(newlib/port_memory.c)
 sdk_library_add_sources(newlib/port_time.c)
 sdk_library_add_sources(newlib/port_init_fini.c)
@@ -103,18 +88,6 @@ if(CONFIG_STACK_SWITCH_CALL_SSCANF)
     sdk_library_add_sources(sscanf.c)
     sdk_add_link_options(-Wl,-wrap,sscanf)
 endif()
-
-# vsnprintf %f %F
-if(CONFIG_VSNPRINTF_FLOAT)
-    sdk_add_compile_definitions(-D CONFIG_LIBC_FLOAT=1)
-else()
-    sdk_add_compile_definitions(-D CONFIG_LIBC_FLOAT=0)
-endif()
-# vsnprintf %g %G %e %E
-if(CONFIG_VSNPRINTF_FLOAT_EX)
-    sdk_add_compile_definitions(-D CONFIG_LIBC_FLOAT_EX=1)
-endif()
-
 
 # ##################################################################################################
 # 2.stdlib and string select

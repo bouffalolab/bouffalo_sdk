@@ -6,6 +6,51 @@
 #include "board_gpio.h"
 #include "bflb_gpio.h"
 #include "bl618dg_glb.h"
+#include "bl618dg_pds.h"
+
+/* Select wakeup pins with the masks below. Each eight-pin GPIO group shares
+ * one trigger mode in hardware. GPIO0-GPIO7 can wake PDS and HBN; GPIO8-GPIO52
+ * can wake PDS only. */
+static const struct board_lp_gpio_wakeup_config_s board_lp_gpio_wakeup_config = {
+    .io_ie = (1ULL << GPIO_PIN_6) | (1ULL << GPIO_PIN_9),
+    .io_pu = 1ULL << GPIO_PIN_6,
+    .io_pd = 1ULL << GPIO_PIN_9,
+    .io_wakeup_unmask = (1ULL << GPIO_PIN_6) | (1ULL << GPIO_PIN_9),
+    .io_0_7_trig_mode = PDS_GPIO_INT_ASYNC_FALLING_EDGE,
+    .io_8_15_trig_mode = PDS_GPIO_INT_ASYNC_RISING_EDGE,
+    .io_16_23_trig_mode = PDS_GPIO_INT_ASYNC_LOW_LEVEL,
+    .io_24_31_trig_mode = PDS_GPIO_INT_ASYNC_LOW_LEVEL,
+    .io_32_39_trig_mode = PDS_GPIO_INT_ASYNC_LOW_LEVEL,
+    .io_40_47_trig_mode = PDS_GPIO_INT_ASYNC_LOW_LEVEL,
+    .io_48_52_trig_mode = PDS_GPIO_INT_ASYNC_LOW_LEVEL,
+};
+
+const struct board_lp_gpio_wakeup_config_s *board_lp_gpio_wakeup_config_get(void)
+{
+    return &board_lp_gpio_wakeup_config;
+}
+
+static const uint8_t board_kys_v2_row_pins[] = {
+    GPIO_PIN_14, GPIO_PIN_15, GPIO_PIN_17, GPIO_PIN_18,
+    GPIO_PIN_27, GPIO_PIN_28, GPIO_PIN_29, GPIO_PIN_30,
+};
+
+static const uint8_t board_kys_v2_col_pins[] = {
+    GPIO_PIN_1, GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_0,
+    GPIO_PIN_4, GPIO_PIN_8, GPIO_PIN_10, GPIO_PIN_5,
+};
+
+static const struct board_kys_v2_gpio_config_s board_kys_v2_gpio_config = {
+    .row_count = sizeof(board_kys_v2_row_pins) / sizeof(board_kys_v2_row_pins[0]),
+    .col_count = sizeof(board_kys_v2_col_pins) / sizeof(board_kys_v2_col_pins[0]),
+    .row_pins = board_kys_v2_row_pins,
+    .col_pins = board_kys_v2_col_pins,
+};
+
+const struct board_kys_v2_gpio_config_s *board_kys_v2_gpio_config_get(void)
+{
+    return &board_kys_v2_gpio_config;
+}
 
 void board_uartx_gpio_init(void)
 {

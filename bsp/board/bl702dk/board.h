@@ -2,9 +2,12 @@
 #define _BOARD_H
 
 #include <stdint.h>
+#include "bflb_rtc.h"
 
 void board_recovery(void);
 void board_init(void);
+
+enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void);
 
 void board_uartx_gpio_init();
 void board_i2c0_gpio_init();

@@ -52,11 +52,12 @@ CONFIG_IPV6               =y
 CONFIG_NETBUS             =y
 CONFIG_NETHUB             =y
 
-# lowpower: enabled for bl616 only by default. BL616CL and BL618DG stay off
-# until their NetHub low-power flows are fully validated.
+# lowpower: enabled by default for BL616CL NetHub low-power validation.
 ifneq ($(CHIP),bl616)
+ifneq ($(CHIP),bl616cl)
 ifneq ($(CHIP),bl618dg)
     CONFIG_NETHUB_LOWPOWER_ENABLE          =n
+endif
 endif
 endif
 ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
@@ -66,13 +67,14 @@ ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
     CONFIG_DCDC_ENABLE                   =n
     CONFIG_PWRMGMT                       =y
     CONFIG_TICKLESS_EXT                  =y
+    CONFIG_PM_HELPER_CLI                 =y
     CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
     CONFIG_CLOCK_SOURCE_EF_PARAM         =n
 endif
 
 
 ifeq ($(CHIP),bl618dg)
-    CONFIG_ROMAPI             =n
+    CONFIG_ROMAPI             =y
     # enable hotplug
     CONFIG_SDIO3_SOFT_RST_INT_USER =y
     CONFIG_DUALCORE_DISABLE   =y

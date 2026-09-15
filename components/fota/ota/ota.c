@@ -18,6 +18,10 @@
 #include "bl_sys.h"
 #include "ota.h"
 
+#ifdef BL618DG
+#include "bl618dg_glb.h"
+#endif
+
 #ifdef CONFIG_IPC
 #include <bflb_multi_core_sync.h>
 #include <flash_ops_rpmsg.h>
@@ -357,7 +361,14 @@ static int _check_ota_header(ota_header_t *ota_header, uint32_t *ota_len, int *u
         goto _fail;
     }
     ota_handle->ctx_sha256 = &_sha_ctx;
-    bflb_group0_request_sha_access(ota_handle->sha_dev);
+#ifdef BL618DG
+    if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+        bflb_group1_request_sha_access(ota_handle->sha_dev);
+    } else
+#endif
+    {
+        bflb_group0_request_sha_access(ota_handle->sha_dev);
+    }
 
 #if CONFIG_FAST_OTA
     ota_erase(ota_handle, 0, ota_handle->part_size);
@@ -365,7 +376,14 @@ static int _check_ota_header(ota_header_t *ota_header, uint32_t *ota_len, int *u
     return ota_handle;
 _fail:
     if (ota_handle && ota_handle->sha_dev) {
-        bflb_group0_release_sha_access(ota_handle->sha_dev);
+#ifdef BL618DG
+        if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+            bflb_group1_release_sha_access(ota_handle->sha_dev);
+        } else
+#endif
+        {
+            bflb_group0_release_sha_access(ota_handle->sha_dev);
+        }
     }
     if (ota_handle && ota_handle->sector_erased) {
         free(ota_handle->sector_erased);
@@ -527,7 +545,14 @@ int ota_finish(ota_handle_t handle, uint8_t check_hash, uint8_t reboot)
         return -1;
     }
 
-    bflb_group0_release_sha_access(handle->sha_dev);
+#ifdef BL618DG
+    if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+        bflb_group1_release_sha_access(handle->sha_dev);
+    } else
+#endif
+    {
+        bflb_group0_release_sha_access(handle->sha_dev);
+    }
     free(handle->sector_erased);
     free(handle->check_buf_raw);
     free(handle);
@@ -553,7 +578,14 @@ int ota_abort(ota_handle_t handle)
         LOG_E("[OTA] Error: handle is NULL\r\n");
         return -1;
     }
-    bflb_group0_release_sha_access(handle->sha_dev);
+#ifdef BL618DG
+    if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+        bflb_group1_release_sha_access(handle->sha_dev);
+    } else
+#endif
+    {
+        bflb_group0_release_sha_access(handle->sha_dev);
+    }
     free(handle->sector_erased);
     free(handle->check_buf_raw);
     free(handle);

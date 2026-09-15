@@ -423,7 +423,12 @@ static int net_if_input(net_al_rx_t net_buf, net_al_if_t net_if, void *addr, uin
     inet_buf_rx_t *buf = net_buf;
 
     buf->custom_free_function = (pbuf_free_custom_fn)free_fn;
-    p = pbuf_alloced_custom(PBUF_RAW, len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, buf, addr, len);
+    /*
+     * The custom pbuf is stored in fnet_buf while the RX payload is stored in
+     * the separate payload area of the FHOST RX buffer.  The payload therefore
+     * does not follow struct pbuf and must not be marked as contiguous.
+     */
+    p = pbuf_alloced_custom(PBUF_RAW, len, PBUF_REF, buf, addr, len);
     assert(p != NULL);
 
     /* MIOT616-238: Record the time when the last TCPIP packet was received */

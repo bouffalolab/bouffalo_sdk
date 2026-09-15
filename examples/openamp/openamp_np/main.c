@@ -45,6 +45,10 @@
 
 #include <app_init.h>
 
+#ifdef CONFIG_RPMSG_SERVICE
+#include "ipc_throughput_test.h"
+#endif
+
 #define DBG_TAG "MAIN"
 #include "log.h"
 #include "async_event.h"
@@ -65,6 +69,33 @@ static struct bflb_device_s *uart1;
 extern void shell_init_with_task(struct bflb_device_s *shell);
 extern void wifi_event_handler(async_input_event_t ev, void *priv);
 
+#ifdef CONFIG_RPMSG_SERVICE
+#define AUTO_TEST_TASK_STACK_SIZE  512U
+#define AUTO_TEST_TASK_PRIORITY    7U
+
+const bool ipc_throughput_crc_enabled = true;
+
+static void ipc_throughput_auto_test_task(void *param)
+{
+    char *test_10s_argv[] = { "ipc_throughput_test", "1400", "10" };
+    char *test_49h_argv[] = { "ipc_throughput_test", "1400", "172800" };
+
+    (void)param;
+
+    while (!ipc_throughput_is_ready()) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    vTaskDelay(pdMS_TO_TICKS((DEFAULT_DURATION_SEC +
+                              PHASE_GAP_SEC) * 1000U));
+    (void)cmd_ipc_throughput_test(3, test_10s_argv);
+    vTaskDelay(pdMS_TO_TICKS((DEFAULT_DURATION_SEC +
+                              PHASE_GAP_SEC) * 1000U));
+    (void)cmd_ipc_throughput_test(3, test_49h_argv);
+    vTaskDelete(NULL);
+}
+#endif
+
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -84,8 +115,19 @@ void wifi_start_firmware_task(void *param)
     LOG_I("Starting fhost ...\r\n");
     fhost_init();
 #ifdef CONFIG_RPMSG_SERVICE
-    void remote_rpmsg_init(void);
-    remote_rpmsg_init();
+    int ret = ipc_throughput_init();
+    if (ret < 0) {
+        LOG_E("IPC throughput init failed: %d\r\n", ret);
+        vTaskDelete(NULL);
+        return;
+    }
+    if (xTaskCreate(ipc_throughput_auto_test_task, "ipc_auto",
+                    AUTO_TEST_TASK_STACK_SIZE, NULL,
+                    AUTO_TEST_TASK_PRIORITY, NULL) != pdPASS) {
+        LOG_E("IPC throughput auto task create failed\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
 #else
     int ipc_remote(void);
     ipc_remote();

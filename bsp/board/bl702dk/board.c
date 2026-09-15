@@ -257,6 +257,11 @@ void ram_heap_init(void)
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 }
 
+enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
+{
+    return BFLB_RTC_32K_CLK_RC;
+}
+
 void board_init(void)
 {
     int ret = -1;
@@ -267,6 +272,7 @@ void board_init(void)
     ret = bflb_flash_init();
 
     system_clock_init();
+    bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
     peripheral_clock_init();
     bflb_irq_initialize();
 

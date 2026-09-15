@@ -4,14 +4,14 @@ cmake_minimum_required(VERSION 3.15)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 # User
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
-
+sdk_add_compile_definitions(-DRPMSG_BUFFER_SIZE=1600)
 
 if (CONFIG_IPC)
     #sdk_add_compile_definitions(-DCONFIG_IPC_ENABLE)
     if (CONFIG_RPMSG_SERVICE)
         sdk_add_compile_definitions(-DCONFIG_RPMSG_SERVICE)
-        target_sources(app PRIVATE rpmsg_service_remote.c)
+        target_compile_options(librpmsg_service PRIVATE -UVRING_SIZE -DVRING_SIZE=4)
+        target_sources(app PRIVATE ../ipc_throughput_test.c)
     else()
         target_sources(app PRIVATE demo_openamp_remote.c)
     endif()
@@ -21,7 +21,7 @@ target_sources(app PRIVATE
                 app/src/sample/app_sample.c
                 app/src/app_init.c)
 
-sdk_add_include_directories(.)
+sdk_add_include_directories(. ..)
 sdk_add_include_directories(app/include)
 
 sdk_set_main_file(main.c)

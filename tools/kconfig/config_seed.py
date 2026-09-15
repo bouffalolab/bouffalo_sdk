@@ -16,57 +16,6 @@ LEGACY_RE = re.compile(
     r"^\s*(?:-?include\b|ifeq\b|ifneq\b|else\b|endif\b|override\b|\$\(error)"
 )
 OVERRIDE_NAME_RE = re.compile(r"^(?:CONFIG_[A-Za-z0-9_]+|CHIP|BOARD|CPU_ID|CPU_MODEL)$")
-BLUETOOTH_PASSTHROUGH_PREFIXES = ("CONFIG_BT", "CONFIG_BLE")
-# Legacy Bluetooth app options that predate the BT_/BLE_ naming convention.
-BLUETOOTH_PASSTHROUGH_NAMES = {
-    "CONFIG_ADV_EXTENSION",
-    "CONFIG_ALLROLES",
-    "CONFIG_BIS",
-    "CONFIG_BLUETOOTH",
-    "CONFIG_BLUETOOTH_APP",
-    "CONFIG_BL_SDK",
-    "CONFIG_BL702_USE_ROM_DRIVER",
-    "CONFIG_BL702L_A1",
-    "CONFIG_BUILD_BLE_ROM_CODE",
-    "CONFIG_CIS",
-    "CONFIG_CLK_ACC",
-    "CONFIG_COMP_ID",
-    "CONFIG_CON_ACL",
-    "CONFIG_CSB",
-    "CONFIG_CTE",
-    "CONFIG_DISABLE_BLE_CONTROLLER_PHY_UPDATE",
-    "CONFIG_DISABLE_BLE_CONTROLLER_SEC_CON",
-    "CONFIG_DISABLE_BLE_CONTROLLER_TEST_MODE",
-    "CONFIG_DISABLE_BT_ECC",
-    "CONFIG_DISABLE_BT_HOST_PRIVACY",
-    "CONFIG_DISABLE_BT_SMP",
-    "CONFIG_DISABLE_CONTROLLER_BLE_PRIVACY",
-    "CONFIG_DYNAMIC_GATTS",
-    "CONFIG_EM_16K",
-    "CONFIG_EM_HEAP_DISABLE",
-    "CONFIG_EM_SIZE",
-    "CONFIG_FREERTOS_DISABLE",
-    "CONFIG_HW_SEC_ENG_DISABLE",
-    "CONFIG_LE_PING",
-    "CONFIG_LE_PWR_CTRL",
-    "CONFIG_LONG_RANG",
-    "CONFIG_LP_HCIUART",
-    "CONFIG_NIMBLE",
-    "CONFIG_NIMBLE_STACK_CLI",
-    "CONFIG_NXSPI_HCI",
-    "CONFIG_NUTTX",
-    "CONFIG_PCA",
-    "CONFIG_PHY_UPDATE",
-    "CONFIG_QUALIFICATION",
-    "CONFIG_RF_EXTRC",
-    "CONFIG_RSWITCH",
-    "CONFIG_SCO_ESCO",
-    "CONFIG_SIMPLE_MASTER",
-    "CONFIG_SNIFF",
-    "CONFIG_TEST_MODE",
-    "CONFIG_VOHCI",
-    "CONFIG_WLANIF_HCI",
-}
 
 
 def config_name(name):
@@ -167,23 +116,6 @@ def config_fragment(kconf, values):
     return write_fragment(lines)
 
 
-def split_kconfig_values(kconf, values):
-    kconfig_values = {}
-    passthrough_values = {}
-    for name, value in values.items():
-        symbol_name = name[7:] if name.startswith("CONFIG_") else None
-        is_bluetooth_config = name in BLUETOOTH_PASSTHROUGH_NAMES or name.startswith(
-            BLUETOOTH_PASSTHROUGH_PREFIXES
-        )
-        symbol = kconf.syms.get(symbol_name)
-        is_defined = symbol is not None and bool(symbol.nodes)
-        if is_bluetooth_config and not is_defined:
-            passthrough_values[name] = value
-        else:
-            kconfig_values[name] = value
-    return kconfig_values, passthrough_values
-
-
 def resolved_values(kconf):
     from kconfiglib import BOOL, STRING, TRISTATE
 
@@ -202,6 +134,18 @@ def resolved_values(kconf):
     return values
 
 
+def write_if_changed(output, content):
+    try:
+        with open(output, encoding="utf-8") as stream:
+            if stream.read() == content:
+                return
+    except FileNotFoundError:
+        pass
+
+    with open(output, "w", encoding="utf-8") as stream:
+        stream.write(content)
+
+
 def write_cmake(output, values):
     from config_replace import output_name
 
@@ -210,8 +154,7 @@ def write_cmake(output, values):
         "set({} {})".format(output_name(name), value)
         for name, value in values.items()
     )
-    with open(output, "w", encoding="utf-8") as stream:
-        stream.write("\n".join(lines) + "\n")
+    write_if_changed(output, "\n".join(lines) + "\n")
 
 
 def write_defconfig(output, values):
@@ -221,8 +164,7 @@ def write_defconfig(output, values):
             lines.append("# {} is not set".format(name))
         else:
             lines.append("{}={}".format(name, value))
-    with open(output, "w", encoding="utf-8") as stream:
-        stream.write("\n".join(lines) + "\n")
+    write_if_changed(output, "\n".join(lines) + "\n")
 
 
 def write_make(output, values):
@@ -232,8 +174,7 @@ def write_make(output, values):
             continue
         make_value = value.strip('"').replace("$", "$$").replace("#", "\\#")
         lines.append("{} := {}".format(name, make_value))
-    with open(output, "w", encoding="utf-8") as stream:
-        stream.write("\n".join(lines) + "\n")
+    write_if_changed(output, "\n".join(lines) + "\n")
 
 
 def write_header(output, values):
@@ -257,8 +198,7 @@ def write_header(output, values):
         value = values.get(value_name, "").strip('"')
         if value:
             lines.append("#define {}{} 1\n".format(prefix, value.upper()))
-    with open(output, "w", encoding="utf-8") as stream:
-        stream.writelines(lines)
+    write_if_changed(output, "".join(lines))
 
 
 def main():
@@ -288,10 +228,8 @@ def main():
     kconf.warn_assign_redun = False
     kconf.warn_assign_undef = True
 
-    base_values, base_passthrough = split_kconfig_values(kconf, defconfig_values)
-    override_values, override_passthrough = split_kconfig_values(kconf, command_values)
-    base_fragment = config_fragment(kconf, base_values)
-    override_fragment = config_fragment(kconf, override_values)
+    base_fragment = config_fragment(kconf, defconfig_values)
+    override_fragment = config_fragment(kconf, command_values)
     try:
         kconf.load_config(base_fragment, replace=True)
         kconf.load_config(override_fragment, replace=False)
@@ -301,8 +239,6 @@ def main():
                 print(warning, file=sys.stderr)
             return 1
         values = resolved_values(kconf)
-        values.update(base_passthrough)
-        values.update(override_passthrough)
         write_defconfig(args.def_out, values)
         write_cmake(args.cmake_out, values)
         write_header(args.header_out, values)

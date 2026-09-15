@@ -36,8 +36,13 @@ Menuconfig 配置系统使用指南
     make guiconfig         # 图形化配置界面
     make diffconfig        # 对比 defconfig.old 和 defconfig
 
-``make menuconfig`` 直接读取和保存工程 ``defconfig``。保存后会重新生成
-``autoconfig.*``，不再创建中间 ``.config``。
+``make menuconfig`` 会先生成完整的 ``build/generated/autoconfig.def``，菜单界面
+基于这份完整配置工作。启动菜单前会保存一份 ``autoconfig.def.before``；退出
+并保存后，系统打印两份完整配置之间新增或值发生变化的配置项，将这些配置逐行
+追加到工程 ``defconfig``，然后重新生成 ``autoconfig.*``。
+
+差分过程不做额外过滤。前后没有变化的 ``CONFIG_CHIP`` 等配置不会被追加，工程
+``defconfig`` 中已有的 Makefile 语句和注释不会被重写。
 
 组件菜单
 --------

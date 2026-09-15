@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 sdk_add_compile_definitions(-DWEBSOCKET_SSL_CHECK_HOSTNAME)
 sdk_add_compile_definitions(-DSHELL_CMD_SIZE=512)
 

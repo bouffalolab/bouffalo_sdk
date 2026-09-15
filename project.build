@@ -1,5 +1,9 @@
 include $(BL_SDK_BASE)/board.build
+ifneq ($(wildcard $(BL_SDK_BASE)/tools/bflb_tools),)
 include $(BL_SDK_BASE)/tools/bflb_tools/project_flash.build
+else
+include $(BL_SDK_BASE)/tools/bflb_flash/project_flash.build
+endif
 
 $(foreach var,CHIP BOARD,$(if $(strip $($(var))),,$(error $(var) must be set by the command line or board.build)))
 ifeq ($(CHIP),bl618dg)
@@ -21,12 +25,6 @@ DEFCONFIG_FILE ?= $(abspath $(SDK_DEMO_PATH)/$(if $(DEFCONFIG),$(DEFCONFIG),defc
 # Apps without a defconfig intentionally start from the Kconfig defaults.
 -include $(DEFCONFIG_FILE)
 
-# Preserve the legacy custom-board Makefile interface while routing the value
-# through the centralized Kconfig output consumed by CMake.
-ifneq ($(strip $(BOARD_DIR)),)
-CONFIG_BOARD_DIR := $(BOARD_DIR)
-endif
-
 CONFIG_INPUT_VARS := $(sort $(filter CONFIG_%,$(.VARIABLES)))
 SELECTOR_VARS := CHIP BOARD CPU_ID CPU_MODEL
 
@@ -35,7 +33,9 @@ CONFIG_AUTOCONFIG_DEF=$(abspath $(BUILD_DIR)/generated/autoconfig.def)
 CONFIG_AUTOCONFIG_CMAKE=$(abspath $(BUILD_DIR)/generated/autoconfig.cmake)
 CONFIG_AUTOCONFIG_HEADER=$(abspath $(BUILD_DIR)/generated/autoconfig.h)
 CONFIG_AUTOCONFIG_MAKE=$(abspath $(BUILD_DIR)/generated/autoconfig.mk)
+CONFIG_AUTOCONFIG_DEF_OLD=$(abspath $(BUILD_DIR)/generated/autoconfig.def.before)
 CONFIG_SEED = $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/config_seed.py"
+CONFIG_MERGE = $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/config_merge.py"
 CONFIG_KCONFIG_ENTRY=$(abspath $(if $(wildcard $(SDK_DEMO_PATH)/Kconfig),$(SDK_DEMO_PATH)/Kconfig,$(BL_SDK_BASE)/Kconfig))
 
 # CMake receives configuration only through generated/autoconfig.cmake.

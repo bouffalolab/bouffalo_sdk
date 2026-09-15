@@ -45,6 +45,12 @@ config MACSW_SELECT
       Select the MAC software configuration library profile, such as default
       or wfa.
 
+config MACSW_LOG_NO_PRINT
+    bool "Wi-Fi 6 MAC software log print"
+    default n
+    help
+      default n
+
 config BL_WPA_SUPPLICANT
     bool "Bouffalo WPA supplicant"
     default n

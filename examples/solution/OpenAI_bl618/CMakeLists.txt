@@ -4,12 +4,10 @@ cmake_minimum_required(VERSION 3.15)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 # User
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 #sdk_add_compile_definitions(-DBL_VERIFY)
 sdk_add_compile_definitions(-DCONFIG_USING_TLS)
 sdk_add_compile_definitions(-DHAVE_CONFIG_H)
 sdk_add_compile_definitions(-DCONFIG_XCODEC_OUTPUT_CACHE)
-sdk_add_compile_definitions(-DSHELL_CMD_SIZE=256)
 
 target_sources(app PRIVATE
                    app/src/oai_http.c

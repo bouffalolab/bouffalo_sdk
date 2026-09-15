@@ -48,8 +48,8 @@ int eth_phy_scan(eth_phy_ctrl_t *phy_ctrl, uint8_t start_addr, uint8_t end_addr)
     end_addr = (end_addr < EPHY_ADDR_MAX) ? end_addr : EPHY_ADDR_MAX;
 
     for (phy_addr = start_addr; phy_addr <= end_addr; phy_addr++) {
-        if (eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_addr, EPHY_ID1_OFFSET, &phy_id_1) < 0 ||
-            eth_phy_mdio_read(phy_ctrl->mac_mdio_dev, phy_addr, EPHY_ID2_OFFSET, &phy_id_2) < 0) {
+        if (eth_phy_mdio_read(phy_ctrl, phy_addr, EPHY_ID1_OFFSET, &phy_id_1) < 0 ||
+            eth_phy_mdio_read(phy_ctrl, phy_addr, EPHY_ID2_OFFSET, &phy_id_2) < 0) {
             continue;
         }
 
@@ -103,6 +103,14 @@ int eth_phy_init(eth_phy_ctrl_t *phy_ctrl, eth_phy_init_cfg_t *cfg)
     } else {
         return -1;
     }
+}
+
+int eth_phy_deinit(eth_phy_ctrl_t *phy_ctrl)
+{
+    if (!phy_ctrl || !phy_ctrl->phy_drv || !phy_ctrl->phy_drv->phy_deinit) {
+        return -1;
+    }
+    return phy_ctrl->phy_drv->phy_deinit(phy_ctrl);
 }
 
 int eth_phy_ctrl(eth_phy_ctrl_t *phy_ctrl, uint32_t cmd, uint32_t arg)

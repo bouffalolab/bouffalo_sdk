@@ -130,7 +130,12 @@ static int msg_hw_reset_cb(mr_frame_elem_t *unused, void *arg)
 {
     mr_virtualchan_priv_t *priv = (mr_virtualchan_priv_t *)arg;
 
-    virtualchan_proc_task_wakeup(priv, VIRTUALCHAN_EVENT_RESET);
+    if (unused == NULL) {
+        virtualchan_proc_task_wakeup(priv, VIRTUALCHAN_EVENT_RESET);
+    } else {
+        priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_IDLE;
+        priv->virtualchan_ready = false;
+    }
 
     LOG_W("Received hw reset request\r\n");
 
@@ -266,6 +271,12 @@ static void virtualchan_proc_task(void *arg)
             mr_virtualchan_dnld_elem_free(priv, virtualchan_msg_pkt);
             virtualchan_msg_pkt = NULL;
             continue;
+        }
+
+        if (virtualchan_msg_pkt && virtualchan_msg_pkt->flag == MR_VIRTUALCHAN_FLAG_HOST_READY &&
+            priv->virtualchan_status == MR_VIRTUALCHAN_DSTA_DEVICE_RUN) {
+            priv->virtualchan_status = MR_VIRTUALCHAN_DSTA_HOST_READY;
+            priv->virtualchan_ready = false;
         }
 
         /* State machine processing */

@@ -6,7 +6,7 @@
 #if defined(CONFIG_SHELL_EXEC_THREAD) && CONFIG_SHELL_EXEC_THREAD
 static int shell_exec_argc;
 static char *shell_exec_argv[SHELL_ARG_NUM + 1];
-static char shell_exec_line[SHELL_CMD_SIZE];
+static char shell_exec_line[CONFIG_SHELL_CMD_SIZE];
 static ptrdiff_t shell_exec_line_diff;
 TaskHandle_t shell_exec_handle;
 static ATTR_NOCACHE_RAM_SECTION volatile bool shell_exec_end = true;
@@ -169,7 +169,7 @@ void shell_init_with_task(struct bflb_device_s *shell)
     Ring_Buffer_Init(&shell_rb, shell_buffer, sizeof(shell_buffer), NULL, NULL);
 
     shell_init();
-    xTaskCreate(shell_task, (char *)"shell_task", SHELL_THREAD_STACK_SIZE, NULL, SHELL_THREAD_PRIO, &shell_handle);
+    xTaskCreate(shell_task, (char *)"shell_task", CONFIG_SHELL_THREAD_STACK_SIZE, NULL, SHELL_THREAD_PRIO, &shell_handle);
 }
 
 void shell_exe_cmd(uint8_t *cmd, uint16_t len)

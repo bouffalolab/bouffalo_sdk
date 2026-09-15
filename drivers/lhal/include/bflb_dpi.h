@@ -74,6 +74,15 @@
   * @}
   */
 
+/** @defgroup DPI_PCLK_SAMPLE_EDGE dpi pixel clock sample edge definition
+  * @{
+  */
+#define DPI_PCLK_SAMPLE_EDGE_FALLING           0
+#define DPI_PCLK_SAMPLE_EDGE_RISING            1
+/**
+  * @}
+  */
+
 /** @defgroup DPI_BURST dpi burst length definition
   * @{
   */
@@ -142,6 +151,14 @@ extern "C" {
  * @param [in] config pointer to save dpi config
  */
 void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *config);
+
+/**
+ * @brief Set dpi pixel clock sample edge.
+ *
+ * @param [in] dev device handle
+ * @param [in] edge pixel clock sample edge, use @ref DPI_PCLK_SAMPLE_EDGE
+ */
+void bflb_dpi_set_pclk_sample_edge(struct bflb_device_s *dev, uint8_t edge);
 
 /**
  * @brief Enable dpi.

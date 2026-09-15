@@ -26,7 +26,7 @@
 #include "sdio_port.h"
 
 #if 0
-#if defined(SDIO_REUSE_LP_RAM) && !(defined(CFG_BL616) && defined(LP_APP))
+#if defined(SDIO_REUSE_LP_RAM) && !(defined(CFG_BL616) && defined(CONFIG_LPAPP))
 #error "SDIO lp ram reuse configuration error"
 #endif
 #endif
@@ -122,7 +122,7 @@ static void tx_buf_init(sdiowifi_mgmr_t *sdm)
 #endif
 #if 0
 #ifdef CFG_BL616
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #ifdef SDIO_REUSE_LP_RAM
     sdiowifi_tx_buf_mem_register(&sdm->tx_desc, (void *)SW_TX_BUF_START, SW_TX_BUF_SIZE);
 #else
@@ -134,7 +134,7 @@ static void tx_buf_init(sdiowifi_mgmr_t *sdm)
         sdiowifi_tx_buf_mem_register(&sdm->tx_desc, (void *)(0x23010000 + (160 - 32) * 1024), 32 * 1024);
     }
 #endif // SDIO_REUSE_LP_RAM
-#endif // LP_APP
+#endif // CONFIG_LPAPP
 
 #ifndef BL_SDIO_BUFF_REDUCTION
     extern uint8_t _heap_wifi_start;

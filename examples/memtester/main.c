@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "memtester.h"
+#include "mm.h"
 
 #if defined(BL616)
 #include "bl616_common.h"
@@ -54,6 +55,7 @@ int main(void)
     bflb_efuse_device_info_type device_info;
 
     board_init();
+    mm_heap_unregister_all();
 
     char memsuffix = 'B';
     /* --------------- stress test --------------- */

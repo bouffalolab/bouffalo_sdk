@@ -113,7 +113,7 @@ static int shell_auto_read(char *buf, uint32_t buf_size)
 int shell_auto_run(void)
 {
     char list[CONFIG_SHELL_AUTO_LIST_SIZE + 1];
-    char cmd[SHELL_CMD_SIZE];
+    char cmd[CONFIG_SHELL_CMD_SIZE];
     uint32_t cmd_pos = 0;
     int ret;
 

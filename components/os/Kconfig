@@ -50,6 +50,13 @@ config CLOCK_SOURCE_EF_PARAM
     help
       Select the system clock source from eFuse parameters at runtime.
 
+config PM_HELPER_CLI
+    bool "Power management helper commands"
+    default n
+    depends on SHELL
+    help
+      Enable shared low-power shell commands and network keepalive helpers.
+
 endif # CONFIG_PWRMGMT
 
 endmenu

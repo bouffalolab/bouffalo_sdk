@@ -3,46 +3,94 @@
 #
 
 menuconfig SOLN_UTILS
-    bool "Enable Soln solution utility component"
+    bool "Solution Utils"
     default n
     depends on FREERTOS
+    select SOLN_FBQ_EN
+    select SOLN_AUDIO_GROUP
+    select SOLN_VIDEO_GROUP
+    select SOLN_STORAGE_NETWORK_GROUP
     help
       Build the shared Soln frame queue and configurable audio, video,
       storage, USB, network and display utility modules.
 
 rsource "Kconfig.soln_frq"
 
-menu "Soln audio functions"
+# Keep selected groups outside "if SOLN_UTILS" to avoid dependency loops.
+config SOLN_AUDIO_GROUP
+    bool "Soln audio functions" if SOLN_UTILS
 
-config SOLN_AUD_AUADC_EN
+if SOLN_UTILS && SOLN_AUDIO_GROUP
+
+menuconfig SOLN_AUD_AUADC_EN
     bool "Internal audio ADC"
     default n
     depends on SOLN_FBQ_AUD_PCM_LOCAL_EN
     help
       Enable audio capture through the internal audio ADC.
 
-config SOLN_AUD_AUDAC_EN
+config SOLN_AUD_AUADC_LOG_LEVEL
+    int "Audio ADC log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_AUADC_EN
+    help
+      Log level for the internal audio ADC adapter.
+
+menuconfig SOLN_AUD_AUDAC_EN
     bool "Internal audio DAC"
     default n
     depends on SOLN_FBQ_AUD_PCM_REMOTE_EN
     help
       Enable audio playback through the internal audio DAC.
 
-config SOLN_AUD_I2S_IN_EN
+config SOLN_AUD_AUDAC_LOG_LEVEL
+    int "Audio DAC log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_AUDAC_EN
+    help
+      Log level for the internal audio DAC adapter.
+
+menuconfig SOLN_AUD_I2S_IN_EN
     bool "External codec I2S input"
     default n
     depends on SOLN_FBQ_AUD_PCM_LOCAL_EN
     help
       Enable audio capture through an external codec connected by I2S.
 
-config SOLN_AUD_I2S_OUT_EN
+if SOLN_AUD_I2S_IN_EN
+
+config SOLN_AUD_I2S_LOG_LEVEL
+    int "I2S audio log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_I2S_IN_EN || SOLN_AUD_I2S_OUT_EN
+    help
+      Log level for the external codec I2S adapter.
+
+endif # SOLN_AUD_I2S_IN_EN
+
+menuconfig SOLN_AUD_I2S_OUT_EN
     bool "External codec I2S output"
     default n
     depends on SOLN_FBQ_AUD_PCM_REMOTE_EN
     help
       Enable audio playback through an external codec connected by I2S.
 
-config SOLN_AUD_UAC_IN_EN
+if SOLN_AUD_I2S_OUT_EN
+
+config SOLN_AUD_I2S_LOG_LEVEL
+    int "I2S audio log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_I2S_IN_EN || SOLN_AUD_I2S_OUT_EN
+    help
+      Log level for the external codec I2S adapter.
+
+endif # SOLN_AUD_I2S_OUT_EN
+
+menuconfig SOLN_AUD_UAC_IN_EN
     bool "USB audio input"
     default n
     depends on SOLN_FBQ_AUD_PCM_LOCAL_EN
@@ -51,7 +99,19 @@ config SOLN_AUD_UAC_IN_EN
     help
       Enable USB Audio Class host capture.
 
-config SOLN_AUD_UAC_OUT_EN
+if SOLN_AUD_UAC_IN_EN
+
+config SOLN_AUD_UAC_LOG_LEVEL
+    int "UAC log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_UAC_IN_EN || SOLN_AUD_UAC_OUT_EN
+    help
+      Log level for the USB Audio Class adapter.
+
+endif # SOLN_AUD_UAC_IN_EN
+
+menuconfig SOLN_AUD_UAC_OUT_EN
     bool "USB audio output"
     default n
     depends on SOLN_FBQ_AUD_PCM_REMOTE_EN
@@ -59,23 +119,54 @@ config SOLN_AUD_UAC_OUT_EN
     help
       Enable USB Audio Class host playback.
 
-config SOLN_AUD_LOOPBACK_EN
+if SOLN_AUD_UAC_OUT_EN
+
+config SOLN_AUD_UAC_LOG_LEVEL
+    int "UAC log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_UAC_IN_EN || SOLN_AUD_UAC_OUT_EN
+    help
+      Log level for the USB Audio Class adapter.
+
+endif # SOLN_AUD_UAC_OUT_EN
+
+menuconfig SOLN_AUD_LOOPBACK_EN
     bool "Audio loopback"
     default n
     depends on SOLN_FBQ_AUD_PCM_LOCAL_EN && SOLN_FBQ_AUD_PCM_REMOTE_EN
     help
       Enable the PCM audio loopback task.
 
-config SOLN_AUD_ES8388_EN
+config SOLN_AUD_LOOPBACK_LOG_LEVEL
+    int "Audio loopback log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_LOOPBACK_EN
+    help
+      Log level for the audio loopback adapter.
+
+menuconfig SOLN_AUD_ES8388_EN
     bool "ES8388 codec configuration"
     default n
     depends on SOLN_AUD_I2S_IN_EN || SOLN_AUD_I2S_OUT_EN
     help
       Enable ES8388 external codec initialization and control helpers.
 
-endmenu
+config SOLN_AUD_ES8388_LOG_LEVEL
+    int "ES8388 log level"
+    range 0 5
+    default 3
+    depends on SOLN_AUD_ES8388_EN
+    help
+      Log level for the ES8388 codec adapter.
 
-menu "Soln video functions"
+endif # SOLN_UTILS && SOLN_AUDIO_GROUP
+
+config SOLN_VIDEO_GROUP
+    bool "Soln video functions" if SOLN_UTILS
+
+if SOLN_UTILS && SOLN_VIDEO_GROUP
 
 config SOLN_VID_DEFAULT_WIDTH
     int "Default video width"
@@ -93,7 +184,7 @@ config SOLN_VID_DEFAULT_HEIGHT
     help
       Default height used by the solution video pipeline.
 
-config SOLN_DISP_DBI_EN
+menuconfig SOLN_DISP_DBI_EN
     bool "DBI display"
     default n
     depends on SOLN_FBQ_VID_RAW_LOCAL_EN || SOLN_FBQ_VID_RAW_REMOTE_EN
@@ -101,7 +192,31 @@ config SOLN_DISP_DBI_EN
     help
       Enable the MCU DBI display consumer.
 
-config SOLN_DISP_RGB_EN
+config SOLN_DISP_DBI_LOG_LEVEL
+    int "DBI display log level"
+    range 0 5
+    default 3
+    depends on SOLN_DISP_DBI_EN
+    help
+      Log level for the DBI display adapter.
+
+config SOLN_DISP_TX_TIME_US
+    int "Display transfer time in microseconds"
+    range 1 1000000
+    default 17000
+    depends on SOLN_DISP_DBI_EN
+    help
+      Estimated display transfer time used by the TE timing logic.
+
+config SOLN_DISP_TE_BOUNDARY_US
+    int "Display TE boundary in microseconds"
+    range 0 1000000
+    default 0
+    depends on SOLN_DISP_DBI_EN
+    help
+      Optional TE timing boundary used by the display flush adapter.
+
+menuconfig SOLN_DISP_RGB_EN
     bool "RGB display"
     default n
     depends on SOLN_FBQ_VID_RAW_LOCAL_EN || SOLN_FBQ_VID_RAW_REMOTE_EN
@@ -110,14 +225,30 @@ config SOLN_DISP_RGB_EN
     help
       Enable the RGB display consumer.
 
-config SOLN_VID_JPEG_ENC_EN
+config SOLN_DISP_RGB_LOG_LEVEL
+    int "RGB display log level"
+    range 0 5
+    default 3
+    depends on SOLN_DISP_RGB_EN
+    help
+      Log level for the RGB display adapter.
+
+menuconfig SOLN_VID_JPEG_ENC_EN
     bool "MJPEG encoder"
     default n
     depends on SOLN_FBQ_VID_JPEG_LOCAL_EN && SOLN_FBQ_VID_RAW_LOCAL_EN
     help
       Enable hardware MJPEG encoding.
 
-config SOLN_VID_JPEG_DEC_EN
+config SOLN_VID_JPEG_ENC_LOG_LEVEL
+    int "MJPEG encoder log level"
+    range 0 5
+    default 3
+    depends on SOLN_VID_JPEG_ENC_EN
+    help
+      Log level for the MJPEG encoder adapter.
+
+menuconfig SOLN_VID_JPEG_DEC_EN
     bool "MJPEG decoder"
     default n
     depends on SOLN_FBQ_VID_JPEG_REMOTE_EN && SOLN_FBQ_VID_RAW_REMOTE_EN
@@ -132,157 +263,21 @@ config SOLN_VID_JPEG_DEC_OUTPUT_FORMAT
     help
       Decoder output format: 1 RGB565, 2 RGB888, 3 NRGB8888, 4 YUYV.
 
-config SOLN_VID_DVP_EN
+config SOLN_VID_JPEG_DEC_LOG_LEVEL
+    int "MJPEG decoder log level"
+    range 0 5
+    default 3
+    depends on SOLN_VID_JPEG_DEC_EN
+    help
+      Log level for the MJPEG decoder adapter.
+
+menuconfig SOLN_VID_DVP_EN
     bool "DVP image sensor"
     default n
     depends on SOLN_FBQ_VID_RAW_LOCAL_EN
     depends on BSP_IMAGE_SENSOR
     help
       Enable DVP camera sensor capture.
-
-config SOLN_VID_DVP_JPEG_ENC_EN
-    bool "DVP JPEG encoder"
-    default n
-    depends on SOLN_FBQ_VID_JPEG_LOCAL_EN
-    depends on BSP_IMAGE_SENSOR
-    depends on !SOLN_VID_JPEG_ENC_EN
-    help
-      Enable the DVP line-buffer JPEG encoder pipeline.
-
-config SOLN_VID_UVC_YUYV_EN
-    bool "USB UVC YUYV input"
-    default n
-    depends on SOLN_FBQ_VID_RAW_LOCAL_EN
-    depends on CHERRYUSB_HOST_VIDEO
-    depends on !SOLN_VID_DVP_EN
-    help
-      Enable USB Video Class capture in YUYV format.
-
-config SOLN_VID_UVC_JPEG_EN
-    bool "USB UVC JPEG input"
-    default n
-    depends on SOLN_FBQ_VID_JPEG_LOCAL_EN
-    depends on CHERRYUSB_HOST_VIDEO
-    depends on !SOLN_VID_JPEG_ENC_EN && !SOLN_VID_DVP_JPEG_ENC_EN
-    help
-      Enable USB Video Class capture in JPEG format.
-
-endmenu
-
-menu "Solution storage and network functions"
-
-config SOLN_SD_AVI_VIDEO_EN
-    bool "Save video AVI to SD card"
-    default n
-    depends on FATFS && (SOLN_FBQ_VID_JPEG_LOCAL_EN || SOLN_FBQ_VID_JPEG_REMOTE_EN)
-    depends on FATFS_SDH_SDCARD && BSP_SDH_SD
-    help
-      Save JPEG video frames to an AVI file on an SD card.
-
-config SOLN_SD_AVI_AUDIO_EN
-    bool "Save audio AVI to SD card"
-    default n
-    depends on FATFS && SOLN_FBQ_AUD_PCM_REMOTE_EN
-    depends on FATFS_SDH_SDCARD && BSP_SDH_SD
-    help
-      Save PCM audio frames to an AVI file on an SD card.
-
-config SOLN_HB_TX_EN
-    bool "HiBooster sender"
-    default n
-    depends on LWIP && SOLN_FBQ_VID_JPEG_LOCAL_EN
-    help
-      Enable the Soln HiBooster JPEG sender adapter.
-
-config SOLN_HB_RX_EN
-    bool "HiBooster receiver"
-    default n
-    depends on LWIP && SOLN_FBQ_VID_JPEG_REMOTE_EN
-    help
-      Enable the Soln HiBooster JPEG receiver adapter.
-
-config SOLN_RTSP_EN
-    bool "RTSP video server"
-    default n
-    depends on RTSP && LWIP && SOLN_FBQ_VID_JPEG_LOCAL_EN
-    help
-      Enable the Soln RTSP video adapter.
-
-endmenu
-
-menu "Soln logging"
-
-config SOLN_LOG_LEVEL
-    int "Solution log level"
-    range 0 5
-    default 3
-    depends on SOLN_UTILS
-    help
-      Log level: 0=fatal, 1=error, 2=warning, 3=info, 4=debug, 5=trace.
-
-config SOLN_FBQ_LOG_LEVEL
-    int "Frame queue log level"
-    range 0 5
-    default 3
-    depends on SOLN_UTILS
-    help
-      Log level for the Soln frame queue implementation.
-
-config SOLN_AUD_AUADC_LOG_LEVEL
-    int "Audio ADC log level"
-    range 0 5
-    default 3
-    depends on SOLN_AUD_AUADC_EN
-    help
-      Log level for the internal audio ADC adapter.
-
-config SOLN_AUD_AUDAC_LOG_LEVEL
-    int "Audio DAC log level"
-    range 0 5
-    default 3
-    depends on SOLN_AUD_AUDAC_EN
-    help
-      Log level for the internal audio DAC adapter.
-
-config SOLN_AUD_LOOPBACK_LOG_LEVEL
-    int "Audio loopback log level"
-    range 0 5
-    default 3
-    depends on SOLN_AUD_LOOPBACK_EN
-    help
-      Log level for the audio loopback adapter.
-
-config SOLN_AUD_ES8388_LOG_LEVEL
-    int "ES8388 log level"
-    range 0 5
-    default 3
-    depends on SOLN_AUD_ES8388_EN
-    help
-      Log level for the ES8388 codec adapter.
-
-config SOLN_AUD_I2S_LOG_LEVEL
-    int "I2S audio log level"
-    range 0 5
-    default 3
-    depends on SOLN_AUD_I2S_IN_EN || SOLN_AUD_I2S_OUT_EN
-    help
-      Log level for the external codec I2S adapter.
-
-config SOLN_DISP_DBI_LOG_LEVEL
-    int "DBI display log level"
-    range 0 5
-    default 3
-    depends on SOLN_DISP_DBI_EN
-    help
-      Log level for the DBI display adapter.
-
-config SOLN_DISP_RGB_LOG_LEVEL
-    int "RGB display log level"
-    range 0 5
-    default 3
-    depends on SOLN_DISP_RGB_EN
-    help
-      Log level for the RGB display adapter.
 
 config SOLN_VID_DVP_LOG_LEVEL
     int "DVP log level"
@@ -292,13 +287,14 @@ config SOLN_VID_DVP_LOG_LEVEL
     help
       Log level for the DVP camera adapter.
 
-config SOLN_VID_JPEG_ENC_LOG_LEVEL
-    int "MJPEG encoder log level"
-    range 0 5
-    default 3
-    depends on SOLN_VID_JPEG_ENC_EN
+menuconfig SOLN_VID_DVP_JPEG_ENC_EN
+    bool "DVP JPEG encoder"
+    default n
+    depends on SOLN_FBQ_VID_JPEG_LOCAL_EN
+    depends on BSP_IMAGE_SENSOR
+    depends on !SOLN_VID_JPEG_ENC_EN
     help
-      Log level for the MJPEG encoder adapter.
+      Enable the DVP line-buffer JPEG encoder pipeline.
 
 config SOLN_VID_DVP_JPEG_ENC_LOG_LEVEL
     int "DVP JPEG encoder log level"
@@ -308,21 +304,16 @@ config SOLN_VID_DVP_JPEG_ENC_LOG_LEVEL
     help
       Log level for the DVP JPEG encoder adapter.
 
-config SOLN_VID_JPEG_DEC_LOG_LEVEL
-    int "MJPEG decoder log level"
-    range 0 5
-    default 3
-    depends on SOLN_VID_JPEG_DEC_EN
+menuconfig SOLN_VID_UVC_YUYV_EN
+    bool "USB UVC YUYV input"
+    default n
+    depends on SOLN_FBQ_VID_RAW_LOCAL_EN
+    depends on CHERRYUSB_HOST_VIDEO
+    depends on !SOLN_VID_DVP_EN
     help
-      Log level for the MJPEG decoder adapter.
+      Enable USB Video Class capture in YUYV format.
 
-config SOLN_AUD_UAC_LOG_LEVEL
-    int "UAC log level"
-    range 0 5
-    default 3
-    depends on SOLN_AUD_UAC_IN_EN || SOLN_AUD_UAC_OUT_EN
-    help
-      Log level for the USB Audio Class adapter.
+if SOLN_VID_UVC_YUYV_EN
 
 config SOLN_VID_UVC_LOG_LEVEL
     int "UVC log level"
@@ -331,6 +322,46 @@ config SOLN_VID_UVC_LOG_LEVEL
     depends on SOLN_VID_UVC_YUYV_EN || SOLN_VID_UVC_JPEG_EN
     help
       Log level for the USB Video Class adapter.
+
+endif # SOLN_VID_UVC_YUYV_EN
+
+menuconfig SOLN_VID_UVC_JPEG_EN
+    bool "USB UVC JPEG input"
+    default n
+    depends on SOLN_FBQ_VID_JPEG_LOCAL_EN
+    depends on CHERRYUSB_HOST_VIDEO
+    depends on !SOLN_VID_JPEG_ENC_EN && !SOLN_VID_DVP_JPEG_ENC_EN
+    help
+      Enable USB Video Class capture in JPEG format.
+
+if SOLN_VID_UVC_JPEG_EN
+
+config SOLN_VID_UVC_LOG_LEVEL
+    int "UVC log level"
+    range 0 5
+    default 3
+    depends on SOLN_VID_UVC_YUYV_EN || SOLN_VID_UVC_JPEG_EN
+    help
+      Log level for the USB Video Class adapter.
+
+endif # SOLN_VID_UVC_JPEG_EN
+
+endif # SOLN_UTILS && SOLN_VIDEO_GROUP
+
+config SOLN_STORAGE_NETWORK_GROUP
+    bool "Solution storage and network functions" if SOLN_UTILS
+
+if SOLN_UTILS && SOLN_STORAGE_NETWORK_GROUP
+
+menuconfig SOLN_SD_AVI_VIDEO_EN
+    bool "Save video AVI to SD card"
+    default n
+    depends on FATFS && (SOLN_FBQ_VID_JPEG_LOCAL_EN || SOLN_FBQ_VID_JPEG_REMOTE_EN)
+    depends on FATFS_SDH_SDCARD
+    help
+      Save JPEG video frames to an AVI file on an SD card.
+
+if SOLN_SD_AVI_VIDEO_EN
 
 config SOLN_SD_AVI_LOG_LEVEL
     int "SD AVI log level"
@@ -348,13 +379,42 @@ config SOLN_SD_JPEG_LOG_LEVEL
     help
       Log level for the SD card JPEG adapter.
 
-config SOLN_RTSP_LOG_LEVEL
-    int "RTSP log level"
+endif # SOLN_SD_AVI_VIDEO_EN
+
+menuconfig SOLN_SD_AVI_AUDIO_EN
+    bool "Save audio AVI to SD card"
+    default n
+    depends on FATFS && SOLN_FBQ_AUD_PCM_REMOTE_EN
+    depends on FATFS_SDH_SDCARD
+    help
+      Save PCM audio frames to an AVI file on an SD card.
+
+if SOLN_SD_AVI_AUDIO_EN
+
+config SOLN_SD_AVI_LOG_LEVEL
+    int "SD AVI log level"
     range 0 5
     default 3
-    depends on SOLN_RTSP_EN
+    depends on SOLN_SD_AVI_VIDEO_EN || SOLN_SD_AVI_AUDIO_EN
     help
-      Log level for the RTSP adapter.
+      Log level for the SD card AVI adapter.
+
+config SOLN_SD_JPEG_LOG_LEVEL
+    int "SD JPEG log level"
+    range 0 5
+    default 3
+    depends on SOLN_SD_AVI_VIDEO_EN || SOLN_SD_AVI_AUDIO_EN
+    help
+      Log level for the SD card JPEG adapter.
+
+endif # SOLN_SD_AVI_AUDIO_EN
+
+menuconfig SOLN_HB_TX_EN
+    bool "HiBooster sender"
+    default n
+    depends on LWIP && SOLN_FBQ_VID_JPEG_LOCAL_EN
+    help
+      Enable the Soln HiBooster JPEG sender adapter.
 
 config SOLN_HB_TX_LOG_LEVEL
     int "HiBooster sender log level"
@@ -364,6 +424,13 @@ config SOLN_HB_TX_LOG_LEVEL
     help
       Log level for the HiBooster sender adapter.
 
+menuconfig SOLN_HB_RX_EN
+    bool "HiBooster receiver"
+    default n
+    depends on LWIP && SOLN_FBQ_VID_JPEG_REMOTE_EN
+    help
+      Enable the Soln HiBooster JPEG receiver adapter.
+
 config SOLN_HB_RX_LOG_LEVEL
     int "HiBooster receiver log level"
     range 0 5
@@ -371,6 +438,59 @@ config SOLN_HB_RX_LOG_LEVEL
     depends on SOLN_HB_RX_EN
     help
       Log level for the HiBooster receiver adapter.
+
+menuconfig SOLN_RTSP_EN
+    bool "RTSP video server"
+    default n
+    depends on RTSP && LWIP && SOLN_FBQ_VID_JPEG_LOCAL_EN
+    help
+      Enable the Soln RTSP video adapter.
+
+config SOLN_RTSP_LOG_LEVEL
+    int "RTSP log level"
+    range 0 5
+    default 3
+    depends on SOLN_RTSP_EN
+    help
+      Log level for the RTSP adapter.
+
+menuconfig SOLN_HB_TX_TEST_EN
+    bool "HiBooster sender test"
+    default n
+    depends on SOLN_UTILS
+    depends on LWIP
+    help
+      Build the HiBooster sender test application code.
+
+config SOLN_HB_TX_TEST_LOG_LEVEL
+    int "HiBooster sender test log level"
+    range 0 5
+    default 3
+    depends on SOLN_HB_TX_TEST_EN
+    help
+      Log level for the HiBooster sender test code.
+
+menuconfig SOLN_HB_RX_TEST_EN
+    bool "HiBooster receiver test"
+    default n
+    depends on SOLN_UTILS
+    depends on LWIP
+    help
+      Build the HiBooster receiver test application code.
+
+config SOLN_HB_RX_TEST_LOG_LEVEL
+    int "HiBooster receiver test log level"
+    range 0 5
+    default 3
+    depends on SOLN_HB_RX_TEST_EN
+    help
+      Log level for the HiBooster receiver test code.
+
+endif # SOLN_UTILS && SOLN_STORAGE_NETWORK_GROUP
+
+if SOLN_UTILS
+
+comment "FPS statistics"
 
 config SOLN_FPS_PRINT_EN
     bool "Print FPS statistics"
@@ -395,60 +515,12 @@ config SOLN_FPS_PRINT_INTERVAL_MULTIPLIER
     help
       Number of samples between periodic FPS log messages.
 
-endmenu
-
-menu "Soln display timing"
-
-config SOLN_DISP_TX_TIME_US
-    int "Display transfer time in microseconds"
-    range 1 1000000
-    default 17000
-    depends on SOLN_DISP_DBI_EN
-    help
-      Estimated display transfer time used by the TE timing logic.
-
-config SOLN_DISP_TE_BOUNDARY_US
-    int "Display TE boundary in microseconds"
-    range 0 1000000
-    default 0
-    depends on SOLN_DISP_DBI_EN
-    help
-      Optional TE timing boundary used by the display flush adapter.
-
-endmenu
-
-menu "Soln diagnostics"
-
-config SOLN_HB_TX_TEST_EN
-    bool "HiBooster sender test"
-    default n
-    depends on SOLN_UTILS
-    depends on LWIP
-    help
-      Build the HiBooster sender test application code.
-
-config SOLN_HB_RX_TEST_EN
-    bool "HiBooster receiver test"
-    default n
-    depends on SOLN_UTILS
-    depends on LWIP
-    help
-      Build the HiBooster receiver test application code.
-
-config SOLN_HB_TX_TEST_LOG_LEVEL
-    int "HiBooster sender test log level"
+config SOLN_LOG_LEVEL
+    int "Solution log level"
     range 0 5
     default 3
-    depends on SOLN_HB_TX_TEST_EN
+    depends on SOLN_UTILS
     help
-      Log level for the HiBooster sender test code.
+      Log level: 0=fatal, 1=error, 2=warning, 3=info, 4=debug, 5=trace.
 
-config SOLN_HB_RX_TEST_LOG_LEVEL
-    int "HiBooster receiver test log level"
-    range 0 5
-    default 3
-    depends on SOLN_HB_RX_TEST_EN
-    help
-      Log level for the HiBooster receiver test code.
-
-endmenu
+endif # SOLN_UTILS

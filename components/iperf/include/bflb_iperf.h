@@ -30,11 +30,15 @@ extern "C" {
 
 #define BFLB_IPERF_OK                   0  /**< Operation completed successfully. */
 #define BFLB_IPERF_ERR_INVALID          -1 /**< Invalid argument, state, or resource failure. */
-#define BFLB_IPERF_ERR_BUSY             -2 /**< Instance is active or still releasing resources. */
+#define BFLB_IPERF_ERR_SELF             -2 /**< Synchronous destruction from this instance's worker is forbidden. */
 
 /**
  * @brief Opaque iPerf instance owned by its creator.
- * @note Public instance APIs use a mutex and must not be called from an ISR.
+ * @note One external owner must serialize destroy with all other external
+ * instance APIs, including create. No API may use the handle after destroy.
+ * Worker callbacks may query state/results even while the owner is destroying.
+ * APIs are task-only; never call them from an ISR or with the scheduler/core
+ * lock held. Instances are single-CPU, not shared across SMP CPUs.
  */
 typedef struct bflb_iperf bflb_iperf_t;
 
@@ -68,7 +72,7 @@ typedef enum {
 typedef enum {
     BFLB_IPERF_STATE_IDLE = 0, /**< No test has been started. */
     BFLB_IPERF_STATE_STARTING, /**< Backend startup is in progress. */
-    BFLB_IPERF_STATE_RUNNING,  /**< Test traffic is active. */
+    BFLB_IPERF_STATE_RUNNING,  /**< Worker started; a peer need not be connected. */
     BFLB_IPERF_STATE_STOPPING, /**< A stop request is being processed. */
     BFLB_IPERF_STATE_DONE,     /**< Test completed successfully. */
     BFLB_IPERF_STATE_ERROR,    /**< Test terminated with an error. */
@@ -90,21 +94,35 @@ typedef struct {
 } bflb_iperf_result_t;
 
 /**
- * @brief Direct completion callback.
+ * @brief Worker lifecycle events, each emitted once for a successful launch.
+ * @note Either event may precede the return from bflb_iperf_create().
+ */
+typedef enum {
+    BFLB_IPERF_EVENT_STARTED = 0, /**< Worker entered, not necessarily connected. */
+    BFLB_IPERF_EVENT_FINISHED,    /**< Runtime resources released and result frozen. */
+} bflb_iperf_event_t;
+
+/**
+ * @brief Direct worker event callback.
  *
- * The callback runs in the backend worker task that finishes the test. The
- * result pointer is valid only for the duration of the callback.
+ * Runs without the instance mutex, possibly before create returns. STARTED
+ * carries an initial snapshot (possibly STOPPING after early cancellation);
+ * FINISHED carries the immutable final snapshot, including failures/cancellation.
+ * The result pointer is valid only during the callback; copy it to retain it.
  *
- * @param[in] iperf Completed instance.
- * @param[in] result Immutable final result snapshot.
+ * @param[in] iperf Live instance; state/result queries are allowed.
+ * @param[in] event STARTED or FINISHED.
+ * @param[in] result Immutable event-time snapshot; never NULL.
  * @param[in] user_data User value copied from the configuration.
  *
- * @note The callback must not call bflb_iperf_destroy(). The creator must
- * destroy the instance later from a safe control context.
+ * @note Synchronous destroy of this instance returns BFLB_IPERF_ERR_SELF.
+ * Do not wait for another task to destroy it: destroy waits for this callback.
+ * Synchronous create failure emits no events. Callbacks must eventually return.
  */
-typedef void (*bflb_iperf_done_cb_t)(bflb_iperf_t *iperf,
-                                     const bflb_iperf_result_t *result,
-                                     void *user_data);
+typedef void (*bflb_iperf_event_cb_t)(bflb_iperf_t *iperf,
+                                    bflb_iperf_event_t event,
+                                    const bflb_iperf_result_t *result,
+                                    void *user_data);
 
 /**
  * @brief Configuration copied when an iPerf instance is created.
@@ -113,7 +131,8 @@ typedef void (*bflb_iperf_done_cb_t)(bflb_iperf_t *iperf,
  * configuration fields are copied by bflb_iperf_create().
  *
  * @note Only the user_data pointer value is copied. The caller must keep the
- * object referenced by user_data valid until the completion callback returns.
+ * object referenced by user_data valid until FINISHED returns (synchronous
+ * destroy provides that guarantee).
  * @note buffer_len must be 80--1470 bytes for UDP, at most 16384 bytes for
  * TCP Socket, and at most 4096 bytes for TCP Raw. task_priority must be less
  * than configMAX_PRIORITIES after default selection.
@@ -136,8 +155,8 @@ typedef struct {
     uint8_t tos;                  /**< IPv4 type-of-service value. */
     uint8_t tcp_nodelay;          /**< Nonzero disables Nagle for a TCP client. */
     uint8_t task_priority;        /**< Backend worker priority; zero selects the default. */
-    bflb_iperf_done_cb_t done_cb; /**< Optional direct completion callback. */
-    void *user_data;              /**< Opaque value passed to done_cb. */
+    bflb_iperf_event_cb_t event_cb; /**< Optional direct worker event callback. */
+    void *user_data;              /**< Opaque value passed to event_cb. */
 } bflb_iperf_config_t;
 
 /**
@@ -154,52 +173,34 @@ typedef struct {
 void bflb_iperf_config_init(bflb_iperf_config_t *config);
 
 /**
- * @brief Create an independent iPerf instance.
+ * @brief Create and immediately launch an independent iPerf instance.
  *
- * The caller owns the returned instance and must eventually destroy it. One
- * instance represents one test and can be started only once.
+ * The caller owns the instance and must eventually destroy it, even after
+ * natural completion or failure. Instances never free themselves. One instance
+ * represents one test; there is no separate public start or stop operation.
+ * All synchronization objects and the output handle are initialized before the
+ * worker can run. This function does not wait for callbacks or connection setup.
  *
  * @param[in] config Test configuration.
- * @param[out] iperf Receives the new instance on success.
- * @retval BFLB_IPERF_OK Instance created.
- * @retval BFLB_IPERF_ERR_INVALID Invalid configuration or allocation failure.
+ * @param[out] iperf Non-NULL output slot, published before worker launch;
+ * set to NULL on synchronous failure. A NULL slot is rejected.
+ * @retval BFLB_IPERF_OK Worker launched; subsequent failures arrive via FINISHED.
+ * @retval BFLB_IPERF_ERR_INVALID Invalid configuration or resource/launch failure;
+ * all resources are released and no callback is emitted.
+ * @pre Task context; the owner must serialize create with external handle APIs.
+ * @note STARTED and FINISHED may both occur before this function returns.
  */
 int bflb_iperf_create(const bflb_iperf_config_t *config, bflb_iperf_t **iperf);
 
 /**
- * @brief Start an iPerf instance.
- *
- * Every backend runs in an independent worker task. Raw PCB operations use
- * short TCP/IP Core Lock sections. A test may still be in STARTING state when
- * this function returns.
- *
- * @param[in] iperf Instance to start.
- * @retval BFLB_IPERF_OK Test accepted.
- * @retval BFLB_IPERF_ERR_INVALID Invalid instance or lifecycle state.
- * @return A backend-specific negative error may also be returned.
- */
-int bflb_iperf_start(bflb_iperf_t *iperf);
-
-/**
- * @brief Request termination of the active test.
- *
- * The request may complete asynchronously. Calling this function when no test
- * is active succeeds without effect.
- *
- * @param[in] iperf Instance to stop.
- * @retval BFLB_IPERF_OK Stop requested or no test was active.
- * @retval BFLB_IPERF_ERR_INVALID Invalid instance or destruction has started.
- * @return A backend-specific negative error on failure.
- */
-int bflb_iperf_stop(bflb_iperf_t *iperf);
-
-/**
  * @brief Read a consistent snapshot of test statistics.
+ * @note Copies all fields into caller-owned storage, does not clear counters.
+ * Running snapshots evolve; DONE/ERROR snapshots remain frozen until destroy.
  *
  * @param[in] iperf Instance to inspect.
  * @param[out] result Destination for the result snapshot.
  * @retval BFLB_IPERF_OK Result returned successfully.
- * @retval BFLB_IPERF_ERR_INVALID An argument is NULL or destruction has started.
+ * @retval BFLB_IPERF_ERR_INVALID An argument is NULL.
  */
 int bflb_iperf_get_result(bflb_iperf_t *iperf, bflb_iperf_result_t *result);
 
@@ -208,21 +209,27 @@ int bflb_iperf_get_result(bflb_iperf_t *iperf, bflb_iperf_result_t *result);
  *
  * @param[in] iperf Instance to inspect.
  * @return Current test state, or BFLB_IPERF_STATE_ERROR when the instance is
- * NULL or destruction has started.
+ * NULL.
  */
 bflb_iperf_state_t bflb_iperf_get_state(bflb_iperf_t *iperf);
 
 /**
- * @brief Destroy an instance owned by the caller.
+ * @brief Request stop, join worker completion, and free the owned instance.
  *
- * This function never waits. It succeeds only after the backend has released
- * all asynchronous resources and the completion callback has returned. Once
- * destruction starts, no thread may issue another API call with the pointer.
+ * Waits without holding the instance mutex until runtime resources have been
+ * released and FINISHED has returned, then frees context/synchronization/instance.
+ * Safe before/during either event or after natural completion. Backend waits
+ * remain transport-specific; this is not a fixed-latency operation. No external
+ * API call may overlap destroy. Worker callbacks may still query the instance.
  *
  * @param[in] iperf Instance to destroy.
  * @retval BFLB_IPERF_OK Instance destroyed; the pointer is no longer valid.
- * @retval BFLB_IPERF_ERR_BUSY Test activity or callback release is incomplete.
- * @retval BFLB_IPERF_ERR_INVALID iperf is NULL or destruction already started.
+ * @retval BFLB_IPERF_ERR_SELF Called from this worker; instance is unchanged.
+ * @retval BFLB_IPERF_ERR_INVALID iperf is NULL.
+ * @pre One external owner; task context, never an ISR or this worker's callback.
+ * Do not hold the scheduler/core lock or a lock needed by an event callback.
+ * @post On success no callback can access user_data again and the handle must
+ * not be reused. The wait has no fixed real-time bound.
  */
 int bflb_iperf_destroy(bflb_iperf_t *iperf);
 

@@ -221,16 +221,16 @@ static void shell_push_history(struct shell *shell)
         if (shell->history_count >= SHELL_HISTORY_LINES) {
             /* if current cmd is same as last cmd, don't push */
             if (memcmp(&shell->cmd_history[SHELL_HISTORY_LINES - 1], shell->line,
-                       SHELL_CMD_SIZE)) {
+                       CONFIG_SHELL_CMD_SIZE)) {
                 /* move history */
                 int index;
 
                 for (index = 0; index < SHELL_HISTORY_LINES - 1; index++) {
                     memcpy(&shell->cmd_history[index][0],
-                           &shell->cmd_history[index + 1][0], SHELL_CMD_SIZE);
+                           &shell->cmd_history[index + 1][0], CONFIG_SHELL_CMD_SIZE);
                 }
 
-                memset(&shell->cmd_history[index][0], 0, SHELL_CMD_SIZE);
+                memset(&shell->cmd_history[index][0], 0, CONFIG_SHELL_CMD_SIZE);
                 memcpy(&shell->cmd_history[index][0], shell->line,
                        shell->line_position);
 
@@ -241,9 +241,9 @@ static void shell_push_history(struct shell *shell)
             /* if current cmd is same as last cmd, don't push */
             if (shell->history_count == 0 ||
                 memcmp(&shell->cmd_history[shell->history_count - 1], shell->line,
-                       SHELL_CMD_SIZE)) {
+                       CONFIG_SHELL_CMD_SIZE)) {
                 shell->current_history = shell->history_count;
-                memset(&shell->cmd_history[shell->history_count][0], 0, SHELL_CMD_SIZE);
+                memset(&shell->cmd_history[shell->history_count][0], 0, CONFIG_SHELL_CMD_SIZE);
                 memcpy(&shell->cmd_history[shell->history_count][0], shell->line,
                        shell->line_position);
 
@@ -733,7 +733,7 @@ void shell_handler(uint8_t data)
 
             /* copy the history command */
             memcpy(shell->line, &shell->cmd_history[shell->current_history][0],
-                   SHELL_CMD_SIZE);
+                   CONFIG_SHELL_CMD_SIZE);
             shell->line_curpos = shell->line_position = strlen(shell->line);
             shell_handle_history(shell);
 
@@ -753,7 +753,7 @@ void shell_handler(uint8_t data)
             }
 
             memcpy(shell->line, &shell->cmd_history[shell->current_history][0],
-                   SHELL_CMD_SIZE);
+                   CONFIG_SHELL_CMD_SIZE);
             shell->line_curpos = shell->line_position = strlen(shell->line);
             shell_handle_history(shell);
 
@@ -856,7 +856,7 @@ void shell_handler(uint8_t data)
         return;
     }
     /* it's a large line, discard it */
-    if (shell->line_position >= SHELL_CMD_SIZE) {
+    if (shell->line_position >= CONFIG_SHELL_CMD_SIZE) {
         shell->line_position = 0;
     }
 
@@ -888,7 +888,7 @@ void shell_handler(uint8_t data)
     shell->line_position++;
     shell->line_curpos++;
 
-    if (shell->line_position >= SHELL_CMD_SIZE) {
+    if (shell->line_position >= CONFIG_SHELL_CMD_SIZE) {
         /* clear command line */
         shell->line_position = 0;
         shell->line_curpos = 0;

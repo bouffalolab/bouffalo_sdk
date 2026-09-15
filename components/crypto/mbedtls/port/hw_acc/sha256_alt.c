@@ -35,6 +35,10 @@
 #include "mbedtls/platform.h"
 #include "bflb_sec_mutex.h"
 
+#ifdef BL618DG
+#include "bl618dg_glb.h"
+#endif
+
 #ifdef CONFIG_MBEDTLS_V2
 #define SHA256_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
@@ -108,7 +112,14 @@ void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
     ctx->sha = sha;
 
     bflb_sec_sha_mutex_take();
-    bflb_group0_request_sha_access(sha);
+#ifdef BL618DG
+    if (GLB_Get_Core_Type() == GLB_CORE_ID_NP) {
+        bflb_group1_request_sha_access(sha);
+    } else
+#endif
+    {
+        bflb_group0_request_sha_access(sha);
+    }
     bflb_sha_link_init(sha);
     bflb_sec_sha_mutex_give();
 }

@@ -26,7 +26,7 @@
     #endif
 #endif
 
-#define NUM_WLAN_CHANNELS           (14)
+#define NUM_WLAN_CHANNELS           (14 + 49)
 #define NUM_BZ_CH_PWRCOMP           (5)
 
 enum
@@ -131,9 +131,13 @@ struct wl_param_pwrlimit_t
     int8_t b_cck;  // power limit for 11b 5.5/11Mbps
     int8_t g;      // power limit for 11g
     int8_t n20;    // power limit for 11n 20M BW
+    int8_t ac20;    // power limit for 11ac 20M BW
     int8_t ax20;   // power limit for 11ax 20M BW
     int8_t n40;    // power limit for 11n 40M BW
+    int8_t ac40;    // power limit for 11ac 40M BW
     int8_t ax40;   // power limit for 11ax 40M BW
+    int8_t ac80;    // power limit for 11ac 80M BW
+    int8_t ax80;   // power limit for 11ax 80M BW
 };
 
 struct wl_efuse_t
@@ -156,6 +160,7 @@ struct wl_param_spur_rules_t
 {
     uint32_t    cfg20;
     uint32_t    cfg40;
+    uint32_t    cfg80;
 };
 
 struct wl_param_t
@@ -345,14 +350,22 @@ void wl_rf_set_bz_channel_pwr_comp(void);
 void wl_rf_set_status(uint8_t combo_rf_en);// turn on/off combo rf domain
 void wl_standalone_rf_set_status(uint8_t standalone_rf_en);// turn on/off standalone rf domain
 void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
-void wl_set_ch_rfcal(uint8_t do_cal);
+void wl_set_ch_rfcal(uint8_t do_cal); // 1/0：turn on/off rf cal while switch channel
+
 
 // config for rf 
 
-// *BZ_STAND_ALONE_RF_EN=1 : standalone-bz rf and combo-bz rf both enable, but default bz rf is standalone bz rf 
-// *BZ_STAND_ALONE_RF_EN=0 : combo-bz rf both enable, and disable stand-alone bz rf 
+// DUAL_ANT_RF_EN = 1: 2 ANT, standalone-bz rf and combo-bz rf have each independent antenna
+// DUAL_ANT_RF_EN = 0: 1 ANT, standalone-bz rf and combo-bz rf share the antenna
+#ifndef DUAL_ANT_RF_EN
+#define DUAL_ANT_RF_EN (0)
+#endif
+
+
+// *BZ_STAND_ALONE_RF_EN=1 : standalone-bz rf and combo-bz rf both enable
+// *BZ_STAND_ALONE_RF_EN=0 : disable stand-alone bz rf, only enable combo-bz rf
 #ifndef BZ_STAND_ALONE_RF_EN
-#define BZ_STAND_ALONE_RF_EN (0)
+#define BZ_STAND_ALONE_RF_EN (1)
 #endif
 
 // if build the LPFW, please define 1 

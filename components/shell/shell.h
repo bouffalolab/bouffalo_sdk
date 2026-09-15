@@ -76,9 +76,9 @@ struct shell {
 
     uint16_t current_history;
     uint16_t history_count;
-    char cmd_history[SHELL_HISTORY_LINES][SHELL_CMD_SIZE];
+    char cmd_history[SHELL_HISTORY_LINES][CONFIG_SHELL_CMD_SIZE];
 
-    char line[SHELL_CMD_SIZE];
+    char line[CONFIG_SHELL_CMD_SIZE];
     uint16_t line_position;
     uint16_t line_curpos;
 

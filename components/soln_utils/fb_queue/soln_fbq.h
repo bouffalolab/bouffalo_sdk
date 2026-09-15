@@ -169,8 +169,9 @@ static inline const soln_fbq_img_raw_ext_t *soln_fbq_img_raw_ext_const(const fbq
  *  @{
  */
 #if IS_ENABLED(CONFIG_SOLN_FBQ_VID_RAW_LOCAL_EN)
-/** Default payload capacity of one local RAW video element, in bytes. */
-#ifndef CONFIG_SOLN_FBQ_VID_RAW_LOCAL_SIZE
+/** Payload capacity in bytes; automatic mode uses width * height * 2. */
+#if IS_ENABLED(CONFIG_SOLN_FBQ_VID_RAW_LOCAL_SIZE_AUTO) || !defined(CONFIG_SOLN_FBQ_VID_RAW_LOCAL_SIZE)
+#undef CONFIG_SOLN_FBQ_VID_RAW_LOCAL_SIZE
 #define CONFIG_SOLN_FBQ_VID_RAW_LOCAL_SIZE (CONFIG_SOLN_VID_DEFAULT_WIDTH * CONFIG_SOLN_VID_DEFAULT_HEIGHT * 2)
 #endif
 /** Default number of elements in the local RAW video fixed pool. */
@@ -208,10 +209,10 @@ fbq_ctrl_t *soln_fbq_vid_raw_local(void);
  *  @{
  */
 #if IS_ENABLED(CONFIG_SOLN_FBQ_VID_RAW_REMOTE_EN)
-/** Default payload capacity of one remote RAW video element, in bytes. */
-#ifndef CONFIG_SOLN_FBQ_VID_RAW_REMOTE_SIZE
-#define CONFIG_SOLN_FBQ_VID_RAW_REMOTE_SIZE \
-    (CONFIG_SOLN_VID_DEFAULT_WIDTH * CONFIG_SOLN_VID_DEFAULT_HEIGHT * 2)
+/** Payload capacity in bytes; automatic mode uses width * height * 2. */
+#if IS_ENABLED(CONFIG_SOLN_FBQ_VID_RAW_REMOTE_SIZE_AUTO) || !defined(CONFIG_SOLN_FBQ_VID_RAW_REMOTE_SIZE)
+#undef CONFIG_SOLN_FBQ_VID_RAW_REMOTE_SIZE
+#define CONFIG_SOLN_FBQ_VID_RAW_REMOTE_SIZE (CONFIG_SOLN_VID_DEFAULT_WIDTH * CONFIG_SOLN_VID_DEFAULT_HEIGHT * 2)
 #endif
 /** Default number of elements in the remote RAW video fixed pool. */
 #ifndef CONFIG_SOLN_FBQ_VID_RAW_REMOTE_NUM

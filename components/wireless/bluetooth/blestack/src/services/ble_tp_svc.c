@@ -357,7 +357,7 @@ static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
     {
         if(value == BT_GATT_CCC_NOTIFY)
         {
-            if(xTaskCreate(ble_tp_notify_task, (char*)"bletpnotify", 256, NULL, TP_PRIO, &ble_tp_notify_task_h) == pdPASS)
+            if(xTaskCreate(ble_tp_notify_task, (char*)"bletpnotify", 512, NULL, TP_PRIO, &ble_tp_notify_task_h) == pdPASS)
             {
                 created_tp_task = 1;
                 BT_WARN("Create throughput tx task success.");

@@ -3,15 +3,15 @@
 bouffalo_flash_cube 的使用
 =================================
 
-BouffaloSDK 采用新的 flash tool （ **bouffalo_flash_cube** ），并且烧录依赖 **Flash prog cfg.ini** 文件。
+BouffaloSDK 采用新的 flash tool（ **bouffalo_flash_cube** ），烧录依赖构建目录中生成的 **flash_prog_cfg.ini** 文件。
 
-相比于 Bouffalo Lab DevCube 繁琐的功能，bouffalo_flash_cube 只用于下载代码，在用户执行 ``make flash`` 时会调用 **bouffalo_flash_cube** 下的可执行文件，并根据 **Flash prog cfg.ini** 进行烧录，
+相比于 Bouffalo Lab DevCube 繁琐的功能，bouffalo_flash_cube 只用于下载代码，在用户执行 ``make flash`` 时会调用 **bouffalo_flash_cube** 下的可执行文件，并烧录 CMake 注册的镜像，
 本节主要介绍一下 **Flash prog cfg.ini** 的语法。更详细的介绍参考 `tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf`
 
 语法
 ---------------------------------
 
-**Flash prog cfg.ini** 正常使用只需要创建一个 KEY，例如 [FW]，并且填写 filedir 和 address 就可以使用了。
+SDK 会自动生成常规烧录项。额外的分区镜像通过 ``CMakeLists.txt`` 中的 ``sdk_add_flash_partition_image`` 注册。下面的语法说明用于介绍生成文件的格式。
 
 其中 filedir 的填写方式有以下几种：
 
@@ -153,4 +153,3 @@ BouffaloSDK 采用新的 flash tool （ **bouffalo_flash_cube** ），并且烧�
     [FW3]
     filedir = ./build/build_out/xxx2.bin
     address = 0x20000
-

@@ -5,13 +5,17 @@ pack_clean::
 	tar czvf $(PROJ_NAME)_imgs.tar.gz $(BUILD_DIR)/build_out/$(PROJ_NAME).*
 	$(CMAKE) -E remove_directory "$(BUILD_DIR)"
 
-menuconfig:
-	KCONFIG_CONFIG="$(DEFCONFIG_FILE)" $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/menuconfig.py"
-	@$(MAKE) defconfig
+menuconfig: config
+	$(CMAKE) -E copy "$(CONFIG_AUTOCONFIG_DEF)" "$(CONFIG_AUTOCONFIG_DEF_OLD)"
+	KCONFIG_CONFIG="$(CONFIG_AUTOCONFIG_DEF)" $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/menuconfig.py" "$(CONFIG_KCONFIG_ENTRY)"
+	@$(CONFIG_MERGE) --before "$(CONFIG_AUTOCONFIG_DEF_OLD)" --after "$(CONFIG_AUTOCONFIG_DEF)" --defconfig "$(DEFCONFIG_FILE)"
+	@$(MAKE) config
 
-guiconfig:
-	KCONFIG_CONFIG="$(DEFCONFIG_FILE)" $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/guiconfig.py"
-	@$(MAKE) defconfig
+guiconfig: config
+	$(CMAKE) -E copy "$(CONFIG_AUTOCONFIG_DEF)" "$(CONFIG_AUTOCONFIG_DEF_OLD)"
+	KCONFIG_CONFIG="$(CONFIG_AUTOCONFIG_DEF)" $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/guiconfig.py" "$(CONFIG_KCONFIG_ENTRY)"
+	@$(CONFIG_MERGE) --before "$(CONFIG_AUTOCONFIG_DEF_OLD)" --after "$(CONFIG_AUTOCONFIG_DEF)" --defconfig "$(DEFCONFIG_FILE)"
+	@$(MAKE) config
 
 config-show:
 	@cat "$(DEFCONFIG_FILE)"

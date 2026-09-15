@@ -61,5 +61,6 @@ sdk_add_compile_definitions(-DCONFIG_ATMODULE_USB)
 sdk_set_main_file(main.c)
 sdk_add_include_directories(.)
 sdk_add_include_directories(./app/include)
+sdk_set_flash_erase(2)
 
 project(usb_wifi)

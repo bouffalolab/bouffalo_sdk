@@ -463,7 +463,7 @@ static int test_tcp_keepalive(int argc, char **argv)
     /*---Get "Hello?"---*/
     memset(buffer, 'A', sizeof(buffer) - 1);
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     if (argc > 2) {
         cmd_tickless(0, NULL);
     }
@@ -722,7 +722,7 @@ int main(void)
 
     pm_sys_init();
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     bl_lp_init(); //wifi lowpower
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
 #endif

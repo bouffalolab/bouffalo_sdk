@@ -14,10 +14,11 @@
 #include <lwip/tcp.h>
 #include <lwip/tcpip.h>
 
+/** @brief Logging category for the TCP Raw backend. */
 #define DBG_TAG "IPERF_TCP_RAW"
 #include "log.h"
 
-#include "iperf_common.h"
+#include "iperf_internal.h"
 
 #if !LWIP_TCPIP_CORE_LOCKING
 #error "iPerf2 TCP Raw requires LWIP_TCPIP_CORE_LOCKING"
@@ -27,7 +28,7 @@
 #define IPERF_TCP_RAW_TASK_NAME    "iperf_tcp_raw"
 /** @brief Worker stack depth passed to xTaskCreate(), in StackType_t units. */
 #define IPERF_TCP_RAW_TASK_STACK   512U
-/** @brief Maximum idle wait before limits and stop requests are rechecked. */
+/** @brief Requested send-backpressure notification timeout, not a latency bound. */
 #define IPERF_TCP_RAW_IDLE_WAIT_MS 10U
 
 /** @brief Events copied atomically from lwIP callbacks to the worker. */
@@ -47,7 +48,7 @@ typedef struct {
     bflb_iperf_t *iperf;      /**< Borrowed instance valid until completion. */
     struct tcp_pcb *tcp;      /**< Active PCB, accessed only with Core Lock. */
     struct tcp_pcb *listener; /**< Listen PCB, accessed only with Core Lock. */
-    TaskHandle_t task;        /**< Worker notified for control and TX events. */
+    TaskHandle_t task;        /**< Callback-only wake target; detach all callbacks before clearing. */
     ip_addr_t connect_addr;   /**< Persistent client destination address. */
     ip_addr_t local_addr;     /**< Established local endpoint. */
     ip_addr_t remote_addr;    /**< Established remote endpoint. */
@@ -59,7 +60,12 @@ typedef struct {
     uint8_t error_pending;    /**< async_error is valid. */
 } iperf_tcp_raw_context_t;
 
-/** @brief Wake the worker after publishing a control or send event. */
+/**
+ * @brief Wake the worker after publishing a control or send event.
+ * @param[in] context Callback context with a live task handle, or NULL task.
+ * @pre TCP/IP callback context with the core lock held; callbacks are detached
+ * before the worker clears its task handle or deletes itself.
+ */
 static void iperf_tcp_raw_notify(iperf_tcp_raw_context_t *context)
 {
     if (context->task != NULL) {
@@ -88,7 +94,7 @@ static void iperf_tcp_raw_detach(struct tcp_pcb *pcb)
  * @brief Consume one received pbuf directly in the lwIP callback.
  * @param[in,out] arg TCP Raw context registered with tcp_arg().
  * @param[in,out] pcb Receiving TCP PCB.
- * @param[in] p Received pbuf, or NULL for orderly peer shutdown.
+ * @param[in,out] p Received pbuf consumed and freed here, or NULL for peer close.
  * @param[in] error lwIP receive status.
  * @retval ERR_OK The event or pbuf was consumed.
  * @note This callback runs with the TCP/IP core locked. Normal payload does
@@ -130,6 +136,11 @@ static err_t iperf_tcp_raw_recv(void *arg, struct tcp_pcb *pcb,
 
 /**
  * @brief Wake the client worker when acknowledged data frees send capacity.
+ * @param[in,out] arg Registered TCP Raw context.
+ * @param[in] pcb Acknowledging PCB; unused.
+ * @param[in] length Acknowledged byte count; unused (bytes count queued writes).
+ * @retval ERR_OK Notification handled.
+ * @pre Called by lwIP with the core lock held.
  */
 static err_t iperf_tcp_raw_sent(void *arg, struct tcp_pcb *pcb, u16_t length)
 {
@@ -143,13 +154,15 @@ static err_t iperf_tcp_raw_sent(void *arg, struct tcp_pcb *pcb, u16_t length)
 
 /**
  * @brief Publish a fatal asynchronous TCP error.
+ * @param[in,out] arg Registered TCP Raw context.
+ * @param[in] error Fatal lwIP status to latch for the worker.
+ * @pre Called by lwIP with the core lock held.
  * @note lwIP has already released the active PCB before this callback runs.
  */
 static void iperf_tcp_raw_error(void *arg, err_t error)
 {
     iperf_tcp_raw_context_t *context = arg;
 
-    LOG_E("TCP Raw asynchronous connection error: error=%d\r\n", error);
     context->tcp = NULL;
     context->async_error = error;
     context->error_pending = 1U;
@@ -159,13 +172,17 @@ static void iperf_tcp_raw_error(void *arg, err_t error)
 
 /**
  * @brief Publish successful completion of a client connection attempt.
+ * @param[in,out] arg Registered TCP Raw context.
+ * @param[in] pcb Established PCB supplying the endpoint tuple on success.
+ * @param[in] error Connection status; nonzero is latched as an async error.
+ * @retval ERR_OK Status was forwarded to the worker.
+ * @pre Called by lwIP with the core lock held; no printing is performed here.
  */
 static err_t iperf_tcp_raw_connected(void *arg, struct tcp_pcb *pcb, err_t error)
 {
     iperf_tcp_raw_context_t *context = arg;
 
     if (error != ERR_OK) {
-        LOG_E("TCP Raw connect callback failed: error=%d\r\n", error);
         context->async_error = error;
         context->error_pending = 1U;
         iperf_tcp_raw_notify(context);
@@ -184,6 +201,13 @@ static err_t iperf_tcp_raw_connected(void *arg, struct tcp_pcb *pcb, err_t error
 
 /**
  * @brief Accept one server connection and immediately install data callbacks.
+ * @param[in,out] arg Registered TCP Raw server context.
+ * @param[in,out] pcb New PCB to retain or abort; may be NULL.
+ * @param[in] error lwIP accept status.
+ * @retval ERR_OK Connection accepted.
+ * @retval ERR_ABRT PCB aborted on error, stop request or an existing peer.
+ * @return The supplied error when pcb is NULL.
+ * @pre Called by lwIP with the core lock held.
  * @note Installing callbacks before returning ensures payload carried by the
  * final handshake ACK is delivered to iperf_tcp_raw_recv().
  */
@@ -209,9 +233,6 @@ static err_t iperf_tcp_raw_accept(void *arg, struct tcp_pcb *pcb, err_t error)
     ip_addr_copy(context->remote_addr, pcb->remote_ip);
     context->local_port = pcb->local_port;
     context->remote_port = pcb->remote_port;
-    iperf_log_connection(context->iperf,
-                         ip_2_ip4(&context->local_addr)->addr, context->local_port,
-                         ip_2_ip4(&context->remote_addr)->addr, context->remote_port);
     iperf_test_begin(context->iperf);
     context->connected = 1U;
     iperf_tcp_raw_notify(context);
@@ -220,6 +241,9 @@ static err_t iperf_tcp_raw_accept(void *arg, struct tcp_pcb *pcb, err_t error)
 
 /**
  * @brief Atomically transfer all latched callback state to the worker.
+ * @param[in,out] context Callback state whose pending flags are cleared.
+ * @param[out] events Non-NULL destination, initialized before copying.
+ * @pre Worker context outside the core lock; this function acquires it.
  */
 static void iperf_tcp_raw_take_events(iperf_tcp_raw_context_t *context,
                                       iperf_tcp_raw_events_t *events)
@@ -246,7 +270,7 @@ static void iperf_tcp_raw_take_events(iperf_tcp_raw_context_t *context,
 /**
  * @brief Fill currently available TCP send capacity with immutable payload.
  * @param[in,out] context Active TCP Raw client context.
- * @retval ERR_OK More data can be submitted without waiting.
+ * @retval ERR_OK No fatal error or detected send-capacity blockage.
  * @retval ERR_MEM Send capacity is exhausted; wait for tcp_sent().
  * @return Another lwIP error on failure.
  * @note tcp_write() references permanent g_iperf_raw_payload without copying.
@@ -255,18 +279,10 @@ static err_t iperf_tcp_raw_fill(iperf_tcp_raw_context_t *context)
 {
     bflb_iperf_t *iperf = context->iperf;
     struct tcp_pcb *pcb;
-    uint64_t remaining = UINT64_MAX;
+    uint64_t remaining = iperf_bytes_remaining(iperf);
     uint32_t written = 0U;
     bool send_blocked = false;
     err_t error = ERR_OK;
-
-    if (iperf->config.amount_bytes != 0U) {
-        if (iperf->stats.bytes < iperf->config.amount_bytes) {
-            remaining = iperf->config.amount_bytes - iperf->stats.bytes;
-        } else {
-            remaining = 0U;
-        }
-    }
 
     LOCK_TCPIP_CORE();
     pcb = context->tcp;
@@ -298,16 +314,19 @@ static err_t iperf_tcp_raw_fill(iperf_tcp_raw_context_t *context)
             error = output_error;
         }
     }
-    UNLOCK_TCPIP_CORE();
-
+    /* Publish bytes before a callback can record the terminal timestamp. */
     if (written != 0U) {
         iperf_account_transfer(iperf, written);
     }
+    UNLOCK_TCPIP_CORE();
     return error == ERR_OK && send_blocked ? ERR_MEM : error;
 }
 
 /**
  * @brief Close the one-shot server listener after accepting a peer.
+ * @param[in,out] context Context whose listener is detached and cleared.
+ * @retval ERR_OK Always; the tcp_close() result is not propagated here.
+ * @pre Worker context outside the core lock.
  */
 static err_t iperf_tcp_raw_close_listener(iperf_tcp_raw_context_t *context)
 {
@@ -360,6 +379,13 @@ static int iperf_tcp_raw_cleanup(iperf_tcp_raw_context_t *context,
 
 /**
  * @brief Run one asynchronous-connect TCP Raw client from the worker task.
+ * @param[in,out] context Initialized client context, retained for cleanup.
+ * @retval ERR_OK A client limit or stop request was observed.
+ * @retval ERR_CLSD Peer closed before local completion.
+ * @return Another lwIP error on setup, asynchronous connection or output failure.
+ * @pre Worker context outside the core lock.
+ * @note Connection and backpressure waits use task notifications. Printing is
+ * outside the core lock; cleanup remains the caller's responsibility.
  */
 static int iperf_tcp_raw_client(iperf_tcp_raw_context_t *context)
 {
@@ -409,7 +435,13 @@ static int iperf_tcp_raw_client(iperf_tcp_raw_context_t *context)
     iperf_log_client_preamble(iperf);
 
     while (true) {
+        uint64_t now_us = iperf_now_us();
         iperf_tcp_raw_events_t events;
+
+        iperf_test_report_periodic(iperf, now_us);
+        if (iperf_limit_reached(iperf, now_us)) {
+            return ERR_OK;
+        }
 
         iperf_tcp_raw_take_events(context, &events);
         if (events.connected != 0U && !established) {
@@ -419,12 +451,12 @@ static int iperf_tcp_raw_client(iperf_tcp_raw_context_t *context)
                                  ip_2_ip4(&events.remote_addr)->addr, events.remote_port);
             iperf_test_begin(iperf);
         }
+
         if (events.error_pending != 0U) {
+            LOG_E("TCP Raw asynchronous connection error: error=%d\r\n", events.error);
             return events.error;
         }
-        if (iperf_limit_reached(iperf, iperf_now_us())) {
-            return ERR_OK;
-        }
+
         if (events.peer_closed != 0U) {
             return ERR_CLSD;
         }
@@ -434,9 +466,6 @@ static int iperf_tcp_raw_client(iperf_tcp_raw_context_t *context)
             if (error != ERR_OK && error != ERR_MEM) {
                 LOG_E("TCP Raw client data output failed: error=%d\r\n", error);
                 return error;
-            }
-            if (iperf_limit_reached(iperf, iperf_now_us())) {
-                return ERR_OK;
             }
             if (error == ERR_MEM) {
                 ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(IPERF_TCP_RAW_IDLE_WAIT_MS));
@@ -449,6 +478,12 @@ static int iperf_tcp_raw_client(iperf_tcp_raw_context_t *context)
 
 /**
  * @brief Run one single-client TCP Raw server from the worker task.
+ * @param[in,out] context Initialized server context, retained for cleanup.
+ * @retval ERR_OK Peer closed normally or stop was requested.
+ * @return An lwIP setup or asynchronous error on failure.
+ * @pre Worker context outside the core lock.
+ * @note Payload callbacks account directly without printing; the worker prints
+ * reports after taking callback events and releasing the core lock.
  */
 static int iperf_tcp_raw_server(iperf_tcp_raw_context_t *context)
 {
@@ -472,7 +507,6 @@ static int iperf_tcp_raw_server(iperf_tcp_raw_context_t *context)
             if (context->listener != NULL) {
                 tcp_arg(context->listener, context);
                 tcp_accept(context->listener, iperf_tcp_raw_accept);
-                iperf_log_server_preamble(iperf);
             } else {
                 tcp_abort(pcb);
             }
@@ -486,21 +520,34 @@ static int iperf_tcp_raw_server(iperf_tcp_raw_context_t *context)
         LOG_E("TCP Raw server PCB/bind/listen failed: error=%d\r\n", error);
         return error;
     }
+    iperf_log_server_preamble(iperf);
 
     while (true) {
         iperf_tcp_raw_events_t events;
 
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        /* Payload callbacks deliberately do not notify. Once connected, wake
+         * for interval reports even during continuous RX or an idle peer. */
+        ulTaskNotifyTake(pdTRUE, established && iperf->config.interval_s != 0U ?
+                                     pdMS_TO_TICKS((uint32_t)iperf->config.interval_s * 1000U) :
+                                     portMAX_DELAY);
+
+        uint64_t now_us = iperf_now_us();
+        iperf_test_report_periodic(iperf, now_us);
 
         iperf_tcp_raw_take_events(context, &events);
         if (events.connected != 0U && !established) {
             established = true;
+            iperf_log_connection(iperf,
+                                 ip_2_ip4(&events.local_addr)->addr, events.local_port,
+                                 ip_2_ip4(&events.remote_addr)->addr, events.remote_port);
             error = iperf_tcp_raw_close_listener(context);
             if (error != ERR_OK) {
                 return error;
             }
         }
+
         if (events.error_pending != 0U) {
+            LOG_E("TCP Raw asynchronous connection error: error=%d\r\n", events.error);
             return events.error;
         }
         if (iperf->stop_requested || events.peer_closed != 0U) {
@@ -511,7 +558,9 @@ static int iperf_tcp_raw_server(iperf_tcp_raw_context_t *context)
 
 /**
  * @brief Run one TCP Raw worker and own the complete PCB lifecycle.
- * @warning iperf_backend_finished() may make context destroyable; only task
+ * @param[in,out] arg Initialized iperf_tcp_raw_context_t owned by the core.
+ * @post PCBs/callbacks are detached before FINISHED; this task self-deletes.
+ * @warning iperf_worker_exit() may make context destroyable; only task
  * self-deletion may follow it.
  */
 static void iperf_tcp_raw_task(void *arg)
@@ -521,9 +570,8 @@ static void iperf_tcp_raw_task(void *arg)
     int error;
 
     context->task = xTaskGetCurrentTaskHandle();
-    vTaskDelay(pdMS_TO_TICKS(10U));
 
-    if (!iperf_backend_started(iperf)) {
+    if (!iperf_worker_enter(iperf)) {
         error = 0;
     } else if (iperf->config.role == BFLB_IPERF_ROLE_CLIENT) {
         error = iperf_tcp_raw_client(context);
@@ -536,23 +584,28 @@ static void iperf_tcp_raw_task(void *arg)
     context->task = NULL;
     context->iperf = NULL;
 
-    iperf_backend_finished(iperf, error);
+    iperf_worker_exit(iperf, error);
     vTaskDelete(NULL);
 }
 
 /**
  * @brief Create one TCP Raw worker task.
+ * @param[in,out] iperf Validated instance with its public output slot published.
+ * @param[in,out] private_context Zero-initialized TCP Raw context.
  * @retval 0 The worker task was created successfully.
  * @retval -1 Task creation failed.
+ * @post Failure leaves no worker or runtime resources and emits no events.
+ * @note The worker may execute either event before launch returns; no instance
+ * or context writes occur after successful xTaskCreate().
  */
-static int iperf_tcp_raw_start(bflb_iperf_t *iperf, void *private_context)
+static int iperf_tcp_raw_launch(bflb_iperf_t *iperf, void *private_context)
 {
     iperf_tcp_raw_context_t *context = private_context;
 
     context->iperf = iperf;
     if (xTaskCreate(iperf_tcp_raw_task, IPERF_TCP_RAW_TASK_NAME,
                     IPERF_TCP_RAW_TASK_STACK, context,
-                    iperf->config.task_priority, &context->task) != pdPASS) {
+                    iperf->config.task_priority, NULL) != pdPASS) {
         LOG_E("TCP Raw task creation failed\r\n");
         context->task = NULL;
         context->iperf = NULL;
@@ -563,20 +616,24 @@ static int iperf_tcp_raw_start(bflb_iperf_t *iperf, void *private_context)
 
 /**
  * @brief Accept a cooperative stop request for a TCP Raw worker.
+ * @param[in,out] iperf Live instance whose stop flag was set by the core.
+ * @param[in] private_context Core-owned context; unused by this hook.
+ * @pre Task context outside the lifecycle mutex.
  * @note The notification wakes a worker blocked on a control event.
+ * The core mutex serializes handle use with revocation; this remains safe after
+ * worker cleanup and does not impose a completion deadline.
  */
-static int iperf_tcp_raw_stop(bflb_iperf_t *iperf, void *private_context)
+static void iperf_tcp_raw_request_stop(bflb_iperf_t *iperf, void *private_context)
 {
-    iperf_tcp_raw_context_t *context = private_context;
-
-    LWIP_UNUSED_ARG(iperf);
-    iperf_tcp_raw_notify(context);
-    return 0;
+    LWIP_UNUSED_ARG(private_context);
+    /* Unlike PCB callbacks, destroy is not serialized by the core lock.
+     * Use the core's mutex-protected handle, never context->task here. */
+    iperf_worker_wake(iperf);
 }
 
 /** @brief Backend operation table for task-driven Classic iPerf2 TCP Raw tests. */
 const iperf_backend_ops_t g_iperf_tcp_raw_ops = {
     .context_size = sizeof(iperf_tcp_raw_context_t),
-    .start = iperf_tcp_raw_start,
-    .stop = iperf_tcp_raw_stop,
+    .launch = iperf_tcp_raw_launch,
+    .request_stop = iperf_tcp_raw_request_stop,
 };

@@ -23,7 +23,7 @@
 #include <bl618dg_mfg_media.h>
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #include "bl_lp.h"
 #include "macsw.h"
 #endif

@@ -761,13 +761,37 @@ struct bt_conn *bt_conn_create_br(const bt_addr_t *peer,
 
 	bt_conn_set_state(conn, BT_CONN_CONNECT);
 	conn->role = BT_CONN_ROLE_MASTER;
-#if defined(BFLB_BREDR_PATCH_FIX_BREDR_CONN_REF_AFTER_ROLE_SWITCH)
-	/* Mark original master role, survives role switch */
+	/* Record the connection direction independently of the current role. */
 	atomic_set_bit(conn->flags, BT_CONN_BR_INITIAL_MASTER);
-#endif
 
 	//bt_conn_unref(conn);
 	return conn;
+}
+
+int bt_conn_br_switch_role(struct bt_conn *conn, u8_t role)
+{
+	struct bt_hci_cp_switch_role *cp;
+	struct net_buf *buf;
+
+	if (!conn || conn->type != BT_CONN_TYPE_BR ||
+	    (role != BT_CONN_ROLE_MASTER && role != BT_CONN_ROLE_SLAVE)) {
+		return -EINVAL;
+	}
+	if (conn->state != BT_CONN_CONNECTED) {
+		return -ENOTCONN;
+	}
+	if (conn->role == role) {
+		return -EALREADY;
+	}
+
+	buf = bt_hci_cmd_create(BT_HCI_OP_SWITCH_ROLE, sizeof(*cp));
+	if (!buf) {
+		return -ENOBUFS;
+	}
+	cp = net_buf_add(buf, sizeof(*cp));
+	memcpy(&cp->bdaddr, &conn->br.dst, sizeof(cp->bdaddr));
+	cp->role = role == BT_CONN_ROLE_MASTER ? BT_HCI_ROLE_MASTER : BT_HCI_ROLE_SLAVE;
+	return bt_hci_cmd_send(BT_HCI_OP_SWITCH_ROLE, buf);
 }
 
 struct bt_conn *bt_conn_create_sco(const bt_addr_t *peer,const struct esco_para *para)

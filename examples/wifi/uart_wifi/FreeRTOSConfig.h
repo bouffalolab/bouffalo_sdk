@@ -98,6 +98,7 @@ to exclude the API function. */
 #define INCLUDE_xTimerPendFunctionCall   1
 #define INCLUDE_xTaskAbortDelay          1
 #define INCLUDE_xTaskGetHandle           1
+#define INCLUDE_xTaskGetIdleTaskHandle   1
 #define INCLUDE_xSemaphoreGetMutexHolder 1
 
 /* Normal assert() semantics without relying on the provision of an assert.h

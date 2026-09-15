@@ -93,6 +93,8 @@ __attribute__((weak)) const PM_LOWPOWER_CFG_Type *bl616cl_lowpower_cfg_get(void)
 void bl_lp_wifi_param_update(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 {
     if (bl_lp_fw_cfg->tim_wakeup_en) {
+        iot2lp_para->wifi_parameter->buf_addr = bl_lp_fw_cfg->buf_addr;
+        iot2lp_para->wifi_parameter->pack_env = bl_lp_fw_cfg->pack_env;
         iot2lp_para->wifi_parameter->tim_wakeup_en = 1;
         memcpy(iot2lp_para->wifi_parameter->bssid, bl_lp_fw_cfg->bssid, 6);
         memcpy(iot2lp_para->wifi_parameter->local_mac, bl_lp_fw_cfg->mac, 6);
@@ -674,9 +676,6 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     bl_lp_debug_record_time(iot2lp_para, "bl_lp_fw_enter");
 
-    // rtc_wakeup_cmp_cnt = bl_lp_fw_cfg->rtc_wakeup_cmp_cnt;
-    // rtc_sleep_us = bl_lp_fw_cfg->rtc_timeout_us;
-
      /* clean wakeup reason */
     memset(&wakeup_reason, 0, sizeof(wakeup_reason));
     iot2lp_para->wakeup_reason_info = &wakeup_reason;
@@ -721,6 +720,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     iot2lp_para->app_entry = (uintptr_t)lp_fw_restore_cpu_para;
     iot2lp_para->args[0] = GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR;
     iot2lp_para->wakeup_reason_info->wakeup_reason = LPFW_WAKEUP_UNKOWN;
+    iot2lp_para->lpfw_wakeup_cnt = 0;
 
    /* cacheable */
     pm_set_wakeup_callback(

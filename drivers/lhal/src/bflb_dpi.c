@@ -8,6 +8,25 @@
 #error "not support dpi"
 #endif
 
+void bflb_dpi_set_pclk_sample_edge(struct bflb_device_s *dev, uint8_t edge)
+{
+    LHAL_PARAM_ASSERT(dev);
+
+#ifdef romapi_bflb_dpi_set_pclk_sample_edge
+    romapi_bflb_dpi_set_pclk_sample_edge(dev, edge);
+#else
+    uint32_t regval;
+
+    regval = getreg32(dev->reg_base + MM_MISC_DISP_CONFIG_OFFSET);
+    if (edge == DPI_PCLK_SAMPLE_EDGE_RISING) {
+        regval |= MM_MISC_RG_DISP_16;
+    } else {
+        regval &= ~MM_MISC_RG_DISP_16;
+    }
+    putreg32(regval, dev->reg_base + MM_MISC_DISP_CONFIG_OFFSET);
+#endif
+}
+
 void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *config)
 {
     LHAL_PARAM_ASSERT(dev);
@@ -233,6 +252,8 @@ void bflb_dpi_init(struct bflb_device_s *dev, const struct bflb_dpi_config_s *co
     regval |= DVP_TSRC_CR_ENABLE;
     putreg32(regval, reg_base + DVP_TSRC_CONFIG_OFFSET);
 #endif
+
+    bflb_dpi_set_pclk_sample_edge(dev, DPI_PCLK_SAMPLE_EDGE_RISING);
 }
 
 void bflb_dpi_enable(struct bflb_device_s *dev)

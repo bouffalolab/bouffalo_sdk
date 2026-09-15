@@ -136,6 +136,7 @@
 #define BFLB_NAME_WO             "wo"
 #define BFLB_NAME_CKS            "cks"
 #define BFLB_NAME_KYS            "kys"
+#define BFLB_NAME_KYS_V2         "kys_v2"
 #define BFLB_NAME_CSI            "csi"
 #define BFLB_NAME_MJPEG          "mjpeg"
 #define BFLB_NAME_MJDEC          "mjdec"

@@ -10,7 +10,7 @@
 
 #if defined(CFG_BL616)
 
-#ifdef CONFIG_BOUFFALO_SDK
+#ifdef BOUFFALO_SDK
 #include "bflb_core.h"
 ATTR_NOCACHE_NOINIT_LPFW_SHARE __ALIGNED(32) struct {
     uint32_t buf[SDIO_RX_MAX_PORT_NUM][SDIO_RX_BUF_SIZE / 4];
@@ -122,4 +122,3 @@ void hr_coredump(void)
     printf("p 0 = %d\r\n", *addr);
 #endif
 }
-

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "rtos_def.h"
 
-#if defined(LP_APP)
+#if defined(CONFIG_LPAPP)
 #include <bl_lp.h>
 #else
 enum PSM_EVENT {

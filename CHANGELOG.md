@@ -1,5 +1,99 @@
 # CHANGELOG
 
+## v2.3.34 — since v2.3.33 (2026-08-31 → 2026-09-15)
+
+### New Features
+
+- **WiFi / Networking**
+  - Added scan-result reporting for access-point operating bandwidth and per-channel utilization
+  - Added SoftAP authentication-failure reporting, including the station identity and failure reason
+  - Added runtime configuration of a SoftAP static IP address
+  - Added host heartbeat detection for NetHub connections
+
+- **BL618DG**
+  - Added regulatory power-limit support for 2.4 GHz and 5 GHz WiFi operation, including 80 MHz bandwidth
+  - Added a low-power wakeup demonstration and preserved wakeup status across PDS recovery
+  - Added a dual-core OpenAMP throughput stress-test example
+  - Added Boya FQ256ES flash support and a keyscan v2 driver with example
+
+- **Ethernet**
+  - Added Ethernet PHY and network-interface control APIs, including independent EMAC receive and transmit shutdown
+
+- **Security / Manufacturing**
+  - Added selectable public-key hash support for BL618DG Boot2 image verification
+  - Added BL616CL RF parameter storage in flash OTP for manufacturing flows
+  - Added Kconfig options for selecting manufacturing-test features
+
+- **Bluetooth / Zigbee**
+  - Added a BL702L Bluetooth controller configuration with reduced memory use and expanded transmit buffering
+  - Added Zigbee cluster extension support for additional customer implementations
+
+- **Display / Memory**
+  - Added DPI pixel-clock sampling-edge selection and display board-mode configuration
+  - Added optional minimum-free-heap tracking
+
+- **Clock / Power**
+  - Added board-specific RTC 32K-source initialization for low-power applications
+  - Added startup eFuse-trim diagnostics on supported boards
+
+- **Tools / Build**
+  - Extended the Web Serial flasher to support BL602, BL616, and BL616CL targets
+  - Added Bluetooth configuration menus and support for appending menuconfig settings to defconfig files
+  - Added an option to suppress MACSW log output
+
+### Bug Fixes
+
+- **WiFi / Networking**
+  - Fixed scan entries expiring or retaining stale metadata when a matching access point is seen with a weaker signal
+  - Validated SoftAP channel, bandwidth, security, and command-line parameters against device and country restrictions
+  - Fixed iperf failures and assertions when the destination is unreachable, and restored compatibility with older iperf2 versions
+  - Fixed receive-buffer handling for fragmented WiFi traffic
+  - Preserved NetHub virtual-channel message types over USB and fixed BL618DG NetHub low-power wakeup
+
+- **Bluetooth**
+  - Fixed BR/EDR inquiry reporting after FHS-only results and protected ACL transmit buffers from concurrent access
+  - Fixed A2DP connection setup, source-configuration failure handling, duplicate discovery, and Sniff-mode timing races
+  - Corrected the BL618DG Bluetooth channel-assessment threshold
+  - Fixed Bluetooth configuration when BR/EDR is enabled
+
+- **Thread / Zigbee / 802.15.4**
+  - Fixed active-scan transmission on the requested 802.15.4 channel and delivery of destination-less beacon frames
+  - Corrected physical channel reporting to OpenThread and improved BL702L Zigbee frequency-offset calibration
+
+- **Platform / Power**
+  - Fixed BL618DG flash hangs caused by PSRAM clock handling and corrected PSRAM clock configuration
+  - Restored USB device role before software reset and fixed low-power wakeup handling in BL616CL and BL618DG flows
+  - Loaded RC32K eFuse trim data during startup for BL616, BL616CL, and BL618DG
+  - Fixed BL618DG Boot2 ISP reset handling and IPC shared-RAM build configuration
+
+- **Security**
+  - Fixed BL618DG NP hardware-accelerated AES and SHA operations used by decryption and OTA requests
+
+- **Linux WiFi Driver / USB**
+  - Fixed scan-result handling on affected platforms and bootrom ID error reporting
+  - Fixed USB zero-length-packet handling and Bluetooth coexistence cleanup
+
+- **Display**
+  - Corrected DSI v2 PLL settings and RGB565 framebuffer cache maintenance
+
+### Improvements
+
+- **WiFi Performance**
+  - Improved BL618DG TCP benchmark throughput through WiFi, lwIP, and cache-layout tuning
+
+- **RF / Low Power**
+  - Updated BL618DG and BL616CL RF PHY libraries and low-power firmware
+  - Updated BL618DG clock and display-PLL drivers for current silicon revisions
+
+- **Build / Configuration**
+  - Unified board lookup, firmware packaging, and flash-image configuration across CMake projects
+  - Packaged Zigbee linker fragments for component-based builds
+  - Enabled no-relax compilation for WiFi 6 builds
+  - Avoided rewriting generated configuration files when their content is unchanged
+
+- **Tools**
+  - Updated the firmware post-processing tool to v1.4.7
+
 ## v2.3.33 — since v2.3.32 (2026-08-18 → 2026-08-31)
 
 ### New Features

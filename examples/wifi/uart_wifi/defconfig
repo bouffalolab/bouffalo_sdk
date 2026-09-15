@@ -36,7 +36,6 @@ CONFIG_PM                            =y
 CONFIG_LWIP_LP                       =y
 CONFIG_DCDC_ENABLE                   =n
 CONFIG_PWRMGMT                       =y
-CONFIG_TICKLESS_EXT                  =y
 CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
 CONFIG_CLOCK_SOURCE_EF_PARAM         =n
 endif

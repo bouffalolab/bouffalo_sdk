@@ -29,16 +29,17 @@ const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll400MCfg_40M = {
     .vco_idac_extra = 2,
     .tdc_dly_sel = 1,
     .dtc_r_sel = 2,
-    .lf_alpha_base = 0,
+    .lf_alpha_base = 1,
     .lf_alpha_exp = 2,
-    .lf_alpha_fast = 3,
-    .lf_beta_base = 3,
-    .lf_beta_exp = 1,
-    .lf_beta_fast = 1,
+    .lf_alpha_fast = 1,
+    .lf_beta_base = 0,
+    .lf_beta_exp = 3,
+    .lf_beta_fast = 0,
     .spd_gain = 2,
     .lms_ext_en = 0,
     .lms_ext_value = 32,
-    .bitclk_div = 2, 
+    .bitclk_div = 2,
+    .resv0_1_0 = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_400M[GLB_XTAL_MAX] = {
@@ -63,16 +64,17 @@ const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll500MCfg_40M = {
     .vco_idac_extra = 2,
     .tdc_dly_sel = 1,
     .dtc_r_sel = 2,
-    .lf_alpha_base = 0,
+    .lf_alpha_base = 1,
     .lf_alpha_exp = 2,
-    .lf_alpha_fast = 3,
-    .lf_beta_base = 3,
-    .lf_beta_exp = 1,
-    .lf_beta_fast = 1,
+    .lf_alpha_fast = 1,
+    .lf_beta_base = 0,
+    .lf_beta_exp = 3,
+    .lf_beta_fast = 0,
     .spd_gain = 2,
     .lms_ext_en = 0,
     .lms_ext_value = 32,
     .bitclk_div = 2,
+    .resv0_1_0 = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_500M[GLB_XTAL_MAX] = {
@@ -87,16 +89,17 @@ const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll550MCfg_40M = {
     .vco_idac_extra = 2,
     .tdc_dly_sel = 1,
     .dtc_r_sel = 2,
-    .lf_alpha_base = 0,
+    .lf_alpha_base = 1,
     .lf_alpha_exp = 2,
-    .lf_alpha_fast = 3,
-    .lf_beta_base = 3,
-    .lf_beta_exp = 1,
-    .lf_beta_fast = 1,
+    .lf_alpha_fast = 1,
+    .lf_beta_base = 0,
+    .lf_beta_exp = 3,
+    .lf_beta_fast = 0,
     .spd_gain = 2,
     .lms_ext_en = 0,
     .lms_ext_value = 32,
     .bitclk_div = 2,
+    .resv0_1_0 = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_550M[GLB_XTAL_MAX] = {
@@ -106,49 +109,51 @@ const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_550M[GLB_XTAL_MAX] 
 
 /* 650M */
 const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll650MCfg_40M = {
-    .refdiv_ratio = 4,
+    .refdiv_ratio = 2,
     .vco_speed = 6,
     .vco_idac_extra = 2,
     .tdc_dly_sel = 0,
     .dtc_r_sel = 0,
-    .lf_alpha_base = 0,
+    .lf_alpha_base = 1,
     .lf_alpha_exp = 2,
-    .lf_alpha_fast = 3,
-    .lf_beta_base = 3,
-    .lf_beta_exp = 1,
-    .lf_beta_fast = 1,
-    .spd_gain = 0,
+    .lf_alpha_fast = 1,
+    .lf_beta_base = 0,
+    .lf_beta_exp = 3,
+    .lf_beta_fast = 0,
+    .spd_gain = 2,
     .lms_ext_en = 0,
     .lms_ext_value = 32,
     .bitclk_div = 2,
+    .resv0_1_0 = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_650M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { &dsipll650MCfg_40M, 0x41000 },
+    { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { &dsipll650MCfg_40M, 0x20800 },
     { NULL, 0x0 }, { NULL, 0x0 },
 };
 
 /* 750M */
 const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll750MCfg_40M = {
-    .refdiv_ratio = 4,
+    .refdiv_ratio = 2,
     .vco_speed = 7,
     .vco_idac_extra = 2,
     .tdc_dly_sel = 0,
     .dtc_r_sel = 0,
-    .lf_alpha_base = 0,
+    .lf_alpha_base = 1,
     .lf_alpha_exp = 2,
-    .lf_alpha_fast = 3,
-    .lf_beta_base = 3,
-    .lf_beta_exp = 1,
-    .lf_beta_fast = 1,
-    .spd_gain = 0,
+    .lf_alpha_fast = 1,
+    .lf_beta_base = 0,
+    .lf_beta_exp = 3,
+    .lf_beta_fast = 0,
+    .spd_gain = 2,
     .lms_ext_en = 0,
     .lms_ext_value = 32,
     .bitclk_div = 2,
+    .resv0_1_0 = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_750M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { &dsipll750MCfg_40M, 0x4B000 },
+    { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { NULL, 0x0 }, { &dsipll750MCfg_40M, 0x25800 },
     { NULL, 0x0 }, { NULL, 0x0 },
 };
 
@@ -159,16 +164,17 @@ const GLB_DSIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION dsipll850MCfg_40M = {
     .vco_idac_extra = 2,
     .tdc_dly_sel = 1,
     .dtc_r_sel = 2,
-    .lf_alpha_base = 0,
+    .lf_alpha_base = 1,
     .lf_alpha_exp = 2,
-    .lf_alpha_fast = 3,
-    .lf_beta_base = 3,
-    .lf_beta_exp = 1,
-    .lf_beta_fast = 1,
+    .lf_alpha_fast = 1,
+    .lf_beta_base = 0,
+    .lf_beta_exp = 3,
+    .lf_beta_fast = 0,
     .spd_gain = 2,
     .lms_ext_en = 0,
     .lms_ext_value = 32,
     .bitclk_div = 1,
+    .resv0_1_0 = 1,
 };
 
 const GLB_DSIPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION dsipllCfg_850M[GLB_XTAL_MAX] = {
@@ -483,6 +489,7 @@ static struct bflb_device_s *dsi_v2_rgb565_dpi = NULL;
 static struct bflb_device_s *dsi_v2_rgb565_osd = NULL;
 static void *volatile dsi_v2_rgb565_screen_using = NULL;
 static void *volatile dsi_v2_rgb565_screen_pending = NULL;
+static uint32_t dsi_v2_rgb565_buf_size = 0;
 static void (*dsi_v2_rgb565_swap_callback)(void) = NULL;
 static void (*dsi_v2_rgb565_cycle_callback)(void) = NULL;
 
@@ -570,6 +577,7 @@ int mipi_dsi_v2_rgb565_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t fr
 
     dsi_v2_rgb565_screen_using = (void *)(uintptr_t)framebuffer_addr;
     dsi_v2_rgb565_screen_pending = (void *)(uintptr_t)framebuffer_addr;
+    dsi_v2_rgb565_buf_size = cfg->width * cfg->height * sizeof(uint16_t);
     return 0;
 }
 
@@ -582,9 +590,9 @@ int mipi_dsi_v2_rgb565_screen_switch(void *screen_buffer)
         return -2;
     }
 
-    /* Need to clean D-cache. */
-    if (dsi_v2_osd_buf_size != 0U) {
-        bflb_l1c_dcache_clean_range(screen_buffer, dsi_v2_osd_buf_size);
+    /* The RGB565 framebuffer is half the size of the ARGB8888 OSD canvas. */
+    if (dsi_v2_rgb565_buf_size != 0U) {
+        bflb_l1c_dcache_clean_range(screen_buffer, dsi_v2_rgb565_buf_size);
     }
 
     dsi_v2_rgb565_screen_pending = screen_buffer;

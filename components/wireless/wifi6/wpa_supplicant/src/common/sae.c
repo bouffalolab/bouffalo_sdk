@@ -2371,6 +2371,8 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
 	u8 verifier[SAE_MAX_HASH_LEN];
 	size_t hash_len;
 
+	sae->confirm_mismatch = 0;
+
 	if (!sae->tmp)
 		return -1;
 
@@ -2410,6 +2412,7 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
 	}
 
 	if (os_memcmp_const(verifier, data + 2, hash_len) != 0) {
+		sae->confirm_mismatch = 1;
 		wpa_printf(MSG_DEBUG, "SAE: Confirm mismatch");
 		wpa_hexdump(MSG_DEBUG, "SAE: Received confirm",
 			    data + 2, hash_len);

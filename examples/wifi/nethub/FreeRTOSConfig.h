@@ -68,12 +68,7 @@
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 
-#ifdef CONFIG_LPAPP
-#else
-#undef configUSE_TICKLESS_IDLE
-#define configUSE_TICKLESS_IDLE                 0
-#endif
-
+// #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
 #define portasmHAS_F_EXTENSION                  1
 

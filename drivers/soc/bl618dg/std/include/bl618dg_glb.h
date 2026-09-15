@@ -272,6 +272,7 @@ typedef struct {
 #if !defined(CPU_MODEL_A0)
     uint8_t momUpdatePeriod;
     uint8_t coarseGain;
+    uint8_t resv0_5_4;
 #endif
 } GLB_CPUPLL_CFG_BASIC_Type;
 
@@ -296,6 +297,7 @@ typedef struct {
   uint8_t lms_ext_en;       /*!< Enable external LMS coefficients (1) and disable internal LMS block */
   uint8_t lms_ext_value;    /*!< External LMS coefficient value (e.g. tt50=0.68 equivalent) */
   uint8_t bitclk_div;       /*!< Output bit clock divider (DSI) applied after VCO/main output */
+  uint8_t resv0_1_0;
 } GLB_DSIPLL_CFG_BASIC_Type;
 
 typedef struct {
@@ -966,7 +968,7 @@ typedef struct {
 #define GLB_PSRAMB_CLK_BCLK               (0) /*!< bus clock */
 #define GLB_PSRAMB_CLK_480M               (1) /*!< 480m */
 #define GLB_PSRAMB_CLK_320M               (2) /*!< 320m */
-#define GLB_PSRAMB_CLK_240M               (3) /*!< 240m */
+#define GLB_PSRAMB_CLK_CPUPLL_DIV1        (3) /*!< cpu pll divided by 1 */
 
 /** @defgroup GLB UART clock type definition
   * @{

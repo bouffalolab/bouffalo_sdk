@@ -65,6 +65,8 @@ typedef struct lwip_emac_port_ctx_s {
     QueueHandle_t rx_process_queue;
     /* rx task  */
     TaskHandle_t rx_task_handle;
+    bool mac_enabled;
+    bool phy_powered;
     int speed_mode;
     int link_sta;
     char task_name[10]; /**< Application-configured RX task name. */

@@ -15,6 +15,9 @@
 #include "wpa_supplicant_i.h"
 #include "ctrl_iface.h"
 #include "common/wpa_ctrl.h"
+#include "ap/hostapd.h"
+#include "ap/sta_info.h"
+#include "ap/wpa_auth.h"
 #include "cfgmacsw.h"
 #include "fhost_api.h"
 #include "eloop_rtos.h"
@@ -76,19 +79,92 @@ static void wpa_macsw_msg_hdr_init(struct wpa_macsw_driver_itf_data *drv,
 
 
 #ifndef CONFIG_NO_WPA_MSG
+static int wpa_macsw_ap_sta_auth_fail_send(
+	struct wpa_supplicant *wpa_s, struct wpa_macsw_driver_itf_data *drv,
+	const char *txt, size_t len)
+{
+	const char *mac_txt;
+	size_t prefix_len;
+	u8 sta_mac[ETH_ALEN];
+	u8 auth_mode;
+	u8 reason;
+
+	if (len >= strlen(AP_STA_POSSIBLE_PSK_MISMATCH) &&
+	    !strncmp(txt, AP_STA_POSSIBLE_PSK_MISMATCH,
+		     strlen(AP_STA_POSSIBLE_PSK_MISMATCH))) {
+		prefix_len = strlen(AP_STA_POSSIBLE_PSK_MISMATCH);
+		reason = CFGMACSW_AP_STA_AUTH_FAIL_PSK_MISMATCH;
+	} else if (len >= strlen(AP_STA_POSSIBLE_SAE_CREDENTIAL_MISMATCH) &&
+		   !strncmp(txt, AP_STA_POSSIBLE_SAE_CREDENTIAL_MISMATCH,
+			    strlen(AP_STA_POSSIBLE_SAE_CREDENTIAL_MISMATCH))) {
+		prefix_len = strlen(AP_STA_POSSIBLE_SAE_CREDENTIAL_MISMATCH);
+		auth_mode = CFGMACSW_AP_STA_AUTH_WPA3_SAE;
+		reason = CFGMACSW_AP_STA_AUTH_FAIL_SAE_CONFIRM_MISMATCH;
+	} else {
+		return 0;
+	}
+
+	/* Require exactly one canonical xx:xx:xx:xx:xx:xx address. */
+	if (len != prefix_len + 17)
+		return -1;
+	mac_txt = txt + prefix_len;
+	if (hwaddr_aton(mac_txt, sta_mac))
+		return -1;
+
+	if (reason == CFGMACSW_AP_STA_AUTH_FAIL_PSK_MISMATCH) {
+		struct sta_info *sta;
+
+		if (!wpa_s->ap_iface || !wpa_s->ap_iface->num_bss ||
+		    !wpa_s->ap_iface->bss || !wpa_s->ap_iface->bss[0])
+			return -1;
+		sta = ap_get_sta(wpa_s->ap_iface->bss[0], sta_mac);
+		if (!sta)
+			return -1;
+
+		/* Use the negotiated version, not the AP's allowed protocols. */
+		switch (wpa_auth_sta_wpa_version(sta->wpa_sm)) {
+		case 1: /* WPA */
+			auth_mode = CFGMACSW_AP_STA_AUTH_WPA_PSK;
+			break;
+		case 2: /* WPA2/RSN */
+			auth_mode = CFGMACSW_AP_STA_AUTH_WPA2_PSK;
+			break;
+		default:
+			return -1;
+		}
+	}
+
+	if (fhost_cntrl_cfgmacsw_ap_sta_auth_fail_send(drv->fhost_vif_idx,
+						    sta_mac, auth_mode,
+						    reason))
+		return -1;
+
+	return 1;
+}
+
 static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
 					     enum wpa_msg_type type,
 					     const char *txt, size_t len)
 {
     struct cfgmacsw_status_code_print *cmd;
-    struct wpa_macsw_driver_itf_data *drv = ((struct wpa_supplicant *)ctx)->drv_priv;
+    struct wpa_supplicant *wpa_s = ctx;
+    struct wpa_macsw_driver_itf_data *drv;
+
+    if (!wpa_s)
+        return;
+    drv = wpa_s->drv_priv;
 
     if (level >= wpa_debug_level)
       dbg(D_CRT "[WPA] %s\n", txt);
 
-    if (!drv || drv->fhost_vif_idx >= MACSW_VIRT_DEV_MAX) {
+    if (!drv || drv->fhost_vif_idx < 0 ||
+        drv->fhost_vif_idx >= MACSW_VIRT_DEV_MAX) {
         return;
     }
+
+    if (drv->vif_init_type == VIF_AP &&
+        wpa_macsw_ap_sta_auth_fail_send(wpa_s, drv, txt, len) != 0)
+        return;
 
     if (!strncmp(txt, "State###", sizeof("State###")-1) ||
         !strncmp(txt, "CTRL-EVENT-NETWORK-NOT-FOUND", sizeof("CTRL-EVENT-NETWORK-NOT-FOUND")-1) ||

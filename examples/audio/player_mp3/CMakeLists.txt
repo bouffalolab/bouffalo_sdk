@@ -4,7 +4,6 @@ cmake_minimum_required(VERSION 3.15)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 # User
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 
 target_sources(app PRIVATE
                    app/app_main.c
@@ -16,5 +15,9 @@ target_sources(app PRIVATE
 sdk_add_include_directories(. app app/player)
 
 sdk_set_main_file(main.c)
+
+sdk_add_flash_partition_image(
+    PARTITION media
+    FILE ${CMAKE_BINARY_DIR}/build_out/romfs.bin)
 
 project(player)

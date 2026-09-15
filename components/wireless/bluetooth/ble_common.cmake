@@ -5,7 +5,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/ble_common_readonly.cmake)
 # ifndef CONFIG_FREERTOS_DISABLE
 # CFLAGS   += -DCONFIG_FREERTOS
 # endif
-if(NOT DEFINED CONFIG_FREERTOS_DISABLE)
+if(NOT CONFIG_FREERTOS_DISABLE)
 	sdk_add_compile_definitions(-DCONFIG_FREERTOS)
 endif()
 # 
@@ -34,7 +34,6 @@ endif()
 # endif
 if("${CHIP}" STREQUAL "bl616")
 #	sdk_add_compile_definitions(-DBL616)
-	set(CONFIG_BT_RESET, n)
 endif()
 # ifeq ($(CONFIG_CHIP_NAME),BL618DG)
 # CFLAGS   += -DBL618DG
@@ -42,7 +41,6 @@ endif()
 # endif
 if("${CHIP}" STREQUAL "bl618dg")
 #	sdk_add_compile_definitions(-DBL618DG)
-	set(CONFIG_BT_RESET, n)
 endif()
 # 
 # 
@@ -73,7 +71,6 @@ sdk_add_compile_definitions(-DBFLB_BLE)
 sdk_add_compile_definitions(-DCONFIG_BLE)
 #
 # CONFIG_BL702L_A1?=0
-sdk_ifndef(CONFIG_BL702L_A1 n)
 #
 # CONFIG_BT_BREDR?=0
 # ifeq ($(CONFIG_BT_BREDR),0)
@@ -108,25 +105,17 @@ sdk_ifndef(CONFIG_BL702L_A1 n)
 # CFLAGS += -DSBC_ENC_INCLUDED
 # CFLAGS += -DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
 # endif
-sdk_ifndef(CONFIG_BT_BREDR n)
-if(NOT CONFIG_BT_BREDR)
-	set(CONFIG_BT n)
-else()
-	sdk_ifndef(CONFIG_BT y)
-	sdk_ifndef(CONFIG_BT_A2DP y)
-	sdk_ifndef(CONFIG_BT_A2DP_SOURCE n)
-	sdk_ifndef(CONFIG_BT_A2DP_SINK y)
-	sdk_ifndef(CONFIG_BT_AVRCP y)
-	sdk_ifndef(CONFIG_BT_HFP n)
-	if(CONFIG_BT_A2DP)
-		sdk_add_compile_definitions(-DCONFIG_BT_A2DP)
-		sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP_SOURCE -DCONFIG_BT_A2DP_SOURCE)
-		sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP_SINK -DCONFIG_BT_A2DP_SINK)
-	endif()
-	sdk_add_compile_definitions_ifdef(CONFIG_BT_AVRCP -DCONFIG_BT_AVRCP)
-	sdk_add_compile_definitions_ifdef(CONFIG_BT_HFP -DCONFIG_BT_HFP)
-	sdk_add_compile_definitions_ifdef(CONFIG_BT_SPP -DCONFIG_BT_SPP)
-	sdk_add_compile_definitions_ifdef(CONFIG_BT_BREDR_PTS -DBR_EDR_PTS_TEST)
+if(CONFIG_BT_A2DP)
+	sdk_add_compile_definitions(-DCONFIG_BT_A2DP)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP_SOURCE -DCONFIG_BT_A2DP_SOURCE)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP_SINK -DCONFIG_BT_A2DP_SINK)
+endif()
+sdk_add_compile_definitions_ifdef(CONFIG_BT_AVRCP -DCONFIG_BT_AVRCP)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_HFP -DCONFIG_BT_HFP)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_SPP -DCONFIG_BT_SPP)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_BREDR_PTS -DBR_EDR_PTS_TEST)
+if(CONFIG_BT_BREDR)
+	set(CONFIG_BT y)
 	sdk_add_compile_definitions(
 		-DCONFIG_BT_BREDR
 		-DCONFIG_MAX_SCO=2
@@ -135,6 +124,11 @@ else()
 		-DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
 	)
 endif()
+# Controller-feature symbols (SCO_ESCO, CIS, ...) are promptless Kconfig
+# symbols: Kconfig resolves them and the controller presets in
+# ble_common_readonly.cmake override them per library. Do not re-default
+# them here — that would run after the presets and clobber forced 'n'
+# values (e.g. the mfg preset's SCO_ESCO n).
 #
 # ifeq ($(CONFIG_BL702L_A1),1)
 # CFLAGS += -DCONFIG_BL702L_A1
@@ -143,7 +137,6 @@ endif()
 #
 if(CONFIG_BL702L_A1)
 	sdk_add_compile_definitions(-DCONFIG_BL702L_A1)
-	set(CONFIG_BLE_TX_BUFF_DATA 2)
 endif()
 # 
 # ifeq ($(CONFIG_BT_TL),1)
@@ -168,7 +161,6 @@ sdk_add_compile_definitions(-DCONFIG_BL_SDK)
 # ifeq ($(CONFIG_EM_16K),1)
 # CFLAGS += -DCONFIG_EM_16K
 # endif
-sdk_ifndef(CONFIG_EM_16K n)
 sdk_add_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
 
 # 
@@ -193,35 +185,12 @@ sdk_add_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
 # CONFIG_CLK_ACC ?= 1
 # CONFIG_LE_PING ?= 1
 # CONFIG_BT_REMOTE_VERSION ?= 0
-sdk_ifndef(CONFIG_BT y)
-sdk_ifndef(CONFIG_SCO_ESCO y)
-sdk_ifndef(CONFIG_PCA y)
-sdk_ifndef(CONFIG_RF_EXTRC y)
-sdk_ifndef(CONFIG_CSB y)
-sdk_ifndef(CONFIG_SNIFF y)
-sdk_ifndef(CONFIG_RSWITCH y)
-sdk_ifndef(CONFIG_TEST_MODE y)
-sdk_ifndef(CONFIG_BT_HCI_TEST_MODE y)
-sdk_ifndef(CONFIG_BT_DIRECT_TEST_MODE y)
-sdk_ifndef(CONFIG_BLE y)
-sdk_ifndef(CONFIG_CIS y)
-sdk_ifndef(CONFIG_ADV_EXTENSION y)
-sdk_ifndef(CONFIG_BIS y)
-sdk_ifndef(CONFIG_LONG_RANG y)
-sdk_ifndef(CONFIG_LE_PWR_CTRL y)
-sdk_ifndef(CONFIG_CTE y)
-sdk_ifndef(CONFIG_PHY_UPDATE y)
-sdk_ifndef(CONFIG_CLK_ACC y)
-sdk_ifndef(CONFIG_LE_PING y)
-sdk_ifndef(CONFIG_BT_REMOTE_VERSION n)
-# 
-# #Update le adv data and scan rsp data when LE adertising is active, sw need 4 adv buffer at least. 
+#
+# #Update le adv data and scan rsp data when LE adertising is active, sw need 4 adv buffer at least.
 # CONFIG_BLE_ACT_MAX ?= 7
-sdk_ifndef(CONFIG_BLE_ACT_MAX 7)
-# 
+#
 # CONFIG_HW_SEC_ENG_DISABLE?=0
-sdk_ifndef(CONFIG_HW_SEC_ENG_DISABLE n)
-# 
+#
 # CONFIG_BT_CONN?=1
 # CFLAGS += -DCONFIG_CON=$(CONFIG_BT_CONN)
 # CONFIG_BLE_TX_BUFF_DATA?=2
@@ -249,41 +218,19 @@ sdk_ifndef(CONFIG_HW_SEC_ENG_DISABLE n)
 # CONFIG_BT_DATA_LEN_UPDATE?=0
 # CONFIG_BT_MESH?=0
 # CONFIG_BT_MESH_MODEL?=0
-sdk_ifndef(CONFIG_BT_CONN 1)
 sdk_add_compile_definitions(-DCONFIG_CON=${CONFIG_BT_CONN})
-if(CONFIG_BT_BREDR)
-    sdk_ifndef(CONFIG_CON_ACL 2)
-else()
-    set(CONFIG_CON_ACL 0)
+if(BLE_STANDALONE_BUILD)
+    sdk_add_compile_definitions(
+        -DCONFIG_BT_CONN=${CONFIG_BT_CONN}
+        -DCONFIG_BLE_TX_BUFF_DATA=${CONFIG_BLE_TX_BUFF_DATA}
+    )
+endif()
+# CONFIG_CON_ACL defaults to 0 in Kconfig; BR/EDR builds use 2 unless the
+# controller preset (or the user) already provided a value.
+if(CONFIG_BT_BREDR AND NOT CONFIG_CON_ACL)
+    set(CONFIG_CON_ACL 2)
 endif()
 sdk_add_compile_definitions(-DCONFIG_ACL_CON=${CONFIG_CON_ACL})
-sdk_ifndef(CONFIG_BLE_TX_BUFF_DATA 2)
-sdk_add_compile_definitions(-DCONFIG_BLE_TX_BUFF_DATA=${CONFIG_BLE_TX_BUFF_DATA})
-sdk_ifndef(CONFIG_BT_ALLROLES y)
-sdk_ifndef(CONFIG_BT_CENTRAL y)
-sdk_ifndef(CONFIG_BT_OBSERVER y)
-sdk_ifndef(CONFIG_BT_PERIPHERAL y)
-sdk_ifndef(CONFIG_BT_BROADCASTER y)
-sdk_ifndef(CONFIG_BT_SETTINGS n)
-sdk_ifndef(CONFIG_BLE_TP_SERVER n)
-sdk_ifndef(CONFIG_BLE_MULTI_ADV n)
-sdk_ifndef(CONFIG_BLE_RECONNECT_TEST n)
-sdk_ifndef(CONFIG_BT_STACK_CLI y)
-sdk_ifndef(CONFIG_BT_TP_CLI n)
-sdk_ifndef(CONFIG_BLE_STACK_DBG_PRINT y)
-sdk_ifndef(CONFIG_BT_STACK_PTS n)
-sdk_ifndef(CONFIG_BT_MESH_PTS n)
-sdk_ifndef(CONFIG_BLE_TP_TEST n)
-sdk_ifndef(CONFIG_BT_GEN_RANDOM_BY_SW n)
-sdk_ifndef(CONFIG_DISABLE_BT_SMP n)
-sdk_ifndef(CONFIG_DISABLE_BT_HOST_PRIVACY y)
-sdk_ifndef(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL n)
-sdk_ifndef(CONFIG_BT_GATT_CLIENT y)
-sdk_ifndef(CONFIG_BT_DATA_LEN_UPDATE y)
-sdk_ifndef(CONFIG_BT_ATT_PREPARE_COUNT 0)
-sdk_ifndef(CONFIG_BLE_USING_DYNAMIC_RAM 0)
-sdk_ifndef(CONFIG_BT_MESH n)
-sdk_ifndef(CONFIG_BT_MESH_MODEL n)
 # ifeq ($(CONFIG_BT_MESH),1)
 # CONFIG_BT_MESH_CLI ?= 1
 # CONFIG_BT_MESH_PB_ADV?=1
@@ -313,36 +260,7 @@ sdk_ifndef(CONFIG_BT_MESH_MODEL n)
 # CONFIG_BT_MESH_SYNC?=0
 # CONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG?=0 # Config mesh normal node can send configure client message or not.
 # endif
-if(CONFIG_BT_MESH)
-    sdk_ifndef(CONFIG_BT_MESH_CLI y)
-    sdk_ifndef(CONFIG_BT_MESH_PB_ADV y)
-    sdk_ifndef(CONFIG_BT_MESH_RELAY y)
-    sdk_ifndef(CONFIG_BT_MESH_PB_GATT y)
-    sdk_ifndef(CONFIG_BT_MESH_FRIEND y)
-    sdk_ifndef(CONFIG_BT_MESH_LOW_POWER y)
-	sdk_ifndef(CONFIG_BT_MESH_PROXY y)
-    sdk_ifndef(CONFIG_BT_MESH_GATT_PROXY y)
-    sdk_ifndef(CONFIG_BT_MESH_MOD_BIND_CB n)
-    sdk_ifndef(CONFIG_BT_MESH_APPKEY_ADD_CB n)
-    sdk_ifndef(CONFIG_BT_MESH_MOD_SUB_ADD_CB n)
-    if(CONFIG_BT_MESH_MODEL)
-		sdk_ifndef(CONFIG_BT_MESH_MODEL_GEN_SRV y)
-		sdk_ifndef(CONFIG_BT_MESH_MODEL_GEN_CLI y)
-		sdk_ifndef(CONFIG_BT_MESH_MODEL_LIGHT_SRV y)
-		sdk_ifndef(CONFIG_BT_MESH_MODEL_LIGHT_CLI y)
-    else()
-    	sdk_ifndef(CONFIG_BT_MESH_MODEL_GEN_SRV y)
-    endif()
-    sdk_ifndef(CONFIG_BT_MESH_PROVISIONER n)
-    if(CONFIG_BT_MESH_PROVISIONER)
-    	sdk_ifndef(CONFIG_BT_MESH_CDB y)
-    else()
-    	sdk_ifndef(CONFIG_BT_MESH_CDB n)
-    endif()
-    sdk_ifndef(CONFIG_BT_MESH_SYNC n)
-    sdk_ifndef(CONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG n)
-endif()
-# 
+#
 # ifeq ($(CONFIG_HW_SEC_ENG_DISABLE),1)
 # CFLAGS += -DCONFIG_HW_SEC_ENG_DISABLE
 # endif
@@ -416,7 +334,9 @@ sdk_add_compile_definitions_ifdef(CONFIG_BT_GEN_RANDOM_BY_SW -DCONFIG_BT_GEN_RAN
 # CFLAGS += -DCONFIG_BLE_PDS
 # CFLAGS += -DCONFIG_HW_SEC_ENG_DISABLE
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_BLE_PDS -DCONFIG_BLE_PDS -DCONFIG_HW_SEC_ENG_DISABLE)
+if(CONFIG_BLE_PDS)
+	sdk_add_compile_definitions(-DCONFIG_BLE_PDS)
+endif()
 # 
 # ifeq ($(CONFIG_EM_HEAP_DISABLE),1)
 # CFLAGS += -DCONFIG_EM_HEAP_DISABLE
@@ -426,7 +346,8 @@ sdk_add_compile_definitions_ifdef(CONFIG_EM_HEAP_DISABLE -DCONFIG_EM_HEAP_DISABL
 # ifneq ($(CONFIG_BT_CONN),0)
 # CFLAGS   += 	-DCONFIG_BT_CONN
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_BT_CONN -DCONFIG_BT_CONN)
+# Value form: autoconf.h always defines CONFIG_BT_CONN with the same value,
+# a bare -D would trigger a macro-redefinition error under -Werror.
 # 
 # CFLAGS   += -DCONFIG_BT_HCI_VS_EVT_USER \
 #  			-DCONFIG_BT_ASSERT \
@@ -789,9 +710,6 @@ if(CONFIG_BT_MESH)
 
 	if(CONFIG_BT_MESH_PTS OR CONFIG_AUTO_PTS)
 		sdk_add_compile_definitions(-DCONFIG_BT_MESH_IV_UPDATE_TEST)
-	endif()
-	if(CONFIG_AUTO_PTS)
-		set(CONFIG_BT_MESH_CLI n)
 	endif()
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_CLI -DCONFIG_BT_MESH_CLI)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PTS -DCONFIG_BT_MESH_PTS)

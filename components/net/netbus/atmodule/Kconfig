@@ -4,6 +4,12 @@
 
 if ATMODULE
 
+config BLUETOOTH_APP
+    bool "Bluetooth application"
+    default n
+    help
+      Enable Bluetooth support in the AT application.
+
 choice
     prompt "AT module transport"
     default ATMODULE_UART

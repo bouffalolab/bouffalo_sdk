@@ -80,7 +80,7 @@ sdk_add_compile_definitions(
     -DMETAL_INTERNAL
     -DDEFAULT_LOGGER_ON
     #/*The following macros will be moved to kconfig in the future*/
-    -DVDEV_START_ADDR=0x210c8000
+    -DVDEV_START_ADDR=0x210C0000
     -DVDEV_SIZE=0x4000
     -DVDEV_STATUS_ADDR=VDEV_START_ADDR
     -DVDEV_STATUS_SIZE=0x400

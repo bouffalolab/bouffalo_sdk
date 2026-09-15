@@ -19,10 +19,11 @@
 
 #include <queue.h>
 
+/** @brief Logging category for the UDP Raw backend. */
 #define DBG_TAG "IPERF_UDP_RAW"
 #include "log.h"
 
-#include "iperf_common.h"
+#include "iperf_internal.h"
 
 #if !LWIP_TCPIP_CORE_LOCKING
 #error "iPerf2 UDP Raw requires LWIP_TCPIP_CORE_LOCKING"
@@ -40,7 +41,7 @@
 #define IPERF_UDP_RAW_FIN_TIMEOUT_MS 250U
 /** @brief Server duplicate-FIN response window, in milliseconds. */
 #define IPERF_UDP_RAW_ACK_WAIT_MS    1000U
-/** @brief Maximum idle wait so receive and stop events are observed promptly. */
+/** @brief Requested queue-wait timeout for stop polling, not a latency bound. */
 #define IPERF_UDP_RAW_IDLE_WAIT_MS   10U
 
 /** @brief One datagram transferred from the lwIP callback to the worker. */
@@ -54,24 +55,26 @@ typedef struct {
 
 /** @brief Complete state for one UDP Raw worker instance. */
 typedef struct {
-    bflb_iperf_t *iperf;    /**< Borrowed instance valid until completion. */
-    struct udp_pcb *udp;    /**< PCB accessed only under the core lock. */
-    QueueHandle_t rx_queue; /**< Callback-to-worker receive queue. */
-    ip_addr_t local_addr;   /**< Bound local address copied under the core lock. */
-    u16_t local_port;       /**< Bound local port copied under the core lock. */
-    ip_addr_t remote_addr;  /**< Connected or selected peer address. */
-    u16_t remote_port;      /**< Connected or selected peer port. */
+    bflb_iperf_t *iperf;                                      /**< Borrowed instance valid until completion. */
+    struct udp_pcb *udp;                                      /**< PCB accessed only under the core lock. */
+    QueueHandle_t rx_queue;                                   /**< Callback-to-worker receive queue. */
+    ip_addr_t local_addr;                                     /**< Bound local address copied under the core lock. */
+    u16_t local_port;                                         /**< Bound local port copied under the core lock. */
+    ip_addr_t remote_addr;                                    /**< Connected or selected peer address. */
+    u16_t remote_port;                                        /**< Connected or selected peer port. */
+    uint8_t client_header[BFLB_IPERF_UDP_CLIENT_HEADER_SIZE]; /**< Worker-owned cached client settings and mutable sequence/time. */
 } iperf_udp_raw_context_t;
 
 /**
  * @brief Send one pbuf and release the caller's reference.
  * @param[in,out] context Active UDP Raw context.
- * @param[in] p Caller-owned pbuf to send.
+ * @param[in,out] p Caller-owned pbuf; its reference is released on all outcomes.
  * @param[in] address Optional destination; NULL uses the connected peer.
  * @param[in] port Destination port used when address is non-NULL.
  * @return ERR_OK on acceptance, or an lwIP error.
  * @note As required by the lwIP netif contract, an asynchronous lower layer
  * retains its own reference before returning from udp_send/udp_sendto.
+ * @pre Worker context outside the core lock; context->udp is valid.
  */
 static err_t iperf_udp_raw_send_pbuf(iperf_udp_raw_context_t *context,
                                      struct pbuf *p,
@@ -81,7 +84,7 @@ static err_t iperf_udp_raw_send_pbuf(iperf_udp_raw_context_t *context,
     err_t error;
 
     LOCK_TCPIP_CORE();
-    error = address == NULL ? udp_send(context->udp, p) :
+    error = (address == NULL) ? udp_send(context->udp, p) :
                               udp_sendto(context->udp, p, address, port);
     UNLOCK_TCPIP_CORE();
 
@@ -94,14 +97,21 @@ static err_t iperf_udp_raw_send_pbuf(iperf_udp_raw_context_t *context,
  * @param[in,out] context Active UDP Raw context.
  * @param[in] length UDP payload length.
  * @param[in] id Signed packet ID.
+ * @param[in] now_us Caller-captured monotonic timestamp in microseconds.
+ * @pre Connected worker context outside the core lock.
+ * @note Positive IDs with at least 80 bytes carry extended settings; every
+ * datagram uses the 16-byte SEQ64 prefix. Negative IDs encode FIN.
+ * Client settings must be cached before the first call; only sequence/time
+ * are updated per send, then copied into the independently owned pbuf.
  * @return ERR_OK, ERR_MEM for transient backpressure, or another lwIP error.
  */
 static err_t iperf_udp_raw_send_data(iperf_udp_raw_context_t *context,
                                      uint16_t length,
-                                     int64_t id)
+                                     int64_t id,
+                                     uint64_t now_us)
 {
     struct pbuf *p;
-    uint64_t now_us;
+    uint16_t header_len = BFLB_IPERF_UDP_HEADER_SIZE;
 
     if (length < BFLB_IPERF_UDP_HEADER_SIZE) {
         return ERR_ARG;
@@ -111,33 +121,36 @@ static err_t iperf_udp_raw_send_data(iperf_udp_raw_context_t *context,
         return ERR_MEM;
     }
 
-    memset(p->payload, '0', length);
-    now_us = iperf_now_us();
+    // memset(p->payload, '0', length);
     if (id > 0 && length >= BFLB_IPERF_UDP_CLIENT_HEADER_SIZE) {
-        /* Fresh pbufs preserve the settings area kept by the Socket buffer. */
-        iperf_write_udp_client_header(p->payload, context->iperf, now_us);
+        header_len = BFLB_IPERF_UDP_CLIENT_HEADER_SIZE;
     }
-    iperf_write_udp_header(p->payload, id, now_us);
+    iperf_write_udp_header(context->client_header, id, now_us);
+    memcpy(p->payload, context->client_header, header_len);
     return iperf_udp_raw_send_pbuf(context, p, NULL, 0U);
 }
 
 /**
  * @brief Send one server AckFIN report to the selected peer.
  * @param[in,out] context Active UDP Raw server context.
+ * @param[in] format Layout selected by the validated setup.
  * @param[in] fin_id Negative FIN packet ID echoed in the report.
+ * @pre format is supported; a selected peer and finalized statistics exist.
+ * @note Report length is 52 bytes for SEQ32, 56 for either SEQ64 layout.
  * @return ERR_OK, ERR_MEM for transient backpressure, or another lwIP error.
  */
 static err_t iperf_udp_raw_send_report(iperf_udp_raw_context_t *context,
+                                       iperf_udp_setup_t format,
                                        int64_t fin_id)
 {
     struct pbuf *p;
+    uint16_t report_len = iperf_udp_server_report_size(format);
 
-    p = pbuf_alloc(PBUF_TRANSPORT, BFLB_IPERF_UDP_ACK_SIZE, PBUF_RAM);
+    p = pbuf_alloc(PBUF_TRANSPORT, report_len, PBUF_RAM);
     if (p == NULL) {
         return ERR_MEM;
     }
-    memset(p->payload, 0, BFLB_IPERF_UDP_ACK_SIZE);
-    iperf_write_udp_report(p->payload, context->iperf, fin_id);
+    iperf_write_udp_server_report(p->payload, context->iperf, format, fin_id);
     return iperf_udp_raw_send_pbuf(context, p, &context->remote_addr,
                                    context->remote_port);
 }
@@ -146,10 +159,12 @@ static err_t iperf_udp_raw_send_report(iperf_udp_raw_context_t *context,
  * @brief Transfer one received pbuf to the worker queue.
  * @param[in,out] arg UDP Raw context registered with udp_recv().
  * @param[in] pcb Receiving PCB.
- * @param[in] p Received pbuf whose ownership is transferred to this callback.
+ * @param[in,out] p Received pbuf transferred to the queue or freed; NULL ignored.
  * @param[in] address Datagram source address.
  * @param[in] port Datagram source port.
  * @note A full queue drops and frees the datagram immediately.
+ * @pre lwIP task callback with the core lock held, never an ISR. The queue is
+ * alive until this callback is detached; enqueue never blocks or prints.
  */
 static void iperf_udp_raw_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                                const ip_addr_t *address, u16_t port)
@@ -177,6 +192,8 @@ static void iperf_udp_raw_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
  * @param[in,out] context Active UDP Raw client context.
  * @param[in] item Received datagram and peer metadata.
  * @return true when a valid AckFIN completes the client test.
+ * @note Checks peer and base report length/flags, not all protocol fields or
+ * correspondence to the sent FIN. The caller retains and must free item->p.
  */
 static bool iperf_udp_raw_client_report_received(iperf_udp_raw_context_t *context,
                                                  const iperf_udp_raw_rx_item_t *item)
@@ -190,10 +207,10 @@ static bool iperf_udp_raw_client_report_received(iperf_udp_raw_context_t *contex
     }
     copied = LWIP_MIN((uint16_t)sizeof(report), item->p->tot_len);
     pbuf_copy_partial(item->p, report, copied, 0U);
-    if (!iperf_udp_report_valid(report, copied)) {
+    if (!iperf_udp_client_report_valid(report, copied)) {
         return false;
     }
-    iperf_read_udp_report(context->iperf, report, copied);
+    iperf_udp_client_read_report(context->iperf, report, copied);
     return true;
 }
 
@@ -219,7 +236,7 @@ static int iperf_udp_raw_wait_report(iperf_udp_raw_context_t *context,
         if (iperf->stop_requested) {
             return ERR_OK;
         }
-        error = iperf_udp_raw_send_data(context, iperf->config.buffer_len, fin_id);
+        error = iperf_udp_raw_send_data(context, iperf->config.buffer_len, fin_id, iperf_now_us());
         if (error != ERR_OK && error != ERR_MEM && error != ERR_BUF) {
             return error;
         }
@@ -246,8 +263,10 @@ static int iperf_udp_raw_wait_report(iperf_udp_raw_context_t *context,
  * @param[in,out] context Active UDP Raw server context.
  * @param[in,out] udp_rx Receiver tracker to finalize once.
  * @param[in] fin_id Initial negative FIN packet ID.
- * @retval ERR_OK The response window elapsed or stop was requested.
- * @return Another lwIP error when AckFIN transmission fails.
+ * @retval ERR_OK At least one report was sent, or stop was requested.
+ * @return Last send error if no report was sent and stop was not requested.
+ * @note Repeated negative IDs from the selected peer extend the response window
+ * without changing frozen statistics; total completion time is not bounded.
  */
 static int iperf_udp_raw_report_server(iperf_udp_raw_context_t *context,
                                        iperf_udp_rx_t *udp_rx,
@@ -258,12 +277,12 @@ static int iperf_udp_raw_report_server(iperf_udp_raw_context_t *context,
     err_t last_error = ERR_MEM;
     bool report_sent = false;
 
-    iperf_finish_udp_rx(iperf, udp_rx, (uint64_t)(-fin_id));
+    iperf_udp_server_rx_finish(iperf, udp_rx, fin_id);
     deadline_us = iperf_now_us() + (uint64_t)IPERF_UDP_RAW_ACK_WAIT_MS * 1000ULL;
 
     while (!iperf->stop_requested && iperf_now_us() < deadline_us) {
         iperf_udp_raw_rx_item_t item;
-        err_t error = iperf_udp_raw_send_report(context, fin_id);
+        err_t error = iperf_udp_raw_send_report(context, udp_rx->format, fin_id);
 
         if (error == ERR_OK) {
             report_sent = true;
@@ -272,23 +291,24 @@ static int iperf_udp_raw_report_server(iperf_udp_raw_context_t *context,
             if (error != ERR_MEM && error != ERR_BUF) {
                 break;
             }
-            vTaskDelay(1U);
+            vTaskDelay(5U);
             continue;
         }
         while (!iperf->stop_requested && iperf_now_us() < deadline_us) {
             uint8_t header[BFLB_IPERF_UDP_HEADER_SIZE];
+            uint16_t copied;
+            int64_t packet_id;
 
             if (xQueueReceive(context->rx_queue, &item, pdMS_TO_TICKS(IPERF_UDP_RAW_IDLE_WAIT_MS)) != pdPASS) {
                 continue;
             }
             if (ip_addr_cmp(&item.remote_addr, &context->remote_addr) &&
-                item.remote_port == context->remote_port &&
-                item.p->tot_len >= BFLB_IPERF_UDP_HEADER_SIZE) {
-                pbuf_copy_partial(item.p, header, sizeof(header), 0U);
-                if (iperf_read_udp_id(header) < 0) {
-                    fin_id = iperf_read_udp_id(header);
-                    deadline_us = iperf_now_us() +
-                                  (uint64_t)IPERF_UDP_RAW_ACK_WAIT_MS * 1000ULL;
+                item.remote_port == context->remote_port) {
+                copied = LWIP_MIN((uint16_t)sizeof(header), item.p->tot_len);
+                copied = pbuf_copy_partial(item.p, header, copied, 0U);
+                if (iperf_udp_decode_id(udp_rx->format, header, copied, &packet_id) && packet_id < 0) {
+                    fin_id = packet_id;
+                    deadline_us = iperf_now_us() + (uint64_t)IPERF_UDP_RAW_ACK_WAIT_MS * 1000ULL;
                     pbuf_free(item.p);
                     break;
                 }
@@ -302,6 +322,7 @@ static int iperf_udp_raw_report_server(iperf_udp_raw_context_t *context,
 /**
  * @brief Release all receive pbufs still queued during shutdown.
  * @param[in,out] context UDP Raw context being closed.
+ * @pre Receive callback detached; the queue still exists and cannot gain items.
  */
 static void iperf_udp_raw_flush_rx(iperf_udp_raw_context_t *context)
 {
@@ -326,6 +347,7 @@ static int iperf_udp_raw_client(iperf_udp_raw_context_t *context)
     uint64_t packet_interval_us;
     uint64_t now_us;
     uint64_t packet_id = 2U;
+    iperf_stats_t stats;
     err_t error = ERR_OK;
 
     LOCK_TCPIP_CORE();
@@ -359,7 +381,9 @@ static int iperf_udp_raw_client(iperf_udp_raw_context_t *context)
     iperf_log_client_preamble(iperf);
 
     /* Packet ID one advertises normal-mode settings before paced traffic. */
-    error = iperf_udp_raw_send_data(context, iperf->config.buffer_len, 1);
+    now_us = iperf_now_us();
+    iperf_write_udp_client_header(context->client_header, iperf, now_us);
+    error = iperf_udp_raw_send_data(context, iperf->config.buffer_len, 1, now_us);
     if (error != ERR_OK) {
         LOG_E("UDP Raw client setup send failed: error=%d\r\n", error);
         return error;
@@ -373,41 +397,44 @@ static int iperf_udp_raw_client(iperf_udp_raw_context_t *context)
     iperf_account_transfer(iperf, iperf->config.buffer_len);
     uint32_t rate_bps = iperf->config.bandwidth_bps ? iperf->config.bandwidth_bps : BFLB_IPERF_DEFAULT_UDP_RATE_BPS;
     packet_interval_us = (uint64_t)iperf->config.buffer_len * 8ULL * 1000000ULL / rate_bps;
-    next_deadline_us = iperf->stats.start_us + packet_interval_us;
+    iperf_stats_snapshot(iperf, &stats);
+    next_deadline_us = stats.start_us + packet_interval_us;
 
-    while (!iperf_limit_reached(iperf, iperf_now_us())) {
+    while (true) {
         iperf_udp_raw_rx_item_t item;
         uint16_t length = iperf->config.buffer_len;
 
+        now_us = iperf_now_us();
+        if (iperf_limit_reached(iperf, now_us)) {
+            break;
+        }
+        if (iperf_test_report_periodic(iperf, now_us)) {
+            /* Discard pacing debt from earlier report intervals. */
+            next_deadline_us = now_us;
+        }
         /* No receive data is expected before FIN; release any stray packets. */
         while (xQueueReceive(context->rx_queue, &item, 0U) == pdPASS) {
             pbuf_free(item.p);
         }
 
         /* Absolute deadlines avoid accumulating delay and send-call execution time. */
-        now_us = iperf_now_us();
         if (now_us < next_deadline_us) {
-            uint32_t remaining_ms = (next_deadline_us - now_us + 999ULL) / 1000ULL;
-            if (xQueueReceive(context->rx_queue, &item,
-                              pdMS_TO_TICKS(LWIP_MIN(remaining_ms,
-                                                     IPERF_UDP_RAW_IDLE_WAIT_MS))) == pdPASS) {
-                pbuf_free(item.p);
+            uint32_t remaining_ms = (next_deadline_us - now_us + 500ULL) / 1000ULL;
+            if (remaining_ms > IPERF_UDP_RAW_IDLE_WAIT_MS) {
+                remaining_ms = IPERF_UDP_RAW_IDLE_WAIT_MS;
+            }
+            if (remaining_ms > 0) {
+                vTaskDelay(pdMS_TO_TICKS(remaining_ms));
             }
             continue;
         }
 
-        if (iperf->config.amount_bytes != 0U) {
-            if (iperf->stats.bytes < iperf->config.amount_bytes) {
-                length = (uint16_t)LWIP_MIN((uint64_t)length, iperf->config.amount_bytes - iperf->stats.bytes);
-            } else {
-                length = 0U;
-            }
-        }
+        length = (uint16_t)LWIP_MIN((uint64_t)length, iperf_bytes_remaining(iperf));
         if (length < BFLB_IPERF_UDP_HEADER_SIZE) {
             break;
         }
 
-        error = iperf_udp_raw_send_data(context, length, (int64_t)packet_id);
+        error = iperf_udp_raw_send_data(context, length, (int64_t)packet_id, now_us);
         if (error == ERR_OK) {
             iperf_account_transfer(iperf, length);
             packet_id++;
@@ -438,7 +465,7 @@ static int iperf_udp_raw_client(iperf_udp_raw_context_t *context)
  * @brief Run a single-peer UDP Raw server through its AckFIN response window.
  * @param[in,out] context Initialized UDP Raw server context.
  * @retval ERR_OK The test completed or a stop request was observed.
- * @return An lwIP error when AckFIN transmission fails.
+ * @return An lwIP error on PCB allocation, bind, peer connect or report failure.
  */
 static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
 {
@@ -471,7 +498,6 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
         return error;
     }
 
-    iperf_udp_rx_init(&udp_rx);
     iperf_log_server_preamble(iperf);
 
     while (!iperf->stop_requested) {
@@ -481,21 +507,16 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
         int64_t packet_id;
         iperf_udp_setup_t setup_type;
 
+        iperf_test_report_periodic(iperf, iperf_now_us());
         if (xQueueReceive(context->rx_queue, &item, pdMS_TO_TICKS(IPERF_UDP_RAW_IDLE_WAIT_MS)) != pdPASS) {
-            continue;
-        }
-
-        if (item.p->tot_len < BFLB_IPERF_UDP_HEADER_SIZE) {
-            pbuf_free(item.p);
             continue;
         }
 
         packet_len = item.p->tot_len;
         copied = LWIP_MIN((uint16_t)sizeof(header), packet_len);
-        pbuf_copy_partial(item.p, header, copied, 0U);
+        copied = pbuf_copy_partial(item.p, header, copied, 0U);
         pbuf_free(item.p);
 
-        packet_id = iperf_read_udp_id(header);
         /* Only a valid setup packet may claim this single-peer server session. */
         if (peer_set == 0U) {
             setup_type = iperf_udp_client_setup_type(header, copied);
@@ -518,14 +539,14 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
                                  ip_2_ip4(&item.local_addr)->addr, context->local_port,
                                  ip_2_ip4(&item.remote_addr)->addr, item.remote_port);
             iperf_test_begin(iperf);
-            udp_rx.next_id = 1U;
+            iperf_udp_server_rx_init(&udp_rx, setup_type);
 
         } else if (!ip_addr_cmp(&item.remote_addr, &context->remote_addr) ||
                    (item.remote_port != context->remote_port)) {
             /* Ignore stray datagrams from other peers. */
             continue;
         }
-        if (packet_id == 0) {
+        if (!iperf_udp_decode_id(udp_rx.format, header, copied, &packet_id)) {
             continue;
         }
 
@@ -537,9 +558,9 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
             break;
         }
 
-        iperf_udp_rx_account(iperf, &udp_rx, packet_id,
-                             iperf_read_udp_timestamp(header),
-                             item.arrival_us, packet_len);
+        iperf_udp_server_rx_account(iperf, &udp_rx, packet_id,
+                                    iperf_read_udp_timestamp(header),
+                                    item.arrival_us, packet_len);
     }
 
     return error;
@@ -548,7 +569,7 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
 /**
  * @brief Run one UDP Raw worker and own its common resource lifecycle.
  * @param[in,out] arg Initialized iperf_udp_raw_context_t.
- * @warning iperf_backend_finished() may make context destroyable; only task
+ * @warning iperf_worker_exit() may make context destroyable; only task
  * self-deletion may follow it.
  */
 static void iperf_udp_raw_task(void *arg)
@@ -557,15 +578,14 @@ static void iperf_udp_raw_task(void *arg)
     bflb_iperf_t *iperf = context->iperf;
     int error;
 
-    vTaskDelay(pdMS_TO_TICKS(10U));
-
-    if (!iperf_backend_started(iperf)) {
+    if (!iperf_worker_enter(iperf)) {
         error = 0;
     } else if (iperf->config.role == BFLB_IPERF_ROLE_CLIENT) {
         error = iperf_udp_raw_client(context);
     } else {
         error = iperf_udp_raw_server(context);
     }
+
     if (context->udp != NULL) {
         LOCK_TCPIP_CORE();
         udp_recv(context->udp, NULL, NULL);
@@ -579,7 +599,7 @@ static void iperf_udp_raw_task(void *arg)
     context->rx_queue = NULL;
     context->iperf = NULL;
 
-    iperf_backend_finished(iperf, error);
+    iperf_worker_exit(iperf, error);
     vTaskDelete(NULL);
 }
 
@@ -589,8 +609,11 @@ static void iperf_udp_raw_task(void *arg)
  * @param[in,out] private_context Zero-initialized UDP Raw context.
  * @retval 0 The worker was created successfully.
  * @retval -1 Queue or task creation failed.
+ * @post Failure rolls back the queue, leaves no worker and emits no events.
+ * @note Events may occur before return; no context writes follow successful
+ * task creation. The core frees the context after synchronous failure.
  */
-static int iperf_udp_raw_start(bflb_iperf_t *iperf, void *private_context)
+static int iperf_udp_raw_launch(bflb_iperf_t *iperf, void *private_context)
 {
     iperf_udp_raw_context_t *context = private_context;
 
@@ -616,19 +639,21 @@ static int iperf_udp_raw_start(bflb_iperf_t *iperf, void *private_context)
 /**
  * @brief Accept a cooperative stop request for a UDP Raw worker.
  * @param[in] iperf Instance whose stop flag was set by the core.
- * @param[in,out] private_context Active UDP Raw context.
- * @retval 0 The stop request was accepted.
+ * @param[in] private_context Core-owned context; unused and possibly cleaned up.
+ * @note Queue waits are bounded by IPERF_UDP_RAW_IDLE_WAIT_MS. Do not touch
+ * the queue here: the worker may already have detached RX and deleted it.
+ * This hook is a no-op, not a queue wakeup. Queue timeouts and retry delays
+ * permit stop polling but do not guarantee a real-time destroy deadline.
  */
-static int iperf_udp_raw_stop(bflb_iperf_t *iperf, void *private_context)
+static void iperf_udp_raw_request_stop(bflb_iperf_t *iperf, void *private_context)
 {
     LWIP_UNUSED_ARG(iperf);
     LWIP_UNUSED_ARG(private_context);
-    return 0;
 }
 
 /** @brief Backend operation table for task-driven Classic iPerf2 UDP Raw tests. */
 const iperf_backend_ops_t g_iperf_udp_raw_ops = {
     .context_size = sizeof(iperf_udp_raw_context_t),
-    .start = iperf_udp_raw_start,
-    .stop = iperf_udp_raw_stop,
+    .launch = iperf_udp_raw_launch,
+    .request_stop = iperf_udp_raw_request_stop,
 };

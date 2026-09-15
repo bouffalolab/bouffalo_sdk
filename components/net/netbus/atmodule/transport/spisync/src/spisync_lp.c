@@ -60,7 +60,7 @@ int spisync_ps_wakeup(spisync_t *spisync, spisync_wakeuparg_t *arg)
         if (arg->wakeup_reason == 0) { // 0-gpio
             // update keepactive
             g_spisync_current->ps_keepactive = 1;
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
             pm_status_update(g_spisync_current->ps_keepactive);
 #endif
         }

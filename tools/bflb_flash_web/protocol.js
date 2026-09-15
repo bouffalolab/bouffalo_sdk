@@ -4,6 +4,11 @@
 
   const COMMAND = Object.freeze({
     GET_BOOT_INFO: 0x10,
+    LOAD_BOOT_HEADER: 0x11,
+    LOAD_SEG_HEADER: 0x17,
+    LOAD_SEG_DATA: 0x18,
+    CHECK_IMAGE: 0x19,
+    RUN_IMAGE: 0x1a,
     CLOCK_SET: 0x22,
     SET_TIMEOUT: 0x23,
     FLASH_ERASE: 0x30,

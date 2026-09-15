@@ -474,6 +474,12 @@ struct bt_hci_cp_io_capability_neg_reply {
 #define BT_LINK_POLICY_ENABLE_SNIFF_MODE        0x0004
 #define BT_LINK_POLICY_ENABLE_PARK_STATE        0x0008
 
+#define BT_HCI_OP_SWITCH_ROLE                   BT_OP(BT_OGF_LINK_POLICY, 0x000b)
+struct bt_hci_cp_switch_role {
+	bt_addr_t bdaddr;
+	u8_t role;
+} __packed;
+
 #define BT_HCI_OP_WRITE_LINK_POLICY             BT_OP(BT_OGF_LINK_POLICY, 0x000d)
 struct bt_hci_cp_write_link_policy {
 	u16_t handle;

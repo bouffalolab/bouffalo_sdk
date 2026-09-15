@@ -1,5 +1,3 @@
-CONFIG_NEWLIB               =n
-CONFIG_NEWLIB_STANDARD      =n
 
 # Components
 CONFIG_BFLB_LOG =n
@@ -44,6 +42,7 @@ CONFIG_MACSW_SELECT = default
 
 CONFIG_PWRMGMT               =y
 CONFIG_TICKLESS_EXT          =y
+CONFIG_PM_HELPER_CLI         =y
 
 # easyflash
 CONFIG_LITTLEFS              =y

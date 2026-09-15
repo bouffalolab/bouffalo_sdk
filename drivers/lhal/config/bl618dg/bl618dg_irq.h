@@ -172,6 +172,8 @@
 #define BL618DG_IRQ_UART0                             (BL618DG_IRQ_NUM_BASE + 28)
 #define BL618DG_IRQ_UART1                             (BL618DG_IRQ_NUM_BASE + 29)
 #define BL618DG_IRQ_UART2                             (BL618DG_IRQ_NUM_BASE + 30)
+/* KYS and UART2 share interrupt source 30 on BL618DG B0 AP. */
+#define BL618DG_IRQ_KYS                               BL618DG_IRQ_UART2
 #define BL618DG_IRQ_GPIO_DMA                          (BL618DG_IRQ_NUM_BASE + 31)
 #define BL618DG_IRQ_I2C0                              (BL618DG_IRQ_NUM_BASE + 32)
 #define BL618DG_IRQ_PWM                               (BL618DG_IRQ_NUM_BASE + 33)

@@ -323,6 +323,11 @@ SECTIONS
         *bflb_flash*.o*(.rodata*)
         *bl616_romapi_patch*.o*(.rodata*)
 
+#ifdef CONFIG_ZIGBEE
+        /* ZigBee hot lookup tables into TCM (see zigbee_ram_rodata.ld.in) */
+        INCLUDE zigbee_ram_rodata.ld.in
+#endif
+
 #ifdef CONFIG_RAM_COPY_CODE
         *(.rodata*)
         *(.srodata*)
@@ -518,6 +523,12 @@ SECTIONS
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         *(.rodata*)
+
+#ifdef CONFIG_ZIGBEE
+        /* ZigBee compact-framework sections (weak __start_/__stop_ refs in
+         * libc7b*.a need explicit KEEP, see zigbee_rom_rodata.ld.in) */
+        INCLUDE zigbee_rom_rodata.ld.in
+#endif
 
 #ifdef CONFIG_SHELL
         /* section information for shell */

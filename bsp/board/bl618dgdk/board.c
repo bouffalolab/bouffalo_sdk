@@ -111,7 +111,12 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline, unused)) system_clock_in
     }
 }
 
-#ifndef LP_APP
+enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
+{
+    return BFLB_RTC_32K_CLK_RC;
+}
+
+#ifndef CONFIG_LPAPP
 static void __attribute__((unused)) peripheral_clock_init(void)
 {
     if (GLB_CORE_ID_AP == GLB_Get_Core_Type()) {
@@ -353,12 +358,58 @@ void bl_show_component_version(void)
     }
 }
 
+void bflb_show_trim_info(void)
+{
+    struct bflb_device_s *efuse_dev;
+    bflb_ef_ctrl_com_trim_t trim;
+    const char *trim_list[] = {
+        "auadc_gain_ext",
+        "auadc_offset",
+        "usb20",
+        "dcdc12_vout",
+        "rc32k",
+        "rcal_iptat",
+        "gpadc2_offset",
+        "psram_trim",
+        "ldo09",
+        "ldo08",
+        "ldo18",
+        "rc32m",
+        "tsen",
+        "gpadc_gain",
+        "gpadc_vref",
+        "gpadc_offset",
+        "gpadc2_gain",
+        "gpadc2_vref",
+        "rcal_icx",
+        "auadc_gain_int"
+    };
+
+    efuse_dev = bflb_device_get_by_name("ef_ctrl");
+    if (NULL == efuse_dev) {
+        printf("efuse device driver not found!\r\n");
+        while (1)
+            ;
+    }
+
+    for (int i = 0; i < sizeof(trim_list) / sizeof(trim_list[0]); i++) {
+        bflb_ef_ctrl_read_common_trim(NULL, (char*)trim_list[i], &trim, 1);
+        if (trim.en) {
+            if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+                printf("trim %s value=%d!\r\n", trim_list[i], trim.value);
+            } else {
+                printf("trim %s parity error!\r\n", trim_list[i]);
+            }
+        } else {
+            printf("trim %s not done!\r\n", trim_list[i]);
+        }
+    }
+}
+
 #if defined(CONFIG_BSP_CONSOLE_USB_CDC)
 /* USB console is initialized after interrupts are restored. */
 #elif defined(CONFIG_CONSOLE_WO)
-
 extern void bflb_wo_set_console(struct bflb_device_s *dev);
-
 static void __attribute__((unused)) console_init()
 {
     struct bflb_device_s *wo;
@@ -407,7 +458,7 @@ static void __attribute__((unused)) console_init()
 
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 void board_recovery(void)
 {
 #ifdef CONF_PSRAM_RESTORE
@@ -548,6 +599,11 @@ void bflb_wfa_init(void)
 
 void ram_heap_init(void)
 {
+    static const uint32_t any_alloc_order[] = {
+        MM_HEAP_OCRAM_0,
+        MM_HEAP_PSRAM_0,
+        MM_HEAP_WRAM_0,
+    };
     size_t heap_len;
 
     /* ram heap init */
@@ -573,9 +629,7 @@ void ram_heap_init(void)
 
     /* psram heap init */
     heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
-#ifndef CONFIG_PSRAM_SKIP_REGISTER_HEAP
     mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
-#endif
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"
@@ -597,6 +651,8 @@ void ram_heap_init(void)
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 #endif
 #endif
+
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 }
 
 #if defined(CPU_AP)
@@ -620,7 +676,9 @@ void board_init(void)
     /* system clock */
     system_clock_init();
 
-#ifndef LP_APP
+    bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
+
+#ifndef CONFIG_LPAPP
     peripheral_clock_init();
 #else
     peripheral_clock_init_lp();
@@ -663,6 +721,8 @@ void board_init(void)
 #endif
     /* version info dump */
     bl_show_component_version();
+    /* trim info dump */
+    bflb_show_trim_info();
 
 #if defined(CONFIG_ANTI_ROLLBACK) && !defined(CONFIG_BOOT2)
     bflb_check_anti_rollback();
@@ -751,6 +811,8 @@ void board_init(void)
     printf("clock gen1:%08x, gen2:%08x\r\n", getreg32(GLB_BASE + GLB_CGEN_CFG1_OFFSET),
            getreg32(GLB_BASE + GLB_CGEN_CFG2_OFFSET));
     log_start();
+
+    bflb_sec_mutex_init();
 
     bflb_irq_restore(flag);
 
@@ -894,7 +956,7 @@ static void mfg_cmd(int argc, char **argv)
 SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #include "bl_lp.h"
 
 static void test_io_wakeup_status(uint8_t io_num)
@@ -985,7 +1047,7 @@ void cmd_io_test(char *buf, int len, int argc, char **argv)
 }
 
 SHELL_CMD_EXPORT_ALIAS(cmd_io_test, io_test, cmd io_test);
-#endif /* LP_APP */
+#endif /* CONFIG_LPAPP */
 
 #endif /* CONFIG_SHELL */
 

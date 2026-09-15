@@ -160,6 +160,11 @@ void ram_heap_init(void)
 
 extern int main(void);
 
+enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
+{
+    return BFLB_RTC_32K_CLK_RC;
+}
+
 void board_init(void)
 {
     int ret = -1;
@@ -174,6 +179,7 @@ void board_init(void)
     }
 
     system_clock_init();
+    bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
     peripheral_clock_init();
     bflb_irq_initialize();
 

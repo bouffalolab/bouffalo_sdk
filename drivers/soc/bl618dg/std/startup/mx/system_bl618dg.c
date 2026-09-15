@@ -196,6 +196,7 @@ void System_Post_Init(void)
 
     sysinit_run_all();
 
+    HBN_Trim_RC32K();
     PDS_Trim_RC32M();
 }
 

@@ -29,7 +29,7 @@ int main(void)
 {
     board_init();
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     app_pm_init();
 #endif
 

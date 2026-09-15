@@ -43,6 +43,10 @@
 #include "mbedtls/platform.h"
 #include "bflb_sec_mutex.h"
 
+#ifdef BL618DG
+#include "bl618dg_glb.h"
+#endif
+
 /* Parameter validation macros based on platform_util.h */
 #ifdef CONFIG_MBEDTLS_V2
 #define AES_VALIDATE_RET( cond )    \
@@ -138,8 +142,15 @@ void mbedtls_aes_init( mbedtls_aes_context *ctx )
 
     memset( ctx, 0, sizeof( mbedtls_aes_context ) );
     ctx->aes = aes;
-
+#ifdef BL618DG
+    if(GLB_CORE_ID_NP == GLB_Get_Core_Type()){
+        bflb_group1_request_aes_access(aes);
+    }else{
+        bflb_group0_request_aes_access(aes);
+    }
+#else
     bflb_group0_request_aes_access(aes);
+#endif
     bflb_aes_link_init(aes);
 }
 

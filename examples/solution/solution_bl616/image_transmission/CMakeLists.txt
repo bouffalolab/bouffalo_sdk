@@ -11,7 +11,6 @@ sdk_add_include_directories(.)
 sdk_add_include_directories(config_file)
 
 # User
-# sdk_add_compile_definitions(-D CONFIG_CLI_CMD_ENABLE)
 # sdk_add_compile_definitions(-DBL616_DHCP_DEBUG)
 # sdk_add_compile_definitions(-DCONFIG_IRQ_USE_VECTOR)
 

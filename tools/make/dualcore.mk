@@ -26,26 +26,12 @@ else
 	endif
 endif
 
-WHOLE_APP_BIN = $(BUILD_DIR)/$(APP_NAME)_$(CHIP).bin
-WHOLE_BUILD_OUT = $(BUILD_DIR)/ap/build_out
-WHOLE_BOOT2_BIN = $(firstword $(wildcard $(WHOLE_BUILD_OUT)/boot2_*_isp_*.bin))
-WHOLE_PARTITION_BIN = $(WHOLE_BUILD_OUT)/partition.bin
-
--include $(SDK_DEMO_PATH)/defconfig
-ifeq ($(CONFIG_STD_BOOT2APP),y)
 whole:
-	python3 $(BL_SDK_BASE)/tools/bflb_whole_bin.py \
-		--app $(WHOLE_APP_BIN) \
-		--boot2 $(WHOLE_BOOT2_BIN) \
-		--pt $(WHOLE_PARTITION_BIN) \
-		--output $(BUILD_DIR)/whole_flash_data.bin
-else
-whole:
-	cmake -E copy $(WHOLE_APP_BIN) $(BUILD_DIR)/whole_flash_data.bin
-endif
+	$(FLASH_CMD) --chipname=$(CHIP) --config=$(BUILD_DIR)/ap/flash_prog_cfg.ini --build
+	cmake -E copy $(BL_SDK_BASE)/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
 
 flash: whole
-	$(FLASH_CMD) --chip=$(CHIP) --port $(FLASH_COMX) --whole_chip --firmware $(BUILD_DIR)/whole_flash_data.bin
+	$(FLASH_CMD) --chip=$(CHIP) --port $(COMX) --whole_chip --firmware $(BUILD_DIR)/whole_flash_data.bin
 
 ota: whole
 	$(BL_SDK_BASE)/tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc-ubuntu --chipname=$(CHIP) --imgfile=$(BUILD_DIR)/$(APP_NAME)_$(CHIP).bin --appkeys=shared --brdcfgdir=$(BL_SDK_BASE)/bsp/board/$(BOARD)/config

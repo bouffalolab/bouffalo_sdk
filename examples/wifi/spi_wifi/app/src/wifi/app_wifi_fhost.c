@@ -70,7 +70,7 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
 
 void app_wifi_init(void)
 {
-    #ifdef LP_APP
+    #ifdef CONFIG_LPAPP
     app_pm_init();
     #endif
 

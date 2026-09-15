@@ -52,6 +52,8 @@ static ATTR_NOCACHE_RAM_SECTION bl_lp_uart_snapshot_t pds_resume_uart_cfg = {
 };
 static ATTR_NOCACHE_RAM_SECTION bl_lp_peripheral_clock_snapshot_t pds_resume_peripheral_clock_cfg = { 0 };
 static ATTR_NOCACHE_RAM_SECTION uint32_t pds_resume_sram_cfg3 = 0;
+static ATTR_NOCACHE_RAM_SECTION uint32_t pds_wakeup_source = 0;
+static ATTR_NOCACHE_RAM_SECTION uint64_t pds_wakeup_gpio = 0;
 
 static void bl_lp_runtime_gpio_snapshot(void);
 static void bl_lp_runtime_gpio_restore(void);
@@ -405,6 +407,9 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
     volatile bool enter_flag = true;
     int ret = 0;
 
+    pds_wakeup_source = 0;
+    pds_wakeup_gpio = 0;
+
 #if (BL_LP_TIME_DEBUG)
     memset(app_pds_time_debug_buff, 0, sizeof(app_pds_time_debug_buff));
     iot2lp_para->time_debug = app_pds_time_debug_buff;
@@ -443,6 +448,8 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
         pm_pds_mode_enter(pds_level, sleep_time);
     }
 
+    pds_wakeup_source = PDS_Get_All_Wakeup_Src();
+    pds_wakeup_gpio = PDS_Get_All_GPIO_Pad_IntStatus();
     bl_lp_debug_record_time(iot2lp_para, "pds exit");
     bl_lp_debug_record_time(iot2lp_para, "restore context start");
 
@@ -469,4 +476,14 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
 #endif
 
     return ret;
+}
+
+uint32_t bl_lp_pds_get_wakeup_source(void)
+{
+    return pds_wakeup_source;
+}
+
+uint64_t bl_lp_pds_get_wakeup_gpio(void)
+{
+    return pds_wakeup_gpio;
 }

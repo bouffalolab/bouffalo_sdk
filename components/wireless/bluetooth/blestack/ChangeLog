@@ -1,4 +1,7 @@
 # Changes
+## 2026-9-10
+1. [A2DP Sink] Automatically request a Master-to-Slave role switch only for locally initiated BR/EDR connections, improving interoperability with iPhone A2DP connections.
+
 ## 2026-08-21
 1.Support compiling ble throughput test code as slave-only.
 

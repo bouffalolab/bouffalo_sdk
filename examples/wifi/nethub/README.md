@@ -75,7 +75,7 @@ Important options:
 - `CONFIG_MR_VIRTUALCHAN=y`
   - required for the current in-tree SDIO USER virtual channel path
 - `CONFIG_NETHUB_LOWPOWER_ENABLE=y`
-  - enabled by default for `BL616`; `BL616CL` and `BL618DG` keep it off by default in the NetHub example
+  - enabled by default for `BL616`, `BL616CL`, and `BL618DG` when their low-power configuration is selected
 
 About `CONFIG_NETHUB_AT_USE_VCHAN`:
 

@@ -141,6 +141,7 @@
 
 #ifdef CONFIG_IPV6
 #define LWIP_IPV6                     1
+#define IPV6_TIMER_PRECISE_NEEDED       1
 #endif
 
 #define LWIP_SUPPORT_CUSTOM_PBUF      1

@@ -41,13 +41,6 @@ config RFPHY_CLI
     help
       Enable RFPHY test commands for chips that ship a standalone PHY RF lib.
 
-config RFPARAM_TLV_FIXED_ADDRESS
-    bool "RF parameter TLV fixed address"
-    default n
-    help
-      Store RF parameters at a fixed TLV flash address instead of the
-      auto-detected location.
-
 config MFG_SDIO
     bool "Manufacturing SDIO mode"
     default n
@@ -86,7 +79,7 @@ config PMP_NOT_INIT
 
 config PMP_NO_INIT
     bool "Disable PMP initialization (legacy alias)"
-    default n
+    default y if PMP_NOT_INIT
     help
       Legacy alias for CONFIG_PMP_NOT_INIT, kept for compatibility.
 
@@ -192,9 +185,6 @@ config FLASH_XIP_LENGTH
 config PSRAM_COPY_CODE
     bool "Copy code to PSRAM"
     default n
-config PSRAM_SKIP_REGISTER_HEAP
-    bool "Skip PSRAM heap registration"
-    default n
 config CONSOLE_WO
     bool "Console write-only mode"
     default n
@@ -262,12 +252,6 @@ config AUDIO_MIC_PDM_MODE
     default n
     help
       Use PDM microphones instead of analog microphones on the board.
-
-config CUSTOMIZE_BOARD_DIR
-    bool "Custom board directory"
-    default n
-    help
-      Allow the application to replace the default board directory.
 
 config CUSTOM_LINKSCRIPT
     bool "Custom linker script"
@@ -342,6 +326,18 @@ config BSP_USB
     default n
     help
       Enable board-level USB pin, clock and interrupt initialization.
+
+config BSP_CONSOLE_USB_CDC
+    bool "USB CDC console"
+    default n
+    depends on FREERTOS
+    depends on SHELL
+    depends on CHERRYUSB
+    depends on CHERRYUSB_DEVICE
+    depends on CHERRYUSB_DEVICE_CDC_ACM
+    depends on CHERRYUSB_OSAL = "freertos"
+    help
+      Route the SDK console through a CherryUSB CDC-ACM device.
 
 config BSP_LWIP_NETIF_EMAC
     bool "lwIP EMAC netif"
@@ -504,26 +500,56 @@ endmenu
 
 menu "Build and Image"
 
-config STD_BOOT2APP
-    bool "Build a standard Boot2 application image"
-    default n
+
+choice APP_BUILD_TYPE
+    prompt "Application build type"
+    default APP_BUILD_TYPE_STD_APP if FREERTOS
+    default APP_BUILD_TYPE_DIRECT_BOOT_APP
     help
-      Generate a whole-flash image containing Boot2, the partition table and
-      the application. When disabled, the whole image contains the application
-      binary only.
+      Select how the application image is packaged and booted.
+
+config APP_BUILD_TYPE_STD_APP
+    bool "Standard application"
+    help
+      Package the application with Boot2, the partition table and RF data.
+
+config APP_BUILD_TYPE_DIRECT_BOOT_APP
+    bool "Direct boot application"
+    help
+      Package the application as a binary that boots directly from address 0.
+
+endchoice
 
 config BOARD_BOOT2FILE
     string "Board Boot2 image file" if n
+    default "$BL_SDK_BASE/bsp/board/bl602dk/config/boot2_bl602_release_v8.1.3.bin" if CHIP = "bl602"
+    default "$BL_SDK_BASE/bsp/board/bl616dk/config/boot2_bl616_isp_release_v8.1.8.bin" if CHIP = "bl616"
+    default "$BL_SDK_BASE/bsp/board/bl616cldk/config/boot2_bl616cl_isp_release_v8.2.1.bin" if CHIP = "bl616cl"
+    default "$BL_SDK_BASE/bsp/board/bl618dgdk/config/boot2_bl618dg_isp_release_v8.2.4.bin" if CHIP = "bl618dg"
+    default "$BL_SDK_BASE/bsp/board/bl702dk/config/boot2_bl702_release_v8.1.2.bin" if CHIP = "bl702"
+    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/boot2_bl702l_isp_release_v8.1.5.bin" if CHIP = "bl702l"
     help
       Absolute path to the default Boot2 image for the selected board.
 
 config BOARD_PTFILE
     string "Board partition table file" if n
+    default "$BL_SDK_BASE/bsp/board/bl602dk/config/partition_cfg_2M.toml" if CHIP = "bl602"
+    default "$BL_SDK_BASE/bsp/board/bl616dk/config/partition_cfg_4M.toml" if CHIP = "bl616"
+    default "$BL_SDK_BASE/bsp/board/bl616cldk/config/partition_cfg_4M.toml" if CHIP = "bl616cl"
+    default "$BL_SDK_BASE/bsp/board/bl618dgdk/config/partition_cfg_4M.toml" if CHIP = "bl618dg"
+    default "$BL_SDK_BASE/bsp/board/bl702dk/config/partition_cfg_2M_boot2_isp.toml" if CHIP = "bl702"
+    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/partition_cfg_2M_boot2_isp.toml" if CHIP = "bl702l"
     help
       Absolute path to the default partition table for the selected board.
 
 config BOARD_DTSFILE
     string "Board device tree file" if n
+    default "$BL_SDK_BASE/bsp/board/bl602dk/config/bl_factory_params_IoTKitA_40M.dts" if CHIP = "bl602"
+    default "$BL_SDK_BASE/bsp/board/bl616dk/config/bl_factory_params_IoTKitA_auto.dts" if CHIP = "bl616"
+    default "$BL_SDK_BASE/bsp/board/bl616cldk/config/bl_factory_params_IoTKitA_auto.dts" if CHIP = "bl616cl"
+    default "$BL_SDK_BASE/bsp/board/bl618dgdk/config/bl_factory_params_IoTKitA_auto.dts" if CHIP = "bl618dg"
+    default "$BL_SDK_BASE/bsp/board/bl702dk/config/bl_factory_params_IoTKitA_32M.dts" if CHIP = "bl702"
+    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/bl_factory_params_IoTKitA_32M.dts" if CHIP = "bl702l"
     help
       Absolute path to the default RF parameter device tree for the selected
       board.

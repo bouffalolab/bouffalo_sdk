@@ -6,8 +6,6 @@
 #include <task.h>
 #include <timers.h>
 
-#include <lwip/etharp.h>
-#include <lwip/netif.h>
 #include <lwip/tcpip.h>
 
 #include <bl_lp.h>
@@ -18,6 +16,7 @@
 #include <board.h>
 #include <board_rf.h>
 #include <clock_manager.h>
+#include <pm_helper_cli.h>
 #include <pm_manager.h>
 #include <shell.h>
 #include <tickless.h>
@@ -43,12 +42,7 @@
 #define ACTIVE_LPFW_UA              (35000)
 #define ACTIVE_APP_UA               (55000)
 
-static TimerHandle_t xArpTimer;
-static TimerHandle_t keepalive_timer;
 static uint32_t lp_timeouts_ms;
-#if defined(BL616CL) || defined(BL618DG)
-static struct bflb_device_s *rtc;
-#endif
 #if defined(BL616)
 static bl_lp_hbn_fw_cfg_t hbn_test_cfg = {
     .hbn_sleep_cnt = 0,
@@ -58,16 +52,10 @@ static bl_lp_hbn_fw_cfg_t hbn_test_cfg = {
 static uint64_t hbn_sleep_cnt;
 #endif
 
-#if defined(BL616)
-static bl_lp_io_cfg_t lp_wake_io_cfg;
-#define IO_WAKEUP_MAX 35
-#elif defined(BL616CL)
+#if defined(BL616CL)
 static lp_gpio_cfg_type lp_wake_io_cfg;
 static uint8_t lp_wake_io_configured;
 #define IO_WAKEUP_MAX 37
-#elif defined(BL618DG)
-static lp_gpio_cfg_type lp_wake_io_cfg;
-#define IO_WAKEUP_MAX 52
 #endif
 
 extern void uart_shell_isr(void);
@@ -152,8 +140,10 @@ static int lp_exit(void *arg)
         bflb_irq_enable(uart_shell->irq_num);
     }
 
+#if defined(BL616CL) || defined(BL618DG)
     pm_disable_gpio_keep(GPIO_PIN_6);
     pm_disable_gpio_keep(GPIO_PIN_8);
+#endif
     board_uartx_gpio_init();
     if (netbus_uart_recovery() < 0) {
         printf("AT Module Uart recovery failed\r\n");
@@ -170,67 +160,14 @@ static int lp_exit(void *arg)
     return 0;
 }
 
-static void app_arp_send(void)
-{
-    if (!wifi_mgmr_sta_state_get()) {
-        return;
-    }
-
-    if (netif_default == NULL || ip4_addr_isany_val(*netif_ip4_addr(netif_default))) {
-        printf("IP address not assigned. ARP announcement skipped.\n");
-        return;
-    }
-
-    LOCK_TCPIP_CORE();
-    do {
-        ip_addr_t src_ip = netif_default->ip_addr;
-        ip_addr_t dest_ip;
-        err_t result;
-
-        ip_addr_copy(dest_ip, src_ip);
-        result = etharp_request(netif_default, ip_2_ip4(&dest_ip));
-        if (result != ERR_OK) {
-            printf("Failed to send ARP request. Error: %d\n", result);
-        }
-    } while (0);
-    UNLOCK_TCPIP_CORE();
-}
-
-static void arp_send(TimerHandle_t xTimer)
-{
-    (void)xTimer;
-    app_arp_send();
-}
-
 int app_pm_create_arp_announce_timer(uint32_t seconds)
 {
-    if (xArpTimer != NULL) {
-        return -1;
-    }
-
-    app_arp_send();
-
-    xArpTimer = xTimerCreate("traffic probe", pdMS_TO_TICKS(seconds * 1000), pdTRUE, NULL, arp_send);
-    if (xArpTimer == NULL) {
-        return -1;
-    }
-
-    return xTimerStart(xArpTimer, 0) == pdPASS ? 0 : -1;
+    return pm_helper_cli_arp_timer_start(seconds);
 }
 
 int app_pm_delete_arp_announce_timer(void)
 {
-    if (xArpTimer == NULL) {
-        printf("Arp timer has not been created.\r\n");
-        return 0;
-    }
-
-    xTimerStop(xArpTimer, 0);
-    xTimerDelete(xArpTimer, portMAX_DELAY);
-    xArpTimer = NULL;
-    printf("Delete arp timer.\r\n");
-
-    return 0;
+    return pm_helper_cli_arp_timer_stop();
 }
 
 int pwr_info_clear(void)
@@ -285,7 +222,7 @@ static void app_pm_start_timeout_timer(uint32_t timeout_ms)
     TimerHandle_t timer;
 
     snprintf(timer_name, sizeof(timer_name), "PwrTimer_%u", (unsigned int)timeout_ms);
-    timer = xTimerCreate(timer_name, pdMS_TO_TICKS(timeout_ms), pdTRUE, NULL, app_pm_timeout_callback);
+    timer = xTimerCreate(timer_name, pdMS_TO_TICKS(timeout_ms), pdFALSE, NULL, app_pm_timeout_callback);
     if (timer == NULL) {
         printf("Failed to create timer.\n");
         return;
@@ -293,6 +230,7 @@ static void app_pm_start_timeout_timer(uint32_t timeout_ms)
 
     if (xTimerStart(timer, 0) != pdPASS) {
         printf("Failed to start timer.\n");
+        xTimerDelete(timer, 0);
     }
 }
 
@@ -364,78 +302,24 @@ void app_pm_enter_pds15(void)
 void app_pm_exit_pds15(void)
 {
     pm_disable_tickless();
-    wifi_mgmr_sta_ps_exit();
-}
-
-static void keepalive_callback(TimerHandle_t xTimer)
-{
-    (void)xTimer;
-    wifi_mgmr_null_data_send();
 }
 
 int app_create_keepalive_timer(uint32_t period_seconds)
 {
-    TickType_t timer_period = pdMS_TO_TICKS(period_seconds * 1000);
-
-    if (keepalive_timer == NULL) {
-        keepalive_timer = xTimerCreate("keepalive_timer", timer_period, pdTRUE, NULL, keepalive_callback);
-        if (keepalive_timer == NULL) {
-            printf("Failed to create timer.\n");
-            return -1;
-        }
-
-        if (xTimerStart(keepalive_timer, 0) != pdPASS) {
-            printf("Failed to start timer.\n");
-            return -1;
-        }
-
-        return 0;
-    }
-
-    if (xTimerChangePeriod(keepalive_timer, timer_period, 0) != pdPASS) {
-        printf("Failed to change timer period.\n");
-        return -1;
-    }
-
-    return 0;
+    return pm_helper_cli_keepalive_timer_start(period_seconds);
 }
 
 int app_delete_keepalive_timer(void)
 {
-    if (keepalive_timer == NULL) {
-        printf("No timer to delete.\n");
-        return 0;
-    }
-
-    if (xTimerStop(keepalive_timer, 0) != pdPASS) {
-        printf("Failed to stop timer.\n");
-        return -1;
-    }
-
-    if (xTimerDelete(keepalive_timer, 0) != pdPASS) {
-        printf("Failed to delete timer.\n");
-        return -1;
-    }
-
-    keepalive_timer = NULL;
-    printf("Timer successfully deleted.\n");
-    return 0;
+    return pm_helper_cli_keepalive_timer_stop();
 }
 
 int app_pm_twt_param_set(int s, int t, int e, int n, int m)
 {
-    twt_setup_params_struct_t param = {
-        .setup_type = s,
-        .flow_type = t,
-        .wake_int_exp = e,
-        .wake_dur_unit = 0,
-        .min_twt_wake_dur = n,
-        .wake_int_mantissa = m,
-    };
-
-    return wifi_mgmr_sta_twt_setup(&param);
+    return pm_helper_cli_twt_setup(s, t, e, n, m);
 }
 
+#if defined(BL616CL)
 static void test_wakeup_io_callback(uint64_t wake_up_io_bits)
 {
     printf("io wakeup callback, bits: 0x%llX\r\n", wake_up_io_bits);
@@ -464,6 +348,7 @@ static void test_wakeup_io_callback(uint64_t wake_up_io_bits)
     }
     tickless_exit();
 }
+#endif
 
 int lp_set_wakeup_by_io(uint8_t io, uint8_t mode)
 {
@@ -581,8 +466,36 @@ static void f32k_clk_init_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+static int uart_wifi_wakeup_timer_start(uint32_t timeout_ms, int broadcast, void *arg)
+{
+    (void)broadcast;
+    (void)arg;
+
+    if (app_lp_timer_config(0, timeout_ms) != 0) {
+        return -1;
+    }
+    app_pm_enter_pds15();
+    return 0;
+}
+
+static int uart_wifi_tickless_start(void *arg)
+{
+    (void)arg;
+    app_pm_enter_pds15();
+    return 0;
+}
+
 int app_pm_init(void)
 {
+    static const pm_helper_cli_cfg_t helper_cfg = {
+        .wakeup_timer_cb = uart_wifi_wakeup_timer_start,
+        .tickless_cb = uart_wifi_tickless_start,
+        .arg = NULL,
+        .arp_target = PM_HELPER_CLI_ARP_LOCAL_IP,
+        .arp_period_seconds = 55,
+        .arp_send_immediately = true,
+        .arp_periodic = true,
+    };
 #if defined(BL616CL)
     uint32_t tmpVal;
 
@@ -620,6 +533,11 @@ int app_pm_init(void)
     pm_sys_init();
     bl_lp_init();
     bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
+
+    if (pm_helper_cli_init(&helper_cfg) != 0) {
+        printf("pm helper cli init failed.\r\n");
+        return -1;
+    }
 
     printf("[OS] Create f32k_clk_init task...\r\n");
     xTaskCreate(f32k_clk_init_task, (char *)"f32k_clk_init", 1024, NULL, 12, NULL);

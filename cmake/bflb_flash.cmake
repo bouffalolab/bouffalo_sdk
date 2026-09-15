@@ -1,4 +1,3 @@
-# POST_PROC combine
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
     set(TOOL_SUFFIX ".exe")
     set(CMAKE ${BL_SDK_BASE}/tools/cmake/bin/cmake.exe)
@@ -23,10 +22,96 @@ if(NOT DEFINED PROJECT_SDK_VERSION OR PROJECT_SDK_VERSION STREQUAL "")
     endif()
 endif()
 
-set(BL_FW_POST_PROC ${BL_SDK_BASE}/tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc${TOOL_SUFFIX})
-set(BL_FW_POST_PROC_CONFIG --chipname=${CHIP} --imgfile=${BIN_FILE} --appkeys=shared)
+if(EXISTS "${BL_SDK_BASE}/tools/bflb_tools")
+    set(FULL_FLASH_TOOL ON)
+    set(BL_FW_POST_PROC ${BL_SDK_BASE}/tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc${TOOL_SUFFIX})
+    set(BL_FW_POST_PROC_CONFIG --chipname=${CHIP} --imgfile=${BIN_FILE} --appkeys=shared)
 
-if(CONFIG_OTA_HEADER_USE_SDK_VERSION)
+    message(STATUS "Use full firmware tool: ${BL_FW_POST_PROC}")
+else()
+    set(FULL_FLASH_TOOL OFF)
+    set(BFLB_IMAGE_TOOL python3 ${BL_SDK_BASE}/tools/bflb_flash/bflb_whole_bin.py)
+    set(BFLB_IMAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/images)
+
+    message(STATUS "Use simple firmware tool: ${BL_SDK_BASE}/tools/bflb_flash/bflb_whole_bin.py")
+endif()
+
+set(BFLB_BOOT2_FILE ${CONFIG_BOARD_BOOT2FILE})
+set(BFLB_PT_FILE ${CONFIG_BOARD_PTFILE})
+set(BFLB_DTS_FILE ${CONFIG_BOARD_DTSFILE})
+set(BFLB_MFG_FILE)
+
+if(CONFIG_OVERRIDE_BOOT2FILE)
+    set(BFLB_BOOT2_FILE ${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_BOOT2FILE})
+endif()
+
+if(CONFIG_OVERRIDE_PTFILE)
+    set(BFLB_PT_FILE ${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_PTFILE})
+endif()
+
+if(CONFIG_OVERRIDE_DTSFILE)
+    set(BFLB_DTS_FILE ${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_DTSFILE})
+endif()
+
+if(CONFIG_OVERRIDE_MFGFILE)
+    set(BFLB_MFG_FILE ${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_MFGFILE})
+endif()
+
+if(FULL_FLASH_TOOL)
+    set(FLASH_PROG_CFG_GENERATOR
+        ${BL_SDK_BASE}/tools/bflb_tools/flash_prog_cfg.py)
+    set(FLASH_PROG_CFG ${CMAKE_CURRENT_BINARY_DIR}/flash_prog_cfg.ini)
+    set(FLASH_PROG_CFG_CMD
+        python3 "${FLASH_PROG_CFG_GENERATOR}"
+        --partition-table "${BFLB_PT_FILE}"
+        --output "${FLASH_PROG_CFG}"
+        --application "${BIN_FILE}")
+
+    get_property(FLASH_ERASE GLOBAL PROPERTY SDK_FLASH_ERASE)
+    if("${FLASH_ERASE}" STREQUAL "")
+        set(FLASH_ERASE 1)
+    endif()
+    list(APPEND FLASH_PROG_CFG_CMD --erase "${FLASH_ERASE}")
+
+    if(CONFIG_APP_BUILD_TYPE_STD_APP)
+        list(APPEND FLASH_PROG_CFG_CMD
+            --standard
+            --boot2 "${CMAKE_CURRENT_BINARY_DIR}/build_out/boot2_*.bin"
+            --partition-bin "${CMAKE_CURRENT_BINARY_DIR}/build_out/partition.bin")
+    elseif(NOT CONFIG_APP_BUILD_TYPE_DIRECT_BOOT_APP)
+        message(FATAL_ERROR "Unsupported application build type")
+    endif()
+
+    get_property(FLASH_IMAGES GLOBAL PROPERTY SDK_FLASH_PARTITION_IMAGES)
+    while(FLASH_IMAGES)
+        list(POP_FRONT FLASH_IMAGES FLASH_IMAGE_PARTITION FLASH_IMAGE_FILE)
+        list(APPEND FLASH_PROG_CFG_CMD --image
+            "${FLASH_IMAGE_PARTITION}" "${FLASH_IMAGE_FILE}")
+    endwhile()
+
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${FLASH_PROG_CFG_GENERATOR}" "${BFLB_PT_FILE}")
+    execute_process(
+        COMMAND ${FLASH_PROG_CFG_CMD}
+        RESULT_VARIABLE FLASH_PROG_CFG_RESULT
+        ERROR_VARIABLE FLASH_PROG_CFG_ERROR)
+    if(NOT FLASH_PROG_CFG_RESULT EQUAL 0)
+        message(FATAL_ERROR
+            "Failed to generate ${FLASH_PROG_CFG}:\n${FLASH_PROG_CFG_ERROR}")
+    endif()
+endif()
+
+if(FULL_FLASH_TOOL)
+    list(APPEND BL_FW_POST_PROC_CONFIG
+        --boot2file=${BFLB_BOOT2_FILE}
+        --ptfile=${BFLB_PT_FILE}
+        --dtsfile=${BFLB_DTS_FILE})
+    if(BFLB_MFG_FILE)
+        list(APPEND BL_FW_POST_PROC_CONFIG --mfgfile=${BFLB_MFG_FILE})
+    endif()
+endif()
+
+if(FULL_FLASH_TOOL AND CONFIG_OTA_HEADER_USE_SDK_VERSION)
     set(OTA_HEADER_VERSION_PREFIX "EVENT_V")
     if(DEFINED CONFIG_OTA_VERSION_PREFIX)
         set(OTA_HEADER_VERSION_PREFIX "${CONFIG_OTA_VERSION_PREFIX}")
@@ -43,63 +128,26 @@ if(CONFIG_OTA_HEADER_USE_SDK_VERSION)
     list(APPEND BL_FW_POST_PROC_CONFIG --ota_ver_prefix=${OTA_HEADER_VERSION_PREFIX})
 endif()
 
-# fw tools board directory select
-get_property(FW_TOOL_BOARD_DIR GLOBAL PROPERTY FW_TOOL_CUSTOM_BOARD_DIR)
-if(FW_TOOL_BOARD_DIR)
-    message(STATUS "Select FW_TOOL_CUSTOM_BOARD_DIR: ${FW_TOOL_BOARD_DIR}")
-elseif(CONFIG_BOARD_DIR)
-    set(FW_TOOL_BOARD_DIR ${CONFIG_BOARD_DIR}/${BOARD})
-    message(STATUS "Select CONFIG_BOARD_DIR: ${FW_TOOL_BOARD_DIR}")
-else()
-    set(FW_TOOL_BOARD_DIR ${BL_SDK_BASE}/bsp/board/${BOARD})
-    message(STATUS "Select BOARD: ${FW_TOOL_BOARD_DIR}")
-endif()
-# fw tools board config select
-get_property(FW_TOOL_BOARD_CONFIG GLOBAL PROPERTY FW_TOOL_CUSTOM_BOARD_CONFIG)
-if(FW_TOOL_BOARD_CONFIG)
-    message(STATUS "Select FW_TOOL_CUSTOM_BOARD_CONFIG: ${FW_TOOL_BOARD_CONFIG}")
-else()
-    set(FW_TOOL_BOARD_CONFIG config)
-    message(STATUS "Select FW_TOOL_BOARD_CONFIG: ${FW_TOOL_BOARD_CONFIG}")
-endif()
+if(FULL_FLASH_TOOL)
+    if(CONFIG_AES_KEY)
+        list(APPEND BL_FW_POST_PROC_CONFIG --key=${CONFIG_AES_KEY})
+    endif()
 
-if(CONFIG_OVERRIDE_PTFILE)
-    list(APPEND BL_FW_POST_PROC_CONFIG --ptfile=${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_PTFILE})
-endif()
+    if(CONFIG_AES_IV)
+        list(APPEND BL_FW_POST_PROC_CONFIG --iv=${CONFIG_AES_IV})
+    endif()
 
-if(CONFIG_OVERRIDE_DTSFILE)
-    list(APPEND BL_FW_POST_PROC_CONFIG --dtsfile=${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_DTSFILE})
-endif()
+    if(CONFIG_PUBLIC_KEY)
+        list(APPEND BL_FW_POST_PROC_CONFIG --publickey=${CONFIG_PUBLIC_KEY})
+    endif()
 
-if(CONFIG_OVERRIDE_BOOT2FILE)
-    list(APPEND BL_FW_POST_PROC_CONFIG --boot2file=${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_BOOT2FILE})
-endif()
+    if(CONFIG_PRIVATE_KEY)
+        list(APPEND BL_FW_POST_PROC_CONFIG --privatekey=${CONFIG_PRIVATE_KEY})
+    endif()
 
-if(CONFIG_OVERRIDE_MFGFILE)
-    list(APPEND BL_FW_POST_PROC_CONFIG --mfgfile=${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_MFGFILE})
-endif()
-
-# fw tools --brdcfgdir select
-list(APPEND BL_FW_POST_PROC_CONFIG --brdcfgdir=${FW_TOOL_BOARD_DIR}/${FW_TOOL_BOARD_CONFIG})
-
-if(CONFIG_AES_KEY)
-    list(APPEND BL_FW_POST_PROC_CONFIG --key=${CONFIG_AES_KEY})
-endif()
-
-if(CONFIG_AES_IV)
-    list(APPEND BL_FW_POST_PROC_CONFIG --iv=${CONFIG_AES_IV})
-endif()
-
-if(CONFIG_PUBLIC_KEY)
-    list(APPEND BL_FW_POST_PROC_CONFIG --publickey=${CONFIG_PUBLIC_KEY})
-endif()
-
-if(CONFIG_PRIVATE_KEY)
-    list(APPEND BL_FW_POST_PROC_CONFIG --privatekey=${CONFIG_PRIVATE_KEY})
-endif()
-
-if(CONFIG_FW_POST_PROC_CUSTOM)
-    list(APPEND BL_FW_POST_PROC_CONFIG ${CONFIG_FW_POST_PROC_CUSTOM})
+    if(CONFIG_FW_POST_PROC_CUSTOM)
+        list(APPEND BL_FW_POST_PROC_CONFIG ${CONFIG_FW_POST_PROC_CUSTOM})
+    endif()
 endif()
 
 # POST_PROC combine cmd
@@ -107,9 +155,23 @@ set(combine_cmds)
 if(CONFIG_SKIP_COMBINE)
     list(APPEND combine_cmds
         COMMAND ${CMAKE} -E echo "[fw_post_proc] skipped: raw binary output requested")
-else()
+elseif(FULL_FLASH_TOOL)
     list(APPEND combine_cmds
         COMMAND ${BL_FW_POST_PROC} ${BL_FW_POST_PROC_CONFIG})
+elseif(CONFIG_APP_BUILD_TYPE_STD_APP)
+    list(APPEND combine_cmds
+        COMMAND ${CMAKE} -E remove_directory ${BFLB_IMAGE_DIR}
+        COMMAND ${BFLB_IMAGE_TOOL} image
+            --app ${BIN_FILE}
+            --boot2 ${BFLB_BOOT2_FILE}
+            --pt ${BFLB_PT_FILE}
+            --dts ${BFLB_DTS_FILE}
+            --output ${BFLB_IMAGE_DIR})
+else(CONFIG_APP_BUILD_TYPE_DIRECT_BOOT_APP)
+    list(APPEND combine_cmds
+        COMMAND ${CMAKE} -E remove_directory ${BFLB_IMAGE_DIR}
+        COMMAND ${CMAKE} -E make_directory ${BFLB_IMAGE_DIR}
+        COMMAND ${CMAKE} -E copy ${BIN_FILE} ${BFLB_IMAGE_DIR}/application@0x0.bin)
 endif()
 add_custom_target(combine WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} ${combine_cmds})
 

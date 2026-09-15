@@ -27,6 +27,11 @@ UART HCI transport variant.
 ### libbtblecontroller_bl616_bleuarthci
 BLE UART HCI transport variant.
 
+## BL702L
+
+### libbtblecontroller_bl702l_m1s1t10
+1 BLE connection is supported, BL702L can be master or slave, with 10 TX buffers. Controller code is in flash; PDS is disabled and EM size is 16K.
+
 ## BL616CL
 
 ### libbtblecontroller_bl616cl_m0b1

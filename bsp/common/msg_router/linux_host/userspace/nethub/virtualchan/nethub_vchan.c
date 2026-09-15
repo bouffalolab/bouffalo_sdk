@@ -34,7 +34,8 @@
 #define NETHUB_VCHAN_NETLINK_RECOVER_POLL_MS 500
 
 /*
- * USB ACM framing: magic(A5 5A) + len_le16 + payload + checksum_le32.
+ * USB ACM framing: magic(A5 5A) + logical_len_le16 +
+ * logical_header + payload + checksum_le32.
  * Invalid magic/len/checksum drops one byte and resyncs on the stream.
  */
 #define NETHUB_VCHAN_USB_MAGIC0       0xA5u
@@ -46,8 +47,8 @@
 #define NETHUB_VCHAN_USB_HDR_LEN      4u
 #define NETHUB_VCHAN_USB_CHECKSUM_LEN 4u
 #define NETHUB_VCHAN_USB_FRAME_MAX \
-    (NETHUB_VCHAN_USB_HDR_LEN + NETHUB_VCHAN_MAX_DATA_LEN + NETHUB_VCHAN_USB_CHECKSUM_LEN)
-#define NETHUB_VCHAN_USB_RX_DATA_TYPE NETHUB_VCHAN_DATA_TYPE_AT
+    (NETHUB_VCHAN_USB_HDR_LEN + NETHUB_VCHAN_DATA_HDR_LEN + \
+     NETHUB_VCHAN_MAX_DATA_LEN + NETHUB_VCHAN_USB_CHECKSUM_LEN)
 
 enum nethub_vchan_transport {
     NETHUB_VCHAN_TRANSPORT_NETLINK = 0,
@@ -75,7 +76,7 @@ struct nethub_vchan_data_hdr {
 } __attribute__((packed));
 #pragma pack(pop)
 
-#define NETHUB_VCHAN_NETLINK_HDR_LEN ((size_t)sizeof(struct nethub_vchan_data_hdr))
+#define NETHUB_VCHAN_LOGICAL_HDR_LEN ((size_t)sizeof(struct nethub_vchan_data_hdr))
 
 #define NETHUB_VCHAN_CTRL_MAGIC   0x4e485643u /* "NHVC" */
 #define NETHUB_VCHAN_CTRL_VERSION 1u
@@ -139,7 +140,7 @@ static void nethub_vchan_dispatch_data(struct nethub_vchan_ctx *ctx,
                                        uint8_t data_type,
                                        const void *data,
                                        size_t len);
-static void nethub_vchan_usb_frame_build(uint8_t *frame, const void *data, size_t len);
+static void nethub_vchan_usb_frame_build(uint8_t *frame, uint8_t data_type, const void *data, size_t len);
 static void nethub_vchan_usb_stream_feed(struct nethub_vchan_ctx *ctx, const uint8_t *data, size_t len);
 static int nethub_vchan_wait_fd_writable(int fd, int timeout_ms);
 static int nethub_vchan_write_all(int fd, const uint8_t *data, size_t len);
@@ -187,13 +188,20 @@ static void nethub_vchan_put_le32(uint8_t *p, uint32_t value)
     p[3] = (uint8_t)((value >> 24) & 0xffu);
 }
 
-static void nethub_vchan_usb_frame_build(uint8_t *frame, const void *data, size_t len)
+static void nethub_vchan_usb_frame_build(uint8_t *frame, uint8_t data_type, const void *data, size_t len)
 {
+    size_t logical_len = NETHUB_VCHAN_LOGICAL_HDR_LEN + len;
+    struct nethub_vchan_data_hdr *hdr =
+        (struct nethub_vchan_data_hdr *)&frame[NETHUB_VCHAN_USB_HDR_LEN];
+
     frame[NETHUB_VCHAN_USB_MAGIC0_OFF] = NETHUB_VCHAN_USB_MAGIC0;
     frame[NETHUB_VCHAN_USB_MAGIC1_OFF] = NETHUB_VCHAN_USB_MAGIC1;
-    nethub_vchan_put_le16(&frame[NETHUB_VCHAN_USB_LEN_OFF], (uint16_t)len);
-    memcpy(&frame[NETHUB_VCHAN_USB_HDR_LEN], data, len);
-    nethub_vchan_put_le32(&frame[NETHUB_VCHAN_USB_HDR_LEN + len], NETHUB_VCHAN_USB_CHECKSUM);
+    nethub_vchan_put_le16(&frame[NETHUB_VCHAN_USB_LEN_OFF], (uint16_t)logical_len);
+    hdr->data_type = data_type;
+    hdr->reserved = 0u;
+    nethub_vchan_put_le16((uint8_t *)&hdr->len, (uint16_t)len);
+    memcpy(hdr->data, data, len);
+    nethub_vchan_put_le32(&frame[NETHUB_VCHAN_USB_HDR_LEN + logical_len], NETHUB_VCHAN_USB_CHECKSUM);
 }
 
 static void nethub_vchan_dispatch_data(struct nethub_vchan_ctx *ctx,
@@ -234,6 +242,8 @@ static void nethub_vchan_usb_stream_drop(struct nethub_vchan_ctx *ctx, size_t le
 static void nethub_vchan_usb_stream_process(struct nethub_vchan_ctx *ctx)
 {
     while (ctx->usb_rx_len >= 2) {
+        struct nethub_vchan_data_hdr *hdr;
+        uint16_t logical_len;
         uint16_t payload_len;
         size_t frame_len;
 
@@ -247,28 +257,33 @@ static void nethub_vchan_usb_stream_process(struct nethub_vchan_ctx *ctx)
             return;
         }
 
-        payload_len = nethub_vchan_get_le16(&ctx->usb_rx_buf[NETHUB_VCHAN_USB_LEN_OFF]);
-        if (payload_len == 0 ||
-            payload_len > NETHUB_VCHAN_MAX_DATA_LEN) {
+        logical_len = nethub_vchan_get_le16(&ctx->usb_rx_buf[NETHUB_VCHAN_USB_LEN_OFF]);
+        if (logical_len <= NETHUB_VCHAN_LOGICAL_HDR_LEN ||
+            logical_len > NETHUB_VCHAN_LOGICAL_HDR_LEN + NETHUB_VCHAN_MAX_DATA_LEN) {
             nethub_vchan_usb_stream_drop(ctx, 1);
             continue;
         }
 
-        frame_len = NETHUB_VCHAN_USB_HDR_LEN + payload_len + NETHUB_VCHAN_USB_CHECKSUM_LEN;
+        frame_len = NETHUB_VCHAN_USB_HDR_LEN + logical_len + NETHUB_VCHAN_USB_CHECKSUM_LEN;
         if (ctx->usb_rx_len < frame_len) {
             return;
         }
 
-        if (nethub_vchan_get_le32(&ctx->usb_rx_buf[NETHUB_VCHAN_USB_HDR_LEN + payload_len]) !=
+        if (nethub_vchan_get_le32(&ctx->usb_rx_buf[NETHUB_VCHAN_USB_HDR_LEN + logical_len]) !=
             NETHUB_VCHAN_USB_CHECKSUM) {
             nethub_vchan_usb_stream_drop(ctx, 1);
             continue;
         }
 
-        nethub_vchan_dispatch_data(ctx,
-                                   NETHUB_VCHAN_USB_RX_DATA_TYPE,
-                                   &ctx->usb_rx_buf[NETHUB_VCHAN_USB_HDR_LEN],
-                                   payload_len);
+        hdr = (struct nethub_vchan_data_hdr *)&ctx->usb_rx_buf[NETHUB_VCHAN_USB_HDR_LEN];
+        payload_len = nethub_vchan_get_le16((const uint8_t *)&hdr->len);
+        if (!nethub_vchan_data_type_is_valid(hdr->data_type) ||
+            logical_len != NETHUB_VCHAN_LOGICAL_HDR_LEN + payload_len) {
+            nethub_vchan_usb_stream_drop(ctx, frame_len);
+            continue;
+        }
+
+        nethub_vchan_dispatch_data(ctx, hdr->data_type, hdr->data, payload_len);
         nethub_vchan_usb_stream_drop(ctx, frame_len);
     }
 }
@@ -981,7 +996,7 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
     struct sockaddr_nl dest_addr;
     struct nlmsghdr *nlh;
     uint8_t usb_frame[NETHUB_VCHAN_USB_FRAME_MAX];
-    char buffer[NLMSG_SPACE(NETHUB_VCHAN_NETLINK_HDR_LEN + NETHUB_VCHAN_MAX_DATA_LEN)];
+    char buffer[NLMSG_SPACE(NETHUB_VCHAN_LOGICAL_HDR_LEN + NETHUB_VCHAN_MAX_DATA_LEN)];
     int ret;
     int fd;
     struct nethub_vchan_data_hdr *data_hdr;
@@ -1000,7 +1015,10 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
     if (ctx->transport == NETHUB_VCHAN_TRANSPORT_USB_ACM) {
         int attempt;
 
-        nethub_vchan_usb_frame_build(usb_frame, data, len);
+        size_t usb_frame_len = NETHUB_VCHAN_USB_HDR_LEN + NETHUB_VCHAN_LOGICAL_HDR_LEN +
+                               len + NETHUB_VCHAN_USB_CHECKSUM_LEN;
+
+        nethub_vchan_usb_frame_build(usb_frame, data_type, data, len);
         for (attempt = 0; attempt < NETHUB_VCHAN_USB_SEND_RETRIES; attempt++) {
             int fd;
             int reconnected = 0;
@@ -1026,7 +1044,7 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
             }
             ret = nethub_vchan_write_all(fd,
                                          usb_frame,
-                                         NETHUB_VCHAN_USB_HDR_LEN + len + NETHUB_VCHAN_USB_CHECKSUM_LEN);
+                                         usb_frame_len);
             if (ret < 0 && ctx->sock_fd == fd) {
                 fd_to_close = ctx->sock_fd;
                 ctx->sock_fd = -1;
@@ -1056,7 +1074,7 @@ static int nethub_vchan_send_raw(struct nethub_vchan_ctx *ctx, uint8_t data_type
     /* Build Netlink message */
     memset(buffer, 0, sizeof(buffer));
     nlh = (struct nlmsghdr *)buffer;
-    nlh->nlmsg_len = NLMSG_LENGTH(NETHUB_VCHAN_NETLINK_HDR_LEN + len);
+    nlh->nlmsg_len = NLMSG_LENGTH(NETHUB_VCHAN_LOGICAL_HDR_LEN + len);
     nlh->nlmsg_pid = getpid();
     nlh->nlmsg_flags = 0;
 
@@ -1532,13 +1550,14 @@ static void *nethub_vchan_recv_thread_func(void *arg)
                 size_t nethub_vchan_data_len = nlh->nlmsg_len - NLMSG_HDRLEN;
 
                 /* Try to parse with data_type header first (userspace-to-userspace format) */
-                if (nethub_vchan_data_len >= NETHUB_VCHAN_NETLINK_HDR_LEN) {
+                if (nethub_vchan_data_len >= NETHUB_VCHAN_LOGICAL_HDR_LEN) {
                     data_hdr = (struct nethub_vchan_data_hdr *)nethub_vchan_data;
 
-                    /* Check if data_type field looks valid (must be < MAX and len must match) */
+                    /* SDIO and USB use the same strict logical packet validation. */
                     if (nethub_vchan_data_type_is_valid(data_hdr->data_type) &&
+                        data_hdr->len > 0u &&
                         data_hdr->len <= NETHUB_VCHAN_MAX_DATA_LEN &&
-                        (size_t)data_hdr->len + NETHUB_VCHAN_NETLINK_HDR_LEN <= nethub_vchan_data_len) {
+                        (size_t)data_hdr->len + NETHUB_VCHAN_LOGICAL_HDR_LEN == nethub_vchan_data_len) {
                         /* Valid header format, extract data */
                         size_t user_data_len = data_hdr->len;
                         void *user_data = data_hdr->data;
@@ -1548,14 +1567,7 @@ static void *nethub_vchan_recv_thread_func(void *arg)
                     }
                 }
 
-                /* Fallback: treat as raw data (kernel-to-userspace format without header) */
-                /* Kernel sends raw data, default to AT type for AT commands */
-                if (nethub_vchan_data_len > 0 && nethub_vchan_data_len <= NETHUB_VCHAN_MAX_DATA_LEN) {
-                    nethub_vchan_dispatch_data(ctx, NETHUB_VCHAN_DATA_TYPE_AT, nethub_vchan_data, nethub_vchan_data_len);
-                } else if (nethub_vchan_data_len > 0) {
-                    fprintf(stderr, "Error: Raw data too large (len=%zu, max=%d)\n", nethub_vchan_data_len,
-                            NETHUB_VCHAN_MAX_DATA_LEN);
-                }
+                fprintf(stderr, "Error: Invalid vchan packet (len=%zu)\n", nethub_vchan_data_len);
             }
         }
     }

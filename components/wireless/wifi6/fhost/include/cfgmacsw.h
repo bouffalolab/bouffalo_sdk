@@ -265,6 +265,8 @@ enum cfgmacsw_msg_index {
     CFGMACSW_COEX_PROTECTION_SET_CMD = 111,
     /// Response to CFGMACSW_COEX_PROTECTION_SET_CMD
     CFGMACSW_COEX_PROTECTION_SET_RESP = 112,
+    /// Notify application of an AP STA credential mismatch
+    CFGMACSW_AP_STA_AUTH_FAIL_CMD = 113,
 };
 
 /// CFGMACSW status
@@ -457,6 +459,32 @@ struct cfgmacsw_status_code_print {
 };
 typedef void (*cfgmacsw_raw_send_done)(void* env);
 typedef void (*cfgmacsw_adhoc_tx_cfm)(void* env, uint32_t status);
+enum cfgmacsw_ap_sta_auth_mode {
+    CFGMACSW_AP_STA_AUTH_WPA2_PSK = 1,
+    CFGMACSW_AP_STA_AUTH_WPA3_SAE,
+    CFGMACSW_AP_STA_AUTH_WPA_PSK,
+};
+
+enum cfgmacsw_ap_sta_auth_fail_reason {
+    CFGMACSW_AP_STA_AUTH_FAIL_PSK_MISMATCH = 1,
+    CFGMACSW_AP_STA_AUTH_FAIL_SAE_CONFIRM_MISMATCH,
+};
+
+/// Structure for CFGMACSW_AP_STA_AUTH_FAIL_CMD.
+/// Ownership is transferred to the FHOST control handler after enqueue.
+struct cfgmacsw_ap_sta_auth_fail {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    int fhost_vif_idx;
+    /// Station MAC address copied from the hostapd control event
+    uint8_t sta_mac[6];
+    /// Authentication mode used by this attempt
+    uint8_t auth_mode;
+    /// Credential mismatch reason
+    uint8_t reason;
+};
+
 struct cfgmacsw_raw_send {
     /// header
     struct cfgmacsw_msg_hdr hdr;
@@ -1386,6 +1414,27 @@ int fhost_cntrl_cfgmacsw_event_send(struct cfgmacsw_msg_hdr *msg_hdr);
  */
 int fhost_cntrl_cfgmacsw_cmd_send(struct cfgmacsw_msg_hdr *cmd,
                                  struct cfgmacsw_msg_hdr *resp);
+
+/**
+ ****************************************************************************************
+ * @brief Send an AP STA authentication failure notification without waiting.
+ *
+ * Parameters are copied into an owned command and queued without waiting.
+ * Allocation failure returns an error without queuing a partial message.
+ * On successful enqueue, the Control TASK owns and releases the command.
+ *
+ * @param[in] fhost_vif_idx FHOST VIF index of the AP.
+ * @param[in] sta_mac       Station MAC address.
+ * @param[in] auth_mode     Authentication mode used by this attempt.
+ * @param[in] reason        Credential mismatch reason.
+ *
+ * @return 0 on successful enqueue and != 0 if the notification was dropped.
+ ****************************************************************************************
+ */
+int fhost_cntrl_cfgmacsw_ap_sta_auth_fail_send(int fhost_vif_idx,
+                                            const uint8_t sta_mac[6],
+                                            uint8_t auth_mode,
+                                            uint8_t reason);
 
 /**
  ****************************************************************************************

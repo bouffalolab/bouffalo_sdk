@@ -19,6 +19,7 @@ endif()
 sdk_add_compile_definitions_ifdef(CONFIG_TIMESLICE_STATS_DEBUG -DMACSW_TIMESLICE_STATS_DEBUG=1)
 
 if(CONFIG_FHOST)
+    sdk_add_link_options(-L${CMAKE_CURRENT_SOURCE_DIR}/wifi6)
     sdk_add_include_directories(wifi6/fhost/include)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/wifi6/fhost/lib/libfhost_${CHIP}_${CONFIG_MACSW_SELECT}.a)
     sdk_add_static_library(wifi6/fhost/lib/libfhost_${CHIP}_${CONFIG_MACSW_SELECT}.a)
@@ -54,7 +55,9 @@ endif()
 
 sdk_add_subdirectory_ifdef(CONFIG_MATTER matter/mfd)
 sdk_add_subdirectory_ifdef(CONFIG_SUBG bl3141_drv)
-sdk_add_subdirectory_ifdef(CONFIG_ZIGBEE zigbee)
+if(CONFIG_ZIGBEE)
+  sdk_add_subdirectory_ifexists(zigbee)
+endif()
 sdk_add_subdirectory_ifdef(CONFIG_WLAN wlan/wlan_mac)
 sdk_add_subdirectory_ifdef(CONFIG_WIFI4 wifi4)
 

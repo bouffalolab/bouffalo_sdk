@@ -8,8 +8,8 @@ sdk_add_compile_definitions(-DCONFIG_BOOT_NP_ASYNC)
 sdk_add_include_directories(.)
 
 sdk_set_main_file(main.c)
+sdk_set_flash_erase(2)
 
 project(wifi)
-
 
 

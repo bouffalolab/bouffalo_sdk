@@ -30,17 +30,8 @@
 #define NETHUB_VCHAN_SLOT_CNT (4)
 #define NETHUB_VCHAN_DBG      (0)
 
-#pragma pack(push, 1)
-struct nethub_vchan_data_hdr {
-    uint8_t data_type;
-    uint8_t reserved;
-    uint16_t len;
-    uint8_t data[];
-} __attribute__((packed));
-#pragma pack(pop)
-
 #define VIRTUALCHAN_FRAME_SIZE (NETHUB_VCHAN_MAX_DATA_LEN \
-                                + sizeof(struct nethub_vchan_data_hdr) \
+                                + sizeof(nethub_vchan_data_hdr_t) \
                                 + FRAME_BUFF_HEADER_ROOM \
                                 + sizeof(mr_virtualchan_msg_t))
 
@@ -60,12 +51,12 @@ static int nethub_vchan_type_is_valid(nethub_vchan_type_t type)
 
 static int virtualchan_dnld_data_output(mr_virtualchan_priv_t *priv, mr_virtualchan_msg_t *virtualchan_msg_pkt)
 {
-    struct nethub_vchan_data_hdr *hdr;
+    nethub_vchan_data_hdr_t *hdr;
 #if NETHUB_VCHAN_DBG
     uint16_t data_len = MR_VIRTUALCHAN_MSG_PACKET_GET_DATA_SIZE(virtualchan_msg_pkt);
 #endif
 
-    hdr = (struct nethub_vchan_data_hdr *)virtualchan_msg_pkt->data;
+    hdr = (nethub_vchan_data_hdr_t *)virtualchan_msg_pkt->data;
     if (nethub_vchan_type_is_valid((nethub_vchan_type_t)hdr->data_type)) {
         nethub_vchan_type_t type = (nethub_vchan_type_t)hdr->data_type;
         nethub_vchan_recv_cb_t cb = g_nethub_vchan_recv_cb[type];
@@ -250,7 +241,7 @@ static int nethub_sdio_vchan_send(nethub_vchan_type_t type, const void *data, ui
     uint16_t total_len;
     mr_virtualchan_priv_t *priv = g_virtualchan_priv;
     mr_virtualchan_msg_t *virtualchan_msg_pkt;
-    struct nethub_vchan_data_hdr *hdr;
+    nethub_vchan_data_hdr_t *hdr;
 
     if (!priv || !data || len == 0 || len > NETHUB_VCHAN_MAX_DATA_LEN ||
         !nethub_vchan_type_is_valid(type)) {
@@ -263,7 +254,7 @@ static int nethub_sdio_vchan_send(nethub_vchan_type_t type, const void *data, ui
         return -1;
     }
 
-    total_len = sizeof(struct nethub_vchan_data_hdr) + len;
+    total_len = sizeof(nethub_vchan_data_hdr_t) + len;
     if (total_len > MR_VIRTUALCHAN_MSG_PACKET_GET_BUFF_SIZE(virtualchan_msg_pkt)) {
         LOG_E("%s upld data size too large: %d > %d\r\n", priv->virtualchan_cfg.name, total_len,
               MR_VIRTUALCHAN_MSG_PACKET_GET_BUFF_SIZE(virtualchan_msg_pkt));
@@ -271,8 +262,8 @@ static int nethub_sdio_vchan_send(nethub_vchan_type_t type, const void *data, ui
         return -1;
     }
 
-    hdr = (struct nethub_vchan_data_hdr *)virtualchan_msg_pkt->data;
-    memset(hdr, 0, sizeof(struct nethub_vchan_data_hdr));
+    hdr = (nethub_vchan_data_hdr_t *)virtualchan_msg_pkt->data;
+    memset(hdr, 0, sizeof(nethub_vchan_data_hdr_t));
     hdr->data_type = type;
     hdr->len = len;
     memcpy(hdr->data, data, len);

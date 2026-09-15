@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.15)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 # User
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 
 # Link with gcov runtime to support macsw library coverage
 sdk_add_link_options(--coverage)

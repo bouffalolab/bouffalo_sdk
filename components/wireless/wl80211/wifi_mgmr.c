@@ -428,7 +428,7 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
             bl_pm_event_bit_clear(PSM_EVENT_DISCONNECT);
 #endif
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);

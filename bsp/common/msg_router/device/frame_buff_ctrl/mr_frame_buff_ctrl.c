@@ -273,6 +273,11 @@ int mr_frame_queue_free_elem(mr_frame_elem_t *frame_elem)
         return -1;
     }
 
+    if (ctrl->custom_free_cb) {
+        ctrl->custom_free_cb(frame_elem, ctrl->custom_free_arg);
+        return 0;
+    }
+
     if (ctrl->before_free_cb) {
         ctrl->before_free_cb(frame_elem, ctrl->before_free_cb_arg);
     }

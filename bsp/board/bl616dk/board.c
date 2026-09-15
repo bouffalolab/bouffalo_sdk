@@ -69,7 +69,7 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
 #endif
 }
 
-#ifndef LP_APP
+#ifndef CONFIG_LPAPP
 static void peripheral_clock_init(void)
 {
     PERIPHERAL_CLOCK_ADC_DAC_ENABLE();
@@ -338,7 +338,7 @@ static void console_init()
 }
 #endif
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 void board_recovery(void)
 {
 #ifdef CONF_PSRAM_RESTORE
@@ -366,6 +366,11 @@ void bflb_wfa_init(void)
 
 void ram_heap_init(void)
 {
+    static const uint32_t any_alloc_order[] = {
+        MM_HEAP_OCRAM_0,
+        MM_HEAP_PSRAM_0,
+        MM_HEAP_WRAM_0,
+    };
     size_t heap_len;
 
     /* ram heap init */
@@ -385,9 +390,7 @@ void ram_heap_init(void)
 
     /* psram heap init */
     heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
-#ifndef CONFIG_PSRAM_SKIP_REGISTER_HEAP
     mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
-#endif
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"
@@ -408,6 +411,13 @@ void ram_heap_init(void)
            "  ocram heap size: %d Kbyte \r\n",
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 #endif
+
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
+}
+
+enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
+{
+    return BFLB_RTC_32K_CLK_RC;
 }
 
 void board_init(void)
@@ -432,7 +442,9 @@ void board_init(void)
     /* system clock */
     system_clock_init();
 
-#ifndef LP_APP
+    bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
+
+#ifndef CONFIG_LPAPP
     peripheral_clock_init();
 #else
     peripheral_clock_init_lp();
@@ -620,7 +632,7 @@ static void mfg_cmd(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 #include "bl_lp.h"
 
 static void test_io_wakeup_status(uint8_t io_num)
@@ -760,7 +772,7 @@ void cmd_acomp_test(char *buf, int len, int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_io_test, io_test, cmd io_test);
 SHELL_CMD_EXPORT_ALIAS(cmd_acomp_test, acomp_test, cmd acomp_test);
-#endif /* LP_APP */
+#endif /* CONFIG_LPAPP */
 
 #endif /* CONFIG_SHELL */
 

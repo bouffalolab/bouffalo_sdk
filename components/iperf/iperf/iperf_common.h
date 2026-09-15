@@ -1,21 +1,97 @@
 /**
  * @file iperf_common.h
- * @brief Private contracts shared by the iPerf core and independent backends.
- * @note This header is private to components/iperf/iperf.
+ * @brief Private Classic iPerf2 protocol, statistics, and reporting helpers.
+ * @note Depends only on standard types and the public opaque handle. Instance
+ * management belongs to iperf_internal.h; implementations are in iperf_common.c.
+ *
+ * @section iperf_udp_wire_layout Classic iPerf2 UDP wire layout
+ * All offsets below are byte offsets within the UDP payload, excluding the
+ * Ethernet/IP/UDP headers. Numeric fields use network byte order (big-endian).
+ * Packet length includes the iPerf prefix, settings (if present), and test data;
+ * a 12/16-byte prefix does NOT mean the whole datagram is only 12/16 bytes.
+ *
+ * @verbatim
+ * Sequence/timestamp prefix:
+ * Offset  Size  SEQ32 (2.0.5)              SEQ64 / SEQ64_EXT
+ *   0       4   Signed 32-bit packet ID    Low 32 bits of packet ID
+ *   4       4   Timestamp seconds         Timestamp seconds
+ *   8       4   Timestamp microseconds    Timestamp microseconds
+ *  12       4   [Client settings begin]   High 32 bits of packet ID
+ *  16           --                       [Client settings begin]
+ *
+ * Normal-mode client layouts supported by this component:
+ * SEQ32     : [12-byte prefix][24-byte base settings][test data ...]
+ * SEQ64     : [16-byte prefix][4-byte flags][remaining payload ...]
+ * SEQ64_EXT : [16-byte prefix][24-byte base][40-byte extension][data ...]
+ *
+ * Base client settings (offsets relative to the start of settings):
+ *  +0       4   flags
+ *  +4       4   numThreads
+ *  +8       4   port
+ * +12       4   buffer length (zero may select the peer's default)
+ * +16       4   window/bandwidth field (meaning depends on mode/version)
+ * +20       4   amount: positive byte limit or negative duration in 0.01 s
+ * @endverbatim
+ *
+ * - SEQ32: normal-mode flags at offset 12 are zero. Data IDs start at zero.
+ *   Recognition needs a complete 36-byte setup prefix and any nonnegative
+ *   signed 32-bit ID.
+ * - SEQ64: flags at offset 16 contain SEQNO64B (0x08000000), without EXTEND.
+ *   In 2.0.13 normal mode, bytes after flags can be ASCII test data, NOT valid
+ *   base settings. Recognition needs only 20 bytes and any nonnegative signed
+ *   64-bit ID. This receiver skips ID 0 and uses one as its data sequence base.
+ * - SEQ64_EXT: flags contain SEQNO64B and EXTEND (0x40000000). Recognition
+ *   requires any nonnegative signed 64-bit ID and a complete 80-byte setup
+ *   prefix with plausible base settings. This component's TX also
+ *   sets LEN_BIT (0x00010000) and encodes the 80-byte length in LEN_MASK.
+ *   Its target rate is written at absolute offset 64. Other extensions are
+ *   version-dependent and are not fully interpreted by this component.
+ *
+ * The first accepted datagram starts receiver timing and selects the peer and
+ * layout, even if IDs 0/1 were lost. Initial loss still uses the protocol base
+ * (zero for SEQ32, one for SEQ64 layouts), not the first received ID. Negative
+ * FIN IDs cannot establish a session. Delayed old data with a valid prefix can
+ * claim a new session; this recognizer cannot distinguish it from a new test.
+ *
+ * @subsection iperf_udp_fin FIN and server AckFIN
+ * A negative signed packet ID denotes FIN, not ordinary test data. The first
+ * FIN fixes the next-ID boundary and freezes receive statistics; expected
+ * datagrams = abs(FIN ID) - first_id (zero for SEQ32, one for SEQ64 layouts).
+ * Repeated FINs trigger another reply without recounting the transfer.
+ *
+ * @verbatim
+ * AckFIN: [same 12/16-byte prefix][40-byte base server report]
+ * This component sends 52 bytes for SEQ32, 56 bytes for SEQ64/SEQ64_EXT.
+ * The prefix echoes the FIN ID. Settings are replaced by the server report.
+ *
+ * Server report offsets relative to its start (12 or 16 in the UDP payload):
+ *  +0       4   flags: VERSION1 (0x80000000) for the emitted base report
+ *  +4       4   Total bytes, high 32 bits
+ *  +8       4   Total bytes, low 32 bits
+ * +12       4   Transfer duration, seconds
+ * +16       4   Transfer duration, microseconds remainder
+ * +20       4   Lost datagrams
+ * +24       4   Out-of-order datagrams
+ * +28       4   Expected datagrams
+ * +32       4   Jitter, seconds
+ * +36       4   Jitter, microseconds remainder
+ * @endverbatim
+ * @note This describes the supported normal-mode subset, not every iPerf2
+ * extension or compatibility (-C) mode. Never cast payloads to native structs:
+ * use the byte-oriented helpers for alignment, byte order and layout handling.
  */
 
 #ifndef IPERF_COMMON_H
 #define IPERF_COMMON_H
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
-#include <FreeRTOS.h>
-#include <semphr.h>
-#include <task.h>
-
 #include "bflb_iperf.h"
+
+/** @name Protocol constants and shared payload
+ * @{
+ */
 
 /** @brief Size of the modern UDP sequence and timestamp prefix, in bytes. */
 #define BFLB_IPERF_UDP_HEADER_SIZE        16U
@@ -47,92 +123,84 @@
 /** @brief Maximum TCP buffer size for the lwIP Raw backend. */
 #define BFLB_IPERF_RAW_TCP_BUFFER_LEN     4096U
 
+/** @brief Permanent immutable payload referenced by zero-copy Raw sends. */
+extern const uint8_t g_iperf_raw_payload[BFLB_IPERF_RAW_TCP_BUFFER_LEN];
+
+/** @} */
+
+/** @name Statistics and UDP receiver types
+ * @{
+ */
+
 /**
  * @brief Mutable statistics produced by one backend instance.
  * @note Timestamps use the monotonic microsecond clock returned by
  * iperf_now_us(); zero denotes a test boundary that has not been recorded.
+ * All published fields (including report baselines) are read/written under
+ * short bflb_irq_save() sections. Do not acquire locks or log inside them.
+ * This protects tasks on one CPU, not instances shared across SMP CPUs.
  */
 typedef struct {
-    uint64_t start_us;         /**< Test start time, or zero before traffic begins. */
-    uint64_t end_us;           /**< Test end time, or zero while the test is active. */
-    uint64_t bytes;            /**< Accounted payload bytes. */
-    uint64_t last_report_us;   /**< Timestamp of the previous interval report. */
-    uint64_t last_report_bytes;/**< Byte count at the previous interval report. */
-    uint32_t datagrams;        /**< UDP datagrams received, or expected after FIN. */
-    uint32_t lost;             /**< Estimated lost UDP datagrams. */
-    uint32_t out_of_order;     /**< UDP datagrams received out of order. */
-    uint32_t jitter_us;        /**< Smoothed UDP inter-arrival jitter in microseconds. */
-    bool udp_report_received;  /**< A valid UDP server AckFIN report was imported. */
+    uint64_t start_us;          /**< Test start time, or zero before traffic begins. */
+    uint64_t end_us;            /**< Test end time, or zero while the test is active. */
+    uint64_t bytes;             /**< Accounted payload bytes. */
+    uint64_t last_report_us;    /**< Timestamp of the previous interval report. */
+    uint64_t last_report_bytes; /**< Byte count at the previous interval report. */
+    uint32_t datagrams;         /**< UDP datagrams received, or expected after FIN. */
+    uint32_t lost;              /**< Estimated lost UDP datagrams. */
+    uint32_t out_of_order;      /**< UDP datagrams received out of order. */
+    uint32_t jitter_us;         /**< Smoothed UDP inter-arrival jitter in microseconds. */
+    bool udp_report_received;   /**< A valid UDP server AckFIN report was imported. */
 } iperf_stats_t;
 
-/**
- * @brief Receiver-side UDP sequence and jitter tracker.
- * @note Initialize with iperf_udp_rx_init() before accounting data packets.
- */
-typedef struct {
-    uint64_t next_id;       /**< Next expected nonnegative UDP sequence number. */
-    uint32_t gap_count;     /**< Accumulated sequence-gap candidates. */
-    int64_t last_transit_us;/**< Previous transit time, or INT64_MIN without a sample. */
-    uint32_t jitter_q4;     /**< Jitter accumulator in Q4 microseconds. */
-} iperf_udp_rx_t;
-
-/** @brief Supported Classic iPerf2 UDP client setup formats. */
+/** @brief Supported normal-mode layouts (prefix width and settings extension). */
 typedef enum {
-    IPERF_UDP_SETUP_INVALID = 0,
-    IPERF_UDP_SETUP_LEGACY,
-    IPERF_UDP_SETUP_MODERN,
+    IPERF_UDP_SETUP_INVALID = 0, /**< Unsupported or insufficient setup prefix. */
+    IPERF_UDP_SETUP_SEQ32,       /**< iPerf2 2.0.5: 12-byte prefix, ID zero is data. */
+    IPERF_UDP_SETUP_SEQ64,       /**< iPerf2 2.0.13: 16-byte prefix, no extension. */
+    IPERF_UDP_SETUP_SEQ64_EXT,   /**< iPerf2 2.2.1: 16-byte prefix with extension. */
 } iperf_udp_setup_t;
 
 /**
- * @brief Operations supplied by one protocol/backend implementation.
- *
- * The core allocates and zero-initializes context_size bytes for context.
- * After a successful start, the backend must eventually publish exactly one
- * completion through iperf_backend_finished().
+ * @brief Receiver-side UDP sequence and jitter tracker.
+ * @note Initialize with iperf_udp_server_rx_init() before accounting data packets.
+ * Owned exclusively by the UDP worker; not shared with callbacks/readers.
  */
 typedef struct {
-    size_t context_size; /**< Bytes required for the private backend context. */
-    int (*start)(bflb_iperf_t *iperf, void *context); /**< Start an instance; zero on acceptance, otherwise a negative error. */
-    int (*stop)(bflb_iperf_t *iperf, void *context);  /**< Request asynchronous stop; zero on acceptance, otherwise a negative error. */
-} iperf_backend_ops_t;
+    iperf_udp_setup_t format; /**< Layout recognized from the accepted setup prefix. */
+    uint8_t first_id;         /**< Zero for SEQ32, one for SEQ64 layouts. */
+    bool finished;            /**< Freeze statistics after the first FIN. */
+    uint64_t next_id;         /**< Next expected nonnegative UDP sequence number. */
+    uint32_t gap_count;       /**< Accumulated sequence-gap candidates. */
+    int64_t last_transit_us;  /**< Previous transit time, or INT64_MIN without a sample. */
+    uint32_t jitter_q4;       /**< Jitter accumulator in Q4 microseconds. */
+} iperf_udp_rx_t;
 
-/**
- * @brief Complete private representation of the public opaque handle.
- * @note active_calls and destroy_started are coordinated with an IRQ critical
- * section; other lifecycle fields are protected by lock where required.
+/** @} */
+
+/** @name Clock and statistics snapshots
+ * @{
  */
-struct bflb_iperf {
-    SemaphoreHandle_t lock;              /**< Mutex protecting public lifecycle state. */
-    bflb_iperf_config_t config;           /**< Validated and normalized configuration copy. */
-    volatile bflb_iperf_state_t state;    /**< Current lifecycle state. */
-    volatile bool stop_requested;         /**< Cooperative stop flag observed by the backend. */
-    int error;                            /**< Final backend error code. */
-    iperf_stats_t stats;                  /**< Mutable traffic statistics. */
-    const iperf_backend_ops_t *ops;        /**< Selected immutable backend operations. */
-    void *backend_context;                /**< Core-owned private backend storage. */
-    uint16_t active_calls;                /**< Public API callers and mutex waiters. */
-    bool backend_released;                /**< Backend no longer accesses instance storage. */
-    bool callback_running;                /**< Completion callback is executing. */
-    bool destroy_started;                 /**< Destruction published to reject new callers. */
-};
-
-/** @brief Blocking TCP Socket backend operations. */
-extern const iperf_backend_ops_t g_iperf_tcp_socket_ops;
-/** @brief Task-driven TCP Raw backend operations. */
-extern const iperf_backend_ops_t g_iperf_tcp_raw_ops;
-/** @brief Blocking UDP Socket backend operations. */
-extern const iperf_backend_ops_t g_iperf_udp_socket_ops;
-/** @brief Task-driven UDP Raw backend operations. */
-extern const iperf_backend_ops_t g_iperf_udp_raw_ops;
-
-/** @brief Permanent immutable payload referenced by zero-copy Raw sends. */
-extern const uint8_t g_iperf_raw_payload[BFLB_IPERF_RAW_TCP_BUFFER_LEN];
 
 /**
  * @brief Read the monotonic hardware timer.
  * @return Current timestamp in microseconds.
  */
 uint64_t iperf_now_us(void);
+
+/**
+ * @brief Copy all statistics under the same single-CPU IRQ guard as writers.
+ * @param[in] iperf Live instance to inspect.
+ * @param[out] stats Non-NULL statistics destination.
+ * @note No mutex, formatting or logging inside the short IRQ section.
+ */
+void iperf_stats_snapshot(const bflb_iperf_t *iperf, iperf_stats_t *stats);
+
+/** @} */
+
+/** @name Wire encoding and UDP tracking
+ * @{
+ */
 
 /**
  * @brief Write one unsigned 32-bit value in network byte order.
@@ -157,15 +225,8 @@ uint32_t iperf_get_u32(const uint8_t *buffer);
 void iperf_write_udp_header(uint8_t *buffer, int64_t id, uint64_t now_us);
 
 /**
- * @brief Read a signed 64-bit UDP packet ID from a modern prefix.
- * @param[in] buffer Source containing BFLB_IPERF_UDP_HEADER_SIZE bytes.
- * @return Signed packet ID.
- */
-int64_t iperf_read_udp_id(const uint8_t *buffer);
-
-/**
- * @brief Read the sender timestamp from a modern UDP prefix.
- * @param[in] buffer Source containing BFLB_IPERF_UDP_HEADER_SIZE bytes.
+ * @brief Read the sender timestamp shared by both UDP prefix layouts.
+ * @param[in] buffer Source containing at least 12 bytes.
  * @return Sender timestamp in microseconds.
  */
 uint64_t iperf_read_udp_timestamp(const uint8_t *buffer);
@@ -185,23 +246,55 @@ void iperf_write_udp_client_header(uint8_t *buffer,
  * @param[in] buffer Received datagram prefix.
  * @param[in] length Number of available bytes.
  * @return Detected setup format, or IPERF_UDP_SETUP_INVALID.
+ * @note Recognizes SEQ32 (36-byte minimum), SEQ64 (20-byte minimum, no base
+ * settings check), and SEQ64_EXT (80-byte minimum). Accepts any nonnegative
+ * signed ID of the selected width, never FIN. A SEQ64 claim cannot fall back
+ * to SEQ32. Not full protocol validation; see the session limits above.
  */
 iperf_udp_setup_t iperf_udp_client_setup_type(const uint8_t *buffer,
                                               uint16_t length);
+
+/**
+ * @brief Get the selected sequence/timestamp prefix length.
+ * @param[in] format Receiver layout.
+ * @return 12 for SEQ32, 16 for SEQ64 layouts, zero for invalid format.
+ */
+uint16_t iperf_udp_header_size(iperf_udp_setup_t format);
+
+/**
+ * @brief Get the selected prefix plus base server report length.
+ * @param[in] format Receiver layout.
+ * @return 52 for SEQ32, 56 for SEQ64 layouts, zero for invalid format.
+ */
+uint16_t iperf_udp_server_report_size(iperf_udp_setup_t format);
+
+/**
+ * @brief Decode an ID only after checking the selected prefix fits in length.
+ * @param[in] format Selected session layout.
+ * @param[in] buffer Prefix with length readable bytes.
+ * @param[in] length Available byte count.
+ * @param[out] id Non-NULL decoded ID destination; unchanged on failure.
+ * @return true on success, false for invalid layout or insufficient bytes.
+ */
+bool iperf_udp_decode_id(iperf_udp_setup_t format, const uint8_t *buffer,
+                         uint16_t length, int64_t *id);
 
 /**
  * @brief Validate a modern or legacy UDP AckFIN report.
  * @param[in] buffer Received report prefix.
  * @param[in] length Number of available bytes.
  * @return true when a supported version-1 report header is present.
+ * @note Checks length/flag placement, not FIN correspondence or all fields.
  */
-bool iperf_udp_report_valid(const uint8_t *buffer, uint16_t length);
+bool iperf_udp_client_report_valid(const uint8_t *buffer, uint16_t length);
 
 /**
  * @brief Initialize receiver-side UDP sequence and jitter tracking.
  * @param[out] tracker Tracker to reset.
+ * @param[in] format Validated setup format; fixed for the peer's session.
+ * @post first_id is zero for SEQ32 and one for either SEQ64 layout.
  */
-void iperf_udp_rx_init(iperf_udp_rx_t *tracker);
+void iperf_udp_server_rx_init(iperf_udp_rx_t *tracker, iperf_udp_setup_t format);
 
 /**
  * @brief Account one received UDP data datagram.
@@ -211,28 +304,33 @@ void iperf_udp_rx_init(iperf_udp_rx_t *tracker);
  * @param[in] sent_us Sender timestamp in microseconds.
  * @param[in] received_us Local datagram arrival time in microseconds.
  * @param[in] length Received datagram length in bytes.
+ * @note Loss is estimated from gaps minus out-of-order arrivals; no exact
+ * deduplication is performed. The worker exclusively owns tracker.
  */
-void iperf_udp_rx_account(bflb_iperf_t *iperf, iperf_udp_rx_t *tracker,
-                          int64_t id, uint64_t sent_us, uint64_t received_us,
-                          uint16_t length);
+void iperf_udp_server_rx_account(bflb_iperf_t *iperf, iperf_udp_rx_t *tracker,
+                                 int64_t id, uint64_t sent_us, uint64_t received_us,
+                                 uint16_t length);
 
 /**
  * @brief Finalize receiver loss accounting when a UDP FIN arrives.
  * @param[in,out] iperf Instance whose statistics are finalized.
  * @param[in,out] tracker Receiver sequence tracker.
- * @param[in] next_id Sequence number following the final client data packet.
+ * @param[in] fin_id Negative FIN ID; repeated calls leave statistics unchanged.
+ * @note Expected datagrams are abs(fin_id) - first_id, saturated to UINT32_MAX.
  */
-void iperf_finish_udp_rx(bflb_iperf_t *iperf, iperf_udp_rx_t *tracker,
-                         uint64_t next_id);
+void iperf_udp_server_rx_finish(bflb_iperf_t *iperf, iperf_udp_rx_t *tracker,
+                                int64_t fin_id);
 
 /**
- * @brief Encode a modern UDP server AckFIN report.
- * @param[out] buffer Destination containing BFLB_IPERF_UDP_ACK_SIZE bytes.
+ * @brief Encode a format-specific UDP server AckFIN report.
+ * @param[out] buffer Destination containing iperf_udp_server_report_size(format) bytes.
  * @param[in] iperf Instance supplying finalized server statistics.
+ * @param[in] format Layout selected for this receiver.
  * @param[in] fin_id Negative FIN packet ID echoed to the client.
+ * @return Actual datagram length (52 or 56), or zero for an invalid format.
  */
-void iperf_write_udp_report(uint8_t *buffer, const bflb_iperf_t *iperf,
-                            int64_t fin_id);
+uint16_t iperf_write_udp_server_report(uint8_t *buffer, const bflb_iperf_t *iperf,
+                                       iperf_udp_setup_t format, int64_t fin_id);
 
 /**
  * @brief Import statistics from a modern or legacy UDP AckFIN report.
@@ -240,8 +338,14 @@ void iperf_write_udp_report(uint8_t *buffer, const bflb_iperf_t *iperf,
  * @param[in] buffer Received report prefix.
  * @param[in] length Number of available bytes.
  */
-void iperf_read_udp_report(bflb_iperf_t *iperf, const uint8_t *buffer,
-                           uint16_t length);
+void iperf_udp_client_read_report(bflb_iperf_t *iperf, const uint8_t *buffer,
+                                  uint16_t length);
+
+/** @} */
+
+/** @name Connection logging
+ * @{
+ */
 
 /**
  * @brief Print the PC iPerf-style client connection preamble.
@@ -269,6 +373,12 @@ void iperf_log_connection(const bflb_iperf_t *iperf,
                           uint32_t remote_ip4,
                           uint16_t remote_port);
 
+/** @} */
+
+/** @name Traffic statistics and reports
+ * @{
+ */
+
 /**
  * @brief Record the test start time once.
  * @param[in,out] iperf Instance whose statistics are initialized.
@@ -282,7 +392,7 @@ void iperf_test_begin(bflb_iperf_t *iperf);
 void iperf_test_end(bflb_iperf_t *iperf);
 
 /**
- * @brief Account one successful transfer and emit any due interval report.
+ * @brief Account one successful transfer without formatting or logging.
  * @param[in,out] iperf Active instance.
  * @param[in] length Number of payload bytes to add.
  * @note UDP transfers also increment the datagram count; TCP transfers only
@@ -291,50 +401,33 @@ void iperf_test_end(bflb_iperf_t *iperf);
 void iperf_account_transfer(bflb_iperf_t *iperf, uint32_t length);
 
 /**
- * @brief Account one transfer using an already captured report timestamp.
- * @param[in,out] iperf Active instance.
- * @param[in] length Number of payload bytes to add.
- * @param[in] now_us Timestamp associated with the accounted data.
+ * @brief Snapshot and print a due interval, then retain its exact baselines.
+ * @param[in,out] iperf Active instance owned by the calling worker.
+ * @param[in] now_us Current monotonic time in microseconds.
+ * @return true when a due report is passed to the logger, false otherwise.
+ * @note The return value does not indicate whether logger filtering hides it.
+ * @note Worker only, outside the TCP/IP core lock; callbacks only account.
  */
-void iperf_account_transfer_at(bflb_iperf_t *iperf, uint32_t length, uint64_t now_us);
+bool iperf_test_report_periodic(bflb_iperf_t *iperf, uint64_t now_us);
 
 /**
  * @brief Finalize timing and print the summary report.
  * @param[in,out] iperf Completed instance.
+ * @note Worker only, after callbacks are detached and all accounting is done.
  */
 void iperf_test_report_finish(bflb_iperf_t *iperf);
-
-/**
- * @brief Determine whether a client limit or stop request has been reached.
- * @param[in] iperf Instance to inspect.
- * @param[in] now_us Current monotonic timestamp in microseconds.
- * @return true when traffic generation should stop; false otherwise.
- * @note Servers ignore local duration and byte limits and terminate on peer events.
- */
-bool iperf_limit_reached(const bflb_iperf_t *iperf, uint64_t now_us);
 
 /**
  * @brief Copy internal statistics into a public result snapshot.
  * @param[in] iperf Instance to inspect.
  * @param[out] result Destination result structure.
+ * @pre Caller holds the instance lifecycle mutex for state/error stability.
+ * @note This helper does not acquire that mutex. Statistics are copied under
+ * their independent short single-CPU IRQ guard, not the TCP/IP core lock.
  */
 void iperf_result_snapshot(const bflb_iperf_t *iperf,
                            bflb_iperf_result_t *result);
 
-/**
- * @brief Publish that backend startup has reached its execution context.
- * @param[in,out] iperf Instance entering the backend execution context.
- * @return true when traffic should run, false when an early stop was requested.
- */
-bool iperf_backend_started(bflb_iperf_t *iperf);
-
-/**
- * @brief Release backend ownership and directly notify completion.
- * @param[in,out] iperf Instance being completed.
- * @param[in] error Final backend error; zero indicates successful completion.
- * @note After this function returns, the backend must not access iperf or its
- * private context again.
- */
-void iperf_backend_finished(bflb_iperf_t *iperf, int error);
+/** @} */
 
 #endif /* IPERF_COMMON_H */

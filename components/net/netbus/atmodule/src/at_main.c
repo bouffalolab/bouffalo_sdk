@@ -31,7 +31,7 @@
 #include "at_http_cmd.h"
 #include "at_through.h"
 #include "at_ble_cmd.h"
-#if (defined LP_APP) && (defined CONFIG_ATMODULE_LP)
+#if (defined CONFIG_LPAPP) && (defined CONFIG_ATMODULE_LP)
 #include "at_pwr/at_pwr_cmd.h"
 #endif
 
@@ -351,7 +351,7 @@ int at_module_init(void)
     /* register ble AT command */
     at_ble_cmd_regist();
 #endif
-#if (defined LP_APP) && (defined CONFIG_ATMODULE_LP)
+#if (defined CONFIG_LPAPP) && (defined CONFIG_ATMODULE_LP)
     /* register pwr AT command */
     at_pwr_cmd_regist();
 #endif

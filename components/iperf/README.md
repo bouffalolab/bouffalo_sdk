@@ -153,7 +153,7 @@ iperf -h
 | `-S <tos>` | IPv4 TOS value. |
 | `-N` | Disable Nagle for a TCP client. |
 | `-B <IPv4>` | Bind a local IPv4 address. |
-| `-a` | Stop the current shell-managed test. |
+| `-a` | Synchronously stop and destroy the current shell-managed test. |
 | `-h` | Print command help. |
 
 Command notes:
@@ -167,7 +167,20 @@ Command notes:
   other numeric options remain plain integers.
 - The shell command manages one test at a time. The C API supports multiple
   independent instances.
-- UDP datagrams must be 80 to 1470 bytes. TCP Socket buffers may be up to
+- The CLI creates one permanent mutex on its first command (initialization
+  assumes the SDK's single shell command task). Its slot transitions through
+  EMPTY / ACTIVE / FINISHED / CLOSING under that mutex. Natural completion
+  schedules one temporary cleanup task; `-a` takes the same exclusive reclaim
+  ownership. Both release the mutex before synchronous destruction. CLOSING
+  rejects creation, queries and another destroy; no timer or resident task is used.
+- Cleanup carries a generation by value, not an instance pointer. Stale tasks
+  cannot reclaim a newer instance even if its address is reused. Generations
+  never wrap (new creation is refused at exhaustion). If cleanup task allocation
+  fails, FINISHED remains reclaimable by `-a` or the next command. Unexpected
+  destroy errors retain the handle for retry rather than losing the slot.
+- The configured UDP buffer/datagram length must be 80 to 1470 bytes; received
+  setup/data minimum lengths depend on the wire format described below.
+  TCP Socket buffers may be up to
   16384 bytes; TCP Raw buffers may be up to 4096 bytes.
 
 ## C API
@@ -175,32 +188,67 @@ Command notes:
 Include `bflb_iperf.h`. A test has a simple lifecycle:
 
 ```text
-config_init -> create -> start -> get_state/get_result -> stop -> destroy
+config_init -> create (launches worker) -> get_state/get_result -> destroy (stop + join + free)
 ```
 
-The following example starts a TCP Raw client:
+The following task-context example runs a TCP Raw client to natural completion,
+copies the final snapshot, and then destroys it synchronously:
 
 ```c
 #include <lwip/ip4_addr.h>
 #include <bflb_iperf.h>
+#include <FreeRTOS.h>
+#include <semphr.h>
 
-bflb_iperf_config_t config;
-bflb_iperf_t *iperf;
-ip4_addr_t server;
+typedef struct {
+  SemaphoreHandle_t finished;
+  bflb_iperf_result_t result;
+} app_iperf_result_t;
 
-bflb_iperf_config_init(&config);
-ip4addr_aton("192.168.1.10", &server);
+static void app_iperf_event(bflb_iperf_t *iperf, bflb_iperf_event_t event,
+              const bflb_iperf_result_t *result, void *user_data)
+{
+  app_iperf_result_t *app = user_data;
 
-config.backend = BFLB_IPERF_BACKEND_RAW;
-config.role = BFLB_IPERF_ROLE_CLIENT;
-config.proto = BFLB_IPERF_PROTO_TCP;
-config.remote_ip4 = server.addr;
-config.duration_s = 10;
+  (void)iperf;
+  if (event == BFLB_IPERF_EVENT_FINISHED) {
+    app->result = *result;
+    xSemaphoreGive(app->finished);
+  }
+  /* Never destroy this instance or wait for its destruction here. */
+}
 
-if (bflb_iperf_create(&config, &iperf) == BFLB_IPERF_OK) {
-    if (bflb_iperf_start(iperf) != BFLB_IPERF_OK) {
-        bflb_iperf_destroy(iperf);
+int app_run_iperf(void)
+{
+  bflb_iperf_config_t config;
+  bflb_iperf_t *iperf = NULL;
+  app_iperf_result_t app;
+  ip4_addr_t server;
+  int ret;
+
+  app.finished = xSemaphoreCreateBinary(); /* Initially empty. */
+  if (app.finished == NULL) {
+    return BFLB_IPERF_ERR_INVALID;
+  }
+  bflb_iperf_config_init(&config);
+  ip4addr_aton("192.168.1.10", &server);
+  config.role = BFLB_IPERF_ROLE_CLIENT; /* TCP Raw is the default. */
+  config.remote_ip4 = server.addr;
+  config.duration_s = 10;
+  config.event_cb = app_iperf_event;
+  config.user_data = &app;
+
+  ret = bflb_iperf_create(&config, &iperf);
+  if (ret == BFLB_IPERF_OK) {
+    xSemaphoreTake(app.finished, portMAX_DELAY);
+    ret = bflb_iperf_destroy(iperf); /* Also waits for callback return. */
+    iperf = NULL;
+    if (ret == BFLB_IPERF_OK) {
+      ret = app.result.error; /* app.result remains valid after destroy. */
     }
+    }
+  vSemaphoreDelete(app.finished);
+  return ret;
 }
 ```
 
@@ -209,24 +257,47 @@ Main API functions:
 | Function | Purpose |
 |---|---|
 | `bflb_iperf_config_init()` | Initialize a configuration with defaults. |
-| `bflb_iperf_create()` | Validate and copy the configuration, then create an instance. |
-| `bflb_iperf_start()` | Start the backend worker asynchronously. |
+| `bflb_iperf_create()` | Validate/copy configuration, allocate resources and launch the worker. |
 | `bflb_iperf_get_state()` | Read the current lifecycle state. |
 | `bflb_iperf_get_result()` | Read a consistent statistics snapshot. |
-| `bflb_iperf_stop()` | Request asynchronous termination. |
-| `bflb_iperf_destroy()` | Release a completed instance owned by the caller. |
+| `bflb_iperf_destroy()` | Request stop, wait for worker/callback completion, then free the instance. |
 
 Important API rules:
 
 - `remote_ip4` and `local_ip4` use network byte order.
-- One instance represents one test and can be started only once.
-- The configuration is copied by `bflb_iperf_create()`.
-- `bflb_iperf_stop()` is asynchronous.
-- `bflb_iperf_destroy()` does not wait. Retry later if it returns
-  `BFLB_IPERF_ERR_BUSY`.
-- `done_cb` runs in the backend worker task. Do not call
-  `bflb_iperf_destroy()` from that callback.
-- Public instance APIs use a FreeRTOS mutex and must not be called from an ISR.
+- Create immediately launches one test. There are no public start/stop APIs.
+  The instance never frees itself, even after natural completion or failure.
+- The configuration is copied, but `user_data` is only a borrowed pointer and
+  must remain valid until FINISHED returns. Output handle and synchronization
+  objects are initialized before worker visibility; callbacks may run before
+  create returns. A synchronous create failure leaves a NULL handle, releases
+  resources and emits no callback.
+- `event_cb` receives STARTED once from the worker (not a connected indication),
+  then FINISHED once after runtime cleanup and result freezing, including early
+  cancellation and asynchronous failure. Snapshot pointers are callback-local:
+  copy to retain. `get_result` copies without clearing counters; DONE/ERROR
+  results remain unchanged until destruction. STARTED may snapshot STOPPING.
+- One external owner must serialize create/destroy and all other external APIs.
+  No reference-count framework protects stale handles. Callbacks may query
+  results/state while the owner is in destroy, because destroy joins without
+  holding the instance mutex. Calling destroy from this instance's worker
+  returns `BFLB_IPERF_ERR_SELF` without changing it. A callback must not wait
+  for another task to destroy the instance either; it must eventually return.
+- To cancel, the owner calls destroy directly instead of waiting for natural
+  completion in the example. Destroy requests stop, wakes TCP Raw's indefinite
+  notification wait, and waits on an initially empty worker-done semaphore.
+  FINISHED returns before the worker revokes its handle and gives that semaphore
+  as its final instance access; only task self-deletion follows. The owner then
+  frees context, synchronization objects and instance. No BUSY polling is needed.
+- Socket waits remain backend-specific: send/receive/accept use checked timeout
+  options; TCP connection setup uses nonblocking connect with 200 ms select
+  slices because lwIP's blocking connect ignores SO_SNDTIMEO. UDP Raw queue
+  waits are bounded to 10 ms, UDP Socket pacing to 20 ms (AckFIN receive up to
+  1 s). Actual destroy latency also depends on scheduling, TCP/IP service,
+  socket close and callback duration; it is not a hard real-time deadline.
+- Public APIs are task-only, with scheduler/interrupts enabled and no TCP/IP
+  core lock held. Statistics use short IRQ guards against torn 64-bit accesses
+  on a single 32-bit CPU; sharing an instance across SMP CPUs is unsupported.
 - `local_port` and `task_priority` are available through the C API but are not
   exposed as shell options.
 
@@ -234,6 +305,16 @@ See [include/bflb_iperf.h](include/bflb_iperf.h) for all configuration fields,
 result fields, and return values.
 
 ## How It Works
+
+`include/bflb_iperf.h` is the public API with an opaque instance handle.
+Private `iperf/iperf_internal.h` owns the instance representation, backend
+operations, worker lifecycle, and client budget contracts; core management is
+implemented by `iperf/bflb_iperf.c`. It includes `iperf/iperf_common.h`, which
+declares protocol constants, UDP layouts/tracking, statistics, shared Raw
+payload, and reporting helpers implemented by `iperf/iperf_common.c`. The common
+header depends only on standard types and the public API; the common
+implementation includes the internal header to access instance fields.
+There is no reverse header dependency.
 
 The implementation has four independent data paths selected by protocol and
 backend:
@@ -251,10 +332,53 @@ remains available for integrations that prefer the Socket API. Each backend
 instance owns its worker and private state; instances do not share mutable test
 state.
 
-UDP uses the Classic iPerf2 normal-mode wire format. The first datagram carries
-the test settings and enables 64-bit sequence numbers. Receivers calculate
-datagram loss, out-of-order delivery, and jitter. A negative final sequence
-number ends the test, and the server returns an AckFIN report.
+UDP uses the Classic iPerf2 normal-mode wire format. Both receivers select a
+fixed layout from the first supported setup datagram:
+
+| PC UDP client | Prefix / settings | Data sequence base | AckFIN size |
+|---|---|---|---|
+| 2.0.5 normal, single stream | 12-byte SEQ32 + 24-byte settings, flags=0 | 0 | 52 bytes |
+| 2.0.13 SEQ64, no EXTEND | 16-byte SEQ64 + 4-byte flags; remaining bytes are payload | 1 | 56 bytes |
+| 2.2.1 SEQ64 with EXTEND | 16-byte SEQ64 + 24-byte settings + 40-byte extension | 1 | 56 bytes |
+
+SEQ64 is identified first, only after at least 20 bytes are available, with
+any nonnegative signed 64-bit ID, a valid timestamp and the SEQ flag (no
+VERSION1). Without EXTEND, 20 bytes suffice: 2.0.13 normal mode has ASCII
+payload after flags, so base configuration fields are neither read nor
+validated. EXTEND requires the full 80 bytes and valid base settings.
+A SEQ64 claim that fails validation never falls back to SEQ32.
+SEQ32 requires a nonnegative signed 32-bit ID, at least 36 bytes, normal flags, one thread, a valid
+port, a plausible buffer length (including the upstream default zero), nonzero
+bandwidth/amount, and a valid timestamp. Arbitrary short UDP or flags=0 alone
+cannot claim a session. All three layouts allow a later valid ID to establish
+a session if IDs 0/1 were lost; negative FIN IDs cannot establish a session.
+For 64-bit IDs, a nonzero high word or a set low-word sign bit is valid as long
+as the complete signed 64-bit value is nonnegative.
+Once selected, data/FIN require only the selected 12/16-byte
+prefix; the layout is not redetected on each packet.
+
+Receiver timing starts with the first accepted datagram, but initial loss is
+still counted from the protocol sequence base (zero for SEQ32, one for SEQ64
+layouts), not from that datagram's ID. Peer binding is unchanged. Delayed data
+from an old test with a valid setup prefix may claim a new server session;
+the receiver cannot distinguish it from a new test.
+
+For 2.0.5, data IDs are 0 through N-1 and FIN is -N: ID0 counts as data and the
+reported total is N, not N-1. SEQ64 retains its existing one-based accounting
+(ID0 is ignored). Receivers account data bytes, not FIN bytes. The first FIN
+freezes statistics; duplicate FINs only trigger another format-matched report.
+Loss and reordering use the existing gap-cancellation estimate, not exact
+duplicate detection. A negative final sequence ends the test.
+
+Device UDP TX remains SEQ64 with extended settings; this change adds 2.0.5
+**RX**, not 2.0.5 TX compatibility or a 32-bit TX mode. Existing 12-byte and
+16-byte prefix server-report readers remain supported.
+
+### Hardware validation
+
+Use [examples/wifi/macsw_bare](../../examples/wifi/macsw_bare) to validate iPerf
+on the device. Test UDP RX with iPerf2 2.0.5, 2.0.13 and 2.2.1 peers on both
+Raw and Socket backends, checking throughput, packet loss and FIN/AckFIN completion.
 
 ## Scope and Limitations
 
@@ -274,6 +398,7 @@ Not supported:
 - Parallel streams
 - Reverse, dual, tradeoff, or full-duplex modes
 - Enhanced mode and extended statistics
+- Headerless compatibility (`-C`) UDP mode
 - Multiple simultaneous clients on one server instance
 - Classic TCP V1 control-header exchange
 

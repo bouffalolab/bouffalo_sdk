@@ -4,8 +4,6 @@
 CONFIG_MQUICKJS             =y
 
 # Enable newlib with LittleFS POSIX port for file I/O
-CONFIG_NEWLIB               =y
-CONFIG_NEWLIB_STANDARD      =n
 CONFIG_NEWLIB_LITTLEFS      =y
 
 # Float/long long support for JavaScript number formatting

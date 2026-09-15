@@ -61,6 +61,18 @@
 #define HAL_BOOT2_SIGN_MAXSIZE                (2048 / 8)
 #define HAL_BOOT2_SIGN_MAXSIZE_SHA384         (3072 / 8)
 #define HAL_BOOT2_DEADBEEF_VAL                0xdeadbeef
+#if !defined(CPU_MODEL_A0)
+#define HAL_BOOT2_PK_HASH_SLOT_COUNT          4U
+#define HAL_BOOT2_PK0_HASH_OFFSET             0x1CU
+#define HAL_BOOT2_PK0_HASH_EXT_OFFSET         0xC0U
+#define HAL_BOOT2_PK1_HASH_OFFSET             0x120U
+#define HAL_BOOT2_PK2_HASH_OFFSET             0x150U
+#define HAL_BOOT2_PK3_HASH_OFFSET             0x180U
+#define HAL_BOOT2_PK_HASH_REVOKE_OFFSET       0x6CU
+#define HAL_BOOT2_PK_HASH_REVOKE_POS          28U
+#define HAL_BOOT2_PK_HASH_REVOKE_MASK         0x0FU
+#define HAL_BOOT2_APP_PK0_HASH_OFFSET         0x1C0U
+#endif
 #define HAL_BOOT2_CPU0_MAGIC                  "BFNP"
 #define HAL_BOOT2_CPU1_MAGIC                  "BFAP"
 #define HAL_BOOT2_CP_FLAG                     0x02
@@ -210,7 +222,11 @@ typedef struct
     uint8_t hbn_check_sign;
     uint8_t app_encrypt_type;
     uint8_t app_sign_type;
+#if !defined(CPU_MODEL_A0)
+    uint8_t pk_hash_revoke;
+#else
     uint8_t rsvd[1];
+#endif
     uint8_t uart_download_cfg;
     uint8_t sf_pin_cfg;
     uint8_t keep_dbg_port_closed;
@@ -373,6 +389,9 @@ void hal_boot2_sw_system_reset(void);
 void hal_boot2_set_psmode_status(uint32_t flag);
 void hal_boot2_clr_user_fw(void);
 void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg);
+#if !defined(CPU_MODEL_A0)
+uint32_t hal_boot2_is_pkhash_valid(const boot2_efuse_hw_config *efuse_cfg, const uint8_t *pkhash, uint8_t sign_type);
+#endif
 void hal_boot2_sboot_finish(void);
 void hal_boot2_uart_gpio_init(void);
 void hal_boot2_debug_uart_gpio_init(void);

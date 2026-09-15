@@ -10,18 +10,6 @@ config POSIX
     help
       Enable the POSIX compatibility layer.
 
-config NEWLIB
-    bool "Newlib"
-    default n
-    help
-      Use newlib as the C library backend.
-
-config NEWLIB_STANDARD
-    bool "Newlib standard (non-nano)"
-    default n
-    help
-      Use the standard newlib variant instead of the nano variant.
-
 config NEWLIB_FATFS
     bool "Newlib FATFS file port"
     default n
@@ -89,6 +77,13 @@ config GCC_COMPILE_LTO
     default n
     help
       Enable GCC link-time optimization for the whole firmware.
+
+config GCC_LINK_NO_RELAX
+    bool "Disable linker relaxation"
+    default y if WIFI6
+    default n
+    help
+      Disable linker relaxation for the whole firmware.
 
 config BOOT2
     bool "Build as part of boot2"

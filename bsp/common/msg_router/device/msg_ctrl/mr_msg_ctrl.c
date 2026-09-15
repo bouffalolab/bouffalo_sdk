@@ -27,8 +27,13 @@
 #define MSG_EVENT_UPLD_HW_READY (1 << 3) /**< Hardware ready to send upload */
 #define MSG_EVENT_UPLD_SEND     (1 << 4) /**< Upload data available for send */
 #define MSG_EVENT_UPLD_DONE     (1 << 5) /**< Upload complete, ready for callback */
+#define MSG_EVENT_UPLD_FAIL     (1 << 8) /**< Upload failed, release in task */
 
 #define MSG_EVENT_HW_RESET      (1 << 6) /**< Hardware reset request */
+#define MSG_EVENT_HOST_TIMEOUT  (1 << 7) /**< Host keepalive timeout */
+
+#define MSG_KEEPALIVE_PERIOD_MS (500U)
+#define MSG_KEEPALIVE_MISS_MAX  (3U)
 
 /**
  * @brief Wake up message processing task with event notification
@@ -59,6 +64,63 @@ static int msg_proc_task_wakeup(mr_msg_ctrl_priv_t *msg_ctrl, uint32_t event)
     return 0;
 }
 
+/**
+ * @brief Drop pending upload frames waiting for hardware transmission
+ * @details Used when the host link resets before queued upload frames can be
+ *          sent. Frames are returned to their registered owner so stale data
+ *          is not transmitted after the next host/device handshake.
+ * @param[in] msg_ctrl Message controller instance
+ */
+static void msg_ctrl_flush_upld_queue(mr_msg_ctrl_priv_t *msg_ctrl)
+{
+    mr_frame_elem_t *frame_elem;
+
+    while (mr_frame_queue_receive(msg_ctrl->upld_wait_queue, &frame_elem, 0) == 0 ||
+           mr_frame_queue_receive(msg_ctrl->upld_done_queue, &frame_elem, 0) == 0 ||
+           mr_frame_queue_receive(msg_ctrl->upld_fail_queue, &frame_elem, 0) == 0) {
+        mr_frame_queue_free_elem(frame_elem);
+    }
+}
+
+static void msg_keepalive_timer_cb(TimerHandle_t timer)
+{
+    mr_msg_ctrl_priv_t *msg_ctrl = (mr_msg_ctrl_priv_t *)pvTimerGetTimerID(timer);
+
+    if (msg_ctrl == NULL || msg_ctrl->keepalive_paused) {
+        return;
+    }
+
+    if (++msg_ctrl->keepalive_miss_count > MSG_KEEPALIVE_MISS_MAX) {
+        msg_proc_task_wakeup(msg_ctrl, MSG_EVENT_HOST_TIMEOUT);
+    }
+}
+
+void mr_msg_ctrl_keepalive_pause(mr_msg_ctrl_priv_t *msg_ctrl)
+{
+    if (msg_ctrl == NULL) {
+        return;
+    }
+
+    msg_ctrl->keepalive_paused = true;
+    msg_ctrl->keepalive_miss_count = 0;
+    if (msg_ctrl->keepalive_timer != NULL) {
+        xTimerStop(msg_ctrl->keepalive_timer, portMAX_DELAY);
+    }
+}
+
+void mr_msg_ctrl_keepalive_resume(mr_msg_ctrl_priv_t *msg_ctrl)
+{
+    if (msg_ctrl == NULL) {
+        return;
+    }
+
+    msg_ctrl->keepalive_paused = false;
+    msg_ctrl->keepalive_miss_count = 0;
+    if (msg_ctrl->keepalive_timer != NULL) {
+        xTimerStart(msg_ctrl->keepalive_timer, portMAX_DELAY);
+    }
+}
+
 /*****************************************************************************
  * Message Transfer Interrupt Callbacks (mr_msg_*)
  * @note Called from HW ISR context
@@ -81,38 +143,27 @@ int mr_msg_host_reset_cb(mr_msg_ctrl_priv_t *msg_ctrl)
 }
 
 /**
- * @brief Drop pending upload frames waiting for hardware transmission
- * @details Used when the host link resets before queued upload frames can be
- *          sent. Frames are returned to their owner pool so stale data is not
- *          transmitted after the next host/device handshake.
- * @param[in] msg_ctrl Message controller instance
- */
-static void msg_ctrl_flush_upld_wait_queue(mr_msg_ctrl_priv_t *msg_ctrl)
-{
-    mr_frame_elem_t *frame_elem;
-
-    while (mr_frame_queue_receive(msg_ctrl->upld_wait_queue, &frame_elem, 0) == 0) {
-        mr_frame_queue_free_elem(frame_elem);
-    }
-}
-
-/**
  * @brief Upload send complete interrupt callback
  * @param msg_ctrl Message controller instance
  * @param frame_elem Frame element that was sent
  * @param success Transfer success flag
  * @retval 0 Always returns 0
  * @note Called from HW ISR context
- * @note If successful and tag valid, enqueues to upld_done_queue for callback processing
- * @note If failed or tag invalid, frees the frame element immediately
+ * @note External frames are enqueued for owner callback processing even if transmission failed
+ * @note Failed pool frames or frames with an invalid tag are freed immediately
  */
 int mr_msg_upld_send_done_cb(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_elem, bool success)
 {
     int ret = 0;
     mr_msg_t *msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
 
-    if (success == false) {
-        goto err_exit;
+    if (!success) {
+        ret = mr_frame_queue_send(msg_ctrl->upld_fail_queue, &frame_elem, 0);
+        if (ret < 0) {
+            goto err_exit;
+        }
+        msg_proc_task_wakeup(msg_ctrl, MSG_EVENT_UPLD_FAIL | MSG_EVENT_UPLD_HW_READY);
+        return 0;
     }
 
     if (msg_pkt->tag >= MR_MSG_TAG_MAX) {
@@ -278,7 +329,7 @@ int mr_msg_ctrl_upld_send(mr_msg_ctrl_priv_t *msg_ctrl, mr_frame_elem_t *frame_e
 /**
  * @brief Message controller processing task (daemon thread)
  * @param arg Pointer to mr_msg_ctrl_priv_t instance
- * @note Event-driven processing loop with 7 event types:
+ * @note Event-driven processing loop with 8 event types:
  *       - MSG_EVENT_HW_RESET: Hardware reset, restart task
  *       - MSG_EVENT_UPLD_SEND | MSG_EVENT_UPLD_HW_READY: Upload transmission
  *       - MSG_EVENT_DNLD_RECV | MSG_EVENT_DNLD_HW_READY: Download reception
@@ -336,13 +387,15 @@ wait_ready:
             notified_value &= ~notified_mask;
             LOG_W("%s processing reset request \r\n", msg_ctrl->cfg.dev_ops->name);
 
+            mr_msg_ctrl_keepalive_pause(msg_ctrl);
+
             /* Call application layer reset callbacks */
-            msg_ctrl_flush_upld_wait_queue(msg_ctrl);
             for (int i = 0; i < MR_MSG_TAG_MAX; i++) {
                 if (msg_ctrl->mr_msg_hw_reset_cb[i] != NULL) {
                     msg_ctrl->mr_msg_hw_reset_cb[i](NULL, msg_ctrl->mr_msg_hw_reset_arg[i]);
                 }
             }
+            msg_ctrl_flush_upld_queue(msg_ctrl);
             goto wait_ready;
         }
 
@@ -420,6 +473,16 @@ wait_ready:
             }
         }
 
+        notified_mask = MSG_EVENT_UPLD_FAIL | MSG_EVENT_UPLD_HW_READY;
+        while (notified_value & notified_mask) {
+            ret = mr_frame_queue_receive(msg_ctrl->upld_fail_queue, &frame_elem, 0);
+            if (ret < 0) {
+                notified_value &= ~notified_mask;
+            } else {
+                mr_frame_queue_free_elem(frame_elem);
+            }
+        }
+
         /* Process download complete event (hardware receive done callback) */
         /* Loop processes all packets in dnld_done_queue */
         notified_mask = MSG_EVENT_DNLD_DONE;
@@ -430,6 +493,12 @@ wait_ready:
                 notified_value &= ~notified_mask;
             } else {
                 msg_pkt = (mr_msg_t *)frame_elem->buff_addr;
+                if (msg_pkt->tag == MR_MSG_TAG_SYS && msg_pkt->sub_tag == MR_MSG_SYS_KEEPALIVE &&
+                    msg_pkt->len == 0) {
+                    mr_msg_ctrl_keepalive_resume(msg_ctrl);
+                    mr_frame_queue_free_elem(frame_elem);
+                    continue;
+                }
                 msg_cb = msg_ctrl->mr_msg_dnld_recv_cb[msg_pkt->tag];
                 msg_arg = msg_ctrl->mr_msg_dnld_recv_arg[msg_pkt->tag];
                 if (msg_cb != NULL) {
@@ -443,6 +512,24 @@ wait_ready:
                     mr_frame_queue_free_elem(frame_elem);
                 }
             }
+        }
+
+        notified_mask = MSG_EVENT_HOST_TIMEOUT;
+        if (notified_value & notified_mask) {
+            notified_value &= ~notified_mask;
+            if (msg_ctrl->keepalive_paused || msg_ctrl->keepalive_miss_count < MSG_KEEPALIVE_MISS_MAX) {
+                continue;
+            }
+            mr_msg_ctrl_keepalive_pause(msg_ctrl);
+            LOG_W("%s host keepalive timeout\r\n", msg_ctrl->cfg.dev_ops->name);
+            for (int i = 0; i < MR_MSG_TAG_MAX; i++) {
+                if (msg_ctrl->mr_msg_hw_reset_cb[i] != NULL) {
+                    msg_ctrl->mr_msg_hw_reset_cb[i]((mr_frame_elem_t *)1, msg_ctrl->mr_msg_hw_reset_arg[i]);
+                }
+            }
+            msg_ctrl_flush_upld_queue(msg_ctrl);
+
+            continue;
         }
 
         /* Detect unknown/unexpected event flags */
@@ -492,6 +579,14 @@ mr_msg_ctrl_priv_t *mr_msg_ctrl_init(mr_msg_ctrl_cfg_t *cfg)
     memset(msg_ctrl, 0, sizeof(mr_msg_ctrl_priv_t));
 
     msg_ctrl->cfg = *cfg;
+    msg_ctrl->keepalive_paused = false;
+    msg_ctrl->keepalive_timer = xTimerCreate("msg_keepalive", pdMS_TO_TICKS(MSG_KEEPALIVE_PERIOD_MS),
+                                              pdTRUE, msg_ctrl, msg_keepalive_timer_cb);
+    if (msg_ctrl->keepalive_timer == NULL) {
+        LOG_E("%s Failed to create keepalive timer\r\n", cfg->name);
+        kfree(msg_ctrl);
+        return NULL;
+    }
 
     /* Create download frame queue controller */
     mr_frame_queue_ctrl_init_cfg_t dnld_frame_cfg = {
@@ -504,7 +599,7 @@ mr_msg_ctrl_priv_t *mr_msg_ctrl_init(mr_msg_ctrl_cfg_t *cfg)
     msg_ctrl->dnld_queue_ctrl = mr_frame_queue_create(&dnld_frame_cfg);
     if (msg_ctrl->dnld_queue_ctrl == NULL) {
         LOG_E("Failed to create download queue controller\r\n");
-        return NULL;
+        goto error_exit;
     }
 
     /* Create queues */
@@ -521,6 +616,10 @@ mr_msg_ctrl_priv_t *mr_msg_ctrl_init(mr_msg_ctrl_cfg_t *cfg)
     msg_ctrl->upld_done_queue = xQueueCreate(msg_ctrl->cfg.upld_queue_depth, sizeof(void *));
     if (msg_ctrl->upld_done_queue == NULL) {
         LOG_E("%s Failed to create msg upload done queue\r\n", msg_ctrl->cfg.name);
+        goto error_exit;
+    }
+    msg_ctrl->upld_fail_queue = xQueueCreate(msg_ctrl->cfg.upld_queue_depth, sizeof(void *));
+    if (msg_ctrl->upld_fail_queue == NULL) {
         goto error_exit;
     }
 
@@ -545,11 +644,17 @@ error_exit:
     if (msg_ctrl->dnld_done_queue) {
         vQueueDelete(msg_ctrl->dnld_done_queue);
     }
+    if (msg_ctrl->keepalive_timer) {
+        xTimerDelete(msg_ctrl->keepalive_timer, 0);
+    }
     if (msg_ctrl->upld_wait_queue) {
         vQueueDelete(msg_ctrl->upld_wait_queue);
     }
     if (msg_ctrl->upld_done_queue) {
         vQueueDelete(msg_ctrl->upld_done_queue);
+    }
+    if (msg_ctrl->upld_fail_queue) {
+        vQueueDelete(msg_ctrl->upld_fail_queue);
     }
     if (msg_ctrl->dnld_queue_ctrl) {
         mr_frame_queue_remove(msg_ctrl->dnld_queue_ctrl);
@@ -574,6 +679,12 @@ int mr_msg_ctrl_deinit(mr_msg_ctrl_priv_t *msg_ctrl)
         return -1;
     }
 
+    mr_msg_ctrl_keepalive_pause(msg_ctrl);
+    if (msg_ctrl->keepalive_timer != NULL) {
+        xTimerDelete(msg_ctrl->keepalive_timer, 0);
+        msg_ctrl->keepalive_timer = NULL;
+    }
+
     /* Delete message processing task */
     vTaskDelete(msg_ctrl->msg_proc_task);
     msg_ctrl->msg_proc_task = NULL;
@@ -582,6 +693,7 @@ int mr_msg_ctrl_deinit(mr_msg_ctrl_priv_t *msg_ctrl)
     vQueueDelete(msg_ctrl->dnld_done_queue);
     vQueueDelete(msg_ctrl->upld_wait_queue);
     vQueueDelete(msg_ctrl->upld_done_queue);
+    vQueueDelete(msg_ctrl->upld_fail_queue);
 
     /* Delete download queue controller */
     mr_frame_queue_remove(msg_ctrl->dnld_queue_ctrl);

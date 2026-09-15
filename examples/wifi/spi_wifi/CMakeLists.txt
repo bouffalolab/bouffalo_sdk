@@ -4,7 +4,6 @@ cmake_minimum_required(VERSION 3.15)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 # User
-sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 #sdk_add_compile_definitions(-DCONFIG_MEMSET_OPTSPEED)
 
 
@@ -44,5 +43,10 @@ if (CONFIG_RCP_ENABLE)
 sdk_add_compile_definitions(-DLWIP_HEAP_SIZE=\(1*1024\))
 sdk_add_compile_definitions(-DCONFIG_RCP_ENABLE=$(CONFIG_RCP_ENABLE))
 endif()
+
+sdk_add_flash_partition_image(
+    PARTITION media
+    FILE ${CMAKE_BINARY_DIR}/build_out/littlefs.bin)
+sdk_set_flash_erase(2)
 
 project(spi_wifi)

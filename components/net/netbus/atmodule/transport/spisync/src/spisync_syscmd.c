@@ -78,7 +78,7 @@ typedef struct _sycmd_seg {
 extern spisync_t *g_spisync_current;
 syscmd_ctx_t s_syscmd_ctx;
 
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
 int pm_status_update(int status);
 #endif
 BaseType_t _syscmd_send(syscmd_ctx_t *ctx, syscmd_msg_t *msg);
@@ -105,7 +105,7 @@ void gpio0_isr(uint8_t pin)
         spisync_log("gpio isrcnt:%d\r\n", isrcnt++);
 
         g_spisync_current->ps_keepactive = 1;
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
         pm_status_update(g_spisync_current->ps_keepactive);
 #endif
 
@@ -221,7 +221,7 @@ static int _ctl_process(uint8_t *buf, uint32_t len)
 
             // update keepactive
             g_spisync_current->ps_keepactive = 0;
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
             pm_status_update(g_spisync_current->ps_keepactive);
 #endif
             break;
@@ -260,7 +260,7 @@ void slave_canentersleep_timer_callback(TimerHandle_t xTimer)
     spisync_log("------------------------ Slave module can enter sleep mode\r\n");
 
     g_spisync_current->ps_keepactive = 0;
-#ifdef LP_APP
+#ifdef CONFIG_LPAPP
     pm_status_update(g_spisync_current->ps_keepactive);
 #endif
 }

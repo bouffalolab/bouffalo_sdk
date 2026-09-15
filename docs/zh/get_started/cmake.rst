@@ -43,6 +43,10 @@ CMake 框架的使用
       - 设置链接脚本
     * - sdk_set_main_file
       - 设置 main 函数所在文件
+    * - sdk_add_flash_partition_image
+      - 将 bin 文件注册到指定分区进行烧录
+    * - sdk_set_flash_erase
+      - 将烧录擦除模式设置为 0、1 或 2
     * - project
       - 工程编译
     * - target_source(app PRIVATE xxx)
@@ -68,3 +72,17 @@ CMake 框架的使用
 --------------------
 
 用户自定义的 cmake 条件编译项（ **使用了 cmake 的 if 语法**）、或者使用了 sdk 带 `ifdef` 结尾的函数, 使能方式同上
+
+注册分区镜像
+--------------------
+
+应用镜像会自动注册，标准应用还会自动注册 Boot2 和分区表。如需烧录其他 bin 文件，请在 ``project()`` 前注册，烧录地址会从当前分区表中读取：
+
+.. code-block:: cmake
+
+    sdk_add_flash_partition_image(
+        PARTITION media
+        FILE ${CMAKE_BINARY_DIR}/build_out/littlefs.bin)
+
+生成的 INI 段名使用分区名，配置文件位于 ``build/flash_prog_cfg.ini``。
+默认擦除模式为 1。如需整片擦除，请在 ``project()`` 前调用 ``sdk_set_flash_erase(2)``。

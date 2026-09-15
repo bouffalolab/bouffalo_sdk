@@ -310,7 +310,26 @@ mm_heap_t *mm_register_heap(uint32_t heap_id, const char *name, uint32_t allocat
                             void *start_addr, size_t size);
 
 /**
- * @brief Set the automatic heap selection list.
+ * @brief Unregister and deinitialize a heap.
+ *
+ * All pointers previously allocated from this heap become invalid after this
+ * call. The heap's allocator and the memory manager remain initialized.
+ *
+ * @param heap_id Heap ID to unregister.
+ * @return 0 on success, negative value on failure.
+ */
+int mm_heap_unregister(uint32_t heap_id);
+
+/**
+ * @brief Unregister and deinitialize all heaps.
+ *
+ * All pointers previously allocated from any heap become invalid after this
+ * call. The registered allocators and memory manager remain initialized.
+ */
+void mm_heap_unregister_all(void);
+
+/**
+ * @brief Set the heap allocation order for MM_FLAG_HEAP_ANY.
  *
  * The provided heap IDs are copied into the internal automatic-allocation
  * list in the specified order. Entries with value 0 disable that slot, and
@@ -322,10 +341,10 @@ mm_heap_t *mm_register_heap(uint32_t heap_id, const char *name, uint32_t allocat
  * @param count Number of entries in heap_list.
  * @return 0 on success, negative value on failure.
  */
-int mm_heap_set_auto_list(const uint32_t *heap_list, size_t count);
+int mm_heap_set_any_alloc_order(const uint32_t *heap_list, size_t count);
 
 /**
- * @brief Get the current automatic heap selection list.
+ * @brief Get the heap allocation order for MM_FLAG_HEAP_ANY.
  *
  * Copies the current automatic-allocation list into the caller-provided
  * buffer. The output buffer must contain at least CONFIG_MM_HEAP_COUNT
@@ -336,7 +355,7 @@ int mm_heap_set_auto_list(const uint32_t *heap_list, size_t count);
  * @param count Number of entries available in heap_list.
  * @return 0 on success, negative value on failure.
  */
-int mm_heap_get_auto_list(uint32_t *heap_list, size_t count);
+int mm_heap_get_any_alloc_order(uint32_t *heap_list, size_t count);
 
 /**
  * @brief Find the heap corresponding to a given address
