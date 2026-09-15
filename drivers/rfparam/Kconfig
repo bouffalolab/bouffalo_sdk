@@ -1,0 +1,10 @@
+#
+# RF parameter driver configuration
+#
+
+config RFPARAM_TLV_FIXED_ADDRESS
+    bool "RF parameter TLV fixed address"
+    default n
+    help
+      Store RF parameters at a fixed TLV flash address instead of the
+      auto-detected location.

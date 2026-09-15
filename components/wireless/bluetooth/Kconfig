@@ -1,0 +1,922 @@
+menu "Bluetooth"
+
+comment "Controller library selection"
+
+config BLECONTROLLER_LIB
+    string "BLE controller library variant (bl602/bl702)"
+    help
+      Name of the prebuilt BLE controller library to link (for example
+      "m1s1").  Only the variants provided for the selected chip are
+      accepted (bl602/bl702: m0s0sp, m0s1, m0s1p, m0s1s, m16s1, m1s1,
+      m2s1, m8s1); the build aborts on unknown values or when the
+      remaining options conflict with the selected library.
+
+config BTBLECONTROLLER_LIB
+    string "Bluetooth controller library variant (btble SoCs)"
+    help
+      Name of the prebuilt Bluetooth+BLE controller library to link (for
+      example "ble1m2s1bredr1").  Only the variants provided for the
+      selected chip are accepted (bl616/bl618dg: ble1m0s1bredr0,
+      ble1m0s1sbredr0, ble1m0s1sbredr1, ble1m10s1bredr0, ble1m10s1bredr1,
+      ble1m2s1bredr0, ble1m2s1bredr1, ble1m4s1bredr1, blespihci,
+      bleuarthci, mfg, uarthci, wlanif; bl702l: m0s1p, m0s1rp, m0s1sp,
+      m0s2p, m0s4p, m1s1p, m1s1t10, m2s1p, m4s1p, m8s1p, uarthci,
+      uarthcilp; bl616cl: m0b1, m0s1, m2s1, mfg, uarthci, wlanif); the
+      build aborts on unknown values or when the remaining options
+      conflict with the selected library.
+
+menu "Controller build integration"
+
+config BT_CONTROLLER_DISABLE
+    bool "Disable the Bluetooth controller"
+    default n
+
+config BT_HOST_HCI
+    bool "Bluetooth host over HCI transport"
+    default n
+
+config BT_HOST_HCI_TL
+    bool "HCI transport layer for the Bluetooth host"
+    default n
+
+config BLE_HOST_DISABLE
+    bool "Disable the BLE host stack"
+    default n
+
+config BLE_USE_MAC2
+    bool "Use the secondary BLE MAC address"
+    default n
+
+config BFLB_BLETP_SVC
+    bool "BLE throughput service (NimBLE)"
+    default n
+
+config NIMBLE
+    bool "Use the NimBLE host stack"
+    default n
+
+config NIMBLE_STACK_CLI
+    bool "NimBLE stack shell commands"
+    default n
+
+config NUTTX
+    bool "Build for the NuttX RTOS"
+    default n
+
+config FREERTOS_DISABLE
+    bool "Build without FreeRTOS"
+    default n
+
+config NXSPI_HCI
+    bool
+    default n
+
+config WLANIF_HCI
+    bool
+    default n
+
+config DISABLE_BT_ECC
+    bool
+    default n
+
+config DISABLE_BLE_CONTROLLER_PHY_UPDATE
+    bool
+    default n
+
+config DISABLE_BLE_CONTROLLER_SEC_CON
+    bool
+    default n
+
+config DISABLE_BLE_CONTROLLER_TEST_MODE
+    bool
+    default n
+
+config DISABLE_CONTROLLER_BLE_PRIVACY
+    bool
+    default n
+
+config BL702L_A1
+    bool
+    default n
+
+config BLE_MFG
+    bool
+    default n
+
+config BLE_MFG_HCI_CMD
+    bool
+    default n
+
+config BT_MFG
+    bool
+    default n
+
+config BT_MFG_HCI_CMD
+    bool
+    default n
+
+config BLE_RES_DYNAMIC_CONF
+    bool
+    default n
+
+config EM_SIZE
+    int
+    default 64
+
+config CON_ACL
+    int
+    default 2 if BT_BREDR
+    default 0
+
+config BT_L2CAP_TX_MTU
+    int "L2CAP TX MTU"
+    range 65 2000 if !DISABLE_BT_SMP
+    range 23 2000 if DISABLE_BT_SMP
+    default 672 if BT_A2DP_SOURCE && !DISABLE_BT_SMP
+    default 247
+
+config BT_RX_BUF_LEN
+    int "BLE host RX buffer size"
+    range 73 2000
+    default 1015 if BT_BREDR && BT_SPP
+    default 680 if BT_BREDR
+    default 255
+
+config BT_RX_STACK_SIZE
+    int "Bluetooth host RX thread stack size"
+    default 3072 if BT_MESH && (BT_MESH_MODEL || AUTO_PTS)
+    default 2176 if BT_MESH
+    default 3072 if BT_NEARBY
+    default 2048
+
+config BT_WORK_QUEUE_STACK_SIZE
+    int "Bluetooth host work queue stack size"
+    default 2048 if BT_MESH
+    default 2048
+
+config BL702_USE_ROM_DRIVER
+    bool "Use the BLE ROM driver on BL702"
+    default n
+
+config BFLB_BLESYNC
+    bool "BLE synchronization service support"
+    default n
+
+config BLE_BEACON_ONLY
+    bool "BLE beacon-only build"
+    default n
+
+config BT_NEARBY
+    bool "Bluetooth nearby profile"
+    default n
+
+config BT_PATH
+    bool "Bluetooth path loss service"
+    default n
+
+endmenu
+
+config BLUETOOTH
+    bool "Bluetooth stack"
+    default n
+    help
+      Anchor for the Bluetooth menu. The Bluetooth stack build itself is
+      controlled by the bluetooth component and the controller library
+      selection, not by this flag.
+
+comment "BR/EDR (Classic)"
+
+config BT_BREDR
+    bool "BR/EDR (Classic) support"
+    default n
+    help
+      Enable Bluetooth BR/EDR (Classic) support. Selecting this pulls in
+      the BR/EDR controller features and the classic Bluetooth profiles.
+      Note: the prebuilt controller library may force this option for
+      certain controller library variants.
+
+config BT_A2DP
+    bool "A2DP"
+    default y if BT_BREDR
+    help
+      Enable the Advanced Audio Distribution Profile.
+
+config BT_A2DP_SOURCE
+    bool "A2DP source role"
+    default n
+    depends on BT_A2DP
+    help
+      Enable the A2DP source role.
+
+config BT_A2DP_SINK
+    bool "A2DP sink role"
+    default y
+    depends on BT_A2DP
+    help
+      Enable the A2DP sink role.
+
+config BT_AVRCP
+    bool "AVRCP"
+    default y if BT_BREDR
+    help
+      Enable the Audio/Video Remote Control Profile.
+
+config BT_HFP
+    bool "HFP"
+    default n
+    depends on BT_BREDR
+    help
+      Enable the Hands-Free Profile.
+
+config BT_SPP
+    bool "SPP"
+    default n
+    depends on BT_BREDR
+    help
+      Enable the Serial Port Profile.
+
+config BT_RESET
+    bool "Bluetooth controller reset"
+    default n
+    help
+      Enable resetting the Bluetooth controller.
+
+config BT_L2CAP_DYNAMIC_CHANNEL
+    bool "L2CAP dynamic channel"
+    depends on BT_BREDR
+    default y
+    help
+      Enable BR/EDR L2CAP dynamic channel support. This is always enabled
+      when BR/EDR is enabled and matches the compile definitions the stack
+      has always received; disable it only if your controller library was
+      built without BR/EDR L2CAP dynamic channel support.
+
+# Controller features
+#
+# These symbols describe capabilities baked into the prebuilt Bluetooth
+# controller library (selected via the blecontroller/btblecontroller
+# component and PRIV_CONFIG_GEN_BLE) rather than something a host-side
+# project can freely turn on or off. They intentionally have no prompt so
+# they do not show up as user-editable entries in menuconfig; their
+# effective values come from the per-library controller presets in
+# ble_common_readonly.cmake (_check_conflict) or from the defaults below
+# when no preset overrides them.
+
+config BT
+    bool
+    default y if BT_BREDR
+    default n
+    help
+      Enable the BR/EDR part of the Bluetooth controller.
+
+config SCO_ESCO
+    bool
+    default y
+    help
+      Enable SCO and eSCO synchronous connection support.
+
+config PCA
+    bool
+    default y
+    help
+      Enable power control adjustments.
+
+config RF_EXTRC
+    bool
+    default y
+    help
+      Enable external RF test support.
+
+config CSB
+    bool
+    default y
+    help
+      Enable connectionless slave broadcast support.
+
+config SNIFF
+    bool
+    default y
+    help
+      Enable BR/EDR sniff mode.
+
+config RSWITCH
+    bool
+    default y
+    help
+      Enable BR/EDR role switch.
+
+config TEST_MODE
+    bool
+    default y
+    help
+      Enable controller test mode support.
+
+config BT_HCI_TEST_MODE
+    bool
+    default y
+    help
+      Enable HCI test mode support.
+
+config BT_DIRECT_TEST_MODE
+    bool
+    default y
+    help
+      Enable BLE direct test mode support.
+
+config BLE
+    bool
+    default y
+    help
+      Enable the BLE part of the Bluetooth controller.
+
+config CIS
+    bool
+    default y
+    help
+      Enable connected isochronous stream support.
+
+config ADV_EXTENSION
+    bool
+    default y
+    help
+      Enable extended advertising support.
+
+config BIS
+    bool
+    default y
+    help
+      Enable broadcast isochronous stream support.
+
+config LONG_RANG
+    bool
+    default y
+    help
+      Enable BLE long range (coded PHY) support.
+
+config LE_PWR_CTRL
+    bool
+    default y
+    help
+      Enable LE power control support.
+
+config CTE
+    bool
+    default y
+    help
+      Enable constant tone extension support.
+
+config PHY_UPDATE
+    bool
+    default y
+    help
+      Enable the LL_PHY_UPDATE procedure.
+
+config CLK_ACC
+    bool
+    default y
+    help
+      Enable clock accuracy support.
+
+config LE_PING
+    bool
+    default y
+    help
+      Enable the LE ping procedure.
+
+config BT_REMOTE_VERSION
+    bool
+    default n
+    help
+      Enable handling of the remote version information request.
+
+comment "Host stack"
+
+# BT_CONN and BLE_TX_BUFF_DATA are fixed by the prebuilt controller library
+# (set via the per-library controller presets in ble_common_readonly.cmake).
+# They intentionally have no prompt so they are not user-editable in
+# menuconfig.
+
+config BT_CONN
+    int
+    default 1
+    help
+      Maximum number of simultaneous ACL connections. Must match the
+      configuration of the prebuilt controller library.
+
+config BLE_TX_BUFF_DATA
+    int
+    default 2
+    help
+      Number of BLE TX data buffers. Must match the configuration of the
+      prebuilt controller library.
+
+# Fixed by the prebuilt controller library presets, like BT_CONN above.
+config BLE_ACT_MAX
+    int
+    default 7
+    help
+      Maximum number of BLE advertising instances. Updating advertising
+      data while advertising is active requires at least 4 buffers.
+
+config BT_ATT_PREPARE_COUNT
+    int "ATT prepare write queue count"
+    default 0
+    range 0 64
+    help
+      Number of queued ATT prepare write requests.
+
+config BLE_USING_DYNAMIC_RAM
+    int "BLE host in dynamic RAM"
+    default 0
+    help
+      Set to 1 to place the BLE host stack in dynamically allocated RAM.
+
+config BT_ALLROLES
+    bool "All BLE roles"
+    default y
+    help
+      Enable all BLE roles at once (central, observer, peripheral,
+      broadcaster). Disabling this allows selecting roles individually.
+
+config BT_CENTRAL
+    bool "Central role"
+    default y
+    help
+      Enable the BLE central role.
+
+config BT_OBSERVER
+    bool "Observer role"
+    default y
+    help
+      Enable the BLE observer role.
+
+config BT_PERIPHERAL
+    bool "Peripheral role"
+    default y
+    help
+      Enable the BLE peripheral role.
+
+config BT_BROADCASTER
+    bool "Broadcaster role"
+    default y
+    help
+      Enable the BLE broadcaster role.
+
+config BT_SETTINGS
+    bool "Settings-based persistent storage"
+    default n
+    help
+      Enable storing Bluetooth settings (bonds, CCC, etc.) through the
+      settings subsystem.
+
+config BLE_TP_SERVER
+    bool "Throughput server"
+    default n
+    help
+      Enable the BLE throughput server.
+
+config BLE_MULTI_ADV
+    bool "Multiple advertising sets"
+    default n
+    help
+      Enable support for multiple concurrent advertising sets.
+
+config BLE_RECONNECT_TEST
+    bool "Reconnect test"
+    default n
+    help
+      Enable BLE reconnect test hooks.
+
+config BT_STACK_CLI
+    bool "Bluetooth stack shell commands"
+    default y
+    help
+      Enable the Bluetooth stack shell command interface.
+
+config BT_TP_CLI
+    bool "Throughput client"
+    default n
+    help
+      Enable the BLE throughput client.
+
+config BLE_STACK_DBG_PRINT
+    bool "Stack debug print"
+    default y
+    help
+      Enable BLE stack debug printing.
+
+config BT_STACK_PTS
+    bool "PTS test support"
+    default n
+    help
+      Enable Bluetooth stack PTS (Profile Tuning Suite) test support.
+
+config BT_MESH_PTS
+    bool "Mesh PTS test support"
+    default n
+    depends on BT_MESH
+    help
+      Enable Bluetooth mesh PTS test support.
+
+config BLE_TP_TEST
+    bool "Throughput test"
+    default n
+    help
+      Enable the BLE throughput test.
+
+config BT_GEN_RANDOM_BY_SW
+    bool "Software random generator"
+    default n
+    help
+      Let the BLE host generate random values in software.
+
+config DISABLE_BT_SMP
+    bool "Disable SMP"
+    default n
+    help
+      Disable the Security Manager Protocol.
+
+config DISABLE_BT_HOST_PRIVACY
+    bool "Disable host privacy"
+    default y
+    help
+      Disable BLE host privacy (RPA) support.
+
+config BT_GATT_CLIENT
+    bool "GATT client"
+    default y
+    help
+      Enable the GATT client.
+
+config BT_DATA_LEN_UPDATE
+    bool "Data length update"
+    default y
+    help
+      Enable the BLE data length update procedure.
+
+config BT_FIXED_PASSKEY
+    bool "Fixed passkey"
+    default n
+    help
+      Use a fixed passkey for pairing.
+
+config BT_SMP_ENFORCE_MITM
+    bool "Enforce MITM protection"
+    default n
+    help
+      Enforce man-in-the-middle protection during pairing.
+
+config BT_GAP_PERIPHERAL_PREF_PARAMS
+    bool "Peripheral preferred connection parameters"
+    default n
+    help
+      Include the peripheral preferred connection parameters GATT
+      characteristic.
+
+comment "Test and debug"
+
+config BT_BREDR_PTS
+    bool "BR/EDR PTS test"
+    default n
+    depends on BT_BREDR
+    help
+      Enable BR/EDR PTS test support.
+
+config BT_TL
+    bool "TL test"
+    default n
+    help
+      Enable BT TL test mode (disables the BLE host).
+
+config BLE_PDS
+    bool "PDS power saving"
+    default n
+    help
+      Enable BLE power down sleep and disable the security engine.
+
+config EM_16K
+    bool "16K EM size"
+    default n
+    help
+      Use a 16K event map size.
+
+config EM_HEAP_DISABLE
+    bool "Disable EM heap"
+    default n
+    help
+      Disable the heap allocated from the event map.
+
+config HW_SEC_ENG_DISABLE
+    bool "Disable hardware security engine"
+    default y if BLE_PDS
+    default n
+    help
+      Disable the hardware security engine. Implicitly enabled by the
+      BLE PDS power saving mode.
+
+config SIMPLE_MASTER
+    bool "Simple master"
+    default n
+    help
+      Build a reduced host for simple central-only applications.
+
+config LP_HCIUART
+    bool "Low power HCI UART"
+    default n
+    help
+      Enable the low power HCI UART transport.
+
+config USE_XTAL32K
+    bool "External 32K crystal"
+    default n
+    help
+      Use an external 32.768 kHz crystal.
+
+config BLE_TP_SVC_COMPATIBILITY_TEST
+    bool "TP service compatibility test"
+    default n
+    depends on BLE_TP_SERVER
+    help
+      Enable BLE throughput service compatibility tests.
+
+config BLE_AT_CMD
+    bool "BLE AT commands"
+    default n
+    help
+      Enable BLE AT command processing.
+
+config BT_DEBUG_MONITOR
+    bool "Monitor protocol debug"
+    default n
+    help
+      Enable the Bluetooth monitor protocol debug output.
+
+config AUTO_PTS
+    bool "Auto PTS"
+    default n
+    help
+      Enable automated PTS testing.
+
+config ZIGBEE_PROV
+    bool "Zigbee provisioning over BLE"
+    default n
+    help
+      Enable Zigbee provisioning over BLE.
+
+config DYNAMIC_GATTS
+    bool "Dynamic GATTS"
+    default n
+    help
+      Enable dynamic GATT server registration.
+
+config PTS_TEST_CASE_INSUFFICIENT_KEY
+    bool "PTS insufficient key test case"
+    default n
+    help
+      Enable the PTS insufficient encryption key size test case.
+
+config PTS_GAP_SLAVER_CONFIG_INDICATE_CHARC
+    bool "PTS GAP slave indicate characteristic"
+    default n
+    help
+      Enable the PTS GAP slave configuration indicate characteristic.
+
+comment "GATT server profiles"
+
+config BT_OAD_SERVER
+    bool "OAD server"
+    default n
+    help
+      Enable the over-the-air download (OAD) GATT server.
+
+config BT_OAD_CLIENT
+    bool "OAD client"
+    default n
+    help
+      Enable the over-the-air download (OAD) GATT client.
+
+config HOGP_SERVER
+    bool "HID over GATT server"
+    default n
+    help
+      Enable the HID over GATT profile server.
+
+config BT_BAS_SERVER
+    bool "Battery service server"
+    default n
+    help
+      Enable the Battery Service server.
+
+config BT_IAS_SERVER
+    bool "Immediate alert service server"
+    default n
+    help
+      Enable the Immediate Alert Service server.
+
+config BT_SPP_SERVER
+    bool "SPP over BLE server"
+    default n
+    help
+      Enable the SPP-like GATT server.
+
+config BT_SCPS_SERVER
+    bool "Scan parameters service server"
+    default n
+    help
+      Enable the Scan Parameters Service server.
+
+config BT_DIS_SERVER
+    bool "Device information service server"
+    default n
+    help
+      Enable the Device Information Service server.
+
+config BT_REMOTE_CONTROL
+    bool "Remote control"
+    default n
+    help
+      Enable the BLE remote control application support.
+
+comment "Bluetooth Mesh"
+
+config BT_MESH
+    bool "Bluetooth Mesh"
+    default n
+    help
+      Enable the Bluetooth Mesh stack.
+
+config BLE_MESH_CERT_BASED_PROV
+    bool "Certificate based provisioning"
+    default n
+    depends on BT_MESH
+    help
+      Enable Bluetooth mesh certificate based provisioning.
+
+config BT_MESH_V1d1
+    bool "Mesh protocol 1.1"
+    default n
+    depends on BT_MESH
+    help
+      Enable Bluetooth Mesh protocol version 1.1 features (private
+      beacons, enhanced provisioning).
+
+config BT_MESH_RELAY
+    bool "Relay"
+    default y
+    depends on BT_MESH
+    help
+      Enable Bluetooth Mesh relaying.
+
+config BT_MESH_PB_ADV
+    bool "Provisioning bearer (ADV)"
+    default y
+    depends on BT_MESH
+    help
+      Enable the advertising provisioning bearer.
+
+config BT_MESH_PB_GATT
+    bool "Provisioning bearer (GATT)"
+    default y
+    depends on BT_MESH
+    help
+      Enable the GATT provisioning bearer.
+
+config BT_MESH_FRIEND
+    bool "Friend"
+    default y
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh friend feature.
+
+config BT_MESH_LOW_POWER
+    bool "Low power"
+    default y
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh low power feature.
+
+config BT_MESH_PROXY
+    bool "Proxy"
+    default y
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh proxy feature.
+
+config BT_MESH_GATT_PROXY
+    bool "GATT proxy"
+    default y
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh GATT proxy feature.
+
+config BT_MESH_CLI
+    bool "Mesh client models"
+    default y
+    depends on BT_MESH
+    help
+      Enable Bluetooth Mesh client model support.
+
+config BT_MESH_MOD_BIND_CB
+    bool "Model bind callback"
+    default n
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh model bind callback.
+
+config BT_MESH_APPKEY_ADD_CB
+    bool "Appkey add callback"
+    default n
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh appkey add callback.
+
+config BT_MESH_MOD_SUB_ADD_CB
+    bool "Model subscription add callback"
+    default n
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh model subscription add callback.
+
+config BT_MESH_SYNC
+    bool "Mesh sync"
+    default n
+    depends on BT_MESH
+    help
+      Enable Bluetooth Mesh synchronization.
+
+config BT_MESH_NODE_SEND_CFGCLI_MSG
+    bool "Node configuration client messages"
+    default n
+    depends on BT_MESH
+    help
+      Allow a normal mesh node to send configuration client messages.
+
+config BT_MESH_PROVISIONER
+    bool "Provisioner"
+    default n
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh provisioner role.
+
+config BT_MESH_CDB
+    bool "Configuration database"
+    default y if BT_MESH_PROVISIONER
+    default n
+    depends on BT_MESH && BT_MESH_PROVISIONER
+    help
+      Enable the Bluetooth Mesh configuration database.
+
+config BT_MESH_OTA_TARGET
+    bool "Mesh OTA target"
+    default n
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh OTA target.
+
+menu "Mesh models"
+    depends on BT_MESH
+
+config BT_MESH_MODEL
+    bool "Mesh models"
+    default n
+    help
+      Enable Bluetooth Mesh model support.
+
+config BT_MESH_MODEL_GEN_SRV
+    bool "Generic server models"
+    default y
+    depends on BT_MESH
+    help
+      Enable the Bluetooth Mesh generic server models.
+
+config BT_MESH_MODEL_GEN_CLI
+    bool "Generic client models"
+    default y
+    depends on BT_MESH_MODEL
+    help
+      Enable the Bluetooth Mesh generic client models.
+
+config BT_MESH_MODEL_LIGHT_SRV
+    bool "Light server models"
+    default y
+    depends on BT_MESH_MODEL
+    help
+      Enable the Bluetooth Mesh lighting server models.
+
+config BT_MESH_MODEL_LIGHT_CLI
+    bool "Light client models"
+    default y
+    depends on BT_MESH_MODEL
+    help
+      Enable the Bluetooth Mesh lighting client models.
+
+config BT_MESH_MODEL_VENDOR_CLI
+    bool "Vendor client model"
+    default n
+    depends on BT_MESH_MODEL
+    help
+      Enable the Bluetooth Mesh vendor client model.
+
+endmenu
+
+endmenu

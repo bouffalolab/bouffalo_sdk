@@ -1,0 +1,59 @@
+config PEC_V2
+    default y if CHIP = "bl616cl" || CHIP = "bl618dg"
+
+config DVP_RASTER
+    default n if CHIP = "bl618dg"
+
+config MULTIMEDIA_VIDEO
+    default y if CHIP = "bl616cl" || CHIP = "bl618dg"
+
+config GCC_OPTIMISE_LEVEL
+    default "-Os" if CHIP = "bl616cl" || CHIP = "bl616" || CHIP = "bl618dg"
+
+config CPU_ID
+    default "ap" if CHIP = "bl618dg"
+
+config CPU_MODEL
+    default "b0" if CHIP = "bl618dg"
+
+config ROMAPI
+    default n if CHIP = "bl618dg" && (CPU_ID = "lp" || CPU_ID = "np")
+
+config WRAM_LENGTH
+    hex "WRAM region length in bytes"
+    depends on CHIP = "bl616" || CHIP = "bl616cl"
+    default 0x28000 if WIFI6 || WLAN
+    default 0x10000
+    help
+      Size in bytes of the WRAM region reserved by the BL616/BL616CL
+      linker layout. The Wi-Fi region excludes the separately reserved
+      EM size. Changing this value also changes the remaining SRAM size.
+
+config PSRAM_FOR_AP_SIZE
+    hex "AP PSRAM partition size" if CHIP = "bl618dg"
+    default 0x200000 if CHIP = "bl618dg"
+    help
+      Size of the external PSRAM region assigned to the AP core.
+
+config WRAM_FOR_AP_SIZE
+    hex "AP WRAM partition size" if CHIP = "bl618dg"
+    default 0x50000 if CHIP = "bl618dg"
+    help
+      Size of the wireless RAM region assigned to the AP core.
+
+config RAM_FOR_AP_SIZE
+    hex "RAM size for AP" if CHIP = "bl618dg"
+    default 0x6D600 if CHIP = "bl618dg"
+
+config DBI_DISPLAY_BOARD_MODE
+    bool "Use display-board DBI Type B pin mapping" if CHIP = "bl618dg"
+    default n
+    help
+      Route DBI Type B control signals through GPIO 12-14 instead of
+      GPIO 18-20, keeping GPIO 17 and data pins unchanged.
+
+config DPI_DISPLAY_BOARD_MODE
+    bool "Use display-board DPI pin mapping" if CHIP = "bl618dg"
+    default n
+    help
+      Route DPI control signals through GPIO 0-3 instead of GPIO 45-48.
