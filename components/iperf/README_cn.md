@@ -307,21 +307,34 @@ TCP/IP Core Lock，以减少 API 和线程切换开销。对于倾向使用 Sock
 UDP 使用 Classic iPerf2 normal-mode 数据格式。两个接收后端都通过合法首包
 选择会话格式，后续不再重新探测：
 
-| PC UDP client | 前缀及配置 | 数据序号基准 | AckFIN 长度 |
+| PC UDP client | 前缀及配置 | 数据序号基准 | Server AckFIN 发送长度 |
 |---|---|---|---|
-| 2.0.5 normal 单流 | 12 字节 SEQ32 + 24 字节配置，flags=0 | 0 | 52 字节 |
-| 2.0.13 SEQ64，无 EXTEND | 16 字节 SEQ64 + 4 字节 flags，其余为负载 | 1 | 56 字节 |
-| 2.2.1 SEQ64，带 EXTEND | 16 字节 SEQ64 + 24 字节配置 + 40 字节扩展 | 1 | 56 字节 |
+| 2.0.5 normal 单流 | 12 字节 SEQ32 + 24 字节配置，flags=0 | 0 | 112 字节 |
+| 2.0.13 SEQ64，无 EXTEND | 16 字节 SEQ64 + 4 字节 flags，其余为负载 | 1 | 128 字节 |
+| 2.2.1 SEQ64，带 EXTEND | 16 字节 SEQ64 + 24 字节配置 + 40 字节扩展 | 1 | 128 字节 |
+
+Server AckFIN 的 12/16 字节序号前缀、40 字节基础统计布局和 VERSION1 flags
+保持不变，尾部追加 60/72 字节全零区域，用于 2.0.9/2.0.13 长度兼容填充，
+不代表支持扩展统计。Client 接收最小长度仍为 SEQ32 的 52 字节或两种 SEQ64
+的 56 字节；两个后端最多读取 56 字节基础前缀，不要求对端提供兼容填充。
 
 优先识别 SEQ64，但必须先满足至少 20 字节、完整 signed64 ID 非负、合法时间戳
 和 SEQ flag（不含 VERSION1）。无 EXTEND 时最小为 20 字节：2.0.13 normal
 模式的 flags 之后是 ASCII 负载，不读取或校验 base 配置字段。EXTEND 仍要求
-完整 80 字节及合法 base 配置。声明 SEQ64 后若校验失败，不会回退为 SEQ32。
-SEQ32 要求 signed32 ID 非负、至少 36 字节，并满足 normal flags、单线程、合法端口、合理 buffer
-长度（允许上游默认值 0）、非零带宽/amount 及合法时间戳，不能仅凭短 UDP 或
+完整 80 字节，但不再校验 base 配置字段。声明 SEQ64 后若校验失败，不会回退为 SEQ32。
+SEQ32 要求 signed32 ID 非负、至少 36 字节，保留 offset 12 的 flags=0 和
+offset 16 的 threads=1 作为格式标记；不校验未使用的端口、buffer 长度、
+window/bandwidth 和 amount 字段。所有格式均要求时间戳 usec < 1000000，
+拒绝带 VERSION1 的 setup flags。不能仅凭短 UDP 或
 flags=0 占用会话。三种格式均允许在 ID0/1 丢失后，由后续合法 ID 建立会话；
 负序号 FIN 不能建立会话。64 位 ID 允许高字非零、低字最高位为 1，只要完整
 signed64 值非负。建连后数据和 FIN 只需满足所选格式的 12/16 字节前缀长度。
+
+Raw 和 Socket 均在各自 server worker 中，仅对每个 server 实例首次 setup 拒绝
+打印警告，包含拒绝原因及可用前缀长度；后续拒绝静默丢弃，继续等待合法 peer。
+不使用全局限频。本次放宽允许 2.0.9 使用的 offset 28 window=0 的 SEQ32 setup，
+不代表已实现 2.0.9 完整互操作。Client 数据/setup/FIN TX 保持不变，
+仅 server AckFIN 发送长度按上述规则增加填充。
 
 接收计时从首个接受的报文开始，但初段丢包仍按协议序号基准（SEQ32 为 0，
 两种 SEQ64 为 1）统计，不以首个收到的 ID 重设基准。peer 绑定逻辑不变。
@@ -339,8 +352,9 @@ signed64 值非负。建连后数据和 FIN 只需满足所选格式的 12/16 �
 ### 实机验证
 
 使用 [examples/wifi/macsw_bare](../../examples/wifi/macsw_bare) 工程验证 iPerf。
-分别使用 iPerf2 2.0.5、2.0.13 和 2.2.1 对端验证设备 UDP RX，覆盖 Raw 和 Socket
+分别使用 iPerf2 2.0.5、2.0.9、2.0.13 和 2.2.1 对端验证设备 UDP RX，覆盖 Raw 和 Socket
 两种后端，检查吞吐、丢包统计及 FIN/AckFIN 正常结束。
+本次 AckFIN 填充调整尚未经过实机验证；以上为验证步骤，不代表已完成互操作测试。
 
 ## 功能范围与限制
 

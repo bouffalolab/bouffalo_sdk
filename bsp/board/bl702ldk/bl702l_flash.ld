@@ -14,17 +14,23 @@ OUTPUT_ARCH( "riscv" )
 /* configure the entry point */
 ENTRY(__start)
 
-StackSize    = 0x1000; /*  4KB */
+StackSize    = 0x0800; /*  2KB */
 HeapMinSize  = 0x1000; /*  4KB */
+/* BLE EM is carved out of the top of the 80 KiB WRAM by GLB_Set_EM_Sel()
+ * when the ble controller is linked; otherwise it returns to the heap. */
+__EM_SIZE = (DEFINED(ble_controller_init) || DEFINED(btble_controller_init)) ? 8K : 0K;
 
 MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x23000000 - 0x1000, LENGTH = 4K
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22020000, LENGTH = 16K
-    dtcm_memory (rx)  : ORIGIN = 0x42024000, LENGTH = 4K
-    ram_memory  (!rx) : ORIGIN = 0x42025000, LENGTH = 60K
+    /* 0x22020000 and 0x42020000 are the instruction/data aliases of the
+     * same SRAM; EM is carved from the top of the range. */
+    itcm_memory (rx)  : ORIGIN = 0x22020000, LENGTH = 80K - __EM_SIZE
+    ram_memory  (!rx) : ORIGIN = 0x42020000, LENGTH = 80K - __EM_SIZE
     hbn_memory  (rx)  : ORIGIN = 0x40010000, LENGTH = 0xE00     /* hbn ram 4K used 3.5K*/
+    /* BL702L PSRAM is at 0x24000000. */
+    psram_memory (wxa) : ORIGIN = 0x24000000, LENGTH = DEFINED(board_psram_init) ? 2M : 0
 }
 
 SECTIONS
@@ -41,6 +47,17 @@ SECTIONS
         KEEP (*(SORT_NONE(.init)))
         KEEP (*(SORT_NONE(.vector)))
 
+    } > xip_memory
+
+    .rom_header ORIGIN(xip_memory) + 512 :
+    {
+        __multi_bins__ = ABSOLUTE(.);
+        LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(4K)         LONG(4K)
+        LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
+        LONG(0x464D4F52) LONG(0x00000053) /*ROMFS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0x54524543) LONG(0x00000053) /*CERTS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0x4F545541) LONG(0x5453494C) /*AUTOLIST*/  LONG(0x00000000) LONG(0x00000000)
+        LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)               LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)
     } > xip_memory
 
     .text :
@@ -91,11 +108,9 @@ SECTIONS
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
         LONG(ORIGIN(itcm_memory));
-        LONG(LENGTH(itcm_memory));
-        LONG(ORIGIN(dtcm_memory));
-        LONG(LENGTH(dtcm_memory));
-        LONG(ORIGIN(ram_memory));
-        LONG(LENGTH(ram_memory));
+        LONG(SIZEOF(.itcm_region));
+        LONG(__ram_start__);
+        LONG(ORIGIN(ram_memory) + LENGTH(ram_memory) - __ram_start__);
         LONG(ORIGIN(hbn_memory));
         LONG(LENGTH(hbn_memory));
         LONG(0xffffffff);
@@ -147,6 +162,13 @@ SECTIONS
         __tcm_code_end__ = .;
     } > itcm_memory
 
+    /*
+     * ITCM and WRAM are two address aliases of the same physical SRAM. Start
+     * normal RAM immediately after the ITCM image's physical extent so unused
+     * ITCM capacity remains available to the system heap.
+     */
+    __ram_start__ = ORIGIN(ram_memory) + ADDR(.itcm_region) - ORIGIN(itcm_memory) + SIZEOF(.itcm_region);
+
     __hbn_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
 
     .hbn_ram_region : AT (__hbn_load_addr)
@@ -160,9 +182,17 @@ SECTIONS
         __hbn_ram_end__ = .;
     } > hbn_memory
 
+    /* RF calibration state survives PDS/HBN and must not enter TLSF RAM. */
+    .hbn_noinit (NOLOAD) :
+    {
+        . = ALIGN(4);
+        *(.retention_noinit)
+        . = ALIGN(4);
+    } > hbn_memory
+
     __dtcm_load_addr = __hbn_load_addr + SIZEOF(.hbn_ram_region);
 
-    .dtcm_region : AT (__dtcm_load_addr)
+    .dtcm_region __ram_start__ : AT (__dtcm_load_addr)
     {
         . = ALIGN(4);
         __tcm_data_start__ = .;
@@ -172,26 +202,20 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_data_end__ = .;
-    } > dtcm_memory
+    } > ram_memory
 
     /*************************************************************************/
-    /* .stack_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of stack sections, and assign
-     * values to stack symbols later */
-    .stack_dummy (NOLOAD):
+    .stack __tcm_data_end__ (NOLOAD):
     {
-        . = ALIGN(0x4);
+        . = ALIGN(16);
+        __StackLimit = .;
         . = . + StackSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
+        __StackTop = .;
+    } > ram_memory
 
-    /* Set stack top to end of RAM, and stack limit move down by
-     * size of stack_dummy section */
-    __StackTop = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory);
     PROVIDE( __freertos_irq_stack_top = __StackTop);
     PROVIDE( _sp_main = __StackTop);
-    PROVIDE( _sp_base = __StackTop - StackSize);
-    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
+    PROVIDE( _sp_base = __StackLimit);
 
     /* Check if data + heap + stack exceeds RAM limit */
     ASSERT(__StackLimit >= __tcm_data_end__, "region RAM overflowed with stack")
@@ -228,6 +252,17 @@ SECTIONS
         *(.sdata2)
         *(.sdata2.*)
 
+        . = ALIGN(8);
+        *(._k_queue.static.*)
+        *(._k_sem.static.*)
+        *(._k_mutex.static.*)
+        _bt_gatt_service_static_list_start = .;
+        KEEP(*(SORT_BY_NAME("._bt_gatt_service_static.static.*")))
+        _bt_gatt_service_static_list_end = .;
+        _bt_l2cap_fixed_chan_list_start = .;
+        KEEP(*(SORT_BY_NAME("._bt_l2cap_fixed_chan.static.*")))
+        _bt_l2cap_fixed_chan_list_end = .;
+
         . = ALIGN(4);
         __bflb_log_tags_start__ = .;
         *(.bflb_log_tags_array)
@@ -255,6 +290,7 @@ SECTIONS
         __noinit_data_start__ = .;
 
         *(.noinit_data*)
+        *(.nocache_noinit_ram)
 
         . = ALIGN(4);
         __noinit_data_end__ = .;
@@ -275,5 +311,9 @@ SECTIONS
 
     ASSERT((__HeapLimit -  __HeapBase ) >= HeapMinSize, "heap size is too short.")
 
-}
+    PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 
+    __psram_heap_base = ORIGIN(psram_memory);
+    __psram_limit = ORIGIN(psram_memory) + LENGTH(psram_memory);
+
+}

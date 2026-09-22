@@ -2448,7 +2448,13 @@ static void conn_req(struct net_buf *buf)
 	bt_conn_unref(conn);
 }
 
-static bool br_sufficient_key_size(struct bt_conn *conn)
+enum br_key_size {
+	BR_KEY_SIZE_OK,		/* key size reported and sufficient */
+	BR_KEY_SIZE_INSUFFICIENT,	/* key size reported but too small */
+	BR_KEY_SIZE_UNKNOWN,	/* controller reported no key size */
+};
+
+static enum br_key_size br_check_key_size(struct bt_conn *conn)
 {
 	struct bt_hci_cp_read_encryption_key_size *cp;
 	struct bt_hci_rp_read_encryption_key_size *rp;
@@ -2460,7 +2466,7 @@ static bool br_sufficient_key_size(struct bt_conn *conn)
 				sizeof(*cp));
 	if (!buf) {
 		BT_ERR("Failed to allocate command buffer");
-		return false;
+		return BR_KEY_SIZE_UNKNOWN;
 	}
 
 	cp = net_buf_add(buf, sizeof(*cp));
@@ -2469,14 +2475,24 @@ static bool br_sufficient_key_size(struct bt_conn *conn)
 	err = bt_hci_cmd_send_sync(BT_HCI_OP_READ_ENCRYPTION_KEY_SIZE,
 				   buf, &rsp);
 	if (err) {
-		BT_ERR("Failed to read encryption key size (err %d)", err);
-		return false;
+		/* A failure here describes the link state, not the key size:
+		 * Insufficient Security (0x2f) means the link is not (yet)
+		 * encrypted, and Command Disallowed (0x0c) means the controller
+		 * cannot process the command in its current state. Neither proves
+		 * the key is short, so report the size as unknown instead of
+		 * failing the link.
+		 */
+		BT_WARN("Enc key size not reported (err %d) handle %u state %u "
+			"role %u encrypt %u addr %s",
+			err, conn->handle, conn->state, conn->role,
+			conn->encrypt, bt_addr_str(&conn->br.dst));
+		return BR_KEY_SIZE_UNKNOWN;
 	}
 
 	if (rsp->len < sizeof(*rp)) {
 		BT_ERR("Too small command complete for encryption key size");
 		net_buf_unref(rsp);
-		return false;
+		return BR_KEY_SIZE_UNKNOWN;
 	}
 
 	rp = (void *)rsp->data;
@@ -2486,10 +2502,12 @@ static bool br_sufficient_key_size(struct bt_conn *conn)
 	BT_DBG("Encryption key size is %u", key_size);
 
 	if (conn->sec_level == BT_SECURITY_L4) {
-		return key_size == BT_HCI_ENCRYPTION_KEY_SIZE_MAX;
+		return key_size == BT_HCI_ENCRYPTION_KEY_SIZE_MAX ?
+			BR_KEY_SIZE_OK : BR_KEY_SIZE_INSUFFICIENT;
 	}
 
-	return key_size >= BT_HCI_ENCRYPTION_KEY_SIZE_MIN;
+	return key_size >= BT_HCI_ENCRYPTION_KEY_SIZE_MIN ?
+		BR_KEY_SIZE_OK : BR_KEY_SIZE_INSUFFICIENT;
 }
 
 static bool update_sec_level_br(struct bt_conn *conn)
@@ -2514,10 +2532,18 @@ static bool update_sec_level_br(struct bt_conn *conn)
 		conn->sec_level = BT_SECURITY_L2;
 	}
 
-	if (!br_sufficient_key_size(conn)) {
-		BT_ERR("Encryption key size is not sufficient");
+	switch (br_check_key_size(conn)) {
+	case BR_KEY_SIZE_INSUFFICIENT:
+		BT_ERR("Encryption key size is not sufficient, handle %u "
+		       "state %u role %u encrypt %u addr %s",
+		       conn->handle, conn->state, conn->role, conn->encrypt,
+		       bt_addr_str(&conn->br.dst));
 		bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
 		return false;
+	case BR_KEY_SIZE_UNKNOWN:
+		break;
+	case BR_KEY_SIZE_OK:
+		break;
 	}
 
 	if (conn->required_sec_level > conn->sec_level) {

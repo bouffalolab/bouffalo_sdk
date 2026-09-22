@@ -224,8 +224,7 @@ void otrAppProcess(ot_system_event_t sevent)
             return;
         }
 
-        iret = wifi_mgmr_coex_start(
-            WIFI_MGMR_COEX_RUNTIME_PS_PTA_REQUIRED);
+        iret = wifi_mgmr_coex_start();
         if (iret != WIFI_MGMR_COEX_OK) {
             LOG_E("Failed to start coexistence with error code: %d\r\n", iret);
             return;

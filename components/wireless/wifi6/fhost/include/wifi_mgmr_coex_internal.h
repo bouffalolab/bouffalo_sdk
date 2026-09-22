@@ -8,6 +8,28 @@
 #include "mac_types.h"
 #include "wifi_mgmr_coex.h"
 
+/* Static platform binding. Prepare/status return wifi_mgmr_coex_error values;
+ * SPDT callbacks obey the nonblocking MACSW hardware contract. */
+struct wifi_mgmr_coex_rf_ops {
+    /* Returns a bit per wifi_mgmr_coex_rf_mode, without writing hardware. */
+    int (*board_modes_get)(const struct wifi_mgmr_coex_board_config *board,
+                           uint32_t *modes);
+    int (*prepare)(const struct wifi_mgmr_coex_board_config *board,
+                   enum wifi_mgmr_coex_rf_mode mode);
+    int (*status_get)(void);
+    struct coexm_board_ops spdt;
+};
+
+const struct wifi_mgmr_coex_rf_ops *platform_coex_rf_ops_get(void);
+
+enum wifi_mgmr_coex_spdt_debug_mode {
+    WIFI_MGMR_COEX_SPDT_DEBUG_2G,
+    WIFI_MGMR_COEX_SPDT_DEBUG_BT,
+    WIFI_MGMR_COEX_SPDT_DEBUG_PTA,
+};
+int platform_coex_spdt_debug_apply(enum wifi_mgmr_coex_spdt_debug_mode mode);
+int wifi_mgmr_coex_spdt_debug_apply(enum wifi_mgmr_coex_spdt_debug_mode mode);
+
 struct wifi_mgmr_coex_radio_context {
     bool radio_ready;
     bool sta_active;
@@ -127,16 +149,19 @@ int wifi_mgmr_coex_control_init(void);
 
 /* Product mutations. These functions run only in the fhost control task. */
 int wifi_mgmr_coex_control_start(wifi_mgmr_coex_runtime_policy_t policy);
+/* Called after MAC reset/start, before the first radio operation. */
+int wifi_mgmr_coex_hardware_init(void);
 int wifi_mgmr_coex_control_stop(void);
 int wifi_mgmr_coex_control_status_get(struct wifi_mgmr_coex_status *status);
 int wifi_mgmr_coex_control_duty_set(uint8_t active_ms);
 
-/* Fixed lifecycle facts emitted by fhost after activation. */
+/* Wi-Fi lifecycle facts emitted by the fhost control task. */
 int wifi_mgmr_coex_lifecycle_scan_begin(int vif_idx);
 int wifi_mgmr_coex_lifecycle_scan_end(int vif_idx);
 int wifi_mgmr_coex_lifecycle_radio_activated(int vif_idx);
 int wifi_mgmr_coex_lifecycle_channel_changed(int vif_idx);
 int wifi_mgmr_coex_lifecycle_radio_invalidated(int vif_idx);
+int wifi_mgmr_coex_lifecycle_connection_failed(int vif_idx);
 
 /* fhost control-task hardware executors used by the lifecycle controller. */
 int fhost_cntrl_coex_activate(
@@ -152,8 +177,5 @@ int fhost_cntrl_coex_duty_set(uint8_t active_ms);
 
 int wifi_mgmr_coex_radio_context_get(
     struct wifi_mgmr_coex_radio_context *context);
-
-/* Fixed BSP integration hook. Product boards may provide a strong override. */
-int coex_board_spdt_gpio_prepare(int gpio);
 
 #endif /* WIFI_MGMR_COEX_INTERNAL_H */

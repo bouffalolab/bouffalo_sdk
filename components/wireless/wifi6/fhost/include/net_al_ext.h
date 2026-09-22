@@ -81,7 +81,9 @@ int net_al_dhcpd_start(net_al_if_t net_if, int start, int limit);
 int net_al_dhcpd_stop(net_al_if_t net_if);
 int net_al_gw_service_enable(net_al_if_t net_if);
 int net_al_gw_service_disable(net_al_if_t net_if);
+int net_al_ext_dhcp_connect_vif(int fhost_vif_idx, int is_api, uint32_t to_ms);
 int net_al_ext_dhcp_connect(int is_api, uint32_t to_ms);
+void net_al_ext_dhcp_disconnect_vif(int fhost_vif_idx);
 void net_al_ext_dhcp_disconnect(void);
 void net_al_ext_netif_status_callback(struct netif *netif);
 /* Returns ERR_OK or an lwIP err_t error value. */

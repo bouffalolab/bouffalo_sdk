@@ -23,6 +23,9 @@
 #include "driver_i.h"
 #include "scan.h"
 #include "p2p_supplicant.h"
+#ifdef CONFIG_MACSW
+#include "p2p_notify_macsw.h"
+#endif /* CONFIG_MACSW */
 #include "sme.h"
 #include "notify.h"
 
@@ -608,14 +611,32 @@ void wpas_notify_resume(struct wpa_global *global)
 
 void wpas_notify_p2p_find_stopped(struct wpa_supplicant *wpa_s)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_find_stopped(wpa_s);
+#endif /* CONFIG_MACSW */
 	/* Notify P2P find has stopped */
 	wpas_dbus_signal_p2p_find_stopped(wpa_s);
 }
 
+void wpas_notify_p2p_listen_stopped(struct wpa_supplicant *wpa_s)
+{
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_listen_stopped(wpa_s);
+#else /* CONFIG_MACSW */
+	(void) wpa_s;
+#endif /* CONFIG_MACSW */
+}
+
 
 void wpas_notify_p2p_device_found(struct wpa_supplicant *wpa_s,
-				  const u8 *dev_addr, int new_device)
+				  const u8 *dev_addr,
+				  const u8 *iface_addr,
+				  const struct p2p_peer_info *info,
+				  int new_device)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_device_found(wpa_s, dev_addr, iface_addr, info);
+#endif /* CONFIG_MACSW */
 	if (new_device) {
 		/* Create the new peer object */
 		wpas_dbus_register_peer(wpa_s, dev_addr);
@@ -629,6 +650,9 @@ void wpas_notify_p2p_device_found(struct wpa_supplicant *wpa_s,
 void wpas_notify_p2p_device_lost(struct wpa_supplicant *wpa_s,
 				 const u8 *dev_addr)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_device_lost(wpa_s, dev_addr);
+#endif /* CONFIG_MACSW */
 	wpas_dbus_unregister_peer(wpa_s, dev_addr);
 
 	/* Create signal on interface object*/
@@ -638,17 +662,24 @@ void wpas_notify_p2p_device_lost(struct wpa_supplicant *wpa_s,
 
 void wpas_notify_p2p_group_removed(struct wpa_supplicant *wpa_s,
 				   const struct wpa_ssid *ssid,
-				   const char *role)
+				   const char *role, const char *reason)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_group_removed(wpa_s, role, reason);
+#endif /* CONFIG_MACSW */
 	wpas_dbus_signal_p2p_group_removed(wpa_s, role);
 
-	wpas_dbus_unregister_p2p_group(wpa_s, ssid);
+	if (ssid)
+		wpas_dbus_unregister_p2p_group(wpa_s, ssid);
 }
 
 
 void wpas_notify_p2p_go_neg_req(struct wpa_supplicant *wpa_s,
 				const u8 *src, u16 dev_passwd_id, u8 go_intent)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_go_neg_req(wpa_s, src, dev_passwd_id, go_intent);
+#endif /* CONFIG_MACSW */
 	wpas_dbus_signal_p2p_go_neg_req(wpa_s, src, dev_passwd_id, go_intent);
 }
 
@@ -656,6 +687,9 @@ void wpas_notify_p2p_go_neg_req(struct wpa_supplicant *wpa_s,
 void wpas_notify_p2p_go_neg_completed(struct wpa_supplicant *wpa_s,
 				      struct p2p_go_neg_results *res)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_go_neg_completed(wpa_s, res);
+#endif /* CONFIG_MACSW */
 	wpas_dbus_signal_p2p_go_neg_resp(wpa_s, res);
 }
 
@@ -663,6 +697,9 @@ void wpas_notify_p2p_go_neg_completed(struct wpa_supplicant *wpa_s,
 void wpas_notify_p2p_invitation_result(struct wpa_supplicant *wpa_s,
 				       int status, const u8 *bssid)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_invitation_result(wpa_s, status, bssid);
+#endif /* CONFIG_MACSW */
 	wpas_dbus_signal_p2p_invitation_result(wpa_s, status, bssid);
 }
 
@@ -703,18 +740,37 @@ void wpas_notify_p2p_provision_discovery(struct wpa_supplicant *wpa_s,
 					 const u8 *dev_addr, int request,
 					 enum p2p_prov_disc_status status,
 					 u16 config_methods,
-					 unsigned int generated_pin)
+					 unsigned int generated_pin,
+					 const struct wpas_p2p_prov_disc_info *info)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_provision_discovery(wpa_s, dev_addr, request, status,
+					     config_methods, generated_pin, info);
+#endif /* CONFIG_MACSW */
 	wpas_dbus_signal_p2p_provision_discovery(wpa_s, dev_addr, request,
 						 status, config_methods,
 						 generated_pin);
 }
 
 
+void wpas_notify_p2p_provision_discovery_failure(
+	struct wpa_supplicant *wpa_s, const u8 *dev_addr)
+{
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_provision_discovery_failure(wpa_s, dev_addr);
+#endif /* CONFIG_MACSW */
+}
+
+
 void wpas_notify_p2p_group_started(struct wpa_supplicant *wpa_s,
 				   struct wpa_ssid *ssid, int persistent,
-				   int client, const u8 *ip)
+				   int client, const u8 *ip, int freq,
+				   const u8 *go_dev_addr)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_group_started(wpa_s, ssid, persistent, client, freq,
+				      go_dev_addr);
+#endif /* CONFIG_MACSW */
 	/* Notify a group has been started */
 	wpas_dbus_register_p2p_group(wpa_s, ssid);
 
@@ -722,9 +778,22 @@ void wpas_notify_p2p_group_started(struct wpa_supplicant *wpa_s,
 }
 
 
+void wpas_notify_p2p_group_formation_success(struct wpa_supplicant *wpa_s)
+{
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_group_formation_success(wpa_s);
+#else /* CONFIG_MACSW */
+	(void) wpa_s;
+#endif /* CONFIG_MACSW */
+}
+
+
 void wpas_notify_p2p_group_formation_failure(struct wpa_supplicant *wpa_s,
 					     const char *reason)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_group_formation_failure(wpa_s, reason);
+#endif /* CONFIG_MACSW */
 	/* Notify a group formation failed */
 	wpas_dbus_signal_p2p_group_formation_failure(wpa_s, reason);
 }
@@ -739,11 +808,36 @@ void wpas_notify_p2p_wps_failed(struct wpa_supplicant *wpa_s,
 
 void wpas_notify_p2p_invitation_received(struct wpa_supplicant *wpa_s,
 					 const u8 *sa, const u8 *go_dev_addr,
-					 const u8 *bssid, int id, int op_freq)
+					 const u8 *bssid, int id, int id_valid,
+					 int op_freq)
 {
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_invitation_received(wpa_s, sa, go_dev_addr, bssid, id,
+					     id_valid, op_freq);
+#endif /* CONFIG_MACSW */
 	/* Notify a P2P Invitation Request */
 	wpas_dbus_signal_p2p_invitation_received(wpa_s, sa, go_dev_addr, bssid,
 						 id, op_freq);
+}
+
+
+void wpas_notify_p2p_invitation_accepted(struct wpa_supplicant *wpa_s,
+					 const u8 *sa, const u8 *go_dev_addr,
+					 const u8 *bssid, int id, int id_valid,
+					 int op_freq)
+{
+#ifdef CONFIG_MACSW
+	wpas_macsw_p2p_invitation_accepted(wpa_s, sa, go_dev_addr, bssid, id,
+					     id_valid, op_freq);
+#else /* CONFIG_MACSW */
+	(void) wpa_s;
+	(void) sa;
+	(void) go_dev_addr;
+	(void) bssid;
+	(void) id;
+	(void) id_valid;
+	(void) op_freq;
+#endif /* CONFIG_MACSW */
 }
 
 #endif /* CONFIG_P2P */
@@ -797,6 +891,11 @@ void wpas_notify_sta_authorized(struct wpa_supplicant *wpa_s,
 				const u8 *mac_addr, int authorized,
 				const u8 *p2p_dev_addr)
 {
+#if defined(CONFIG_MACSW) && defined(CONFIG_P2P)
+	if (authorized)
+		wpas_macsw_p2p_go_sta_authorized(wpa_s, mac_addr);
+#endif /* CONFIG_MACSW && CONFIG_P2P */
+
 	if (authorized)
 		wpas_notify_ap_sta_authorized(wpa_s, mac_addr, p2p_dev_addr);
 	else

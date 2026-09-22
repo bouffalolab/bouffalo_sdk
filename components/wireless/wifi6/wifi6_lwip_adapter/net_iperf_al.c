@@ -47,6 +47,37 @@
 
 int net_if_get_ip(net_al_if_t net_if, uint32_t *ip, uint32_t *mask, uint32_t *gw);
 
+static int iperf_vif_ipv4(uint16_t vif, uint32_t *ip)
+{
+    net_al_if_t n = fhost_to_net_if(vif);
+    uint32_t mask = 0;
+
+    if (!n || !ip) {
+        return -1;
+    }
+    net_if_get_ip(n, ip, &mask, NULL);
+    return *ip ? 0 : -1;
+}
+
+/* Use the requested vif when it has IPv4; otherwise the other vif. */
+static uint16_t iperf_auto_vif(uint16_t requested, uint32_t *ip)
+{
+    uint16_t other;
+
+    if (iperf_vif_ipv4(requested, ip) == 0) {
+        return requested;
+    }
+    other = (requested == (uint16_t)MGMR_VIF_STA) ?
+            (uint16_t)MGMR_VIF_AP : (uint16_t)MGMR_VIF_STA;
+    if (iperf_vif_ipv4(other, ip) == 0) {
+        fhost_printf("iperf: vif %u has no IPv4, auto vif %u\r\n",
+                     requested, other);
+        return other;
+    }
+    *ip = 0;
+    return requested;
+}
+
 /*
  * DEFINITIONS
  ****************************************************************************************
@@ -1409,11 +1440,9 @@ static err_t net_iperf_pcb_config(void *pcb, struct fhost_iperf_stream *stream)
 
     if (settings->flags.is_server)
     {
-        net_al_if_t n = fhost_to_net_if(settings->vif_num);
-        uint32_t mask;
+        uint16_t vif = iperf_auto_vif(settings->vif_num, &ip);
 
-        // Bind Server IP address and port to pcb
-        net_if_get_ip(n, &ip, &mask, NULL);
+        stream->iperf_settings.vif_num = vif;
         ip_addr_set_ip4_u32_val(lip,  ip);
         if (settings->flags.is_udp)
         {
@@ -2072,7 +2101,7 @@ Client/Server:\r\n\
   -l, --len       #[KM]    length of buffer to read or write (default 8 KB)\r\n\
   -p, --port      #        server port to listen on/connect to\r\n\
   -u, --udp                use UDP rather than TCP\r\n\
-  -I              #        vif number, 0 for sta, 1 for ap, default is 0\r\n\r\n\
+  -I              #        vif number, 0=sta 1=ap; omit to auto-select (STA, else AP/P2P if STA has no IPv4)\r\n\r\n\
 Client specific:\r\n\
   -b, --bandwidth #[KM]    for UDP, bandwidth to send at in bits/sec\r\n\
                          (default 1 Mbit/sec, implies -u)\r\n\

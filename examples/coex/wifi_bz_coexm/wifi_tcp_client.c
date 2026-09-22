@@ -18,9 +18,12 @@
 #define TCP_CLIENT_NOT_DEL_SELF  0
 
 struct arg_param {
-    int argc;
-    char **argv;
+    struct in_addr addr;
+    uint16_t port;
 };
+
+static struct arg_param tcp_client_param;
+static volatile int tcp_client_running;
 
 // clang-format off
 static const uint8_t write_buf[128] = "wifi tcp client test, helloworld!\r\n";
@@ -132,24 +135,11 @@ static void wifi_tcp_client_init(void *input_arg)
 {
     printf("tcp client task start ...\r\n");
 
-    char *addr;
-    char *port;
     int sock_client = -1;
     struct sockaddr_in remote_addr;
     TaskHandle_t px_tcpclient_rx_task = NULL;
     TaskHandle_t px_tcpclient_tx_task = NULL;
-    struct arg_param* arg = (struct arg_param*)input_arg;
-
-    /* check arg */
-    if (arg->argc < 3) {
-        printf("%s", PING_USAGE);
-        goto __exit;
-    }
-
-    /* get address (argv[1] if present) */
-    addr = arg->argv[1];
-    /* get port number (argv[2] if present) */
-    port = arg->argv[2];
+    const struct arg_param *arg = (const struct arg_param *)input_arg;
 
     /* create socket */
     if ((sock_client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
@@ -158,10 +148,10 @@ static void wifi_tcp_client_init(void *input_arg)
     }
 
     remote_addr.sin_family = AF_INET;
-    remote_addr.sin_port = htons(atoi(port));
-    remote_addr.sin_addr.s_addr = inet_addr(addr);
+    remote_addr.sin_port = htons(arg->port);
+    remote_addr.sin_addr = arg->addr;
     memset(&(remote_addr.sin_zero), 0, sizeof(remote_addr.sin_zero));
-    printf("Server ip Address : %s:%s\r\n", addr, port);
+    printf("Server ip Address : %s:%u\r\n", inet_ntoa(remote_addr.sin_addr), (unsigned int)arg->port);
 
     /* connect socket */
     if (connect(sock_client, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr)) != 0) {
@@ -224,6 +214,7 @@ __exit:
     }
 
     printf("tcp_client exit!\r\n");
+    tcp_client_running = 0;
     vTaskDelete(NULL);
 }
 
@@ -232,9 +223,37 @@ __exit:
 
 int cmd_wifi_tcp_client(int argc, char **argv)
 {
-    struct arg_param arg = {argc, argv};
+    struct in_addr addr;
+    char *end;
+    long port;
 
-    if (pdPASS != xTaskCreate(wifi_tcp_client_init, "tcp_client", 512, (void *)&arg, 15, NULL)) {
+    if (argc != 3) {
+        printf("%s", PING_USAGE);
+        return -1;
+    }
+
+    if (tcp_client_running) {
+        printf("TCP client is already running\r\n");
+        return -1;
+    }
+
+    if (!inet_aton(argv[1], &addr)) {
+        printf("Invalid server IPv4 address\r\n");
+        return -1;
+    }
+
+    errno = 0;
+    port = strtol(argv[2], &end, 10);
+    if (errno != 0 || end == argv[2] || *end != '\0' || port < 1 || port > 65535) {
+        printf("Invalid server port (1-65535)\r\n");
+        return -1;
+    }
+
+    tcp_client_param.addr = addr;
+    tcp_client_param.port = (uint16_t)port;
+    tcp_client_running = 1;
+    if (pdPASS != xTaskCreate(wifi_tcp_client_init, "tcp_client", 512, &tcp_client_param, 15, NULL)) {
+        tcp_client_running = 0;
         return -1;
     }
 

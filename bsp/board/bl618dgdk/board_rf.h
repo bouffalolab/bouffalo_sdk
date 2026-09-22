@@ -5,6 +5,27 @@
 #include "board_rf_overlay.h"
 #else
 
+#include <stdbool.h>
+#include <stdint.h>
+
+/* Board overlays opt in only when they implement the same hardware contract. */
+#define BOARD_RF_COEX_OPS_SUPPORTED 1
+
+#define BOARD_RF_MODE_COMBO_BIT       (1u << 0)
+#define BOARD_RF_MODE_STANDALONE_BIT  (1u << 1)
+/* Validate declared wiring and report confirmed modes without touching RF/GPIO. */
+int board_rf_modes_get(bool standalone, int spdt_gpio, uint32_t *modes);
+
+enum board_rf_spdt_mode {
+    BOARD_RF_SPDT_FIXED_BT,
+    BOARD_RF_SPDT_DYNAMIC_PTA,
+    BOARD_RF_SPDT_FIXED_2G,
+};
+
+/* Hardware-only operations; caller owns serialization and radio safety checks. */
+int board_rf_spdt_mode_apply(enum board_rf_spdt_mode mode);
+int board_rf_spdt_mode_verify(enum board_rf_spdt_mode mode);
+
 enum board_ctl_ops {
   /* @ rf configuration start {  */
   BRD_CTL_RF_RESET_DEFAULT,
@@ -26,6 +47,9 @@ enum board_ctl_ops {
 
 int board_rf_ctl(enum board_ctl_ops ops, ...);
 
+/* Initializers below only prepare hardware. The integration layer must check
+ * stack lifetime and register board configuration/callbacks separately.
+ * They no longer configure WiFi6 Coex as a side effect. */
 /** single antenna 
  *  ┌────────────┐
  *  │   BT PATH ─┼────── NC
@@ -34,7 +58,11 @@ int board_rf_ctl(enum board_ctl_ops ops, ...);
  *  │   5G PATH ─┼──────►│  Diplexer  │──► Antenna
  *  └────────────┘       └────────────┘
  * */
-void board_rf_single_ant_init(void);
+int board_rf_single_ant_init(void);
+int board_rf_combo_init(void);
+
+/** Physical RF preparation result, not MGMR/Coex integration readiness. */
+int board_rf_init_status_get(void);
 
 /** single antenna with spdt
  *  ┌────────────┐       ┌──────┐
@@ -44,24 +72,24 @@ void board_rf_single_ant_init(void);
  *  │   5G PATH ─┼────────────────────►│  Diplexer  │
  *  └────────────┘                     └────────────┘
  *
- * @param pin_bt_path Even GPIO whose high level selects the BT path, or -1
- *                    when that switch-control input is not connected.
- * @param pin_2g_path Odd GPIO whose high level selects the 2G path, or -1
- *                    when that switch-control input is not connected.
+ * @param spdt_gpio The single control GPIO, supplied by the board integrator.
  *
  * GPIO_FUNC_SPDT outputs high on an even GPIO and low on an odd GPIO when BT
  * wins PTA arbitration. The GPIO parity and the external switch truth table
- * must match the parameter roles above.
+ * must match the wiring. No GPIO or polarity is guessed for another board.
+ * Leaves the switch fixed to BT until an approved runtime recipe takes over.
  * */
-#ifdef CONFIG_WIFI6
-void board_rf_single_ant_spdt_init(int pin_bt_path, int pin_2g_path);
-#endif
+int board_rf_single_ant_spdt_init(int spdt_gpio);
 
-/** force external spdt to use bt path, normally on bt path + 5g wifi for soft ap application
+/** Legacy full RF diagnostic initializer, not a GPIO-only operation.
+ * Not part of the board_rf_init_status_get()/wifi_bt_init startup contract.
+ * No shell alias; do not call while radio services are running.
  * */
 void board_rf_single_ant_spdt_force_bt_init(int pin_bt_path, int pin_2g_path);
 
-/** normally for application which wants to use 2g path for bt/ieee 802.15.4 with this ant desgin
+/** Legacy full RF diagnostic initializer: selects combo path and recalibrates.
+ * Not part of the board_rf_init_status_get()/wifi_bt_init startup contract.
+ * No shell alias; do not call while radio services are running.
  * */
 void board_rf_single_ant_spdt_force_2g_init(int pin_bt_path, int pin_2g_path);
 
@@ -73,7 +101,7 @@ void board_rf_single_ant_spdt_force_2g_init(int pin_bt_path, int pin_2g_path);
  *  │   5G PATH ─┼──────►│  Diplexer  │──► Antenna
  *  └────────────┘       └────────────┘ 
  * */
-void board_rf_dual_ant_init(void);
+int board_rf_dual_ant_init(void);
 
 #endif
 #endif

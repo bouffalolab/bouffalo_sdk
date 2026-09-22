@@ -1212,13 +1212,21 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_set_cmd, wifi_sta_ps_set, wifi sta powersave 
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_ipv6_enable, wifi_sta_ipv6_enable, enable STA IPv6);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_ipv6_disable, wifi_sta_ipv6_disable, disable STA IPv6);
 #endif
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_board_config_cmd, wifi_coex_board_config, declare coex board wiring);
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_init_cmd, wifi_coex_init, prepare coex RF mode before stack startup);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_start_cmd, wifi_coex_start, wifi coex start);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_stop_cmd, wifi_coex_stop, wifi coex stop);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_duty_set_cmd, wifi_coex_duty_set, wifi coex duty set);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_status_cmd, wifi_coex_status, wifi coex status);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_protection_cmd, wifi_coex_protection, wifi coex protection);
 #if defined(CONFIG_WIFI_COEX_DEBUG_CLI)
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_board_config_cmd, wifi_coex_debug_board_config, declare or show coex board wiring);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_status_cmd, wifi_coex_debug_status, wifi coex debug status);
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_spdt_bt_cmd, spdt_bt, debug force SPDT to BT);
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_spdt_2g_cmd, spdt_2g, debug force SPDT to 2G);
+#ifdef CONFIG_COEX_SPDT_EXPERIMENT
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_spdt_pta_cmd, spdt_pta, EXPERIMENT ONLY hand GPIO to prepared PTA);
+#endif
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_bt_spdt_cmd, wifi_coex_debug_bt_spdt, wifi coex debug bt spdt ctrl);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_bt_overlay_cmd, wifi_coex_debug_bt_overlay, wifi coex debug bt channel overlay);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_bt_adj_pwr_cmd, wifi_coex_debug_bt_adj_pwr, wifi coex debug bt adjusted tx power);

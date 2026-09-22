@@ -2042,6 +2042,8 @@ int p2p_set_listen_channel(struct p2p_data *p2p, u8 reg_class, u8 channel,
 
 u8 p2p_get_listen_channel(struct p2p_data *p2p);
 
+int p2p_listen_channel_forced(struct p2p_data *p2p);
+
 int p2p_set_ssid_postfix(struct p2p_data *p2p, const u8 *postfix, size_t len);
 
 int p2p_get_interface_addr(struct p2p_data *p2p, const u8 *dev_addr,

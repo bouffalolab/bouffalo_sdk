@@ -43,6 +43,7 @@
 #define LPFW_WAKEUP_BLE                 (1 << 6)
 #define LPFW_WAKEUP_LOSS_CFG_OVER       (1 << 7)
 #define LPFW_WAKEUP_CUSTOM_RX           (1 << 8)
+#define LPFW_WAKEUP_KEYSCAN             (1 << 9)
 
 /* Conversion of units */
 #define BL_US_TO_PDS_CNT(us)  ((us) * 512 / 15625)  /* us * 32768 / 1000 /1000 */
@@ -139,5 +140,8 @@ int bl_lp_rtc_rc32k_coarse_adj(uint32_t expect_time, uint32_t rc32k_actual_time)
 int bl_lp_io_wakeup_cfg(void *io_wakeup_cfg);
 void bl_lp_wakeup_io_int_register(void (*wakeup_io_callback)(uint64_t wake_up_io_bits));
 int bl_lp_wakeup_io_get_mode(uint8_t io_num);
+
+/* Keyscan (KYD) wakeup */
+int bl_lp_keyscan_wakeup_cfg(uint8_t en);
 
 #endif

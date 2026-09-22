@@ -21,7 +21,8 @@
 #include "board_gpio.h"
 #endif
 #include "shell.h"
-#if defined(CONFIG_EXAMPLE_PM_BOD_WAKEUP)
+#if defined(CONFIG_EXAMPLE_PM_BOD_WAKEUP) || \
+    defined(CONFIG_EXAMPLE_PM_AON_WDT)
 #include "bl618dg_aon.h"
 #endif
 #include "bl618dg_hbn.h"
@@ -31,6 +32,15 @@
 #include "cli_helper.h"
 
 #define PM_DEMO_PRINT_DELAY_US 500U
+
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+#define PM_DEMO_AON_WDT_TIMEOUT       WDG_RESET_TIME_2S00
+#define PM_DEMO_AON_WDT_TIMEOUT_MS    2000U
+#define PM_DEMO_AON_WDT_FEED_INTERVAL 500U
+
+static uint64_t g_aon_wdt_last_kick_ms;
+static int g_aon_wdt_reset;
+#endif
 
 /* Timer wakeup source selector for the optional app_pm_enter argument. */
 #define PM_DEMO_TIMER_SRC_RTC       0U
@@ -122,6 +132,44 @@ static int pm_demo_pds_level_valid(uint32_t level)
            (level == PM_PDS_LEVEL_15);
 }
 
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+static void pm_demo_aon_wdt_boot_latch(void)
+{
+    /* Stop it before lengthy application initialization after board bring-up. */
+    AON_Wdg_Stop();
+    g_aon_wdt_reset = (AON_Wdg_Status_Get() == SET);
+}
+
+static void pm_demo_aon_wdt_kick(void)
+{
+    AON_Wdg_Kick();
+    g_aon_wdt_last_kick_ms = bflb_mtimer_get_time_ms();
+}
+
+static int pm_demo_aon_wdt_start(void)
+{
+    if (AON_Wdg_Init(PM_DEMO_AON_WDT_TIMEOUT) != SUCCESS) {
+        return -EIO;
+    }
+
+    AON_Wdg_Start();
+    pm_demo_aon_wdt_kick();
+    printf("PM demo AON WDT started: timeout=%u ms, feed interval=%u ms\r\n",
+           PM_DEMO_AON_WDT_TIMEOUT_MS, PM_DEMO_AON_WDT_FEED_INTERVAL);
+    return 0;
+}
+
+static void pm_demo_aon_wdt_service(void)
+{
+    uint64_t now_ms = bflb_mtimer_get_time_ms();
+
+    if ((now_ms - g_aon_wdt_last_kick_ms) >=
+        PM_DEMO_AON_WDT_FEED_INTERVAL) {
+        pm_demo_aon_wdt_kick();
+    }
+}
+#endif
+
 #if defined(PM_DEMO_HBN_IRQ_OUT_WAKEUP)
 static uint32_t pm_demo_get_and_clear_hbn_status(void)
 {
@@ -183,7 +231,16 @@ static void pm_demo_print_boot_wakeup(void)
 {
 #if defined(PM_DEMO_HBN_IRQ_OUT_WAKEUP)
     uint32_t status = pm_demo_get_and_clear_hbn_status();
+#endif
 
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+    if (g_aon_wdt_reset != 0) {
+        AON_Wdg_Status_Clear();
+        printf("PM demo reset source: AON WDT\r\n");
+        return;
+    }
+#endif
+#if defined(PM_DEMO_HBN_IRQ_OUT_WAKEUP)
     if (status != 0U) {
         printf("PM demo HBN wakeup sources:\r\n");
         pm_demo_print_hbn_status(status);
@@ -216,14 +273,17 @@ static void pm_demo_keyscan_print_result(
 }
 
 #if !defined(CONFIG_EXAMPLE_PM_KEYSCAN_POLL_MODE)
+#define PM_DEMO_KEYSCAN_INT_MASK (BFLB_KYS_V2_INT_FIFO_NONEMPTY | \
+                                  BFLB_KYS_V2_INT_FIFO_FULL | \
+                                  BFLB_KYS_V2_INT_GHOST)
+
 static void pm_demo_keyscan_isr(int irq, void *arg)
 {
     uint32_t status = bflb_kys_v2_get_int_status(g_kys);
 
     (void)irq;
     (void)arg;
-    if ((status & (BFLB_KYS_V2_INT_DONE | BFLB_KYS_V2_INT_FIFO_FULL |
-                   BFLB_KYS_V2_INT_GHOST)) == 0U) {
+    if ((status & PM_DEMO_KEYSCAN_INT_MASK) == 0U) {
         return;
     }
 
@@ -241,11 +301,7 @@ static void pm_demo_keyscan_start(void)
     g_kys_result = (struct bflb_kys_v2_result_s){ 0 };
     bflb_kys_v2_int_clear(g_kys, BFLB_KYS_V2_INT_CLEAR_ALL);
     bflb_irq_clear_pending(g_kys->irq_num);
-    bflb_kys_v2_int_enable(g_kys,
-                           BFLB_KYS_V2_INT_DONE |
-                               BFLB_KYS_V2_INT_FIFO_FULL |
-                               BFLB_KYS_V2_INT_GHOST,
-                           true);
+    bflb_kys_v2_int_enable(g_kys, PM_DEMO_KEYSCAN_INT_MASK, true);
     bflb_irq_enable(g_kys->irq_num);
     bflb_kys_v2_enable(g_kys);
 }
@@ -255,11 +311,7 @@ static void pm_demo_keyscan_stop(void)
 {
     bflb_kys_v2_disable(g_kys);
 #if !defined(CONFIG_EXAMPLE_PM_KEYSCAN_POLL_MODE)
-    bflb_kys_v2_int_enable(g_kys,
-                           BFLB_KYS_V2_INT_DONE |
-                               BFLB_KYS_V2_INT_FIFO_FULL |
-                               BFLB_KYS_V2_INT_GHOST,
-                           false);
+    bflb_kys_v2_int_enable(g_kys, PM_DEMO_KEYSCAN_INT_MASK, false);
     bflb_irq_disable(g_kys->irq_num);
     bflb_irq_clear_pending(g_kys->irq_num);
 #endif
@@ -530,7 +582,13 @@ static int pm_demo_enter_pds(uint32_t level, uint32_t wake_ms,
 #endif
 
     /* RTC wake routes through HBN_IRQ_OUT; the PDS timer uses its own source. */
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+    pm_demo_aon_wdt_kick();
+#endif
     ret = bl_lp_pds_enter_with_restore(level, pds_sleep_time);
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+    pm_demo_aon_wdt_kick();
+#endif
 
     pm_demo_print_rtc_time();
     pm_demo_print_pds_wakeup();
@@ -572,6 +630,9 @@ static int pm_demo_enter_hbn(uint32_t wake_ms)
     printf("Enter HBN0\r\n");
 #endif
     arch_delay_us(PM_DEMO_PRINT_DELAY_US);
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+    pm_demo_aon_wdt_kick();
+#endif
 #if defined(CONFIG_EXAMPLE_PM_RTC_WAKEUP)
     pm_hbn_mode_enter(PM_HBN_LEVEL_0, pm_demo_ms_to_rtc_ticks(wake_ms));
 #else
@@ -662,6 +723,10 @@ int main(void)
 
     board_init();
 
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+    pm_demo_aon_wdt_boot_latch();
+#endif
+
     printf("PM demo starting...\r\n");
 
 #if defined(CONFIG_EXAMPLE_PM_GPIO_WAKEUP)
@@ -721,9 +786,19 @@ int main(void)
         return ret;
     }
 #endif
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+    ret = pm_demo_aon_wdt_start();
+    if (ret != 0) {
+        printf("PM demo AON WDT initialization failed: %d\r\n", ret);
+        return ret;
+    }
+#endif
     printf("PM demo ready: app_pm_enter <PDS|HBN> <level> <wake_ms> [rtc|timer]\r\n");
     shell_init();
     while (1) {
+#if defined(CONFIG_EXAMPLE_PM_AON_WDT)
+        pm_demo_aon_wdt_service();
+#endif
         ch = bflb_uart_getchar(g_uart);
         if (ch != -1) {
             shell_handler(ch);

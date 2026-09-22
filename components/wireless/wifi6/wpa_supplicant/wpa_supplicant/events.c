@@ -5840,6 +5840,10 @@ void wpa_supplicant_event_global(void *ctx, enum wpa_event_type event,
 u16 wpa_supplicant_get_status_code(void *ctx)
 {
     struct wpa_supplicant *wpa_s = ctx;
+
+    if (wpa_s->own_disconnect_req)
+        return WLAN_FW_DISCONNECT_BY_USER_WITH_DEAUTH;
+
     u16 status_code;
     //default
     status_code = WLAN_FW_4WAY_HANDSHAKE_ERROR_PSK_TIMEOUT_FAILURE;

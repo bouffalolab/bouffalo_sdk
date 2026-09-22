@@ -1080,10 +1080,13 @@ void dhcpd_start(struct netif *netif, int start, int limit)
 
         {
             char server_ip[IP4ADDR_STRLEN_MAX];
+            char pool_start[IP4ADDR_STRLEN_MAX];
+            char pool_end[IP4ADDR_STRLEN_MAX];
             ip4addr_ntoa_r(netif_ip4_addr(netif), server_ip, sizeof(server_ip));
-            DEBUG_PRINTF("[%c%c] START server=%s pool=%d.%d.%d.%d-%d\r\n",
-                netif->name[0], netif->name[1], server_ip,
-                start_num, end_num);
+            ip4addr_ntoa_r(&ip_start, pool_start, sizeof(pool_start));
+            ip4addr_ntoa_r(&ip_end, pool_end, sizeof(pool_end));
+            DEBUG_PRINTF("[%c%c] START server=%s pool=%s-%s\r\n",
+                netif->name[0], netif->name[1], server_ip, pool_start, pool_end);
         }
 
         res = tcpip_callback((tcpip_callback_fn)dhcp_server_start, arg);

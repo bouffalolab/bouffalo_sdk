@@ -11,7 +11,10 @@
 // #define NX_UF_EN 0
 
 #ifndef WL_BB_CE
-#define WL_BB_CE (1)
+#define WL_BB_CE 1
+#endif
+#ifndef WL_BB_PD
+#define WL_BB_PD 1
 #endif
 
 #if !defined(WL_WB03) && !defined(WL_BL618M) && !defined(WL_BL616)
@@ -47,6 +50,7 @@
 #define WL_WB03   (0)
 #endif
 
+ 
 #include <stdio.h>
 #if defined(CFG_MFG_SDIO) || defined(CFG_MFG_USB) 
 extern void wl_logprintf(const char *fmt, ...);

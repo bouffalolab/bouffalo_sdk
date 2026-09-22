@@ -1,10 +1,17 @@
 #include "bl_lp_internal.h"
 
 static lp_fw_gpio_cfg_t *gp_lp_io_cfg = NULL;
+static uint8_t gp_lp_keyscan_en = 0;
 
 int bl_lp_io_wakeup_cfg(void *io_wakeup_cfg)
 {
     gp_lp_io_cfg = io_wakeup_cfg;
+    return 0;
+}
+
+int bl_lp_keyscan_wakeup_cfg(uint8_t en)
+{
+    gp_lp_keyscan_en = en ? 1 : 0;
     return 0;
 }
 
@@ -35,6 +42,13 @@ void bl618dg_lp_io_wakeup_prepare(void)
                       ->io_wakeup_unmask);
         bl_lp_io_wakeup_init((lp_fw_gpio_cfg_t *)iot2lp_para->wakeup_source_parameter->io_wakeup_parameter);
     }
+}
+
+void bl618dg_lp_keyscan_wakeup_prepare(void)
+{
+    /* Keyscan (KYD) matrix/pin/PDS configuration is owned by APP; only the
+     * enable flag has to be published to LPFW through the shared structure. */
+    iot2lp_para->wakeup_source_parameter->kyscan_wakeup_en = gp_lp_keyscan_en;
 }
 
 int bl_lp_wakeup_io_get_mode(uint8_t io_num)

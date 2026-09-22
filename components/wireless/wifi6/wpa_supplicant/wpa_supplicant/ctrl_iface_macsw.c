@@ -21,52 +21,32 @@
 #include "cfgmacsw.h"
 #include "fhost_api.h"
 #include "eloop_rtos.h"
+#include "drivers/driver_macsw_priv.h"
 
-/**
- * Per interface driver data
- * !! keep same with driver_macsw.c
- */
+static int wpa_macsw_forward_status_msg(const char *txt)
+{
+    return !strncmp(txt, "State###", sizeof("State###") - 1) ||
+           !strncmp(txt, "CTRL-EVENT-NETWORK-NOT-FOUND", sizeof("CTRL-EVENT-NETWORK-NOT-FOUND") - 1) ||
+           !strncmp(txt, "AP-STA-ENCRYPTION-TYPE-MISMATCH", sizeof("AP-STA-ENCRYPTION-TYPE-MISMATCH") - 1) ||
+           !strncmp(txt, "WPS-SUCCESS", sizeof("WPS-SUCCESS") - 1) ||
+           !strncmp(txt, "STA-RX-EAPOL1", sizeof("STA-RX-EAPOL1") - 1) ||
+           !strncmp(txt, "STA-TX-EAPOL2", sizeof("STA-TX-EAPOL2") - 1) ||
+           !strncmp(txt, "STA-RX-EAPOL3", sizeof("STA-RX-EAPOL3") - 1) ||
+           !strncmp(txt, "STA-TX-EAPOL4", sizeof("STA-TX-EAPOL4") - 1) ||
+           !strncmp(txt, "SAE-COMMITTED", sizeof("SAE-COMMITTED") - 1) ||
+	   !strncmp(txt, "SAE-CONFIRMED", sizeof("SAE-CONFIRMED") - 1) ||
+	   !strncmp(txt, "SAE-ACCEPTED", sizeof("SAE-ACCEPTED") - 1) ||
+	   !strncmp(txt, "CTRL-EVENT-CONNECTED",
+		    sizeof("CTRL-EVENT-CONNECTED") - 1);
+}
 
-struct wpa_macsw_driver_itf_data {
-    // WPA_supplicant global context
-    void *ctx;
-    // Global driver data
-    struct wpa_macsw_driver_data *gdrv;
-    // Index, at FHOST level, of the interface
-    int fhost_vif_idx;
-    // Initial interface type (ref @ enum mac_vif_type)
-    uint8_t vif_init_type;
-    // List of scan results
-    struct dl_list scan_res;
-    // Driver status
-    int status;
-    // MAC address of the AP we are connected to
-    u8 bssid[ETH_ALEN];
-    // SSID of the AP we are connected to
-    u8 *ssid;
-    // SSID length
-    u8 ssid_len;
-    // Next authentication alg to try (used when connect with several algos)
-    int next_auth_alg;
-    // DTIM period cached from set_ap, reused when building CSA beacon
-    u8 dtim_period;
-};
-
-/**
- * Global data driver info
- * !! keep same with driver_macsw.c
- */
-struct wpa_macsw_driver_data {
-    // WPA_supplicant context
-    void *ctx;
-    // List of interface driver data
-    struct wpa_macsw_driver_itf_data itfs[MACSW_VIRT_DEV_MAX];
-    rtos_queue resp_queue;
-    // Extended capabilities
-    u8 extended_capab[10];
-    // Extended capabilities mask
-    u8 extended_capab_mask[10];
-};
+static int wpa_macsw_status_msg_is_sensitive(const char *txt)
+{
+    return !strncmp(txt, "P2P-GROUP-STARTED",
+                    sizeof("P2P-GROUP-STARTED") - 1) ||
+           !strncmp(txt, "P2P-PROV-DISC-SHOW-PIN",
+                    sizeof("P2P-PROV-DISC-SHOW-PIN") - 1);
+}
 
 static void wpa_macsw_msg_hdr_init(struct wpa_macsw_driver_itf_data *drv,
                   struct cfgmacsw_msg_hdr *msg_hdr,
@@ -147,6 +127,7 @@ static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
 					     const char *txt, size_t len)
 {
     struct cfgmacsw_status_code_print *cmd;
+    size_t copy_len;
     struct wpa_supplicant *wpa_s = ctx;
     struct wpa_macsw_driver_itf_data *drv;
 
@@ -154,8 +135,12 @@ static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
         return;
     drv = wpa_s->drv_priv;
 
-    if (level >= wpa_debug_level)
-      dbg(D_CRT "[WPA] %s\n", txt);
+    if (level >= wpa_debug_level) {
+        if (wpa_macsw_status_msg_is_sensitive(txt))
+            dbg(D_CRT "[WPA] sensitive control event redacted\n");
+        else
+            dbg(D_CRT "[WPA] %s\n", txt);
+    }
 
     if (!drv || drv->fhost_vif_idx < 0 ||
         drv->fhost_vif_idx >= MACSW_VIRT_DEV_MAX) {
@@ -166,18 +151,7 @@ static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
         wpa_macsw_ap_sta_auth_fail_send(wpa_s, drv, txt, len) != 0)
         return;
 
-    if (!strncmp(txt, "State###", sizeof("State###")-1) ||
-        !strncmp(txt, "CTRL-EVENT-NETWORK-NOT-FOUND", sizeof("CTRL-EVENT-NETWORK-NOT-FOUND")-1) ||
-        !strncmp(txt, "AP-STA-ENCRYPTION-TYPE-MISMATCH", sizeof("AP-STA-ENCRYPTION-TYPE-MISMATCH")-1) ||
-        !strncmp(txt, "WPS-SUCCESS", sizeof("WPS-SUCCESS")-1) ||
-        !strncmp(txt, "STA-RX-EAPOL1)", sizeof("STA-RX-EAPOL1")-1) ||
-        !strncmp(txt, "STA-TX-EAPOL2)", sizeof("STA-TX-EAPOL2")-1) ||
-        !strncmp(txt, "STA-RX-EAPOL3)", sizeof("STA-RX-EAPOL3")-1) ||
-        !strncmp(txt, "STA-TX-EAPOL4)", sizeof("STA-TX-EAPOL4")-1) ||
-        !strncmp(txt, "SAE-COMMITTED", sizeof("SAE-COMMITTED")-1) ||
-        !strncmp(txt, "SAE-CONFIRMED", sizeof("SAE-CONFIRMED")-1) ||
-        !strncmp(txt, "SAE-ACCEPTED", sizeof("SAE-ACCEPTED")-1) ||
-        !strncmp(txt, "CTRL-EVENT-CONNECTED", sizeof("CTRL-EVENT-CONNECTED")-1)) {
+    if (wpa_macsw_forward_status_msg(txt)) {
 
         cmd = rtos_calloc(1, sizeof(struct cfgmacsw_status_code_print));
         if (cmd == NULL) {
@@ -187,12 +161,17 @@ static void wpa_supplicant_ctrl_iface_msg_cb(void *ctx, int level,
         wpa_macsw_msg_hdr_init(drv, &cmd->hdr, CFGMACSW_STATUS_CODE_PRINT_CMD, sizeof(*cmd));
 
         cmd->fhost_vif_idx = drv->fhost_vif_idx;
-        cmd->msg = txt;
+        copy_len = len;
+        if (copy_len >= sizeof(cmd->msg))
+            copy_len = sizeof(cmd->msg) - 1;
+        memcpy(cmd->msg, txt, copy_len);
+        cmd->msg[copy_len] = '\0';
 
         if (fhost_cntrl_cfgmacsw_cmd_send(&cmd->hdr, NULL)) {
-            printf("%s: cmd send failed, txt is %s\r\n", __func__, txt);
+            printf("%s: status event send failed\r\n", __func__);
+            rtos_free(cmd);
         } else {
-            printf("%s: cmd send succeded, txt is %s\r\n", __func__, txt);
+            printf("%s: status event sent\r\n", __func__);
         }
     }
 }

@@ -465,7 +465,7 @@ static int at_lp_interval_get_cmd(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
-#if defined(NX_COEX_POWERSAVE) && NX_COEX_POWERSAVE
+#if defined(CONFIG_WIFI6) && CONFIG_WIFI6 && defined(CONFIG_FHOST) && CONFIG_FHOST
 static int at_coex_result(int result)
 {
     switch (result) {
@@ -515,9 +515,7 @@ static int at_query_cmd_cwcoexduty(int argc, const char **argv)
 
 static int at_setup_cmd_cwcoexen(int argc, const char **argv)
 {
-    struct wifi_mgmr_coex_board_config board;
     int enable = 0;
-    int ret;
 
     AT_CMD_PARSE_NUMBER(0, &enable);
 
@@ -525,17 +523,9 @@ static int at_setup_cmd_cwcoexen(int argc, const char **argv)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }
 
-    if (enable) {
-        if (wifi_mgmr_coex_board_config_get(&board) !=
-            WIFI_MGMR_COEX_BOARD_CONFIG_OK) {
-            return AT_RESULT_WITH_SUB_CODE(AT_SUB_UNSUPPORT_CMD);
-        }
-        ret = wifi_mgmr_coex_start(WIFI_MGMR_COEX_RUNTIME_BOARD_DEFAULT);
-    } else {
-        ret = wifi_mgmr_coex_stop();
-    }
-
-    return at_coex_result(ret);
+    /* This legacy setter controlled hardware activation, not PS-PTA.
+     * Hardware is now lifecycle-owned; never reinterpret old requests as PS. */
+    return AT_RESULT_WITH_SUB_CODE(AT_SUB_UNSUPPORT_CMD);
 }
 
 static int at_query_cmd_cwcoexen(int argc, const char **argv)
@@ -569,7 +559,38 @@ static int at_query_cmd_cwcoexstatus(int argc, const char **argv)
 
     return AT_RESULT_CODE_OK;
 }
-#endif // NX_COEX_POWERSAVE
+
+static int at_setup_cmd_cwcoexps(int argc, const char **argv)
+{
+    int enable = 0;
+
+    AT_CMD_PARSE_NUMBER(0, &enable);
+
+    if (enable != 0 && enable != 1) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
+
+    return at_coex_result(enable ? wifi_mgmr_coex_start() :
+                                  wifi_mgmr_coex_stop());
+}
+
+static int at_query_cmd_cwcoexstate(int argc, const char **argv)
+{
+    struct wifi_mgmr_coex_status status;
+    int ret = wifi_mgmr_coex_status_get(&status);
+
+    if (ret != WIFI_MGMR_COEX_OK) {
+        return at_coex_result(ret);
+    }
+
+    at_response_string("+CWCOEXSTATE:%u,%u,%u,%u,%u,%u\r\n",
+                       status.hardware_configured, status.active,
+                       status.effective_runtime, status.ps_pta_running,
+                       status.band, status.duty_active_ms);
+
+    return AT_RESULT_CODE_OK;
+}
+#endif // CONFIG_WIFI6 && CONFIG_FHOST
 
 static const at_cmd_struct at_pwr_cmd[] = {
     {"+PWR",                NULL, at_pwr_cmd_pwrmode, NULL, 1, 3},
@@ -594,11 +615,13 @@ static const at_cmd_struct at_pwr_cmd[] = {
     {"+PWR_CLEAR",          NULL, NULL, at_pwr_clear_cmd, 0, 0},
     {"+PWR_GET",            NULL, NULL, at_pwr_get_cmd, 0, 0},
     {"+LP_INTERVAL_GET",    NULL, NULL, at_lp_interval_get_cmd, 0, 0},
-#if defined(NX_COEX_POWERSAVE) && NX_COEX_POWERSAVE
+#if defined(CONFIG_WIFI6) && CONFIG_WIFI6 && defined(CONFIG_FHOST) && CONFIG_FHOST
     {"+CWCOEXDUTY",         at_query_cmd_cwcoexduty, at_setup_cmd_cwcoexduty, NULL, 1, 1},
     {"+CWCOEXEN",           at_query_cmd_cwcoexen, at_setup_cmd_cwcoexen, NULL, 1, 1},
     {"+CWCOEXSTATUS",       at_query_cmd_cwcoexstatus, NULL, NULL, 0, 0},
-#endif // NX_COEX_POWERSAVE
+    {"+CWCOEXPS",           NULL, at_setup_cmd_cwcoexps, NULL, 1, 1},
+    {"+CWCOEXSTATE",        at_query_cmd_cwcoexstate, NULL, NULL, 0, 0},
+#endif // CONFIG_WIFI6 && CONFIG_FHOST
     {NULL,                  NULL, NULL, NULL, 0, 0},
 };
 

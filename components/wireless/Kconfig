@@ -75,6 +75,49 @@ config WIFI_IPERF
     help
       Build the legacy Wi-Fi adapter that exposes the iPerf shell command.
 
+config WIFI_P2P
+    bool "Wi-Fi Direct (P2P) support"
+    depends on WIFI6 && MACSW_SELECT = "p2p"
+    default y
+    help
+      Build Wi-Fi Direct control APIs, events, and supplicant integration.
+      This option depends on MACSW_SELECT="p2p" and defaults to y when that
+      profile is selected. Enabling it turns on UNSINGLE_MAC_ADDR by default
+      so the STA and AP virtual interfaces use different MAC addresses.
+
+config UNSINGLE_MAC_ADDR
+    bool "Use different MAC addresses for STA and AP"
+    depends on WIFI6
+    default y if WIFI_P2P
+    default n
+    help
+      Allow the STA and AP virtual interfaces to use different MAC addresses
+      that differ by one bit. This is required for concurrent STA and AP/GO
+      operation and is enabled by default when WIFI_P2P is selected.
+
+config WIFI_P2P_PERSISTENT_GROUP
+    bool "Persist Wi-Fi Direct group credentials"
+    depends on WIFI_P2P
+    default y
+    select LITTLEFS
+    select LITTLEFS_KV_EASYFLASH
+    select BFLB_MTD
+    select PARTITION
+    help
+      Store P2P persistent-group profiles in the PSM partition so they can be
+      reinvoked after the P2P interface or device is restarted.
+
+config WL80211_P2P
+    bool "Enable WL80211 support Wi-Fi Direct (P2P)"
+    default n
+    help
+      Build the wl80211 P2P support, including the remain-on-channel (ROC)
+      operations required for P2P listen and negotiation. Pair this with
+      CONFIG_BL_SUPPLICANT_P2P, which builds the bl_supplicant P2P runtime
+      and the p2p_* shell commands used to drive discovery, GO negotiation
+      and WPS onboarding. Leave disabled to keep the default image size
+      and RAM profile effectively unchanged.
+
 endmenu
 
 menu "Legacy wireless compatibility"

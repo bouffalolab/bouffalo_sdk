@@ -51,6 +51,12 @@ uint32_t dbg_vsnprintf_offset(char *buffer, uint32_t size, uint32_t offset, cons
 
 #define fhost_printf(...) printf(__VA_ARGS__)
 
+#if defined(CONFIG_P2P_DEBUG) && CONFIG_P2P_DEBUG
+#define FHOST_P2P_DEBUG(...) fhost_printf(__VA_ARGS__)
+#else
+#define FHOST_P2P_DEBUG(...) do { if (0) fhost_printf(__VA_ARGS__); } while (0)
+#endif
+
 #define INVARIANTS
 
 #define INVALID_VIF_IDX 0xFF

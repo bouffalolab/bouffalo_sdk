@@ -491,7 +491,6 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
                 efuse_cfg->encrypted[i] = SF_CTRL_AES_128BITS + 1;
                 break;
             case HAL_APP_ENCRYPT_INDIVIDUAL_AES256:
-            case HAL_APP_ENCRYPT_INDIVIDUAL_AES128_XTS:
                 efuse_cfg->encrypted[i] = SF_CTRL_AES_256BITS + 1;
                 break;
             case HAL_APP_NO_ENCRYPT:

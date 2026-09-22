@@ -1,8 +1,10 @@
 # BL618DG PM demo
 
 This example combines the BL618DG PDS/HBN entry paths behind one shell
-command. GPIO, BOD, keyscan, and RTC wakeup paths can be selected independently
-with Kconfig. GPIO, BOD, and RTC wakeup are enabled by default.
+command. GPIO, BOD, keyscan, RTC, and AON watchdog paths can be selected
+independently with Kconfig. The watchdog demonstrates periodic servicing in the
+active state, watchdog reset during PDS, and whether it remains active during
+HBN. GPIO, BOD, keyscan, RTC, and AON watchdog are enabled by default.
 
 ## Build
 
@@ -54,6 +56,8 @@ The following options are available through `make menuconfig`:
 - `CONFIG_EXAMPLE_PM_KEYSCAN_POLL_MODE`: use keyscan polling instead of the
   default interrupt mode while waiting for the startup key presses
 - `CONFIG_EXAMPLE_PM_RTC_WAKEUP`: enable RTC wakeup for PDS and HBN
+- `CONFIG_EXAMPLE_PM_AON_WDT`: enable the default two-second AON watchdog; the
+  active shell loop feeds it every 500 ms
 
 Wake GPIO pins, pulls, and the trigger mode of each eight-pin GPIO group are
 configured by `board_lp_gpio_wakeup_config` in the board's `board_gpio.c`, just
@@ -105,12 +109,21 @@ returning to the shell. Runtime CLI settings are not retained across HBN reset;
 the next boot reloads board and Kconfig defaults. HBN GPIO wake reporting reads
 all GPIO0-GPIO7 status bits so a runtime-configured pin is still identified.
 
+The AON watchdog is stopped immediately after board initialization so the
+remaining application initialization and optional keyscan exercise cannot
+create a reset loop. It is then configured for a two-second timeout and fed
+every 500 ms in the shell loop. The demo kicks it once immediately before
+PDS/HBN entry and immediately after PDS returns.
+The driver identifies it as an HBN-domain watchdog, so it is expected to keep
+counting while the CPU is asleep. The HBN test below verifies that expectation
+on hardware. A timeout prints `PM demo reset source: AON WDT` on the next boot.
+
 ## Test Walkthrough
 
 The default board config enables GPIO6 (pull-up, async falling edge) and GPIO9
 (pull-down, async rising edge) as wake pins, plus the 8x8 keyscan matrix. GPIO6
 can wake PDS and HBN; GPIO9 can wake PDS only. The steps below assume the
-default `defconfig` (GPIO, BOD, keyscan, and RTC wakeup all enabled).
+default `defconfig` (GPIO, BOD, keyscan, RTC, and AON WDT enabled).
 
 ### Wakeup source bits
 
@@ -313,3 +326,77 @@ PM demo starting...
 PM demo HBN wakeup sources:
   HBN BOD
 ```
+
+### 10. AON watchdog in active, PDS15, and HBN modes
+
+The default image enables the AON watchdog. Build it with:
+
+```sh
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CPU_MODEL=b0
+```
+
+The two-second timeout means manual GPIO, BOD, or keyscan wakeup tests must
+trigger within two seconds. Build with `CONFIG_EXAMPLE_PM_AON_WDT=n` when those
+tests need an unrestricted wait time.
+
+After flashing, the startup log contains:
+
+```text
+PM demo AON WDT started: timeout=2000 ms, feed interval=500 ms
+```
+
+First leave the shell idle for at least 5 seconds. It must remain running,
+which verifies periodic feeding in the active state.
+
+For the PDS15 normal-wakeup control, select a one-second PDS timer. It expires
+before the watchdog and execution resumes without restarting `main()`:
+
+```text
+app_pm_enter PDS 15 1000 timer
+Enter PDS15: PDS-timer delay=1000 ms (0=disabled)
+PDS wakeup sources: 0x00000001
+  PDS timer
+```
+
+Next make the PDS15 sleep longer than the watchdog timeout:
+
+```text
+app_pm_enter PDS 15 5000 timer
+```
+
+The watchdog should reset the chip after about two seconds, before the
+five-second PDS timer expires. The next boot must contain:
+
+```text
+PM demo starting...
+PM demo reset source: AON WDT
+```
+
+For the HBN normal-wakeup control, use a one-second RTC delay. HBN wakeup itself
+restarts the CPU, so identify the result by the HBN RTC status:
+
+```text
+app_pm_enter HBN 0 1000
+PM demo starting...
+PM demo HBN wakeup sources:
+  HBN RTC
+```
+
+Finally make the HBN sleep longer than the watchdog timeout:
+
+```text
+app_pm_enter HBN 0 5000
+```
+
+On BL618DG hardware this was verified to restart after about three seconds
+with:
+
+```text
+PM demo starting...
+PM demo reset source: AON WDT
+```
+
+This confirms that the AON watchdog remains active in HBN0 and resets the chip
+before the five-second HBN RTC delay. Do not use the generic startup banner
+alone to distinguish HBN RTC wakeup from a watchdog timeout, because both paths
+restart the CPU.

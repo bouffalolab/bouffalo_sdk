@@ -35,17 +35,22 @@
  *
  * - SEQ32: normal-mode flags at offset 12 are zero. Data IDs start at zero.
  *   Recognition needs a complete 36-byte setup prefix and any nonnegative
- *   signed 32-bit ID.
+ *   signed 32-bit ID; threads at offset 16 must be one as a format marker.
  * - SEQ64: flags at offset 16 contain SEQNO64B (0x08000000), without EXTEND.
  *   In 2.0.13 normal mode, bytes after flags can be ASCII test data, NOT valid
  *   base settings. Recognition needs only 20 bytes and any nonnegative signed
  *   64-bit ID. This receiver skips ID 0 and uses one as its data sequence base.
  * - SEQ64_EXT: flags contain SEQNO64B and EXTEND (0x40000000). Recognition
  *   requires any nonnegative signed 64-bit ID and a complete 80-byte setup
- *   prefix with plausible base settings. This component's TX also
+ *   prefix, without base-settings validation. This component's TX also
  *   sets LEN_BIT (0x00010000) and encodes the 80-byte length in LEN_MASK.
  *   Its target rate is written at absolute offset 64. Other extensions are
  *   version-dependent and are not fully interpreted by this component.
+ *
+ * All layouts require timestamp usec < 1000000 and reject VERSION1 setup
+ * flags. Unconsumed base fields (port, buffer length, window/bandwidth, amount)
+ * are not checked. Each server worker warns only on its first setup rejection,
+ * including the reason; subsequent rejections are silently discarded.
  *
  * The first accepted datagram starts receiver timing and selects the peer and
  * layout, even if IDs 0/1 were lost. Initial loss still uses the protocol base
@@ -60,8 +65,11 @@
  * Repeated FINs trigger another reply without recounting the transfer.
  *
  * @verbatim
- * AckFIN: [same 12/16-byte prefix][40-byte base server report]
- * This component sends 52 bytes for SEQ32, 56 bytes for SEQ64/SEQ64_EXT.
+ * AckFIN: [same 12/16-byte prefix][40-byte base server report][zero padding]
+ * This component sends 112 bytes for SEQ32, 128 bytes for SEQ64/SEQ64_EXT.
+ * The trailing 60/72 bytes are compatibility padding for 2.0.9/2.0.13,
+ * not extended statistics support. Base layout and VERSION1 flags stay unchanged.
+ * Client reception requires only the 52/56-byte base prefix, not the padding.
  * The prefix echoes the FIN ID. Settings are replaced by the server report.
  *
  * Server report offsets relative to its start (12 or 16 in the UDP payload):
@@ -103,12 +111,16 @@
 #define BFLB_IPERF_UDP_CLIENT_HEADER_SIZE (BFLB_IPERF_UDP_HEADER_SIZE + BFLB_IPERF_UDP_CLIENT_V1_SIZE + BFLB_IPERF_UDP_CLIENT_EXT_SIZE)
 /** @brief Size of the base server AckFIN report, in bytes. */
 #define BFLB_IPERF_SERVER_HEADER_SIZE     40U
-/** @brief Total size of a modern UDP AckFIN datagram prefix, in bytes. */
+/** @brief Modern AckFIN base receive minimum/prefix capacity (56), not TX size. */
 #define BFLB_IPERF_UDP_ACK_SIZE           (BFLB_IPERF_UDP_HEADER_SIZE + BFLB_IPERF_SERVER_HEADER_SIZE)
 /** @brief Size of the legacy 32-bit UDP sequence prefix, in bytes. */
 #define BFLB_IPERF_UDP_LEGACY_HEADER_SIZE 12U
-/** @brief Total size of a legacy UDP AckFIN report, in bytes. */
+/** @brief Legacy AckFIN base receive minimum (52), not padded TX size. */
 #define BFLB_IPERF_UDP_LEGACY_ACK_SIZE    (BFLB_IPERF_UDP_LEGACY_HEADER_SIZE + BFLB_IPERF_SERVER_HEADER_SIZE)
+/** @brief SEQ32 AckFIN TX size with zero compatibility padding for 2.0.9. */
+#define BFLB_IPERF_UDP_LEGACY_ACK_TX_SIZE 112U
+/** @brief Both SEQ64 AckFIN TX sizes with zero compatibility padding for 2.0.13. */
+#define BFLB_IPERF_UDP_ACK_TX_SIZE        128U
 /** @brief Classic iPerf2 flag indicating a version-1 control header. */
 #define BFLB_IPERF_HEADER_VERSION1        0x80000000UL
 /** @brief Classic iPerf2 flag indicating an extended client header. */
@@ -245,14 +257,18 @@ void iperf_write_udp_client_header(uint8_t *buffer,
  * @brief Identify a supported normal-mode UDP client setup header.
  * @param[in] buffer Received datagram prefix.
  * @param[in] length Number of available bytes.
+ * @param[out] reason Optional output for a static rejection string; set to
+ * NULL on success. Pass NULL if no diagnostic is needed.
  * @return Detected setup format, or IPERF_UDP_SETUP_INVALID.
  * @note Recognizes SEQ32 (36-byte minimum), SEQ64 (20-byte minimum, no base
  * settings check), and SEQ64_EXT (80-byte minimum). Accepts any nonnegative
- * signed ID of the selected width, never FIN. A SEQ64 claim cannot fall back
+ * signed ID of the selected width, never FIN. Requires usec < 1000000 and
+ * rejects VERSION1 setup flags. SEQ32 flags=0/threads=1 remain format markers;
+ * unconsumed base fields are ignored. A SEQ64 claim cannot fall back
  * to SEQ32. Not full protocol validation; see the session limits above.
  */
 iperf_udp_setup_t iperf_udp_client_setup_type(const uint8_t *buffer,
-                                              uint16_t length);
+                                              uint16_t length, const char **reason);
 
 /**
  * @brief Get the selected sequence/timestamp prefix length.
@@ -262,9 +278,9 @@ iperf_udp_setup_t iperf_udp_client_setup_type(const uint8_t *buffer,
 uint16_t iperf_udp_header_size(iperf_udp_setup_t format);
 
 /**
- * @brief Get the selected prefix plus base server report length.
+ * @brief Get the selected server AckFIN TX length including zero padding.
  * @param[in] format Receiver layout.
- * @return 52 for SEQ32, 56 for SEQ64 layouts, zero for invalid format.
+ * @return 112 for SEQ32, 128 for SEQ64 layouts, zero for invalid format.
  */
 uint16_t iperf_udp_server_report_size(iperf_udp_setup_t format);
 
@@ -285,6 +301,7 @@ bool iperf_udp_decode_id(iperf_udp_setup_t format, const uint8_t *buffer,
  * @param[in] length Number of available bytes.
  * @return true when a supported version-1 report header is present.
  * @note Checks length/flag placement, not FIN correspondence or all fields.
+ * Requires only 52 bytes for legacy or 56 for modern; TX padding is not required.
  */
 bool iperf_udp_client_report_valid(const uint8_t *buffer, uint16_t length);
 
@@ -327,7 +344,9 @@ void iperf_udp_server_rx_finish(bflb_iperf_t *iperf, iperf_udp_rx_t *tracker,
  * @param[in] iperf Instance supplying finalized server statistics.
  * @param[in] format Layout selected for this receiver.
  * @param[in] fin_id Negative FIN packet ID echoed to the client.
- * @return Actual datagram length (52 or 56), or zero for an invalid format.
+ * @return Actual datagram length (112 or 128), or zero for an invalid format.
+ * @note Base report layout/flags are unchanged; trailing bytes are zero-filled
+ * for 2.0.9/2.0.13 compatibility, not extended statistics support.
  */
 uint16_t iperf_write_udp_server_report(uint8_t *buffer, const bflb_iperf_t *iperf,
                                        iperf_udp_setup_t format, int64_t fin_id);

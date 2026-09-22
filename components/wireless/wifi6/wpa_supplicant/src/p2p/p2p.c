@@ -2044,16 +2044,17 @@ static void p2p_add_dev_from_probe_req(struct p2p_data *p2p, const u8 *addr,
 		return; /* not a P2P probe */
 	}
 
-	if (msg.ssid == NULL || msg.ssid[1] != P2P_WILDCARD_SSID_LEN ||
+	if (msg.ssid == NULL || msg.ssid[1] == 0) {
+		p2p_dbg(p2p,
+			"Probe Req missing SSID but has P2P attributes from "
+			MACSTR "; create peer entry for MACSW compatibility",
+			MAC2STR(addr));
+	} else if (msg.ssid[1] != P2P_WILDCARD_SSID_LEN ||
 	    os_memcmp(msg.ssid + 2, P2P_WILDCARD_SSID, P2P_WILDCARD_SSID_LEN)
 	    != 0) {
-		/* The Probe Request is not part of P2P Device Discovery. It is
-		 * not known whether the source address of the frame is the P2P
-		 * Device Address or P2P Interface Address. Do not add a new
-		 * peer entry based on this frames.
-		 */
-		p2p_parse_free(&msg);
-		return;
+		p2p_dbg(p2p,
+			"Probe Req SSID '%s' is not P2P wildcard; accept peer entry for MACSW scan SSID compatibility",
+			wpa_ssid_txt(msg.ssid + 2, msg.ssid[1]));
 	}
 
 	dev = p2p_get_device(p2p, addr);
@@ -2374,12 +2375,21 @@ p2p_reply_probe(struct p2p_data *p2p, const u8 *addr, const u8 *dst,
 		return P2P_PREQ_NOT_PROCESSED;
 	}
 
-	if (elems.ssid == NULL || elems.ssid_len != P2P_WILDCARD_SSID_LEN ||
-	    os_memcmp(elems.ssid, P2P_WILDCARD_SSID, P2P_WILDCARD_SSID_LEN) !=
-	    0) {
-		/* not using P2P Wildcard SSID - ignore */
-		p2p_dbg(p2p, "Probe Req not using P2P Wildcard SSID - ignore it");
-		return P2P_PREQ_NOT_PROCESSED;
+	if (elems.ssid == NULL || elems.ssid_len == 0) {
+		if (elems.wps_ie == NULL || elems.wps_ie_len == 0) {
+			p2p_dbg(p2p, "Probe Req missing SSID - ignore it");
+			return P2P_PREQ_NOT_PROCESSED;
+		}
+		p2p_dbg(p2p,
+			"Probe Req missing SSID but has P2P/WPS IEs from "
+			MACSTR "; accept for MACSW compatibility",
+			MAC2STR(addr));
+	} else if (elems.ssid_len != P2P_WILDCARD_SSID_LEN ||
+		   os_memcmp(elems.ssid, P2P_WILDCARD_SSID,
+			     P2P_WILDCARD_SSID_LEN) != 0) {
+		p2p_dbg(p2p,
+			"Probe Req SSID '%s' is not P2P wildcard; reply for MACSW scan SSID compatibility",
+			wpa_ssid_txt(elems.ssid, elems.ssid_len));
 	}
 
 	if (supp_rates_11b_only(&elems)) {
@@ -4798,6 +4808,12 @@ int p2p_set_listen_channel(struct p2p_data *p2p, u8 reg_class, u8 channel,
 u8 p2p_get_listen_channel(struct p2p_data *p2p)
 {
 	return p2p->cfg->channel;
+}
+
+
+int p2p_listen_channel_forced(struct p2p_data *p2p)
+{
+	return p2p->cfg->channel_forced;
 }
 
 

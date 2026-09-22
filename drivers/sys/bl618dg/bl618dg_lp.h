@@ -241,6 +241,7 @@ typedef struct {
     uint8_t wifi_wakeup_en;
     uint8_t ble_wakeup_en;
     uint8_t rtc_wakeup_en;
+    uint8_t kyscan_wakeup_en; /* occupies the former padding byte, keeps layout stable */
     uint64_t rtc_wakeup_cnt; /* The value of the next rtc wake up */
 } lp_fw_wakeup_source_t;
 

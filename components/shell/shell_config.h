@@ -33,7 +33,7 @@
 #endif
 
 #ifndef SHELL_THREAD_PRIO
-#define SHELL_THREAD_PRIO 5
+#define SHELL_THREAD_PRIO (configMAX_PRIORITIES / 2 + 1)
 #endif
 
 #ifndef SHELL_EXEC_THREAD_STACK_SIZE
@@ -41,7 +41,7 @@
 #endif
 
 #ifndef SHELL_EXEC_THREAD_PRIO
-#define SHELL_EXEC_THREAD_PRIO 4
+#define SHELL_EXEC_THREAD_PRIO (configMAX_PRIORITIES / 2 - 1)
 #endif
 
 #endif

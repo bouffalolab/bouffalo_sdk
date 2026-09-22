@@ -33,6 +33,7 @@
 #define BL_P2P_DEFAULT_PIN "12345670"
 #define BL_P2P_DEFAULT_GO_INTENT 7
 #define BL_P2P_LISTEN_WPS_GO_INTENT 14
+#define BL_P2P_MAX_GO_INTENT 15
 #define BL_P2P_CONFIG_METHODS_DEFAULT \
     (WPS_CONFIG_DISPLAY | WPS_CONFIG_KEYPAD | WPS_CONFIG_PUSHBUTTON)
 #define BL_P2P_GO_DHCP_START 2
@@ -121,6 +122,11 @@ struct bl_p2p_runtime {
 };
 
 static struct bl_p2p_runtime g_bl_p2p_runtime;
+
+/* Runtime-configurable GO intents (see p2p_go_intent shell command). Kept
+ * outside of the runtime struct so they survive bl_p2p_init()/deinit(). */
+static int g_bl_p2p_go_intent = BL_P2P_DEFAULT_GO_INTENT;
+static int g_bl_p2p_listen_wps_go_intent = BL_P2P_LISTEN_WPS_GO_INTENT;
 
 static void bl_p2p_listen_timeout(struct timeout_s *timeout);
 static void bl_p2p_stop_listen_internal(struct bl_p2p_runtime *runtime, bool notify_end);
@@ -263,7 +269,7 @@ static int bl_p2p_listen_wps_authorize(struct bl_p2p_runtime *runtime,
            reason != NULL ? reason : "unknown");
 
     ret = bl_p2p_connect(peer, runtime->listen_wps_mode, pin,
-                         BL_P2P_LISTEN_WPS_GO_INTENT, true);
+                         g_bl_p2p_listen_wps_go_intent, true);
     if (ret < 0) {
         printf("[P2P] listen_wps auth FAIL peer=" MACSTR " ret=%d\r\n",
                MAC2STR(peer), ret);
@@ -568,7 +574,7 @@ static void bl_p2p_apply_default_methods(struct bl_p2p_runtime *runtime)
     }
 
     p2p_set_config_methods(runtime->p2p, BL_P2P_CONFIG_METHODS_DEFAULT);
-    p2p_set_go_intent(runtime->p2p, BL_P2P_DEFAULT_GO_INTENT);
+    p2p_set_go_intent(runtime->p2p, (u8) g_bl_p2p_go_intent);
 }
 
 static void bl_p2p_store_group_ie(wifi_appie_ram_t type, struct wpabuf *ie)
@@ -2496,6 +2502,45 @@ int bl_p2p_set_device_name(const char *name)
     return 0;
 }
 
+int bl_p2p_set_go_intent(int go_intent, int listen_wps_go_intent)
+{
+    struct bl_p2p_runtime *runtime = &g_bl_p2p_runtime;
+
+    if (go_intent > BL_P2P_MAX_GO_INTENT ||
+        listen_wps_go_intent > BL_P2P_MAX_GO_INTENT) {
+        return -1;
+    }
+
+    /* A negative value keeps the current setting for that entry. */
+    if (go_intent >= 0) {
+        g_bl_p2p_go_intent = go_intent;
+    }
+    if (listen_wps_go_intent >= 0) {
+        g_bl_p2p_listen_wps_go_intent = listen_wps_go_intent;
+    }
+
+    /* Push the value matching the current role to the live p2p instance so
+     * the new setting takes effect without a re-init. */
+    if (runtime->p2p != NULL) {
+        p2p_set_go_intent(runtime->p2p,
+                          (u8) (runtime->listen_wps_armed ?
+                                    g_bl_p2p_listen_wps_go_intent :
+                                    g_bl_p2p_go_intent));
+    }
+
+    return 0;
+}
+
+void bl_p2p_get_go_intent(int *go_intent, int *listen_wps_go_intent)
+{
+    if (go_intent != NULL) {
+        *go_intent = g_bl_p2p_go_intent;
+    }
+    if (listen_wps_go_intent != NULL) {
+        *listen_wps_go_intent = g_bl_p2p_listen_wps_go_intent;
+    }
+}
+
 bool bl_p2p_is_ready(void)
 {
     return g_bl_p2p_runtime.ready && g_bl_p2p_runtime.p2p != NULL;
@@ -2596,6 +2641,8 @@ int bl_p2p_init(void)
         bl_p2p_reset_runtime(runtime);
         return -4;
     }
+
+    bl_p2p_apply_default_methods(runtime);
 
     if (bl_p2p_glue_register_mgmt_rx(bl_p2p_mgmt_rx, runtime) < 0) {
         p2p_deinit(runtime->p2p);
@@ -2747,7 +2794,7 @@ int bl_p2p_listen_wps_start(enum bl_p2p_wps_mode mode, uint8_t channel,
     bl_p2p_set_runtime_channel(runtime, channel);
     p2p_set_config_methods(runtime->p2p,
                            bl_p2p_listen_wps_config_methods(mode));
-    p2p_set_go_intent(runtime->p2p, BL_P2P_LISTEN_WPS_GO_INTENT);
+    p2p_set_go_intent(runtime->p2p, (u8) g_bl_p2p_listen_wps_go_intent);
     /* Maximize listen-state duty cycle so peers have a high chance to catch
      * our probe response. Values are in units of 100 TU
      * (1 TU = 1024 us). 10..20 -> ~1024..2048 ms per listen window. */
@@ -2837,8 +2884,10 @@ int bl_p2p_connect(const uint8_t peer_addr[6], enum bl_p2p_wps_mode mode,
         return -1;
     }
 
-    if (go_intent < 1 || go_intent > 15) {
-        go_intent = 7;
+    /* 0 is a valid GO intent (always become client), so only reject values
+     * outside of the 0..15 range defined by the P2P spec. */
+    if (go_intent < 0 || go_intent > BL_P2P_MAX_GO_INTENT) {
+        go_intent = g_bl_p2p_go_intent;
     }
 
     if (platform_get_mac(WL80211_VIF_STA, ifaddr) < 0) {

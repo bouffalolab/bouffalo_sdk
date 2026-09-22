@@ -56,13 +56,8 @@ struct wifi_mgmr_rate_config {
 #define CODE_WIFI_ON_SCAN_DONE_ONJOIN                10
 #define CODE_WIFI_ON_AP_STARTED                      11
 #define CODE_WIFI_ON_AP_STOPPED                      12
-#define CODE_WIFI_ON_PROV_SSID                       13
-#define CODE_WIFI_ON_PROV_BSSID                      14
-#define CODE_WIFI_ON_PROV_PASSWD                     15
-#define CODE_WIFI_ON_PROV_CONNECT                    16
-#define CODE_WIFI_ON_PROV_DISCONNECT                 17
-#define CODE_WIFI_ON_PROV_SCAN_START                 18
-#define CODE_WIFI_ON_PROV_STATE_GET                  19
+#define CODE_WIFI_ON_AP_CSA_DONE                     13
+#define CODE_WIFI_ON_STA_CSA_DONE                    14
 #define CODE_WIFI_ON_MGMR_DENOISE                    20
 #define CODE_WIFI_ON_AP_STA_ADD                      21
 #define CODE_WIFI_ON_AP_STA_DEL                      22

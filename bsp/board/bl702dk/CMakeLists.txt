@@ -7,9 +7,14 @@ sdk_add_compile_definitions_ifdef(CONFIG_BLUETOOTH -DCFG_BLUETOOTH_ENABLED)
 sdk_add_compile_definitions_ifdef(CONFIG_LMAC154 -DCFG_M154_ENABLED)
 
 if(CONFIG_PM)
-sdk_set_linker_script(bl702_flash_lp.ld)
+    sdk_set_linker_script(bl702_flash_lp.ld)
 else()
-sdk_set_linker_script(bl702_flash.ld)
+    sdk_set_linker_script(bl702_flash.ld)
+endif()
+
+if(CONFIG_PSRAM AND CONFIG_PM)
+    # bl702_flash_lp.ld has no psram_memory region or heap symbols.
+    message(FATAL_ERROR "CONFIG_PSRAM is not supported with CONFIG_PM on bl702dk")
 endif()
 
 if(CONFIG_PSRAM)

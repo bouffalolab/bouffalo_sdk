@@ -310,6 +310,11 @@ __UNUSED static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_params[
         .param = flash_secreg_param_winb_80ew_16fw_32jw_32fw_32fv,
     },
     {
+        /*!< BY25FQ256ES */
+        .jedec_id = 0x194068,
+        .param = flash_secreg_param_gd_wq32e_q128e,
+    },
+    {
         /*!< FM25Q08 */
         .jedec_id = 0x1440a1,
         .param = flash_secreg_param_fm_25q32,
@@ -590,6 +595,11 @@ __UNUSED static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_params[
         .param = flash_secreg_param_winb_80ew_16fw_32jw_32fw_32fv,
     },
     {
+        /*!< W25Q02RV-JM */
+        .jedec_id = 0x2270ef,
+        .param = flash_secreg_param_winb_80ew_16fw_32jw_32fw_32fv,
+    },
+    {
         /*!< XM25QH80B */
         .jedec_id = 0x144020,
         .param = flash_secreg_param_winb_80ew_16fw_32jw_32fw_32fv,
@@ -623,6 +633,11 @@ __UNUSED static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_params[
         /*!< XM25QH128C */
         .jedec_id = 0x184020,
         .param = flash_secreg_param_winb_80ew_16fw_32jw_32fw_32fv,
+    },
+    {
+        /*!< XM25EH512D */
+        .jedec_id = 0x204620,
+        .param = flash_secreg_param_gd_25q256d_25s512md,
     },
     {
         /*!< XT25F04D */

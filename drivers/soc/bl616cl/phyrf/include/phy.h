@@ -126,8 +126,8 @@ enum phy_mac_chan_bandwidth
 
 #define PHY_SUPPORTED_BAND        E_PHY_BAND_2G4
 #define PHY_SUPPORTED_CHAN_BW     E_PHY_CHNL_BW_20
-#define PHY_SUPPORTED_NSS         1
 #define PHY_SUPPORTED_NSTS_NDP    4
+#define PHY_SUPPORTED_NSS         1
 #define PHY_SUPPORTED_NTX         1
 #define PHY_SUPPORTED_NRX         1
 #define PHY_SUPPORTED_ANTENNA_SET 1

@@ -1,4 +1,7 @@
 # Changes
+## 2026-9-20
+1. [BR/EDR] Stop treating a failed HCI Read_Encryption_Key_Size as an insufficient encryption key. Insufficient Security (0x2f) and Command Disallowed (0x0c) describe the link state, not the key size, so the key size is now reported as unknown and the security level is re-checked on the next encryption change or key refresh. This caused spurious AUTH_FAIL disconnects when reconnecting a headset, where the controller could not yet serve the command at connection setup.
+
 ## 2026-9-10
 1. [A2DP Sink] Automatically request a Master-to-Slave role switch only for locally initiated BR/EDR connections, improving interoperability with iPhone A2DP connections.
 

@@ -85,7 +85,7 @@ static err_t iperf_udp_raw_send_pbuf(iperf_udp_raw_context_t *context,
 
     LOCK_TCPIP_CORE();
     error = (address == NULL) ? udp_send(context->udp, p) :
-                              udp_sendto(context->udp, p, address, port);
+                                udp_sendto(context->udp, p, address, port);
     UNLOCK_TCPIP_CORE();
 
     pbuf_free(p);
@@ -136,7 +136,8 @@ static err_t iperf_udp_raw_send_data(iperf_udp_raw_context_t *context,
  * @param[in] format Layout selected by the validated setup.
  * @param[in] fin_id Negative FIN packet ID echoed in the report.
  * @pre format is supported; a selected peer and finalized statistics exist.
- * @note Report length is 52 bytes for SEQ32, 56 for either SEQ64 layout.
+ * @note Allocate/send 112 bytes for SEQ32, 128 for either SEQ64 layout,
+ * including zero compatibility padding; no extended statistics are emitted.
  * @return ERR_OK, ERR_MEM for transient backpressure, or another lwIP error.
  */
 static err_t iperf_udp_raw_send_report(iperf_udp_raw_context_t *context,
@@ -198,6 +199,7 @@ static void iperf_udp_raw_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 static bool iperf_udp_raw_client_report_received(iperf_udp_raw_context_t *context,
                                                  const iperf_udp_raw_rx_item_t *item)
 {
+    /* Only the 56-byte base prefix is needed, even for padded peer reports. */
     uint8_t report[BFLB_IPERF_UDP_ACK_SIZE];
     uint16_t copied;
 
@@ -464,6 +466,7 @@ static int iperf_udp_raw_client(iperf_udp_raw_context_t *context)
 /**
  * @brief Run a single-peer UDP Raw server through its AckFIN response window.
  * @param[in,out] context Initialized UDP Raw server context.
+ * @note Only the first setup rejection per server worker logs its reason.
  * @retval ERR_OK The test completed or a stop request was observed.
  * @return An lwIP error on PCB allocation, bind, peer connect or report failure.
  */
@@ -473,6 +476,7 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
     ip_addr_t local_addr;
     iperf_udp_rx_t udp_rx;
     uint8_t peer_set = 0U;
+    bool setup_warned = false;
     err_t error = ERR_OK;
 
     uint8_t header[BFLB_IPERF_UDP_CLIENT_HEADER_SIZE];
@@ -519,8 +523,14 @@ static int iperf_udp_raw_server(iperf_udp_raw_context_t *context)
 
         /* Only a valid setup packet may claim this single-peer server session. */
         if (peer_set == 0U) {
-            setup_type = iperf_udp_client_setup_type(header, copied);
+            const char *reason;
+
+            setup_type = iperf_udp_client_setup_type(header, copied, &reason);
             if (setup_type == IPERF_UDP_SETUP_INVALID) {
+                if (!setup_warned) {
+                    LOG_W("UDP Raw server setup rejected: %s (prefix=%u bytes)\r\n", reason, (unsigned int)copied);
+                    setup_warned = true;
+                }
                 continue;
             }
 

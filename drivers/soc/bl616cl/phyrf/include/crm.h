@@ -17,8 +17,8 @@
  * INCLUDE FILES
  ****************************************************************************************
  */
-#include "co_int.h"
-#include "co_bool.h"
+#include <stdint.h>
+#include <stdbool.h>
 // #include "rwnx_config.h"
 
 

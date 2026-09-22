@@ -141,51 +141,41 @@ void iperf_write_udp_client_header(uint8_t *buffer,
 }
 
 /**
- * @brief Check the supported subset of base client settings for plausibility.
- * @param[in] settings At least 24 readable bytes beginning with client flags.
- * @param[in] header_size Sequence/timestamp prefix size, 12 or 16 bytes.
- * @return true for accepted thread, port, buffer and amount fields.
- * @note This is not full protocol validation; flags and layout are checked by
- * the caller and unconsumed settings are not validated here.
- */
-static bool iperf_udp_client_fields_valid(const uint8_t *settings,
-                                          uint16_t header_size)
-{
-    uint32_t threads = iperf_get_u32(settings + 4);
-    uint32_t port = iperf_get_u32(settings + 8);
-    uint32_t buffer_len = iperf_get_u32(settings + 12);
-
-    return threads > 0U && threads <= 128U && port > 0U && port <= UINT16_MAX &&
-           (buffer_len == 0U ||
-            (buffer_len >= header_size + BFLB_IPERF_UDP_CLIENT_V1_SIZE &&
-             buffer_len <= 65507U)) &&
-           iperf_get_u32(settings + 20) != 0U;
-}
-
-/**
  * @brief Recognize one of three supported normal-mode UDP setup layouts.
  * @param[in] buffer Datagram prefix with length readable bytes.
  * @param[in] length Available prefix size in bytes.
+ * @param[out] reason Optional rejection string output; NULL on success.
  * @return SEQ32, SEQ64 or SEQ64_EXT; INVALID for rejected prefixes.
  * @note SEQ32 requires 36 bytes and a nonnegative signed 32-bit ID. SEQ64
  * layouts require a nonnegative signed 64-bit ID: SEQ64 accepts 20 bytes
- * without base-settings validation; SEQ64_EXT needs 80 bytes and plausible
- * base fields. A SEQ64 claim never falls back to SEQ32. Later IDs can establish
+ * without base-settings validation; SEQ64_EXT needs 80 bytes. SEQ32 retains
+ * flags=0 and threads=1 as format markers; other base fields are not checked.
+ * All layouts require usec < 1000000. VERSION1 setup flags are rejected.
+ * A SEQ64 claim never falls back to SEQ32. Later IDs can establish
  * a session after initial loss; negative FIN IDs cannot. Receivers start timing
  * on the first accepted datagram but retain the format's loss-accounting base.
  * Delayed old data with a valid prefix may therefore claim a new session.
  * This recognizer does not validate every protocol field or extension.
  */
 iperf_udp_setup_t iperf_udp_client_setup_type(const uint8_t *buffer,
-                                              uint16_t length)
+                                              uint16_t length, const char **reason)
 {
     uint32_t packet_id;
     uint32_t offset_16; /* SEQ64 flags, or SEQ32 numThreads. */
+    const char *reject_reason;
+
+    if (reason != NULL) {
+        *reason = NULL;
+    }
 
     /* The SEQ64 flag at offset 16 is readable only with a full 20-byte prefix. */
-    if (length < BFLB_IPERF_UDP_HEADER_SIZE + sizeof(uint32_t) ||
-        iperf_get_u32(buffer + 8) >= 1000000U) {
-        return IPERF_UDP_SETUP_INVALID;
+    if (length < BFLB_IPERF_UDP_HEADER_SIZE + sizeof(uint32_t)) {
+        reject_reason = "prefix shorter than 20 bytes";
+        goto rejected;
+    }
+    if (iperf_get_u32(buffer + 8) >= 1000000U) {
+        reject_reason = "timestamp usec >= 1000000";
+        goto rejected;
     }
     packet_id = iperf_get_u32(buffer);
 
@@ -193,34 +183,53 @@ iperf_udp_setup_t iperf_udp_client_setup_type(const uint8_t *buffer,
     offset_16 = iperf_get_u32(buffer + BFLB_IPERF_UDP_HEADER_SIZE);
     if ((offset_16 & BFLB_IPERF_HEADER_SEQNO64B) != 0U) {
         /* Only the high word determines the sign of a 64-bit ID. */
-        if ((iperf_get_u32(buffer + 12) & 0x80000000U) != 0U ||
-            (offset_16 & BFLB_IPERF_HEADER_VERSION1) != 0U) {
-            return IPERF_UDP_SETUP_INVALID;
+        if ((iperf_get_u32(buffer + 12) & 0x80000000U) != 0U) {
+            reject_reason = "negative SEQ64 ID (FIN cannot set up a session)";
+            goto rejected;
+        }
+        if ((offset_16 & BFLB_IPERF_HEADER_VERSION1) != 0U) {
+            reject_reason = "SEQ64 VERSION1 mode unsupported";
+            goto rejected;
         }
         if ((offset_16 & BFLB_IPERF_HEADER_EXTEND) == 0U) {
             /* 2.0.13 normal mode leaves ASCII payload after flags, not base
              * settings. Preserve the original 20-byte minimum. */
             return IPERF_UDP_SETUP_SEQ64;
         }
-        return length >= BFLB_IPERF_UDP_CLIENT_HEADER_SIZE &&
-                       iperf_udp_client_fields_valid(buffer + BFLB_IPERF_UDP_HEADER_SIZE,
-                                                     BFLB_IPERF_UDP_HEADER_SIZE) ?
-                   IPERF_UDP_SETUP_SEQ64_EXT :
-                   IPERF_UDP_SETUP_INVALID;
+        if (length < BFLB_IPERF_UDP_CLIENT_HEADER_SIZE) {
+            reject_reason = "SEQ64 EXT prefix shorter than 80 bytes";
+            goto rejected;
+        }
+        return IPERF_UDP_SETUP_SEQ64_EXT;
     }
 
-    /* 2.0.5 normal: flags@12=0, threads@16=1, port@20, length@24,
-     * bandwidth@28, amount@32. In particular, missing SEQ64 flags@16=0
+    /* SEQ32 normal: flags@12=0, threads@16=1 are format markers.
+     * Unconsumed port/length/window or bandwidth/amount fields are ignored.
+     * In particular, missing SEQ64 flags@16=0
      * cannot masquerade as numThreads=1. Any nonnegative signed 32-bit ID
      * permits setup after initial data loss.
      * Compatibility (-C), dual and tradeoff modes are deliberately excluded. */
-    if ((packet_id & 0x80000000U) == 0U &&
-        length >= BFLB_IPERF_UDP_LEGACY_HEADER_SIZE + BFLB_IPERF_UDP_CLIENT_V1_SIZE &&
-        iperf_get_u32(buffer + 12) == 0U && offset_16 == 1U &&
-        iperf_udp_client_fields_valid(buffer + BFLB_IPERF_UDP_LEGACY_HEADER_SIZE,
-                                      BFLB_IPERF_UDP_LEGACY_HEADER_SIZE) &&
-        iperf_get_u32(buffer + 28) != 0U) {
-        return IPERF_UDP_SETUP_SEQ32;
+    if (length < BFLB_IPERF_UDP_LEGACY_HEADER_SIZE + BFLB_IPERF_UDP_CLIENT_V1_SIZE) {
+        reject_reason = "SEQ32 prefix shorter than 36 bytes";
+        goto rejected;
+    }
+    if ((packet_id & 0x80000000U) != 0U) {
+        reject_reason = "negative SEQ32 ID (FIN cannot set up a session)";
+        goto rejected;
+    }
+    if ((iperf_get_u32(buffer + 12) & BFLB_IPERF_HEADER_VERSION1) != 0U) {
+        reject_reason = "SEQ32 VERSION1 mode unsupported";
+        goto rejected;
+    }
+    if (iperf_get_u32(buffer + 12) != 0U || offset_16 != 1U) {
+        reject_reason = "SEQ32 requires normal flags=0 and threads=1";
+        goto rejected;
+    }
+    return IPERF_UDP_SETUP_SEQ32;
+
+rejected:
+    if (reason != NULL) {
+        *reason = reject_reason;
     }
     return IPERF_UDP_SETUP_INVALID;
 }
@@ -244,15 +253,21 @@ uint16_t iperf_udp_header_size(iperf_udp_setup_t format)
 }
 
 /**
- * @brief Get the prefix plus 40-byte base AckFIN report length.
+ * @brief Get the server AckFIN TX length including compatibility padding.
  * @param[in] format Receiver layout.
- * @return 52 for SEQ32, 56 for either SEQ64 layout, or zero if invalid.
+ * @return 112 for SEQ32, 128 for either SEQ64 layout, or zero if invalid.
  */
 uint16_t iperf_udp_server_report_size(iperf_udp_setup_t format)
 {
-    uint16_t header_size = iperf_udp_header_size(format);
-
-    return header_size == 0U ? 0U : header_size + BFLB_IPERF_SERVER_HEADER_SIZE;
+    switch (format) {
+        case IPERF_UDP_SETUP_SEQ32:
+            return BFLB_IPERF_UDP_LEGACY_ACK_TX_SIZE;
+        case IPERF_UDP_SETUP_SEQ64:
+        case IPERF_UDP_SETUP_SEQ64_EXT:
+            return BFLB_IPERF_UDP_ACK_TX_SIZE;
+        default:
+            return 0U;
+    }
 }
 
 /**
@@ -458,9 +473,11 @@ void iperf_udp_server_rx_finish(bflb_iperf_t *iperf,
  * @param[out] buffer Destination containing at least
  * iperf_udp_server_report_size(format) writable bytes.
  * @param[in] iperf Instance supplying finalized server statistics.
- * @param[in] format Validated receiver layout (52-byte or 56-byte report).
+ * @param[in] format Validated receiver layout (112-byte or 128-byte report).
  * @param[in] fin_id Negative FIN packet identifier echoed to the client.
- * @return 52 for SEQ32, 56 for either SEQ64 layout, or zero for invalid format.
+ * @return 112 for SEQ32, 128 for either SEQ64 layout, or zero for invalid format.
+ * @note Base layout and VERSION1 flags are unchanged. Trailing zero bytes are
+ * 2.0.9/2.0.13 compatibility padding, not extended statistics support.
  * @pre Statistics describe a started receiver; buffer has the selected capacity.
  */
 uint16_t iperf_write_udp_server_report(uint8_t *buffer,
@@ -482,6 +499,7 @@ uint16_t iperf_write_udp_server_report(uint8_t *buffer,
     now_us = iperf_now_us();
     end_us = stats->end_us == 0U ? now_us : stats->end_us;
     duration_us = end_us - stats->start_us;
+    /* Clear the full TX report, including padding beyond the base statistics. */
     memset(buffer, 0, report_size);
     if (format == IPERF_UDP_SETUP_SEQ32) {
         iperf_put_u32(buffer, (uint32_t)fin_id);

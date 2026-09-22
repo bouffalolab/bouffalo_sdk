@@ -1,5 +1,71 @@
 # CHANGELOG
 
+## v2.3.35 — since v2.3.34 (2026-09-15 → 2026-09-22)
+
+### New Features
+
+- **WiFi / P2P**
+  - Added Wi-Fi Direct (P2P) support for BL616 and BL618DG, including group-owner and group-client operation, persistent groups, GO-intent configuration, and coexistence with station mode
+  - Added a P2P demonstration with supplicant-compatible management commands and lifecycle events
+
+- **WiFi**
+  - Added access-point PMF (802.11w) mode to scan results
+  - Added channel-switch-announcement (CSA) completion events for access-point and station operation, and reported them from the WiFi examples
+
+- **Power Management**
+  - Added a unified BL616CL power-management demo with board-level low-power GPIO wakeup configuration
+  - Added keyscan wakeup support, including an AON watchdog option in the BL618DG power-management demo
+
+- **Manufacturing / Flashing**
+  - Added a RAM-resident BL618DG eFlash loader that is downloaded over JTAG and uses the existing host programming protocol
+  - Added BL618DG flash support for XM25EH512 and W25Q02RV devices
+
+- **BL702 / BL702L**
+  - Added PSRAM support, including memory layout, Boot2 flash configuration, and multi-image descriptors
+
+- **Audio**
+  - Added the ACM8852 audio codec driver
+
+### Bug Fixes
+
+- **WiFi / Coexistence**
+  - Fixed single-antenna coexistence so the configured antenna plan is restored after scans and remains consistent across connection, scan, and access-point events
+  - Fixed RF initialization ordering for combo, dual-antenna, and single-GPIO SPDT boards, and rejected Wi-Fi/Bluetooth startup before RF preparation is complete
+  - Fixed a WiFi task hang when the final authentication frame of an aborted connection could not be transmitted, as happened after a failed WPA3/SAE handshake; pending frames are now retried without blocking and released when they can no longer be delivered
+  - Fixed AT+CWLAP reporting incorrect RSSI and authentication values on BL602
+  - Fixed a crash in the TCP client test command caused by reading shell arguments after the command had returned
+  - Fixed iperf result parsing for different iperf versions
+  - Fixed P2P DHCP pool address formatting
+  - Restored hidden SSIDs and their metadata in scan results reported by the WiFi TCP example
+
+- **Bluetooth**
+  - Fixed A2DP media-channel setup and SBC codec configuration
+  - Fixed HFP codec negotiation by no longer advertising mSBC and always answering +BCS with CVSD
+  - Fixed BR/EDR connections with devices that do not report an encryption key size
+  - Fixed null-pointer crashes in AVDTP stream and local-endpoint handling
+
+- **Networking / Ethernet**
+  - Fixed BL618DG UWB/WiFi low-power wakeup over NetHub
+  - Fixed Ethernet ping failures after reboot caused by EMAC v2 receive-DMA initialization order
+
+- **Power Management**
+  - Fixed spurious keyscan interrupts while idle
+
+- **Manufacturing / Boot**
+  - Fixed BL616CL manufacturing tests applying RF temperature optimization when temperature calibration is disabled
+  - Removed the unsupported individual APP AES-128 XTS encryption option from BL618DG Boot2 ISP
+
+- **Build / Tools**
+  - Fixed menuconfig generation of the autoconfig.menuconfig file
+
+### Improvements
+
+- Increased the AT command task stack size
+- Made RF parameter loading overridable by board implementations
+- Updated the BL616CL PHY RF library and the keyscan driver
+- Tuned TCP buffering in the BL618DG WiFi/Bluetooth coexistence demo to balance throughput and memory use
+- Updated coexistence handling in AT commands
+
 ## v2.3.34 — since v2.3.33 (2026-08-31 → 2026-09-15)
 
 ### New Features

@@ -17,10 +17,18 @@ enum {
     ELOOP_EVT_WPA_L2_DATA_WL2 = 11,   /* wl2 interface */
 };
 
+/*
+ * Synchronous request shared by the waiting task and the eloop task. Keep the
+ * handler reply in this heap block so a late response after a timeout never
+ * writes through caller stack pointers. The last reference frees the block.
+ */
 struct event_sync_msg {
   rtos_semaphore done;
   char **resp;
   int *resp_len;
+  char *reply;
+  int reply_len;
+  int refcount;
 };
 
 /* Helper to get event ID for interface name (wl1/wl2) */

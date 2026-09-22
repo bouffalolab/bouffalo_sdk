@@ -187,7 +187,7 @@ typedef struct
 typedef struct wifi_mgmr_scan_item {
     uint32_t mode;
     uint32_t timestamp_lastseen;
-    uint16_t ssid_len;
+    int ssid_len;
     uint8_t channel;
     int8_t rssi;
     char ssid[32];

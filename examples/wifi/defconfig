@@ -15,6 +15,7 @@ ifeq ($(CHIP),bl602)
 else
     CONFIG_WIFI6=y
     CONFIG_MACSW_SELECT = default
+    CONFIG_WIFI_P2P ?= n
     ifeq ($(CONFIG_WL80211),y)
         CONFIG_BL_WPA_SUPPLICANT =y
         CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT ?= 0x4000 # 16KB

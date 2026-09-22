@@ -687,8 +687,13 @@ struct wpa_ssid {
 	size_t num_p2p_clients;
 
 #ifndef P2P_MAX_STORED_CLIENTS
-#define P2P_MAX_STORED_CLIENTS 100
+#define P2P_MAX_STORED_CLIENTS 20
 #endif /* P2P_MAX_STORED_CLIENTS */
+
+#ifndef P2P_GROUP_STORE_MAX_GROUPS
+/* Keep equal to WIFI_MGMR_P2P_MAX_PERSISTENT_GROUPS. */
+#define P2P_GROUP_STORE_MAX_GROUPS 8
+#endif /* P2P_GROUP_STORE_MAX_GROUPS */
 
 	/**
 	 * psk_list - Per-client PSKs (struct psk_list_entry)

@@ -1,7 +1,7 @@
 #ifndef _PHY_TRPC_H_
 #define _PHY_TRPC_H_
 
-#include "co_int.h"
+#include <stdint.h>
 
 #define PHY_TRPC_MAX_DBM    (25)
 #define PHY_TRPC_NUM_MCS    (10)

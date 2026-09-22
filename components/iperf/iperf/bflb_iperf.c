@@ -11,7 +11,7 @@
 #include "iperf_internal.h"
 
 /** @brief Default worker priority, clamped to the configured FreeRTOS range. */
-#define IPERF_DEFAULT_TASK_PRIORITY ((configMAX_PRIORITIES > 10U) ? 10U : (configMAX_PRIORITIES - 1U))
+#define IPERF_DEFAULT_TASK_PRIORITY (configMAX_PRIORITIES / 2 - 1)
 /** @brief Maximum generic Socket I/O buffer size, in bytes. */
 #define IPERF_MAX_BUFFER_LEN        8192U
 /** @brief Maximum UDP datagram size accepted by all backends, in bytes. */

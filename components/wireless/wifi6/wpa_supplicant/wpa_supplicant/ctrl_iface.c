@@ -2706,7 +2706,6 @@ static int wpa_supplicant_ctrl_iface_log_level(struct wpa_supplicant *wpa_s,
 #endif
 
 
-#ifndef CONFIG_MACSW
 static int wpa_supplicant_ctrl_iface_list_networks(
 	struct wpa_supplicant *wpa_s, char *cmd, char *buf, size_t buflen)
 {
@@ -2772,7 +2771,6 @@ static int wpa_supplicant_ctrl_iface_list_networks(
 
 	return pos - buf;
 }
-#endif
 
 
 #ifndef CONFIG_EXTRA_SIZE_OPT
@@ -3558,7 +3556,12 @@ static int wpa_supplicant_ctrl_iface_remove_network(
 	/* cmd: "<network id>" or "all" */
 	if (os_strcmp(cmd, "all") == 0) {
 		wpa_printf(MSG_DEBUG, "CTRL_IFACE: REMOVE_NETWORK all");
-		return wpa_supplicant_remove_all_networks(wpa_s);
+		if (wpa_supplicant_remove_all_networks(wpa_s))
+			return -1;
+		if (wpa_s->conf->update_config &&
+		    wpa_config_write(wpa_s->confname, wpa_s->conf))
+			return -1;
+		return 0;
 	}
 
 	id = atoi(cmd);
@@ -3573,6 +3576,12 @@ static int wpa_supplicant_ctrl_iface_remove_network(
 	if (result == -2) {
 		wpa_printf(MSG_DEBUG, "CTRL_IFACE: Not able to remove the "
 			   "network id=%d", id);
+		return -1;
+	}
+	if (wpa_s->conf->update_config &&
+	    wpa_config_write(wpa_s->confname, wpa_s->conf)) {
+		wpa_printf(MSG_ERROR,
+			   "CTRL_IFACE: Network removed from runtime, but persistence failed");
 		return -1;
 	}
 	return 0;
@@ -6184,6 +6193,10 @@ static int p2p_ctrl_connect(struct wpa_supplicant *wpa_s, char *cmd,
 				   auth, go_intent, freq, freq2, persistent_id,
 				   pd, ht40, vht, max_oper_chwidth, he, edmg,
 				   group_ssid, group_ssid_len, allow_6ghz);
+	WPA_P2P_DEBUG("P2PDBG ctrl_connect ifname=%s peer=" MACSTR
+	       " method=%d join=%d auth=%d auto=%d go_intent=%d freq=%d ret=%d\r\n",
+	       wpa_s->ifname, MAC2STR(addr), wps_method, join, auth,
+	       automatic, go_intent, freq, new_pin);
 	if (new_pin == -2) {
 		os_memcpy(buf, "FAIL-CHANNEL-UNAVAILABLE\n", 25);
 		return 25;
@@ -6872,14 +6885,16 @@ static int p2p_ctrl_group_add_persistent(struct wpa_supplicant *wpa_s,
 
 static int p2p_ctrl_group_add(struct wpa_supplicant *wpa_s, char *cmd)
 {
-	int freq = 0, persistent = 0, group_id = -1;
+	int freq = 0, persistent = 0, group_id = -1, ret = -1;
 	bool allow_6ghz = false;
+	bool passphrase_set = false;
 	int vht = wpa_s->conf->p2p_go_vht;
 	int ht40 = wpa_s->conf->p2p_go_ht40 || vht;
 	int he = wpa_s->conf->p2p_go_he;
 	int edmg = wpa_s->conf->p2p_go_edmg;
 	int max_oper_chwidth, chwidth = 0, freq2 = 0;
 	char *token, *context = NULL;
+	char passphrase[64] = { 0 };
 #ifdef CONFIG_ACS
 	int acs = 0;
 #endif /* CONFIG_ACS */
@@ -6902,6 +6917,29 @@ static int p2p_ctrl_group_add(struct wpa_supplicant *wpa_s, char *cmd)
 			ht40 = 1;
 		} else if (os_strcmp(token, "he") == 0) {
 			he = 1;
+		} else if (os_strncmp(token, "passphrase_hex=", 15) == 0) {
+			char *value = token + 15;
+			size_t hex_len = os_strlen(value);
+			size_t passphrase_len = hex_len / 2;
+			bool invalid;
+
+			invalid = passphrase_set || hex_len < 16 ||
+				hex_len > 2 * (sizeof(passphrase) - 1) ||
+				(hex_len & 1) ||
+				hexstr2bin(value, (u8 *) passphrase,
+					   passphrase_len) < 0;
+			if (!invalid) {
+				passphrase[passphrase_len] = '\0';
+				invalid = has_ctrl_char((const u8 *) passphrase,
+							passphrase_len);
+			}
+			forced_memzero(value, hex_len);
+			if (invalid) {
+				wpa_printf(MSG_DEBUG,
+					   "CTRL: Invalid P2P_GROUP_ADD passphrase");
+				goto out;
+			}
+			passphrase_set = true;
 		} else if (os_strcmp(token, "edmg") == 0) {
 			edmg = 1;
 		} else if (os_strcmp(token, "persistent") == 0) {
@@ -6909,10 +6947,14 @@ static int p2p_ctrl_group_add(struct wpa_supplicant *wpa_s, char *cmd)
 		} else if (os_strcmp(token, "allow_6ghz") == 0) {
 			allow_6ghz = true;
 		} else {
-			wpa_printf(MSG_DEBUG,
-				   "CTRL: Invalid P2P_GROUP_ADD parameter: '%s'",
-				   token);
-			return -1;
+			if (os_strncmp(token, "passphrase", 10) == 0)
+				wpa_printf(MSG_DEBUG,
+					   "CTRL: Invalid P2P_GROUP_ADD passphrase parameter");
+			else
+				wpa_printf(MSG_DEBUG,
+					   "CTRL: Invalid P2P_GROUP_ADD parameter: '%s'",
+					   token);
+			goto out;
 		}
 	}
 
@@ -6938,7 +6980,7 @@ static int p2p_ctrl_group_add(struct wpa_supplicant *wpa_s, char *cmd)
 
 	max_oper_chwidth = parse_freq(chwidth, freq2);
 	if (max_oper_chwidth < 0)
-		return -1;
+		goto out;
 
 	if (allow_6ghz && chwidth == 40)
 		max_oper_chwidth = CHANWIDTH_40MHZ_6GHZ;
@@ -6947,14 +6989,25 @@ static int p2p_ctrl_group_add(struct wpa_supplicant *wpa_s, char *cmd)
 	wpa_s->p2p_go_allow_dfs = !!(wpa_s->drv_flags &
 				     WPA_DRIVER_FLAGS_DFS_OFFLOAD);
 
-	if (group_id >= 0)
-		return p2p_ctrl_group_add_persistent(wpa_s, group_id,
-						     freq, freq2, ht40, vht,
-						     max_oper_chwidth, he,
-						     edmg, allow_6ghz);
+	if (group_id >= 0) {
+		if (passphrase_set) {
+			wpa_printf(MSG_DEBUG,
+				   "CTRL: Cannot replace persistent group passphrase");
+			goto out;
+		}
+		ret = p2p_ctrl_group_add_persistent(wpa_s, group_id, freq, freq2,
+						    ht40, vht, max_oper_chwidth,
+						    he, edmg, allow_6ghz);
+	} else {
+		ret = wpas_p2p_group_add_with_passphrase(
+			wpa_s, persistent, freq, freq2, ht40, vht,
+			max_oper_chwidth, he, edmg, allow_6ghz,
+			passphrase_set ? passphrase : NULL);
+	}
 
-	return wpas_p2p_group_add(wpa_s, persistent, freq, freq2, ht40, vht,
-				  max_oper_chwidth, he, edmg, allow_6ghz);
+out:
+	forced_memzero(passphrase, sizeof(passphrase));
+	return ret;
 }
 
 
@@ -11517,7 +11570,11 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	const int reply_size = 4096;
 	int reply_len;
 
-	if (os_strncmp(buf, WPA_CTRL_RSP, os_strlen(WPA_CTRL_RSP)) == 0 ||
+	if (os_strncmp(buf, "P2P_GROUP_ADD ", 14) == 0 &&
+	    os_strstr(buf + 14, "passphrase")) {
+		wpa_dbg(wpa_s, MSG_DEBUG,
+			"Control interface command 'P2P_GROUP_ADD [REMOVED]'");
+	} else if (os_strncmp(buf, WPA_CTRL_RSP, os_strlen(WPA_CTRL_RSP)) == 0 ||
 	    os_strncmp(buf, "SET_NETWORK ", 12) == 0 ||
 	    os_strncmp(buf, "PMKSA_ADD ", 10) == 0 ||
 	    os_strncmp(buf, "MESH_PMKSA_ADD ", 15) == 0) {
@@ -11849,6 +11906,9 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 					      reply_size);
 	} else if (os_strncmp(buf, "P2P_SET ", 8) == 0) {
 		if (p2p_ctrl_set(wpa_s, buf + 8) < 0)
+			reply_len = -1;
+	} else if (os_strcmp(buf, "P2P_REBIND") == 0) {
+		if (wpas_p2p_rebind(wpa_s) < 0)
 			reply_len = -1;
 	} else if (os_strcmp(buf, "P2P_FLUSH") == 0) {
 		p2p_ctrl_flush(wpa_s);
@@ -12601,6 +12661,12 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	} else if (os_strncmp(buf, "DISABLE_NETWORK ", 16) == 0) {
 		if (wpa_supplicant_ctrl_iface_disable_network(wpa_s, buf + 16))
 			reply_len = -1;
+	} else if (os_strncmp(buf, "LIST_NETWORKS ", 14) == 0) {
+		reply_len = wpa_supplicant_ctrl_iface_list_networks(
+			wpa_s, buf + 14, reply, reply_size);
+	} else if (os_strcmp(buf, "LIST_NETWORKS") == 0) {
+		reply_len = wpa_supplicant_ctrl_iface_list_networks(
+			wpa_s, NULL, reply, reply_size);
 #ifndef CONFIG_EXTRA_SIZE_OPT
 	} else if (os_strcmp(buf, "DISCONNECT") == 0) {
 		wpas_request_disconnection(wpa_s);
@@ -12789,6 +12855,9 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 					   reply_size);
 	} else if (os_strncmp(buf, "P2P_SET ", 8) == 0) {
 		if (p2p_ctrl_set(wpa_s, buf + 8) < 0)
+			reply_len = -1;
+	} else if (os_strcmp(buf, "P2P_REBIND") == 0) {
+		if (wpas_p2p_rebind(wpa_s) < 0)
 			reply_len = -1;
 	} else if (os_strcmp(buf, "P2P_FLUSH") == 0) {
 		p2p_ctrl_flush(wpa_s);

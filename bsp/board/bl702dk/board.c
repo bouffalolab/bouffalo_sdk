@@ -5,7 +5,8 @@
 #include "bflb_flash.h"
 #include "bflb_sec_mutex.h"
 #include "bflb_spi_psram.h"
-#include "bflb_ef_ctrl.h"
+#include "hardware/sf_ctrl_reg.h"
+#include "bflb_efuse.h"
 
 #include "bl702_glb.h"
 #include "ef_data_reg.h"
@@ -17,6 +18,8 @@ extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
+extern uint32_t __psram_heap_base;
+extern uint32_t __psram_limit;
 
 static struct bflb_device_s *uart0;
 
@@ -146,18 +149,64 @@ void ATTR_TCM_SECTION psram_gpio_init(void)
 
 uint8_t psramId[8] = { 0 };
 
-void ATTR_TCM_SECTION board_psram_init(void)
+#ifdef CONFIG_PSRAM
+__attribute__((noinline)) int ATTR_TCM_SECTION board_psram_init(void)
 {
-    psram_gpio_init();
+    bflb_efuse_device_info_type device_info;
+    uint32_t sf_ctrl_0, sf_ctrl_1, sf_ctrl_2;
+    uint32_t regval;
+    int rst_ret, drv_ret, wrap_ret;
+    uint8_t psram_id[8] = { 0 };
 
-    bflb_psram_init(&ap_memory1604, &cmds_cfg, &psram_cfg);
+    bflb_efuse_get_device_info(&device_info);
 
-    bflb_psram_softwarereset(&ap_memory1604, ap_memory1604.ctrl_mode);
+    /* Snapshot the sf controller state: restored on psram init failure so
+     * flash access keeps working (no driver api can save/restore these
+     * registers as a whole). */
+    sf_ctrl_0 = getreg32(BFLB_SF_CTRL_BASE + SF_CTRL_0_OFFSET);
+    sf_ctrl_1 = getreg32(BFLB_SF_CTRL_BASE + SF_CTRL_1_OFFSET);
+    sf_ctrl_2 = getreg32(BFLB_SF_CTRL_BASE + SF_CTRL_2_OFFSET);
 
-    bflb_psram_readid(&ap_memory1604, psramId);
+    if (device_info.psram_info == 1) {
+        psram_cfg.pad_sel = SF_CTRL_SEL_DUAL_BANK_SF2_SF3;
+        psram_cfg.psram_rx_clk_invert_sel = 1;
+        psram_cfg.psram_clk_delay = 0;
+        GLB_Select_Internal_PSram();
+    } else if (device_info.psram_info == 0) {
+        psram_cfg.pad_sel = SF_CTRL_SEL_DUAL_CS_SF2;
+        psram_cfg.psram_rx_clk_invert_sel = 1;
+        psram_cfg.psram_clk_delay = 0;
+        psram_gpio_init();
+    } else {
+        return -1;
+    }
+
+    bflb_sf_ctrl_psram_init(&psram_cfg);
+    bflb_sf_ctrl_cmds_set(&cmds_cfg, SF_CTRL_SEL_PSRAM);
+
+    rst_ret = bflb_psram_softwarereset(&ap_memory1604, ap_memory1604.ctrl_mode);
+    bflb_psram_readid(&ap_memory1604, psram_id);
+    drv_ret = bflb_psram_setdrivestrength(&ap_memory1604);
+    wrap_ret = bflb_psram_setburstwrap(&ap_memory1604);
+
+    bflb_sf_ctrl_sbus_select_bank(SF_CTRL_SEL_FLASH);
+
+    if (rst_ret != 0 || drv_ret != 0 || wrap_ret != 0 || psram_id[0] != 0x0d) {
+        putreg32(sf_ctrl_0, BFLB_SF_CTRL_BASE + SF_CTRL_0_OFFSET);
+        putreg32(sf_ctrl_1, BFLB_SF_CTRL_BASE + SF_CTRL_1_OFFSET);
+        /* Force the flash bank routing back regardless of the boot2 state. */
+        regval = sf_ctrl_2 & ~((1U << 29) | (1U << 30) | (1U << 31));
+        putreg32(regval, BFLB_SF_CTRL_BASE + SF_CTRL_2_OFFSET);
+        return -1;
+    }
+
     bflb_psram_cache_write_set(&ap_memory1604, SF_CTRL_QIO_MODE, ENABLE, DISABLE, DISABLE);
-    L1C_Cache_Enable_Set(L1C_WAY_DISABLE_NONE);
+    /* Set burst toggle to spi mode, fix psram random access issue */
+    putreg32(0x08000000, BFLB_SF_CTRL_BASE + 0x84);
+
+    return 0;
 }
+#endif
 
 uint32_t board_psram_size_get(void)
 {
@@ -242,6 +291,10 @@ void board_recovery(void)
 
 void ram_heap_init(void)
 {
+    static const uint32_t any_alloc_order[] = {
+        MM_HEAP_OCRAM_0,
+        MM_HEAP_PSRAM_0,
+    };
     size_t heap_len;
 
     /* ram heap init */
@@ -251,10 +304,29 @@ void ram_heap_init(void)
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
 
+#ifdef CONFIG_PSRAM
+    if (board_psram_init() != 0) {
+        printf("psram init failed\r\n");
+        while (1) {}
+    }
+
+    heap_len = (size_t)&__psram_limit - (size_t)&__psram_heap_base;
+    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte, \r\n"
+           "  psram heap size: %d Kbyte\r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
+           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
+#else
     /* ram info dump */
     printf("dynamic memory init success\r\n"
            "  ocram heap size: %d Kbyte \r\n",
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#endif
+
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 }
 
 enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
@@ -280,10 +352,6 @@ void board_init(void)
 
     /* heap init */
     ram_heap_init();
-
-#ifdef CONFIG_PSRAM
-    board_psram_init();
-#endif
 
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
     bl_show_log();

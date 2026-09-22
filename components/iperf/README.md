@@ -335,27 +335,44 @@ state.
 UDP uses the Classic iPerf2 normal-mode wire format. Both receivers select a
 fixed layout from the first supported setup datagram:
 
-| PC UDP client | Prefix / settings | Data sequence base | AckFIN size |
+| PC UDP client | Prefix / settings | Data sequence base | Server AckFIN TX size |
 |---|---|---|---|
-| 2.0.5 normal, single stream | 12-byte SEQ32 + 24-byte settings, flags=0 | 0 | 52 bytes |
-| 2.0.13 SEQ64, no EXTEND | 16-byte SEQ64 + 4-byte flags; remaining bytes are payload | 1 | 56 bytes |
-| 2.2.1 SEQ64 with EXTEND | 16-byte SEQ64 + 24-byte settings + 40-byte extension | 1 | 56 bytes |
+| 2.0.5 normal, single stream | 12-byte SEQ32 + 24-byte settings, flags=0 | 0 | 112 bytes |
+| 2.0.13 SEQ64, no EXTEND | 16-byte SEQ64 + 4-byte flags; remaining bytes are payload | 1 | 128 bytes |
+| 2.2.1 SEQ64 with EXTEND | 16-byte SEQ64 + 24-byte settings + 40-byte extension | 1 | 128 bytes |
+
+Server AckFIN keeps the 12/16-byte sequence prefix, 40-byte base statistics
+layout and VERSION1 flags unchanged. It appends 60/72 zero bytes for
+2.0.9/2.0.13 length compatibility; this does not implement extended statistics.
+Client reception still accepts a minimum of 52 bytes for SEQ32 or 56 bytes for
+SEQ64 layouts. Both backends read at most the 56-byte base prefix and do not
+require compatibility padding from peers.
 
 SEQ64 is identified first, only after at least 20 bytes are available, with
 any nonnegative signed 64-bit ID, a valid timestamp and the SEQ flag (no
 VERSION1). Without EXTEND, 20 bytes suffice: 2.0.13 normal mode has ASCII
 payload after flags, so base configuration fields are neither read nor
-validated. EXTEND requires the full 80 bytes and valid base settings.
+validated. EXTEND requires the full 80 bytes, without base-settings validation.
 A SEQ64 claim that fails validation never falls back to SEQ32.
-SEQ32 requires a nonnegative signed 32-bit ID, at least 36 bytes, normal flags, one thread, a valid
-port, a plausible buffer length (including the upstream default zero), nonzero
-bandwidth/amount, and a valid timestamp. Arbitrary short UDP or flags=0 alone
+SEQ32 requires a nonnegative signed 32-bit ID, at least 36 bytes, flags at offset
+12 equal to zero and threads at offset 16 equal to one as format markers.
+Unconsumed port, buffer length, window/bandwidth and amount fields are not
+validated. All layouts require timestamp usec < 1000000 and reject VERSION1
+setup flags. Arbitrary short UDP or flags=0 alone
 cannot claim a session. All three layouts allow a later valid ID to establish
 a session if IDs 0/1 were lost; negative FIN IDs cannot establish a session.
 For 64-bit IDs, a nonzero high word or a set low-word sign bit is valid as long
 as the complete signed 64-bit value is nonnegative.
 Once selected, data/FIN require only the selected 12/16-byte
 prefix; the layout is not redetected on each packet.
+
+Both Raw and Socket server workers log a warning with the rejection reason and
+available prefix length only on the first setup rejection per server instance;
+further rejected setups are silently discarded while waiting for a valid peer.
+There is no global warning limiter. This relaxation allows a SEQ32 setup with
+the zero window field at offset 28 used by 2.0.9; it does not establish full
+2.0.9 interoperability. Client data/setup/FIN TX remains unchanged; only server
+AckFIN TX sizes are padded as described above.
 
 Receiver timing starts with the first accepted datagram, but initial loss is
 still counted from the protocol sequence base (zero for SEQ32, one for SEQ64
@@ -377,8 +394,10 @@ Device UDP TX remains SEQ64 with extended settings; this change adds 2.0.5
 ### Hardware validation
 
 Use [examples/wifi/macsw_bare](../../examples/wifi/macsw_bare) to validate iPerf
-on the device. Test UDP RX with iPerf2 2.0.5, 2.0.13 and 2.2.1 peers on both
+on the device. Test UDP RX with iPerf2 2.0.5, 2.0.9, 2.0.13 and 2.2.1 peers on both
 Raw and Socket backends, checking throughput, packet loss and FIN/AckFIN completion.
+The AckFIN padding adjustment has not been hardware-validated; these are
+validation instructions, not a claim of tested interoperability.
 
 ## Scope and Limitations
 

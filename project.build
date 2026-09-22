@@ -30,13 +30,16 @@ SELECTOR_VARS := CHIP BOARD CPU_ID CPU_MODEL
 
 CONFIG_AUTOCONFIG_INPUT=$(abspath $(BUILD_DIR)/generated/autoconfig.input)
 CONFIG_AUTOCONFIG_DEF=$(abspath $(BUILD_DIR)/generated/autoconfig.def)
+CONFIG_AUTOCONFIG_MENUCONFIG=$(abspath $(BUILD_DIR)/generated/autoconfig.menuconfig)
 CONFIG_AUTOCONFIG_CMAKE=$(abspath $(BUILD_DIR)/generated/autoconfig.cmake)
 CONFIG_AUTOCONFIG_HEADER=$(abspath $(BUILD_DIR)/generated/autoconfig.h)
 CONFIG_AUTOCONFIG_MAKE=$(abspath $(BUILD_DIR)/generated/autoconfig.mk)
-CONFIG_AUTOCONFIG_DEF_OLD=$(abspath $(BUILD_DIR)/generated/autoconfig.def.before)
 CONFIG_SEED = $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/config_seed.py"
-CONFIG_MERGE = $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/config_merge.py"
 CONFIG_KCONFIG_ENTRY=$(abspath $(if $(wildcard $(SDK_DEMO_PATH)/Kconfig),$(SDK_DEMO_PATH)/Kconfig,$(BL_SDK_BASE)/Kconfig))
+
+# An existing menuconfig result becomes the configuration source; otherwise
+# resolve the project defconfig and command-line values through Make.
+CONFIG_SOURCE=$(if $(wildcard $(CONFIG_AUTOCONFIG_MENUCONFIG)),$(CONFIG_AUTOCONFIG_MENUCONFIG),$(CONFIG_AUTOCONFIG_INPUT))
 
 # CMake receives configuration only through generated/autoconfig.cmake.
 cmake_definition+= -DCMAKE_COLOR_DIAGNOSTICS=ON
@@ -74,7 +77,7 @@ config: | $(BUILD_DIR)/generated
 	$(foreach var,$(SELECTOR_VARS),$(if $(strip $($(var))),$(file >>$(CONFIG_AUTOCONFIG_INPUT),$(var)=$($(var)))))
 	$(foreach var,$(CONFIG_INPUT_VARS),$(file >>$(CONFIG_AUTOCONFIG_INPUT),$(var)=$($(var))))
 	$(CONFIG_SEED) \
-		--defconfig "$(CONFIG_AUTOCONFIG_INPUT)" \
+		--defconfig "$(CONFIG_SOURCE)" \
 		--kconfig "$(CONFIG_KCONFIG_ENTRY)" \
 		--def-out "$(CONFIG_AUTOCONFIG_DEF)" \
 		--cmake-out "$(CONFIG_AUTOCONFIG_CMAKE)" \
@@ -96,8 +99,10 @@ config-info:
 	@echo "SDK_DEMO_PATH = $(SDK_DEMO_PATH)"
 	@echo "KCONFIG entry = $(CONFIG_KCONFIG_ENTRY)"
 	@echo "defconfig        = $(DEFCONFIG_FILE)"
+	@echo "config source    = $(CONFIG_SOURCE)"
 	@echo "autoconfig.input = $(CONFIG_AUTOCONFIG_INPUT)"
 	@echo "autoconfig.def   = $(CONFIG_AUTOCONFIG_DEF)"
+	@echo "autoconfig.menuconfig = $(CONFIG_AUTOCONFIG_MENUCONFIG)"
 	@echo "autoconfig.cmake = $(CONFIG_AUTOCONFIG_CMAKE)"
 
 puncover:

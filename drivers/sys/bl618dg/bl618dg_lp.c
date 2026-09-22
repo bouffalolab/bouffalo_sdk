@@ -780,6 +780,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
      * while APP/GLB interrupts are disabled.
      */
     bl618dg_lp_io_wakeup_prepare();
+    bl618dg_lp_keyscan_wakeup_prepare();
 
     LP_HOOK(pre_sys, bl_lp_fw_cfg);
 
@@ -1004,6 +1005,13 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
             tmpVal = tmpVal & 0xfffffff1;
             BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
         }
+
+        /* Note: the keyscan (KYD) matrix, the PDS pad settings and the KYD
+         * wakeup latch are owned by APP. Only the PDS wakeup source mask is
+         * armed here so that LPFW (and its own PDS15 sleep, which does not
+         * call PDS_Mask_All_Wakeup_Src()) can be woken up by a key press. */
+        PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_KEYSCAN,
+                                   iot2lp_para->wakeup_source_parameter->kyscan_wakeup_en ? UNMASK : MASK);
 
         if (pds_timer_enabled || bl_lp_fw_cfg->ble_wakeup_en) {
 

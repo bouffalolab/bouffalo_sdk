@@ -1,4 +1,4 @@
-# Examples
+﻿# Examples
 
 This directory contains the official Bouffalo SDK example projects. They
 demonstrate SDK features and provide reference code that can be adapted for
@@ -107,6 +107,7 @@ are intentionally not listed as applications.
 | --- | --- |
 | [`wifi`](wifi) | [`ap_sta_bridge`](wifi/ap_sta_bridge), [`macsw_bare`](wifi/macsw_bare), [`nethub`](wifi/nethub), [`rf_ota`](wifi/rf_ota), [`sdh_wifi`](wifi/sdh_wifi), [`sdio_wifi`](wifi/sdio_wifi), [`spi_wifi`](wifi/spi_wifi), [`uart_wifi`](wifi/uart_wifi), [`usb_wifi`](wifi/usb_wifi), [`wfa`](wifi/wfa), [`wfa_dualcore`](wifi/wfa_dualcore) |
 | [`wifi/coex`](wifi/coex) | [`wifi_ble`](wifi/coex/wifi_ble) |
+| [`wifi/p2p`](wifi/p2p) | [`wifi_p2p`](wifi/p2p/wifi_p2p), [`wifi_p2p_high_perf`](wifi/p2p/wifi_p2p_high_perf) |
 | [`wifi/sta`](wifi/sta) | [`aws_iot`](wifi/sta/aws_iot), [`dualcore`](wifi/sta/dualcore), [`wifi_ap`](wifi/sta/dualcore/wifi_ap), [`wifi_np`](wifi/sta/dualcore/wifi_np), [`http_restful_api`](wifi/sta/http_restful_api), [`matter`](wifi/sta/matter), [`smartconfig_ble`](wifi/sta/smartconfig_ble), [`smartconfig_softap`](wifi/sta/smartconfig_softap), [`websocket`](wifi/sta/websocket), [`wifi_eth_bridge`](wifi/sta/wifi_eth_bridge), [`wifi_gcov_dump`](wifi/sta/wifi_gcov_dump), [`wifi_http`](wifi/sta/wifi_http), [`wifi_https`](wifi/sta/wifi_https), [`wifi_mqtt`](wifi/sta/wifi_mqtt), [`wifi_ota_by_http`](wifi/sta/wifi_ota_by_http), [`wifi_tcp`](wifi/sta/wifi_tcp), [`wifi_tcp_high_perf`](wifi/sta/wifi_tcp_high_perf), [`wifi_udp`](wifi/sta/wifi_udp) |
 | [`wifi/wfa_dualcore`](wifi/wfa_dualcore) | [`wfa_ap`](wifi/wfa_dualcore/wfa_ap), [`wfa_np`](wifi/wfa_dualcore/wfa_np) |
 

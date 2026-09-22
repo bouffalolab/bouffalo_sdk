@@ -82,11 +82,25 @@
 #else 
 #define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
 #endif
+#if defined(BL618DG)
+/* A modest TX window; retain RAM for Bluetooth and the default MACSW profile. */
+#define TCP_SND_BUF                   (8 * TCP_MSS)
+#else
 #define TCP_SND_BUF                   (4 * TCP_MSS)
+#endif
 
 #define TCP_QUEUE_OOSEQ               1
+#if defined(BL618DG)
+/* Leave FHOST RX buffers available for retransmissions and other traffic. */
+#define TCP_OOSEQ_MAX_PBUFS           8
+#endif
 #define MEMP_NUM_TCP_SEG              ((4 * TCP_SND_BUF) / TCP_MSS)
+#if defined(BL618DG)
+/* Reference descriptors are shared with forwarding and socket traffic. */
+#define MEMP_NUM_PBUF                 ((2 * TCP_SND_BUF) / TCP_MSS)
+#else
 #define MEMP_NUM_PBUF                 (TCP_SND_BUF / TCP_MSS)
+#endif
 #define PBUF_POOL_SIZE                0
 #define LWIP_WND_SCALE                1
 #define TCP_RCV_SCALE                 2
@@ -98,6 +112,8 @@
 
 #if (defined(BL602))
 #define LWIP_HEAP_SIZE (14 * 1024)
+#elif defined(BL618DG)
+#define LWIP_HEAP_SIZE (32 * 1024)
 #else 
 #define LWIP_HEAP_SIZE (18 * 1024)
 #endif 

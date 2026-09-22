@@ -11,6 +11,7 @@
 
 #define WL_P2P_DEFAULT_LISTEN_WPS_DURATION_SEC 20
 #define WL_P2P_MAX_2G_CHANNEL 13
+#define WL_P2P_MAX_GO_INTENT 15
 
 static int wl_p2p_is_2g_channel(unsigned int channel)
 {
@@ -415,6 +416,40 @@ static int p2p_deinit_cmd(int argc, char **argv)
     return wl_p2p_deinit_cmd(argc, argv);
 }
 
+static int p2p_go_intent_cmd(int argc, char **argv)
+{
+    int go_intent;
+    int listen_wps_go_intent;
+
+    if (argc < 3) {
+        bl_p2p_get_go_intent(&go_intent, &listen_wps_go_intent);
+        printf("usage: p2p_go_intent <go_intent 0-%d> "
+               "<listen_wps_go_intent 0-%d>\n",
+               WL_P2P_MAX_GO_INTENT, WL_P2P_MAX_GO_INTENT);
+        printf("go_intent=%d listen_wps_go_intent=%d\n",
+               go_intent, listen_wps_go_intent);
+        return -1;
+    }
+
+    go_intent = atoi(argv[1]);
+    listen_wps_go_intent = atoi(argv[2]);
+    if (go_intent < 0 || go_intent > WL_P2P_MAX_GO_INTENT ||
+        listen_wps_go_intent < 0 || listen_wps_go_intent > WL_P2P_MAX_GO_INTENT) {
+        printf("invalid go_intent=%d listen_wps_go_intent=%d (range 0-%d)\n",
+               go_intent, listen_wps_go_intent, WL_P2P_MAX_GO_INTENT);
+        return -1;
+    }
+
+    if (bl_p2p_set_go_intent(go_intent, listen_wps_go_intent) < 0) {
+        printf("p2p_go_intent failed\n");
+        return -1;
+    }
+
+    printf("p2p_go_intent ok go_intent=%d listen_wps_go_intent=%d\n",
+           go_intent, listen_wps_go_intent);
+    return 0;
+}
+
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_init_cmd, wl_p2p_init, wl80211 p2p runtime init);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_find_cmd, wl_p2p_find, wl80211 p2p find);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_listen_cmd, wl_p2p_listen, wl80211 p2p listen);
@@ -453,5 +488,7 @@ SHELL_CMD_EXPORT_ALIAS(p2p_connect_pin_cmd, p2p_connect_pin,
                        join a wl80211 P2P GO with WPS PIN display mode);
 SHELL_CMD_EXPORT_ALIAS(p2p_stop_cmd, p2p_stop, stop wl80211 p2p runtime activity);
 SHELL_CMD_EXPORT_ALIAS(p2p_deinit_cmd, p2p_deinit, deinit wl80211 p2p runtime);
+SHELL_CMD_EXPORT_ALIAS(p2p_go_intent_cmd, p2p_go_intent,
+                       set go_intent and listen_wps_go_intent);
 
 #endif /* CONFIG_BL_SUPPLICANT_P2P */

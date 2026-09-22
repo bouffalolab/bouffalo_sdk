@@ -11,6 +11,12 @@
 
 #include "macsw_config.h"
 
+#if defined(CFG_P2P_DEBUG) && CFG_P2P_DEBUG
+#define MACSW_P2P_DEBUG(...) bl_fw_printf(__VA_ARGS__)
+#else
+#define MACSW_P2P_DEBUG(...) do { if (0) bl_fw_printf(__VA_ARGS__); } while (0)
+#endif
+
 #define MACSW_VERSION_STR      "v6.10.0.0"
 // Version has the form Major.minor.release.patch
 // The version string is "vMM.mm.rr.pp"
@@ -1440,6 +1446,20 @@ struct scanu_start_cfm
     uint8_t status;
     /// Number of scan results available
     uint8_t result_cnt;
+};
+
+/// Scan completion status for @ref scanu_start_cfm::status.
+enum scanu_status
+{
+    SCANU_DONE = CO_OK,
+    SCANU_ABORTED,
+};
+
+/// Structure containing the parameters of the @ref SCANU_ABORT_REQ message.
+struct scanu_abort_req
+{
+    /// Index of the VIF that was scanning.
+    uint8_t vif_idx;
 };
 
 /// Structure containing the parameters of the @ref SM_CONNECT_IND message.
@@ -3089,6 +3109,10 @@ enum
     SCANU_GET_SCAN_RESULT_CFM,
     /// Indicate country code to fhost
     SCANU_COUNTRY_CODE_IND,
+    /// Abort current scan request
+    SCANU_ABORT_REQ,
+    /// Abort current scan confirmation
+    SCANU_ABORT_CFM,
 };
 
 enum mm_msg_tag
@@ -3553,6 +3577,7 @@ enum scan_msg_tag
      * Section of internal SCAN messages. No SCAN API messages should be defined below this point
      */
     SCAN_PROBE_TIMER,
+    SCAN_CANCEL_TIMER,
 
     /// MAX number of messages
     SCAN_MAX,

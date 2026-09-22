@@ -69,6 +69,8 @@ enum coex_config_status {
     COEX_CONFIG_ERR_INVALID_COMBINATION = -4,
     COEX_CONFIG_ERR_HARDWARE_NOT_READY = -5,
     COEX_CONFIG_ERR_BUSY = -6,
+    /** Backend changed hardware but could not complete or verify the write. */
+    COEX_CONFIG_ERR_PARTIAL_WRITE = -7,
 };
 
 /** Coexistence capabilities implemented by the selected MACSW backend. */
@@ -123,6 +125,35 @@ struct coexm_hw_plan {
     struct mac_chan_op channel;
 };
 
+enum coexm_spdt_mode {
+    COEXM_SPDT_FIXED_BT = 0,
+    COEXM_SPDT_DYNAMIC_PTA = 1,
+};
+
+/* Immutable startup operations bound to board wiring by the caller.
+ * Callbacks receive only the mode and must not block or query WiFi6. */
+struct coexm_board_ops {
+    int (*spdt_apply)(uint8_t mode);
+    int (*spdt_verify)(uint8_t mode);
+};
+
+int coexm_hw_board_register(const struct coexm_board_ops *ops);
+/* Pure startup admission: no RF/MMIO access or board callback required. */
+int coexm_hw_mode_validate(enum coexm_hw_topology topology, enum coex_rf_path path);
+bool coexm_hw_auto_enabled(void);
+bool coexm_hw_baseline_ready(void);
+/* Startup-only board identity, without a fabricated connected channel.
+ * Repeated calls must use the same topology. Does not enable PS-PTA. */
+int coexm_hw_default_apply(enum coexm_hw_topology topology);
+int coexm_hw_radio_update(const struct mac_chan_op *channel);
+/* Notify actual home before lifecycle cleanup; NULL means confirmed no home. */
+void coexm_hw_radio_notify(const struct mac_chan_op *channel);
+/* Context lookup failed, not equivalent to no home. Neither API writes MMIO. */
+void coexm_hw_radio_invalidate(void);
+bool coexm_hw_radio_sync_lost(void);
+bool coexm_hw_radio_matches(const struct mac_chan_op *channel);
+int coexm_hw_plan_get(struct coexm_hw_plan *plan);
+
 /*
  * TYPE DEFINITIONS
  ****************************************************************************************
@@ -172,7 +203,10 @@ int pm_coex_wakeup(void);
 /**
  * @brief Pause the power management functionality.
  * @details When paused, pm_coex_sleep and pm_coex_wakeup calls will be ignored.
- * @return 0 on success, -1 if PM is not initialized or role apply failed.
+ *          Initialized scheduling is paused even on failure; hardware fault
+ *          and the last applied role remain unchanged on a pre-existing fault.
+ * @return 0 on success, a negative value if PM is uninitialized or hardware
+ *         restoration failed.
  */
 int pm_coex_pause(void);
 
@@ -215,9 +249,12 @@ int coexm_hw_plan_restore(const struct coexm_hw_plan *plan);
 int coexm_hw_plan_replace(const struct coexm_hw_plan *old_plan,
                           const struct coexm_hw_plan *new_plan);
 
-/** Temporarily remove/restore channel-specific constraints while scanning. */
-int coexm_hw_scan_override_begin(void);
-int coexm_hw_scan_override_end(void);
+/** Temporarily apply a plan-specific scan recipe for the requested bands. */
+int coexm_hw_scan_override_begin(uint8_t scan_band_mask);
+/* Physical scan terminal only (including failure before scan starts).
+ * Ends override ownership even on error; does not clear a hardware fault.
+ * Caller serializes this with release of its acquired SCAN Protection owner. */
+int coexm_hw_scan_override_end(bool joining);
 
 enum coexm_hw_replay_reason {
     COEXM_HW_REPLAY_MAC_RESET = 0,
@@ -230,6 +267,12 @@ int coexm_hw_replay(enum coexm_hw_replay_reason reason);
 
 /** True when hardware could not be restored to the committed software fact. */
 bool coexm_hw_is_faulted(void);
+
+/** Read-only MACSW initialization fact, not proof that a recipe is applied. */
+bool coexm_hw_is_ready(void);
+
+/* Read-only hardware ownership check; callers must serialize any mutation. */
+bool coexm_hw_blocks_reconfiguration(void);
 
 /*
  * PS-PTA coordinator entrypoints
@@ -244,7 +287,9 @@ int coex_ps_pta_enable(void);
 
 /**
  * @brief Disable PS-PTA for the current explicit activation.
- * @return 0 on success; -1 if runtime role restore failed.
+ * @details Always disables local runtime and releases slice timer/TX gating,
+ *          including on hardware failure. Does not clear hardware fault.
+ * @return 0 on success; a negative value on hardware fault or restore failure.
  */
 int coex_ps_pta_disable(void);
 
@@ -308,11 +353,12 @@ void coex_coord_on_runtime_resume(void);
  *          while preserving the current-connection enable state.
  *
  * This is typically triggered when Wi-Fi PS is turned OFF.
- * Does nothing if PS-PTA is disabled.
+ * Preserves the enable state, including DISABLED on late callbacks. Local
+ * timer/TX-gate cleanup is unconditional, even if role restoration fails.
  *
  * @note Coex protection is controlled separately and remains disabled by
  *       default in the explicit-activation design.
- * @return 0 on success; -1 if the PTA role transition failed.
+ * @return 0 on success; a negative value on hardware fault or restore failure.
  */
 int coex_ps_pta_runtime_pause(void);
 
@@ -423,6 +469,16 @@ coex_protect_acquire_result_t coex_protect_scan_acquire(
  *         the reference and mask remain active.
  */
 int coex_protect_release(coex_protect_type_t type, uint8_t band);
+
+/**
+ * @brief Consume this physical scan's acquired reference at SCANU terminal.
+ * @param held Receipt set only for COEX_PROTECT_ACQUIRED; consumed on cleanup.
+ * @return 0 on normal cleanup/no receipt; -1 on error. A latched hardware fault
+ *         still returns -1 after logical cleanup, without writing a PTA role.
+ * @note Serialize with scan override end. Never releases other owners or
+ *       changes their watchdog. This does not relax the general release API.
+ */
+int coex_protect_scan_complete(bool *held);
 
 /**
  * @brief Release all RF protections (global emergency reset)

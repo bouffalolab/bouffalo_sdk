@@ -239,7 +239,7 @@ status=ok`，但**空口 0 包**（板 A 扫描/接收都收不到）。表现�
 | `wifi_sta_disconnect` | 断开连接 |
 | `wifi_state` | 查看连接状态 |
 | `wifi_sta_dhcp` | 触发/查看 DHCP 获取的 IP |
-| `wifi_coex_start ps_pta` / `wifi_coex_stop` | 显式开启/关闭 PS-PTA 共存 |
+| `wifi_coex_start` / `wifi_coex_stop` | 显式开启/关闭 PS-PTA 共存 |
 | `wifi_coex_duty_set <10-90>` | 设置 WiFi active 时间（ms） |
 | `wifi_coex_status` | 查看 activation、runtime、band 和 duty |
 | `iperf -c <IP> -i 1 -t 60` | 做 client（TCP），UDP 加 `-u --bw 80M` |

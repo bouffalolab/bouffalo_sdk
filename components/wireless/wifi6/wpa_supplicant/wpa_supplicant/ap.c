@@ -367,8 +367,9 @@ int wpa_supplicant_conf_ap_ht(struct wpa_supplicant *wpa_s,
 				 * configuration now to avoid such cases that
 				 * would lead to group formation failures. */
 				if (wpa_s->conf->p2p_ht40_2g4) {
-					conf->secondary_channel = wpas_p2p_get_ht40_mode(wpa_s, mode,
-											 conf->channel);
+					conf->secondary_channel =
+						wpas_p2p_get_sec_channel_offset_40mhz(
+							wpa_s, mode, conf->channel);
 					conf->ht_no_overlap_check = 1;
 				} else {
 					wpa_printf(MSG_DEBUG,

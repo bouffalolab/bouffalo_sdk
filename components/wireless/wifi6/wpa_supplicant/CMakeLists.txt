@@ -17,6 +17,13 @@ endif()
 
 sdk_library_add_sources(wpa_supplicant/wpa_supplicant.c)
 sdk_library_add_sources(wpa_supplicant/wps_supplicant.c)
+if(CONFIG_WIFI_P2P)
+sdk_library_add_sources(wpa_supplicant/p2p_supplicant.c)
+sdk_library_add_sources(wpa_supplicant/p2p_supplicant_sd.c)
+sdk_library_add_sources(wpa_supplicant/p2p_notify_macsw.c)
+sdk_library_add_sources(wpa_supplicant/gas_query.c)
+sdk_library_add_sources(wpa_supplicant/offchannel.c)
+endif()
 sdk_library_add_sources(wpa_supplicant/events.c)
 sdk_library_add_sources(wpa_supplicant/scan.c)
 sdk_library_add_sources(wpa_supplicant/notify.c)
@@ -128,6 +135,9 @@ sdk_library_add_sources(src/ap/wnm_ap.c)
 endif()
 sdk_library_add_sources(src/eap_server/eap_server.c)
 sdk_library_add_sources(src/ap/wps_hostapd.c)
+if(CONFIG_WIFI_P2P)
+sdk_library_add_sources(src/ap/p2p_hostapd.c)
+endif()
 sdk_library_add_sources(src/wps/wps.c)
 sdk_library_add_sources(src/wps/wps_attr_build.c)
 sdk_library_add_sources(src/wps/wps_dev_attr.c)
@@ -136,6 +146,9 @@ sdk_library_add_sources(src/wps/wps_registrar.c)
 sdk_library_add_sources(src/wps/wps_common.c)
 sdk_library_add_sources(src/eap_server/eap_server_identity.c)
 sdk_library_add_sources(src/eap_server/eap_server_methods.c)
+if(CONFIG_WIFI_P2P)
+sdk_library_add_sources(src/eap_server/eap_server_wsc.c)
+endif()
 sdk_library_add_sources(src/eap_common/eap_common.c)
 sdk_library_add_sources(src/eap_peer/eap.c)
 sdk_library_add_sources(src/eap_peer/eap_wsc.c)
@@ -144,6 +157,19 @@ sdk_library_add_sources(src/eap_common/eap_wsc_common.c)
 sdk_library_add_sources(src/ap/ctrl_iface_ap.c)
 sdk_library_add_sources(src/wps/wps_attr_process.c)
 sdk_library_add_sources(src/wps/wps_enrollee.c)
+if(CONFIG_WIFI_P2P)
+sdk_library_add_sources(src/common/gas.c)
+sdk_library_add_sources(src/p2p/p2p.c)
+sdk_library_add_sources(src/p2p/p2p_utils.c)
+sdk_library_add_sources(src/p2p/p2p_parse.c)
+sdk_library_add_sources(src/p2p/p2p_build.c)
+sdk_library_add_sources(src/p2p/p2p_go_neg.c)
+sdk_library_add_sources(src/p2p/p2p_sd.c)
+sdk_library_add_sources(src/p2p/p2p_pd.c)
+sdk_library_add_sources(src/p2p/p2p_invitation.c)
+sdk_library_add_sources(src/p2p/p2p_dev_disc.c)
+sdk_library_add_sources(src/p2p/p2p_group.c)
+endif()
 
 sdk_add_include_directories(wpa_supplicant)
 sdk_add_include_directories(src)
@@ -156,6 +182,11 @@ sdk_add_include_directories(src/eap_peer)
 sdk_add_include_directories(src/wps)
 sdk_add_include_directories(src/eapol_supp)
 
+if(CONFIG_WIFI_P2P_PERSISTENT_GROUP)
+    sdk_add_include_directories(${BL_SDK_BASE}/components/fs/littlefs/easyflash_port)
+    sdk_add_include_directories(${BL_SDK_BASE}/components/utils/bflb_mtd/include)
+endif()
+
 #sdk_add_compile_definitions(-DCONFIG_WPA_EXTRA_LOG_PRINT)
 sdk_add_compile_definitions(-DCONFIG_MACSW_LWIP)
 sdk_add_compile_definitions(-DCONFIG_USE_MBEDTLS)
@@ -163,12 +194,15 @@ sdk_add_compile_definitions(-DCONFIG_NO_STDOUT_DEBUG)
 #sdk_add_compile_definitions(-DCONFIG_WPA_LOG_LEVEL=MSG_EXCESSIVE)
 #MSG_EXCESSIVE, MSG_MSGDUMP, MSG_DEBUG, MSG_INFO, MSG_WARNING, MSG_ERROR
 
-if(CONFIG_MBEDTLS_AES_USE_HW
-   AND CONFIG_MBEDTLS_BIGNUM_USE_HW
-   AND CONFIG_MBEDTLS_ECC_USE_HW
-   AND CONFIG_MBEDTLS_SHA1_USE_HW
-   AND CONFIG_MBEDTLS_SHA256_USE_HW
-   AND CONFIG_MBEDTLS_SHA512_USE_HW)
+if(CONFIG_WIFI_P2P)
+    # P2P GO/GC provisioning path uses deeper WPS/AP call stacks.
+    sdk_add_compile_definitions(-DWPA_SUPPLICANT_USE_NORMAL_STACK)
+elseif(CONFIG_MBEDTLS_AES_USE_HW
+       AND CONFIG_MBEDTLS_BIGNUM_USE_HW
+       AND CONFIG_MBEDTLS_ECC_USE_HW
+       AND CONFIG_MBEDTLS_SHA1_USE_HW
+       AND CONFIG_MBEDTLS_SHA256_USE_HW
+       AND CONFIG_MBEDTLS_SHA512_USE_HW)
     message(WARNING "WPA SUPPLICNAT USE SMALL STACK")
 else()
     sdk_add_compile_definitions(-DWPA_SUPPLICANT_USE_NORMAL_STACK)

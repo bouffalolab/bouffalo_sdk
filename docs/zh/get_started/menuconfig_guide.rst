@@ -34,15 +34,16 @@ Menuconfig 配置系统使用指南
 
     make menuconfig        # 命令行配置界面
     make guiconfig         # 图形化配置界面
-    make diffconfig        # 对比 defconfig.old 和 defconfig
+    make config            # 重新生成编译配置
 
 ``make menuconfig`` 会先生成完整的 ``build/generated/autoconfig.def``，菜单界面
-基于这份完整配置工作。启动菜单前会保存一份 ``autoconfig.def.before``；退出
-并保存后，系统打印两份完整配置之间新增或值发生变化的配置项，将这些配置逐行
-追加到工程 ``defconfig``，然后重新生成 ``autoconfig.*``。
+基于这份完整配置工作，并将菜单结果保存到
+``build/generated/autoconfig.menuconfig``。菜单结果不会回写工程 ``defconfig``，
+也不会生成 ``.old`` 或 ``.before`` 备份文件。
 
-差分过程不做额外过滤。前后没有变化的 ``CONFIG_CHIP`` 等配置不会被追加，工程
-``defconfig`` 中已有的 Makefile 语句和注释不会被重写。
+退出并保存后，普通 ``make`` 或 ``make config`` 会优先使用已有的
+``generated/autoconfig.menuconfig``；该文件不存在时才使用工程 ``defconfig``
+和命令行配置参数。
 
 组件菜单
 --------

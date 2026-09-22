@@ -227,7 +227,7 @@ void bt_enable_cb(int err)
     }
 }
 
-void wifi_bt_create_task(void *param) 
+void wifi_bt_create_task(void *param)
 {
     if (rfparam_cfg_get()) {
         tcpip_init(NULL, NULL);
@@ -266,7 +266,7 @@ int main(void)
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
-       
+
     #if defined(CONFIG_BT_SETTINGS)
     bflb_mtd_init();
     /* ble stack need easyflash kv */
@@ -279,8 +279,8 @@ int main(void)
         return 0;
     }
 #else
-    LOG_I("Please refer to board_rf.h/c and README.md for antenna structure and application scenario.\r\n");
-    LOG_I("Use the appropriate board_rf_* command for rf initialization.\r\n");
+    LOG_I("Declare wiring with wifi_coex_board_config <topology> [gpio].\r\n");
+    LOG_I("Then run wifi_coex_init <combo|standalone>; see README.md.\r\n");
 #endif
     LOG_I("And then, run wifi_bt_init command to start wifi & bluetooth stack tasks.\r\n");
 
@@ -292,92 +292,44 @@ int main(void)
 
 int cmd_wifi_bt_create_task(int argc, char **argv)
 {
-    xTaskCreate(wifi_bt_create_task, "wifi bt init", 1024, NULL, 10, NULL);
+    static bool task_started;
+    uintptr_t flags;
+
+    if (argc != 1) {
+        printf("usage: %s\r\n", argv[0]);
+        return -1;
+    }
+#if defined(BL618DG)
+    if (wifi_mgmr_coex_rf_status_get() != WIFI_MGMR_COEX_OK) {
+        LOG_I("Coex preparation incomplete; run wifi_coex_init, or reboot after RF failure.\r\n");
+        return -1;
+    }
+#else
+    if (rfparam_cfg_get() == NULL) {
+        LOG_I("RF not initialized.\r\n");
+        return -1;
+    }
+#endif
+    flags = bflb_irq_save();
+    if (task_started) {
+        bflb_irq_restore(flags);
+        LOG_I("Wi-Fi/BT startup already requested.\r\n");
+        return -1;
+    }
+    task_started = true;
+    bflb_irq_restore(flags);
+
+    if (xTaskCreate(wifi_bt_create_task, "wifi bt init", 1024, NULL, 10, NULL) != pdPASS) {
+        flags = bflb_irq_save();
+        task_started = false;
+        bflb_irq_restore(flags);
+        LOG_I("Wi-Fi/BT task allocation failed.\r\n");
+        return -1;
+    }
 
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_bt_create_task, wifi_bt_init, Initialize wifi and bt stack);
-
-static bool coex_board_gpio_parse(const char *text, int *gpio_pin)
-{
-    char *end = NULL;
-    long value;
-
-    if (text == NULL || text[0] == '\0' || gpio_pin == NULL) {
-        return false;
-    }
-
-    value = strtol(text, &end, 10);
-    if (*end != '\0' || value < 0 || value >= GPIO_PIN_MAX) {
-        return false;
-    }
-
-    *gpio_pin = (int)value;
-    return true;
-}
-
-static const char *coex_board_config_error_name(int error)
-{
-    switch (error) {
-    case WIFI_MGMR_COEX_BOARD_CONFIG_ERR_INVALID_ARGUMENT:
-        return "invalid_argument";
-    case WIFI_MGMR_COEX_BOARD_CONFIG_ERR_NOT_SUPPORTED:
-        return "not_supported";
-    case WIFI_MGMR_COEX_BOARD_CONFIG_ERR_BUSY:
-        return "busy";
-    case WIFI_MGMR_COEX_BOARD_CONFIG_ERR_GPIO_PREPARE:
-        return "gpio_prepare_failed";
-    case WIFI_MGMR_COEX_BOARD_CONFIG_ERR_NOT_CONFIGURED:
-        return "not_configured";
-    default:
-        return "unknown";
-    }
-}
-
-static void coex_board_config_usage(const char *command)
-{
-    printf("usage:\r\n");
-    printf("  %s combo\r\n", command);
-    printf("  %s standalone_dual_ant\r\n", command);
-    printf("  %s standalone_single_ant <spdt_gpio>\r\n", command);
-    printf("  %s show\r\n", command);
-}
-
-int cmd_wifi_coex_debug_board_config(int argc, char **argv)
-{
-    enum wifi_mgmr_coex_board_topology topology;
-    int spdt_gpio = -1;
-    int ret;
-
-    if (argc == 2 && strcmp(argv[1], "show") == 0) {
-        wifi_mgmr_coex_debug_context_dump();
-        return 0;
-    }
-
-    if (argc == 2 && strcmp(argv[1], "combo") == 0) {
-        topology = WIFI_MGMR_COEX_BOARD_COMBO_SHARED_PATH;
-    } else if (argc == 2 &&
-               strcmp(argv[1], "standalone_dual_ant") == 0) {
-        topology = WIFI_MGMR_COEX_BOARD_STANDALONE_DUAL_ANT;
-    } else if (argc == 3 &&
-               strcmp(argv[1], "standalone_single_ant") == 0 &&
-               coex_board_gpio_parse(argv[2], &spdt_gpio)) {
-        topology = WIFI_MGMR_COEX_BOARD_STANDALONE_SINGLE_ANT_SPDT;
-    } else {
-        coex_board_config_usage(argv[0]);
-        return -1;
-    }
-
-    ret = wifi_mgmr_coex_board_configure(topology, spdt_gpio);
-    if (ret != WIFI_MGMR_COEX_BOARD_CONFIG_OK) {
-        printf("coex board config failed: %s (%d)\r\n",
-               coex_board_config_error_name(ret), ret);
-        return ret;
-    }
-
-    printf("coex board config applied\r\n");
-    return 0;
-}
 
 int cmd_wifi_coex_debug_context_dump(int argc, char **argv)
 {
@@ -395,19 +347,17 @@ int cmd_wifi_coex_debug_resolve(int argc, char **argv)
     wifi_mgmr_coex_runtime_policy_t policy;
 
     if (argc != 2) {
-        printf("usage: %s <board_default|hardware_only|ps_pta>\r\n",
+        printf("usage: %s <hardware_only|ps_pta>\r\n",
                argv[0]);
         return -1;
     }
 
-    if (strcmp(argv[1], "board_default") == 0) {
-        policy = WIFI_MGMR_COEX_RUNTIME_BOARD_DEFAULT;
-    } else if (strcmp(argv[1], "hardware_only") == 0) {
+    if (strcmp(argv[1], "hardware_only") == 0) {
         policy = WIFI_MGMR_COEX_RUNTIME_HARDWARE_ONLY;
     } else if (strcmp(argv[1], "ps_pta") == 0) {
         policy = WIFI_MGMR_COEX_RUNTIME_PS_PTA_REQUIRED;
     } else {
-        printf("usage: %s <board_default|hardware_only|ps_pta>\r\n",
+        printf("usage: %s <hardware_only|ps_pta>\r\n",
                argv[0]);
         return -1;
     }
@@ -415,8 +365,6 @@ int cmd_wifi_coex_debug_resolve(int argc, char **argv)
     return wifi_mgmr_coex_debug_resolve_dump(policy);
 }
 
-SHELL_CMD_EXPORT_ALIAS(cmd_wifi_coex_debug_board_config, wifi_coex_debug_board_config,
-                       configure coex board topology);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_coex_debug_context_dump, wifi_coex_debug_context,
                        dump coex input context);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_coex_debug_resolve, wifi_coex_debug_resolve,
@@ -464,6 +412,7 @@ int cmd_wifi_coex_debug_rfparam_init(int argc, char **argv)
 
     return 0;
 }
+
 
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_coex_debug_bt_path, wifi_coex_debug_bt_path, setup bt path);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_coex_debug_combo_path, wifi_coex_debug_combo_path, setup combo path);

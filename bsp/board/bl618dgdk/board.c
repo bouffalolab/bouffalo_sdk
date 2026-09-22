@@ -239,6 +239,9 @@ static void peripheral_clock_init_lp(void)
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
 
 #ifdef CONFIG_BSP_USB
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CGEN_CFG1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_CGEN_S1_RSVD13);
+    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG1, tmpVal);
     PERIPHERAL_CLOCK_USB_ENABLE();
 #endif
 

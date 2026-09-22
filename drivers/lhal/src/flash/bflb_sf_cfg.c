@@ -2117,10 +2117,10 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_boya_be32m = {
 
     /*AC*/
     .time_e_sector = 300,
-    .time_e_32k = 1200,
-    .time_e_64k = 1200,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
     .time_page_pgm = 5,
-    .time_ce = 33 * 1000,
+    .time_ce = 65 * 1000,
     .pd_delay = 20,
     .qe_data = 0,
 };
@@ -2943,6 +2943,16 @@ __UNUSED static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
     {
         .jedec_id = 0x194068,
         //.name="boya_fq256es_256_33",
+        .cfg = &flash_cfg_boya_be32m,
+    },
+    {
+        .jedec_id = 0x204620,
+        //.name="xm25eh512d_512_33",
+        .cfg = &flash_cfg_boya_be32m,
+    },
+    {
+        .jedec_id = 0x2270ef,
+        //.name="wb_02rv_2g_33",
         .cfg = &flash_cfg_boya_be32m,
     },
     {

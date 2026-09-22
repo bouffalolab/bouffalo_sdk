@@ -267,6 +267,12 @@ enum cfgmacsw_msg_index {
     CFGMACSW_COEX_PROTECTION_SET_RESP = 112,
     /// Notify application of an AP STA credential mismatch
     CFGMACSW_AP_STA_AUTH_FAIL_CMD = 113,
+    /// Structured P2P event from supplicant (param: @ref cfgmacsw_p2p_event)
+    CFGMACSW_P2P_EVENT = 114,
+    /// Request cancellation of an active scan (param: @ref cfgmacsw_abort_scan)
+    CFGMACSW_ABORT_SCAN_CMD = 115,
+    /// Response to CFGMACSW_ABORT_SCAN_CMD (param: @ref cfgmacsw_resp)
+    CFGMACSW_ABORT_SCAN_RESP = 116,
 };
 
 /// CFGMACSW status
@@ -449,13 +455,108 @@ struct cfgmacsw_rc_result {
 };
 
 /// structure for CFGMACSW_STATUS_CODE_PRINT_CMD
+#define CFGMACSW_STATUS_CODE_MSG_LEN 256
 struct cfgmacsw_status_code_print {
     /// header
     struct cfgmacsw_msg_hdr hdr;
     /// Vif idx
     int fhost_vif_idx;
-    const char *msg;
+    char msg[CFGMACSW_STATUS_CODE_MSG_LEN];
 
+};
+
+enum cfgmacsw_p2p_event_type {
+    CFGMACSW_P2P_DEVICE_FOUND = 1,
+    CFGMACSW_P2P_DEVICE_LOST,
+    CFGMACSW_P2P_FIND_STOPPED,
+    CFGMACSW_P2P_GO_NEG_REQUEST,
+    CFGMACSW_P2P_GO_NEG_FAILURE,
+    CFGMACSW_P2P_GO_NEG_SUCCESS,
+    CFGMACSW_P2P_GROUP_FORMATION_FAILURE,
+    CFGMACSW_P2P_GROUP_STARTED,
+    CFGMACSW_P2P_GROUP_REMOVED,
+    CFGMACSW_P2P_INVITATION_RECEIVED,
+    CFGMACSW_P2P_INVITATION_RESULT,
+    CFGMACSW_P2P_GROUP_FORMATION_SUCCESS,
+    CFGMACSW_P2P_PROV_DISC_SHOW_PIN,
+    CFGMACSW_P2P_PROV_DISC_ENTER_PIN,
+    CFGMACSW_P2P_PROV_DISC_PBC_REQ,
+    CFGMACSW_P2P_PROV_DISC_PBC_RESP,
+    CFGMACSW_P2P_PROV_DISC_FAILURE,
+    CFGMACSW_P2P_INVITATION_ACCEPTED,
+    /* Internal lifecycle notification; intentionally has no public event code. */
+    CFGMACSW_P2P_LISTEN_STOPPED,
+};
+
+enum cfgmacsw_p2p_role {
+    CFGMACSW_P2P_ROLE_UNKNOWN = 0,
+    CFGMACSW_P2P_ROLE_GO,
+    CFGMACSW_P2P_ROLE_CLIENT,
+};
+
+enum cfgmacsw_p2p_wps_method {
+    CFGMACSW_P2P_WPS_METHOD_UNKNOWN = 0,
+    CFGMACSW_P2P_WPS_METHOD_PIN_DISPLAY,
+    CFGMACSW_P2P_WPS_METHOD_PIN_KEYPAD,
+    CFGMACSW_P2P_WPS_METHOD_PBC,
+    CFGMACSW_P2P_WPS_METHOD_NFC,
+    CFGMACSW_P2P_WPS_METHOD_P2PS,
+};
+
+enum cfgmacsw_p2p_valid_field {
+    CFGMACSW_P2P_VALID_PEER_ADDR       = 1U << 0,
+    CFGMACSW_P2P_VALID_PEER_IFACE_ADDR = 1U << 1,
+    CFGMACSW_P2P_VALID_GO_DEV_ADDR     = 1U << 2,
+    CFGMACSW_P2P_VALID_BSSID           = 1U << 3,
+    CFGMACSW_P2P_VALID_ROLE            = 1U << 4,
+    CFGMACSW_P2P_VALID_FREQ            = 1U << 5,
+    CFGMACSW_P2P_VALID_STATUS          = 1U << 6,
+    CFGMACSW_P2P_VALID_PERSISTENT_ID   = 1U << 7,
+    CFGMACSW_P2P_VALID_CONFIG_METHODS  = 1U << 8,
+    CFGMACSW_P2P_VALID_DEV_CAPAB       = 1U << 9,
+    CFGMACSW_P2P_VALID_GROUP_CAPAB     = 1U << 10,
+    CFGMACSW_P2P_VALID_LEVEL           = 1U << 11,
+    CFGMACSW_P2P_VALID_GO_INTENT       = 1U << 12,
+    CFGMACSW_P2P_VALID_DEV_PASSWD_ID   = 1U << 13,
+    CFGMACSW_P2P_VALID_WPS_METHOD      = 1U << 14,
+    CFGMACSW_P2P_VALID_PERSISTENT      = 1U << 15,
+};
+
+#define CFGMACSW_P2P_ADDR_LEN        6
+#define CFGMACSW_P2P_SSID_LEN        32
+#define CFGMACSW_P2P_IFNAME_LEN      16
+#define CFGMACSW_P2P_DEVICE_NAME_LEN 33
+#define CFGMACSW_P2P_PIN_LEN         9
+#define CFGMACSW_P2P_REASON_LEN      32
+
+/// Fixed-size, pointer-free P2P event passed from supplicant to fhost.
+struct cfgmacsw_p2p_event {
+    struct cfgmacsw_msg_hdr hdr;
+    int fhost_vif_idx;
+    uint32_t valid_fields;
+    int32_t status;
+    int32_t persistent_id;
+    uint16_t freq;
+    uint16_t config_methods;
+    uint16_t dev_passwd_id;
+    uint8_t type;
+    uint8_t role;
+    uint8_t dev_capab;
+    uint8_t group_capab;
+    int8_t level;
+    uint8_t go_intent;
+    uint8_t wps_method;
+    uint8_t ssid_len;
+    uint8_t persistent;
+    uint8_t peer_addr[CFGMACSW_P2P_ADDR_LEN];
+    uint8_t peer_iface_addr[CFGMACSW_P2P_ADDR_LEN];
+    uint8_t go_dev_addr[CFGMACSW_P2P_ADDR_LEN];
+    uint8_t bssid[CFGMACSW_P2P_ADDR_LEN];
+    uint8_t ssid[CFGMACSW_P2P_SSID_LEN];
+    char ifname[CFGMACSW_P2P_IFNAME_LEN];
+    char device_name[CFGMACSW_P2P_DEVICE_NAME_LEN];
+    char pin[CFGMACSW_P2P_PIN_LEN];
+    char reason[CFGMACSW_P2P_REASON_LEN];
 };
 typedef void (*cfgmacsw_raw_send_done)(void* env);
 typedef void (*cfgmacsw_adhoc_tx_cfm)(void* env, uint32_t status);
@@ -578,6 +679,14 @@ struct cfgmacsw_scan_completed {
     uint32_t status;
     /// Nb result available with CFGMACSW_SCAN_RESULTS_CMD
     uint32_t result_cnt;
+};
+
+/// Structure for CFGMACSW_ABORT_SCAN_CMD.
+struct cfgmacsw_abort_scan {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
 };
 
 /// structure for CFGMACSW_SCAN_RESULT_EVENT
@@ -1028,7 +1137,7 @@ struct cfgmacsw_set_ps_mode {
 struct cfgmacsw_coex_start {
     /// header
     struct cfgmacsw_msg_hdr hdr;
-    /// One of enum wifi_mgmr_coex_runtime_policy values
+    /// Must be PS_PTA_REQUIRED (2); old hardware-only requests are rejected.
     uint8_t policy;
 };
 
@@ -1050,6 +1159,7 @@ struct cfgmacsw_coex_status_resp {
     struct cfgmacsw_msg_hdr hdr;
     /// One of enum wifi_mgmr_coex_error values
     int32_t result;
+    bool hardware_configured;
     /// A product activation is committed
     bool active;
     /// PS-PTA runtime is currently running

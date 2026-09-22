@@ -1,13 +1,25 @@
 #ifndef _BOARD_GPIO_H_
 #define _BOARD_GPIO_H_
 
-#if __has_include("board_gpio_overlay.h")
-#include "board_gpio_overlay.h"
-#else
-
 #include <stdint.h>
 
 #include "bflb_gpio.h"
+
+/** @brief Board-specific low-power GPIO wakeup configuration. */
+struct board_lp_gpio_wakeup_config_s {
+    uint64_t io_ie;                          /*!< GPIO input-enable mask */
+    uint64_t io_pu;                          /*!< GPIO pull-up mask */
+    uint64_t io_pd;                          /*!< GPIO pull-down mask */
+    uint8_t io_0_36_trig_mode[GPIO_PIN_MAX]; /*!< Per-GPIO trigger mode */
+    uint64_t io_wakeup_unmask;               /*!< GPIO wakeup-enable mask */
+};
+
+/** @brief Return the board-specific low-power GPIO wakeup configuration. */
+const struct board_lp_gpio_wakeup_config_s *board_lp_gpio_wakeup_config_get(void);
+
+#if __has_include("board_gpio_overlay.h")
+#include "board_gpio_overlay.h"
+#else
 
 void board_uartx_gpio_init(void);
 void board_i2c0_gpio_init(void);

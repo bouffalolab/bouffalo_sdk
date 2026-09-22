@@ -6,6 +6,7 @@
 
 #include "audio_codec_driver.h"
 #include "audio_codec_ac101s.h"
+#include "audio_codec_acm8852.h"
 #include "audio_codec_es8311.h"
 #include "audio_codec_es8389.h"
 #include "audio_codec_es8388.h"
@@ -31,6 +32,7 @@ static const audio_codec_driver_t *g_drivers[] = {
     &audio_codec_es8388_driver,
     &audio_codec_wm8978_driver,
     &audio_codec_ac101s_driver,
+    &audio_codec_acm8852_driver,
 };
 
 static void audio_codec_reset_dev(audio_codec_dev_t *dev)

@@ -268,6 +268,7 @@ SECTIONS
         *(.noinit_hbn_ram_data*)
         . = ALIGN(4);
     } > hbn_memory
-
+    
+    PROVIDE(__LD_CONFIG_EM_SEL = 0K);
 }
 

@@ -220,6 +220,8 @@ typedef enum {
 #endif
 } IRQn_Type;
 
+#define KYS_IRQn                               UART2_IRQn
+
 #if defined(CPU_LP)
 #define BMX_MCU_BUS_ERR_IRQn                   (IRQn_LAST + 0)
 #define MJDEC_IRQn                             (IRQn_LAST + 1)
@@ -252,6 +254,7 @@ typedef enum {
 #define UART0_IRQn                             (IRQn_LAST + 28)
 #define UART1_IRQn                             (IRQn_LAST + 29)
 #define UART2_IRQn                             (IRQn_LAST + 30)
+#define KYS_IRQn                               UART2_IRQn
 #define GPIO_DMA_IRQn                          (IRQn_LAST + 31)
 #define I2C0_IRQn                              (IRQn_LAST + 32)
 #define PWM_IRQn                               (IRQn_LAST + 33)

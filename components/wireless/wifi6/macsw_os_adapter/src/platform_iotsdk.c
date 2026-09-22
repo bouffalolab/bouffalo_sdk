@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "platform_al.h"
+#include "cfgmacsw.h"
+#include "wifi_mgmr_coex_internal.h"
 #include "FreeRTOS.h"
 #include "timers.h"
 
@@ -104,6 +106,13 @@ int platform_get_random(unsigned char *buf, size_t len)
 void platform_post_event(int catalogue, int code1, int code2)
 {
     aos_post_event((uint16_t)catalogue, (uint16_t)code1, (uint16_t)code2);
+}
+
+void platform_post_p2p_event(int code,
+			     const struct cfgmacsw_p2p_event *event)
+{
+	if (event)
+		platform_post_event(0x0002, code, event->fhost_vif_idx);
 }
 
 /**
@@ -311,3 +320,15 @@ void platform_hook_prevent_sleep(uint32_t event, uint8_t prevent)
     }
 }
 #endif
+
+/* This SDK adapter has no topology-aware RF preparation binding. */
+const struct wifi_mgmr_coex_rf_ops *platform_coex_rf_ops_get(void)
+{
+    return NULL;
+}
+
+int platform_coex_spdt_debug_apply(enum wifi_mgmr_coex_spdt_debug_mode mode)
+{
+    (void)mode;
+    return WIFI_MGMR_COEX_ERR_NOT_SUPPORTED;
+}

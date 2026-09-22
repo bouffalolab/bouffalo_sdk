@@ -119,6 +119,9 @@ typedef void (*fhost_wpa_cb_t) (int fhost_vif_idx, uint8_t event, // ref @ enum 
 /// Vif index to use for global command/events
 #define FHOST_WPA_GLOBAL_VIF MACSW_VIRT_DEV_MAX
 
+/// WPA command timed out before the supplicant produced a response.
+#define FHOST_WPA_ERR_TIMEOUT (-5)
+
 /**
  ****************************************************************************************
  * @brief Init WPA environment and create the WPA task
@@ -145,6 +148,22 @@ int fhost_wpa_init(void);
  ****************************************************************************************
  */
 int fhost_wpa_add_vif(int fhost_vif_idx);
+
+/**
+ ****************************************************************************************
+ * @brief Let WPA task manage an interface using an optional configuration name
+ *
+ * This is equivalent to @ref fhost_wpa_add_vif, but passes @p config_name to
+ * wpa_supplicant while adding the interface. The configuration backend may use
+ * this name to select interface-specific persistent storage.
+ *
+ * @param[in] fhost_vif_idx Index of the FHOST interface
+ * @param[in] config_name   Configuration name, or NULL for an empty configuration
+ *
+ * @return 0 if the interface was added successfully and !=0 otherwise.
+ ****************************************************************************************
+ */
+int fhost_wpa_add_vif_with_config(int fhost_vif_idx, const char *config_name);
 
 /**
  ****************************************************************************************
@@ -278,6 +297,39 @@ int fhost_wpa_execute_cmd(int fhost_vif_idx, char *resp_buf, int *resp_buf_len,
  ****************************************************************************************
  */
 int fhost_wpa_set_assoc_ie(int fhost_vif_idx, const uint8_t *ies, uint16_t ies_len);
+
+/**
+ ****************************************************************************************
+ * @brief Send a command to the WPA task and take ownership of its response
+ *
+ * This function is blocking until the command is executed by the WPA task. Unlike
+ * @ref fhost_wpa_execute_cmd, the response is not copied into a caller-provided buffer.
+ * On success, ownership of the dynamically allocated, null-terminated response is
+ * transferred through @p resp_buf and must be released with
+ * @ref fhost_wpa_response_free.
+ *
+ * @param[in]  fhost_vif_idx Index of the FHOST interface, or
+ *                           @ref FHOST_WPA_GLOBAL_VIF for a global command.
+ * @param[out] resp_buf       Dynamically allocated response. Set to NULL on error.
+ * @param[out] resp_buf_len   Response length in bytes, excluding the null terminator.
+ *                           Set to 0 on error.
+ * @param[in]  fmt            Command to send to the wpa_supplicant task. The command
+ *                           is first formatted using optional parameters.
+ *
+ * @return <0 if an error occurred and 0 otherwise.
+ ****************************************************************************************
+ */
+int fhost_wpa_execute_cmd_alloc(int fhost_vif_idx, char **resp_buf,
+                                int *resp_buf_len, const char *fmt, ...);
+
+/**
+ ****************************************************************************************
+ * @brief Release a response returned by @ref fhost_wpa_execute_cmd_alloc
+ *
+ * @param[in] resp_buf Response to release. NULL is accepted.
+ ****************************************************************************************
+ */
+void fhost_wpa_response_free(char *resp_buf);
 
 /**
  ****************************************************************************************

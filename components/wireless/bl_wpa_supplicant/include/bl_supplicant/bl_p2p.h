@@ -18,6 +18,8 @@ typedef void (*bl_p2p_listen_pin_cb_t)(const uint8_t peer_addr[6],
 
 int bl_p2p_init(void);
 int bl_p2p_set_device_name(const char *name);
+int bl_p2p_set_go_intent(int go_intent, int listen_wps_go_intent);
+void bl_p2p_get_go_intent(int *go_intent, int *listen_wps_go_intent);
 void bl_p2p_deinit(void);
 int bl_p2p_find(unsigned int timeout_sec);
 int bl_p2p_listen(unsigned int duration_ms);
@@ -49,6 +51,20 @@ static inline int bl_p2p_set_device_name(const char *name)
 {
     (void) name;
     return -1;
+}
+
+static inline int bl_p2p_set_go_intent(int go_intent, int listen_wps_go_intent)
+{
+    (void) go_intent;
+    (void) listen_wps_go_intent;
+    return -1;
+}
+
+static inline void bl_p2p_get_go_intent(int *go_intent,
+                                        int *listen_wps_go_intent)
+{
+    (void) go_intent;
+    (void) listen_wps_go_intent;
 }
 
 static inline void bl_p2p_deinit(void)

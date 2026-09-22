@@ -7,9 +7,14 @@
 #include "bflb_flash.h"
 #include "bflb_sec_mutex.h"
 #include "bflb_ef_ctrl.h"
+#include "bflb_efuse.h"
+#include "bflb_spi_psram.h"
+#include "bflb_sf_cfg.h"
+#include "hardware/sf_ctrl_reg.h"
 
 #include "bl702l_glb.h"
 #include "bl702l_clock.h"
+#include "bl702l_l1c.h"
 #include "ef_data_reg.h"
 #if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
 #include "bl702l_ef_cfg.h"
@@ -24,6 +29,8 @@ extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
+extern uint32_t __psram_heap_base;
+extern uint32_t __psram_limit;
 
 static struct bflb_device_s *uart0;
 
@@ -72,6 +79,102 @@ static void peripheral_clock_init(void)
     GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_SRC_XCLK, 1);
     GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, 15);
     GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_SRC_DLL128M);
+}
+
+#ifdef CONFIG_PSRAM
+static struct spi_psram_cfg_type ap_memory1604 = {
+    .read_id_cmd = 0x9F,
+    .read_id_dmy_clk = 0,
+    .burst_toggle_cmd = 0xC0,
+    .reset_enable_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .enter_quad_mode_cmd = 0x35,
+    .exit_quad_mode_cmd = 0xF5,
+    .read_reg_cmd = 0xB5,
+    .read_reg_dmy_clk = 1,
+    .write_reg_cmd = 0xB1,
+    .read_cmd = 0x03,
+    .read_dmy_clk = 0,
+    .f_read_cmd = 0x0B,
+    .f_read_dmy_clk = 1,
+    .f_read_quad_cmd = 0xEB,
+    .f_read_quad_dmy_clk = 3,
+    .write_cmd = 0x02,
+    .quad_write_cmd = 0x38,
+    .page_size = 512,
+    .burst_toggle_en = ENABLE,
+    .ctrl_mode = PSRAM_SPI_CTRL_MODE,
+    .drive_strength = PSRAM_DRIVE_STRENGTH_50_OHMS,
+    .burst_length = PSRAM_BURST_LENGTH_512_BYTES,
+};
+
+static struct sf_ctrl_cmds_cfg cmds_cfg = {
+    .cmds_en = 1,
+    .cmds_wrap_mode = 0,
+    .cmds_wrap_len = SF_CTRL_WRAP_LEN_512,
+};
+
+static struct sf_ctrl_psram_cfg psram_cfg = {
+    .owner = SF_CTRL_OWNER_SAHB,
+    /* Legacy BL702L uses internal flash on SF1 and external PSRAM on SF2. */
+    .pad_sel = SF_CTRL_PAD1,
+    .bank_sel = SF_CTRL_SEL_PSRAM,
+    .psram_rx_clk_invert_src = 1,
+    .psram_rx_clk_invert_sel = 0,
+    .psram_delay_src = 1,
+    .psram_clk_delay = 1,
+};
+
+/* The bl702ldk board wires PSRAM to the SF2 pad. efuse psram_info marks the
+ * internal 2MB package; that init path is not implemented, so such chips
+ * fail here instead of being misconfigured through the external path. */
+__attribute__((noinline)) int ATTR_TCM_SECTION board_psram_init(void)
+{
+    bflb_efuse_device_info_type device_info;
+    uint32_t sf_ctrl_0, sf_ctrl_1, sf_ctrl_2;
+    uint8_t psram_id[8] = { 0 };
+    int rst_ret, drv_ret, wrap_ret;
+
+    bflb_efuse_get_device_info(&device_info);
+    if (device_info.psram_info != 1) {
+        return -1;
+    }
+
+    /* Snapshot the sf controller state: restored on psram init failure so
+     * flash access keeps working (no driver api can save/restore these
+     * registers as a whole). */
+    sf_ctrl_0 = getreg32(BFLB_SF_CTRL_BASE + SF_CTRL_0_OFFSET);
+    sf_ctrl_1 = getreg32(BFLB_SF_CTRL_BASE + SF_CTRL_1_OFFSET);
+    sf_ctrl_2 = getreg32(BFLB_SF_CTRL_BASE + SF_CTRL_2_OFFSET);
+
+    bflb_sf_cfg_init_ext_flash_gpio(0);
+    bflb_sf_ctrl_psram_init(&psram_cfg);
+    bflb_sf_ctrl_cmds_set(&cmds_cfg, SF_CTRL_SEL_PSRAM);
+    bflb_sf_ctrl_burst_toggle_set(ap_memory1604.burst_toggle_en, ap_memory1604.ctrl_mode);
+    drv_ret = bflb_psram_setdrivestrength(&ap_memory1604);
+    wrap_ret = bflb_psram_setburstwrap(&ap_memory1604);
+    rst_ret = bflb_psram_softwarereset(&ap_memory1604, ap_memory1604.ctrl_mode);
+    bflb_psram_readid(&ap_memory1604, psram_id);
+
+    bflb_sf_ctrl_sbus_select_bank(SF_CTRL_SEL_FLASH);
+
+    if (rst_ret != 0 || drv_ret != 0 || wrap_ret != 0 || psram_id[0] != 0x0d) {
+        putreg32(sf_ctrl_0, BFLB_SF_CTRL_BASE + SF_CTRL_0_OFFSET);
+        putreg32(sf_ctrl_1, BFLB_SF_CTRL_BASE + SF_CTRL_1_OFFSET);
+        putreg32(sf_ctrl_2, BFLB_SF_CTRL_BASE + SF_CTRL_2_OFFSET);
+        return -1;
+    }
+
+    bflb_psram_cache_write_set(&ap_memory1604, SF_CTRL_QIO_MODE, ENABLE, DISABLE, ENABLE);
+    L1C_Cache_Enable_Set(L1C_WAY_DISABLE_NONE);
+
+    return 0;
+}
+#endif
+
+uint32_t board_psram_size_get(void)
+{
+    return 2 * 1024 * 1024;
 }
 
 void bl_show_log(void)
@@ -145,6 +248,10 @@ static void console_init()
 
 void ram_heap_init(void)
 {
+    static const uint32_t any_alloc_order[] = {
+        MM_HEAP_OCRAM_0,
+        MM_HEAP_PSRAM_0,
+    };
     size_t heap_len;
 
     /* ram heap init */
@@ -154,10 +261,29 @@ void ram_heap_init(void)
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
 
+#ifdef CONFIG_PSRAM
+    if (board_psram_init() != 0) {
+        printf("psram init failed\r\n");
+        while (1) {}
+    }
+
+    heap_len = (size_t)&__psram_limit - (size_t)&__psram_heap_base;
+    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte, \r\n"
+           "  psram heap size: %d Kbyte\r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
+           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
+#else
     /* ram info dump */
     printf("dynamic memory init success\r\n"
            "  ocram heap size: %d Kbyte \r\n",
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#endif
+
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 }
 
 void board_init(void)

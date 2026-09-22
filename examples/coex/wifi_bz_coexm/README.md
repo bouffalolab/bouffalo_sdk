@@ -1,217 +1,244 @@
 # wifi_bz_coexm
 
-Wi-Fi/BT/BLE/BZ coexistence validation demo for BL616, BL616CL and
-BL618DG. The demo exposes the product coexistence API and a separately named
-laboratory debug command set. Legacy RF-context TDMA is not part of this demo.
-
-For hardware topology, product API, initialization order, supported modes and
-integration restrictions, see [COEX_GUIDE.md](COEX_GUIDE.md).
+Wi-Fi/BLE coexistence demo for BL616 and BL616CL, with additional BL618DG
+BR/EDR support. See [COEX_GUIDE.md](COEX_GUIDE.md) for topology selection,
+STA/AP examples, PS-PTA, Protection and application APIs.
 
 ## Build
 
-```text
-# BL616
+Run from `examples/coex/wifi_bz_coexm`:
+
+```sh
 make CHIP=bl616 BOARD=bl616dk
-
-# BL616CL
 make CHIP=bl616cl BOARD=bl616cldk
-
-# BL618DG AP core
 make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
-BL618DG B0 coexistence builds must link
-`libbl618dg_phyrf_b0_bz.a`.
+Choose the command matching the board. BL618DG uses the SDK's default PHYRF
+library, including for standalone operation; no PHYRF CMake changes or library
+override are needed.
+
+### BL618DG Flash / PSRAM
+
+Use separate build directories and a board with compatible PSRAM:
+
+```sh
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap BUILD_DIR=build_flash \
+    CONFIG_PSRAM=n CONFIG_PSRAM_COPY_CODE=n
+
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap BUILD_DIR=build_psram \
+    CONFIG_PSRAM=y CONFIG_PSRAM_COPY_CODE=y
+```
+
+`CONFIG_PSRAM_COPY_CODE=y` selects code execution from PSRAM; enabling PSRAM
+alone does not. Use the artifacts from the selected build directory when
+flashing. Keep `COEX_SPDT_EXPERIMENT` off for normal operation.
+
+For integration testing on a real standalone dual-antenna board:
+
+```sh
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap BUILD_DIR=build_dual_ant \
+    COEX_DUAL_ANT_VALIDATION=ON
+```
+
+This enables the dual-antenna parallel hardware configuration, not PS-PTA.
+It is disabled in the default build and requires board-level validation.
 
 ## Startup
 
-BL616 and BL616CL initialize RF during boot. Start the protocol stacks with:
+On BL618DG, declare the board wiring, select its RF mode, then run `wifi_bt_init`:
+
+| Hardware | Declare wiring | Prepare RF | Wi-Fi operation |
+|---|---|---|---|
+| Combo, no external SPDT | `wifi_coex_board_config combo` | `wifi_coex_init combo` | 2.4 GHz STA/AP |
+| Standalone single antenna, SPDT + diplexer | `wifi_coex_board_config standalone_single_ant <gpio>` | `wifi_coex_init standalone` | 2.4/5 GHz STA/AP |
+| Standalone dual antenna, no SPDT | `wifi_coex_board_config standalone_dual_ant` | `wifi_coex_init standalone` | 2.4/5 GHz STA/AP, validation build |
+
+Declaration records immutable hardware facts without changing RF or GPIO. Supply
+the actual SPDT control GPIO and verify the switch polarity against the BSP.
+There is no default GPIO. BL616/BL616CL prepare RF during boot and start at
+`wifi_bt_init`, without a topology command.
+
+`wifi_coex_init` requires a declaration and accepts only `combo` or `standalone`.
+Unsupported board/mode combinations are rejected before RF preparation; it does
+not switch mode automatically. A successful prepare is not an already-running
+hardware baseline. Use `wifi_coex_board_config show` to inspect both layers.
+
+For example, on the tested single-antenna board whose GPIO18 high level selects BT:
 
 ```text
+wifi_coex_board_config standalone_single_ant 18
+wifi_coex_init standalone
 wifi_bt_init
 ```
 
-BL618DG does not initialize RF or start Wi-Fi/Bluetooth automatically. Use
-this order:
+Wait for `CODE_WIFI_ON_MGMR_DONE` and successful Bluetooth initialization.
+Then choose one Wi-Fi role, replacing the connection parameters as needed:
 
-1. Run exactly one `board_rf_*` command matching the physical RF and antenna
-   wiring.
-2. Configure the matching WiFi6 Board Config metadata.
-3. Run `wifi_bt_init` once.
-4. Start STA or AP and wait for a valid band/channel.
-5. Run `wifi_coex_start` for a backend-supported plan.
-
-RF initialization must precede `wifi_bt_init`. Reboot before changing the
-physical topology.
-
-### BL618DG Topology Mapping
-
-| Physical topology | RF initialization | Matching Board Config |
-|---|---|---|
-| Combo/shared path | `board_rf_single_ant_init` | `wifi_coex_debug_board_config combo` |
-| Standalone dual antenna | `board_rf_dual_ant_init` | `wifi_coex_debug_board_config standalone_dual_ant` |
-| Standalone single antenna with dynamic SPDT | `board_rf_single_ant_spdt_init <bt-gpio> <2g-gpio>` | `wifi_coex_debug_board_config standalone_single_ant <connected-gpio>` |
-
-The RF command configures and calibrates the physical path. Board Config is
-immutable resolver input and does not initialize PHYRF. The two commands must
-describe the same hardware.
-
-The current Board Config API records one SPDT control GPIO. For a board using
-one switch-control input, pass that GPIO to both layers. Examples:
+STA:
 
 ```text
-# Even GPIO: high selects the BT path
-board_rf_single_ant_spdt_init 18 -1
-wifi_coex_debug_board_config standalone_single_ant 18
-
-# Odd GPIO: high selects the Wi-Fi 2G path
-board_rf_single_ant_spdt_init -1 11
-wifi_coex_debug_board_config standalone_single_ant 11
+wifi_sta_connect -b <AP_BSSID> -c 36 <SSID_5G> <password>
 ```
 
-`GPIO_FUNC_SPDT` derives polarity from GPIO parity: an even GPIO is high
-when BT wins PTA arbitration, while an odd GPIO is low. The GPIO parity and
-the external RF-switch truth table must match.
-
-`board_rf_single_ant_spdt_bt_init` and
-`board_rf_single_ant_spdt_2g_init` are fixed-path RF diagnostics. They do not
-define a product Activation topology and must not be treated as a replacement
-for Board Config.
-
-## Product Coex Interface
-
-The product interface does not expose VIF, STA/AP role, channel, RF path,
-SPDT GPIO or register values:
-
-```c
-int wifi_mgmr_coex_start(wifi_mgmr_coex_runtime_policy_t policy);
-int wifi_mgmr_coex_stop(void);
-int wifi_mgmr_coex_status_get(struct wifi_mgmr_coex_status *status);
-int wifi_mgmr_coex_duty_set(uint8_t active_ms);
-int wifi_mgmr_coex_protection_set(bool enable);
-```
-
-Equivalent shell commands:
+AP:
 
 ```text
-wifi_coex_start <board_default|hardware_only|ps_pta>
-wifi_coex_stop
-wifi_coex_status
-wifi_coex_duty_set <10-90>
-wifi_coex_protection <0|1>
+wifi_ap_start -s COEX_5G_AP -k 12345678 -c 36 -I 192.168.169.1 -S 2 -L 100
 ```
 
-`wifi_coex_start` requires a ready radio context: STA connected or AP
-started with a valid band and channel. Repeating start with the same effective
-configuration and repeating stop are idempotent. Stop before selecting a
-different policy.
+Wait for STA connection/IP or `CODE_WIFI_ON_AP_STARTED`, then run
+`wifi_coex_status`. Use a legal channel matching the target network. For 2.4 GHz,
+change the STA parameters or AP channel, not the physical topology.
 
-`hardware_only` applies the resolved hardware recipe without starting
-PS-PTA. `ps_pta` explicitly requires software duty slicing and does not
-silently fall back. `board_default` resolves to `hardware_only` on all
-supported chips.
+Hardware coexistence is automatic. Single-antenna SPDT uses dynamic PTA before
+connecting and on 2.4 GHz; stable 5 GHz uses fixed-BT. Scan temporarily uses
+dynamic PTA and restores the valid home configuration. Do not manually switch
+GPIO/RF paths while operating; reboot before changing topology or after an RF
+initialization failure.
 
-Duty is the Wi-Fi active time in each approximately 100 ms PS-PTA period. It
-can be set before start. It is saved but has no runtime effect in
-hardware-only mode.
+## Coex Commands
 
-Connection Protection is independent from Activation and disabled by default.
-Enable it before scan/connect only in products that require connection-stage
-protection:
-
-```text
-wifi_coex_protection 1
-wifi_sta_connect ...
-# after the radio is ready
-wifi_coex_start board_default
-```
-
-## Current Backend Boundary
-
-Board Config and the resolver recognize the BL618DG combo, standalone
-dual-antenna and standalone single-antenna SPDT topologies. Product Activation
-is fail-closed: the current BL618DG backend has a complete apply/restore plan
-only for 2.4 GHz combo.
-
-| Chip/topology | Current product start |
+| Command | Purpose |
 |---|---|
-| BL616 2.4G combo | hardware-only and explicit PS-PTA |
-| BL616CL 2.4G combo | hardware-only and explicit PS-PTA |
-| BL618DG 2.4G combo | hardware-only and explicit PS-PTA |
-| BL618DG standalone or 5G | resolver/debug available; start returns not supported until a complete backend plan is approved |
+| `wifi_coex_start` | Explicitly enable PS-PTA on a supported, connected 2.4 GHz single STA |
+| `wifi_coex_stop` | Disable PS-PTA; retain the hardware baseline and Wi-Fi link |
+| `wifi_coex_status` | Query hardware readiness, active configuration and PS-PTA runtime |
+| `wifi_coex_duty_set <10-90>` | Set Wi-Fi active-window duration in milliseconds |
+| `wifi_coex_protection <0\|1>` | Independently disable/enable connection-stage Protection |
 
-Do not restore the old channel-update fallback to bypass this boundary.
+No hardware-only start is needed. Start takes no mode argument and is not used
+for AP, STA+AP, 5 GHz or dual-antenna parallel operation. Before PS-PTA start,
+ordinary STA PS must be off. PS-PTA is not automatically restarted after reconnect.
 
-## Laboratory Debug Commands
+Protection defaults to off. Enable it after stack initialization and before a
+supported scan/connect operation if the application needs it. Stop does not
+disable Protection. See the Guide for its topology/band policy.
 
-The demo enables `CONFIG_WIFI_COEX_DEBUG_CLI`:
+`active=1` does not mean PS-PTA is running: check `ps_pta_running`. A healthy
+5 GHz hardware-only connection reports, for example:
+
+```text
+coex hardware_configured=1 active=1 runtime=hardware_only ps_pta_running=0 band=5g duty=50 ms
+```
+
+The duty value is the saved setting, not evidence of active time slicing.
+Check command errors before proceeding; a failed status query is not a valid
+snapshot of the previous configuration.
+
+## Bluetooth SPP
+
+BL618DG BR/EDR SPP is separate from Wi-Fi and Coex initialization. After
+`wifi_bt_init` completes:
+
+```text
+bredr_init
+bredr_connectable 1
+bredr_discoverable 1
+```
+
+Pair an SPP-capable peer and open its SPP connection. ACL connection alone is
+not an SPP data connection. Re-enable connectable/discoverable before reconnecting.
+Once SPP is connected, DUT TX can be started with:
+
+```text
+bredr_discoverable 0
+spp_tp_start all 672 0
+```
+
+Stop the sender with `spp_tp_stop all`. For DUT RX, send from the peer instead.
+BL616/BL616CL use application BLE services, not these BR/EDR commands.
+
+## Throughput and CPU Measurement
+
+Use PC **iperf2**. TX/RX is relative to the DUT. Replace `PC_IP`, `DUT_IP`,
+`PORT` and `VIF`; use `VIF=0` for STA or `VIF=1` for AP. Start the receiver first.
+
+| Direction | Receiver | Sender |
+|---|---|---|
+| TCP TX | PC: `iperf -s -B PC_IP -p PORT -i 1` | DUT: `iperf -c PC_IP -p PORT -t 30 -i 1 -I VIF` |
+| TCP RX | DUT: `iperf -s -p PORT -i 1 -I VIF` | PC: `iperf -c DUT_IP -B PC_IP -p PORT -t 30 -i 1` |
+| UDP TX | PC: `iperf -s -u -B PC_IP -p PORT -i 1` | DUT: `iperf -c PC_IP -p PORT -t 30 -i 1 -I VIF -u -b 80M -l 1470` |
+| UDP RX | DUT: `iperf -s -p PORT -i 1 -I VIF -u` | PC: `iperf -c DUT_IP -B PC_IP -p PORT -t 30 -i 1 -u -b 80M -l 1470` |
+
+For STA, use a PC Ethernet connection to the same router. For AP, connect the
+PC Wi-Fi adapter to the DUT. Run `iperf stop` on the DUT between tests.
+For UDP saturation tests, increase `-b` from 80M until receiver throughput
+plateaus; record actual sender rate and loss. A high-loss plateau is not lossless
+throughput. Compare concurrent and single-load tests under the same conditions
+and over overlapping Wi-Fi/SPP windows.
+
+For CPU statistics, add `CONFIG_PS_EXTEND=y` to the build. Run `ps_extend` once
+to establish a reference, then sample at fixed intervals, such as every 5 seconds.
+`Usage(x% Ns)` is CPU busy over that interval and already includes Trap time;
+do not add Trap again. Keep sampling frequency consistent between tests because
+the command allocates memory and prints a task table.
+
+## Diagnostics
+
+The demo enables the debug CLI. These are optional inspections, not setup steps:
 
 ```text
 wifi_coex_debug_status
 wifi_coex_debug_context
-wifi_coex_debug_resolve <board_default|hardware_only|ps_pta>
-wifi_coex_debug_board_config ...
+wifi_coex_debug_board_config show
+wifi_coex_debug_resolve hardware_only
+wifi_coex_debug_resolve ps_pta
 ```
 
-BL618DG path diagnostics:
+Resolver output does not apply a hardware configuration. `spdt_2g` and `spdt_bt`
+are isolated board diagnostics and are blocked while the hardware is managed.
+PS-PTA stop does not release that hardware ownership. Do not use raw RF/register
+commands to bypass an initialization or configuration error.
 
-```text
-wifi_coex_debug_bt_path
-wifi_coex_debug_combo_path
-wifi_coex_debug_rfparam_init
-wifi_coex_debug_bt_spdt <0|1>
-wifi_coex_debug_bt_overlay <0|1> [margin:0-63]
-wifi_coex_debug_bt_adj_pwr <0|1> [ble|154|bt|wifi] [power]
-```
+## PSRAM Reference Results (2026-09-16)
 
-Topology, path, SPDT, overlay, adjusted-power and RF-parameter changes are
-rejected while Activation or Connection Protection owns coexistence hardware:
+Historical measurements from `wifi_bz_coexm`, not a new validation of the current
+checkout. DUT: `bl618dg-cp2102n-01`, standalone single antenna, GPIO18, default
+PHYRF, PSRAM code-copy, PS-PTA/Protection off. Wi-Fi used 5 GHz channel 36;
+STA used an ASUS AX88U and Ethernet PC, AP used MT7921U at 20 MHz with peer power
+saving enabled. The SPP peer was the AIC Bluetooth controller.
 
-```text
-wifi_coex_stop
-wifi_coex_protection 0
-```
+Rates are receiver measurements, normally averaged over **2 x 30 seconds**.
+BT-only retains an idle Wi-Fi connection/AP; it does not mean Wi-Fi radio off.
+CPU is mean busy from `ps_extend`, normally eight valid samples per row.
 
-Normal start/stop does not dump registers. Use
-`wifi_coex_debug_status` explicitly when MMIO evidence is required.
+### Single Load
 
-## Example Flows
+| Test | STA rate | STA CPU % | AP rate | AP CPU % |
+|---|---:|---:|---:|---:|
+| UDP TX, Mbit/s | 178.00 | 92.65 | 85.75 | 43.72 |
+| UDP RX, Mbit/s | 277.00 | 98.86 | 78.80 | 52.51 |
+| TCP TX, Mbit/s | 38.45 | 71.23 | 34.30 | 62.77 |
+| TCP RX, Mbit/s | 85.20 | 77.99 | 50.20 | 60.66 |
+| BT TX, KiB/s | 123.36 | 6.47 | 123.20 | 6.57 |
+| BT RX, KiB/s | 123.45 | 22.19 | 122.84 | 22.13 |
 
-BL616/BL616CL hardware-only:
+### Concurrent Load
 
-```text
-wifi_bt_init
-wifi_sta_connect ...
-wifi_coex_start board_default
-wifi_coex_status
-```
+Wi-Fi rates are Mbit/s; BT rates are KiB/s (1024 bytes/s).
 
-BL616/BL616CL explicit PS-PTA:
+| Test | STA Wi-Fi | STA BT | STA CPU % | AP Wi-Fi | AP BT | AP CPU % |
+|---|---:|---:|---:|---:|---:|---:|
+| UDP TX + BT TX | 153.50 | 111.96 | 88.30 | 82.80 | 120.78 | 52.70 |
+| UDP TX + BT RX | 133.50 | 118.12 | 93.68 | 82.05 | 110.27 | 66.32 |
+| UDP RX + BT TX | 259.00* | 75.32* | 99.56* | 71.15 | 61.33 | 51.07 |
+| UDP RX + BT RX | 206.50 | 121.71 | 99.61 | 77.80 | 47.08 | 61.89 |
+| TCP TX + BT TX | 34.90 | 87.19 | 73.56 | 32.80 | 105.93 | 71.26 |
+| TCP TX + BT RX | 31.85 | 118.58 | 84.59 | 30.75 | 73.18 | 75.12 |
+| TCP RX + BT TX | 79.40 | 82.93 | 81.08 | 43.15 | 76.39 | 58.12 |
+| TCP RX + BT RX | 71.55 | 116.03 | 89.12 | 47.15 | 39.28 | 66.54 |
 
-```text
-wifi_coex_duty_set 50
-wifi_coex_start ps_pta
-wifi_coex_status
-```
+`*` STA UDP RX + BT TX has one valid 30-second run and two CPU samples.
 
-BL618DG 2.4G combo:
+- UDP offered-load arguments: STA TX/RX `300M`, AP TX `160M`, AP RX `80M`.
+  STA UDP RX loss was 11.6163% alone, 17.4912% with BT TX, and 34.2106% with
+  BT RX. These are saturation results, not recommended lossless operating rates.
+- UDP TX had zero recorded loss; AP UDP RX loss was below 0.001%. AP RX values
+  reflect this peer/link setup, not a demonstrated absolute DUT limit.
+- AP and STA use different peers and link conditions; their difference cannot
+  be attributed solely to the Wi-Fi role. These short windows do not establish
+  long-term stability or guaranteed product throughput.
 
-```text
-board_rf_single_ant_init
-wifi_coex_debug_board_config combo
-wifi_bt_init
-wifi_sta_connect ...
-wifi_coex_start hardware_only
-wifi_coex_status
-```
-
-The demo also enables `iperf`, `ble_tp_test` and `ps_extend` for
-coexistence throughput and CPU-load validation.
-
-## Integration Limitation
-
-BL618DG physical RF initialization and WiFi6 Board Config currently use two
-explicit commands. This is intentional during integration so the BSP remains
-the owner of RF initialization and WiFi6 remains the owner of resolver
-metadata. Product applications should wrap both calls in one board-specific
-startup function so customers cannot select mismatched topologies.
+Sample counts, loss, relative changes and test evidence are in the
+[full test report](../../../docs/coex/validation/618dg_psram_sta_ap_bt_full_retest_20260916.md).

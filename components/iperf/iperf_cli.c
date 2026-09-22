@@ -20,13 +20,10 @@
 #define DBG_TAG "IPERF_CLI"
 #include "log.h"
 
-#include "bflb_iperf.h"
+#include "iperf_internal.h"
 
 /** @brief Dynamic one-shot reaper stack depth in StackType_t units. */
 #define IPERF_CLEANUP_STACK 512U
-/** @brief Reaper priority, one level above the idle task. */
-#define IPERF_CLEANUP_PRIORITY (tskIDLE_PRIORITY + 1U)
-
 /** @brief Mutex-protected ownership state of the single CLI instance slot. */
 typedef enum {
     IPERF_CLI_EMPTY = 0, /**< No owned instance; a new create may claim the slot. */
@@ -159,9 +156,10 @@ static void iperf_cli_event_cb(bflb_iperf_t *iperf,
     xSemaphoreTake(s_cli_lock, portMAX_DELAY);
     if (s_cli_generation == generation && s_cli_state == IPERF_CLI_ACTIVE) {
         s_cli_state = IPERF_CLI_FINISHED;
+        UBaseType_t cleanup_priority = s_cli_iperf->config.task_priority;
         if (xTaskCreate(iperf_cli_cleanup_task, "iperf_cleanup",
                         IPERF_CLEANUP_STACK, (void *)generation,
-                        IPERF_CLEANUP_PRIORITY, NULL) != pdPASS) {
+                        cleanup_priority, NULL) != pdPASS) {
             /* Keep FINISHED: -a or any subsequent command can reclaim it. */
             LOG_E("cleanup task allocation failed; next command will reclaim instance\r\n");
         }

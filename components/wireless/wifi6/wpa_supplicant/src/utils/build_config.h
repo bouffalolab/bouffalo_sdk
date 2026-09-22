@@ -21,7 +21,9 @@
 
 #define CONFIG_EXTRA_WPA_SSID_FLAG
 
+#if !MACSW_P2P
 #define CONFIG_ONLY_STA_AP_MODE
+#endif
 //#define CONFIG_NO_HIGHER_40M_OR_NON_24G
 //#define CONFIG_SAE_BASIC_ONLY
 #define CONFIG_EXTRA_SIZE_OPT
@@ -109,7 +111,7 @@
 #endif
 #define CONFIG_WPS
 #define EAP_WSC
-#if MACSW_P2P
+#ifdef CONFIG_WIFI_P2P
 #define CONFIG_P2P
 #define CONFIG_WPS
 #define CONFIG_GAS
@@ -120,7 +122,7 @@
 #define EAP_SERVER_WSC
 #define CONFIG_OFFCHANNEL
 #define IEEE8021X_EAPOL
-#endif // MACSW_P2P
+#endif /* CONFIG_WIFI_P2P */
 #if MACSW_VHT
 #define CONFIG_IEEE80211AC
 #endif

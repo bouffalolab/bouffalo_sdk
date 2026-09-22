@@ -103,6 +103,8 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
             wifi_mgmr_task_start();
+            /* Keep hidden SSIDs in subsequent scan results. */
+            wifi_mgmr_scan_filter_hidden_ssid(0);
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
@@ -134,6 +136,14 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         } break;
         case CODE_WIFI_ON_AP_STA_DEL: {
             LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
+        } break;
+        case CODE_WIFI_ON_AP_CSA_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_CSA_DONE, channel %u\r\n",
+                  __func__, (unsigned int)ev->value);
+        } break;
+        case CODE_WIFI_ON_STA_CSA_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_STA_CSA_DONE, channel %u\r\n",
+                  __func__, (unsigned int)ev->value);
         } break;
         default: {
             LOG_I("[APP] [EVT] Unknown code %u \r\n", code);

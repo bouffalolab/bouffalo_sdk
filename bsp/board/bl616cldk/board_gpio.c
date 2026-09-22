@@ -8,6 +8,26 @@
 #include "bl616cl_glb.h"
 #include "bflb_audac.h"
 #include "bflb_auadc.h"
+#include "bl616cl_pds.h"
+
+/* GPIO0 is an HBN AON pad; GPIO12 is a PDS-only wake pad. Trigger modes are
+ * configured independently for every BL616CL GPIO. */
+static const struct board_lp_gpio_wakeup_config_s board_lp_gpio_wakeup_config = {
+    .io_ie = (1ULL << GPIO_PIN_0) | (1ULL << GPIO_PIN_12),
+    .io_pu = 1ULL << GPIO_PIN_0,
+    .io_pd = 1ULL << GPIO_PIN_12,
+    .io_0_36_trig_mode = {
+        [GPIO_PIN_0] = PDS_GPIO_INT_ASYNC_FALLING_EDGE,
+        [GPIO_PIN_12] = PDS_GPIO_INT_ASYNC_RISING_EDGE,
+    },
+    .io_wakeup_unmask = (1ULL << GPIO_PIN_0) | (1ULL << GPIO_PIN_12),
+};
+
+const struct board_lp_gpio_wakeup_config_s *board_lp_gpio_wakeup_config_get(void)
+{
+    return &board_lp_gpio_wakeup_config;
+}
+
 void board_uartx_gpio_init(void)
 {
     struct bflb_device_s *gpio;

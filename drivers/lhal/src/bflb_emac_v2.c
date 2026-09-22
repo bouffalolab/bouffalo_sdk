@@ -3550,7 +3550,6 @@ void bflb_emac_v2_start_pre(struct bflb_device_s *dev)
     bflb_emac_v2_promisc_enable(dev);
     //bflb_emac_v2_tx_enable(dev);
     //bflb_emac_v2_rx_enable(dev);
-    bflb_emac_v2_enable_dma_rx(dev);
     bflb_emac_v2_enable_dma_tx(dev);
     bflb_emac_v2_enable_interrupt(dev, EMAC_V2_INT_ENABLE_CFG);
 }
@@ -4172,6 +4171,8 @@ int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case EMAC_CMD_SET_RX_EN:
             if (arg) {
                 ret = bflb_emac_v2_rx_enable(dev);
+                bflb_emac_v2_enable_dma_rx(dev);
+                bflb_emac_v2_resume_dma_rx(dev);
             } else {
                 ret = bflb_emac_v2_rx_disable(dev);
             }

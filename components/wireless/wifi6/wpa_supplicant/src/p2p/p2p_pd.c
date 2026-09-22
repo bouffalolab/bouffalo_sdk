@@ -1592,10 +1592,13 @@ int p2p_send_prov_disc_req(struct p2p_data *p2p, struct p2p_device *dev,
 			   int join, int force_freq)
 {
 	struct wpabuf *req;
+	const u8 *dst;
 	int freq;
 
 	if (force_freq > 0)
 		freq = force_freq;
+	else if (join && dev->oper_freq > 0)
+		freq = dev->oper_freq;
 	else
 		freq = dev->listen_freq > 0 ? dev->listen_freq :
 			dev->oper_freq;
@@ -1654,8 +1657,20 @@ int p2p_send_prov_disc_req(struct p2p_data *p2p, struct p2p_device *dev,
 	if (p2p->state != P2P_IDLE)
 		p2p_stop_listen_for_freq(p2p, freq);
 	p2p->pending_action_state = P2P_PENDING_PD;
-	if (p2p_send_action(p2p, freq, dev->info.p2p_device_addr,
-			    p2p->cfg->dev_addr, dev->info.p2p_device_addr,
+	/*
+	 * Join PD must be addressed to the GO interface/BSSID on the GO
+	 * channel. Pixel keeps the P2P device address on social listen, so a
+	 * 5 GHz GO never sees PD frames sent to the device address.
+	 */
+	dst = dev->info.p2p_device_addr;
+	if (join && !is_zero_ether_addr(dev->interface_addr))
+		dst = dev->interface_addr;
+	printf("P2P: PD join=%d freq=%d dst=" MACSTR " dev=" MACSTR
+	       " iface=" MACSTR "\r\n",
+	       join, freq, MAC2STR(dst),
+	       MAC2STR(dev->info.p2p_device_addr),
+	       MAC2STR(dev->interface_addr));
+	if (p2p_send_action(p2p, freq, dst, p2p->cfg->dev_addr, dst,
 			    wpabuf_head(req), wpabuf_len(req), 200) < 0) {
 		p2p_dbg(p2p, "Failed to send Action frame");
 		wpabuf_free(req);

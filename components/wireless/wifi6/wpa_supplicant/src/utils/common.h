@@ -11,6 +11,12 @@
 
 #include "os.h"
 
+#if defined(CONFIG_P2P_DEBUG) && CONFIG_P2P_DEBUG
+#define WPA_P2P_DEBUG(...) printf(__VA_ARGS__)
+#else
+#define WPA_P2P_DEBUG(...) do { if (0) printf(__VA_ARGS__); } while (0)
+#endif
+
 #if defined(__linux__) || defined(__GLIBC__)
 #include <endian.h>
 #include <byteswap.h>

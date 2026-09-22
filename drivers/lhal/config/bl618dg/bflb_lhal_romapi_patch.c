@@ -44,6 +44,56 @@ typedef struct
     const spi_flash_cfg_type *cfg;
 } Flash_Info_t;
 
+struct flash_params_s {
+    uint32_t jedec_id;
+    bflb_flash_secreg_param_t param;
+};
+
+static const ATTR_TCM_CONST_SECTION bflb_flash_secreg_param_t flash_secreg_param_winb_02rv = {
+    .region_offset = 1,
+    .region_count = 3,
+    .region_size = 0x10,
+    .secreg_size = 0x1,
+    .api_type = BFLB_FLASH_SECREG_API_TYPE_GENERAL,
+    .lb_share = 0,
+    .lb_offset = 11,
+    .lb_write_cmd = 0x31,
+    .lb_write_len = 1,
+    .lb_read_cmd[0] = 0x35,
+    .lb_read_len = 1,
+    .lb_read_loop = 1,
+};
+
+static const ATTR_TCM_CONST_SECTION bflb_flash_secreg_param_t flash_secreg_param_boya_fq256es = {
+    .region_offset = 1,
+    .region_count = 3,
+    .region_size = 0x10,
+    .secreg_size = 0x4,
+    .api_type = BFLB_FLASH_SECREG_API_TYPE_GENERAL,
+    .lb_share = 0,
+    .lb_offset = 11,
+    .lb_write_cmd = 0x31,
+    .lb_write_len = 1,
+    .lb_read_cmd[0] = 0x35,
+    .lb_read_len = 1,
+    .lb_read_loop = 1,
+};
+
+static const ATTR_TCM_CONST_SECTION bflb_flash_secreg_param_t flash_secreg_param_xm25eh512d = {
+    .region_offset = 1,
+    .region_count = 3,
+    .region_size = 0x10,
+    .secreg_size = 0x8,
+    .api_type = BFLB_FLASH_SECREG_API_TYPE_GENERAL,
+    .lb_share = 0,
+    .lb_offset = 11,
+    .lb_write_cmd = 0x31,
+    .lb_write_len = 1,
+    .lb_read_cmd[0] = 0x35,
+    .lb_read_len = 1,
+    .lb_read_loop = 1,
+};
+
 static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_issi_25lp256 = {
     .reset_c_read_cmd = 0xff,
     .reset_c_read_cmd_size = 3,
@@ -234,15 +284,20 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_boya_be32m = {
 
     /*AC*/
     .time_e_sector = 300,
-    .time_e_32k = 1200,
-    .time_e_64k = 1200,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
     .time_page_pgm = 5,
-    .time_ce = 33 * 1000,
+    .time_ce = 65 * 1000,
     .pd_delay = 20,
     .qe_data = 0,
 };
 
 static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
+    {
+        .jedec_id = 0x2270ef,
+        //.name="winb_02rv_2g_33",
+        .cfg = &flash_cfg_boya_be32m,
+    },
     {
         .jedec_id = 0x21609d,
         //.name="issi_25lp01g_33",
@@ -252,6 +307,26 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         .jedec_id = 0x194068,
         //.name="boya_fq256es_256_33",
         .cfg = &flash_cfg_boya_be32m,
+    },
+    {
+        .jedec_id = 0x204620,
+        //.name="xm25eh512d_512_33",
+        .cfg = &flash_cfg_boya_be32m,
+    },
+};
+
+static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_secreg_infos[] = {
+    {
+        .jedec_id = 0x2270ef,
+        .param = flash_secreg_param_winb_02rv,
+    },
+    {
+        .jedec_id = 0x194068,
+        .param = flash_secreg_param_boya_fq256es,
+    },
+    {
+        .jedec_id = 0x204620,
+        .param = flash_secreg_param_xm25eh512d,
     },
 };
 
@@ -300,6 +375,37 @@ int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, 
                 arch_memcpy_fast(p_flash_cfg, flash_infos[i].cfg, sizeof(spi_flash_cfg_type));
                 return 0;
             }
+        }
+    }
+
+    return -1;
+}
+
+/****************************************************************************/ /**
+ * @brief  Get flash security register parameters according to flash ID patch
+ *
+ * @param  jid: Flash JEDEC ID
+ * @param  param: Flash security register parameter pointer
+ *
+ * @return BFLB_RET:0 means success and other value means error
+ *
+*******************************************************************************/
+int ATTR_TCM_SECTION bflb_flash_secreg_get_param(uint32_t jid, const bflb_flash_secreg_param_t **param)
+{
+    uint32_t i;
+
+    if (param == NULL) {
+        return -1;
+    }
+
+    if (romapi_bflb_flash_secreg_get_param(jid, param) == 0) {
+        return 0;
+    }
+
+    for (i = 0; i < sizeof(flash_secreg_infos) / sizeof(flash_secreg_infos[0]); i++) {
+        if (flash_secreg_infos[i].jedec_id == jid) {
+            *param = &flash_secreg_infos[i].param;
+            return 0;
         }
     }
 

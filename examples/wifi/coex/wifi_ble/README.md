@@ -56,7 +56,7 @@ wifi_sta_connect <ssid> <passwd>
 * Start coexistence using PS-PTA
 
 ```
-wifi_coex_start ps_pta
+wifi_coex_start
 ```
 
 * Set the Wi-Fi duty cycle to 50%

@@ -4,6 +4,21 @@ address0 = 0xe000
 address1 = 0xf000
 
 [[pt_entry]]
+type = 16
+name = "Boot2"
+device = 0
+address0 = 0
+size0 = 0xE000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 1
+# If header is 1 and security is 1, It will be encrypted.
+security = 1
+
+[[pt_entry]]
 type = 0
 name = "FW"
 device = 0

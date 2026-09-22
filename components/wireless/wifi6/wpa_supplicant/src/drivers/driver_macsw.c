@@ -22,6 +22,7 @@
 #include "wifi_mgmr_ext.h"
 
 #include "eloop_rtos.h"
+#include "driver_macsw_priv.h"
 
 #if MACSW_WFA
 /* Sentinel symbol for CI verification: nm <elf> | grep __ci_wfa_sentinel */
@@ -50,51 +51,6 @@ struct wpa_mac_tx_frame {
 	u8 data[0];
 };
 
-/**
- * Per interface driver data
- * !!keep same with ctrl_iface_macsw.c
- */
-struct wpa_macsw_driver_itf_data {
-	// WPA_supplicant global context
-	void *ctx;
-	// Global driver data
-	struct wpa_macsw_driver_data *gdrv;
-	// Index, at FHOST level, of the interface
-	int fhost_vif_idx;
-	// Initial interface type (ref @ enum mac_vif_type)
-	uint8_t vif_init_type;
-	// List of scan results
-	struct dl_list scan_res;
-	// Driver status
-	int status;
-	// MAC address of the AP we are connected to
-	u8 bssid[ETH_ALEN];
-	// SSID of the AP we are connected to
-	u8 *ssid;
-	// SSID length
-	u8 ssid_len;
-	// Next authentication alg to try (used when connect with several algos)
-	int next_auth_alg;
-	// DTIM period cached from set_ap, reused when building CSA beacon
-	u8 dtim_period;
-};
-
-/**
- * Global data driver info
- * !!keep same with ctrl_iface_macsw.c
- */
-struct wpa_macsw_driver_data {
-	// WPA_supplicant context
-	void *ctx;
-	// List of interface driver data
-	struct wpa_macsw_driver_itf_data itfs[MACSW_VIRT_DEV_MAX];
-	rtos_queue resp_queue;
-	// Extended capabilities
-	u8 extended_capab[10];
-	// Extended capabilities mask
-	u8 extended_capab_mask[10];
-};
-
 struct wpa_macsw_driver_scan_res {
 	struct dl_list list;
 	struct wpa_scan_res *res;
@@ -108,6 +64,7 @@ enum wpa_macsw_driver_status {
 	MACSW_INITIALIZED = BIT(4),
 	MACSW_SCANNING = BIT(5),
 	MACSW_EXT_AUTH = BIT(6),
+	MACSW_RESTORE_UNKNOWN = BIT(7),
 };
 
 // For STA only accept action frames
@@ -162,6 +119,81 @@ static void macsw_to_hostapd_channel(struct mac_chan_def *macsw,
 	hostapd->allowed_bw = ~0;
 
 	dl_list_init(&hostapd->survey_list);
+}
+
+static struct hostapd_channel_data *
+macsw_get_mode_channel(struct hostapd_hw_modes *mode, int freq)
+{
+	int i;
+
+	for (i = 0; i < mode->num_channels; i++) {
+		struct hostapd_channel_data *chan = &mode->channels[i];
+
+		if (chan->freq == freq &&
+		    !(chan->flag & HOSTAPD_CHAN_DISABLED))
+			return chan;
+	}
+
+	return NULL;
+}
+
+static void macsw_set_5g_channel_width_flags(struct hostapd_hw_modes *mode,
+					      u8 max_bw)
+{
+	static const int center_freqs_80mhz[] = {
+		5210, 5290, 5530, 5610, 5690, 5775, 5855
+	};
+	static const unsigned int vht80_flags[] = {
+		HOSTAPD_CHAN_VHT_10_70,
+		HOSTAPD_CHAN_VHT_30_50,
+		HOSTAPD_CHAN_VHT_50_30,
+		HOSTAPD_CHAN_VHT_70_10,
+	};
+	size_t i;
+
+	if (max_bw < PHY_CHNL_BW_40)
+		return;
+
+	for (i = 0; i < ARRAY_SIZE(center_freqs_80mhz); i++) {
+		int pair;
+		size_t pos;
+
+		for (pair = 0; pair < 2; pair++) {
+			int lower_freq = center_freqs_80mhz[i] - 30 + pair * 40;
+			struct hostapd_channel_data *lower;
+			struct hostapd_channel_data *upper;
+
+			lower = macsw_get_mode_channel(mode, lower_freq);
+			upper = macsw_get_mode_channel(mode, lower_freq + 20);
+			if (!lower || !upper)
+				continue;
+			lower->flag |= HOSTAPD_CHAN_HT40PLUS;
+			lower->allowed_bw |= HOSTAPD_CHAN_WIDTH_40P;
+			upper->flag |= HOSTAPD_CHAN_HT40MINUS;
+			upper->allowed_bw |= HOSTAPD_CHAN_WIDTH_40M;
+		}
+
+		if (max_bw < PHY_CHNL_BW_80)
+			continue;
+
+		for (pos = 0; pos < ARRAY_SIZE(vht80_flags); pos++) {
+			int freq = center_freqs_80mhz[i] - 30 + pos * 20;
+
+			if (!macsw_get_mode_channel(mode, freq))
+				break;
+		}
+		if (pos != ARRAY_SIZE(vht80_flags))
+			continue;
+
+		for (pos = 0; pos < ARRAY_SIZE(vht80_flags); pos++) {
+			int freq = center_freqs_80mhz[i] - 30 + pos * 20;
+			struct hostapd_channel_data *chan;
+
+			chan = macsw_get_mode_channel(mode, freq);
+			chan->flag |= vht80_flags[pos];
+			chan->allowed_bw |= HOSTAPD_CHAN_WIDTH_80;
+		}
+	}
 }
 
 static void hostapd_to_macsw_op_channel(struct hostapd_freq_params *hostapd,
@@ -412,6 +444,9 @@ static void wpa_macsw_driver_process_scan_result(struct wpa_macsw_driver_data *g
 	}
 
 	drv = &gdrv->itfs[res.fhost_vif_idx];
+	WPA_P2P_DEBUG("P2PDBG drv_scan_result fhost_vif=%d len=%u freq=%u rssi=%d init=%d\r\n",
+	       res.fhost_vif_idx, res.length, res.freq, res.rssi,
+	       !!(drv->status & MACSW_INITIALIZED));
 
 	if (!(drv->status & MACSW_INITIALIZED) ||
 	    (res.length < offsetof(struct ieee80211_mgmt, u.beacon.variable)))
@@ -707,8 +742,9 @@ static bool _wpa_macsw_driver_process_multi_bssid_scan_result(struct wpa_macsw_d
 
 static void wpa_macsw_driver_process_scan_done_event(struct wpa_macsw_driver_data *gdrv)
 {
-	struct wpa_macsw_driver_itf_data *drv;
-	struct cfgmacsw_scan_completed event;
+    struct wpa_macsw_driver_itf_data *drv;
+    struct cfgmacsw_scan_completed event;
+    union wpa_event_data data;
 
 	struct cfgmacsw_msg_hdr *msg_hdr;
 	unsigned int msg_len;
@@ -718,10 +754,15 @@ static void wpa_macsw_driver_process_scan_done_event(struct wpa_macsw_driver_dat
 
 	drv = &gdrv->itfs[event.fhost_vif_idx];
 	drv->status &= ~MACSW_SCANNING;
-	if (!(drv->status & MACSW_INITIALIZED))
-		return;
+	WPA_P2P_DEBUG("P2PDBG drv_scan_done fhost_vif=%d status=%d result_cnt=%u init=%d\r\n",
+	       event.fhost_vif_idx, event.status, event.result_cnt,
+	       !!(drv->status & MACSW_INITIALIZED));
+    if (!(drv->status & MACSW_INITIALIZED))
+        return;
 
-	wpa_supplicant_event(drv->ctx, EVENT_SCAN_RESULTS, NULL);
+    memset(&data, 0, sizeof(data));
+    data.scan_info.aborted = (event.status != CFGMACSW_SUCCESS);
+    wpa_supplicant_event(drv->ctx, EVENT_SCAN_RESULTS, &data);
 }
 
 static void wpa_macsw_driver_process_connect_event(struct wpa_macsw_driver_data *gdrv)
@@ -887,6 +928,17 @@ static void wpa_macsw_driver_process_rx_mgmt_event(struct wpa_macsw_driver_data 
 	data.rx_mgmt.drv_priv = drv;
 	data.rx_mgmt.freq = event.freq;
 	data.rx_mgmt.ssi_signal = event.rssi;
+	if (WLAN_FC_GET_STYPE(le_to_host16(mgmt->frame_control)) ==
+	    WLAN_FC_STYPE_ACTION) {
+		WPA_P2P_DEBUG("P2PDBG drv_rx_mgmt fhost_vif=%d freq=%u stype=%u da="
+		       MACSTR " sa=" MACSTR " bssid=" MACSTR
+		       " len=%u init=%d\r\n",
+		       event.fhost_vif_idx, event.freq,
+		       WLAN_FC_GET_STYPE(le_to_host16(mgmt->frame_control)),
+		       MAC2STR(mgmt->da), MAC2STR(mgmt->sa),
+		       MAC2STR(mgmt->bssid), event.length,
+		       !!(drv->status & MACSW_INITIALIZED));
+	}
 
 	if ((WLAN_FC_GET_STYPE(le_to_host16(mgmt->frame_control)) == WLAN_FC_STYPE_AUTH) &&
 	    (le_to_host16(mgmt->u.auth.auth_alg) == WLAN_AUTH_SAE)) {
@@ -976,6 +1028,8 @@ static void wpa_macsw_driver_process_tx_status_event(struct wpa_macsw_driver_dat
 	struct cfgmac_tx_status_event event;
 	struct wpa_mac_tx_frame *tx_frame;
 	enum wpa_event_type wpa_event;
+	const u8 *dst;
+	bool acknowledged;
 
 	struct cfgmacsw_msg_hdr *msg_hdr;
 	unsigned int msg_len;
@@ -1000,9 +1054,46 @@ static void wpa_macsw_driver_process_tx_status_event(struct wpa_macsw_driver_dat
 		data.tx_status.dst = ((struct ieee80211_hdr *)tx_frame->data)->addr1;
 		data.tx_status.data = tx_frame->data;
 		data.tx_status.data_len = tx_frame->data_len;
-		data.tx_status.ack = event.acknowledged;
+		acknowledged = event.acknowledged;
+		/*
+		 * A P2P peer can receive the association response while its ACK is
+		 * lost on the GO side.  Treating that status as a hard TX failure
+		 * makes hostapd remove the freshly added STA before EAPOL-1 arrives,
+		 * which creates a spurious first-attempt 4-way timeout.  Limit this
+		 * compatibility path to successful association responses on the
+		 * fixed P2P GO VIF; all other management TX statuses keep their
+		 * hardware result.
+		 */
+		#ifdef CONFIG_WIFI_P2P
+		if (!acknowledged &&
+		    (data.tx_status.stype == WLAN_FC_STYPE_ASSOC_RESP ||
+		     data.tx_status.stype == WLAN_FC_STYPE_REASSOC_RESP) &&
+		    (tx_frame->drv->status & MACSW_AP_STARTED) &&
+		    tx_frame->drv->fhost_vif_idx ==
+			WIFI_MGMR_P2P_FHOST_VIF_IDX &&
+		    tx_frame->data_len >= IEEE80211_HDRLEN + 4 &&
+		    WPA_GET_LE16(tx_frame->data + IEEE80211_HDRLEN + 2) ==
+			WLAN_STATUS_SUCCESS) {
+			acknowledged = true;
+			WPA_P2P_DEBUG("P2PDBG assoc_resp_no_ack_accept fhost_vif=%d dst="
+			       MACSTR "\r\n",
+			       tx_frame->drv->fhost_vif_idx,
+			       MAC2STR(data.tx_status.dst));
+		}
+		#endif
+		data.tx_status.ack = acknowledged;
 		wpa_event = EVENT_TX_STATUS;
 	}
+	dst = tx_frame->eapol ? tx_frame->dst_addr :
+		((struct ieee80211_hdr *)tx_frame->data)->addr1;
+	WPA_P2P_DEBUG("P2PDBG drv_tx_status_event fhost_vif=%d type=%u stype=%u dst="
+	       MACSTR " ack=%d len=%u init=%d\r\n",
+	       tx_frame->drv->fhost_vif_idx,
+	       tx_frame->eapol ? 0xff : data.tx_status.type,
+	       tx_frame->eapol ? 0xff : data.tx_status.stype,
+	       MAC2STR(dst),
+	       event.acknowledged, (unsigned int)tx_frame->data_len,
+	       !!(tx_frame->drv->status & MACSW_INITIALIZED));
 
 	// Interface may have been stopped just after posting the TX_STATUS event
 	if (tx_frame->drv->status & MACSW_INITIALIZED)
@@ -1025,6 +1116,10 @@ static void wpa_macsw_driver_tx_status(uint32_t frame_id, bool acknowledged, voi
 	event.hdr.len = sizeof(event);
 	event.data = (uint8_t *)tx_frame;
 	event.acknowledged = acknowledged;
+	WPA_P2P_DEBUG("P2PDBG drv_tx_status_cb fhost_vif=%d frame_id=%u ack=%d len=%u init=%d\r\n",
+	       drv->fhost_vif_idx, frame_id, acknowledged,
+	       (unsigned int)tx_frame->data_len,
+	       !!(drv->status & MACSW_INITIALIZED));
 
 	if (!(drv->status & MACSW_INITIALIZED) || fhost_cntrl_cfgmacsw_event_send(&event.hdr))
 		wpa_macsw_driver_release_tx_frame(tx_frame);
@@ -1066,6 +1161,9 @@ static void wpa_macsw_driver_remain_on_channel_event(struct wpa_macsw_driver_dat
 	data.remain_on_channel.freq     = event.freq;
 
 	drv = &gdrv->itfs[event.fhost_vif_idx];
+	WPA_P2P_DEBUG("P2PDBG drv_roc_event fhost_vif=%d freq=%u duration=%u init=%d\r\n",
+	       event.fhost_vif_idx, event.freq, event.duration,
+	       !!(drv->status & MACSW_INITIALIZED));
 	if (!(drv->status & MACSW_INITIALIZED))
 		return;
 
@@ -1087,6 +1185,9 @@ static void wpa_macsw_driver_remain_on_channel_exp_event(struct wpa_macsw_driver
 	data.remain_on_channel.freq = event.freq;
 
 	drv = &gdrv->itfs[event.fhost_vif_idx];
+	WPA_P2P_DEBUG("P2PDBG drv_roc_exp fhost_vif=%d freq=%u init=%d\r\n",
+	       event.fhost_vif_idx, event.freq,
+	       !!(drv->status & MACSW_INITIALIZED));
 	if (!(drv->status & MACSW_INITIALIZED))
 		return;
 
@@ -1222,7 +1323,8 @@ static void *wpa_macsw_driver_init2(void *ctx, const char *ifname, void *global_
 	struct wpa_macsw_driver_itf_data *drv = NULL;
 	struct fhost_vif_status vif_status;
 	int fhost_vif_idx;
-    int type;
+	int p2p = 0;
+	int type;
 
 	//TRACE_FHOST(WPA_INFO, "Driver MACSW init for %s", TR_STR_8(ifname));
 
@@ -1230,9 +1332,11 @@ static void *wpa_macsw_driver_init2(void *ctx, const char *ifname, void *global_
 	if (fhost_vif_idx < 0)
 		goto err;
 
-	if (fhost_get_vif_status(fhost_vif_idx, &vif_status) ||
-	    ((vif_status.type != VIF_STA) && (vif_status.type != VIF_AP) &&
-	     (vif_status.type != VIF_MESH_POINT)))
+	if (fhost_get_vif_status(fhost_vif_idx, &vif_status))
+		goto err;
+
+	if ((vif_status.type != VIF_STA) && (vif_status.type != VIF_AP) &&
+	    (vif_status.type != VIF_MESH_POINT) && (vif_status.type != VIF_UNKNOWN))
 		goto err;
 
 	drv = &gdrv->itfs[fhost_vif_idx];
@@ -1247,16 +1351,18 @@ static void *wpa_macsw_driver_init2(void *ctx, const char *ifname, void *global_
 	drv->ssid = NULL;
 	drv->ssid_len = 0;
 
-    // XXX TODO
-    // Check here if adding mesh/p2p support
-    if (fhost_vif_idx == MGMR_VIF_STA) {
-        type = VIF_STA;
-    } else {
-        type = VIF_AP;
-    }
-	if (wpa_macsw_driver_vif_update(drv, type, 0)) {
-        goto err;
-    }
+	if (vif_status.type == VIF_UNKNOWN) {
+		type = VIF_STA;
+		if (fhost_vif_idx != MGMR_VIF_STA) {
+			p2p = 1;
+			drv->status |= MACSW_RESTORE_UNKNOWN;
+		}
+	} else {
+		type = vif_status.type;
+	}
+
+	if (wpa_macsw_driver_vif_update(drv, type, p2p))
+		goto err;
 
 	// Configure default RX filters (whatever initial interface type is)
 	fhost_wpa_set_mgmt_rx_filter(fhost_vif_idx, STA_MGMT_RX_FILTER);
@@ -1295,6 +1401,16 @@ static void wpa_macsw_driver_deinit(void *priv)
 		os_free(drv->ssid);
 		drv->ssid = NULL;
 	}
+
+	/*
+	 * SoftAP and P2P share fhost vif 1. driver_init2 only sets
+	 * MACSW_RESTORE_UNKNOWN when the vif started as VIF_UNKNOWN, so a
+	 * SoftAP teardown used to leave type=AP. The next P2P GC associate
+	 * then failed with CFGMACSW_INVALID_VIF.
+	 */
+	if ((drv->status & MACSW_RESTORE_UNKNOWN) ||
+	    drv->fhost_vif_idx != MGMR_VIF_STA)
+		wpa_macsw_driver_vif_update(drv, VIF_UNKNOWN, 0);
 
 	fhost_wpa_send_event(FHOST_WPA_INTERFACE_REMOVED, NULL, 0, drv->fhost_vif_idx);
 }
@@ -1570,6 +1686,8 @@ static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 			if (feat.me_config.he_supp)
 				macsw_he_capabilities_init(mode, &feat.me_config.he_cap);
 		}
+		macsw_set_5g_channel_width_flags(mode,
+						 feat.me_config.phy_bw_max);
 		mode++;
 	}
 
@@ -1680,7 +1798,7 @@ static int wpa_macsw_driver_get_capa(void *priv, struct wpa_driver_capa *capa)
 	capa->max_stations = MACSW_REMOTE_STA_MAX;
 	//capa->probe_resp_offloads;
 	//capa->max_acl_mac_addrs;
-	capa->num_multichan_concurrent = 2;
+	capa->num_multichan_concurrent = 1;
 	capa->extended_capa = drv->gdrv->extended_capab;
 	capa->extended_capa_mask = drv->gdrv->extended_capab_mask;
 	capa->extended_capa_len = sizeof(drv->gdrv->extended_capab);
@@ -1729,7 +1847,8 @@ static int wpa_macsw_driver_scan2(void *priv, struct wpa_driver_scan_params *par
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_scan cmd;
-	struct cfgmacsw_resp resp;
+	struct cfgmacsw_resp resp = { 0 };
+	int ret;
 
 	memset(&cmd, 0, sizeof(cmd));
 
@@ -1761,7 +1880,12 @@ static int wpa_macsw_driver_scan2(void *priv, struct wpa_driver_scan_params *par
 	cmd.probe_cnt = params->probe_cnt;
 	cmd.is_cntrl_link = false;
 
-	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
+	ret = fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	WPA_P2P_DEBUG("P2PDBG drv_scan_req fhost_vif=%d ret=%d status=%d ssid_cnt=%d first_freq=%d p2p_probe=%d ie_len=%u\r\n",
+	       drv->fhost_vif_idx, ret, resp.status, cmd.ssid_cnt,
+	       params->freqs ? params->freqs[0] : 0, params->p2p_probe,
+	       (unsigned int) params->extra_ies_len);
+	if (ret || (resp.status != CFGMACSW_SUCCESS))
 		return -1;
 
 	drv->status |= MACSW_SCANNING;
@@ -1846,7 +1970,8 @@ static int wpa_macsw_driver_associate(void *priv,
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_connect cmd;
-	struct cfgmacsw_resp resp;
+	struct cfgmacsw_resp resp = { 0 };
+	int ret;
 
 	if (params->mode == IEEE80211_MODE_AP)
 		return wpa_macsw_driver_associate_ap(drv, params);
@@ -1922,12 +2047,32 @@ static int wpa_macsw_driver_associate(void *priv,
 	/* for now only support station role */
 	if (params->mode != IEEE80211_MODE_INFRA)
 		return -3;
+
+	{
+		struct fhost_vif_status vif_status;
+		int p2p = (drv->fhost_vif_idx != MGMR_VIF_STA);
+
+		if (!fhost_get_vif_status(drv->fhost_vif_idx, &vif_status) &&
+		    vif_status.type != VIF_STA) {
+			wpa_printf(MSG_INFO,
+				   "P2P: convert fhost_vif=%d type=%d to STA before associate",
+				   drv->fhost_vif_idx, vif_status.type);
+			if (wpa_macsw_driver_vif_update(drv, VIF_STA, p2p))
+				return -4;
+		}
+	}
+
 	cmd.uapsd = params->uapsd;
 
 	cmd.ie = params->wpa_ie;
 	cmd.ie_len = params->wpa_ie_len;
 
-	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
+	ret = fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	WPA_P2P_DEBUG("P2PDBG drv_assoc fhost_vif=%d ret=%d status=%d bssid=" MACSTR
+	       " ssid_len=%d freq=%d mode=%d\r\n",
+	       drv->fhost_vif_idx, ret, resp.status, MAC2STR(params->bssid),
+	       params->ssid_len, params->freq.freq, params->mode);
+	if (ret || (resp.status != CFGMACSW_SUCCESS))
 		return -4;
 
 	return 0;
@@ -2115,11 +2260,21 @@ static int wpa_macsw_driver_set_ap(void *priv, struct wpa_driver_ap_params *para
 	struct cfgmacsw_start_ap cmd;
 	struct cfgmacsw_resp resp;
 	int res = -1;
+	int p2p = 0;
 
 	drv->dtim_period = params->dtim_period;
 
 	if (drv->status & MACSW_AP_STARTED)
 		return wpa_macsw_driver_update_bcn(drv, params);
+
+#ifdef CONFIG_WIFI_P2P
+	if (!p2p && params->ssid && params->ssid_len >= 7 &&
+	    os_memcmp(params->ssid, "DIRECT-", 7) == 0)
+		p2p = 1;
+#endif
+
+	if (wpa_macsw_driver_vif_update(drv, VIF_AP, p2p))
+		return -1;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_START_AP_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_START_AP_RESP, sizeof(resp));
@@ -2234,12 +2389,17 @@ static int wpa_macsw_driver_deinit_ap(void *priv)
 		//TRACE_FHOST(ERR, "Need to abort scan");
 	}
 
-	// switch back to initial interface type
+	// Group teardown keeps a temporary P2P interface alive for further use.
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_SET_VIF_TYPE_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_SET_VIF_TYPE_RESP, sizeof(resp));
 	cmd.fhost_vif_idx = drv->fhost_vif_idx;
-	cmd.type = drv->vif_init_type;
-	cmd.p2p = false;
+	if (drv->status & MACSW_RESTORE_UNKNOWN) {
+		cmd.type = VIF_STA;
+		cmd.p2p = true;
+	} else {
+		cmd.type = drv->vif_init_type;
+		cmd.p2p = false;
+	}
 
 	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
 		return -1;
@@ -2580,7 +2740,8 @@ static int wpa_macsw_remain_on_channel(void *priv, unsigned int freq, unsigned i
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_remain_on_channel cmd;
-	struct cfgmacsw_resp resp;
+	struct cfgmacsw_resp resp = { 0 };
+	int ret;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_REMAIN_ON_CHANNEL_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_REMAIN_ON_CHANNEL_RESP, sizeof(resp));
@@ -2589,8 +2750,12 @@ static int wpa_macsw_remain_on_channel(void *priv, unsigned int freq, unsigned i
 	cmd.duration = duration;
 	cmd.freq = freq;
 
-	fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	ret = fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	WPA_P2P_DEBUG("P2PDBG drv_roc_req fhost_vif=%d freq=%u duration=%u ret=%d status=%d\r\n",
+		       drv->fhost_vif_idx, freq, duration, ret, resp.status);
 
+	if (ret || resp.status != CFGMACSW_SUCCESS)
+		return -1;
 	return 0;
 }
 
@@ -2598,15 +2763,20 @@ static int wpa_macsw_cancel_remain_on_channel(void *priv)
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_cancel_remain_on_channel cmd;
-	struct cfgmacsw_resp resp;
+	struct cfgmacsw_resp resp = { 0 };
+	int ret;
 
 	cmd.fhost_vif_idx = drv->fhost_vif_idx;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_CANCEL_REMAIN_ON_CHANNEL_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_CANCEL_REMAIN_ON_CHANNEL_RESP, sizeof(resp));
 
-	fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	ret = fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	WPA_P2P_DEBUG("P2PDBG drv_cancel_roc fhost_vif=%d ret=%d status=%d\r\n",
+		       drv->fhost_vif_idx, ret, resp.status);
 
+	if (ret || resp.status != CFGMACSW_SUCCESS)
+		return -1;
 	return 0;
 }
 
@@ -2635,7 +2805,31 @@ static int wpa_macsw_send_action(void *priv, unsigned int freq, unsigned int wai
 	os_memcpy(hdr->addr3, bssid, ETH_ALEN);
 
     ret = fhost_send_80211_frame(drv->fhost_vif_idx, tx_frame->data, IEEE80211_HDRLEN + data_len, no_cck, cb, tx_frame);
+    WPA_P2P_DEBUG("P2PDBG drv_send_action fhost_vif=%d freq=%u wait=%u dst=" MACSTR
+           " src=" MACSTR " bssid=" MACSTR " len=%u no_cck=%d ret=%u\r\n",
+           drv->fhost_vif_idx, freq, wait, MAC2STR(dst), MAC2STR(src),
+           MAC2STR(bssid), (unsigned int)data_len, no_cck, ret);
     if (ret < 4)
+        return -1;
+
+    return 0;
+}
+
+static int wpa_macsw_driver_abort_scan(void *priv, u64 scan_cookie)
+{
+    struct wpa_macsw_driver_itf_data *drv = priv;
+    struct cfgmacsw_abort_scan cmd;
+    struct cfgmacsw_resp resp;
+
+    (void)scan_cookie;
+    memset(&cmd, 0, sizeof(cmd));
+    memset(&resp, 0, sizeof(resp));
+    wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_ABORT_SCAN_CMD, sizeof(cmd));
+    wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_ABORT_SCAN_RESP, sizeof(resp));
+    cmd.fhost_vif_idx = drv->fhost_vif_idx;
+
+    if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) ||
+        (resp.status != CFGMACSW_SUCCESS))
         return -1;
 
     return 0;
@@ -2771,7 +2965,8 @@ const struct wpa_driver_ops wpa_driver_macsw_ops = {
 	.get_hw_feature_data = wpa_macsw_driver_get_hw_feature_data,
 	.get_capa = wpa_macsw_driver_get_capa,
 	.set_key = wpa_macsw_driver_set_key,
-	.scan2 = wpa_macsw_driver_scan2,
+    .scan2 = wpa_macsw_driver_scan2,
+    .abort_scan = wpa_macsw_driver_abort_scan,
 	.get_scan_results2 = wpa_macsw_driver_get_scan_results2,
 	.set_supp_port = wpa_macsw_driver_set_supp_port,
 	.associate = wpa_macsw_driver_associate,

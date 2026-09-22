@@ -112,6 +112,7 @@ static int iperf_udp_socket_wait_report(iperf_udp_socket_context_t *context,
                                         uint64_t next_id)
 {
     bflb_iperf_t *iperf = context->iperf;
+    /* Only the 56-byte base prefix is needed, even for padded peer reports. */
     uint8_t report[BFLB_IPERF_UDP_ACK_SIZE];
     int64_t fin_id = -(int64_t)next_id;
     uint32_t attempt;
@@ -152,7 +153,7 @@ static int iperf_udp_socket_send_report(iperf_udp_socket_context_t *context,
                                         int64_t fin_id)
 {
     bflb_iperf_t *iperf = context->iperf;
-    uint8_t report[BFLB_IPERF_UDP_ACK_SIZE];
+    uint8_t report[BFLB_IPERF_UDP_ACK_TX_SIZE];
     uint64_t deadline_us;
     uint16_t report_len;
     int64_t packet_id;
@@ -346,6 +347,7 @@ exit:
  * @note Only a prefix accepted by the normal-mode recognizer selects the peer;
  * SEQ64 without extension does not require complete base client settings.
  * Later datagrams from other peers are rejected by the connected UDP socket.
+ * Only the first setup rejection per server worker logs its reason.
  */
 static int iperf_udp_socket_server(iperf_udp_socket_context_t *context)
 {
@@ -361,6 +363,7 @@ static int iperf_udp_socket_server(iperf_udp_socket_context_t *context)
     uint64_t received_us;
     iperf_udp_setup_t setup_type;
     uint8_t peer_set = 0U;
+    bool setup_warned = false;
 
     socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (socket_fd < 0) {
@@ -403,8 +406,13 @@ static int iperf_udp_socket_server(iperf_udp_socket_context_t *context)
         }
         /* Only a valid setup packet may claim this single-peer server session. */
         if (peer_set == 0U) {
-            setup_type = iperf_udp_client_setup_type(context->buffer, (uint16_t)received);
+            const char *reason;
+            setup_type = iperf_udp_client_setup_type(context->buffer, (uint16_t)received, &reason);
             if (setup_type == IPERF_UDP_SETUP_INVALID) {
+                if (!setup_warned) {
+                    LOG_W("UDP Socket server setup rejected: %s (prefix=%u bytes)\r\n", reason, (unsigned int)received);
+                    setup_warned = true;
+                }
                 continue;
             }
             if (connect(socket_fd, (struct sockaddr *)&remote, remote_len) < 0) {

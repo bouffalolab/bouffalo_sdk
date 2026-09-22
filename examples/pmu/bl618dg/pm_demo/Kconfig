@@ -55,4 +55,14 @@ config EXAMPLE_PM_RTC_WAKEUP
       through HBN_IRQ_OUT. The PDS timer wakeup source can also be selected at
       runtime by passing "timer" as the last app_pm_enter argument.
 
+config EXAMPLE_PM_AON_WDT
+    bool "Enable AON watchdog"
+    default y
+    help
+      Enable the BL618DG AON-domain watchdog with a two-second timeout. The
+      demo feeds it every 500 ms while active and immediately before entering
+      PDS or HBN. A PDS sleep longer than two seconds should cause an AON
+      watchdog reset before the configured timer wakeup. The README also uses
+      this option to determine whether the watchdog remains active in HBN0.
+
 endmenu

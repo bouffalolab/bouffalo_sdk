@@ -4,20 +4,18 @@
 #else
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
 
 #include "bflb_gpio.h"
+#include "bflb_irq.h"
 #include "board_rf.h"
-#include "shell.h"
 
 #include "wl_api.h"
 #include "rfparam_adapter.h"
 #include "bl618dg_hbn.h"
-#ifdef CONFIG_WIFI6
-#include "coexm.h"
-#endif
 
 #define USER_UNUSED(a) ((void)(a))
 
@@ -120,59 +118,210 @@ int board_rf_ctl(enum board_ctl_ops ops, ...)
   return ret;
 }
 
-void board_rf_single_ant_init(void)
+/* Retain a failed RF attempt: partial PHY initialization requires a reboot. */
+static int board_rf_init_result = -EAGAIN;
+
+int board_rf_init_status_get(void)
 {
-    board_rf_phyrf_cfg_get();
-    cmd_set_btble_combo(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("PHY RF init failed!\r\n");
-        return;
-    }
-    cmd_set_btble_combo(0, NULL);
+    uintptr_t flags = bflb_irq_save();
+    int ret = board_rf_init_result;
+
+    bflb_irq_restore(flags);
+    return ret;
 }
 
-#ifdef CONFIG_WIFI6
-void board_rf_single_ant_spdt_init(int pin_bt_path, int pin_2g_path)
-{
-    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+/* Bound once before stack startup; runtime callbacks never query FHOST. */
+static int board_rf_spdt_gpio = -1;
 
-    if (pin_bt_path >= 0) {
-        bflb_gpio_init(gpio, pin_bt_path, GPIO_FUNC_GPIO | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_0);
-        bflb_gpio_reset(gpio, pin_bt_path);
+static int board_rf_spdt_fixed(int pin, bool bt)
+{
+    struct bflb_device_s *gpio;
+    volatile uint32_t *config;
+    uint32_t value;
+
+    if (pin < 0 || pin >= GPIO_PIN_MAX) {
+        return -EINVAL;
     }
-    if (pin_2g_path >= 0) {
-        bflb_gpio_init(gpio, pin_2g_path, GPIO_FUNC_GPIO | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_0);
-        bflb_gpio_set(gpio, pin_2g_path);
+    gpio = bflb_device_get_by_name("gpio");
+    if (gpio == NULL) {
+        return -ENODEV;
+    }
+
+    /* Single-write handover: direct-output mode exposes a stable output latch.
+     * Do not replay SET/CLR/interrupt-clear bits from a register snapshot. */
+    config = (volatile uint32_t *)(gpio->reg_base + GLB_GPIO_CFG0_OFFSET + 4 * pin);
+    value = *config & ~(GLB_REG_GPIO_0_MODE_MSK | GLB_REG_GPIO_0_FUNC_SEL_MSK |
+                       GLB_REG_GPIO_0_IE_MSK | GLB_REG_GPIO_0_O_MSK |
+                       GLB_REG_GPIO_0_SET_MSK | GLB_REG_GPIO_0_CLR_MSK |
+                       GLB_REG_GPIO_0_INT_CLR_MSK | GLB_REG_GPIO_0_PU_MSK |
+                       GLB_REG_GPIO_0_PD_MSK | GLB_REG_GPIO_0_DRV_MSK);
+    value |= ((GPIO_FUNC_GPIO >> GPIO_FUNC_SHIFT) << GLB_REG_GPIO_0_FUNC_SEL_POS) |
+             GLB_REG_GPIO_0_OE_MSK | GLB_REG_GPIO_0_SMT_MSK |
+             GLB_REG_GPIO_0_INT_MASK_MSK;
+    /* The board wiring must match the hardware PTA output parity. */
+    if (bt == ((pin & 1) == 0)) {
+        value |= GLB_REG_GPIO_0_O_MSK;
+    }
+    *config = value;
+    return 0;
+}
+
+static int board_rf_spdt_apply(int pin, enum board_rf_spdt_mode mode)
+{
+    struct bflb_device_s *gpio;
+
+    if (mode == BOARD_RF_SPDT_FIXED_BT || mode == BOARD_RF_SPDT_FIXED_2G) {
+        return board_rf_spdt_fixed(pin, mode == BOARD_RF_SPDT_FIXED_BT);
+    }
+    if (mode != BOARD_RF_SPDT_DYNAMIC_PTA || pin < 0 || pin >= GPIO_PIN_MAX) {
+        return -EINVAL;
+    }
+    gpio = bflb_device_get_by_name("gpio");
+    if (gpio == NULL) {
+        return -ENODEV;
+    }
+    /* Only a serialized recipe executor may hand the pin over to ready PTA. */
+    bflb_gpio_init(gpio, pin, GPIO_FUNC_SPDT | GPIO_ALTERNATE);
+    return 0;
+}
+
+static int board_rf_spdt_verify(int pin, enum board_rf_spdt_mode mode)
+{
+    struct bflb_device_s *gpio;
+    uint32_t value;
+    uint32_t mask = GLB_REG_GPIO_0_FUNC_SEL_MSK | GLB_REG_GPIO_0_OE_MSK |
+                    GLB_REG_GPIO_0_MODE_MSK;
+    uint32_t expected;
+
+    if (pin < 0 || pin >= GPIO_PIN_MAX ||
+        (mode != BOARD_RF_SPDT_FIXED_BT &&
+         mode != BOARD_RF_SPDT_FIXED_2G &&
+         mode != BOARD_RF_SPDT_DYNAMIC_PTA)) {
+        return -EINVAL;
+    }
+    gpio = bflb_device_get_by_name("gpio");
+    if (gpio == NULL) {
+        return -ENODEV;
+    }
+    value = *(volatile uint32_t *)(gpio->reg_base + GLB_GPIO_CFG0_OFFSET + 4 * pin);
+    if (mode != BOARD_RF_SPDT_DYNAMIC_PTA) {
+        mask |= GLB_REG_GPIO_0_IE_MSK | GLB_REG_GPIO_0_O_MSK;
+        expected = ((GPIO_FUNC_GPIO >> GPIO_FUNC_SHIFT) <<
+                    GLB_REG_GPIO_0_FUNC_SEL_POS) | GLB_REG_GPIO_0_OE_MSK;
+        if ((mode == BOARD_RF_SPDT_FIXED_BT) == ((pin & 1) == 0)) {
+            expected |= GLB_REG_GPIO_0_O_MSK;
+        }
+    } else {
+        expected = (GPIO_FUNC_SPDT >> GPIO_FUNC_SHIFT) <<
+                    GLB_REG_GPIO_0_FUNC_SEL_POS;
+        expected |= 1u << GLB_REG_GPIO_0_MODE_POS;
+    }
+    return (value & mask) == expected ? 0 : -EIO;
+}
+
+int board_rf_spdt_mode_apply(enum board_rf_spdt_mode mode)
+{
+    if (board_rf_init_status_get() != 0) {
+        return -EAGAIN;
+    }
+    return board_rf_spdt_apply(board_rf_spdt_gpio, mode);
+}
+
+int board_rf_spdt_mode_verify(enum board_rf_spdt_mode mode)
+{
+    if (board_rf_init_status_get() != 0) {
+        return -EAGAIN;
+    }
+    return board_rf_spdt_verify(board_rf_spdt_gpio, mode);
+}
+
+int board_rf_modes_get(bool standalone, int spdt_gpio, uint32_t *modes)
+{
+    if (modes == NULL || spdt_gpio < -1 || spdt_gpio >= GPIO_PIN_MAX ||
+        (!standalone && spdt_gpio != -1)) {
+        return -EINVAL;
+    }
+    if (spdt_gpio >= 0 && bflb_device_get_by_name("gpio") == NULL) {
+        return -ENODEV;
+    }
+    /* Cross-path operation on standalone wiring is not qualified yet. */
+    *modes = standalone ? BOARD_RF_MODE_STANDALONE_BIT : BOARD_RF_MODE_COMBO_BIT;
+    return 0;
+}
+
+static int board_rf_initialize(bool standalone, int spdt_gpio)
+{
+    uintptr_t flags;
+    uint32_t modes;
+    int ret = board_rf_modes_get(standalone, spdt_gpio, &modes);
+
+    if (ret != 0) {
+        return ret;
+    }
+
+    flags = bflb_irq_save();
+    if (board_rf_init_result != -EAGAIN || rfparam_cfg_get() != NULL) {
+        bflb_irq_restore(flags);
+        return -EBUSY;
+    }
+    board_rf_init_result = -EBUSY;
+    bflb_irq_restore(flags);
+
+    if (spdt_gpio >= 0) {
+        board_rf_spdt_gpio = spdt_gpio;
+        ret = board_rf_spdt_fixed(spdt_gpio, false);
+        if (ret != 0) {
+            goto done;
+        }
     }
 
     board_rf_phyrf_cfg_get();
     cmd_set_btble_combo(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("PHY RF init failed!\r\n");
-        return;
+    ret = rfparam_init(0, NULL, 0);
+    if (ret != 0) {
+        ret = -EIO;
+        goto done;
     }
-  
-    if (pin_bt_path >= 0) {
-        bflb_gpio_set(gpio, pin_bt_path);
+
+    if (standalone) {
+        if (spdt_gpio >= 0) {
+            ret = board_rf_spdt_fixed(spdt_gpio, true);
+            if (ret != 0) {
+                goto done;
+            }
+        }
+        cmd_set_btble_standalone(0, NULL);
+        if (rfparam_init(0, NULL, 0) != 0) {
+            ret = -EIO;
+        }
+    } else {
+        cmd_set_btble_combo(0, NULL);
     }
-    if (pin_2g_path >= 0) {
-        bflb_gpio_reset(gpio, pin_2g_path);
-    }
-    cmd_set_btble_standalone(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("PHY RF init failed!\r\n");
-        return;
-    }
-  
-    if (pin_bt_path >= 0) {
-        bflb_gpio_init(gpio, pin_bt_path, GPIO_FUNC_SPDT | GPIO_ALTERNATE);
-    }
-    if (pin_2g_path >= 0) {
-        bflb_gpio_init(gpio, pin_2g_path, GPIO_FUNC_SPDT | GPIO_ALTERNATE);
-    }
-    coexm_bt_set_spdt_ctrl(true);
+
+done:
+    flags = bflb_irq_save();
+    board_rf_init_result = ret;
+    bflb_irq_restore(flags);
+    return ret;
 }
-#endif
+
+int board_rf_combo_init(void)
+{
+    return board_rf_initialize(false, -1);
+}
+
+int board_rf_single_ant_init(void)
+{
+    return board_rf_combo_init();
+}
+
+int board_rf_single_ant_spdt_init(int spdt_gpio)
+{
+    if (spdt_gpio < 0) {
+        return -EINVAL;
+    }
+    return board_rf_initialize(true, spdt_gpio);
+}
 
 void board_rf_single_ant_spdt_force_bt_init(int pin_bt_path, int pin_2g_path)
 {
@@ -229,118 +378,9 @@ void board_rf_single_ant_spdt_force_2g_init(int pin_bt_path, int pin_2g_path)
     cmd_set_btble_combo(0, NULL);
 }
 
-void board_rf_dual_ant_init(void)
+int board_rf_dual_ant_init(void)
 {
-    board_rf_phyrf_cfg_get();
-    cmd_set_btble_combo(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("PHY RF init failed!\r\n");
-        return;
-    }
-
-    cmd_set_btble_standalone(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("PHY RF init failed!\r\n");
-        return;
-    }
+    return board_rf_initialize(true, -1);
 }
-
-int cmd_board_rf_single_init(int argc, char **argv)
-{
-    board_rf_single_ant_init();
-
-    printf ("Board RF initialized for single antennas.\r\n");
-
-    return 0;
-}
-
-#ifdef CONFIG_WIFI6
-int cmd_board_rf_single_ant_spdt_init(int argc, char **argv)
-{
-    int pin_bt_path = -1, pin_2g_path = -1;
-
-    if (argc >= 2) {
-        pin_bt_path = atoi(argv[1]);
-    }
-    if (argc >= 3) {
-        pin_2g_path = atoi(argv[2]);
-    }
-
-    if (pin_bt_path >= 0 || pin_2g_path >= 0) {
-        board_rf_single_ant_spdt_init(pin_bt_path, pin_2g_path);
-
-        printf ("SPDT BT path pin %d, 2G path pin %d.\r\n", pin_bt_path, pin_2g_path);
-        printf ("Board RF initialized for single antennas with spdt.\r\n");
-    }
-    else {
-        printf ("command usage: board_rf_single_ant_spdt_init <pin-bt-path> <pin-2g-path>\r\n", pin_bt_path, pin_2g_path);
-    }
-
-    return 0;
-}
-#endif
-
-int cmd_board_rf_single_ant_spdt_bt_init(int argc, char **argv)
-{
-    int pin_bt_path = -1, pin_2g_path = -1;
-
-    if (argc >= 2) {
-        pin_bt_path = atoi(argv[1]);
-    }
-    if (argc >= 3) {
-        pin_2g_path = atoi(argv[2]);
-    }
-
-    if (pin_bt_path >= 0 || pin_2g_path >= 0) {
-        board_rf_single_ant_spdt_force_bt_init(pin_bt_path, pin_2g_path);
-        printf ("SPDT BT path pin %d, 2G path pin %d.\r\n", pin_bt_path, pin_2g_path);
-        printf ("Board RF initialized for single antennas with spdt, and force bluetooth to use bt path.\r\n");
-    }
-    else {
-        printf ("command usage: board_rf_single_ant_spdt_bt_init <pin-bt-path> <pin-2g-path>\r\n", pin_bt_path, pin_2g_path);
-    }
-    return -1;
-}
-
-int cmd_board_rf_single_ant_spdt_2g_init(int argc, char **argv)
-{
-    int pin_bt_path = -1, pin_2g_path = -1;
-
-    if (argc >= 2) {
-        pin_bt_path = atoi(argv[1]);
-    }
-    if (argc >= 3) {
-        pin_2g_path = atoi(argv[2]);
-    }
-
-    if (pin_bt_path >= 0 || pin_2g_path >= 0) {
-        board_rf_single_ant_spdt_force_2g_init(pin_bt_path, pin_2g_path);
-
-        printf ("SPDT BT path pin %d, 2G path pin %d.\r\n", pin_bt_path, pin_2g_path);
-        printf ("Board RF initialized for single antennas with spdt, and force bluetooth to use 2g path.\r\n");
-    }
-    else {
-        printf ("command usage: board_rf_single_ant_spdt_2g_init <pin-bt-path> <pin-2g-path>\r\n", pin_bt_path, pin_2g_path);
-    }
-
-    return 0;
-}
-
-int cmd_board_rf_dual_ant_init(int argc, char **argv)
-{
-    board_rf_dual_ant_init();
-
-    printf ("Board RF initialized for dual antennas.");
-
-    return 0;
-}
-
-SHELL_CMD_EXPORT_ALIAS(cmd_board_rf_single_init, board_rf_single_ant_init, init single ant);
-#ifdef CONFIG_WIFI6
-SHELL_CMD_EXPORT_ALIAS(cmd_board_rf_single_ant_spdt_init, board_rf_single_ant_spdt_init, init single ant/spdt);
-#endif
-SHELL_CMD_EXPORT_ALIAS(cmd_board_rf_single_ant_spdt_bt_init, board_rf_single_ant_spdt_bt_init, init single ant/spdt to use bt path);
-SHELL_CMD_EXPORT_ALIAS(cmd_board_rf_single_ant_spdt_2g_init, board_rf_single_ant_spdt_2g_init, init single ant/spdt to use 2g path);
-SHELL_CMD_EXPORT_ALIAS(cmd_board_rf_dual_ant_init, board_rf_dual_ant_init, init dual ant hardware);
 
 #endif

@@ -45,6 +45,10 @@ int wpas_p2p_handle_frequency_conflicts(struct wpa_supplicant *wpa_s,
 int wpas_p2p_group_add(struct wpa_supplicant *wpa_s, int persistent_group,
 		       int freq, int vht_center_freq2, int ht40, int vht,
 		       int max_oper_chwidth, int he, int edmg, bool allow_6ghz);
+int wpas_p2p_group_add_with_passphrase(
+	struct wpa_supplicant *wpa_s, int persistent_group, int freq,
+	int vht_center_freq2, int ht40, int vht, int max_oper_chwidth, int he,
+	int edmg, bool allow_6ghz, const char *passphrase);
 int wpas_p2p_group_add_persistent(struct wpa_supplicant *wpa_s,
 				  struct wpa_ssid *ssid, int addr_allocated,
 				  int force_freq, int neg_freq,
@@ -178,6 +182,7 @@ int wpas_p2p_try_edmg_channel(struct wpa_supplicant *wpa_s,
 #ifdef CONFIG_P2P
 
 int wpas_p2p_init(struct wpa_global *global, struct wpa_supplicant *wpa_s);
+int wpas_p2p_rebind(struct wpa_supplicant *wpa_s);
 void wpas_p2p_deinit(struct wpa_supplicant *wpa_s);
 void wpas_p2p_completed(struct wpa_supplicant *wpa_s);
 void wpas_p2p_update_config(struct wpa_supplicant *wpa_s);
@@ -226,6 +231,11 @@ int wpas_p2p_mac_setup(struct wpa_supplicant *wpa_s);
 
 static inline int
 wpas_p2p_init(struct wpa_global *global, struct wpa_supplicant *wpa_s)
+{
+	return 0;
+}
+
+static inline int wpas_p2p_rebind(struct wpa_supplicant *wpa_s)
 {
 	return 0;
 }

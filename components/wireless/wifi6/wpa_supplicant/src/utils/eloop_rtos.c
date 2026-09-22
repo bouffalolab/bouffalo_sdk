@@ -399,36 +399,74 @@ unsigned int eloop_get_request_body(void ** body) {
   return evreq->body_len;
 }
 
+static void event_sync_msg_release(struct event_sync_msg *msg) {
+  int refcount;
+
+  rtos_mutex_lock(eloop.mtx);
+  refcount = --msg->refcount;
+  rtos_mutex_unlock(eloop.mtx);
+
+  if (refcount == 0) {
+    if (msg->reply) {
+      os_free(msg->reply);
+    }
+    rtos_semaphore_delete(msg->done);
+    os_free(msg);
+  }
+}
+
 /* sync done cb */
 static void event_commit_sync_done(void *data) {
   struct event_sync_msg *msg = data;
 
   rtos_semaphore_signal(msg->done, 0);
+  event_sync_msg_release(msg);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 int eloop_event_commit_sync(int type, const char *request, int req_len,
                             char **resp, int *resp_len, int timeout_ms) {
-  int ret = 0;
-  struct event_sync_msg * data = os_malloc(sizeof(struct event_sync_msg) + req_len);
+  int ret;
+  struct event_sync_msg *data = os_malloc(sizeof(struct event_sync_msg) + req_len);
+
+  if (data == NULL) {
+    return -1;
+  }
 
   memcpy(data + 1, request, req_len);
 
-  rtos_semaphore_create(&data->done, 1, 0);
-  data->resp = resp;
-  data->resp_len = resp_len;
+  if (rtos_semaphore_create(&data->done, 1, 0) != 0) {
+    os_free(data);
+    return -1;
+  }
+  data->reply = NULL;
+  data->reply_len = 0;
+  data->refcount = 2;
+  data->resp = &data->reply;
+  data->resp_len = &data->reply_len;
 
   ret = eloop_post_event(type, sizeof(struct event_sync_msg) + req_len, data, event_commit_sync_done);
   if (ret) {
-    goto exit;
+    rtos_semaphore_delete(data->done);
+    os_free(data);
+    return ret;
   }
-  rtos_semaphore_wait(data->done, timeout_ms);
 
-exit:
-  rtos_semaphore_delete(data->done);
-  os_free(data);
+  if (rtos_semaphore_wait(data->done, timeout_ms) != 0) {
+    event_sync_msg_release(data);
+    return -2;
+  }
 
-  return ret;
+  if (resp) {
+    *resp = data->reply;
+  }
+  if (resp_len) {
+    *resp_len = data->reply_len;
+  }
+  data->reply = NULL;
+  event_sync_msg_release(data);
+
+  return 0;
 }
 
 int eloop_event_commit(int type, const char *request, int req_len) {

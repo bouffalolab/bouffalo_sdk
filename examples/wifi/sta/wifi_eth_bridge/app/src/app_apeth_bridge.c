@@ -108,6 +108,14 @@ extern int hostrouter_init(void);
         case CODE_WIFI_ON_AP_STA_DEL: {
             LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
         } break;
+        case CODE_WIFI_ON_AP_CSA_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_CSA_DONE, channel %u\r\n",
+                  __func__, (unsigned int)ev->value);
+        } break;
+        case CODE_WIFI_ON_STA_CSA_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_STA_CSA_DONE, channel %u\r\n",
+                  __func__, (unsigned int)ev->value);
+        } break;
         default: {
             LOG_I("[APP] [EVT] Unknown code %u \r\n", code);
         }

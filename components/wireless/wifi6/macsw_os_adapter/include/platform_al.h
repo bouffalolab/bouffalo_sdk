@@ -21,6 +21,7 @@ enum PSM_EVENT {
 
 /* forward decl */
 typedef struct bcn_param bcn_param_t;
+struct cfgmacsw_p2p_event;
 
 typedef void *  platform_event_handler_t;
 typedef void (*platform_event_func_t)( platform_event_handler_t xTimer );
@@ -72,6 +73,10 @@ int platform_delete_schedule_event(platform_event_handler_t handler);
 */
 
 void platform_post_event(int catalogue, int code1, int code2);
+#ifdef CONFIG_WIFI_P2P
+void platform_post_p2p_event(int code,
+                             const struct cfgmacsw_p2p_event *event);
+#endif
 
 #define PLATFORM_HOOK(x, ...) do { \
     typeof(platform_hook_##x) * volatile hook = platform_hook_##x; \

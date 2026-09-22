@@ -2,6 +2,7 @@
 #define __WL_API_H__
 
 #include <stdint.h>
+#include <stdarg.h>
 
 /**
  * WL_API_RMEM_EN and WL_API_RMEM_ADDR
@@ -211,6 +212,13 @@ typedef enum
  *                   handles variable argument lists appropriately as in standard 'printf' function.
  *      Requirement: The main program must provide an implementation of this function and assign this function pointer to it during the initialization of the wl_api_t structure.
  *
+ * @var log_vprintf
+ *      Type: void (*)(const char *format, va_list args)
+ *      Description: Varargs logging hook. The wl library hands its log arguments to the platform as a va_list,
+ *                   so platforms should provide a vprintf-like function here. If this pointer is NULL, the
+ *                   library falls back to log_printf (legacy behavior).
+ *      Requirement: Optional. Assign a vprintf-style function during initialization when available.
+ *
  * @var log_level
  *      Type: uint8_t
  *      Description: Defines the logging level. The wl library will use this level to filter log messages, outputting only those that are at or above this level.
@@ -234,8 +242,10 @@ struct wl_cfg_t
     void (*capcode_set)(uint8_t capcode_in, uint8_t capcode_out);
     /* platform api to get capcode register */
     void (*capcode_get)(uint8_t* capcode_in, uint8_t* capcode_out);
-    /* platform logging api */
+    /* platform logging api: the wl library passes a va_list, so prefer
+     * log_vprintf; log_printf is kept as a legacy fallback. */
     void (*log_printf)(const char *format, ...);
+    void (*log_vprintf)(const char *format, va_list args);
 
     uint8_t     log_level;
     uint8_t     device_info; // QFN24,QFN32,QFN40,QFN48

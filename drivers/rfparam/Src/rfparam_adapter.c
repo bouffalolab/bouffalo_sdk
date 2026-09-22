@@ -474,6 +474,7 @@ void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out)
  * @return RFPARAM_SUSS is suss, other is err
  *
 *******************************************************************************/
+__attribute__((weak))
 int8_t rfparam_load(struct wl_param_t *param)
 {
     uint8_t tmp_buf[32] = { 0 };

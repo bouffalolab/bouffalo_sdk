@@ -34,10 +34,22 @@
 #include "wpa_ie.h"
 
 #ifdef CONFIG_PMK_CACHE_IN_MGMR
+#include <fhost.h>
+#include <wifi_mgmr_ext.h>
 #include <wifi_mgmr_pmk.h>
 #endif /* CONFIG_PMK_CACHE_IN_MGMR */
 
 static const u8 null_rsc[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
+#ifdef CONFIG_PMK_CACHE_IN_MGMR
+static int wpa_sm_mgmr_vif_idx(struct wpa_sm *sm)
+{
+    if (!sm || !sm->ifname)
+        return WIFI_MGMR_PMK_VIF_UNKNOWN;
+
+    return fhost_vif_idx_from_name(sm->ifname);
+}
+#endif /* CONFIG_PMK_CACHE_IN_MGMR */
 
 
 /**
@@ -2346,13 +2358,18 @@ static int wpa_supplicant_decrypt_key_data(struct wpa_sm *sm,
  */
 void wpa_sm_aborted_cached(struct wpa_sm *sm)
 {
-	if (sm && sm->cur_pmksa) {
+	if (sm) {
 		wpa_dbg(sm->ctx->msg_ctx, MSG_DEBUG,
 			"RSN: Cancelling PMKSA caching attempt");
-		sm->cur_pmksa = NULL;
 #ifdef CONFIG_PMK_CACHE_IN_MGMR
-        wifi_mgmr_pmk_cache_entry_invalidate();
+		int fhost_vif_idx = wpa_sm_mgmr_vif_idx(sm);
+		const u8 *aa = sm->cur_pmksa ? sm->cur_pmksa->aa : NULL;
+
+		if (fhost_vif_idx == MGMR_VIF_STA)
+			wifi_mgmr_pmk_cache_entry_invalidate_for_network(
+				fhost_vif_idx, sm->network_ctx, aa);
 #endif /* CONFIG_PMK_CACHE_IN_MGMR */
+		sm->cur_pmksa = NULL;
 	}
 }
 
@@ -3147,12 +3164,15 @@ void wpa_sm_set_pmk(struct wpa_sm *sm, const u8 *pmk, size_t pmk_len,
 
 	if (bssid) {
 #ifdef CONFIG_PMK_CACHE_IN_MGMR
-        if (sm->key_mgmt == WPA_KEY_MGMT_SAE && pmk_len == WIFI_MGMR_PMK_LEN) {
+        if (sm->key_mgmt == WPA_KEY_MGMT_SAE &&
+            pmk_len == WIFI_MGMR_PMK_LEN &&
+            wpa_sm_mgmr_vif_idx(sm) == MGMR_VIF_STA) {
             wifi_mgmr_pmk_cache_entry entry;
             os_memcpy(entry.pmk, pmk, WIFI_MGMR_PMK_LEN);
             os_memcpy(entry.pmkid, pmkid, WIFI_MGMR_PMKID_LEN);
             os_memcpy(entry.aa, bssid, WIFI_MGMR_ETH_ALEN);
-            wifi_mgmr_pmk_cache_entry_update(&entry);
+            wifi_mgmr_pmk_cache_entry_update_for_network(
+                &entry, MGMR_VIF_STA, sm->network_ctx);
         }
 #endif /* CONFIG_PMK_CACHE_IN_MGMR */
 		sm->cur_pmksa = pmksa_cache_add(sm->pmksa, pmk, pmk_len,
@@ -3910,7 +3930,15 @@ void wpa_sm_update_replay_ctr(struct wpa_sm *sm, const u8 *replay_ctr)
 
 void wpa_sm_pmksa_cache_flush(struct wpa_sm *sm, void *network_ctx)
 {
+	if (!sm)
+		return;
+
 	pmksa_cache_flush(sm->pmksa, network_ctx, NULL, 0, false);
+#ifdef CONFIG_PMK_CACHE_IN_MGMR
+	if (wpa_sm_mgmr_vif_idx(sm) == MGMR_VIF_STA)
+		wifi_mgmr_pmk_cache_entry_invalidate_for_network(
+			MGMR_VIF_STA, network_ctx, NULL);
+#endif /* CONFIG_PMK_CACHE_IN_MGMR */
 }
 
 
@@ -5292,15 +5320,15 @@ void wpa_sm_pmksa_cache_reconfig(struct wpa_sm *sm)
 void wpa_sm_load_pmksa_cache_from_mgmr(struct wpa_sm *sm, const u8 *bssid)
 {
     wifi_mgmr_pmk_cache_entry entry;
+    int fhost_vif_idx = wpa_sm_mgmr_vif_idx(sm);
 
-    if (!wifi_mgmr_pmk_cache_entry_read(&entry)) {
-        if (os_memcmp(entry.aa, bssid, sizeof(entry.aa))) {
-            /* BSSID changed, invalidate current cache */
-            wifi_mgmr_pmk_cache_entry_invalidate();
-        } else {
-            pmksa_cache_add(sm->pmksa, entry.pmk, WIFI_MGMR_PMK_LEN, entry.pmkid, NULL,
-                    0, entry.aa, sm->own_addr, sm->network_ctx, WPA_KEY_MGMT_SAE, NULL);
-        }
-    }
+    if (fhost_vif_idx != MGMR_VIF_STA ||
+        wifi_mgmr_pmk_cache_entry_read_for_network(
+            &entry, fhost_vif_idx, sm->network_ctx, bssid))
+        return;
+
+    pmksa_cache_add(sm->pmksa, entry.pmk, WIFI_MGMR_PMK_LEN, entry.pmkid,
+                    NULL, 0, entry.aa, sm->own_addr, sm->network_ctx,
+                    WPA_KEY_MGMT_SAE, NULL);
 }
 #endif /* CONFIG_PMK_CACHE_IN_MGMR */

@@ -1544,7 +1544,8 @@ class Kconfig(object):
         save_old (default: True):
           If True and <filename> already exists, a copy of it will be saved to
           <filename>.old in the same directory before the new configuration is
-          written.
+          written. Set KCONFIG_CONFIG_SAVE_OLD=n to disable the backup for
+          command-line tools that do not expose save_old directly.
 
           Errors are silently ignored if <filename>.old cannot be written (e.g.
           due to permissions errors).
@@ -1573,7 +1574,7 @@ class Kconfig(object):
         if self._contents_eq(filename, contents):
             return "No change to configuration in '{}'".format(filename)
 
-        if save_old:
+        if save_old and os.getenv("KCONFIG_CONFIG_SAVE_OLD", "y") != "n":
             _save_old(filename)
 
         with self._open(filename, "w") as f:
@@ -4579,6 +4580,8 @@ class Symbol(object):
                    .format(self.kconfig.config_prefix, self.name)
 
         if self.orig_type in _INT_HEX:
+            if not val:
+                return ""
             return "{}{}={}\n" \
                    .format(self.kconfig.config_prefix, self.name, val)
 
