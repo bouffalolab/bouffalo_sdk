@@ -1,0 +1,15 @@
+CONFIG_ROMAPI               = y
+CONFIG_XZ                   = y
+CONFIG_GCC_OPTIMISE_LEVEL   = -Os
+
+# These are enabled by default for BL618DG in bsp/board/Kconfig; the loader
+# needs neither, and leaving them on pulls in the PEC v2 and multimedia LHAL
+# drivers and inflates the RAM image.
+CONFIG_PEC_V2               = n
+CONFIG_MULTIMEDIA_VIDEO     = n
+
+CONFIG_DEBUG                = n
+CONFIG_COREDUMP             = n
+CONFIG_TLSF                 = n
+CONFIG_MEM_TLSF_EN          = n
+CONFIG_BFLB_LOG             = n

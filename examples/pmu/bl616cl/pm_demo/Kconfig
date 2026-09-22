@@ -1,0 +1,46 @@
+mainmenu "SDK Configuration"
+
+source "$BL_SDK_BASE/Kconfig"
+
+menu "Example Configuration"
+
+config EXAMPLE_PM_GPIO_WAKEUP
+    bool "Enable GPIO wakeup"
+    default y
+    help
+      Enable board-configured low-power GPIO wakeup. GPIO0-GPIO5 can wake
+      PDS and HBN; GPIO6-GPIO36 can wake PDS only.
+
+config EXAMPLE_PM_BOD_WAKEUP
+    bool "Enable BOD wakeup"
+    default y
+    help
+      Enable BOD as a wakeup source in PDS and HBN modes.
+
+config EXAMPLE_PM_BOD_THRESHOLD
+    int "BOD threshold selector"
+    depends on EXAMPLE_PM_BOD_WAKEUP
+    range 0 7
+    default 5
+    help
+      BL616CL BOD threshold selector passed to HBN_Set_BOD_Config():
+
+        0 = 2.2 V, 1 = 2.3 V, 2 = 2.4 V, 3 = 2.5 V
+        4 = 2.6 V, 5 = 2.7 V, 6 = 2.8 V, 7 = 2.9 V
+
+config EXAMPLE_PM_RTC_WAKEUP
+    bool "Enable RTC wakeup"
+    default y
+    help
+      Enable relative RTC wakeup in PDS and HBN modes. PDS receives RTC wakeup
+      through HBN_IRQ_OUT. The PDS timer can also be selected at runtime.
+
+config EXAMPLE_PM_HBN_WDT
+    bool "Enable HBN watchdog"
+    default y
+    help
+      Enable the BL616CL HBN-domain watchdog with a one-second timeout. The
+      demo feeds it every 250 ms while active and around PDS entry. A sleep
+      longer than one second can be used to verify watchdog behavior.
+
+endmenu
