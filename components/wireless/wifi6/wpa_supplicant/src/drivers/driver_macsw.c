@@ -111,6 +111,8 @@ static void macsw_to_hostapd_channel(struct mac_chan_def *macsw,
 		hostapd->flag |= HOSTAPD_CHAN_RADAR | HOSTAPD_CHAN_DFS_USABLE;
 		hostapd->dfs_cac_ms = 60000;
 	}
+	if (macsw->flags & CHAN_RADAR)
+		hostapd->flag |= HOSTAPD_CHAN_RADAR;
 	if (macsw->flags & CHAN_DISABLED) {
 		hostapd->flag |= HOSTAPD_CHAN_DISABLED;
 	}
@@ -752,7 +754,11 @@ static void wpa_macsw_driver_process_scan_done_event(struct wpa_macsw_driver_dat
 	msg_len = eloop_get_request_body((void **)&msg_hdr);
 	memcpy(&event, msg_hdr, msg_len);
 
+	if (event.fhost_vif_idx >= MACSW_VIRT_DEV_MAX)
+		return;
 	drv = &gdrv->itfs[event.fhost_vif_idx];
+	if (event.survey_id != drv->survey_id)
+		return;
 	drv->status &= ~MACSW_SCANNING;
 	WPA_P2P_DEBUG("P2PDBG drv_scan_done fhost_vif=%d status=%d result_cnt=%u init=%d\r\n",
 	       event.fhost_vif_idx, event.status, event.result_cnt,
@@ -1843,6 +1849,8 @@ static int wpa_macsw_driver_set_key(void *priv, struct wpa_driver_set_key_params
 	return 0;
 }
 
+static u32 macsw_survey_sequence;
+
 static int wpa_macsw_driver_scan2(void *priv, struct wpa_driver_scan_params *params)
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
@@ -1879,6 +1887,9 @@ static int wpa_macsw_driver_scan2(void *priv, struct wpa_driver_scan_params *par
 		cmd.duration = 0;
 	cmd.probe_cnt = params->probe_cnt;
 	cmd.is_cntrl_link = false;
+	if (++macsw_survey_sequence == 0)
+		++macsw_survey_sequence;
+	drv->survey_id = cmd.survey_id = macsw_survey_sequence;
 
 	ret = fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
 	WPA_P2P_DEBUG("P2PDBG drv_scan_req fhost_vif=%d ret=%d status=%d ssid_cnt=%d first_freq=%d p2p_probe=%d ie_len=%u\r\n",
@@ -1891,6 +1902,67 @@ static int wpa_macsw_driver_scan2(void *priv, struct wpa_driver_scan_params *par
 	drv->status |= MACSW_SCANNING;
 
 	return 0;
+}
+
+static int wpa_macsw_driver_get_survey(void *priv, unsigned int freq)
+{
+	struct wpa_macsw_driver_itf_data *drv = priv;
+	struct cfgmacsw_get_survey cmd = {0};
+	struct cfgmacsw_get_survey_resp resp = {0};
+	union wpa_event_data data;
+	struct freq_survey *survey, *tmp;
+	unsigned int i;
+	int ret = -1;
+
+	os_memset(&data, 0, sizeof(data));
+	dl_list_init(&data.survey_results.survey_list);
+	data.survey_results.freq_filter = freq;
+	cmd.results = os_calloc(SCAN_CHANNEL_MAX, sizeof(*cmd.results));
+	if (!cmd.results)
+		return -1;
+	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_GET_SURVEY_CMD, sizeof(cmd));
+	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_GET_SURVEY_RESP, sizeof(resp));
+	cmd.fhost_vif_idx = drv->fhost_vif_idx;
+	cmd.survey_id = drv->survey_id;
+	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) ||
+	    resp.status != CFGMACSW_SUCCESS || !resp.count ||
+	    resp.count > SCAN_CHANNEL_MAX)
+		goto out;
+
+	for (i = 0; i < resp.count; i++) {
+		struct cfgmacsw_survey *raw = &cmd.results[i];
+		if (freq && freq != raw->freq)
+			continue;
+		/* Require full coverage; missing measurements must never win ACS. */
+		if (!raw->time_ms || raw->busy_ms > raw->time_ms || raw->noise_dbm >= 0) {
+			wpa_printf(MSG_ERROR, "ACS: Invalid survey for %u MHz", raw->freq);
+			goto out;
+		}
+		survey = os_zalloc(sizeof(*survey));
+		if (!survey)
+			goto out;
+		survey->ifidx = drv->fhost_vif_idx;
+		survey->freq = raw->freq;
+		survey->nf = raw->noise_dbm;
+		survey->channel_time = raw->time_ms;
+		survey->channel_time_busy = raw->busy_ms;
+		survey->filled = SURVEY_HAS_NF | SURVEY_HAS_CHAN_TIME |
+			SURVEY_HAS_CHAN_TIME_BUSY;
+		dl_list_add_tail(&data.survey_results.survey_list, &survey->list);
+	}
+	if (dl_list_empty(&data.survey_results.survey_list))
+		goto out;
+	/* hostapd takes ownership of accepted samples synchronously. */
+	wpa_supplicant_event(drv->ctx, EVENT_SURVEY, &data);
+	ret = 0;
+out:
+	dl_list_for_each_safe(survey, tmp, &data.survey_results.survey_list,
+			     struct freq_survey, list) {
+		dl_list_del(&survey->list);
+		os_free(survey);
+	}
+	os_free(cmd.results);
+	return ret;
 }
 
 static struct wpa_scan_results * wpa_macsw_driver_get_scan_results2(void *priv)
@@ -2966,6 +3038,7 @@ const struct wpa_driver_ops wpa_driver_macsw_ops = {
 	.get_capa = wpa_macsw_driver_get_capa,
 	.set_key = wpa_macsw_driver_set_key,
     .scan2 = wpa_macsw_driver_scan2,
+	.get_survey = wpa_macsw_driver_get_survey,
     .abort_scan = wpa_macsw_driver_abort_scan,
 	.get_scan_results2 = wpa_macsw_driver_get_scan_results2,
 	.set_supp_port = wpa_macsw_driver_set_supp_port,

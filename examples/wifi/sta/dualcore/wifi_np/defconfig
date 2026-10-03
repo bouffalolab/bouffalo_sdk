@@ -1,4 +1,5 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
+-include $(BL_SDK_BASE)/examples/wifi/sta/dualcore/defconfig
 
 CONFIG_WIFI_IPERF     =y
 CONFIG_COREDUMP       =n

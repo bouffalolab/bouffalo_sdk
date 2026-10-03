@@ -16,13 +16,11 @@ sdk_library_add_sources(startup/${STARTUP_SUB_DIR}/vector.S)
 if (NOT "${CPU_ID}" STREQUAL "lp")
 sdk_library_add_sources(startup/${STARTUP_SUB_DIR}/riscv_fpu.S)
 endif()
-sdk_library_add_sources(startup/${STARTUP_SUB_DIR}/start_load.c)
 sdk_library_add_sources(startup/${STARTUP_SUB_DIR}/system_bl618dg.c)
 sdk_library_add_sources(startup/${STARTUP_SUB_DIR}/interrupt.c)
 
 if(CONFIG_GCC_COMPILE_LTO)
     set_source_files_properties(
-        ${CMAKE_CURRENT_SOURCE_DIR}/startup/${STARTUP_SUB_DIR}/start_load.c
         ${CMAKE_CURRENT_SOURCE_DIR}/startup/${STARTUP_SUB_DIR}/system_bl618dg.c
         PROPERTIES COMPILE_FLAGS "-fno-lto"
     )

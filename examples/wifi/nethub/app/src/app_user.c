@@ -3,7 +3,7 @@
 #include <lwip/tcpip.h>
 
 #include <bflb_mtd.h>
-#include <easyflash.h>
+#include "lfs_kv.h"
 #include <nethub.h>
 #include <rfparam_adapter.h>
 
@@ -30,9 +30,9 @@ int app_user_init(void)
     tcpip_init(NULL, NULL);
 
     bflb_mtd_init();
-    ret = easyflash_init();
+    ret = lfs_kv_init();
     if (ret != 0) {
-        LOG_E("easyflash init failed: %d\r\n", ret);
+        LOG_E("lfs_kv init failed: %d\r\n", ret);
         return -1;
     }
 

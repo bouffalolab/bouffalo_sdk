@@ -6,7 +6,7 @@
 #include "bflb_uart.h"
 #include "bflb_mtd.h"
 #include "board.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "rfparam_adapter.h"
 #include "usbd_core.h"
 
@@ -309,7 +309,7 @@ int main(void)
 
 #if USB_ETHERNET_BLE_ENABLE
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_E("PHY RF init failed\r\n");

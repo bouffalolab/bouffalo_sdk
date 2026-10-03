@@ -599,7 +599,8 @@ typedef struct wifi_mgmr_ap_params {
     char *key;
     /// OPEN/WPA/WPA2; if NULL and key is not NULL, the default AKM is WPA2.
     char *akm;
-    /// If zero, the default channel is 6.
+    /// If zero, 5G selects the first AP-legal 5GHz channel in the
+    /// current country-code list; 2.4GHz-only targets use channel 6.
     uint8_t channel;
     /// Channel type, see mac_chan_bandwidth.
     uint8_t type;
@@ -648,6 +649,15 @@ typedef struct wifi_mgmr_ap_params {
     int bcn_timer;
     /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames.
     bool disable_wmm;
+    /// Run ACS before starting the AP (20/40MHz, plus 80MHz on 5GHz).
+    /// Surveys use 20MHz; type selects the AP bandwidth. Zero-initialize this structure.
+    /// channel selects the band: 0 uses the chip default (5GHz on BL618DG,
+    /// 2.4GHz on 2.4GHz-only targets); 1..14 selects 2.4GHz, and a valid
+    /// 5GHz channel selects 5GHz.
+    /// Selects among legal non-DFS channels in that band; no fixed-channel fallback.
+    /// A connected STA takes precedence: the AP follows its channel without ACS.
+    /// Starting with ACS can block for up to 60 seconds; do not call from WPA/control tasks.
+    bool acs;
 } wifi_mgmr_ap_params_t;
 
 /**

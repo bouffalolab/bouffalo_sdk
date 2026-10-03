@@ -17,7 +17,7 @@
 #include "hci_core.h"
 
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 #include <byteorder.h>
 #include <bluetooth.h>

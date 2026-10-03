@@ -46,7 +46,7 @@
 #endif
 
 #if defined(CONFIG_BT_SETTINGS)
-#include "easyflash.h"
+#include "lfs_kv.h"
 #endif
 #include <../../blestack/src/include/bluetooth/crypto.h>
 #include "local_operation.h"
@@ -2464,7 +2464,7 @@ static void mmdl_generic_server_cb(bflb_ble_mesh_generic_server_cb_event_t event
         case BFLB_BLE_MESH_MODEL_OP_GEN_ONPOWERUP_SET:
         case BFLB_BLE_MESH_MODEL_OP_GEN_ONPOWERUP_SET_UNACK:
             BT_WARN("GEN_ONPOWERUP_SET 0x%02x\n", param->value.state_change.onpowerup_set.onpowerup);
-            ef_set_env_blob("onpowerup", &param->value.state_change.onpowerup_set.onpowerup,
+            lfs_kv_set_blob("onpowerup", &param->value.state_change.onpowerup_set.onpowerup,
                 sizeof(param->value.state_change.onpowerup_set.onpowerup));
         break;
         case BFLB_BLE_MESH_MODEL_OP_GEN_POWER_LEVEL_SET:
@@ -2516,12 +2516,12 @@ static void mmdl_generic_server_cb(bflb_ble_mesh_generic_server_cb_event_t event
         break;
     }
 
-    ef_set_env_blob("gpl_state", gpl_srv->state,
+    lfs_kv_set_blob("gpl_state", gpl_srv->state,
             sizeof(*gpl_srv->state));
     //BT_WARN("gpl_srv->state [%x][%x][%x][%x][%x]", gpl_srv->state->power_actual,
     //    gpl_srv->state->power_default, gpl_srv->state->power_last,
     //    gpl_srv->state->power_range_min, gpl_srv->state->power_range_max);
-    ef_set_env_blob("target_onoff", &goo_srv->state.target_onoff,
+    lfs_kv_set_blob("target_onoff", &goo_srv->state.target_onoff,
                     sizeof(goo_srv->state.target_onoff));
 }
 
@@ -2726,25 +2726,25 @@ static void mmdl_lighting_server_cb(bflb_ble_mesh_lighting_server_cb_event_t eve
         BT_WARN( "Unknown Server event opcode[%lx] 0x%02x", param->ctx.recv_op, event);
         break;
     }
-    ef_set_env_blob("lln_state", lln_srv->state,
+    lfs_kv_set_blob("lln_state", lln_srv->state,
             sizeof(*lln_srv->state));
     //BT_WARN("lln_state [%x][%x][%x][%x][%x]", lln_srv->state->lightness_actual,
     //    lln_srv->state->lightness_default, lln_srv->state->lightness_last,
     //    lln_srv->state->lightness_range_min, lln_srv->state->lightness_range_max);
-    ef_set_env_blob("lctl_state", lctl_srv->state,
+    lfs_kv_set_blob("lctl_state", lctl_srv->state,
             sizeof(*lctl_srv->state));
     //BT_WARN("lctl_state [%x][%x][%x][%x][%x][%x]", lctl_srv->state->temperature,
     //        lctl_srv->state->target_temperature, lctl_srv->state->temperature_default,
     //        lctl_srv->state->delta_uv, lctl_srv->state->target_delta_uv,
     //        lctl_srv->state->target_delta_uv);
-    ef_set_env_blob("lhsl_state", lhsl_srv->state,
+    lfs_kv_set_blob("lhsl_state", lhsl_srv->state,
            sizeof(*lhsl_srv->state));
     //BT_WARN("lhsl_state [%x][%x][%x][%x][%x][%x][%x][%x][%x]", lhsl_srv->state->saturation,
     //        lhsl_srv->state->saturation_default, lhsl_srv->state->target_saturation,
     //        lhsl_srv->state->hue, lhsl_srv->state->hue_default,
     //        lhsl_srv->state->target_hue, lhsl_srv->state->lightness,
     //        lhsl_srv->state->lightness_default, lhsl_srv->state->target_lightness);
-    ef_set_env_blob("lxyl_state", lxyl_srv->state,
+    lfs_kv_set_blob("lxyl_state", lxyl_srv->state,
            sizeof(*lxyl_srv->state));
     //BT_WARN("lxyl_state [%x][%x][%x][%x][%x][%x][%x][%x][%x]", lxyl_srv->state->x,
     //        lxyl_srv->state->x_default, lxyl_srv->state->target_x,
@@ -2756,7 +2756,7 @@ static void mmdl_lighting_server_cb(bflb_ble_mesh_lighting_server_cb_event_t eve
     //        lc_srv->lc->state.light_onoff, lc_srv->lc->state.target_light_onoff,
     //        lc_srv->lc->state.ambient_luxlevel, lc_srv->lc->state.linear_output);
     #if 1
-    //ef_set_env_blob("lc_state_machine", &lc_srv->lc->state_machine.state,
+    //lfs_kv_set_blob("lc_state_machine", &lc_srv->lc->state_machine.state,
     //               sizeof(lc_srv->lc->state_machine.state));
     //        BT_WARN("lc_state_machine [%x]", lc_srv->lc->state_machine.state);
     #endif
@@ -2790,36 +2790,36 @@ static void mmdl_ready(void)
     lxyl_m = bt_mesh_model_find(&mesh_comp->elem[0], BFLB_BLE_MESH_MODEL_ID_LIGHT_XYL_SRV);
     lxyl_srv = (bflb_ble_mesh_light_xyl_srv_t*)lxyl_m->user_data;
 
-    ef_get_env_blob("onpowerup", &gpo_srv->state->onpowerup,
+    lfs_kv_get_blob("onpowerup", &gpo_srv->state->onpowerup,
         sizeof(gpo_srv->state->onpowerup), NULL);
     BT_WARN("onpowerup_state.onpowerup = %d", gpo_srv->state->onpowerup);
 
-    ef_get_env_blob("gpl_state", gpl_srv->state,
+    lfs_kv_get_blob("gpl_state", gpl_srv->state,
             sizeof(*gpl_srv->state), NULL);
     BT_WARN("gpl_state [%x][%x][%x][%x][%x]", gpl_srv->state->power_actual,
             gpl_srv->state->power_default, gpl_srv->state->power_last,
             gpl_srv->state->power_range_min, gpl_srv->state->power_range_max);
 
-    ef_get_env_blob("lln_state", lln_srv->state,
+    lfs_kv_get_blob("lln_state", lln_srv->state,
             sizeof(*lln_srv->state), NULL);
     BT_WARN("lln_state [%x][%x][%x][%x][%x]", lln_srv->state->lightness_linear,
         lln_srv->state->lightness_default, lln_srv->state->lightness_last,
         lln_srv->state->lightness_range_min, lln_srv->state->lightness_range_max);
 
-    ef_get_env_blob("lctl_state", lctl_srv->state,
+    lfs_kv_get_blob("lctl_state", lctl_srv->state,
            sizeof(*lctl_srv->state), NULL);
     BT_WARN("lctl_state [%x][%x][%x][%x][%x][%x]", lctl_srv->state->temperature,
             lctl_srv->state->target_temperature, lctl_srv->state->temperature_default,
             lctl_srv->state->delta_uv, lctl_srv->state->target_delta_uv,
             lctl_srv->state->target_delta_uv);
-    ef_get_env_blob("lhsl_state", lhsl_srv->state,
+    lfs_kv_get_blob("lhsl_state", lhsl_srv->state,
            sizeof(*lhsl_srv->state), NULL);
     BT_WARN("lhsl_state [%x][%x][%x][%x][%x][%x][%x][%x][%x]", lhsl_srv->state->saturation,
             lhsl_srv->state->saturation_default, lhsl_srv->state->target_saturation,
             lhsl_srv->state->hue, lhsl_srv->state->hue_default,
             lhsl_srv->state->target_hue, lhsl_srv->state->lightness,
             lhsl_srv->state->lightness_default, lhsl_srv->state->target_lightness);
-    ef_get_env_blob("lxyl_state", lxyl_srv->state,
+    lfs_kv_get_blob("lxyl_state", lxyl_srv->state,
            sizeof(*lxyl_srv->state), NULL);
     BT_WARN("lxyl_state [%x][%x][%x][%x][%x][%x][%x][%x][%x]", lxyl_srv->state->x,
             lxyl_srv->state->x_default, lxyl_srv->state->target_x,
@@ -2883,7 +2883,7 @@ static void mmdl_ready(void)
 
     }
     else if(gpo_srv->state->onpowerup == 2){
-        ef_get_env_blob("target_onoff", &goo_srv->state.onoff,
+        lfs_kv_get_blob("target_onoff", &goo_srv->state.onoff,
             sizeof(goo_srv->state.onoff), NULL);
         BT_WARN("onoff_server.state.onoff = %d", goo_srv->state.onoff);
         /*  last known value of the Generic Power Actual state before the node is powered down */

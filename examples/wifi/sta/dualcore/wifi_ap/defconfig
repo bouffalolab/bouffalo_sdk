@@ -1,3 +1,4 @@
+-include $(BL_SDK_BASE)/examples/wifi/sta/dualcore/defconfig
 
 CONFIG_VSNPRINTF_NANO       =n
 CONFIG_VSNPRINTF_FLOAT      =y

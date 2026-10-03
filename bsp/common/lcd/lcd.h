@@ -284,6 +284,24 @@
 #define LCD_COLOR_DEPTH              JD9365TX_7KF82_DSI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) jd9365tx_7kf82_dsi_##_func(__VA_ARGS__)
 
+#elif defined LCD_DSI_ST7701S_HD40007C30
+
+#include "mipi_dsi/st7701s_hd40007c30_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        ST7701S_HD40007C30_DSI_W
+#define LCD_H                        ST7701S_HD40007C30_DSI_H
+#define LCD_COLOR_DEPTH              ST7701S_HD40007C30_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st7701s_hd40007c30_dsi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DSI_FL7707N_HD395003C30
+
+#include "mipi_dsi/fl7707n_hd395003c30_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        FL7707N_HD395003C30_DSI_W
+#define LCD_H                        FL7707N_HD395003C30_DSI_H
+#define LCD_COLOR_DEPTH              FL7707N_HD395003C30_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) fl7707n_hd395003c30_dsi_##_func(__VA_ARGS__)
+
 #elif defined LCD_DSI_EK79007_WKS70WSV114
 
 #include "mipi_dsi/ek79007_wks70wsv114_dsi.h"

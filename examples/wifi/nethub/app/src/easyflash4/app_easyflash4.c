@@ -10,33 +10,33 @@
 #define DBG_TAG "MAIN"
 #include "log.h"
 
-#include <easyflash.h>
+#include "lfs_kv.h"
 
 int cmd_atef_test(int argc, char **argv)
 {
     char buf[65];
     int ret;
 
-    printf("ef start\r\n");
+    printf("lfs_kv start\r\n");
 
     memset(buf, 0, sizeof(buf));
-    ret = ef_get_env_blob("atkeykey", buf, sizeof(buf), NULL);
+    ret = lfs_kv_get_blob("atkeykey", buf, sizeof(buf), NULL);
     buf[64] = 0;
-    printf("ef get, ret:%d, val:%s\r\n", ret, buf);
+    printf("lfs_kv get, ret:%d, val:%s\r\n", ret, buf);
 
-    ret = ef_set_env_blob("atkeykey", (const char *)"valval", strlen("valval"));
-    printf("ef set, ret:%d\r\n", ret);
+    ret = lfs_kv_set_blob("atkeykey", (const char *)"valval", strlen("valval"));
+    printf("lfs_kv set, ret:%d\r\n", ret);
 
     memset(buf, 0, sizeof(buf));
-    ret = ef_get_env_blob("atkeykey", buf, sizeof(buf), NULL);
+    ret = lfs_kv_get_blob("atkeykey", buf, sizeof(buf), NULL);
     buf[64] = 0;
-    printf("ef get, ret:%d, val:%s\r\n", ret, buf);
+    printf("lfs_kv get, ret:%d, val:%s\r\n", ret, buf);
 
-    printf("ef end\r\n");
+    printf("lfs_kv end\r\n");
 
     return 0;
 }
-SHELL_CMD_EXPORT_ALIAS(cmd_atef_test, atef_test, at easyflash test.);
+SHELL_CMD_EXPORT_ALIAS(cmd_atef_test, atef_test, at lfs_kv test.);
 
 int cmd_atef_set(int argc, char **argv)
 {
@@ -46,24 +46,23 @@ int cmd_atef_set(int argc, char **argv)
         printf("arg error\r\n");
     }
 
-    ret = ef_set_env_blob(argv[1], (const char *)(argv[2]), strlen(argv[2]));
-    printf("ef set key:%s, val:%s, ret:%d\r\n", argv[1], argv[2], ret);
+    ret = lfs_kv_set_blob(argv[1], (const char *)(argv[2]), strlen(argv[2]));
+    printf("lfs_kv set key:%s, val:%s, ret:%d\r\n", argv[1], argv[2], ret);
     return 0;
 }
-SHELL_CMD_EXPORT_ALIAS(cmd_atef_set, atef_set, at easyflash set.);
+SHELL_CMD_EXPORT_ALIAS(cmd_atef_set, atef_set, at lfs_kv set.);
 
 int cmd_atef_dump(int argc, char **argv)
 {
-    ef_print_env();
+    lfs_kv_print();
 
     return 0;
 }
-SHELL_CMD_EXPORT_ALIAS(cmd_atef_dump, atef_dump, at easyflash dump.);
+SHELL_CMD_EXPORT_ALIAS(cmd_atef_dump, atef_dump, at lfs_kv dump.);
 
 void app_easyflash4_init(void)
 {
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 }
-
 

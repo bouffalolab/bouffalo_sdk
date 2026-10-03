@@ -192,11 +192,52 @@ More details on how littlefs works can be found in [DESIGN.md](DESIGN.md) and
 ## Testing
 
 The littlefs comes with a test suite designed to run on a PC using the
-[emulated block device](bd/lfs_testbd.h) found in the `bd` directory.
+[emulated block device](bd/lfs_emubd.h) found in the `bd` directory.
 The tests assume a Linux environment and can be started with make:
 
 ``` bash
 make test
+```
+
+Tests are implemented in C in the .toml files found in the `tests` directory.
+When developing a feature or fixing a bug, it is frequently useful to run a
+single test case or suite of tests:
+
+``` bash
+./scripts/test.py -l runners/test_runner  # list available test suites
+./scripts/test.py -L runners/test_runner test_dirs  # list available test cases
+./scripts/test.py runners/test_runner test_dirs  # run a specific test suite
+```
+
+If an assert fails in a test, test.py will try to print information about the
+failure:
+
+``` bash
+tests/test_dirs.toml:1:failure: test_dirs_root:1g12gg2 (PROG_SIZE=16, ERASE_SIZE=512) failed
+tests/test_dirs.toml:5:assert: assert failed with 0, expected eq 42
+    lfs_mount(&lfs, cfg) => 42;
+```
+
+This includes the test id, which can be passed to test.py to run only that
+specific test permutation:
+
+``` bash
+./scripts/test.py runners/test_runner test_dirs_root:1g12gg2  # run a specific test permutation
+./scripts/test.py runners/test_runner test_dirs_root:1g12gg2 --gdb  # drop into gdb on failure
+```
+
+Some other flags that may be useful:
+
+```bash
+./scripts/test.py runners/test_runner -b -j  # run tests in parallel
+./scripts/test.py runners/test_runner -v -O-  # redirect stdout to stdout
+./scripts/test.py runners/test_runner -ddisk  # capture resulting disk image
+```
+
+See `-h/--help` for a full list of available flags:
+
+``` bash
+./scripts/test.py --help
 ```
 
 ## License
@@ -226,16 +267,40 @@ License Identifiers that are here available: http://spdx.org/licenses/
   to create images of the filesystem on your PC. Check if littlefs will fit
   your needs, create images for a later download to the target memory or
   inspect the content of a binary image of the target memory.
-  
+
+- [littlefs-toy] - A command-line tool for creating and working with littlefs
+  images. Uses syntax similar to tar command for ease of use. Supports working
+  on littlefs images embedded inside another file (firmware image, etc).
+
 - [littlefs2-rust] - A Rust wrapper for littlefs. This project allows you
   to use littlefs in a Rust-friendly API, reaping the benefits of Rust's memory
   safety and other guarantees.
 
+- [nim-littlefs] - A Nim wrapper and API for littlefs. Includes a fuse
+  implementation based on [littlefs-fuse]
+
+- [chamelon] - A pure-OCaml implementation of (most of) littlefs, designed for
+  use with the MirageOS library operating system project. It is interoperable
+  with the reference implementation, with some caveats.
+
 - [littlefs-disk-img-viewer] - A memory-efficient web application for viewing
   littlefs disk images in your web browser.
 
-- [mklfs] - A command line tool built by the [Lua RTOS] guys for making
-  littlefs images from a host PC. Supports Windows, Mac OS, and Linux.
+- [mklfs] - A command line tool for creating littlefs images. Used in the Lua
+  RTOS ecosystem.
+
+- [mklittlefs] - A command line tool for creating littlefs images. Used in the
+  ESP8266 and RP2040 ecosystem.
+
+- [pico-littlefs-usb] - An interface for littlefs that emulates a FAT12
+  filesystem over USB. Allows mounting littlefs on a host PC without additional
+  drivers.
+
+- [ramcrc32bd] - An example block device using littlefs's 32-bit CRC for
+  error-correction.
+
+- [ramrsbd] - An example block device using Reed-Solomon codes for
+  error-correction.
 
 - [Mbed OS] - The easiest way to get started with littlefs is to jump into Mbed
   which already has block device drivers for most forms of embedded storage.
@@ -254,23 +319,24 @@ License Identifiers that are here available: http://spdx.org/licenses/
   for microcontroller-scale devices. Due to limitations of FAT it can't provide
   power-loss resilience, but it does allow easy interop with PCs.
 
-- [chamelon] - A pure-OCaml implementation of (most of) littlefs, designed for
-  use with the MirageOS library operating system project. It is interoperable
-  with the reference implementation, with some caveats.
-
 [BSD-3-Clause]: https://spdx.org/licenses/BSD-3-Clause.html
-[littlefs-disk-img-viewer]: https://github.com/tniessen/littlefs-disk-img-viewer
 [littlefs-fuse]: https://github.com/geky/littlefs-fuse
 [FUSE]: https://github.com/libfuse/libfuse
 [littlefs-js]: https://github.com/geky/littlefs-js
 [littlefs-js-demo]:http://littlefs.geky.net/demo.html
+[littlefs-python]: https://pypi.org/project/littlefs-python/
+[littlefs-toy]: https://github.com/tjko/littlefs-toy
+[littlefs2-rust]: https://crates.io/crates/littlefs2
+[nim-littlefs]: https://github.com/Graveflo/nim-littlefs
+[chamelon]: https://github.com/yomimono/chamelon
+[littlefs-disk-img-viewer]: https://github.com/tniessen/littlefs-disk-img-viewer
 [mklfs]: https://github.com/whitecatboard/Lua-RTOS-ESP32/tree/master/components/mklfs/src
-[Lua RTOS]: https://github.com/whitecatboard/Lua-RTOS-ESP32
+[mklittlefs]: https://github.com/earlephilhower/mklittlefs
+[pico-littlefs-usb]: https://github.com/oyama/pico-littlefs-usb
+[ramcrc32bd]: https://github.com/geky/ramcrc32bd
+[ramrsbd]: https://github.com/geky/ramrsbd
 [Mbed OS]: https://github.com/armmbed/mbed-os
 [LittleFileSystem]: https://os.mbed.com/docs/mbed-os/latest/apis/littlefilesystem.html
 [SPIFFS]: https://github.com/pellepl/spiffs
 [Dhara]: https://github.com/dlbeer/dhara
 [ChaN's FatFs]: http://elm-chan.org/fsw/ff/00index_e.html
-[littlefs-python]: https://pypi.org/project/littlefs-python/
-[littlefs2-rust]: https://crates.io/crates/littlefs2
-[chamelon]: https://github.com/yomimono/chamelon

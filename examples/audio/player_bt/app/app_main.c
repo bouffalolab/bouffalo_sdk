@@ -14,7 +14,7 @@
 #include "rfparam_adapter.h"
 #include "bl616_glb.h"
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 void vAssertCalled(void)
 {
@@ -62,7 +62,7 @@ void app_main_entry(void *arg)
 
     /* For bt status save */
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
 #if defined(CONFIG_CODEC_USE_I2S)
     extern msp_i2s_port_init(void);

@@ -7,6 +7,11 @@
 #include "bl616_pds.h"
 #include "ef_data_reg.h"
 
+/* SDK boolean options are defined when enabled and undefined when disabled. */
+#if defined(CONFIG_PSRAM_RETENTION) && !defined(CONFIG_PSRAM)
+#error "CONFIG_PSRAM_RETENTION requires CONFIG_PSRAM; enable PSRAM or disable retention."
+#endif
+
 #ifndef PM_PDS_GPIO_KEEP_EN
 #define PM_PDS_GPIO_KEEP_EN 0
 #endif
@@ -606,8 +611,10 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
         return;
     }
 
-    /* To make it simple and safe*/
-    __ASM volatile("csrc mstatus, 8");
+    /* Save and restore the caller's global interrupt state instead of
+     * force-enabling MIE on return: the tickless LPFW handoff enters from a
+     * critical section and must stay blocked until the reset entry is ready. */
+    uintptr_t irq_flag = bflb_irq_save();
 
     /* Must Disable ADC, Otherwise, the current increase 1mA  */
     /* adc disable */
@@ -659,6 +666,11 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
         default:
             return;
     }
+
+#ifdef CONFIG_PSRAM_RETENTION
+    pPdsCfg->pdsCtl.bgSysOff = 0;
+    pPdsCfg->pdsCtl5.ldo18ioOff = 0;
+#endif
 
 #if PM_PDS_FLASH_POWER_OFF
     uint32_t flash_cfg_len;
@@ -782,8 +794,10 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
     }
 #endif
 
-    /* enable global interrupts */
-    __asm volatile("csrs mstatus, 8");
+    /* Restore the caller's global interrupt state instead of force-enabling
+     * MIE: the tickless LPFW handoff returns from WFI inside a critical
+     * section and must stay blocked until the reset entry is ready. */
+    bflb_irq_restore(irq_flag);
 
     /*************************************************************************/
 }
@@ -901,6 +915,44 @@ void pm_set_wakeup_callback(void (*wakeup_callback)(void))
     BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
     /* Set HBN flag */
     BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+}
+
+/* Tickless PDS1 helpers. Always compiled: these are plain driver APIs, the
+ * sleep-policy switch belongs to the callers, not to the soc layer. */
+void ATTR_TCM_SECTION pm_pds_wakeup_irq_quiesce(void)
+{
+    bflb_irq_disable(PDS_WAKEUP_IRQn);
+    PDS_IntMask(PDS_INT_WAKEUP, MASK);
+    bflb_irq_clear_pending(PDS_WAKEUP_IRQn);
+}
+
+void ATTR_TCM_SECTION pm_pds_wakeup_irq_ack(void)
+{
+    pm_pds_wakeup_irq_quiesce();
+    PDS_IntClear();
+    bflb_irq_clear_pending(PDS_WAKEUP_IRQn);
+}
+
+int ATTR_TCM_SECTION pm_reset_cpu_to_lpfw(void)
+{
+    /* BL616 uses HBN registers, not the BL618DG B0 WRAM metadata. The
+     * matching APP installs a stack-safe trampoline at this HBN address. */
+    uint32_t callback = BL_RD_REG(HBN_BASE, HBN_RSV1);
+    if (BL_RD_REG(HBN_BASE, HBN_RSV0) != HBN_STATUS_ENTER_FLAG ||
+        callback != 0x20010000U) {
+        return -1;
+    }
+    __asm volatile("csrc mstatus, 8");
+    pm_pds_wakeup_irq_quiesce();
+    bflb_l1c_dcache_clean_all();
+    if (GLB_Set_CPU_Reset_Address(GLB_CORE_ID_M0, callback) != SUCCESS) {
+        return -2;
+    }
+    __DSB();
+    __ISB();
+    GLB_SW_CPU_Reset();
+    while (1) {
+    }
 }
 
 void pm_set_boot2_app_jump_para(uint32_t para)
@@ -1137,6 +1189,9 @@ __WEAK void pm_irq_callback(enum pm_event_type event)
 
 void pm_pds_irq_register(void)
 {
+    /* Registration only: attach the PDS wake ISR and enable the ECLIC line.
+     * Arming (clearing status, unmasking the wake source) belongs to the
+     * sleep-entry path, done by pm_pds_mode_enter() for PDS1. */
     bflb_irq_attach(PDS_WAKEUP_IRQn, (irq_callback)PDS_WAKEUP_IRQ, NULL);
     bflb_irq_enable(PDS_WAKEUP_IRQn);
 }

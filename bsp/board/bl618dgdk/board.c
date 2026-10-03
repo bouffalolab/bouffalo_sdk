@@ -12,7 +12,6 @@
 #include "bflb_boot2.h"
 #endif
 #include "bflb_sec_mutex.h"
-#include "bflb_xip_sflash.h"
 #include "bflb_sf_ctrl.h"
 #include "bflb_acomp.h"
 #include "bflb_efuse.h"
@@ -24,6 +23,9 @@
 #include "bl618dg_pm.h"
 
 #include "mm.h"
+#if defined(CONFIG_PSRAM) || defined(CONFIG_PSRAM_XIP)
+#include "psram_heap_init.h"
+#endif
 
 #ifdef CONFIG_BSP_CONSOLE_USB_CDC
 #include "usb_console.h"
@@ -37,19 +39,13 @@ extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
-#ifdef CONFIG_DUALCORE_DISABLE
 extern uint8_t _heap_wifi_start;
 extern uint8_t _heap_wifi_size;
-#endif
-#ifndef CPU_LP
-extern uint32_t __psram_heap_base;
-extern uint32_t __psram_limit;
-
-extern uint32_t __psram_data_start__;
-extern uint32_t __psram_data_end__;
-extern uint32_t __psram_noinit_start__;
-extern uint32_t __psram_noinit_end__;
-#endif
+static const uint32_t any_alloc_order[] = {
+    MM_HEAP_OCRAM_0,
+    MM_HEAP_PSRAM_0,
+    MM_HEAP_WRAM_0,
+};
 
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLB_LOG) || defined(CONFIG_FATFS))
 static struct bflb_device_s *rtc;
@@ -530,66 +526,6 @@ void np_board_main(void)
     __WFI();
 }
 
-extern uint32_t __start;
-
-void boot_up_np()
-{
-    uint32_t ap_offset;
-#ifndef CONFIG_BOOT_NP_ASYNC
-    /* AP & NP run in the same code */
-    bflb_l1c_dcache_clean_all();
-    ap_offset = bflb_sf_ctrl_get_flash_image_offset(0, 0);
-    bflb_sf_ctrl_set_flash_image_offset(ap_offset, 1, 0);
-#else
-    Tzc_Sec_Set_Master_Group(TZC_SEC_MASTER_NP, 1);
-    /* AP & NP run in the different code */
-    uint32_t boot_addr = ap_offset = bflb_sf_ctrl_get_flash_image_offset(0, 0);
-    extern uint32_t __dualcore_images__;
-    uint32_t image_ap_1Kalign_size = *(uint32_t *)(&__dualcore_images__);
-    boot_addr += image_ap_1Kalign_size;
-    printf("AP image offset: 0x%08x, AP image 1K align size: 0x%08x, NP boot address: 0x%08x\r\n", ap_offset,
-           image_ap_1Kalign_size, boot_addr);
-    bflb_sf_ctrl_set_flash_image_offset(boot_addr, 1, 0);
-#endif
-    GLB_Set_CPU_Reset_Address(GLB_CORE_ID_NP, (uint32_t)&__start);
-    GLB_Release_CPU(GLB_CORE_ID_NP);
-}
-
-static void __attribute__((noinline, unused)) boot_up_lp(uint32_t address)
-{
-    extern uint32_t __multi_bins__;
-    uint32_t mini_code_start = *(uint32_t *)((uint32_t)&__multi_bins__ + 40);
-    uint32_t mini_code_end = *(uint32_t *)((uint32_t)&__multi_bins__ + 44);
-    uint32_t mini_code_len = mini_code_end - mini_code_start;
-
-    printf("mini code start: 0x%08x, end: 0x%08x, len: %d\r\n", mini_code_start, mini_code_end, mini_code_len);
-    Tzc_Sec_Set_Master_Group(TZC_SEC_MASTER_LP, 0);
-
-    if (mini_code_start != 0) {
-        GLB_Release_Mini_Sys();
-#if defined(CPU_MODEL_A0)
-        GLB_Set_MINI_FCLK(ENABLE, GLB_MINI_FCLK_XCLK, 0);
-#else
-        GLB_Set_MINI_FCLK(ENABLE, GLB_MINI_FCLK_RC32M, 0);
-#endif
-        //GLB_Select_LPCPU_Jtag();
-        arch_delay_us(10);
-
-        uint32_t mini_xip_addr = BFLB_FLASH_XIP_BASE + mini_code_start - bflb_sf_ctrl_get_flash_image_offset(0, 0);
-
-        memcpy((void *)address, (void *)mini_xip_addr, mini_code_len);
-        bflb_l1c_dcache_clean_all();
-
-        __asm__ volatile("" : "+r"(address));
-        printf("Copy gmini_sysData to 0x%08x,[1][31:0]=%08x,len=%d\r\n", address,
-               *(volatile uint32_t *)((uintptr_t)address + 4), mini_code_len);
-
-        GLB_Set_CPU_Reset_Address(GLB_CORE_ID_LP, (uint32_t)address);
-
-        GLB_Release_CPU(GLB_CORE_ID_LP);
-    }
-}
-
 #ifdef CONFIG_HIGH_ISR_STACK
 void bflb_wfa_init(void)
 {
@@ -602,11 +538,6 @@ void bflb_wfa_init(void)
 
 void ram_heap_init(void)
 {
-    static const uint32_t any_alloc_order[] = {
-        MM_HEAP_OCRAM_0,
-        MM_HEAP_PSRAM_0,
-        MM_HEAP_WRAM_0,
-    };
     size_t heap_len;
 
     /* ram heap init */
@@ -616,9 +547,7 @@ void ram_heap_init(void)
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
 
-#ifdef CONFIG_DUALCORE_DISABLE
     mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, (size_t)&_heap_wifi_size);
-#endif
 
 #ifndef CPU_LP
 #ifdef CONFIG_PSRAM
@@ -629,33 +558,14 @@ void ram_heap_init(void)
         while (1) {}
     }
 #endif
-
-    /* psram heap init */
-    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
-    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
-
-    /* ram info dump */
-    printf("dynamic memory init success\r\n"
-           "  ocram heap size: %d Kbyte, \r\n"
-           "  psram heap size: %d Kbyte\r\n",
-           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
-           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
-
-#else
-    /* check psram data */
-    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_end__ - &__psram_noinit_start__ > 0) {
-        puts("psram data already exists, please enable CONFIG_PSRAM\r\n");
-        while (1) {}
-    }
+#endif
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"
            "  ocram heap size: %d Kbyte \r\n",
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 #endif
-#endif
 
-    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 }
 
 #if defined(CPU_AP)
@@ -717,6 +627,10 @@ void board_init(void)
 
     /* ram and heap init (including psram) */
     ram_heap_init();
+#if defined(CONFIG_PSRAM) || defined(CONFIG_PSRAM_XIP)
+    ram_psram_heap_init();
+#endif
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 
     /* boot info dump */
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
@@ -759,8 +673,7 @@ void board_init(void)
 #ifdef CONFIG_BFLB_MTD
     bflb_mtd_init();
 #endif
-#ifdef CONFIG_DUALCORE_DISABLE
-#else
+#ifdef CONFIG_DUALCORE_NP_ENABLE
     boot_up_np();
 #endif
 #if defined(CPU_MODEL_A0)
@@ -804,6 +717,10 @@ void board_init(void)
 
     /* ram and heap init (including psram) */
     ram_heap_init();
+#if defined(CONFIG_PSRAM) || defined(CONFIG_PSRAM_XIP)
+    ram_psram_heap_init();
+#endif
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
     bl_show_log();
@@ -842,6 +759,7 @@ void board_init(void)
 
     /* heap init */
     ram_heap_init();
+    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
 
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
     bl_show_log();

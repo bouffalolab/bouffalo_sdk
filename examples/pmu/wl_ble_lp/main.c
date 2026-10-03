@@ -38,7 +38,7 @@
 #include "shell.h"
 
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "clock_manager.h"
 #include "pm_manager.h"
 
@@ -62,7 +62,7 @@
 #endif
 
 //#include "bflb_mtd.h"
-//#include "easyflash.h"
+//#include "lfs_kv.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -147,15 +147,24 @@ static void bluetooth_start_task(void *pvParameters)
     bt_enable(bt_enable_cb);
 
 #if defined(BL618DG)
+#if defined(CONFIG_BTBLE_USE_STANDALONE_PATH)
+    printf("cmd_set_btble_standalone\r\n");
     extern void cmd_set_btble_standalone(int argc, char **argv);
-    // extern void cmd_set_btble_combo(int argc, char **argv);
+    cmd_set_btble_standalone(0, 0);
+    if (0 != rfparam_init(0, NULL, 0)) {
+        printf("standalone PHY RF init failed!\r\n");
+    }
+#else
+    printf("cmd_set_btble_combo\r\n");
+    extern void cmd_set_btble_combo(int argc, char **argv);
+    cmd_set_btble_combo(0, 0);
+#endif
 
-    cmd_set_btble_standalone(0, NULL);
-    // cmd_set_btble_combo(0, NULL);   
-
+#if 0
     if (bt_addr_le_create_static(&addr) == 0) {
         bt_id_create(&addr, NULL);
     }
+#endif
 #endif
 #endif
     vTaskDelete(NULL);
@@ -343,11 +352,13 @@ static int lp_exit(void *arg)
 
 #if defined(CFG_BLE_ENABLE) && defined(BL618DG)
     board_rf_ctl(BRD_CTL_RF_RESET_DEFAULT, 0);
-    extern void cmd_set_btble_standalone(int argc, char **argv);
-    // extern void cmd_set_btble_combo(int argc, char **argv);
-
+#if defined(CONFIG_BTBLE_USE_STANDALONE_PATH)
+extern void cmd_set_btble_standalone(int argc, char **argv);
     cmd_set_btble_standalone(0, NULL);
-    // cmd_set_btble_combo(0, NULL);   
+#else
+extern void cmd_set_btble_combo(int argc, char **argv);
+    cmd_set_btble_combo(0, NULL);
+#endif
 #endif
     vPortSetupTimerInterrupt();
 
@@ -357,9 +368,11 @@ static int lp_exit(void *arg)
 
     wakeup_reason = bl_lp_get_wake_reason();
 
+    #if 0
     if (wakeup_reason & LPFW_WAKEUP_BLE) {
         pm_disable_tickless();
     }
+    #endif
 
     if (wakeup_reason & LPFW_WAKEUP_WIFI_BROADCAST) {
         vTaskNotifyGiveFromISR(rxl_process_task_hd, &xHigherPriorityTaskWoken);
@@ -718,7 +731,7 @@ int main(void)
 #endif
 
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     pm_sys_init();
 

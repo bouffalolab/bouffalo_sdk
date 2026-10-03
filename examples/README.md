@@ -25,7 +25,7 @@ standalone projects; build a project from the directory that contains its
 | [`crash`](crash) | Crash handling and diagnostic examples. |
 | [`dhrystone`](dhrystone) | Dhrystone benchmark. |
 | [`dsp`](dsp) | Digital signal processing examples. |
-| [`easyflash`](easyflash) | EasyFlash examples. |
+| [`easyflash`](easyflash) | LittleFS key-value (lfs_kv) examples. |
 | [`fatfs`](fatfs) | FAT file-system examples. |
 | [`freertos`](freertos) | FreeRTOS examples. |
 | [`helloworld`](helloworld) | Minimal getting-started example. |

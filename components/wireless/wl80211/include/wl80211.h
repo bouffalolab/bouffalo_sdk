@@ -5,7 +5,19 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+/*
+ * The scan-result tree layout must be identical across every translation
+ * unit that dereferences struct wl80211_scan_result_item.  NuttX's
+ * <sys/tree.h> RB_ENTRY (three pointers plus an int color, 16 bytes)
+ * differs from the tree.h this component is built with in its native
+ * environment (rbe_link[3], 12 bytes), so the vendored tree.h is included
+ * unconditionally.  <sys/queue.h> stays per-environment for plain lists.
+ */
+#ifdef __NuttX__
+#include <sys/queue.h>
+#else
 #include "queue/queue.h"
+#endif
 #include "tree/tree.h"
 
 //#define INVARIANTS

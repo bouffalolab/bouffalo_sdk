@@ -21,7 +21,7 @@ extern "C"
 // Software library version
 // Major (top-nibble), incremented on backwards incompatible changes
 // Minor (bottom-nibble), incremented on feature additions
-#define LFS_VERSION 0x00020008
+#define LFS_VERSION 0x0002000b
 #define LFS_VERSION_MAJOR (0xffff & (LFS_VERSION >> 16))
 #define LFS_VERSION_MINOR (0xffff & (LFS_VERSION >>  0))
 
@@ -52,16 +52,15 @@ typedef uint32_t lfs_block_t;
 #endif
 
 // Maximum size of a file in bytes, may be redefined to limit to support other
-// drivers. Limited on disk to <= 4294967296. However, above 2147483647 the
-// functions lfs_file_seek, lfs_file_size, and lfs_file_tell will return
-// incorrect values due to using signed integers. Stored in superblock and
-// must be respected by other littlefs drivers.
+// drivers. Limited on disk to <= 2147483647. Stored in superblock and must be
+// respected by other littlefs drivers.
 #ifndef LFS_FILE_MAX
 #define LFS_FILE_MAX 2147483647
 #endif
 
 // Maximum size of custom attributes in bytes, may be redefined, but there is
-// no real benefit to using a smaller LFS_ATTR_MAX. Limited to <= 1022.
+// no real benefit to using a smaller LFS_ATTR_MAX. Limited to <= 1022. Stored
+// in superblock and must be respected by other littlefs drivers.
 #ifndef LFS_ATTR_MAX
 #define LFS_ATTR_MAX 1022
 #endif
@@ -136,14 +135,15 @@ enum lfs_open_flags {
 
     // internally used flags
 #ifndef LFS_READONLY
-    LFS_F_DIRTY   = 0x010000, // File does not match storage
-    LFS_F_WRITING = 0x020000, // File has been written since last flush
+    LFS_F_DIRTY   = 0x00010000, // File does not match storage due to write
+    LFS_F_DUSTY   = 0x00020000, // File does not match storage due to desync
+    LFS_F_WRITING = 0x00040000, // File has been written since last flush
 #endif
-    LFS_F_READING = 0x040000, // File has been read since last flush
+    LFS_F_READING = 0x00080000, // File has been read since last flush
 #ifndef LFS_READONLY
-    LFS_F_ERRED   = 0x080000, // An error occurred during write
+    LFS_F_ERRED   = 0x00100000, // An error occurred during write
 #endif
-    LFS_F_INLINE  = 0x100000, // Currently inlined in directory entry
+    LFS_F_INLINE  = 0x01000000, // Currently inlined in directory entry
 };
 
 // File seek flags
@@ -205,7 +205,8 @@ struct lfs_config {
     // program sizes.
     lfs_size_t block_size;
 
-    // Number of erasable blocks on the device.
+    // Number of erasable blocks on the device. Defaults to block_count stored
+    // on disk when zero.
     lfs_size_t block_count;
 
     // Number of erase cycles before littlefs evicts metadata logs and moves
@@ -226,8 +227,19 @@ struct lfs_config {
     // Size of the lookahead buffer in bytes. A larger lookahead buffer
     // increases the number of blocks found during an allocation pass. The
     // lookahead buffer is stored as a compact bitmap, so each byte of RAM
-    // can track 8 blocks. Must be a multiple of 8.
+    // can track 8 blocks.
     lfs_size_t lookahead_size;
+
+    // Threshold for metadata compaction during lfs_fs_gc in bytes. Metadata
+    // pairs that exceed this threshold will be compacted during lfs_fs_gc.
+    // Defaults to ~88% block_size when zero, though the default may change
+    // in the future.
+    //
+    // Note this only affects lfs_fs_gc. Normal compactions still only occur
+    // when full.
+    //
+    // Set to -1 to disable metadata compaction during lfs_fs_gc.
+    lfs_size_t compact_thresh;
 
     // Optional statically allocated read buffer. Must be cache_size.
     // By default lfs_malloc is used to allocate this buffer.
@@ -237,25 +249,24 @@ struct lfs_config {
     // By default lfs_malloc is used to allocate this buffer.
     void *prog_buffer;
 
-    // Optional statically allocated lookahead buffer. Must be lookahead_size
-    // and aligned to a 32-bit boundary. By default lfs_malloc is used to
-    // allocate this buffer.
+    // Optional statically allocated lookahead buffer. Must be lookahead_size.
+    // By default lfs_malloc is used to allocate this buffer.
     void *lookahead_buffer;
 
     // Optional upper limit on length of file names in bytes. No downside for
     // larger names except the size of the info struct which is controlled by
-    // the LFS_NAME_MAX define. Defaults to LFS_NAME_MAX when zero. Stored in
-    // superblock and must be respected by other littlefs drivers.
+    // the LFS_NAME_MAX define. Defaults to LFS_NAME_MAX or name_max stored on
+    // disk when zero.
     lfs_size_t name_max;
 
     // Optional upper limit on files in bytes. No downside for larger files
-    // but must be <= LFS_FILE_MAX. Defaults to LFS_FILE_MAX when zero. Stored
-    // in superblock and must be respected by other littlefs drivers.
+    // but must be <= LFS_FILE_MAX. Defaults to LFS_FILE_MAX or file_max stored
+    // on disk when zero.
     lfs_size_t file_max;
 
     // Optional upper limit on custom attributes in bytes. No downside for
     // larger attributes size but must be <= LFS_ATTR_MAX. Defaults to
-    // LFS_ATTR_MAX when zero.
+    // LFS_ATTR_MAX or attr_max stored on disk when zero.
     lfs_size_t attr_max;
 
     // Optional upper limit on total space given to metadata pairs in bytes. On
@@ -263,6 +274,15 @@ struct lfs_config {
     // can help bound the metadata compaction time. Must be <= block_size.
     // Defaults to block_size when zero.
     lfs_size_t metadata_max;
+
+    // Optional upper limit on inlined files in bytes. Inlined files live in
+    // metadata and decrease storage requirements, but may be limited to
+    // improve metadata-related performance. Must be <= cache_size, <=
+    // attr_max, and <= block_size/8. Defaults to the largest possible
+    // inline_max when zero.
+    //
+    // Set to -1 to disable inlined files.
+    lfs_size_t inline_max;
 
 #ifdef LFS_MULTIVERSION
     // On-disk version to use when writing in the form of 16-bit major version
@@ -430,19 +450,20 @@ typedef struct lfs {
     lfs_gstate_t gdisk;
     lfs_gstate_t gdelta;
 
-    struct lfs_free {
-        lfs_block_t off;
+    struct lfs_lookahead {
+        lfs_block_t start;
         lfs_block_t size;
-        lfs_block_t i;
-        lfs_block_t ack;
-        uint32_t *buffer;
-    } free;
+        lfs_block_t next;
+        lfs_block_t ckpoint;
+        uint8_t *buffer;
+    } lookahead;
 
     const struct lfs_config *cfg;
     lfs_size_t block_count;
     lfs_size_t name_max;
     lfs_size_t file_max;
     lfs_size_t attr_max;
+    lfs_size_t inline_max;
 
 #ifdef LFS_MIGRATE
     struct lfs1 *lfs1;
@@ -712,18 +733,6 @@ lfs_ssize_t lfs_fs_size(lfs_t *lfs);
 // Returns a negative error code on failure.
 int lfs_fs_traverse(lfs_t *lfs, int (*cb)(void*, lfs_block_t), void *data);
 
-// Attempt to proactively find free blocks
-//
-// Calling this function is not required, but may allowing the offloading of
-// the expensive block allocation scan to a less time-critical code path.
-//
-// Note: littlefs currently does not persist any found free blocks to disk.
-// This may change in the future.
-//
-// Returns a negative error code on failure. Finding no free blocks is
-// not an error.
-int lfs_fs_gc(lfs_t *lfs);
-
 #ifndef LFS_READONLY
 // Attempt to make the filesystem consistent and ready for writing
 //
@@ -737,10 +746,32 @@ int lfs_fs_mkconsistent(lfs_t *lfs);
 #endif
 
 #ifndef LFS_READONLY
+// Attempt any janitorial work
+//
+// This currently:
+// 1. Calls mkconsistent if not already consistent
+// 2. Compacts metadata > compact_thresh
+// 3. Populates the block allocator
+//
+// Though additional janitorial work may be added in the future.
+//
+// Calling this function is not required, but may allow the offloading of
+// expensive janitorial work to a less time-critical code path.
+//
+// Returns a negative error code on failure. Accomplishing nothing is not
+// an error.
+int lfs_fs_gc(lfs_t *lfs);
+#endif
+
+#ifndef LFS_READONLY
 // Grows the filesystem to a new size, updating the superblock with the new
 // block count.
 //
-// Note: This is irreversible.
+// If LFS_SHRINKNONRELOCATING is defined, this function will also accept
+// block_counts smaller than the current configuration, after checking
+// that none of the blocks that are being removed are in use.
+// Note that littlefs's pseudorandom block allocation means that
+// this is very unlikely to work in the general case.
 //
 // Returns a negative error code on failure.
 int lfs_fs_grow(lfs_t *lfs, lfs_size_t block_count);

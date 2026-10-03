@@ -1,5 +1,6 @@
 #include "st7102_yh494_dsi.h"
 #include "mipi_dsi_v2.h"
+#include "bflb_l1c.h"
 #include "bflb_mtimer.h"
 
 #if defined(LCD_DSI_ST7102_YH494)
@@ -174,18 +175,33 @@ static int st7102_yh494_prepare(void)
 
 int st7102_yh494_dsi_init(st7102_yh494_dsi_color_t *screen_buffer)
 {
+
+#if (ST7102_YH494_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) || \
+    (ST7102_YH494_FB_MODE == ST7102_YH494_FB_MODE_RGB565)
+    if (screen_buffer == NULL) {
+        return -1;
+    }
+#endif
+
     int ret = st7102_yh494_prepare();
     if (ret != 0) {
         return ret;
     }
-    /* DPI background + OSD0 overlay + OSD SEOF interrupt. screen_buffer is the
-     * initial OSD canvas handed down by lcd_init(). */
-    return mipi_dsi_v2_display_init(&st7102_yh494_timing, (uint32_t)screen_buffer);
+
+    const mipi_dsi_v2_init_t init_config = {
+        .timing = &st7102_yh494_timing,
+        .base_frame_buff = (ST7102_YH494_OSD0_FORMAT == MIPI_DSI_V2_OSD_FORMAT_NONE &&
+                            ST7102_YH494_FB_MODE == ST7102_YH494_FB_MODE_RGB565) ? screen_buffer : NULL,
+        .osd0_frame_buff = (ST7102_YH494_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) ? screen_buffer : NULL,
+        .base_format = (ST7102_YH494_FB_MODE == ST7102_YH494_FB_MODE_RGB565) ? DPI_DATA_FORMAT_RGB565 : DPI_DATA_FORMAT_Y_UV_PLANAR,
+        .osd_format = ST7102_YH494_OSD0_FORMAT,
+    };
+    return mipi_dsi_v2_display_init(&init_config);
 }
 
 int st7102_yh494_dsi_screen_switch(st7102_yh494_dsi_color_t *screen_buffer)
 {
-    return mipi_dsi_v2_screen_switch((void *)screen_buffer);
+    return mipi_dsi_v2_screen_switch(screen_buffer);
 }
 
 st7102_yh494_dsi_color_t *st7102_yh494_dsi_get_screen_using(void)
@@ -227,5 +243,3 @@ int display_unprepare(void)
 }
 
 #endif /* LCD_DSI_ST7102_YH494 */
-
-

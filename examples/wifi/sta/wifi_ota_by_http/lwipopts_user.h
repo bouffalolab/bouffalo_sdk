@@ -140,4 +140,17 @@
 #endif
 #define LWIP_RAND()                                      ((u32_t)random())
 
+#define LWIP_HTTPD_DYNAMIC_HEADERS     1
+#define LWIP_HTTPD_SUPPORT_POST        1
+#define LWIP_HTTPD_CUSTOM_FILES        1
+#define HTTPD_USE_CUSTOM_FSDATA        1
+#define HTTPD_FSDATA_FILE              "https_server_ota_fsdata.c"
+#define HTTPD_ENABLE_HTTPS             1
+#define HTTPD_SERVER_AGENT             "HTTPS-Server-OTA"
+
+#define LWIP_ALTCP                     1
+#define LWIP_ALTCP_TLS                 1
+#define LWIP_ALTCP_TLS_MBEDTLS         1
+#define ALTCP_MBEDTLS_RNG_FN           mbedtls_entropy_func
+
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

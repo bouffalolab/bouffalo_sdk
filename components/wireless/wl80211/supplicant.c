@@ -345,7 +345,7 @@ bool wl80211_supplicant_auth_done_internal(uint8_t sta_idx, uint16_t reason_code
     wl80211_mac_disconnect(reason_code, WLAN_FW_DISCONNECT_BY_USER_WITH_DEAUTH);
 #else
     wl80211_printf("%s:%d\n", __func__, __LINE__);
-    wl80211_mac_disconnect(0, reason_code);
+    wl80211_mac_disconnect(reason_code, WLAN_FW_4WAY_HANDSHAKE_ERROR_PSK_TIMEOUT_FAILURE);
 #endif
     return true;
 }

@@ -134,6 +134,8 @@ struct fhost_vif_tag
     struct mac_addr mac_addr;
     /// is scanning
     bool scanning;
+    /// Cookie of the active scan, also carried by its completion event.
+    uint32_t scan_survey_id;
     /// XXX if the socket used for IPC
     bool is_cntrl_link;
     /// Pointer to the MAC VIF structure

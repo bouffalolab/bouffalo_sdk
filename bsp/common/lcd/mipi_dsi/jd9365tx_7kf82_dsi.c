@@ -191,39 +191,43 @@ static int jd9365tx_7kf82_prepare(void)
 
 int jd9365tx_7kf82_dsi_init(jd9365tx_7kf82_dsi_color_t *screen_buffer)
 {
-    int ret;
-    static uint32_t osd1_sync_pixel __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
 
+#if (JD9365TX_7KF82_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) || \
+    (JD9365TX_7KF82_FB_MODE == JD9365TX_7KF82_FB_MODE_RGB565)
     if (screen_buffer == NULL) {
         return -1;
     }
+#endif
 
-    ret = jd9365tx_7kf82_prepare();
+    int ret = jd9365tx_7kf82_prepare();
     if (ret != 0) {
         return ret;
     }
 
-    osd1_sync_pixel = 0;
-    bflb_l1c_dcache_clean_range(&osd1_sync_pixel, sizeof(osd1_sync_pixel));
-
-    return mipi_dsi_v2_rgb565_display_init(&jd9365tx_7kf82_timing,
-                                            (uint32_t)(uintptr_t)screen_buffer,
-                                            (uint32_t)(uintptr_t)&osd1_sync_pixel);
+    const mipi_dsi_v2_init_t init_config = {
+        .timing = &jd9365tx_7kf82_timing,
+        .base_frame_buff = (JD9365TX_7KF82_OSD0_FORMAT == MIPI_DSI_V2_OSD_FORMAT_NONE &&
+                            JD9365TX_7KF82_FB_MODE == JD9365TX_7KF82_FB_MODE_RGB565) ? screen_buffer : NULL,
+        .osd0_frame_buff = (JD9365TX_7KF82_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) ? screen_buffer : NULL,
+        .base_format = (JD9365TX_7KF82_FB_MODE == JD9365TX_7KF82_FB_MODE_RGB565) ? DPI_DATA_FORMAT_RGB565 : DPI_DATA_FORMAT_Y_UV_PLANAR,
+        .osd_format = JD9365TX_7KF82_OSD0_FORMAT,
+    };
+    return mipi_dsi_v2_display_init(&init_config);
 }
 
 int jd9365tx_7kf82_dsi_screen_switch(jd9365tx_7kf82_dsi_color_t *screen_buffer)
 {
-    return mipi_dsi_v2_rgb565_screen_switch(screen_buffer);
+    return mipi_dsi_v2_screen_switch(screen_buffer);
 }
 
 jd9365tx_7kf82_dsi_color_t *jd9365tx_7kf82_dsi_get_screen_using(void)
 {
-    return (jd9365tx_7kf82_dsi_color_t *)mipi_dsi_v2_rgb565_get_screen_using();
+    return (jd9365tx_7kf82_dsi_color_t *)mipi_dsi_v2_get_screen_using();
 }
 
 int jd9365tx_7kf82_dsi_frame_callback_register(uint32_t callback_type, void (*callback)(void))
 {
-    return mipi_dsi_v2_rgb565_frame_callback_register(callback_type, callback);
+    return mipi_dsi_v2_frame_callback_register(callback_type, callback);
 }
 
 const mipi_dsi_v2_timing_t *jd9365tx_7kf82_dsi_get_timing(void)

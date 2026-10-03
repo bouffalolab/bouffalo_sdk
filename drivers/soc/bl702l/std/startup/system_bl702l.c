@@ -41,10 +41,24 @@ void SystemInit(void)
     tmpVal &= ~(0xff << 16); /*mask all pds wakeup source int*/
     BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
 
-    /* GLB_Set_EM_Sel(GLB_EM_0KB); */
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_SEAM_MISC);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); //GLB_EM_0KB
-    BL_WR_REG(GLB_BASE, GLB_SEAM_MISC, tmpVal);
+    /* Configure EM size from the linker script symbol */
+    {
+        extern uint8_t __LD_CONFIG_EM_SEL;
+        volatile uint32_t em_size = (uint32_t)&__LD_CONFIG_EM_SEL;
+
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_SEAM_MISC);
+
+        if (em_size == 0) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); /* GLB_EM_0KB */
+        } else if (em_size == 8 * 1024) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x03); /* GLB_EM_8KB */
+        } else if (em_size == 16 * 1024) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x0F); /* GLB_EM_16KB */
+        } else {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00);
+        }
+        BL_WR_REG(GLB_BASE, GLB_SEAM_MISC, tmpVal);
+    }
 
     /* Restore default setting*/
     /* GLB_UART_Sig_Swap_Set(UART_SIG_SWAP_NONE); */

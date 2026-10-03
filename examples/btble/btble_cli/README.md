@@ -4,7 +4,7 @@
 
 | CHIP                      | Remark |
 |:-------------------------:|:------:|
-| BL602/BL616/BL618/BL618DG |        |
+| BL602/BL702/BL702L/BL616/BL618/BL618DG |        |
 
 ## Compile
 
@@ -13,6 +13,19 @@
 ```
 make CHIP=bl602 BOARD=bl602dk
 ```
+
+- BL702 (BLE only)
+
+```
+make CHIP=bl702 BOARD=bl702dk
+```
+
+- BL702L (BLE only)
+
+```
+make CHIP=bl702l BOARD=bl702ldk
+```
+
 - BL616/BL618
 
 ```

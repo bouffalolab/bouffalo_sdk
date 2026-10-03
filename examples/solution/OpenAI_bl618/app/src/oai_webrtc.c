@@ -8,7 +8,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <oai_config.h>
-#include <easyflash.h>
+#include "lfs_kv.h"
 #include <bl616_sys.h>
 
 #define TICK_INTERVAL 15
@@ -100,7 +100,7 @@ void oai_webrtc(void *arg)
 
     while (1) {
         memset(openai_api_key, 0, 256);
-        ef_get_env_blob("OPENAI_API_KEY", openai_api_key, 256, NULL);
+        lfs_kv_get_blob("OPENAI_API_KEY", openai_api_key, 256, NULL);
         if (openai_api_key[0]) {
             printf("set OPENAI_API_KEY success :%s\r\n", openai_api_key);
             break;

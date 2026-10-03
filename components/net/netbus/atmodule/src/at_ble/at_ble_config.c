@@ -13,7 +13,7 @@
 #include <string.h>
 #include <FreeRTOS.h>
 //#ifdef EASYFLASH_ENABLE
-#include <easyflash.h>
+#include "lfs_kv.h"
 //#endif
 //#include <wifi_mgmr_ext.h>
 #include "at_config.h"
@@ -109,7 +109,7 @@ int at_ble_generate_aes_iv(void)
             at_ble_config->aes_enable = 1;
             if(at_utils_crypto_aes_key_init() !=0)
             {
-                ef_del_env(AT_CONFIG_KEY_BLE_AES_IV);
+                lfs_kv_del(AT_CONFIG_KEY_BLE_AES_IV);
                 return -1;
             }
             return 0;
@@ -131,7 +131,7 @@ int at_ble_config_default(void)
         AT_CMD_PRINTF("at_ble_config is NULL in at_ble_config_default\r\n");
         return -1;
     }
-    ef_del_env(AT_CONFIG_KEY_BLE_NAME);
+    lfs_kv_del(AT_CONFIG_KEY_BLE_NAME);
     memset(at_ble_config, 0, sizeof(ble_config));
     at_ble_config->work_role = BLE_DISABLE;
     strlcpy(at_ble_config->ble_name, "BFLB-AT", sizeof(at_ble_config->ble_name));

@@ -313,56 +313,47 @@ int mipi_dsi_v2_dcs_write_cmd(uint8_t data_type, uint8_t cmd, const uint8_t *dat
     return 0;
 }
 
-/* ---------- Frame-buffer switch (OSD0 blend + SEOF interrupt, shared by all v2 panels) ----------
- *
- * The LVGL canvas is the OSD0 blend overlay on top of the DPI background. Switching
- * the screen re-points OSD0 at a new canvas; the swap latches at the next frame
- * boundary (SEOF). The OSD interrupt fires every SEOF: the ISR invokes the SWAP
- * callback so the LVGL port (lv_port_disp_rgb.c) knows the swap completed.
- * OSD0 (not OSD1) is used so OSD1 stays free for another overlay. */
+/* ---------- Unified DPI base + OSD0 scan-out path ---------- */
 
+static struct bflb_device_s *dsi_v2_dpi = NULL;
 static struct bflb_device_s *dsi_v2_osd = NULL;
-static void *dsi_v2_screen_using = NULL;
+static void *volatile dsi_v2_screen_using = NULL;
+static void *volatile dsi_v2_screen_pending = NULL;
 static void (*dsi_v2_swap_callback)(void) = NULL;
 static void (*dsi_v2_cycle_callback)(void) = NULL;
+static uint8_t dsi_v2_base_format = DPI_DATA_FORMAT_Y_UV_PLANAR;
+static uint32_t dsi_v2_buf_size = 0;
+static bool dsi_v2_screen_is_base = false;
+static uint32_t dsi_v2_sync_pixel __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
 
-/* For D-cache */
-static uint32_t dsi_v2_osd_buf_size = 0;
-
-/**
- * @brief Base (DPI background) layer swap, invoked from the OSD SEOF ISR.
- *
- * Weak no-op by default: an OSD0-only LVGL app needs nothing here (the base layer
- * just scans black). An app that drives a video background overrides this (see the
- * video pipeline in dpi_manager.c) to latch the next decoded YUV frame into the DPI
- * base layer at the frame boundary -- so the background switches between frames,
- * never mid-scanout. Keeping it weak means the driver no longer reaches into the
- * app's video state (the old dpi_show_* / dpi_busy_y externs are gone). */
 __attribute__((weak)) void mipi_dsi_v2_osd0_base_layer_swap(void)
 {
 }
 
 static void mipi_dsi_v2_osd0_isr(int irq, void *arg)
 {
+    bool swapped = false;
+
     (void)irq;
     (void)arg;
 
     bflb_osd_int_clear(dsi_v2_osd);
 
-    /* SEOF crossed: swap the base (DPI background) layer -- weak no-op unless an
-     * app overrides it to latch the next video frame between scanouts. */
+    if (dsi_v2_screen_using != dsi_v2_screen_pending) {
+        dsi_v2_screen_using = dsi_v2_screen_pending;
+        swapped = true;
+    }
+
     mipi_dsi_v2_osd0_base_layer_swap();
 
     if (dsi_v2_cycle_callback != NULL) {
         dsi_v2_cycle_callback();
     }
-    if (dsi_v2_swap_callback != NULL) {
+    if (swapped && dsi_v2_swap_callback != NULL) {
         dsi_v2_swap_callback();
     }
 }
 
-/* Attach + enable the OSD SEOF interrupt. Call once after the OSD blend layer is
- * up (the dpi_manager owns that). */
 void mipi_dsi_v2_osd_irq_init(struct bflb_device_s *osd)
 {
     dsi_v2_osd = osd;
@@ -372,24 +363,29 @@ void mipi_dsi_v2_osd_irq_init(struct bflb_device_s *osd)
     bflb_irq_enable(osd->irq_num);
 }
 
-/* Bring up the scan-out side (the panel link itself was already up via
- * mipi_dsi_v2_setup()/hs_mode_start() in the panel's _dsi_init()):
- *   [1] DPI background scan-out layer (YUV planar, FRAMEBUFFER_WITH_OSD)
- *   [2] OSD0 ARGB8888 blend overlay (the LVGL canvas) -- must follow [1]
- *   [3] OSD SEOF interrupt that drives the frame callbacks
- * osd_buf is the initial OSD canvas. The DPI background framebuffer is left at 0;
- * the video pipeline points it at real YUV frames at runtime. */
-int mipi_dsi_v2_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t osd_buf)
+int mipi_dsi_v2_display_init(const mipi_dsi_v2_init_t *init_config)
 {
+    if (init_config == NULL || init_config->timing == NULL ||
+        (init_config->base_format != DPI_DATA_FORMAT_RGB565 &&
+         init_config->base_format != DPI_DATA_FORMAT_Y_UV_PLANAR) ||
+        (init_config->osd_format != MIPI_DSI_V2_OSD_FORMAT_RGB565 &&
+         init_config->osd_format != MIPI_DSI_V2_OSD_FORMAT_ARGB8888 &&
+         init_config->osd_format != MIPI_DSI_V2_OSD_FORMAT_NONE)) {
+        return -2;
+    }
+
+    const mipi_dsi_v2_timing_t *cfg = init_config->timing;
     struct bflb_device_s *dpi = bflb_device_get_by_name("dpi");
     struct bflb_device_s *osd = bflb_device_get_by_name("osd0");
+    bool osd_enabled = init_config->osd_format != MIPI_DSI_V2_OSD_FORMAT_NONE;
 
     if (dpi == NULL || osd == NULL) {
         return -1;
     }
+    if (osd_enabled && init_config->osd0_frame_buff == NULL) {
+        return -2;
+    }
 
-    /* [1] DPI background scan-out layer. framebuffer_addr=0: the video pipeline
-     * switches in real YUV frames at runtime (via the app's base-layer swap). */
     struct bflb_dpi_config_s dpi_config = {
         .width = cfg->width,
         .height = cfg->height,
@@ -401,19 +397,18 @@ int mipi_dsi_v2_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t osd_buf)
         .vfp = cfg->vfp,
         .interface = DPI_INTERFACE_24_PIN,
         .input_sel = DPI_INPUT_SEL_FRAMEBUFFER_WITH_OSD,
-        // .input_sel = DPI_INPUT_SEL_TEST_PATTERN_WITH_OSD, // completly shut down the layer 
         .test_pattern = DPI_TEST_PATTERN_NULL,
-        .data_format = DPI_DATA_FORMAT_Y_UV_PLANAR,
+        .data_format = init_config->base_format,
         .framebuffer_addr = 0,
         .uv_framebuffer_addr = 0,
     };
     bflb_dpi_init(dpi, &dpi_config);
-
     bflb_dpi_feature_control(dpi, DPI_CMD_SET_BURST, DPI_BURST_INCR8);
 
-    /* [2] OSD0 full-screen ARGB8888 overlay (the LVGL canvas) */
     struct bflb_osd_blend_config_s osd_blend_config = {
-        .blend_format = OSD_BLEND_FORMAT_ARGB8888,
+        .blend_format = osd_enabled && init_config->osd_format == MIPI_DSI_V2_OSD_FORMAT_RGB565
+                            ? OSD_BLEND_FORMAT_RGB565
+                            : OSD_BLEND_FORMAT_ARGB8888,
         .order_a = 3,
         .order_rv = 2,
         .order_gy = 1,
@@ -421,22 +416,43 @@ int mipi_dsi_v2_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t osd_buf)
         .coor = {
             .start_x = 0,
             .start_y = 0,
-            .end_x = cfg->width,
-            .end_y = cfg->height,
+            .end_x = osd_enabled ? cfg->width : 1,
+            .end_y = osd_enabled ? cfg->height : 1,
         },
-        .layer_buffer_addr = osd_buf,
+        .layer_buffer_addr = (uint32_t)(uintptr_t)(osd_enabled ? init_config->osd0_frame_buff : &dsi_v2_sync_pixel),
     };
+    dsi_v2_sync_pixel = 0;
+    bflb_l1c_dcache_clean_range(&dsi_v2_sync_pixel, sizeof(dsi_v2_sync_pixel));
     bflb_osd_blend_init(osd, &osd_blend_config);
-
+    if (!osd_enabled) {
+        bflb_osd_blend_set_global_a(osd, true, 0);
+    }
     bflb_osd_blend_enable(osd);
 
-    /* [3] OSD SEOF interrupt -> frame callbacks (drives screen_switch reporting) */
+    dsi_v2_dpi = dpi;
+    dsi_v2_base_format = init_config->base_format;
+    dsi_v2_screen_is_base = !osd_enabled;
+    dsi_v2_buf_size = osd_enabled ? (uint32_t)cfg->width * cfg->height *
+                       (init_config->osd_format == MIPI_DSI_V2_OSD_FORMAT_RGB565 ? 2U : 4U) :
+                       (init_config->base_format == DPI_DATA_FORMAT_RGB565 ?
+                        (uint32_t)cfg->width * cfg->height * 2U : 0U);
+    dsi_v2_screen_using = osd_enabled ? init_config->osd0_frame_buff : init_config->base_frame_buff;
+    dsi_v2_screen_pending = dsi_v2_screen_using;
+
+    if (osd_enabled) {
+        bflb_l1c_dcache_clean_range(init_config->osd0_frame_buff, dsi_v2_buf_size);
+    }
+
+    /* Keep the base address out of bflb_dpi_init(); apply an optional RGB565
+     * base buffer through the hardware's frame-switch API after setup. */
+    if (init_config->base_format == DPI_DATA_FORMAT_RGB565 &&
+        init_config->base_frame_buff != NULL) {
+        bflb_l1c_dcache_clean_range(init_config->base_frame_buff,
+                                    (uint32_t)cfg->width * cfg->height * 2U);
+        bflb_dpi_framebuffer_switch(dpi, (uint32_t)(uintptr_t)init_config->base_frame_buff);
+    }
+
     mipi_dsi_v2_osd_irq_init(osd);
-
-    /* Canvas byte size for the cache write-back in screen_switch() (ARGB8888). */
-    dsi_v2_osd_buf_size = (uint32_t)cfg->width * cfg->height * 4U;
-
-    dsi_v2_screen_using = (void *)osd_buf;
     return 0;
 }
 
@@ -445,21 +461,26 @@ int mipi_dsi_v2_screen_switch(void *screen_buffer)
     if (screen_buffer == NULL) {
         return -1;
     }
-    if (dsi_v2_osd == NULL) {
+    if (dsi_v2_osd == NULL || dsi_v2_dpi == NULL) {
         return -2;
     }
-
-    /* Need to clean D-cache. */
-    if (dsi_v2_osd_buf_size != 0U) {
-        bflb_l1c_dcache_clean_range(screen_buffer, dsi_v2_osd_buf_size);
+    if (dsi_v2_buf_size != 0U) {
+        bflb_l1c_dcache_clean_range(screen_buffer, dsi_v2_buf_size);
     }
 
-    /* Re-point the OSD blend layer at the new canvas. Non-blocking: the swap
-     * latches at the next SEOF; the SWAP callback tells the caller it happened. */
-    bflb_osd_blend_set_layer_buffer(dsi_v2_osd, (uint32_t)screen_buffer);
-    // bflb_osd_blend_set_layer_buffer(dsi_v2_osd, 0); // shut down the osd
-    dsi_v2_screen_using = screen_buffer;
-
+    uintptr_t flags = bflb_irq_save();
+    if (dsi_v2_screen_is_base) {
+        if (dsi_v2_base_format != DPI_DATA_FORMAT_RGB565) {
+            bflb_irq_restore(flags);
+            return -3;
+        }
+        bflb_dpi_framebuffer_switch(dsi_v2_dpi, (uint32_t)(uintptr_t)screen_buffer);
+    } else {
+        bflb_osd_blend_set_layer_buffer(dsi_v2_osd, (uint32_t)(uintptr_t)screen_buffer);
+        bflb_osd_int_clear(dsi_v2_osd);
+    }
+    dsi_v2_screen_pending = screen_buffer;
+    bflb_irq_restore(flags);
     return 0;
 }
 
@@ -474,142 +495,6 @@ int mipi_dsi_v2_frame_callback_register(uint32_t callback_type, void (*callback)
         dsi_v2_swap_callback = callback;
     } else if (callback_type == MIPI_DSI_V2_FRAME_INT_TYPE_CYCLE) {
         dsi_v2_cycle_callback = callback;
-    }
-    return 0;
-}
-
-/* ---------- RGB565 base framebuffer + OSD1 SEOF path ----------
- *
- * The camera preview uses DPI's RGB565 base framebuffer directly. OSD1 stays
- * transparent and exists only to generate a frame-boundary interrupt. Keep all
- * state separate from the OSD0/LVGL path above so existing DSI applications
- * cannot affect this mode. */
-
-static struct bflb_device_s *dsi_v2_rgb565_dpi = NULL;
-static struct bflb_device_s *dsi_v2_rgb565_osd = NULL;
-static void *volatile dsi_v2_rgb565_screen_using = NULL;
-static void *volatile dsi_v2_rgb565_screen_pending = NULL;
-static uint32_t dsi_v2_rgb565_buf_size = 0;
-static void (*dsi_v2_rgb565_swap_callback)(void) = NULL;
-static void (*dsi_v2_rgb565_cycle_callback)(void) = NULL;
-
-static void mipi_dsi_v2_rgb565_osd1_isr(int irq, void *arg)
-{
-    bool swapped = false;
-
-    (void)irq;
-    (void)arg;
-
-    bflb_osd_int_clear(dsi_v2_rgb565_osd);
-
-    if (dsi_v2_rgb565_screen_using != dsi_v2_rgb565_screen_pending) {
-        bflb_dpi_framebuffer_switch(
-            dsi_v2_rgb565_dpi, (uint32_t)(uintptr_t)dsi_v2_rgb565_screen_pending);
-        dsi_v2_rgb565_screen_using = dsi_v2_rgb565_screen_pending;
-        swapped = true;
-    }
-
-    if (dsi_v2_rgb565_cycle_callback != NULL) {
-        dsi_v2_rgb565_cycle_callback();
-    }
-    if (swapped && dsi_v2_rgb565_swap_callback != NULL) {
-        dsi_v2_rgb565_swap_callback();
-    }
-}
-
-int mipi_dsi_v2_rgb565_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t framebuffer_addr,
-                                    uint32_t osd_sync_buf)
-{
-    struct bflb_dpi_config_s dpi_config;
-    struct bflb_osd_blend_config_s osd_blend_config;
-
-    if (cfg == NULL || framebuffer_addr == 0 || osd_sync_buf == 0) {
-        return -2;
-    }
-
-    dsi_v2_rgb565_dpi = bflb_device_get_by_name("dpi");
-    dsi_v2_rgb565_osd = bflb_device_get_by_name("osd1");
-    if (dsi_v2_rgb565_dpi == NULL || dsi_v2_rgb565_osd == NULL) {
-        return -1;
-    }
-
-    dpi_config = (struct bflb_dpi_config_s){
-        .width = cfg->width,
-        .height = cfg->height,
-        .hsw = cfg->hsw,
-        .hbp = cfg->hbp,
-        .hfp = cfg->hfp,
-        .vsw = cfg->vsw,
-        .vbp = cfg->vbp,
-        .vfp = cfg->vfp,
-        .interface = DPI_INTERFACE_24_PIN,
-        .input_sel = DPI_INPUT_SEL_FRAMEBUFFER_WITH_OSD,
-        .test_pattern = DPI_TEST_PATTERN_NULL,
-        .data_format = DPI_DATA_FORMAT_RGB565,
-        .framebuffer_addr = framebuffer_addr,
-        .uv_framebuffer_addr = 0,
-    };
-    bflb_dpi_init(dsi_v2_rgb565_dpi, &dpi_config);
-    bflb_dpi_feature_control(dsi_v2_rgb565_dpi, DPI_CMD_SET_BURST, DPI_BURST_INCR8);
-
-    osd_blend_config = (struct bflb_osd_blend_config_s){
-        .blend_format = OSD_BLEND_FORMAT_ARGB8888,
-        .order_a = 3,
-        .order_rv = 2,
-        .order_gy = 1,
-        .order_bu = 0,
-        .coor = {
-            .start_x = 0,
-            .start_y = 0,
-            .end_x = 1,
-            .end_y = 1,
-        },
-        .layer_buffer_addr = osd_sync_buf,
-    };
-    bflb_osd_blend_init(dsi_v2_rgb565_osd, &osd_blend_config);
-    bflb_osd_blend_set_global_a(dsi_v2_rgb565_osd, true, 0);
-    bflb_osd_blend_enable(dsi_v2_rgb565_osd);
-
-    bflb_osd_int_clear(dsi_v2_rgb565_osd);
-    bflb_irq_attach(dsi_v2_rgb565_osd->irq_num, mipi_dsi_v2_rgb565_osd1_isr, NULL);
-    bflb_osd_int_mask(dsi_v2_rgb565_osd, false);
-    bflb_irq_enable(dsi_v2_rgb565_osd->irq_num);
-
-    dsi_v2_rgb565_screen_using = (void *)(uintptr_t)framebuffer_addr;
-    dsi_v2_rgb565_screen_pending = (void *)(uintptr_t)framebuffer_addr;
-    dsi_v2_rgb565_buf_size = cfg->width * cfg->height * sizeof(uint16_t);
-    return 0;
-}
-
-int mipi_dsi_v2_rgb565_screen_switch(void *screen_buffer)
-{
-    if (screen_buffer == NULL) {
-        return -1;
-    }
-    if (dsi_v2_rgb565_dpi == NULL || dsi_v2_rgb565_osd == NULL) {
-        return -2;
-    }
-
-    /* The RGB565 framebuffer is half the size of the ARGB8888 OSD canvas. */
-    if (dsi_v2_rgb565_buf_size != 0U) {
-        bflb_l1c_dcache_clean_range(screen_buffer, dsi_v2_rgb565_buf_size);
-    }
-
-    dsi_v2_rgb565_screen_pending = screen_buffer;
-    return 0;
-}
-
-void *mipi_dsi_v2_rgb565_get_screen_using(void)
-{
-    return dsi_v2_rgb565_screen_using;
-}
-
-int mipi_dsi_v2_rgb565_frame_callback_register(uint32_t callback_type, void (*callback)(void))
-{
-    if (callback_type == MIPI_DSI_V2_FRAME_INT_TYPE_SWAP) {
-        dsi_v2_rgb565_swap_callback = callback;
-    } else if (callback_type == MIPI_DSI_V2_FRAME_INT_TYPE_CYCLE) {
-        dsi_v2_rgb565_cycle_callback = callback;
     }
     return 0;
 }

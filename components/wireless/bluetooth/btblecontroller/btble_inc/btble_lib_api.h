@@ -96,6 +96,78 @@ typedef struct {
     uint16_t next_hus;
 } btble_controller_lp_fw_adv_info_t;
 
+/*
+ * Slave connection activity recorded for the LPFW (LTOS connected-state
+ * exploration).  Timestamps are BLE half-slots (312.5 us) unless noted;
+ * bit offsets are half-microseconds.
+ */
+typedef struct {
+    /* Connection control structure byte offset in BLE EM. */
+    uint16_t cs_off;
+    /* Connection interval, half-slots. */
+    uint16_t interval;
+    /* Slave latency. */
+    uint16_t latency;
+    /* Event counter of the last event run by the controller. */
+    uint16_t evt_cnt;
+    /* Amount by which the connection event counter should be incremented. */
+    uint16_t evt_inc;
+    /* Master sleep clock accuracy, ppm. */
+    uint16_t master_sca;
+    /* Local sleep clock drift used for RX window widening, ppm. */
+    uint16_t local_drift;
+    /* CSA#1: channel index programmed for the last event. */
+    uint16_t last_cs_ch_idx;
+    /* Next anchor target (middle of the RX window), half-slots. */
+    uint32_t next_ts;
+    /* Exchange-table program time of the pending event (window start). */
+    uint32_t prog_hs;
+    uint16_t prog_hus;
+    /* Half-us bit offset stored with the pending event (window start). */
+    int16_t  next_bit_off;
+    /* Scheduled RX window of the pending event, half-us. */
+    uint32_t sync_win_size;
+    /* Last anchor with a sync, half-slots / half-us. */
+    uint32_t last_sync_ts;
+    int16_t  last_sync_bit_off;
+    /* Last anchor with a CRC-correct packet (supervision reference). */
+    uint32_t last_crc_ok_ts;
+    /* Supervision timeout, half-slots. */
+    uint32_t timeout;
+    /* Minimum event duration, half-us. */
+    uint32_t duration_min;
+    /* Rates (enum lld_rate: 0 = 1M, 1 = 2M). */
+    uint8_t  rx_rate;
+    uint8_t  tx_rate;
+    /* 1: CSA#1 (software computes the channel), 0: CSA#2 (hardware). */
+    uint8_t  hop_sel_1;
+    uint8_t  hop_inc;
+    uint8_t  link_id;
+    /* RX encryption enabled (informational, the hardware does the CCM). */
+    uint8_t  encrypted;
+    /* Arbiter priority of the pending event. */
+    uint8_t  current_prio;
+    /* Slave latency was applied to the pending event. */
+    uint8_t  latency_applied;
+} btble_controller_lp_fw_con_info_t;
+
+/* What the LPFW did with a BTBLE_ST_CONN hand-off (activity con_wake_cause). */
+#define BTBLE_LPFW_CON_WAKE_NONE   0   /*Not caused by BLE */
+#define BTBLE_LPFW_CON_WAKE_MAC_ERR  1  /* mac error   */
+#define BTBLE_LPFW_CON_WAKE_RX     2  /* a PDU is left in the RX descriptor  */
+#define BTBLE_LPFW_CON_WAKE_MIC_ERR     3 /* last event: MIC error*/
+#define BTBLE_LPFW_CON_WAKE_LINK_TIMEOUT 4
+#define BTBLE_LPFW_CON_WAKE_RX_DESC_NOT_VALID 5 /*rx descriptor is not valid*/
+#define BTBLE_LPFW_CON_WAKE_END_ISR_MISS   6 /*No end isr comes*/
+#define BTBLE_LPFW_CON_WAKE_LATENCY_SYNC_ERR 7
+#define BTBLE_LPFW_CCON_WAKE_OTHER_RX_ERR 8
+
+#define BTBLE_LPFW_CON_STATE_WAIT_NEXT_PROG 1  /* waiting for the next event to be programmed. */
+#define BTBLE_LPFW_CON_STATE_WAIT_END_ISR   2  /*event program time has been set and wait for end isr */
+#define BTBLE_LPFW_CON_STATE_WAIT_CHECK_RX  3  /*end isr comes, and wait for rx*/
+#define BTBLE_LPFW_CON_STATE_WAIT_CAL_NEXT_PROG_TIME 4  /*wait to calculated next prog time*/
+
+
 #define BTBLE_ST_NONE        0xFF
 #define BTBLE_ST_ADV         0
 #define BTBLE_ST_RX_CONN_IND 1
@@ -108,6 +180,8 @@ typedef struct {
      * btble_controller_lp_fw_activity_t.state.
      */
     uint8_t state;
+    /*if wakeup_app=1,not work in lpfw*/
+    uint8_t wakeup_app;
     /* True when the next BLE wake-up is for a scheduled radio event; false for other internal controller timer. */
     bool is_arbTarget;
     /* Current RX descriptor byte offset in BLE EM. */
@@ -124,8 +198,11 @@ typedef struct {
     uint16_t saved_blecore_count;
     /* Number of valid uint32_t entries in saved_ipcore. */
     uint16_t saved_ipcore_count;
+    uint16_t rc_calibration;
     /* Legacy advertising information. */
     btble_controller_lp_fw_adv_info_t adv;
+    /* Connection information, valid when state == BTBLE_ST_CONN. */
+    btble_controller_lp_fw_con_info_t con;
 } btble_controller_lp_fw_info_t;
 
 typedef struct {
@@ -156,6 +233,33 @@ typedef struct {
      * When false, BLE remains in deep sleep and sleep_duration is valid.
      */
     bool lpfw_ble_awake;
+    /*
+     * BTBLE_ST_CONN hand-back.  con_wake_cause is BTBLE_LPFW_CON_WAKE_*;
+     * the remaining fields are valid when it is not _NONE.
+     */
+    uint8_t con_wake_cause;
+    uint8_t con_state;
+    uint8_t con_proged_in_lpfw;
+    /* Event counter of the last event the LPFW programmed. */
+    uint16_t con_evt_cnt;
+     /* Amount by which the connection event counter should be incremented. */
+    uint16_t con_evt_inc;
+    /* Anchor of that event: the sync time if it synced, else its target. */
+    uint32_t con_next_ts;
+    uint16_t con_next_bit_off;
+    /* next event: exchange-table program time (window start) */
+    uint32_t con_prog_hs;
+    /* next event: exchange-table fine time */
+    uint16_t con_prog_hus;
+    /* Last anchor with a sync, half-slots / half-us. */
+    uint32_t con_last_sync_ts;
+    int16_t  con_last_sync_bit_off;
+    /* Last anchor with a CRC-correct packet. */
+    uint32_t con_last_crc_ok_ts;
+    /* CSA#1: channel index of the last event. */
+    uint16_t con_last_cs_ch_idx;
+    /* BLE EM byte address of the LPFW's current RX descriptor. */
+    uint32_t con_rx_desc_addr;
 } btble_controller_lp_fw_activity_t;
 
 /**
@@ -281,5 +385,14 @@ typedef void (*bt_sco_codec_cb_t) (uint16_t   interval_halfslot,
                                 uint32_t   start_time_halfslot,
                                 uint8_t    buffer_index);
 void btble_controller_sco_codec_callback_register(bt_sco_codec_cb_t cb);
+
+/**
+ * @brief Set the BLE public device address. Called after btble_controller_init.
+ *
+ * @param[in] pub_addr Public device address, exactly 6 bytes.
+ *
+ * @return 0 on success, -1 if pub_addr is NULL or all zeros.
+ */
+int btble_controller_set_mac_addr(const uint8_t pub_addr[6]);
 
 #endif

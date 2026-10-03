@@ -26,7 +26,7 @@
 #include "board.h"
 #include "shell.h"
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "web_config.h"
 
 #ifndef BL602
@@ -128,7 +128,7 @@ int main(void)
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
     
     if (rfparam_init(0, NULL, 0) != 0) {
         LOG_E("RF init failed\r\n");

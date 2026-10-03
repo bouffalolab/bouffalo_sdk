@@ -5,6 +5,7 @@
 | CHIP        | Remark |
 |:-----------:|:------:|
 | BL616/BL618 |        |
+| BL618DG     |        |
 | BL602       |        |
 
 ## Compile
@@ -15,10 +16,16 @@
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-To package a specific OTA software version into the OTA header, override `PROJECT_SDK_VERSION` when building. This example enables `CONFIG_OTA_HEADER_USE_SDK_VERSION=y`, `CONFIG_OTA_VERSION_CHECK=y`, and `CONFIG_OTA_VERSION_PREFIX="EVENT_V"`, so the OTA header carries `EVENT_Vx.y.z` and the device rejects non-increasing versions.
+The OTA header uses `CONFIG_PROJECT_SDK_VERSION` because `CONFIG_OTA_HEADER_USE_SDK_VERSION=y`. The default version is `1.0.0`; override `PROJECT_SDK_VERSION` when building to package another version. The image version prefix defaults to `EVENT_V`. This example does not enable `CONFIG_OTA_VERSION_CHECK`, so the device does not reject images based on version ordering.
 
 ```bash
 make CHIP=bl616 BOARD=bl616dk PROJECT_SDK_VERSION=2.1.5
+```
+
+- BL618DG (AP core)
+
+```
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
 ```
 
 - BL602
@@ -108,9 +115,27 @@ if connect success, Linux server pc have send data to BL616.
 ### OTA version and integrity checks
 
 1. The OTA header software version is generated from `PROJECT_SDK_VERSION` and prefixed with `EVENT_V`.
-2. `CONFIG_OTA_VERSION_CHECK=y` rejects downgrade and same-version images before the firmware body is applied.
-3. The OTA header SHA256 is verified by the common OTA core for TCP, HTTP, and HTTPS paths. A corrupted `.ota` file is aborted and does not switch the active partition.
-4. HTTPS with `--require-client-cert` verifies the device against `client_1.crt` signed by `ca_1.crt`, and the device also verifies the server certificate chain with the embedded CA.
+2. The OTA header SHA256 is verified by the common OTA core for TCP, HTTP, and HTTPS paths. A corrupted `.ota` file is aborted and does not switch the active partition.
+3. HTTPS with `--require-client-cert` verifies the device against `client_1.crt` signed by `ca_1.crt`, and the device also verifies the server certificate chain with the embedded CA.
+
+## HTTP(S) Server OTA (BL616/BL618/BL618DG)
+
+Start a SoftAP, then set the firmware URL with the shell command:
+
+```text
+wifi_ap_start -s SoftAP-OTA -k 12345678 -I 192.168.169.1 -S 2 -L 4
+https_server_ota_start <http-or-https-url> [reboot: 0|1]
+```
+
+Connect a phone or computer to the AP and open `http://192.168.169.1/` or
+`https://192.168.169.1/`. The browser downloads the `.bin.ota` file from the
+specified URL and uploads it to the device. The browser needs Internet access
+and the firmware host must allow CORS. For the HTTPS page, use an HTTPS firmware
+URL and accept the demo certificate warning. `reboot` defaults to `1`; run the
+command again and refresh the page to use a new firmware URL.
+
+`CONFIG_FOTA_HTTPD_SERVER=y` enables the OTA POST handler in the FOTA component.
+The example registers its HTTPS certificate and supplies the web page.
 
 
 ## OTA use partition

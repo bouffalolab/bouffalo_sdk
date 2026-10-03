@@ -20,7 +20,7 @@
 #if defined(BFLB_BLE)
 #include <stdlib.h>
 #if defined(CONFIG_BT_SETTINGS)
-#include "easyflash.h"
+#include "lfs_kv.h"
 #endif
 #include <FreeRTOS.h>
 #include "portable.h"
@@ -234,15 +234,15 @@ K_WORK_DEFINE(save_id_work, save_id);
 #endif //!BFLB_BLE
 #if defined (BFLB_BLE)
 #if defined(CONFIG_BT_SETTINGS)
-bool ef_ready_flag = false;
-int bt_check_if_ef_ready()
+bool lfs_kv_ready_flag = false;
+int bt_check_if_lfs_kv_ready()
 {
     int err = 0;
     
-    if(!ef_ready_flag){
-        err = easyflash_init();
+    if(!lfs_kv_ready_flag){
+        err = lfs_kv_init();
         if(!err)
-            ef_ready_flag = true;
+            lfs_kv_ready_flag = true;
     }
 
     return err;
@@ -252,11 +252,11 @@ int bt_settings_set_bin(const char *key, const uint8_t *value, size_t length)
 {    
     int err;
 
-    err =  bt_check_if_ef_ready();
+    err =  bt_check_if_lfs_kv_ready();
     if(err)
         return err;
 
-    err = ef_set_env_blob(key, value, length);
+    err = lfs_kv_set_blob(key, value, length);
 
     return err;
 }
@@ -266,11 +266,11 @@ int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *re
     int err;
     size_t rlen;
 
-    err = bt_check_if_ef_ready();
+    err = bt_check_if_lfs_kv_ready();
     if(err)
         return err;
 
-    rlen = ef_get_env_blob(key, value, exp_len, NULL);
+    rlen = lfs_kv_get_blob(key, value, exp_len, NULL);
 
     if(real_len)
         *real_len = rlen;
@@ -280,14 +280,14 @@ int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *re
 
 int settings_delete(const char *key)
 {
-#if (EF_SW_VERSION_NUM == 0x40099)
-    struct env_node_obj env;
-    if(!ef_get_env_obj(key, &env)){
+    size_t len = 0;
+
+    if (lfs_kv_get_blob(key, NULL, 0, &len) == 0) {
         BT_DBG("Not found %s in settings", key);
         return 0;
     }
-#endif /* EF_SW_VERSION_NUM == 0x40099 */
-    return ef_del_env(key);
+
+    return lfs_kv_del(key);
 }
 
 int settings_save_one(const char *key, const u8_t *value, size_t length)
@@ -301,7 +301,7 @@ void bt_settings_save_id(void)
 {
 #if defined(BFLB_BLE)
 #if defined(CONFIG_BT_SETTINGS)
-    if(bt_check_if_ef_ready())
+    if(bt_check_if_lfs_kv_ready())
         return;
     bt_settings_set_bin(NV_LOCAL_ID_ADDR, (const u8_t *)&bt_dev.id_addr[0], sizeof(bt_addr_le_t)*CONFIG_BT_ID_MAX); 
 #if defined(CONFIG_BT_PRIVACY)
@@ -322,7 +322,7 @@ void bt_settings_save_name(void)
 
 void bt_local_info_load(void)
 {
-    if(bt_check_if_ef_ready())
+    if(bt_check_if_lfs_kv_ready())
         return;
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
     bt_settings_get_bin(NV_LOCAL_NAME, (u8_t*)bt_dev.name, CONFIG_BT_DEVICE_NAME_MAX, NULL);

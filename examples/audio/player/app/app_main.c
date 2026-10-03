@@ -16,7 +16,7 @@
 
 #include "rfparam_adapter.h"
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "bflb_romfs.h"
 
 #include <sys/time.h>
@@ -44,7 +44,7 @@ void app_main_entry(void *arg)
 
     /* For bt status save */
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     /* romsfs init mount use media factory*/
     romfs_mount(0x778000);

@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include "bflb_dsi.h"
+#include "bflb_dpi.h"
 #include "bflb_gpio.h"
 #include "bl618dg_glb.h"
 
@@ -146,40 +147,57 @@ int mipi_dsi_v2_dcs_write_cmd(uint8_t data_type, uint8_t cmd, const uint8_t *dat
  * the OSD0 blend layer (set up by the application's dpi_manager). "Switching the
  * screen" means re-pointing the OSD0 blend layer at the freshly rendered canvas;
  * the swap latches at the next frame boundary (SEOF). An OSD interrupt fires on
- * every SEOF and invokes the registered SWAP callback, so the LVGL port can sync
- * (give a semaphore / rotate triple buffers) without busy-waiting.
+ * every SEOF. CYCLE is reported on every frame; SWAP is reported only after a
+ * submitted canvas crosses a subsequent frame boundary. get_screen_using()
+ * reports that completed canvas, so the LVGL port can safely reuse the old one.
  *
  * This is the DSI sibling of bl_mipi_dpi_v2_screen_switch(): the panel-specific
  * <panel>_dsi_screen_switch / _get_screen_using / _frame_callback_register
  * wrappers all forward here, exactly as the DPI panels forward to
  * lcd_mipi_dpi_* (see standard_dpi.c).
  *
- * The OSD canvas is the caller's buffer; the caller is responsible for cleaning
- * it out of the dcache before calling (the LVGL flush callback already does). */
+ * The OSD canvas is the caller's buffer; screen_switch() cleans its D-cache
+ * before programming the new address. */
 
 /* Frame interrupt callback types (mirror the DPI framework's CYCLE/SWAP split). */
 #define MIPI_DSI_V2_FRAME_INT_TYPE_CYCLE 0
 #define MIPI_DSI_V2_FRAME_INT_TYPE_SWAP  1
 
+#define MIPI_DSI_V2_OSD_FORMAT_RGB565   0
+#define MIPI_DSI_V2_OSD_FORMAT_ARGB8888 1
+#define MIPI_DSI_V2_OSD_FORMAT_NONE     2
+
+typedef struct {
+    const mipi_dsi_v2_timing_t *timing;
+    void *base_frame_buff; /* Optional RGB565 base framebuffer. YUV base frames are
+                              supplied later with bflb_dpi_framebuffer_planar_switch(). */
+    void *osd0_frame_buff; /* OSD0 framebuffer, required unless OSD0_FORMAT_NONE. */
+    uint8_t base_format; /* DPI base format: RGB565 or Y_UV_PLANAR */
+    uint8_t osd_format;  /* OSD0 canvas format: RGB565, ARGB8888 or NONE */
+} mipi_dsi_v2_init_t;
+
 /* One-shot bring-up of the DSI scan-out side, called from the panel's _dsi_init()
  * after the panel link is up:
- *   [1] DPI background scan-out layer (YUV planar, framebuffer-with-OSD; the
- *       background framebuffer starts at 0 and the app's video pipeline switches
- *       in real YUV frames at runtime via bflb_dpi_framebuffer_planar_switch)
- *   [2] OSD0 ARGB8888 blend overlay (the LVGL canvas)
- *   [3] OSD SEOF interrupt driving the frame callbacks
- * 'cfg' is the active panel timing; osd_buf is the initial OSD canvas (the
- * framebuffer lcd_init() handed down). Returns 0 on success, -1 if the DPI/OSD
- * device is unavailable. */
-int mipi_dsi_v2_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t osd_buf);
+ *   [1] DPI background scan-out layer (RGB565 or YUV planar; the framebuffer
+ *       address starts at 0 and the app switches real frames later through the
+ *       bflb_dpi_framebuffer_switch/planar_switch APIs)
+ *   [2] OSD0 RGB565/ARGB8888 blend overlay, or a transparent 1x1 OSD0 when NONE
+ *   [3] OSD0 SEOF interrupt driving the frame callbacks
+ * init_config supplies panel timing, independent base/OSD0 buffers, and both
+ * formats. The base address is programmed after DPI setup through the DPI
+ * framebuffer switch API; YUV base buffers are always supplied by the caller
+ * with bflb_dpi_framebuffer_planar_switch().
+ * Returns 0 on success, -1 if the DPI/OSD device is unavailable, -2 for invalid
+ * configuration. The configuration is consumed during this call only. */
+int mipi_dsi_v2_display_init(const mipi_dsi_v2_init_t *init_config);
 
 /* Attach + enable the OSD SEOF interrupt that drives the frame callbacks. Called
  * by mipi_dsi_v2_display_init(); exposed for callers that set up the OSD blend
  * layer themselves. 'osd' is that OSD device (OSD0). */
 void mipi_dsi_v2_osd_irq_init(struct bflb_device_s *osd);
 
-/* Re-point the OSD blend layer at screen_buffer. Non-blocking: the swap latches
- * at the next SEOF and the registered SWAP callback fires from the OSD ISR.
+/* Re-point the selected OSD0 or RGB565 base buffer at screen_buffer. Non-blocking:
+ * the swap latches at the next SEOF and the registered SWAP callback fires from the OSD ISR.
  * Returns 0 on success, -1 on NULL buffer, -2 if the OSD IRQ was not initialized
  * (mipi_dsi_v2_osd_irq_init not called). */
 int mipi_dsi_v2_screen_switch(void *screen_buffer);
@@ -191,28 +209,6 @@ void *mipi_dsi_v2_get_screen_using(void);
 /* Register a frame callback, invoked from the OSD SEOF ISR. SWAP and CYCLE are
  * both supported (mirrors the DPI framework). callback==NULL clears. Returns 0. */
 int mipi_dsi_v2_frame_callback_register(uint32_t callback_type, void (*callback)(void));
-
-/* RGB565 camera scan-out path. This is intentionally independent from the
- * existing YUV background + OSD0/LVGL path above:
- *   [1] RGB565 DPI base framebuffer
- *   [2] transparent 1x1 ARGB8888 OSD1 blend layer
- *   [3] OSD1 SEOF interrupt driving frame callbacks
- *
- * 'framebuffer_addr' is the initial RGB565 DPI base buffer. 'osd_sync_buf'
- * points to one ARGB8888 pixel used only to keep OSD1 active for SEOF. The
- * caller owns both buffers and must clean dcache before initialization. */
-int mipi_dsi_v2_rgb565_display_init(const mipi_dsi_v2_timing_t *cfg, uint32_t framebuffer_addr,
-                                    uint32_t osd_sync_buf);
-
-/* Queue the next RGB565 DPI base framebuffer. OSD1 SEOF applies the switch at
- * the frame boundary and then invokes the registered SWAP callback. */
-int mipi_dsi_v2_rgb565_screen_switch(void *screen_buffer);
-
-/* Return the RGB565 framebuffer currently selected for DPI scanout. */
-void *mipi_dsi_v2_rgb565_get_screen_using(void);
-
-/* Register OSD1 SEOF callbacks for the RGB565 camera scan-out path. */
-int mipi_dsi_v2_rgb565_frame_callback_register(uint32_t callback_type, void (*callback)(void));
 
 /* Base (DPI background) layer swap, invoked from the OSD SEOF ISR on every frame
  * boundary. Weak no-op by default: OSD0-only LVGL apps need no override (the base

@@ -6,9 +6,6 @@
 #include "oad_main.h"
 #ifdef CONFIG_BT_SETTINGS
 #include "settings.h"
-#if defined(CONFIG_IOT_SDK)
-#include "ef_def.h"
-#endif /* CONFIG_IOT_SDK */
 #endif
 #include "conn_internal.h"
 #if !defined(CONFIG_BL_SDK)

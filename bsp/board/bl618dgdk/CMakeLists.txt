@@ -4,6 +4,9 @@ target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_flash_psram.c)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_gpio.c)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board.c)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fw_header.c)
+if("${CPU_ID}" STREQUAL "ap")
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_ap.c)
+endif()
 
 if(CONFIG_GCC_COMPILE_LTO)
     set_source_files_properties(

@@ -14,20 +14,7 @@
 #include "unwind_6byte.h"
 #include "FreeRTOS.h"
 #include "task.h"
-
-/*============================================================================
- * Multi_bins Descriptor Parsing
- *============================================================================*/
-
-/* Multi_bins descriptor format (16 bytes) */
-typedef struct {
-    char name[8];         /* Descriptor name */
-    uint32_t start_addr;  /* Flash offset relative to firmware start */
-    uint32_t end_addr;    /* End offset */
-} __attribute__((packed)) multi_bin_desc_t;
-
-/* Linker symbols for multi_bins array */
-extern const uint8_t __multi_bins__[];
+#include "multi_bins.h"
 
 /*============================================================================
  * Internal Functions
@@ -39,38 +26,7 @@ extern const uint8_t __multi_bins__[];
  */
 static const uint8_t* get_cfi_table_base(void)
 {
-    const uint8_t *array_ptr = __multi_bins__;
-    const multi_bin_desc_t *desc;
-
-    /* Iterate through descriptors until terminator (16 bytes each) */
-    for (int i = 0; i < 16; i++) {
-        desc = (const multi_bin_desc_t*)(array_ptr + i * 16);
-
-        /* Check for terminator */
-        if (desc->start_addr == 0xFFFFFFFF) {
-            break;
-        }
-
-        /* Check if this is DWARFCFI descriptor (8-byte name) */
-        if (memcmp(desc->name, "DWARFCFI", 8) == 0) {
-            /* Convert firmware-relative offset to XIP mapped address */
-            uint32_t cfi_flash_addr = desc->start_addr;
-#if defined(BL616)
-            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0xA0000000;
-#elif defined(BL616CL)
-            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0x80000000;
-#elif defined(BL618DG) && defined(CPU_MODEL_B0)
-            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0xB0000000;
-#elif defined(BL618DG) && defined(CPU_MODEL_A0)
-            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0x80000000;
-#elif defined(BL602) || defined(BL702) || defined(BL702L)
-            uint32_t cfi_xip_addr = (cfi_flash_addr - 0x1000) + 0x23000000;
-#endif
-            return (const uint8_t*)cfi_xip_addr;
-        }
-    }
-
-    return NULL;  /* Not found */
+    return multi_bins_get_start("DWARFCFI");
 }
 
 /*============================================================================

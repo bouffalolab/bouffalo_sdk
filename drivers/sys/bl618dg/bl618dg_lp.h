@@ -81,7 +81,7 @@ enum PSM_EVENT {
 #define BL_LP_BLE_WAKE_TO_EXPIRY_US                (BL_LP_BLE_MAINTENANCE_LEAD_US + BL_LP_BLE_PDS_EARLY_US)
 
 #define LP_FW_BLE_PARA_MAGIC                       0x424C4550UL /* "BLEP" */
-#define LP_FW_BLE_PARA_VERSION                     20U
+#define LP_FW_BLE_PARA_VERSION                     21U
 #define LP_FW_BLE_DFE_MODE_STANDALONE              0U
 #define LP_FW_BLE_DFE_MODE_COMBO                   4U
 #define LP_FW_BLE_SPDT_GPIO_INVALID                0xFFU
@@ -326,15 +326,76 @@ typedef struct {
     uint32_t saved_ipcore_addr;
     uint16_t saved_blecore_count;
     uint16_t saved_ipcore_count;
+    uint16_t rc_calibration;
     uint32_t conn_ind_rx_desc_off;
     uint32_t consecutive_no_adv;
     uint32_t sleep_duration;
+    uint8_t wakeup_app;
     uint8_t ble_activity_state;
     uint8_t lpfw_ble_awake;
     uint8_t dfe_mode;
     uint8_t spdt_enabled;
     uint8_t spdt_gpio;
     uint8_t reserved;
+    /*
+     * LTOS connected-state exploration (ble_activity_state == LP_FW_BLE_ST_CONN).
+     * APP -> LPFW: scheduling state of the slave link at the hand-off; the
+     * LPFW keeps the same fields current for its next event.  Times are BLE
+     * half-slots (312.5 us), offsets half-us.
+     */
+    uint16_t con_interval;        /* half-slots */
+    uint16_t con_latency;
+    uint8_t con_latency_applied;
+    uint16_t con_evt_cnt;         /* counter of the last event run */
+    uint16_t con_evt_inc;         /* increment for the next event */
+    uint16_t con_master_sca;      /* ppm */
+    uint16_t con_local_drift;     /* ppm */
+    uint16_t con_last_cs_ch_idx;  /* CSA#1 channel of the last event */
+    uint32_t con_prog_hs;         /* next event: exchange-table program time (window start) */
+    uint16_t con_prog_hus;        /* next event: exchange-table fine time */
+    uint32_t con_next_ts;         /* next event timestamp(corresponding to the middle of the sync window when slave)*/
+    uint32_t con_next_bit_off;
+    uint32_t con_sync_win_hus;    /* next event: RX window, half-us */
+    uint32_t con_last_sync_ts;
+    int16_t  con_last_sync_bit_off;
+    int16_t  con_rsvd0;
+    uint32_t con_last_crc_ok_ts;
+    uint32_t con_timeout_hs;      /* supervision timeout, half-slots */
+    uint32_t con_duration_min_hus;
+    uint8_t  con_rx_rate;         /* 0 = 1M, 1 = 2M */
+    uint8_t  con_hop_sel_1;       /* 1: CSA#1 */
+    uint8_t  con_hop_inc;
+    uint8_t  con_prio;            /* arbiter priority (0..255) */
+    uint16_t con_early_us;        /* BLE core wake lead before the window start (0 = default) */
+    /* LPFW -> APP. */
+    uint8_t  con_state;
+    uint8_t  con_wake_cause;      /* 0 none, 1 clean, 2 miss, 3 rx left in the descriptor */
+    uint8_t  con_proged_in_lpfw; /*If conn event is programed in lpfw*/
+    uint32_t con_out_next_ts;   /* its anchor: sync time, or the target when missed */
+    uint16_t con_out_next_bit_off;
+    uint32_t con_out_rx_desc_off; /* current RX descriptor byte offset */
+    uint32_t con_events_run;
+    uint32_t con_events_synced;
+    uint16_t con_last_rxstat;     /* RXSTATCE of the last received packet */
+    uint16_t con_last_rxphce;     /* RXPHCE of the last received packet */
+    /* con_dbg: [0] us from programming to window start, [1] HW error type,
+     * [2] poll bits, [3] us to the next window, [4] anchor error of the last
+     * sync (half-us, signed), [5] BLE clock advance minus RTC advance across
+     * the last sleep (us, signed), [6] BT half-slot at the last sleep arm,
+     * [7] RTC us at the last sleep arm (low 32 bits). */
+    uint32_t con_dbg[8];
+    /* Per-event log ring (entry = (con_events_run - 1) % 8), 4 words each:
+     * [0] evt_cnt<<16 | status<<8 | sw_wakeup_forced<<4 | poll bits,
+     * [1] rxstat<<16 | rxchass (rate<<14 | used ch idx<<8 | raw rssi) of the
+     *     first descriptor of the event (0xFFFF when none was written),
+     * [2] anchor error of the sync (half-us, signed; 0x7FFFFFFF without sync),
+     * [3] clock lag across the preceding sleep (us, signed, high 16) |
+     *     us from programming to the window start (signed, low 16). */
+    uint32_t con_elog[32];
+    uint16_t con_sync_evt_cnt;    /* counter of the last synced event (timing reference) */
+    uint16_t con_retry_max;       /* missed events re-tried in the LPFW before handing back */
+    uint16_t con_retries;         /* re-tries used in this window */
+    uint16_t con_rsvd1;
 } lp_fw_ble_para_t;
 
 typedef struct {
@@ -482,7 +543,6 @@ typedef struct {
 
 #define LP_FW_PRE_JUMP_ADDR 0x20010000
 
-extern uint32_t __attribute__((weak)) __lpfw_load_addr[];     /* ld symbol */
 extern uint32_t __attribute__((weak)) __lpfw_share_start__[]; /* ld symbol */
 extern uint32_t __attribute__((weak)) __lpfw_share_used__[];  /* ld symbol */
 extern uint32_t __attribute__((weak)) __lpfw_share_end__[];   /* ld symbol */

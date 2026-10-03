@@ -56,8 +56,26 @@ static int bl_lp_check_iot2lp_para_pointers(iot2lp_para_t *para)
     return 0;
 }
 
-/* jump to lpfw form bootrom */
+#if defined(BL616) && defined(CONFIG_PSRAM_RETENTION)
+/* CPU-only reset bypasses BootROM's stack setup. Keep this first in the
+ * HBN code section: LP_FW_PRE_JUMP_ADDR is also used by the PDS15 wake path. */
+ATTR_HBN_CODE_SECTION __attribute__((naked, used)) void lp_fw_pre(void)
+{
+    __asm__ __volatile__(
+        "csrci mstatus, 8\n\t"
+        ".option push\n\t"
+        ".option norelax\n\t"
+        "la gp, __global_pointer$\n\t"
+        ".option pop\n\t"
+        "la sp, __StackTop\n\t"
+        "csrw mscratch, sp\n\t"
+        "j lp_fw_pre_body\n\t");
+}
+ATTR_HBN_CODE_SECTION __attribute__((used, noinline)) void lp_fw_pre_body(void)
+#else
+/* jump to lpfw from BootROM */
 ATTR_HBN_CODE_SECTION void lp_fw_pre(void)
+#endif
 {
     uint32_t tmpVal;
 
@@ -101,6 +119,11 @@ static void bl616_load_hbn_ram(void)
 {
     uint32_t *pSrc, *pDest;
 
+#if defined(BL616) && defined(CONFIG_PSRAM_RETENTION)
+    /* Fixed BootROM/CPU-reset entry must not overlap the retained context. */
+    assert((uintptr_t)lp_fw_pre == LP_FW_PRE_JUMP_ADDR);
+    assert((uintptr_t)&__hbn_ram_end__ <= IOT2LP_PARA_ADDR);
+#endif
     /* BF Add HBNRAM data copy */
     pSrc = &__hbn_ram_load__;
     pDest = &__hbn_ram_start__;
@@ -600,6 +623,11 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     iot2lp_para->wifi_parameter->wifi_rx_buff = (uint8_t *)((uint32_t)export_get_rx_buffer1_addr() & 0x2FFFFFFF);
     /* lpfw cfg: system para */
     iot2lp_para->mcu_sts = bl_lp_fw_cfg->mcu_sts;
+#if defined(BL616) && defined(CONFIG_PSRAM_RETENTION)
+    iot2lp_para->pds_level = PM_PDS_LEVEL_1;
+#else
+    iot2lp_para->pds_level = PM_PDS_LEVEL_15;
+#endif
     iot2lp_para->lpfw_wakeup_cnt = 0;
     iot2lp_para->pattern = 0xAA5555AA;
     iot2lp_para->wakeup_flag = 0;
@@ -716,6 +744,12 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     lp_fw_save_cpu_para(GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR);
 
     if (iot2lp_para->wakeup_flag == 0) {
+#if defined(BL616) && defined(CONFIG_PSRAM_RETENTION)
+        const enum pm_pds_sleep_level sleep_level = PM_PDS_LEVEL_1;
+        pm_pds_irq_register();
+#else
+        const enum pm_pds_sleep_level sleep_level = PM_PDS_LEVEL_15;
+#endif
         /* Check io_stat , judge whether to enter PDS mode */
         /* if io_stat isn't 0x0, will sleep 2ms */
         if (1 == bl_lp_wakeup_check_allow()) {
@@ -731,7 +765,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
             /* enable rtc wakeup source */
             BL_WR_REG(PDS_BASE, PDS_INT, BL_RD_REG(PDS_BASE, PDS_INT) | (0x00000001 << 11));
             /* pds15 enter */
-            pm_pds_mode_enter(PM_PDS_LEVEL_15, BL_US_TO_PDS_CNT(pds_sleep_us));
+            pm_pds_mode_enter(sleep_level, BL_US_TO_PDS_CNT(pds_sleep_us));
 
         } else if (bl_lp_fw_cfg->tim_wakeup_en) {
             /* disable rtc comp */
@@ -740,7 +774,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
             tmpVal = tmpVal & 0xfffffff1;
             BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
             /* pds15 enter */
-            pm_pds_mode_enter(PM_PDS_LEVEL_15, BL_US_TO_PDS_CNT(pds_sleep_us));
+            pm_pds_mode_enter(sleep_level, BL_US_TO_PDS_CNT(pds_sleep_us));
 
         } else if (rtc_wakeup_cmp_cnt || rtc_sleep_us) {
             /* rtc cfg */
@@ -750,9 +784,14 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
             /* enable rtc wakeup source */
             BL_WR_REG(PDS_BASE, PDS_INT, BL_RD_REG(PDS_BASE, PDS_INT) | (0x00000001 << 11));
             /* pds15 enter */
-            pm_pds_mode_enter(PM_PDS_LEVEL_15, 0);
+            pm_pds_mode_enter(sleep_level, 0);
         }
 
+#if defined(BL616) && defined(CONFIG_PSRAM_RETENTION)
+        /* Successful handoff does not return. On validation failure, restore
+         * APP through the existing fallback rather than jump to an invalid PC. */
+        (void)pm_reset_cpu_to_lpfw();
+#endif
         iot2lp_para->wakeup_flag = 1;
         lp_fw_restore_cpu_para(GET_OFFSET(iot2lp_para_t, cpu_regs) + IOT2LP_PARA_ADDR);
     }

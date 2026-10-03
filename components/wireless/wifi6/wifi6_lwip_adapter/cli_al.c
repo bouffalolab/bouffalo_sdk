@@ -852,7 +852,7 @@ void wifi_mgmr_ap_ip_set_cmd(int argc, char **argv)
 static void wifi_mgmr_ap_start_usage(const char *command)
 {
     printf("[USAGE]: %s -s <ssid> [-k <key>] [-a <akm>] "
-           "[-c <channel>] [-b <bandwidth>]\r\n", command);
+           "[-c <channel>] [-b <bandwidth>] [-A <0|1>]\r\n", command);
     printf("               [-t <inactivity_s>] [-h <0|1>] [-i <0|1>] "
            "[-g <0|1>] [-d <0|1>]\r\n");
     printf("               [-I <ipv4_addr>] [-S <pool_start>] "
@@ -860,7 +860,9 @@ static void wifi_mgmr_ap_start_usage(const char *command)
     printf("  -s: SSID (required)\r\n");
     printf("  -k: key; omitted for an open AP\r\n");
     printf("  -a: AKM, e.g. OPEN, WPA, WPA2/RSN, or WPA3/SAE; OPEN cannot use -k\r\n");
-    printf("  -c: primary channel; default is 6\r\n");
+    printf("  -c: primary channel; BL618DG default is the first legal 5GHz channel;\r\n");
+    printf("      with ACS enabled, channel selects the band (0 uses the chip default).\r\n");
+    printf("  -A: startup ACS, 0=disabled (default), 1=enabled; 20MHz surveys, -b selects AP bandwidth\r\n");
     printf("  -b: bandwidth, 0=20MHz (default), 1=40MHz, 2=80MHz\r\n");
     printf("  -t: maximum station inactivity in seconds\r\n");
     printf("  -h: hidden SSID, 0=disabled (default), 1=enabled\r\n");
@@ -893,8 +895,13 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
     config.use_dhcpd = true;
 
     utils_al_getopt_init(&getopt_env, 0);
-    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:w:")) != -1) {
+    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:w:A:")) != -1) {
         switch (opt) {
+        case 'A':
+            if (!getopt_env.optarg || !utils_al_parse_long(getopt_env.optarg, 0, 1, &value))
+                goto _ERROUT;
+            config.acs = value != 0;
+            break;
 	case 'b':
 	    if (!getopt_env.optarg || getopt_env.optarg[0] < '0' ||
                 getopt_env.optarg[0] > '9' ||
@@ -984,6 +991,9 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
         goto _ERROUT;
     }
 
+    /* Deferred-cal debug: AP start uses FULL IQ at channel switch, not MM_RF_CAL. */
+    RFCAL_PRINTF("[RFCAL] AP_START ssid=%s ch=%u hidden=%u\r\n",
+           config.ssid, config.channel, config.hidden_ssid);
     ret = wifi_mgmr_ap_start(&config);
     if (ret) {
         printf("\r\nwifi_ap_start failed, ret=%d\r\n", ret);
@@ -1014,6 +1024,8 @@ void wifi_mgmr_ap_chan_switch_cmd(int argc, char **argv)
     if (argc > 2)
         cs_count = (uint8_t)atoi(argv[2]);
 
+    /* Deferred-cal debug: AP CSA FORCE runs on CHANNEL_SWITCH_IND, not here. */
+    RFCAL_PRINTF("[RFCAL] AP_CSA ch=%d cs_count=%u\r\n", channel, cs_count);
     wifi_mgmr_ap_chan_switch(channel, cs_count);
 }
 #endif

@@ -17,6 +17,22 @@ config FOTA_NO_SHELL
     help
       Build FOTA without the shell command frontend.
 
+config FOTA_HTTPD_SERVER
+    bool "lwIP HTTPD FOTA server"
+    default n
+    depends on FOTA && HTTP && HTTPD && LWIP_ALTCP
+    help
+      Build the lwIP HTTPD server for browser-uploaded firmware.
+
+config FAST_OTA
+    int "OTA erase mode"
+    range 0 1
+    default 1
+    depends on FOTA
+    help
+      Set to 1 to erase the complete inactive partition when an OTA session
+      starts. Set to 0 to erase sectors as firmware data is written.
+
 config OTA_VERSION_CHECK
     bool "OTA version check"
     default n

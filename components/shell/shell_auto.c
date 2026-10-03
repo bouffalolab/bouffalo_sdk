@@ -1,5 +1,5 @@
 #include "shell.h"
-#include "bflb_flash.h"
+#include "multi_bins.h"
 
 #if IS_ENABLED(CONFIG_FREERTOS)
 #include "FreeRTOS.h"
@@ -14,70 +14,28 @@
 #define CONFIG_SHELL_AUTO_EXEC_TIMEOUT_MS 30000
 #endif
 
-#define SHELL_AUTO_DESC_NAME "AUTOLIST"
-#define SHELL_AUTO_FW_HEADER_OFFSET 0x1000
-
-typedef struct {
-    char name[8];
-    uint32_t start_addr;
-    uint32_t end_addr;
-} __attribute__((packed)) multi_bin_desc_t;
-
-extern const uint8_t __multi_bins__[];
-
-static int shell_auto_find_desc(const multi_bin_desc_t **out_desc)
+static int shell_auto_find_desc(const uint8_t **start_addr, const uint8_t **end_addr)
 {
-    const multi_bin_desc_t *desc;
-
-    if (out_desc == NULL) {
+    if (start_addr == NULL || end_addr == NULL) {
         return -1;
     }
 
-    for (int i = 0; i < 16; i++) {
-        desc = (const multi_bin_desc_t *)(__multi_bins__ + i * sizeof(multi_bin_desc_t));
-        if (desc->start_addr == 0xFFFFFFFF) {
-            break;
-        }
-        if (memcmp(desc->name, SHELL_AUTO_DESC_NAME, sizeof(desc->name)) == 0) {
-            if (desc->end_addr > desc->start_addr) {
-                *out_desc = desc;
-                return 0;
-            }
-            break;
-        }
+    *start_addr = multi_bins_get_start("AUTOLIST");
+    *end_addr = multi_bins_get_end("AUTOLIST");
+    if (*start_addr != NULL && *end_addr > *start_addr) {
+        return 0;
     }
 
-    *out_desc = NULL;
+    *start_addr = NULL;
+    *end_addr = NULL;
     return -1;
-}
-
-static uint32_t shell_auto_capacity(const multi_bin_desc_t *desc)
-{
-    uint32_t size = desc->end_addr - desc->start_addr;
-
-    if (size > CONFIG_SHELL_AUTO_LIST_SIZE) {
-        size = CONFIG_SHELL_AUTO_LIST_SIZE;
-    }
-
-    return size;
-}
-
-static uint32_t shell_auto_flash_addr(uint32_t bin_offset)
-{
-    uint32_t image_offset = bflb_flash_get_image_offset();
-
-    if (image_offset >= SHELL_AUTO_FW_HEADER_OFFSET) {
-        return bin_offset + image_offset - SHELL_AUTO_FW_HEADER_OFFSET;
-    }
-
-    return bin_offset;
 }
 
 static int shell_auto_read(char *buf, uint32_t buf_size)
 {
-    const multi_bin_desc_t *desc;
+    const uint8_t *start_addr;
+    const uint8_t *end_addr;
     uint32_t size;
-    int ret;
 
     if (buf == NULL || buf_size == 0) {
         return -1;
@@ -85,19 +43,19 @@ static int shell_auto_read(char *buf, uint32_t buf_size)
 
     memset(buf, 0, buf_size);
 
-    if (shell_auto_find_desc(&desc) != 0) {
+    if (shell_auto_find_desc(&start_addr, &end_addr) != 0) {
         return -1;
     }
 
-    size = shell_auto_capacity(desc);
+    size = (uint32_t)(end_addr - start_addr);
+    if (size > CONFIG_SHELL_AUTO_LIST_SIZE) {
+        size = CONFIG_SHELL_AUTO_LIST_SIZE;
+    }
     if (size >= buf_size) {
         size = buf_size - 1;
     }
 
-    ret = bflb_flash_read(shell_auto_flash_addr(desc->start_addr), (uint8_t *)buf, size);
-    if (ret != 0) {
-        return ret;
-    }
+    memcpy(buf, start_addr, size);
 
     buf[size] = '\0';
     for (uint32_t i = 0; i < size; i++) {

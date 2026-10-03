@@ -17,6 +17,20 @@
 #define MACSW_P2P_DEBUG(...) do { if (0) bl_fw_printf(__VA_ARGS__); } while (0)
 #endif
 
+/* Deferred 5 GHz RF cal logs. Set CFG_RFCAL_DEBUG to 0 to silence [RFCAL]. */
+#ifndef CFG_RFCAL_DEBUG
+#define CFG_RFCAL_DEBUG 1
+#endif
+#if defined(CFG_RFCAL_DEBUG) && CFG_RFCAL_DEBUG
+#define RFCAL_PRINTF(...) printf(__VA_ARGS__)
+#define RFCAL_LOG(fmt, ...) \
+    bl_fw_printf("[RFCAL] t_us=%lu " fmt "\r\n", \
+                 (unsigned long)hal_machw_time(), ##__VA_ARGS__)
+#else
+#define RFCAL_PRINTF(...) do { if (0) printf(__VA_ARGS__); } while (0)
+#define RFCAL_LOG(...) do { } while (0)
+#endif
+
 #define MACSW_VERSION_STR      "v6.10.0.0"
 // Version has the form Major.minor.release.patch
 // The version string is "vMM.mm.rr.pp"
@@ -1949,6 +1963,28 @@ struct mm_version_cfm
     uint8_t max_vif_nb;
 };
 
+/// FORCE IQ on an active deferred 5 GHz working channel.
+struct mm_rf_cal_req
+{
+    /// VIF index requesting the calibration.
+    uint8_t vif_idx;
+    /// Channel context index expected to be active.
+    uint8_t chan_idx;
+};
+
+/// Confirmation of the deferred RF calibration request.
+struct mm_rf_cal_cfm
+{
+    /// Status of the request (@ref co_status).
+    uint8_t status;
+    /// VIF index copied from the request.
+    uint8_t vif_idx;
+    /// Channel context index copied from the request.
+    uint8_t chan_idx;
+    /// Time spent in the PHY calibration routine, in microseconds.
+    uint32_t elapsed_us;
+};
+
 /// Structure containing the parameters of the @ref ME_CONFIG_MONITOR_REQ message.
 struct me_config_monitor_req
 {
@@ -3366,6 +3402,14 @@ enum mm_msg_tag
     MM_BBP_START_REQ,
     MM_BBP_STOP_REQ,
 
+    /// FORCE current-channel 5 GHz IQ after FAST. Dispatched in HW IDLE.
+    /// STA: fhost STA_PORT. CSA: CSA_SWITCH. AP start does not use this.
+    MM_RF_CAL_REQ,
+    /// Confirmation of @ref MM_RF_CAL_REQ.
+    MM_RF_CAL_CFM,
+    /// Internal timer: repost @ref MM_RF_CAL_REQ after BUSY or failure.
+    MM_RF_CAL_RETRY_IND,
+
     /// MAX number of messages
     MM_MAX,
 };
@@ -4439,6 +4483,10 @@ uint8_t mm_channel_switch_ind_get_chan_index(void *param);
 uint8_t mm_channel_switch_ind_get_vif_index(void *param);
 bool mm_channel_switch_ind_get_roc(void *param);
 bool mm_channel_switch_ind_get_roc_tdls(void *param);
+/// True if fhost should MM_RF_CAL (FORCE current-channel IQ) on CHANNEL_SWITCH_IND.
+/// CSA (PENDING + CHANNEL_SWITCH), or a failed attempt whose retry count is set.
+/// A fresh STA/GC EXPLICIT ctxt waits for STA_PORT and does not match here.
+bool mac_vif_rf_cal_on_channel_switch(void *macif);
 
 void macif_rx_buf_ind(void);
 void macif_tx_data_ind(int queue_idx);

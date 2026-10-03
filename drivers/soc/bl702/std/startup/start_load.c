@@ -39,6 +39,8 @@ extern uint32_t __tcm_code_start__;
 extern uint32_t __tcm_code_end__;
 extern uint32_t __tcm_data_start__;
 extern uint32_t __tcm_data_end__;
+extern uint32_t __system_ram_data_start__;
+extern uint32_t __system_ram_data_end__;
 extern uint32_t __ram_data_start__;
 extern uint32_t __ram_data_end__;
 extern uint32_t __bss_start__;
@@ -78,6 +80,14 @@ void start_load(void)
     pDest = &__tcm_data_start__;
 
     for (; pDest < &__tcm_data_end__;) {
+        *pDest++ = *pSrc++;
+    }
+
+    /* BF Add system RAM data copy */
+    pSrc = &__system_ram_load_addr;
+    pDest = &__system_ram_data_start__;
+
+    for (; pDest < &__system_ram_data_end__;) {
         *pDest++ = *pSrc++;
     }
 

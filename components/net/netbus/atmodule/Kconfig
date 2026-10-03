@@ -51,6 +51,12 @@ config ATMODULE_FULL_FEAT
     help
       Enable the complete AT command feature set.
 
+config ATMODULE_ALL_FEAT
+    bool "Enable all AT module features"
+    default n
+    help
+      Enable the extended AT commands.
+
 config ATMODULE_BLUETOOTH
     bool "Bluetooth commands"
     help
@@ -119,6 +125,20 @@ config ATMODULE_GPIO
     depends on ATMODULE_BASE
     help
       Enable AT GPIO commands.
+
+config ATMODULE_CHIP_TEMP
+    bool "Chip temperature command"
+    depends on ATMODULE_BASE
+    default n
+    help
+      Enable the AT+TEMP command.
+
+config ATMODULE_CHIP_VBAT
+    bool "Chip voltage command"
+    depends on ATMODULE_BASE
+    default n
+    help
+      Enable the AT+VBAT command.
 
 config ATMODULE_CONFIG_STORAGE
     bool "Persistent configuration storage"

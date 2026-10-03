@@ -37,6 +37,10 @@
 #include "ap.h"
 #include "ap/sta_info.h"
 #include "notify.h"
+#ifdef CONFIG_MACSW
+#include "fhost.h"
+#include "fhost_wpa.h"
+#endif
 
 
 #ifdef CONFIG_WPS
@@ -918,6 +922,10 @@ static void wpas_ap_configured_cb(void *ctx)
 		   hostapd_state_text(wpa_s->ap_iface->state));
 	if (wpa_s->ap_iface->state == HAPD_IFACE_DISABLED) {
 		wpa_supplicant_ap_deinit(wpa_s);
+#ifdef CONFIG_MACSW
+		fhost_wpa_send_event(FHOST_WPA_DISCONNECTED, NULL, 0,
+				     fhost_vif_idx_from_name(wpa_s->ifname));
+#endif
 		return;
 	}
 

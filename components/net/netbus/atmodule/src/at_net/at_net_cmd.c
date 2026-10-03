@@ -1140,6 +1140,10 @@ static int at_setup_cmd_ciprecvdata(int argc, const char **argv)
         AT_CMD_PARSE_NUMBER(1, &size);
     }
 
+    if (!at_net_client_id_is_valid(linkid)) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_HANDLE_INVALID);
+    }
+
     if (size <= 0 || size > at_net_recvbuf_size_get(linkid)) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }

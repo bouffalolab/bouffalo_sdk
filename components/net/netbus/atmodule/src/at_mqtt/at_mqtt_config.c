@@ -13,7 +13,7 @@
 #include <string.h>
 #include <FreeRTOS.h>
 //#ifdef EASYFLASH_ENABLE
-#include <easyflash.h>
+#include "lfs_kv.h"
 //#endif
 #include "at_config.h"
 #include "at_mqtt_config.h"
@@ -49,7 +49,7 @@ int at_mqtt_config_save(const char *key)
 
 int at_mqtt_config_default(void)
 {
-    //ef_del_env(AT_CONFIG_KEY_NET_TRANS_LINK);
+    //lfs_kv_del(AT_CONFIG_KEY_NET_TRANS_LINK);
     if (at_mqtt_config) {
         memset(&at_mqtt_config->ssl_conf, 0, sizeof(at_mqtt_config->ssl_conf));
     }

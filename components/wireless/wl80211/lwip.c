@@ -220,6 +220,7 @@ int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned in
     pc->opaque = opaque;
 
     if (ERR_OK != pbuf_take(p, buffer, len)) {
+        pc->cb = NULL; // caller keeps opaque on failure
         pbuf_free(p);
         return -2;
     }
@@ -235,6 +236,7 @@ int wl80211_output_raw(uint8_t vif_type, void *buffer, uint16_t len, unsigned in
     txhdr = (void *)ALIGN4_HI((uint32_t)p->payload);
 
     if (wl80211_mac_tx(vif_type, txhdr, flags, txseg, 1, pbuf_free, p)) {
+        pc->cb = NULL; // caller keeps opaque on failure
         pbuf_free(p);
         return -3;
     } else {

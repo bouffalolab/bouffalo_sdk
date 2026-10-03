@@ -1,5 +1,6 @@
 #include "axs15231b_hs035_dsi.h"
 #include "mipi_dsi_v2.h"
+#include "bflb_l1c.h"
 #include "bflb_mtimer.h"
 
 #if defined(LCD_DSI_AXS15231B_HS035)
@@ -78,18 +79,33 @@ static int axs15231b_hs035_prepare(void)
 
 int axs15231b_hs035_dsi_init(axs15231b_hs035_dsi_color_t *screen_buffer)
 {
+
+#if (AXS15231B_HS035_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) || \
+    (AXS15231B_HS035_FB_MODE == AXS15231B_HS035_FB_MODE_RGB565)
+    if (screen_buffer == NULL) {
+        return -1;
+    }
+#endif
+
     int ret = axs15231b_hs035_prepare();
     if (ret != 0) {
         return ret;
     }
-    /* DPI background + OSD0 overlay + OSD SEOF interrupt. screen_buffer is the
-     * initial OSD canvas handed down by lcd_init(). */
-    return mipi_dsi_v2_display_init(&axs15231b_hs035_timing, (uint32_t)screen_buffer);
+
+    const mipi_dsi_v2_init_t init_config = {
+        .timing = &axs15231b_hs035_timing,
+        .base_frame_buff = (AXS15231B_HS035_OSD0_FORMAT == MIPI_DSI_V2_OSD_FORMAT_NONE &&
+                            AXS15231B_HS035_FB_MODE == AXS15231B_HS035_FB_MODE_RGB565) ? screen_buffer : NULL,
+        .osd0_frame_buff = (AXS15231B_HS035_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) ? screen_buffer : NULL,
+        .base_format = (AXS15231B_HS035_FB_MODE == AXS15231B_HS035_FB_MODE_RGB565) ? DPI_DATA_FORMAT_RGB565 : DPI_DATA_FORMAT_Y_UV_PLANAR,
+        .osd_format = AXS15231B_HS035_OSD0_FORMAT,
+    };
+    return mipi_dsi_v2_display_init(&init_config);
 }
 
 int axs15231b_hs035_dsi_screen_switch(axs15231b_hs035_dsi_color_t *screen_buffer)
 {
-    return mipi_dsi_v2_screen_switch((void *)screen_buffer);
+    return mipi_dsi_v2_screen_switch(screen_buffer);
 }
 
 axs15231b_hs035_dsi_color_t *axs15231b_hs035_dsi_get_screen_using(void)

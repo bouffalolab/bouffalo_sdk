@@ -142,9 +142,9 @@ int app_apeth_bridge_init(void)
     bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
     bflb_irq_enable(WIFI_IRQn);
 
-    /* Enable easyflash(littlefs) */
+    /* Enable lfs_kv(littlefs) */
     // bflb_mtd_init();
-    // easyflash_init();
+    // lfs_kv_init();
 
     /* romsfs init mount use media factory*/
     // romfs_mount(0x378000);

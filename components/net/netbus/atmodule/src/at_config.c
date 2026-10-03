@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 #if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
-#include <easyflash.h>
+#include "lfs_kv.h"
 #endif
 #include "at_main.h"
 #include "at_core.h"
@@ -30,7 +30,7 @@ int at_config_read(const char *key, void *config, int len)
     size_t ret, value_len;
 
     memset(config, 0, len);
-    ret = ef_get_env_blob(key, config, len, &value_len);
+    ret = lfs_kv_get_blob(key, config, len, &value_len);
     if (ret > 0 && ret == value_len && value_len == len) {
         AT_CONFIG_PRINTF("'%s' (%d) read success\r\n", key, len);
         return 1;
@@ -48,9 +48,9 @@ int at_config_write(const char *key, void *config, int len)
         return 0;
     }
 #if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
-    int ret = ef_set_env_blob(key, config, len);
+    int ret = lfs_kv_set_blob(key, config, len);
     if (ret != 0) {
-        AT_CONFIG_PRINTF("ef_set_env_blob failed for '%s' (%d)\r\n", key, len);
+        AT_CONFIG_PRINTF("lfs_kv_set_blob failed for '%s' (%d)\r\n", key, len);
         return 0;
     }
     return 1;
@@ -66,9 +66,9 @@ int at_config_delete(const char *key)
         return 0;
     }
 #if defined(CONFIG_ATMODULE_CONFIG_STORAGE) && (CONFIG_ATMODULE_CONFIG_STORAGE)
-    int ret = ef_del_env(key);
+    int ret = lfs_kv_del(key);
     if (ret != 0) {
-        AT_CONFIG_PRINTF("ef_del_env failed for '%s'\r\n", key);
+        AT_CONFIG_PRINTF("lfs_kv_del failed for '%s'\r\n", key);
         return 0;
     }
     return 1;
@@ -97,7 +97,7 @@ int at_config_read_with_id(const char *key, int id, void *config, int len)
     char key_id[128];
     snprintf(key_id, sizeof(key_id), "%s%d", key, id);
 
-    ret = ef_get_env_blob(key_id, config, len, &value_len);
+    ret = lfs_kv_get_blob(key_id, config, len, &value_len);
     if (ret > 0 && ret == value_len) {
         AT_CONFIG_PRINTF("'%s' (%d) read success\r\n", key_id, value_len);
         return 1;

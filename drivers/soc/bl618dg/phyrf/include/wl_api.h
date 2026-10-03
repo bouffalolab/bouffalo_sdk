@@ -350,7 +350,6 @@ void wl_rf_set_bz_channel_pwr_comp(void);
 void wl_rf_set_status(uint8_t combo_rf_en);// turn on/off combo rf domain
 void wl_standalone_rf_set_status(uint8_t standalone_rf_en);// turn on/off standalone rf domain
 void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
-void wl_set_ch_rfcal(uint8_t do_cal); // 1/0：turn on/off rf cal while switch channel
 
 
 // config for rf 

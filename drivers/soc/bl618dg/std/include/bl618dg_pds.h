@@ -163,7 +163,10 @@ typedef struct
     uint32_t wbRst       : 1; /*!< [13] */
     uint32_t wbMemStby   : 1; /*!< [14] */
     uint32_t wbGateClk   : 1; /*!< [15] */
-    uint32_t rsv16_19    : 4; /*!< [19:16]reserve */
+    uint32_t bzBlePwrOff  : 1; /*!< [16]Power off BZ BLE at PDS sleep state */
+    uint32_t bzBleRst     : 1; /*!< [17]Reset BZ BLE at PDS sleep state */
+    uint32_t bzBleMemStby : 1; /*!< [18]Retain BZ BLE RAM at PDS sleep state */
+    uint32_t bzBleGateClk : 1; /*!< [19]Gate BZ BLE clock at PDS sleep state */
     uint32_t usbPwrOff   : 1; /*!< [20] */
     uint32_t usbRst      : 1; /*!< [21] */
     uint32_t usbMemStby  : 1; /*!< [22] */
@@ -222,19 +225,24 @@ typedef struct
 {
     uint32_t rsv0             : 1;  /*!< [0]reserve */
     uint32_t forceMiscPwrOff  : 1;  /*!< [1]manual force MISC pwr_off */
-    uint32_t rsv2_3           : 2;  /*!< [3:2]reserve */
+    uint32_t forceBzBlePwrOff : 1;  /*!< [2]manual force BZ_BLE pwr_off */
+    uint32_t rsv3             : 1;  /*!< [3]reserve */
     uint32_t forceMiscIsoEn   : 1;  /*!< [4]manual force MISC iso_en */
-    uint32_t rsv5_6           : 2;  /*!< [6:5]reserve */
+    uint32_t forceBzBleIsoEn  : 1;  /*!< [5]manual force BZ_BLE iso_en */
+    uint32_t rsv6             : 1;  /*!< [6]reserve */
     uint32_t forceMiscPdsRst  : 1;  /*!< [7]manual force MISC pds_rst */
-    uint32_t rsv8_9           : 2;  /*!< [9:8]reserve */
+    uint32_t forceBzBlePdsRst : 1;  /*!< [8]manual force BZ_BLE pds_rst */
+    uint32_t rsv9             : 1;  /*!< [9]reserve */
     uint32_t forceMiscMemStby : 1;  /*!< [10]manual force MISC mem_stby */
-    uint32_t rsv11_12         : 2;  /*!< [12:11]reserve */
+    uint32_t forceBzBleMemStby : 1; /*!< [11]manual force BZ_BLE mem_stby */
+    uint32_t rsv12            : 1;  /*!< [12]reserve */
     uint32_t forceMiscGateClk : 1;  /*!< [13]manual force MISC gate_clk */
-    uint32_t rsv14_23         : 10; /*!< [23:14]reserve */
+    uint32_t forceBzBleGateClk : 1; /*!< [14]manual force BZ_BLE gate_clk */
+    uint32_t rsv15_23         : 9;  /*!< [23:15]reserve */
     uint32_t cpuIsoEn         : 1;  /*!< [24]make CPU isolated at PDS Sleep state */
     uint32_t rsv25_26         : 2;  /*!< [26:25]reserve */
     uint32_t wbIsoEn          : 1;  /*!< [27]make WB isolated at PDS Sleep state */
-    uint32_t rsv28            : 1;  /*!< [28]reserve */
+    uint32_t bzBleIsoEn       : 1;  /*!< [28]make BZ_BLE isolated at PDS Sleep state */
     uint32_t usbIsoEn         : 1;  /*!< [29]make USB isolated at PDS Sleep state */
     uint32_t miscIsoEn        : 1;  /*!< [30]make misc isolated at PDS Sleep state */
     uint32_t rsv31            : 1;  /*!< [31]reserve */

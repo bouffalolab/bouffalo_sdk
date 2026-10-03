@@ -25,10 +25,19 @@ typedef struct mode{
     int mode;
 }wifimode_t;
 
+enum wlan_netif_state {
+    WLAN_NETIF_DISCONNECTED = 0,
+    WLAN_NETIF_CONNECTING,
+    WLAN_NETIF_CONNECTED,
+    WLAN_NETIF_STOPPED = WLAN_NETIF_DISCONNECTED,
+    WLAN_NETIF_STARTING = WLAN_NETIF_CONNECTING,
+    WLAN_NETIF_STARTED = WLAN_NETIF_CONNECTED,
+};
+
 struct wlan_netif {
-    int mode;//0: sta; 1: ap
-    int started;
-    int set;
+    uint8_t mode;//0: sta; 1: ap
+    enum wlan_netif_state state;
+    uint8_t set;
     uint8_t mac[6];
 };
 

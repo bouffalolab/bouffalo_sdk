@@ -19,6 +19,7 @@
 #if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
 #include "bl702l_ef_cfg.h"
 #include "bl702l_phy.h"
+#include "bl702l_rf.h"
 #endif
 
 #include "board.h"
@@ -530,7 +531,8 @@ void rf_reset_done_callback(void)
     rf_set_bz_mode(MODE_BZ_COEX);
 #elif defined(CFG_BLUETOOTH_ENABLED)
     rf_set_bz_mode(MODE_BLE_ONLY);
-    else rf_set_bz_mode(MODE_ZB_ONLY);
+#else
+    rf_set_bz_mode(MODE_ZB_ONLY);
 #endif
 }
 

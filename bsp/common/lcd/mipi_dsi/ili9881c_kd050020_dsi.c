@@ -1,5 +1,6 @@
 #include "ili9881c_kd050020_dsi.h"
 #include "mipi_dsi_v2.h"
+#include "bflb_l1c.h"
 #include "bflb_mtimer.h"
 
 #if defined(LCD_DSI_ILI9881C_KD050020)
@@ -338,18 +339,33 @@ static int ili9881c_kd050020_prepare(void)
 
 int ili9881c_kd050020_dsi_init(ili9881c_kd050020_dsi_color_t *screen_buffer)
 {
+
+#if (ILI9881C_KD050020_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) || \
+    (ILI9881C_KD050020_FB_MODE == ILI9881C_KD050020_FB_MODE_RGB565)
+    if (screen_buffer == NULL) {
+        return -1;
+    }
+#endif
+
     int ret = ili9881c_kd050020_prepare();
     if (ret != 0) {
         return ret;
     }
-    /* DPI background + OSD0 overlay + OSD SEOF interrupt. screen_buffer is the
-     * initial OSD canvas handed down by lcd_init(). */
-    return mipi_dsi_v2_display_init(&ili9881c_kd050020_timing, (uint32_t)screen_buffer);
+
+    const mipi_dsi_v2_init_t init_config = {
+        .timing = &ili9881c_kd050020_timing,
+        .base_frame_buff = (ILI9881C_KD050020_OSD0_FORMAT == MIPI_DSI_V2_OSD_FORMAT_NONE &&
+                            ILI9881C_KD050020_FB_MODE == ILI9881C_KD050020_FB_MODE_RGB565) ? screen_buffer : NULL,
+        .osd0_frame_buff = (ILI9881C_KD050020_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) ? screen_buffer : NULL,
+        .base_format = (ILI9881C_KD050020_FB_MODE == ILI9881C_KD050020_FB_MODE_RGB565) ? DPI_DATA_FORMAT_RGB565 : DPI_DATA_FORMAT_Y_UV_PLANAR,
+        .osd_format = ILI9881C_KD050020_OSD0_FORMAT,
+    };
+    return mipi_dsi_v2_display_init(&init_config);
 }
 
 int ili9881c_kd050020_dsi_screen_switch(ili9881c_kd050020_dsi_color_t *screen_buffer)
 {
-    return mipi_dsi_v2_screen_switch((void *)screen_buffer);
+    return mipi_dsi_v2_screen_switch(screen_buffer);
 }
 
 ili9881c_kd050020_dsi_color_t *ili9881c_kd050020_dsi_get_screen_using(void)

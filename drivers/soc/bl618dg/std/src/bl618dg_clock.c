@@ -562,8 +562,8 @@ static inline uint32_t Clock_PARAMB_Clk_Mux_Output(uint8_t sel)
         /* wifi pll 320m */
         return Clock_Get_WIFI_PLL_Output(320 * 1000 * 1000);
     } else if (sel == 3) {
-        /* wifi pll 240m */
-        return Clock_Get_WIFI_PLL_Output(240 * 1000 * 1000);
+        /* cpu pll divided by 1 */
+        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV1);
     } else {
         return 0;
     }

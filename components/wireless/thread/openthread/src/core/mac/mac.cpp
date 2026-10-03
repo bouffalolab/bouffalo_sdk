@@ -1922,6 +1922,12 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        // The MAC filter models the physical IEEE 802.15.4 neighbor set.
+        // TREL is an independent infrastructure link and must remain usable
+        // to merge partitions whose 802.15.4 peers are intentionally isolated.
+        if (aFrame->GetRadioType() == kRadioTypeIeee802154)
+#endif
         SuccessOrExit(error = mFilter.ApplyToRxFrame(*aFrame, srcaddr.GetExtended(), neighbor));
 #endif
 

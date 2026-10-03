@@ -1,4 +1,4 @@
-# easyflash
+# lfs_kv (LittleFS key-value store)
 
 
 ## Support CHIP

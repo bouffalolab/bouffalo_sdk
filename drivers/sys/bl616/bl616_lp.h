@@ -257,6 +257,9 @@ typedef struct {
 
     lp_fw_time_debug_t *time_debug;
 
+    /* Runtime LPFW sleep policy: 1 = PDS1; all other values = PDS15. */
+    uint32_t pds_level;
+
     /* The parameter that remains after the reset, it has to be at the back */
     struct {
         /* reset reason */
@@ -522,7 +525,6 @@ typedef struct {
 
 
 extern iot2lp_para_t *const iot2lp_para;
-extern uint32_t __attribute__((weak)) __lpfw_load_addr[];     /* ld symbol */
 extern uint32_t __attribute__((weak)) __lpfw_share_start__[];   /* ld symbol */
 extern uint32_t __attribute__((weak)) __lpfw_share_used[];    /* ld symbol */
 extern uint32_t __attribute__((weak)) __lpfw_share_end__[];     /* ld symbol */

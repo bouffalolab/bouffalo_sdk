@@ -383,7 +383,6 @@ typedef struct {
 
 #define LP_FW_PRE_JUMP_ADDR 0x20010000
 
-extern uint32_t __lpfw_load_addr[];   /* ld symbol */
 extern uint32_t __lpfw_share_start__[]; /* ld symbol */
 extern uint32_t __lpfw_share_used__[];  /* ld symbol */
 extern uint32_t __lpfw_share_end__[];   /* ld symbol */

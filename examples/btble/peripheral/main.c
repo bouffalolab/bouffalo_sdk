@@ -27,7 +27,7 @@
 #include "hci_core.h"
 
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 #if defined(CONFIG_BT_OAD_SERVER)
 #include "oad_main.h"
@@ -143,8 +143,8 @@ int main(void)
     shell_init_with_task(uart0);
 
     bflb_mtd_init();
-    /* ble stack need easyflash kv */
-    easyflash_init();
+    /* ble stack need lfs_kv */
+    lfs_kv_init();
 
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {

@@ -123,8 +123,13 @@ typedef struct bench_id {
 
 
 // bench suites are linked into a custom ld section
+#if defined(__APPLE__)
+extern struct bench_suite __start__bench_suites __asm("section$start$__DATA$_bench_suites");
+extern struct bench_suite __stop__bench_suites __asm("section$end$__DATA$_bench_suites");
+#else
 extern struct bench_suite __start__bench_suites;
 extern struct bench_suite __stop__bench_suites;
+#endif
 
 const struct bench_suite *bench_suites = &__start__bench_suites;
 #define BENCH_SUITE_COUNT \
@@ -803,9 +808,9 @@ static void summary(void) {
     }
 
     char perm_buf[64];
-    snprintf(perm_buf, sizeof(perm_buf), "%zu/%zu", perms.filtered, perms.total);
+    sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
     char flag_buf[64];
-    snprintf(flag_buf, sizeof(flag_buf), "%s%s",
+    sprintf(flag_buf, "%s%s",
             (flags & BENCH_REENTRANT) ? "r" : "",
             (!flags) ? "-" : "");
     printf("%-23s  %7s %7zu %7zu %11s\n",
@@ -862,9 +867,9 @@ static void list_suites(void) {
             }
 
             char perm_buf[64];
-            snprintf(perm_buf, sizeof(perm_buf),  "%zu/%zu", perms.filtered, perms.total);
+            sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
             char flag_buf[64];
-            snprintf(flag_buf, sizeof(flag_buf), "%s%s",
+            sprintf(flag_buf, "%s%s",
                     (bench_suites[i].flags & BENCH_REENTRANT) ? "r" : "",
                     (!bench_suites[i].flags) ? "-" : "");
             printf("%-*s  %7s %7zu %11s\n",
@@ -915,9 +920,9 @@ static void list_cases(void) {
                         &perms);
 
                 char perm_buf[64];
-                snprintf(perm_buf, sizeof(perm_buf), "%zu/%zu", perms.filtered, perms.total);
+                sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
                 char flag_buf[64];
-                snprintf(flag_buf, sizeof(flag_buf), "%s%s",
+                sprintf(flag_buf, "%s%s",
                         (bench_suites[i].cases[j].flags & BENCH_REENTRANT)
                             ? "r" : "",
                         (!bench_suites[i].cases[j].flags)
@@ -1321,6 +1326,9 @@ void perm_run(
         .block_cycles       = BLOCK_CYCLES,
         .cache_size         = CACHE_SIZE,
         .lookahead_size     = LOOKAHEAD_SIZE,
+        .compact_thresh     = COMPACT_THRESH,
+        .metadata_max       = METADATA_MAX,
+        .inline_max         = INLINE_MAX,
     };
 
     struct lfs_emubd_config bdcfg = {

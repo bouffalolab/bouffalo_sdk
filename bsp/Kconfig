@@ -108,9 +108,6 @@ menu "Legacy BSP compatibility"
 config ENABLE_IMG_HASH
     bool "Enable image hash"
     default n
-config DUALCORE_DISABLE
-    bool "Disable secondary core"
-    default n
 config BSP_EMAC_RMII_DEFAULT_PORT
     int "Default EMAC RMII port"
     default 0
@@ -240,6 +237,19 @@ config PSRAM
     default n
     help
       Enable the external PSRAM driver and map it into the application heap.
+
+config FLASH_XIP_PSRAM
+    bool "PSRAM_XIP"
+    default n if PSRAM_XIP
+    default y if PSRAM
+    help
+      Enable the external PSRAM driver as xip.
+
+config PSRAM_XIP
+    bool "PSRAM_XIP"
+    default n
+    help
+      Enable the external PSRAM driver as xip.
 
 config PSRAM_LENGTH
     hex "PSRAM length"
@@ -627,11 +637,24 @@ config DUALCORE_NP_IMAGE
     help
       Path to the non-processor core image packed with the main image.
 
+config DUALCORE_NP_ENABLE
+    bool "Enable secondary core"
+    default n
+    default y if !DUALCORE_DISABLE
+
 config THIRDCORE_LP_IMAGE
     string "Third-core LP image"
     default ""
     help
       Path to the low-power core image packed with the main image.
+
+config THIRDCORE_LP_ENABLE
+    bool "Enable third core"
+    default n
+
+config DUALCORE_DISABLE
+    bool "Disable secondary core"
+    default y
 
 config NO_SHORT_ENUMS
     bool "Disable short enums"

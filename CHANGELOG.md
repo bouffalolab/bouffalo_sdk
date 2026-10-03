@@ -1,5 +1,79 @@
 # CHANGELOG
 
+## v2.3.36 — since v2.3.35 (2026-09-22 → 2026-10-03)
+
+### New Features
+
+- **WiFi**
+  - Added survey-based automatic channel selection when starting a SoftAP, choosing a legal, measured non-DFS channel for the requested band and bandwidth
+  - Added NuttX host support to the wl80211 driver and WPA supplicant, including a PBKDF2 backend and bounded in-flight station transmit frames
+
+- **Memory / Boot**
+  - Added PSRAM execute-in-place (XIP) support for BL616, BL616CL, and BL618DG, including multi-image firmware descriptors, a startup image loader, and configurable secondary-core images
+  - Added multi-image support to the low-power firmware adapter
+
+- **Bluetooth**
+  - Added an API to configure the Bluetooth public device address
+  - Added Bluetooth controller support for BL702 and BL702L, including the BLE CLI example
+  - Added BLE link support to the BL618DG low-power firmware, with Bluetooth power-down controls and a configurable Bluetooth path in the WiFi/BLE low-power example
+  - Released a UART HCI transport variant of the BL616CL Bluetooth controller library
+
+- **Power Management**
+  - Added tickless PDS1 low-power support for BL616
+  - Added a PSRAM retention option for BL616 low-power applications
+
+- **OTA**
+  - Added an HTTPS OTA server that hosts a browser page for uploading a firmware image to the device, with a demonstration and a selectable OTA erase mode
+
+- **Display**
+  - Added the ST7701S HD40007C30 (480x480) and FL7707N HD395003C30 (720x720) square MIPI-DSI panels
+  - Improved RGB565/YUV base-layer and OSD0 format configuration for DSI v2 displays
+
+- **Thread / 802.15.4**
+  - Added TREL (Thread Radio Encapsulation Link) support to the legacy Thread border router, including mDNS peer discovery
+
+- **Storage**
+  - Added a filesystem key-value storage API on LittleFS and migrated internal users from EasyFlash; stored key-values are preserved across the upgrade, and the legacy interface remains available as a deprecated compatibility layer
+
+### Bug Fixes
+
+- **WiFi**
+  - Fixed WPA 4-way handshake failures being reported with a misleading status instead of the actual failure reason
+  - Fixed raw transmit callbacks being invoked after a transmit error in the lwIP port
+  - Fixed interrupt-safety and receive-ring race conditions in the WiFi MAC driver
+
+- **Bluetooth**
+  - Fixed an advertising data buffer overflow
+  - Fixed BLE resume after sleep in the BL618DG low-power firmware
+  - Fixed the BL618DG BLE power configuration for PDS15
+
+- **Thread / Zigbee / 802.15.4**
+  - Fixed receive restart after frames that do not request an acknowledgement when receive-on-idle is enabled
+
+- **Power Management**
+  - Fixed stale wireless wake scheduling flags that could persist across low-power transitions
+  - Fixed BL618DG PSRAM clock reporting when the CPU PLL is used
+
+- **AT Commands**
+  - Fixed BL616 flash and GPIO handling, including GPIO pin range validation
+  - Fixed BL616 TLS memory allocation in AT commands by using the system heap
+
+- **Display**
+  - Fixed DSI v2 direct-mode frame swapping, where a stale frame interrupt could be reported as a completed buffer swap
+
+- **Tools**
+  - Fixed relative path handling in the flashing tool configuration files
+
+### Improvements
+
+- Updated the BL616CL and BL618DG RF PHY libraries
+- Improved 5 GHz calibration timing for station connections and channel switches
+- Updated MXIC QPI flash command handling
+- Added a BL616CL WiFi MAC configuration profile for NuttX hosts that prevents receive-FIFO overflow under high-throughput TCP receive
+- Updated LittleFS to v2.11.3
+- Completed BL702/BL702L PSRAM support with the PSRAM controller driver and chip-level integration
+- Updated FlashCube to v1.4.4
+
 ## v2.3.35 — since v2.3.34 (2026-09-15 → 2026-09-22)
 
 ### New Features

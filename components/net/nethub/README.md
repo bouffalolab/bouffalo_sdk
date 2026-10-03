@@ -183,7 +183,7 @@ The usual sequence is:
 
 1. RF parameter initialization
 2. `tcpip_init()`
-3. `easyflash_init()`
+3. `lfs_kv_init()`
 4. `nethub_bootstrap()`
 5. `app_wifi_init()`
 

@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <stdint.h>
+
 #if __has_include("board_overlay.h")
 #include "board_overlay.h"
 #else
@@ -14,6 +16,11 @@ void board_init(void);
 enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void);
 
 void board_acomp_init(void);
+
+#ifdef CPU_AP
+void boot_up_np(void);
+void boot_up_lp(uint32_t address);
+#endif
 
 #define APP_PWM_TRI_CH_U  (PWM_CH0)
 #define APP_PWM_TRI_CH_V  (PWM_CH1)

@@ -27,10 +27,17 @@
 
 #include <bflb_efuse.h>
 #include <bflb_sec_trng.h>
-#include "bl616_efuse.h"
 
 #include "macsw.h"
 #include "wl80211_mac.h"
+
+/* Work queue for the timeouts and events.  A port whose network stack runs
+ * on LPWORK can build with WL80211_WORK=LPWORK to keep HPWORK free.
+ */
+
+#ifndef WL80211_WORK
+#  define WL80211_WORK HPWORK
+#endif
 
 /* Forward declarations for static functions */
 static struct work_s g_timeout_work;
@@ -77,6 +84,14 @@ const struct platform_feature wl80211_platform_feature[] = { { 2, 1, 1 }, { 1, 0
 #define WL80211_RX_DESC_MPDU_LEN  (sizeof(struct wl80211_mac_rx_desc) + CO_ALIGN4_HI(RX_MAX_AMSDU_SUBFRAME_LEN + 1))
 // for monitor mode
 #define WL80211_RX_DESC_AMSDU_LEN (sizeof(struct wl80211_mac_rx_desc) + CO_ALIGN4_HI(MACSW_CONFIG(MACSW_MAX_AMSDU_RX)))
+
+/* MACSW_MAX_BA_RX is not defined by macsw.h (no hard-coded value there);
+ * derive it from the config value that was pulled in above. */
+#ifdef CFG_BARX
+#define MACSW_MAX_BA_RX CFG_BARX
+#else
+#define MACSW_MAX_BA_RX 2 /* safe fallback */
+#endif
 
 #define WL80211_RX_BUF_MEM_LEN    ((MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2) * WL80211_RX_DESC_MPDU_LEN)
 const unsigned int wl80211_rx_buf_mem_len = WL80211_RX_BUF_MEM_LEN;
@@ -362,9 +377,9 @@ static void timeout_watchdog_handler(wdparm_t arg)
 
   timer->is_pending = true;
 
-  /* Queue work to LPWORK for safe callback execution */
+  /* Queue work to WL80211_WORK for safe callback execution */
 
-  int ret = work_queue(HPWORK, &timer->work, timeout_worker, timer, 0);
+  int ret = work_queue(WL80211_WORK, &timer->work, timeout_worker, timer, 0);
   if (ret != 0)
     {
       wlerr("Failed to queue timeout work: %d\n", ret);
@@ -557,14 +572,14 @@ void wl80211_post_event(int code1, int code2)
   nxmutex_unlock(&g_event_queue_mutex);
 
   /* Queue the event handler if work is available */
-  ret = work_queue(HPWORK, &g_event_work, async_event_handler, NULL, 0);
+  ret = work_queue(WL80211_WORK, &g_event_work, async_event_handler, NULL, 0);
   if (ret != 0)
     {
       wlerr("Failed to queue event handler work\n");
     }
 }
 
-void wl80211_post_mac_event(int code1, int code2, const uint8_t mac[6])
+void wl80211_post_event_with_mac(int code1, int code2, const uint8_t mac[6])
 {
   (void)mac;
   wl80211_post_event(code1, code2);
@@ -579,10 +594,11 @@ void wl80211_post_mac_event(int code1, int code2, const uint8_t mac[6])
  * @return 0 on success and OTHERS if error occurred.
  ****************************************************************************************
  */
-int platform_get_mac(enum wl80211_vif_type vif, uint8_t mac[6])
+int platform_get_mac(uint8_t vif_type, uint8_t mac[6])
 {
+  extern int bl616_efuse_read_mac_address(uint8_t mac[6]);
   uint8_t tmp[8];
-  UNUSED(vif);
+  UNUSED(vif_type);
 
 #ifdef CONFIG_BL616_WLAN_BACKUPMAC
   bflb_efuse_get_chipid(tmp);

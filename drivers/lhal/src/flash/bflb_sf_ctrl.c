@@ -819,6 +819,16 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *psram_cf
 
     reg_base = BFLB_SF_CTRL_BASE;
 
+#if defined(BL702) || defined(BL702L)
+    bflb_sf_ctrl_select_pad(psram_cfg->pad_sel);
+#if defined(BL702)
+    bflb_sf_ctrl_sbus_select_bank(psram_cfg->bank_sel);
+#elif defined(BL702L)
+    /* Match the BL702L standard driver sequence before enabling bank 2. */
+    bflb_sf_ctrl_sbus_select_bank(psram_cfg->bank_sel);
+#endif
+#endif
+
 #if defined(BL702L)
     /* Enable psram dual bank mode */
     regval = getreg32(reg_base + SF_CTRL_2_OFFSET);

@@ -6,7 +6,7 @@
 #include "bflb_mtd.h"
 #include "bflb_mtimer.h"
 #include "board.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "incbin.h"
 #include "rfparam_adapter.h"
 
@@ -285,7 +285,7 @@ int main(void)
     LOG_I("BLE HID CLI Sender\r\n");
 
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     if (rfparam_init(0, NULL, 0) != 0) {
         LOG_E("PHY RF init failed\r\n");

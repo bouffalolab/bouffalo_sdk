@@ -9,7 +9,7 @@ void lmac154_dbg_output(void);
 int lmac154_dbg_cli(int argc, char **argv);
 
 void lmac154_dbg_trace(const char *format, ...);
-void lmac154_dbg_trace_tx(uint32_t * DataPtr, uint32_t length, uint32_t base_time, uint32_t delay_time, uint32_t plat_entry_sym, uint32_t chk_time, int ret);
+void lmac154_dbg_trace_tx(uint32_t * DataPtr, uint32_t length, uint32_t base_time, uint32_t delay_time, uint32_t plat_entry_sym, uint32_t chk_time, int rf_state, int ret);
 void lmac154_dbg_trace_rxing_ack(char * tag, int is_rx_doing, int rx_acc_symb, int ack_frame_length, int result);
 void lmac154_dbg_trace_tx_ack(uint32_t base_time, uint32_t delay_time, int ret);
 void lmac154_dbg_trace_write_ack(uint32_t * DataPtr, uint32_t length, int timeout, int ret);

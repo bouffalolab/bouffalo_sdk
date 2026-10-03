@@ -13,7 +13,7 @@
 #include <string.h>
 #include <FreeRTOS.h>
 //#ifdef EASYFLASH_ENABLE
-#include <easyflash.h>
+#include "lfs_kv.h"
 //#endif
 #include "at_config.h"
 #include "at_net_main.h"
@@ -111,14 +111,14 @@ int at_net_config_save(const char *key)
 
 int at_net_config_default(void)
 {
-    ef_del_env(AT_CONFIG_KEY_NET_TCP_OPT);
-    ef_del_env(AT_CONFIG_KEY_NET_RECONN_INTV);
-    ef_del_env(AT_CONFIG_KEY_NET_TRANS_LINK);
-    ef_del_env(AT_CONFIG_KEY_NET_SSLCONF);
-    ef_del_env(AT_CONFIG_KEY_NET_SSLSCONF);
-    ef_del_env(AT_CONFIG_KEY_NET_IPV6_ENABLE);
-    ef_del_env(AT_CONFIG_KEY_NET_DNS);
-    ef_del_env(AT_CONFIG_KEY_NET_RECVMODE);
+    lfs_kv_del(AT_CONFIG_KEY_NET_TCP_OPT);
+    lfs_kv_del(AT_CONFIG_KEY_NET_RECONN_INTV);
+    lfs_kv_del(AT_CONFIG_KEY_NET_TRANS_LINK);
+    lfs_kv_del(AT_CONFIG_KEY_NET_SSLCONF);
+    lfs_kv_del(AT_CONFIG_KEY_NET_SSLSCONF);
+    lfs_kv_del(AT_CONFIG_KEY_NET_IPV6_ENABLE);
+    lfs_kv_del(AT_CONFIG_KEY_NET_DNS);
+    lfs_kv_del(AT_CONFIG_KEY_NET_RECVMODE);
     if (at_net_config) {
         memset(&at_net_config->tcp_opt, 0, sizeof(at_net_config->tcp_opt));
         memset(&at_net_config->reconn_intv, 0, sizeof(at_net_config->reconn_intv));

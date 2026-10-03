@@ -667,6 +667,8 @@ struct fhost_vif_ap_cfg
 
     /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames
     bool disable_wmm;
+    /** Startup ACS in the band and bandwidth in chan; surveys use 20MHz. */
+    bool acs;
 };
 
 /**

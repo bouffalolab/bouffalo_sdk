@@ -9,7 +9,9 @@
 #include "supplicant.h"
 #include "wl80211_platform.h"
 #include "timeout.h"
+#ifdef CONFIG_LPAPP
 #include "bl_lp.h"
+#endif
 
 #ifdef COMPAT_WIFI_MGMR
 #include "wifi_mgmr.h"

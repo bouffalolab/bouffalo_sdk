@@ -3,20 +3,22 @@
 自定义二进制文件镜像管理工具
 在 bin 文件的指定偏移处维护一个镜像描述符数组
 
-描述符格式（16字节）:
-  - char[8] name        : 名称（最多7字符）
+描述符格式（24字节）:
+  - char[8] name        : 名称（最多8字符）
   - uint32_t start_addr : 起始地址
   - uint32_t end_addr   : 结束地址
+  - uint32_t vma_start  : 运行时起始地址（不使用时填0）
+  - uint32_t vma_end    : 运行时结束地址（不使用时填0）
 
-数组以四个 0xFFFFFFFF 结束（16字节）
+数组以全 0xFF 的结束项结束
 """
 
 import struct
 import os
 import sys
 import argparse
-from pathlib import Path
-from typing import Optional, Tuple, List, Dict
+import hashlib
+from typing import Optional, List, Dict
 
 # 全局 debug 变量，设置为 1 时打印详细日志
 debug = 0
@@ -24,17 +26,16 @@ debug = 0
 class CustomBinManager:
     """自定义 BIN 文件管理器"""
 
-    # 数组在文件中的默认偏移量：0x1200
+    # 自动探测时按顺序检查这些偏移。
     DEFAULT_ARRAY_OFFSET = 0x1200
+    ARRAY_OFFSETS = (DEFAULT_ARRAY_OFFSET, 0x200)
+    SELF_NAME = b'SELF\x00\x00\x00\x00'
 
-    # 描述符结构：8字节名称 + 4字节起始地址 + 4字节结束地址
-    DESCRIPTOR_FORMAT = "8sII"
+    DESCRIPTOR_FORMAT = "<8sIIII"
     DESCRIPTOR_SIZE = struct.calcsize(DESCRIPTOR_FORMAT)
 
-    # 结束标记：四个 0xFFFFFFFF（16字节）
     END_MARKER = 0xFFFFFFFF
-    END_MARKER_COUNT = 4
-    END_MARKER_SIZE = END_MARKER_COUNT * 4
+    END_MARKER_NAME = b'\xff' * 8
 
     # 默认对齐大小：4KB
     DEFAULT_ALIGNMENT = 0x1000
@@ -51,7 +52,28 @@ class CustomBinManager:
     @staticmethod
     def align_up(value: int, alignment: int) -> int:
         """向上对齐到指定大小"""
+        if alignment <= 0:
+            raise ValueError(f"对齐大小必须大于 0: {alignment}")
         return ((value + alignment - 1) // alignment) * alignment
+
+    @staticmethod
+    def resolve_array_offset(data: bytes, array_offset: Optional[int] = None) -> int:
+        """Resolve the descriptor table offset, auto-detecting it from SELF when omitted."""
+        if array_offset is not None:
+            return array_offset
+
+        for candidate in CustomBinManager.ARRAY_OFFSETS:
+            if data[candidate:candidate + 8] != CustomBinManager.SELF_NAME:
+                continue
+            try:
+                descriptors = CustomBinManager.read_descriptors(data, candidate)
+            except ValueError:
+                continue
+            if descriptors and descriptors[0]['name'] == 'SELF':
+                return candidate
+
+        offsets = "、".join(f"0x{offset:X}" for offset in CustomBinManager.ARRAY_OFFSETS)
+        raise ValueError(f"文件格式错误：未在 {offsets} 找到有效的 SELF 描述符表")
 
     @staticmethod
     def inspect_bin_file(bin_path: str, array_offset: Optional[int] = None):
@@ -60,11 +82,8 @@ class CustomBinManager:
 
         参数:
             bin_path: bin 文件路径
-            array_offset: 数组偏移量（None 则使用默认值）
+            array_offset: 数组偏移量（None 则自动探测 SELF）
         """
-        if array_offset is None:
-            array_offset = CustomBinManager.DEFAULT_ARRAY_OFFSET
-
         if debug:
             print(f"文件: {bin_path}")
 
@@ -80,6 +99,11 @@ class CustomBinManager:
             return
 
         file_size = len(data)
+        try:
+            array_offset = CustomBinManager.resolve_array_offset(data, array_offset)
+        except ValueError as e:
+            print(f"错误: {e}")
+            return
         if debug:
             print(f"大小: {file_size} 字节 (0x{file_size:X})")
             print(f"数组偏移: 0x{array_offset:X} ({array_offset})")
@@ -92,70 +116,21 @@ class CustomBinManager:
         if debug:
             print("=" * 80)
 
-        # 读取描述符
-        offset = array_offset
-        index = 0
+        try:
+            descriptors = CustomBinManager.read_descriptors(data, array_offset)
+        except ValueError as e:
+            print(f"错误: {e}")
+            return
 
-        while offset + CustomBinManager.DESCRIPTOR_SIZE <= file_size:
-            try:
-                # 读取描述符: { char[8] name, uint32_t start_addr, uint32_t end_addr }
-                name_bytes, start_addr, end_addr = struct.unpack_from(
-                    CustomBinManager.DESCRIPTOR_FORMAT,
-                    data,
-                    offset
-                )
-
-                # 检查结束标记（name字段全为0xFF，start_addr和end_addr都是0xFFFFFFFF）
-                if (start_addr == CustomBinManager.END_MARKER and
-                    end_addr == CustomBinManager.END_MARKER and
-                    name_bytes == b'\xff' * 8):
-                    if debug:
-                        print(f"[结束标记] 找到结束标记")
-                        print(f"  偏移: 0x{offset:X}")
-                        print(f"  数组总项数: {index}")
-                    break
-
-                # 解码名称
-                try:
-                    name = name_bytes.decode('ascii').rstrip('\x00')
-                except UnicodeDecodeError:
-                    name = f"<无效编码: {name_bytes.hex()}>"
-
-                # 显示信息
-                if debug:
-                    print(f"[{index}] {name}")
-                    print(f"  起始地址: 0x{start_addr:08X} ({start_addr})")
-                    print(f"  结束地址: 0x{end_addr:08X} ({end_addr})")
-
-                    if start_addr == 0 and end_addr == 0:
-                        size = 0
-                        print(f"  状态: 未分配")
-                    elif end_addr > start_addr:
-                        size = end_addr - start_addr
-                        print(f"  大小: {size} 字节 (0x{size:X})")
-
-                        # 验证地址范围
-                        if start_addr >= file_size:
-                            print(f"  警告: 起始地址超出文件范围")
-                        elif end_addr > file_size:
-                            print(f"  警告: 结束地址超出文件范围")
-                    else:
-                        print(f"  状态: 无效地址范围")
-
-                    print(f"  描述符偏移: 0x{offset:X}")
-                    print()
-
-                offset += CustomBinManager.DESCRIPTOR_SIZE
-                index += 1
-
-                # 安全限制
-                if index > 1000:
-                    print(f"警告: 超过1000个描述符，停止读取")
-                    break
-
-            except Exception as e:
-                print(f"错误: 在偏移 0x{offset:X} 处读取失败: {e}")
-                break
+        for index, desc in enumerate(descriptors):
+            if debug:
+                print(f"[{index}] {desc['name']}")
+                print(f"  起始地址: 0x{desc['start_addr']:08X}")
+                print(f"  结束地址: 0x{desc['end_addr']:08X}")
+                if desc['vma_end'] > desc['vma_start']:
+                    print(f"  VMA: 0x{desc['vma_start']:08X} - 0x{desc['vma_end']:08X}")
+                print(f"  描述符偏移: 0x{desc['desc_offset']:X}")
+        index = len(descriptors)
 
         # 显示文件摘要
         if debug:
@@ -168,29 +143,23 @@ class CustomBinManager:
     def read_descriptors(data: bytes, array_offset: Optional[int] = None) -> List[Dict]:
         """
         从二进制数据中读取描述符数组
-        返回: 描述符列表，每个描述符是 {'name': str, 'start_addr': int, 'end_addr': int, 'desc_offset': int}
+        返回24字节描述符列表
         """
-        if array_offset is None:
-            array_offset = CustomBinManager.DEFAULT_ARRAY_OFFSET
+        array_offset = CustomBinManager.resolve_array_offset(data, array_offset)
 
         descriptors = []
         offset = array_offset
 
         while True:
             # 读取描述符
-            if offset + CustomBinManager.DESCRIPTOR_SIZE > len(data):
+            if offset + CustomBinManager.DESCRIPTOR_SIZE > len(data) or offset >= array_offset + 512:
                 raise ValueError("文件格式错误：未找到结束标记")
 
-            name_bytes, start_addr, end_addr = struct.unpack_from(
-                CustomBinManager.DESCRIPTOR_FORMAT,
-                data,
-                offset
-            )
+            fields = struct.unpack_from(CustomBinManager.DESCRIPTOR_FORMAT, data, offset)
+            name_bytes, start_addr, end_addr = fields[:3]
 
             # 检查是否为结束标记
-            if (start_addr == CustomBinManager.END_MARKER and
-                end_addr == CustomBinManager.END_MARKER and
-                name_bytes == b'\xff' * 8):
+            if name_bytes == CustomBinManager.END_MARKER_NAME:
                 break
 
             # 解码名称（去除空字符）
@@ -203,6 +172,8 @@ class CustomBinManager:
                 'name': name,
                 'start_addr': start_addr,
                 'end_addr': end_addr,
+                'vma_start': fields[3],
+                'vma_end': fields[4],
                 'desc_offset': offset
             })
 
@@ -226,7 +197,11 @@ class CustomBinManager:
                    alignment: Optional[int] = None,
                    output_bin_path: Optional[str] = None,
                    append_size: Optional[int] = None,
-                   tail_alignment: Optional[int] = None):
+                   tail_alignment: Optional[int] = None,
+                   sha256_header: bool = False,
+                   vma_auto: bool = False,
+                   vma_start_addr: Optional[int] = None,
+                   vma_limit: Optional[int] = None):
         """
         追加 bin 文件到主固件末尾，并更新描述符
 
@@ -239,10 +214,11 @@ class CustomBinManager:
             output_bin_path: 输出文件路径（如果为None则覆盖原文件）
             append_size: 指定预留数据大小，仅在 append_bin_path 为 None 时有效
             tail_alignment: 追加数据末尾对齐大小，None 或 0 表示不补齐末尾
+            sha256_header: 在追加数据前写入其 SHA-256 摘要（32 字节）
+            vma_auto: 在24字节描述符表中自动分配运行地址
+            vma_start_addr: 指定24字节描述符表中的运行地址起点
+            vma_limit: VMA 区间的独占上限
         """
-        if array_offset is None:
-            array_offset = CustomBinManager.DEFAULT_ARRAY_OFFSET
-
         if alignment is None:
             alignment = CustomBinManager.DEFAULT_ALIGNMENT
         if tail_alignment is None:
@@ -259,6 +235,8 @@ class CustomBinManager:
             print(f"读取主 bin 文件: {main_bin_path}")
         with open(main_bin_path, 'rb') as f:
             main_bin_data = bytearray(f.read())
+
+        array_offset = CustomBinManager.resolve_array_offset(main_bin_data, array_offset)
 
         main_bin_size = len(main_bin_data)
         if debug:
@@ -279,12 +257,21 @@ class CustomBinManager:
             with open(append_bin_path, 'rb') as f:
                 append_bin_data = f.read()
 
+        if sha256_header:
+            append_bin_data = hashlib.sha256(append_bin_data).digest() + append_bin_data
+            if debug:
+                print("  写入 SHA-256 摘要头: 32 字节")
+
         append_bin_size = len(append_bin_data)
         if debug:
             print(f"  追加 bin 大小: {append_bin_size} 字节 (0x{append_bin_size:X})")
 
         # 读取现有描述符数组
         descriptors = CustomBinManager.read_descriptors(main_bin_data, array_offset)
+        if vma_auto and vma_start_addr is not None:
+            raise ValueError("--vma-auto 与 --vma-start 不能同时使用")
+        if vma_limit is not None and not (vma_auto or vma_start_addr is not None):
+            raise ValueError("--vma-limit 需要与 VMA 参数同时使用")
         if debug:
             print(f"找到 {len(descriptors)} 个现有描述符")
 
@@ -309,6 +296,29 @@ class CustomBinManager:
             print(f"  数据结束地址: 0x{data_end_addr:08X}")
             print(f"  结束地址: 0x{end_addr:08X}")
             print(f"  数据大小: {append_bin_size} 字节")
+
+        vma_start = vma_end = 0
+        if vma_auto:
+            max_vma_end = max((desc['vma_end'] for desc in descriptors
+                               if desc['vma_end'] > desc['vma_start'] and
+                               (vma_limit is None or desc['vma_end'] <= vma_limit)), default=0)
+            if max_vma_end == 0:
+                raise ValueError("--vma-auto 需要表中至少一个有效的 VMA 区间")
+            vma_start = CustomBinManager.align_up(max_vma_end, 4)
+            vma_end = vma_start + (end_addr - start_addr)
+            if vma_end > 0xffffffff:
+                raise ValueError("VMA 结束地址超出32位范围")
+        elif vma_start_addr is not None:
+            vma_start = vma_start_addr
+            vma_end = vma_start + end_addr - start_addr
+            if vma_start < 0 or vma_start % 4 or vma_end > 0xffffffff:
+                raise ValueError("指定的 VMA 区间无效或未按4字节对齐")
+            for desc in descriptors:
+                if desc['name'] != descriptor_name and desc['vma_end'] > desc['vma_start'] and \
+                        vma_start < desc['vma_end'] and desc['vma_start'] < vma_end:
+                    raise ValueError(f"VMA 与 {desc['name']} 重叠")
+        if vma_limit is not None and vma_end > vma_limit:
+            raise ValueError("追加段 VMA 超出分区上限")
 
         # 扩展主 bin 数据（如果有对齐填充）
         padding_size = start_addr - main_bin_size
@@ -340,7 +350,7 @@ class CustomBinManager:
             # 找到第一个未分配的描述符或追加到数组末尾
             desc_offset = None
             for desc in descriptors:
-                if desc['start_addr'] == 0 and desc['end_addr'] == 0:
+                if desc['start_addr'] == 0 and desc['end_addr'] == 0 and not desc['name']:
                     desc_offset = desc['desc_offset']
                     if debug:
                         print(f"使用未分配描述符 (偏移 0x{desc_offset:X})")
@@ -353,32 +363,30 @@ class CustomBinManager:
                     print(f"追加新描述符到数组末尾 (偏移 0x{desc_offset:X})")
 
         # 写入描述符
-        # 格式：8字节名称 + 4字节起始地址 + 4字节结束地址
+        # 格式：8字节名称、起止偏移、起止VMA，共24字节
         # 名称编码：如果正好8字节则无需null终止符，否则用null填充
         name_bytes = descriptor_name.encode('ascii')
         if len(name_bytes) < 8:
             name_bytes = name_bytes.ljust(8, b'\x00')
-        struct.pack_into(
-            CustomBinManager.DESCRIPTOR_FORMAT,
-            main_bin_data,
-            desc_offset,
-            name_bytes,
-            start_addr,
-            end_addr
-        )
+        struct.pack_into(CustomBinManager.DESCRIPTOR_FORMAT, main_bin_data, desc_offset,
+                         name_bytes, start_addr, end_addr, vma_start, vma_end)
 
         if debug:
             print(f"写入描述符: name='{descriptor_name}', start=0x{start_addr:08X}, end=0x{end_addr:08X}")
 
-        # 确保结束标记存在
-        end_marker_offset = array_offset + (len(descriptors) + 1) * CustomBinManager.DESCRIPTOR_SIZE
-        if len(main_bin_data) < end_marker_offset + CustomBinManager.END_MARKER_SIZE:
+        # 占用预留描述符时结束项保持原位；仅在描述符写到原结束项时后移。
+        end_marker_offset = array_offset + len(descriptors) * CustomBinManager.DESCRIPTOR_SIZE
+        if desc_offset == end_marker_offset:
+            end_marker_offset += CustomBinManager.DESCRIPTOR_SIZE
+        if end_marker_offset + CustomBinManager.DESCRIPTOR_SIZE > array_offset + 512:
+            raise ValueError("描述符表空间不足")
+        if len(main_bin_data) < end_marker_offset + CustomBinManager.DESCRIPTOR_SIZE:
             # 扩展文件以容纳结束标记
-            main_bin_data.extend(b'\x00' * (end_marker_offset + CustomBinManager.END_MARKER_SIZE - len(main_bin_data)))
+            main_bin_data.extend(b'\x00' *
+                                 (end_marker_offset + CustomBinManager.DESCRIPTOR_SIZE - len(main_bin_data)))
 
-        # 写入结束标记（四个 0xFFFFFFFF）
-        for i in range(CustomBinManager.END_MARKER_COUNT):
-            struct.pack_into("I", main_bin_data, end_marker_offset + i * 4, CustomBinManager.END_MARKER)
+        main_bin_data[end_marker_offset:end_marker_offset + CustomBinManager.DESCRIPTOR_SIZE] = \
+            b'\xff' * CustomBinManager.DESCRIPTOR_SIZE
 
         # 写入输出文件
         if output_bin_path is None:
@@ -404,17 +412,19 @@ def main():
 
   2. 追加 bin 文件到主固件:
      %(prog)s firmware.bin --append APP app.bin
+     %(prog)s firmware.bin --append LPFW lpfw.bin --sha256-header --vma-auto
      %(prog)s firmware.bin --append KERNEL kernel.bin --output new.bin --align 0x1000
      %(prog)s firmware.bin --append AUTOLIST --append-size 128
      %(prog)s firmware.bin --append AUTOLIST autolist.txt --tail-align 0x1000
 
 说明:
-  数组位置: 在 bin 文件的指定偏移处（默认 0x1200）
-  描述符格式: { char[8] name, uint32_t start_addr, uint32_t end_addr } = 16字节
-  结束标记: 四个 0xFFFFFFFF（16字节）
+  数组位置: 未指定 --offset 时，依次在 0x1200 和 0x200 查找 SELF
+  描述符格式: 固定24字节；不使用VMA时将 vma_start、vma_end 填0
+  结束项: 全0xFF，不记录整个 bin 文件大小
   name字段: 描述符名称（最多8字符，8字符时无需null终止符）
   start_addr: 起始地址
   end_addr: 结束地址
+  --sha256-header: 在追加 bin 数据开头写入 32 字节 SHA-256 摘要
         """
     )
 
@@ -443,8 +453,7 @@ def main():
     parser.add_argument(
         "--offset",
         type=str,
-        default="0x1200",
-        help="描述符数组在文件中的偏移量（支持 0x 格式，默认: 0x1200）"
+        help="显式指定描述符数组偏移量；默认在 0x1200 和 0x200 自动查找 SELF"
     )
 
     # 对齐参数
@@ -459,6 +468,30 @@ def main():
         "--tail-align",
         type=str,
         help="追加数据末尾对齐大小（支持 0x 格式；默认不补齐末尾）"
+    )
+
+    parser.add_argument(
+        "--sha256-header",
+        action="store_true",
+        help="在追加 bin 数据开头写入 32 字节 SHA-256 摘要"
+    )
+
+    parser.add_argument(
+        "--vma-auto",
+        action="store_true",
+        help="从表中最大 VMA 结束地址4字节对齐后分配追加段的 VMA"
+    )
+
+    parser.add_argument(
+        "--vma-start",
+        type=str,
+        help="指定追加段运行地址起点（支持 0x 格式）"
+    )
+
+    parser.add_argument(
+        "--vma-limit",
+        type=str,
+        help="VMA 区间独占上限（支持 0x 格式）"
     )
 
     # 位置参数
@@ -488,10 +521,12 @@ def main():
 
     # 解析偏移量和对齐值
     try:
-        array_offset = CustomBinManager.parse_offset(args.offset)
+        array_offset = CustomBinManager.parse_offset(args.offset) if args.offset else None
         alignment = CustomBinManager.parse_offset(args.align)
         append_size = CustomBinManager.parse_offset(args.append_size) if args.append_size else None
         tail_alignment = CustomBinManager.parse_offset(args.tail_align) if args.tail_align else None
+        vma_start_addr = CustomBinManager.parse_offset(args.vma_start) if args.vma_start else None
+        vma_limit = CustomBinManager.parse_offset(args.vma_limit) if args.vma_limit else None
     except ValueError as e:
         print(f"错误: 无效的数值: {e}")
         return 1
@@ -535,7 +570,11 @@ def main():
                 alignment,
                 args.output,
                 append_size,
-                tail_alignment
+                tail_alignment,
+                args.sha256_header,
+                args.vma_auto,
+                vma_start_addr,
+                vma_limit
             )
             return 0
         except Exception as e:

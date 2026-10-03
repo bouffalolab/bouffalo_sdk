@@ -6023,7 +6023,7 @@ static int bt_init(void)
 	}
 #endif /* CONFIG_BLE_USING_DYNAMIC_RAM */
 
-/*Make sure that freertos is running when set info into flash, because Semaphore is used in ef_set_env*/
+/*Make sure that freertos is running when set info into flash, because Semaphore is used in lfs_kv_set_blob*/
 #if defined(BFLB_BLE_PATCH_SETTINGS_LOAD)
     char empty_name[CONFIG_BT_DEVICE_NAME_MAX];
     memset(empty_name, 0, CONFIG_BT_DEVICE_NAME_MAX);
@@ -6660,26 +6660,28 @@ static int set_ad(u16_t hci_op, const struct bt_ad *ad, size_t ad_len)
 		const struct bt_data *data = ad[c].data;
 
 		for (i = 0; i < ad[c].len; i++) {
-			int len = data[i].data_len;
+			size_t len = data[i].data_len;
 			u8_t type = data[i].type;
 
-			/* Check if ad fit in the remaining buffer */
+			/* Check if ad fits in the remaining buffer. */
 			if (set_data->len + len + 2 > 31) {
-				len = 31 - (set_data->len + 2);
-				if (type != BT_DATA_NAME_COMPLETE || !len) {
+				ssize_t shortened_len = 31 - (set_data->len + 2);
+
+				if (!(type == BT_DATA_NAME_COMPLETE && shortened_len > 0)) {
 					net_buf_unref(buf);
 					BT_ERR("Too big advertising data");
 					return -EINVAL;
 				}
+
 				type = BT_DATA_NAME_SHORTENED;
+				len = (size_t)shortened_len;
 			}
 
-			set_data->data[set_data->len++] = len + 1;
+			set_data->data[set_data->len++] = (u8_t)(len + 1);
 			set_data->data[set_data->len++] = type;
 
-			memcpy(&set_data->data[set_data->len], data[i].data,
-			       len);
-			set_data->len += len;
+			memcpy(&set_data->data[set_data->len], data[i].data, len);
+			set_data->len += (u8_t)len;
 		}
 	}
 

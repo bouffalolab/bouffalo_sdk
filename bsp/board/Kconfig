@@ -35,6 +35,11 @@ config PSRAM_FOR_AP_SIZE
     help
       Size of the external PSRAM region assigned to the AP core.
 
+config PSRAM_ADDRESS
+    hex
+    default 0x88000000 if CHIP = "bl618dg" && CPU_MODEL = "a0"
+    default 0xb8000000 if CHIP = "bl618dg"
+
 config WRAM_FOR_AP_SIZE
     hex "AP WRAM partition size" if CHIP = "bl618dg"
     default 0x50000 if CHIP = "bl618dg"

@@ -149,37 +149,28 @@ static int ek79007_wks70wsv114_prepare(void)
 
 int ek79007_wks70wsv114_dsi_init(ek79007_wks70wsv114_dsi_color_t *screen_buffer)
 {
-#if (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
-    static uint32_t osd1_sync_pixel __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
-#endif
 
+#if (EK79007_WKS70WSV114_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) || \
+    (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
     if (screen_buffer == NULL) {
         return -1;
     }
+#endif
 
     int ret = ek79007_wks70wsv114_prepare();
     if (ret != 0) {
         return ret;
     }
 
-#if (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
-    osd1_sync_pixel = 0;
-    bflb_l1c_dcache_clean_range(screen_buffer,
-                                EK79007_WKS70WSV114_DSI_W * EK79007_WKS70WSV114_DSI_H *
-                                    sizeof(*screen_buffer));
-    bflb_l1c_dcache_clean_range(&osd1_sync_pixel, sizeof(osd1_sync_pixel));
-
-    /* DPI expands the RGB565 framebuffer to the panel's RGB888 DSI stream. OSD1
-     * stays transparent and supplies the frame-boundary interrupt for LVGL swaps. */
-    return mipi_dsi_v2_rgb565_display_init(&ek79007_wks70wsv114_timing,
-                                            (uint32_t)(uintptr_t)screen_buffer,
-                                            (uint32_t)(uintptr_t)&osd1_sync_pixel);
-#else
-    /* YUV video scans out on the DPI base layer while LVGL uses the full-screen
-     * ARGB8888 OSD0 layer. */
-    return mipi_dsi_v2_display_init(&ek79007_wks70wsv114_timing,
-                                    (uint32_t)(uintptr_t)screen_buffer);
-#endif
+    const mipi_dsi_v2_init_t init_config = {
+        .timing = &ek79007_wks70wsv114_timing,
+        .base_frame_buff = (EK79007_WKS70WSV114_OSD0_FORMAT == MIPI_DSI_V2_OSD_FORMAT_NONE &&
+                            EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565) ? screen_buffer : NULL,
+        .osd0_frame_buff = (EK79007_WKS70WSV114_OSD0_FORMAT != MIPI_DSI_V2_OSD_FORMAT_NONE) ? screen_buffer : NULL,
+        .base_format = (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565) ? DPI_DATA_FORMAT_RGB565 : DPI_DATA_FORMAT_Y_UV_PLANAR,
+        .osd_format = EK79007_WKS70WSV114_OSD0_FORMAT,
+    };
+    return mipi_dsi_v2_display_init(&init_config);
 }
 
 int ek79007_wks70wsv114_dsi_screen_switch(ek79007_wks70wsv114_dsi_color_t *screen_buffer)
@@ -188,29 +179,17 @@ int ek79007_wks70wsv114_dsi_screen_switch(ek79007_wks70wsv114_dsi_color_t *scree
         return -1;
     }
 
-#if (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
-    return mipi_dsi_v2_rgb565_screen_switch(screen_buffer);
-#else
     return mipi_dsi_v2_screen_switch(screen_buffer);
-#endif
 }
 
 ek79007_wks70wsv114_dsi_color_t *ek79007_wks70wsv114_dsi_get_screen_using(void)
 {
-#if (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
-    return (ek79007_wks70wsv114_dsi_color_t *)mipi_dsi_v2_rgb565_get_screen_using();
-#else
     return (ek79007_wks70wsv114_dsi_color_t *)mipi_dsi_v2_get_screen_using();
-#endif
 }
 
 int ek79007_wks70wsv114_dsi_frame_callback_register(uint32_t callback_type, void (*callback)(void))
 {
-#if (EK79007_WKS70WSV114_FB_MODE == EK79007_WKS70WSV114_FB_MODE_RGB565)
-    return mipi_dsi_v2_rgb565_frame_callback_register(callback_type, callback);
-#else
     return mipi_dsi_v2_frame_callback_register(callback_type, callback);
-#endif
 }
 
 const mipi_dsi_v2_timing_t *ek79007_wks70wsv114_dsi_get_timing(void)

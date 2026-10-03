@@ -1,5 +1,21 @@
 # BL616 Low-Power Brief Documentation
 
+## BL616: PSRAM retention
+
+Configure this example through `defconfig`:
+
+```make
+CONFIG_PSRAM_RETENTION =y
+```
+
+This replaces `CONFIG_TICKLESS_PDS1` and keeps PSRAM powered during tickless sleep using BL616's PDS1 path. The current working configuration keeps it enabled. Set it to `n` or remove it to use the default PDS15 path. Other chips ignore this option and keep their default sleep path. This option does not enable or initialize PSRAM itself.
+
+APP passes the sleep level through `iot2lp_para.pds_level`. Both modes use one LPFW image: run `bash auto_release` in `examples/pmu/bl616_lp_fw`, then rebuild APP. See the [BL616 LPFW guide](../bl616_lp_fw/README.md) for build and image selection details. Switching retention only requires rebuilding APP; the initial migration requires updating both APP and LPFW.
+
+PDS1 APP handoff now experimentally uses CPU-only reset instead of the final PDS15 bridge, reusing the LPFW XIP/APP context restore entry. Rebuild and package the updated LPFW; rebuilding APP alone does not update an existing LPFW binary. Default PDS15 behavior is unchanged. Hardware validation must cover timer/GPIO/Wi-Fi wakes, PSRAM contents, actual Wi-Fi traffic after wake, and repeated sleep cycles. The PDS15 power measurements below do not describe retention mode.
+
+After flashing and connecting to Wi-Fi, run `tickless 10 0` in the serial shell, or use `wakeup_timer 5000 0` for an approximately five-second timed wakeup test.
+
 ## Overview
 
 ### 1. Brief Description of Low-Power Design

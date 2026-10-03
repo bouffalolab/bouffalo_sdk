@@ -74,7 +74,7 @@
 #include "hci_core.h"
 #if defined(CONFIG_BT_SETTINGS)
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #endif
 
 #define DBG_TAG "MAIN"
@@ -269,8 +269,8 @@ int main(void)
 
     #if defined(CONFIG_BT_SETTINGS)
     bflb_mtd_init();
-    /* ble stack need easyflash kv */
-    easyflash_init();
+    /* ble stack need lfs_kv */
+    lfs_kv_init();
     #endif
 
 #if defined (BL616) || defined (BL616CL)

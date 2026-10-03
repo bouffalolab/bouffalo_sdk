@@ -295,7 +295,8 @@ static void acs_fail(struct hostapd_iface *iface)
 {
 	wpa_printf(MSG_ERROR, "ACS: Failed to start");
 	acs_cleanup(iface);
-	hostapd_disable_iface(iface);
+	/* hostapd_acs_completed() queued the supplicant failure callback.
+	 * Let it tear down the AP; disable_iface() would clear that callback. */
 }
 
 
@@ -358,11 +359,12 @@ acs_survey_chan_interference_factor(struct hostapd_iface *iface,
 		int_factor = acs_survey_interference_factor(survey,
 							    iface->lowest_nf);
 		chan->interference_factor += int_factor;
-		wpa_printf(MSG_DEBUG, "ACS: %d: min_nf=%d interference_factor=%Lg nf=%d time=%lu busy=%lu rx=%lu",
-			   i, chan->min_nf, int_factor,
-			   survey->nf, (unsigned long) survey->channel_time,
-			   (unsigned long) survey->channel_time_busy,
-			   (unsigned long) survey->channel_time_rx);
+		wpa_printf(MSG_INFO,
+			   "ACS: sample ch=%d freq=%d round=%u T_ms=%llu B_ms=%llu NF_dBm=%d min_NF_dBm=%d score=%.9e",
+			   chan->chan, chan->freq, i,
+			   (unsigned long long) survey->channel_time,
+			   (unsigned long long) survey->channel_time_busy,
+			   survey->nf, iface->lowest_nf, (double) int_factor);
 	}
 
 	if (count)
@@ -554,8 +556,8 @@ static void acs_survey_mode_interference_factor(
 
 		acs_survey_chan_interference_factor(iface, chan);
 
-		wpa_printf(MSG_DEBUG, "ACS:  * interference factor average: %Lg",
-			   chan->interference_factor);
+		wpa_printf(MSG_INFO, "ACS: average ch=%d score=%.9e",
+			   chan->chan, (double) chan->interference_factor);
 	}
 }
 
@@ -648,7 +650,6 @@ static void
 acs_find_ideal_chan_mode(struct hostapd_iface *iface,
 			 struct hostapd_hw_modes *mode,
 			 int n_chans, u32 bw,
-			 struct hostapd_channel_data **rand_chan,
 			 struct hostapd_channel_data **ideal_chan,
 			 long double *ideal_factor)
 {
@@ -668,6 +669,9 @@ acs_find_ideal_chan_mode(struct hostapd_iface *iface,
 		 * primary until more sophisticated channel selection is
 		 * implemented. */
 		if (!chan_pri_allowed(chan))
+			continue;
+		if (!acs_usable_chan(chan) ||
+		    (chan->flag & (HOSTAPD_CHAN_NO_IR | HOSTAPD_CHAN_RADAR)))
 			continue;
 
 		if (!is_in_chanlist(iface, chan))
@@ -728,6 +732,12 @@ acs_find_ideal_chan_mode(struct hostapd_iface *iface,
 		for (j = 1; j < n_chans; j++) {
 			adj_chan = acs_find_chan(iface, chan->freq + (j * 20));
 			if (!adj_chan)
+				break;
+			/* Every 20MHz subchannel must be legal and measured. */
+			if (!acs_usable_chan(adj_chan) ||
+			    (adj_chan->flag & (HOSTAPD_CHAN_NO_IR | HOSTAPD_CHAN_RADAR)) ||
+			    !is_in_chanlist(iface, adj_chan) ||
+			    !is_in_freqlist(iface, adj_chan))
 				break;
 
 			if (!chan_bw_allowed(adj_chan, bw, 1, 0)) {
@@ -806,13 +816,13 @@ acs_find_ideal_chan_mode(struct hostapd_iface *iface,
 
 		if (bias) {
 			factor *= bias->bias;
-			wpa_printf(MSG_DEBUG,
-				   "ACS:  * channel %d: total interference = %Lg (%f bias)",
-				   chan->chan, factor, bias->bias);
+			wpa_printf(MSG_INFO,
+				   "ACS: candidate ch=%d score=%.9e bias=%.3f",
+				   chan->chan, (double) factor, bias->bias);
 		} else {
-			wpa_printf(MSG_DEBUG,
-				   "ACS:  * channel %d: total interference = %Lg",
-				   chan->chan, factor);
+			wpa_printf(MSG_INFO,
+				   "ACS: candidate ch=%d score=%.9e bias=1.000",
+				   chan->chan, (double) factor);
 		}
 
 		if (acs_usable_chan(chan) &&
@@ -821,9 +831,6 @@ acs_find_ideal_chan_mode(struct hostapd_iface *iface,
 			*ideal_chan = chan;
 		}
 
-		/* This channel would at least be usable */
-		if (!(*rand_chan))
-			*rand_chan = chan;
 	}
 }
 
@@ -837,8 +844,7 @@ acs_find_ideal_chan_mode(struct hostapd_iface *iface,
 static struct hostapd_channel_data *
 acs_find_ideal_chan(struct hostapd_iface *iface)
 {
-	struct hostapd_channel_data *ideal_chan = NULL,
-		*rand_chan = NULL;
+	struct hostapd_channel_data *ideal_chan = NULL;
 	long double ideal_factor = 0;
 	int i;
 	int n_chans = 1;
@@ -886,17 +892,18 @@ bw_selected:
 		mode = &iface->hw_features[i];
 		if (!hostapd_hw_skip_mode(iface, mode))
 			acs_find_ideal_chan_mode(iface, mode, n_chans, bw,
-						 &rand_chan, &ideal_chan,
+						 &ideal_chan,
 						 &ideal_factor);
 	}
 
 	if (ideal_chan) {
-		wpa_printf(MSG_DEBUG, "ACS: Ideal channel is %d (%d MHz) with total interference factor of %Lg",
-			   ideal_chan->chan, ideal_chan->freq, ideal_factor);
+		wpa_printf(MSG_INFO,
+			   "ACS: selected ch=%d freq=%d score=%.9e (lower is better)",
+			   ideal_chan->chan, ideal_chan->freq, (double) ideal_factor);
 		return ideal_chan;
 	}
 
-	return rand_chan;
+	return NULL; /* Never start an unmeasured fallback channel. */
 }
 
 
@@ -981,8 +988,26 @@ static void acs_study(struct hostapd_iface *iface)
 	iface->conf->channel = ideal_chan->chan;
 	iface->freq = ideal_chan->freq;
 
-	if (iface->conf->ieee80211ac || iface->conf->ieee80211ax)
+	/* Channel 14 is 802.11b-only. The initial ACS setup uses channel 0,
+	 * so hostapd_select_hw_mode() did not apply this fixed-channel rule. */
+	if (ideal_chan->chan == 14 && ideal_chan->freq < 2500) {
+		wpa_printf(MSG_INFO,
+			   "ACS: channel 14 selected, disabling OFDM/HT/VHT/HE");
+		iface->conf->hw_mode = HOSTAPD_MODE_IEEE80211B;
+		iface->conf->ieee80211n = 0;
+		iface->conf->ieee80211ac = 0;
+		iface->conf->ieee80211ax = 0;
+		iface->conf->secondary_channel = 0;
+		hostapd_set_oper_chwidth(iface->conf, CHANWIDTH_USE_HT);
+		if (hostapd_select_hw_mode(iface) < 0) {
+			wpa_printf(MSG_ERROR,
+				   "ACS: failed to select 11b mode for channel 14");
+			err = -1;
+			goto fail;
+		}
+	} else if (iface->conf->ieee80211ac || iface->conf->ieee80211ax) {
 		acs_adjust_center_freq(iface);
+	}
 
 	err = 0;
 fail:

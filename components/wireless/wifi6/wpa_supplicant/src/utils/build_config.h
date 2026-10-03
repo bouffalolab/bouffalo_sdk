@@ -100,6 +100,7 @@
 
 // AP support
 #define CONFIG_AP
+#define CONFIG_ACS
 #define NEED_AP_MLME
 #define CONFIG_NO_RADIUS
 #define CONFIG_NO_ACCOUNTING

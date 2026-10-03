@@ -273,6 +273,8 @@ enum cfgmacsw_msg_index {
     CFGMACSW_ABORT_SCAN_CMD = 115,
     /// Response to CFGMACSW_ABORT_SCAN_CMD (param: @ref cfgmacsw_resp)
     CFGMACSW_ABORT_SCAN_RESP = 116,
+    CFGMACSW_GET_SURVEY_CMD = 117,
+    CFGMACSW_GET_SURVEY_RESP = 118,
 };
 
 /// CFGMACSW status
@@ -667,6 +669,29 @@ struct cfgmacsw_scan {
     bool passive;
     /// the count of probe req sent on every channel
     uint32_t probe_cnt;
+    /// Nonzero request cookie for retaining raw survey data for this scan.
+    uint32_t survey_id;
+};
+
+struct cfgmacsw_survey {
+    uint16_t freq;
+    int8_t noise_dbm; /* zero means unavailable */
+    uint32_t time_ms;
+    uint32_t busy_ms;
+};
+
+struct cfgmacsw_get_survey {
+    struct cfgmacsw_msg_hdr hdr;
+    int fhost_vif_idx;
+    uint32_t survey_id;
+    /* Caller-owned SCAN_CHANNEL_MAX entries, valid until the response. */
+    struct cfgmacsw_survey *results;
+};
+
+struct cfgmacsw_get_survey_resp {
+    struct cfgmacsw_msg_hdr hdr;
+    uint32_t status;
+    unsigned int count;
 };
 
 /// structure for CFGMACSW_SCAN_DONE_EVENT
@@ -679,6 +704,7 @@ struct cfgmacsw_scan_completed {
     uint32_t status;
     /// Nb result available with CFGMACSW_SCAN_RESULTS_CMD
     uint32_t result_cnt;
+    uint32_t survey_id;
 };
 
 /// Structure for CFGMACSW_ABORT_SCAN_CMD.

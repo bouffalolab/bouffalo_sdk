@@ -213,7 +213,7 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
         return -2;
     }
 
-    if (info->state != BTBLE_ST_ADV) {
+    if (info->state != BTBLE_ST_ADV && info->state != BTBLE_ST_CONN) {
         tickless_debugf("[BLE_LP][para] unsupported controller state=%u", info->state);
         return -3;
     }
@@ -231,6 +231,67 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
                         info->saved_blecore_count, (const void *)info->saved_ipcore, info->saved_ipcore_count);
         return -5;
     }
+
+    ble->rc_calibration = info->rc_calibration;
+    ble->wakeup_app     = info->wakeup_app;
+    if (info->state == BTBLE_ST_CONN) {
+        const btble_controller_lp_fw_con_info_t *c = &info->con;
+        ble->ble_activity_state = LP_FW_BLE_ST_CONN;
+        ble->version            = LP_FW_BLE_PARA_VERSION;
+        ble->cs_off             = c->cs_off;
+        ble->rx_desc_off        = info->rx_desc_off;
+        ble->rx_data_off        = info->rx_data_off;
+        ble->rx_data_len        = info->rx_data_len;
+        ble->saved_blecore_addr = (uint32_t)(uintptr_t)info->saved_blecore;
+        ble->saved_ipcore_addr  = (uint32_t)(uintptr_t)info->saved_ipcore;
+        ble->saved_blecore_count = info->saved_blecore_count;
+        ble->saved_ipcore_count  = info->saved_ipcore_count;
+        ble->dfe_mode     = (uint8_t)(((*(volatile uint32_t *)0x20004640u) >> 28) & 7u);
+        ble->spdt_enabled = 0U;
+        ble->spdt_gpio    = LP_FW_BLE_SPDT_GPIO_INVALID;
+        ble->con_interval        = c->interval;
+        ble->con_latency         = c->latency;
+        ble->con_latency_applied = c->latency_applied;
+        ble->con_evt_cnt         = c->evt_cnt;
+        ble->con_evt_inc         = c->evt_inc;
+        ble->con_master_sca      = c->master_sca;
+        ble->con_local_drift     = c->local_drift;
+        ble->con_last_cs_ch_idx  = c->last_cs_ch_idx;
+        ble->con_prog_hus        = c->prog_hus;
+        ble->con_prog_hs         = c->prog_hs;
+        ble->con_next_ts         = c->next_ts;
+        ble->con_next_bit_off    = c->next_bit_off;
+        ble->con_sync_win_hus    = c->sync_win_size;
+        ble->con_last_sync_ts    = c->last_sync_ts;
+        ble->con_last_sync_bit_off = c->last_sync_bit_off;
+        ble->con_last_crc_ok_ts  = c->last_crc_ok_ts;
+        ble->con_timeout_hs      = c->timeout;
+        ble->con_duration_min_hus = c->duration_min;
+        ble->con_rx_rate         = c->rx_rate;
+        ble->con_hop_sel_1       = c->hop_sel_1;
+        ble->con_hop_inc         = c->hop_inc;
+        ble->con_prio            = c->current_prio;
+        ble->con_state           = BTBLE_LPFW_CON_STATE_WAIT_NEXT_PROG;
+        ble->con_proged_in_lpfw   = 0U;
+        ble->con_rsvd0           = 0U;
+        ble->con_early_us        = 0U;
+        ble->con_wake_cause      = 0U;
+        ble->con_out_next_ts     = 0U;
+        ble->con_out_rx_desc_off = 0U;
+        ble->con_events_run      = 0U;
+        ble->con_events_synced   = 0U;
+        ble->con_last_rxstat     = 0U;
+        ble->con_last_rxphce     = 0U;
+        memset(ble->con_dbg, 0, sizeof(ble->con_dbg));
+        memset(ble->con_elog, 0, sizeof(ble->con_elog));
+        ble->con_sync_evt_cnt    = c->evt_cnt;   /* latency applied => the last event synced */
+        ble->con_retry_max       = 4U;
+        ble->con_retries         = 0U;
+        ble->con_rsvd1           = 0U;
+        ble->magic = LP_FW_BLE_PARA_MAGIC;
+        return 0;
+    }
+
 
     if (info->adv.adv_pdu_len < 6U) {
         tickless_debugf("[BLE_LP][para] invalid advertising PDU length=%u", info->adv.adv_pdu_len);
@@ -471,6 +532,33 @@ extern uint16_t btblecontroller_rc32k_xtal_count_wait_result(void);
             .conn_ind_rx_desc_addr = ble->conn_ind_rx_desc_off,
             .sleep_duration = ble->sleep_duration,
             .lpfw_ble_awake = !!ble->lpfw_ble_awake,
+        };
+        int ret = btble_controller_lp_fw_activity_restore(&restore);
+        if (ret != 0) {
+            tickless_debugf("[BLE_LP][restore] activity state=%u ret=%d", restore.state, ret);
+        }
+    }else if (ble->ble_activity_state == LP_FW_BLE_ST_CONN) {
+            btble_controller_lp_fw_activity_t restore = {
+            .state                 = BTBLE_ST_CONN,
+            .con_state             = ble->con_state,
+            .next_hs               = 0U,
+            .next_hus              = 0U,
+            .conn_ind_rx_desc_addr = 0U,
+            .con_proged_in_lpfw     = ble->con_proged_in_lpfw,
+            .sleep_duration        = ble->sleep_duration,
+            .lpfw_ble_awake        = ble->lpfw_ble_awake != 0U,
+            .con_wake_cause        = ble->con_wake_cause,
+            .con_evt_cnt           = ble->con_evt_cnt,
+            .con_evt_inc           = ble->con_evt_inc,
+            .con_next_ts           = ble->con_out_next_ts,
+            .con_next_bit_off      = ble->con_out_next_bit_off,
+            .con_prog_hs           = ble->con_prog_hs,
+            .con_prog_hus          = ble->con_prog_hus,
+            .con_last_sync_ts      = ble->con_last_sync_ts,
+            .con_last_sync_bit_off = ble->con_last_sync_bit_off,
+            .con_last_crc_ok_ts    = ble->con_last_crc_ok_ts,
+            .con_last_cs_ch_idx    = ble->con_last_cs_ch_idx,
+            .con_rx_desc_addr      = ble->rx_desc_off,
         };
         int ret = btble_controller_lp_fw_activity_restore(&restore);
         if (ret != 0) {

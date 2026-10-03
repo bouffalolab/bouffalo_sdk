@@ -51,7 +51,7 @@ CONFIG_DCDC_ENABLE =n
 CONFIG_MACSW_SELECT = default
 
 CONFIG_PWRMGMT               =y
-# easyflash
+# lfs_kv
 CONFIG_LITTLEFS              =y
 CONFIG_LITTLEFS_KV_EASYFLASH =y
 CONFIG_BFLB_MTD              =y

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #if defined(CONFIG_CLOCK_SOURCE_EF_PARAM) && CONFIG_CLOCK_SOURCE_EF_PARAM
-#include "easyflash.h"
+#include "lfs_kv.h"
 #endif
 #include "FreeRTOS.h"
 #include "task.h"
@@ -635,7 +635,7 @@ int clock_source_read(uint8_t *clock_source)
     *clock_source = 0; // Default if not found
 
     // Use EasyFlash to read clock source setting
-    if (ef_get_env_blob(CLOCK_SOURCE_KEY, clock_source, sizeof(uint8_t), &value_len) == 0 ||
+    if (lfs_kv_get_blob(CLOCK_SOURCE_KEY, clock_source, sizeof(uint8_t), &value_len) == 0 ||
         value_len != sizeof(uint8_t)) {
         printf("Clock source file not found\r\n");
         return -1;
@@ -654,7 +654,7 @@ int clock_source_write(uint8_t clock_source)
     }
 
     // Use EasyFlash to write clock source setting
-    if (ef_set_env_blob(CLOCK_SOURCE_KEY, &clock_source, sizeof(uint8_t)) != EF_NO_ERR) {
+    if (lfs_kv_set_blob(CLOCK_SOURCE_KEY, &clock_source, sizeof(uint8_t)) != LFS_KV_OK) {
         printf("Failed to write clock source\r\n");
         return -2;
     }
@@ -671,7 +671,7 @@ int rc_cal_data_read(uint32_t *rc_cal_value)
     *rc_cal_value = 0; // Default if not found
 
     // Use EasyFlash to read RC calibration data
-    if (ef_get_env_blob(RC_CAL_DATA_KEY, rc_cal_value, sizeof(uint32_t), &value_len) == 0 ||
+    if (lfs_kv_get_blob(RC_CAL_DATA_KEY, rc_cal_value, sizeof(uint32_t), &value_len) == 0 ||
         value_len != sizeof(uint32_t)) {
         printf("RC calibration data file not found\r\n");
         return -1;
@@ -685,7 +685,7 @@ int rc_cal_data_read(uint32_t *rc_cal_value)
 int rc_cal_data_write(uint32_t rc_cal_value)
 {
     // Use EasyFlash to write RC calibration data
-    if (ef_set_env_blob(RC_CAL_DATA_KEY, &rc_cal_value, sizeof(uint32_t)) != EF_NO_ERR) {
+    if (lfs_kv_set_blob(RC_CAL_DATA_KEY, &rc_cal_value, sizeof(uint32_t)) != LFS_KV_OK) {
         printf("Failed to write RC calibration data\r\n");
         return -1;
     }

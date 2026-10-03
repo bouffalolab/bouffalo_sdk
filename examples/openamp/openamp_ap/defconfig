@@ -1,3 +1,4 @@
+-include $(BL_SDK_BASE)/examples/openamp/defconfig
 
 CONFIG_VSNPRINTF_NANO       =n
 CONFIG_VSNPRINTF_FLOAT      =y
@@ -25,3 +26,7 @@ CONFIG_RPMSG_SERVICE                 =y
 CONFIG_RPMSG_SERVICE_MODE_MASTER     =y
 CONFIG_RAM_FOR_AP_SIZE = 0x48000
 CONFIG_WRAM_FOR_AP_SIZE = 0x28000
+
+ifeq ($(CONFIG_PSRAM_XIP),y)
+CONFIG_OVERRIDE_PTFILE=psram_xip.toml
+endif

@@ -22,7 +22,7 @@
 #include "rfparam_adapter.h"
 
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 /**************************************************************************************************
  * Beacon Configuration
@@ -220,7 +220,7 @@ int main(void)
     board_init();
 
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");

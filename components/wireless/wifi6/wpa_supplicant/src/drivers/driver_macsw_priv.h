@@ -37,6 +37,8 @@ struct wpa_macsw_driver_itf_data {
 	int next_auth_alg;
 	// DTIM period cached from set_ap, reused when building CSA beacon
 	u8 dtim_period;
+	// Cookie of the most recent driver scan (raw survey ownership).
+	u32 survey_id;
 };
 
 /**

@@ -656,7 +656,7 @@ static int at_setup_flash_write(int argc, const char **argv)
     at_response_string("Recv %d bytes\r\n", recv_num);
 
     AT_CMD_PRINTF("flash write 0x%x %d \r\n", address, nbytes);
-    ret = bflb_flash_write(address, buffer, nbytes);
+    ret = bflb_flash_write(address, (uint8_t *)buffer, nbytes);
     at_free(buffer);
 
     if (ret) {
@@ -705,7 +705,7 @@ static int at_setup_flash_write_hex(int argc, const char **argv)
     }
 
     AT_CMD_PRINTF("flash write hex 0x%x %d \r\n", address, nbytes);
-    ret = bflb_flash_write(address, buffer, nbytes);
+    ret = bflb_flash_write(address, (uint8_t *)buffer, nbytes);
 
     at_free(buffer);
 
@@ -739,7 +739,7 @@ static int at_setup_flash_read(int argc, const char **argv)
     memset(buffer, 0, nbytes);
 
     AT_CMD_PRINTF("flash read 0x%x %d \r\n", address, nbytes);
-    ret = bflb_flash_read(address, buffer, nbytes);
+    ret = bflb_flash_read(address, (uint8_t *)buffer, nbytes);
 
     if (ret) {
         at_free(buffer);
@@ -785,7 +785,7 @@ static int at_setup_flash_read_hex(int argc, const char **argv)
     memset(bin_buffer, 0, nbytes);
 
     AT_CMD_PRINTF("flash read hex 0x%x %d \r\n", address, nbytes);
-    ret = bflb_flash_read(address, bin_buffer, nbytes);
+    ret = bflb_flash_read(address, (uint8_t *)bin_buffer, nbytes);
 
     if (ret) {
         at_free(bin_buffer);
@@ -838,6 +838,12 @@ static int at_setup_flash_erase(int argc, const char **argv)
 #endif
 
 #ifdef CONFIG_ATMODULE_GPIO
+#if defined(BL616)
+extern int GLB_GPIO_Pad_LeadOut_Sts(uint8_t gpioPin);
+#else
+#define GLB_GPIO_Pad_LeadOut_Sts(pin) (1)
+#endif
+
 static int at_setup_gpio_output(int argc, const char **argv)
 {
     int pin, pull_state, cfgset;
@@ -933,6 +939,10 @@ static int at_setup_gpio_analog_input(int argc, const char **argv)
     struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
 
     AT_CMD_PARSE_NUMBER(0, &pin);
+
+    if (pin < 0) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
+    }
 
     if (GLB_GPIO_Pad_LeadOut_Sts(pin) != 1) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_IO_ERROR);

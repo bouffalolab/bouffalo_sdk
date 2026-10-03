@@ -12,7 +12,7 @@
 
 #include "rfparam_adapter.h"
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 #define DBG_TAG "appuartwifi"
 #include "log.h"
@@ -30,9 +30,9 @@ int app_uartwifi_init(void)
     /* TCP/IP stack init */
     tcpip_init(NULL, NULL);
 
-    /* Enable easyflash(littlefs) */
+    /* Enable lfs_kv(littlefs) */
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     app_wifi_init();
 

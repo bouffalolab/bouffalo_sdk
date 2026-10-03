@@ -9,7 +9,7 @@
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 #include "bflb_irq.h"
 #include "bflb_uart.h"
@@ -32,9 +32,9 @@ int app_spiwifi_init(void)
     /* TCP/IP stack init */
     tcpip_init(NULL, NULL);
 
-    /* Enable easyflash(littlefs) */
+    /* Enable lfs_kv(littlefs) */
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     extern void app_wifi_init(void);
     app_wifi_init();

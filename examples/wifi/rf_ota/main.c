@@ -42,7 +42,7 @@
 #include "bflb_mtd.h"
 #include "bflb_uart.h"
 
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "rfparam_adapter.h"
 #include "async_event.h"
 #include "mm.h"
@@ -119,7 +119,7 @@ static void rf_ota_wifi_config_load(void)
     size_t read_len;
 
     memset(&config, 0, sizeof(config));
-    read_len = ef_get_env_blob(RF_OTA_WIFI_CONFIG_KEY, &config, sizeof(config), &saved_len);
+    read_len = lfs_kv_get_blob(RF_OTA_WIFI_CONFIG_KEY, &config, sizeof(config), &saved_len);
     if (read_len != sizeof(config) || saved_len != sizeof(config) || !rf_ota_wifi_config_is_valid(&config)) {
         return;
     }
@@ -177,7 +177,7 @@ static void rf_ota_wifi_config_save_current(void)
         return;
     }
 
-    if (ef_set_env_blob(RF_OTA_WIFI_CONFIG_KEY, &config, sizeof(config)) != EF_NO_ERR) {
+    if (lfs_kv_set_blob(RF_OTA_WIFI_CONFIG_KEY, &config, sizeof(config)) != LFS_KV_OK) {
         LOG_E("Failed to save WiFi configuration.\r\n");
         return;
     }
@@ -242,7 +242,7 @@ static void rf_ota_wifi_forget(void)
     }
 
     wifi_autoconnect_enabled = false;
-    if (ef_del_env(RF_OTA_WIFI_CONFIG_KEY) != EF_NO_ERR) {
+    if (lfs_kv_del(RF_OTA_WIFI_CONFIG_KEY) != LFS_KV_OK) {
         LOG_E("Failed to delete saved WiFi configuration.\r\n");
         rf_ota_wifi_enable_autoconnect();
         return;
@@ -384,7 +384,7 @@ int main(void)
     shell_init_with_task(uart0);
 
     bflb_mtd_init();
-    if (easyflash_init() == EF_NO_ERR) {
+    if (lfs_kv_init() == LFS_KV_OK) {
         wifi_storage_ready = true;
         rf_ota_wifi_config_load();
     } else {

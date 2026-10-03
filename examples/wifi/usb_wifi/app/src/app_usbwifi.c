@@ -12,7 +12,7 @@
 
 #include <bflb_irq.h>
 #include <bflb_mtd.h>
-#include <easyflash.h>
+#include "lfs_kv.h"
 
 #include <rfparam_adapter.h>
 
@@ -33,9 +33,9 @@ int app_usbwifi_init(void)
     /* TCP/IP stack init */
     tcpip_init(NULL, NULL);
 
-    /* Enable easyflash(littlefs) */
+    /* Enable lfs_kv(littlefs) */
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     /* romsfs init mount use media factory*/
     // romfs_mount(0x378000);

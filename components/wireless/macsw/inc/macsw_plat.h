@@ -18,7 +18,7 @@
     do {                                                                               \
         int irq_rest;                                                                  \
         uint32_t btime, etime;                                                         \
-        __asm__ volatile ("csrrci %0, mstatus, %1" : "=r" (irq_rest) : "i" (INTE_EN)); \
+        __asm__ volatile ("csrrci %0, mstatus, %1" : "=r" (irq_rest) : "i" (INTE_EN) : "memory"); \
         btime = 0; /* bflb_mtimer_get_time_ms(); */                                    \
                                                                                        \
         /* Increment the critical section nesting level */                             \
@@ -29,7 +29,7 @@
         /* CRITICAL_NESTING_DEC(); */                                                 \
         etime = 0; /*bflb_mtimer_get_time_ms();*/                                     \
         /* Restore mstatus to its previous value */                                   \
-        __asm__ volatile ("csrw mstatus, %0" : /* no output */ : "r" (irq_rest));     \
+        __asm__ volatile ("csrw mstatus, %0" : /* no output */ : "r" (irq_rest) : "memory"); \
         if (etime - btime > 5) {                                                      \
           printf("disable interrupt time %ld ms too long. %s:%d\r\n",                  \
                   etime - btime, __func__, __LINE__);                                 \

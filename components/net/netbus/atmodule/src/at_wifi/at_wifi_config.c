@@ -13,7 +13,7 @@
 #include <string.h>
 #include <FreeRTOS.h>
 //#ifdef EASYFLASH_ENABLE
-#include <easyflash.h>
+#include "lfs_kv.h"
 //#endif
 #include "at_config.h"
 #include "at_wifi_config.h"

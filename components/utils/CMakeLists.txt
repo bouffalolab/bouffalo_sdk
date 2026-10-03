@@ -2,6 +2,9 @@ sdk_generate_library()
 
 sdk_add_include_directories(.)
 
+sdk_add_include_directories(multi_bins)
+sdk_library_add_sources(multi_bins/multi_bins.c)
+
 if(NOT DEFINED CONFIG_LOG_LEVEL)
     sdk_add_compile_definitions(-DCONFIG_LOG_LEVEL=3)
 endif()

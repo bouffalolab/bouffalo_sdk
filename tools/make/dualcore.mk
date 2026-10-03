@@ -1,4 +1,14 @@
-all:
+CONFIG_CMDLINE_VARS := $(foreach var,$(filter CONFIG_%,$(.VARIABLES)),\
+    $(if $(filter command line,$(origin $(var))),$(var)))
+
+.DEFAULT_GOAL := all
+.PHONY: defconfig
+defconfig:
+	$(file >>defconfig,)
+	$(foreach var,$(CONFIG_CMDLINE_VARS),\
+	    $(file >>defconfig,$(var)=$(value $(var))))
+
+all: defconfig
 	make -C $(APP_NAME)_np BUILD_DIR=../$(BUILD_DIR)/np CPU_ID=np;				      \
 	make -C $(APP_NAME)_ap BUILD_DIR=../$(BUILD_DIR)/ap CPU_ID=ap CONFIG_DUALCORE_NP_IMAGE=../np/build_out/$(APP_NAME)_$(CHIP)_np.bin;                                                                                     \
 	cp $(BUILD_DIR)/ap/build_out/$(APP_NAME)_$(CHIP)_ap.bin $(BUILD_DIR)/$(APP_NAME)_$(CHIP).bin

@@ -1293,8 +1293,8 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_mxic_1635f = {
     .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enter_qpi = 0x38,
-    .exit_qpi = 0xff,
+    .enter_qpi = 0x35,
+    .exit_qpi = 0xf5,
 
     /*AC*/
     .time_e_sector = 300,
@@ -1396,8 +1396,8 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_mxic_25l256 = {
     .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enter_qpi = 0x38,
-    .exit_qpi = 0xff,
+    .enter_qpi = 0x35,
+    .exit_qpi = 0xf5,
 
     /*AC*/
     .time_e_sector = 400,

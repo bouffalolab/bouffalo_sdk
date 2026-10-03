@@ -124,6 +124,10 @@ enum {
 	SMALLBW_10M = 1,
 	SMALLBW_5M 	= 2,
 };
+enum phy_channel_cal_mode {
+    PHY_CHAN_CAL_FAST = 0,   /* Skip the 5G RF calibration on channel switch, only program the channel */
+    PHY_CHAN_CAL_FULL,       /* Run the full 5G calibration on channel switch; matches legacy phy_set_channel() */
+};
 
 /// Operating Channel
 struct phy_mac_chan_op
@@ -225,6 +229,37 @@ void phy_get_version(uint32_t *version_1, uint32_t *version_2);
  ****************************************************************************************
  */
 void phy_set_channel(const void *chan, uint8_t index);
+
+/**
+ ****************************************************************************************
+ * @brief Set channel function with an explicit calibration mode.
+ * Behaves like phy_set_channel(), but the caller selects how much RF calibration is run
+ * while switching the channel. The function is blocking until the PLL has locked on the
+ * new channel frequency.
+ *
+ * @param[in] chan    Channel configuration
+ * @param[in] index   Index of the RF for which the channel has to be set (@ref PHY_PRIM
+ *                    operating (primary RF)), 1: secondary RF (@ref PHY_SEC used for
+ *                    additional radar detection). This parameter is reserved if no
+ *                    secondary RF is available in the system
+ * @param[in] mode    Calibration mode applied while switching (@ref phy_channel_cal_mode):
+ *                    @ref PHY_CHAN_CAL_FAST or @ref PHY_CHAN_CAL_FULL
+ ****************************************************************************************
+ */
+void phy_set_channel_ex(const void *chan, uint8_t index, enum phy_channel_cal_mode mode);
+
+/**
+ ****************************************************************************************
+ * @brief Re-calibrate the channel the radio is currently locked on.
+ * Re-runs the RF calibration for the current channel configuration without changing that
+ * configuration, which is useful when the calibration result has been lost, for example
+ * after returning from a low power cycle.
+ *
+ * @return 0. The function does not report failures.
+ ****************************************************************************************
+ */
+int phy_calibrate_current_channel(void);
+
 
 /**
  ****************************************************************************************

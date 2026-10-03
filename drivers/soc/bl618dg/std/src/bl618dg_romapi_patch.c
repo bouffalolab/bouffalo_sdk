@@ -1337,6 +1337,52 @@ static inline uint32_t Clock_SPI3_Clk_Mux_Output(uint8_t sel)
     }
 }
 
+static uint32_t Clock_Get_CPUPLL_Div1_Output(void)
+{
+    uint32_t refdiv;
+    uint32_t sdmin;
+    uint32_t tmpVal;
+    uint32_t xtal_value;
+
+    HBN_Get_Xtal_Value(&xtal_value);
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET);
+    refdiv = BL_GET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_REFCLK_DIV_RATIO);
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET);
+    sdmin = BL_GET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_SDM_IN);
+
+    volatile uint32_t vco_divisor_value = 2048U;
+    volatile float vco_divisor = (float)vco_divisor_value;
+    float vco_float = (float)sdmin / vco_divisor * ((float)xtal_value / (float)refdiv);
+
+    return (uint32_t)vco_float;
+}
+
+static uint32_t Clock_Get_PSRAMB_Clk(void)
+{
+    uint32_t clock;
+    uint32_t div;
+    uint32_t tmpVal;
+    uint8_t clk_sel;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG2);
+    clk_sel = BL_GET_REG_BITS_VAL(tmpVal, GLB_PSRAM_CLK_SEL);
+    div = BL_GET_REG_BITS_VAL(tmpVal, GLB_PSRAM_CLK_DIV);
+
+    if (clk_sel == GLB_PSRAMB_CLK_BCLK) {
+        clock = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_PBCLK);
+    } else if (clk_sel == GLB_PSRAMB_CLK_480M) {
+        clock = 480 * 1000 * 1000;
+    } else if (clk_sel == GLB_PSRAMB_CLK_320M) {
+        clock = 320 * 1000 * 1000;
+    } else if (clk_sel == GLB_PSRAMB_CLK_CPUPLL_DIV1) {
+        clock = Clock_Get_CPUPLL_Div1_Output();
+    } else {
+        return 0;
+    }
+
+    return clock / (div + 1);
+}
+
 /****************************************************************************/ /**
 
  * @brief  Get Peripheral1 Clock
@@ -1359,8 +1405,10 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
         clk_sel = BL_GET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_SPI_CLK_SEL);
         div = BL_GET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_SPI_CLK_DIV);
         clock = Clock_SPI3_Clk_Mux_Output(clk_sel);
-        
+
         return clock / (div + 1);
+    } else if (type == BL_PERIPHERAL_CLOCK_PSRAMB) {
+        return Clock_Get_PSRAMB_Clk();
     } else {
         return RomDriver_Clock_Peripheral_Clock_Get(type);
     }

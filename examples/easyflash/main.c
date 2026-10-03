@@ -1,7 +1,7 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 
 uint8_t test_data[] = { "1234567890" };
 uint8_t read_buffer[100];
@@ -11,18 +11,19 @@ uint8_t read_buffer[100];
 #define TEST_KEY1       "g/hwaddr/mac_aabb"
 #define TEST_KEY2       "/root/aa/bbb/"
 
-static EfErrCode env_foreach_cb(const char *name, void *arg) {
+static lfs_kv_err_t env_foreach_cb(const char *name, void *arg) {
   uint32_t *count = (uint32_t *)arg;
   printf("foreach key %d: %s\n", (*count)++, name);
-  return EF_NO_ERR;
+  return LFS_KV_OK;
 }
 
 int main(void)
 {
-    EfErrCode ret;
+    lfs_kv_err_t ret;
+    size_t read_len;
     board_init();
 
-    /* Partition and boot2 must be use, and we can only operate partition **psm** with easyflash
+    /* Partition and boot2 must be use, and we can only operate partition **psm** with lfs_kv (littlefs)
      *
      * partition_cfg with psm:
      *
@@ -43,41 +44,35 @@ int main(void)
 
     */
     bflb_mtd_init();
-    if (easyflash_init() == EF_NO_ERR) {
-        printf("easyflash_init test pass.\n");
+    if (lfs_kv_init() == LFS_KV_OK) {
+        printf("lfs_kv_init test pass.\n");
     } else {
         printf("errno: %d\r\n", errno);
-        printf("easyflash_init test failed.\n");
+        printf("lfs_kv_init test failed.\n");
     }
 
     memset(read_buffer, 0, sizeof(read_buffer));
 
-    ret = ef_set_and_save_env(WIFI_SSID_KEY, (const char *)"helloworld");
-    if (ret != EF_NO_ERR) {
+    ret = lfs_kv_set_blob(WIFI_SSID_KEY, (const char *)"helloworld", strlen("helloworld") + 1);
+    if (ret != LFS_KV_OK) {
       printf("test case %d failed.\n", __LINE__);
       while(1);
     }
 
-    ret = ef_set_and_save_env(WIFI_PASSWD_KEY, (const char *)"helloworld2023");
-    if (ret != EF_NO_ERR) {
+    ret = lfs_kv_set_blob(WIFI_PASSWD_KEY, (const char *)"helloworld2023", strlen("helloworld2023") + 1);
+    if (ret != LFS_KV_OK) {
       printf("test case %d failed.\n", __LINE__);
       while(1);
     }
 
-    ret = ef_set_and_save_env(TEST_KEY1, (const char *)"11223344");
-    if (ret != EF_NO_ERR) {
+    ret = lfs_kv_set_blob(TEST_KEY1, (const char *)"11223344", strlen("11223344") + 1);
+    if (ret != LFS_KV_OK) {
       printf("test case %d failed.\n", __LINE__);
       while(1);
     }
 
-    ret = ef_set_and_save_env(TEST_KEY2, (const char *)"deadbeef");
-    if (ret != EF_NO_ERR) {
-      printf("test case %d failed.\n", __LINE__);
-      while(1);
-    }
-
-    ret = ef_save_env();
-    if (ret != EF_NO_ERR) {
+    ret = lfs_kv_set_blob(TEST_KEY2, (const char *)"deadbeef", strlen("deadbeef") + 1);
+    if (ret != LFS_KV_OK) {
       printf("test case %d failed.\n", __LINE__);
       while(1);
     }
@@ -86,105 +81,105 @@ int main(void)
     char passwd[65];
     char hwaddr[33];
 
-    ret = ef_get_env_blob(WIFI_SSID_KEY, ssid, sizeof(ssid), NULL);
-    if (ret > 0) {
-        ssid[ret] = 0;
+    read_len = lfs_kv_get_blob(WIFI_SSID_KEY, ssid, sizeof(ssid), NULL);
+    if (read_len > 0) {
+        ssid[read_len] = 0;
         printf("ssid:%s, test pass.\r\n", ssid);
     } else {
         printf("test case %d failed.\n", __LINE__);
         while(1);
     }
 
-    ret = ef_get_env_blob(WIFI_PASSWD_KEY, passwd, sizeof(passwd), NULL);
-    if (ret > 0) {
-        passwd[ret] = 0;
+    read_len = lfs_kv_get_blob(WIFI_PASSWD_KEY, passwd, sizeof(passwd), NULL);
+    if (read_len > 0) {
+        passwd[read_len] = 0;
         printf("passwd:%s test pass.\r\n", passwd);
     } else {
         printf("test case %d failed.\n", __LINE__);
         while(1);
     }
 
-    ret = ef_get_env_blob(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL);
-    hwaddr[ret] = 0;
-    if (ret == 0) {
+    read_len = lfs_kv_get_blob(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL);
+    hwaddr[read_len] = 0;
+    if (read_len == 0) {
         printf("read key1 failed\r\n");
         while(1);
     } else {
         printf(TEST_KEY1 ":%s, pass\r\n", hwaddr);
     }
 
-    ret = ef_get_env_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 2);
-    hwaddr[ret] = 0;
-    if (ret == 0) {
+    read_len = lfs_kv_get_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 2);
+    hwaddr[read_len] = 0;
+    if (read_len == 0) {
         printf("read key1 failed\r\n");
         while(1);
     } else {
         printf(TEST_KEY1 "+2:%s, pass\r\n", hwaddr);
     }
 
-    ret = ef_get_env_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 3);
-    hwaddr[ret] = 0;
-    if (ret == 0) {
+    read_len = lfs_kv_get_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 3);
+    hwaddr[read_len] = 0;
+    if (read_len == 0) {
         printf("read key1 failed\r\n");
         while(1);
     } else {
         printf(TEST_KEY1 "+3:%s, pass\r\n", hwaddr);
     }
 
-    ret = ef_get_env_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 100);
-    hwaddr[ret] = 0;
-    if (ret == 0) {
+    read_len = lfs_kv_get_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 100);
+    hwaddr[read_len] = 0;
+    if (read_len == 0) {
         printf("test case %d pass.\n", __LINE__);
     } else {
         printf(TEST_KEY1 "+100:%s, failed\r\n", hwaddr);
         while(1);
     }
 
-    ret = ef_get_env_blob("aa/bb", hwaddr, sizeof(hwaddr), NULL);
-    hwaddr[ret] = 0;
-    if (ret == 0) {
+    read_len = lfs_kv_get_blob("aa/bb", hwaddr, sizeof(hwaddr), NULL);
+    hwaddr[read_len] = 0;
+    if (read_len == 0) {
         printf("test non-exists key pass\r\n");
     } else {
         printf("aa/bb:%s, failed!\r\n", hwaddr);
         while(1);
     }
 
-    ret = ef_get_env_blob(TEST_KEY2, hwaddr, sizeof(hwaddr), NULL);
-    hwaddr[ret] = 0;
-    if (ret == 0) {
+    read_len = lfs_kv_get_blob(TEST_KEY2, hwaddr, sizeof(hwaddr), NULL);
+    hwaddr[read_len] = 0;
+    if (read_len == 0) {
         printf("read key2 failed\r\n");
         while(1);
     } else {
         printf(TEST_KEY2 ":%s, pass\r\n", hwaddr);
     }
 
-    printf("foreach all env:\n");
+    printf("foreach all kv:\n");
     uint32_t count = 0;
-    ef_foreach_env(env_foreach_cb, &count);
-    printf("foreach all env: done, total: %d\n", count);
+    lfs_kv_foreach(env_foreach_cb, &count);
+    printf("foreach all kv: done, total: %d\n", count);
     if (count == 4) {
-        printf("ef_foreach_env test pass.\n");
+        printf("lfs_kv_foreach test pass.\n");
     } else {
-        printf("ef_foreach_env test failed.\n");
+        printf("lfs_kv_foreach test failed.\n");
         while(1);
     }
 
-    ef_print_env();
+    lfs_kv_print();
     printf("clear all kv\r\n");
     /* reset all kv */
-    ef_env_set_default();
+    lfs_kv_clear();
 
-    ef_print_env();
+    lfs_kv_print();
     count = 0;
-    ef_foreach_env(env_foreach_cb, &count);
+    lfs_kv_foreach(env_foreach_cb, &count);
     if (count == 0) {
-        printf("ef_env_set_default test pass.\n");
+        printf("lfs_kv_clear test pass.\n");
     } else {
-        printf("ef_env_set_default test failed.\n");
+        printf("lfs_kv_clear test failed.\n");
         while(1);
     }
 
-    printf("easyflash case success\r\n");
+    printf("lfs_kv case success\r\n");
     while (1) {
     }
 }

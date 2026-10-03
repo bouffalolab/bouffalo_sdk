@@ -132,12 +132,18 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel1 = {
     },
     .pdsCtl3 = {
         .forceMiscPwrOff = 0,
+        .forceBzBlePwrOff = 0,
         .forceMiscIsoEn = 0,
+        .forceBzBleIsoEn = 0,
         .forceMiscPdsRst = 0,
+        .forceBzBlePdsRst = 0,
         .forceMiscMemStby = 0,
+        .forceBzBleMemStby = 0,
         .forceMiscGateClk = 0,
+        .forceBzBleGateClk = 0,
         .cpuIsoEn = 0,
         .wbIsoEn = 1,
+        .bzBleIsoEn = 1,
         .usbIsoEn = 0,
         .miscIsoEn = 0,
     },
@@ -150,6 +156,10 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel1 = {
         .wbRst = 1,
         .wbMemStby = 1,
         .wbGateClk = 1,
+        .bzBlePwrOff = 1,
+        .bzBleRst = 1,
+        .bzBleMemStby = 1,
+        .bzBleGateClk = 1,
         .usbPwrOff = 0,
         .usbRst = 0,
         .usbMemStby = 0,
@@ -214,12 +224,18 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel2 = {
     },
     .pdsCtl3 = {
         .forceMiscPwrOff = 0,
+        .forceBzBlePwrOff = 0,
         .forceMiscIsoEn = 0,
+        .forceBzBleIsoEn = 0,
         .forceMiscPdsRst = 0,
+        .forceBzBlePdsRst = 0,
         .forceMiscMemStby = 0,
+        .forceBzBleMemStby = 0,
         .forceMiscGateClk = 0,
+        .forceBzBleGateClk = 0,
         .cpuIsoEn = 1,
         .wbIsoEn = 0,
+        .bzBleIsoEn = 0,
         .usbIsoEn = 0,
         .miscIsoEn = 0,
     },
@@ -232,6 +248,10 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel2 = {
         .wbRst = 0,
         .wbMemStby = 0,
         .wbGateClk = 0,
+        .bzBlePwrOff = 0,
+        .bzBleRst = 0,
+        .bzBleMemStby = 0,
+        .bzBleGateClk = 0,
         .usbPwrOff = 0,
         .usbRst = 0,
         .usbMemStby = 0,
@@ -297,12 +317,18 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel3 = {
     },
     .pdsCtl3 = {
         .forceMiscPwrOff = 0,
+        .forceBzBlePwrOff = 0,
         .forceMiscIsoEn = 0,
+        .forceBzBleIsoEn = 0,
         .forceMiscPdsRst = 0,
+        .forceBzBlePdsRst = 0,
         .forceMiscMemStby = 0,
+        .forceBzBleMemStby = 0,
         .forceMiscGateClk = 0,
+        .forceBzBleGateClk = 0,
         .cpuIsoEn = 1,
         .wbIsoEn = 1,
+        .bzBleIsoEn = 1,
         .usbIsoEn = 0,
         .miscIsoEn = 0,
     },
@@ -315,6 +341,10 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel3 = {
         .wbRst = 1,
         .wbMemStby = 1,
         .wbGateClk = 1,
+        .bzBlePwrOff = 1,
+        .bzBleRst = 1,
+        .bzBleMemStby = 1,
+        .bzBleGateClk = 1,
         .usbPwrOff = 0,
         .usbRst = 0,
         .usbMemStby = 0,
@@ -380,12 +410,18 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel7 = {
     },
     .pdsCtl3 = {
         .forceMiscPwrOff = 0,
+        .forceBzBlePwrOff = 0,
         .forceMiscIsoEn = 0,
+        .forceBzBleIsoEn = 0,
         .forceMiscPdsRst = 0,
+        .forceBzBlePdsRst = 0,
         .forceMiscMemStby = 0,
+        .forceBzBleMemStby = 0,
         .forceMiscGateClk = 0,
+        .forceBzBleGateClk = 0,
         .cpuIsoEn = 1,
         .wbIsoEn = 1,
+        .bzBleIsoEn = 1,
         .usbIsoEn = 1,
         .miscIsoEn = 0,
     },
@@ -398,6 +434,10 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel7 = {
         .wbRst = 1,
         .wbMemStby = 1,
         .wbGateClk = 1,
+        .bzBlePwrOff = 1,
+        .bzBleRst = 1,
+        .bzBleMemStby = 1,
+        .bzBleGateClk = 1,
         .usbPwrOff = 1,
         .usbRst = 1,
         .usbMemStby = 1,
@@ -471,16 +511,21 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel15 = {
         .wbIsoEn = 1,
         .usbIsoEn = 1,
         .miscIsoEn = 1,
+        .bzBleIsoEn = 1,
     },
     .pdsCtl4 = {
         .cpuPwrOff = 1,
         .cpuRst = 1,
-        .cpuMemStby = 0,
-        .cpuGateClk = 0,
+        .cpuMemStby = 1,
+        .cpuGateClk = 1,
         .wbPwrOff = 1,
         .wbRst = 1,
         .wbMemStby = 1,
         .wbGateClk = 1,
+        .bzBlePwrOff = 1,
+        .bzBleRst = 1,
+        .bzBleMemStby = 1,
+        .bzBleGateClk = 1,
         .usbPwrOff = 1,
         .usbRst = 1,
         .usbMemStby = 1,
@@ -500,7 +545,6 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel15 = {
         .pdsGpioKeep = 0,
     }
 };
-
 
 /****************************************************************************/ /**
  * @brief  Disable GPIO Keep,include PDS_IO and HBN_IO
@@ -1019,8 +1063,19 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg)
     }
 
     if (p->ramRetEn) {
-        PDS_Set_All_WRAM_Retention();
-        PDS_Set_All_OCRAM_Retention();
+        uint32_t tmpVal = 0;
+
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_RAM1);
+        tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_RAM_CLK);
+        tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_RAM_CLK2);
+        tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_MISC_RAM_CLK);
+        tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_USB_RAM_CLK);
+        tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_WB_RAM_CLK);
+        tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_CTRL_NP_RAM_CLK);
+        BL_WR_REG(PDS_BASE, PDS_RAM1, tmpVal);
+
+        *((volatile uint32_t *)0x24000040) |= (1<<7);
+        *((volatile uint32_t *)0x29000040) |= (1<<7);
     }
 
     PDS_Default_Level_Config(pPdsCfg, p->sleepTime);

@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "https_fota.h"
+#include "https_fota_server.h"
 #include "https_ota_tls_material.h"
 
 int app_https_ota_fill_config(const char *url, struct https_fota_config *config)
@@ -26,5 +27,14 @@ int app_https_ota_fill_config(const char *url, struct https_fota_config *config)
     config->client_key_len = https_ota_client_key_pem_len;
 #endif
 
+    return 0;
+}
+
+int app_https_fota_server_fill_config(struct https_fota_server_config *config)
+{
+    config->cert_pem = (const unsigned char *)https_server_ota_cert_pem;
+    config->cert_len = https_server_ota_cert_pem_len;
+    config->key_pem = (const unsigned char *)https_server_ota_key_pem;
+    config->key_len = https_server_ota_key_pem_len;
     return 0;
 }

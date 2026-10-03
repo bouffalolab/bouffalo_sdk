@@ -43,7 +43,7 @@
 #include "shell.h"
 #include <peer.h>
 #include <oai_config.h>
-#include <easyflash.h>
+#include "lfs_kv.h"
 #include <bflb_mtd.h>
 #include <bflb_rtc.h>
 
@@ -183,7 +183,7 @@ int main(void)
     rtc = bflb_device_get_by_name("rtc");
     bflb_rtc_set_time(rtc, 0);
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
     tcpip_init(NULL, NULL);
     xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
 

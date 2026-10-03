@@ -39,7 +39,7 @@
 #include "mesh_settings.h"
 #ifdef CONFIG_BT_SETTINGS
 #if defined(CONFIG_BT_SETTINGS)
-#include "easyflash.h"
+#include "lfs_kv.h"
 #endif
 #endif
 #endif
@@ -2595,7 +2595,7 @@ static ssize_t mesh_settings_read_cb(void *cb_arg, void *data, size_t data_len)
 	const char *key_name = (const char *)cb_arg;
 	size_t read_len, tot_len;
 
-	read_len = ef_get_env_blob(key_name, data, data_len, &tot_len);
+	read_len = lfs_kv_get_blob(key_name, data, data_len, &tot_len);
 	if (read_len == tot_len) {
 		BT_DBG("read data[%s]", bt_hex(data, data_len));
 		return read_len;
@@ -2606,24 +2606,11 @@ static ssize_t mesh_settings_read_cb(void *cb_arg, void *data, size_t data_len)
 }
 
 /* Added by bouffalo */
-#if defined(CONFIG_IOT_SDK)
-static bool setting_env_cb(env_node_obj_t env, void *arg1, void *arg2)
-#else
-static EfErrCode setting_env_cb(const char *key_name, void *arg)
-#endif /* CONFIG_IOT_SDK */
+static lfs_kv_err_t setting_env_cb(const char *key_name, void *arg)
 {
-#if defined(CONFIG_IOT_SDK)
-    if (!(env->crc_is_ok && env->status == ENV_WRITE)) {
-		 return false;
-	}
-	const char *key_name = env->name;
-	int key_name_len = env->name_len;
-	BT_WARN("Env[%.*s] Data len[%lu]", env->name_len, env->name, env->value_len);
-#else
 	int key_name_len = strlen(key_name);
-#endif /* CONFIG_IOT_SDK */
 	
-	char *pname, name[EF_ENV_NAME_MAX+1];
+	char *pname, name[LFS_KV_KEY_MAX+1];
 	const char* next;
 
 	pname = name;
@@ -2633,11 +2620,11 @@ static EfErrCode setting_env_cb(const char *key_name, void *arg)
 
 	/* Check mesh index*/
 	if(0 != memcmp(pname, MESH_SETTINGS_DIR, strlen(MESH_SETTINGS_DIR))){
-		return EF_NO_ERR;
+		return LFS_KV_OK;
 	}
 	pname += strlen(MESH_SETTINGS_DIR);
 	if(*pname != '/'){
-		return EF_NO_ERR;
+		return LFS_KV_OK;
 	}
 	pname += 1;
 
@@ -2658,18 +2645,14 @@ static EfErrCode setting_env_cb(const char *key_name, void *arg)
 			break;
 		}
 	}
-	return EF_NO_ERR;
+	return LFS_KV_OK;
 }
 
 
 /* Added by bouffalo */
 void load_mesh_setting(void)
 {
-#if defined(CONFIG_IOT_SDK)
-	ef_print_env_cb(setting_env_cb);
-#else
-	ef_foreach_env(setting_env_cb, NULL);
-#endif /* CONFIG_IOT_SDK */
+	lfs_kv_foreach(setting_env_cb, NULL);
 }
 #endif /* CONFIG_BT_SETTINGS */
 

@@ -13,7 +13,7 @@
 
 #ifdef CONFIG_WIFI_P2P_PERSISTENT_GROUP
 #include "crc32.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #include "bflb_mtd.h"
 
 #define P2P_CONFIG_NAME "p2p"
@@ -33,7 +33,7 @@ static int p2p_group_store_init(void)
 		return 0;
 
 	bflb_mtd_init();
-	if (easyflash_init() != EF_NO_ERR) {
+	if (lfs_kv_init() != LFS_KV_OK) {
 		wpa_printf(MSG_ERROR, "P2P: Persistent storage init failed");
 		return -1;
 	}
@@ -180,7 +180,7 @@ static int p2p_group_store_write(struct wpa_config *config)
 		     crc32(blob + P2P_GROUP_STORE_HEADER_LEN,
 			   total_len - P2P_GROUP_STORE_HEADER_LEN));
 
-	if (ef_set_env_blob(P2P_GROUP_STORE_KEY, blob, total_len) == EF_NO_ERR)
+	if (lfs_kv_set_blob(P2P_GROUP_STORE_KEY, blob, total_len) == LFS_KV_OK)
 		ret = 0;
 	else
 		wpa_printf(MSG_ERROR, "P2P: Failed to write persistent group data");
@@ -311,7 +311,7 @@ static int p2p_group_store_read(struct wpa_config *config)
 
 	if (p2p_group_store_init())
 		return -1;
-	ef_get_env_blob(P2P_GROUP_STORE_KEY, NULL, 0, &total_len);
+	lfs_kv_get_blob(P2P_GROUP_STORE_KEY, NULL, 0, &total_len);
 	if (!total_len)
 		return 0;
 	if (total_len < P2P_GROUP_STORE_HEADER_LEN ||
@@ -320,7 +320,7 @@ static int p2p_group_store_read(struct wpa_config *config)
 	blob = os_malloc(total_len);
 	if (!blob)
 		goto out;
-	read_len = ef_get_env_blob(P2P_GROUP_STORE_KEY, blob, total_len, NULL);
+	read_len = lfs_kv_get_blob(P2P_GROUP_STORE_KEY, blob, total_len, NULL);
 	if (read_len != total_len ||
 	    WPA_GET_LE32(blob) != P2P_GROUP_STORE_MAGIC ||
 	    WPA_GET_LE16(blob + 4) != P2P_GROUP_STORE_VERSION ||

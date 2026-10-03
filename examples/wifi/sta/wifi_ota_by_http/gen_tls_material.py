@@ -8,6 +8,8 @@ PEM_FILES = (
     ("ca_1.crt", "https_ota_ca_pem"),
     ("client_1.crt", "https_ota_client_cert_pem"),
     ("client_1.key", "https_ota_client_key_pem"),
+    ("server_1.crt", "https_server_ota_cert_pem"),
+    ("server_1.key", "https_server_ota_key_pem"),
 )
 
 

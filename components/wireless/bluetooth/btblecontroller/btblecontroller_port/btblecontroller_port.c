@@ -35,6 +35,10 @@
 
 #if defined(BL702L)
 #include "bl702l_glb.h"
+#if !defined(CONFIG_IOT_SDK)
+#include "bl702l_hbn.h"
+#include "bl702l_pds.h"
+#endif
 #endif
 
 #if defined(CONFIG_IOT_SDK)
@@ -352,3 +356,114 @@ __attribute__((weak)) uint16_t btblecontroller_rc32k_xtal_count_wait_result(void
     return (uint16_t)xtal_cnt2;
 }
 #endif
+
+/*
+ * Current-SDK shims for BL702L controller code that still calls HOSAL APIs
+ * directly; legacy builds get the same symbols from platform/hosal/bl702l_hal.
+ */
+#if defined(BL702L) && !defined(CONFIG_IOT_SDK)
+
+#ifdef BL702L_Delay_US
+#undef BL702L_Delay_US
+#endif
+
+#define BL_RTC_MAX_COUNTER  ((1ULL << 40) - 1)
+
+static uint64_t bl702l_rtc_get_counter(void)
+{
+    uint32_t low;
+    uint32_t high;
+
+    HBN_Get_RTC_Timer_Val(&low, &high);
+    return ((uint64_t)high << 32) | low;
+}
+
+__attribute__((weak)) uint64_t bl_rtc_get_aligned_counter(void)
+{
+    uint32_t low_previous;
+    uint32_t low;
+    uint32_t high;
+
+    HBN_Get_RTC_Timer_Val(&low_previous, &high);
+    do {
+        HBN_Get_RTC_Timer_Val(&low, &high);
+    } while (low == low_previous);
+
+    return ((uint64_t)high << 32) | low;
+}
+
+__attribute__((weak)) uint64_t bl_rtc_get_delta_counter(uint64_t ref_cnt)
+{
+    uint64_t cnt = bl702l_rtc_get_counter();
+
+    ref_cnt &= BL_RTC_MAX_COUNTER;
+    if (cnt < ref_cnt) {
+        cnt += BL_RTC_MAX_COUNTER + 1;
+    }
+    return cnt - ref_cnt;
+}
+
+__attribute__((weak)) void bl_rtc_trigger_xtal_cnt_32k(void)
+{
+    uint32_t value = BL_RD_REG(HBN_BASE, HBN_GLB);
+
+    if (BL_GET_REG_BITS_VAL(value, HBN_F32K_SEL) == 1) {
+        return;
+    }
+
+    value = BL_RD_REG(GLB_BASE, GLB_XTAL_DEG_32K);
+    value = BL_SET_REG_BIT(value, GLB_CLR_XTAL_CNT_32K_DONE);
+    BL_WR_REG(GLB_BASE, GLB_XTAL_DEG_32K, value);
+
+    value = BL_RD_REG(GLB_BASE, GLB_XTAL_DEG_32K);
+    value = BL_SET_REG_BIT(value, GLB_XTAL_CNT_32K_SW_TRIG_PS);
+    BL_WR_REG(GLB_BASE, GLB_XTAL_DEG_32K, value);
+}
+
+__attribute__((weak)) uint16_t bl_rtc_process_xtal_cnt_32k(void)
+{
+    uint32_t value = BL_RD_REG(PDS_BASE, PDS_XTAL_CNT_32K);
+
+    if (BL_GET_REG_BITS_VAL(value, PDS_XTAL_CNT_32K_PROCESS)) {
+        do {
+            value = BL_RD_REG(PDS_BASE, PDS_XTAL_CNT_32K);
+        } while (!BL_GET_REG_BITS_VAL(value, PDS_XTAL_CNT_32K_DONE));
+    }
+
+    return BL_GET_REG_BITS_VAL(value, PDS_RO_XTAL_CNT_32K_CNT);
+}
+
+__attribute__((weak)) uint32_t bl_rtc_32k_to_32m(uint32_t cycles)
+{
+    uint32_t value = BL_RD_REG(PDS_BASE, PDS_XTAL_CNT_32K);
+    uint16_t cnt = BL_GET_REG_BITS_VAL(value, PDS_RO_XTAL_CNT_32K_CNT);
+    uint16_t res = BL_GET_REG_BITS_VAL(value, PDS_RO_XTAL_CNT_32K_RES);
+
+    return cycles * cnt + cycles * res / 64;
+}
+
+__attribute__((weak)) uint64_t bl_timer_now_us64(void)
+{
+    return bflb_mtimer_get_time_us();
+}
+
+__attribute__((weak)) void BL702L_Delay_US(uint32_t cnt)
+{
+    bflb_mtimer_delay_us(cnt);
+}
+
+__attribute__((weak)) int bl_wireless_mac_addr_get(uint8_t mac[8])
+{
+    mac[0] = 0;
+    mac[1] = 0;
+    return bflb_efuse_read_mac_address_opt(0, mac + 2, 1);
+}
+
+/* Legacy parity: bl_iot_sdk hosal defaults to 0 until the app calls
+ * bl_wireless_default_tx_power_set(); a strong app symbol overrides this. */
+__attribute__((weak)) int8_t bl_wireless_default_tx_power_get(void)
+{
+    return 0;
+}
+
+#endif /* BL702L && !CONFIG_IOT_SDK */

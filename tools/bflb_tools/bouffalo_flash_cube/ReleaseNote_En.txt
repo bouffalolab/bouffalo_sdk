@@ -1,18 +1,32 @@
 
+= Release 1.4.4 =
+Released: 2026-09
+
+== FlashCube ==
+Features:
+1. Add support for BL602P
+2. Add a warm reset option on the gui.
+3. Support passing flash_para data for partial erase operations.
+4. Modify the iomode in the passed flash_para for flash larger than 16MB.
+5. Set the handshake timeout sent to bootrom to 10s for BL616A1/BL616CL/BL618DG.
+6. Add handshake process before retry upon compressed writing failure.
+7. Add version information to executable files.
+
+
 = Release 1.4.3 =
 Released: 2026-08
 
 == FlashCube ==
 Features:
-1. When downloading to flash/RAM, do not send command 0x22 if speed_uart_boot and speed_uart_load are identical
-2. Add support for a2 version of bl618dg 
-3. Support auth: if the device is in auth mode but auth verify has not been performed, throw an error
-4. Add a configuration item in the config file for all chip types to update the timece parameter in flash_para.bin
+1. When downloading to flash/RAM, do not send command 0x22 if speed_uart_boot and speed_uart_load are identical.
+2. Add support for a2 version of BL618DG. 
+3. Support auth: if the device is in auth mode but auth verify has not been performed, throw an error.
+4. Add a configuration item in the config file for all chip types to update the timece parameter in flash_para.bin.
 5. When performing full-chip erase only, support sending flash_para.bin.
-6. Copy flash_para.bin to a temporary folder for update operations to prevent conflicts during multi-threaded access
-7. Update flash size detection logic to support high-capacity flash
-8. Chipname must be provided when build/config/wholechip-erase
-9. Support warm reset
+6. Copy flash_para.bin to a temporary folder for update operations to prevent conflicts during multi-threaded access.
+7. Update flash size detection logic to support high-capacity flash.
+8. Chipname must be provided when build/config/wholechip-erase.
+9. Support warm reset.
 
 
 = Release 1.4.2 =
@@ -20,12 +34,12 @@ Released: 2026-05
 
 == FlashCube ==
 Features:
-1. GUI supports ram download
-2. Exit with an error if the auto-detected chip type does not match the input value
+1. GUI supports ram download.
+2. Exit with an error if the auto-detected chip type does not match the input value.
 
 Bug Fixes:
-1. Fix bug of ram download
-2. Fix the issue of write_and_verify_all_data
+1. Fix bug of ram download.
+2. Fix the issue of write_and_verify_all_data.
 
 
 = Release 1.4.1 =
@@ -33,11 +47,11 @@ Released: 2026-03
 
 == FlashCube ==
 Features:
-1. Add log recording for BLFlashCommand
-2. Add --config_filedir option
+1. Add log recording for BLFlashCommand.
+2. Add --config_filedir option.
 
 Bug Fixes:
-1. Fix flashing error for non-uart programming
+1. Fix flashing error for non-uart programming.
 
 
 = Release 1.4.0 =
@@ -45,8 +59,8 @@ Released: 2026-02
 
 == FlashCube ==
 Features:
-1. rename bl616l as bl616cl, bl616d as bl618dg
-2. remove bl628, bl808, bl606p
+1. Rename BL616L as BL616CL, BL616D as BL618DG.
+2. Remove BL628, BL808, BL606P.
 
 
 = Release 1.3.3 =
@@ -54,11 +68,11 @@ Released: 2025-09
 
 == FlashCube ==
 Features:
-1. Add write_flash_files subcommand to support writing multiple files at different addresses
+1. Add write_flash_files subcommand to support writing multiple files at different addresses.
 
 Bug Fixes:
-1. Fix the bug caused by the auto-detect chip type
-2. Fix bugs related to the flash otp lock operation
+1. Fix the bug caused by the auto-detect chip type.
+2. Fix bugs related to the flash otp lock operation.
 
 
 = Release 1.3.2 =
@@ -66,9 +80,9 @@ Released: 2025-08
 
 == FlashCube ==
 Features:
-1. Support automatically detect chip type
-2. Support input of environment variables
-3. Add check of flash otp index and lock
+1. Support automatically detect chip type.
+2. Support input of environment variables.
+3. Add check of flash otp index and lock.
 
 
 = Release 1.3.0 =
@@ -76,7 +90,7 @@ Released: 2025-03
 
 == FlashCube ==
 Changes:
-1. Replace ecdsa, pcryptodome, bflb-crypto-plus with cryptography
+1. Replace ecdsa, pcryptodome, bflb-crypto-plus with cryptography.
 
 
 = Release 1.2.0 =
@@ -84,9 +98,9 @@ Released: 2024-12
 
 == FlashCube ==
 Features:
-1. Add flash otp page
-2. Add host_rx_timeout config
-3. Support BL616L sign with sha384
+1. Add flash otp page.
+2. Add host_rx_timeout config.
+3. Support BL616L sign with sha384.
 
 
 = Release 1.1.3 =
@@ -94,11 +108,11 @@ Released: 2024-11
 
 == FlashCube ==
 Changes:
-1. Modify sync number of 55 to 300
-2. Change timeout from 10s to 2s before flash and efuse write
+1. Modify sync number of 55 to 300.
+2. Change timeout from 10s to 2s before flash and efuse write.
 
 Bug Fixes:
-1. Fix bug of flash otp
+1. Fix bug of flash otp.
 
 
 = Release 1.1.2 =
@@ -106,16 +120,16 @@ Released: 2024-10
 
 == FlashCube ==
 Features:
-1. Support BL616L and BL616D 
-2. Support flash otp 
-3. Support password in ram download
-4. Support option for cpu reset after download
-5. Support user-defined aes key obtained through cfg.bin
-6. Support efuse data input encrypted by rsa pubkey
+1. Support BL616L and BL616D. 
+2. Support flash otp.
+3. Support password in ram download.
+4. Support option for cpu reset after download.
+5. Support user-defined aes key obtained through cfg.bin.
+6. Support efuse data input encrypted by rsa pubkey.
 
 Changes:
-1. Set return code to 1 when the command execution in error
-2. Remove setting flash config when efuse download only 
+1. Set return code to 1 when the command execution in error.
+2. Remove setting flash config when efuse download only.
 
 
 = Release 1.1.1 =
@@ -123,21 +137,21 @@ Released: 2024-06-06
 
 == FlashCube ==
 Features:
-1. Print "chip is protected or closed" when the communication with bootrom receives 0a0a
-2. Report error if the end address is larger than the flash size when reading flash in flash utils page
-3. Add ram program auto download
+1. Print "chip is protected or closed" when the communication with bootrom receives 0a0a.
+2. Report error if the end address is larger than the flash size when reading flash in flash utils page.
+3. Add ram program auto download.
 
 Changes:
-1. Remove error report when writing efusedata.bin without efusedata_mask.bin
-2. The temporary generated bin file will be deleted automatically after the download is completed when using skip function
-3. The log file can still be generated after deleting the log folder under linux
-4. Set the security_write value of bl602/bl702 to false, and the other chips to true
-5. Set the child window of add image file always on top of the main window
+1. Remove error report when writing efusedata.bin without efusedata_mask.bin.
+2. The temporary generated bin file will be deleted automatically after the download is completed when using skip function.
+3. The log file can still be generated after deleting the log folder under linux.
+4. Set the security_write value of BL602/BL702 to false, and the other chips to true.
+5. Set the child window of add image file always on top of the main window.
 
 Bug Fixes:
-1. Fix the error of --whole_chip input option
-2. Fix the bug of dbg password mode writing efuse
-3. Modify the logging process to avoid the loss of log printing when abnormal characters appear
+1. Fix the error of --whole_chip input option.
+2. Fix the bug of dbg password mode writing efuse.
+3. Modify the logging process to avoid the loss of log printing when abnormal characters appear.
 
 
 = Release 1.1.0 =
@@ -152,8 +166,8 @@ Features:
 Changes:
 
 Bug Fixes:
-1. Fix error in saving configuration
-2. Fix bug of boot2 isp mode
+1. Fix error in saving configuration.
+2. Fix bug of boot2 isp mode.
 
 
 = Release 1.0.9 =
@@ -161,7 +175,7 @@ Released: 2024-01-17
 
 == FlashCube ==
 Features:
-1. Add bl616 A1 support.
+1. Add BL616 A1 support.
 2. BL602/702 puts the encrypted or signed eflash loader bin into package.
 
 Changes:

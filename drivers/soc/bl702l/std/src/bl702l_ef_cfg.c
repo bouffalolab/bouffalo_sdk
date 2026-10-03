@@ -165,7 +165,7 @@ void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
 {
     uint32_t tmpval;
 
-    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_KEY_SLOT_5_W2_OFFSET, &tmpval, 1, 1);
     device_info->sf_swap_cfg = (tmpval >> 22) & 3;
     device_info->flash_info = (tmpval >> 26) & 0x7;
     device_info->psram_info = (tmpval >> 24) & 0x3;

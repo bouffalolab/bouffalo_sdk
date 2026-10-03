@@ -74,12 +74,20 @@ PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 OUTPUT_ARCH( "riscv" )
 ENTRY(__start)
 
+#ifdef CONFIG_PSRAM_XIP
+#define CONFIG_XIP_ADDRESS CONFIG_PSRAM_ADDRESS
+#define CONFIG_XIP_LENGTH CONFIG_PSRAM_LENGTH
+#else
+#define CONFIG_XIP_ADDRESS CONFIG_FLASH_XIP_ADDRESS
+#define CONFIG_XIP_LENGTH CONFIG_FLASH_XIP_LENGTH
+#endif
+
 MEMORY
 {
-#if CONFIG_FLASH_XIP_ADDRESS
-    fw_header  (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS - 0x1000, LENGTH = 4K
-    rom_header (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS,          LENGTH = 6K
-    rom (rx)          : ORIGIN = CONFIG_FLASH_XIP_ADDRESS + 0x1800, LENGTH = CONFIG_FLASH_XIP_LENGTH
+#if CONFIG_XIP_ADDRESS
+    fw_header  (rx)   : ORIGIN = CONFIG_XIP_ADDRESS - 0x1000, LENGTH = 4K
+    rom_header (rx)   : ORIGIN = CONFIG_XIP_ADDRESS,          LENGTH = 6K
+    rom (rx)          : ORIGIN = CONFIG_XIP_ADDRESS + 0x1800, LENGTH = CONFIG_XIP_LENGTH
 
     ram_nocache (!rx) : ORIGIN = RAM_NOCACHE_ADDRESS,               LENGTH = RAM_NOCACHE_LENGTH
     ram  (!rx)        : ORIGIN = RAM_ADDRESS,                       LENGTH = RAM_LENGTH
@@ -91,12 +99,14 @@ MEMORY
     ram  (!rx)        : ORIGIN = RAM_ADDRESS + 6K,                  LENGTH = RAM_LENGTH - 6K
 #endif
 
+#ifndef CONFIG_PSRAM_XIP
     ram_psram  (wxa)  : ORIGIN = CONFIG_PSRAM_ADDRESS,              LENGTH = CONFIG_PSRAM_LENGTH
+#endif
     ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS,               LENGTH = CONFIG_WRAM_LENGTH - __EM_SIZE
     hbn_memory (rx)   : ORIGIN = 0x20010000,                        LENGTH = 512
 }
 
-#if !CONFIG_FLASH_XIP_ADDRESS
+#if !CONFIG_XIP_ADDRESS
     REGION_ALIAS("rom", ram);
 #endif
 
@@ -105,7 +115,7 @@ SECTIONS
     .fw_header :
     {
         KEEP(*(.fw_header))
-#if !CONFIG_FLASH_XIP_ADDRESS
+#if !CONFIG_XIP_ADDRESS
         LONG(RAM_ADDRESS)
         LONG(0x48474553)
 #endif
@@ -120,12 +130,29 @@ SECTIONS
         . = ORIGIN(rom_header) + 512;
         __multi_bins__ = ABSOLUTE(.);
         LONG(0x464C4553) LONG(0x00000000) /*SELF*/      LONG(LENGTH(fw_header)) LONG(__rom_end__ - __rom_header_start__ + LENGTH(fw_header))
+#ifdef CONFIG_PSRAM_XIP
+        LONG(ORIGIN(rom_header)) LONG(__rom_end__)
+#else
+        LONG(0) LONG(0)
+#endif
+        LONG(0x41525350) LONG(0x5353424D) /*PSRAMBSS*/  LONG(0) LONG(0)
+#ifdef CONFIG_PSRAM_XIP
+        LONG(__rom_bss_start__) LONG(__rom_noinit_end__)
+#else
+        LONG(0) LONG(0)
+#endif
         LONG(0x0000504C) LONG(0x00000000) /*LP*/        LONG(0x00000000) LONG(0x00000000)
+        LONG(0) LONG(0)
         LONG(0x52415744) LONG(0x49464346) /*DWARFCFI*/  LONG(0x00000000) LONG(0x00000000)
+        LONG(0) LONG(0)
         LONG(0x464D4F52) LONG(0x00000053) /*ROMFS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0) LONG(0)
         LONG(0x54524543) LONG(0x00000053) /*CERTS*/     LONG(0x00000000) LONG(0x00000000)
+        LONG(0) LONG(0)
         LONG(0x4F545541) LONG(0x5453494C) /*AUTOLIST*/  LONG(0x00000000) LONG(0x00000000)
+        LONG(0) LONG(0)
         LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)               LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)
+        LONG(0xFFFFFFFF) LONG(0xFFFFFFFF)
     } > rom_header
 
     .rftlv.tool ORIGIN(rom_header) + 1K:
@@ -170,6 +197,7 @@ SECTIONS
     } > rom_header
     GROUP_END(rom_header)
 
+#ifndef CONFIG_PSRAM_XIP
     GROUP_START(ram_psram)
 #ifdef CONFIG_PSRAM_COPY_CODE
     . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
@@ -224,6 +252,7 @@ SECTIONS
         . = ALIGN(32);
     } > ram_psram
     GROUP_END(ram_psram)
+#endif
 
     GROUP_START(ram_nocache)
     SECTION_LOAD_PROLOGUE(ram_nocache_data, ,)
@@ -443,8 +472,10 @@ SECTIONS
         LONG(__ram_nocache_start__); LONG(__ram_nocache_end__); LONG(__ram_nocache_end__);
         . = ALIGN(4); __ram_section = ABSOLUTE(.);
         LONG(__ram_start__);         LONG(__ram_end__);         LONG(ORIGIN(ram)+LENGTH(ram));
+#ifndef CONFIG_PSRAM_XIP
         . = ALIGN(4); __psram_section = ABSOLUTE(.);
         LONG(__ram_psram_start__);   LONG(__ram_psram_end__);   LONG(ORIGIN(ram_psram)+LENGTH(ram_psram));
+#endif
         . = ALIGN(4); __ram_wifi_section = ABSOLUTE(.);
         LONG(__ram_wifi_start__);    LONG(__ram_wifi_end__);    LONG(ORIGIN(ram_wifi)+LENGTH(ram_wifi));
         LONG(0xffffffff);            LONG(0xffffffff);          LONG(0xffffffff);
@@ -455,23 +486,29 @@ SECTIONS
         LONG(__tcm_rodata_start__);         LONG(__tcm_rodata_end__);         LONG(__tcm_rodata_load__);
         LONG(__tcm_data_start__);           LONG(__tcm_data_end__);           LONG(__tcm_data_load__);
         LONG(__ram_data_start__);           LONG(__ram_data_end__);           LONG(__ram_data_load__);
-#ifdef CONFIG_PSRAM_COPY_CODE
+#if defined(CONFIG_PSRAM_COPY_CODE) && !defined(CONFIG_PSRAM_XIP)
         LONG(__psram_text_start__);         LONG(__psram_text_end__);         LONG(__psram_text_load__);
         LONG(__psram_rodata_start__);       LONG(__psram_rodata_end__);       LONG(__psram_rodata_load__);
 #endif
+#ifndef CONFIG_PSRAM_XIP
         LONG(__psram_data_start__);         LONG(__psram_data_end__);         LONG(__psram_data_load__);
+#endif
         LONG(0xffffffff);                   LONG(0xffffffff);                 LONG(0xffffffff);
 
         . = ALIGN(4); __mem_setz_sections = ABSOLUTE(.);
         LONG(__ram_bss_start__);            LONG(__ram_bss_end__);
         LONG(__wifi_bss_start__);           LONG(__wifi_bss_end__);
+#ifndef CONFIG_PSRAM_XIP
         LONG(__psram_bss_start__);          LONG(__psram_bss_end__);
+#endif
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         . = ALIGN(4); __mem_noinit_sections = ABSOLUTE(.);
         LONG(__ram_nocache_noinit_start__); LONG(__ram_nocache_noinit_end__);
         LONG(__ram_noinit_start__);         LONG(__ram_noinit_end__);
+#ifndef CONFIG_PSRAM_XIP
         LONG(__psram_noinit_data_start__);       LONG(__psram_noinit_data_end__);
+#endif
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         . = ALIGN(4); _dump_sections = ABSOLUTE(.);
@@ -479,7 +516,7 @@ SECTIONS
         LONG(ORIGIN(ram) + (__ram_nocache_end__ - ORIGIN(ram_nocache)));
         LONG(LENGTH(ram) - (__ram_nocache_end__ - ORIGIN(ram_nocache)));
         LONG(ORIGIN(ram_wifi));             LONG(LENGTH(ram_wifi));
-#ifdef CONFIG_PSRAM
+#if defined(CONFIG_PSRAM) && !defined(CONFIG_PSRAM_XIP)
         LONG(ORIGIN(ram_psram));            LONG(LENGTH(ram_psram));
 #endif
         LONG(0xffffffff);                   LONG(0xffffffff);
@@ -539,6 +576,23 @@ SECTIONS
         . = ALIGN(CONFIG_PMP_ALIGN_SIZE);
     } > rom
 
+#ifdef CONFIG_PSRAM_XIP
+    SECTION_PROLOGUE(rom_data, ,)
+    {
+        . = ALIGN(32);
+        KEEP(*(.psram_code*))
+        KEEP(*(.psram_data*))
+    } > rom
+    SECTION_PROLOGUE(rom_bss, (NOLOAD),)
+    {
+        KEEP(*(.psram_bss*))
+    } > rom
+    SECTION_PROLOGUE(rom_noinit, (NOLOAD),)
+    {
+        KEEP(*(.psram_noinit*))
+    } > rom
+#endif
+
 #ifdef CONFIG_LPAPP
     SECTION_LOAD_PROLOGUE(lpfw, ,)
     {
@@ -561,7 +615,7 @@ SECTIONS
 
 /* define some heap init symbol */
 
-#if CONFIG_FLASH_XIP_ADDRESS
+#if CONFIG_XIP_ADDRESS
     __HeapBase = ABSOLUTE((__ram_end__ + 3) & ~3);
     __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
 #else
@@ -569,8 +623,12 @@ SECTIONS
     __HeapLimit = ABSOLUTE(ORIGIN(ram) + LENGTH(ram));
 #endif
 
+#ifndef CONFIG_PSRAM_XIP
     __psram_heap_base = ABSOLUTE((__ram_psram_end__ + 31) & ~31);
     __psram_limit = ABSOLUTE(ORIGIN(ram_psram) + LENGTH(ram_psram));
+#else
+    __psram_limit = ABSOLUTE(CONFIG_PSRAM_ADDRESS + CONFIG_PSRAM_LENGTH);
+#endif
 
     _heap_wifi_start = ABSOLUTE(__ram_wifi_end__);
     _heap_wifi_size = ABSOLUTE(ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start);

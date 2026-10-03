@@ -373,6 +373,8 @@ int fhost_wpa_create_network(int fhost_vif_idx, char *net_cfg, char *ssid_cfg,
  ****************************************************************************************
  */
 int fhost_wpa_enable_network(int fhost_vif_idx);
+/** Enable and require CONNECTED within timeout_ms (>0); failure returns -1. */
+int fhost_wpa_enable_network_timeout(int fhost_vif_idx, int timeout_ms);
 
 /**
  ****************************************************************************************

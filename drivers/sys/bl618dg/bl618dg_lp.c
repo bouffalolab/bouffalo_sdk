@@ -918,6 +918,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 #endif
     else {
         pds_sleep_us = 0;
+        iot2lp_para->wake_sched.wifi_sched.flags = 0U;
     }
 
     uint32_t ble_sleep_us = 0;
@@ -938,6 +939,8 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
             }
             bl_lp_sched_publish(2,1000, 10000, ble_sleep_us + rtc_now_us);
         }
+    } else {
+        iot2lp_para->wake_sched.ble_sched.flags = 0U;
     }
 
     if ((rtc_wakeup_cmp_cnt == 0) && rtc_sleep_us > ((uint64_t)24 * 60 * 60 * 1000 * 1000)) {

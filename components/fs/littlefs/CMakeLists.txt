@@ -14,5 +14,5 @@ if(CONFIG_FREERTOS)
     sdk_add_compile_definitions(-DLFS_THREADSAFE)
 endif()
 
-sdk_library_add_sources(easyflash_port/lfs_easyflash.c)
-sdk_add_include_directories(easyflash_port)
+sdk_library_add_sources(lfs_kv/lfs_kv.c)
+sdk_add_include_directories(lfs_kv)

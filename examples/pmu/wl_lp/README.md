@@ -1,5 +1,82 @@
 # 616低功耗简介文档
 
+## BL616：PSRAM 保活配置
+
+在本示例 `defconfig` 中配置：
+
+```make
+CONFIG_PSRAM_RETENTION =y
+```
+
+此选项替代原来的 `CONFIG_TICKLESS_PDS1`，表示 tickless 休眠时保持 PSRAM 供电，仅 BL616 生效。当前工作配置保留开启状态；设为 `n` 或删除该配置即可使用默认 PDS15 路径。其他芯片忽略此选项，保持默认休眠路径。该选项不负责启用或初始化 PSRAM，应用仍需按板级配置使用 PSRAM。
+
+BL616 APP 将 PDS1/PDS15 级别通过 `iot2lp_para.pds_level` 传给 LPFW；两种模式共用同一份 LPFW，无需分别编译。先在 `examples/pmu/bl616_lp_fw` 中运行 `bash auto_release`，再编译 APP。详细构建及镜像选择见 [BL616 LPFW 说明](../bl616_lp_fw/README.md)。切换保活配置只需重新编译 APP，不需切换 LPFW 镜像；首次迁移必须同时更新 APP 和统一 LPFW。
+
+PDS1 返回 APP 改为实验性的 CPU-only reset 路径，不再经过最终 PDS15 短睡眠跳板；复用 LPFW 的 XIP 和 APP 上下文恢复入口。需重新构建并打包新版 LPFW，单独重编 APP 不会更新已有 LPFW 二进制。默认 PDS15 模式不变。本次修改不替代上板验证：除定时、GPIO、Wi-Fi 唤醒和 PSRAM 内容外，还要验证唤醒后的实际 Wi-Fi 收发及连续多轮休眠，不能直接套用下文 PDS15 的功耗数据。
+
+烧录并连接 Wi-Fi 后，串口执行 `tickless 10 0` 进入低功耗，或执行 `wakeup_timer 5000 0` 进行约 5 秒的定时唤醒测试。
+
+## BL616 PSRAM 数据保持测试
+
+本示例在 BL616 的 `defconfig` 分支中开启 `CONFIG_PSRAM=y`，启动时初始化 PSRAM 并注册堆；`CONFIG_PSRAM_RETENTION=y` 则选择 PDS1。需要板上实际有匹配的 PSRAM，链接脚本默认容量为 4 MiB。
+
+初始化链路为 `board_init()` → `ram_heap_init()` → `board_psram_x8_init()`（`bsp/board/bl616dk/board.c` / `board_flash_psram.c`）。Winbond PSRAM 使用芯片内部刷新，而不是 CPU 周期性发 DRAM refresh；板级配置中 PASR 为全阵列刷新、禁止 deep power-down，但当前初始化明确写的是 CR0，不能仅凭配置结构断言 CR1 已被写入，实际模式应结合器件手册/寄存器读回确认。
+
+不要为了测试在唤醒后直接调用完整 `board_psram_x8_init()`：未烧录 DQS trim 时，初始化扫描会写 PSRAM，破坏待校验数据。控制器/时钟恢复与存储芯片重新初始化应分开判断。
+
+新增两个命令（仅 BL616 且开启 PSRAM 时编译）：
+
+- `psram_write [seed]`：从 PSRAM 堆申请尽可能大的连续空闲块，目标留下 64 KiB 供其他用途；写入由字索引和种子生成的确定性数据。默认种子 `0x61612345`，可指定其他十进制/十六进制种子。打印实际测试地址和字节数；不覆盖已分配对象、堆元数据及静态段。碎片化时实际范围会小于总空闲容量。
+- `psram_verify`：完整读回并比较，输出正确/错误字节数、错误字数、错误位数和字节正确率（四位小数），最多打印前 8 个错误位置。不会初始化、复位 PSRAM，也不会重写测试数据。
+
+写入结束 clean+invalidate D-cache，校验前只 invalidate 测试块，避免缓存造成假通过。测试块在检查后仍保持分配，可以重复休眠/检查；再次写入复用同一块，重启释放。指针、长度和种子放在片内 SRAM。两个命令均关闭 tickless，避免读写中途再次入睡；再次休眠需显式运行休眠命令。
+
+推荐先连接 Wi-Fi，再执行：
+
+```text
+psram_write
+psram_verify
+wakeup_timer 10000 0
+# 等待约 10 秒唤醒、串口恢复后：
+psram_verify
+```
+
+第一次校验建立不经过 PDS 的基线，应为 `PASS` 和 `100.0000%`。随后可重复 `wakeup_timer 60000 0` → `psram_verify`，以及更换种子后重新测试。检查低功耗日志/统计，确认实际进入 PDS，而不只是等待定时器。
+
+唤醒后通过表示当前完整恢复路径下数据可读且无需在命令中额外初始化；不等同于底层从未恢复控制器。失败不能单独区分 DRAM 内容丢失、PSRAM 控制器/时钟未恢复或板级时序问题。若读取卡死/异常，也需要调试器检查控制器状态，命令无法将总线挂死统计为错误率。PSRAM 堆元数据也可能受休眠影响，失败后应重启，不要继续分配/释放内存。
+
+### PSRAM 寄存器访问时钟
+
+`CONFIG_LPAPP` 使用 `bl616dk/board.c` 的 `peripheral_clock_init_lp()`，其精简时钟配置从零重写 `GLB_CGEN_CFG2`。原实现没有保留 bit18（PSRAM 控制器总线时钟），这与普通 `pds_rtc` 初始化路径不同。现在在 `CONFIG_PSRAM` 下通过 SDK `GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_PSRAM1_CTRL)` 恢复该时钟；此函数同时用于启动和 `board_recovery()`，避免唤醒后再次门控。SDK 中 PSRAM1_CTRL 对应 bit18，PSRAM0_CTRL 的 ungate 分支为空，不要仅凭名称换成后者。
+
+刷新命令也通过同一 SDK API 幂等开启总线时钟，并打印 `CGEN_CFG2` 和 `gate18` 前后值。只修改时钟门控，不修改 PSRAM 时钟源/分频、不重置或重新初始化器件。`status` 不写器件 CR1，但会开启访问所需总线时钟。该修复针对源码中确定的门控遗漏；仍需上板确认 CR1 不再固定为 ID，并在 PDS 后重复读取。启用必要时钟可能影响活跃功耗，应使用同一固件比较刷新 ON/OFF。
+
+### 内部刷新开关（破坏性测试）
+
+`psram_refresh off` 向 Winbond CR1 写入 `PASR=NONE`，`psram_refresh on` 写入 `PASR=FULL`；`psram_refresh status` 只读状态，不写配置（也会关闭 tickless）。破坏性控制限于当前 WB_4MB（ID `0x005f`），按 SDK 定义 FULL=0、NONE=4；保留其他控制器时序/突发字段，不做 reset 或 DQS 初始化。
+
+器件寄存器读写统一调用 BL616 SDK 的 `PSram_Ctrl_Winbond_Read_Reg()` / `PSram_Ctrl_Winbond_Write_Reg()`，不再使用应用自定义 REQ/GNT、pulse、DONE 轮询或 10 us 延时。是否使用 ROM 由 SDK 实现/构建决定，不直接调用 ROM 地址。写配置从当前控制器写影子提取，保留其他字段、仅修改 PASR 并禁止复位；写前 clean 全部 D-cache。应用只读控制器影子/状态用于配置保留和诊断，不直接写控制器寄存器。
+
+ID 不匹配或写前读取失败时停止操作，但写前 CR1 等于 ID0/0xffff 只警告、不阻止写入。写后强制读取 CR1 → ID0 → CR1，即使写事务超时也尝试回读；逐项打印 SDK 返回码、CR1 原始结果、WB_CONFIG 写影子和 WB_STATUS 只读状态。写影子变化或 SDK 返回 SUCCESS 均不能单独作为成功依据。SDK 超时路径的请求释放行为由底层驱动负责；当前 BL616 C 实现存在超时提前返回而未释放请求的路径，遇到超时应重启，不继续破坏性实验。
+
+两次回读一致、PASR 符合目标且原始值没有明显异常才报告 `VERIFIED readback`，否则报告 `WRITE ATTEMPTED, EFFECT UNCONFIRMED`。`Transition observed=yes` 表示本次写入前后同时观察到 PASR 和原始 CR1 变化。先执行 `on → off → on` 验证可重复的 `0 → 4 → 0`；单次已等于目标不能证明切换有效。命令不会自动切换到相反模式。SDK 读取通路与刷新行为仍需上板验证。
+
+```text
+psram_write
+psram_verify
+psram_refresh on
+psram_refresh status
+psram_refresh off
+psram_refresh status
+# 确认 OFF VERIFIED 和 PASR=4，再等待；先不进入 PDS
+psram_refresh on
+psram_refresh status
+# 确认 ON VERIFIED 和 PASR=0
+psram_verify
+```
+
+关闭前要求先执行 `psram_write`。整个颗粒都会受到影响，不限于测试块：堆元数据和其他对象可能损坏，系统可能崩溃；开启刷新不能恢复已丢失数据。应在专用测试板上执行，结束后重启，不继续使用该 PSRAM 堆。短时间仍正确不代表关闭无效，数据衰减与温度、等待时长有关。刷新命令关闭 tickless；若另做 PDS 对比，需显式执行休眠命令。不要在刷新关闭期间反复读取测试区，以免访问干扰保持时间实验。
+
 ## 概述
 
 ### 1. 低功耗设计简述

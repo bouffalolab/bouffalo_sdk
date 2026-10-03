@@ -19,7 +19,7 @@ endif
 # Debug
 CONFIG_COREDUMP              =n
 
-# easyflash
+# lfs_kv
 CONFIG_LITTLEFS              =y
 CONFIG_LITTLEFS_KV_EASYFLASH =y
 CONFIG_BFLB_MTD              =y

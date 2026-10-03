@@ -525,6 +525,10 @@ config MBEDTLS_OPENTHREAD_OPTIMIZATIONS_ENABLED
 	  aims to use other mbedTLS services on top of OpenThread (e.g. secure
 	  sockets), it's advised to disable this option.
 
+config MBEDTLS_PLATFORM_NO_SYSTEM_ALLOCATOR
+    bool "Use custom allocator set at runtime instead of system heap"
+    default n
+
 config MBEDTLS_USER_CONFIG_ENABLE
 	bool "User mbedTLS config file"
 	help

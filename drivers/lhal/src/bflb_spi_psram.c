@@ -36,6 +36,9 @@
 
 #include "bflb_spi_psram.h"
 #include "bflb_l1c.h"
+#include "bflb_sflash.h"
+#include "bflb_flash_secreg.h"
+#include "bflb_flash_secreg_port.h"
 
 /** @addtogroup  BFLB_Peripheral_Driver
  *  @{
@@ -100,7 +103,7 @@ void ATTR_TCM_SECTION bflb_psram_init(struct spi_psram_cfg_type *psram_cfg, stru
                                       struct sf_ctrl_psram_cfg *sf_ctrl_psram_cfg)
 {
     bflb_sf_ctrl_psram_init(sf_ctrl_psram_cfg);
-    bflb_sf_ctrl_cmds_set(cmds_cfg, 0);
+    bflb_sf_ctrl_cmds_set(cmds_cfg, SF_CTRL_SEL_PSRAM);
 
 #if defined(BL702L)
     bflb_sf_ctrl_burst_toggle_set(psram_cfg->burst_toggle_en, psram_cfg->ctrl_mode);
@@ -121,7 +124,7 @@ void ATTR_TCM_SECTION bflb_psram_init(struct spi_psram_cfg_type *psram_cfg, stru
 __WEAK
 void ATTR_TCM_SECTION bflb_psram_readreg(struct spi_psram_cfg_type *psram_cfg, uint8_t *reg_value)
 {
-    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BASE;
+    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t timeout = 0;
     struct sf_ctrl_cmd_cfg_type psram_cmd;
 
@@ -169,7 +172,7 @@ void ATTR_TCM_SECTION bflb_psram_readreg(struct spi_psram_cfg_type *psram_cfg, u
 __WEAK
 void ATTR_TCM_SECTION bflb_psram_writereg(struct spi_psram_cfg_type *psram_cfg, uint8_t *reg_value)
 {
-    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BASE;
+    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     struct sf_ctrl_cmd_cfg_type psram_cmd;
 
     if (((uint32_t)&psram_cmd) % 4 == 0) {
@@ -274,7 +277,7 @@ int ATTR_TCM_SECTION bflb_psram_setburstwrap(struct spi_psram_cfg_type *psram_cf
 __WEAK
 void ATTR_TCM_SECTION bflb_psram_readid(struct spi_psram_cfg_type *psram_cfg, uint8_t *data)
 {
-    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BASE;
+    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t timeout = 0;
     struct sf_ctrl_cmd_cfg_type psram_cmd;
 
@@ -476,6 +479,7 @@ int ATTR_TCM_SECTION bflb_psram_softwarereset(struct spi_psram_cfg_type *psram_c
     psram_cmd.rw_flag = SF_CTRL_READ;
     bflb_sf_ctrl_sendcmd(&psram_cmd);
 
+    timeout = SF_CTRL_BUSY_STATE_TIMEOUT;
     while (bflb_sf_ctrl_get_busy_state()) {
         timeout--;
 
@@ -610,7 +614,7 @@ __WEAK
 int ATTR_TCM_SECTION bflb_psram_write(struct spi_psram_cfg_type *psram_cfg, uint8_t io_mode,
                                       uint32_t addr, uint8_t *data, uint32_t len)
 {
-    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BASE;
+    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t i = 0, cur_len = 0;
     uint32_t burst_len = 512;
     uint8_t cmd;
@@ -688,7 +692,7 @@ __WEAK
 int ATTR_TCM_SECTION bflb_psram_read(struct spi_psram_cfg_type *psram_cfg, uint8_t io_mode,
                                      uint32_t addr, uint8_t *data, uint32_t len)
 {
-    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BASE;
+    uint8_t *const psram_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t cur_len, i;
     uint32_t burst_len = 512;
     uint32_t timeout = 0;

@@ -178,10 +178,29 @@ add_custom_target(combine WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} ${combin
 
 # post_build
 set(post_build_cmds)
+if(CONFIG_PSRAM_XIP AND CHIP MATCHES "^(bl616|bl616cl|bl618dg)$" AND NOT CPU_ID STREQUAL "lp")
+    set(MULTI_BINS_VMA_OPTION --vma-auto)
+    if(CHIP STREQUAL "bl618dg" AND CPU_ID STREQUAL "ap")
+        math(EXPR MULTI_BINS_NP_VMA "${CONFIG_PSRAM_ADDRESS} + ${CONFIG_PSRAM_FOR_AP_SIZE}" OUTPUT_FORMAT HEXADECIMAL)
+        math(EXPR MULTI_BINS_PSRAM_END "${CONFIG_PSRAM_ADDRESS} + ${CONFIG_PSRAM_LENGTH}" OUTPUT_FORMAT HEXADECIMAL)
+        list(APPEND MULTI_BINS_VMA_OPTION --vma-limit ${MULTI_BINS_NP_VMA})
+    endif()
+endif()
 if(CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW)
+    # Optional experiment image; leave the SDK's default LPFW binary untouched.
+    if(NOT LPFW_BIN)
+        set(LPFW_BIN ${BL_SDK_BASE}/tools/lpfw/bin/${CHIP}_lp_fw.bin)
+    endif()
     list(APPEND post_build_cmds
         COMMAND ${CMAKE} -E echo "[lp_fw] concate with lp fw bin"
-        COMMAND ${BL_SDK_BASE}/tools/lpfw/patch_lpfw${TOOL_SUFFIX} ${BIN_FILE} ${BL_SDK_BASE}/tools/lpfw/bin/${CHIP}_lp_fw.bin)
+        COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
+	        ${BIN_FILE}
+		--append LPFW
+		${BL_SDK_BASE}/tools/lpfw/bin/${CHIP}_lp_fw.bin
+		--output ${BIN_FILE}
+	        --align 0x20
+                --sha256-header
+                ${MULTI_BINS_VMA_OPTION})
 endif()
 
 if(CONFIG_POST_BUILDS_GENERATE_ROMFS)
@@ -191,6 +210,10 @@ if(CONFIG_POST_BUILDS_GENERATE_ROMFS)
 endif()
 
 if(CONFIG_DUALCORE_NP_IMAGE)
+    set(MULTI_BINS_NP_VMA_OPTION ${MULTI_BINS_VMA_OPTION})
+    if(CONFIG_PSRAM_XIP AND CHIP STREQUAL "bl618dg" AND CPU_ID STREQUAL "ap")
+        set(MULTI_BINS_NP_VMA_OPTION --vma-start ${MULTI_BINS_NP_VMA} --vma-limit ${MULTI_BINS_PSRAM_END})
+    endif()
     list(APPEND post_build_cmds
         COMMAND ${CMAKE} -E echo "[dualcore] append CONFIG_DUALCORE_NP_IMAGE"
 	COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
@@ -199,6 +222,7 @@ if(CONFIG_DUALCORE_NP_IMAGE)
                 ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DUALCORE_NP_IMAGE}
 		--output ${BIN_FILE}
                 --align 0x400
+                ${MULTI_BINS_NP_VMA_OPTION}
         )
 endif()
 
@@ -211,6 +235,7 @@ if(CONFIG_THIRDCORE_LP_IMAGE)
                 ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_THIRDCORE_LP_IMAGE}
 		--output ${BIN_FILE}
                 --align 0x400
+                ${MULTI_BINS_VMA_OPTION}
         )
 endif()
 
@@ -230,6 +255,7 @@ if(CONFIG_BACKTRACE)
             ${CMAKE_CURRENT_BINARY_DIR}/build_out/dwarfcfi.bin
             --output ${BIN_FILE}
             --align 0x1000
+            ${MULTI_BINS_VMA_OPTION}
         #COMMAND ${CMAKE} -E echo "  [done] DWARFCFI embedded successfully"
         )
 endif()
@@ -250,6 +276,7 @@ if(CONFIG_X509_CERTIFICATE_BUNDLE)
             ${CMAKE_CURRENT_BINARY_DIR}/build_out/x509_crt_bundle
             --output ${BIN_FILE}
             --align 0x1000
+            ${MULTI_BINS_VMA_OPTION}
         )
 endif()
 
@@ -262,6 +289,7 @@ if(CONFIG_SHELL AND CONFIG_SHELL_AUTOLIST_FILE)
             ${CONFIG_SHELL_AUTOLIST_FILE}
             --output ${BIN_FILE}
             --align 0x100
+            ${MULTI_BINS_VMA_OPTION}
     )
 endif()
 

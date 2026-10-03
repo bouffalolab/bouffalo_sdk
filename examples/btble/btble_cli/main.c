@@ -10,6 +10,12 @@
 #include "ble_lib_api.h"
 #include "bl602_glb.h"
 #include "rfparam_adapter.h"
+#elif defined(BL702)
+#include "ble_lib_api.h"
+#include "bl702_glb.h"
+#elif defined(BL702L)
+#include "btble_lib_api.h"
+#include "bl702l_glb.h"
 #elif defined(BL616)
 #include "btble_lib_api.h"
 #include "bl616_glb.h"
@@ -34,7 +40,7 @@ extern int bredr_cli_register(void);
 
 #if defined(CONFIG_BT_SETTINGS)
 #include "bflb_mtd.h"
-#include "easyflash.h"
+#include "lfs_kv.h"
 #endif
 
 #if defined(CONFIG_BLE_TP_SERVER)
@@ -85,6 +91,7 @@ void bt_enable_cb(int err)
         printf("BD_ADDR:(MSB)%02x:%02x:%02x:%02x:%02x:%02x(LSB) \r\n",
                bt_addr.a.val[5], bt_addr.a.val[4], bt_addr.a.val[3], bt_addr.a.val[2], bt_addr.a.val[1], bt_addr.a.val[0]);
         bt_conn_cb_register(&ble_conn_callbacks);
+        btcli_enable_cb(err);
         ble_cli_register();
 
         #if defined(CONFIG_BLE_TP_SERVER)
@@ -108,7 +115,7 @@ static TaskHandle_t app_start_handle;
 static void app_start_task(void *pvParameters)
 {
     // Initialize BLE controller
-    #if defined(BL602)
+    #if defined(BL602) || defined(BL702)
     ble_controller_init(configMAX_PRIORITIES - 1);
     #else
     btble_controller_init(configMAX_PRIORITIES - 1);
@@ -130,15 +137,17 @@ int main(void)
     shell_init_with_task(uart0);
 #if defined(CONFIG_BT_SETTINGS)
     bflb_mtd_init();
-    /* ble stack need easyflash kv */
-    easyflash_init();
+    /* ble stack need lfs_kv */
+    lfs_kv_init();
 #endif
 
+#if !(defined(BL702) || defined(BL702L))
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return 0;
     }
+#endif
 
     #if defined(BL618DG)
     #if defined(CONFIG_BTBLE_USE_STANDALONE_PATH)

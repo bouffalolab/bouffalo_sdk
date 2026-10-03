@@ -13,7 +13,7 @@
 #include "board.h"
 #include "shell.h"
 
-#include <easyflash.h>
+#include "lfs_kv.h"
 #include <bflb_mtd.h>
 
 #include "async_event.h"
@@ -87,7 +87,7 @@ int main(void)
     }
 
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     tcpip_init(NULL, NULL);
 

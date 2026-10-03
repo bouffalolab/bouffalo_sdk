@@ -322,26 +322,51 @@
 #define PDS_CR_PDS_FORCE_MISC_PWR_OFF_LEN         (1U)
 #define PDS_CR_PDS_FORCE_MISC_PWR_OFF_MSK         (((1U << PDS_CR_PDS_FORCE_MISC_PWR_OFF_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_PWR_OFF_POS)
 #define PDS_CR_PDS_FORCE_MISC_PWR_OFF_UMSK        (~(((1U << PDS_CR_PDS_FORCE_MISC_PWR_OFF_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_PWR_OFF_POS))
+#define PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF           PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF
+#define PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_POS       (2U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_LEN       (1U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_MSK       (((1U << PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_POS)
+#define PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_UMSK      (~(((1U << PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_PWR_OFF_POS))
 #define PDS_CR_PDS_FORCE_MISC_ISO_EN              PDS_CR_PDS_FORCE_MISC_ISO_EN
 #define PDS_CR_PDS_FORCE_MISC_ISO_EN_POS          (4U)
 #define PDS_CR_PDS_FORCE_MISC_ISO_EN_LEN          (1U)
 #define PDS_CR_PDS_FORCE_MISC_ISO_EN_MSK          (((1U << PDS_CR_PDS_FORCE_MISC_ISO_EN_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_ISO_EN_POS)
 #define PDS_CR_PDS_FORCE_MISC_ISO_EN_UMSK         (~(((1U << PDS_CR_PDS_FORCE_MISC_ISO_EN_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_ISO_EN_POS))
+#define PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN            PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN
+#define PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_POS        (5U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_LEN        (1U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_MSK        (((1U << PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_POS)
+#define PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_UMSK       (~(((1U << PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_ISO_EN_POS))
 #define PDS_CR_PDS_FORCE_MISC_PDS_RST             PDS_CR_PDS_FORCE_MISC_PDS_RST
 #define PDS_CR_PDS_FORCE_MISC_PDS_RST_POS         (7U)
 #define PDS_CR_PDS_FORCE_MISC_PDS_RST_LEN         (1U)
 #define PDS_CR_PDS_FORCE_MISC_PDS_RST_MSK         (((1U << PDS_CR_PDS_FORCE_MISC_PDS_RST_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_PDS_RST_POS)
 #define PDS_CR_PDS_FORCE_MISC_PDS_RST_UMSK        (~(((1U << PDS_CR_PDS_FORCE_MISC_PDS_RST_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_PDS_RST_POS))
+#define PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST           PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST
+#define PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_POS       (8U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_LEN       (1U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_MSK       (((1U << PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_POS)
+#define PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_UMSK      (~(((1U << PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_PDS_RST_POS))
 #define PDS_CR_PDS_FORCE_MISC_MEM_STBY            PDS_CR_PDS_FORCE_MISC_MEM_STBY
 #define PDS_CR_PDS_FORCE_MISC_MEM_STBY_POS        (10U)
 #define PDS_CR_PDS_FORCE_MISC_MEM_STBY_LEN        (1U)
 #define PDS_CR_PDS_FORCE_MISC_MEM_STBY_MSK        (((1U << PDS_CR_PDS_FORCE_MISC_MEM_STBY_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_MEM_STBY_POS)
 #define PDS_CR_PDS_FORCE_MISC_MEM_STBY_UMSK       (~(((1U << PDS_CR_PDS_FORCE_MISC_MEM_STBY_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_MEM_STBY_POS))
+#define PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY          PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY
+#define PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_POS      (11U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_LEN      (1U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_MSK      (((1U << PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_POS)
+#define PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_UMSK     (~(((1U << PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_MEM_STBY_POS))
 #define PDS_CR_PDS_FORCE_MISC_GATE_CLK            PDS_CR_PDS_FORCE_MISC_GATE_CLK
 #define PDS_CR_PDS_FORCE_MISC_GATE_CLK_POS        (13U)
 #define PDS_CR_PDS_FORCE_MISC_GATE_CLK_LEN        (1U)
 #define PDS_CR_PDS_FORCE_MISC_GATE_CLK_MSK        (((1U << PDS_CR_PDS_FORCE_MISC_GATE_CLK_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_GATE_CLK_POS)
 #define PDS_CR_PDS_FORCE_MISC_GATE_CLK_UMSK       (~(((1U << PDS_CR_PDS_FORCE_MISC_GATE_CLK_LEN) - 1) << PDS_CR_PDS_FORCE_MISC_GATE_CLK_POS))
+#define PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK          PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK
+#define PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_POS      (14U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_LEN      (1U)
+#define PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_MSK      (((1U << PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_POS)
+#define PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_UMSK     (~(((1U << PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_LEN) - 1) << PDS_CR_PDS_FORCE_BZ_BLE_GATE_CLK_POS))
 #define PDS_CR_PDS_NP_ISO_EN                      PDS_CR_PDS_NP_ISO_EN
 #define PDS_CR_PDS_NP_ISO_EN_POS                  (24U)
 #define PDS_CR_PDS_NP_ISO_EN_LEN                  (1U)
@@ -352,6 +377,11 @@
 #define PDS_CR_PDS_WB_ISO_EN_LEN                  (1U)
 #define PDS_CR_PDS_WB_ISO_EN_MSK                  (((1U << PDS_CR_PDS_WB_ISO_EN_LEN) - 1) << PDS_CR_PDS_WB_ISO_EN_POS)
 #define PDS_CR_PDS_WB_ISO_EN_UMSK                 (~(((1U << PDS_CR_PDS_WB_ISO_EN_LEN) - 1) << PDS_CR_PDS_WB_ISO_EN_POS))
+#define PDS_CR_PDS_BZ_BLE_ISO_EN                  PDS_CR_PDS_BZ_BLE_ISO_EN
+#define PDS_CR_PDS_BZ_BLE_ISO_EN_POS              (28U)
+#define PDS_CR_PDS_BZ_BLE_ISO_EN_LEN              (1U)
+#define PDS_CR_PDS_BZ_BLE_ISO_EN_MSK              (((1U << PDS_CR_PDS_BZ_BLE_ISO_EN_LEN) - 1) << PDS_CR_PDS_BZ_BLE_ISO_EN_POS)
+#define PDS_CR_PDS_BZ_BLE_ISO_EN_UMSK             (~(((1U << PDS_CR_PDS_BZ_BLE_ISO_EN_LEN) - 1) << PDS_CR_PDS_BZ_BLE_ISO_EN_POS))
 #define PDS_CR_PDS_USB_ISO_EN                     PDS_CR_PDS_USB_ISO_EN
 #define PDS_CR_PDS_USB_ISO_EN_POS                 (29U)
 #define PDS_CR_PDS_USB_ISO_EN_LEN                 (1U)
@@ -405,6 +435,26 @@
 #define PDS_CR_PDS_WB_GATE_CLK_LEN                (1U)
 #define PDS_CR_PDS_WB_GATE_CLK_MSK                (((1U << PDS_CR_PDS_WB_GATE_CLK_LEN) - 1) << PDS_CR_PDS_WB_GATE_CLK_POS)
 #define PDS_CR_PDS_WB_GATE_CLK_UMSK               (~(((1U << PDS_CR_PDS_WB_GATE_CLK_LEN) - 1) << PDS_CR_PDS_WB_GATE_CLK_POS))
+#define PDS_CR_PDS_BZ_BLE_PWR_OFF                 PDS_CR_PDS_BZ_BLE_PWR_OFF
+#define PDS_CR_PDS_BZ_BLE_PWR_OFF_POS             (16U)
+#define PDS_CR_PDS_BZ_BLE_PWR_OFF_LEN             (1U)
+#define PDS_CR_PDS_BZ_BLE_PWR_OFF_MSK             (((1U << PDS_CR_PDS_BZ_BLE_PWR_OFF_LEN) - 1) << PDS_CR_PDS_BZ_BLE_PWR_OFF_POS)
+#define PDS_CR_PDS_BZ_BLE_PWR_OFF_UMSK            (~(((1U << PDS_CR_PDS_BZ_BLE_PWR_OFF_LEN) - 1) << PDS_CR_PDS_BZ_BLE_PWR_OFF_POS))
+#define PDS_CR_PDS_BZ_BLE_RESET                   PDS_CR_PDS_BZ_BLE_RESET
+#define PDS_CR_PDS_BZ_BLE_RESET_POS               (17U)
+#define PDS_CR_PDS_BZ_BLE_RESET_LEN               (1U)
+#define PDS_CR_PDS_BZ_BLE_RESET_MSK               (((1U << PDS_CR_PDS_BZ_BLE_RESET_LEN) - 1) << PDS_CR_PDS_BZ_BLE_RESET_POS)
+#define PDS_CR_PDS_BZ_BLE_RESET_UMSK              (~(((1U << PDS_CR_PDS_BZ_BLE_RESET_LEN) - 1) << PDS_CR_PDS_BZ_BLE_RESET_POS))
+#define PDS_CR_PDS_BZ_BLE_MEM_STBY                PDS_CR_PDS_BZ_BLE_MEM_STBY
+#define PDS_CR_PDS_BZ_BLE_MEM_STBY_POS            (18U)
+#define PDS_CR_PDS_BZ_BLE_MEM_STBY_LEN            (1U)
+#define PDS_CR_PDS_BZ_BLE_MEM_STBY_MSK            (((1U << PDS_CR_PDS_BZ_BLE_MEM_STBY_LEN) - 1) << PDS_CR_PDS_BZ_BLE_MEM_STBY_POS)
+#define PDS_CR_PDS_BZ_BLE_MEM_STBY_UMSK           (~(((1U << PDS_CR_PDS_BZ_BLE_MEM_STBY_LEN) - 1) << PDS_CR_PDS_BZ_BLE_MEM_STBY_POS))
+#define PDS_CR_PDS_BZ_BLE_GATE_CLK                PDS_CR_PDS_BZ_BLE_GATE_CLK
+#define PDS_CR_PDS_BZ_BLE_GATE_CLK_POS            (19U)
+#define PDS_CR_PDS_BZ_BLE_GATE_CLK_LEN            (1U)
+#define PDS_CR_PDS_BZ_BLE_GATE_CLK_MSK            (((1U << PDS_CR_PDS_BZ_BLE_GATE_CLK_LEN) - 1) << PDS_CR_PDS_BZ_BLE_GATE_CLK_POS)
+#define PDS_CR_PDS_BZ_BLE_GATE_CLK_UMSK           (~(((1U << PDS_CR_PDS_BZ_BLE_GATE_CLK_LEN) - 1) << PDS_CR_PDS_BZ_BLE_GATE_CLK_POS))
 #define PDS_CR_PDS_USB_PWR_OFF                    PDS_CR_PDS_USB_PWR_OFF
 #define PDS_CR_PDS_USB_PWR_OFF_POS                (20U)
 #define PDS_CR_PDS_USB_PWR_OFF_LEN                (1U)
@@ -1618,19 +1668,24 @@ struct pds_reg {
         struct {
             uint32_t reserved_0                 : 1;  /* [    0],       rsvd,        0x0 */
             uint32_t cr_pds_force_misc_pwr_off  : 1;  /* [    1],        r/w,        0x0 */
-            uint32_t reserved_2_3               : 2;  /* [ 3: 2],       rsvd,        0x0 */
+            uint32_t cr_pds_force_bz_ble_pwr_off : 1; /* [    2],        r/w,        0x0 */
+            uint32_t reserved_3                 : 1;  /* [    3],       rsvd,        0x0 */
             uint32_t cr_pds_force_misc_iso_en   : 1;  /* [    4],        r/w,        0x0 */
-            uint32_t reserved_5_6               : 2;  /* [ 6: 5],       rsvd,        0x0 */
+            uint32_t cr_pds_force_bz_ble_iso_en : 1; /* [    5],        r/w,        0x0 */
+            uint32_t reserved_6                 : 1;  /* [    6],       rsvd,        0x0 */
             uint32_t cr_pds_force_misc_pds_rst  : 1;  /* [    7],        r/w,        0x0 */
-            uint32_t reserved_8_9               : 2;  /* [ 9: 8],       rsvd,        0x0 */
+            uint32_t cr_pds_force_bz_ble_pds_rst : 1; /* [    8],        r/w,        0x0 */
+            uint32_t reserved_9                 : 1;  /* [    9],       rsvd,        0x0 */
             uint32_t cr_pds_force_misc_mem_stby : 1;  /* [   10],        r/w,        0x0 */
-            uint32_t reserved_11_12             : 2;  /* [12:11],       rsvd,        0x0 */
+            uint32_t cr_pds_force_bz_ble_mem_stby : 1; /* [   11],        r/w,        0x0 */
+            uint32_t reserved_12                : 1;  /* [   12],       rsvd,        0x0 */
             uint32_t cr_pds_force_misc_gate_clk : 1;  /* [   13],        r/w,        0x0 */
-            uint32_t reserved_14_23             : 10; /* [23:14],       rsvd,        0x0 */
+            uint32_t cr_pds_force_bz_ble_gate_clk : 1; /* [   14],        r/w,        0x0 */
+            uint32_t reserved_15_23             : 9;  /* [23:15],       rsvd,        0x0 */
             uint32_t cr_pds_np_iso_en           : 1;  /* [   24],        r/w,        0x1 */
             uint32_t reserved_25_26             : 2;  /* [26:25],       rsvd,        0x0 */
             uint32_t cr_pds_wb_iso_en           : 1;  /* [   27],        r/w,        0x1 */
-            uint32_t reserved_28                : 1;  /* [   28],       rsvd,        0x0 */
+            uint32_t cr_pds_bz_ble_iso_en        : 1;  /* [   28],        r/w,        0x1 */
             uint32_t cr_pds_usb_iso_en          : 1;  /* [   29],        r/w,        0x1 */
             uint32_t cr_pds_misc_iso_en         : 1;  /* [   30],        r/w,        0x1 */
             uint32_t reserved_31                : 1;  /* [   31],       rsvd,        0x0 */
@@ -1650,7 +1705,10 @@ struct pds_reg {
             uint32_t cr_pds_wb_reset      : 1; /* [   13],        r/w,        0x1 */
             uint32_t cr_pds_wb_mem_stby   : 1; /* [   14],        r/w,        0x1 */
             uint32_t cr_pds_wb_gate_clk   : 1; /* [   15],        r/w,        0x1 */
-            uint32_t reserved_16_19       : 4; /* [19:16],       rsvd,        0x0 */
+            uint32_t cr_pds_bz_ble_pwr_off  : 1; /* [   16],        r/w,        0x1 */
+            uint32_t cr_pds_bz_ble_reset    : 1; /* [   17],        r/w,        0x1 */
+            uint32_t cr_pds_bz_ble_mem_stby : 1; /* [   18],        r/w,        0x1 */
+            uint32_t cr_pds_bz_ble_gate_clk : 1; /* [   19],        r/w,        0x1 */
             uint32_t cr_pds_usb_pwr_off   : 1; /* [   20],        r/w,        0x1 */
             uint32_t cr_pds_usb_reset     : 1; /* [   21],        r/w,        0x1 */
             uint32_t cr_pds_usb_mem_stby  : 1; /* [   22],        r/w,        0x1 */

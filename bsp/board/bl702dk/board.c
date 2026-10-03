@@ -27,11 +27,56 @@ static struct bflb_device_s *uart0;
 static struct bflb_device_s *rtc;
 #endif
 
+static int bl702_read_xtal_capcode(uint8_t *capcode)
+{
+    uint32_t slot3_w3;
+    uint32_t slot5_w3;
+    uint8_t trim;
+
+    if (capcode == NULL) {
+        return -1;
+    }
+
+    /* Slot 2 and slot 1 share KEY_SLOT_3_W3; slot 2 has highest priority. */
+    bflb_ef_ctrl_read_direct(NULL, 0x58, &slot3_w3, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, 0x78, &slot5_w3, 1, 0);
+
+    trim = (slot3_w3 >> 25) & 0x7f;
+    if (trim & 0x01) {
+        *capcode = trim >> 1;
+        return 2;
+    }
+
+    trim = (slot3_w3 >> 9) & 0x7f;
+    if (trim & 0x01) {
+        *capcode = trim >> 1;
+        return 1;
+    }
+
+    trim = (slot5_w3 >> 25) & 0x7f;
+    if (trim & 0x01) {
+        *capcode = trim >> 1;
+        return 0;
+    }
+
+    return -1;
+}
+
 static void system_clock_init(void)
 {
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+    uint8_t capcode;
+#endif
+
     GLB_Set_System_CLK(GLB_DLL_XTAL_32M, GLB_SYS_CLK_DLL144M);
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 71);
     HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+    if (bl702_read_xtal_capcode(&capcode) >= 0) {
+        AON_Set_Xtal_CapCode(capcode, capcode);
+    }
+#endif
 }
 
 static void peripheral_clock_init(void)

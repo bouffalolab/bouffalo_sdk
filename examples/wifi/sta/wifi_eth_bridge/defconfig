@@ -1,5 +1,6 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
+CONFIG_PSRAM =y
 CONFIG_MACSW_SELECT = bridge
 CONFIG_BFLB_LOG =n
 

@@ -7,7 +7,7 @@
 
 #define VERSION_OT_BR_MAJOR 1
 #define VERSION_OT_BR_MINOR 7
-#define VERSION_OT_BR_PATCH 4
+#define VERSION_OT_BR_PATCH 5
 
 // #define VERSION_OT_BR_EXTRA_INFO "customer-1"
 

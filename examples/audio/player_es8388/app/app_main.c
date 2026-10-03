@@ -14,6 +14,7 @@
 
 #include "rfparam_adapter.h"
 #include "bl616_glb.h"
+#include "lfs_kv.h"
 
 void vAssertCalled(void)
 {
@@ -56,7 +57,7 @@ void app_main_entry(void *arg)
 
     /* For bt status save */
     bflb_mtd_init();
-    easyflash_init();
+    lfs_kv_init();
 
     /* romsfs init mount use media factory*/
     romfs_mount(0x378000);
@@ -80,4 +81,3 @@ void app_main_entry(void *arg)
     app_play_fifo_music();
     vTaskDelete(NULL);
 }
-
