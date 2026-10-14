@@ -1,14 +1,15 @@
 name: Sync bflb_tools to bflb_flash_tools
 
-# Mirror contract (v1)
-# - The mirror content is `git subtree split` of tools/bflb_tools at the
-#   pushed master commit, with EXCLUDE_FILES (bouffalo_sdk build glue, used
-#   only by project.build and cmake/bflb_flash.cmake) removed from every
-#   commit. Nothing else is added, removed or rewritten; the mirror is
-#   generated, never edited by hand. All changes go to bouffalo_sdk master.
+# Mirror contract (v2)
+# - Each mirror commit is a snapshot of tools/bflb_tools at a bouffalo_sdk
+#   master commit, with EXCLUDE_FILES (bouffalo_sdk build glue, used only by
+#   project.build and cmake/bflb_flash.cmake) removed. bouffalo_sdk history is
+#   not carried over: a commit is appended only when the snapshot differs from
+#   the mirror head, so the mirror grows only with real tool updates. The
+#   mirror is generated, never edited by hand. All changes go to bouffalo_sdk
+#   master.
 # - Failures never advance the mirror: verification runs before the push and
-#   the push is a plain fast-forward (no force), so a rewritten upstream
-#   history is reported instead of being forced over the mirror.
+#   the push is a plain fast-forward (no force).
 
 on:
   push:
@@ -37,36 +38,7 @@ jobs:
       - name: Checkout bouffalo_sdk
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           persist-credentials: false
-
-      - name: Split bflb_tools subtree
-        run: |
-          set -euo pipefail
-          git subtree split --prefix=tools/bflb_tools HEAD -b bflb-tools-split
-
-      - name: Drop SDK-only files from split history
-        env:
-          FILTER_BRANCH_SQUELCH_WARNING: "1"
-        run: |
-          set -euo pipefail
-          git filter-branch --prune-empty \
-            --index-filter "git rm -q --cached --ignore-unmatch -- ${EXCLUDE_FILES}" \
-            bflb-tools-split
-
-      - name: Verify split against upstream subtree
-        run: |
-          set -euo pipefail
-          split_tree=$(git rev-parse bflb-tools-split^{tree})
-          export GIT_INDEX_FILE="${RUNNER_TEMP}/expected.index"
-          git read-tree "HEAD:tools/bflb_tools"
-          git rm -q --cached --ignore-unmatch -- ${EXCLUDE_FILES}
-          upstream_tree=$(git write-tree)
-          test "${split_tree}" = "${upstream_tree}"
-          test -z "$(git log --format=%H bflb-tools-split -- ${EXCLUDE_FILES})"
-          files=$(git ls-tree -r --name-only bflb-tools-split | wc -l)
-          test "${files}" -gt 0
-          echo "verified tree=${split_tree} files=${files} parent=$(git rev-parse HEAD)"
 
       - name: Check sync token
         env:
@@ -75,11 +47,51 @@ jobs:
           set -euo pipefail
           test -n "${TOKEN}"
 
-      - name: Push to bflb_flash_tools master branch
+      - name: Build bflb_tools snapshot
+        id: snapshot
         env:
           TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
         run: |
           set -euo pipefail
           git remote add bflb-flash-tools \
             "https://x-access-token:${TOKEN}@github.com/bouffalolab/bflb_flash_tools.git"
-          git push bflb-flash-tools bflb-tools-split:master
+          parent=
+          head=$(git ls-remote bflb-flash-tools refs/heads/master)
+          if [ -n "${head}" ]; then
+            git fetch -q --depth=1 bflb-flash-tools master
+            parent=$(git rev-parse FETCH_HEAD)
+          fi
+          export GIT_INDEX_FILE="${RUNNER_TEMP}/snapshot.index"
+          git read-tree "HEAD:tools/bflb_tools"
+          git rm -q --cached --ignore-unmatch -- ${EXCLUDE_FILES}
+          tree=$(git write-tree)
+          if [ -n "${parent}" ] && [ "$(git rev-parse "${parent}^{tree}")" = "${tree}" ]; then
+            echo "bflb_tools unchanged since mirror ${parent}, nothing to push"
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          export GIT_AUTHOR_NAME="$(git log -1 --format=%an)"
+          export GIT_AUTHOR_EMAIL="$(git log -1 --format=%ae)"
+          export GIT_COMMITTER_NAME="github-actions[bot]"
+          export GIT_COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+          commit=$(git log -1 --format="%s%n%nSource: bouffalolab/bouffalo_sdk@%H" |
+            git commit-tree "${tree}" ${parent:+-p "${parent}"})
+          git update-ref refs/heads/bflb-tools-snapshot "${commit}"
+          echo "changed=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify snapshot against upstream subtree
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          expected=$(git ls-tree -r "HEAD:tools/bflb_tools" |
+            awk -F'\t' -v ex=" ${EXCLUDE_FILES} " 'index(ex, " " $2 " ") == 0')
+          test "${expected}" = "$(git ls-tree -r bflb-tools-snapshot)"
+          files=$(git ls-tree -r --name-only bflb-tools-snapshot | wc -l)
+          test "${files}" -gt 0
+          echo "verified tree=$(git rev-parse bflb-tools-snapshot^{tree}) files=${files} parent=$(git rev-parse HEAD)"
+
+      - name: Push to bflb_flash_tools master branch
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git push bflb-flash-tools bflb-tools-snapshot:master
