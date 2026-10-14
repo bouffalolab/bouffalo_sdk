@@ -1,0 +1,85 @@
+name: Sync bflb_tools to bflb_flash_tools
+
+# Mirror contract (v1)
+# - The mirror content is `git subtree split` of tools/bflb_tools at the
+#   pushed master commit, with EXCLUDE_FILES (bouffalo_sdk build glue, used
+#   only by project.build and cmake/bflb_flash.cmake) removed from every
+#   commit. Nothing else is added, removed or rewritten; the mirror is
+#   generated, never edited by hand. All changes go to bouffalo_sdk master.
+# - Failures never advance the mirror: verification runs before the push and
+#   the push is a plain fast-forward (no force), so a rewritten upstream
+#   history is reported instead of being forced over the mirror.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "tools/bflb_tools/**"
+      - ".github/workflows/sync-bflb-tools.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-bflb-flash-tools
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    env:
+      EXCLUDE_FILES: flash_prog_cfg.py project_flash.build
+
+    steps:
+      - name: Checkout bouffalo_sdk
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Split bflb_tools subtree
+        run: |
+          set -euo pipefail
+          git subtree split --prefix=tools/bflb_tools HEAD -b bflb-tools-split
+
+      - name: Drop SDK-only files from split history
+        env:
+          FILTER_BRANCH_SQUELCH_WARNING: "1"
+        run: |
+          set -euo pipefail
+          git filter-branch --prune-empty \
+            --index-filter "git rm -q --cached --ignore-unmatch -- ${EXCLUDE_FILES}" \
+            bflb-tools-split
+
+      - name: Verify split against upstream subtree
+        run: |
+          set -euo pipefail
+          split_tree=$(git rev-parse bflb-tools-split^{tree})
+          export GIT_INDEX_FILE="${RUNNER_TEMP}/expected.index"
+          git read-tree "HEAD:tools/bflb_tools"
+          git rm -q --cached --ignore-unmatch -- ${EXCLUDE_FILES}
+          upstream_tree=$(git write-tree)
+          test "${split_tree}" = "${upstream_tree}"
+          test -z "$(git log --format=%H bflb-tools-split -- ${EXCLUDE_FILES})"
+          files=$(git ls-tree -r --name-only bflb-tools-split | wc -l)
+          test "${files}" -gt 0
+          echo "verified tree=${split_tree} files=${files} parent=$(git rev-parse HEAD)"
+
+      - name: Check sync token
+        env:
+          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${TOKEN}"
+
+      - name: Push to bflb_flash_tools master branch
+        env:
+          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          git remote add bflb-flash-tools \
+            "https://x-access-token:${TOKEN}@github.com/bouffalolab/bflb_flash_tools.git"
+          git push bflb-flash-tools bflb-tools-split:master
