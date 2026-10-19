@@ -1,0 +1,61 @@
+sdk_generate_library()
+sdk_library_add_sources(clock_manager.c)
+sdk_library_add_sources(pm_manager.c)
+sdk_library_add_sources_ifdef(CONFIG_PM_HELPER_CLI pm_helper_cli.c)
+if (CONFIG_TICKLESS_EXT)
+    sdk_add_compile_definitions(-DconfigEXPECTED_IDLE_TIME_BEFORE_SLEEP=40)
+
+    sdk_library_add_sources(tickless_hook.c)
+    sdk_library_add_sources(rc32k_trim.c)
+
+    if (CONFIG_TICKLESS_ACCURATE)
+        sdk_library_add_sources(tickless_accurate.c)
+    else()
+        sdk_library_add_sources(tickless.c)
+        sdk_add_compile_definitions(-DconfigUSE_TICKLESS_IDLE=1)
+        sdk_add_compile_definitions(-Dconfig_CUSTOM_TICKLESS=1)
+    endif()
+endif()
+sdk_add_include_directories(.)
+
+if("${CHIP}" STREQUAL "bl616")
+    sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_SOC_DEFAULT=10)
+    sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_AON_DEFAULT=10)
+    if (CONFIG_DCDC_ENABLE)
+        sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_RT_DEFAULT=8)
+    else()
+        sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_RT_DEFAULT=10)
+    endif()
+endif()
+
+if("${CHIP}" STREQUAL "bl618dg")
+    sdk_add_compile_definitions(-D PM_PDS_LDO_SOC_LEVEL_DEFAULT=AON_LDO_SOC_LEVEL_0P800V)
+    sdk_add_compile_definitions(-D PM_PDS_DCDC_SYS_LEVEL_DEFAULT=AON_DCDC_SYS_LEVEL_0P925V)
+endif()
+
+if (CONFIG_TICKLESS_ACCURATE)
+    # sdk_add_compile_definitions(-DTICKLESS_DEBUG=4)
+    sdk_add_compile_definitions(-DconfigUSE_TICKLESS_IDLE=1)
+
+    if (CONFIG_ACTIVE_CRYSTAL)
+        sdk_add_compile_definitions(-DCFG_ACTIVE_CRYSTAL)
+    endif ()
+
+    sdk_add_compile_definitions(-DconfigEXPECTED_IDLE_TIME_BEFORE_SLEEP=40)
+    sdk_add_compile_definitions(-Dconfig_CUSTOM_TICKLESS=2)
+    # MTIME base addresses for tickless_accurate.c
+    if("${CHIP}" STREQUAL "bl602" OR "${CHIP}" STREQUAL "bl702" OR "${CHIP}" STREQUAL "bl702l")
+        set(MTIME_BASE "0x0200BFF8UL")
+        set(MTIMECMP_BASE "0x02004000UL")
+    elseif("${CHIP}" STREQUAL "bl618dg" AND NOT "${CPU_MODEL}" STREQUAL "a0")
+        set(MTIME_BASE "0x18030000UL")
+        set(MTIMECMP_BASE "0x18030008UL")
+    else()
+        set(MTIME_BASE "0xE000BFF8UL")
+        set(MTIMECMP_BASE "0xE0004000UL")
+    endif()
+    sdk_add_compile_definitions(
+        -DconfigMTIME_BASE_ADDRESS=${MTIME_BASE}
+        -DconfigMTIMECMP_BASE_ADDRESS=${MTIMECMP_BASE}
+    )
+endif()

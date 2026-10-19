@@ -1,0 +1,15 @@
+CONFIG_PSRAM                =n
+ifeq ($(CHIP),bl618dg)
+CONFIG_PSRAM_FOR_AP_SIZE = 0x600000
+CONFIG_DPI_DISPLAY_BOARD_MODE =n
+endif
+CONFIG_BSP_LCD              =y
+CONFIG_BSP_TOUCH            =y
+
+CONFIG_FREERTOS             =y
+
+CONFIG_LVGL9                =y
+CONFIG_LVGL9_PORT_DISP      =y
+CONFIG_LVGL9_PORT_INDEV     =n
+CONFIG_LVGL9_PORT_FS        =n
+CONFIG_LVGL9_OSD_LAYER = y

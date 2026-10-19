@@ -1,0 +1,790 @@
+# Include btblecontroller related configurations
+include(${CMAKE_CURRENT_LIST_DIR}/ble_common_readonly.cmake)
+
+# 
+# ifndef CONFIG_FREERTOS_DISABLE
+# CFLAGS   += -DCONFIG_FREERTOS
+# endif
+if(NOT CONFIG_FREERTOS_DISABLE)
+	sdk_add_compile_definitions(-DCONFIG_FREERTOS)
+endif()
+# 
+# CFLAGS   += -DARCH_RISCV
+# 
+# ifeq ($(CONFIG_CHIP_NAME),BL602)
+# CFLAGS   += -DBL602
+# CFLAGS   += -DCONFIG_SET_TX_PWR
+# endif
+if("${CHIP}" STREQUAL "bl602")
+#	sdk_add_compile_definitions(-DBL602)
+	sdk_add_compile_definitions(-DCONFIG_SET_TX_PWR)
+endif()
+# 
+# ifeq ($(CONFIG_CHIP_NAME),BL702)
+# CFLAGS   += -DBL702
+# endif
+if("${CHIP}" STREQUAL "bl702")
+#	sdk_add_compile_definitions(-DBL702)
+endif()
+# 
+# 
+# ifeq ($(CONFIG_CHIP_NAME),BL616)
+# CFLAGS   += -DBL616
+# CONFIG_BT_RESET=0
+# endif
+if("${CHIP}" STREQUAL "bl616")
+#	sdk_add_compile_definitions(-DBL616)
+endif()
+# ifeq ($(CONFIG_CHIP_NAME),BL618DG)
+# CFLAGS   += -DBL618DG
+# CONFIG_BT_RESET=0
+# endif
+if("${CHIP}" STREQUAL "bl618dg")
+#	sdk_add_compile_definitions(-DBL618DG)
+endif()
+# 
+# 
+# ifeq ($(CONFIG_CHIP_NAME),BL702L)
+# CFLAGS   += -DBL702L
+# endif
+if("${CHIP}" STREQUAL "bl702l")
+#	sdk_add_compile_definitions(-DBL702L)
+endif()
+# 
+# ifeq ($(CONFIG_DBG_RUN_ON_FPGA), y)
+# CFLAGS   += -DCONFIG_DBG_RUN_ON_FPGA
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_DBG_RUN_ON_FPGA -DCONFIG_DBG_RUN_ON_FPGA)
+# 
+# ifeq ($(CONFIG_BUILD_ROM_CODE),1)
+# CFLAGS += -DBUILD_ROM_CODE
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BUILD_ROM_CODE -DBUILD_ROM_CODE)
+# 
+# CFLAGS   += -DCONFIG_BLE_ENABLE
+# CPPFLAGS += -DCONFIG_BLE_ENABLE
+# 
+# CFLAGS   += -DBFLB_BLE
+# CFLAGS   += -DCONFIG_BLE
+sdk_add_compile_definitions(-DCONFIG_BLE_ENABLE)
+sdk_add_compile_definitions(-DBFLB_BLE)
+sdk_add_compile_definitions(-DCONFIG_BLE)
+#
+# CONFIG_BL702L_A1?=0
+#
+# CONFIG_BT_BREDR?=0
+# ifeq ($(CONFIG_BT_BREDR),0)
+# CONFIG_BT=0
+# else
+# CONFIG_BT=1
+# CONFIG_BT_A2DP?=1
+# CONFIG_BT_A2DP_SOURCE?=0
+# CONFIG_BT_AVRCP?=1
+# CONFIG_BT_HFP?=1
+# ifeq ($(CONFIG_BT_A2DP),1)
+# CFLAGS += -DCONFIG_BT_A2DP
+# ifeq ($(CONFIG_BT_A2DP_SOURCE),1)
+# CFLAGS += -DCONFIG_BT_A2DP_SOURCE
+# endif
+# endif
+# ifeq ($(CONFIG_BT_AVRCP),1)
+# CFLAGS += -DCONFIG_BT_AVRCP
+# endif
+# ifeq ($(CONFIG_BT_HFP),1)
+# CFLAGS += -DCONFIG_BT_HFP
+# endif
+#ifeq ($(CONFIG_BT_SPP),1)
+#CFLAGS += -DCONFIG_BT_SPP
+#endif
+#ifeq($(CONFIG_BT_BREDR_PTS),1)
+#CFLAGS += -DBR_EDR_PTS_TEST
+#endif
+# CFLAGS += -DCONFIG_BT_BREDR
+# CFLAGS += -DCONFIG_MAX_SCO=2
+# CFLAGS += -DSBC_DEC_INCLUDED
+# CFLAGS += -DSBC_ENC_INCLUDED
+# CFLAGS += -DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
+# endif
+if(CONFIG_BT_A2DP)
+	sdk_add_compile_definitions(-DCONFIG_BT_A2DP)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP_SOURCE -DCONFIG_BT_A2DP_SOURCE)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP_SINK -DCONFIG_BT_A2DP_SINK)
+endif()
+sdk_add_compile_definitions_ifdef(CONFIG_BT_AVRCP -DCONFIG_BT_AVRCP)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_HFP -DCONFIG_BT_HFP)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_SPP -DCONFIG_BT_SPP)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_BREDR_PTS -DBR_EDR_PTS_TEST)
+if(CONFIG_BT_BREDR)
+	set(CONFIG_BT y)
+	sdk_add_compile_definitions(
+		-DCONFIG_BT_BREDR
+		-DCONFIG_MAX_SCO=2
+		-DSBC_DEC_INCLUDED
+		-DSBC_ENC_INCLUDED
+		-DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
+	)
+endif()
+# Controller-feature symbols (SCO_ESCO, CIS, ...) are promptless Kconfig
+# symbols: Kconfig resolves them and the controller presets in
+# ble_common_readonly.cmake override them per library. Do not re-default
+# them here — that would run after the presets and clobber forced 'n'
+# values (e.g. the mfg preset's SCO_ESCO n).
+#
+# ifeq ($(CONFIG_BL702L_A1),1)
+# CFLAGS += -DCONFIG_BL702L_A1
+# CONFIG_BLE_TX_BUFF_DATA = 2
+# endif
+#
+if(CONFIG_BL702L_A1)
+	sdk_add_compile_definitions(-DCONFIG_BL702L_A1)
+endif()
+# 
+# ifeq ($(CONFIG_BT_TL),1)
+# CFLAGS += -DCONFIG_BT_TL
+# CONFIG_BLE_HOST_DISABLE:=1
+# endif
+if(CONFIG_BT_TL)
+	sdk_add_compile_definitions(-DCONFIG_BT_TL)
+	set(CONFIG_BLE_HOST_DISABLE y)
+endif()
+# 
+# ifeq ($(CONFIG_BL_SDK),1)
+# CFLAGS += -DCONFIG_BL_SDK
+# endif
+# ifneq ($(CONFIG_IOT_SDK_DISABLE),1)
+# CFLAGS   += -DCONFIG_IOT_SDK
+# endif
+sdk_add_compile_definitions(-DCONFIG_BL_SDK)
+# sdk_add_compile_definitions_ifndef(CONFIG_IOT_SDK_DISABLE -DCONFIG_IOT_SDK)
+# 
+# CONFIG_EM_16K ?= 0
+# ifeq ($(CONFIG_EM_16K),1)
+# CFLAGS += -DCONFIG_EM_16K
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
+
+# 
+# CONFIG_BT ?= 1
+# CONFIG_SCO_ESCO ?= 1
+# CONFIG_PCA ?= 1
+# CONFIG_RF_EXTRC ?= 1
+# CONFIG_CSB ?= 1
+# CONFIG_SNIFF ?= 1
+# CONFIG_RSWITCH ?= 1
+# CONFIG_TEST_MODE ?= 1
+# CONFIG_BT_HCI_TEST_MODE ?= 1
+# CONFIG_BT_DIRECT_TEST_MODE ?= 1
+# CONFIG_BLE ?= 1
+# CONFIG_CIS ?= 1
+# CONFIG_ADV_EXTENSION ?= 1
+# CONFIG_BIS ?= 1
+# CONFIG_LONG_RANG ?= 1
+# CONFIG_LE_PWR_CTRL ?= 1
+# CONFIG_CTE ?= 1
+# CONFIG_PHY_UPDATE ?= 1
+# CONFIG_CLK_ACC ?= 1
+# CONFIG_LE_PING ?= 1
+# CONFIG_BT_REMOTE_VERSION ?= 0
+#
+# #Update le adv data and scan rsp data when LE adertising is active, sw need 4 adv buffer at least.
+# CONFIG_BLE_ACT_MAX ?= 7
+#
+# CONFIG_HW_SEC_ENG_DISABLE?=0
+#
+# CONFIG_BT_CONN?=1
+# CFLAGS += -DCONFIG_CON=$(CONFIG_BT_CONN)
+# CONFIG_BLE_TX_BUFF_DATA?=2
+# CFLAGS += -DCONFIG_BLE_TX_BUFF_DATA=$(CONFIG_BLE_TX_BUFF_DATA)
+# CONFIG_BT_ALLROLES?=1
+# CONFIG_BT_CENTRAL?=1
+# CONFIG_BT_OBSERVER?=1
+# CONFIG_BT_PERIPHERAL?=1
+# CONFIG_BT_BROADCASTER?=1
+# CONFIG_BT_SETTINGS?=0
+# CONFIG_BLE_TP_SERVER?=0
+# CONFIG_BLE_MULTI_ADV?=0
+# CONFIG_BLE_RECONNECT_TEST?=0
+# CONFIG_BT_STACK_CLI?=1
+# CONFIG_BT_TP_CLI?=0
+# CONFIG_BLE_STACK_DBG_PRINT?=1
+# CONFIG_BT_STACK_PTS?=0
+# CONFIG_BT_MESH_PTS?=0
+# CONFIG_BLE_TP_TEST?=0
+# CONFIG_BT_GEN_RANDOM_BY_SW?=0 #If BLE host generate random value by software
+# CONFIG_DISABLE_BT_SMP?=0
+# CONFIG_DISABLE_BT_HOST_PRIVACY?=1
+# CONFIG_BT_L2CAP_DYNAMIC_CHANNEL?=0
+# CONFIG_BT_GATT_CLIENT?=1
+# CONFIG_BT_DATA_LEN_UPDATE?=0
+# CONFIG_BT_MESH?=0
+# CONFIG_BT_MESH_MODEL?=0
+sdk_add_compile_definitions(-DCONFIG_CON=${CONFIG_BT_CONN})
+if(BLE_STANDALONE_BUILD)
+    sdk_add_compile_definitions(
+        -DCONFIG_BT_CONN=${CONFIG_BT_CONN}
+        -DCONFIG_BLE_TX_BUFF_DATA=${CONFIG_BLE_TX_BUFF_DATA}
+    )
+endif()
+# CONFIG_CON_ACL defaults to 0 in Kconfig; BR/EDR builds use 2 unless the
+# controller preset (or the user) already provided a value.
+if(CONFIG_BT_BREDR AND NOT CONFIG_CON_ACL)
+    set(CONFIG_CON_ACL 2)
+endif()
+sdk_add_compile_definitions(-DCONFIG_ACL_CON=${CONFIG_CON_ACL})
+# ifeq ($(CONFIG_BT_MESH),1)
+# CONFIG_BT_MESH_CLI ?= 1
+# CONFIG_BT_MESH_PB_ADV?=1
+# CONFIG_BT_MESH_RELAY?=1
+# CONFIG_BT_MESH_PB_GATT?=1
+# CONFIG_BT_MESH_FRIEND?=1
+# CONFIG_BT_MESH_LOW_POWER?=1
+# CONFIG_BT_MESH_PROXY?=1
+# CONFIG_BT_MESH_GATT_PROXY?=1
+# CONFIG_BT_MESH_MOD_BIND_CB?=0
+# CONFIG_BT_MESH_APPKEY_ADD_CB?=0
+# CONFIG_BT_MESH_MOD_SUB_ADD_CB?=0
+# ifeq ($(CONFIG_BT_MESH_MODEL), y)
+# CONFIG_BT_MESH_MODEL_GEN_SRV?=1
+# CONFIG_BT_MESH_MODEL_GEN_CLI?=1
+# CONFIG_BT_MESH_MODEL_LIGHT_SRV?=1
+# CONFIG_BT_MESH_MODEL_LIGHT_CLI?=1
+# else
+# CONFIG_BT_MESH_MODEL_GEN_SRV?=1
+# endif
+# CONFIG_BT_MESH_PROVISIONER?=0
+# ifeq ($(CONFIG_BT_MESH_PROVISIONER),1)
+# CONFIG_BT_MESH_CDB?=1
+# else
+# CONFIG_BT_MESH_CDB?=0
+# endif
+# CONFIG_BT_MESH_SYNC?=0
+# CONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG?=0 # Config mesh normal node can send configure client message or not.
+# endif
+#
+# ifeq ($(CONFIG_HW_SEC_ENG_DISABLE),1)
+# CFLAGS += -DCONFIG_HW_SEC_ENG_DISABLE
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_HW_SEC_ENG_DISABLE -DCONFIG_HW_SEC_ENG_DISABLE)
+
+# ifeq ($(CONFIG_LP_HCIUART),1)
+# CFLAGS += -DCONFIG_LP_HCIUART
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_LP_HCIUART -DCONFIG_LP_HCIUART)
+
+# 
+# ##########################################
+# ############## BLE STACK #################
+# ##########################################
+# 
+# ifeq ($(CONFIG_BT_ALLROLES),1)
+# 
+# CFLAGS += -DCONFIG_BT_ALLROLES
+# CFLAGS += -DCONFIG_BT_CENTRAL
+# CFLAGS += -DCONFIG_BT_OBSERVER
+# CFLAGS += -DCONFIG_BT_PERIPHERAL
+# CFLAGS += -DCONFIG_BT_BROADCASTER
+# 
+# else
+# 
+# ifeq ($(CONFIG_BT_CENTRAL),1)
+# CFLAGS += -DCONFIG_BT_CENTRAL
+# endif
+# ifeq ($(CONFIG_BT_OBSERVER),1)
+# CFLAGS += -DCONFIG_BT_OBSERVER
+# endif
+# ifeq ($(CONFIG_BT_PERIPHERAL),1)
+# CFLAGS += -DCONFIG_BT_PERIPHERAL
+# endif
+# ifeq ($(CONFIG_BT_BROADCASTER),1)
+# CFLAGS += -DCONFIG_BT_BROADCASTER
+# endif
+# 
+# endif
+if(CONFIG_BT_ALLROLES)
+	sdk_add_compile_definitions(
+		-DCONFIG_BT_ALLROLES
+		-DCONFIG_BT_CENTRAL
+		-DCONFIG_BT_OBSERVER
+		-DCONFIG_BT_PERIPHERAL
+		-DCONFIG_BT_BROADCASTER
+	)
+else()
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_CENTRAL -DCONFIG_BT_CENTRAL)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_OBSERVER -DCONFIG_BT_OBSERVER)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_PERIPHERAL -DCONFIG_BT_PERIPHERAL)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_BROADCASTER -DCONFIG_BT_BROADCASTER)
+endif()
+# 
+# ifneq ($(CONFIG_DBG_RUN_ON_FPGA), y)
+# ifeq ($(CONFIG_BT_SETTINGS), y)
+# CFLAGS += -DCONFIG_BT_SETTINGS
+# endif
+# endif
+if(NOT CONFIG_DBG_RUN_ON_FPGA)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_SETTINGS -DCONFIG_BT_SETTINGS)
+endif()
+
+# 
+# ifeq ($(CONFIG_BT_GEN_RANDOM_BY_SW),1)
+# CFLAGS += -DCONFIG_BT_GEN_RANDOM_BY_SW
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_GEN_RANDOM_BY_SW -DCONFIG_BT_GEN_RANDOM_BY_SW)
+# 
+# ifeq ($(CONFIG_BLE_PDS),1)
+# CFLAGS += -DCONFIG_BLE_PDS
+# CFLAGS += -DCONFIG_HW_SEC_ENG_DISABLE
+# endif
+if(CONFIG_BLE_PDS)
+	sdk_add_compile_definitions(-DCONFIG_BLE_PDS)
+endif()
+# 
+# ifeq ($(CONFIG_EM_HEAP_DISABLE),1)
+# CFLAGS += -DCONFIG_EM_HEAP_DISABLE
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_EM_HEAP_DISABLE -DCONFIG_EM_HEAP_DISABLE)
+# 
+# ifneq ($(CONFIG_BT_CONN),0)
+# CFLAGS   += 	-DCONFIG_BT_CONN
+# endif
+# Value form: autoconf.h always defines CONFIG_BT_CONN with the same value,
+# a bare -D would trigger a macro-redefinition error under -Werror.
+# 
+# CFLAGS   += -DCONFIG_BT_HCI_VS_EVT_USER \
+#  			-DCONFIG_BT_ASSERT \
+sdk_add_compile_definitions(-DCONFIG_BT_HCI_VS_EVT_USER -DCONFIG_BT_ASSERT)
+# 
+# ifneq ($(CONFIG_SIMPLE_MASTER),1)
+# CFLAGS   +=		-DCONFIG_BT_GATT_DIS_PNP \
+#  			-DCONFIG_BT_GATT_DIS_SERIAL_NUMBER \
+#  			-DCONFIG_BT_GATT_DIS_FW_REV \
+#  			-DCONFIG_BT_GATT_DIS_HW_REV \
+#  			-DCONFIG_BT_GATT_DIS_SW_REV \
+#  			-DCONFIG_BT_GATT_DYNAMIC_DB \
+#  			-DCONFIG_BT_GATT_SERVICE_CHANGED \
+#  			-DCONFIG_BT_KEYS_OVERWRITE_OLDEST \
+#  			-DCONFIG_BT_KEYS_SAVE_AGING_COUNTER_ON_PAIRING \
+#  			-DCONFIG_BT_BONDABLE 
+# endif
+if(NOT CONFIG_SIMPLE_MASTER)
+	sdk_add_compile_definitions(
+		-DCONFIG_BT_GATT_DIS_PNP
+		-DCONFIG_BT_GATT_DIS_SERIAL_NUMBER
+		-DCONFIG_BT_GATT_DIS_FW_REV
+		-DCONFIG_BT_GATT_DIS_HW_REV
+		-DCONFIG_BT_GATT_DIS_SW_REV
+		-DCONFIG_BT_GATT_DYNAMIC_DB
+		-DCONFIG_BT_GATT_SERVICE_CHANGED
+		-DCONFIG_BT_KEYS_OVERWRITE_OLDEST
+		-DCONFIG_BT_KEYS_SAVE_AGING_COUNTER_ON_PAIRING
+		-DCONFIG_BT_BONDABLE
+	)
+endif()
+# 
+# ifeq ($(CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS),1)
+# CFLAGS += -DCONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS -DCONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS)
+# 
+# ifeq ($(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL),1)
+# CFLAGS += -DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL -DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+# 
+# ifeq ($(CONFIG_BT_GATT_CLIENT),1)
+# CFLAGS += -DCONFIG_BT_GATT_CLIENT
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_GATT_CLIENT -DCONFIG_BT_GATT_CLIENT)
+# 
+# ifeq ($(CONFIG_BT_DATA_LEN_UPDATE),1)
+# CFLAGS += -DCONFIG_BT_DATA_LEN_UPDATE=1
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_DATA_LEN_UPDATE -DCONFIG_BT_DATA_LEN_UPDATE)
+# 
+# ifeq ($(CONFIG_BT_RESET),1)
+# CFLAGS   += -DCONFIG_BT_RESET
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_RESET -DCONFIG_BT_RESET)
+# 
+# ifneq ($(CONFIG_DISABLE_BT_SMP), y)
+# CFLAGS += -DCONFIG_BT_SMP \
+#  			-DCONFIG_BT_SIGNING
+# ifeq ($(CONFIG_BT_FIXED_PASSKEY),1)
+# CFLAGS += -DCONFIG_BT_FIXED_PASSKEY
+# endif
+# ifeq ($(CONFIG_BT_SMP_ENFORCE_MITM),1)
+# CFLAGS += -DCONFIG_BT_SMP_ENFORCE_MITM
+# endif
+# endif
+if(NOT CONFIG_DISABLE_BT_SMP)
+	sdk_add_compile_definitions(-DCONFIG_BT_SMP -DCONFIG_BT_SIGNING)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_FIXED_PASSKEY -DCONFIG_BT_FIXED_PASSKEY)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_SMP_ENFORCE_MITM -DCONFIG_BT_SMP_ENFORCE_MITM)
+endif()
+# 
+# ifeq ($(CONFIG_BT_REMOTE_VERSION), y)
+# CFLAGS += -DCONFIG_BT_REMOTE_VERSION=1
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_REMOTE_VERSION -DCONFIG_BT_REMOTE_VERSION=1)
+# 
+# ifneq ($(CONFIG_DISABLE_BT_ECC), y)
+# CFLAGS += -DCONFIG_BT_ECC
+# endif
+if(NOT CONFIG_DISABLE_BT_ECC)
+	sdk_add_compile_definitions(-DCONFIG_BT_ECC)
+endif()
+# 
+# ifneq ($(CONFIG_DBG_RUN_ON_FPGA), y)
+# CFLAGS += -DCONFIG_BT_SETTINGS_CCC_LAZY_LOADING \
+#  			-DCONFIG_BT_SETTINGS_USE_PRINTK
+# endif
+if(NOT CONFIG_DBG_RUN_ON_FPGA)
+	sdk_add_compile_definitions(-DCONFIG_BT_SETTINGS_CCC_LAZY_LOADING -DCONFIG_BT_SETTINGS_USE_PRINTK)
+endif()
+# 
+# ifeq ($(CONFIG_BLE_STACK_DBG_PRINT),1)
+# CFLAGS += -DCONFIG_BLE_STACK_DBG_PRINT
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_STACK_DBG_PRINT -DCONFIG_BLE_STACK_DBG_PRINT)
+# 
+# ifeq ($(CONFIG_BT_DEBUG_MONITOR),1)
+# CFLAGS += -DCONFIG_BT_DEBUG_MONITOR
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_DEBUG_MONITOR -DCONFIG_BT_DEBUG_MONITOR)
+# ifeq ($(CONFIG_BLE_AT_CMD),1)
+# CFLAGS += -DCONFIG_BLE_AT_CMD
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_AT_CMD -DCONFIG_BLE_AT_CMD)
+# 
+#ifeq ($(CONFIG_BT_OAD_SERVER),1)
+#CFLAGS += -DCONFIG_BT_OAD_SERVER
+#endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_OAD_SERVER -DCONFIG_BT_OAD_SERVER)
+# ifeq ($(CONFIG_BT_OAD_CLIENT),1)
+# CFLAGS += -DCONFIG_BT_OAD_CLIENT
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_OAD_CLIENT -DCONFIG_BT_OAD_CLIENT)
+# ifeq ($(CONFIG_HOGP_SERVER),1)
+# CFLAGS += -DCONFIG_HOGP_SERVER
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_HOGP_SERVER -DCONFIG_HOGP_SERVER)
+# ifeq ($(CONFIG_BT_BAS_SERVER),1)
+# CFLAGS += -DCONFIG_BT_BAS_SERVER
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_BAS_SERVER -DCONFIG_BT_BAS_SERVER)
+# ifeq ($(CONFIG_BT_IAS_SERVER),1)
+# CFLAGS += -DCONFIG_BT_IAS_SERVER
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_IAS_SERVER -DCONFIG_BT_IAS_SERVER)
+# ifeq ($(CONFIG_BT_SPP_SERVER),1)
+# CFLAGS += -DCONFIG_BT_SPP_SERVER
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_SPP_SERVER -DCONFIG_BT_SPP_SERVER)
+# ifeq ($(CONFIG_BT_SCPS_SERVER),1)
+# CFLAGS += -DCONFIG_BT_SCPS_SERVER
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_SCPS_SERVER -DCONFIG_BT_SCPS_SERVER)
+# ifeq ($(CONFIG_BT_DIS_SERVER),1)
+# CFLAGS += -DCONFIG_BT_DIS_SERVER
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_DIS_SERVER -DCONFIG_BT_DIS_SERVER)
+# 
+sdk_add_compile_definitions_ifdef(CONFIG_BT_REMOTE_CONTROL -DCONFIG_BT_REMOTE_CONTROL)
+# 
+# ifneq ($(CONFIG_DISABLE_BT_HOST_PRIVACY), y)
+# CFLAGS += -DCONFIG_BT_PRIVACY
+# endif
+if(NOT CONFIG_DISABLE_BT_HOST_PRIVACY)
+	sdk_add_compile_definitions(-DCONFIG_BT_PRIVACY)
+endif() 
+# 
+# ifeq ($(CONFIG_BLE_TP_TEST),1)
+# CFLAGS += -DCONFIG_BLE_TP_TEST
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_TP_TEST -DCONFIG_BLE_TP_TEST)
+# 
+# ifeq ($(CONFIG_BLE_TP_SERVER),1)
+# CFLAGS += -DCONFIG_BLE_TP_SERVER \
+#           -DCONFIG_BT_GATT_DYNAMIC_DB
+# ifeq ($(CONFIG_BLE_TP_SVC_COMPATIBILITY_TEST),1)
+# CFLAGS += -DCONFIG_BLE_TP_SVC_COMPATIBILITY_TEST
+# endif
+# endif
+if(CONFIG_BLE_TP_SERVER)
+	sdk_add_compile_definitions(-DCONFIG_BLE_TP_SERVER)
+	sdk_add_compile_definitions(-DCONFIG_BT_GATT_DYNAMIC_DB)
+	sdk_add_compile_definitions_ifdef(CONFIG_BLE_TP_SVC_COMPATIBILITY_TEST -DCONFIG_BLE_TP_SVC_COMPATIBILITY_TEST)
+endif()
+# 
+# ifeq ($(CONFIG_BLE_MULTI_ADV),1)
+# CFLAGS += -DCONFIG_BLE_MULTI_ADV
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_MULTI_ADV -DCONFIG_BLE_MULTI_ADV)
+# 
+# ifeq ($(CONFIG_BLE_RECONNECT_TEST),1)
+# CFLAGS += -DCONFIG_BLE_RECONNECT_TEST
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_RECONNECT_TEST -DCONFIG_BLE_RECONNECT_TEST)
+# 
+# ifeq ($(CONFIG_BT_STACK_CLI),1)
+# CFLAGS += -DCONFIG_BT_STACK_CLI
+# endif
+# ifeq ($(CONFIG_BT_TP_CLI),1)
+# CFLAGS += -DCONFIG_BT_TP_CLI
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_STACK_CLI -DCONFIG_BT_STACK_CLI)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_TP_CLI -DCONFIG_BT_TP_CLI)
+# 
+# ifeq ($(CONFIG_BT_STACK_PTS),1)
+# CFLAGS += -DCONFIG_BT_STACK_PTS
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_BT_STACK_PTS -DCONFIG_BT_STACK_PTS)
+# 
+# ifeq ($(PTS_TEST_CASE_INSUFFICIENT_KEY),1)
+# CFLAGS += -DPTS_TEST_CASE_INSUFFICIENT_KEY
+# endif
+sdk_add_compile_definitions_ifdef(PTS_TEST_CASE_INSUFFICIENT_KEY -DPTS_TEST_CASE_INSUFFICIENT_KEY)
+# ifeq ($(PTS_GAP_SLAVER_CONFIG_INDICATE_CHARC),1)
+# CFLAGS += -DPTS_GAP_SLAVER_CONFIG_INDICATE_CHARC
+# endif
+sdk_add_compile_definitions_ifdef(PTS_GAP_SLAVER_CONFIG_INDICATE_CHARC -DPTS_GAP_SLAVER_CONFIG_INDICATE_CHARC)
+# 
+# ifeq ($(CONFIG_ZIGBEE_PROV),1)
+# CFLAGS += -DCONFIG_ZIGBEE_PROV
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_ZIGBEE_PROV -DCONFIG_ZIGBEE_PROV)
+# 
+# ifeq ($(CONFIG_AUTO_PTS),1)
+# CFLAGS += -DCONFIG_AUTO_PTS
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_AUTO_PTS -DCONFIG_AUTO_PTS)
+
+#ifeq ($(CONFIG_DYNAMIC_GATTS),1)
+#CFLAGS += -DCONFIG_DYNAMIC_GATTS
+#endif
+sdk_add_compile_definitions_ifdef(CONFIG_DYNAMIC_GATTS -DCONFIG_DYNAMIC_GATTS)
+
+if(NOT CONFIG_BT_STACK_PTS)
+# Validate CONFIG_BT_ATT_PREPARE_COUNT range (0-64)
+if(CONFIG_BT_ATT_PREPARE_COUNT GREATER 64)
+    message(FATAL_ERROR "CONFIG_BT_ATT_PREPARE_COUNT must be <= 64, but got ${CONFIG_BT_ATT_PREPARE_COUNT}")
+endif()
+if(CONFIG_BT_ATT_PREPARE_COUNT LESS 0)
+    message(FATAL_ERROR "CONFIG_BT_ATT_PREPARE_COUNT must be >= 0, but got ${CONFIG_BT_ATT_PREPARE_COUNT}")
+endif()
+sdk_add_compile_definitions(-DCONFIG_BT_ATT_PREPARE_COUNT=${CONFIG_BT_ATT_PREPARE_COUNT})
+endif()
+if(CONFIG_BLE_USING_DYNAMIC_RAM)
+	sdk_add_compile_definitions(-DCONFIG_BLE_USING_DYNAMIC_RAM=1)
+else()
+	sdk_add_compile_definitions(-DCONFIG_BLE_USING_DYNAMIC_RAM=0)
+endif()
+# 
+# ##########################################
+# ############## BLE MESH ##################
+# ##########################################
+# 
+# ifeq ($(CONFIG_BT_MESH),1)
+#
+# ifeq ($(CONFIG_BLE_MESH_CERT_BASED_PROV),1)
+# CFLAGS += -DCONFIG_BLE_MESH_CERT_BASED_PROV=1
+# endif
+# ifeq ($(CONFIG_BT_MESH_V1d1),1)
+# CFLAGS += -DCONFIG_BT_MESH_V1d1
+# CFLAGS += -DCONFIG_BT_MESH_ECDH_P256_HMAC_SHA256_AES_CCM
+# CFLAGS += -DCONFIG_BT_MESH_ECDH_P256_CMAC_AES128_AES_CCM
+# CFLAGS += -DCONFIG_BT_MESH_PRIV_BEACONS
+# CFLAGS += -DCONFIG_BT_MESH_PRIV_BEACON_CLI
+# #CFLAGS += -DCONFIG_BT_MESH_OOB_AUTH_REQUIRED
+# endif
+# ifeq ($(CONFIG_AUTO_PTS),1)
+# CFLAGS += -DCONFIG_BT_MESH_IV_UPDATE_TEST
+# CONFIG_BT_MESH_CLI := 0
+# else ifeq ($(CONFIG_BT_MESH_PTS),1)
+# CFLAGS += -DCONFIG_BT_MESH_IV_UPDATE_TEST
+# endif
+# ifeq ($(CONFIG_BT_MESH_CLI),1)
+# CFLAGS += -DCONFIG_BT_MESH_CLI
+# endif
+# ifeq ($(CONFIG_BT_MESH_PTS),1)
+# CFLAGS += -DCONFIG_BT_MESH_PTS
+# endif
+# CFLAGS += -DCONFIG_BT_MESH 
+# ifeq ($(CONFIG_CHIP_NAME),BL602)
+# CFLAGS += -DBFLB_CRYPT_HARDWARE
+# else ifeq ($(CONFIG_CHIP_NAME),BL702)
+# CFLAGS += -DBFLB_CRYPT_HARDWARE
+# endif
+# 
+# CFLAGS += -DCONFIG_BT_MESH_PROV
+# ifeq ($(CONFIG_BT_MESH_RELAY),1)
+# CFLAGS += -DCONFIG_BT_MESH_RELAY
+# endif
+# #CFLAGS += -DCONFIG_BT_SETTINGS
+# ifeq ($(CONFIG_BT_MESH_PB_ADV),1)
+# CFLAGS += -DCONFIG_BT_MESH_PB_ADV
+# endif
+# ifeq ($(CONFIG_BT_MESH_PB_GATT),1)
+# CFLAGS += -DCONFIG_BT_MESH_PB_GATT
+# endif
+# ifeq ($(CONFIG_BT_MESH_FRIEND),1)
+# CFLAGS += -DCONFIG_BT_MESH_FRIEND
+# endif
+# ifeq ($(CONFIG_BT_MESH_LOW_POWER),1)
+# CFLAGS += -DCONFIG_BT_MESH_LOW_POWER
+# endif
+# ifeq ($(CONFIG_BT_MESH_PROXY),1)
+# CFLAGS += -DCONFIG_BT_MESH_PROXY
+# endif
+# ifeq ($(CONFIG_BT_MESH_GATT_PROXY),1)
+# CFLAGS += -DCONFIG_BT_MESH_GATT_PROXY
+# endif
+# ifeq ($(CONFIG_BT_MESH_MOD_BIND_CB),1)
+# CFLAGS += -DCONFIG_BT_MESH_MOD_BIND_CB
+# endif
+# ifeq ($(CONFIG_BT_MESH_APPKEY_ADD_CB),1)
+# CFLAGS += -DCONFIG_BT_MESH_APPKEY_ADD_CB
+# endif
+# ifeq ($(CONFIG_BT_MESH_MOD_SUB_ADD_CB),1)
+# CFLAGS += -DCONFIG_BT_MESH_MOD_SUB_ADD_CB
+# endif
+# ifeq ($(CONFIG_BLE_STACK_DBG_PRINT),1)
+# CFLAGS += -DCONFIG_BLE_STACK_DBG_PRINT
+# endif
+# ifeq ($(CONFIG_BT_MESH_SYNC),1)
+# CFLAGS += -DCONFIG_BT_MESH_SYNC
+# endif
+# ifeq ($(CONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG),1)
+# CFLAGS += -DCONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG
+# endif
+# ifeq ($(CONFIG_BT_MESH_CDB),1)
+# CFLAGS += -DCONFIG_BT_MESH_CDB
+# ifeq ($(CONFIG_AUTO_PTS),1)
+# CFLAGS += -DCONFIG_BT_MESH_CDB_NODE_COUNT=4
+# else
+# CFLAGS += -DCONFIG_BT_MESH_CDB_NODE_COUNT=64
+# endif
+# CFLAGS += -DCONFIG_BT_MESH_CDB_SUBNET_COUNT=2
+# CFLAGS += -DCONFIG_BT_MESH_CDB_APP_KEY_COUNT=2
+# endif 
+# ifeq ($(CONFIG_BT_MESH_PROVISIONER),1)
+# CFLAGS += -DCONFIG_BT_MESH_PROVISIONER
+# CFLAGS += -DCONFIG_BT_MESH_CFG_CLI
+# CFLAGS += -DCONFIG_BT_MESH_HEALTH_CLI
+# endif
+# ifeq ($(CONFIG_BT_MESH_OTA_TARGET),1)
+# CFLAGS += -DCONFIG_BT_MESH_OTA_TARGET
+# endif
+# ifeq ($(CONFIG_BT_MESH_MODEL),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL
+# CFLAGS += -DCONFIG_BT_MESH_TEST
+# ifeq ($(CONFIG_BT_MESH_MODEL_GEN_SRV),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL_GEN_SRV
+# endif 
+# ifeq ($(CONFIG_BT_MESH_MODEL_GEN_CLI),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL_GEN_CLI
+# endif 
+# ifeq ($(CONFIG_BT_MESH_MODEL_LIGHT_SRV),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL_LIGHT_SRV
+# endif 
+# ifeq ($(CONFIG_BT_MESH_MODEL_LIGHT_CLI),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL_LIGHT_CLI
+# endif
+# ifeq ($(CONFIG_BT_MESH_MODEL_VENDOR_CLI),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL_VENDOR_CLI
+# endif
+# else
+# ifeq ($(CONFIG_BT_MESH_MODEL_GEN_SRV),1)
+# CFLAGS += -DCONFIG_BT_MESH_MODEL_GEN_SRV
+# endif 
+# endif
+# endif
+if(CONFIG_BT_MESH)
+    sdk_add_compile_definitions_ifdef(CONFIG_BLE_MESH_CERT_BASED_PROV -DCONFIG_BLE_MESH_CERT_BASED_PROV=1)
+    sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_V1d1
+		-DCONFIG_BT_MESH_V1d1
+		-DCONFIG_BT_MESH_ECDH_P256_HMAC_SHA256_AES_CCM
+		-DCONFIG_BT_MESH_ECDH_P256_CMAC_AES128_AES_CCM
+		-DCONFIG_BT_MESH_PRIV_BEACONS
+		-DCONFIG_BT_MESH_PRIV_BEACON_CLI
+	)
+
+	if(CONFIG_BT_MESH_PTS OR CONFIG_AUTO_PTS)
+		sdk_add_compile_definitions(-DCONFIG_BT_MESH_IV_UPDATE_TEST)
+	endif()
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_CLI -DCONFIG_BT_MESH_CLI)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PTS -DCONFIG_BT_MESH_PTS)
+	sdk_add_compile_definitions(-DCONFIG_BT_MESH)
+	if("${CHIP}" STREQUAL "bl602")
+		sdk_add_compile_definitions(-DBFLB_CRYPT_HARDWARE)
+	elseif("${CHIP}" STREQUAL "bl702")
+		sdk_add_compile_definitions(-DBFLB_CRYPT_HARDWARE)
+	endif()
+	sdk_add_compile_definitions(-DCONFIG_BT_MESH_PROV)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_RELAY -DCONFIG_BT_MESH_RELAY)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PB_ADV -DCONFIG_BT_MESH_PB_ADV)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PB_GATT -DCONFIG_BT_MESH_PB_GATT)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_FRIEND -DCONFIG_BT_MESH_FRIEND)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_LOW_POWER -DCONFIG_BT_MESH_LOW_POWER)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PROXY -DCONFIG_BT_MESH_PROXY)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_GATT_PROXY -DCONFIG_BT_MESH_GATT_PROXY)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MOD_BIND_CB -DCONFIG_BT_MESH_MOD_BIND_CB)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_APPKEY_ADD_CB -DCONFIG_BT_MESH_APPKEY_ADD_CB)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MOD_SUB_ADD_CB -DCONFIG_BT_MESH_MOD_SUB_ADD_CB)
+	sdk_add_compile_definitions_ifdef(CONFIG_BLE_STACK_DBG_PRINT -DCONFIG_BLE_STACK_DBG_PRINT)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_SYNC -DCONFIG_BT_MESH_SYNC)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG -DCONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG)
+    if(CONFIG_BT_MESH_CDB)
+        if(CONFIG_AUTO_PTS)
+            sdk_add_compile_definitions(-DCONFIG_BT_MESH_CDB_NODE_COUNT=4)
+        else()
+            sdk_add_compile_definitions(-DCONFIG_BT_MESH_CDB_NODE_COUNT=64)
+        endif()
+    endif()
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_CDB 
+		-DCONFIG_BT_MESH_CDB
+		-DCONFIG_BT_MESH_CDB_SUBNET_COUNT=2
+		-DCONFIG_BT_MESH_CDB_APP_KEY_COUNT=2
+	)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PROVISIONER 
+		-DCONFIG_BT_MESH_PROVISIONER
+	#	-DCONFIG_BT_MESH_CFG_CLI
+		-DCONFIG_BT_MESH_HEALTH_CLI
+	)
+    sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_OTA_TARGET -DCONFIG_BT_MESH_OTA_TARGET)
+    if(CONFIG_BT_MESH_MODEL)
+		sdk_add_compile_definitions(-DCONFIG_BT_MESH_MODEL -DCONFIG_BT_MESH_TEST)
+		sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MODEL_GEN_SRV -DCONFIG_BT_MESH_MODEL_GEN_SRV)
+		sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MODEL_GEN_CLI -DCONFIG_BT_MESH_MODEL_GEN_CLI)
+		sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MODEL_LIGHT_SRV -DCONFIG_BT_MESH_MODEL_LIGHT_SRV)
+		sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MODEL_LIGHT_CLI -DCONFIG_BT_MESH_MODEL_LIGHT_CLI)
+		sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MODEL_VENDOR_CLI -DCONFIG_BT_MESH_MODEL_VENDOR_CLI)
+    else()
+		sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MODEL_GEN_SRV -DCONFIG_BT_MESH_MODEL_GEN_SRV)
+    endif()
+endif()
+# 
+# ifeq ($(CONFIG_USE_XTAL32K),1)
+# CFLAGS += -DCONFIG_USE_XTAL32K
+# endif
+sdk_add_compile_definitions_ifdef(CONFIG_USE_XTAL32K -DCONFIG_USE_XTAL32K)
+# 
+# #CFLAGS   += -Wno-unused-const-variable  \
+# #CFLAGS   += -Wno-unused-but-set-variable \
+# #CFLAGS   += -Wno-format
+# 
+# BTBLE_PATH := $(abspath $(dir $(COMPONENT_PATH)))
+# ifeq ($(notdir $(BTBLE_PATH)),ble)
+# BTBLE_SDK_VER := $(shell cd $(BTBLE_PATH) && git --git-dir=.git describe --abbrev=8 --tags --dirty --always)
+# CFLAGS += -DBTBLE_SDK_VER=\"$(BTBLE_SDK_VER)\"
+# endif
+execute_process(COMMAND git --git-dir=.git describe --abbrev=8 --tags --dirty --always
+                RESULT_VARIABLE USING_GIT
+                OUTPUT_VARIABLE version
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
+if(NOT ${USING_GIT} EQUAL n)
+  sdk_add_compile_definitions(-DBTBLE_SDK_VER="NULL")
+else()
+  sdk_add_compile_definitions(-DBTBLE_SDK_VER="${version}")
+endif()
+#

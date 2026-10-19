@@ -1,0 +1,10 @@
+
+== BL702L Boot2 v8.1.5 ==
+Note:
+1. support fw anti-rollback
+
+== BL702L Boot2 v8.1.4 ==
+Note:
+1. first release, support normal boot2 all feature, but not support xz mode
+2. support secp256r1 signature
+3. support app retry function

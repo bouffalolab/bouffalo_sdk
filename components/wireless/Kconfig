@@ -1,0 +1,254 @@
+#
+# Common wireless configuration
+#
+
+menu "Wireless"
+
+config WIFI4
+    bool "Wi-Fi 4 stack"
+    default n
+    help
+      Build the Wi-Fi 4 protocol stack and integration layer.
+
+config WIFI6
+    bool "Wi-Fi 6 stack"
+    default n
+    help
+      Build the Wi-Fi 6 MAC software and integration layer.
+
+config WIFI_VERBOSITY_DEFAULT
+    int "Wi-Fi MAC automatic output verbosity"
+    depends on WIFI6
+    range 0 6
+    default 3
+    help
+      Initial severity threshold for MAC automatic diagnostics: 0=fatal,
+      1=error, 2=warning, 3=info, 4=debug, 5=trace, 6=off.
+      The wifi_verbosity command changes this threshold until reboot.
+      Command results and explicit diagnostic queries are not filtered.
+
+config WL80211
+    bool "WL80211 Wi-Fi interface"
+    default n
+    help
+      Use the WL80211 Wi-Fi management and data-path implementation.
+
+config LMAC154
+    bool "IEEE 802.15.4 MAC"
+    default n
+    help
+      Build the low-level IEEE 802.15.4 MAC implementation.
+
+config LMAC154_DBG
+    bool "IEEE 802.15.4 MAC debug"
+    depends on LMAC154
+    default n
+
+config LMAC154_DBG_ALL
+    bool "IEEE 802.15.4 MAC verbose debug"
+    depends on LMAC154_DBG
+    default n
+
+config MACSW_SELECT
+    string "Wi-Fi 6 MAC software profile"
+    default ""
+    help
+      Select the MAC software configuration library profile, such as default
+      or wfa.
+
+config MACSW_LOG_NO_PRINT
+    bool "Wi-Fi 6 MAC software log print"
+    default n
+    help
+      default n
+
+config BL_WPA_SUPPLICANT
+    bool "Bouffalo WPA supplicant"
+    default n
+    help
+      Build the standalone Bouffalo WPA supplicant component.
+
+config FHOST
+    bool "Wi-Fi 6 FHOST interface"
+    default n
+    help
+      Build the FHOST Wi-Fi management and data-path implementation.
+
+config WL80211_WRAM_MEM_SIZE_LIMIT
+    hex "WL80211 WRAM allocation limit"
+    default 0x8000 if WL80211
+    help
+      Limit the total amount of WRAM used by WL80211 dynamic allocations.
+
+config WIFI_IPERF
+    bool "Wi-Fi iPerf adapter"
+    default n
+    help
+      Build the legacy Wi-Fi adapter that exposes the iPerf shell command.
+
+config WIFI_P2P
+    bool "Wi-Fi Direct (P2P) support"
+    depends on WIFI6 && MACSW_SELECT = "p2p"
+    default y
+    help
+      Build Wi-Fi Direct control APIs, events, and supplicant integration.
+      This option depends on MACSW_SELECT="p2p" and defaults to y when that
+      profile is selected. Enabling it turns on UNSINGLE_MAC_ADDR by default
+      so the STA and AP virtual interfaces use different MAC addresses.
+
+config UNSINGLE_MAC_ADDR
+    bool "Use different MAC addresses for STA and AP"
+    depends on WIFI6
+    default y if WIFI_P2P
+    default n
+    help
+      Allow the STA and AP virtual interfaces to use different MAC addresses
+      that differ by one bit. This is required for concurrent STA and AP/GO
+      operation and is enabled by default when WIFI_P2P is selected.
+
+config WIFI_P2P_PERSISTENT_GROUP
+    bool "Persist Wi-Fi Direct group credentials"
+    depends on WIFI_P2P
+    default y
+    select LITTLEFS
+    select LITTLEFS_KV_EASYFLASH
+    select BFLB_MTD
+    select PARTITION
+    help
+      Store P2P persistent-group profiles in the PSM partition so they can be
+      reinvoked after the P2P interface or device is restarted.
+
+config WL80211_P2P
+    bool "Enable WL80211 support Wi-Fi Direct (P2P)"
+    default n
+    help
+      Build the wl80211 P2P support, including the remain-on-channel (ROC)
+      operations required for P2P listen and negotiation. Pair this with
+      CONFIG_BL_SUPPLICANT_P2P, which builds the bl_supplicant P2P runtime
+      and the p2p_* shell commands used to drive discovery, GO negotiation
+      and WPS onboarding. Leave disabled to keep the default image size
+      and RAM profile effectively unchanged.
+
+endmenu
+
+menu "Legacy wireless compatibility"
+
+config WIFI_ENABLE
+    bool "Enable Wi-Fi"
+    default n
+config WLAN
+    bool "WLAN firmware"
+    default n
+config WLAN_MFG
+    string "WLAN manufacturing mode"
+    default ""
+config WLAN_IF
+    string "WLAN interface"
+    default ""
+config BLE_IF
+    string "BLE interface"
+    default ""
+config BT_IF
+    string "Bluetooth interface"
+    default ""
+config BTBLE_IF
+    string "Bluetooth and BLE interface"
+    default ""
+config WLAN_PROJ_NAME
+    string "WLAN project name"
+    default ""
+config WFA
+    bool "Wi-Fi Alliance test mode"
+    default n
+config WIFI_TG
+    bool "Wi-Fi test group"
+    default n
+config WIFI_ETH_BRIDGE
+    bool "Wi-Fi Ethernet bridge"
+    default n
+config WIFI_MAT
+    bool "Wi-Fi Matter support"
+    default n
+config WIFI_MAT_FULL_COPY
+    bool "Wi-Fi Matter full copy"
+    default n
+config WIFI_ENABLE
+    bool "Wi-Fi enable"
+    default n
+config WIFI_ETH_BRIDGE
+    bool "Wi-Fi Ethernet bridge"
+    default n
+config COEX
+    bool "Coexistence"
+    default n
+config COEX_WIFI_MODE
+    int "Coexistence Wi-Fi mode"
+    default 0
+config THREAD
+    bool "Thread support"
+    default n
+config THREAD_TPERF
+    bool "Thread performance test"
+    default n
+
+config MATTER
+    bool "Matter support"
+    depends on THREAD
+    default n
+
+config OT_CLI
+    string "OpenThread CLI transport"
+    depends on THREAD && !OT_NCP && !OT_RCP
+    default ""
+    help
+      Select the OpenThread CLI transport: shell or uart.
+
+config OT_SERIAL
+    string
+    default ""
+    help
+      Deprecated compatibility setting. Use OT_CLI instead.
+
+choice
+    prompt "OpenThread device type"
+    depends on THREAD && !OT_RCP
+
+config OT_FTD
+    bool "OpenThread Full Thread Device"
+
+config OT_MTD
+    bool "OpenThread Minimal Thread Device"
+
+endchoice
+
+config OTBR
+    bool "OpenThread Border Router"
+    depends on THREAD
+    default n
+
+config OTBR_REST
+    bool "OpenThread Border Router REST support"
+    depends on OTBR
+    default n
+
+choice
+    prompt "OpenThread co-processor mode"
+    depends on THREAD
+    optional
+
+config OT_NCP
+    bool "OpenThread NCP"
+
+config OT_RCP
+    bool "OpenThread RCP"
+
+endchoice
+
+config SUBG
+    bool "Sub-GHz support"
+    default n
+config DUAL_ETH
+    bool "Dual Ethernet"
+    default n
+
+endmenu

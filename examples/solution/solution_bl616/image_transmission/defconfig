@@ -1,0 +1,94 @@
+CONFIG_GCC_OPTIMISE_LEVEL =-O2
+
+ifneq (,$(filter $(CHIP),bl616 bl616cl))
+    CONFIG_WL80211 =y
+    CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT = 0x4000 # 16KB
+endif
+# The default configuration of the wireless network
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+# The log of macsw affects the real-time performance.
+CONFIG_MACSW_LOG_NO_PRINT =y
+
+CONFIG_PSRAM =y
+CONFIG_SHELL =y
+CONFIG_IPERF =y
+
+####################### soln_utils config #######################
+CONFIG_SOLN_UTILS =y
+CONFIG_SOLN_FPS_PRINT_EN =y
+CONFIG_SOLN_FPS_STAT_INTERVAL_MS = 1000
+CONFIG_SOLN_FPS_PRINT_INTERVAL_MULTIPLIER = 3
+
+################### queue ###################
+CONFIG_SOLN_FBQ_VID_RAW_LOCAL_EN       =y
+CONFIG_SOLN_FBQ_VID_RAW_REMOTE_EN      =n
+CONFIG_SOLN_FBQ_VID_JPEG_LOCAL_EN      =y
+CONFIG_SOLN_FBQ_VID_JPEG_REMOTE_EN     =n
+CONFIG_SOLN_FBQ_AUD_PCM_LOCAL_EN       =n
+CONFIG_SOLN_FBQ_AUD_PCM_REMOTE_EN      =n
+
+################### video ##################
+## video default size
+CONFIG_SOLN_VID_DEFAULT_WIDTH        =640
+CONFIG_SOLN_VID_DEFAULT_HEIGHT       =480
+## dbi display (yuyv >> dbi_display)
+CONFIG_SOLN_DISP_DBI_EN              =y
+## jpeg compression (yuyv >> jpeg)
+CONFIG_SOLN_VID_JPEG_ENC_EN          =y
+## dvp sensor compression (dvp >> yuyv >> jpeg)
+CONFIG_SOLN_VID_DVP_JPEG_ENC_EN      =n
+## dvp sensor (dvp >> yuyv)
+CONFIG_SOLN_VID_DVP_EN               =y
+
+## image_transmission (jpeg)
+CONFIG_SOLN_HB_TX_EN                 =y
+CONFIG_SOLN_HB_RX_EN                 =n
+CONFIG_SOLN_HB_TX_TEST_EN            =n
+CONFIG_SOLN_HB_RX_TEST_EN            =y
+
+#################### soln_utils config end ###################
+
+# lcd display
+ifneq (,$(filter y,$(CONFIG_SOLN_DISP_DBI_EN) $(CONFIG_SOLN_DISP_RGB_EN)))
+    CONFIG_BSP_LCD =y
+endif
+
+# dvp sensor
+ifneq (,$(filter y,$(CONFIG_SOLN_VID_DVP_EN) $(CONFIG_SOLN_VID_DVP_JPEG_ENC_EN)))
+    CONFIG_BSP_IMAGE_SENSOR =y
+endif
+
+# usb host
+ifneq (,$(filter y,$(CONFIG_SOLN_VID_UVC_YUYV_EN) $(CONFIG_SOLN_VID_UVC_JPEG_EN) $(CONFIG_SOLN_AUD_UAC_IN_EN)))
+    CONFIG_CHERRYUSB =y
+    CONFIG_CHERRYUSB_HOST =y
+    ifneq (,$(filter y,$(CONFIG_SOLN_VID_UVC_YUYV_EN) $(CONFIG_SOLN_VID_UVC_JPEG_EN)))
+        CONFIG_CHERRYUSB_HOST_VIDEO =y
+    endif
+    ifneq (,$(filter y,$(CONFIG_SOLN_AUD_UAC_IN_EN) $(CONFIG_SOLN_AUD_UAC_OUT_EN)))
+        CONFIG_CHERRYUSB_HOST_AUDIO=y
+    endif
+endif
+
+# fatfs
+ifneq (,$(filter y,$(CONFIG_SOLN_SD_AVI_VIDEO_EN) $(CONFIG_SOLN_SD_AVI_AUDIO_EN)))
+    CONFIG_BSP_SDH_SD      	=y
+    CONFIG_FATFS          	=y
+    CONFIG_FATFS_SDH_SDCARD	=y
+endif
+
+# mbedtls
+CONFIG_MBEDTLS_AES_USE_HW    =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_MBEDTLS_SHA1_USE_HW   =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y
+
+# 84KB WRAM for BL616/BL616CL, which is enough for this project.
+CONFIG_WRAM_LENGTH = 0x15000
+
+ifeq ($(CHIP),bl618dg)
+    CONFIG_ROMAPI             =n
+    CONFIG_DUALCORE_DISABLE   =y
+endif

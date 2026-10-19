@@ -1,0 +1,25 @@
+mainmenu "BL616CL USB ECM Audio Configuration"
+
+source "$BL_SDK_BASE/Kconfig"
+
+menu "USB ECM Audio Adapter Options"
+
+config USB_ETHERNET_HID_ENABLE
+    bool "Enable HID keyboard interface"
+    default y
+
+config USB_ETHERNET_UAC_ENABLE
+    bool "Enable UAC interfaces"
+    default y
+
+config USB_ETHERNET_UAC_SPEAKER_ENABLE
+    bool "Enable UAC speaker stream"
+    depends on USB_ETHERNET_UAC_ENABLE
+    default y
+
+config USB_ETHERNET_UAC_MIC_ENABLE
+    bool "Enable UAC microphone stream"
+    depends on USB_ETHERNET_UAC_ENABLE
+    default y
+
+endmenu

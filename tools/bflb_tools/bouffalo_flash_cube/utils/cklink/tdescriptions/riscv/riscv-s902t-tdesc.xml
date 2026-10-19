@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<target>
+  <architecture>riscv</architecture>
+  <feature name="org.gnu.gdb.riscv.cpu">
+    <reg name="zero" bitsize="32" regnum="0"  type="int"/>
+    <reg name="ra"   bitsize="32" regnum="1"  type="code_ptr"/>
+    <reg name="sp"   bitsize="32" regnum="2"  type="data_ptr"/>
+    <reg name="gp"   bitsize="32" regnum="3"  type="data_ptr"/>
+    <reg name="tp"   bitsize="32" regnum="4"  type="data_ptr"/>
+    <reg name="t0"   bitsize="32" regnum="5"  type="int"/>
+    <reg name="t1"   bitsize="32" regnum="6"  type="int"/>
+    <reg name="t2"   bitsize="32" regnum="7"  type="int"/>
+    <reg name="fp"   bitsize="32" regnum="8"  type="data_ptr"/>
+    <reg name="s1"   bitsize="32" regnum="9"  type="int"/>
+    <reg name="a0"   bitsize="32" regnum="10"  type="int"/>
+    <reg name="a1"   bitsize="32" regnum="11" type="int"/>
+    <reg name="a2"   bitsize="32" regnum="12" type="int"/>
+    <reg name="a3"   bitsize="32" regnum="13" type="int"/>
+    <reg name="a4"   bitsize="32" regnum="14" type="int"/>
+    <reg name="a5"   bitsize="32" regnum="15" type="int"/>
+    <reg name="pc"   bitsize="32" regnum="32" type="code_ptr"/>
+  </feature>
+  <feature name="org.gnu.gdb.riscv.csr">
+    <!-- Regnum for CSR is (csr_regno + 65), used by remote protocol -->
+    <!-- M-mode Information -->
+	<reg name="mhcr"      bitsize="32" regnum="0x802" type="int"/>
+    <reg name="mvendorid" bitsize="32" regnum="0xf52" type="int"/>
+	<reg name="marchid"   bitsize="32" regnum="0xf53" type="int"/>
+	<reg name="mimpid"    bitsize="32" regnum="0xf54" type="int"/>
+	<reg name="mhartid"   bitsize="32" regnum="0xf55" type="int"/>
+    <!-- M-mode Exception Setting -->
+    <reg name="mstatus"   bitsize="32" regnum="0x341" type="int"/>
+	<reg name="misa"      bitsize="32" regnum="0x342" type="int"/>
+	<reg name="mie"       bitsize="32" regnum="0x345" type="int"/>
+	<reg name="mtvec"     bitsize="32" regnum="0x346" type="int"/>
+	<reg name="mtvt"      bitsize="32" regnum="0x348" type="int"/>
+	<!-- M-mode Exception Handling -->
+	<reg name="mscratch"  bitsize="32" regnum="0x381" type="int"/>
+	<reg name="mepc"      bitsize="32" regnum="0x382" type="int"/>
+	<reg name="mcause"    bitsize="32" regnum="0x383" type="int"/>
+	<reg name="mtval"     bitsize="32" regnum="0x384" type="int"/>
+	<reg name="mip"       bitsize="32" regnum="0x385" type="int"/>
+	<reg name="mnxti"     bitsize="32" regnum="0x386" type="int"/>
+	<!-- M-mode Counter -->
+	<reg name="mcycle"    bitsize="32" regnum="0xb41" type="int"/>
+	<reg name="minstret"  bitsize="32" regnum="0xb43" type="int"/>
+	<reg name="minstreth" bitsize="32" regnum="0xbc3" type="int"/>
+	<!-- Processor Status Extend -->
+	<reg name="mxstatus"     bitsize="32" regnum="0x801" type="int"/>
+	<!-- SP Extend -->
+	<reg name="usp"        bitsize="32" regnum="0x812" type="int"/>
+	<!-- Trust Execution Env Extend -->
+	<reg name="mebr"          bitsize="32" regnum="0xc21" type="int"/>
+	<reg name="nt_msp"        bitsize="32" regnum="0xc2c" type="int"/>
+	<reg name="t_usp"         bitsize="32" regnum="0xc2d" type="int"/>
+	<reg name="t_mdcr"        bitsize="32" regnum="0xc2e" type="int"/>
+	<reg name="t_mpcr"        bitsize="32" regnum="0xc2f" type="int"/>
+	<reg name="pmpteecfg"     bitsize="32" regnum="0xc30" type="int"/>
+  </feature>
+  <feature name="org.gnu.gdb.riscv.ckpseudo">
+	<reg name="t_sp"          bitsize="32" regnum="0x2"   type="int32" env="tee"/>
+	<reg name="t_mstatus"     bitsize="32" regnum="0x341" type="int32" env="tee"/>
+	<reg name="t_mie"         bitsize="32" regnum="0x345" type="int32" env="tee"/>
+	<reg name="t_mtvec"       bitsize="32" regnum="0x346" type="int32" env="tee"/>
+	<reg name="t_mtvt"        bitsize="32" regnum="0x348" type="int32" env="tee"/>
+	<reg name="t_mepc"        bitsize="32" regnum="0x382" type="int32" env="tee"/>
+	<reg name="t_mcause"      bitsize="32" regnum="0x383" type="int32" env="tee"/>
+	<reg name="t_mip"         bitsize="32" regnum="0x385" type="int32" env="tee"/>
+	<reg name="t_mxstatus"    bitsize="32" regnum="0x801" type="int32" env="tee"/>
+	<reg name="t_mebr"        bitsize="32" regnum="0xc21" type="int32" env="tee"/>
+	<!--reg name="t_mintstatus"  bitsize="32" regnum="0xc22" type="int" env="tee"/-->
+	<!-- REE Registers -->
+	<reg name="nt_sp"         bitsize="32" regnum="0x2"   type="int32" env="ree"/>
+	<reg name="nt_mstatus"    bitsize="32" regnum="0x341" type="int32" env="ree"/>
+	<reg name="nt_mie"        bitsize="32" regnum="0x345" type="int32" env="ree"/>
+	<reg name="nt_mtvec"      bitsize="32" regnum="0x346" type="int32" env="ree"/>
+	<reg name="nt_mtvt"       bitsize="32" regnum="0x348" type="int32" env="ree"/>
+	<reg name="nt_mepc"       bitsize="32" regnum="0x382" type="int32" env="ree"/>
+	<reg name="nt_mcause"     bitsize="32" regnum="0x383" type="int32" env="ree"/>
+	<reg name="nt_mip"        bitsize="32" regnum="0x385" type="int32" env="ree"/>
+	<reg name="nt_mxstatus"   bitsize="32" regnum="0x801" type="int32" env="ree"/>
+	<reg name="nt_mebr"       bitsize="32" regnum="0xc21" type="int32" env="ree"/>
+	<reg name="nt_mintstatus" bitsize="32" regnum="0xc29" type="int32" env="ree"/>
+  </feature>
+  <feature name="org.gnu.gdb.riscv.virtual">
+	<reg name="priv"  bitsize="32" regnum="0x1041" type="int"/>
+  </feature>
+</target>

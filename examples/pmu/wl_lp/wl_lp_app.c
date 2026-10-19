@@ -1,0 +1,274 @@
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
+
+#include <lwip/tcpip.h>
+#include <lwip/sockets.h>
+#include <lwip/netdb.h>
+
+#include "bl_fw_api.h"
+#include "wifi_mgmr_ext.h"
+#include "wifi_mgmr.h"
+
+#include "bflb_irq.h"
+#include "bflb_mtimer.h"
+#include "board.h"
+#include "bl_lp.h"
+#include "bflb_uart.h"
+#include "bflb_gpio.h"
+#include "bflb_clock.h"
+
+#ifdef BL616
+#include "bl616_pm.h"
+#include "bl616_glb.h"
+#include "bl616_glb_gpio.h"
+#include "bl616_hbn.h"
+#elif defined(BL616CL)
+#include "bl616cl_pm.h"
+#include "bl616cl_glb.h"
+#include "bl616cl_hbn.h"
+#elif defined(BL618DG)
+#include "bl618dg_pm.h"
+#include "bl618dg_glb.h"
+#include "bl618dg_hbn.h"
+#endif
+
+#include "bflb_rtc.h"
+#include "shell.h"
+#include "pm_manager.h"
+#include "pm_helper_cli.h"
+
+#ifdef BL616
+#define SLEEP_PDS_UA        80
+#define ACTIVE_LPFW_UA      38000
+#define ACTIVE_APP_UA       57000
+#elif defined(BL616CL)
+#define SLEEP_PDS_UA        55
+#define ACTIVE_LPFW_UA      32000
+#define ACTIVE_APP_UA       50000
+#elif defined(BL618DG)
+#define SLEEP_PDS_UA        155
+#define ACTIVE_LPFW_UA      36000
+#define ACTIVE_APP_UA       52000
+#endif
+
+int pwr_info_clear(void)
+{
+#ifdef BL616
+    bl_lp_info_clear();
+#else
+    bl_lp_info_clear(iot2lp_para->lp_info);
+#endif
+
+    return 0;
+}
+
+uint64_t pwr_info_get(void)
+{
+    bl_lp_info_t lp_info;
+    bl_lp_info_get(&lp_info);
+
+    printf("\r\nVirtual time: %llu us\r\n", bl_lp_get_virtual_us());
+    printf("Power info dump:\r\n");
+    printf("LPFW try recv bcn: %d, loss %d\r\n", lp_info.lpfw_recv_cnt, lp_info.lpfw_loss_cnt);
+    printf("Total time %lldms\r\n", lp_info.time_total_us / 1000);
+    printf("PDS sleep: %lldms\r\n", lp_info.sleep_pds_us / 1000);
+    printf("LPFW active: %lldms\r\n", lp_info.active_lpfw_us / 1000);
+    printf("APP active: %lldms\r\n", lp_info.active_app_us / 1000);
+
+    if (lp_info.time_total_us == 0U) {
+        printf("Predict current: unavailable (no elapsed sample)\r\n");
+        return 0;
+    }
+
+    uint64_t current = (lp_info.sleep_pds_us * SLEEP_PDS_UA + lp_info.active_lpfw_us * ACTIVE_LPFW_UA + lp_info.active_app_us * ACTIVE_APP_UA) / lp_info.time_total_us;
+
+    printf("Predict current: %llduA\r\n", current);
+
+    return current;
+}
+
+static TimerHandle_t wakeup_timer;
+
+static void timerCallback(TimerHandle_t xTimer)
+{
+    (void)xTimer;
+
+    /* Timer callbacks execute in the FreeRTOS timer daemon task and must not
+     * block on timer commands. This is a persistent one-shot timer, so no
+     * self-delete is required. */
+    pm_disable_tickless();
+    pwr_info_get();
+}
+
+static int wakeup_timer_start(uint32_t timeout_ms)
+{
+    TickType_t timer_period = pdMS_TO_TICKS(timeout_ms);
+
+    if (timer_period == 0U) {
+        printf("Wakeup timeout is shorter than one OS tick.\r\n");
+        return -1;
+    }
+
+    if (wakeup_timer == NULL) {
+        wakeup_timer = xTimerCreate("PwrTimer", timer_period, pdFALSE, NULL, timerCallback);
+        if (wakeup_timer == NULL) {
+            printf("Failed to create wakeup timer.\r\n");
+            return -1;
+        }
+    }
+
+    /* ChangePeriod also starts an inactive timer and resets an active timer,
+     * making repeated wakeup_timer commands deterministic. */
+    if (xTimerChangePeriod(wakeup_timer, timer_period, portMAX_DELAY) != pdPASS) {
+        printf("Failed to start wakeup timer.\r\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+static int wl_lp_wakeup_timer_start(uint32_t timeout_ms, int broadcast, void *arg)
+{
+    (void)arg;
+
+    lpfw_cfg.bcmc_dtim_mode = (uint8_t)broadcast;
+    if (wakeup_timer_start(timeout_ms) != 0) {
+        return -1;
+    }
+    if (pm_enable_tickless() != 0) {
+        (void)xTimerStop(wakeup_timer, 0);
+        return -1;
+    }
+    pwr_info_clear();
+
+    return 0;
+}
+
+static int wl_lp_tickless_start(void *arg)
+{
+    (void)arg;
+    return pm_enable_tickless();
+}
+
+
+#define BUFFER_SIZE 1024
+
+typedef struct {
+    char server_ip[16];
+    uint16_t server_port;
+} server_info_t;
+
+void tcp_client_task(void *pvParameters)
+{
+    int sock;
+    struct sockaddr_in server_addr;
+    char buffer[BUFFER_SIZE];
+    int bytes_received;
+    server_info_t *server_info = (server_info_t *) pvParameters;
+
+    printf("create tcp client task.\r\n");
+
+    // Create socket
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        printf("Failed to create socket, errno: %d\n", errno);
+        vPortFree(server_info);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // Set server address.
+    printf("set server address.\r\n");
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_info->server_port);
+    if (inet_aton(server_info->server_ip, &server_addr.sin_addr) == 0) {
+        printf("Invalid server IP address\n");
+        close(sock);
+        vPortFree(server_info);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // Connect to the server.
+    printf("start connect server.\r\n");
+    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        printf("Failed to connect to server, errno: %d\n", errno);
+        close(sock);
+        vPortFree(server_info);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    printf("Connected to server %s:%d\n", server_info->server_ip, server_info->server_port);
+
+    while (1) {
+        // Receive data sent by the server.
+        bytes_received = recv(sock, buffer, BUFFER_SIZE, 0);
+        if (bytes_received < 0) {
+            printf("Failed to receive data, errno: %d\n", errno);
+            break;
+        } else if (bytes_received == 0) {
+            printf("Server closed connection\n");
+            break;
+        }
+
+        // Process the received data.
+        buffer[bytes_received] = '\0';
+        printf("Received from server: %s\n", buffer);
+    }
+
+    close(sock);
+    vPortFree(server_info);
+    printf("Socket closed, task exiting\n");
+    vTaskDelete(NULL);
+}
+
+void start_tcp_client_task(const char *ip, uint16_t port)
+{
+    printf("start_tcp_client_task.\r\n");
+    server_info_t *server_info = (server_info_t *)pvPortMalloc(sizeof(server_info_t));
+    if (server_info == NULL) {
+        printf("Failed to allocate memory for server_info\n");
+        return;
+    }
+
+    printf("copy ip.\r\n");
+
+    strncpy(server_info->server_ip, ip, sizeof(server_info->server_ip) - 1);
+    server_info->server_ip[sizeof(server_info->server_ip) - 1] = '\0';  // Ensure that the string is NULL-terminated
+    server_info->server_port = port;
+
+    printf("start create.\r\n");
+    if (xTaskCreate(tcp_client_task, "tcp_client_task", 2048, server_info, 15, NULL) != pdPASS) {
+        printf("Failed to create task\n");
+        vPortFree(server_info);
+    }
+}
+
+static void cmd_tcp_client(int argc, char **argv)
+{
+    if (argc != 3) {
+        printf("Usage: %s <ip> <port>\n", argv[0], atoi(argv[2]));
+        return;
+    }
+    start_tcp_client_task(argv[1], (uint16_t)atoi(argv[2]));
+}
+
+SHELL_CMD_EXPORT_ALIAS(cmd_tcp_client, tcp_client, cmd tcp client);
+
+int ci_pm_test_init(void)
+{
+    static const pm_helper_cli_cfg_t cfg = {
+        .wakeup_timer_cb = wl_lp_wakeup_timer_start,
+        .tickless_cb = wl_lp_tickless_start,
+        .arg = NULL,
+        .arp_target = PM_HELPER_CLI_ARP_GATEWAY,
+        .arp_period_seconds = 55,
+        .arp_send_immediately = false,
+        .arp_periodic = false,
+    };
+
+    return pm_helper_cli_init(&cfg);
+}

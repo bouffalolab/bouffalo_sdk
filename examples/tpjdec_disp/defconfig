@@ -1,0 +1,16 @@
+CONFIG_BFLB_LOG    =n
+
+CONFIG_PSRAM    =y
+
+CONFIG_BSP_LCD  =y
+
+CONFIG_TJPGDEC  =y
+
+# sdh lhal driver
+CONFIG_BSP_SDH_SD                   =n
+CONFIG_BSP_SDH_OSAL_POLLING_MODE    =n
+# CONFIG_BSP_SDH_LOG_LEVEL          =5
+
+# fatfs
+CONFIG_FATFS                =n
+CONFIG_FATFS_SDH_SDCARD     =n

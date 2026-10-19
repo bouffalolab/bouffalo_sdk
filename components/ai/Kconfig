@@ -1,0 +1,19 @@
+#
+# AI components
+#
+
+menu "AI"
+
+config TINYMAIX
+    bool "TinyMaix"
+    default n
+    help
+      Build the TinyMaix lightweight neural network inference library.
+
+config TENSORFLOWLITE
+    bool "TensorFlow Lite"
+    default n
+    help
+      Build TensorFlow Lite for Microcontrollers.
+
+endmenu

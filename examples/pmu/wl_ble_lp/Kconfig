@@ -1,0 +1,24 @@
+mainmenu "WL/BLE Low-Power Configuration"
+
+source "$BL_SDK_BASE/Kconfig"
+
+config BLE_ENABLE
+    bool "Enable BLE"
+    default y
+    help
+      Enable Bluetooth Low Energy support in the low-power example.
+
+config BTBLE_USE_STANDALONE_PATH
+    bool "Enable STANDALONE_PATH"
+    default y
+
+config USBH_MSC
+    bool "USB host mass storage"
+    default n
+    select CHERRYUSB
+    select CHERRYUSB_HOST
+    select CHERRYUSB_HOST_MSC
+    select FATFS
+    select FATFS_USBH
+    help
+      Enable USB mass-storage host support backed by FatFs.

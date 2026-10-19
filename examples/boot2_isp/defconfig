@@ -1,0 +1,24 @@
+CONFIG_BOOT2                    = y
+CONFIG_BFLB_LOG                 = n
+CONFIG_XZ                       = y
+CONFIG_ROMAPI                   = y
+CONFIG_VSNPRINTF_NANO           = y
+CONFIG_GCC_OPTIMISE_LEVEL       = -Os
+CONFIG_PM_PDS_FLASH_POWER_OFF   = y
+CONFIG_PM_PDS_PLL_POWER_OFF     = y
+CONFIG_PM_PDS_RF_POWER_OFF      = y
+CONFIG_ERR_NOT_DUMP_ALL_REGS    = y
+CONFIG_BOARD_FLASH_LOW_SPEED    = y
+
+CONFIG_CHERRYUSB                = y
+# Enable the CherryUSB device mode
+CONFIG_CHERRYUSB_DEVICE         = y
+# Enable the CherryUSB device classes
+CONFIG_CHERRYUSB_DEVICE_CDC_ACM = y
+
+# Use the boot2 link script
+CONFIG_CUSTOM_LINKSCRIPT            = y
+# Config flash 4-byte address mode for 32M flash
+CONFIG_FLASH_4BYTE_ADDR_MODE_ENABLE = n
+
+CONFIG_FLASH_AUTO_2LINE_FALLBACK = y

@@ -1,0 +1,15 @@
+stages:
+  - build_bouffalosdk
+  - build_iot
+  - build_mfg
+  - build_lpfw
+  - build_wlan
+  - flash
+  - test_iot
+  - test_lpfw
+  - scheduled_test
+  - scheduled_deploy
+
+include:
+  - ci-commit.yml
+  - ci-scheduled.yml

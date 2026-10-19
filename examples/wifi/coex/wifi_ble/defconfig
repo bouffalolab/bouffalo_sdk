@@ -1,0 +1,28 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+CONFIG_BFLB_LOG =n
+CONFIG_FREERTOS =y
+CONFIG_SHELL =y
+CONFIG_RF =y
+
+# kv storage for ble settings
+CONFIG_BFLB_MTD =y
+CONFIG_PARTITION =y
+CONFIG_LITTLEFS =y
+
+# iperf for coex throughput test
+CONFIG_WIFI_IPERF =y
+
+# ble
+CONFIG_BLUETOOTH =y
+CONFIG_BT_SETTINGS =y
+CONFIG_BT_STACK_CLI =y
+
+ifeq ($(CHIP),bl602)
+    CONFIG_BLECONTROLLER_LIB =m1s1
+    CONFIG_HW_SEC_ENG_DISABLE =y
+    CONFIG_ROMAPI =y
+else ifeq ($(CHIP),bl616cl)
+    CONFIG_BTBLECONTROLLER_LIB =m2s1
+else
+    CONFIG_BTBLECONTROLLER_LIB =ble1m2s1bredr0
+endif

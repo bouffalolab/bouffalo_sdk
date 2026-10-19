@@ -1,0 +1,225 @@
+#
+# USB components
+#
+
+menu "USB"
+
+config CHERRYUSB
+    bool "CherryUSB"
+    default n
+    help
+      Build the CherryUSB protocol stack.
+
+if CHERRYUSB
+
+config CHERRYUSB_OSAL
+    string "CherryUSB OS abstraction layer"
+    default "freertos" if FREERTOS
+    default ""
+    help
+      OSAL backend used by CherryUSB, for example freertos.
+
+config CHERRYUSB_DEVICE
+    bool "USB device stack"
+    default n
+    help
+      Build the CherryUSB device stack.
+
+config CHERRYUSB_DEVICE_CDC
+    bool "CDC device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the base CDC device class.
+
+config CHERRYUSB_DEVICE_CDC_ACM
+    bool "CDC-ACM device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the CDC-ACM serial device class.
+
+config CHERRYUSB_DEVICE_CDC_ECM
+    bool "CDC-ECM device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the CDC-ECM Ethernet device class.
+
+config CHERRYUSB_DEVICE_CDC_RNDIS
+    bool "CDC-RNDIS device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the CDC-RNDIS Ethernet device class.
+
+config CHERRYUSB_DEVICE_HID
+    bool "HID device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the HID device class.
+
+config CHERRYUSB_DEVICE_MSC
+    bool "MSC device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the mass storage device class.
+
+config CHERRYUSB_DEVICE_AUDIO
+    bool "Audio device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the audio device class.
+
+config CHERRYUSB_DEVICE_VIDEO
+    bool "Video device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the video (UVC) device class.
+
+config CHERRYUSB_DEVICE_DFU
+    bool "DFU device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the device firmware update class.
+
+config CHERRYUSB_DEVICE_GAMEPAD
+    bool "Gamepad device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the gamepad HID device class.
+
+config CHERRYUSB_HOST
+    bool "USB host stack"
+    default n
+    help
+      Build the CherryUSB host stack.
+
+config CHERRYUSB_HOST_CDC_ACM
+    bool "CDC-ACM host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the CDC-ACM serial host class.
+
+config CHERRYUSB_HOST_CDC_ECM
+    bool "CDC-ECM host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the CDC-ECM Ethernet host class.
+
+config CHERRYUSB_HOST_CDC_NCM
+    bool "CDC-NCM host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the CDC-NCM Ethernet host class.
+
+config CHERRYUSB_HOST_CDC_RNDIS
+    bool "CDC-RNDIS host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the CDC-RNDIS Ethernet host class.
+
+config CHERRYUSB_HOST_HID
+    bool "HID host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the HID host class.
+
+config CHERRYUSB_HOST_MSC
+    bool "MSC host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the mass storage host class.
+
+config CHERRYUSB_HOST_VIDEO
+    bool "Video host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the video (UVC) host class.
+
+config CHERRYUSB_HOST_AUDIO
+    bool "Audio host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the audio (UAC) host class.
+
+config CHERRYUSB_HOST_AUDIO_UAC
+    bool "Audio UAC host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the USB Audio Class host driver.
+
+config CHERRYUSB_HOST_BLUETOOTH
+    bool "Bluetooth HCI host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the Bluetooth HCI over USB host class.
+
+config CHERRYUSB_HOST_ASIX
+    bool "ASIX Ethernet host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the ASIX Ethernet adapter host class.
+
+config CHERRYUSB_HOST_RTL8152
+    bool "RTL8152 Ethernet host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the RTL8152 Ethernet adapter host class.
+
+config CHERRYUSB_HOST_CH34X
+    bool "CH34X serial host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the CH34X USB serial host class.
+
+config CHERRYUSB_HOST_CP210X
+    bool "CP210X serial host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the CP210X USB serial host class.
+
+config CHERRYUSB_HOST_FTDI
+    bool "FTDI serial host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the FTDI USB serial host class.
+
+config CHERRYUSB_HOST_PL2303
+    bool "PL2303 serial host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the PL2303 USB serial host class.
+
+config CHERRYUSB_HOST_GSM
+    bool "GSM modem host class"
+    default n
+    depends on CHERRYUSB_HOST
+    help
+      Build the GSM modem host class.
+
+endif # CONFIG_CHERRYUSB
+
+endmenu

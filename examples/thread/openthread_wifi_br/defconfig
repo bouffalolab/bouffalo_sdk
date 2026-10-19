@@ -1,0 +1,30 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_POSIX                 =n
+
+CONFIG_BFLB_MTD              =y
+CONFIG_LITTLEFS              =y
+
+# thread
+CONFIG_LMAC154               =y
+CONFIG_THREAD                =y
+CONFIG_LMAC154_DBG           =n
+CONFIG_LMAC154_DBG_ALL       =n
+
+CONFIG_OTBR                  =y
+CONFIG_IPV6                  =y
+CONFIG_COREDUMP              =y
+CONFIG_PARTITION             =y
+
+CONFIG_MBEDTLS_PLATFORM_NO_SYSTEM_ALLOCATOR =y
+
+ifneq ($(CONFIG_MBEDTLS_V2),y)
+CONFIG_MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED =y
+CONFIG_MBEDTLS_ECJPAKE_C                    =y
+CONFIG_MBEDTLS_ECDSA_DETERMINISTIC          =y
+CONFIG_MBEDTLS_HMAC_DRBG_ENABLED            =y
+CONFIG_MBEDTLS_DTLS                         =y
+CONFIG_MBEDTLS_SSL_DTLS_CONNECTION_ID       =y
+CONFIG_MBEDTLS_CMAC                         =y
+endif

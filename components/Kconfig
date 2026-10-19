@@ -1,0 +1,30 @@
+#
+# Component configuration, one source per top-level component.  The order
+# mirrors components/CMakeLists.txt so the menu follows the build hierarchy.
+#
+
+source "$BL_SDK_BASE/components/ai/Kconfig"
+source "$BL_SDK_BASE/components/crypto/Kconfig"
+source "$BL_SDK_BASE/components/debug/Kconfig"
+source "$BL_SDK_BASE/components/fs/Kconfig"
+source "$BL_SDK_BASE/components/graphics/Kconfig"
+source "$BL_SDK_BASE/components/mm/Kconfig"
+source "$BL_SDK_BASE/components/sysinit/Kconfig"
+source "$BL_SDK_BASE/components/libc/Kconfig"
+source "$BL_SDK_BASE/components/lzma/Kconfig"
+source "$BL_SDK_BASE/components/net/Kconfig"
+source "$BL_SDK_BASE/components/os/Kconfig"
+source "$BL_SDK_BASE/components/iperf/Kconfig"
+source "$BL_SDK_BASE/components/shell/Kconfig"
+source "$BL_SDK_BASE/components/soln_utils/Kconfig"
+source "$BL_SDK_BASE/components/usb/Kconfig"
+source "$BL_SDK_BASE/components/utils/Kconfig"
+source "$BL_SDK_BASE/components/wamr/Kconfig"
+source "$BL_SDK_BASE/components/multimedia/Kconfig"
+source "$BL_SDK_BASE/components/ipc/Kconfig"
+source "$BL_SDK_BASE/components/fota/Kconfig"
+source "$BL_SDK_BASE/components/wireless/Kconfig"
+source "$BL_SDK_BASE/components/wireless/wifi4/Kconfig"
+# zigbee ships out-of-tree in external releases; tolerate its absence there
+osource "$BL_SDK_BASE/components/wireless/zigbee/Kconfig"
+osource "$BL_SDK_BASE/components/wireless/bluetooth/Kconfig"

@@ -1,0 +1,48 @@
+mainmenu "SDK Configuration"
+
+config GPIO_TESTER
+    bool "Enable GPIO tester backend"
+    default n
+    help
+      Use two PCA9698 I/O expanders over I2C instead of native MCU GPIOs.
+
+if GPIO_TESTER
+
+config GPIO_TESTER_I2C_FREQ
+    int "GPIO tester I2C frequency"
+    range 1000 1000000
+    default 400000
+
+config GPIO_TESTER_I2C0_SDA_PIN
+    int "GPIO tester I2C0 SDA pin"
+    range 0 79
+    default 11
+
+config GPIO_TESTER_I2C0_SCL_PIN
+    int "GPIO tester I2C0 SCL pin"
+    range 0 79
+    default 14
+
+config GPIO_TESTER_I2C1_SDA_PIN
+    int "GPIO tester I2C1 SDA pin"
+    range 0 79
+    default 16
+
+config GPIO_TESTER_I2C1_SCL_PIN
+    int "GPIO tester I2C1 SCL pin"
+    range 0 79
+    default 17
+
+config GPIO_TESTER_I2C0_ADDR
+    hex "GPIO tester I2C0 PCA9698 address"
+    range 0x00 0x7f
+    default 0x20
+
+config GPIO_TESTER_I2C1_ADDR
+    hex "GPIO tester I2C1 PCA9698 address"
+    range 0x00 0x7f
+    default 0x20
+
+endif
+
+source "$BL_SDK_BASE/Kconfig"

@@ -1,0 +1,28 @@
+add_subdirectory(xcommon)
+
+sdk_add_subdirectory_ifdef(CONFIG_AACDEC aacdec)
+sdk_add_subdirectory_ifdef(CONFIG_AMRNB amrnb)
+sdk_add_subdirectory_ifdef(CONFIG_AMRWB amrwb)
+sdk_add_subdirectory_ifdef(CONFIG_PVMP3DEC pvmp3dec)
+sdk_add_subdirectory_ifdef(CONFIG_OPUS opus)
+sdk_add_subdirectory_ifdef(CONFIG_SPEEX speex)
+sdk_add_subdirectory_ifdef(CONFIG_VORBIS vorbis)
+sdk_add_subdirectory_ifdef(CONFIG_OGG ogg)
+
+sdk_add_subdirectory_ifdef(CONFIG_AUIDIO_FLOWCTRL_BRIDGE audio_flowctrl_bridge)
+sdk_add_subdirectory_ifdef(CONFIG_BLUETOOTH_PORT bluetooth_port)
+
+sdk_add_subdirectory_ifdef(CONFIG_SONIC sonic)
+sdk_add_subdirectory_ifdef(CONFIG_MINIALSA minialsa)
+sdk_add_subdirectory_ifdef(CONFIG_SPEEXDSP speexdsp)
+sdk_add_subdirectory_ifdef(CONFIG_LIBFVAD libfvad)
+sdk_add_subdirectory_ifdef(CONFIG_USERVICE uservice)
+sdk_add_subdirectory_ifdef(CONFIG_DRV_SND drv_snd)
+sdk_add_subdirectory_ifdef(CONFIG_SMART_AUDIO smart_audio)
+
+sdk_add_subdirectory_ifdef(CONFIG_AV xav)
+sdk_add_subdirectory_ifdef(CONFIG_XCODEC xcodec)
+sdk_add_subdirectory_ifdef(CONFIG_XPORT xport)
+sdk_add_subdirectory_ifdef(CONFIG_XUTILS xutils)
+sdk_add_subdirectory_ifdef(CONFIG_XRECORD xrecord)
+sdk_add_subdirectory_ifdef(CONFIG_XWEBSOCKET xwebsocket)

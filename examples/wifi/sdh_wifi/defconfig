@@ -1,0 +1,13 @@
+#include $(BL_SDK_BASE)/examples/wifi/defconfig
+CONFIG_POSIX         =n
+CONFIG_FREERTOS      =y
+CONFIG_SHELL         =y
+#CONFIG_HTTP                  =y
+#CONFIG_HTTP_CLIENT           =y
+CONFIG_OS_FRT           =y
+CONFIG_PSRAM =y
+CONFIG_PSRAM_COPY_CODE=n
+CONFIG_BSP_SDH_SDIO          =y
+CONFIG_BSP_SDH_OSAL_POLLING_MODE = n
+CONFIG_BACKTRACE=y
+CONFIG_COREDUMP =n

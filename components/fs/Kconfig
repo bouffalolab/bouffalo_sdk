@@ -1,0 +1,53 @@
+#
+# File system components
+#
+
+menu "File System"
+
+config FATFS
+    bool "FatFS"
+    default n
+    help
+      Build the FatFS file system.
+
+config FATFS_SDH_SDCARD
+    bool "FatFS SDH SD card support"
+    default n
+    depends on FATFS
+    help
+      Mount FatFS volumes on SD cards attached to the SD host controller.
+
+config FATFS_USBH
+    bool "FatFS USB host support"
+    default n
+    depends on FATFS
+    help
+      Mount FatFS volumes on USB mass storage devices.
+
+config ROMFS
+    bool "ROMFS"
+    default n
+    help
+      Build the ROMFS file system.
+
+config LITTLEFS
+    bool "LittleFS"
+    default n
+    help
+      Build the LittleFS file system.
+
+config LITTLEFS_KV_EASYFLASH
+    bool "LittleFS key-value store"
+    default n
+    depends on LITTLEFS
+    help
+      Build the EasyFlash-compatible key-value layer on top of LittleFS.
+
+config EASYFLASH4
+    bool "EasyFlash (deprecated)"
+    default n
+    help
+      Legacy EasyFlash support.  Use LittleFS instead for new projects.
+
+
+endmenu

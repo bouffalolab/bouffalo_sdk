@@ -1,0 +1,45 @@
+# 内核模块编译产物
+*.ko
+*.o
+*.mod
+*.mod.c
+*.mod.o
+
+# 内核构建系统文件
+modules.order
+Module.symvers
+.*.cmd
+.module-common.o
+
+# 内核构建目录
+.tmp_versions/
+.modules/
+
+# 用户空间可执行文件
+userspace/*/c/
+
+# 编辑器临时文件
+*~
+*.swp
+*.swo
+.*.swp
+.*.swo
+
+# IDE配置文件
+.vscode/
+.idea/
+*.sublime-*
+
+# 系统生成的文件
+.DS_Store
+Thumbs.db
+*.orig
+*.rej
+
+# 日志文件
+*.log
+*.out
+
+# 临时文件
+tmp/
+temp/

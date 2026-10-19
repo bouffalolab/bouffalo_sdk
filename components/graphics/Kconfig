@@ -1,0 +1,88 @@
+#
+# Graphics components
+#
+
+menu "Graphics"
+
+config LVGL8
+    bool "LVGL v8"
+    default n
+    help
+      Build the LVGL v8 graphics library.
+
+config LVGL8_PORT_DISP
+    bool "LVGL v8 display port"
+    default n
+    depends on LVGL8
+    help
+      Build the LVGL v8 display driver port.
+
+config LVGL8_PORT_INDEV
+    bool "LVGL v8 input device port"
+    default n
+    depends on LVGL8
+    help
+      Build the LVGL v8 input device port.
+
+config LVGL8_PORT_FS
+    bool "LVGL v8 file system port"
+    default n
+    depends on LVGL8
+    help
+      Build the LVGL v8 file system port.
+
+config LVGL8_OSD_LAYER
+    bool "LVGL v8 OSD layer"
+    default n
+    depends on LVGL8
+    help
+      Render LVGL v8 on an on-screen display layer.
+
+config LVGL9
+    bool "LVGL v9"
+    default n
+    help
+      Build the LVGL v9 graphics library.
+
+config LVGL9_PORT_DISP
+    bool "LVGL v9 display port"
+    default n
+    depends on LVGL9
+    help
+      Build the LVGL v9 display driver port.
+
+config LVGL9_PORT_INDEV
+    bool "LVGL v9 input device port"
+    default n
+    depends on LVGL9
+    help
+      Build the LVGL v9 input device port.
+
+config LVGL9_PORT_FS
+    bool "LVGL v9 file system port"
+    default n
+    depends on LVGL9
+    help
+      Build the LVGL v9 file system port.
+
+config LVGL9_OSD_LAYER
+    bool "LVGL v9 OSD layer"
+    default n
+    depends on LVGL9
+    help
+      Render LVGL v9 on an on-screen display layer.
+
+config LVGL_V9_WITH_OSD_USB_VIDEO
+    bool "LVGL v9 with OSD USB video"
+    default n
+    depends on LVGL9
+    help
+      Build the LVGL v9 with OSD and USB video capture demo.
+
+config TJPGDEC
+    bool "TJpgDec"
+    default n
+    help
+      Build the Tiny JPEG decoder.
+
+endmenu

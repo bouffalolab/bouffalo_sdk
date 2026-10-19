@@ -1,0 +1,5 @@
+add_subdirectory(firmware)
+add_subdirectory(manager)
+add_subdirectory(wpa_supplicant)
+add_subdirectory(blcrypto_suite)
+add_subdirectory(wifi4_adapter)

@@ -1,0 +1,27 @@
+OpenOCD release bundle: 0.12.0+dev-02513-gf9212ff31
+Source: /home/pfchen/workspace/openocd @ f9212ff31
+Built: 2026-05-14
+Hosts: Linux x86_64 and Windows x86_64
+
+Linux:
+- Use bin/openocd; it is a small launcher that sets LD_LIBRARY_PATH to its own directory and execs openocd.bin.
+- For non-root USB access, install 99-openocd.rules to /etc/udev/rules.d/, reload udev rules, and replug the debug adapter.
+
+Windows:
+- Use bin/openocd.exe.
+- Keep the bundled DLL files in the same directory as openocd.exe.
+- CH347 first tries libusb, then falls back to WCH CH347DLLA64.DLL/CH347DLL.DLL when available.
+
+Bundled libraries:
+- libftdi1
+- libhidapi-hidraw
+- libusb-1.0
+- libudev
+- libcap
+- CH347DLLA64.DLL / CH347DLL.DLL
+
+The Linux binary still relies on target system glibc/ld-linux/libm.
+
+Verified adapters include:
+- ch347
+- ftdi

@@ -1,0 +1,59 @@
+# Build Options
+
+# Components
+CONFIG_BFLB_LOG          =n
+CONFIG_FREERTOS          =y
+CONFIG_POSIX             =n
+CONFIG_TLSF              =y
+CONFIG_SHELL             =y
+CONFIG_LWIP              =y
+#CONFIG_FHOST            =y
+CONFIG_WL80211           =y
+CONFIG_BL_WPA_SUPPLICANT =y
+CONFIG_WIFI6             =y
+CONFIG_RF                =y
+CONFIG_MBEDTLS           =y
+CONFIG_IPERF             =y
+#CONFIG_PSRAM            =y
+CONFIG_DHCPD             =y
+CONFIG_PING              =y
+#CONFIG_MQTT             =y
+CONFIG_BACKTRACE         =y
+
+CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT = 0x10000 # 64KB
+
+CONFIG_VSNPRINTF_FLOAT        =y
+CONFIG_VSNPRINTF_FLOAT_EX     =y
+CONFIG_VSNPRINTF_LONG_LONG    =y
+
+# mbedtls
+#CONFIG_MBEDTLS_AES_USE_HW    =y
+#CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+#CONFIG_MBEDTLS_ECC_USE_HW    =y
+#CONFIG_MBEDTLS_SHA1_USE_HW   =y
+#CONFIG_MBEDTLS_SHA256_USE_HW =y
+#CONFIG_MBEDTLS_SHA512_USE_HW =y
+CONFIG_MACSW_SELECT                  = default
+
+ifeq ($(CHIP),bl618dg)
+    CONFIG_ROMAPI            =n
+    CONFIG_DUALCORE_DISABLE  =y
+endif
+
+# CONFIG_GCOV_DUMP          =y
+
+ifeq ($(CONFIG_GCOV_DUMP),y)
+    # Use LittleFS on Flash instead of FATFS on PSRAM
+    CONFIG_LITTLEFS = y
+    CONFIG_BFLB_MTD = y
+    CONFIG_PARTITION = y
+    CONFIG_SHELL_THREAD_STACK_SIZE = 2048
+
+    # HTTP client support for upload command
+    CONFIG_HTTP=y
+    CONFIG_HTTP_CLIENT=y
+
+    # Enable PSRAM for GCOV sections.
+    CONFIG_PSRAM = y
+    CONFIG_OVERRIDE_PTFILE = media_8M_flash.toml
+endif

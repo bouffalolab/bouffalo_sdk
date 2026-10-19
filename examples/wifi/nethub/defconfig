@@ -1,0 +1,136 @@
+#CONFIG_WL80211   =y
+# ctrl Channel（device use ATModule, host use bflbwifid、bflbwifictrl）
+CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE =y
+CONFIG_NETHUB_LOWPOWER_ENABLE          =y
+CONFIG_NETHUB_PROFILE_DUAL             =n
+CONFIG_NETHUB_PROFILE_SDIO             =y
+CONFIG_NETHUB_PROFILE_USB              =n
+
+ifeq ($(CONFIG_NETHUB_DEV_SELECT),sdio)
+    CONFIG_NETHUB_PROFILE_SDIO =y
+    CONFIG_NETHUB_PROFILE_USB  =n
+else ifeq ($(CONFIG_NETHUB_DEV_SELECT),usb)
+    CONFIG_NETHUB_PROFILE_SDIO =n
+    CONFIG_NETHUB_PROFILE_USB  =y
+endif
+
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+# Debug
+CONFIG_COREDUMP              =n
+
+# lfs_kv
+CONFIG_LITTLEFS              =y
+CONFIG_LITTLEFS_KV_EASYFLASH =y
+CONFIG_BFLB_MTD              =y
+CONFIG_PARTITION             =y
+
+# BSP
+CONFIG_BSP_ETH_PHY           =y
+
+# mbedtls
+CONFIG_MBEDTLS_AES_USE_HW    =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_MBEDTLS_SHA1_USE_HW   =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y
+
+# wifi
+CONFIG_WIFI_IPERF =y
+
+# Message Router
+CONFIG_BSP_MR               =y
+CONFIG_MR_SDIO_DRIVER       =y
+CONFIG_MR_SDIO_QUEUE_DEPTH  =4
+
+CONFIG_MR_NETDEV            =y
+CONFIG_MR_TTY               =n
+CONFIG_MR_VIRTUALCHAN       =y
+
+CONFIG_IPV6               =y
+CONFIG_NETBUS             =y
+CONFIG_NETHUB             =y
+
+# lowpower: enabled by default for BL616CL NetHub low-power validation.
+ifneq ($(CHIP),bl616)
+ifneq ($(CHIP),bl616cl)
+ifneq ($(CHIP),bl618dg)
+    CONFIG_NETHUB_LOWPOWER_ENABLE          =n
+endif
+endif
+endif
+ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
+    CONFIG_LPAPP                         =y
+    CONFIG_PM                            =y
+    CONFIG_LWIP_LP                       =y
+    CONFIG_DCDC_ENABLE                   =n
+    CONFIG_PWRMGMT                       =y
+    CONFIG_TICKLESS_EXT                  =y
+    CONFIG_PM_HELPER_CLI                 =y
+    CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
+    CONFIG_CLOCK_SOURCE_EF_PARAM         =n
+endif
+
+
+ifeq ($(CHIP),bl618dg)
+    CONFIG_ROMAPI             =y
+    # enable hotplug
+    CONFIG_SDIO3_SOFT_RST_INT_USER =y
+    CONFIG_DUALCORE_DISABLE   =y
+    CONFIG_WRAM_FOR_AP_SIZE   = 0x50000
+    CONFIG_RAM_FOR_AP_SIZE    = 0x50000
+    CONFIG_NETHUB_HOTCODE_IN_FLASH        = n
+    CONFIG_NETHUB_HOTCODE_IN_RAM          = y
+    CONFIG_NETHUB_HOTCODE_IN_PSRAM        = n
+endif
+
+ifeq ($(CHIP),bl616cl)
+    CONFIG_ROMAPI             =n
+endif
+
+
+# USB
+ifeq ($(CONFIG_NETHUB_DEV_SELECT),sdio)
+    CONFIG_NETHUB_PROFILE_SDIO =y
+    CONFIG_NETHUB_PROFILE_USB  =n
+else ifeq ($(CONFIG_NETHUB_DEV_SELECT),usb)
+    CONFIG_NETHUB_PROFILE_SDIO =n
+    CONFIG_NETHUB_PROFILE_USB  =y
+endif
+ifeq ($(CONFIG_NETHUB_PROFILE_DUAL),y)
+    CONFIG_NETHUB_PROFILE_SDIO =y
+    CONFIG_NETHUB_PROFILE_USB  =y
+endif
+ifeq ($(CONFIG_NETHUB_PROFILE_USB),y)
+    CONFIG_BSP_USB                  =y
+    CONFIG_CHERRYUSB                =y
+    CONFIG_CHERRYUSB_DEVICE         =y
+    CONFIG_CHERRYUSB_DEVICE_CDC     =y
+    CONFIG_CHERRYUSB_DEVICE_CDC_ECM =y
+    CONFIG_CHERRYUSB_DEVICE_CDC_ACM =y
+endif
+
+
+# AT Module
+ifeq ($(CONFIG_NETHUB_CTRLCHANNEL_USE_ATMODULE),y)
+    CONFIG_ATMODULE           =y
+endif
+ifeq ($(CONFIG_ATMODULE),y)
+    -include $(ATMODULE_PATH)/examples/at_defconfig
+endif
+ifeq ($(CONFIG_ATMODULE),y)
+    CONFIG_ATMODULE_TTY       =y
+    CONFIG_ATMODULE_WORK_Q    =y
+    CONFIG_ATMODULE_OTA       =y
+    CONFIG_ATMODULE_NANO      =y
+    CONFIG_ATMODULE_WIFI      =y
+    CONFIG_ATMODULE_WIFI_STA  =y
+    CONFIG_ATMODULE_WIFI_AP   =y
+    CONFIG_ATMODULE_NETHUB_WIFICHANNELAUTO =y
+endif
+ifeq ($(CONFIG_ATMODULE),y)
+    ifeq ($(CONFIG_NETHUB_LOWPOWER_ENABLE),y)
+        CONFIG_ATMODULE_LP               =y
+    endif
+endif

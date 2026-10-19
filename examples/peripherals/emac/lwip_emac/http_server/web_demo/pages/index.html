@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>lwIP EMAC Documentation</title>
+    <link rel="icon" href="asset/favicon.ico">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="shell">
+        <header class="hero">
+            <div class="brand">
+                <div class="lwip-mark" aria-hidden="true">
+                    <span class="lwip-orbit"></span>
+                    <strong>lwIP</strong>
+                </div>
+                <div>
+                    <p class="eyebrow">EMBEDDED NETWORK DOCUMENTATION</p>
+                    <h1>lwIP EMAC <span>Documentation</span></h1>
+                    <p class="subtitle">Live project documentation served directly from the firmware image.</p>
+                </div>
+            </div>
+
+            <div class="status-panel" aria-label="HTTP server status">
+                <span class="status-dot"></span>
+                <div>
+                    <strong>HTTPD ONLINE</strong>
+                    <small>TCP PORT 80</small>
+                </div>
+            </div>
+        </header>
+
+        <section class="toolbar" aria-label="Document controls">
+            <div class="language-switch" role="group" aria-label="README language">
+                <button class="language-button active" type="button" data-language="en" aria-pressed="true">
+                    <span class="language-code">EN</span>
+                    <span>English</span>
+                </button>
+                <button class="language-button" type="button" data-language="zh" aria-pressed="false">
+                    <span class="language-code">中</span>
+                    <span>中文</span>
+                </button>
+            </div>
+
+            <div class="document-meta">
+                <span id="document-source">/docs/readme-en.md</span>
+                <span class="meta-divider"></span>
+                <span id="document-size">Loading…</span>
+            </div>
+        </section>
+
+        <section class="document-card">
+            <div class="window-bar">
+                <div class="window-lights" aria-hidden="true">
+                    <i></i><i></i><i></i>
+                </div>
+                <span id="document-title">README.md</span>
+                <button id="reload-button" class="reload-button" type="button" aria-label="Reload document">
+                    <span aria-hidden="true">↻</span> Reload
+                </button>
+            </div>
+
+            <div id="loading-state" class="loading-state" role="status">
+                <span class="loader"></span>
+                <div>
+                    <strong>Fetching documentation</strong>
+                    <small>Reading the embedded Markdown resource…</small>
+                </div>
+            </div>
+
+            <div id="error-state" class="error-state" hidden>
+                <strong>Unable to load the document</strong>
+                <span id="error-message">The device did not return a valid response.</span>
+                <button id="retry-button" type="button">Try again</button>
+            </div>
+
+            <pre id="readme-content" class="readme-content" tabindex="0" hidden></pre>
+        </section>
+
+        <footer>
+            <span>Embedded Network Demo</span>
+            <span>FreeRTOS · lwIP · EMAC</span>
+        </footer>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

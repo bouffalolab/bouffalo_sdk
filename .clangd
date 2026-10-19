@@ -1,0 +1,7 @@
+CompileFlags:
+  Remove:
+    - "-march=*"
+    - "-mtune=*"
+  Add:
+    - "-march=rv32imafc"
+    - "-mabi=ilp32f"

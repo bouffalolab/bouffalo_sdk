@@ -1,0 +1,104 @@
+#include "mr_msg_ctrl.h"
+#include "mr_frame_buff_ctrl.h"
+#include "mr_netdev.h"
+
+#include "transport_sdio.h"
+#include "msg_ctrl_sdio.h"
+#include "nh_vchan_backend.h"
+#include "netdev_wifi.h"
+
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+#include "mr_sdio_drv.h"
+#include "task.h"
+#endif
+
+#define DBG_TAG "NETHUB_SDIO"
+#include "log.h"
+
+static int transport_sdio_init(void)
+{
+    int ret;
+
+    ret = msg_ctrl_sdio_init();
+    if (ret < 0 || g_msg_sdio_ctrl == NULL) {
+        LOG_E("msg_ctrl_sdio_init failed\r\n");
+        return ret < 0 ? ret : -1;
+    }
+
+    ret = netdev_wifi_init(g_msg_sdio_ctrl);
+    if (ret < 0 || g_netdev_wifi_priv == NULL) {
+        LOG_E("netdev_wifi_init failed\r\n");
+        return ret < 0 ? ret : -1;
+    }
+
+    ret = nethub_sdio_vchan_backend_init(g_msg_sdio_ctrl);
+    if (ret < 0) {
+        LOG_E("nethub_vchan_backend_init failed\r\n");
+        return ret < 0 ? ret : -1;
+    }
+
+    return NETHUB_OK;
+}
+
+static nethub_route_result_t sdio_input_callback(nethub_frame_t *frame, void *arg)
+{
+    NETHUB_UNUSED(frame);
+    NETHUB_UNUSED(arg);
+    return NETHUB_ROUTE_CONTINUE;
+}
+
+static nethub_route_result_t sdio_output_callback(nethub_frame_t *frame, void *arg)
+{
+    NETHUB_UNUSED(arg);
+    netdev_wifi_upld(frame, NULL);
+    return NETHUB_ROUTE_CONTINUE;
+}
+
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+static bool transport_sdio_lp_is_idle(void)
+{
+    return true;
+}
+
+static int transport_sdio_lp_prepare(void)
+{
+    int ret;
+
+    if (g_msg_sdio_ctrl == NULL || g_msg_sdio_ctrl->msg_proc_task == NULL) {
+        return -1;
+    }
+
+    mr_msg_ctrl_keepalive_pause(g_msg_sdio_ctrl);
+    vTaskSuspend(g_msg_sdio_ctrl->msg_proc_task);
+    ret = mr_sdio_drv_lowpower_prepare();
+    if (ret != 0) {
+        vTaskResume(g_msg_sdio_ctrl->msg_proc_task);
+        mr_msg_ctrl_keepalive_resume(g_msg_sdio_ctrl);
+    }
+    return ret;
+}
+
+static int transport_sdio_lp_resume(void)
+{
+    int ret = mr_sdio_drv_lowpower_restore();
+
+    if (ret == 0) {
+        vTaskResume(g_msg_sdio_ctrl->msg_proc_task);
+        mr_msg_ctrl_keepalive_resume(g_msg_sdio_ctrl);
+    }
+    return ret;
+}
+#endif
+
+const struct nhif_ops nhsdio_ops = {
+    .type = NETHUB_CHANNEL_SDIO,
+    .init = transport_sdio_init,
+    .deinit = NULL,
+    .input = sdio_input_callback,
+    .output = sdio_output_callback,
+#if defined(CONFIG_NETHUB_LOWPOWER_ENABLE)
+    .is_idle = transport_sdio_lp_is_idle,
+    .lowpower_prepare = transport_sdio_lp_prepare,
+    .lowpower_resume = transport_sdio_lp_resume,
+#endif
+};

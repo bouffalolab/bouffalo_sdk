@@ -1,0 +1,58 @@
+/**
+  ******************************************************************************
+  * @file    at_net_config.c
+  * @version V1.0
+  * @date
+  * @brief   This file is part of AT command framework
+  ******************************************************************************
+  */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <FreeRTOS.h>
+//#ifdef EASYFLASH_ENABLE
+#include "lfs_kv.h"
+//#endif
+#include "at_config.h"
+#include "at_mqtt_config.h"
+#include "at_pal.h"
+
+mqtt_config *at_mqtt_config = NULL;
+
+int at_mqtt_config_init(void)
+{
+    at_mqtt_config = (mqtt_config *)at_malloc(sizeof(mqtt_config));
+    if (at_mqtt_config == NULL) {
+        printf("Failed to allocate memory for at_mqtt_config\r\n");
+        return -1;
+    }
+    memset(at_mqtt_config, 0, sizeof(mqtt_config));
+    if (!at_config_read(AT_MQTT_SSL_CONF, &at_mqtt_config->ssl_conf, sizeof(at_mqtt_config->ssl_conf))) {
+        printf("MQTT SSL config read failed, using defaults\r\n");
+    }
+    return 0;
+}
+
+int at_mqtt_config_save(const char *key)
+{
+    if (!at_mqtt_config || !key) {
+        printf("Invalid arguments to at_mqtt_config_save\r\n");
+        return -1;
+    }
+    if (strcmp(key, AT_MQTT_SSL_CONF) == 0)
+        return at_config_write(key, &at_mqtt_config->ssl_conf, sizeof(at_mqtt_config->ssl_conf));
+
+    return -1;
+}
+
+int at_mqtt_config_default(void)
+{
+    //lfs_kv_del(AT_CONFIG_KEY_NET_TRANS_LINK);
+    if (at_mqtt_config) {
+        memset(&at_mqtt_config->ssl_conf, 0, sizeof(at_mqtt_config->ssl_conf));
+    }
+    return 0;
+}
+

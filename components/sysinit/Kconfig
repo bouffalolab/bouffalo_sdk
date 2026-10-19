@@ -1,0 +1,9 @@
+#
+# System initialization component
+#
+
+menu "System Initialization"
+
+comment "sysinit is always built and has no user configurable options"
+
+endmenu

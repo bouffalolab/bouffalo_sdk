@@ -1,0 +1,158 @@
+#
+# Kconfig for atmodule
+#
+
+if ATMODULE
+
+config BLUETOOTH_APP
+    bool "Bluetooth application"
+    default n
+    help
+      Enable Bluetooth support in the AT application.
+
+choice
+    prompt "AT module transport"
+    default ATMODULE_UART
+    help
+      Physical transport used by the AT module.
+
+config ATMODULE_USB
+    bool "USB"
+    help
+      Communicate with the host over USB.
+
+config ATMODULE_UART
+    bool "UART"
+    help
+      Communicate with the host over UART.
+
+config ATMODULE_NXSPI
+    bool "NX SPI"
+    help
+      Communicate with the host over NX SPI.
+
+config ATMODULE_SPISYNC
+    bool "SPI sync"
+    help
+      Communicate with the host over synchronous SPI.
+
+config ATMODULE_TTY
+    bool "TTY"
+    help
+      Communicate with the host over a TTY virtual channel.
+
+endchoice
+
+menu "AT module features"
+
+config ATMODULE_FULL_FEAT
+    bool "Enable full feature set"
+    default n
+    help
+      Enable the complete AT command feature set.
+
+config ATMODULE_ALL_FEAT
+    bool "Enable all AT module features"
+    default n
+    help
+      Enable the extended AT commands.
+
+config ATMODULE_BLUETOOTH
+    bool "Bluetooth commands"
+    help
+      Enable AT commands for Bluetooth/BLE.
+
+config ATMODULE_WORK_Q
+    bool "Work queue"
+    help
+      Enable the AT module work queue.
+
+config ATMODULE_NETWORK
+    bool "Network commands"
+    depends on ATMODULE_WORK_Q
+    help
+      Enable AT network commands such as TCP, UDP and TLS.
+
+config ATMODULE_HTTP
+    bool "HTTP commands"
+    depends on ATMODULE_NETWORK
+    help
+      Enable AT HTTP client commands.
+
+config ATMODULE_MQTT
+    bool "MQTT commands"
+    depends on ATMODULE_NETWORK
+    help
+      Enable AT MQTT client commands.
+
+config ATMODULE_BASE
+    bool "Base module"
+    help
+      Enable the AT base command set.
+
+config ATMODULE_FS
+    bool "File system commands"
+    depends on ATMODULE_BASE
+    help
+      Enable AT file system commands.
+
+config ATMODULE_OTA
+    bool "OTA commands"
+    depends on ATMODULE_BASE
+    depends on ATMODULE_WORK_Q
+    help
+      Enable AT firmware upgrade commands.
+
+config ATMODULE_LP
+    bool "Low-power commands"
+    help
+      Enable AT low-power mode commands.
+
+config ATMODULE_FLASH
+    bool "Flash commands"
+    depends on ATMODULE_BASE
+    help
+      Enable AT flash read/write/erase commands.
+
+config ATMODULE_EFUSE
+    bool "eFuse commands"
+    depends on ATMODULE_BASE
+    help
+      Enable AT eFuse read/write commands.
+
+config ATMODULE_GPIO
+    bool "GPIO commands"
+    depends on ATMODULE_BASE
+    help
+      Enable AT GPIO commands.
+
+config ATMODULE_CHIP_TEMP
+    bool "Chip temperature command"
+    depends on ATMODULE_BASE
+    default n
+    help
+      Enable the AT+TEMP command.
+
+config ATMODULE_CHIP_VBAT
+    bool "Chip voltage command"
+    depends on ATMODULE_BASE
+    default n
+    help
+      Enable the AT+VBAT command.
+
+config ATMODULE_CONFIG_STORAGE
+    bool "Persistent configuration storage"
+    default y
+    depends on ATMODULE_BASE
+    help
+      Store AT configuration persistently across reboots.
+
+config ATMODULE_MINIDUMP
+    bool "Minidump commands"
+    depends on ATMODULE_BASE
+    help
+      Enable AT minidump retrieval commands.
+
+endmenu
+
+endif # CONFIG_ATMODULE

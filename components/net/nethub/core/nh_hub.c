@@ -1,0 +1,283 @@
+#include "nh_hub.h"
+#include "nh_filter.h"
+#if defined(CONFIG_NETHUB_PROFILE_DUAL)
+#include "nh_host_select.h"
+#endif
+#include "nh_internal.h"
+#include "nh_profile.h"
+#include "nh_runtime.h"
+
+#define DBG_TAG "NETHUB"
+#include "log.h"
+
+static nethub_context_t g_nethub_ctx = {
+    .host_link_type = NETHUB_CHANNEL_MAX,
+};
+
+nethub_context_t *nh_ctx_get(void)
+{
+    return &g_nethub_ctx;
+}
+
+int nethub_init(const nethub_config_t *config)
+{
+#if !defined(CONFIG_NETHUB_PROFILE_DUAL)
+    const nh_profile_t *profile;
+#endif
+
+    NETHUB_UNUSED(config);
+
+    if (g_nethub_ctx.initialized) {
+        return NETHUB_ERR_ALREADY_EXISTS;
+    }
+
+#if defined(CONFIG_NETHUB_PROFILE_DUAL)
+    nethub_host_select_reset();
+    if (nh_profile_get_by_host(NETHUB_CHANNEL_SDIO) == NULL ||
+        nh_profile_get_by_host(NETHUB_CHANNEL_USB) == NULL) {
+        return NETHUB_ERR_INTERNAL;
+    }
+    g_nethub_ctx.profile = NULL;
+    g_nethub_ctx.host_link_type = NETHUB_CHANNEL_MAX;
+#else
+    profile = nh_profile_get();
+    if (profile == NULL) {
+        return NETHUB_ERR_INTERNAL;
+    }
+    g_nethub_ctx.profile = profile;
+    g_nethub_ctx.host_link_type = profile->host_link_type;
+#endif
+    g_nethub_ctx.initialized = true;
+    g_nethub_ctx.started = false;
+
+    LOG_I("init profile=%s host_link=%s\r\n",
+          nethub_profile_name(),
+          nethub_channel_to_string(g_nethub_ctx.host_link_type));
+    return NETHUB_OK;
+}
+
+int nethub_deinit(void)
+{
+    if (!g_nethub_ctx.initialized) {
+        return NETHUB_ERR_NOT_INITIALIZED;
+    }
+
+    if (g_nethub_ctx.started) {
+        int ret = nethub_stop();
+        if (ret != NETHUB_OK) {
+            return ret;
+        }
+    }
+
+    nhif_unregister_all();
+    g_nethub_ctx.initialized = false;
+    g_nethub_ctx.started = false;
+    g_nethub_ctx.profile = NULL;
+    g_nethub_ctx.host_link_type = NETHUB_CHANNEL_MAX;
+#if defined(CONFIG_NETHUB_PROFILE_DUAL)
+    nethub_host_select_reset();
+#endif
+
+    return NETHUB_OK;
+}
+
+int nethub_start(void)
+{
+    int ret;
+
+    if (!g_nethub_ctx.initialized) {
+        return NETHUB_ERR_NOT_INITIALIZED;
+    }
+
+    if (g_nethub_ctx.started) {
+        return NETHUB_OK;
+    }
+
+    ret = nhif_init_all();
+    if (ret != NETHUB_OK) {
+        return ret;
+    }
+
+    g_nethub_ctx.started = true;
+#if defined(CONFIG_NETHUB_PROFILE_DUAL)
+    ret = nethub_host_select_start();
+    if (ret != NETHUB_OK) {
+        g_nethub_ctx.started = false;
+        return ret;
+    }
+#endif
+    return NETHUB_OK;
+}
+
+int nethub_stop(void)
+{
+    int ret;
+
+    if (!g_nethub_ctx.started) {
+        return NETHUB_OK;
+    }
+
+    ret = nhif_deinit_all();
+    if (ret != NETHUB_OK) {
+        return ret;
+    }
+
+    g_nethub_ctx.started = false;
+    return NETHUB_OK;
+}
+
+nethub_route_result_t nethub_send_output(nethub_frame_t *frame, nethub_channel_t dst_type)
+{
+    nhif_instance_t *instance;
+
+    if (!g_nethub_ctx.initialized || !g_nethub_ctx.started) {
+        return NETHUB_ROUTE_ERROR;
+    }
+
+    if (frame == NULL) {
+        return NETHUB_ROUTE_ERROR;
+    }
+
+    instance = nhif_find_by_type(dst_type);
+    if (instance == NULL || instance->state != NETHUB_ENDPOINT_STATE_ACTIVE) {
+        return NETHUB_ROUTE_ERROR;
+    }
+
+    if (instance->ops == NULL || instance->ops->output == NULL) {
+        return NETHUB_ROUTE_ERROR;
+    }
+
+    return instance->ops->output(frame, instance->private_data);
+}
+
+nethub_route_result_t nethub_process_input(nethub_frame_t *frame, nethub_channel_t src_type)
+{
+    nethub_channel_t dst_type;
+
+    if (!g_nethub_ctx.initialized || !g_nethub_ctx.started) {
+        return NETHUB_ROUTE_ERROR;
+    }
+
+    if (frame == NULL) {
+        return NETHUB_ROUTE_ERROR;
+    }
+
+    switch (src_type) {
+        case NETHUB_CHANNEL_WIFI_STA:
+        case NETHUB_CHANNEL_WIFI_AP:
+            dst_type = g_nethub_ctx.host_link_type;
+            if (dst_type >= NETHUB_CHANNEL_MAX) {
+                if (frame->free_cb != NULL) {
+                    frame->free_cb(frame->cb_arg);
+                }
+                return NETHUB_ROUTE_STOP;
+            }
+            break;
+        case NETHUB_CHANNEL_SDIO:
+        case NETHUB_CHANNEL_USB:
+        case NETHUB_CHANNEL_SPI:
+            if (!nethub_is_host_link_active(src_type)) {
+                if (frame->free_cb != NULL) {
+                    frame->free_cb(frame->cb_arg);
+                }
+                return NETHUB_ROUTE_STOP;
+            }
+            dst_type = nh_runtime_get_active_wifi_channel();
+            break;
+        default:
+            return NETHUB_ROUTE_ERROR;
+    }
+
+    return nethub_send_output(frame, dst_type);
+}
+
+int nethub_get_status(nethub_runtime_status_t *status)
+{
+    if (status == NULL) {
+        return NETHUB_ERR_INVALID_PARAM;
+    }
+
+    status->initialized = g_nethub_ctx.initialized;
+    status->started = g_nethub_ctx.started;
+    status->custom_wifi_rx_filter_active = nh_filter_custom_wifi_rx_is_active();
+    status->profile_name = nethub_profile_name();
+    status->host_channel = nethub_host_channel();
+    status->active_wifi_channel = nethub_get_active_wifi_channel();
+    status->statistics = *nh_runtime_stats_readonly();
+
+    return NETHUB_OK;
+}
+
+bool nethub_is_initialized(void)
+{
+    return g_nethub_ctx.initialized;
+}
+
+bool nethub_is_started(void)
+{
+    return g_nethub_ctx.started;
+}
+
+const char *nethub_profile_name(void)
+{
+    if (g_nethub_ctx.profile != NULL) {
+        return g_nethub_ctx.profile->name;
+    }
+
+#if defined(CONFIG_NETHUB_PROFILE_DUAL)
+    return "dual_profile";
+#else
+    return nh_profile_get_name();
+#endif
+}
+
+nethub_channel_t nethub_host_channel(void)
+{
+    return g_nethub_ctx.host_link_type;
+}
+
+nethub_channel_t nethub_get_active_wifi_channel(void)
+{
+    return nh_runtime_get_active_wifi_channel();
+}
+
+bool nethub_is_host_link_active(nethub_channel_t host_link)
+{
+    return g_nethub_ctx.host_link_type == host_link;
+}
+
+int nethub_set_active_host_link(nethub_channel_t host_link)
+{
+#if defined(CONFIG_NETHUB_PROFILE_DUAL)
+    return NETHUB_ERR_INVALID_STATE;
+#else
+    return nh_core_set_active_host_link(host_link);
+#endif
+}
+
+int nh_core_set_active_host_link(nethub_channel_t host_link)
+{
+    const nh_profile_t *profile;
+
+    if (!g_nethub_ctx.initialized) {
+        return NETHUB_ERR_NOT_INITIALIZED;
+    }
+
+    profile = nh_profile_get_by_host(host_link);
+    if (profile == NULL || profile->host_endpoint_ops == NULL) {
+        return NETHUB_ERR_NOT_FOUND;
+    }
+
+    if (nhif_find_by_type(host_link) == NULL) {
+        return NETHUB_ERR_NOT_FOUND;
+    }
+
+    if (g_nethub_ctx.host_link_type == host_link) {
+        return NETHUB_OK;
+    }
+
+    g_nethub_ctx.profile = profile;
+    g_nethub_ctx.host_link_type = host_link;
+    LOG_I("active host link switched to %s\r\n", nethub_channel_to_string(host_link));
+    return NETHUB_OK;
+}

@@ -1,0 +1,15 @@
+
+make CONFIG_BL_INTF=SDIO
+
+
+sudo systemctl stop dhcpcd
+
+
+sudo rmmod blwnet
+sudo killall blctld
+
+
+sudo insmod blwnet.ko
+sudo ./userspace/blctld  $PWD/userspace/sta.sh
+
+

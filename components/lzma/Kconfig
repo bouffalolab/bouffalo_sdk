@@ -1,0 +1,13 @@
+#
+# LZMA component
+#
+
+menu "Compression"
+
+config XZ
+    bool "XZ (LZMA2) decoder"
+    default n
+    help
+      Build the XZ embedded decoder used by boot2 and image tools.
+
+endmenu

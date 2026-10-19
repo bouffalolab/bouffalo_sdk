@@ -1,0 +1,6 @@
+CONFIG_BSP_ETH_PHY=y
+
+# Default EMAC port IDs for the standalone emac_basic example (lwIP EMAC
+# start framework not used).
+CONFIG_EMAC0_RMII_ID ?= 0
+CONFIG_EMAC0_MDIO_ID ?= 0

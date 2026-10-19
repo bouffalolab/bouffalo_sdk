@@ -1,0 +1,138 @@
+include $(BL_SDK_BASE)/board.build
+ATMODULE_PATH ?= $(BL_SDK_BASE)/components/net/netbus/atmodule
+export ATMODULE_PATH
+ifneq ($(wildcard $(BL_SDK_BASE)/tools/bflb_tools),)
+include $(BL_SDK_BASE)/tools/bflb_tools/project_flash.build
+else
+include $(BL_SDK_BASE)/tools/bflb_flash/project_flash.build
+endif
+
+$(foreach var,CHIP BOARD,$(if $(strip $($(var))),,$(error $(var) must be set by the command line or board.build)))
+ifeq ($(CHIP),bl618dg)
+$(foreach var,CPU_ID,$(if $(strip $($(var))),,$(error $(var) must be set for bl618dg by the command line or board.build)))
+endif
+
+# avoid 'Entering|Leaving directory' messages
+ifndef VERBOSE
+	MAKEFLAGS += --no-print-directory
+endif
+
+BUILD_DIR ?= build
+PYTHON ?= python3
+.DEFAULT_GOAL := $(BUILD_DIR)
+
+DEFCONFIG_FILE ?= $(abspath $(SDK_DEMO_PATH)/$(if $(DEFCONFIG),$(DEFCONFIG),defconfig))
+
+# Resolve Make conditionals and includes before loading the generated Kconfig result.
+# Apps without a defconfig intentionally start from the Kconfig defaults.
+-include $(DEFCONFIG_FILE)
+
+CONFIG_INPUT_VARS := $(sort $(filter CONFIG_%,$(.VARIABLES)))
+SELECTOR_VARS := CHIP BOARD CPU_ID CPU_MODEL
+
+CONFIG_AUTOCONFIG_INPUT=$(abspath $(BUILD_DIR)/generated/autoconfig.input)
+CONFIG_AUTOCONFIG_DEF=$(abspath $(BUILD_DIR)/generated/autoconfig.def)
+CONFIG_AUTOCONFIG_MENUCONFIG=$(abspath $(BUILD_DIR)/generated/autoconfig.menuconfig)
+CONFIG_AUTOCONFIG_CMAKE=$(abspath $(BUILD_DIR)/generated/autoconfig.cmake)
+CONFIG_AUTOCONFIG_HEADER=$(abspath $(BUILD_DIR)/generated/autoconfig.h)
+CONFIG_AUTOCONFIG_MAKE=$(abspath $(BUILD_DIR)/generated/autoconfig.mk)
+CONFIG_SEED = $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/config_seed.py"
+CONFIG_KCONFIG_ENTRY=$(abspath $(if $(wildcard $(SDK_DEMO_PATH)/Kconfig),$(SDK_DEMO_PATH)/Kconfig,$(BL_SDK_BASE)/Kconfig))
+
+# An existing menuconfig result becomes the configuration source; otherwise
+# resolve the project defconfig and command-line values through Make.
+CONFIG_SOURCE=$(if $(wildcard $(CONFIG_AUTOCONFIG_MENUCONFIG)),$(CONFIG_AUTOCONFIG_MENUCONFIG),$(CONFIG_AUTOCONFIG_INPUT))
+
+# CMake receives configuration only through generated/autoconfig.cmake.
+cmake_definition+= -DCMAKE_COLOR_DIAGNOSTICS=ON
+cmake_definition+= -DBUILD_DIR="$(BUILD_DIR)"
+cmake_definition+= -DSDK_DEMO_PATH="$(abspath $(SDK_DEMO_PATH))"
+cmake_definition+= -DFLASH_BAUDRATE=$(BAUDRATE)
+cmake_definition+= -DFLASH_COMX=$(COMX)
+cmake_definition+= -DCROSS_COMPILE=$(CROSS_COMPILE)
+
+$(BUILD_DIR): Makefile cmake_cache
+	$(LIBRARY_BUILD)
+	$(MAKE) -C "$(BUILD_DIR)" pre_build
+	$(MAKE) -C "$(BUILD_DIR)" -j8
+	$(MAKE) -C "$(BUILD_DIR)" post_build
+	$(MAKE) -C "$(BUILD_DIR)" combine
+
+cmake_cache_ninja: config
+	$(LIBRARY_CMAKE_CACHE)
+	-$(CMAKE) -E remove "$(BUILD_DIR)/CMakeCache.txt"
+	-$(CMAKE) -E remove_directory "$(BUILD_DIR)/CMakeFiles"
+	$(CMAKE) -S . -B "$(BUILD_DIR)" -G Ninja $(cmake_definition)
+
+cmake_cache: config
+	$(LIBRARY_CMAKE_CACHE)
+	-$(CMAKE) -E remove "$(BUILD_DIR)/CMakeCache.txt"
+	-$(CMAKE) -E remove_directory "$(BUILD_DIR)/CMakeFiles"
+	$(CMAKE) -S . -B "$(BUILD_DIR)" -G $(cmake_generator) $(cmake_definition)
+
+$(BUILD_DIR)/generated:
+	$(CMAKE) -E make_directory "$(BUILD_DIR)/generated"
+
+.PHONY: config
+config: | $(BUILD_DIR)/generated
+	$(file >$(CONFIG_AUTOCONFIG_INPUT),# Auto-generated Make defconfig input)
+	$(foreach var,$(SELECTOR_VARS),$(if $(strip $($(var))),$(file >>$(CONFIG_AUTOCONFIG_INPUT),$(var)=$($(var)))))
+	$(foreach var,$(CONFIG_INPUT_VARS),$(file >>$(CONFIG_AUTOCONFIG_INPUT),$(var)=$($(var))))
+	$(CONFIG_SEED) \
+		--defconfig "$(CONFIG_SOURCE)" \
+		--kconfig "$(CONFIG_KCONFIG_ENTRY)" \
+		--def-out "$(CONFIG_AUTOCONFIG_DEF)" \
+		--cmake-out "$(CONFIG_AUTOCONFIG_CMAKE)" \
+		--header-out "$(CONFIG_AUTOCONFIG_HEADER)" \
+		--make-out "$(CONFIG_AUTOCONFIG_MAKE)"
+
+ninja:Makefile cmake_cache_ninja
+	$(LIBRARY_BUILD)
+	$(CMAKE) -S . -B "$(BUILD_DIR)" -G Ninja $(cmake_definition)
+	cd $(BUILD_DIR) && ninja && ninja combine
+
+clean::
+	$(CMAKE) -E remove_directory "$(BUILD_DIR)"
+
+savedefconfig:
+	@echo "defconfig is already the persistent project configuration"
+
+config-info:
+	@echo "SDK_DEMO_PATH = $(SDK_DEMO_PATH)"
+	@echo "KCONFIG entry = $(CONFIG_KCONFIG_ENTRY)"
+	@echo "defconfig        = $(DEFCONFIG_FILE)"
+	@echo "config source    = $(CONFIG_SOURCE)"
+	@echo "autoconfig.input = $(CONFIG_AUTOCONFIG_INPUT)"
+	@echo "autoconfig.def   = $(CONFIG_AUTOCONFIG_DEF)"
+	@echo "autoconfig.menuconfig = $(CONFIG_AUTOCONFIG_MENUCONFIG)"
+	@echo "autoconfig.cmake = $(CONFIG_AUTOCONFIG_CMAKE)"
+
+puncover:
+	$(command_puncover)
+
+size:
+	$(MAKE) -C "$(BUILD_DIR)" size_report
+
+.PHONY: $(BUILD_DIR) clean clean-build ninja flash ram whole efuse puncover size \
+        config-info savedefconfig
+
+ifneq ($(OS),Windows_NT)
+include $(BL_SDK_BASE)/project.build.linux
+endif
+
+ifneq ($(wildcard $(BL_SDK_BASE)/library.mk),)
+LIBRARY_MAKE = $(MAKE) -f $(BL_SDK_BASE)/library.mk \
+	BL_SDK_BASE="$(BL_SDK_BASE)" \
+	SDK_DEMO_PATH="$(SDK_DEMO_PATH)" \
+	BUILD_DIR="$(BUILD_DIR)" \
+	CHIP="$(CHIP)" CPU_ID="$(CPU_ID)" CPU_MODEL="$(CPU_MODEL)" \
+	CMAKE="$(CMAKE)" cmake_generator='$(cmake_generator)' \
+	cmake_definition="$(cmake_definition)" \
+	CPU_COMPILE_OPTION="$(CPU_COMPILE_OPTION)" \
+	CROSS_COMPILE="$(CROSS_COMPILE)"
+else
+LIBRARY_MAKE =
+endif
+
+LIBRARY_BUILD := $(if $(LIBRARY_MAKE),$(LIBRARY_MAKE) library_build,)
+LIBRARY_CMAKE_CACHE := $(if $(LIBRARY_MAKE),$(LIBRARY_MAKE) library_cmake_cache,)

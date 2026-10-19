@@ -1,0 +1,100 @@
+{
+  "build": {
+    "enabled": true,
+    "chip": "bl616cl",
+    "board": "bl616cldk",
+    "extra_args": []
+  },
+  "flash": {
+    "enabled": true,
+    "port": "/dev/ttyUSB0",
+    "extra_args": []
+  },
+  "serial": {
+    "dut": {
+      "port": "/dev/ttyUSB0",
+      "baudrate": 2000000,
+      "run_reset_on_open": true,
+      "reset_pulse_ms": 5,
+      "boot_wait_ms": 200,
+      "dtr_low_is_true": true,
+      "rts_low_is_true": true
+    },
+    "dft": {
+      "port": "/dev/ttyACM0",
+      "baudrate": 2000000,
+      "run_reset_on_open": true,
+      "reset_pulse_ms": 5,
+      "boot_wait_ms": 200,
+      "dtr_low_is_true": true,
+      "rts_low_is_true": true
+    }
+  },
+  "timing": {
+    "startup_drain_ms": 1500,
+    "dft_settle_ms": 5,
+    "ready_delay_ms": 10,
+    "edge_hold_ms": 5,
+    "level_hold_ms": 5,
+    "wakeup_timeout_ms": 3000,
+    "dut_ready_timeout_ms": 1500,
+    "dut_command_timeout_ms": 1500,
+    "dft_command_timeout_ms": 1000,
+    "post_wakeup_settle_ms": 150,
+    "quiet_after_parse_ms": 50
+  },
+  "retries": {
+    "dut_command_max_retries": 2,
+    "dft_command_max_retries": 2
+  },
+  "tests": {
+    "pds_modes": [1, 3, 7, 15],
+    "pins": [
+      { "dut_gpio": 0, "dft_gpio": 0 },
+      { "dut_gpio": 1, "dft_gpio": 1 },
+      { "dut_gpio": 2, "dft_gpio": 2 },
+      { "dut_gpio": 3, "dft_gpio": 3 },
+      { "dut_gpio": 4, "dft_gpio": 4 },
+      { "dut_gpio": 5, "dft_gpio": 5 },
+      { "dut_gpio": 6, "dft_gpio": 6 },
+      { "dut_gpio": 7, "dft_gpio": 7 },
+      { "dut_gpio": 8, "dft_gpio": 8 },
+      { "dut_gpio": 9, "dft_gpio": 9 },
+      { "dut_gpio": 10, "dft_gpio": 10 },
+      { "dut_gpio": 11, "dft_gpio": 11 },
+      { "dut_gpio": 12, "dft_gpio": 12 },
+      { "dut_gpio": 13, "dft_gpio": 13 },
+      { "dut_gpio": 14, "dft_gpio": 14 },
+      { "dut_gpio": 15, "dft_gpio": 15 },
+      { "dut_gpio": 16, "dft_gpio": 16 },
+      { "dut_gpio": 17, "dft_gpio": 17 },
+      { "dut_gpio": 18, "dft_gpio": 18 },
+      { "dut_gpio": 19, "dft_gpio": 19 },
+      { "dut_gpio": 20, "dft_gpio": 20 },
+      { "dut_gpio": 21, "dft_gpio": 21 },
+      { "dut_gpio": 22, "dft_gpio": 22 },
+      { "dut_gpio": 23, "dft_gpio": 23 },
+      { "dut_gpio": 24, "dft_gpio": 24 },
+      { "dut_gpio": 25, "dft_gpio": 25 },
+      { "dut_gpio": 26, "dft_gpio": 26 },
+      { "dut_gpio": 27, "dft_gpio": 27 },
+      { "dut_gpio": 28, "dft_gpio": 28 },
+      { "dut_gpio": 29, "dft_gpio": 29 },
+      { "dut_gpio": 30, "dft_gpio": 30 },
+      { "dut_gpio": 31, "dft_gpio": 31 },
+      { "dut_gpio": 32, "dft_gpio": 32 },
+      { "dut_gpio": 33, "dft_gpio": 33 }
+    ],
+    "triggers": [
+      "sync_fall",
+      "sync_rise",
+      "sync_low",
+      "sync_high",
+      "sync_both",
+      "async_fall",
+      "async_rise",
+      "async_low",
+      "async_high"
+    ]
+  }
+}

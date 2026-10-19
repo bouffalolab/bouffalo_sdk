@@ -1,0 +1,4 @@
+# build objects
+*.o
+*.d
+build/

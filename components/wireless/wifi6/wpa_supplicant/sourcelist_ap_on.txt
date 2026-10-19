@@ -1,0 +1,45 @@
+# Source file to support AP mode
+   wpa_supplicant/ap.c
+   src/ap/hostapd.c
+   src/ap/wpa_auth_glue.c
+   src/ap/utils.c
+   src/ap/authsrv.c
+   src/ap/ap_config.c
+   src/utils/ip_addr.c
+   src/ap/sta_info.c
+   src/ap/tkip_countermeasures.c
+   src/ap/ap_mlme.c
+   src/ap/ieee802_1x.c
+   src/eapol_auth/eapol_auth_sm.c
+   src/ap/ieee802_11_auth.c
+   src/ap/ieee802_11_shared.c
+   src/ap/drv_callbacks.c
+   src/ap/ap_drv_ops.c
+   src/ap/beacon.c
+   src/ap/bss_load.c
+   src/ap/eap_user_db.c
+   src/ap/neighbor_db.c
+   src/ap/rrm.c
+   src/utils/crc32.c
+
+   src/ap/wmm.c
+   src/ap/ap_list.c
+   src/ap/ieee802_11.c
+   src/ap/hw_features.c
+   src/ap/dfs.c
+
+   src/ap/wpa_auth.c
+   src/ap/wpa_auth_ie.c
+   src/ap/pmksa_cache_auth.c
+
+   src/ap/ieee802_11_ht.c
+   src/ap/ieee802_11_vht.c
+   src/ap/ieee802_11_he.c
+   src/ap/wnm_ap.c
+
+   src/eap_server/eap_server.c
+   src/eap_server/eap_server_identity.c
+   src/eap_server/eap_server_methods.c
+   src/eap_common/eap_common.c
+
+   src/ap/ctrl_iface_ap.c

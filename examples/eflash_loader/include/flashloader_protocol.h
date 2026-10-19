@@ -1,0 +1,92 @@
+#ifndef FLASHLOADER_PROTOCOL_H
+#define FLASHLOADER_PROTOCOL_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "flashloader_config.h"
+
+enum flashloader_command {
+    FLASHLOADER_CMD_CHANGE_RATE       = 0x20,
+    FLASHLOADER_CMD_RESET             = 0x21,
+    FLASHLOADER_CMD_CLOCK_SET         = 0x22,
+    FLASHLOADER_CMD_OPTION_FINISH     = 0x23,
+    FLASHLOADER_CMD_FLASH_ERASE       = 0x30,
+    FLASHLOADER_CMD_FLASH_WRITE       = 0x31,
+    FLASHLOADER_CMD_FLASH_READ        = 0x32,
+    FLASHLOADER_CMD_FLASH_BOOT        = 0x33,
+    FLASHLOADER_CMD_FLASH_XIP_READ    = 0x34,
+    FLASHLOADER_CMD_FLASH_SWITCH_BANK = 0x35,
+    FLASHLOADER_CMD_FLASH_READ_JID    = 0x36,
+    FLASHLOADER_CMD_FLASH_READ_STATUS = 0x37,
+    FLASHLOADER_CMD_FLASH_WRITE_STATUS = 0x38,
+    FLASHLOADER_CMD_FLASH_WRITE_CHECK = 0x3A,
+    FLASHLOADER_CMD_FLASH_SET_PARA    = 0x3B,
+    FLASHLOADER_CMD_FLASH_CHIP_ERASE  = 0x3C,
+    FLASHLOADER_CMD_FLASH_READ_SHA    = 0x3D,
+    FLASHLOADER_CMD_FLASH_XIP_READ_SHA = 0x3E,
+    FLASHLOADER_CMD_FLASH_XZ_WRITE    = 0x3F,
+    FLASHLOADER_CMD_EFUSE_WRITE       = 0x40,
+    FLASHLOADER_CMD_EFUSE_READ        = 0x41,
+    FLASHLOADER_CMD_EFUSE_READ_MAC    = 0x42,
+    FLASHLOADER_CMD_EFUSE_WRITE_MAC   = 0x43,
+    FLASHLOADER_CMD_XIP_READ_START    = 0x60,
+    FLASHLOADER_CMD_XIP_READ_FINISH   = 0x61,
+    FLASHLOADER_CMD_FLASH_OTP_ERASE   = 0xA0,
+    FLASHLOADER_CMD_FLASH_OTP_WRITE   = 0xA1,
+    FLASHLOADER_CMD_FLASH_OTP_READ    = 0xA2,
+    FLASHLOADER_CMD_FLASH_OTP_SET_PARA = 0xA3,
+    FLASHLOADER_CMD_FLASH_OTP_GET_PARA = 0xA4,
+    FLASHLOADER_CMD_FLASH_OTP_LOCK_INDEX = 0xA5,
+    FLASHLOADER_CMD_FLASH_OTP_LOCK_ADDR = 0xA6,
+    FLASHLOADER_CMD_FLASH_OTP_ERASE_INDEX = 0xA7,
+    FLASHLOADER_CMD_FLASH_OTP_WRITE_INDEX = 0xA8,
+    FLASHLOADER_CMD_FLASH_OTP_READ_INDEX = 0xA9,
+};
+
+enum flashloader_error {
+    FLASHLOADER_SUCCESS                  = 0x0000,
+    FLASHLOADER_FLASH_INIT_ERROR         = 0x0001,
+    FLASHLOADER_FLASH_ERASE_PARA_ERROR   = 0x0002,
+    FLASHLOADER_FLASH_ERASE_ERROR        = 0x0003,
+    FLASHLOADER_FLASH_WRITE_PARA_ERROR   = 0x0004,
+    FLASHLOADER_FLASH_WRITE_ADDR_ERROR   = 0x0005,
+    FLASHLOADER_FLASH_WRITE_ERROR        = 0x0006,
+    FLASHLOADER_FLASH_BOOT_PARA_ERROR    = 0x0007,
+    FLASHLOADER_FLASH_SET_PARA_ERROR     = 0x0008,
+    FLASHLOADER_FLASH_READ_STATUS_ERROR  = 0x0009,
+    FLASHLOADER_FLASH_WRITE_STATUS_ERROR = 0x000A,
+    FLASHLOADER_FLASH_DECOMPRESS_ERROR   = 0x000B,
+    FLASHLOADER_FLASH_WRITE_XZ_ERROR     = 0x000C,
+    FLASHLOADER_FLASH_SWITCH_BANK_ERROR  = 0x000D,
+    FLASHLOADER_CMD_ID_ERROR             = 0x0101,
+    FLASHLOADER_CMD_LEN_ERROR            = 0x0102,
+    FLASHLOADER_CMD_CRC_ERROR            = 0x0103,
+    FLASHLOADER_CMD_SEQ_ERROR            = 0x0104,
+    FLASHLOADER_EFUSE_WRITE_PARA_ERROR   = 0x0401,
+    FLASHLOADER_EFUSE_WRITE_ADDR_ERROR   = 0x0402,
+    FLASHLOADER_EFUSE_WRITE_ERROR        = 0x0403,
+    FLASHLOADER_EFUSE_READ_PARA_ERROR    = 0x0404,
+    FLASHLOADER_EFUSE_READ_ADDR_ERROR    = 0x0405,
+    FLASHLOADER_EFUSE_READ_ERROR         = 0x0406,
+    FLASHLOADER_EFUSE_READ_MAC_ERROR     = 0x0407,
+    FLASHLOADER_FAIL                     = 0xFFFF,
+};
+
+struct flashloader_frame {
+    uint8_t command;
+    const uint8_t *payload;
+    uint16_t payload_length;
+};
+
+uint16_t flashloader_frame_parse(const uint8_t *data, size_t data_length,
+                                 struct flashloader_frame *frame);
+size_t flashloader_response_encode_ack(uint16_t status, uint8_t *output,
+                                       size_t output_capacity);
+size_t flashloader_response_encode_data_header(uint16_t data_length,
+                                               uint8_t *output,
+                                               size_t output_capacity);
+
+void flashloader_protocol_run(void) __attribute__((noreturn));
+
+#endif

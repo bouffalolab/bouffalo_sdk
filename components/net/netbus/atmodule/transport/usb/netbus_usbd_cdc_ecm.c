@@ -1,0 +1,756 @@
+#include <stdio.h>
+#include <stdint.h>
+
+#include "FreeRTOS.h"
+#include "timers.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
+#include "usbd_core.h"
+#include "bflb_mtimer.h"
+#include <bflb_core.h>
+#include "board.h"
+#include <shell.h>
+
+#include <assert.h>
+#include <stdio.h>
+
+//#include "usb.h"
+
+#include "bflb_mtimer.h"
+#include "bflb_emac.h"
+#include <bflb_clock.h>
+
+#include "usbd_core.h"
+#include "usbd_cdc.h"
+#include "usbd_cdc_ecm.h"
+#include "lwip/netif.h"
+#include "eth_phy.h"
+#include "ephy_general.h"
+
+#ifdef CONFIG_WL80211
+#include <wl80211.h>
+#include <wl80211_mac.h>
+#include <nethub_packet_filter.h>
+#else
+#include <wifi_pkt_hooks.h>
+#include <net_pkt_filter.h>
+#include <net_al.h>
+#include <fhost.h>
+#endif
+
+#ifdef CONFIG_ATMODULE
+#include "at_wifi_config.h"
+#endif
+
+#include "netbus_usbd_cdc_acm.h"
+#include "wifi_mgmr_ext.h"
+
+#define DBG_TAG "USBECM"
+#include "log.h"
+
+/* External function declarations */
+extern int wifi_mgmr_sta_mac_get(uint8_t mac[6]);
+#ifndef CONFIG_WL80211
+extern int fhost_tx_start(struct netif *net_if, struct pbuf *p, void *payload, void *data);
+#endif
+
+#define CONFIG_BYPASS_TX    (0)
+#define CONFIG_BYPASS_TX2   (0)
+#define CONFIG_BYPASS_RX    (0)
+
+#define NXBD_UPLD_ITEMS     (20)
+#define NXBD_DNLD_ITEMS     (11)
+#define TX_PBUF_FRAME_LEN   (1514)
+#define TX_PBUF_PAYLOAD_LEN (PBUF_LINK_ENCAPSULATION_HLEN + TX_PBUF_FRAME_LEN)
+
+#define ecm_print(...)
+//#define ecm_print printf
+
+typedef struct _trans_desc {
+    struct pbuf_custom pbuf;
+    int                payload_len;
+    char               *payload_buf;
+} trans_desc_t;
+
+typedef struct _usbecm_desc {
+    netbus_usb_cdc_t usbacm;
+    QueueHandle_t dnfq;  // download free queue
+    QueueHandle_t upvq;  // up valid queue
+
+    TaskHandle_t uptask_hdl;
+    TaskHandle_t dntask_hdl;
+    SemaphoreHandle_t dnsem;
+    SemaphoreHandle_t upsem;
+
+    /* global val */
+    trans_desc_t *dnmsg;
+    struct pbuf *upmsg;
+    uint8_t    dbg_dntask_mode;
+    uint8_t    dbg_uptask_mode;
+    uint32_t   dbg_uptask_loop_cnt;
+    int send_cnt;
+    int recv_cnt;
+} usbecm_t;
+
+/* MTU */
+#define ECM_EMAC_NETIF_MTU (1514)
+
+/* MAC ADDRESS ASCII */
+#define MAC_ADDR_ASCII_00  ('1')
+#define MAC_ADDR_ASCII_01  ('8')
+#define MAC_ADDR_ASCII_10  ('B')
+#define MAC_ADDR_ASCII_11  ('9')
+#define MAC_ADDR_ASCII_20  ('0')
+#define MAC_ADDR_ASCII_21  ('5')
+#define MAC_ADDR_ASCII_30  ('D')
+#define MAC_ADDR_ASCII_31  ('E')
+#define MAC_ADDR_ASCII_40  ('8')
+#define MAC_ADDR_ASCII_41  ('6')
+#define MAC_ADDR_ASCII_50  ('3')
+#define MAC_ADDR_ASCII_51  ('0')
+
+/*!< endpoint address */
+#define CDC_ECM_IN_EP      0x81
+#define CDC_ECM_OUT_EP     0x02
+#define CDC_ECM_INT_EP     0x85
+
+#define USBD_VID           0xFFFF
+#define USBD_PID           0xFFFF
+#define USBD_MAX_POWER     100
+
+/*!< config descriptor size */
+#define USB_CONFIG_SIZE    (9 + CDC_ECM_DESCRIPTOR_LEN + CDC_ACM_DESCRIPTOR_LEN)
+
+/* str idx = 4 is for mac address: aa:bb:cc:dd:ee:ff*/
+#define CDC_ECM_MAC_STRING_INDEX      4
+
+static const uint8_t device_descriptor[] = {
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
+};
+
+static const uint8_t config_descriptor[] = {
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x04, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    CDC_ECM_DESCRIPTOR_INIT(0x00, CDC_ECM_INT_EP, CDC_ECM_OUT_EP, CDC_ECM_IN_EP, CDC_MAX_MPS, CDC_ECM_MAC_STRING_INDEX),
+    CDC_ACM_DESCRIPTOR_INIT(0x02, CDC_ACM_INT_EP, CDC_ACM_OUT_EP, CDC_ACM_IN_EP, CDC_MAX_MPS, 0x02),
+};
+
+#ifdef CONFIG_USB_HS
+static const uint8_t device_quality_descriptor[] = {
+    0x0a,
+    USB_DESCRIPTOR_TYPE_DEVICE_QUALIFIER,
+    0x00,
+    0x02,
+    0x00,
+    0x00,
+    0x00,
+    0x40,
+    0x00,
+    0x00,
+};
+#endif
+
+static char cdc_ecm_mac_string[] = {
+    MAC_ADDR_ASCII_00, MAC_ADDR_ASCII_01, MAC_ADDR_ASCII_10, MAC_ADDR_ASCII_11,
+    MAC_ADDR_ASCII_20, MAC_ADDR_ASCII_21, MAC_ADDR_ASCII_30, MAC_ADDR_ASCII_31,
+    MAC_ADDR_ASCII_40, MAC_ADDR_ASCII_41, MAC_ADDR_ASCII_50, MAC_ADDR_ASCII_51,
+    '\0'
+};
+
+static const uint8_t *device_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+    return device_descriptor;
+}
+
+static const uint8_t *config_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+    return config_descriptor;
+}
+
+static const uint8_t *device_quality_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+#ifdef CONFIG_USB_HS
+    return device_quality_descriptor;
+#else
+    return NULL;
+#endif
+}
+
+static const char *string_descriptor_callback(uint8_t speed, uint8_t index)
+{
+    static const char langid[] = { 0x09, 0x04 };
+
+    (void)speed;
+
+    switch (index) {
+        case USB_STRING_LANGID_INDEX:
+            return langid;
+        case USB_STRING_MFC_INDEX:
+            return "CherryUSB";
+        case USB_STRING_PRODUCT_INDEX:
+            return "CherryUSB_CDC_ECM_ACM";
+        case USB_STRING_SERIAL_INDEX:
+            return "2022123456";
+        case CDC_ECM_MAC_STRING_INDEX:
+            return cdc_ecm_mac_string;
+        default:
+            return NULL;
+    }
+}
+
+static const struct usb_descriptor cdc_ecm_acm_descriptor = {
+    .device_descriptor_callback = device_descriptor_callback,
+    .config_descriptor_callback = config_descriptor_callback,
+    .device_quality_descriptor_callback = device_quality_descriptor_callback,
+    .string_descriptor_callback = string_descriptor_callback,
+};
+
+struct usbd_interface intf0;
+struct usbd_interface intf1;
+usbecm_t g_usbecm;
+volatile uint8_t g_cdc_acm_init_done = 0;
+char     s_buf[NXBD_DNLD_ITEMS*TX_PBUF_PAYLOAD_LEN+31] __attribute__((section("SHAREDRAM")));
+trans_desc_t dnmsg_desc[NXBD_DNLD_ITEMS] __attribute__((section(".nocache_ram")));// up+dn
+
+// FIXME
+
+static void cdc_ecm_macaddr_init(void)
+{
+    char wlan_mac[6] = {0};
+    char mac_addr[13] = {0};
+
+#ifdef CONFIG_WL80211
+    extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
+    mfg_media_read_macaddr_with_lock(wlan_mac, 1);
+#else
+    wifi_mgmr_sta_mac_get((uint8_t *)wlan_mac);
+#endif
+
+    //wifi_mgmr_sta_mac_get(wlan_mac);
+    snprintf(mac_addr, sizeof(mac_addr), "%02x%02x%02x%02x%02x%02x",
+             wlan_mac[0], wlan_mac[1], wlan_mac[2], wlan_mac[3], wlan_mac[4], wlan_mac[5]);
+
+    ecm_print("cdc_ecm_macaddr_init: %s\r\n", mac_addr);
+
+    for (int i = 0; i < 12; i++) {
+        cdc_ecm_mac_string[i] = mac_addr[i];
+    }
+}
+
+/* ecm only supports in linux, and you should input the following command
+ *
+ * sudo ifconfig enxaabbccddeeff up
+ * sudo dhcpclient enxaabbccddeeff
+*/
+static void cdc_ecm_init(void)
+{
+    cdc_ecm_macaddr_init();
+
+    usbd_desc_register(0, &cdc_ecm_acm_descriptor);
+    usbd_add_interface(0, usbd_cdc_ecm_init_intf(&intf0, CDC_ECM_INT_EP, CDC_ECM_OUT_EP, CDC_ECM_IN_EP));
+    usbd_add_interface(0, usbd_cdc_ecm_init_intf(&intf1, CDC_ECM_INT_EP, CDC_ECM_OUT_EP, CDC_ECM_IN_EP));
+
+    netbus_usb_cdcacm_init(&g_usbecm.usbacm, 2048, 2048);
+    extern void usbd_event_handler(uint8_t busid, uint8_t event);
+    usbd_initialize(0, 0, usbd_event_handler);
+    ecm_print("%s, line:%d\r\n", __FUNCTION__, __LINE__);
+}
+
+void usbd_cdc_ecm_data_send_done(uint32_t nbytes)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    g_usbecm.send_cnt++;
+
+    ecm_print("    upld over cnt:%d\r\n", g_usbecm.send_cnt);
+
+    if (xSemaphoreGiveFromISR(g_usbecm.upsem, &xHigherPriorityTaskWoken) != pdTRUE) {
+        ecm_print("usb send done error!\r\n");
+    }
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void usbd_cdc_ecm_data_recv_done(uint32_t nbytes)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    g_usbecm.recv_cnt++;
+
+    ecm_print("    dnld over cnt:%d\r\n", g_usbecm.recv_cnt);
+
+    if (g_usbecm.dnmsg) {
+        g_usbecm.dnmsg->pbuf.pbuf.len     = nbytes;
+        g_usbecm.dnmsg->pbuf.pbuf.tot_len = nbytes;
+    }
+    if (xSemaphoreGiveFromISR(g_usbecm.dnsem, &xHigherPriorityTaskWoken) != pdTRUE) {
+        ecm_print("usb recv done error!\r\n");
+    }
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+#include "lwip/prot/ethernet.h"
+#include "lwip/prot/etharp.h"
+#include "lwip/prot/ip.h"
+#include "lwip/prot/tcp.h"
+#include "lwip/prot/udp.h"
+
+static void custom_free(struct pbuf *p)
+{
+    static uint32_t s_cnt = 0;
+    trans_desc_t *msg = (trans_desc_t *)p;
+
+    s_cnt++;
+    if (msg) {
+        while (xQueueSend(g_usbecm.dnfq, &msg, portMAX_DELAY) != pdPASS);
+    }
+    ecm_print("    dnld free fq/items:%d/%d, dnmsg:%p, s_cnt:%d\r\n",
+            uxQueueMessagesWaiting(g_usbecm.dnfq), NXBD_DNLD_ITEMS,
+            g_usbecm.dnmsg, s_cnt);
+}
+
+#ifdef CONFIG_WL80211
+err_t _wl80211_output(wl80211_vif_type vif, struct pbuf *buf)
+{
+    struct wl80211_tx_header *txhdr;
+    struct iovec txseg[5];
+    int seg_cnt;
+    int payload_len = buf->tot_len;
+    int remain_len = payload_len;
+
+    // first segment record payload
+    txseg[0].iov_base = buf->payload;
+    txseg[0].iov_len = buf->len;
+    remain_len -= buf->len;
+
+    // Increase the ref count so that the buffer is not freed by the networking
+    // stack until it is actually sent over the WiFi interface
+    pbuf_ref(buf);
+
+    if (pbuf_header_force(buf, PBUF_LINK_ENCAPSULATION_HLEN)) {
+        abort();
+    }
+
+    /* get tx desc */
+    txhdr = (void *)ALIGN4_HI((uint32_t)buf->payload);
+
+    struct pbuf *buf_t = buf->next;
+    int idx = 1;
+    while (remain_len && buf_t && (idx < 5)) {
+        txseg[idx].iov_base = buf_t->payload;
+        txseg[idx].iov_len = buf_t->len;
+
+        remain_len -= buf_t->len;
+        idx++;
+        buf_t = buf_t->next;
+    }
+    seg_cnt = idx;
+    assert(remain_len == 0);
+
+    if (wl80211_mac_tx(vif, txhdr, 0, txseg, seg_cnt, pbuf_free, buf)) {
+        pbuf_free(buf);
+        return ERR_BUF;
+    }
+
+    return (ERR_OK);
+}
+#endif
+
+int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
+{
+    struct pbuf *p = (struct pbuf *)msg;
+#ifdef CONFIG_WL80211
+    struct netif *net_if;
+    struct netif *net_if_sta, *net_if_ap;
+#else
+    net_al_if_t *net_if;
+#endif
+
+#if (CONFIG_BYPASS_TX == 1)
+    pbuf_free(p);
+    return 0;
+#endif
+
+    if (!p) {
+        printf("alloc error.\r\n");
+        return -1;
+    }
+    // get intf
+#ifdef CONFIG_WL80211
+    net_if = (struct netif *)(wl80211_mac_vif[is_sta ? WL80211_VIF_STA : WL80211_VIF_AP]);
+    net_if_sta = (struct netif *)wl80211_mac_vif[WL80211_VIF_STA];
+    net_if_ap  = (struct netif *)wl80211_mac_vif[WL80211_VIF_AP];
+#else
+    if (is_sta) {
+        net_if = (net_al_if_t *)fhost_env.vif[0].net_if;
+    } else {
+        if (fhost_to_mac_vif(MGMR_VIF_AP) == NULL) {
+            ecm_print("ap mac_vif invalid, drop frame\r\n");
+            pbuf_free(p);
+            return -1;
+        }
+        net_if = (net_al_if_t *)fhost_env.vif[1].net_if;
+    }
+#endif
+
+    if (!net_if) {
+        pbuf_free(p);
+        return -1;
+    }
+
+#if 0
+    if ((!net_if) || (!netif_is_up((struct netif *)net_if))) {
+#ifdef CONFIG_WL80211
+        ecm_print("    netif_status - sta:%d ap:%d\r\n",
+                  net_if_sta ? netif_is_up(net_if_sta) : -1,
+                  net_if_ap ? netif_is_up(net_if_ap) : -1);
+#else
+        ecm_print("    netif_status - sta:%d\r\n",
+                  (net_if_sta ? netif_is_up(net_if_sta) : -1));
+#endif
+        pbuf_free(p);
+        return -1;
+    }
+#endif
+
+    {
+        static uint32_t g_fhost_tx_cnt = 0;
+        g_fhost_tx_cnt++;
+        ecm_print("dnld <------- cnt:%d msg:%p -> off=(%p-%p)=%d\r\n",
+                    g_fhost_tx_cnt, msg,
+                    msg->payload_buf,
+                    msg->pbuf.pbuf.payload,
+                    ((uint32_t)msg->pbuf.pbuf.payload-(uint32_t)msg->payload_buf));
+    }
+#if (CONFIG_BYPASS_TX2 == 1)
+    pbuf_free(p);
+    return 0;
+#endif
+#ifdef CONFIG_WL80211
+    if (0 != _wl80211_output(is_sta ? WL80211_VIF_STA : WL80211_VIF_AP, p)) {
+#else
+    if (0 != fhost_tx_start((struct netif *)net_if, p, NULL, NULL)) {
+#endif
+        //printf("  tx error.\r\n");
+    }
+    pbuf_free(p);
+    return 0;
+}
+
+void usb_dn_task(void *arg)
+{
+    BaseType_t result;
+    int ret;
+
+    while (1) {
+        g_usbecm.dbg_dntask_mode = 1;
+        // get buf
+        result = xQueueReceive(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY);
+        if (result != pdPASS) {
+            printf("result:%d\r\n", result);
+            return;  // Timeout or error in receiving the message
+        }
+
+        // init pbuf
+        g_usbecm.dbg_dntask_mode = 2;
+        g_usbecm.dnmsg->pbuf.custom_free_function = custom_free;
+        if (!pbuf_alloced_custom(PBUF_RAW_TX, TX_PBUF_FRAME_LEN,
+                (PBUF_ALLOC_FLAG_DATA_CONTIGUOUS | PBUF_TYPE_ALLOC_SRC_MASK_STD_HEAP),
+                &g_usbecm.dnmsg->pbuf, g_usbecm.dnmsg->payload_buf, TX_PBUF_PAYLOAD_LEN)) {
+            while (xQueueSend(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY) != pdPASS);
+            g_usbecm.dnmsg = NULL;
+            continue;
+        }
+
+        // recv buf
+        g_usbecm.dbg_dntask_mode = 3;
+        ret = usbd_cdc_ecm_start_read((uint8_t *)g_usbecm.dnmsg->pbuf.pbuf.payload, (TX_PBUF_FRAME_LEN));
+        if (0 != ret) {
+            printf("usbd_cdc_ecm_receive ret:%d\r\n", ret);
+            vTaskDelay(200);
+            while (xQueueSend(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY) != pdPASS);
+            continue;
+        }
+        g_usbecm.dbg_dntask_mode = 4;
+        result = xSemaphoreTake(g_usbecm.dnsem, portMAX_DELAY);
+
+
+        if (result != pdPASS) {
+            printf("usbd_cdc_ecm_receive ok take isr result:%d.\r\n", result);
+            while (xQueueSend(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY) != pdPASS);
+            continue;
+        }
+        g_usbecm.dbg_dntask_mode = 5;
+
+        // update pbuf
+#if defined(CONFIG_ATMODULE) && defined(CONFIG_ATMODULE_WIFI_AP) && CONFIG_ATMODULE && CONFIG_ATMODULE_WIFI_AP
+        extern wifi_config *at_wifi_config;
+        if (at_wifi_config->wifi_mode == WIFI_SOFTAP_MODE) {
+            portwifi_eth_tx(g_usbecm.dnmsg, 0);
+        } else {
+            portwifi_eth_tx(g_usbecm.dnmsg, 1);
+        }
+#else
+        portwifi_eth_tx(g_usbecm.dnmsg, 1);
+#endif
+        g_usbecm.dnmsg = NULL;
+    }
+}
+
+void usb_up_task(void *arg)
+{
+    BaseType_t result;
+    int ret;
+
+    while (1) {
+        g_usbecm.dbg_uptask_mode = 1;
+        result = xQueueReceive(g_usbecm.upvq, &g_usbecm.upmsg, portMAX_DELAY);
+        if (result != pdPASS) {
+            printf("result:%d\r\n", result);
+            return;  // Timeout or error in receiving the message
+        }
+
+        g_usbecm.dbg_uptask_mode = 2;
+        ret = usbd_cdc_ecm_start_write((uint8_t *)(uintptr_t)g_usbecm.upmsg->payload,
+                                       g_usbecm.upmsg->len);
+        if (ret != 0) {
+            printf("usb ecm start send failed: %d.\r\n", ret);
+            pbuf_free(g_usbecm.upmsg);
+            continue;
+        }
+        do {
+            result = xSemaphoreTake(g_usbecm.upsem, pdMS_TO_TICKS(10000));
+            if (result != pdPASS) {
+                printf("usb ecm send timeout.\r\n");
+            }
+        } while (result != pdPASS);
+        g_usbecm.dbg_uptask_mode = 3;
+        pbuf_free(g_usbecm.upmsg);
+
+        g_usbecm.dbg_uptask_loop_cnt++;
+    }
+
+    return;
+}
+
+int dual_stack_peer_input(void *pkt, void *arg)
+{
+    static int s_cnt = 0;
+    struct pbuf *p = (struct pbuf *)pkt;
+#if 1
+    s_cnt++;
+    ecm_print("upld -------> %s, cnt:%d, p:%p\r\n", __func__, s_cnt, p);
+    if (!p) {
+        return -1;
+    }
+    while (xQueueSend(g_usbecm.upvq, &p, portMAX_DELAY) != pdPASS);
+#else
+    s_cnt++;
+    printf("%s, cnt:%d\r\n", __func__, s_cnt);
+    pkt_free(p);
+#endif
+    return 0;
+}
+
+static void *eth_input_hook(bool is_sta, void *pkt, void *arg)
+{
+    struct pbuf *p = (struct pbuf *)pkt;
+
+    if (!p) {
+        return NULL;
+    }
+    if (npf_is_8021X(p)) {
+        return pkt;
+    }
+
+    // XXX distinguish STA/AP
+    int ret = dual_stack_peer_input(p, NULL);
+    if (ret) {
+        pbuf_free(p);
+        return NULL;
+    }
+
+    return NULL;
+}
+
+static int usbecm_dump(void);
+
+static int usbecm_queue_init(void)
+{
+    int i;
+
+    /* reset global */
+    memset(&g_usbecm, 0, sizeof(usbecm_t));
+
+    /* init queue sem */
+    g_usbecm.dnfq = xQueueCreate(NXBD_DNLD_ITEMS + 1, sizeof(trans_desc_t *));
+    g_usbecm.upvq = xQueueCreate(NXBD_UPLD_ITEMS + 1, sizeof(trans_desc_t *));
+    g_usbecm.dnsem = xSemaphoreCreateBinary();
+    g_usbecm.upsem = xSemaphoreCreateBinary();
+    if (!g_usbecm.dnfq || !g_usbecm.upvq || !g_usbecm.dnsem || !g_usbecm.upsem) {
+        LOG_E("failed to create queue\r\n");
+        return -1;
+    }
+
+    usbecm_dump();
+
+    /* init sem */
+    for (i = 0; i < NXBD_DNLD_ITEMS; i++) {
+        trans_desc_t *msg;
+        dnmsg_desc[i].payload_buf = s_buf + TX_PBUF_PAYLOAD_LEN * i;
+        msg = &(dnmsg_desc[i]);
+        xQueueSend(g_usbecm.dnfq, &msg, portMAX_DELAY);
+    }
+
+    usbecm_dump();
+
+    return 0;
+}
+
+#ifdef CONFIG_WL80211
+#ifndef CONFIG_UPLD_ZEROCOPY_THRES
+#define CONFIG_UPLD_ZEROCOPY_THRES 500
+#endif
+
+void usb_input(void *prv, wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
+                         uint32_t status /* enum rx_status_bits */)
+{
+    struct pbuf_custom *pc;
+    struct pbuf *p;
+
+    // TODO If the current packet is being forwarded to the host, use zerocopy.
+#if 0
+    if (frm_len < CONFIG_UPLD_ZEROCOPY_THRES) {
+        pc = malloc(sizeof(struct pbuf_custom) + frm_len);
+        if (pc == NULL) {
+            /// TODO
+            assert(0);
+        }
+
+        p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+        pc->custom_free_function = (void *)free;
+
+        memcpy(p->payload, buf, frm_len);
+        // free rx right now
+        wl80211_mac_rx_free(rxhdr);
+    } else {
+        pc = rxhdr;
+        p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+        pc->custom_free_function = (void *)wl80211_mac_rx_free;
+    }
+#else
+    pc = rxhdr;
+    p = pbuf_alloced_custom(PBUF_RAW, frm_len, PBUF_REF | PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS, pc, buf, frm_len);
+    if (!p) {
+        wl80211_mac_rx_free(rxhdr);
+        return;
+    }
+    pc->custom_free_function = (void *)wl80211_mac_rx_free;
+#endif
+
+#if 0
+    assert(p != NULL);
+    assert(p->ref > 0);
+
+    assert(vif2netif[vif].input != NULL);
+#endif
+    if (WL80211_VIF_STA == vif) {
+        eth_input_hook(1, p, NULL);
+    } else {
+        pbuf_free(p);
+    }
+}
+#endif
+
+static int usbecm_wifi_init(void)
+{
+#ifdef CONFIG_WL80211
+#if CONFIG_BYPASS_RX
+#else
+    wl80211_register_input_cb(usb_input, NULL);
+#endif
+#else
+    bl_pkt_eth_input_hook_register(eth_input_hook, NULL);
+    // todo
+#endif
+    return 0;
+}
+
+static int usbecm_usb_init(void)
+{
+    cdc_ecm_init();
+    return 0;
+}
+
+static int usb_ecm_acm_init(void)
+{
+    usbecm_queue_init();
+    usbecm_usb_init();
+    usbecm_wifi_init();
+
+    xTaskCreate(usb_dn_task, (char *)"usbdn", 1024, NULL, 25, NULL);
+    xTaskCreate(usb_up_task, (char *)"usbup", 1024, NULL, 25, NULL);
+
+    return 0;
+}
+
+static int usbecm_dump(void)
+{
+    printf("[%ld] flash clock:%d\r\n", xTaskGetTickCount(), bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_FLASH, 0));
+
+    if (g_usbecm.dnfq) {
+        printf("dn fq:%d, dnmsg:%p, items:%d\r\n",
+                uxQueueMessagesWaiting(g_usbecm.dnfq),
+                g_usbecm.dnmsg,
+                NXBD_DNLD_ITEMS);
+    }
+    if (g_usbecm.upvq) {
+        printf("up vq:%d, upmsg:%p, items:%d\r\n",
+                uxQueueMessagesWaiting(g_usbecm.upvq),
+                g_usbecm.upmsg,
+                NXBD_UPLD_ITEMS);
+    }
+    printf("dntask mode:%d\r\n", g_usbecm.dbg_dntask_mode);
+    printf("uptask mode:%d, loop cnt:%d\r\n", g_usbecm.dbg_uptask_mode, g_usbecm.dbg_uptask_loop_cnt);
+    printf("send_over:%d, recv_cnt:%d\r\n", g_usbecm.send_cnt, g_usbecm.recv_cnt);
+
+    return 0;
+}
+
+static int cmd_usbecm(int argc, char *argv[])
+{
+    if (argc < 2) {
+        usbecm_dump();
+        printf("Usage: usbecm <dump|init>\n");
+        return -1;
+    }
+
+    const char *cmd = argv[1];
+
+    if (strcmp(cmd, "dump") == 0) {
+        return usbecm_dump();
+    } else if (strcmp(cmd, "init") == 0) {
+        /* usb_ecm_acm_init(); */  /* commented out, init done elsewhere */
+    } else {
+        printf("Invalid command: %s\n", cmd);
+        printf("Usage: usbecm <dump|init>\n");
+        return -1;
+    }
+
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(cmd_usbecm, usbecm, USB ECM commands.);
+
+netbus_usb_cdc_t *netbus_usb_cdc_init(void)
+{
+    usb_ecm_acm_init();
+    while (!g_cdc_acm_init_done) {
+        vTaskDelay(10);
+    }
+    return &g_usbecm.usbacm;
+}

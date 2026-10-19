@@ -1,0 +1,1 @@
+#define LHAL_VERSION "@LHAL_VERSION@"

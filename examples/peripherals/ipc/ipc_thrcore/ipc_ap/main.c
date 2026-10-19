@@ -1,0 +1,208 @@
+#include "bflb_mtimer.h"
+#include "board.h"
+#include "bflb_ipc.h"
+#include "bflb_irq.h"
+#include "bflb_gpio.h"
+#include "bflb_uart.h"
+#define DBG_TAG "MAIN"
+#include "log.h"
+#include "shell.h"
+
+#define NP_IPC_DEV_NAME "ipc1_ch1"
+#define LP_IPC_DEV_NAME "ipc1_ch0"
+#define AP_IPC_DEV_NAME "ipc0_ch0"
+
+#define IPC_GPIO_MEASURE_ENABLE 0
+
+#if IPC_GPIO_MEASURE_ENABLE
+#define IPC_MEASURE_GPIOX_PIN GPIO_PIN_0
+#define IPC_MEASURE_GPIOY_PIN GPIO_PIN_1
+#define IPC_MEASURE_GPIO_CFG  (GPIO_OUTPUT | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_0)
+#define IPC_MEASURE_GPIOX_HIGH() bflb_gpio_set(gpio, IPC_MEASURE_GPIOX_PIN)
+#define IPC_MEASURE_GPIOX_LOW()  bflb_gpio_reset(gpio, IPC_MEASURE_GPIOX_PIN)
+#define IPC_MEASURE_GPIOY_HIGH() bflb_gpio_set(gpio, IPC_MEASURE_GPIOY_PIN)
+#define IPC_MEASURE_GPIOY_LOW()  bflb_gpio_reset(gpio, IPC_MEASURE_GPIOY_PIN)
+#else
+#define IPC_MEASURE_GPIOX_HIGH()
+#define IPC_MEASURE_GPIOX_LOW()
+#define IPC_MEASURE_GPIOY_HIGH()
+#define IPC_MEASURE_GPIOY_LOW()
+#endif
+
+struct bflb_device_s *np_ipc;
+struct bflb_device_s *lp_ipc;
+struct bflb_device_s *ap_ipc;
+#if IPC_GPIO_MEASURE_ENABLE
+static struct bflb_device_s *gpio;
+#endif
+static struct bflb_device_s *uartx;
+
+#if IPC_GPIO_MEASURE_ENABLE
+static void ipc_measure_gpio_init(void)
+{
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, IPC_MEASURE_GPIOX_PIN, IPC_MEASURE_GPIO_CFG);
+    bflb_gpio_init(gpio, IPC_MEASURE_GPIOY_PIN, IPC_MEASURE_GPIO_CFG);
+    IPC_MEASURE_GPIOX_LOW();
+    IPC_MEASURE_GPIOY_LOW();
+}
+#endif
+
+#if defined(CPU_AP)
+void ap_ipc_isr(int irq, void *arg)
+{
+    IPC_MEASURE_GPIOY_HIGH();
+    uint32_t ipc_intsta = bflb_ipc_get_intsta(ap_ipc);
+    if (ipc_intsta & 0xffff0000) {
+        LOG_I("LP->AP interrupt trigger!\r\n");
+        LOG_I("Status=0x%08X\r\n", (ipc_intsta & 0xffff0000) >> 16);
+    }
+
+    if (ipc_intsta & 0x0000ffff) {
+        LOG_I("NP->AP interrupt trigger!\r\n");
+        LOG_I("Status=0x%08X\r\n", ipc_intsta & 0xffff);
+    }
+
+    bflb_ipc_clear(ap_ipc, ipc_intsta);
+    IPC_MEASURE_GPIOY_LOW();
+}
+#elif defined(CPU_LP)
+void lp_ipc_isr(int irq, void *arg)
+{
+    IPC_MEASURE_GPIOY_HIGH();
+    uint32_t ipc_intsta = bflb_ipc_get_intsta(lp_ipc);
+
+    if (ipc_intsta & 0xffff0000) {
+        LOG_I("AP->LP interrupt trigger!\r\n");
+        LOG_I("Status=0x%08X\r\n", (ipc_intsta & 0xffff0000) >> 16);
+    }
+
+    if (ipc_intsta & 0x0000ffff) {
+        LOG_I("NP->LP interrupt trigger!\r\n");
+        LOG_I("Status=0x%08X\r\n", ipc_intsta & 0xffff);
+    }
+
+    bflb_ipc_clear(lp_ipc, ipc_intsta);
+    IPC_MEASURE_GPIOY_LOW();
+}
+
+#endif
+
+#if defined(CPU_AP)
+int ap_trigger_lp(int argc, char **argv)
+{
+    printf("Trigger AP->LP interrupt\r\n");
+    if (argc != 2) {
+        printf("Usage: ap_trigger_lp <value>\r\n");
+        return -1;
+    }
+    IPC_MEASURE_GPIOX_HIGH();
+    bflb_ipc_trig(lp_ipc, atoi(argv[1]));
+    IPC_MEASURE_GPIOX_LOW();
+    return 0;
+}
+
+int ap_trigger_np(int argc, char **argv)
+{
+    printf("Trigger AP->NP interrupt\r\n");
+    if (argc != 2) {
+        printf("Usage: ap_trigger_np <value>\r\n");
+        return -1;
+    }
+    IPC_MEASURE_GPIOX_HIGH();
+    bflb_ipc_trig(np_ipc, atoi(argv[1]));
+    IPC_MEASURE_GPIOX_LOW();
+    return 0;
+}
+
+#elif defined(CPU_LP)
+int lp_trigger_ap(int argc, char **argv)
+{
+    printf("Trigger LP->AP interrupt\r\n");
+    if (argc != 2) {
+        printf("Usage: lp_trigger_ap <value>\r\n");
+        return -1;
+    }
+    IPC_MEASURE_GPIOX_HIGH();
+    bflb_ipc_trig(ap_ipc, atoi(argv[1]));
+    IPC_MEASURE_GPIOX_LOW();
+    return 0;
+}
+
+int lp_trigger_np(int argc, char **argv)
+{
+    printf("Trigger LP->NP interrupt\r\n");
+    if (argc != 2) {
+        printf("Usage: lp_trigger_np <value>\r\n");
+        return -1;
+    }
+    IPC_MEASURE_GPIOX_HIGH();
+    bflb_ipc_trig(np_ipc, atoi(argv[1]));
+    IPC_MEASURE_GPIOX_LOW();
+    return 0;
+}
+#endif
+
+#if defined(CPU_AP)
+void ap_ipc_init()
+{
+    lp_ipc = bflb_device_get_by_name(LP_IPC_DEV_NAME);
+
+    np_ipc = bflb_device_get_by_name(NP_IPC_DEV_NAME);
+
+    ap_ipc = bflb_device_get_by_name(AP_IPC_DEV_NAME);
+    bflb_ipc_init(ap_ipc);
+    bflb_ipc_int_unmask(ap_ipc, IPC_BITS_ALL);
+    bflb_irq_attach(ap_ipc->irq_num, ap_ipc_isr, NULL);
+    bflb_irq_enable(ap_ipc->irq_num);
+}
+#elif defined(CPU_LP)
+void lp_ipc_init()
+{
+    ap_ipc = bflb_device_get_by_name(AP_IPC_DEV_NAME);
+
+    np_ipc = bflb_device_get_by_name(NP_IPC_DEV_NAME);
+
+    lp_ipc = bflb_device_get_by_name(LP_IPC_DEV_NAME);
+    bflb_ipc_init(lp_ipc);
+    bflb_ipc_int_unmask(lp_ipc, IPC_BITS_ALL);
+    bflb_irq_attach(lp_ipc->irq_num, lp_ipc_isr, NULL);
+    bflb_irq_enable(lp_ipc->irq_num);
+}
+#endif
+
+int main(void)
+{
+    int ch;
+    board_init();
+#if IPC_GPIO_MEASURE_ENABLE
+    ipc_measure_gpio_init();
+#endif
+
+#if defined(CPU_AP)
+    ap_ipc_init();
+#elif defined(CPU_LP)
+    lp_ipc_init();
+#endif
+
+#if defined(CPU_AP)
+    uartx = bflb_device_get_by_name("uart0");
+#elif defined(CPU_LP)
+    uartx = bflb_device_get_by_name("uart3");
+#endif
+    LOG_I("IPC test start\r\n");
+    shell_init();
+    while (1) {
+        if ((ch = bflb_uart_getchar(uartx)) != -1) {
+            shell_handler(ch);
+        }
+    }
+}
+
+#if defined(CPU_AP)
+SHELL_CMD_EXPORT_ALIAS(ap_trigger_lp, ap_trigger_lp, shell trigger lp interrupt.);
+SHELL_CMD_EXPORT_ALIAS(ap_trigger_np, ap_trigger_np, shell trigger np interrupt.);
+#elif defined(CPU_LP)
+SHELL_CMD_EXPORT_ALIAS(lp_trigger_ap, lp_trigger_ap, shell trigger ap interrupt.);
+SHELL_CMD_EXPORT_ALIAS(lp_trigger_np, lp_trigger_np, shell trigger np interrupt.);
+#endif

@@ -1,0 +1,8 @@
+mainmenu "SDK Configuration"
+
+config WIFI_TCP_IPERF_RX_ACK_BATCH_MSS
+	int "TCP RX window update batch (MSS)"
+	default 4
+	range 1 32
+
+source "$BL_SDK_BASE/Kconfig"

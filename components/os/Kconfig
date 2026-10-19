@@ -1,0 +1,62 @@
+#
+# OS components
+#
+
+menu "Operating System"
+
+config FREERTOS
+    bool "FreeRTOS"
+    default n
+    help
+      Build applications on top of FreeRTOS.  Disable for bare-metal projects.
+
+config PS_EXTEND
+    bool "FreeRTOS power-save extension"
+    default n
+    depends on FREERTOS
+    help
+      Build the FreeRTOS power-save extension with trap-based wakeup.
+
+config PWRMGMT
+    bool "Power management"
+    default n
+    help
+      Build the power management component.
+
+if PWRMGMT
+
+config DCDC_ENABLE
+    bool "DCDC converter"
+    default n
+    help
+      Enable the DCDC converter in power management.
+
+config TICKLESS_EXT
+    bool "Extended tickless idle"
+    default n
+    help
+      Enable extended tickless idle support in power management.
+
+config TICKLESS_ACCURATE
+    bool "Accurate tickless idle"
+    default n
+    depends on TICKLESS_EXT
+    help
+      Keep tick accounting accurate during tickless idle.
+
+config CLOCK_SOURCE_EF_PARAM
+    bool "Clock source from eFuse parameters"
+    default n
+    help
+      Select the system clock source from eFuse parameters at runtime.
+
+config PM_HELPER_CLI
+    bool "Power management helper commands"
+    default n
+    depends on SHELL
+    help
+      Enable shared low-power shell commands and network keepalive helpers.
+
+endif # CONFIG_PWRMGMT
+
+endmenu

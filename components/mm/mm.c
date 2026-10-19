@@ -1,0 +1,1006 @@
+/**
+ * @file mm.c
+ * @brief Core implementation of the Bouffalo SDK memory management framework
+ * @version 1.0
+ * @date 2025
+ *
+ * This file implements the core functions of the memory management framework,
+ * including allocator management, heap management, and API interfaces.
+ *
+ * Copyright (c) 2025 Bouffalo Lab
+ */
+
+#include "mm.h"
+#include "bflb_core.h"
+#include <string.h>
+#include <errno.h>
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+#include "mm_track.h"
+#endif
+
+#define DBG_TAG "MM"
+#ifdef CONFIG_MM_LOG_LEVEL
+#define CONFIG_LOG_LEVEL CONFIG_MM_LOG_LEVEL
+#endif
+#include "log.h"
+
+/* Global manager instance - the only global variable */
+mem_manager_t g_mem_manager;
+
+/* ======================================================================== */
+/*                      Weak Function Definitions - Critical Section Protection                                */
+/* ======================================================================== */
+
+/**
+ * @brief Memory management lock save (weak function)
+ *
+ * Provides critical section protection mechanism
+ * External code can reimplement this function to provide specific lock mechanism
+ *
+ * @return Lock status flag
+ */
+__attribute__((weak)) uintptr_t mm_lock_save(void)
+{
+    return bflb_irq_save();
+}
+
+/**
+ * @brief Memory management lock restore (weak function)
+ *
+ * Restores critical section protection
+ * External code can reimplement this function to provide specific lock mechanism
+ *
+ * @param flags Lock status flag
+ */
+__attribute__((weak)) void mm_unlock_restore(uintptr_t flags)
+{
+    bflb_irq_restore(flags);
+}
+
+/* ======================================================================== */
+/*       Framework Initialization and Management Interfaces                 */
+/* ======================================================================== */
+
+/**
+ * @brief Memory manager initialization
+ *
+ * @return 0 on success, negative value on failure
+ */
+int mem_manager_init(void)
+{
+    mem_manager_t *manager = &g_mem_manager;
+
+    /* Check if already initialized */
+    if (manager->initialized) {
+        return 0;
+    }
+
+    /* Zero-initialize manager structure */
+    memset(manager, 0, sizeof(mem_manager_t));
+
+    /* Register compile-time configured managers */
+#if IS_ENABLED(CONFIG_MM_TLSF_EN)
+    mm_register_allocator(MM_ALLOCATOR_TLSF, &g_tlsf_allocator);
+#endif
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_FREERTOS_HEAP5)
+    mm_register_allocator(MM_ALLOCATOR_HEAP5, &g_heap5_allocator);
+#endif
+
+    /* Set manager status */
+    manager->initialized = true;
+
+    /* Reset MM_FLAG_HEAP_ANY allocations to the default ascending order. */
+    mm_heap_set_any_alloc_order(NULL, 0);
+
+    return 0;
+}
+
+/**
+ * @brief Register memory manager
+ *
+ * Provide index at usage, directly mapped to array index (excluding 0)
+ *
+ * @param allocator_id Manager ID (array index, excluding 0)
+ * @param allocator Manager structure pointer
+ * @return 0 on success, negative value on failure
+ */
+int mm_register_allocator(uint32_t allocator_id, const mm_allocator_t *allocator)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t flags;
+
+    /* Parameter validation */
+    if (allocator_id == 0 || allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+        LOG_E("Invalid allocator ID: %u\r\n", allocator_id);
+        return -EINVAL;
+    }
+
+    if (!allocator || strlen(allocator->name) == 0 ||
+        !allocator->malloc || !allocator->free || !allocator->realloc ||
+        !allocator->get_block_size || !allocator->get_free_size) {
+        LOG_E("Invalid allocator structure\r\n");
+        return -EINVAL;
+    }
+
+    flags = mm_lock_save();
+
+    /* Check if position is already occupied */
+    if (manager->allocators[allocator_id] != NULL) {
+        mm_unlock_restore(flags);
+        LOG_E("Allocator ID %u already registered\r\n", allocator_id);
+        return -EEXIST;
+    }
+
+    /* Directly record manager pointer to specified position */
+    manager->allocators[allocator_id] = (mm_allocator_t *)allocator;
+
+    mm_unlock_restore(flags);
+
+    return 0;
+}
+
+/**
+ * @brief Register and initialize memory pool
+ *
+ * Returns heap pointer directly from allocator->init, avoiding dynamic memory
+ * allocation by the framework. allocator->init handles the allocation of heap
+ * structure and private data internally.
+ *
+ * @param heap_id Heap ID (array index, excluding 0)
+ * @param name Memory pool name
+ * @param allocator_id Manager ID
+ * @param start_addr Memory start address
+ * @param size Memory size
+ * @return Pointer to the heap, NULL on failure
+ */
+mm_heap_t *mm_register_heap(uint32_t heap_id, const char *name, uint32_t allocator_id,
+                            void *start_addr, size_t size)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    const mm_allocator_t *allocator;
+    mm_heap_t *heap;
+    uintptr_t flags;
+
+    /* Parameter validation */
+    if (heap_id == 0 || heap_id >= CONFIG_MM_HEAP_COUNT) {
+        LOG_E("Invalid heap ID: %u\r\n", heap_id);
+        return NULL;
+    }
+
+    /* Framework initialization check */
+    if (!manager->initialized) {
+        LOG_E("Failed to initialize memory manager\r\n");
+        return NULL;
+    }
+
+    flags = mm_lock_save();
+
+    /* Check if position is already occupied */
+    if (manager->heaps[heap_id] != NULL) {
+        mm_unlock_restore(flags);
+        LOG_E("Heap ID %u already registered\r\n", heap_id);
+        return NULL;
+    }
+
+    /* Get allocator */
+    if (allocator_id == 0 || allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+        mm_unlock_restore(flags);
+        LOG_E("Invalid allocator ID: %u\r\n", allocator_id);
+        return NULL;
+    }
+    allocator = manager->allocators[allocator_id];
+    if (!allocator) {
+        mm_unlock_restore(flags);
+        LOG_E("Allocator %u not found\r\n", allocator_id);
+        return NULL;
+    }
+
+    /* Call allocator initialization */
+    heap = (mm_heap_t *)allocator->init(heap_id, start_addr, size);
+    if (!heap) {
+        mm_unlock_restore(flags);
+        LOG_E("Allocator %u init failed\r\n", allocator_id);
+        return NULL;
+    }
+
+    /* Set heap name */
+    if (name && strlen(name) > 0) {
+        strncpy(heap->name, name, CONFIG_MM_HEAP_NAME_MAX - 1);
+        heap->name[CONFIG_MM_HEAP_NAME_MAX - 1] = '\0';
+    }
+
+    /* Activate heap and add to manager */
+    heap->is_active = true;
+    manager->heaps[heap_id] = heap;
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
+    /* New heap changes total free memory baseline; force-reset watermark. */
+    manager->min_free_size = kfree_size(0);
+#endif
+
+    mm_unlock_restore(flags);
+
+    return heap;
+}
+
+static void mm_heap_unregister_locked(mem_manager_t *manager, uint32_t heap_id)
+{
+    const mm_allocator_t *allocator;
+    mm_heap_t *heap = manager->heaps[heap_id];
+
+    manager->heaps[heap_id] = NULL;
+    allocator = heap->allocator_id < CONFIG_MM_ALLOCATOR_COUNT ?
+                    manager->allocators[heap->allocator_id] : NULL;
+    if (allocator && allocator->deinit) {
+        allocator->deinit(heap);
+    } else {
+        heap->is_active = false;
+    }
+}
+
+/**
+ * @brief Unregister and deinitialize a heap.
+ */
+int mm_heap_unregister(uint32_t heap_id)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t flags;
+
+    if (!manager->initialized) {
+        return -EPERM;
+    }
+
+    if (heap_id == 0 || heap_id >= CONFIG_MM_HEAP_COUNT) {
+        return -EINVAL;
+    }
+
+    flags = mm_lock_save();
+    if (!manager->heaps[heap_id]) {
+        mm_unlock_restore(flags);
+        return -ENOENT;
+    }
+
+    mm_heap_unregister_locked(manager, heap_id);
+    mm_unlock_restore(flags);
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
+    manager->min_free_size = kfree_size(0);
+#endif
+
+    return 0;
+}
+
+/**
+ * @brief Unregister and deinitialize all heaps.
+ */
+void mm_heap_unregister_all(void)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t flags;
+
+    if (!manager->initialized) {
+        return;
+    }
+
+    flags = mm_lock_save();
+
+    for (uint32_t heap_id = 1; heap_id < CONFIG_MM_HEAP_COUNT; heap_id++) {
+        if (!manager->heaps[heap_id]) {
+            continue;
+        }
+
+        mm_heap_unregister_locked(manager, heap_id);
+    }
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
+    manager->min_free_size = 0;
+#endif
+
+    mm_unlock_restore(flags);
+}
+
+/**
+ * @brief Set the heap allocation order for MM_FLAG_HEAP_ANY.
+ *
+ * The provided heap IDs are copied into the internal automatic-allocation
+ * list in the specified order. Entries with value 0 disable that slot, and
+ * heaps not present in the list are not used by kmalloc(MM_FLAG_HEAP_ANY).
+ * Passing NULL with count 0 resets the list to the default ascending heap-ID
+ * order, which matches the order of mm_heap_type_t.
+ *
+ * @param heap_list Array of heap IDs ordered by automatic allocation priority.
+ * @param count Number of entries in heap_list.
+ * @return 0 on success, negative value on failure.
+ */
+int mm_heap_set_any_alloc_order(const uint32_t *heap_list, size_t count)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t flags;
+
+    if (!manager->initialized) {
+        LOG_E("Memory manager not initialized\r\n");
+        return -EPERM;
+    }
+
+    if (count > CONFIG_MM_HEAP_COUNT) {
+        LOG_E("Heap order count exceeds maximum: %zu\r\n", count);
+        return -EINVAL;
+    }
+
+    /* Reset to default ascending order */
+    if (heap_list == NULL || count == 0) {
+        flags = mm_lock_save();
+        for (uint32_t heap_id = 0; heap_id < CONFIG_MM_HEAP_COUNT; heap_id++) {
+            manager->heap_alloc_order[heap_id] = heap_id;
+        }
+        mm_unlock_restore(flags);
+        return 0;
+    }
+
+    /* Validate input heap IDs: check range and duplicates. */
+    bool seen[CONFIG_MM_HEAP_COUNT] = { 0 };
+    for (size_t i = 0; i < count; i++) {
+        uint32_t heap_id = heap_list[i];
+        if (heap_id >= CONFIG_MM_HEAP_COUNT || (heap_id && seen[heap_id])) {
+            LOG_E("Invalid or duplicate heap ID in order: %u\r\n", heap_id);
+            return -EINVAL;
+        }
+        seen[heap_id] = true;
+    }
+
+    flags = mm_lock_save();
+    /* Copy provided heap IDs in specified order. */
+    for (size_t i = 0; i < count; i++) {
+        manager->heap_alloc_order[i] = heap_list[i];
+    }
+    /* Clear remaining entries */
+    for (size_t i = count; i < CONFIG_MM_HEAP_COUNT; i++) {
+        manager->heap_alloc_order[i] = 0;
+    }
+    mm_unlock_restore(flags);
+
+    return 0;
+}
+
+/**
+ * @brief Get the heap allocation order for MM_FLAG_HEAP_ANY.
+ *
+ * Copies the current automatic-allocation list into the caller-provided
+ * buffer. The output buffer must contain at least CONFIG_MM_HEAP_COUNT
+ * entries so all configured slots, including zero-valued disabled slots,
+ * can be copied out.
+ *
+ * @param heap_list Output array receiving the current automatic allocation list.
+ * @param count Number of entries available in heap_list.
+ * @return 0 on success, negative value on failure.
+ */
+int mm_heap_get_any_alloc_order(uint32_t *heap_list, size_t count)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t flags;
+
+    if (!manager->initialized) {
+        LOG_E("Memory manager not initialized\r\n");
+        return -EPERM;
+    }
+
+    if (heap_list == NULL) {
+        LOG_E("Invalid heap list buffer\r\n");
+        return -EINVAL;
+    }
+
+    if (count < CONFIG_MM_HEAP_COUNT) {
+        LOG_E("Heap list buffer too small: %zu\r\n", count);
+        return -EINVAL;
+    }
+
+    flags = mm_lock_save();
+    memcpy(heap_list, manager->heap_alloc_order, sizeof(manager->heap_alloc_order[0]) * CONFIG_MM_HEAP_COUNT);
+    mm_unlock_restore(flags);
+
+    return 0;
+}
+
+/* ======================================================================== */
+/*                      Core Memory Allocation Interfaces                   */
+/* ======================================================================== */
+
+/**
+ * @brief Find the heap corresponding to a given address
+ *
+ * @param addr Memory address
+ * @return Pointer to the heap, NULL if not found
+ */
+mm_heap_t *mm_find_heap_by_addr(void *addr)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+
+    if (!addr) {
+        return NULL;
+    }
+
+    /* Linear search through all active heaps */
+    for (uint32_t i = 1; i < CONFIG_MM_HEAP_COUNT; i++) {
+        heap = manager->heaps[i];
+        if (heap == NULL || !heap->is_active) {
+            continue;
+        }
+
+        if ((uintptr_t)addr >= (uintptr_t)heap->start_addr &&
+            (uintptr_t)addr < (uintptr_t)heap->end_addr) {
+            return heap;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief kmalloc core implementation - optimized version
+ *
+ * Intelligent heap selection, supports automatic polling and specified heap allocation
+ * Optimized loop range and statistics update logic
+ *
+ * @param size Allocation size
+ * @param flags Allocation flags
+ * @return Allocated memory address, NULL on failure
+ */
+void *kmalloc(size_t size, uint32_t flags)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    void *ptr = NULL;
+    uint32_t heap_id;
+    uintptr_t irq_flags;
+
+    if (size == 0) {
+        return NULL;
+    }
+
+    if (!manager->initialized) {
+        LOG_E("Memory manager not initialized\r\n");
+        return NULL;
+    }
+
+    /* Parse allocation parameters. */
+    heap_id = (flags & MM_FLAG_HEAP_MASK) >> MM_FLAG_HEAP_SHIFT;
+    if (heap_id != MM_FLAG_HEAP_ANY && heap_id >= CONFIG_MM_HEAP_COUNT) {
+        LOG_E("Invalid heap ID in flags: %u\r\n", heap_id);
+        return NULL;
+    }
+
+    irq_flags = mm_lock_save();
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+    if (size + MM_TRACK_SLOT_BYTES < size) {
+        LOG_E("Allocation size overflow: %zu\r\n", (size_t)size);
+        mm_unlock_restore(irq_flags);
+        return NULL;
+    }
+
+    if (mm_track_is_started()) {
+        size = size + MM_TRACK_SLOT_BYTES;
+    }
+#endif
+
+    if (heap_id != MM_FLAG_HEAP_ANY) {
+        heap = manager->heaps[heap_id];
+        if (heap && heap->is_active) {
+            allocator = manager->allocators[heap->allocator_id];
+            if (allocator) {
+                ptr = allocator->malloc(heap, size, flags);
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+                if (mm_track_is_started() && ptr != NULL) {
+                    mm_track_malloc(ptr, allocator->get_block_size(heap, ptr));
+                }
+#endif
+            }
+        }
+    } else {
+        /* Automatic selection mode: follow configured heap priority order. */
+        for (uint32_t order_idx = 0; order_idx < CONFIG_MM_HEAP_COUNT; order_idx++) {
+            uint32_t ordered_heap_id = manager->heap_alloc_order[order_idx];
+            if (ordered_heap_id == 0) {
+                continue;
+            }
+
+            heap = manager->heaps[ordered_heap_id];
+            if (!heap || !heap->is_active) {
+                continue;
+            }
+
+            allocator = manager->allocators[heap->allocator_id];
+            if (!allocator) {
+                continue;
+            }
+
+            ptr = allocator->malloc(heap, size, flags);
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+            if (mm_track_is_started() && ptr != NULL) {
+                mm_track_malloc(ptr, allocator->get_block_size(heap, ptr));
+            }
+#endif
+            if (ptr != NULL) {
+                break;
+            }
+        }
+    }
+
+    /* Update statistics */
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
+    if (ptr) {
+        manager->stats.total_malloc_successes++;
+    } else {
+        manager->stats.total_malloc_failures++;
+    }
+#endif
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
+    /* Track runtime free-memory watermark after each malloc attempt. */
+    const size_t free_size = kfree_size(0);
+    if (free_size < manager->min_free_size) {
+        manager->min_free_size = free_size;
+    }
+#endif
+
+    mm_unlock_restore(irq_flags);
+
+    if (ptr) {
+        LOG_D("Allocated %zu bytes at %p\r\n", size, ptr);
+    } else {
+        LOG_D("Failed to allocate %zu bytes\r\n", size);
+    }
+
+    return ptr;
+}
+
+/**
+ * @brief kfree core implementation - optimized version
+ *
+ * Intelligent address recognition, uses dedicated lookup function to find corresponding heap
+ * Code is more concise, logic is clearer
+ *
+ * @param ptr Memory address to be freed
+ */
+void kfree(void *ptr)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    uintptr_t irq_flags;
+
+    if (!ptr) {
+        return;
+    }
+
+    if (!manager->initialized) {
+        return;
+    }
+
+    irq_flags = mm_lock_save();
+
+    /* Find corresponding heap by address */
+    heap = mm_find_heap_by_addr(ptr);
+    if (!heap) {
+        /* Address not found in any matching heap - silent failure */
+        mm_unlock_restore(irq_flags);
+        LOG_W("Free address %p not found in any heap\r\n", ptr);
+        return;
+    }
+
+    /* Get allocator and perform free */
+    allocator = manager->allocators[heap->allocator_id];
+    if (!allocator) {
+        /* Allocator does not exist, silent failure */
+        mm_unlock_restore(irq_flags);
+        LOG_E("Allocator %u not found for heap %u\r\n", heap->allocator_id, heap->heap_id);
+        return;
+    }
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+    if (mm_track_is_started()) {
+        mm_track_free(ptr, allocator->get_block_size(heap, ptr));
+    }
+#endif
+    allocator->free(heap, ptr);
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
+    /* Update framework-level statistics */
+    manager->stats.total_free_successes++;
+#endif
+
+    mm_unlock_restore(irq_flags);
+
+    LOG_D("Freed memory at %p\r\n", ptr);
+}
+
+/**
+ * @brief krealloc reallocate memory
+ *
+ * Reallocate memory block size, preserving original data
+ * Note: realloc does not support flags, allocation is done from the original memory's heap
+ *
+ * @param ptr Original memory address (can be NULL)
+ * @param newsize New memory size
+ * @return New memory address, NULL on failure
+ */
+void *krealloc(void *ptr, size_t newsize)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    void *new_ptr = NULL;
+    uintptr_t irq_flags;
+
+    /* Handle special cases */
+    if (newsize == 0) {
+        if (ptr) {
+            kfree(ptr);
+        }
+        return NULL;
+    }
+
+    if (ptr == NULL) {
+        /* Equivalent to malloc, use default heap */
+        return kmalloc(newsize, MM_FLAG_HEAP_ANY);
+    }
+
+    irq_flags = mm_lock_save();
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+    bool is_untracked = false;
+    size_t block_size = 0;
+    if (newsize + MM_TRACK_SLOT_BYTES < newsize) {
+        LOG_E("Allocation size overflow: %zu\r\n", (size_t)newsize);
+        mm_unlock_restore(irq_flags);
+        return NULL;
+    }
+
+    if (mm_track_is_started()) {
+        is_untracked = mm_track_is_untracked_ptr(ptr);
+        newsize = newsize + MM_TRACK_SLOT_BYTES;
+    }
+#endif
+
+    /* Find corresponding heap by address */
+    heap = mm_find_heap_by_addr(ptr);
+    if (!heap) {
+        mm_unlock_restore(irq_flags);
+        LOG_E("Cannot find heap for address %p\r\n", ptr);
+        return NULL;
+    }
+
+    /* Get allocator */
+    allocator = manager->allocators[heap->allocator_id];
+    if (!allocator) {
+        mm_unlock_restore(irq_flags);
+        LOG_E("Allocator %u not found for heap %u\r\n", heap->allocator_id, heap->heap_id);
+        return NULL;
+    }
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+    if (mm_track_is_started()) {
+        block_size = allocator->get_block_size(heap, ptr);
+        mm_track_free(ptr, block_size);
+    }
+#endif
+
+    /* Call allocator's realloc implementation */
+    new_ptr = allocator->realloc(heap, ptr, newsize);
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+    if (mm_track_is_started() && new_ptr != NULL) {
+        mm_track_malloc(new_ptr, allocator->get_block_size(heap, new_ptr));
+    }
+    if (mm_track_is_started() && new_ptr == NULL) {
+        mm_track_free_revoke(ptr, block_size, is_untracked);
+    }
+#endif
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_STATISTICS)
+    if (new_ptr) {
+        /* Allocator realloc succeeded, update framework-level statistics */
+        manager->stats.total_malloc_successes++;
+        LOG_D("Allocator realloc succeeded: %p -> %p, size: %zu\r\n", ptr, new_ptr, newsize);
+    } else {
+        /* Allocator realloc failed */
+        manager->stats.total_malloc_failures++;
+        LOG_D("Allocator realloc failed for %zu bytes\r\n", newsize);
+    }
+#else
+    if (new_ptr) {
+        LOG_D("Allocator realloc succeeded: %p -> %p, size: %zu\r\n", ptr, new_ptr, newsize);
+    } else {
+        LOG_D("Allocator realloc failed for %zu bytes\r\n", newsize);
+    }
+#endif
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
+    /* Track runtime free-memory watermark after each realloc attempt. */
+    const size_t free_size = kfree_size(0);
+    if (free_size < manager->min_free_size) {
+        manager->min_free_size = free_size;
+    }
+#endif
+
+    mm_unlock_restore(irq_flags);
+
+    return new_ptr;
+}
+
+/**
+ * @brief Allocate memory with a specific alignment requirement.
+ *
+ * @param size Number of bytes to allocate.
+ * @param align Desired alignment in bytes.
+ * @return Pointer to aligned memory on success, NULL on failure.
+ */
+void *kmemalign(size_t size, size_t align)
+{
+    uint32_t flags = 0;
+
+    if (align <= 4U) {
+        flags |= MM_FLAG_ALIGN_4BYTE;
+    } else if (align <= 8U) {
+        flags |= MM_FLAG_ALIGN_8BYTE;
+    } else if (align <= 16U) {
+        flags |= MM_FLAG_ALIGN_16BYTE;
+    } else if (align <= 32U) {
+        flags |= MM_FLAG_ALIGN_32BYTE;
+    } else if (align <= 64U) {
+        flags |= MM_FLAG_ALIGN_64BYTE;
+    } else if (align <= 128U) {
+        flags |= MM_FLAG_ALIGN_128BYTE;
+    } else {
+        flags |= MM_FLAG_ALIGN_256BYTE;
+    }
+
+    return kmalloc(size, flags);
+}
+
+/**
+ * @brief Query the usable payload size of an allocated block.
+ *
+ * @param ptr Pointer returned by memory allocation APIs.
+ * @return Usable payload size in bytes, 0 on failure.
+ */
+size_t kmalloc_size(void *ptr)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    size_t size = 0;
+    uintptr_t irq_flags;
+
+    if (!ptr || !manager->initialized) {
+        return 0;
+    }
+
+    irq_flags = mm_lock_save();
+    heap = mm_find_heap_by_addr(ptr);
+    if (!heap) {
+        mm_unlock_restore(irq_flags);
+        return 0;
+    }
+
+    allocator = manager->allocators[heap->allocator_id];
+    if (!allocator || !allocator->get_block_size) {
+        mm_unlock_restore(irq_flags);
+        return 0;
+    }
+
+    size = allocator->get_block_size(heap, ptr);
+#if IS_ENABLED(CONFIG_MM_ENABLE_TRACKING)
+    if (mm_track_is_started() && !mm_track_is_untracked_ptr(ptr)) {
+        size -= MM_TRACK_SLOT_BYTES;
+    }
+#endif
+    mm_unlock_restore(irq_flags);
+
+    return size;
+}
+
+/**
+ * @brief Return remaining free bytes.
+ *
+ * @param heap_id Heap ID to query. Pass 0 to sum all active heaps.
+ * @return Remaining free bytes, or 0 on failure.
+ */
+size_t kfree_size(uint32_t heap_id)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    mm_heap_t *heap;
+    const mm_allocator_t *allocator;
+    uint32_t start_idx, end_idx;
+    uintptr_t irq_flags;
+    size_t total_free = 0;
+
+    if (!manager->initialized) {
+        return 0;
+    }
+
+    /* heap_id == 0 means summing free bytes from all active heaps. */
+    if (heap_id != 0) {
+        if (heap_id >= CONFIG_MM_HEAP_COUNT) {
+            return 0;
+        }
+        start_idx = heap_id;
+        end_idx = heap_id + 1;
+    } else {
+        start_idx = 1;
+        end_idx = CONFIG_MM_HEAP_COUNT;
+    }
+
+    irq_flags = mm_lock_save();
+
+    for (uint32_t i = start_idx; i < end_idx; i++) {
+        size_t free_size = 0;
+
+        heap = manager->heaps[i];
+        if (!heap || !heap->is_active) {
+            continue;
+        }
+
+        if (heap->allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+            continue;
+        }
+
+        allocator = manager->allocators[heap->allocator_id];
+        if (!allocator) {
+            continue;
+        }
+
+        if (allocator->get_free_size) {
+            free_size = allocator->get_free_size(heap);
+        } else if (allocator->get_usage_info) {
+            struct mm_usage_info usage;
+            allocator->get_usage_info(heap, &usage);
+            free_size = (size_t)usage.free_size;
+        }
+
+        total_free += free_size;
+    }
+
+    mm_unlock_restore(irq_flags);
+
+    return total_free;
+}
+
+/**
+ * @brief Return the largest contiguous free payload block.
+ *
+ * @param heap_id Heap ID to query. Pass 0 to query all active heaps.
+ * @return Largest allocatable payload size in bytes, or 0 on failure.
+ */
+size_t kmax_free_size(uint32_t heap_id)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uint32_t start_idx, end_idx;
+    uintptr_t irq_flags;
+    size_t max_free_size = 0;
+
+    if (!manager->initialized) {
+        return 0;
+    }
+
+    if (heap_id != 0) {
+        if (heap_id >= CONFIG_MM_HEAP_COUNT) {
+            return 0;
+        }
+        start_idx = heap_id;
+        end_idx = heap_id + 1;
+    } else {
+        start_idx = 1;
+        end_idx = CONFIG_MM_HEAP_COUNT;
+    }
+
+    irq_flags = mm_lock_save();
+
+    for (uint32_t i = start_idx; i < end_idx; i++) {
+        mm_heap_t *heap = manager->heaps[i];
+        const mm_allocator_t *allocator;
+        struct mm_usage_info usage;
+
+        if (!heap || !heap->is_active || heap->allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+            continue;
+        }
+
+        allocator = manager->allocators[heap->allocator_id];
+        if (!allocator || !allocator->get_usage_info) {
+            continue;
+        }
+
+        allocator->get_usage_info(heap, &usage);
+        if ((size_t)usage.max_free_size > max_free_size) {
+            max_free_size = (size_t)usage.max_free_size;
+        }
+    }
+
+    mm_unlock_restore(irq_flags);
+
+    return max_free_size;
+}
+
+/**
+ * @brief Walk all allocated blocks across active heaps.
+ *
+ * Invokes allocator-specific block walkers for each active heap that supports
+ * allocated-block traversal.
+ *
+ * @param walker Callback invoked for each allocated block.
+ * @param user User context passed through to the callback.
+ * @return 0 on success, negative value on failure.
+ */
+int mm_walk_allocated_blocks(mm_allocated_block_walker_t walker, void *user)
+{
+    mem_manager_t *manager = &g_mem_manager;
+    uintptr_t irq_flags;
+
+    if (!walker || !manager->initialized) {
+        return -EINVAL;
+    }
+
+    irq_flags = mm_lock_save();
+
+    for (uint32_t i = 1; i < CONFIG_MM_HEAP_COUNT; i++) {
+        mm_heap_t *heap = manager->heaps[i];
+        const mm_allocator_t *allocator;
+
+        if (!heap || !heap->is_active || heap->allocator_id >= CONFIG_MM_ALLOCATOR_COUNT) {
+            continue;
+        }
+
+        allocator = manager->allocators[heap->allocator_id];
+        if (!allocator || !allocator->walk_allocated_blocks) {
+            LOG_W("Heap %u does not support allocated block walking\r\n", heap->heap_id);
+            continue;
+        }
+
+        allocator->walk_allocated_blocks(heap, walker, user);
+    }
+
+    mm_unlock_restore(irq_flags);
+    return 0;
+}
+
+#if IS_ENABLED(CONFIG_MM_ENABLE_MIN_FREE_TRACKING)
+
+/**
+ * @brief Get the minimum free-memory watermark.
+ *
+ * Returns the tracked minimum value of kfree_size(0).
+ *
+ * @return Minimum free bytes watermark.
+ */
+size_t kmin_free_size(void)
+{
+    return g_mem_manager.min_free_size;
+}
+
+/**
+ * @brief Reset and return the minimum free-memory watermark.
+ *
+ * Recomputes the watermark from the current total free bytes.
+ *
+ * @return New minimum free bytes watermark after reset.
+ */
+size_t kmin_free_size_reset(void)
+{
+    uintptr_t irq_flags;
+    size_t free_size;
+
+    irq_flags = mm_lock_save();
+
+    free_size = kfree_size(0);
+    g_mem_manager.min_free_size = free_size;
+
+    mm_unlock_restore(irq_flags);
+
+    return free_size;
+}
+
+#endif

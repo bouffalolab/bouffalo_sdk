@@ -1,0 +1,1361 @@
+#ifndef _LCD_CONF_H_
+#define _LCD_CONF_H_
+
+#if __has_include("lcd_conf_user.h")
+
+/* User external configuration, User need to use this file as a template */
+#include "lcd_conf_user.h"
+
+#else
+
+#warning "There is no user LCD conf file and the default conf will be used"
+
+/* clang-format off */
+
+/* Select screen Type, Optional:
+
+  mipi dbi interface
+    LCD_DBI_GC9307
+    LCD_DBI_ILI9488
+    LCD_DBI_ILI9486
+    LCD_DBI_ILI9341
+    LCD_DBI_JD9853
+    LCD_DBI_NT35510
+    LCD_DBI_ST7789V
+    LCD_DBI_ST7796
+    LCD_DBI_ST77922
+    LCD_DBI_ST77926 (support qspi)
+    LCD_DBI_SPD2010 (support qspi)
+
+  mipi dpi (RGB) interface
+    LCD_DPI_ILI9488
+    LCD_DPI_GC9503V
+    LCD_DPI_ST7701P
+    LCD_DPI_ST7701S
+    LCD_DPI_STANDARD
+    LCD_DPI_JD9165BA
+
+  mipi dsi vidio interface
+    LCD_DSI_VIDIO_ILI9881C
+    LCD_DSI_ILI9881C_KD050020  (ILI9881C 720x1280, 4-lane, e.g. KD050HDFIA020, BL618DG)
+    LCD_DSI_ILI9881C_KD050023W4  (ILI9881C 720x1280, 2-lane, e.g. KD050HDFIA023-W4, BL618DG)
+    LCD_DSI_ILI9806E_KD050FWFIA019  (ILI9806E 480x854, 2-lane, e.g. KD050FWFIA019, BL618DG)
+    LCD_DSI_ST7102_YH494          (ST7102 480x960, 2-lane, e.g. YH-494BSAC002N1, BL618DG)
+    LCD_DSI_ST7102_KD027HVF       (ST7102 320x320, 1-lane, e.g. KD027HVFID009, BL618DG)
+    LCD_DSI_AXS15231B_HS035        (AXS15231B 172x640, 1-lane, firmware-init, BL618DG)
+    LCD_DSI_AXS15231E_JX371        (AXS15231E 258x960, 1-lane, e.g. JX 3.71+15231B, BL618DG)
+    LCD_DSI_JD9365TX_7KF82         (JD9365TX 720x1280, 2-lane, BL618DG)
+    LCD_DSI_EK79007_WKS70WSV114    (EK79007 1024x600, 2/4-lane selectable, e.g. WKS70WSV114, BL618DG)
+    LCD_DSI_ST7701S_HD40007C30     (ST7701S 480x480, 2-lane, e.g. HD40007C30-V5, BL618DG)
+    LCD_DSI_FL7707N_HD395003C30    (FL7707N 720x720, 2-lane, e.g. HD395003C30-V2, BL618DG)
+
+  spi interface
+    LCD_SPI_GC9307
+    LCD_SPI_ILI9488
+    LCD_SPI_ILI9341
+    LCD_SPI_ST7796
+    LCD_SPI_ST7789V
+    LCD_SPI_ST7735
+*/
+#define LCD_SPI_ST7796
+
+
+/* dbi gc9307 config */
+#if defined LCD_DBI_GC9307
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define GC9307_DBI_PIXEL_FORMAT 1
+
+    /* GC9307 LCD width and height */
+    #define GC9307_DBI_W 240
+    #define GC9307_DBI_H 320
+
+    /* The offset of the area can be displayed */
+    #define GC9307_DBI_OFFSET_X 0
+    #define GC9307_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define GC9307_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define GC9307_DBI_COLOR_REVERSAL 0
+
+   /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define GC9307_DBI_DIR_MIRROR 0
+
+
+/* dbi ili9488 config */
+#elif defined LCD_DBI_ILI9488
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ILI9488_DBI_PIXEL_FORMAT 1
+
+    /* ILI9488 LCD width and height */
+    #define ILI9488_DBI_W 320
+    #define ILI9488_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ILI9488_DBI_OFFSET_X 0
+    #define ILI9488_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ILI9488_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9488_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9488_DBI_DIR_MIRROR 0
+
+
+/* dbi ili9486 config */
+#elif defined LCD_DBI_ILI9486
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ILI9486_DBI_PIXEL_FORMAT 1
+
+    /* ILI9486 LCD width and height */
+    #define ILI9486_DBI_W 320
+    #define ILI9486_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ILI9486_DBI_OFFSET_X 0
+    #define ILI9486_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ILI9486_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9486_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9486_DBI_DIR_MIRROR 0
+
+
+/* dbi ili9341 config */
+#elif defined LCD_DBI_ILI9341
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ILI9341_DBI_PIXEL_FORMAT 1
+
+    /* ILI9341 LCD width and height */
+    #define ILI9341_DBI_W 240
+    #define ILI9341_DBI_H 320
+
+    /* The offset of the area can be displayed */
+    #define ILI9341_DBI_OFFSET_X 0
+    #define ILI9341_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+    #define ILI9341_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9341_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9341_DBI_DIR_MIRROR 0
+
+
+/* dbi jd9853 config */
+#elif defined LCD_DBI_JD9853
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define JD9853_DBI_PIXEL_FORMAT 1
+
+    /* JD9853 LCD width and height */
+    #define JD9853_DBI_W 240
+    #define JD9853_DBI_H 320
+
+    /* The offset of the area can be displayed */
+    #define JD9853_DBI_OFFSET_X 0
+    #define JD9853_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define JD9853_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define JD9853_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define JD9853_DBI_DIR_MIRROR 0
+
+
+   /* dbi nt35510 config */
+#elif defined LCD_DBI_NT35510
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define NT35510_DBI_PIXEL_FORMAT 1
+
+    /* NT35510 LCD width and height */
+    #define NT35510_DBI_W 480
+    #define NT35510_DBI_H 800
+
+    /* The offset of the area can be displayed */
+    #define NT35510_DBI_OFFSET_X 0
+    #define NT35510_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define NT35510_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define NT35510_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define NT35510_DBI_DIR_MIRROR 0
+
+
+/* dbi st7789v config */
+#elif defined LCD_DBI_ST7789V
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    // #define LCD_DBI_WORK_MODE 3
+    /* Selecting pixel format
+        1: rgb565
+    */
+    #define ST7789V_DBI_PIXEL_FORMAT 1
+
+    /* LCD width and height */
+    #define ST7789V_DBI_W 320
+    #define ST7789V_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST7789V_DBI_OFFSET_X 0
+    #define ST7789V_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST7789V_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7789V_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7789V_DBI_DIR_MIRROR 0
+
+
+    /* dbi st77922 config */
+#elif defined LCD_DBI_ST77922
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ST77922_DBI_PIXEL_FORMAT 1
+
+    /* ST77922 LCD width and height */
+    #define ST77922_DBI_W 320
+    #define ST77922_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST77922_DBI_OFFSET_X 0
+    #define ST77922_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST77922_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+    #define ST77922_DBI_COLOR_REVERSAL 1
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST77922_DBI_DIR_MIRROR 0
+
+
+    /* dbi st77926 config */
+#elif defined LCD_DBI_ST77926
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080), QSPI; (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ST77926_DBI_PIXEL_FORMAT 1
+
+    /* ST77926 LCD width and height */
+    #define ST77926_DBI_W 320
+    #define ST77926_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST77926_DBI_OFFSET_X 0
+    #define ST77926_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST77926_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+    #define ST77926_DBI_COLOR_REVERSAL 1
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST77926_DBI_DIR_MIRROR 0
+
+
+   /* dbi st7796 config */
+#elif defined LCD_DBI_ST7796
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ST7796_DBI_PIXEL_FORMAT 1
+
+    /* ST7796 LCD width and height */
+    #define ST7796_DBI_W 320
+    #define ST7796_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST7796_DBI_OFFSET_X 0
+    #define ST7796_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST7796_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7796_DBI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7796_DBI_DIR_MIRROR 0
+
+
+    /* dbi st77926 config */
+#elif defined LCD_DBI_ST77926
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080), QSPI; (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ST77926_DBI_PIXEL_FORMAT 1
+
+    /* ST77926 LCD width and height */
+    #define ST77926_DBI_W 320
+    #define ST77926_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST77926_DBI_OFFSET_X 0
+    #define ST77926_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST77926_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+    #define ST77926_DBI_COLOR_REVERSAL 1
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST77926_DBI_DIR_MIRROR 0
+
+    /* dbi SPD2010 config */
+#elif defined LCD_DBI_SPD2010
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080), QSPI; (support chips: bl616, bl618dg, bl618dg),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define SPD2010_DBI_PIXEL_FORMAT 1
+
+    /* SPD2010 LCD width and height */
+    #define SPD2010_DBI_W 412
+    #define SPD2010_DBI_H 412
+
+    /* The offset of the area can be displayed */
+    #define SPD2010_DBI_OFFSET_X 0
+    #define SPD2010_DBI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define SPD2010_DBI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+    #define SPD2010_DBI_COLOR_REVERSAL 1
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define SPD2010_DBI_DIR_MIRROR 0
+
+
+/* dpi gc9503v config */
+#elif defined LCD_DPI_GC9503V
+
+    /* Selecting DPI working mode
+        1: DPI peripheral (support: bl618dg)
+        2: simulation (support: bl616)
+        3. DPI v2 peripheral (support: bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 1
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bits)
+    */
+    #define GC9503V_DPI_PIXEL_FORMAT 1
+
+    /* RGB-BGR Order control 
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define GC9503V_DPI_RGB_ORDER_MODE 0
+
+    /* enabled DE(data enable) signal
+        0: disable DE signal output
+        1: enable DE signal output
+    */
+    #define GC9503V_DPI_DE_MODE 1
+
+    /* ILI9488 LCD width and height */
+    #define GC9503V_DPI_W 480
+    #define GC9503V_DPI_H 480
+
+
+/* dpi st7701p config */
+#elif defined LCD_DPI_ST7701P
+
+    /* Selecting DPI working mode
+        2: simulation (support: bl616)
+        3: DPI v2 peripheral (support: bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 3
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 1
+
+    /* Selecting framebuffer format
+        1: rgb565 (16-bits)
+        2: nrgb8888 (32-bits, output rgb888)
+    */
+    #define ST7701P_DPI_PIXEL_FORMAT 2
+
+    /* RGB-BGR Order control
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define ST7701P_DPI_RGB_ORDER_MODE 0
+
+    #define ST7701P_DPI_W 480
+    #define ST7701P_DPI_H 480
+
+
+/* dpi st7701s config */
+#elif defined LCD_DPI_ST7701S
+
+    /* Selecting DPI working mode
+        1: DPI peripheral (support: bl618dg)
+        2: simulation (support: bl616)
+        3. DPI v2 peripheral (support: bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 1
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bits)
+    */
+    #define ST7701S_DPI_PIXEL_FORMAT 1
+
+    /* RGB-BGR Order control 
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define ST7701S_DPI_RGB_ORDER_MODE 1
+
+    /* ILI9488 LCD width and height */
+    #define ST7701S_DPI_W 480
+    #define ST7701S_DPI_H 480
+
+
+/* dpi jd9165ba config */
+#elif defined LCD_DPI_JD9165BA
+
+    /* Selecting DPI working mode
+        3. DPI v2 peripheral (support: bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 3
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bits)
+        2: nrgb8888 (32-bits, output rgb888)
+    */
+    #define JD9165BA_DPI_PIXEL_FORMAT 2
+
+    /* RGB-BGR Order control
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define JD9165BA_DPI_RGB_ORDER_MODE 0
+
+    /* JD9165BA LCD width and height */
+    #define JD9165BA_DPI_W 1024
+    #define JD9165BA_DPI_H 600
+
+    /* RGB timing and frame rate are fixed by the panel and defined in jd9165ba_dpi.c */
+
+
+/* dpi ili9488 config */
+#elif defined LCD_DPI_ILI9488
+
+    /* Selecting DPI working mode
+        1: DPI peripheral (support: bl618dg)
+        2: simulation (support: bl616)
+        3. DPI v2 peripheral (support: bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 1
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 2
+
+    /* Selecting pixel format
+        1: rgb565 (16-bits)
+    */
+    #define ILI9488_DPI_PIXEL_FORMAT 1
+
+    /* ILI9488 LCD width and height */
+    #define ILI9488_DPI_W 320
+    #define ILI9488_DPI_H 480
+
+
+#elif defined(LCD_DPI_STANDARD)
+
+    /* Selecting DPI working mode
+        1: DPI peripheral (support: bl618dg)
+        2: simulation old version (support: bl616)
+        3. DPI v2 peripheral (support: bl618dg)
+        4. simulation v2 (support: bl616cl, bl618dg)
+    */
+    #define LCD_DPI_INTERFACE_TYPE 1
+
+    /* Selecting initialization interface
+        0: Not using or custom
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
+    */
+    #define LCD_DPI_INIT_INTERFACE_TYPE 0
+
+    /* Selecting pixel format
+        1: rgb565 (16-bits)
+        2: nrgb8888 (32-bits)
+    */
+    #define STANDARD_DPI_PIXEL_FORMAT 1
+
+    /* STANDARD LCD width and height */
+    #define STANDARD_DPI_W 800
+    #define STANDARD_DPI_H 480
+
+    /* RGB timing parameter Settings
+       Total Width = HSW + HBP + Active_Width + HFP
+       Total Height = VSW + VBP + Active_Height + VFP */
+
+    #if ((STANDARD_DPI_W == 1024)&&(STANDARD_DPI_H == 600))
+    /* Hsync Pulse Width */
+    #define STANDARD_DPI_HSW 20 
+    /* Hsync Back Porch */
+    #define STANDARD_DPI_HBP 140
+    /* Hsync Front Porch */
+    #define STANDARD_DPI_HFP 160
+
+    /* Vsync Pulse Width */
+    #define STANDARD_DPI_VSW 3
+    /* Vsync Back Porch */
+    #define STANDARD_DPI_VBP 23
+    /* Vsync Front Porch */
+    #define STANDARD_DPI_VFP 12
+#else
+    /* Hsync Pulse Width */
+    #define STANDARD_DPI_HSW 4
+    /* Hsync Back Porch */
+    #define STANDARD_DPI_HBP 82
+    /* Hsync Front Porch */
+    #define STANDARD_DPI_HFP 14
+
+    /* Vsync Pulse Width */
+    #define STANDARD_DPI_VSW 5
+    /* Vsync Back Porch */
+    #define STANDARD_DPI_VBP 6
+    /* Vsync Front Porch */
+    #define STANDARD_DPI_VFP 39
+#endif
+
+    /* Maximum refresh frame rate per second, Used to automatically calculate the clock frequency */
+    #define STANDARD_DPI_FRAME_RATE 70
+
+
+/* spi gc9307 config */
+#elif defined LCD_SPI_GC9307
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: SPI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_SPI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565
+    */
+    #define GC9307_SPI_PIXEL_FORMAT 1
+
+    /* LCD width and height */
+    #define GC9307_SPI_W 240
+    #define GC9307_SPI_H 320
+
+    /* The offset of the area can be displayed */
+    #define GC9307_SPI_OFFSET_X 0
+    #define GC9307_SPI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+    #define GC9307_SPI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+    #define GC9307_SPI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define GC9307_SPI_DIR_MIRROR 0
+
+
+/* spi ili9488 config */
+#elif defined LCD_SPI_ILI9488
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: SPI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_SPI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565
+    */
+    #define ILI9488_SPI_PIXEL_FORMAT 1
+
+    /* ILI9488 LCD width and height */
+    #define ILI9488_SPI_W 320
+    #define ILI9488_SPI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ILI9488_SPI_OFFSET_X 0
+    #define ILI9488_SPI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ILI9488_SPI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9488_SPI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9488_SPI_DIR_MIRROR 0
+
+
+/* spi ili9341 config */
+#elif defined LCD_SPI_ILI9341
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: SPI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_SPI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565, 16-bit/pixel
+    */
+    #define ILI9341_SPI_PIXEL_FORMAT 1
+
+    /* LCD width and height */
+    #define ILI9341_SPI_W 240
+    #define ILI9341_SPI_H 320
+
+    /* The offset of the area can be displayed */
+    #define ILI9341_SPI_OFFSET_X 0
+    #define ILI9341_SPI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ILI9341_SPI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9341_SPI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9341_SPI_DIR_MIRROR 0
+
+
+/* spi st7735 config */
+#elif defined LCD_SPI_ST7735
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: SPI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_SPI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565
+    */
+    #define ST7735_SPI_PIXEL_FORMAT 1
+
+    /* LCD width and height */
+    #define ST7735_SPI_W 240
+    #define ST7735_SPI_H 320
+
+    /* The offset of the area can be displayed */
+    #define ST7735_SPI_OFFSET_X 0
+    #define ST7735_SPI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST7735_SPI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7735_SPI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7735_SPI_DIR_MIRROR 0
+
+/* spi st7789v config */
+#elif defined LCD_SPI_ST7789V
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: SPI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_SPI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565
+    */
+    #define ST7789V_SPI_PIXEL_FORMAT 1
+
+    /* LCD width and height */
+    #define ST7789V_SPI_W 320
+    #define ST7789V_SPI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST7789V_SPI_OFFSET_X 0
+    #define ST7789V_SPI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST7789V_SPI_COLOR_ORDER 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7789V_SPI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7789V_SPI_DIR_MIRROR 0
+
+
+/* spi st7796 config */
+#elif defined LCD_SPI_ST7796
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: SPI peripheral, supported functions: spi-4wire,
+    */
+    #define LCD_SPI_INTERFACE_TYPE 1
+
+    /* Selecting pixel format
+        1: rgb565
+    */
+    #define ST7796_SPI_PIXEL_FORMAT 1
+
+    /* LCD width and height */
+    #define ST7796_SPI_W 320
+    #define ST7796_SPI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST7796_SPI_OFFSET_X 0
+    #define ST7796_SPI_OFFSET_Y 0
+
+    /* Color RGB order, Some screens are required 
+        0: R-G-B
+        1: B-G-R
+    */
+   #define ST7796_SPI_COLOR_ORDER 0
+    
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7796_SPI_COLOR_REVERSAL 0
+
+    /* Display direction X-axis mirroring, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7796_SPI_DIR_MIRROR 0
+
+
+/* dsi ili9881c_kd050020 config */
+#elif defined LCD_DSI_ILI9881C_KD050020
+
+    /* Base: ILI9881C_KD050020_FB_MODE_RGB565 or ILI9881C_KD050020_FB_MODE_Y_UV_PLANAR */
+    #define ILI9881C_KD050020_FB_MODE ILI9881C_KD050020_FB_MODE_Y_UV_PLANAR
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define ILI9881C_KD050020_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi ili9881c_kd050023w4 config */
+#elif defined LCD_DSI_ILI9881C_KD050023W4
+
+    /* Base: ILI9881C_KD050023W4_FB_MODE_RGB565 or ILI9881C_KD050023W4_FB_MODE_Y_UV_PLANAR */
+    #define ILI9881C_KD050023W4_FB_MODE ILI9881C_KD050023W4_FB_MODE_Y_UV_PLANAR
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define ILI9881C_KD050023W4_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi st7102_yh494 config */
+#elif defined LCD_DSI_ST7102_YH494
+
+    /* Base: ST7102_YH494_FB_MODE_RGB565 or ST7102_YH494_FB_MODE_Y_UV_PLANAR */
+    #define ST7102_YH494_FB_MODE ST7102_YH494_FB_MODE_Y_UV_PLANAR
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define ST7102_YH494_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi st7102_kd027hvf config */
+#elif defined LCD_DSI_ST7102_KD027HVF
+
+    /* Base: ST7102_KD027HVF_FB_MODE_RGB565 or ST7102_KD027HVF_FB_MODE_Y_UV_PLANAR */
+    #define ST7102_KD027HVF_FB_MODE ST7102_KD027HVF_FB_MODE_Y_UV_PLANAR
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define ST7102_KD027HVF_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi axs15231b_hs035 config */
+#elif defined LCD_DSI_AXS15231B_HS035
+
+    /* Base: AXS15231B_HS035_FB_MODE_RGB565 or AXS15231B_HS035_FB_MODE_Y_UV_PLANAR */
+    #define AXS15231B_HS035_FB_MODE AXS15231B_HS035_FB_MODE_Y_UV_PLANAR
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define AXS15231B_HS035_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi axs15231e_jx371 config */
+#elif defined LCD_DSI_AXS15231E_JX371
+
+    /* Base: AXS15231E_JX371_FB_MODE_RGB565 or AXS15231E_JX371_FB_MODE_Y_UV_PLANAR */
+    #define AXS15231E_JX371_FB_MODE AXS15231E_JX371_FB_MODE_Y_UV_PLANAR
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define AXS15231E_JX371_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi jd9365tx_7kf82 config */
+#elif defined LCD_DSI_JD9365TX_7KF82
+
+    /* Base: JD9365TX_7KF82_FB_MODE_RGB565 or JD9365TX_7KF82_FB_MODE_Y_UV_PLANAR */
+    #define JD9365TX_7KF82_FB_MODE JD9365TX_7KF82_FB_MODE_RGB565
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define JD9365TX_7KF82_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+
+/* dsi ili9806e kd050fwfia019 config */
+#elif defined LCD_DSI_ILI9806E_KD050FWFIA019
+
+    /* MADCTL (0x36) orientation, applied on page 0 after the panel init table
+        0: panel default orientation
+        1: 180-degree rotation/mirror
+    */
+    #define ILI9806E_KD050FWFIA019_ROTATE_180 0
+
+    /* Select ILI9806E_KD050FWFIA019_FB_MODE
+        ILI9806E_KD050FWFIA019_FB_MODE_RGB565: RGB565 framebuffer
+        ILI9806E_KD050FWFIA019_FB_MODE_Y_UV_PLANAR: Y_UV_PLANAR base
+    */
+    #define ILI9806E_KD050FWFIA019_FB_MODE ILI9806E_KD050FWFIA019_FB_MODE_RGB565
+
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define ILI9806E_KD050FWFIA019_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+/* dsi ek79007 wks70wsv114 config */
+#elif defined LCD_DSI_EK79007_WKS70WSV114
+
+    /* Number of MIPI DSI data lanes the panel is wired for
+        2: 2-lane (vendor EK79007_Initial_Code_2lane, writes 0xB2 = 0x10)
+        4: 4-lane (vendor EK79007_Initial_Code_4lane, leaves 0xB2 at its default)
+    */
+    #define EK79007_WKS70WSV114_LANE_NUM 2
+
+    /* Select EK79007_WKS70WSV114_FB_MODE
+        EK79007_WKS70WSV114_FB_MODE_RGB565: RGB565 framebuffer
+        EK79007_WKS70WSV114_FB_MODE_Y_UV_PLANAR: Y_UV_PLANAR base
+    */
+    #define EK79007_WKS70WSV114_FB_MODE EK79007_WKS70WSV114_FB_MODE_RGB565
+
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define EK79007_WKS70WSV114_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+/* dsi st7701s hd40007c30 config */
+#elif defined LCD_DSI_ST7701S_HD40007C30
+
+    /* Select ST7701S_HD40007C30_FB_MODE
+        ST7701S_HD40007C30_FB_MODE_RGB565: RGB565 framebuffer
+        ST7701S_HD40007C30_FB_MODE_Y_UV_PLANAR: Y_UV_PLANAR base
+    */
+    #define ST7701S_HD40007C30_FB_MODE ST7701S_HD40007C30_FB_MODE_RGB565
+
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define ST7701S_HD40007C30_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+    /* RGB-BGR Order control
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define ST7701S_HD40007C30_RGB_ORDER_MODE 1
+
+/* dsi fl7707n hd395003c30 config */
+#elif defined LCD_DSI_FL7707N_HD395003C30
+
+    /* Select FL7707N_HD395003C30_FB_MODE
+        FL7707N_HD395003C30_FB_MODE_RGB565: RGB565 framebuffer
+        FL7707N_HD395003C30_FB_MODE_Y_UV_PLANAR: Y_UV_PLANAR base
+    */
+    #define FL7707N_HD395003C30_FB_MODE FL7707N_HD395003C30_FB_MODE_RGB565
+
+    /* OSD0 canvas: MIPI_DSI_V2_OSD_FORMAT_RGB565, ARGB8888 or NONE */
+    #define FL7707N_HD395003C30_OSD0_FORMAT MIPI_DSI_V2_OSD_FORMAT_ARGB8888
+
+#endif
+
+/********** simulation DPI configuration **********/
+#if (defined(LCD_DPI_INTERFACE_TYPE) && (LCD_DPI_INTERFACE_TYPE == 2))
+
+    /* supports 16-wire and 8-wire-latch output modes */
+
+    /* For internal use, do not modify */
+    #define LCD_SIM_DPI_ENABLE
+
+    /* Selecting initialization interface */
+    #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
+        /* Software spi 3-wires 9-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_DAT   GPIO_PIN_3
+
+    #elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+        /* Software spi 4-wires 8-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DAT   GPIO_PIN_3
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DC    GPIO_PIN_4
+    #endif
+
+    /* dma used by sim */
+    #define LCD_SIM_DPI_DMA_NAME "dma0_ch3"
+
+    /* The mode of data latch.
+        0: 16-bit *1-cycle date out;
+        1: 8-bit *2-cycle date out, Low 8-bit latch, high 8-bit pass-through, Additional latch devices are required */
+    #define LCD_SIM_DPI_DATA_LATCH_MODE 1
+
+    /* Signal polarity selection */
+    #define LCD_SIM_DPI_V_SYNC_SIN_POL 0
+    #define LCD_SIM_DPI_H_SYNC_SIN_POL 0
+    #define LCD_SIM_DPI_DE_SIN_POL     1
+
+    /* Selecting pin
+        The numbers of some pins must be consecutive, and cannot cross the 32 boundary.
+        Rules: PIN_DE = PIN_CLK + 1; PIN_LATCH = PIN_CLK + 2;
+               PIN_VSYNC = PIN_HSYNC + 1;
+               PIN_DATA_n = PIN_DATA_START + n;
+    */
+    #define LCD_DPI_SIM_PIN_CLK         GPIO_PIN_32
+    #define LCD_DPI_SIM_PIN_HSYNC       GPIO_PIN_18
+    #define LCD_DPI_SIM_PIN_DATA_START  GPIO_PIN_24 /* 8-wire(latch mode) or 16-wire */
+
+    /* Maximum number of DPI invalid rows, >= (VHW + VBP + VFP) */
+    #define LCD_DPI_SIM_INVALID_LIN_MAX 300
+
+    /* cache num of dma_lli, >= 2,
+        Performance is best when the value is no less than the number of disp_buffs used */
+    #define LCD_DPI_SIM_DMA_LLI_CACHE_NUM 3
+#endif
+
+/********** DPI v2 configuration **********/
+#if (defined(LCD_DPI_INTERFACE_TYPE) && (LCD_DPI_INTERFACE_TYPE == 3))
+
+    /* Enable DPI v2 functionality */
+    #define LCD_V2_DPI_ENABLE
+
+    /* Selecting initialization interface */
+    #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
+        /* Software spi 3-wires 9-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_DAT   GPIO_PIN_3
+
+    #elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+        /* Software spi 4-wires 8-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DAT   GPIO_PIN_3
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DC    GPIO_PIN_4
+    #endif
+
+    /* Interface type selection:
+        0: 24PIN mode (D0 ~ D23)
+        1: 18PIN mode 1 (D0 ~ D17)
+        2: 18PIN mode 2 (D0 ~ D5, D8 ~ D13, D16 ~ D21)
+        3: 16PIN mode 1 (D0 ~ D15)
+        4: 16PIN mode 2 (D0 ~ D4, D8 ~ D13, D16 ~ D20)
+        5: 16PIN mode 3 (D1 ~ D5, D8 ~ D13, D17 ~ D21)
+    */
+    #define LCD_DPI_V2_INTERFACE_TYPE  0
+
+    /* Input source selection:
+        0: Test pattern without OSD
+        1: Test pattern with OSD
+        2: Framebuffer without OSD
+        3: Framebuffer with OSD
+    */
+    #define LCD_DPI_V2_INPUT_SEL       3
+
+    /* Test pattern selection (only valid when input_sel is 0 or 1):
+        0: NULL (no test pattern)
+        1: Black
+        2: Red
+        3: Green
+        4: Yellow
+    */
+    #define LCD_DPI_V2_TEST_PATTERN     0
+
+
+#endif
+
+/********** DBI peripheral configuration ***********/
+#if (defined(LCD_DBI_INTERFACE_TYPE) && (LCD_DBI_INTERFACE_TYPE == 1))
+
+    /* Select the working mode of DBI
+        1: DBI TypeC 4-wire mode
+        2: DBI TypeC 3-wire mode
+        3: DBI TypeB x8 mode (8080)
+        4: DBI QSPI mode (Not the mipi standard. Extra support for QSPI mode)
+       Select the following configuration:
+        #define LCD_DBI_WORK_MODE 1
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_c_4_wire_gpio_init
+
+        #define LCD_DBI_WORK_MODE 2
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_c_3_wire_gpio_init
+
+        #define LCD_DBI_WORK_MODE 3
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_b_gpio_init
+
+        #define LCD_DBI_WORK_MODE 4
+        #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_ex_qspi_gpio_init
+    */
+    #define LCD_DBI_WORK_MODE 1
+    #define LCD_DBI_GPIO_INIT_FUNC  board_lcd_dbi_type_c_4_wire_gpio_init
+
+    /* RGB-BGR Order control 
+        0: output R-G-B
+        1: output B-G-R
+    */
+    #define LCD_RGB_ORDER_MODE 0
+
+    /* dma used by DBI */
+    #define LCD_DBI_DMA_NAME "dma0_ch3"
+
+    /* The maximum amount of data to be transferred affects the number of LLI memory pools */
+    #define DBI_DBI_DATA_SIZE_MAX (800 * 640 * 4)
+
+#endif
+
+/********** SPI hard 4-wire configuration ***********/
+#if (defined(LCD_SPI_INTERFACE_TYPE) && (LCD_SPI_INTERFACE_TYPE == 1))
+
+    /*Select the spi idx and following configuration:
+        #define LCD_SPI_HARD_4_NAME "spi0"
+        #define LCD_SPI_HARD_4_GPIO_INIT_FUNC board_lcd_spi_0_hard_4_gpio_init
+
+        #define LCD_SPI_HARD_4_NAME "spi1"
+        #define LCD_SPI_HARD_4_GPIO_INIT_FUNC board_lcd_spi_1_hard_4_gpio_init
+    */
+    #define LCD_SPI_HARD_4_NAME "spi0"
+    #define LCD_SPI_HARD_4_GPIO_INIT_FUNC board_lcd_spi_0_hard_4_gpio_init
+
+    /* dma used by spi */
+    #define LCD_SPI_HARD_4_DMA_NAME "dma0_ch3"
+
+    /* cs/dc pin, software controlled */
+    #define LCD_SPI_HARD_4_PIN_CS GPIO_PIN_14
+    #define LCD_SPI_HARD_4_PIN_DC GPIO_PIN_16
+
+    /* The maximum pixel cnt to be transferred affects the number of LLI memory pools */
+    #define LCD_SPI_HARD_4_PIXEL_CNT_MAX (800 * 640)
+
+#endif
+
+/********** lcd reset configuration ***********/
+#define LCD_RESET_EN 0
+
+#if (defined(LCD_RESET_EN) && LCD_RESET_EN)
+
+/* lcd reset signal pin, please leave blank if not needed */
+#define LCD_RESET_PIN GPIO_PIN_12
+
+/* lcd reset signal active level
+    0: lcd reset at low level
+    1: lcd reset at high level
+ */
+#define LCD_RESET_ACTIVE_LEVEL  0
+
+/* lcd reset active hold time (ms) */
+#define LCD_RESET_HOLD_MS   10
+
+/* lcd recovery time after reset end (ms) */
+#define LCD_RESET_DELAY   100
+
+#endif
+
+/********** lcd back light configuration ***********/
+#define LCD_BACKLIGHT_EN 0
+
+#if (defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN)
+/* lcd backlight pin */
+#define LCD_BACKLIGHT_PIN GPIO_PIN_17
+/* lcd backlight signal active level
+    0: lcd backlight at low level
+    1: lcd backlight at high level
+ */
+#define LCD_BACKLIGHT_ACTIVE_LEVEL 1
+
+#endif
+
+#endif
+
+/* clang-format on */
+#endif

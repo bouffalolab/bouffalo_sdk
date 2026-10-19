@@ -1,0 +1,99 @@
+cmake_minimum_required(VERSION 3.15)
+
+
+find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
+
+sdk_add_include_directories(.)
+
+target_sources(app PRIVATE
+                bflb_eflash_loader_interface.c
+                bflb_eflash_loader_cmds.c
+                bflb_eflash_loader_uart.c
+                bflb_sp_boot_decompress.c
+                bflb_sp_boot_parser.c
+                bflb_sp_common.c
+                bflb_sp_media_boot.c
+                bflb_sp_port.c
+                bflb_sp_ram_image_boot.c
+                partition.c
+                ${CMAKE_SOURCE_DIR}/port/${CHIP}/bflb_port_boot2.c
+                bflb_eflash_loader_usb.c
+                )
+
+
+if("${CHIP}" STREQUAL "bl616")
+target_sources(app PRIVATE rv32i_xtheade_lz4.S)
+endif()
+if("${CHIP}" STREQUAL "bl616cl")
+target_sources(app PRIVATE rv32i_xtheade_lz4.S)
+endif()
+if("${CHIP}" STREQUAL "bl618dg")
+target_sources(app PRIVATE rv32i_xtheade_lz4.S)
+if(NOT "${CPU_MODEL}" STREQUAL "a0")
+set_source_files_properties(rv32i_xtheade_lz4.S PROPERTIES COMPILE_DEFINITIONS BFLB_LZ4_NO_XTHEAD)
+endif()
+endif()
+
+if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/port/${CHIP})
+include_directories(${CMAKE_SOURCE_DIR}/port/${CHIP})
+if(EXISTS "${CMAKE_SOURCE_DIR}/port/${CHIP}/CMakeLists.txt")
+    add_subdirectory(${CMAKE_SOURCE_DIR}/port/${CHIP})
+endif()
+else()
+message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/port/${CHIP} is not exist")
+endif()
+include_directories(${CMAKE_SOURCE_DIR})
+sdk_set_main_file(main.c)
+if("${CHIP}" STREQUAL "bl618dg")
+sdk_set_linker_script_macro(port/${CHIP}/bflb_sp_boot2_iap_flash.ld)
+else()
+sdk_set_linker_script(port/${CHIP}/bflb_sp_boot2_iap_flash.ld)
+endif()
+
+sdk_add_compile_definitions(-DBFLB_BOOT2_VER="${CONFIG_BOOT2_VER}")
+sdk_add_compile_definitions(-DBFLB_BOOT2)
+sdk_add_compile_definitions(-DCONFIG_TRAP_DUMP_DISABLE)
+sdk_add_compile_options(-flto)
+sdk_add_compile_options(-fno-inline-functions-called-once)
+sdk_add_compile_options(-fno-ipa-cp-clone)
+message(${CONFIG_BOOT2_VER})
+
+sdk_add_compile_definitions(-DBOOT2_ANTI_ROLLBACK_VER=${CONFIG_BOOT2_ANTI_ROLLBACK_VER})
+
+if((${CHIP} STREQUAL "bl602"))
+    sdk_add_compile_definitions(-DCHIP_BL602)
+endif()
+
+if((${CHIP} STREQUAL "bl702"))
+    sdk_add_compile_definitions(-DCHIP_BL702)
+endif()
+
+if((${CHIP} STREQUAL "bl702l"))
+    sdk_add_compile_definitions(-DCHIP_BL702L)
+endif()
+
+if((${CHIP} STREQUAL "bl616"))
+    sdk_add_compile_definitions(-DCHIP_BL616)
+endif()
+
+if((${CHIP} STREQUAL "bl616cl"))
+    sdk_add_compile_definitions(-DCHIP_BL616CL)
+endif()
+
+if((${CHIP} STREQUAL "bl618dg"))
+    sdk_add_compile_definitions(-DCHIP_BL618DG)
+    sdk_add_compile_definitions(-DCONFIG_APP_ENCRYPT_AFTER_SIGN)
+endif()
+
+sdk_add_compile_definitions(-D CONFIG_DISABLE_NOCACHE_RAM_LOAD)
+sdk_add_compile_definitions(-D CONFIG_DISABLE_SBUS2_ENABLE_SUPPORT)
+execute_process(
+    COMMAND git rev-parse HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+add_definitions(-DGIT_COMMIT="${GIT_COMMIT}")
+
+project(boot2_isp)

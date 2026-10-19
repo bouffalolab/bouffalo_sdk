@@ -1,0 +1,65 @@
+# wpa_supplicant files
+   wpa_supplicant/wpa_supplicant.c
+   wpa_supplicant/events.c
+   wpa_supplicant/scan.c
+   wpa_supplicant/notify.c
+   wpa_supplicant/bss.c
+   wpa_supplicant/wmm_ac.c
+   wpa_supplicant/wpas_glue.c
+   wpa_supplicant/eap_register.c
+   wpa_supplicant/config.c
+   wpa_supplicant/config_none.c
+   wpa_supplicant/ctrl_iface.c
+   wpa_supplicant/ctrl_iface_macsw.c
+   wpa_supplicant/main_macsw.c
+   wpa_supplicant/op_classes.c
+   wpa_supplicant/rrm.c
+   wpa_supplicant/bssid_ignore.c
+   wpa_supplicant/robust_av.c
+
+   src/utils/eloop.c
+   src/utils/common.c
+   src/utils/wpabuf.c
+   src/utils/os_macsw.c
+   src/utils/wpa_debug.c
+   src/utils/bitfield.c
+
+   src/crypto/md5.c
+   src/crypto/md5-internal.c
+   src/crypto/rc4.c
+   src/crypto/sha1.c
+   src/crypto/sha1-internal.c
+   src/crypto/sha1-prf.c
+   src/crypto/sha1-pbkdf2.c
+   src/crypto/sha256.c
+   src/crypto/sha256-internal.c
+   src/crypto/sha256-prf.c
+   src/crypto/sha256-kdf.c
+   src/crypto/aes-internal.c
+   src/crypto/aes-wrap.c
+   src/crypto/aes-internal-enc.c
+   src/crypto/aes-unwrap.c
+   src/crypto/aes-internal-dec.c
+   src/crypto/aes-omac1.c
+   src/crypto/random.c
+   src/crypto/tls_none.c
+
+   include sourcelist_crypto_${CRYPTO}.txt
+
+   src/l2_packet/l2_packet_macsw.c
+
+   src/rsn_supp/wpa.c
+   src/rsn_supp/wpa_ie.c
+   src/rsn_supp/preauth.c
+
+   src/drivers/drivers.c
+   src/drivers/driver_common.c
+   src/drivers/driver_macsw.c
+
+   src/common/wpa_common.c
+   src/common/ieee802_11_common.c
+   src/common/hw_features_common.c
+
+   include sourcelist_ap_${BCN}.txt
+   include sourcelist_p2p_${P2P_WPA}.txt
+   include sourcelist_mesh_${MESH_WPA}.txt

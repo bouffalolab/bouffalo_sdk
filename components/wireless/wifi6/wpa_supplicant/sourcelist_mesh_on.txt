@@ -1,0 +1,7 @@
+# Source file to support MESH mode
+   wpa_supplicant/mesh.c
+   wpa_supplicant/mesh_mpm.c
+   wpa_supplicant/mesh_rsn.c
+
+   src/crypto/aes-siv.c
+   src/crypto/aes-ctr.c

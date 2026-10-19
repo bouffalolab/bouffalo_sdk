@@ -1,0 +1,367 @@
+#
+# Soln frame queue configuration
+#
+
+# Keep this symbol outside "if SOLN_UTILS": it is selected by SOLN_UTILS.
+# Only the prompt depends on SOLN_UTILS, avoiding a circular dependency.
+config SOLN_FBQ_EN
+    bool "Soln frame queues" if SOLN_UTILS
+    help
+      Frame queue configuration group, forced on when Solution Utils is enabled.
+      Each queue below can be enabled and configured independently.
+
+if SOLN_FBQ_EN
+
+menuconfig SOLN_FBQ_VID_RAW_LOCAL_EN
+  bool "Local RAW video queue"
+    default n
+    depends on SOLN_UTILS
+    help
+      Enable the queue carrying RAW frames produced locally by capture sources.
+
+if SOLN_FBQ_VID_RAW_LOCAL_EN
+
+config SOLN_FBQ_VID_RAW_LOCAL_SIZE_AUTO
+    bool "Calculate local RAW frame size automatically"
+    default y
+    help
+      When enabled, the payload capacity is calculated in C as:
+        SOLN_VID_DEFAULT_WIDTH * SOLN_VID_DEFAULT_HEIGHT * 2 bytes.
+      Disable this option to specify a capacity manually, including zero.
+
+config SOLN_FBQ_VID_RAW_LOCAL_SIZE
+  hex "Local RAW video frame size in bytes"
+  range 0x0 0xFFFFFFFF
+  default 0xA0000
+    depends on !SOLN_FBQ_VID_RAW_LOCAL_SIZE_AUTO
+    help
+      Payload capacity of each local RAW frame in bytes.
+      Use zero only when the producer supplies the payload 
+      and its capacity as needed.
+
+config SOLN_FBQ_VID_RAW_LOCAL_NUM
+  int "Local RAW video frame count"
+    range 1 32
+    default 2
+    help
+      Number of buffers allocated for the local RAW queue.
+
+comment "JPEG encoder output"
+
+config SOLN_FBQ_VID_RAW_LOCAL_ENC_ID
+  int "Local RAW JPEG encoder stream ID"
+    range 0 4
+    default 0
+    help
+      Output ID reserved for the JPEG encoder consumer.
+
+config SOLN_FBQ_VID_RAW_LOCAL_ENC_DEPTH
+  int "Local RAW JPEG encoder stream depth"
+    range 1 32
+    default 1
+    help
+      Queue depth reserved for the JPEG encoder consumer.
+
+comment "Display output"
+
+config SOLN_FBQ_VID_RAW_LOCAL_DISP_ID
+  int "Local RAW display stream ID"
+    range 0 4
+    default 1
+    help
+      Output ID reserved for the display consumer.
+
+config SOLN_FBQ_VID_RAW_LOCAL_DISP_DEPTH
+  int "Local RAW display stream depth"
+    range 1 32
+    default 1
+    help
+      Queue depth reserved for the display consumer.
+
+endif # SOLN_FBQ_VID_RAW_LOCAL_EN
+
+menuconfig SOLN_FBQ_VID_RAW_REMOTE_EN
+  bool "Remote RAW video queue"
+    default n
+    depends on SOLN_UTILS
+    help
+      Enable the queue carrying raw frames produced by JPEG decoding.
+
+if SOLN_FBQ_VID_RAW_REMOTE_EN
+
+config SOLN_FBQ_VID_RAW_REMOTE_SIZE_AUTO
+    bool "Calculate remote RAW frame size automatically"
+    default y
+    help
+      When enabled, the payload capacity is calculated in C as:
+        SOLN_VID_DEFAULT_WIDTH * SOLN_VID_DEFAULT_HEIGHT * 2 bytes.
+      Disable this option to specify a capacity manually, including zero.
+
+config SOLN_FBQ_VID_RAW_REMOTE_SIZE
+    hex "Remote RAW video frame size in bytes"
+    range 0x0 0xFFFFFFFF
+    default 0xA0000
+    depends on !SOLN_FBQ_VID_RAW_REMOTE_SIZE_AUTO
+    help
+      Payload capacity of each remote RAW frame in bytes.
+      Use zero only  when the producer supplies the payload 
+      and its capacity as needed.
+
+config SOLN_FBQ_VID_RAW_REMOTE_NUM
+  int "Remote RAW video frame count"
+    range 1 32
+    default 2
+    help
+      Number of buffers allocated for the remote RAW queue.
+
+comment "Display output"
+
+config SOLN_FBQ_VID_RAW_REMOTE_DISP_ID
+  int "Remote RAW display stream ID"
+    range 0 4
+    default 1
+    help
+      Output ID reserved for the display consumer.
+
+config SOLN_FBQ_VID_RAW_REMOTE_DISP_DEPTH
+  int "Remote RAW display stream depth"
+    range 1 32
+    default 1
+    help
+      Queue depth reserved for the display consumer.
+
+endif # SOLN_FBQ_VID_RAW_REMOTE_EN
+
+menuconfig SOLN_FBQ_VID_JPEG_LOCAL_EN
+  bool "Local JPEG video queue"
+    default n
+    depends on SOLN_UTILS
+    help
+      Enable the queue carrying JPEG frames produced locally.
+
+if SOLN_FBQ_VID_JPEG_LOCAL_EN
+
+config SOLN_FBQ_VID_JPEG_LOCAL_SIZE
+  hex "Local JPEG video frame size"
+    default 0x20000
+    help
+      Maximum payload size of one local JPEG frame.
+
+config SOLN_FBQ_VID_JPEG_LOCAL_NUM
+  int "Local JPEG video frame count"
+    range 1 32
+    default 6
+    help
+      Number of buffers allocated for the local JPEG queue.
+
+comment "SD recording output"
+
+config SOLN_FBQ_VID_JPEG_LOCAL_SD_ID
+  int "Local JPEG SD stream ID"
+    range 0 4
+    default 0
+    help
+      Output ID reserved for SD card recording.
+
+config SOLN_FBQ_VID_JPEG_LOCAL_SD_DEPTH
+  int "Local JPEG SD stream depth"
+    range 1 32
+    default 2
+    help
+      Queue depth reserved for SD card recording.
+
+comment "Network output"
+
+config SOLN_FBQ_VID_JPEG_LOCAL_NET_ID
+  int "Local JPEG network stream ID"
+    range 0 4
+    default 2
+    help
+      Output ID reserved for the network consumer.
+
+config SOLN_FBQ_VID_JPEG_LOCAL_NET_DEPTH
+  int "Local JPEG network stream depth"
+    range 1 32
+    default 2
+    help
+      Queue depth reserved for the network consumer.
+
+endif # SOLN_FBQ_VID_JPEG_LOCAL_EN
+
+menuconfig SOLN_FBQ_VID_JPEG_REMOTE_EN
+  bool "Remote JPEG video queue"
+    default n
+    depends on SOLN_UTILS
+    help
+      Enable the queue carrying received JPEG frames.
+
+if SOLN_FBQ_VID_JPEG_REMOTE_EN
+
+config SOLN_FBQ_VID_JPEG_REMOTE_SIZE
+  hex "Remote JPEG video frame size"
+    default 0x20000
+    help
+      Maximum payload size of one received MJPEG frame.
+
+config SOLN_FBQ_VID_JPEG_REMOTE_NUM
+  int "Remote JPEG video frame count"
+    range 1 32
+    default 6
+    help
+      Number of buffers allocated for the remote JPEG queue.
+
+comment "SD recording output"
+
+config SOLN_FBQ_VID_JPEG_REMOTE_SD_ID
+  int "Remote JPEG SD stream ID"
+    range 0 4
+    default 0
+    help
+      Output ID reserved for SD card recording of received frames.
+
+config SOLN_FBQ_VID_JPEG_REMOTE_SD_DEPTH
+  int "Remote JPEG SD stream depth"
+    range 1 32
+    default 3
+    help
+      Queue depth reserved for SD card recording of received frames.
+
+comment "JPEG decoder output"
+
+config SOLN_FBQ_VID_JPEG_REMOTE_DEC_ID
+  int "Remote JPEG decoder stream ID"
+    range 0 4
+    default 2
+    help
+      Output ID reserved for the JPEG decoder.
+
+config SOLN_FBQ_VID_JPEG_REMOTE_DEC_DEPTH
+  int "Remote JPEG decoder stream depth"
+    range 1 32
+    default 3
+    help
+      Queue depth reserved for the JPEG decoder.
+
+endif # SOLN_FBQ_VID_JPEG_REMOTE_EN
+
+menuconfig SOLN_FBQ_AUD_PCM_LOCAL_EN
+  bool "Local PCM audio queue"
+    default n
+    depends on SOLN_UTILS
+    help
+      Enable the queue carrying captured PCM audio frames.
+
+if SOLN_FBQ_AUD_PCM_LOCAL_EN
+
+config SOLN_FBQ_AUD_PCM_LOCAL_SIZE
+  hex "Local PCM audio frame size"
+    default 0x400
+    help
+      Maximum payload size of one local PCM audio frame.
+
+config SOLN_FBQ_AUD_PCM_LOCAL_NUM
+  int "Local PCM audio frame count"
+    range 4 64
+    default 20
+    help
+      Number of buffers allocated for the local PCM audio queue.
+
+comment "Audio loopback output"
+
+config SOLN_FBQ_AUD_PCM_LOCAL_LOOPBACK_ID
+  int "Local PCM loopback stream ID"
+    range 0 4
+    default 0
+    help
+      Output ID reserved for the audio loopback consumer.
+
+config SOLN_FBQ_AUD_PCM_LOCAL_LOOPBACK_DEPTH
+  int "Local PCM loopback stream depth"
+    range 1 64
+    default 20
+    help
+      Queue depth reserved for the audio loopback consumer.
+
+endif # SOLN_FBQ_AUD_PCM_LOCAL_EN
+
+menuconfig SOLN_FBQ_AUD_PCM_REMOTE_EN
+  bool "Remote PCM audio queue"
+    default n
+    depends on SOLN_UTILS
+    help
+      Enable the queue carrying remotely supplied or playback PCM audio frames.
+
+if SOLN_FBQ_AUD_PCM_REMOTE_EN
+
+config SOLN_FBQ_AUD_PCM_REMOTE_SIZE
+  hex "Remote PCM audio frame size"
+    default 0x400
+    help
+      Maximum payload size of one remote PCM audio frame.
+
+config SOLN_FBQ_AUD_PCM_REMOTE_NUM
+  int "Remote PCM audio frame count"
+    range 4 64
+    default 20
+    help
+      Number of buffers allocated for the remote PCM audio queue.
+
+comment "Internal audio DAC output"
+
+config SOLN_FBQ_AUD_PCM_REMOTE_AUDAC_ID
+  int "Remote PCM AUDAC stream ID"
+    range 0 4
+    default 0
+    help
+      Output ID reserved for the internal audio DAC.
+
+config SOLN_FBQ_AUD_PCM_REMOTE_AUDAC_DEPTH
+  int "Remote PCM AUDAC stream depth"
+    range 1 64
+    default 20
+    help
+      Queue depth reserved for the internal audio DAC.
+
+comment "I2S audio output"
+
+config SOLN_FBQ_AUD_PCM_REMOTE_I2S_ID
+  int "Remote PCM I2S stream ID"
+    range 0 4
+    default 1
+    help
+      Output ID reserved for the I2S audio consumer.
+
+config SOLN_FBQ_AUD_PCM_REMOTE_I2S_DEPTH
+  int "Remote PCM I2S stream depth"
+    range 1 64
+    default 20
+    help
+      Queue depth reserved for the I2S audio consumer.
+
+comment "SD recording output"
+
+config SOLN_FBQ_AUD_PCM_REMOTE_SD_ID
+  int "Remote PCM SD stream ID"
+    range 0 4
+    default 2
+    help
+      Output ID reserved for SD card audio recording.
+
+config SOLN_FBQ_AUD_PCM_REMOTE_SD_DEPTH
+  int "Remote PCM SD stream depth"
+    range 1 64
+    default 10
+    help
+      Queue depth reserved for SD card audio recording.
+
+endif # SOLN_FBQ_AUD_PCM_REMOTE_EN
+
+config SOLN_FBQ_LOG_LEVEL
+    int "Frame queue log level"
+    range 0 5
+    default 3
+    depends on SOLN_UTILS
+    help
+      Log level for the Soln frame queue implementation.
+
+endif # SOLN_FBQ_EN

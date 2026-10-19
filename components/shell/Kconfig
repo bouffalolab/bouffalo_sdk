@@ -1,0 +1,41 @@
+#
+# Shell component
+#
+
+menu "Shell"
+
+config SHELL
+    bool "Command shell"
+    default n
+    help
+      Build the interactive command shell.
+
+config SHELL_CMD_SIZE
+    int "Maximum shell command size"
+    default 128
+    depends on SHELL
+    help
+      Maximum length of a single shell command line.
+
+config SHELL_THREAD_STACK_SIZE
+    int "Shell thread stack size"
+    default 4096
+    depends on SHELL
+    help
+      Stack size of the shell input thread.
+
+config SHELL_AUTOLIST_FILE
+    string "Shell autolist source file"
+    default ""
+    depends on SHELL
+    help
+      Path to the file that lists shell commands registered automatically.
+
+config SHELL_AUTO_LIST_SIZE
+    int "Shell autolist size"
+    default 128
+    depends on SHELL && SHELL_AUTOLIST_FILE != ""
+    help
+      Maximum number of automatically registered shell commands.
+
+endmenu

@@ -1,0 +1,234 @@
+/****************************************************************************
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ ****************************************************************************/
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
+
+#include <lwip/tcpip.h>
+#include <lwip/sockets.h>
+#include <lwip/netdb.h>
+
+#include "bl_fw_api.h"
+#include <fhost_api.h>
+#include "wifi_mgmr_ext.h"
+#include "mm.h"
+#include "wifi_mgmr.h"
+
+#include "bflb_irq.h"
+#include "bflb_uart.h"
+
+#include "rfparam_adapter.h"
+
+#include "board.h"
+#include "shell.h"
+
+#include <app_init.h>
+
+#ifdef CONFIG_RPMSG_SERVICE
+#include "ipc_throughput_test.h"
+#endif
+
+#define DBG_TAG "MAIN"
+#include "log.h"
+#include "async_event.h"
+
+struct bflb_device_s *gpio;
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static struct bflb_device_s *uart1;
+
+
+extern void shell_init_with_task(struct bflb_device_s *shell);
+extern void wifi_event_handler(async_input_event_t ev, void *priv);
+
+#ifdef CONFIG_RPMSG_SERVICE
+#define AUTO_TEST_TASK_STACK_SIZE  512U
+#define AUTO_TEST_TASK_PRIORITY    7U
+
+const bool ipc_throughput_crc_enabled = true;
+
+static void ipc_throughput_auto_test_task(void *param)
+{
+    char *test_10s_argv[] = { "ipc_throughput_test", "1400", "10" };
+    char *test_49h_argv[] = { "ipc_throughput_test", "1400", "172800" };
+
+    (void)param;
+
+    while (!ipc_throughput_is_ready()) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    vTaskDelay(pdMS_TO_TICKS((DEFAULT_DURATION_SEC +
+                              PHASE_GAP_SEC) * 1000U));
+    (void)cmd_ipc_throughput_test(3, test_10s_argv);
+    vTaskDelay(pdMS_TO_TICKS((DEFAULT_DURATION_SEC +
+                              PHASE_GAP_SEC) * 1000U));
+    (void)cmd_ipc_throughput_test(3, test_49h_argv);
+    vTaskDelete(NULL);
+}
+#endif
+
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Functions
+ ****************************************************************************/
+void wifi_start_firmware_task(void *param)
+{
+    LOG_I("Starting wifi ...\r\n");
+
+    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
+
+
+    wifi_task_create();
+
+    LOG_I("Starting fhost ...\r\n");
+    fhost_init();
+#ifdef CONFIG_RPMSG_SERVICE
+    int ret = ipc_throughput_init();
+    if (ret < 0) {
+        LOG_E("IPC throughput init failed: %d\r\n", ret);
+        vTaskDelete(NULL);
+        return;
+    }
+    if (xTaskCreate(ipc_throughput_auto_test_task, "ipc_auto",
+                    AUTO_TEST_TASK_STACK_SIZE, NULL,
+                    AUTO_TEST_TASK_PRIORITY, NULL) != pdPASS) {
+        LOG_E("IPC throughput auto task create failed\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
+#else
+    int ipc_remote(void);
+    ipc_remote();
+#endif
+    vTaskDelete(NULL);
+}
+
+void wifi_event_handler(async_input_event_t ev, void *priv)
+{
+    uint32_t code = ev->code;
+
+     switch (code) {
+        case CODE_WIFI_ON_INIT_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
+            wifi_mgmr_task_start();
+        } break;
+        case CODE_WIFI_ON_MGMR_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_SCAN_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
+            wifi_mgmr_sta_scanlist();
+        } break;
+        case CODE_WIFI_ON_CONNECTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
+            void mm_sec_keydump();
+            mm_sec_keydump();
+        } break;
+        #ifdef CODE_WIFI_ON_GOT_IP_ABORT
+        case CODE_WIFI_ON_GOT_IP_ABORT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_ABORT\r\n", __func__);
+        } break;
+        #endif
+        #ifdef CODE_WIFI_ON_GOT_IP_TIMEOUT
+        case CODE_WIFI_ON_GOT_IP_TIMEOUT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP_TIMEOUT\r\n", __func__);
+        } break;
+        #endif
+        case CODE_WIFI_ON_GOT_IP: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size(0));
+        } break;
+        case CODE_WIFI_ON_DISCONNECT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STARTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STOPPED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STA_ADD: {
+            LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
+        } break;
+        case CODE_WIFI_ON_AP_STA_DEL: {
+            LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
+        } break;
+        default: {
+            LOG_I("[APP] [EVT] Unknown code %u \r\n", code);
+        }
+    }
+}
+
+static TaskHandle_t app_wifi_task;
+int loop_cnt = 0;
+
+void app_wifi_entry(void *param)
+{
+    printf("%s entry.\r\n", __FUNCTION__);
+
+    printf("wifi start\r\n");
+    if (0 != rfparam_init(0, NULL, 0)) {
+        LOG_I("PHY RF init failed!\r\n");
+        vTaskDelete(NULL);
+    }
+
+    LOG_I("PHY RF init success!\r\n");
+
+    tcpip_init(NULL, NULL);
+
+    xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
+
+    printf("wifi done\r\n");
+    app_init();
+    while (1) {
+        //printf("loop, cpu:%d, loop_cnt:%d\r\n", GLB_Get_Core_Type(), loop_cnt++);
+        vTaskDelay(1000);
+    }
+}
+
+int main(void)
+{
+    board_init();
+
+    uart1 = bflb_device_get_by_name("uart1");
+    shell_init_with_task(uart1);
+
+    xTaskCreate(app_wifi_entry, (char *)"init", 2048, NULL, 16, &app_wifi_task);
+
+    vTaskStartScheduler();
+    while (1) {
+        // never here.
+    }
+}

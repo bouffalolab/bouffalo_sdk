@@ -1,0 +1,89 @@
+
+# Components
+CONFIG_BFLB_LOG =n
+CONFIG_FREERTOS =y
+CONFIG_POSIX =n
+CONFIG_TLSF =y
+CONFIG_SHELL =y
+CONFIG_LWIP =y
+CONFIG_RF =y
+CONFIG_MBEDTLS =y
+# Initialize PSRAM and register its heap for the BL616 retention test.
+# CONFIG_PSRAM =y
+CONFIG_DHCPD =y
+CONFIG_PING =y
+# CONFIG_MQTT =y
+
+CONFIG_VSNPRINTF_NANO       =n
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+
+# Config
+## mbedtls
+CONFIG_MBEDTLS_AES_USE_HW =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW =y
+CONFIG_MBEDTLS_SHA1_USE_HW =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y
+
+#CONFIG_LOG_DISABLE          =n
+#CONFIG_ASSERT_DISABLE       =n
+#CONFIG_LOG_LEVEL            =3
+#CONFIG_LOG_POOL_SIZE        =1024
+
+# lpfw
+CONFIG_LPAPP =y
+CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW=y
+CONFIG_PM =y
+CONFIG_LWIP_LP =y
+
+CONFIG_MACSW_SELECT = default
+
+CONFIG_PWRMGMT               =y
+CONFIG_TICKLESS_EXT          =y
+# BL616 only: keep PSRAM powered during tickless sleep (PDS1).
+# Leave disabled for the default PDS15 path; other chips ignore this option.
+ifeq ($(CHIP),bl616)
+# CONFIG_PSRAM_RETENTION       =y
+endif
+
+CONFIG_PM_HELPER_CLI         =y
+
+# lfs_kv
+CONFIG_LITTLEFS              =y
+CONFIG_LITTLEFS_KV_EASYFLASH =y
+CONFIG_BFLB_MTD              =y
+CONFIG_PARTITION             =y
+
+
+# WiFi stack selection: BL616 uses fhost; BL616CL/BL618DG use wl80211
+CONFIG_WIFI6 =y
+ifeq ($(CHIP),bl616cl)
+    CONFIG_WL80211 =y
+    CONFIG_BL_WPA_SUPPLICANT =y
+    CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT ?= 0x4000
+else ifeq ($(CHIP),bl618dg)
+    CONFIG_WL80211 =y
+    CONFIG_BL_WPA_SUPPLICANT =y
+    CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT ?= 0x4000
+else
+    CONFIG_FHOST =y
+endif
+
+ifeq ($(CHIP),bl616)
+    # DCDC ENABLE
+    CONFIG_DCDC_ENABLE =n
+endif
+
+ifeq ($(CHIP),bl618dg)
+    CONFIG_CLOCK_SOURCE_EF_PARAM =n
+    CONFIG_ROMAPI            =y
+    CONFIG_DUALCORE_DISABLE  =y
+    CONFIG_LPFW_CUSTOM_RX    =y
+endif
+
+ifeq ($(CHIP),bl616cl)
+    CONFIG_CLOCK_SOURCE_EF_PARAM =n
+endif

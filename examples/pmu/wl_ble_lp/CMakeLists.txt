@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.15)
+
+find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
+
+if (CONFIG_USBH_MSC)
+target_sources(app PRIVATE
+    usbh_msc_fatfs.c
+              )
+endif()
+
+target_sources(app PRIVATE
+    wl_ble_lp_app.c
+              )
+
+if (CONFIG_BLUETOOTH)
+    sdk_add_compile_definitions(-DCFG_BLE_ENABLE)
+endif()
+
+sdk_add_compile_definitions(-DWPA_SUPPLICANT_CLEANUP_INTERVAL=1800)
+
+sdk_add_include_directories(.)
+
+sdk_set_main_file(main.c)
+
+project(ble_lp)

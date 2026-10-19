@@ -1,0 +1,84 @@
+#
+# Utility components
+#
+
+menu "Utilities"
+
+config BFLB_LOG
+    bool "Bouffalo log backend"
+    default n
+    help
+      Enable the Bouffalo colorized log backend.
+
+if BFLB_LOG
+
+config LOG_LEVEL
+    int "Log level"
+    default 3
+    help
+      0 = fatal, 1 = error, 2 = warning, 3 = info, 4 = debug, 5 = trace.
+
+config LOG_POOL_SIZE
+    int "Log pool size"
+    default 1024
+    help
+      Size in bytes of the asynchronous log message pool.
+
+config LOG_NCOLOR
+    bool "Disable colored log output"
+    default n
+    help
+      Disable ANSI color codes in log output.
+
+config LOG_DISABLE
+    bool "Disable printf and puts"
+    default n
+    help
+      Compile printf and puts calls out of non-application targets.
+
+config ASSERT_DISABLE
+    bool "Disable asserts"
+    default n
+    help
+      Compile assert checks out of the firmware.
+
+endif # CONFIG_BFLB_LOG
+
+config TIMEZONE
+    int "Default timezone offset (hours)"
+    default 8
+    help
+      UTC offset used by the timestamp utility when the application does not
+      set a timezone at runtime.
+
+config COREDUMP
+    bool "Core dump"
+    default y
+    help
+      Build the fault core-dump encoder.
+
+config PARTITION
+    bool "Partition table"
+    default n
+    help
+      Build the flash partition table utility.
+
+config BFLB_MTD
+    bool "Bouffalo MTD"
+    default n
+    help
+      Build the flash memory technology device layer.
+
+config MQUICKJS
+    bool "mQuickJS"
+    default n
+    help
+      Build the lightweight QuickJS JavaScript engine.
+
+config BFLB_BLOCK_POOL_DEBUG
+    bool "Block pool debug"
+    default n
+    help
+      Enable debug checks and statistics for the block pool allocator.
+
+endmenu

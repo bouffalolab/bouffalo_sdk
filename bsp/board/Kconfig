@@ -1,0 +1,101 @@
+# Board defaults precede shared fallbacks. Missing board files are allowed.
+osource "$BL_SDK_BASE/bsp/board/$BOARD/Kconfig.defconfig"
+
+# Shared defaults for boards using the JY6316 four-slot capture profile.
+# The common player options are still declared in the multimedia Kconfig.
+if BSP_AUDIO_PLAYER && MULTIMEDIA
+
+config WAVE_PLAYER_REC_CHANNELS
+    default 4 if AUDIO_CODEC_JY6316_ENABLE
+
+endif
+
+config DVP_RASTER
+    default n if CHIP = "bl618dg"
+
+config MULTIMEDIA_VIDEO
+    default y if CHIP = "bl616cl" || CHIP = "bl618dg"
+
+config GCC_OPTIMISE_LEVEL
+    default "-Os" if CHIP = "bl616cl" || CHIP = "bl616" || CHIP = "bl618dg"
+
+config CPU_ID
+    default "ap" if CHIP = "bl618dg"
+
+config CPU_MODEL
+    default "b0" if CHIP = "bl618dg"
+
+config ROMAPI
+    default n if CHIP = "bl618dg" && (CPU_ID = "lp" || CPU_ID = "np")
+
+config WRAM_LENGTH
+    hex "WRAM region length in bytes"
+    depends on CHIP = "bl616" || CHIP = "bl616cl"
+    default 0x28000 if WIFI6 || WLAN
+    default 0x10000
+    help
+      Size in bytes of the WRAM region reserved by the BL616/BL616CL
+      linker layout. The Wi-Fi region excludes the separately reserved
+      EM size. Changing this value also changes the remaining SRAM size.
+
+config PSRAM_FOR_AP_SIZE
+    hex "AP PSRAM partition size" if CHIP = "bl618dg"
+    default 0x200000 if CHIP = "bl618dg"
+    help
+      Size of the external PSRAM region assigned to the AP core.
+
+config PSRAM_ADDRESS
+    hex
+    default 0x88000000 if CHIP = "bl618dg" && CPU_MODEL = "a0"
+    default 0xb8000000 if CHIP = "bl618dg"
+
+config WRAM_FOR_AP_SIZE
+    hex "AP WRAM partition size" if CHIP = "bl618dg"
+    default 0x50000 if CHIP = "bl618dg"
+    help
+      Size of the wireless RAM region assigned to the AP core.
+
+config RAM_FOR_AP_SIZE
+    hex "RAM size for AP" if CHIP = "bl618dg"
+    default 0x6D600 if CHIP = "bl618dg"
+
+config DBI_DISPLAY_BOARD_MODE
+    bool "Use display-board DBI Type B pin mapping" if CHIP = "bl618dg"
+    default n
+    help
+      Route DBI Type B control signals through GPIO 12-14 instead of
+      GPIO 18-20, keeping GPIO 17 and data pins unchanged.
+
+config DPI_DISPLAY_BOARD_MODE
+    bool "Use display-board DPI pin mapping" if CHIP = "bl618dg"
+    default n
+    help
+      Route DPI control signals through GPIO 0-3 instead of GPIO 45-48.
+
+menu "Board audio capture layout"
+    depends on BSP_AUDIO_PLAYER
+
+config BOARD_AUDIO_CAPTURE_MIC_MASK
+    hex "Microphone DMA slot mask"
+    default 0x0c if AUDIO_CODEC_JY6316_ENABLE
+    default 0x01
+    help
+      Physical microphone roles in interleaved I2S capture data: bit N is
+      DMA slot N, not an analog ADC pin. Boards can provide defaults in
+      bsp/board/<board>/Kconfig.defconfig. Shared fallbacks describe the
+      JY6316 four-slot profile or mono slot 0. Zero means unknown.
+      Override for other wiring. Applications supply this layout to
+      wave_player_init and choose how to use the channels.
+      A different capture backend must supply its own matching layout.
+
+config BOARD_AUDIO_CAPTURE_REF_MASK
+    hex "Playback reference DMA slot mask"
+    default 0x01 if AUDIO_CODEC_JY6316_ENABLE
+    default 0x00
+    help
+      Captured playback reference roles, disjoint from microphone slots.
+      JY6316 uses reference/empty/MIC/MIC; AVE ES8388 uses reference/MIC.
+      Masks must fit the configured capture channel count. This describes
+      available inputs; the application selects the AEC reference source.
+
+endmenu

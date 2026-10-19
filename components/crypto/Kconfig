@@ -1,0 +1,161 @@
+#
+# Crypto components
+#
+
+menu "Crypto"
+
+config MBEDTLS
+    bool "mbedTLS"
+    default n
+    help
+      Build the mbedTLS cryptography library.
+
+if MBEDTLS
+
+config MBEDTLS_V2
+    bool "Use mbedTLS v2"
+    default n
+    help
+      Link against the prebuilt mbedTLS v2 library instead of v3.
+
+config MBEDTLS_CFG_FILE
+    string "mbedTLS configuration file"
+    default "config-tls-generic.h"
+    help
+      Name of the mbedTLS configuration header used by the build.
+
+if !MBEDTLS_V2
+
+config MBEDTLS_SSL_MAX_CONTENT_LEN
+    int "Max payload size for TLS protocol message"
+    default 16384
+    help
+      Maximum TLS protocol message payload size in bytes.
+
+source "$BL_SDK_BASE/components/crypto/mbedtls/Kconfig.tls-generic"
+
+endif
+
+config MBEDTLS_DEBUG
+    bool "mbedTLS debug output"
+    default n
+    help
+      Enable mbedTLS debug logging output.
+
+config MBEDTLS_DEBUG_LEVEL
+    int "mbedTLS debug level"
+    default 0
+    depends on MBEDTLS_DEBUG
+    help
+      mbedTLS debug threshold: 0 off, 1 error, 2 state, 3 io, 4 verbose.
+
+config MBEDTLS_DEBUG_STRIP_NEWLINE
+    bool "Strip newlines from mbedTLS debug output"
+    default n
+    depends on MBEDTLS_DEBUG
+    help
+      Remove trailing newlines from mbedTLS debug messages.
+
+config MBEDTLS_DEBUG_EXTRACT_BASENAME_AT_RUNTIME
+    bool "Extract mbedTLS debug basename at runtime"
+    default n
+    depends on MBEDTLS_DEBUG
+    help
+      Strip path prefixes from mbedTLS source names at runtime instead of
+      at compile time.
+
+config MBEDTLS_SELF_TEST
+    bool "mbedTLS self tests"
+    default n
+    help
+      Build the mbedTLS self test entry points.
+
+menu "mbedTLS hardware acceleration"
+
+config MBEDTLS_AES_USE_HW
+    bool "AES hardware acceleration"
+    default n
+    help
+      Use the chip AES engine for mbedTLS AES operations.
+
+config MBEDTLS_SHA1_USE_HW
+    bool "SHA1 hardware acceleration"
+    default n
+    help
+      Use the chip hash engine for mbedTLS SHA1 operations.
+
+config MBEDTLS_SHA256_USE_HW
+    bool "SHA256 hardware acceleration"
+    default n
+    help
+      Use the chip hash engine for mbedTLS SHA256 operations.
+
+config MBEDTLS_SHA512_USE_HW
+    bool "SHA512 hardware acceleration"
+    default n
+    help
+      Use the chip hash engine for mbedTLS SHA512 operations.
+
+config MBEDTLS_ECC_USE_HW
+    bool "ECC hardware acceleration"
+    default n
+    help
+      Use the chip PKA engine for mbedTLS elliptic curve operations.
+
+config MBEDTLS_BIGNUM_USE_HW
+    bool "Bignum hardware acceleration"
+    default n
+    help
+      Use the chip PKA engine for mbedTLS bignum operations.
+
+endmenu
+
+config X509_CERTIFICATE_BUNDLE
+    bool "X.509 Certificate Bundle"
+    help
+      Enable X.509 certificate bundle for TLS verification.
+      When enabled, a bundle of trusted root CA certificates will be
+      embedded in the firmware and automatically attached to SSL
+      connections for certificate verification.
+
+config CRT_BUNDLE_MAX_CERTS
+    int "Maximum certificates in bundle"
+    depends on X509_CERTIFICATE_BUNDLE
+    default 200
+    help
+      Maximum number of certificates allowed in the X.509 certificate bundle.
+      If the actual bundle contains more certificates, initialization will fail.
+
+if MBEDTLS_V2
+
+menu "Legacy mbedTLS compatibility"
+
+config MBEDTLS_CMAC
+    bool "CMAC"
+    default n
+config MBEDTLS_DTLS
+    bool "DTLS"
+    default n
+config MBEDTLS_ECDSA_DETERMINISTIC
+    bool "Deterministic ECDSA"
+    default n
+config MBEDTLS_ECJPAKE_C
+    bool "ECJPAKE"
+    default n
+config MBEDTLS_HMAC_DRBG_ENABLED
+    bool "HMAC DRBG"
+    default n
+config MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
+    bool "ECJPAKE key exchange"
+    default n
+config MBEDTLS_SSL_DTLS_CONNECTION_ID
+    bool "DTLS connection ID"
+    default n
+
+endmenu
+
+endif
+
+endif # CONFIG_MBEDTLS
+
+endmenu

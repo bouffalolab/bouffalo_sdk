@@ -1,0 +1,7 @@
+**/img_create_iot
+**/img_create_mcu
+**/img_create
+**/log
+*.bin
+*.ini
+*.pack

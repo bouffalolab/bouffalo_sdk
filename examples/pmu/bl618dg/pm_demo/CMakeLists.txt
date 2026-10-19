@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.15)
+
+find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
+
+sdk_set_main_file(main.c)
+
+target_sources(app PRIVATE cli_helper.c)
+
+project(pm_demo)

@@ -1,0 +1,474 @@
+# Changes
+## 2026-10-13
+1. [BR/EDR] Preserve Inquiry Scan and Page Scan flags after connection failures and disconnections to keep the host synchronized with the controller's Scan Enable configuration, preventing subsequent scan-disable requests from incorrectly returning -EALREADY.
+
+## 2026-10-09
+1. [HCI] Fix CVE-2023-0396: when the controller returns incomplete command parameters, Host initialization and APIs such as bt_le_read_rssi() and bt_le_read_chan_map() could read beyond the response buffer. Check lengths before accessing fields in these paths, PRNG setup and hast_ble_reset(), and handle a missing status byte in hci_cmd_complete().
+2. [HCI] Fix CVE-2023-0397: during Host initialization, le_read_buffer_size_complete() could pass a zero packet count from the controller's LE Read Buffer Size response to TX credit semaphore setup. Reject the zero count before updating LE buffer state or initializing credits.
+3. [HCI] Fix CVE-2024-5754: hci_encrypt_change() could repeat security processing when the controller sent a successful Encryption Change event with the same encryption state already stored for the connection. Ignore the duplicate before updating state or notifying the security handlers.
+4. [L2CAP] Fix CVE-2025-10456: when a peer sends an LE Flow Control Credit indication with a non-dynamic CID or zero credits, le_credits() could pass it to channel lookup and TX credit handling. Reject both cases before looking up the channel or changing its credits.
+5. [L2CAP] Fix CVE-2025-10457: le_conn_rsp() and le_disconn_rsp() matched peer responses without checking which request was pending, allowing an unrelated response to change or remove a channel. Track the request opcode with its signaling identifier and require both to match; also verify the disconnect response SCID belongs to that channel.
+6. [L2CAP] Fix CVE-2025-10458: le_conn_rsp() could accept a peer's successful CoC response with an invalid destination CID or MTU/MPS, leaving unusable channel parameters. Validate the CID and protocol limits before installing them, disconnect the ACL on an invalid successful response, and make le_conn_req() reply with Unacceptable Parameters for invalid MTU/MPS.
+7. [L2CAP] Fix CVE-2026-5068: while reassembling a segmented CoC SDU, l2cap_chan_le_recv_sdu() writes a 16-bit segment counter into net_buf user_data; a configuration smaller than two bytes would overwrite memory. Add a build assertion requiring enough space when CONFIG_BT_L2CAP_DYNAMIC_CHANNEL is enabled.
+8. [host/conn] Fix CVE-2023-2234: HCI event handlers used bt_conn_lookup_handle() without checking the link type, so an event carrying another type's handle could access the wrong LE or BR/EDR fields in bt_conn. Add an expected-type argument and reject mismatches before returning the connection to the handler.
+9. [GATT] Fix CVE-2024-1638: when a peer reads or writes an attribute marked READ_LESC or WRITE_LESC, the 8-bit permission storage/mask and incomplete read/write masks could lose the LESC bits and skip the SC check in bt_gatt_check_perm(). Widen permissions and the check mask to 16 bits and include LESC in both read/write masks so access requires an encrypted link with an SC key.
+
+## 2026-9-23
+1. Fixed the BLE advertising-name shortening underflow by allowing truncation only when shortened_len > 0, otherwise returning -EINVAL before memcpy().
+
+## 2026-9-20
+1. [BR/EDR] Stop treating a failed HCI Read_Encryption_Key_Size as an insufficient encryption key. Insufficient Security (0x2f) and Command Disallowed (0x0c) describe the link state, not the key size, so the key size is now reported as unknown and the security level is re-checked on the next encryption change or key refresh. This caused spurious AUTH_FAIL disconnects when reconnecting a headset, where the controller could not yet serve the command at connection setup.
+
+## 2026-9-10
+1. [A2DP Sink] Automatically request a Master-to-Slave role switch only for locally initiated BR/EDR connections, improving interoperability with iPhone A2DP connections.
+
+## 2026-08-21
+1.Support compiling ble throughput test code as slave-only.
+
+## 2026-08-19
+1. [ble_cli_cmds] Add BL618DG RF coexistence CLI controls: ble_coex_rf_start, ble_coex_rf_stop, and ble_coex_rf_set for Bluetooth/WiFi time slicing and manual RF selection.
+2. [bredr_cli_cmds] Add A2DP Sink statistics CLI support with one-shot reporting, periodic reporting, and manual stopping, including bitrate, sequence range, and packet count.
+3. [bredr_cli_cmds] Add HFP SCO test-tone simulation and RX sample inspection commands for CVSD audio-path validation.
+
+## 2026-08-18
+1. [BR/EDR] Enable sniff mode in the default link policy so the controller accepts sniff negotiation; without it idle ACL links stay in Active mode and break WLAN/BT coex.
+2. [BR/EDR] Send Sniff/Exit Sniff Mode commands synchronously to surface Command Status rejections, enable the Mode Change event, and clarify sniff/unsniff CLI output.
+
+## 2026-08-12
+1. [BR/EDR] Add per-device Extended Inquiry Result callback support under BFLB_BREDR_PATCH_EXTENDED_INQUIRY_RESULT_CALLBACK, with CLI test output for address, class of device, RSSI, and EIR name.
+
+## 2026-08-05
+fix: support HCI monitor output on IoT SDK.
+feat: add SPP MTU query and A2DP stream controls.
+
+## 2026-07-31
+1. [blestack] Fix GATT MTU exchange to use the runtime local ATT MTU instead of the compile-time BT_ATT_MTU value.
+
+## 2026-07-30
+1.Make OAD finish callback private to avoid conflict with other components.
+
+## 2026-07-28
+1. [BR/EDR] Size the HCI RX buffer for SPP's 1007-byte L2CAP RX MTU, including HCI ACL and L2CAP headers.
+
+## 2026-07-24
+1. [host/conn] Split LE and BR/EDR ACL connections into independent pools sized by CONFIG_BT_MAX_CONN and CONFIG_BT_ACL_CONN, with pool-local connection indexes and a private unique ID only for HCI ACL RX buffers.
+2. [blestack] Size BR/EDR L2CAP, SMP, profiles, and connection-info CLI resources with CONFIG_BT_ACL_CONN, derived from the selected controller library's ACL capacity.
+
+## 2026-07-23
+1. [bredr_cli_cmds] Add bt profile deinit and cleanup related CLI support under BFLB_BREDR_PATCH_DEINIT_CLEANUP.
+2. [blestack] Complete BR/EDR profile deinitialization support in host-side paths under BFLB_BREDR_PATCH_DEINIT_CLEANUP.
+
+## 2026-07-10
+1. [bredr_cli_cmds] Reduce code size by replacing embedded A2DP source audio data with a generated test tone.
+
+## 2026-07-03
+1. [blestack] Fix BLE connection info reporting to show only connected LE links, avoiding pending connection objects being shown with zero remote addresses.
+
+## 2026-06-30
+1.Fix concurrent connection collision issue with same peer between advertiser and initiator.
+
+## 2026-06-29
+1. [blestack] Add black-box test CLI commands (cancel discover/write/read/indicate, gatt_indicate, conn_count, directed_adv).
+2. [blestack] Hold conn reference in ble_tp_task to avoid use-after-free on disconnect.
+
+## 2026-06-26
+1. [ble_tp_cli] Improve throughput rate accuracy: replace software-timer sampling with self-timed reporter using xTaskGetTickCount real elapsed time, eliminating jitter from task preemption and timer-callback blocking. Rate unit corrected from mislabeled Kb/s to KB/s (/1024).
+
+## 2026-06-18
+1. [BR/EDR] Fix discovery being stuck after stop during the name-resolution window: when the inquiry has already completed and the host is resolving device names, Inquiry Cancel returns Command Disallowed (-EACCES); treat this as a successful stop -- detach the callback, cancel the in-flight remote name requests, clear the discovery state, and return 0 so a subsequent start works. Late name completions racing with the cancels are dropped via the detached-callback guards instead of being reported after stop.
+
+## 2026-06-09
+1. [blestack] Add BR/EDR sniff mode support.
+2. [bredr_cli_cmds] Add bredr_sniff/bredr_unsniff CLI commands.
+3. [bredr_cli_cmds] Add spp_tp_start/spp_tp_stop SPP throughput test commands with per-link rate limiting.
+
+## 2026-06-04
+1. [blestack] Fix directed advertising refcount over-unref crash. the original "bouffalo fix" unref'd one ref prematurely in enh_conn_complete, causing the crash from excessive unrefs on failure.
+
+## 2026-05-29
+1. [blestack] Add BL618DG and BL616CL to BLE feature macros: hci_core.c/h, ble_cli_cmds.c, hci_vs.h.
+2. [bredr_cli_cmds] Fix duplicate bredr_start_inquiry CLI entry.
+3. [bredr_cli_cmds] Fix cod[1] copy-paste bug, should be cod[2] for device class byte 3.
+4. [bredr_cli_cmds] Add missing BT_AVDTP_CLI macro definition in non-CONFIG_SHELL branch.
+5. [bredr_cli_cmds] Fix stream_pause variable scope: move declaration from CONFIG_BT_AVRCP to CONFIG_BT_A2DP block.
+
+## 2026-05-07
+1.[blestack] split HCI UART transport into reusable layers .
+
+## 2026-04-17
+1.[blestack] serialize mtu and data len exchange for oad and atvv.
+
+## 2026-04-08
+1. [L2CAP BR] Fix stale CID on reconnection: clear channel CIDs when destroyed so reused channel structs get fresh allocation on next connection.
+2. [host/conn] Fix connection reference leak after BR/EDR role switch: track original creation role to correctly release the sticky reference regardless of post-RSW live role.
+
+## 2026-04-07
+1. [BR/EDR] Enable role switch in default link policy settings during initialization, so the controller accepts incoming role switch requests from the peer.
+2. [host/conn] Fix connection reference double-unref after BR/EDR slave-to-master role switch, which caused an assert during A2DP disconnect.
+
+## 2026-04-01
+1.[blestack] Add support for setting BLE static random address.
+
+## 2026-03-12
+1. [blestack] Refactor tinycrypt header include paths.
+
+## 2026-02-10
+1. [blestack] Add CONFIG_BT_ATT_PREPARE_COUNT configuration option to make ATT prepare count configurable (0-64 range) with validation in both build system and compile-time checks.
+
+## 2026-02-03
+1. SPP Performance Enhancement: Increased MTU 1021 bytes and optimized L2CAP buffer configuration for transmission efficiency improvement.
+
+## 2026-01-20
+1.[blestack]: standardize include paths in blestack headers.
+
+## 2026-01-14
+1.[blestack] Add statistics mode to BLE scan CLI command.
+
+## 2026-01-07
+1.Save local irk to flash.
+
+## 2025-12-30
+1. Enhance A2DP stream pause control in CLI commands.
+
+## 2025-12-29
+1.[blestack]: Support Google Nearby Fastpair.
+
+## 2025-11-10
+1.[blestack]: fix CCC subscription crash and prevent configuration sharing.
+
+## 2025-10-30
+1. [blestack] set default CONFIG_BT_DEVICE_APPEARANCE to 0x0000(unknown device).
+ 
+## 2025-10-10
+1. [blestack]remove easyflash4 for bouffalo sdk.
+
+## 2025-10-10
+1. [blestack]support set tx power and set bdaddr command on bl618dg platform.
+
+## 2025-09-24
+1. [blestack]Use common config a macro for Bouffalo_SDK.
+
+## 2025-09-03
+1. [blestack] blestack support HCI TL via UART.
+
+## 2025-08-08
+1. [blestack] Add bt_br_foreach_bond API to get BREDR Link key.
+
+## 2025-08-05
+1. [blestack] Refactor dynamic GATT callbacks to include connection context and fix parameter handling.
+
+## 2025-07-31
+1. [blestack] Add parameter validation and error handling.
+
+## 2025-07-23
+1. [blestack] DIS profile: add missing return after model setting initialization.
+
+## 2025-07-22
+1. [blestack] Increase maximum supported GATT services from 2 to 3 (SERVER_MAX_SERVICES).
+
+## 2025-07-17
+1. [blestack] Add GATT API parameter invalid check.
+
+## 2025-07-02
+1. [blestack] support ble stack on bl618dg platform.
+2. [blestack] Optimize ble debug monitor, replace "BT_WARN" by "putchar" to avoid stack overflow.
+
+## 2025-06-16
+1. [blestack]Add bt_force_disable API to force disable host/controller.
+
+## 2025-06-13
+1. [blestack]Rename host assist API.
+
+## 2025-05-16
+1. [blestack]Enable CONFIG_BL_SDK at default settings(only Bouffalo SDK).
+
+## 2025-05-13
+1.[blestack]Sending acl data or hci commands in freertos timer task  is not permitted.
+
+## 2025-04-15
+1.[blestack]Fixed dynamic_gatt_pool.free reinit memory leak at dynamic gatt server init.
+
+## 2025-04-02
+1. Fixed some compilation warnings to enhance code stability.
+2. Enable CONFIG_BT_ECC at ble1m2s1bredr0. 
+
+## 2025-03-31
+1.[blestack]Fix conn_new reentry issue, avoid different connections use the same conn[i].
+2.[blestack]Fix BT_CONN_CONNECTED issue, there is a risk that conn->tx_queue._queue didn't finish when conn->state is set to BT_CONN_CONNECTED.
+3.[blestack]Fix bt_conn_create_le issue，there is a risk that conn create a connect to same address before disconnect complete, and new ref is not start from 0.
+
+## 2025-03-26
+1.[blestack]Fix memory leak issue because bt_dev.br.pkts semaphore does not be freed.
+
+## 2025-03-25
+1.[blestack] In ble_cli_cmds.c, do not make it call blestack APIs to send hci commands or hci data in recv_thread context.
+
+## 2025-03-07
+1.[blestack] Avoid conflict when ble slave and master are accessing the last resource at the same time.
+
+## 2025-02-28
+1.[blestack] Add reading remote version function. Setting CONFIG_BT_REMOTE_VERSION to 1 in proj_config.mk to enable this function.
+
+## 2025-02-10
+1.[blestack] Add CONFIG_BT_WORK_QUEUE_STACK_SIZE to config work_q thread size.
+
+## 2025-02-08
+1.[blestack] Fix build error when enable CONFIG_BT_TP_CLI
+
+## 2025-02-08
+1.[blestack] Add CONFIG_BT_RX_STACK_SIZE to config ble rx thread stack size.
+2.[blestack] Add bt_gatt_find_attr api to get struct bt_gatt_attr from handle.
+
+## 2025-02-08
+[blestack]support uart interface.
+
+## 2025-02-06
+[blestack]Add Throughput test cli and ble1m0s1sbredr0 Support DTM.
+
+## 2025-01-21
+[blestack]Support send two advertising in one adv event, this call be enabled by set CONFIG_BLE_ADV_TWO_PAYLOAD_IN_ONE_ADV_INTERVAL_WITH_ROME_CODE to 1.
+
+## 2025-01-13
+1.Fix the assert issue when it stops the work_q timer because of timer handle is null in some corner case.
+2.Fix hci command timeout becuase BT_HCI_EVT_NUM_COMPLETED_PACKETS evt fails to be handled in time.
+3.Fix memory leak issue because ble connection's tx queue fails to be freed in some corner case.
+
+## 2025-01-09
+[blestack]Rename uuid.h to bt_uuid.h to avoid incorrect inclusion.
+
+## 2024-12-19
+[blestack]Fix the problem that repeated calls to bt_conn_create_br/bt_conn_create_sco and causes subsequent connection failure.
+
+## 2024-12-11
+1.Fix the issue that master takes a long time to establish le connection after stop scan in the case that upper layer triggers scan once after it initiates le connection. 
+
+## 2024-11-18
+1.[BL616]Fix smp timeout issue in smp transport key distribution over the BR/EDR transport because the local device doesn't send id key while it indicates id key distribution.
+
+## 2024-10-31
+1.Support customized scan interval and scan window in scanning procedure of general connection establishment.
+
+## 2024-10-23
+1. [blestack] Fixed CLI Command parameter format incorrected.
+2. [blestack] Report compilation  error when the number of acl tx buffer doesn't meet required threshold in blestack.
+
+## 2024-10-22
+1. [blestack] This adds a possibility to reject incomming LE Connection request due to insufficient authorization or encryption key size. This is needed for qualification purposes.
+
+## 2024-10-17
+1. [blestack]Added Validation for Public Key Validity in SMP Pairing.
+
+## 2024-10-11
+1. l2cap_br_conf_req need return BT_L2CAP_CONF_UNKNOWN_OPTIONS when config opt not hint.(PTS 8.7.1)
+
+## 2024-09-10
+1. Fixed CVE-2021-3454: https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-fx88-6c29-vrp3
+2. Enhance DIS dis_settings_init func.
+
+## 2024-09-09
+1.Add deinitialization and callback to enhance BAS/DIS/IAS Profile.
+
+## 2024-09-06
+1.[bl702L][BL616]Add a hci vendor command to get btblecontroller's sdk version and add an api for application layer to get btblecontroller's sdk version.
+
+## 2024-09-02
+1.Fix the issue that there is no available contexts of L2CAP channels when connected. The issue happens is a corner case. The reason is that conn_update timer is released earlier in previous connection and this causes that the contexts of L2CAP channels are not released in previous disconnection.
+
+## 2024-08-29
+1.[dynamic gatt] reset gatt db when call dynamic gatt unregister.
+
+##2024-08-21
+1.[feature][CLI]support parse EIR data.
+
+##2024-08-09
+1.[blestack][feature]ble datalen updated callback.
+
+##2024-07-30
+1.Add an API to cancel gatt prepare writes. Application layer can call this api to make remote server release buffers in prepare queue if error happens.
+
+##2024-07-24
+1.reset gatt server attr count when call dynamic gatt unregister api.
+
+##2024-07-23
+1.gatt server dynamic add unregister api and support multi servers register.
+
+##2024-07-16
+1.Add gatt server dynamic register api.
+
+##2024-07-15
+1.Update code for mesh 1.1.
+
+## 2024-07-03
+1.[blestack] Updated the OAD service to work with new Flash driver API.
+
+## 2024-07-01
+1.[blestack]Fixed CVE-2024-1638 and add Core Specification 5.4 Vol. 3 Part C 10.3.1 supported
+2.[blestack]Fixed CVE-2024-3077
+CVE-2024-1638 https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-p6f3-f63q-5mc2
+CVE-2024-3077 https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-gmfv-4vfh-2mh8
+
+## 2024-06-27
+1. Fixed bt_le_name_update strlcpy parameter incorrected.
+
+## 2024-06-24
+1.[BL616]Add an api for setting br/edr tx power.
+
+## 2024-06-07
+1.Add BREDR unpair CLI command.
+
+## 2024-06-07
+1.Fix the crash issue caused by the risk of removing gatt subscriptions triggered by unpairing an connected peer device.
+
+## 2024-06-06
+1.[BREDR]Fixed bt hci cp setup sync conn req parameter for HFP/HF/ACS/BV-15-I(eSCO S4 settings).
+
+## 2024-06-04
+1.[BREDR][FEATURE] Sets the minimal size of encryption key.
+
+## 2024-5-30
+1.When disconnected,no need to cancel the connection update timer as the timer will be released at the end.
+2.When att time out occur, disconnect this connection.
+3.[BREDR]Fix hfp_outgoint_call_with_mem_loc cli command parameter incorrect.
+
+## 2024-5-24
+1.Add an api to check if bt is ready.
+2.Make bt_auth callback can be updated if needed.
+
+## 2024-5-23
+1.[L2CAP][BR]Fix l2cap l2cap_br_conf_rsp parameter incorrect
+
+##2024-05-22
+1.SBC CVE-2024-1638 and CVE-2024-3077. URL:https://android.googlesource.com/platform/packages/modules/Bluetooth/+/7b126f346ba0990eca5c80e958685f75fd5c7fd1%5E%21/
+
+##2024-04-23
+1.Add api to make upper layer can send gatt servie changed indication.
+
+## 2024-04-16
+1.Fix the assert issue in a corner case casued by connection update timer which is not deleted completely.
+2.Not unblock hci tx thread when hci number complete event is received to optimize code.
+
+## 2024-04-10
+1.Change the max adv length from 30 to 31 bytes in set_ad_and_rsp_d function
+
+## 2024-04-8
+1.Fix an error when enable disable ble repeatedly(bouffalo sdk).
+
+## 2024-03-27
+1.Fix CVE Cases :cve-2021-3436, cve-2022-1041, cve-2022-1042, cve-2022-2993, cve-2023-4264, cve-2023-5753
+2.BREDR Add auth callback related command
+
+## 2024-03-18
+1.Optimize bl hci wrapper layer to fix the assert issue caused by lack of cache space during att rx test in a corner case.
+
+## 2024-03-15
+1.Fix rx acl len mismatch issue when pds is enabled in a corner case.
+
+## 2024-03-14
+1.Bring up A2DP source function
+
+## 2024-03-04
+1.Fix the issue that directed adv fails to be started because the conditions for checking whether adv can be initiated are inappropriate.
+
+## 2024-02-23
+1.Fix the assert issue in disconnection when master does auto connection from whitelist.
+
+## 2024-02-02
+1.Not force it to write ccc for existed subscriptions in blestack when connected to avoid the att timeout issue that happens when there are multiple subscriptions.
+  Make upper layer write ccc if needed when connected.
+2.Optimize ble tp service to trigger ble action in tp task not in blestack's callback to avoid att timeout issue.
+
+## 2024-01-25
+1.The connectable adv is rejected if the number of connections reaches the maximum number.
+2.Fix an assert issue caused by a risk that upper layer disconnect le connection in connection scan state in a corner case.
+
+## 2024-01-16
+1.Fix the issue that gatt ccc and sc are not removed if upper layer calls bt_unpair with the peer address which is not identity address.
+2.Fix the memory leak issue because conn_update timer is not freed in some corner case.
+3.Fix the assert issue in hci_tx_thread because conn_cleanup is called twice in some corner case.
+
+## 2024-01-11
+1.Fix an assert issue caused by a risk that upper layer disconnect le connection while target's adv has been received by host in connection scan state.
+
+## 2024-01-08
+1.Fix the issue that the att response of previous att request fails to be handled because the previous att request's req context is overwritten by the next att request in a corner case.
+
+## 2024-01-02
+1.Fix the issue that it fails to remove sc configurations from flash.
+
+## 2023-12-29
+1.Fix the issue that it fails to start gatt discovery in a new connection if gatt discovery returns error directly in previous connection.
+
+## 2023-12-26
+1.Fix the issue that gatt service changed configuration cannot be saved because sc entries are all used.
+
+## 2023-12-22
+1.Fix the assert issue that it still accesses connection tx queue which is cleaned and freed to initiate tx in le disconnected state in a corner case.
+
+## 2023-11-28
+1.Fix an error that buf is released early when send gatt req, Occurs in a throughput test scene.
+
+## 2023-11-20
+1.Fix an assert issue when sending hci commands in a corner case.
+
+## 2023-11-13
+1. Fix the issue that ble rconnection fails if the previous ble connection is established with its high duty cycle directed adv.
+2. Fix the issue that ble reconnection fails if the previous high duty cycle adv timeout happens.
+3. Fix the issue that upper layer cannot identify the connection with connection handle in upper layer's disconnected callback.
+
+## 2023-11-2
+1. Add the feature of setting ble connection window.
+
+## 2023-10-27
+1. Fix the issue that ble master fails to connect to the same slave after disconnection in a corner case.
+
+## 2023-09-14
+1. Fix the issue that connection update work is not released when upper layer does disconnection in BT_CONN_CONNECT_SCAN state.
+
+## 2023-08-15
+1. Fix the issue that att_timeout still happens while this att_req has been cancelled by upper layer.
+
+## 2023-08-08
+1. Remove compilation flags in ble_common.mk, including -Wno-unused-const-variable,-Wno-unused-but-set-variable and -Wno-format. Fix related compilation errors and warnings.
+
+## 2023-07-26
+1. Fix the problem that repeated calls to bt_conn_create_le causes subsequent connection failure.
+
+## 2023-07-14
+1. Add ble direct test mode feature.
+
+## 2023-06-21
+1. Fix an illegal memory access issue in bt_gatt_indicate().
+2. Solve the problem that the next bt_gatt_discover cannot be initiated in the callback function when the first bt_gatt_discover is completed.
+   
+## 2023-06-16
+1. Optimize error log.
+
+## 2023-06-15
+1. Add ble auto clean le key when key missing.
+
+## 2023-06-06
+1. Add the function for ble tx/rx throughput.
+
+## 2023-05-31
+1. Add an error response value in the discover function callback.
+
+## 2023-05-24
+1. Fix a crash when call bt_gatt_subscribe function in ble connected callback.
+
+## 2023-05-10
+1. Supplement EIR/AD data type definitions.
+2. Add API to make upper layer can disable pair.
+3. Add API to make upper layer can set preferred connection parameters If CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS is enabled.
+
+## 2023-04-20
+1. Fix an error that ble may crash when disable / re-enable again in some scenario.
+
+## 2023-04-19
+1. Add API to get ble tx power for bl702L/bl702/bl602.
+2. Static random address can be set to a new value after bt is disabled.
+ 
+## 2023-04-17
+1. Fix disconnect error when call bt_conn_disconnect().
+   Issue: when bt_conn_disconnect()->bt_hci_disconnect()->bt_hci_cmd_send_sync() is run, yeild will be called and current task is pending. Once disconnect done, conn->state will be changed to BT_CONN_DISCONNECTED and current task will be restored. Now if bt_conn_set_state() is called with parameter BT_CONN_DISCONNECT. conn->ref will be messed.
+2. Fix crash when call bt_le_scan_stop().
+   Issue: scan_dev_found_cb will be set to NULL in bt_le_scan_stop(). If bt_le_scan_stop() is called but scan has not been stopped immediately, le_adv_report() will call scan_dev_found_cb which leads to crash.

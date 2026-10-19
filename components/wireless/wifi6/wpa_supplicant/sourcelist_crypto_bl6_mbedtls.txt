@@ -1,0 +1,9 @@
+# Use mbedtls to support SAE
+   # this is needed for exernal auth
+   wpa_supplicant/sme.c
+
+   src/common/sae.c
+   src/common/dragonfly.c
+
+   src/crypto/crypto_mbedtls.c
+   src/crypto/dh_groups.c

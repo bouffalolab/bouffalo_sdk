@@ -1,0 +1,1 @@
+/* Reserved for future tiny stubs when upstream adds optional modules. */

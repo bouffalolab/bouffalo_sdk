@@ -1,0 +1,45 @@
+#
+# IPC components
+#
+
+menu "Inter-Processor Communication"
+
+config IPC
+    bool "IPC framework"
+    default n
+    help
+      Build the inter-processor communication framework.
+
+config RPMSG_SERVICE
+    bool "RPMsg service"
+    default n
+    depends on IPC
+    help
+      Build the RPMsg based service layer used by multi-core applications.
+
+config RPMSG_SERVICE_MODE_MASTER
+    bool "RPMsg service master mode"
+    default n
+    depends on RPMSG_SERVICE
+    help
+      Run the RPMsg service in master mode; leave disabled for slave mode.
+
+config OPENAMP_PROXY
+    bool "OpenAMP proxy"
+    default n
+    help
+      Build the OpenAMP proxy service.
+
+config OPENAMP_VIRTIO_DEVICE_SUPPORT
+    bool "OpenAMP virtio device"
+    default n
+    help
+      Enable virtio device support in OpenAMP.
+
+config OPENAMP_VIRTIO_DRIVER_SUPPORT
+    bool "OpenAMP virtio driver"
+    default n
+    help
+      Enable virtio driver support in OpenAMP.
+
+endmenu

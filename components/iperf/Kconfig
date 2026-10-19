@@ -1,0 +1,18 @@
+#
+# Kconfig for compact Classic iPerf2
+#
+
+menu "iPerf"
+
+config IPERF
+    bool "Enable iPerf throughput test component"
+    default n
+    depends on FREERTOS && (LWIP || SOCKET_OFFLOAD_CLIENT)
+    help
+      Enable the compact IPv4 throughput test component with TCP and UDP
+      client/server support through lwIP Socket and Raw backends.
+
+      This component implements the Classic iPerf2 protocol and does not
+      support iPerf3. Requires FreeRTOS and either local lwIP or the socket
+      offload client. The offload client supports only the Socket backend.
+endmenu

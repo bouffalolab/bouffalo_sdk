@@ -1,0 +1,226 @@
+## BLE Low Power：
+
+### BLE ADV:
+
+1.Reset board
+
+2\.
+
+ADV = 2S: Enter the command "ble\_start\_adv 0 0 0x0c80 0x0c80 " in the command line.
+
+OR
+
+ADV = 500MS: Enter the command "ble\_start\_adv 0 0 0x0320 0x0320" in the command line.
+
+3.Enter the command "pm_enter_lp " in the command line.
+
+### BLE CONNECTION:
+
+1.Reset board
+
+2.Enter ADV connectable mode: Enter the command "ble\_start\_adv 0 0 0x80 0x80 " in the command line.
+
+3.Use Phone or other device connect IUT.
+
+4. When connection established enter the command "pm_enter_lp " in the command line.
+
+### BL618DG RC32K trigger
+
+The shared `pm_helper_cli` provides `ble_rc32k_trigger <0|1>` for BL618DG builds with BLE and LPFW tickless support. Without this command, LPFW disables RC32K triggering during advertising and enables it during a connection. After `ble_rc32k_trigger 0` or `ble_rc32k_trigger 1`, both states use the specified value from the next sleep hand-off until reboot.
+
+This demo enables `CONFIG_PM_HELPER_CLI=y` by default. Shared commands include `wakeup_timer <timeout_ms> <broadcast:0|1>`, `wifi_lp_set_dtim`, `io_debug`, `lpfw_uart`, and `lpfw_clock` (the last two on supported chips). The existing `pm_enter_lp [broadcast]` command remains available; shared `tickless [dtim] [broadcast:0|1]` also enters low power.
+
+### BLE Benchmark：
+
+The following test data reduced the power of BLE TX. The modification is as follows: Change "pwr\_table\_ble = <13> to pwr\_table\_ble = <0>;" in the file "bsp/board/bl616\_dk/config/bl\_factory\_params\_IoTKitA\_auto.dts".
+
+| Mode        | uA   |
+| :---------- | :--- |
+| Deep sleep  | 50   |
+| ADV = 2S    | 428  |
+| ADV = 500ms | 1430 |
+
+
+
+## WiFi Low Power：
+
+### WIFI only Compile
+
+Enter the build command line:
+
+```bash
+make CONFIG_BLE_ENABLE=0
+```
+
+### Enable IPv6
+
+IPv6 is disabled by default in this demo. Add `CONFIG_IPV6=y` when building the image if IPv6 is required.
+
+Build with Wi-Fi and BLE:
+
+```bash
+make CHIP=bl616 BOARD=bl616dk CONFIG_IPV6=y
+```
+
+Build Wi-Fi only with IPv6:
+
+```bash
+make CHIP=bl616 BOARD=bl616dk CONFIG_BLE_ENABLE=0 CONFIG_IPV6=y
+```
+
+After the board boots, connect Wi-Fi first. IPv6 is not enabled automatically after Wi-Fi connection in this low-power precise timer mode. Enable STA IPv6 at runtime with:
+
+```bash
+wifi_sta_ipv6_enable
+```
+
+This command creates the STA IPv6 link-local address and enables IPv6 autoconfig. If the router sends RA with a valid prefix, the STA can generate a global IPv6 address after DAD completes.
+
+Check IPv6 address state:
+
+```bash
+wifi_sta_info
+```
+
+Disable STA IPv6 at runtime with:
+
+```bash
+wifi_sta_ipv6_disable
+```
+
+The `wifi_sta_ipv6_enable` and `wifi_sta_ipv6_disable` commands are only available in images built with `CONFIG_IPV6=y`.
+
+### Test DTIM:
+
+1.Reset board
+
+2.Set dtim.
+
+DTIM = 1
+```bash
+wifi_lp_set_dtim 1
+```
+
+DTIM = 3
+```bash
+wifi_lp_set_dtim 3
+```
+
+DTIM = 10
+```bash
+wifi_lp_set_dtim 10
+```
+
+2.Connect wifi, and got ip.
+
+3.Enter lowpower
+
+```bash
+pm_enter_lp <rx_bcast>
+```
+
+Parameter:
+
+rx_bcast = 0 — Disable receiving broadcast/multicast while in low power.
+STA will not wake at DTIM for broadcast/multicast delivery; expect lower power.
+
+rx_bcast = 1 — Enable receiving broadcast/multicast while in low power.
+STA wakes at DTIM to receive buffered broadcast/multicast; expect higher power.
+
+# Enter low power, ignore broadcast in LP
+pm_enter_lp 0
+
+# Enter low power, receive broadcast in LP
+pm_enter_lp 1
+
+
+### Test TWT PDS15:
+
+1.Reset board
+
+2.Connect to a TWT-capable Wi-Fi 6 AP, and got ip.
+
+3.Setup TWT.
+
+The following setup requests a 32 ms service period and an 8 s wakeup interval:
+
+```bash
+wifi_mgmr_sta_twt_setup -s 1 -t 1 -e 9 -d 0 -n 125 -m 15625
+```
+
+Parameter calculation:
+
+```text
+Service period = 125 * 256 us = 32 ms
+Wakeup interval = 15625 << 9 us = 8000000 us = 8 s
+```
+
+4.Optional: check the negotiated TWT flow.
+
+```bash
+wifi_mgmr_sta_twt_statusget
+```
+
+5.Enter lowpower.
+
+```bash
+pm_enter_lp 0
+```
+
+6.Teardown TWT.
+
+Teardown all TWT flows:
+
+```bash
+wifi_mgmr_sta_twt_teardown -n 0 -a 1 -i 0
+```
+
+Or teardown a specified TWT flow after checking `flow_id` with `wifi_mgmr_sta_twt_statusget`:
+
+```bash
+wifi_mgmr_sta_twt_teardown -n 0 -a 0 -i <flow_id>
+```
+
+
+### WiFi Benchmark：
+
+| Mode       | uA  |
+| :--------- | :-- |
+| Deep sleep | 67  |
+| DTIM = 1   | 810 |
+| DTIM = 3   | 319 |
+| DTIM = 10  | 154 |
+
+
+## BLE And WiFi Dual Low Power
+BLE and Wi-Fi dual low power mode, which can maintain Wi-Fi keep-alive while also maintaining BLE advertising and BLE connection.
+
+### Test Step
+
+1.Reset board
+2.Connect wifi, and got ip.
+3.Enter ADV connectable mode: Enter the command "ble\_start\_adv 0 0 0x320 0x320" in the command line.
+4.DTIM = 10: Enter the command "tickless 10" in the command line.
+
+
+
+## USB Host for MSC
+Start usbh msc test with a specified time duration, during which perform write and read operation on a usb msc device.
+
+Please be noticed, the USB Host feature in this demo is only for purpose of Wi-Fi performance verification when USB traffic is on. BL616 cannot go to sleep once there is a USB device connected, so this demo only works in active mode.
+
+### Build Command
+
+```bash
+make CONFIG_USBH_MSC=y
+```
+
+### Test Step
+
+1.Make sure BL616 is not in sleep mode during this test
+
+2.Plug in a usb msc device
+
+3.Initialize usb host: Enter the command "usbh\_init" in the command line.
+
+4.Enter the test command with a time duration in seconds as argument (uint32_t type), e.g. "usbh\_msc\_test 60" in the command line.

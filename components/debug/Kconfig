@@ -1,0 +1,21 @@
+#
+# Debug components
+#
+
+menu "Debug"
+
+config BACKTRACE
+    bool "Backtrace"
+    default y if FREERTOS
+    default n
+    help
+      Enable the DWARF CFI based backtrace support.
+
+config MM_ENABLE_TRACKING
+    bool "Memory tracking"
+    default n
+    help
+      Enable memory allocation tracking.  Also enabled automatically by some
+      memory management configurations.
+
+endmenu

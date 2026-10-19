@@ -1,0 +1,22 @@
+# High-performance mode running on PSRAM, BL618: TCP-TX: 95Mbps; TCP-RX: 88Mbps;
+# CONFIG_PSRAM=y
+# CONFIG_PSRAM_COPY_CODE=y
+
+CONFIG_FREERTOS =y
+CONFIG_IPERF    =y
+CONFIG_SHELL    =y
+CONFIG_LWIP                 =y
+CONFIG_HTTPD                =y
+CONFIG_BSP_ETH_PHY          =y
+CONFIG_BSP_LWIP_NETIF_EMAC  =y
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+
+# Obtaining the MAC address depends on CONFIG_RF (mfg_media_read_macaddr_with_lock),
+# so enable CONFIG_RF for EMAC to work properly.
+CONFIG_RF =y
+
+# lwIP EMAC start framework. Port count and per-port RMII/MDIO ids come from
+# bsp/Kconfig: CONFIG_EMAC_DEV_COUNT (default 1 = single port) and
+# CONFIG_EMAC0_* / CONFIG_EMAC1_*.
+CONFIG_BSP_LWIP_EMAC_START =y

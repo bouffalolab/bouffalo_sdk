@@ -1,0 +1,1893 @@
+#include "bl616cl_pm.h"
+#include "bflb_flash.h"
+#include "bl616cl_clock.h"
+#include "bflb_rtc.h"
+#include "bflb_gpio.h"
+#include "bl616cl_glb.h"
+#include "bl616cl_hbn.h"
+#include "bl616cl_pds.h"
+
+#ifndef PM_DCDC_SOC_ENABLE_STABLE_DELAY_MS
+#define PM_DCDC_SOC_ENABLE_STABLE_DELAY_MS 5
+#endif
+
+#ifdef CONFIG_PSRAM
+#define PM_LP_CFG_DEFAULT                \
+    {                                    \
+        .pds_gpio_keep_en = 0,           \
+        .hbn_gpio_keep_en = 0,           \
+        .pds_flash_power_off = 1,        \
+        .pll_power_off = 1,              \
+        .rf_power_off = 1,               \
+        .clk_default_sel = PM_PDS_CLK_F32K, \
+        .set_all_ram_ret_en = 1,         \
+        .hbn_flash_power_off = 1,        \
+        .ldo18io_power_down = 0,         \
+    }
+#else
+#define PM_LP_CFG_DEFAULT                \
+    {                                    \
+        .pds_gpio_keep_en = 0,           \
+        .hbn_gpio_keep_en = 0,           \
+        .pds_flash_power_off = 1,        \
+        .pll_power_off = 1,              \
+        .rf_power_off = 1,               \
+        .clk_default_sel = PM_PDS_CLK_F32K, \
+        .set_all_ram_ret_en = 1,         \
+        .hbn_flash_power_off = 1,        \
+        .ldo18io_power_down = 1,         \
+    }
+#endif
+
+static const PM_LOWPOWER_CFG_Type pm_power_mode_cfgs[PM_POWER_MODE_MAX] = {
+    [PM_LDO13_LDO07_PDSLDO07] = {
+        .name = "ldo_only_soc0p7_sys1p3",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 0xFF,
+            .dcdc_soc_enable_pin = 0xFF,
+            .dcdc_soc_pds_enable = DISABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P7,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P700V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 0xFF,
+            .dcdc_sys_pds_enable = DISABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P300V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P300V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_LDO13_LDO09_PDSLDO09] = {
+        .name = "ldo_only_soc0p9_sys1p3",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 0xFF,
+            .dcdc_soc_enable_pin = 0xFF,
+            .dcdc_soc_pds_enable = DISABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P7,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P900V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 0xFF,
+            .dcdc_sys_pds_enable = DISABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P300V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P300V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_DCDC13_DCDC79_PDSDCDC09] = {
+        .name = "dcdc13_dcdc79_soc0p9",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 1,
+            .dcdc_soc_enable_pin = 3,
+            .dcdc_soc_pds_enable = ENABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P9,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P800V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P800V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P650V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 2,
+            .dcdc_sys_pds_enable = ENABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P200V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P200V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_DCDC13_DCDC79_PDSDCDC07] = {
+        .name = "dcdc13_dcdc79_soc0p7",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 1,
+            .dcdc_soc_enable_pin = 3,
+            .dcdc_soc_pds_enable = ENABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P7,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P800V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P700V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P650V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 2,
+            .dcdc_sys_pds_enable = ENABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P200V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P200V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_DCDC13_LDO0P7_PDSLDO07] = {
+        .name = "single_dcdc13_ldosoc0p7",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 0xFF,
+            .dcdc_soc_enable_pin = 0xFF,
+            .dcdc_soc_pds_enable = DISABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P7,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P700V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 2,
+            .dcdc_sys_pds_enable = ENABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P200V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P200V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_DCDC13_LDO0P9_PDSLDO09] = {
+        .name = "single_dcdc13_ldosoc0p9",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 0xFF,
+            .dcdc_soc_enable_pin = 0xFF,
+            .dcdc_soc_pds_enable = DISABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P7,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P900V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P900V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 2,
+            .dcdc_sys_pds_enable = ENABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P200V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P200V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_LDO13_DCDC09_PDSLDO09] = {
+        .name = "single_dcdc09_ldosys1p3",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 1,
+            .dcdc_soc_enable_pin = 3,
+            .dcdc_soc_pds_enable = ENABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P9,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P800V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P800V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P650V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 0xFF,
+            .dcdc_sys_pds_enable = DISABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P300V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P300V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+    [PM_LDO13_DCDC07_PDSLDO07] = {
+        .name = "single_dcdc07_ldosys1p3",
+        .soc_cfg = {
+            .dcdc_soc_vsel_pin = 1,
+            .dcdc_soc_enable_pin = 3,
+            .dcdc_soc_pds_enable = ENABLE,
+            .dcdc_soc_pds_level = PM_DCDC_SOC_LEVEL_0P7,
+            .ldo_soc_active_level = HBN_LDO_SOC_LEVEL_0P800V,
+            .ldo_soc_enter_pds_level = HBN_LDO_SOC_LEVEL_0P700V,
+            .ldo_soc_pds_level = HBN_LDO_SOC_LEVEL_0P650V,
+        },
+        .sys_cfg = {
+            .dcdc_sys_enable_pin = 0xFF,
+            .dcdc_sys_pds_enable = DISABLE,
+            .ldo_sys_active_level = HBN_LDO_SYS_LEVEL_1P300V,
+            .ldo_sys_pds_level = HBN_LDO_SYS_LEVEL_1P300V,
+        },
+        .lp_cfg = PM_LP_CFG_DEFAULT,
+    },
+};
+
+static BL_Err_Type ATTR_TCM_SECTION pm_dcdc_soc_cfg_validate(const PM_DCDC_SOC_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return ERROR;
+    }
+
+    if ((cfg->dcdc_soc_vsel_pin != 0xFF) && (cfg->dcdc_soc_vsel_pin >= GPIO_PIN_MAX)) {
+        return ERROR;
+    }
+
+    if ((cfg->dcdc_soc_enable_pin != 0xFF) && (cfg->dcdc_soc_enable_pin >= GPIO_PIN_MAX)) {
+        return ERROR;
+    }
+
+    if ((cfg->dcdc_soc_pds_level != PM_DCDC_SOC_LEVEL_0P7) &&
+        (cfg->dcdc_soc_pds_level != PM_DCDC_SOC_LEVEL_0P9)) {
+        return ERROR;
+    }
+
+    if (!IS_HBN_LDO_SOC_LEVEL_TYPE(cfg->ldo_soc_active_level) ||
+        !IS_HBN_LDO_SOC_LEVEL_TYPE(cfg->ldo_soc_enter_pds_level) ||
+        !IS_HBN_LDO_SOC_LEVEL_TYPE(cfg->ldo_soc_pds_level)) {
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+static BL_Err_Type ATTR_TCM_SECTION pm_dcdc_sys_cfg_validate(const PM_DCDC_SYS_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return ERROR;
+    }
+
+    if ((cfg->dcdc_sys_enable_pin != 0xFF) && (cfg->dcdc_sys_enable_pin >= GPIO_PIN_MAX)) {
+        return ERROR;
+    }
+
+    if (!IS_HBN_LDO_SYS_LEVEL_TYPE(cfg->ldo_sys_active_level) ||
+        !IS_HBN_LDO_SYS_LEVEL_TYPE(cfg->ldo_sys_pds_level)) {
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+static BL_Err_Type ATTR_TCM_SECTION pm_lp_cfg_validate(const PM_LP_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return ERROR;
+    }
+
+    if ((cfg->pds_gpio_keep_en > 1) ||
+        (cfg->hbn_gpio_keep_en > 1) ||
+        (cfg->pds_flash_power_off > 1) ||
+        (cfg->pll_power_off > 1) ||
+        (cfg->rf_power_off > 1) ||
+        (cfg->set_all_ram_ret_en > 1) ||
+        (cfg->hbn_flash_power_off > 1) ||
+        (cfg->ldo18io_power_down > 1)) {
+        return ERROR;
+    }
+
+    if (cfg->clk_default_sel > PM_PDS_CLK_RC16M) {
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+const PM_LOWPOWER_CFG_Type *ATTR_TCM_SECTION pm_power_mode_cfg_get(uint8_t mode)
+{
+    if ((uint32_t)mode >= PM_POWER_MODE_MAX) {
+        return NULL;
+    }
+
+    return &pm_power_mode_cfgs[mode];
+}
+
+static BL_Err_Type ATTR_TCM_SECTION pm_lowpower_cfg_validate(const PM_LOWPOWER_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return ERROR;
+    }
+
+    if ((pm_dcdc_soc_cfg_validate(&cfg->soc_cfg) != SUCCESS) ||
+        (pm_dcdc_sys_cfg_validate(&cfg->sys_cfg) != SUCCESS) ||
+        (pm_lp_cfg_validate(&cfg->lp_cfg) != SUCCESS)) {
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+static char *trig_mode_desc[] = {
+    "sync falling edge trigger",
+    "sync rising edge trigger",
+    "sync low level trigger",
+    "sync high level trigger",
+    "sync rising & falling edge trigger",
+    "sync rising & falling edge trigger",
+    "sync rising & falling edge trigger",
+    "sync rising & falling edge trigger",
+    "async falling edge trigger",
+    "async rising edge trigger",
+    "async low level trigger",
+    "async high level trigger"
+};
+
+/* Cache Way Disable, will get from l1c register */
+uint8_t cacheWayDisable = 0;
+
+/* PSRAM IO Configuration, will get from glb register */
+uint32_t psramIoCfg = 0;
+
+/* Flash offset value, will get from sf_ctrl register */
+uint32_t flash_offset = 0;
+
+spi_flash_cfg_type *flash_cfg;
+
+uint8_t ATTR_TCM_SECTION pm_get_sf_pin_select(void)
+{
+    uint32_t sf_pin_select;
+
+    sf_pin_select = (BL_RD_WORD(0x20056000 + 0x74) >> 5) & 0x3f;
+
+    if (sf_pin_select == 0x3f) {
+        return SF_IO_EXT_SF2;
+    } else if (sf_pin_select == 0x0A) {
+        return SF_IO_EXT_SF3;
+    } else {
+        return (uint8_t)sf_pin_select;
+    }
+}
+
+static int is_flash_io(uint8_t pin, uint32_t sf_pin_select)
+{
+    if (sf_pin_select & (1 << 2)) {
+        return (pin >= GPIO_PIN_6 && pin <= GPIO_PIN_11);
+    } else if (sf_pin_select & (1 << 3)) {
+        return (pin >= GPIO_PIN_24 && pin <= GPIO_PIN_29);
+    }
+
+    return 0;
+}
+
+static int is_gpio_with_expected_cfg(uint8_t pin, uint8_t ie, uint8_t pu, uint8_t pd)
+{
+    uint32_t gpio_cfg;
+    uint32_t func_sel;
+
+    if (pin >= GPIO_PIN_MAX) {
+        return 0;
+    }
+
+    if (pu) {
+        pd = 0;
+    } else if (pd) {
+        pu = 0;
+    }
+
+    gpio_cfg = BL_RD_WORD(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2));
+    func_sel = BL_GET_REG_BITS_VAL(gpio_cfg, GLB_REG_GPIO_0_FUNC_SEL);
+
+    return (((gpio_cfg & GLB_REG_GPIO_0_IE_MSK) != 0U) == (ie != 0U)) &&
+           ((gpio_cfg & GLB_REG_GPIO_0_OE_MSK) == 0U) &&
+           (((gpio_cfg & GLB_REG_GPIO_0_PU_MSK) != 0U) == (pu != 0U)) &&
+           (((gpio_cfg & GLB_REG_GPIO_0_PD_MSK) != 0U) == (pd != 0U)) &&
+           (func_sel == GPIO_FUNC_GPIO);
+}
+
+static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel1 = {
+    .pdsCtl = {
+        .pdsStart = 1,
+        .sleepForever = 0,
+        .xtalForceOff = 0,
+        .saveWiFiState = 0,
+        .pdsFastClkSel = 0,
+        .maskIoDetBfPds = 0,
+        .clkOff = 1,
+        .memStby = 1,
+        .glbRstProtect = 0,
+        .isolation = 1,
+        .waitXtalRdy = 0,
+        .pdsPwrOff = 1,
+        .xtalOff = 1,
+        .socEnbForceOn = 0,
+        .pdsRstSocEn = 0,
+        .pdsRC32mOn = 0,
+        .pdsLdoSocVselEn = 0,
+        .wifipllOff = 1,
+        .gpioDetClkSel = 0,
+        .dirAccessWramEn = 0,
+        .pdsCtlRfSel = 3,
+        .pdsUseTbttSlp = 0,
+    },
+    .pdsCtl2 = {
+        .forceCpuPwrOff = 0,
+        .forceWbPwrOff = 0,
+        .forceUsbPwrOff = 0,
+        .forceCpuIso = 0,
+        .forceWbIso = 0,
+        .forceUsbIso = 0,
+        .forceCpuPdsRst = 0,
+        .forceWbPdsRst = 0,
+        .forceUsbPdsRst = 0,
+        .forceCpuMemStby = 0,
+        .forceWbMemStby = 0,
+        .forceUsbMemStby = 0,
+        .forceCpuGateClk = 0,
+        .forceWbGateClk = 0,
+        .forceUsbGateClk = 0,
+    },
+    .pdsCtl3 = {
+        .forceMiscPwrOff = 0,
+        .forceMiscIsoEn = 0,
+        .forceMiscPdsRst = 0,
+        .forceMiscMemStby = 0,
+        .forceMiscGateClk = 0,
+        .cpuIsoEn = 0,
+        .wbIsoEn = 1,
+        .usbIsoEn = 0,
+        .miscIsoEn = 0,
+    },
+    .pdsCtl4 = {
+        .cpuPwrOff = 0,
+        .cpuRst = 0,
+        .cpuMemStby = 0,
+        .cpuGateClk = 0,
+        .wbPwrOff = 1,
+        .wbRst = 1,
+        .wbMemStby = 0,
+        .wbGateClk = 0,
+        .usbPwrOff = 0,
+        .usbRst = 0,
+        .usbMemStby = 0,
+        .usbGateClk = 0,
+        .miscPwrOff = 0,
+        .miscRst = 0,
+        .miscMemStby = 0,
+        .miscGateClk = 0,
+    },
+    .pdsCtl5 = {
+        .cpuWfiMask = 0,
+        .pdsPadOdEn = 0,
+        .ctrlUsb33 = 0,
+    },
+    .pdsCtl6 = {
+        .pdsEisoCnt = 0,
+        .pdsSelFastClk = 0,
+        .ldoSocLpEn = 1,
+        .ldoSysLpEn = 1,
+        .wakeDisRepu = 0,
+        .wakeSelFastClk = 0,
+    }
+};
+static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel2 = {
+    .pdsCtl = {
+        .pdsStart = 1,
+        .sleepForever = 0,
+        .xtalForceOff = 0,
+        .saveWiFiState = 0,
+        .pdsFastClkSel = 0,
+        .maskIoDetBfPds = 0,
+        .clkOff = 1,
+        .memStby = 1,
+        .glbRstProtect = 0,
+        .isolation = 1,
+        .waitXtalRdy = 0,
+        .pdsPwrOff = 1,
+        .xtalOff = 1,
+        .socEnbForceOn = 0,
+        .pdsRstSocEn = 0,
+        .pdsRC32mOn = 0,
+        .pdsLdoSocVselEn = 0,
+        .wifipllOff = 1,
+        .gpioDetClkSel = 0,
+        .dirAccessWramEn = 0,
+        .pdsCtlRfSel = 3,
+        .pdsUseTbttSlp = 0,
+    },
+    .pdsCtl2 = {
+        .forceCpuPwrOff = 0,
+        .forceWbPwrOff = 0,
+        .forceUsbPwrOff = 0,
+        .forceCpuIso = 0,
+        .forceWbIso = 0,
+        .forceUsbIso = 0,
+        .forceCpuPdsRst = 0,
+        .forceWbPdsRst = 0,
+        .forceUsbPdsRst = 0,
+        .forceCpuMemStby = 0,
+        .forceWbMemStby = 0,
+        .forceUsbMemStby = 0,
+        .forceCpuGateClk = 0,
+        .forceWbGateClk = 0,
+        .forceUsbGateClk = 0,
+    },
+    .pdsCtl3 = {
+        .forceMiscPwrOff = 0,
+        .forceMiscIsoEn = 0,
+        .forceMiscPdsRst = 0,
+        .forceMiscMemStby = 0,
+        .forceMiscGateClk = 0,
+        .cpuIsoEn = 1,
+        .wbIsoEn = 0,
+        .usbIsoEn = 0,
+        .miscIsoEn = 0,
+    },
+    .pdsCtl4 = {
+        .cpuPwrOff = 1,
+        .cpuRst = 1,
+        .cpuMemStby = 1,
+        .cpuGateClk = 1,
+        .wbPwrOff = 0,
+        .wbRst = 0,
+        .wbMemStby = 0,
+        .wbGateClk = 0,
+        .usbPwrOff = 0,
+        .usbRst = 0,
+        .usbMemStby = 0,
+        .usbGateClk = 0,
+        .miscPwrOff = 0,
+        .miscRst = 0,
+        .miscMemStby = 0,
+        .miscGateClk = 0,
+    },
+    .pdsCtl5 = {
+        .cpuWfiMask = 0,
+        .pdsPadOdEn = 0,
+        .ctrlUsb33 = 0,
+    },
+    .pdsCtl6 = {
+        .pdsEisoCnt = 0,
+        .pdsSelFastClk = 0,
+        .ldoSocLpEn = 1,
+        .ldoSysLpEn = 1,
+        .wakeDisRepu = 0,
+        .wakeSelFastClk = 0,
+    }
+};
+
+static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel3 = {
+    .pdsCtl = {
+        .pdsStart = 1,
+        .sleepForever = 0,
+        .xtalForceOff = 0,
+        .saveWiFiState = 0,
+        .pdsFastClkSel = 0,
+        .maskIoDetBfPds = 0,
+        .clkOff = 1,
+        .memStby = 1,
+        .glbRstProtect = 0,
+        .isolation = 1,
+        .waitXtalRdy = 1,
+        .pdsPwrOff = 1,
+        .xtalOff = 1,
+        .socEnbForceOn = 0,
+        .pdsRstSocEn = 0,
+        .pdsRC32mOn = 0,
+        .pdsLdoSocVselEn = 0,
+        .wifipllOff = 1,
+        .gpioDetClkSel = 0,
+        .dirAccessWramEn = 0,
+        .pdsCtlRfSel = 3,
+        .pdsUseTbttSlp = 0,
+    },
+    .pdsCtl2 = {
+        .forceCpuPwrOff = 0,
+        .forceWbPwrOff = 0,
+        .forceUsbPwrOff = 0,
+        .forceCpuIso = 0,
+        .forceWbIso = 0,
+        .forceUsbIso = 0,
+        .forceCpuPdsRst = 0,
+        .forceWbPdsRst = 0,
+        .forceUsbPdsRst = 0,
+        .forceCpuMemStby = 0,
+        .forceWbMemStby = 0,
+        .forceUsbMemStby = 0,
+        .forceCpuGateClk = 0,
+        .forceWbGateClk = 0,
+        .forceUsbGateClk = 0,
+    },
+    .pdsCtl3 = {
+        .forceMiscPwrOff = 0,
+        .forceMiscIsoEn = 0,
+        .forceMiscPdsRst = 0,
+        .forceMiscMemStby = 0,
+        .forceMiscGateClk = 0,
+        .cpuIsoEn = 1,
+        .wbIsoEn = 1,
+        .usbIsoEn = 0,
+        .miscIsoEn = 0,
+    },
+    .pdsCtl4 = {
+        .cpuPwrOff = 1,
+        .cpuRst = 1,
+        .cpuMemStby = 1,
+        .cpuGateClk = 1,
+        .wbPwrOff = 1,
+        .wbRst = 1,
+        .wbMemStby = 1,
+        .wbGateClk = 1,
+        .usbPwrOff = 0,
+        .usbRst = 0,
+        .usbMemStby = 0,
+        .usbGateClk = 0,
+        .miscPwrOff = 0,
+        .miscRst = 0,
+        .miscMemStby = 0,
+        .miscGateClk = 0,
+    },
+    .pdsCtl5 = {
+        .cpuWfiMask = 0,
+        .pdsPadOdEn = 0,
+        .ctrlUsb33 = 0,
+    },
+    .pdsCtl6 = {
+        .pdsEisoCnt = 0,
+        .pdsSelFastClk = 0,
+        .ldoSocLpEn = 1,
+        .ldoSysLpEn = 1,
+        .wakeDisRepu = 0,
+        .wakeSelFastClk = 0,
+    }
+};
+
+static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel7 = {
+    .pdsCtl = {
+        .pdsStart = 1,
+        .sleepForever = 0,
+        .xtalForceOff = 0,
+        .saveWiFiState = 0,
+        .pdsFastClkSel = 0,
+        .maskIoDetBfPds = 0,
+        .clkOff = 1,
+        .memStby = 1,
+        .glbRstProtect = 0,
+        .isolation = 1,
+        .waitXtalRdy = 1,
+        .pdsPwrOff = 1,
+        .xtalOff = 1,
+        .socEnbForceOn = 0,
+        .pdsRstSocEn = 0,
+        .pdsRC32mOn = 0,
+        .pdsLdoSocVselEn = 0,
+        .wifipllOff = 1,
+        .gpioDetClkSel = 0,
+        .dirAccessWramEn = 0,
+        .pdsCtlRfSel = 3,
+        .pdsUseTbttSlp = 0,
+    },
+    .pdsCtl2 = {
+        .forceCpuPwrOff = 0,
+        .forceWbPwrOff = 0,
+        .forceUsbPwrOff = 0,
+        .forceCpuIso = 0,
+        .forceWbIso = 0,
+        .forceUsbIso = 0,
+        .forceCpuPdsRst = 0,
+        .forceWbPdsRst = 0,
+        .forceUsbPdsRst = 0,
+        .forceCpuMemStby = 0,
+        .forceWbMemStby = 0,
+        .forceUsbMemStby = 0,
+        .forceCpuGateClk = 0,
+        .forceWbGateClk = 0,
+        .forceUsbGateClk = 0,
+    },
+    .pdsCtl3 = {
+        .forceMiscPwrOff = 0,
+        .forceMiscIsoEn = 0,
+        .forceMiscPdsRst = 0,
+        .forceMiscMemStby = 0,
+        .forceMiscGateClk = 0,
+        .cpuIsoEn = 1,
+        .wbIsoEn = 1,
+        .usbIsoEn = 1,
+        .miscIsoEn = 0,
+    },
+    .pdsCtl4 = {
+        .cpuPwrOff = 1,
+        .cpuRst = 1,
+        .cpuMemStby = 1,
+        .cpuGateClk = 1,
+        .wbPwrOff = 1,
+        .wbRst = 1,
+        .wbMemStby = 0,
+        .wbGateClk = 0,
+        .usbPwrOff = 1,
+        .usbRst = 1,
+        .usbMemStby = 1,
+        .usbGateClk = 1,
+        .miscPwrOff = 0,
+        .miscRst = 0,
+        .miscMemStby = 0,
+        .miscGateClk = 0,
+    },
+    .pdsCtl5 = {
+        .cpuWfiMask = 0,
+        .pdsPadOdEn = 0,
+        .ctrlUsb33 = 1,
+    },
+    .pdsCtl6 = {
+        .pdsEisoCnt = 0,
+        .pdsSelFastClk = 0,
+        .ldoSocLpEn = 1,
+        .ldoSysLpEn = 1,
+        .wakeDisRepu = 0,
+        .wakeSelFastClk = 0,
+    }
+};
+
+static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel11 = {
+    .pdsCtl = {
+        .pdsStart = 1,
+        .sleepForever = 0,
+        .xtalForceOff = 0,
+        .saveWiFiState = 0,
+        .pdsFastClkSel = 0,
+        .maskIoDetBfPds = 0,
+        .clkOff = 1,
+        .memStby = 1,
+        .glbRstProtect = 0,
+        .isolation = 1,
+        .waitXtalRdy = 1,
+        .pdsPwrOff = 1,
+        .xtalOff = 1,
+        .socEnbForceOn = 0,
+        .pdsRstSocEn = 0,
+        .pdsRC32mOn = 0,
+        .pdsLdoSocVselEn = 0,
+        .wifipllOff = 1,
+        .gpioDetClkSel = 0,
+        .dirAccessWramEn = 0,
+        .pdsCtlRfSel = 3,
+        .pdsUseTbttSlp = 0,
+    },
+    .pdsCtl2 = {
+        .forceCpuPwrOff = 0,
+        .forceWbPwrOff = 0,
+        .forceUsbPwrOff = 0,
+        .forceCpuIso = 0,
+        .forceWbIso = 0,
+        .forceUsbIso = 0,
+        .forceCpuPdsRst = 0,
+        .forceWbPdsRst = 0,
+        .forceUsbPdsRst = 0,
+        .forceCpuMemStby = 0,
+        .forceWbMemStby = 0,
+        .forceUsbMemStby = 0,
+        .forceCpuGateClk = 0,
+        .forceWbGateClk = 0,
+        .forceUsbGateClk = 0,
+    },
+    .pdsCtl3 = {
+        .forceMiscPwrOff = 0,
+        .forceMiscIsoEn = 0,
+        .forceMiscPdsRst = 0,
+        .forceMiscMemStby = 0,
+        .forceMiscGateClk = 0,
+        .cpuIsoEn = 1,
+        .wbIsoEn = 1,
+        .usbIsoEn = 0,
+        .miscIsoEn = 1,
+    },
+    .pdsCtl4 = {
+        .cpuPwrOff = 1,
+        .cpuRst = 1,
+        .cpuMemStby = 1,
+        .cpuGateClk = 1,
+        .wbPwrOff = 1,
+        .wbRst = 1,
+        .wbMemStby = 1,
+        .wbGateClk = 1,
+        .usbPwrOff = 0,
+        .usbRst = 0,
+        .usbMemStby = 0,
+        .usbGateClk = 0,
+        .miscPwrOff = 1,
+        .miscRst = 1,
+        .miscMemStby = 1,
+        .miscGateClk = 1,
+    },
+    .pdsCtl5 = {
+        .cpuWfiMask = 0,
+        .pdsPadOdEn = 0,
+        .ctrlUsb33 = 0,
+    },
+    .pdsCtl6 = {
+        .pdsEisoCnt = 0,
+        .pdsSelFastClk = 0,
+        .ldoSocLpEn = 1,
+        .ldoSysLpEn = 1,
+        .wakeDisRepu = 0,
+        .wakeSelFastClk = 0,
+    }
+};
+
+static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel15 = {
+    .pdsCtl = {
+        .pdsStart = 1,
+        .sleepForever = 0,
+        .xtalForceOff = 0,
+        .saveWiFiState = 0,
+        .pdsFastClkSel = 0,
+        .maskIoDetBfPds = 0,
+        .clkOff = 1,
+        .memStby = 1,
+        .glbRstProtect = 0,
+        .isolation = 1,
+        .waitXtalRdy = 1,
+        .pdsPwrOff = 1,
+        .xtalOff = 1,
+        .socEnbForceOn = 1,
+        .pdsRstSocEn = 1,
+        .pdsRC32mOn = 0,
+        .pdsLdoSocVselEn = 0,
+        .wifipllOff = 1,
+        .gpioDetClkSel = 0,
+        .dirAccessWramEn = 0,
+        .pdsCtlRfSel = 3,
+        .pdsUseTbttSlp = 0,
+    },
+    .pdsCtl2 = {
+        .forceCpuPwrOff = 0,
+        .forceWbPwrOff = 0,
+        .forceUsbPwrOff = 0,
+        .forceCpuIso = 0,
+        .forceWbIso = 0,
+        .forceUsbIso = 0,
+        .forceCpuPdsRst = 0,
+        .forceWbPdsRst = 0,
+        .forceUsbPdsRst = 0,
+        .forceCpuMemStby = 0,
+        .forceWbMemStby = 0,
+        .forceUsbMemStby = 0,
+        .forceCpuGateClk = 0,
+        .forceWbGateClk = 0,
+        .forceUsbGateClk = 0,
+    },
+    .pdsCtl3 = {
+        .forceMiscPwrOff = 0,
+        .forceMiscIsoEn = 0,
+        .forceMiscPdsRst = 0,
+        .forceMiscMemStby = 0,
+        .forceMiscGateClk = 0,
+        .cpuIsoEn = 1,
+        .wbIsoEn = 1,
+        .usbIsoEn = 1,
+        .miscIsoEn = 1,
+    },
+    .pdsCtl4 = {
+        .cpuPwrOff = 1,
+        .cpuRst = 1,
+        .cpuMemStby = 1,
+        .cpuGateClk = 1,
+        .wbPwrOff = 1,
+        .wbRst = 1,
+        .wbMemStby = 1,
+        .wbGateClk = 1,
+        .usbPwrOff = 1,
+        .usbRst = 1,
+        .usbMemStby = 1,
+        .usbGateClk = 1,
+        .miscPwrOff = 1,
+        .miscRst = 1,
+        .miscMemStby = 1,
+        .miscGateClk = 1,
+    },
+    .pdsCtl5 = {
+        .cpuWfiMask = 0,
+        .pdsPadOdEn = 0,
+        .ctrlUsb33 = 1,
+    },
+    .pdsCtl6 = {
+        .pdsEisoCnt = 0,
+        .pdsSelFastClk = 0,
+        .ldoSocLpEn = 1,
+        .ldoSysLpEn = 1,
+        .wakeDisRepu = 0,
+        .wakeSelFastClk = 0,
+    }
+};
+
+/****************************************************************************/ /**
+ * @brief  Disable GPIO Keep,include PDS_IO and HBN_IO
+ *
+ * @param  pin: gpio number
+ *
+ * @return SUCCESS
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION pm_disable_gpio_keep(uint32_t pin)
+{
+    uint32_t tmpVal = 0;
+    uint32_t pos = 0;
+
+    if (pin <= GPIO_PIN_5) {
+        HBN_AON_PAD_CFG_Type aonPadCfg;
+        aonPadCfg.ctrlEn = 0;
+        aonPadCfg.ie = 0;
+        aonPadCfg.oe = 0;
+        aonPadCfg.pullUp = 0;
+        aonPadCfg.pullDown = 0;
+        aonPadCfg.outValue = 0;
+
+        HBN_Aon_Pad_Cfg(pin, &aonPadCfg);
+    } else if (pin < GPIO_PIN_MAX) {
+        pos = pin - 6;
+        /* PDS_IO latch disable */
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+        tmpVal &= ~(1 << pos);
+        BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+    } else {
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+static BL_Err_Type ATTR_TCM_SECTION pm_gpio_output_keep(uint32_t pin, uint8_t high);
+
+void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v7(uint32_t pin)
+{
+    (void)pm_gpio_output_keep(pin, 0);
+}
+
+void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v9(uint32_t pin)
+{
+    (void)pm_gpio_output_keep(pin, 1);
+}
+
+static BL_Err_Type ATTR_TCM_SECTION pm_gpio_output_keep(uint32_t pin, uint8_t high)
+{
+    uint32_t tmpVal = 0;
+
+    if (pin == 0xFF) {
+        return SUCCESS;
+    }
+
+    if (pin >= GPIO_PIN_MAX) {
+        return ERROR;
+    }
+
+
+    if (pin <= GPIO_PIN_5) {
+        uint32_t aonVal = 0;
+
+        aonVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_0);
+        aonVal |= (1U << (HBN_REG_EN_AON_CTRL_GPIO_POS + pin));
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_IE_SMT_POS + pin));
+        aonVal &= ~(0x7U << (HBN_REG_AON_LED_SEL_POS + ((pin % 3) * 3)));
+        BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_0, aonVal);
+
+        aonVal = BL_RD_REG(HBN_BASE, HBN_PAD_CTRL_1);
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_OE_POS + pin));
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_PD_POS + pin));
+        aonVal &= ~(1U << (HBN_REG_AON_PAD_PU_POS + pin));
+        if (high) {
+            aonVal |= (1U << (HBN_REG_AON_PAD_PU_POS + pin));
+        } else {
+            aonVal |= (1U << (HBN_REG_AON_PAD_PD_POS + pin));
+        }
+        BL_WR_REG(HBN_BASE, HBN_PAD_CTRL_1, aonVal);
+
+        return SUCCESS;
+    } else {
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+        tmpVal &= ~(1 << (pin - 6));
+        BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+
+        /* gpio output */
+        (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG0_OFFSET + (pin << 2))) = 0x40400b42;
+        if (high) {
+            (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG138_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+        } else {
+            (*(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG140_OFFSET + ((pin >> 5) << 2))) = (1U << (pin & 0x1f));
+        }
+
+        tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_LAT_EN);
+        tmpVal |= (1 << (pin - 6));
+        BL_WR_REG(PDS_BASE, PDS_GPIO_LAT_EN, tmpVal);
+
+        return SUCCESS;
+    }
+}
+
+BL_Err_Type ATTR_TCM_SECTION pm_dcdc_soc_enable_ctrl(uint32_t pin, BL_Fun_Type enable)
+{
+    if (pin == 0xFF) {
+        return SUCCESS;
+    }
+
+    return pm_gpio_output_keep(pin, enable ? 1 : 0);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_soc_vsel_ctrl(uint32_t pin, uint8_t high)
+{
+    pm_gpio_output_keep(pin, high ? 1 : 0);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_soc_enter_pds(const PM_DCDC_SOC_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
+
+    HBN_SW_Set_Ldo_Soc_Vout(cfg->ldo_soc_enter_pds_level);
+    pm_dcdc_soc_vsel_ctrl(cfg->dcdc_soc_vsel_pin, cfg->dcdc_soc_pds_level == PM_DCDC_SOC_LEVEL_0P9);
+    pm_dcdc_soc_enable_ctrl(cfg->dcdc_soc_enable_pin, cfg->dcdc_soc_pds_enable);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_soc_exit_pds(const PM_DCDC_SOC_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
+
+    pm_dcdc_soc_vsel_ctrl(cfg->dcdc_soc_vsel_pin, 1);
+    pm_dcdc_soc_enable_ctrl(cfg->dcdc_soc_enable_pin, ENABLE);
+    if (cfg->dcdc_soc_enable_pin != 0xFF) {
+        arch_delay_ms(PM_DCDC_SOC_ENABLE_STABLE_DELAY_MS);
+    }
+    HBN_SW_Set_Ldo_Soc_Vout(cfg->ldo_soc_active_level);
+}
+
+BL_Err_Type ATTR_TCM_SECTION pm_dcdc_sys_enable_ctrl(uint32_t pin, BL_Fun_Type enable)
+{
+    if (pin == 0xFF) {
+        return SUCCESS;
+    }
+
+    return pm_gpio_output_keep(pin, enable ? 1 : 0);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_sys_enter_pds(const PM_DCDC_SYS_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
+
+    pm_dcdc_sys_enable_ctrl(cfg->dcdc_sys_enable_pin, cfg->dcdc_sys_pds_enable);
+}
+
+void ATTR_TCM_SECTION pm_dcdc_sys_exit_pds(const PM_DCDC_SYS_CFG_Type *cfg)
+{
+    if (cfg == NULL) {
+        return;
+    }
+
+    pm_dcdc_sys_enable_ctrl(cfg->dcdc_sys_enable_pin, ENABLE);
+    HBN_SW_Set_Ldo_Sys_Vout(cfg->ldo_sys_active_level);
+}
+
+
+/****************************************************************************/ /**
+ * @brief  Enable PDS Wakeup Source
+ *
+ * @param  WakeupType: PDS Wakeup Source Type, this parameter can be one of the following values:
+ *           @arg PDS_WAKEUP_BY_PDS_TIMER
+ *           @arg PDS_WAKEUP_BY_HBN_IRQ_OUT
+ *           @arg PDS_WAKEUP_BY_GPIO_IRQ
+ *           @arg PDS_WAKEUP_BY_PDS_GPIO_INT
+ *           @arg PDS_WAKEUP_BY_TOUCH_INT
+ *           @arg PDS_WAKEUP_BY_WIFI_WAKEUP
+ *           @arg PDS_WAKEUP_BY_DM_SLP_IRQ
+ *           @arg PDS_WAKEUP_BY_USBH_WKP_DET
+ *           @arg PDS_WAKEUP_BY_USBH_CONN_DET
+ *           @arg PDS_WAKEUP_BY_WIFI_TBTT_WAKEUP_IRQ
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type pm_pds_wakeup_src_en(uint32_t WakeupType)
+{
+    CHECK_PARAM(IS_PDS_WAKEUP_EVENT_TYPE(WakeupType));
+
+    uint32_t tmpVal = 0;
+    uint32_t pds_wakeup_src_en_bits = 0;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+
+    pds_wakeup_src_en_bits = BL_GET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_WAKEUP_SRC_EN);
+    pds_wakeup_src_en_bits |= ((uint32_t)1 << WakeupType);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_WAKEUP_SRC_EN, pds_wakeup_src_en_bits);
+
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Disable PDS Wakeup Source
+ *
+ * @param  WakeupType: PDS Wakeup Source Type, this parameter can be one of the following values:
+ *           @arg PDS_WAKEUP_BY_PDS_TIMER
+ *           @arg PDS_WAKEUP_BY_HBN_IRQ_OUT
+ *           @arg PDS_WAKEUP_BY_GPIO_IRQ
+ *           @arg PDS_WAKEUP_BY_PDS_GPIO_INT
+ *           @arg PDS_WAKEUP_BY_TOUCH_INT
+ *           @arg PDS_WAKEUP_BY_WIFI_WAKEUP
+ *           @arg PDS_WAKEUP_BY_DM_SLP_IRQ
+ *           @arg PDS_WAKEUP_BY_USBH_WKP_DET
+ *           @arg PDS_WAKEUP_BY_USBH_CONN_DET
+ *           @arg PDS_WAKEUP_BY_WIFI_TBTT_WAKEUP_IRQ
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type pm_pds_wakeup_src_disable(uint32_t WakeupType)
+{
+    CHECK_PARAM(IS_PDS_WAKEUP_EVENT_TYPE(WakeupType));
+
+    uint32_t tmpVal = 0;
+    uint32_t pds_wakeup_src_en_bits = 0;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+
+    pds_wakeup_src_en_bits = BL_GET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_WAKEUP_SRC_EN);
+    pds_wakeup_src_en_bits &= ~((uint32_t)1 << WakeupType);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_WAKEUP_SRC_EN, pds_wakeup_src_en_bits);
+
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Get PDS Wakeup Source
+ *
+ * @return wakeup_event
+ *
+*******************************************************************************/
+uint32_t pm_pds_get_all_wakeup_src(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, PDS_RO_PDS_WAKEUP_EVENT);
+
+    return tmpVal;
+}
+
+/****************************************************************************/ /**
+ * @brief  Detect PDS Wakeup Source
+ *
+ * @param  WakeupType: PDS Wakeup Source Type, this parameter can be one of the following values:
+ *           @arg PDS_WAKEUP_BY_PDS_TIMER
+ *           @arg PDS_WAKEUP_BY_HBN_IRQ_OUT
+ *           @arg PDS_WAKEUP_BY_GPIO_IRQ
+ *           @arg PDS_WAKEUP_BY_PDS_GPIO_INT
+ *           @arg PDS_WAKEUP_BY_TOUCH_INT
+ *           @arg PDS_WAKEUP_BY_WIFI_WAKEUP
+ *           @arg PDS_WAKEUP_BY_DM_SLP_IRQ
+ *           @arg PDS_WAKEUP_BY_USBH_WKP_DET
+ *           @arg PDS_WAKEUP_BY_USBH_CONN_DET
+ *           @arg PDS_WAKEUP_BY_WIFI_TBTT_WAKEUP_IRQ
+ *
+ * @return SET or RESET
+ *
+*******************************************************************************/
+BL_Sts_Type pm_pds_get_wakeup_src(uint32_t WakeupType)
+{
+    CHECK_PARAM(IS_PDS_WAKEUP_EVENT_TYPE(WakeupType));
+
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, PDS_RO_PDS_WAKEUP_EVENT);
+    tmpVal &= ((uint32_t)1 << WakeupType);
+
+    return tmpVal ? SET : RESET;
+}
+
+/****************************************************************************/ /**
+ * @brief  set gpio pad pull type in lowpower mode
+ *
+ * @param  pin: gpio
+ *
+ * @param  pu: power up
+ * @param  pd: power down
+ * @param  ie: Active IE (interrupt)
+ *
+ * @return SUCCESS or ERROR
+ *
+ * @note   Pu and Pd not depend on IE
+ *
+*******************************************************************************/
+BL_Err_Type pm_set_gpio_pu_pd_ie(int pin, int pu, int pd, int ie)
+{
+    struct bflb_device_s *gpio;
+
+    if (pin >= GPIO_PIN_MAX) {
+        return ERROR;
+    }
+
+    gpio = bflb_device_get_by_name("gpio");
+    if (ie) {
+        if (pu) {
+            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN);
+        } else if (pd) {
+            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLDOWN | GPIO_SMT_EN);
+        } else {
+            bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
+        }
+    } else {
+    }
+
+    if (pin < 6) {
+
+        HBN_AON_PAD_CFG_Type aonPadCfg;
+        aonPadCfg.ctrlEn = 1;
+        aonPadCfg.ie = ie;
+        aonPadCfg.oe = 0;
+        aonPadCfg.pullUp = pu;
+        aonPadCfg.pullDown = pd;
+
+        HBN_Aon_Pad_Cfg(pin, &aonPadCfg);
+
+        /* AON IO configuration needs 100us delay to take effect */
+        arch_delay_us(100);
+    } else {
+        PDS_Enable_GPIO_Keep(pin);
+    }
+
+    return SUCCESS;
+}
+
+int pm_lowpower_gpio_cfg(lp_gpio_cfg_type *gpio_cfg)
+{
+    uint8_t io = 0;
+    uint8_t ie = 0;
+    uint8_t pu = 0;
+    uint8_t pd = 0;
+    uint8_t unmask = 0;
+    uint8_t trig_mode = 0;
+    uint32_t sf_pin_select;
+
+    sf_pin_select = pm_get_sf_pin_select();
+
+    for (uint8_t i = 0; i < GPIO_PIN_MAX; i++) {
+        io = i;
+
+        if (is_flash_io(io, sf_pin_select)) {
+            continue;
+        }
+
+        ie = (gpio_cfg->io_ie >> i) & 0x1;
+        pu = (gpio_cfg->io_pu >> i) & 0x1;
+        pd = (gpio_cfg->io_pd >> i) & 0x1;
+        unmask = (gpio_cfg->io_wakeup_unmask >> i) & 0x1;
+        trig_mode = gpio_cfg->io_0_36_trig_mode[i];
+
+
+        /* Wakeup detection requires io_ie to be enabled.
+        * We intentionally do not reject unmask=1 && ie=0 here:
+        * that combination is treated as an application-layer bug. */
+        if ((io >= GPIO_PIN_6) && is_gpio_with_expected_cfg(io, ie, pu, pd)) {
+            PDS_Enable_GPIO_Keep(io);
+        } else {
+            pm_set_gpio_pu_pd_ie(io, pu, pd, ie);
+        }
+
+        if (unmask) {
+            pm_set_gpio_trig_mode_int_mask(io, trig_mode, UNMASK);
+        } else {
+            pm_set_gpio_int_mask(io, MASK);
+        }
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  Mask All PDS Wakeup Source
+ *
+*******************************************************************************/
+void pm_pds_mask_all_wakeup_src(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_WAKEUP_SRC_EN);
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_RF_DONE_INT_MASK);
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_WIFI_TBTT_SLEEP_IRQ_MASK);
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_WIFI_TBTT_WAKEUP_IRQ_MASK);
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  set gpio pad int mask type in lowpower mode
+ *
+ * @param  pad: gpio type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~36
+ *
+ * @param  intMask: MASK or UNMASK
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type pm_set_gpio_int_mask(int pin, int int_mask)
+{
+    if (pin >= GPIO_PIN_MAX) {
+        return ERROR;
+    }
+
+    if (pin < 6) {
+        HBN_Set_Aon_Pad_IntMask(pin, int_mask);
+
+        if (int_mask == UNMASK) {
+            PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_HBN_IRQ_OUT, UNMASK);
+        }
+    } else {
+        PDS_Set_GPIO_Pad_IntMask(pin, int_mask);
+
+        if (int_mask == UNMASK) {
+            PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_GPIO_INT, UNMASK);
+        }
+    }
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  set gpio pad trigger mode and int mask type in lowpower mode
+ *
+ * @param  pad: gpio type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~36
+ *
+ * @param  trig: trig type, this parameter can be one of the following values:
+ *           @arg PM_IO_TRIG_SYNC_FALLING_EDGE
+ *           @arg PM_IO_TRIG_SYNC_RISING_EDGE
+ *           @arg PM_IO_TRIG_SYNC_LOW_LEVEL
+ *           @arg PM_IO_TRIG_SYNC_HIGH_LEVEL
+ *           @arg PM_IO_TRIG_SYNC_RISING_FALLING_EDGE
+ *           @arg PM_IO_TRIG_ASYNC_FALLING_EDGE
+ *           @arg PM_IO_TRIG_ASYNC_RISING_EDGE
+ *           @arg PM_IO_TRIG_ASYNC_LOW_LEVEL
+ *           @arg PM_IO_TRIG_ASYNC_HIGH_LEVEL
+ *           @arg PM_PDS_IO_TRIG_NONE
+ *
+ * @param  intMask: MASK or UNMASK
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type pm_set_gpio_trig_mode_int_mask(int pin, int trig_mode, int int_mask)
+{
+    if (pin >= GPIO_PIN_MAX) {
+        return ERROR;
+    }
+
+    if (pin < 6) {
+        HBN_Set_Aon_Pad_IntMask(pin, int_mask);
+        HBN_Set_Aon_Pad_IntMode(pin, trig_mode);
+
+        if (int_mask == UNMASK) {
+            HBN_Hw_Pu_Pd_Cfg(DISABLE);
+            PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_HBN_IRQ_OUT, UNMASK);
+        }
+    } else {
+        PDS_Set_GPIO_Pad_IntMask(pin, int_mask);
+        PDS_Set_GPIO_Pad_IntMode(pin, trig_mode);
+
+        if (int_mask == UNMASK) {
+            PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_GPIO_INT, UNMASK);
+        }
+    }
+    return SUCCESS;
+}
+
+void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time, const PM_LOWPOWER_CFG_Type *lowpower_cfg)
+{
+    const PM_LP_CFG_Type *lp_cfg;
+
+    if ((sleep_time != 0) && (sleep_time <= PDS_WARMUP_LATENCY_CNT)) {
+        return;
+    }
+
+    if (pm_lowpower_cfg_validate(lowpower_cfg) != SUCCESS) {
+        return;
+    }
+
+    lp_cfg = &lowpower_cfg->lp_cfg;
+
+    PM_PWR_Cfg ldosys_cfg = {
+        .lp_mode_en = ENABLE,
+        .voltage_level = lowpower_cfg->sys_cfg.ldo_sys_pds_level,
+    };
+
+    PM_PWR_Cfg ldosoc_cfg = {
+        .lp_mode_en = ENABLE,
+        .voltage_level = lowpower_cfg->soc_cfg.ldo_soc_pds_level,
+    };
+
+    PM_PDS_CFG_Type cfg = {
+        .pdsLevel = pds_level,                          /*!< PDS level */
+        .turnOffRF = lp_cfg->rf_power_off,              /*!< Wheather turn off RF */
+        .powerDownFlash = lp_cfg->pds_flash_power_off,  /*!< Whether power down flash */
+        .ramRetEn = lp_cfg->set_all_ram_ret_en,         /*!< Whether OCRAM Retention */
+        .turnoffRC32M = ENABLE,                         /*!< Whether trun off RC32M */
+        .turnoffXtal = ENABLE,                          /*!< Whether trun off XTAL */
+        .turnoffWifiPLL = lp_cfg->pll_power_off,        /*!< Whether trun off WiFi PLL */
+        .pdsClkType = lp_cfg->clk_default_sel,          /*!< pds_clk type */
+        .pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K, /*!< pds gpio det clk type */
+        .pdsLdo18ioPowerDown = lp_cfg->ldo18io_power_down, /*!< Whether power down LDO18IO */
+        .dcdc_soc_cfg = (PM_DCDC_SOC_CFG_Type *)&lowpower_cfg->soc_cfg, /*!< DCDC SOC GPIO and voltage config */
+        .dcdc_sys_cfg = (PM_DCDC_SYS_CFG_Type *)&lowpower_cfg->sys_cfg, /*!< DCDC SYS GPIO config */
+        .ldo_sys_cfg = ldosys_cfg,                      /*!< Power Config of ldo_sys */
+        .ldo_soc_cfg = ldosoc_cfg,                      /*!< Power Config of ldo_soc */
+        .ldo_sys_lp_en_cnt = 0,                         /*!< delay_cnt before ldo_sys enable lowpower mode */
+        .ldo_sys_exit_lp_cnt = 0,                       /*!< delay_cnt before ldo_sys exit lowpower mode */
+        .ldo_soc_lp_en_cnt = 1,                         /*!< delay_cnt before ldo_soc enable lowpower mode */
+        .ldo_soc_exit_lp_cnt = 1,                       /*!< delay_cnt before ldo_soc exit lowpower mode */
+        .sleepTime = sleep_time,                        /*!< PDS sleep time */
+        .flashCfg = NULL,                               /*!< Flash config pointer, used when power down flash */
+        .preCbFun = NULL,                               /*!< Pre callback function */
+        .postCbFun = NULL,                              /*!< Post callback function */
+    };
+
+    pm_pds_enable((uint32_t *)&cfg, lowpower_cfg);
+}
+
+void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *lowpower_cfg)
+{
+    uint32_t sf_pin_select = 0;
+    PM_PDS_CFG_Type *p = (PM_PDS_CFG_Type *)cfg;
+    PDS_DEFAULT_LV_CFG_Type *pPdsCfg = NULL;
+    uint32_t irq_save = 0;
+    uint8_t rc32m_speed = HBN_RCM_32M;
+    PM_DCDC_SOC_CFG_Type soc_cfg;
+    PM_DCDC_SYS_CFG_Type sys_cfg;
+
+    if ((p == NULL) || ((p->sleepTime != 0) && (p->sleepTime <= PDS_WARMUP_LATENCY_CNT))) {
+        return;
+    }
+
+    if (pm_lowpower_cfg_validate(lowpower_cfg) != SUCCESS) {
+        return;
+    }
+
+    soc_cfg = lowpower_cfg->soc_cfg;
+    sys_cfg = lowpower_cfg->sys_cfg;
+
+    p->turnOffRF = lowpower_cfg->lp_cfg.rf_power_off;
+    p->powerDownFlash = lowpower_cfg->lp_cfg.pds_flash_power_off;
+    p->ramRetEn = lowpower_cfg->lp_cfg.set_all_ram_ret_en;
+    p->turnoffWifiPLL = lowpower_cfg->lp_cfg.pll_power_off;
+    p->pdsClkType = lowpower_cfg->lp_cfg.clk_default_sel;
+    p->pdsLdo18ioPowerDown = lowpower_cfg->lp_cfg.ldo18io_power_down;
+    p->ldo_sys_cfg.lp_mode_en = ENABLE;
+    p->ldo_sys_cfg.voltage_level = sys_cfg.ldo_sys_pds_level;
+    p->ldo_soc_cfg.lp_mode_en = ENABLE;
+    p->ldo_soc_cfg.voltage_level = soc_cfg.ldo_soc_pds_level;
+    p->dcdc_soc_cfg = &soc_cfg;
+    p->dcdc_sys_cfg = &sys_cfg;
+
+    if ((p->pdsClkType == PM_PDS_CLK_RC32M) || (p->pdsClkType == PM_PDS_CLK_RC16M) || (p->pdsClkType == PM_PDS_CLK_RC8M)) {
+        p->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_RC32M;
+        p->turnoffRC32M = DISABLE;
+    } else if ((p->pdsClkType == PM_PDS_CLK_XTAL) || (p->pdsClkType == PM_PDS_CLK_XTAL_LP)) {
+        p->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_XTAL;
+        p->turnoffXtal = DISABLE;
+    } else {
+        p->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K;
+    }
+
+    if (p->pdsLdo18ioPowerDown || p->powerDownFlash) {
+        uint32_t flash_cfg_len;
+        bflb_flash_get_cfg((uint8_t **)&p->flashCfg, &flash_cfg_len);
+    }
+
+    /* To make it simple and safe*/
+    irq_save = csi_irq_save();
+
+    if (p->sleepTime) {
+        PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_TIMER, UNMASK); // unmask pds sleep time wakeup
+    } else {
+        PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_TIMER, MASK); // mask pds sleep time wakeup
+    }
+
+    /* clear all interrupt status,except pds_gpio_int */
+    PDS_IntClear();
+
+    /* enable PDS interrupt to wakeup CPU (PDS1:CPU not powerdown, CPU __WFI)*/
+    /* if enter pds1, please User call pm_pds_irq_register function before pm_pds_mode_enter */
+    // pm_pds_irq_register();
+    /***********************************************************/
+
+    switch (p->pdsLevel) {
+        case PM_PDS_LEVEL_1:
+            pPdsCfg = &pdsCfgLevel1;
+            break;
+        case PM_PDS_LEVEL_2:
+            pPdsCfg = &pdsCfgLevel2;
+            break;
+        case PM_PDS_LEVEL_3:
+            pPdsCfg = &pdsCfgLevel3;
+            break;
+        case PM_PDS_LEVEL_7:
+            pPdsCfg = &pdsCfgLevel7;
+            break;
+        case PM_PDS_LEVEL_11:
+            pPdsCfg = &pdsCfgLevel11;
+            break;
+        case PM_PDS_LEVEL_15:
+            pPdsCfg = &pdsCfgLevel15;
+            break;
+        default:
+            return;
+    }
+
+    if (ENABLE == p->ldo_soc_cfg.lp_mode_en) {
+        pPdsCfg->pdsCtl6.ldoSocLpEn = 1;
+        pPdsCfg->pdsCtl.pdsLdoSocVselEn = 1;
+        HBN_Set_Ldo_Soc_Vout_in_Lowpower(p->ldo_soc_cfg.voltage_level);
+        HBN_Ctrl_Ldo_Soc_Mode_by_HW(ENABLE);
+        PDS_Set_Ldo_Soc_Enter_lp_delay(1);
+        PDS_Set_Ldo_Soc_Exit_lp_delay(1);
+    } else {
+        pPdsCfg->pdsCtl6.ldoSocLpEn = 0;
+    }
+
+    if (ENABLE == p->ldo_sys_cfg.lp_mode_en) {
+        pPdsCfg->pdsCtl6.ldoSysLpEn = 1;
+        HBN_Set_Ldo_Sys_Vout_in_Lowpower(p->ldo_sys_cfg.voltage_level);
+        HBN_Ctrl_Ldo_Sys_Mode_by_HW(ENABLE);
+        PDS_Set_Ldo_Sys_Enter_lp_delay(0);
+        PDS_Set_Ldo_Sys_Exit_lp_delay(0);
+    } else {
+        pPdsCfg->pdsCtl6.ldoSysLpEn = 0;
+    }
+
+    if (p->pdsLdo18ioPowerDown || p->powerDownFlash) {
+        sf_pin_select = pm_get_sf_pin_select();
+        HBN_Power_Down_Flash((spi_flash_cfg_type *)p->flashCfg);
+
+        /* latch flash io pad */
+        if (sf_pin_select & (1 << 2)) {
+            for (uint8_t i = GPIO_PIN_6; i <= GPIO_PIN_11; i++) {
+                *((volatile uint32_t *)(0x200008C4 + i * 4)) = 0;
+                PDS_Enable_GPIO_Keep(i);
+            }
+        } else if (sf_pin_select & (1 << 3)) {
+            for (uint8_t i = GPIO_PIN_24; i <= GPIO_PIN_29; i++) {
+                *((volatile uint32_t *)(0x200008C4 + i * 4)) = 0;
+                PDS_Enable_GPIO_Keep(i);
+            }
+        } else {
+        }
+    }
+
+    if (p->pdsLdo18ioPowerDown) {
+        /* must power down ldo18io, Otherwise, the current is abnormal */
+        GLB_Power_Down_Ldo18ioVout();
+    }
+
+    if (p->pdsClkType == PM_PDS_CLK_F32K) {
+        pPdsCfg->pdsCtl6.wakeSelFastClk = 1;
+        pPdsCfg->pdsCtl6.wakeDisRepu = 0;
+        pPdsCfg->pdsCtl.pdsFastClkSel = 0;
+    } else if ((p->pdsClkType == PM_PDS_CLK_RC32M) || (p->pdsClkType == PM_PDS_CLK_RC16M) || (p->pdsClkType == PM_PDS_CLK_RC8M)) {
+        /* RC32M/RC16M/RC8M as pds clk */
+        pPdsCfg->pdsCtl6.pdsEisoCnt = 1;
+        pPdsCfg->pdsCtl6.pdsSelFastClk = 1;
+        pPdsCfg->pdsCtl6.wakeSelFastClk = 1;
+        pPdsCfg->pdsCtl6.wakeDisRepu = 1;
+    } else if ((p->pdsClkType == PM_PDS_CLK_XTAL) || (p->pdsClkType == PM_PDS_CLK_XTAL_LP)) {
+        /* XTAL as pds clk */
+        pPdsCfg->pdsCtl6.pdsEisoCnt = 1;
+        pPdsCfg->pdsCtl6.pdsSelFastClk = 1;
+        pPdsCfg->pdsCtl6.wakeSelFastClk = 1;
+        pPdsCfg->pdsCtl6.wakeDisRepu = 1;
+        pPdsCfg->pdsCtl.pdsFastClkSel = 1;
+        pPdsCfg->pdsCtl.xtalOff = 0;
+        pPdsCfg->pdsCtl.socEnbForceOn = 0;
+    } else {
+    }
+
+    pPdsCfg->pdsCtl.gpioDetClkSel = p->pdsGpioDetClkType;
+
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
+    PDS_Pu_PLL_Enable();
+    if (p->turnoffWifiPLL) {
+        GLB_Power_Off_WIFIPLL();
+    } else {
+        pPdsCfg->pdsCtl.wifipllOff = 0;
+    }
+
+    if (p->turnoffRC32M == ENABLE) {
+        pPdsCfg->pdsCtl.pdsRC32mOn = 0;
+    } else {
+        pPdsCfg->pdsCtl.pdsRC32mOn = 1;
+        rc32m_speed = HBN_Get_RC32M_Speed();
+        if ((p->pdsClkType == PM_PDS_CLK_RC8M) && (rc32m_speed != HBN_RCM_8M)) {
+            HBN_Set_RC32M_Speed(HBN_RCM_8M);
+        } else if ((p->pdsClkType == PM_PDS_CLK_RC16M) && (rc32m_speed != HBN_RCM_16M)) {
+            HBN_Set_RC32M_Speed(HBN_RCM_16M);
+        } else if ((p->pdsClkType == PM_PDS_CLK_RC32M) && (rc32m_speed != HBN_RCM_32M)) {
+            HBN_Set_RC32M_Speed(HBN_RCM_32M);
+        }
+    }
+
+    if (p->turnoffXtal == DISABLE) {
+        pPdsCfg->pdsCtl.xtalOff = 0;
+        if (p->pdsClkType == PM_PDS_CLK_XTAL_LP) {
+            AON_XTAL_Enter_LowPower();
+        }
+    } else {
+        pPdsCfg->pdsCtl.xtalOff = 1;
+        if (p->pdsLevel == PM_PDS_LEVEL_15) {
+            AON_Power_Off_XTAL();
+        }
+    }
+
+    if (!(p->turnOffRF)) {
+        pPdsCfg->pdsCtl.pdsCtlRfSel = 0;
+    }
+
+    if (p->ramRetEn) {
+        pPdsCfg->pdsCtl4.miscMemStby = 1;
+        pPdsCfg->pdsCtl4.wbMemStby = 1;
+        PDS_Set_All_WRAM_Retention();
+        PDS_Set_All_OCRAM_Retention();
+    } else {
+        PDS_Disable_Ctrl_Ram();
+    }
+
+    PDS_Default_Level_Config(pPdsCfg, p->sleepTime);
+
+    if (p->dcdc_soc_cfg) {
+        p->dcdc_soc_cfg->ldo_soc_pds_level = p->ldo_soc_cfg.voltage_level;
+        pm_dcdc_soc_enter_pds(p->dcdc_soc_cfg);
+    }
+    if (p->dcdc_sys_cfg) {
+        pm_dcdc_sys_enter_pds(p->dcdc_sys_cfg);
+    }
+
+    __WFI();
+
+    if (p->dcdc_sys_cfg) {
+        pm_dcdc_sys_exit_pds(p->dcdc_sys_cfg);
+    }
+    if (p->dcdc_soc_cfg) {
+        pm_dcdc_soc_exit_pds(p->dcdc_soc_cfg);
+    }
+
+    /******************************* Wakeup Flow *******************************/
+    if (p->turnoffRC32M == DISABLE) {
+        if ((rc32m_speed == HBN_RCM_8M) && (p->pdsClkType != PM_PDS_CLK_RC8M)) {
+            HBN_Set_RC32M_Speed(HBN_RCM_8M);
+        } else if ((rc32m_speed == HBN_RCM_16M) && (p->pdsClkType != PM_PDS_CLK_RC16M)) {
+            HBN_Set_RC32M_Speed(HBN_RCM_16M);
+        } else if ((rc32m_speed == HBN_RCM_32M) && (p->pdsClkType != PM_PDS_CLK_RC32M)) {
+            HBN_Set_RC32M_Speed(HBN_RCM_32M);
+        }
+    }
+    if (p->turnoffXtal == DISABLE) {
+        if (p->pdsClkType == PM_PDS_CLK_XTAL_LP) {
+            AON_XTAL_Exit_LowPower();
+        }
+    }
+
+    if (p->pdsLdo18ioPowerDown) {
+        GLB_Power_Up_Ldo18ioVout();
+    }
+    GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL);
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
+
+    if (p->pdsLdo18ioPowerDown || p->powerDownFlash) {
+        if (p->pdsLevel < PM_PDS_LEVEL_2) {
+            /* Init flash gpio */
+            /* clear latch flash io pad */
+            if (sf_pin_select & (1 << 2)) {
+                for (uint8_t i = GPIO_PIN_6; i <= GPIO_PIN_11; i++) {
+                    pm_disable_gpio_keep(i);
+                }
+            } else if (sf_pin_select & (1 << 3)) {
+                for (uint8_t i = GPIO_PIN_24; i <= GPIO_PIN_29; i++) {
+                    pm_disable_gpio_keep(i);
+                }
+            } else {
+            }
+
+            bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
+            bflb_sflash_restore_from_powerdown((spi_flash_cfg_type *)p->flashCfg, 0, SF_CTRL_FLASH_BANK0);
+        }
+    }
+
+    /* enable global interrupts */
+    csi_irq_restore(irq_save);
+    /*************************************************************************/
+}
+
+/**
+ * @brief
+ *
+ * power management in hbn(hibernation) mode
+ * cpu will reset after wakeup
+ *
+ * HBN_LEVEL PD_AON PD_AON_HBNRTC PD_AON_HBNCORE PD_CORE&...
+ * HBN0        ON       ON            ON            OFF
+ * HBN1        ON       ON            OFF           OFF
+ * HBN2        ON       OFF           OFF           OFF
+ *
+ * @param hbn_level
+ */
+void ATTR_TCM_SECTION pm_hbn_mode_enter(uint32_t hbn_level,
+                                        uint64_t sleep_time)
+{
+    /* To make it simple and safe*/
+    __ASM volatile("csrc mstatus, 8");
+
+    bflb_irq_clear_pending(HBN_OUT0_IRQn);
+    bflb_irq_clear_pending(HBN_OUT1_IRQn);
+
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);
+
+    if (sleep_time) {
+        struct bflb_device_s *rtc_dev = NULL;
+        bflb_rtc_set_time(rtc_dev, sleep_time); // sleep time,unit is cycle
+    } else {
+        /* clear RTC timer interrupt */
+        HBN_Clear_RTC_INT();
+        /* commpare value set max value */
+        HBN_Set_RTC_Timer(0, 0xFFFFFFFF, 0xFF, 0);
+    }
+
+    if (hbn_level >= PM_HBN_LEVEL_2) {
+        HBN_Power_Off_RC32K();
+    } else {
+        HBN_Keep_On_RC32K();
+    }
+
+    /* MCU CLK SELECT RC32M */
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
+
+    uint32_t flash_cfg_len;
+
+    /* get flash config */
+    bflb_flash_get_cfg((uint8_t **)&flash_cfg, &flash_cfg_len);
+
+    HBN_Power_Down_Flash(flash_cfg);
+    HBN_Power_Off_LDO18_IO();
+
+    /* Set HBN flag */
+    BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+
+    HBN_Level_Select(hbn_level);
+
+    while (1) {
+        arch_delay_ms(100);
+        // GLB_SW_POR_Reset();
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  get trigger mode description
+ *
+ * @param  gpioindex_cfg: gpio trigger mode index
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+char *pm_get_trig_mode_desc(int index)
+{
+    if (index < 0 || index >= sizeof(trig_mode_desc) / sizeof(trig_mode_desc[0])) {
+        return "Invalid trigger mode index";
+    }
+    return trig_mode_desc[index];
+}
+
+void pm_set_wakeup_callback(void (*wakeup_callback)(void))
+{
+    uint32_t chip_version = 0;
+
+    /* get chip version*/
+    chip_version = BL_RD_WORD(0x90018800);
+    if (chip_version == 0x0616a002) {
+        BL_WR_WORD(BL616CL_OCRAM_BASE + 8, (uint32_t)wakeup_callback);
+        /* Set HBN flag */
+        BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+        BL_WR_WORD(BL616CL_OCRAM_BASE, 0x4e42484d);
+        BL_WR_WORD(BL616CL_OCRAM_BASE + 4, 0x4e42484d);
+    } else {
+        BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
+        /* Set HBN flag */
+        BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+    }
+}
+
+void pm_set_boot2_app_jump_para(uint32_t para)
+{
+    BL_WR_REG(HBN_BASE, HBN_RSV1, para);
+    /* Set APP jump flag */
+    BL_WR_REG(HBN_BASE, HBN_RSV0, APP_JUMP_ENTER_FLAG);
+}
+
+void pm_hbn_out0_irq_register(void)
+{
+    bflb_irq_attach(HBN_OUT0_IRQn, (irq_callback)HBN_OUT0_IRQ, NULL);
+    bflb_irq_enable(HBN_OUT0_IRQn);
+}
+
+void pm_hbn_out1_irq_register(void)
+{
+    bflb_irq_attach(HBN_OUT1_IRQn, (irq_callback)HBN_OUT1_IRQ, NULL);
+    bflb_irq_enable(HBN_OUT1_IRQn);
+}
+
+void HBN_OUT0_IRQ(void)
+{
+    if (SET == HBN_Get_INT_State(HBN_INT_GPIO0)) {
+        HBN_Clear_IRQ(HBN_INT_GPIO0);
+        pm_irq_callback(PM_HBN_GPIO0_WAKEUP_EVENT);
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO1)) {
+        HBN_Clear_IRQ(HBN_INT_GPIO1);
+        pm_irq_callback(PM_HBN_GPIO1_WAKEUP_EVENT);
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO2)) {
+        HBN_Clear_IRQ(HBN_INT_GPIO2);
+        pm_irq_callback(PM_HBN_GPIO2_WAKEUP_EVENT);
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO3)) {
+        HBN_Clear_IRQ(HBN_INT_GPIO3);
+        pm_irq_callback(PM_HBN_GPIO3_WAKEUP_EVENT);
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO4)) {
+        HBN_Clear_IRQ(HBN_INT_GPIO4);
+        pm_irq_callback(PM_HBN_GPIO4_WAKEUP_EVENT);
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO5)) {
+        HBN_Clear_IRQ(HBN_INT_GPIO5);
+        pm_irq_callback(PM_HBN_GPIO5_WAKEUP_EVENT);
+    } else {
+        HBN_Clear_RTC_INT();
+        HBN_Clear_IRQ(HBN_INT_RTC);
+        pm_irq_callback(PM_HBN_RTC_WAKEUP_EVENT);
+    }
+}
+
+void ATTR_TCM_SECTION HBN_OUT1_IRQ(void)
+{
+    /* PIR */
+    if (SET == HBN_Get_INT_State(HBN_INT_PIR)) {
+        HBN_Clear_IRQ(HBN_INT_PIR);
+    }
+    /* BOR */
+    else if (SET == HBN_Get_INT_State(HBN_INT_BOD)) {
+        HBN_Clear_IRQ(HBN_INT_BOD);
+        pm_irq_callback(PM_HBN_BOD_WAKEUP_EVENT);
+    }
+}
+
+__WEAK void pm_irq_callback(uint32_t event)
+{
+    // default weak implementation
+}
+
+void pm_pds_irq_register(void)
+{
+    bflb_irq_attach(PDS_WAKEUP_IRQn, (irq_callback)PDS_WAKEUP_IRQ, NULL);
+    bflb_irq_enable(PDS_WAKEUP_IRQn);
+}
+
+void ATTR_TCM_SECTION PDS_WAKEUP_IRQ(void)
+{
+    /* WAKE INT */
+    if (SET == PDS_Get_IntStatus(PDS_INT_WAKEUP)) {
+        uint32_t all_event = PDS_Get_All_Wakeup_Src();
+        for (uint32_t event = 0; event < PM_PDS_WAKEUP_EVENT_MAX - PM_PDS_WAKEUP_EVENT_MIN; event++) {
+            if ((1 << event) & all_event) {
+                pm_irq_callback(PM_PDS_WAKEUP_EVENT_MIN + event);
+            }
+            if ((event + PM_PDS_WAKEUP_EVENT_MIN) == PM_PDS_GPIO6_36_WAKEUP_EVENT) {
+                PDS_Set_All_GPIO_Pad_IntClr();
+            }
+        }
+    }
+    /* RF DONE */
+    else if (SET == PDS_Get_IntStatus(PDS_INT_RF_DONE)) {
+    }
+    /* WIFI_TBTT_SLEEP */
+    else if (SET == PDS_Get_IntStatus(PDS_INT_WIFI_TBTT_SLEEP)) {
+    }
+    /* WIFI_TBTT_WAKEUP */
+    else if (SET == PDS_Get_IntStatus(PDS_INT_WIFI_TBTT_WAKEUP)) {
+    } else {
+    }
+
+    PDS_IntClear();
+}

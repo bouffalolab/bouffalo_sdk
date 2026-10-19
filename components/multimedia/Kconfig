@@ -1,0 +1,289 @@
+#
+# Multimedia components
+#
+
+menu "Multimedia"
+
+config MULTIMEDIA
+    bool "Multimedia framework"
+    default n
+    help
+      Build the multimedia framework and its codec backends.
+
+menu "Multimedia Options"
+    depends on MULTIMEDIA
+
+config ALGRTC
+    bool "Audio algorithm runtime"
+    default n
+
+config AACDEC
+    bool "AAC decoder"
+    default n
+    help
+      Build the AAC audio decoder.
+
+config AMRNB
+    bool "AMR-NB codec"
+    default n
+    help
+      Build the AMR narrowband codec.
+
+config AMRWB
+    bool "AMR-WB codec"
+    default n
+    help
+      Build the AMR wideband codec.
+
+config PVMP3DEC
+    bool "MP3 decoder"
+    default n
+    help
+      Build the MP3 audio decoder.
+
+config OPUS
+    bool "Opus codec"
+    default n
+    help
+      Build the Opus audio codec.
+
+config SPEEX
+    bool "Speex codec"
+    default n
+    help
+      Build the Speex audio codec.
+
+config SPEEXDSP
+    bool "SpeexDSP"
+    default n
+    help
+      Build the Speex DSP library.
+
+config VORBIS
+    bool "Vorbis codec"
+    default n
+    help
+      Build the Vorbis audio decoder.
+
+config OGG
+    bool "Ogg container"
+    default n
+    help
+      Build the Ogg container demuxer.
+
+config SONIC
+    bool "Sonic audio resampler"
+    default n
+    help
+      Build the Sonic speed/pitch audio resampler.
+
+config MINIALSA
+    bool "Mini ALSA"
+    default n
+    help
+      Build the mini ALSA userspace library.
+
+config LIBFVAD
+    bool "libfvad voice activity detection"
+    default n
+    help
+      Build the libfvad voice activity detector.
+
+config USERVICE
+    bool "UService audio service"
+    default n
+    help
+      Build the UService based audio service.
+
+config AUIDIO_FLOWCTRL_BRIDGE
+    bool "Audio flow-control bridge"
+    default n
+    help
+      Build the audio flow-control bridge component.
+
+config BLUETOOTH_PORT
+    bool "Bluetooth stack port"
+    default n
+    help
+      Build the Classic Bluetooth and BLE adapter for the SDK Bluetooth stack.
+      Requires the Bluetooth stack and the selected profile configuration.
+
+config DRV_SND
+    bool "Sound card driver"
+    default n
+    help
+      Build the minialsa sound card backend using the xcodec interface.
+      Audio hardware is provided by the configured codec and board port.
+
+config SMART_AUDIO
+    bool "Smart audio playback control"
+    default n
+    help
+      Build the chip-independent audio playback control component.
+      Audio hardware is provided by the configured multimedia backend.
+
+config BL606P_PLAYER
+    bool "BL606P audio player"
+    default n
+    help
+      Enable the legacy BL606P audio player integration.
+
+config AV
+    bool "Audio/video framework"
+    default n
+    help
+      Build the audio/video framework.
+
+config XCODEC
+    bool "X codec"
+    default n
+    help
+      Build the X codec framework.
+
+config XPORT
+    bool "X port"
+    default n
+    help
+      Build the X multimedia port layer.
+
+config XUTILS
+    bool "X utils"
+    default n
+    help
+      Build the X multimedia utility library.
+
+config XRECORD
+    bool "X record"
+    default n
+    help
+      Build the X audio recording component.
+
+config XWEBSOCKET
+    bool "X WebSocket"
+    default n
+    help
+      Build the X multimedia WebSocket component.
+
+config CODEC_ENABLE_HFP
+    bool "Codec HFP mode"
+    default n
+    help
+      Build codec support for the hands-free profile.
+
+config CODEC_USE_I2S
+    bool "Codec I2S interface"
+    default n
+    help
+      Route the codec through the I2S interface.
+
+config CODEC_USE_I2S_RX
+    bool "Codec I2S receive"
+    default n
+    depends on CODEC_USE_I2S
+    help
+      Enable I2S receive direction for the codec.
+
+config CODEC_USE_I2S_TX
+    bool "Codec I2S transmit"
+    default n
+    depends on CODEC_USE_I2S
+    help
+      Enable I2S transmit direction for the codec.
+
+config CODEC_USE_ES8388
+    bool "ES8388 codec"
+    default n
+    help
+      Use the ES8388 external codec in the multimedia port.
+
+config MSP_USE_CODEC_ONLY
+    bool "MSP codec only mode"
+    default n
+    help
+      Build the multimedia service pipeline with codec support only.
+
+config MSP_USE_STATIC_RAM
+    bool "MSP static RAM"
+    default n
+    help
+      Allocate multimedia service buffers from static RAM.
+
+config XCODEC_OUTPUT_CACHE
+    bool "X codec output cache"
+    default n
+    help
+      Cache decoded audio output in the X codec pipeline.
+
+endmenu
+
+menu "Audio player compatibility"
+    depends on MULTIMEDIA
+
+config MP3_PLAYER_TEST_MP3
+    bool "MP3 player test"
+    default n
+config MP3_PLAYER_TASK_STACK_DEPTH
+    int "MP3 player task stack depth"
+    default 376
+config MP3_PLAYER_CACHE_BYTES
+    int "MP3 player cache bytes"
+    default 4096
+config MP3_PLAYER_RESAMPLE_TX_BLOCK_BYTES
+    int "MP3 player resample block bytes"
+    default 0
+config WAVE_PLAYER_CODEC_REG_CLI
+    int "Wave player codec CLI"
+    default 0
+config WAVE_PLAYER_ENABLE_REC
+    bool "Wave player recording"
+    default n
+config WAVE_PLAYER_ENABLE_REC_RB
+    bool "Wave player record loopback"
+    default y if WAVE_PLAYER_ENABLE_REC
+    default n
+config WAVE_PLAYER_ENABLE_RESAMPLE
+    bool "Wave player resampling"
+    default n
+config WAVE_PLAYER_FIX_SAMPLE_RATE
+    int "Wave player fixed sample rate"
+    default 0
+config WAVE_PLAYER_RESAMPLE_QUALITY
+    int "Wave player resample quality"
+    default 5
+config WAVE_PLAYER_OUT_CHANNELS
+    int "Wave player output channels"
+    default 2
+config WAVE_PLAYER_OUT_SAMPLES
+    int "Wave player output samples"
+    default 512
+config WAVE_PLAYER_REC_CHANNELS
+    int "Wave player record channels"
+    default 2
+config WAVE_PLAYER_REC_DEFAULT_MIC_PGA
+    int "Wave player default microphone PGA"
+    default 90
+config WAVE_PLAYER_REC_DMA_BLOCKS
+    int "Wave player record DMA blocks"
+    default 8
+config WAVE_PLAYER_REC_FRAME_MS
+    int "Wave player record frame duration"
+    default 20
+config WAVE_PLAYER_REC_MAX_FS_HZ
+    int "Wave player maximum record rate"
+    default 32000
+config WAVE_PLAYER_REC_MONO_SOURCE
+    int "Wave player mono source"
+    default 0
+config WAVE_PLAYER_REC_SECONDS
+    int "Wave player record seconds"
+    default 2
+config WAVE_PLAYER_TASK_STACK_DEPTH
+    int "Wave player task stack depth"
+    default 256
+config FLAC
+    bool "FLAC support"
+    default n
+
+endmenu
+
+endmenu

@@ -1,0 +1,78 @@
+ifeq ($(OS),Windows_NT)
+    ELF_FILE := $(firstword $(wildcard build/build_out/*.elf))
+else
+    ELF_FILE := $(shell find build/build_out -name "*.elf" 2>/dev/null | head -n1)
+endif
+
+ifeq ($(strip $(ELF_FILE)),)
+    PROJ_NAME :=
+else
+    PROJ_NAME := $(basename $(notdir $(ELF_FILE)))
+endif
+
+BAUDRATE ?= 2000000
+COMX ?= COM5
+
+command_flash = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --config=$(BUILD_DIR)/flash_prog_cfg.ini
+command_ram = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --firmware=$(BUILD_DIR)/build_out/$(PROJ_NAME)*.bin --ram
+command_efuse = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --efusefile=$(BUILD_DIR)/build_out/efusedata.bin
+command_puncover = $(PUNCOVER_PROGRAM) \
+	--elf_file ./$(BUILD_DIR)/build_out/*.elf --map_file ./$(BUILD_DIR)/build_out/*.map \
+	--build_dir ./$(BUILD_DIR) --src_root ${BL_SDK_BASE} --port 5001
+ifeq ($(OS),Windows_NT)
+	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+	PUNCOVER_PROGRAM = puncover_riscv.exe
+	cmake_generator = "MinGW Makefiles"
+else
+	ifeq ($(shell uname),Darwin)
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-macos
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	else ifeq ($(shell uname),FreeBSD)
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-freebsd
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	else ifeq ($(shell arch),aarch64)
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-arm
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	else ifeq ($(patsubst %WSL2,WSL2,$(shell uname -r)), WSL2)
+		ifeq ($(patsubst /dev/tty%,/dev/tty,$(COMX)), /dev/tty)
+			# Linux serial port style, try to flash firmware with BLFlashCommand-ubuntu
+			CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+			BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+			PUNCOVER_PROGRAM = puncover_riscv
+			cmake_generator = "Unix Makefiles"
+		else
+			CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+			BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+			PUNCOVER_PROGRAM = puncover_riscv
+			cmake_generator = "Unix Makefiles"
+		endif
+	else
+		CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	endif
+endif
+
+flash:
+	$(command_flash)
+
+ram:
+	$(command_ram)
+
+whole:
+	$(command_flash) --build
+	$(CMAKE) -E copy ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
+
+efuse:
+	$(command_efuse)

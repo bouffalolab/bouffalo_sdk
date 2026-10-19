@@ -1,0 +1,29 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+-include $(BL_SDK_BASE)/examples/wifi/sta/dualcore/defconfig
+
+# Use the same iperf frontend as AP for local Socket vs offload comparison.
+# Disable the legacy Raw-only iperf to avoid duplicate shell commands.
+CONFIG_WIFI_IPERF     =n
+CONFIG_IPERF          =y
+CONFIG_COREDUMP       =n
+
+CONFIG_MBEDTLS_AES_USE_HW    =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_MBEDTLS_SHA1_USE_HW   =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y
+
+CONFIG_BFLB_MTD              =y
+CONFIG_PARTITION             =y
+CONFIG_FOTA                  =y
+CONFIG_LOG_LEVEL             =4
+CONFIG_IPC                   =y
+CONFIG_OPENAMP_VIRTIO_DEVICE_SUPPORT =y
+CONFIG_OPENAMP_VIRTIO_DRIVER_SUPPORT =n
+CONFIG_RPMSG_SERVICE        =y
+CONFIG_RAM_FOR_AP_SIZE = 0x48000
+CONFIG_WRAM_FOR_AP_SIZE = 0x28000
+
+CONFIG_SOCKET_OFFLOAD =y
+CONFIG_SOCKET_OFFLOAD_SERVICE =y

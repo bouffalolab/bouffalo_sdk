@@ -1,0 +1,5 @@
+add_subdirectory(lib)
+sdk_add_subdirectory_ifdef(CONFIG_LWIP lwip)
+sdk_add_subdirectory_ifdef(CONFIG_SOCKET_OFFLOAD socket_offload)
+sdk_add_subdirectory_ifdef(CONFIG_NETBUS netbus)
+sdk_add_subdirectory_ifdef(CONFIG_NETHUB nethub)

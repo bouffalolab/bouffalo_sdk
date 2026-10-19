@@ -1,0 +1,329 @@
+#
+# Network components
+#
+
+menu "Network"
+
+source "$BL_SDK_BASE/components/net/socket_offload/Kconfig"
+
+config LWIP
+    bool "lwIP"
+    default n
+    help
+      Build the lwIP TCP/IP stack.
+
+if LWIP
+
+config IPV6
+    bool "IPv6"
+    default n
+    help
+      Enable IPv6 support in the lwIP stack.
+
+config DHCPD
+    bool "DHCP server"
+    default n
+    help
+      Build the lwIP DHCP server application.
+
+config MDNS
+    bool "mDNS responder"
+    default n
+    help
+      Build the lwIP mDNS responder application.
+
+config PING
+    bool "Ping application"
+    default n
+    help
+      Build the lwIP ping CLI application.
+
+endif # CONFIG_LWIP
+
+config NETBUS
+    bool "Netbus"
+    default n
+    help
+      Build the Netbus host/device communication framework.
+
+if NETBUS
+
+config NETIFD_NANO
+    bool "netifd nano"
+    default n
+    help
+      Build the nano network interface daemon for Netbus devices.
+
+config DHCP_IN_EMB
+    bool "Embedded DHCP client"
+    default n
+    help
+      Enable the embedded DHCP client used by host router devices.
+
+config CPU_E907
+    bool "E907 CPU target"
+    default n
+    help
+      Build Netbus device manager for the E907 CPU core.
+
+config ATMODULE
+    bool "AT module"
+    default n
+    help
+      Build the AT command module.
+
+config NXSPI_NET
+    bool "NX SPI network transport"
+    default n
+    help
+      Enable the NX SPI network transport for Netbus devices.
+
+endif # CONFIG_NETBUS
+
+config NETHUB
+    bool "Nethub"
+    default n
+    help
+      Build the Nethub networking hub component.
+
+if NETHUB
+
+choice
+    prompt "Nethub host profile"
+    default NETHUB_PROFILE_SDIO
+    help
+      Physical transport used to connect the Nethub host.
+
+config NETHUB_PROFILE_SDIO
+    bool "SDIO"
+    help
+      Connect the Nethub host over SDIO.
+
+config NETHUB_PROFILE_USB
+    bool "USB"
+    help
+      Connect the Nethub host over USB.
+
+config NETHUB_PROFILE_SPI
+    bool "SPI"
+    help
+      Connect the Nethub host over SPI.
+
+endchoice
+
+config NETHUB_PROFILE_DUAL
+    bool "Dual profile"
+    default n
+    help
+      Build both SDIO and USB Nethub host profiles.
+
+config NETHUB_CTRLCHANNEL_USE_ATMODULE
+    bool "Use AT module control channel"
+    default n
+    help
+      Route Nethub control messages through the AT module.
+
+config NETHUB_LOWPOWER_ENABLE
+    bool "Nethub low power"
+    default n
+    help
+      Enable low-power handling in the Nethub transport.
+
+config NETHUB_DEV_SELECT
+    string "Legacy Nethub device selection"
+    default ""
+    help
+      Compatibility selector for legacy build commands using sdio or usb.
+
+config NETHUB_HOTCODE_IN_FLASH
+    bool "Place Nethub hot code in flash"
+    default n
+
+config NETHUB_HOTCODE_IN_RAM
+    bool "Place Nethub hot code in RAM"
+    default n
+
+config NETHUB_HOTCODE_IN_PSRAM
+    bool "Place Nethub hot code in PSRAM"
+    default n
+
+endif # CONFIG_NETHUB
+
+config HTTP
+    bool "HTTP"
+    default n
+    help
+      Build the HTTP protocol library.
+
+if HTTP
+
+config HTTP_CLIENT
+    bool "HTTP client"
+    default y
+    help
+      Build the HTTP client implementation.
+
+config HTTP_SERVER
+    bool "HTTP server"
+    default n
+    help
+      Build the HTTP server implementation.
+
+config HTTP_PARSER_STRICT
+    bool "Strict HTTP parser"
+    default n
+    help
+      Enable strict RFC compliance checks in the HTTP parser.
+
+config WEBSOCKET
+    bool "WebSocket"
+    default n
+    help
+      Build the WebSocket upgrade and framing support.
+
+endif # CONFIG_HTTP
+
+config MQTT
+    bool "MQTT"
+    default n
+    help
+      Build the MQTT client library.
+
+config RTSP
+    bool "RTSP"
+    default n
+    help
+      Build the RTSP client library.
+
+config LIBPEER
+    bool "libpeer"
+    default n
+    select LWIP
+    select MBEDTLS
+    select SRTP
+    select MBEDTLS_TLS_VERSION_1_2 if !MBEDTLS_V2
+    select MBEDTLS_DTLS if !MBEDTLS_V2
+    select MBEDTLS_X509_CRT_WRITE_C if !MBEDTLS_V2
+    help
+      Build the peer-to-peer networking library.
+
+if LIBPEER
+
+config SCTP_MESSAGE_SIZE
+    int "Maximum DataChannel message bytes"
+    range 1 16384
+    default 16384
+    help
+      Also advertised in SDP. Keep this within the target memory budget.
+      Outgoing messages must also fit the transmit fragment window.
+
+config SCTP_TX_WINDOW
+    int "Reliable SCTP transmit packet slots"
+    range 1 64
+    default 16
+    help
+      Also limits the fragment count of each reliable or abandonable send.
+
+config SCTP_RX_WINDOW
+    int "SCTP receive packet slots"
+    range 2 32
+    default 16
+    help
+      At least two slots are required for fragmented message reassembly.
+      Contiguous received prefixes can be compacted when a message uses
+      more fragments than the receive slot count.
+
+config SCTP_DATA_RETRY_MS
+    int "SCTP reliable DATA retry interval (ms)"
+    range 1 60000
+    default 750
+
+config SCTP_DATA_RETRY_LIMIT
+    int "SCTP reliable DATA retry limit"
+    range 1 64
+    default 8
+
+config DTLS_HANDSHAKE_TIMEOUT_MS
+    int "DTLS handshake deadline (ms)"
+    range 1000 120000
+    default 15000
+
+endif # LIBPEER
+
+config WEBRTC_PEER
+    bool "WebRTC peer facade"
+    default n
+    depends on LIBPEER
+    help
+      Build the application-facing WebRTC peer facade.
+
+config WEBRTC_PEER_MJPEG
+    bool "MJPEG DataChannel adapter"
+    default n
+    depends on WEBRTC_PEER
+    help
+      Build the MJPEG DataChannel chunking and pacing adapter.
+
+config WEBRTC_PEER_SIGNALING_APPRTC
+    bool "AppRTC signaling backend"
+    default n
+    depends on WEBRTC_PEER
+    help
+      Build the optional AppRTC signaling backend.
+
+config SRTP
+    bool "SRTP"
+    default n
+    help
+      Build the Secure RTP library.
+
+osource "$ATMODULE_PATH/Kconfig"
+
+endmenu
+
+menu "Legacy network compatibility"
+
+config LWIP_ALTCP
+    bool "lwIP ALTCP"
+    default n
+config LWIP_LP
+    bool "lwIP low power"
+    default n
+config HTTPD
+    bool "HTTP daemon (legacy)"
+    default n
+config HTTPS_OTA_USE_CA_CERT
+    bool "Use CA certificate for HTTPS OTA"
+    default n
+config HTTPS_OTA_USE_CLIENT_CERT
+    bool "Use client certificate for HTTPS OTA"
+    default n
+config HOSTROUTER
+    bool "Host router"
+    default n
+config LPAPP
+    bool "Low-power application"
+    default n
+config USE_LPAPP
+    bool "Use low-power application"
+    default n
+config SDIO_LPAPP
+    bool "Use SDIO low-power application"
+    default n
+config ATMODULE_NANO
+    bool "AT module nano mode"
+    default n
+config ATMODULE_NETHUB_WIFICHANNELAUTO
+    bool "AT module nethub channel auto"
+    default n
+config ATMODULE_WIFI
+    bool "AT module Wi-Fi"
+    default n
+config ATMODULE_WIFI_AP
+    bool "AT module Wi-Fi AP"
+    default n
+config ATMODULE_WIFI_STA
+    bool "AT module Wi-Fi station"
+    default n
+
+endmenu

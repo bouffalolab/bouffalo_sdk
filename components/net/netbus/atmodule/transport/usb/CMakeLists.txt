@@ -1,0 +1,6 @@
+sdk_generate_library()
+
+sdk_add_include_directories(.)
+
+sdk_library_add_sources_ifdef(CONFIG_ATMODULE_USB netbus_usbd_cdc_acm.c)
+sdk_library_add_sources_ifdef(CONFIG_ATMODULE_USB netbus_usbd_cdc_ecm.c)

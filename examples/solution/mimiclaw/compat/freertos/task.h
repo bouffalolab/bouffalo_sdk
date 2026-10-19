@@ -1,0 +1,6 @@
+#ifndef MIMICLAW_COMPAT_FREERTOS_TASK_H
+#define MIMICLAW_COMPAT_FREERTOS_TASK_H
+
+#include <task.h>
+
+#endif

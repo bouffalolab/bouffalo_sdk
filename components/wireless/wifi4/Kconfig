@@ -1,0 +1,17 @@
+menu "Wi-Fi 4"
+
+config STA_MAX
+    int "Maximum Wi-Fi stations"
+    default 5
+    range 1 32
+    help
+      Maximum number of station records compiled into the Wi-Fi 4 firmware.
+
+config VIRT_DEV_MAX
+    int "Maximum virtual Wi-Fi devices"
+    default 2
+    range 1 8
+    help
+      Maximum number of simultaneous virtual Wi-Fi interfaces.
+
+endmenu

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2024 Linaro Limited.
+
+# The focus of this flow is to check for external changes that will effect
+# the project.  Even if no code changes are happening, changes in external
+# distros or projects can invalidate our work and this flow lets us know
+
+name: libmetal Heath Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - docs/**
+
+  # Allows you to run this workflow manually from the Actions tab or gh API
+  workflow_dispatch:
+
+  # run weekly on Sunday at 5:10 AM UTC (9:10 PM US western)
+  schedule:
+    - cron:  '10 5 * * 0'
+
+jobs:
+  zephyr_build_main:
+    name: 'Zephyr build from latest on main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Zephyr Latest
+      id: build_Zephyr_latest
+      uses: ./.github/actions/build_ci
+      with:
+        target: zephyr-latest

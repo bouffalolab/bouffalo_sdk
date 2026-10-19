@@ -1,0 +1,17 @@
+mainmenu "SDK Configuration"
+
+# Preserve this example's ES8311 mono profile on its legacy DK targets.
+# Other boards and JY6316 use the BSP defaults; explicit settings still win.
+if BSP_AUDIO_PLAYER && MULTIMEDIA && !AUDIO_CODEC_JY6316_ENABLE
+if BOARD = "bl616dk" || BOARD = "bl618dgdk" || BOARD = "bl616cldk"
+
+config WAVE_PLAYER_OUT_CHANNELS
+    default 1
+
+config WAVE_PLAYER_REC_CHANNELS
+    default 1
+
+endif
+endif
+
+source "$BL_SDK_BASE/Kconfig"

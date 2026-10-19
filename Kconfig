@@ -1,0 +1,152 @@
+#
+# Bouffalo SDK Configuration (main menu)
+#
+
+mainmenu "Bouffalo SDK Configuration"
+
+# Load centralized board defaults before the common fallback defaults below.
+source "$BL_SDK_BASE/bsp/board/Kconfig"
+
+menu "Build Options"
+
+config BOUFFALO_SDK
+    bool
+    default y
+    help
+      Identify builds that use the Bouffalo SDK integration.
+
+config CHIP
+    string "SoC name"
+    default "$CHIP"
+    help
+      SoC selected by the Make bootstrap configuration.
+
+config BOARD
+    string "Board name"
+    default "$BOARD"
+    help
+      Board selected by the Make bootstrap configuration.
+
+config STRICT
+    bool "Strict compilation (treat warnings as errors)"
+    default n
+    help
+      Enable -Werror to treat all compiler warnings as errors.
+      -Wall is always enabled; this option additionally makes
+      any warning a hard build failure.
+
+config GCC_OPTIMISE_LEVEL
+    string "Optimization level"
+    default "-Os"
+    help
+      GCC optimization level used for the whole SDK, e.g. -O0, -Og, -Os, -O2.
+
+config CPU_ID
+    string "CPU core ID"
+    default ""
+    help
+      CPU core selected for a multi-core SoC, e.g. ap, np or lp.
+
+config CPU_MODEL
+    string "CPU model revision"
+    default ""
+    help
+      CPU model or silicon revision selected by the board.
+
+config VSCODE_PARSE_EN
+    bool "Generate VS Code parse data"
+    default y
+    help
+      Enable build metadata used by VS Code source parsing.
+
+config EXPORT_COMPILE_COMMANDS
+    bool "Export compile commands"
+    default n
+    help
+      Generate compile_commands.json for editor and analysis tools.
+
+config PROJECT_SDK_VERSION
+    string "Project SDK version override"
+    default "1.1.1"
+    help
+      SDK version embedded in generated firmware metadata.
+
+config DBG_RUN_ON_FPGA
+    bool "Run wireless stacks on FPGA"
+    default n
+    help
+      Enable wireless timing and behavior intended for FPGA execution.
+
+config BUILD_ROM_CODE
+    bool "Build wireless ROM code"
+    default n
+    help
+      Build wireless controller or stack code for a ROM image.
+
+config SKIP_COMBINE
+    bool "Skip firmware image post-processing"
+    default n
+    help
+      Keep the raw linked binary and skip the firmware image combine step.
+      This is used by low-power firmware images that are embedded into a
+      separate application image.
+
+config DEBUG
+    bool "Enable debug build"
+    default y
+    help
+      Enable debug information and debug-oriented runtime behavior.
+
+config ROMAPI
+    bool "Use ROM API"
+    default y
+    help
+      Link against the ROM resident API of the selected chip.
+
+config CONSOLE_UART_BAUDRATE
+    int "Console UART baudrate"
+    default 2000000
+    help
+      Baudrate of the default console UART.
+
+config COMX
+    string "Console serial port"
+    default "COM5"
+    help
+      Host serial port used by flash/download tools.
+
+config FLASH_AUTO_2LINE_FALLBACK
+    bool "Retry flash initialization in two-line mode"
+    default n
+    help
+      Validate the configured quad read mode first. If validation fails,
+      retry initialization in DIO or DO mode according to c_read_support.
+
+config XTAL_POWER_TYPE_ACTIVE
+    bool "Use active crystal power mode"
+    default n
+    help
+      Enable active crystal power type for the external oscillator.
+
+config ANTI_ROLLBACK
+    bool "Enable anti-rollback"
+    default n
+    help
+      Enable firmware anti-rollback support.
+
+config APP_ANTI_ROLLBACK_VER
+    int "Application anti-rollback version"
+    default 0
+    depends on ANTI_ROLLBACK
+    help
+      Minimum allowed application version for anti-rollback checking.
+
+endmenu
+
+#
+# Include all other component Kconfigs
+#
+source "$BL_SDK_BASE/components/Kconfig"
+source "$BL_SDK_BASE/bsp/Kconfig"
+osource "$BL_SDK_BASE/drivers/soc/Kconfig"
+osource "$BL_SDK_BASE/drivers/rfparam/Kconfig"

@@ -1,0 +1,30 @@
+.PHONY: pack_clean menuconfig guiconfig config-show kconfig-check diffconfig
+
+# Pack built outputs and clean.
+pack_clean::
+	tar czvf $(PROJ_NAME)_imgs.tar.gz $(BUILD_DIR)/build_out/$(PROJ_NAME).*
+	$(CMAKE) -E remove_directory "$(BUILD_DIR)"
+
+menuconfig: config
+	$(CMAKE) -E copy "$(CONFIG_AUTOCONFIG_DEF)" "$(CONFIG_AUTOCONFIG_MENUCONFIG)"
+	KCONFIG_CONFIG="$(CONFIG_AUTOCONFIG_MENUCONFIG)" KCONFIG_CONFIG_SAVE_OLD=n $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/menuconfig.py" "$(CONFIG_KCONFIG_ENTRY)"
+
+guiconfig: config
+	$(CMAKE) -E copy "$(CONFIG_AUTOCONFIG_DEF)" "$(CONFIG_AUTOCONFIG_MENUCONFIG)"
+	KCONFIG_CONFIG="$(CONFIG_AUTOCONFIG_MENUCONFIG)" KCONFIG_CONFIG_SAVE_OLD=n $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/guiconfig.py" "$(CONFIG_KCONFIG_ENTRY)"
+
+config-show:
+	@cat "$(DEFCONFIG_FILE)"
+
+kconfig-check:
+	BL_SDK_BASE="$(BL_SDK_BASE)" $(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/kconfig_check.py" \
+		--kconfig "$(CONFIG_KCONFIG_ENTRY)"
+
+diffconfig::
+	@args="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$args" ]; then \
+		$(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/diffconfig.py" \
+			"$(DEFCONFIG_FILE).old" "$(DEFCONFIG_FILE)"; \
+	else \
+		$(PYTHON) "$(BL_SDK_BASE)/tools/kconfig/diffconfig.py" $$args; \
+	fi

@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2020 STMicroelectronics
+
+name: open-amp lib Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - docs/**
+      - cmake/**
+      - scripts/**
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - docs/**
+      - cmake/**
+      - scripts/**
+
+jobs:
+  platform_builds:
+    name: check builds on different platforms
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout open-amp
+      uses: actions/checkout@v4
+      with:
+        path: open-amp
+    - name: Checkout libmetal
+      uses: actions/checkout@v4
+      with:
+        repository: OpenAMP/libmetal
+        path: libmetal
+    - name: Checkout openamp-system-reference
+      uses: actions/checkout@v4
+      with:
+        repository: OpenAMP/openamp-system-reference
+        path: openamp-system-reference
+    - name: build for Linux
+      id: build_linux
+      uses: ./open-amp/.github/actions/build_ci
+      with:
+        target: linux
+    - name: build for generic arm
+      id: build_generic
+      uses: ./open-amp/.github/actions/build_ci
+      with:
+        target: generic
+
+  # Break the zephyr builds into their own job as the common runner was
+  # running out of space when runs were together
+  # Also, as the longest running jobs, this allows them to run in ||
+  zephyr_build_known_good_version:
+    name: Zephyr build with a version that is known to work
+    runs-on: ubuntu-latest
+    steps:
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+    - name: Checkout open-amp
+      uses: actions/checkout@v4
+      with:
+        path: open-amp
+    - name: Checkout libmetal
+      uses: actions/checkout@v4
+      with:
+        repository: OpenAMP/libmetal
+        path: libmetal
+    - name: Checkout openamp-system-reference
+      uses: actions/checkout@v4
+      with:
+        repository: OpenAMP/openamp-system-reference
+        path: openamp-system-reference
+    - name: build for Zephyr (Known Good)
+      id: build_Zephyr
+      uses: ./open-amp/.github/actions/build_ci
+      with:
+        target: zephyr

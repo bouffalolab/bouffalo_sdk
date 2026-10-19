@@ -1,0 +1,106 @@
+Support for MACSW platform
+=========================
+
+Version used
+------------
+version: 2.10
+commit: cff80b4f7d3c0a47c052e8187d671710f48939e4
+
+
+Build configuration
+-------------------
+The wpa_supplicant build configuration for MACSW platform is located in the file src/utils/build_config.h
+(under the CONFIG_MACSW_LWIP marco).
+
+WPA macros are defined depending of the feature enabled in the MACSW firmware build.
+
+
+MACSW specific files
+-------------------
+- wpa_supplicant/main_macsw.c:
+Main function for the WPA task
+
+- wpa_supplicant/ctrl_iface_macsw.c:
+Strip down version of ctrl_iface_udp.c. Only global command interface is implemented
+
+- src/utils/os_macsw.c
+Minimal implementation of OS level function used by wpa_supplicant
+
+- src/l2_packet/l2_packet_macsw.c
+Implementation of wpa_supplicant's L2 interface using net_al API
+
+- ./src/drivers/driver_macsw.c
+Implementation of wpa_supplicant's driver interface to interact with fhost layer (using CFGMACSW messages)
+
+
+wpa_supplicant Patch
+--------------------
+In addition to MACSW specific files, several original files have custom patches:
+- In the patch is specific to MACSW platform then is should defined under a CONFIG_MACSW macro so that
+  it is easy to identify when rebasing wpa_supplicant code.
+
+- If the patch is generic then it should be pushed upstream whenever possible, and the commit
+  message shall start with "[WPA][MACSW]" so that they could be easily identify.
+  Also, to ease the rebase process, the patch should not impact macsw specific files.
+
+
+How to update
+-------------
+This assume a git repository, as doing the same thing with SVN would be much more complicated
+and leave no room for error.
+
+- Identify all files with "CONFIG_MACSW" section
+  find . -name "*.[ch]" -exec grep --color -Hn -E 'CONFIG_(LWIP|(DRIVER_)?MACSW)' \{} \;
+
+- Override files with newer code base, and manually merge all files identified in previous step
+
+- Update version in this file, and commit the rebase with commit message starting with "[WPA][REBASE]"
+  At this point the code may not compile, but it's OK.
+
+- Then identify the previous rebase commit
+  git log --oneline --grep '\[REBASE\]'
+  1439504 (HEAD) [WPA][REBASE] refs: #1400. rebase as of 2021-04-21
+  0d79e84 [WPA][REBASE] refs: #1200. rebase as of  of 2020-05-20
+  ea57639 [WPA][REBASE] refs: #1000. rebase as of  of 2019-06-22
+  [...]
+  => In this fake example the previous rebase (before the one we just did) is commit 0d79e84
+
+- and list all patches done on original files since
+  git log --oneline --grep '\[MACSW\]' 0d79e84..
+  9cd1f3f [WPA][MACSW] refs: #1250. patch3 for wpa_supplicant
+  80be775 [WPA][MACSW] refs: #1200. patch2 for wpa_supplicant
+  0b3e0c6 [WPA][MACSW] refs: #1200. patch1 for wpa_supplicant
+
+- For each patches, re-apply them in order and update the issue ticket in the commit message.
+  Note: If the path has been pushed and merged upstream then there is no need to re-apply it
+  as it is already present in the rebase.
+
+  for patch in 0b3e0c6 80be775 9cd1f3f
+  do
+     git am $patch
+     git commit --amend => change ticket id in commit message
+  done
+
+- At this point your git history should look something like
+  git log --oneline
+  a563ad1 (HEAD) [WPA][MACSW] refs: #1400. patch3 for wpa_supplicant
+  f1a4aa3 [WPA][MACSW] refs: #1400. patch2 for wpa_supplicant
+  e559272 [WPA][MACSW] refs: #1400. patch1 for wpa_supplicant
+  1439504 [WPA][REBASE] refs: #1400. rebase as of 2021-04-21
+  [...]
+
+  And the code should compile
+
+- If the code doesn't compile there are 2 options
+    - MACSW specific files needs to be updated (e.g. API update) then create a new patch for it
+    - wpa supplicant code doesn't compile (unlikely but still possible) in this case
+      create a new patch for it using '[WPA][MACSW]' prefix in the commit message.
+      If applicable send the patch upstream
+
+  Any patches created a this step should be posted for review
+
+- Once the code compile test it !!
+  If some test are failing, create new patches (or amend previous one if it's a merge error)
+  If new patches are created, follow the same rules as defined in previous step.
+
+- Once every thing is ready and reviewed push you modifications

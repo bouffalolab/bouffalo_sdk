@@ -1,0 +1,14 @@
+mainmenu "SDK Configuration"
+
+source "$BL_SDK_BASE/Kconfig"
+
+menu "Example Configuration"
+
+config EXAMPLE_KYS_V2_POLL_MODE
+    bool "Use polling mode"
+    default n
+    help
+      Enable polling mode for this example. If disabled, the example uses
+      keyscan interrupts.
+
+endmenu

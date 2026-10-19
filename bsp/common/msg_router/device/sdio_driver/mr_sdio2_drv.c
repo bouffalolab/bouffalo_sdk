@@ -1,0 +1,465 @@
+/**
+ * @file mr_sdio2_drv.c
+ * @brief SDIO2 driver wrapper implementation
+ */
+
+#include "bflb_mtimer.h"
+#include "bflb_gpio.h"
+#include "bflb_irq.h"
+#include "bflb_sdio2.h"
+
+#if defined(BL616)
+#include "bl616_glb.h"
+#elif defined(BL616CL)
+#include "bl616cl_glb.h"
+#endif
+
+#include "board.h"
+#include "board_gpio.h"
+
+#include "mr_frame_buff_ctrl.h"
+#include "mr_msg_ctrl.h"
+
+#define DBG_TAG "MR_SDIO2"
+#include "log.h"
+
+/*****************************************************************************
+ * Macro Definitions
+ *****************************************************************************/
+
+/* #define SDIO2_DBG(a, ...) LOG_I(a, ##__VA_ARGS__) */
+#define SDIO2_DBG(a, ...)
+
+/** SDIO2 test size in bytes */
+#define SDIO2_TEST_SIZE (512 * 3)
+
+/*****************************************************************************
+ * Global Variables
+ *****************************************************************************/
+
+/** Download push and completion counters */
+static volatile uint32_t dnld_push_cnt, dnld_cpl_cnt;
+/** Upload push and completion counters */
+static volatile uint32_t upld_push_cnt, upld_cpl_cnt;
+/** SDIO2 device handle */
+static struct bflb_device_s *sdio2_hd;
+
+static volatile bool sdio2_ready_flag = false;
+static mr_msg_ctrl_priv_t *sdio2_msg_ctrl;
+
+/*****************************************************************************
+ * Private Functions
+ *****************************************************************************/
+
+static void sdio2_irq_cb(void *arg, uint32_t irq_event, bflb_sdio2_trans_desc_t *trans_desc);
+
+/**
+ * @brief Prepare SDIO2 hardware resources
+ * @retval None
+ * @note Enables SDIO2 clock/reset routing and configures board SDIO GPIO pins
+ */
+static void sdio2_hw_prepare(void)
+{
+#if defined(BL616)
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_USB20_SDU);
+    GLB_Config_SDIO_Host_Reset_System(0);
+    GLB_Config_SDIO_Host_Reset_SDU(1);
+    GLB_Config_SDIO_Host_Interrupt_CPU(1);
+#elif defined(BL616CL)
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_SDU);
+    GLB_Config_SDIO_Host_Reset_System(0);
+    GLB_Config_SDIO_Host_Reset_SDU(1);
+    GLB_Config_SDIO_Host_Interrupt_CPU(1);
+#elif defined(BL602)
+    /* No clock gating for BL602 */
+#endif
+
+    board_sdio_gpio_init();
+}
+
+/**
+ * @brief Prepare SDIO2 driver for low power entry
+ * @retval None
+ * @note Marks SDIO2 not ready, disables IRQs, reports pending transfers as failed, then deinitializes SDIO2
+ */
+static void sdio2_lowpower_prepare(void)
+{
+    mr_msg_ctrl_priv_t *msg_ctrl = sdio2_msg_ctrl;
+    mr_frame_elem_t *frame_elem;
+
+    sdio2_ready_flag = false;
+
+    if (sdio2_hd != NULL) {
+        bflb_irq_disable(sdio2_hd->irq_num);
+    }
+#ifdef SDIO2_SOFT_RST_INT_SUP
+    bflb_irq_disable(SDIO2_SOFT_RST_IRQ_NUM);
+    bflb_irq_clear_pending(SDIO2_SOFT_RST_IRQ_NUM);
+#endif
+    board_sdio_gpio_deinit();
+
+    //mr_msg_host_reset_cb(msg_ctrl);
+    {
+        bflb_sdio2_trans_desc_t trans_desc;
+
+        while (bflb_sdio2_dnld_port_pop(sdio2_hd, &trans_desc) == 0) {
+            frame_elem = (mr_frame_elem_t *)(trans_desc.user_arg);
+
+            frame_elem->data_size = 0;
+            mr_msg_dnld_recv_done_cb(msg_ctrl, frame_elem, false);
+        }
+
+        while (bflb_sdio2_upld_port_pop(sdio2_hd, &trans_desc) == 0) {
+            frame_elem = (mr_frame_elem_t *)(trans_desc.user_arg);
+
+            mr_msg_upld_send_done_cb(msg_ctrl, frame_elem, false);
+        }
+    }
+
+    if (sdio2_hd != NULL) {
+        bflb_sdio2_deinit(sdio2_hd);
+    }
+}
+
+/**
+ * @brief Restore SDIO2 driver after low power exit
+ * @retval None
+ * @note Reinitializes SDIO2 hardware and restores the IRQ callback
+ */
+static void sdio2_lowpower_restore(void)
+{
+    if (sdio2_hd == NULL) {
+        return;
+    }
+
+    sdio2_hw_prepare();
+    bflb_sdio2_init(sdio2_hd, SDIO2_TEST_SIZE);
+    bflb_sdio2_irq_attach(sdio2_hd, sdio2_irq_cb, sdio2_msg_ctrl);
+}
+
+/**
+ * @brief SDIO2 download completion interrupt callback
+ * @param arg Callback argument
+ * @param trans_desc Transaction descriptor
+ * @retval None
+ */
+static void sdio2_dnld_irq_callback(void *arg, bflb_sdio2_trans_desc_t *trans_desc, bool success)
+{
+    if (arg == NULL || trans_desc == NULL) {
+        return;
+    }
+
+    mr_msg_ctrl_priv_t *msg_ctrl = (mr_msg_ctrl_priv_t *)arg;
+    mr_frame_elem_t *frame_elem = (mr_frame_elem_t *)(trans_desc->user_arg);
+
+    frame_elem->data_size = trans_desc->data_len;
+    mr_msg_dnld_recv_done_cb(msg_ctrl, frame_elem, success);
+
+    dnld_cpl_cnt++;
+}
+
+/**
+ * @brief SDIO2 upload completion interrupt callback
+ * @param arg Callback argument
+ * @param trans_desc Transaction descriptor
+ * @param success Operation success flag
+ * @retval None
+ */
+static void sdio2_upld_irq_callback(void *arg, bflb_sdio2_trans_desc_t *trans_desc, bool success)
+{
+    if (arg == NULL || trans_desc == NULL) {
+        return;
+    }
+
+    mr_msg_ctrl_priv_t *msg_ctrl = (mr_msg_ctrl_priv_t *)arg;
+    mr_frame_elem_t *frame_elem = (mr_frame_elem_t *)(trans_desc->user_arg);
+
+    mr_msg_upld_send_done_cb(msg_ctrl, frame_elem, success);
+
+    upld_cpl_cnt++;
+}
+
+#ifdef SDIO2_SOFT_RST_INT_SUP
+/**
+ * @brief SDIO2 soft reset interrupt callback
+ * @param arg Callback argument
+ * @retval None
+ */
+static void sdio2_reset_irq_callback(void *arg)
+{
+    LOG_W("\r\n***** sdio2 reset! *****\r\n");
+    sdio2_lowpower_prepare();
+    sdio2_lowpower_restore();
+    mr_msg_host_reset_cb((mr_msg_ctrl_priv_t *)arg);
+}
+#endif
+
+/**
+ * @brief SDIO2 interrupt callback dispatcher
+ * @param arg Callback argument
+ * @param irq_event Interrupt event type
+ * @param trans_desc Transaction descriptor
+ * @retval None
+ */
+static void sdio2_irq_cb(void *arg, uint32_t irq_event, bflb_sdio2_trans_desc_t *trans_desc)
+{
+    switch (irq_event) {
+        case SDIO2_IRQ_EVENT_DNLD_CPL:
+            sdio2_dnld_irq_callback(arg, trans_desc, true);
+            break;
+
+        case SDIO2_IRQ_EVENT_UPLD_CPL:
+            sdio2_upld_irq_callback(arg, trans_desc, true);
+            break;
+
+#ifdef SDIO2_SOFT_RST_INT_SUP
+        case SDIO2_IRQ_EVENT_SOFT_RESET:
+            sdio2_reset_irq_callback(arg);
+            break;
+#endif
+
+        case SDIO2_IRQ_EVENT_ERR_CRC:
+            LOG_E("sdio2 error: CRC ERROR!\r\n");
+            sdio2_dnld_irq_callback(arg, trans_desc, false);
+            break;
+        case SDIO2_IRQ_EVENT_ERR_ABORT:
+            LOG_E("sdio2 error: ABORT!\r\n");
+            sdio2_dnld_irq_callback(arg, trans_desc, false);
+            break;
+        case SDIO2_IRQ_EVENT_ERR_UNKNOW:
+            LOG_E("sdio2 error: UNKNOW!\r\n");
+            break;
+        default:
+            LOG_E("irq_event %d\r\n", irq_event);
+            break;
+    }
+}
+
+/**
+ * @brief Initialize SDIO2 driver
+ * @param msg_ctrl Pointer to message controller private structure
+ * @retval 0 Success
+ * @retval -1 Error
+ */
+static int sdio2_driver_init(mr_msg_ctrl_priv_t *msg_ctrl)
+{
+    LOG_I("sdio2_driver_init\r\n");
+
+    sdio2_hw_prepare();
+
+    /* Get SDIO2 device handle */
+    sdio2_hd = bflb_device_get_by_name("sdio2");
+    if (sdio2_hd == NULL) {
+        LOG_E("get device failed\r\n");
+        return -1;
+    }
+
+    sdio2_msg_ctrl = msg_ctrl;
+    sdio2_ready_flag = false;
+
+    /* Initialize SDIO2 */
+    bflb_sdio2_init(sdio2_hd, SDIO2_TEST_SIZE);
+
+    /* Attach interrupt callback */
+    bflb_sdio2_irq_attach(sdio2_hd, sdio2_irq_cb, msg_ctrl);
+
+    LOG_I("sdio2 init done, wait host ready...\r\n");
+
+    return 0;
+}
+
+/**
+ * @brief Prepare SDIO driver for low power entry
+ * @retval 0 Success
+ * @retval -1 Driver is not initialized
+ */
+int mr_sdio_drv_lowpower_prepare(void)
+{
+    if (sdio2_hd == NULL || sdio2_msg_ctrl == NULL) {
+        LOG_E("sdio2 prepare lowpower failed: driver is not initialized\r\n");
+        return -1;
+    }
+
+    LOG_W("\r\n***** sdio2 prepare lowpower *****\r\n");
+    sdio2_lowpower_prepare();
+
+    return 0;
+}
+
+/**
+ * @brief Restore SDIO driver after low power exit
+ * @retval 0 Success
+ * @retval -1 Driver is not initialized
+ * @note Notifies the message controller to restart host synchronization after SDIO2 restore
+ */
+int mr_sdio_drv_lowpower_restore(void)
+{
+    if (sdio2_hd == NULL || sdio2_msg_ctrl == NULL) {
+        LOG_E("sdio2 restore failed: driver is not initialized\r\n");
+        return -1;
+    }
+
+    LOG_W("\r\n***** sdio2 restore request *****\r\n");
+    sdio2_lowpower_restore();
+    mr_msg_host_reset_cb(sdio2_msg_ctrl);
+
+    return 0;
+}
+
+/**
+ * @brief Check if SDIO2 is ready
+ * @retval 0 SDIO2 is ready
+ * @retval -1 SDIO2 is not ready
+ */
+static int sdio2_is_ready(void)
+{
+    if (bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_FUNC_HOST_READY, 0) == 0) {
+        sdio2_ready_flag = false;
+        return -1;
+    }
+
+    LOG_W("sdio2 host ready!\r\n");
+
+    /* Display bus configuration */
+    LOG_I("sdio2 bus width: %d\r\n", bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_BUS_WIDTH, 0));
+    LOG_I("sdio2 block size: %d\r\n", bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_FUNC_BLK_SIZE, 0));
+    LOG_I("sdio dnld max size %d\r\n", bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_DNLD_MAX_SIZE, 0));
+    LOG_I("sdio upld max size %d\r\n", bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_UPLD_MAX_SIZE, 0));
+
+    sdio2_ready_flag = true;
+    return 0;
+}
+
+/**
+ * @brief Check if SDIO2 download is busy
+ * @retval 0 Download is not busy
+ * @retval 1 Download is busy
+ */
+static int sdio2_dnld_is_busy(void)
+{
+    if (sdio2_ready_flag == false) {
+        LOG_E("sdio2 not ready\r\n");
+        return -1;
+    }
+
+    if (bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_DNLD_QUEUE_AVAILABLE, 0) > 0) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+/**
+ * @brief Start SDIO2 download operation
+ * @param frame_elem Frame element to download
+ * @param arg User argument
+ * @retval 0 Success
+ * @retval -1 Error
+ */
+static int sdio2_dnld_start(mr_frame_elem_t *frame_elem)
+{
+    int ret;
+
+    if (sdio2_ready_flag == false) {
+        LOG_E("sdio2 not ready\r\n");
+        return -1;
+    }
+
+    bflb_sdio2_trans_desc_t dnld_desc = {
+        .buff = frame_elem->buff_addr,
+        .buff_len = frame_elem->buff_size,
+        .data_len = 0,
+        .user_arg = frame_elem,
+    };
+
+    ret = bflb_sdio2_dnld_port_push(sdio2_hd, &dnld_desc);
+    if (ret != 0) {
+        LOG_E("sdio2 dnld push failed, ret: %d\r\n", ret);
+        return ret;
+    }
+
+    dnld_push_cnt++;
+    SDIO2_DBG("sdio2 dnld push, buff: %p, size: %d\r\n", frame_elem->buff_addr, frame_elem->data_size);
+
+    return 0;
+}
+
+/**
+ * @brief Check if SDIO2 upload is busy
+ * @retval 0 Upload is not busy
+ * @retval 1 Upload is busy
+ */
+static int sdio2_upld_is_busy(void)
+{
+    if (sdio2_ready_flag == false) {
+        LOG_E("sdio2 not ready\r\n");
+        return -1;
+    }
+
+    if (bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_UPLD_QUEUE_AVAILABLE, 0) > 0) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+/**
+ * @brief Start SDIO2 upload operation
+ * @param frame_elem Frame element to upload
+ * @param arg User argument
+ * @retval 0 Success
+ * @retval -1 Error
+ */
+static int sdio2_upld_start(mr_frame_elem_t *frame_elem)
+{
+    int ret;
+    uint16_t blk_size;
+
+    if (sdio2_ready_flag == false) {
+        LOG_E("sdio2 not ready\r\n");
+        return -1;
+    }
+
+    bflb_sdio2_trans_desc_t upld_desc = {
+        .buff = frame_elem->buff_addr,
+        .buff_len = frame_elem->buff_size,
+        .data_len = frame_elem->data_size,
+        .user_arg = frame_elem,
+    };
+
+    blk_size = (uint16_t)bflb_sdio2_feature_control(sdio2_hd, SDIO2_CMD_GET_FUNC_BLK_SIZE, 0);
+    if (blk_size == 0) {
+        blk_size = 512; /* Default block size */
+        LOG_E("sdio2 upld blk_size is 0, set to default 512\r\n");
+    }
+
+    if (upld_desc.data_len >= 64) {
+        upld_desc.data_len = (upld_desc.data_len + blk_size - 1) & ~(blk_size - 1); /* Align up to blk_size */
+        if (upld_desc.buff_len < upld_desc.data_len) {
+            upld_desc.buff_len = upld_desc.data_len;
+        }
+    }
+
+    ret = bflb_sdio2_upld_port_push(sdio2_hd, &upld_desc);
+    if (ret != 0) {
+        LOG_E("sdio2 upld push failed, ret: %d\r\n", ret);
+        return ret;
+    }
+
+    upld_push_cnt++;
+    SDIO2_DBG("sdio2 upld push, buff: %p, size: %d\r\n", frame_elem->buff_addr, frame_elem->data_size);
+
+    return 0;
+}
+
+/* SDIO2 ops for message controller */
+mr_msg_ctrl_ops_t msg_ctrl_sdio_ops = {
+    .name = "SDIO2",
+    .dev_init = sdio2_driver_init,
+    .dev_deinit = NULL,
+    .dev_is_ready = sdio2_is_ready,
+    .dev_dnld_is_busy = sdio2_dnld_is_busy,
+    .dev_upld_is_busy = sdio2_upld_is_busy,
+    .dev_dnld_start = sdio2_dnld_start,
+    .dev_upld_start = sdio2_upld_start,
+};

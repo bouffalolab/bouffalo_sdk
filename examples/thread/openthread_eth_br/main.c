@@ -1,0 +1,357 @@
+#include <assert.h>
+
+#if defined(BL616)
+#include "bl616.h"
+#elif defined(BL702L)
+#include "bl702l.h"
+#endif
+
+#include <bflb_irq.h>
+#include <bflb_uart.h>
+#include <bflb_wdg.h>
+#include <bflb_emac.h>
+#include <bl616_glb.h>
+
+#include <rfparam_adapter.h>
+#include <bl_sys.h>
+#include <bflb_mtd.h>
+
+#include "eth_phy.h"
+#include "ephy_general.h"
+
+#include <FreeRTOS.h>
+#include <task.h>
+#include <timers.h>
+
+#include "lwip/opt.h"
+#include "lwip/init.h"
+#include "netif/etharp.h"
+#include "lwip/netif.h"
+#include "lwip/tcpip.h"
+#include "lwip/dhcp6.h"
+#if LWIP_DHCP
+#include "lwip/dhcp.h"
+#endif
+#include "lwip_netif_emac.h"
+
+#include <lmac154.h>
+#if defined (BL616) || defined (BL702L)
+#include <lmac154_fpt.h>
+#endif
+#include <zb_timer.h>
+
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#include <openthread/thread.h>
+#include <openthread/dataset_ftd.h>
+#include <openthread/cli.h>
+#include <openthread_port.h>
+#include <openthread_br.h>
+#include <otbr_rtos_lwip.h>
+#if CONFIG_OTBR
+#include <openthread_rest.h>
+#endif
+
+#include "board.h"
+
+#define DBG_TAG "MAIN"
+#include "log.h"
+
+#define LWIP_EMAC_RX_BUFF_CNT      (10)
+#define LWIP_EMAC_TX_BUFF_CNT      (6)
+#define LWIP_EMAC_FRAME_SIZE_MIN   (14 + 46 + 4)
+#define LWIP_EMAC_FRAME_SIZE_MAX   (14 + 4 + 1500 + 4)
+#define LWIP_EMAC_BUFFER_ALIGNMENT (32U)
+#define LWIP_EMAC_NETIF_MTU        (1500)
+#define LWIP_EMAC_RX_STACK_SIZE    (512)
+#define LWIP_EMAC_TX_BUF_TIMEOUT   (10)
+#define LWIP_EMAC_BUFFER_SIZE      \
+    ((LWIP_EMAC_FRAME_SIZE_MAX + LWIP_EMAC_BUFFER_ALIGNMENT - 1U) & ~(LWIP_EMAC_BUFFER_ALIGNMENT - 1U))
+
+#if (defined(EMAC_SPEED_10M_SUPPORT) && EMAC_SPEED_10M_SUPPORT)
+#define LWIP_EMAC_PHY_ABILITY \
+    (EPHY_ABILITY_100M_TX | EPHY_ABILITY_100M_FULL_DUPLEX | EPHY_ABILITY_10M_T | EPHY_ABILITY_10M_FULL_DUPLEX)
+#else
+#define LWIP_EMAC_PHY_ABILITY (EPHY_ABILITY_100M_TX | EPHY_ABILITY_100M_FULL_DUPLEX)
+#endif
+
+#define THREAD_CHANNEL     15
+#define THREAD_PANID       0x6677
+#define THREAD_EXTPANID    { 0x11, 0x11, 0x11, 0x11, 0x22, 0x22, 0x22, 0x22 }
+#define THREAD_NETWORK_KEY { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff }
+
+static struct bflb_device_s *uart0;
+
+/* global network interface struct define */
+static struct netif gnetif;
+static lwip_emac_port_ctx_t emac_ctx = {
+    .task_name = "emac0_rx",
+    .hostname = "emac0",
+};
+/* phy cfg */
+static const eth_phy_init_cfg_t emac_phy_cfg = {
+    .speed_mode = EPHY_SPEED_MODE_AUTO_NEGOTIATION,
+    .local_auto_negotiation_ability = LWIP_EMAC_PHY_ABILITY,
+};
+/* emac cfg */
+static const struct bflb_emac_config_s emac_hw_cfg = {
+    .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
+    .clk_internal_mode = false,
+#if defined(BL616CL) || defined(BL618DG)
+    .md_clk_div = 79,
+#else
+    .md_clk_div = 39,
+#endif
+    .min_frame_len = LWIP_EMAC_FRAME_SIZE_MIN,
+    .max_frame_len = LWIP_EMAC_FRAME_SIZE_MAX,
+};
+static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(32)
+    emac_tx_buffer[LWIP_EMAC_TX_BUFF_CNT][LWIP_EMAC_BUFFER_SIZE];
+static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(32)
+    emac_rx_buffer[LWIP_EMAC_RX_BUFF_CNT][LWIP_EMAC_BUFFER_SIZE];
+
+/****************************************************************************
+ * Functions
+ ****************************************************************************/
+extern void __libc_init_array(void);
+extern void shell_init_with_task(struct bflb_device_s *shell);
+
+void lmac154_app_init(void)
+{
+    irq_callback lmac154_isr_callback;
+
+    lmac154_init();
+    lmac154_enableCoex();
+    lmac154_setStd2015Extra(true);
+    lmac154_setTxRetry(0);
+    lmac154_fptClear();
+    lmac154_setEnhAckWaitTime((LMAC154_AIFS + 10 + (6 + 42) * 2) << LMAC154_US_PER_SYMBOL_BITS);
+    lmac154_setRxStateWhenIdle(true);
+
+#if defined(BL702L)
+    lmac154_setTxRxTransTime(0xA0);
+#endif
+#if (defined (BL616) || defined(BL702L))
+    lmac154_setFramePendingMode(LMAC154_FPT_ANY);
+#endif
+    zb_timer_cfg(bflb_mtimer_get_time_us() >> LMAC154_US_PER_SYMBOL_BITS);
+    lmac154_disableRx();
+
+    lmac154_isr_callback = (irq_callback)lmac154_getInterruptCallback();
+    bflb_irq_attach(M154_INT_IRQn, lmac154_isr_callback, NULL);
+    bflb_irq_enable(M154_INT_IRQn);
+}
+
+void vApplicationTickHook( void )
+{
+#ifdef BL616
+    lmac154_monitor(10000);
+#endif
+}
+
+otbr_lwip_netif_type_t otbr_getInfraNetif(void)
+{
+    return (otbr_lwip_netif_type_t)&gnetif;
+}
+
+static void netif_status_callback(struct netif *netif)
+{
+    typedef enum {
+        ADDRESS_SHOW_IDX_IPV4 = 0,
+        ADDRESS_SHOW_IDX_IPV6 = 1,
+    } address_shown_t;
+    static address_shown_t address_show_msk = 0;
+    bool isIPv4AddressAssigned = false;
+
+    if (netif->flags & NETIF_FLAG_UP) {
+        if (!ip4_addr_isany(netif_ip4_addr(netif)) && (0 == (address_show_msk & (1 << ADDRESS_SHOW_IDX_IPV4)))) {
+            printf("IPv4 address: %s\r\n", ip4addr_ntoa(netif_ip4_addr(netif)));
+            printf("IPv4 mask: %s\r\n", ip4addr_ntoa(netif_ip4_netmask(netif)));
+            printf("Gateway address: %s\r\n", ip4addr_ntoa(netif_ip4_gw(netif)));
+            address_show_msk |= (1 << ADDRESS_SHOW_IDX_IPV4);
+            isIPv4AddressAssigned = true;
+        }
+
+        for (uint32_t i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
+            if (!ip6_addr_isany(netif_ip6_addr(netif, i)) && ip6_addr_ispreferred(netif_ip6_addr_state(netif, i))) {
+                const ip6_addr_t *ip6addr = netif_ip6_addr(netif, i);
+                if (ip6_addr_isany(ip6addr)) {
+                    continue;
+                }
+
+                if (ip6_addr_islinklocal(ip6addr)) {
+                    if (0 == (address_show_msk & (1 << (i + ADDRESS_SHOW_IDX_IPV6)))) {
+                        printf("IPv6 linklocal address: %s\r\n", ip6addr_ntoa(ip6addr));
+                    }
+                } else {
+                    if (0 == (address_show_msk & (1 << (i + ADDRESS_SHOW_IDX_IPV6)))) {
+                        printf("IPv6 address %d: %s\r\n", i, ip6addr_ntoa(ip6addr));
+                    }
+                }
+
+                address_show_msk |= (1 << (i + ADDRESS_SHOW_IDX_IPV6));
+            }
+        }
+
+        if (isIPv4AddressAssigned) {
+            if (false == otIp6IsEnabled(otrGetInstance())) {
+                printf("IPv4 address is assigned, start Thread stack.\r\n");
+                otIp6SetEnabled(otrGetInstance(), true);
+                otThreadSetEnabled(otrGetInstance(), true);
+            }
+            otbr_instance_routing_init();
+        }
+
+    } else {
+        address_show_msk = 0;
+        printf("Interface is down status.\r\n");
+    }
+}
+
+void lwip_status_update_task(void *pvParameters)
+{
+    LOG_I("lwip_status_update_task Run...\r\n");
+
+    /* Infinite loop */
+    while (1) {
+        vTaskDelay(200);
+        eth_link_state_update(&gnetif);
+    }
+}
+
+/**
+  * @brief  Setup the network interface
+  * @param  None
+  * @retval None
+  */
+static void netif_config(void *arg)
+{
+    ip_addr_t ipaddr;
+    ip_addr_t netmask;
+    ip_addr_t gw;
+    lwip_emac_port_cfg_t emac_port_cfg = {
+        .port = 0,
+        .mdio_port = 0,
+        .phy_scan_start = EPHY_ADDR_MIN,
+        .phy_scan_end = EPHY_ADDR_MAX,
+        .mtu = LWIP_EMAC_NETIF_MTU,
+        .rx_stack_size = LWIP_EMAC_RX_STACK_SIZE,
+        .tx_buf_timeout = LWIP_EMAC_TX_BUF_TIMEOUT,
+        .buffer_stride = LWIP_EMAC_BUFFER_SIZE,
+        .phy_cfg = emac_phy_cfg,
+        .emac_cfg = emac_hw_cfg,
+        .tx_buffer = emac_tx_buffer,
+        .tx_buffer_size = sizeof(emac_tx_buffer),
+        .rx_buffer = emac_rx_buffer,
+        .rx_buffer_size = sizeof(emac_rx_buffer),
+    };
+
+    (void)arg;
+
+    memset(&ipaddr, 0, sizeof(ip_addr_t));
+    memset(&netmask, 0, sizeof(ip_addr_t));
+    memset(&gw, 0, sizeof(ip_addr_t));
+
+    emac_ctx.cfg = emac_port_cfg;
+
+    /* add the network interface */
+    if (netif_add(&gnetif, &ipaddr.u_addr.ip4, &netmask.u_addr.ip4,
+                  &gw.u_addr.ip4, &emac_ctx, &eth_emac_if_init,
+                  &tcpip_input) == NULL) {
+        return;
+    }
+
+    /*  Registers the default network interface */
+    netif_set_default(&gnetif);
+
+    netif_create_ip6_linklocal_address(&gnetif, 1);
+    gnetif.ip6_autoconfig_enabled = 1;
+    dhcp6_enable_stateless(&gnetif);
+
+    netif_set_status_callback(&gnetif, netif_status_callback);
+
+#if LWIP_DHCP
+    if (dhcp_start(&gnetif) != ERR_OK) {
+        LOG_E("DHCP client start failed\r\n");
+    } else {
+        LOG_I("DHCP client started\r\n");
+    }
+#endif
+
+#if CONFIG_OTBR
+    openthread_httpd_init(8081);
+#endif
+
+    /* lwip status update task */
+    xTaskCreate((void *)lwip_status_update_task, (char *)"lwip_sta_update", 512, NULL, osPriorityHigh, NULL);
+}
+
+void otr_start_default(void)
+{
+    otOperationalDataset ds;
+
+    if (!otDatasetIsCommissioned(otrGetInstance())) {
+
+        if (OT_ERROR_NONE != otDatasetCreateNewNetwork(otrGetInstance(), &ds)) {
+            printf("Failed to create dataset for Thread Network\r\n");
+        }
+
+        if (OT_ERROR_NONE != otDatasetSetActive(otrGetInstance(), &ds)) {
+            printf("Failed to set active dataset\r\n");
+        }
+    }
+}
+
+void otrInitUser(otInstance *instance)
+{
+    otAppCliInit((otInstance *)instance);
+    otr_start_default();
+    otbr_netif_init();
+    otbr_nat64_init(OPENTHREAD_OTBR_CONFIG_NAT64_CIDR);
+}
+
+static void prvInitTask(void *pvParameters)
+{
+    lmac154_app_init();
+
+    otrStart();
+
+    vTaskDelete(NULL);
+}
+
+int main(void)
+{
+    bl_sys_rstinfo_init();
+
+    board_init();
+
+    uart0 = bflb_device_get_by_name("uart0");
+    shell_init_with_task(uart0);
+
+    __libc_init_array();
+
+    /* emac gpio init */
+    board_emac_rmii_gpio_init(0);
+    board_emac_mdio_gpio_init(0);
+
+    bflb_mtd_init();
+
+#if defined(BL616)
+    /* Init rf */
+    if (0 != rfparam_init(0, NULL, 0)) {
+        printf("PHY RF init failed!\r\n");
+        return 0;
+    }
+#endif
+
+    memset(otbr_getThreadNetif(), 0, sizeof(struct netif));
+
+    tcpip_init(netif_config, NULL);
+
+    xTaskCreate(prvInitTask, "init", 1024, NULL, 15, NULL);
+
+    puts("[OS] Starting OS Scheduler...\r\n");
+    vTaskStartScheduler();
+
+    while (1) {
+    }
+}

@@ -1,0 +1,8 @@
+CHIP ?= bl616
+BOARD ?= bl616dk
+ifeq ($(CHIP),bl618dg)
+CROSS_COMPILE ?= riscv64-zephyr-elf-
+CPU_ID ?= ap
+else
+CROSS_COMPILE ?= riscv64-unknown-elf-
+endif

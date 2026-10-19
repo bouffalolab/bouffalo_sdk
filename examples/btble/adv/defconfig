@@ -1,0 +1,25 @@
+# BLE Beacon Demo Configuration
+CONFIG_BFLB_LOG =n
+CONFIG_FREERTOS =y
+CONFIG_SHELL =n
+CONFIG_BLUETOOTH =y
+CONFIG_RF =y
+CONFIG_BT_STACK_CLI =n
+
+ifeq ($(CHIP),bl616cl)
+    CONFIG_BTBLECONTROLLER_LIB =m0b1
+else
+    CONFIG_BTBLECONTROLLER_LIB =ble1m0s1
+endif
+
+CONFIG_PARTITION =y
+CONFIG_BFLB_MTD =y
+CONFIG_LITTLEFS =y
+
+# BLE Beacon Only Mode (Direct Controller API)
+# Uncomment to enable Beacon Only mode (reduced memory usage)
+CONFIG_BLE_BEACON_ONLY =y
+CONFIG_BLE_PDS =y
+
+# BLE Dynamic RAM mode (use dynamic allocation for BLE static structures)
+#CONFIG_BLE_USING_DYNAMIC_RAM =y

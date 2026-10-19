@@ -1,0 +1,94 @@
+#
+# C library components
+#
+
+menu "C Library"
+
+config POSIX
+    bool "POSIX API"
+    default n
+    help
+      Enable the POSIX compatibility layer.
+
+config NEWLIB_FATFS
+    bool "Newlib FATFS file port"
+    default n
+    help
+      Route newlib file I/O to a FatFS file system.
+
+config NEWLIB_LITTLEFS
+    bool "Newlib LittleFS file port"
+    default n
+    help
+      Route newlib file I/O to a LittleFS file system.
+
+config VSNPRINTF_NANO
+    bool "Use nano vsnprintf"
+    default n
+    help
+      Use the smaller nano vsnprintf implementation.
+
+config VSNPRINTF_FLOAT
+    bool "vsnprintf %f support"
+    default n
+    help
+      Enable %f formatting in the printf family.
+
+config VSNPRINTF_FLOAT_EX
+    bool "vsnprintf %g/%e support"
+    default n
+    depends on VSNPRINTF_FLOAT
+    help
+      Enable %g, %G, %e and %E formatting in the printf family.
+
+config VSNPRINTF_LONG_LONG
+    bool "vsnprintf long long support"
+    default n
+    help
+      Enable %lld and related long long formatting.
+
+config SCANF_FLOAT
+    bool "scanf %f support"
+    default n
+    help
+      Enable %f parsing in the scanf family.
+
+config SCANF_FLOAT_EX
+    bool "scanf %g/%e support"
+    default n
+    depends on SCANF_FLOAT
+    help
+      Enable %g, %G, %e and %E parsing in the scanf family.
+
+config STACK_SWITCH_CALL_SSCANF
+    bool "Wrap sscanf call"
+    default n
+    help
+      Provide a stack-switching wrapper for sscanf.
+
+config STDATOMIC
+    bool "C11 stdatomic"
+    default n
+    help
+      Build the C11 atomic operations support.
+
+config GCC_COMPILE_LTO
+    bool "Link-time optimization"
+    default n
+    help
+      Enable GCC link-time optimization for the whole firmware.
+
+config GCC_LINK_NO_RELAX
+    bool "Disable linker relaxation"
+    default y if WIFI6
+    default n
+    help
+      Disable linker relaxation for the whole firmware.
+
+config BOOT2
+    bool "Build as part of boot2"
+    default n
+    help
+      Build the C library as part of the boot2 image.
+
+endmenu

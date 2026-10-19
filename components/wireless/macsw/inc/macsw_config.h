@@ -1,0 +1,130 @@
+#ifndef __MACSW_CONFIG_H__
+#define __MACSW_CONFIG_H__
+
+#define CFG_RTOS
+#define CFG_FHOST
+#define CFG_UMAC
+#define CFG_STATS
+#define CFG_WIFI_DBG 2
+#define CFG_REC
+#define CFG_COEX
+#define CFG_BCN
+#define CFG_AGG
+
+#define CFG_VIF_MAX 2
+#define CFG_STA_MAX 4
+#define CFG_SPC 16
+
+#define CFG_MAC_VER_V21
+#define CFG_MDM_VER_V30
+#define CFG_PLF_VER_V30
+
+#define CFG_PS
+
+#define CFG_MU_CNT 1
+#define CFG_KEYCFG
+#define CFG_P2P 0
+#define CFG_P2P_GO 0
+#define CFG_BWLEN
+#define CFG_HE
+
+#define CFG_UF 1
+#define CFG_MFP 1
+#define CFG_FTM_INIT 1
+#define CFG_FTM_RSP 1
+#define CFG_HSU 0
+#define CFG_CRYPTO
+#define CFG_FHOST_MONITOR
+#define TX_RETRY_ENABLE 1
+
+#define CFG_AUTH_ASSOC_RETRY_MAX 6
+
+#define CFG_ENABLE_AP_PS
+
+#define WIFI_STATISTIC_ENABLE 0
+
+#define CFG_RAW_SEND_ENABLE
+
+#ifdef BL616CL
+#define CFG_PLATFORM_DMA_ENABLE 0
+#else
+#define CFG_PLATFORM_DMA_ENABLE 1
+#endif
+
+/*
+ * Include the selected macsw configuration before common feature defaults.
+ * For WFA builds, macsw_wfa_config.h defines CFG_WFA here so TWT PDS15 is
+ * excluded by the common rule below, instead of relying on a later #undef.
+ */
+#if defined(CONFIG_MACSW_SELECT_INCLUDE)
+#include CONFIG_MACSW_SELECT_INCLUDE
+#endif
+
+/* Enable TWT PDS15 by default for non-WFA macsw configurations. */
+#if !defined(CFG_WFA) && !defined(CFG_WIFI_TWT_PDS15_ENABLE)
+#define CFG_WIFI_TWT_PDS15_ENABLE
+#endif
+
+#ifndef CFG_TX_PBD_CNT
+#define CFG_TX_PBD_CNT 5
+#endif
+
+/* XXX hacks start */
+// 这些宏需要简化成1-2个。
+//#define CFG_LPM
+#undef CFG_LPM
+//#define CFG_HE_TB ??
+#ifndef RC_EZ23Q4
+#define RC_EZ23Q4 0
+#endif
+
+#ifndef RC_EZ23Q4_BCN
+#define RC_EZ23Q4_BCN 0
+#endif
+
+#ifndef RC_EZ23Q4_EDCA
+#define RC_EZ23Q4_EDCA 0
+#endif
+
+#ifndef WL_BB_TPC
+#define WL_BB_TPC 1
+#endif
+
+#ifndef WL_BB_PD
+#define WL_BB_PD 1
+#endif
+
+#ifndef WL_BB_CE
+#define WL_BB_CE 0
+#endif
+
+#ifndef BL_RA_EN
+#define BL_RA_EN 0
+#endif
+
+#ifndef WL_BB_TPC_LOG
+#define WL_BB_TPC_LOG 0 // TODO REMOVE
+#endif
+
+#ifndef CFG_RC_BL_CHANGE
+#define CFG_RC_BL_CHANGE 0
+#endif
+
+#ifndef BL_HD_RETRY_MAX
+#define BL_HD_RETRY_MAX 0
+#endif
+/* hacks end */
+
+/* linkage feature control */
+#define MACSW_LINKSTAGE_CONF(f) \
+  (&__macsw_conf_ ## f)
+
+#define MACSW_LINKSTAGE_CONF_DEF(f) \
+  extern int __macsw_conf_ ## f __attribute__((weak))
+
+MACSW_LINKSTAGE_CONF_DEF(bl_wifi_ps_enable);
+MACSW_LINKSTAGE_CONF_DEF(plat_dma_enable);
+
+#undef MACSW_LINKSTAGE_CONF_DEF
+
+#endif

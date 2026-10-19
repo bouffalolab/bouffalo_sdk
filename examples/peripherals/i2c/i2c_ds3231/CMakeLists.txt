@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.15)
+
+
+find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
+
+sdk_set_main_file(main.c)
+
+project(i2c_ds3231)
+
+# Add DS3231 driver source file
+target_sources(app PRIVATE ds3231.c)
