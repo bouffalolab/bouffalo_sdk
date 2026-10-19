@@ -1,0 +1,39 @@
+menu "Audio player hardware and diagnostics"
+    depends on BSP_AUDIO_PLAYER
+
+config I2S_DSP_MODE
+    bool "Use I2S DSP/TDM mode"
+    default y if AUDIO_CODEC_JY6316_ENABLE
+    default n
+    help
+      Use DSP/TDM framing for external codecs such as JY6316.
+
+config WAVE_PLAYER_I2S_TX_SLOTS
+    int "I2S DSP TX slots (0 derives from active channels)"
+    depends on I2S_DSP_MODE
+    range 0 6
+    default 4 if AUDIO_CODEC_JY6316_ENABLE
+    default 0
+    help
+      JY6316 needs four bus slots even during playback-only operation.
+      Supported values are 0 (automatic), 1, 2, 3, 4 and 6. A value of 5
+      is rejected by the player. FIFO LR merge requires an even slot count.
+      Bus slots are independent of playback channels and capture role masks.
+      Boards may override the default in their Kconfig.defconfig.
+
+config WAVE_PLAYER_I2S_DSP_LR_MERGE
+    bool "Pack two 16-bit DSP slots into one I2S FIFO entry"
+    depends on I2S_DSP_MODE
+    default y
+    help
+      Pack two adjacent 16-bit DSP slots into one 32-bit FIFO/DMA entry.
+
+config WAVE_PLAYER_DIAG
+    bool "Enable audio player diagnostics"
+    default n
+
+config WAVE_PLAYER_TEST_WAVE
+    bool "Include built-in WAV playback samples"
+    default n
+
+endmenu

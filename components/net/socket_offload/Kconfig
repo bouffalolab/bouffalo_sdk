@@ -1,0 +1,44 @@
+config SOCKET_OFFLOAD
+    bool "Socket offload over RPMsg"
+    depends on FREERTOS && IPC && RPMSG_SERVICE && LWIP
+    default n
+    help
+      IPv4 TCP/UDP socket RPC using the OpenAMP RPMsg RPC service.
+      After SDK RPMsg initialization, the client calls rpmsg_and_rpc_init
+      then socket_offload_init; the service calls rpc_service_init.
+      Both cores must use the same RPMsg configuration.
+
+if SOCKET_OFFLOAD
+
+choice SOCKET_OFFLOAD_ROLE
+    prompt "Socket RPC role"
+    default SOCKET_OFFLOAD_SERVICE if LWIP
+    default SOCKET_OFFLOAD_CLIENT
+
+config SOCKET_OFFLOAD_CLIENT
+    bool "Socket API and RPC client"
+    help
+      Forward socket calls to a remote service. Compiles against the lwIP
+      headers; the archive link pulls only the referenced helper objects,
+      so the TCP/IP stack itself stays out of this core.
+
+config SOCKET_OFFLOAD_SERVICE
+    bool "RPC service using the local TCP/IP stack"
+    depends on LWIP
+    help
+      Dispatch socket requests in the RPMsg receive task to local lwIP.
+      Blocking socket calls also block this RPMsg receive task.
+
+endchoice
+
+config SOCKET_OFFLOAD_LOG_LEVEL
+    int "Socket offload log level"
+    range 0 4
+    default 1
+    help
+      Compile-time log level for the socket offload component:
+      0 = disabled, 1 = errors, 2 = warnings, 3 = information,
+      4 = debug. Use level 1 for throughput measurements; level 4
+      logs every RPC request and response.
+
+endif

@@ -1,0 +1,20 @@
+# WAMR component
+#
+
+menu "WAMR"
+
+config WAMR_INTERP
+    bool "WAMR WebAssembly interpreter"
+    depends on FREERTOS
+    default n
+    help
+      Enable the WAMR WebAssembly bytecode interpreter.
+
+config WAMR_AOT
+    bool "WAMR BL616 RISC-V32 ILP32F AOT runtime"
+    depends on FREERTOS && CHIP = "bl616"
+    default n
+    help
+      Enable loading BL616 RISC-V32 AOT modules from executable SRAM.
+
+endmenu

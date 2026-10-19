@@ -1,0 +1,21 @@
+# ES8388 DMA slot roles for the AVE V10 board. Keep the shared JY6316
+# profile when that external audio board is selected instead.
+if BSP_AUDIO_PLAYER
+
+if MULTIMEDIA
+
+config WAVE_PLAYER_OUT_CHANNELS
+    default 2
+
+config WAVE_PLAYER_REC_CHANNELS
+    default 2 if !AUDIO_CODEC_JY6316_ENABLE
+
+endif
+
+config BOARD_AUDIO_CAPTURE_MIC_MASK
+    default 0x02 if !AUDIO_CODEC_JY6316_ENABLE && WAVE_PLAYER_REC_CHANNELS >= 2
+
+config BOARD_AUDIO_CAPTURE_REF_MASK
+    default 0x01 if !AUDIO_CODEC_JY6316_ENABLE && WAVE_PLAYER_REC_CHANNELS >= 2
+
+endif

@@ -1,0 +1,2 @@
+Sphinx>=7
+sphinx-rtd-theme

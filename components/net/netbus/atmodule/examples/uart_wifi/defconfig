@@ -1,0 +1,41 @@
+#CONFIG_WL80211              =y
+
+ifneq ($(CONFIG_WL80211),y)
+CONFIG_ATMODULE_WIFI_AP   =y
+CONFIG_ATMODULE_FULL_FEAT =y
+CONFIG_ATMODULE_WORK_Q    =y
+CONFIG_ATMODULE_NETWORK   =y
+CONFIG_ATMODULE_HTTP      =y
+CONFIG_ATMODULE_MQTT      =y
+CONFIG_ATMODULE_FS        =y
+endif
+
+ifeq ($(CONFIG_AT_MDNS_ENABLE),y)
+CONFIG_MDNS =y
+endif
+
+
+-include $(SDK_DEMO_PATH)/../at_defconfig
+
+CONFIG_ATMODULE_UART        =y
+
+CONFIG_MQTT                 =y
+CONFIG_HTTP                 =y
+CONFIG_HTTP_CLIENT          =y
+CONFIG_LITTLEFS             =y
+
+#CONFIG_RCP_ENABLE =y
+CONFIG_USE_LPAPP            =n
+
+ifeq ($(CONFIG_USE_LPAPP),y)
+ifneq ($(CONFIG_WL80211),y)
+CONFIG_ATMODULE_LP                   =y
+CONFIG_LPAPP                         =y
+CONFIG_PM                            =y
+CONFIG_LWIP_LP                       =y
+CONFIG_DCDC_ENABLE                   =n
+CONFIG_PWRMGMT                       =y
+CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
+CONFIG_CLOCK_SOURCE_EF_PARAM         =n
+endif
+endif

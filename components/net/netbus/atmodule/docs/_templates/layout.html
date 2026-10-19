@@ -1,0 +1,17 @@
+{% extends "!layout.html" %}
+{% set other_language = "en" if language == "zh" else "zh" %}
+{% set language_url = "../" * (pagename.count("/") + 2) ~ other_language ~ "/html/" ~ pagename ~ ".html" %}
+
+{% block sidebartitle %}
+{{ super() }}
+<div class="at-language-switch" aria-label="Language / 语言">
+  <span>{{ "中文" if language == "zh" else "English" }}</span> ·
+  <a href="{{ language_url }}" lang="{{ other_language }}" hreflang="{{ other_language }}">{{ "English" if language == "zh" else "中文" }}</a>
+</div>
+{% endblock %}
+
+{% block mobile_nav %}
+<i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+<a href="{{ pathto('index') }}"><img class="at-mobile-logo" src="{{ pathto('_static/bouffalolab-logo.png', 1) }}" alt="Bouffalo Lab"></a>
+<a href="{{ language_url }}" lang="{{ other_language }}">{{ "English" if language == "zh" else "中文" }}</a>
+{% endblock %}

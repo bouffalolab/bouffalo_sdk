@@ -1,0 +1,47 @@
+#include <FreeRTOS.h>
+#include <task.h>
+#include <timers.h>
+
+#include <lwip/tcpip.h>
+#include <lwip/sockets.h>
+#include <lwip/netdb.h>
+
+#include <bl_fw_api.h>
+#include <wifi_mgmr_ext.h>
+#include <wifi_mgmr.h>
+
+#include <bflb_irq.h>
+#include <bflb_mtd.h>
+#include "lfs_kv.h"
+
+#include <rfparam_adapter.h>
+
+#define DBG_TAG "MAIN"
+#include <log.h>
+
+/* External function declarations */
+extern int app_wifi_init(void);
+
+int app_usbwifi_init(void)
+{
+    /* RF param init */
+    if (0 != rfparam_init(0, NULL, 0)) {
+        LOG_I("PHY RF init failed!\r\n");
+        return 0;
+    }
+
+    /* TCP/IP stack init */
+    tcpip_init(NULL, NULL);
+
+    /* Enable lfs_kv(littlefs) */
+    bflb_mtd_init();
+    lfs_kv_init();
+
+    /* romsfs init mount use media factory*/
+    // romfs_mount(0x378000);
+
+    app_wifi_init();
+
+    return 0;
+}
+

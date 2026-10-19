@@ -1,0 +1,6 @@
+/examples/*/build/
+/examples/*/build_*/
+/bouffalo_sdk/
+/docs/build/
+/build/
+/build_*/

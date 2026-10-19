@@ -1,0 +1,17 @@
+# JY6166/JY6311 capture slot roles on the BL618DG MStar board.
+if BSP_AUDIO_CODEC
+
+config AUDIO_CODEC_JY6316_ENABLE
+    default y
+
+endif
+
+if BSP_AUDIO_PLAYER
+
+config BOARD_AUDIO_CAPTURE_MIC_MASK
+    default 0x08 if AUDIO_CODEC_JY6316_ENABLE
+
+config BOARD_AUDIO_CAPTURE_REF_MASK
+    default 0x01 if AUDIO_CODEC_JY6316_ENABLE
+
+endif
