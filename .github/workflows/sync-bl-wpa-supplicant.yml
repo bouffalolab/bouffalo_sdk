@@ -1,26 +1,25 @@
 name: Sync bl_wpa_supplicant to bouffalo_sdk-bl_wpa_supplicant
 
-# Mirror contract (v1)
-# - The mirror content is exactly `git subtree split` of
-#   components/wireless/bl_wpa_supplicant at the pushed master commit.
-#   No extra files are added, removed or rewritten; the mirror is generated,
-#   never edited by hand. All source changes go to bouffalo_sdk master.
+# Mirror contract (v2)
+# - Each mirror commit is a snapshot of components/wireless/bl_wpa_supplicant
+#   at a bouffalo_sdk master commit. bouffalo_sdk history is not carried
+#   over: a commit is appended only when the snapshot differs from the mirror
+#   head, so the mirror keeps fast-forwarding even when a release rewrites
+#   the bouffalo_sdk history. The mirror is generated, never edited by hand.
+#   All changes go to bouffalo_sdk master.
 # - The mirror carries the subtree's own COPYING (wpa_supplicant BSD terms).
 #   Parent-level license changes do not affect the mirror, because the parent
-#   LICENSE (Apache-2.0) is not part of the exported subtree. If a parent-level
-#   NOTICE ever becomes required for this subtree, add it to `paths` below and
-#   revisit the export rule.
+#   LICENSE (Apache-2.0) is not part of the exported subtree.
+# - Every master push runs the job, which compares the trees itself: a path
+#   filter only sees the first 300 changed files of a push, and a release
+#   changes more than that.
 # - Failures never advance the mirror: verification runs before the push and
-#   the push is a plain fast-forward (no force), so a rewritten upstream
-#   history is reported instead of being forced over the mirror.
+#   the push is a plain fast-forward (no force).
 
 on:
   push:
     branches:
       - master
-    paths:
-      - "components/wireless/bl_wpa_supplicant/**"
-      - ".github/workflows/sync-bl-wpa-supplicant.yml"
   workflow_dispatch:
 
 permissions:
@@ -34,29 +33,14 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
+    env:
+      PREFIX: components/wireless/bl_wpa_supplicant
+
     steps:
       - name: Checkout bouffalo_sdk
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           persist-credentials: false
-
-      - name: Split bl_wpa_supplicant subtree
-        run: |
-          set -euo pipefail
-          git subtree split --prefix=components/wireless/bl_wpa_supplicant HEAD -b supplicant-split
-
-      - name: Verify split against upstream subtree
-        run: |
-          set -euo pipefail
-          prefix=components/wireless/bl_wpa_supplicant
-          split_tree=$(git rev-parse supplicant-split^{tree})
-          upstream_tree=$(git rev-parse "HEAD:${prefix}")
-          test "${split_tree}" = "${upstream_tree}"
-          test -f "${prefix}/COPYING"
-          files=$(git ls-tree -r --name-only supplicant-split | wc -l)
-          test "${files}" -gt 0
-          echo "verified tree=${split_tree} files=${files} parent=$(git rev-parse HEAD)"
 
       - name: Check sync token
         env:
@@ -65,11 +49,47 @@ jobs:
           set -euo pipefail
           test -n "${TOKEN}"
 
-      - name: Push to bouffalo_sdk-bl_wpa_supplicant master branch
+      - name: Build bl_wpa_supplicant snapshot
+        id: snapshot
         env:
           TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
         run: |
           set -euo pipefail
           git remote add bouffalo-supplicant \
             "https://x-access-token:${TOKEN}@github.com/bouffalolab/bouffalo_sdk-bl_wpa_supplicant.git"
-          git push bouffalo-supplicant supplicant-split:master
+          parent=
+          head=$(git ls-remote bouffalo-supplicant refs/heads/master)
+          if [ -n "${head}" ]; then
+            git fetch -q --depth=1 bouffalo-supplicant master
+            parent=$(git rev-parse FETCH_HEAD)
+          fi
+          tree=$(git rev-parse "HEAD:${PREFIX}")
+          if [ -n "${parent}" ] && [ "$(git rev-parse "${parent}^{tree}")" = "${tree}" ]; then
+            echo "${PREFIX} unchanged since mirror ${parent}, nothing to push"
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          export GIT_AUTHOR_NAME="$(git log -1 --format=%an)"
+          export GIT_AUTHOR_EMAIL="$(git log -1 --format=%ae)"
+          export GIT_COMMITTER_NAME="github-actions[bot]"
+          export GIT_COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+          commit=$(git log -1 --format="%s%n%nSource: bouffalolab/bouffalo_sdk@%H" |
+            git commit-tree "${tree}" ${parent:+-p "${parent}"})
+          git update-ref refs/heads/supplicant-snapshot "${commit}"
+          echo "changed=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify snapshot against upstream subtree
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse supplicant-snapshot^{tree})" = "$(git rev-parse "HEAD:${PREFIX}")"
+          test -f "${PREFIX}/COPYING"
+          files=$(git ls-tree -r --name-only supplicant-snapshot | wc -l)
+          test "${files}" -gt 0
+          echo "verified tree=$(git rev-parse supplicant-snapshot^{tree}) files=${files} parent=$(git rev-parse HEAD)"
+
+      - name: Push to bouffalo_sdk-bl_wpa_supplicant master branch
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git push bouffalo-supplicant supplicant-snapshot:master

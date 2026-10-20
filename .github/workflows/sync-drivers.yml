@@ -1,12 +1,22 @@
 name: Sync drivers to bouffalo_sdk-drivers
 
+# Mirror contract (v2)
+# - Each mirror commit is a snapshot of drivers at a bouffalo_sdk master
+#   commit. bouffalo_sdk history is not carried over: a commit is appended
+#   only when the snapshot differs from the mirror head, so the mirror keeps
+#   fast-forwarding even when a release rewrites the bouffalo_sdk history.
+#   The mirror is generated, never edited by hand. All changes go to
+#   bouffalo_sdk master.
+# - Every master push runs the job, which compares the trees itself: a path
+#   filter only sees the first 300 changed files of a push, and a release
+#   changes more than that.
+# - Failures never advance the mirror: verification runs before the push and
+#   the push is a plain fast-forward (no force).
+
 on:
   push:
     branches:
       - master
-    paths:
-      - "drivers/**"
-      - ".github/workflows/sync-drivers.yml"
   workflow_dispatch:
 
 permissions:
@@ -20,27 +30,14 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
+    env:
+      PREFIX: drivers
+
     steps:
       - name: Checkout bouffalo_sdk
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           persist-credentials: false
-
-      - name: Split drivers subtree
-        run: |
-          set -euo pipefail
-          git subtree split --prefix=drivers HEAD -b drivers-split
-
-      - name: Verify split against upstream subtree
-        run: |
-          set -euo pipefail
-          split_tree=$(git rev-parse drivers-split^{tree})
-          upstream_tree=$(git rev-parse "HEAD:drivers")
-          test "${split_tree}" = "${upstream_tree}"
-          files=$(git ls-tree -r --name-only drivers-split | wc -l)
-          test "${files}" -gt 0
-          echo "verified tree=${split_tree} files=${files} parent=$(git rev-parse HEAD)"
 
       - name: Check sync token
         env:
@@ -49,11 +46,46 @@ jobs:
           set -euo pipefail
           test -n "${TOKEN}"
 
-      - name: Push to bouffalo_drivers master branch
+      - name: Build drivers snapshot
+        id: snapshot
         env:
           TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
         run: |
           set -euo pipefail
           git remote add bouffalo-drivers \
             "https://x-access-token:${TOKEN}@github.com/bouffalolab/bouffalo_sdk-drivers.git"
-          git push bouffalo-drivers drivers-split:master
+          parent=
+          head=$(git ls-remote bouffalo-drivers refs/heads/master)
+          if [ -n "${head}" ]; then
+            git fetch -q --depth=1 bouffalo-drivers master
+            parent=$(git rev-parse FETCH_HEAD)
+          fi
+          tree=$(git rev-parse "HEAD:${PREFIX}")
+          if [ -n "${parent}" ] && [ "$(git rev-parse "${parent}^{tree}")" = "${tree}" ]; then
+            echo "${PREFIX} unchanged since mirror ${parent}, nothing to push"
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          export GIT_AUTHOR_NAME="$(git log -1 --format=%an)"
+          export GIT_AUTHOR_EMAIL="$(git log -1 --format=%ae)"
+          export GIT_COMMITTER_NAME="github-actions[bot]"
+          export GIT_COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+          commit=$(git log -1 --format="%s%n%nSource: bouffalolab/bouffalo_sdk@%H" |
+            git commit-tree "${tree}" ${parent:+-p "${parent}"})
+          git update-ref refs/heads/drivers-snapshot "${commit}"
+          echo "changed=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify snapshot against upstream subtree
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse drivers-snapshot^{tree})" = "$(git rev-parse "HEAD:${PREFIX}")"
+          files=$(git ls-tree -r --name-only drivers-snapshot | wc -l)
+          test "${files}" -gt 0
+          echo "verified tree=$(git rev-parse drivers-snapshot^{tree}) files=${files} parent=$(git rev-parse HEAD)"
+
+      - name: Push to bouffalo_sdk-drivers master branch
+        if: steps.snapshot.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git push bouffalo-drivers drivers-snapshot:master
