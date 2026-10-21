@@ -2,6 +2,12 @@
 
 [English Version](README.md)
 
+> v2.3.37 使用精简 Git 历史以缩短 `git pull` 时间；如需在本地将其与 v2.3.36 串成完整历史，请执行：
+>
+> ```bash
+> git replace -f --graft 'v2.3.37-history-base^{}' 'v2.3.36^{}'
+> ```
+
 # 简介
 
 **BouffaloSDK** 是 Bouffalo Lab 提供的 IOT 和 MCU 软件开发包，支持博流智能所有系列芯片，也是 **bl_mcu_sdk** 和 **bl_iot_sdk** 的结合体。

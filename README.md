@@ -2,6 +2,12 @@
 
 [中文版](README_zh.md)
 
+> v2.3.37 uses a compact Git history to reduce `git pull` time; run this command locally to join it with v2.3.36:
+>
+> ```bash
+> git replace -f --graft 'v2.3.37-history-base^{}' 'v2.3.36^{}'
+> ```
+
 # Introduction
 
 **BouffaloSDK** is the IOT and MCU software development kit provided by the Bouffalo Lab Team, supports all the series of Bouffalo chips. Also it is the combination of **bl_mcu_sdk** and **bl_iot_sdk** .
