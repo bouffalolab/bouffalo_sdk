@@ -12,11 +12,7 @@
 
 volatile float coe[ADC_COUNTS];
 volatile int32_t offset[ADC_COUNTS];
-#if defined(CPU_MODEL_A0)
-volatile uint32_t tsen_offset = 2400;
-#else
-volatile uint32_t tsen_offset = 0;
-#endif
+volatile uint32_t tsen_offset = 2480;
 
 __UNUSED static int bflb_adc_fifo1_is_enabled(void)
 {
@@ -134,6 +130,11 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
         regval |= AON_GPADC1_VREF_EX_SEL;
     }
     putreg32(regval, reg_base + AON_GPADC1_REG_CONFIG1_OFFSET);
+
+    putreg32(getreg32(ADC_AON_BASE + AON_GPADC1_REG_RAW_DATA_OFFSET) | (1U << (AON_GPADC1_RESERVED_SHIFT + 2)),
+             ADC_AON_BASE + AON_GPADC1_REG_RAW_DATA_OFFSET);
+    putreg32(getreg32(ADC_AON_BASE + AON_GPADC2_REG_RAW_DATA_OFFSET) | (1U << AON_GPADC2_RESERVED_SHIFT),
+             ADC_AON_BASE + AON_GPADC2_REG_RAW_DATA_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
     regval |= AON_GPADC1_EXT_NEG_SEL_MASK;
