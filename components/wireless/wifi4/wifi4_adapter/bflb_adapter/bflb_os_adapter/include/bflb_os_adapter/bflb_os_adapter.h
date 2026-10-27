@@ -118,7 +118,7 @@ struct bl_ops_funcs
 
 typedef struct bl_ops_funcs bl_ops_funcs_t;
 
-extern bl_ops_funcs_t g_bl_ops_funcs;
+extern const bl_ops_funcs_t g_bl_ops_funcs;
 
 #ifdef __cplusplus
 }

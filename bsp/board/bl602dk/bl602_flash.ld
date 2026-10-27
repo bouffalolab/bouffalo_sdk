@@ -27,10 +27,11 @@ MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x23000000 - 0x1000, LENGTH = 4K
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22010000, LENGTH = 16K
-    ram_memory  (!rx) : ORIGIN = 0x42014000, LENGTH = 184K
-    ram_wifi    (wxa) : ORIGIN = 0x42042000 , LENGTH = (112K - 64K - 8K - __EM_SIZE) /*leave 8K left for BLE*/
+    ram_memory  (!rx) : ORIGIN = 0x4200C000, LENGTH = 216K - __EM_SIZE
+    ram_wifi    (wxa) : ORIGIN = 0x42042000 - __EM_SIZE, LENGTH = 40K /*reserve 8K for BLE EM*/
 }
+
+ASSERT(ORIGIN(ram_memory) + LENGTH(ram_memory) <= ORIGIN(ram_wifi), "application RAM overlaps Wi-Fi RAM")
 
 SECTIONS
 {
@@ -128,8 +129,6 @@ SECTIONS
         /* _dump_sections for bflb_coredump.c*/
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
-        LONG(ORIGIN(itcm_memory));
-        LONG(LENGTH(itcm_memory));
         LONG(ORIGIN(ram_memory));
         LONG(LENGTH(ram_memory));
         LONG(0xffffffff);
@@ -183,7 +182,7 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
-    } > itcm_memory
+    } > ram_memory
 
     __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
 

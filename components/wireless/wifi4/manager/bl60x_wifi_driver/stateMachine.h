@@ -310,7 +310,7 @@ struct state
    /** 
     * \brief An array of transitions for the state.
     */
-   struct transition *transitions;
+   const struct transition *transitions;
    /** 
     * \brief Number of transitions in the #transitions array.
     */

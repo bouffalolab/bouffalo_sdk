@@ -39,6 +39,15 @@
 #define TLSF_64BIT
 #endif
 
+#if defined(TLSF_64BIT)
+/*
+** TODO: We can increase this to support larger sizes, at the expense
+** of more overhead in the TLSF structure.
+*/
+#undef CONFIG_MM_TLSF_FL_INDEX_MAX
+#define CONFIG_MM_TLSF_FL_INDEX_MAX 32
+#endif
+
 /*
 ** gcc 3.4 and above have builtin support, specialized for architecture.
 ** Some compilers masquerade as gcc; patchlevel test filters them out.
@@ -217,7 +226,7 @@ enum tlsf_public {
 	** values require more memory in the control structure. Values of
 	** 4 or 5 are typical.
 	*/
-    SL_INDEX_COUNT_LOG2 = 5,
+    SL_INDEX_COUNT_LOG2 = CONFIG_MM_TLSF_SL_INDEX_COUNT_LOG2,
 };
 
 /* Private constants: do not modify. */
@@ -242,15 +251,7 @@ enum tlsf_private {
 	** blocks below that size into the 0th first-level list.
 	*/
 
-#if defined(TLSF_64BIT)
-    /*
-	** TODO: We can increase this to support larger sizes, at the expense
-	** of more overhead in the TLSF structure.
-	*/
-    FL_INDEX_MAX = 32,
-#else
-    FL_INDEX_MAX = 30,
-#endif
+    FL_INDEX_MAX = CONFIG_MM_TLSF_FL_INDEX_MAX,
     SL_INDEX_COUNT = (1 << SL_INDEX_COUNT_LOG2),
     FL_INDEX_SHIFT = (SL_INDEX_COUNT_LOG2 + ALIGN_SIZE_LOG2),
     FL_INDEX_COUNT = (FL_INDEX_MAX - FL_INDEX_SHIFT + 1),
@@ -292,6 +293,8 @@ tlsf_static_assert(sizeof(unsigned int) * CHAR_BIT >= SL_INDEX_COUNT);
 
 /* Ensure we've properly tuned our sizes. */
 tlsf_static_assert(ALIGN_SIZE == SMALL_BLOCK_SIZE / SL_INDEX_COUNT);
+tlsf_static_assert(FL_INDEX_MAX >= FL_INDEX_SHIFT);
+tlsf_static_assert(FL_INDEX_MAX <= sizeof(size_t) * CHAR_BIT);
 
 /*
 ** Data structures and associated constants.

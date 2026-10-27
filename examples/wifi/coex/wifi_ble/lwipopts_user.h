@@ -66,23 +66,40 @@
 
 #define PBUF_LINK_ENCAPSULATION_HLEN  388
 
+#if defined(BL602)
+/* Four sockets share the TCP, UDP and RAW connection pools. */
+#define MEMP_NUM_NETBUF               4
+#define MEMP_NUM_NETCONN              4
+#define MEMP_NUM_UDP_PCB              4
+#define MEMP_NUM_TCP_PCB              2
+#define MEMP_NUM_TCP_PCB_LISTEN       1
+#define MEMP_NUM_RAW_PCB              1
+#else
 #define MEMP_NUM_NETBUF               32
 #define MEMP_NUM_NETCONN              16
 #define MEMP_NUM_UDP_PCB              16
+#endif
 
 #define MAC_TXQ_DEPTH                 32
 #define MAC_RXQ_DEPTH                 12
 
 #define IP_REASS_MAX_PBUFS            (2 * MAC_RXQ_DEPTH - 2)
+#if defined(BL602)
+#define MEMP_NUM_REASSDATA            1
+#else
 #define MEMP_NUM_REASSDATA            LWIP_MIN((IP_REASS_MAX_PBUFS), 5)
-
-#define TCP_MSS                       (1500 - 40)
-#if (defined(BL602))
-#define TCP_WND                       (3 * TCP_MSS)
-#else 
-#define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
 #endif
+
+#if (defined(BL602))
+/* Leave room for two copied TCP segments and control packets in the 4 KiB heap. */
+#define TCP_MSS                       1024
+#define TCP_WND                       (3 * TCP_MSS)
+#define TCP_SND_BUF                   (2 * TCP_MSS)
+#else 
+#define TCP_MSS                       (1500 - 40)
+#define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
 #define TCP_SND_BUF                   (4 * TCP_MSS)
+#endif
 
 #define TCP_QUEUE_OOSEQ               1
 #define MEMP_NUM_TCP_SEG              ((4 * TCP_SND_BUF) / TCP_MSS)
@@ -97,7 +114,7 @@
 #define MEM_ALIGNMENT                 4
 
 #if (defined(BL602))
-#define LWIP_HEAP_SIZE (14 * 1024)
+#define LWIP_HEAP_SIZE (4 * 1024)
 #else 
 #define LWIP_HEAP_SIZE (18 * 1024)
 #endif 

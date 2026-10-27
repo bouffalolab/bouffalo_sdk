@@ -67,7 +67,7 @@ typedef struct wifi_hosal_funcs wifi_hosal_funcs_t;
  * Private Data
  ****************************************************************************/
 
-extern wifi_hosal_funcs_t g_wifi_hosal_funcs;
+extern const wifi_hosal_funcs_t g_wifi_hosal_funcs;
 
 
 /****************************************************************************

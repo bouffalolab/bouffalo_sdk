@@ -10,6 +10,29 @@ config MEM_TLSF_EN
     help
       Enable the TLSF dynamic memory allocator.
 
+config MM_TLSF_FL_INDEX_MAX
+    int "TLSF maximum pool size (log2 bytes)"
+    depends on MEM_TLSF_EN
+    range 7 30
+    default 30
+    help
+      The largest single memory region one TLSF heap can manage is
+      1 << this value bytes on 32-bit targets. The default is 30 (1 GiB).
+      On 64-bit targets, this setting is ignored and FL_INDEX_MAX is
+      fixed at 32. Useful steps: 17 = 128 KiB, 18 = 256 KiB, 20 = 1 MiB,
+      24 = 16 MiB, 30 = 1 GiB. A pool larger than the limit is rejected
+      when the heap is created.
+
+config MM_TLSF_SL_INDEX_COUNT_LOG2
+    int "TLSF second-level list count (log2)"
+    depends on MEM_TLSF_EN
+    range 1 6
+    default 5
+    help
+      Each first-level size class has 1 << this value second-level lists.
+      Smaller values reduce allocator metadata but use coarser size classes.
+      The default is 5 (32 lists), preserving the original configuration.
+
 config MEM_HEAP5_EN
     bool "Heap5 allocator"
     default n

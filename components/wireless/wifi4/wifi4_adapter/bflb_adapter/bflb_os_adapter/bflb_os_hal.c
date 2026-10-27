@@ -109,7 +109,7 @@ struct timer_adpt
 
 extern void *__attribute__((weak)) _wifi_log_flag;
 
-bl_ops_funcs_t g_bl_ops_funcs =
+const bl_ops_funcs_t g_bl_ops_funcs =
 {
     ._version = BL_OS_ADAPTER_VERSION,
     ._printf = bflb_os_printf,

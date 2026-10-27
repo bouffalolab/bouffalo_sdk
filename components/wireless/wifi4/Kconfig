@@ -14,4 +14,16 @@ config VIRT_DEV_MAX
     help
       Maximum number of simultaneous virtual Wi-Fi interfaces.
 
+if WIFI4
+
+config WIFI4_SCAN_ITEMS_MAX
+    int "Maximum cached Wi-Fi scan results"
+    default 50
+    range 1 50
+    help
+      Maximum number of scan results cached by the Wi-Fi 4 manager.
+      NETBUS builds retain their fixed limit of 30 entries.
+
+endif
+
 endmenu

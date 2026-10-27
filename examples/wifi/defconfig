@@ -12,6 +12,8 @@ CONFIG_PING          =y
 
 ifeq ($(CHIP),bl602)
     CONFIG_WIFI4=y
+    # The OCRAM heap is below 256 KiB, so the larger TLSF size classes are never used.
+    CONFIG_MM_TLSF_FL_INDEX_MAX=18
 else
     CONFIG_WIFI6=y
     CONFIG_MACSW_SELECT = default

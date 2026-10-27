@@ -62,7 +62,7 @@ int platform_pds_rf_turnoff(void *arg)
     return 0;
 }
 
-wifi_hosal_funcs_t g_wifi_hosal_funcs =
+const wifi_hosal_funcs_t g_wifi_hosal_funcs =
 {
   .efuse_read_mac = platform_get_mac,
   .rf_turn_on = platform_pds_rf_turnon,

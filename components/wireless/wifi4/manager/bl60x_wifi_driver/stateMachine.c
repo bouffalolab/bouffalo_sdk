@@ -37,7 +37,7 @@
 
 static void goToErrorState( struct stateMachine *stateMachine,
       struct event *const event );
-static struct transition *getTransition( struct stateMachine *stateMachine,
+static const struct transition *getTransition( struct stateMachine *stateMachine,
       const struct state *state, struct event *const event );
 
 void stateM_init( struct stateMachine *fsm,
@@ -68,7 +68,7 @@ int stateM_handleEvent( struct stateMachine *fsm,
 
    const struct state *nextState = fsm->currentState;
    do {
-      struct transition *transition = getTransition( fsm, nextState, event );
+      const struct transition *transition = getTransition( fsm, nextState, event );
 
       /* If there were no transitions for the given event for the current
        * state, check if there are any transitions for any of the parent
@@ -158,14 +158,14 @@ static void goToErrorState( struct stateMachine *fsm,
       fsm->currentState->entryAction( fsm->currentState->data, event );
 }
 
-static struct transition *getTransition( struct stateMachine *fsm,
+static const struct transition *getTransition( struct stateMachine *fsm,
       const struct state *state, struct event *const event )
 {
    size_t i;
 
    for ( i = 0; i < state->numTransitions; ++i )
    {
-      struct transition *t = &state->transitions[ i ];
+      const struct transition *t = &state->transitions[ i ];
 
       /* A transition for the given event has been found: */
       if ( t->eventType == event->type )

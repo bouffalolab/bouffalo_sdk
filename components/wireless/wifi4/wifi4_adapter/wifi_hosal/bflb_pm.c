@@ -41,12 +41,12 @@ struct pm_env
 struct pm_node
 {
     utils_dlist_t dlist_item;
-    enum PM_EVEMT event;
     uint32_t code;
     uint16_t priority;
+    enum PM_EVEMT event;
+    enum PM_EVENT_ABLE enable;
     uint32_t cap_bit;
     bl_pm_cb_t ops;
-    enum PM_EVENT_ABLE enable;
     void *ctx;
 };
 

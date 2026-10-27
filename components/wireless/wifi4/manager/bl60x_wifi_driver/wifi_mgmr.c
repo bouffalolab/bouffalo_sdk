@@ -801,7 +801,7 @@ static void stateEnter( void *stateData, struct event *event )
 const static struct state stateGlobal = {
    .parentState = NULL,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_GLB, (void*)WIFI_MGMR_EVENT_GLB_DISABLE_AUTORECONNECT, &stateGlobalGuard_disable_autoreconnect, &stateGlobalAction, &stateIdle},
       {EVENT_TYPE_GLB, (void*)WIFI_MGMR_EVENT_GLB_ENABLE_AUTORECONNECT, &stateGlobalGuard_enable_autoreconnect, &stateGlobalAction, &stateIdle},
@@ -826,7 +826,7 @@ const static struct state stateGlobal = {
 const static struct state stateSniffer = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_IDLE, &stateSnifferGuard_idle, &stateAction, &stateIdle},
       /*Will NOT transfer state*/
@@ -856,7 +856,7 @@ static bool stateConnectingGuard_disconnect(void *ev, struct event *event )
 const static struct state stateConnecting = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_FW, (void*)WIFI_MGMR_EVENT_FW_IND_CONNECTED, &stateGuard, &stateAction, &stateConnectedIPNo},
       {EVENT_TYPE_FW, (void*)WIFI_MGMR_EVENT_FW_IND_DISCONNECT, &stateGuard, &stateAction, &stateDisconnect},
@@ -901,7 +901,7 @@ static void dump_connect_param(const wifi_mgmr_profile_msg_t *profile_msg, int b
 const static struct state stateIdle = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_SNIFFER, &stateIdleGuard_sniffer, &stateAction, &stateSniffer},
    },
@@ -936,7 +936,7 @@ static bool stateIfaceDownGuard_phyup(void *ev, struct event *event )
 const static struct state stateIfaceDown = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_PHY_UP, &stateIfaceDownGuard_phyup, &stateAction, &stateIdle},
    },
@@ -1176,7 +1176,7 @@ static void stateConnectedIPNoAction_disconn( void *oldStateData, struct event *
 const static struct state stateConnectedIPNo = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_IP_GOT, &stateGuard, &stateConnectedIPNoAction_ipgot, &stateConnectedIPYes},
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_DISCONNECT, &stateConnectedIPNoGuard_disconnect, &stateAction, &stateDisconnect},
@@ -1310,7 +1310,7 @@ static void stateConnectedIPYes_exit( void *stateData, struct event *event )
 const static struct state stateConnectedIPYes = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_GLB, (void*)WIFI_MGMR_EVENT_GLB_IP_UPDATE, &stateConnectedIPYesGuard_ip_update, &stateAction, &stateConnectedIPNo},
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_DISCONNECT, &stateConnectedIPYesGuard_disconnect, &stateConnectedIPYes_action, &stateDisconnect},
@@ -1501,7 +1501,7 @@ static void stateDisconnect_exit(void *stateData, struct event *event)
 const static struct state stateDisconnect = {
    .parentState = &stateGlobal,
    .entryState = NULL,
-   .transitions = (struct transition[])
+   .transitions = (const struct transition[])
    {
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_RECONNECT, &stateGuard, &stateDisconnect_action_reconnect, &stateConnecting},
       {EVENT_TYPE_APP, (void*)WIFI_MGMR_EVENT_APP_IDLE, &stateGuard, &stateDisconnect_action_idle, &stateIdle},

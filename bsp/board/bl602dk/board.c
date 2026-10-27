@@ -18,6 +18,8 @@ extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
+extern uint32_t _heap_wifi_start;
+extern uint32_t _heap_wifi_size;
 
 static struct bflb_device_s *uart0;
 
@@ -151,6 +153,12 @@ void ram_heap_init(void)
     /* ocram heap init */
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+
+    heap_len = (size_t)&_heap_wifi_size;
+    if (heap_len >= ALIGN_UP(sizeof(mm_heap_t), 64) + tlsf_size() +
+                    tlsf_pool_overhead() + tlsf_block_size_min()) {
+        mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, heap_len);
+    }
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"

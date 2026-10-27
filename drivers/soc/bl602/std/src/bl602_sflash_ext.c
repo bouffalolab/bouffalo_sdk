@@ -635,6 +635,7 @@ int ATTR_TCM_SECTION bflb_sflash_cache_enable_set(uint8_t way_disable)
     regval &= ~SFLASH_L1C_CACHEABLE;
     regval |= SFLASH_L1C_BYPASS;
     regval &= ~SFLASH_L1C_WAY_DIS_MASK;
+    regval |= (way_disable << SFLASH_L1C_WAY_DIS_SHIFT);
     regval &= ~SFLASH_L1C_CNT_EN;
     putreg32(regval, SFLASH_L1C_BASE_ADDR+SFLASH_L1C_CONFIG_OFFSET);
 
@@ -667,6 +668,7 @@ int ATTR_TCM_SECTION bflb_sflash_cache_enable_set(uint8_t way_disable)
 
     regval &= ~SFLASH_L1C_BYPASS;
     regval &= ~SFLASH_L1C_WAY_DIS_MASK;
+    regval |= (way_disable << SFLASH_L1C_WAY_DIS_SHIFT);
     regval |= SFLASH_L1C_CNT_EN;
     putreg32(regval, SFLASH_L1C_BASE_ADDR+SFLASH_L1C_CONFIG_OFFSET);
 
