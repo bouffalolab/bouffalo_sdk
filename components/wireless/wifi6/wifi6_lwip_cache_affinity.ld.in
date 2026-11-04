@@ -1,0 +1,74 @@
+/* Wi-Fi 6 lwIP throughput paths. */
+. = ALIGN(4096);
+
+/* TCP ACK receive path. */
+*(.text.net_al_input)
+*(.text.is_sta_netif)
+*(.text.memcmp)
+*(.text.pbuf_alloced_custom)
+*(.text.tcpip_input .text.tcpip_inpkt)
+*(.text.sys_mutex_lock .text.sys_mutex_unlock)
+*(.text.xQueueSemaphoreTake)
+*(.text.ethernet_input)
+*(.text.ip4_input)
+*(.text.raw_input)
+*(.text.tcp_input .text.tcp_parseopt .text.tcp_receive)
+*(.text.tcp_input_delayed_close)
+*(.text.tcp_free_acked_segments.*)
+*(.text.pbuf_remove_header .text.pbuf_realloc)
+
+/* ACK callback, segment construction and TCP egress. */
+*(.text.net_iperf_tcp_sent)
+. = ALIGN(64);
+*(.text.net_iperf_tcp_send)
+*(.text.tcp_write)
+*(.text.net_iperf_tcp_recv_cb)
+/* Per-packet TCP RX clock and interval check, still executed from Flash. */
+*(.text.get_time_SINCE_BOOT .text.macsw_mac_get_time)
+*(.text.fhost_iperf_print_interv_stats)
+*(.text.tcp_recved)
+*(.text.pbuf_free)
+*(.text.tcp_alloc_header_pbuf.* .text.tcp_tx_header_pbuf_free)
+*(.text.tcp_pbuf_prealloc .text.tcp_create_segment)
+*(.text.tcp_seg_free)
+*(.text.tcp_output_segment_busy)
+*(.text.tcp_output_fill_options.*)
+*(.text.tcp_output_alloc_header_common.* .text.tcp_output_alloc_header.*)
+*(.text.tcp_output .text.tcp_send_empty_ack .text.tcp_output_control_segment)
+*(.text.netif_get_by_index)
+*(.text.tcp_eff_send_mss_netif)
+
+/* TCP pbuf and segment allocation. */
+*(.text.sys_arch_protect .text.sys_arch_unprotect)
+*(.text.do_memp_malloc_pool .text.do_memp_free_pool)
+*(.text.memp_malloc .text.memp_free)
+*(.text.mem_malloc .text.mem_free)
+*(.text.pbuf_alloc .text.pbuf_alloc_reference .text.pbuf_cat .text.pbuf_add_header)
+
+/* Shared checksum, IPv4, ARP and Ethernet egress. */
+*(.text.lwip_standard_chksum)
+*(.text.inet_chksum)
+*(.text.inet_chksum_pseudo .text.ip_chksum_pseudo)
+*(.text.lwip_htons .text.lwip_htonl)
+*(.text.ip4_route)
+*(.text.ip4_output_if .text.ip4_output_if_src)
+*(.text.ip4_addr_isbroadcast_u32)
+*(.text.etharp_output .text.etharp_output_to_arp_index)
+*(.text.ethernet_output)
+*(.text.pbuf_add_header_impl .text.pbuf_header_impl .text.pbuf_header)
+
+. = ALIGN(64);
+
+/* UDP TX packet production and buffer ownership. */
+*(.text.net_iperf_udp_client_run)
+*(.text.net_iperf_find_free_send_buf)
+*(.text.net_iperf_pbuf_custom_header_free_cb)
+*(.text.net_iperf_pbuf_custom_payload_free_cb)
+*(.text.rtos_semaphore_wait .text.rtos_semaphore_signal)
+*(.text.xQueueGenericSend)
+*(.text.udp_send)
+*(.text.udp_sendto .text.udp_sendto_if .text.udp_sendto_if_src)
+
+/* UDP receive path. */
+*(.text.udp_input)
+*(.text.net_iperf_udp_recv_cb)

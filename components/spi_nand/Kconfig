@@ -1,0 +1,17 @@
+menu "SPI NAND"
+
+config SPI_NAND
+    bool "SPI NAND flash"
+    default n
+    help
+      Enable the Bouffalo SPI NAND driver and Dhara FTL, using
+      SPI/GPIO. Supports polling SIO and 512-byte logical sectors.
+
+config NAND_FLASH_VERIFY_WRITE
+    bool "Read back and verify NAND page writes"
+    default n
+    depends on SPI_NAND
+    help
+      Enable physical-page readback verification after programming.
+
+endmenu

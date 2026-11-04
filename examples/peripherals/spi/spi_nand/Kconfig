@@ -1,0 +1,8 @@
+mainmenu "SPI NAND Example"
+source "$BL_SDK_BASE/Kconfig"
+config SPI_NAND_EXAMPLE_FORMAT
+    bool "Format an unformatted /flash volume"
+    default n
+    help
+      Explicitly allow f_mkfs when no filesystem is detected. Existing NAND
+      contents may be overwritten. Leave disabled when checking stored data.
