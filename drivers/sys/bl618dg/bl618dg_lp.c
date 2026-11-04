@@ -591,6 +591,22 @@ void bl_lp_fw_init(void)
     BL_LP_LOG("[LP] init finish\r\n");
 }
 
+void bl_lp_ble_rx_ppm_clear(void)
+{
+    lp_fw_ble_para_t *ble = iot2lp_para->ble_parameter;
+
+    if (ble == NULL) {
+        return;
+    }
+
+    ble->con_rx_ppm_valid = 0U;
+    ble->con_rx_ppm_rtc_hus = 0U;
+    ble->con_rx_ppm_evt_cnt = 0U;
+    ble->con_rx_ppm_interval = 0U;
+    ble->con_rx_ppm_rate = 0U;
+    ble->con_rx_ppm = 0;
+}
+
 int bl_lp_init(void)
 {
     bl_lp_env_init();

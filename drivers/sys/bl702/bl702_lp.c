@@ -183,7 +183,7 @@ void lp_fw_restore_cpu_para(uint32_t save_addr)
         /* Intial the mtvt, MUST BE 64 bytes aligned*/
         ".weak __Vectors\n\t"
         "la t0, __Vectors\n\t"
-        "csrw mtvt, t0\n\t"
+        "csrw 0x307, t0\n\t"
 
 
         );

@@ -544,7 +544,9 @@ void ram_heap_init(void)
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
 
+#if !defined(CPU_LP)
     mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, (size_t)&_heap_wifi_size);
+#endif
 
 #ifndef CPU_LP
 #ifdef CONFIG_PSRAM

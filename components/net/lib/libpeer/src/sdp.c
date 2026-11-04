@@ -14,6 +14,7 @@ void sdp_init(Sdp* sdp, char* content, size_t capacity) {
   sdp->capacity = capacity;
   sdp->length = 0;
   sdp->failed = content == NULL || capacity == 0;
+  sdp->video_mid = sdp->audio_mid = sdp->data_mid = NULL;
   if (!sdp->failed) {
     content[0] = '\0';
   }
@@ -60,7 +61,7 @@ int sdp_append_h264(Sdp* sdp) {
          sdp_append(sdp, "a=rtpmap:96 H264/90000") ||
          sdp_append(sdp, "a=ssrc:1 cname:webrtc-h264") ||
          sdp_append(sdp, "a=sendrecv") ||
-         sdp_append(sdp, "a=mid:video") ||
+         sdp_append(sdp, "a=mid:%s", sdp->video_mid ? sdp->video_mid : "video") ||
          sdp_append(sdp, "a=rtcp-mux");
 }
 
@@ -70,7 +71,7 @@ int sdp_append_pcma(Sdp* sdp) {
          sdp_append(sdp, "a=rtpmap:8 PCMA/8000") ||
          sdp_append(sdp, "a=ssrc:4 cname:webrtc-pcma") ||
          sdp_append(sdp, "a=sendrecv") ||
-         sdp_append(sdp, "a=mid:audio") ||
+         sdp_append(sdp, "a=mid:%s", sdp->audio_mid ? sdp->audio_mid : "audio") ||
          sdp_append(sdp, "a=rtcp-mux");
 }
 
@@ -80,7 +81,7 @@ int sdp_append_pcmu(Sdp* sdp) {
          sdp_append(sdp, "a=rtpmap:0 PCMU/8000") ||
          sdp_append(sdp, "a=ssrc:5 cname:webrtc-pcmu") ||
          sdp_append(sdp, "a=sendrecv") ||
-         sdp_append(sdp, "a=mid:audio") ||
+         sdp_append(sdp, "a=mid:%s", sdp->audio_mid ? sdp->audio_mid : "audio") ||
          sdp_append(sdp, "a=rtcp-mux");
 }
 
@@ -90,19 +91,19 @@ int sdp_append_opus(Sdp* sdp) {
          sdp_append(sdp, "a=rtpmap:111 opus/48000/2") ||
          sdp_append(sdp, "a=ssrc:6 cname:webrtc-opus") ||
          sdp_append(sdp, "a=sendrecv") ||
-         sdp_append(sdp, "a=mid:audio") ||
+         sdp_append(sdp, "a=mid:%s", sdp->audio_mid ? sdp->audio_mid : "audio") ||
          sdp_append(sdp, "a=rtcp-mux");
 }
 
 int sdp_append_datachannel(Sdp* sdp) {
   return sdp_append(sdp, "m=application 9 UDP/DTLS/SCTP webrtc-datachannel") ||
          sdp_append(sdp, "c=IN IP4 0.0.0.0") ||
-         sdp_append(sdp, "a=mid:datachannel") ||
+         sdp_append(sdp, "a=mid:%s", sdp->data_mid ? sdp->data_mid : "datachannel") ||
          sdp_append(sdp, "a=sctp-port:5000") ||
          sdp_append(sdp, "a=max-message-size:%u", (unsigned)CONFIG_SCTP_MESSAGE_SIZE);
 }
 
-int sdp_create(Sdp* sdp, int b_video, int b_audio, int b_datachannel) {
+int sdp_create_bundle(Sdp* sdp, const char* first, const char* second, const char* third) {
   if (sdp_append(sdp, "v=0") ||
       sdp_append(sdp, "o=- 1495799811084970 1495799811084970 IN IP4 0.0.0.0") ||
       sdp_append(sdp, "s=-") ||
@@ -116,8 +117,14 @@ int sdp_create(Sdp* sdp, int b_video, int b_audio, int b_datachannel) {
   }
 #endif
 
-  return sdp_append(sdp, "a=group:BUNDLE%s%s%s",
-                    b_video ? " video" : "",
-                    b_audio ? " audio" : "",
-                    b_datachannel ? " datachannel" : "");
+  return sdp_append(sdp, "a=group:BUNDLE%s%s%s%s%s%s",
+                    first ? " " : "", first ? first : "",
+                    second ? " " : "", second ? second : "",
+                    third ? " " : "", third ? third : "");
+}
+
+int sdp_create(Sdp* sdp, int b_video, int b_audio, int b_datachannel) {
+  return sdp_create_bundle(sdp, b_video ? "video" : NULL,
+                          b_audio ? "audio" : NULL,
+                          b_datachannel ? "datachannel" : NULL);
 }

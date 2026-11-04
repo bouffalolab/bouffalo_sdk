@@ -17,14 +17,6 @@
 /** @brief Maximum UDP datagram size accepted by all backends, in bytes. */
 #define IPERF_MAX_UDP_LEN           4096U
 
-#ifdef CONFIG_SOCKET_OFFLOAD_CLIENT
-#define IPERF_RAW_TCP_BACKEND NULL
-#define IPERF_RAW_UDP_BACKEND NULL
-#else
-#define IPERF_RAW_TCP_BACKEND (&g_iperf_tcp_raw_ops)
-#define IPERF_RAW_UDP_BACKEND (&g_iperf_udp_raw_ops)
-#endif
-
 /**
  * @brief Immutable protocol/backend operation dispatch table.
  * @note The first index is bflb_iperf_proto_t and the second index is
@@ -33,11 +25,15 @@
 static const iperf_backend_ops_t *const s_backends[][2] = {
     [BFLB_IPERF_PROTO_TCP] = {
         [BFLB_IPERF_BACKEND_SOCKET] = &g_iperf_tcp_socket_ops,
-        [BFLB_IPERF_BACKEND_RAW] = IPERF_RAW_TCP_BACKEND,
+#ifdef CONFIG_IPERF_RAW
+        [BFLB_IPERF_BACKEND_RAW] = &g_iperf_tcp_raw_ops,
+#endif
     },
     [BFLB_IPERF_PROTO_UDP] = {
         [BFLB_IPERF_BACKEND_SOCKET] = &g_iperf_udp_socket_ops,
-        [BFLB_IPERF_BACKEND_RAW] = IPERF_RAW_UDP_BACKEND,
+#ifdef CONFIG_IPERF_RAW
+        [BFLB_IPERF_BACKEND_RAW] = &g_iperf_udp_raw_ops,
+#endif
     },
 };
 

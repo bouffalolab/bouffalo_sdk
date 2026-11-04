@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.15)
 
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
-# User
-sdk_add_compile_definitions(-DRPMSG_BUFFER_SIZE=1600)
-
 if (CONFIG_IPC)
     #sdk_add_compile_definitions(-DCONFIG_IPC_ENABLE)
     if (CONFIG_RPMSG_SERVICE)

@@ -49,6 +49,22 @@ void board_i2c0_gpio_init(void)
                        GPIO_SMT_EN | GPIO_DRV_2);
 }
 
+void board_sdh_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    /* Single-bit TF: CMD/CLK/DAT0. Leave GPIO48 for audio-board enable. */
+    bflb_gpio_init(gpio, GPIO_PIN_45,
+                   GPIO_FUNC_SDH | GPIO_ALTERNATE | GPIO_PULLUP |
+                       GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_46,
+                   GPIO_FUNC_SDH | GPIO_ALTERNATE | GPIO_PULLUP |
+                       GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_47,
+                   GPIO_FUNC_SDH | GPIO_ALTERNATE | GPIO_PULLUP |
+                       GPIO_SMT_EN | GPIO_DRV_1);
+}
+
 void board_audio_pll_config_for_rate(unsigned int samplerate_hz)
 {
     switch (samplerate_hz) {
@@ -114,6 +130,8 @@ void board_audac_gpio_init(void)
 
     board_audio_pll_config_for_rate(48000);
     GLB_Set_Audio_SOLO_CLK(ENABLE, 3);
+    /* Let the builtin codec rate selectors control their clock dividers. */
+    GLB_Set_Audio_AUTO_CLK(ENABLE);
     bflb_gpio_init(gpio, GPIO_PIN_0,
                    GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP |
                        GPIO_SMT_EN | GPIO_DRV_2);
@@ -128,6 +146,8 @@ void board_auadc_gpio_init(void)
 
     board_audio_pll_config_for_rate(48000);
     GLB_Set_Audio_SOLO_CLK(ENABLE, 3);
+    /* Let the builtin codec rate selectors control their clock dividers. */
+    GLB_Set_Audio_AUTO_CLK(ENABLE);
 #ifdef CONFIG_AUDIO_MIC_PDM_MODE
     bflb_gpio_init(gpio, GPIO_PIN_25,
                    GPIO_FUNC_PDM | GPIO_ALTERNATE | GPIO_FLOAT |

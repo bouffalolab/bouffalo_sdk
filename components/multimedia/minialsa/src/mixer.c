@@ -123,7 +123,7 @@ msp_mixer_elem_t *msp_mixer_elem_next(msp_mixer_elem_t *elem_p)
 
     msp_mixer_elem_t *elem = elem_p->mixer->cur_elem;
 
-    elem = msp_slist_entry(&elem_p->next, msp_mixer_elem_t, next);
+    elem = msp_slist_entry(elem_p->next.next, msp_mixer_elem_t, next);
 
     return elem;
 }

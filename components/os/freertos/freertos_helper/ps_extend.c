@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <FreeRTOS.h>
+#include <semphr.h>
 #include <task.h>
 #include "shell.h"
 #include "ps_extend.h"
@@ -107,6 +108,8 @@ struct irqs_stat {
 static struct tasks_stat ps_tasks_stat;
 static struct irqs_stat ps_irqs_stat;
 static uint64_t interval;
+static StaticSemaphore_t ps_mutex_buffer;
+static SemaphoreHandle_t ps_mutex;
 
 // similar to vTaskList
 static int u_task_list(char *write_buffer, int32_t buffer_len, float *usage, float *trap_usage)
@@ -271,9 +274,13 @@ void freertos_helper_ps_init_all_irqctx(void)
     }
 }
 
-static void ps_cmd(char *buf, int len, int argc, char **argv)
+void freertos_helper_ps_dump(void)
 {
-    freertos_helper_ps_init();
+    if(freertos_helper_ps_init() != 0 || ps_mutex == NULL ||
+       xSemaphoreTake(ps_mutex, portMAX_DELAY) != pdPASS) {
+        printf("cli: mutex take error\r\n");
+        return;
+    }
 
     char *buffer;
     uint32_t buffer_len = PS_BUFFER_SIZE;
@@ -286,6 +293,7 @@ static void ps_cmd(char *buf, int len, int argc, char **argv)
     buffer = pvPortMalloc(buffer_len);
     if (NULL == buffer) {
         printf("cli: malloc error\r\n");
+        xSemaphoreGive(ps_mutex);
         return;
     }
     *buffer = 0;
@@ -312,6 +320,12 @@ static void ps_cmd(char *buf, int len, int argc, char **argv)
         printf("cli: other error\r\n");
     }
     vPortFree(buffer);
+    xSemaphoreGive(ps_mutex);
+}
+
+static void ps_cmd(char *buf, int len, int argc, char **argv)
+{
+    freertos_helper_ps_dump();
 }
 
 SHELL_CMD_EXPORT_ALIAS(ps_cmd, ps_extend, task dump with extend usage);
@@ -319,11 +333,20 @@ SHELL_CMD_EXPORT_ALIAS(ps_cmd, ps_extend, task dump with extend usage);
 int freertos_helper_ps_init(void)
 {
     static int inited = 0;
+
+    taskENTER_CRITICAL();
     if(!inited) {
+        ps_mutex = xSemaphoreCreateMutexStatic(&ps_mutex_buffer);
+        if(ps_mutex == NULL) {
+            taskEXIT_CRITICAL();
+            return -pdFREERTOS_ERRNO_ENOMEM;
+        }
+        freertos_helper_ps_init_all_irqctx();
         vPortRegisterReportIrqCost(irq_ctx_count_cost);
         vPortRegisterReportExpCost(exp_ctx_count_cost);
-        freertos_helper_ps_init_all_irqctx();
         inited = 1;
     }
+    taskEXIT_CRITICAL();
+
     return 0;
 }

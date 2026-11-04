@@ -57,11 +57,13 @@
 #define XCODEC_DMA_INPUT_PER_NODE_SIZE  (1920) //20ms    //(1536)//16ms
 
 #define XCODEC_OUTPUT_TASK_PRI          (2)
-#define XCODEC_OUTPUT_TASK_STACK_SIZE   (1024) //bytes
+#define XCODEC_OUTPUT_TASK_STACK_SIZE   (2048) //bytes
 #define XCODEC_OUTPUT_EVENT_TIMEROUT    (10)   //ms
 
 #define XCODEC_INPUT_TASK_PRI           (2)
-#define XCODEC_INPUT_TASK_STACK_SIZE    (8192)
+#ifndef CONFIG_XCODEC_INPUT_TASK_STACK_SIZE
+#define CONFIG_XCODEC_INPUT_TASK_STACK_SIZE (8192)
+#endif
 #define XCODEC_INPUT_EVENT_TIMEROUT     (20)
 
 #ifndef DMA_BASE
@@ -103,6 +105,30 @@ static uint32_t xcodec_normalize_slot_width(uint32_t bit_width, uint32_t slot_wi
 }
 
 static aui_ch_t rx_context;
+static xcodec_pcm_layout_t pcm_layout;
+
+void xcodec_set_pcm_layout(const xcodec_pcm_layout_t *layout)
+{
+    pcm_layout = layout ? *layout : (xcodec_pcm_layout_t){0};
+}
+
+int xcodec_pcm_prepare(xcodec_pcm_format_t *pcm, int input, uint32_t channels,
+                       uint32_t bit_width, uint32_t slot_width, uint32_t period, uint32_t buffer)
+{
+    int ret = xcodec_pcm_format_prepare(pcm, &pcm_layout, input, channels, bit_width, slot_width,
+                                        period, buffer, input ? sizeof(aui_segment_t) : sizeof(auo_segment_t), 32);
+    if (ret != 0) {
+        return ret;
+    }
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
+    uint32_t transfer_bytes = pcm_layout.channels ? pcm_layout.fifo_sample_bytes :
+                              (channels == 1 ? slot_width / 8U : 4U);
+#else
+    uint32_t transfer_bytes = 2U;
+#endif
+    /* Each period is one DMA descriptor with a 12-bit transfer count. */
+    return pcm->period / transfer_bytes > 4095U ? -1 : 0;
+}
 static struct bflb_device_s *audac_dev = NULL;
 static uint32_t g_xcodec_output_clock_mhz;
 
@@ -180,10 +206,11 @@ xcodec_error_t xcodec_input_open(xcodec_t *codec, xcodec_input_t *ch, uint32_t c
 
     rx_context.ch_idx = ch_idx;
     rx_context.ringbuffer = ch->ring_buf;
+    rx_context.device_dma = NULL;
     rx_context.dma = msp_malloc(sizeof(aui_dma_t));
 
     rx_context.task_pri = XCODEC_INPUT_TASK_PRI;
-    rx_context.stack_size = XCODEC_INPUT_TASK_STACK_SIZE;   //Bytes
+    rx_context.stack_size = CONFIG_XCODEC_INPUT_TASK_STACK_SIZE; //Bytes
     rx_context.event_timeout = XCODEC_INPUT_EVENT_TIMEROUT; //ms
     rx_context.maxcount = XCODEC_DMA_INPUT_NODE_NUM;
     rx_context.per_node_size = XCODEC_DMA_INPUT_PER_NODE_SIZE;
@@ -215,6 +242,7 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
     aui_cfg_t cfg;
 
     ch->period = config->period;
+    ch->pcm_format = config->pcm_format ? *config->pcm_format : (xcodec_pcm_format_t){0};
 
     slot_width = xcodec_normalize_slot_width(config->bit_width, config->slot_width);
     cfg.sample_rate = config->sample_rate;
@@ -230,6 +258,9 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
     cfg.pdm_in_pin = config->pdm_in_pin;
     cfg.pdm_clk_pin = config->pdm_clk_pin;
     rx_context.maxcount = config->buffer_size / (config->period + sizeof(aui_segment_t));
+    if (config->pcm_format) {
+        rx_context.maxcount = config->pcm_format->periods;
+    }
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
     {
         msp_i2s_device_cfg_t i2s_cfg = {
@@ -332,12 +363,43 @@ xcodec_error_t xcodec_input_start(xcodec_input_t *ch)
 
 uint32_t xcodec_input_read(xcodec_input_t *ch, void *data, uint32_t size)
 {
+    const xcodec_pcm_format_t *pcm = &ch->pcm_format;
+    if (pcm->channels && pcm->layout.channels) {
+        uint32_t fifo[64];
+        uint32_t done = 0;
+        if (!data || size % pcm->frame_bytes) {
+            return 0;
+        }
+        while (done < size) {
+            uint32_t frames = (size - done) / pcm->frame_bytes;
+            uint32_t available = aui_buffer_avail(&rx_context) / pcm->dma_frame_bytes;
+            if (frames > sizeof(fifo) / pcm->dma_frame_bytes) {
+                frames = sizeof(fifo) / pcm->dma_frame_bytes;
+            }
+            if (frames > available) {
+                frames = available;
+            }
+            if (!frames) {
+                break;
+            }
+            uint32_t received = aui_read(&rx_context, fifo, frames * pcm->dma_frame_bytes);
+            if (received % pcm->dma_frame_bytes) {
+                break;
+            }
+            xcodec_pcm_unpack((uint8_t *)data + done, fifo, received / pcm->dma_frame_bytes, pcm);
+            done += received / pcm->dma_frame_bytes * pcm->frame_bytes;
+            if (received != frames * pcm->dma_frame_bytes) {
+                break;
+            }
+        }
+        return done;
+    }
     return aui_read(&rx_context, data, size);
 }
 
 uint32_t xcodec_input_read_async(xcodec_input_t *ch, void *data, uint32_t size)
 {
-    return aui_read(&rx_context, data, size);
+    return xcodec_input_read(ch, data, size);
 }
 
 void xcodec_input_stop(xcodec_input_t *ch)
@@ -367,11 +429,13 @@ void xcodec_input_close(xcodec_input_t *ch)
 
 uint32_t xcodec_input_buffer_avail(xcodec_input_t *ch)
 {
-    return aui_buffer_avail(&rx_context);
+    uint32_t bytes = aui_buffer_avail(&rx_context);
+    return ch->pcm_format.channels ? bytes / ch->pcm_format.dma_frame_bytes * ch->pcm_format.frame_bytes : bytes;
 }
 uint32_t xcodec_input_buffer_remain(xcodec_input_t *ch)
 {
-    return aui_buffer_remain(&rx_context);
+    uint32_t bytes = aui_buffer_remain(&rx_context);
+    return ch->pcm_format.channels ? bytes / ch->pcm_format.dma_frame_bytes * ch->pcm_format.frame_bytes : bytes;
 }
 
 xcodec_error_t xcodec_input_buffer_reset(xcodec_input_t *ch)
@@ -415,6 +479,10 @@ static uint32_t xcodec_output_frame_bytes(const auo_ch_t *context)
     }
 
     slot_width = xcodec_normalize_slot_width(context->bit_width, context->slot_width);
+    if (pcm_layout.channels == context->sound_channel_num && pcm_layout.bit_width == context->bit_width &&
+        pcm_layout.slot_width == slot_width) {
+        return pcm_layout.channels * pcm_layout.fifo_sample_bytes;
+    }
     sample_bytes = (slot_width + 7U) / 8U;
     return sample_bytes * context->sound_channel_num;
 }
@@ -485,6 +553,7 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
 
     tx_context.ch_idx = ch_idx;
     tx_context.ringbuffer = ch->ring_buf;
+    tx_context.device_dma = NULL;
     tx_context.dma = msp_malloc(sizeof(auo_dma_t));
     msp_dma_ch_cfg_t dma_channel_cfg;
     dma_channel_cfg = msp_dma_channel_config();
@@ -539,6 +608,7 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
     }
 
     ch->period = config->period;
+    ch->pcm_format = config->pcm_format ? *config->pcm_format : (xcodec_pcm_format_t){0};
 
     slot_width = xcodec_normalize_slot_width(config->bit_width, config->slot_width);
     cfg.sample_rate = config->sample_rate;
@@ -549,6 +619,9 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
     cfg.sound_channel_num = config->sound_channel_num;
     cfg.per_node_size = config->period;
     tx_context.maxcount = config->buffer_size / (config->period + sizeof(auo_segment_t));
+    if (config->pcm_format) {
+        tx_context.maxcount = config->pcm_format->periods;
+    }
 #if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
     {
         msp_i2s_device_cfg_t i2s_cfg = {
@@ -647,11 +720,45 @@ uint32_t xcodec_output_write(xcodec_output_t *ch, const void *data, uint32_t siz
         user_log("codec have close ?\r\n");
         return 0;
     }
+    const xcodec_pcm_format_t *pcm = &ch->pcm_format;
+    if (pcm->channels && pcm->layout.channels) {
+        uint32_t fifo[64];
+        uint32_t done = 0;
+        if (!data || size % (2U * pcm->frame_bytes)) {
+            return 0;
+        }
+        while (done < size) {
+            uint32_t frames = (size - done) / pcm->frame_bytes;
+            uint32_t available = (auo_buffer_avail(&tx_context) / 32U) * 2U;
+            if (frames > sizeof(fifo) / pcm->dma_frame_bytes) {
+                frames = sizeof(fifo) / pcm->dma_frame_bytes;
+            }
+            if (frames > available) {
+                frames = available;
+            }
+            if (!frames) {
+                break;
+            }
+            xcodec_pcm_pack(fifo, (const uint8_t *)data + done, frames, pcm);
+            uint32_t written = auo_write(&tx_context, fifo, frames * pcm->dma_frame_bytes);
+            if (written % pcm->dma_frame_bytes) {
+                break;
+            }
+            done += written / pcm->dma_frame_bytes * pcm->frame_bytes;
+            if (written != frames * pcm->dma_frame_bytes) {
+                break;
+            }
+        }
+        return done;
+    }
     return auo_write(&tx_context, data, size);
 }
 
 uint32_t xcodec_output_write_async(xcodec_output_t *ch, const void *data, uint32_t size)
 {
+    if (ch->pcm_format.channels && ch->pcm_format.layout.channels) {
+        return xcodec_output_write(ch, data, size);
+    }
     if (NULL == tx_context.dma) {
         user_log("codec have close ?\r\n");
         return 0;
@@ -704,12 +811,14 @@ xcodec_error_t xcodec_output_resume(xcodec_output_t *ch)
 
 uint32_t xcodec_output_buffer_avail(xcodec_output_t *ch)
 {
-    return auo_buffer_avail(&tx_context);
+    uint32_t bytes = auo_buffer_avail(&tx_context);
+    return ch->pcm_format.channels ? bytes / ch->pcm_format.dma_frame_bytes * ch->pcm_format.frame_bytes : bytes;
 }
 
 uint32_t xcodec_output_buffer_remain(xcodec_output_t *ch)
 {
-    return auo_buffer_remain(&tx_context);
+    uint32_t bytes = auo_buffer_remain(&tx_context);
+    return ch->pcm_format.channels ? bytes / ch->pcm_format.dma_frame_bytes * ch->pcm_format.frame_bytes : bytes;
 }
 
 xcodec_error_t xcodec_output_buffer_reset(xcodec_output_t *ch)

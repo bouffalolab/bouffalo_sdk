@@ -6,25 +6,11 @@
 
 #### 下载工具链
 
-**Windows:**
+**Windows / Linux / macOS:**
 ```bash
-# 下载地址
-https://github.com/bouffalolab/toolchain_gcc_t-head_windows
-```
-
-**Linux:**
-```bash
-# 下载地址
-https://github.com/bouffalolab/toolchain_gcc_t-head_linux
-
-# 解压
-tar -xzf riscv64-unknown-elf-gcc.tar.gz
-```
-
-**macOS:**
-```bash
-# macOS需要自建工具链
-# 参考：https://github.com/p4ddy1/pine_ox64/blob/main/build_toolchain_macos.md
+# 使用 Bouffalo riscv64-unknown-elf GCC 14.3（自带 Picolibc）
+# 将其 bin 目录加入 PATH
+export PATH="/path/to/riscv64-unknown-elf/bin:$PATH"
 ```
 
 #### 配置工具链

@@ -32,9 +32,9 @@ int bflb_audac_init(struct bflb_device_s *dev, const struct bflb_audac_init_conf
     /* set output mode and sampling rate */
     regval &= ~AUDAC_AU_PWM_MODE_MASK;
     if (config->output_mode != AUDAC_OUTPUT_MODE_PWM) {
-        regval |= (config->sampling_rate + 8) << AUDAC_AU_PWM_MODE_SHIFT;
+        regval |= ((uint32_t)config->sampling_rate + 8U) << AUDAC_AU_PWM_MODE_SHIFT;
     } else {
-        regval |= config->sampling_rate << AUDAC_AU_PWM_MODE_SHIFT;
+        regval |= (uint32_t)config->sampling_rate << AUDAC_AU_PWM_MODE_SHIFT;
     }
     putreg32(regval, reg_base + AUDAC_0_OFFSET);
 

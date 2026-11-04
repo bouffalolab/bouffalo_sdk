@@ -188,6 +188,72 @@ static int wl_p2p_group_add_pin_cmd(int argc, char **argv)
     return 0;
 }
 
+static int wl_p2p_listen_wps_cmd(int argc, char **argv,
+                                 enum bl_p2p_wps_mode mode,
+                                 const char *cmd)
+{
+    const char *pin = NULL;
+    unsigned int duration_sec = WL_P2P_DEFAULT_LISTEN_WPS_DURATION_SEC;
+    unsigned int channel;
+
+    if (argc < 2) {
+        printf("usage: %s <channel> [duration_sec] [pin]\n", cmd);
+        return -1;
+    }
+
+    channel = (unsigned int) atoi(argv[1]);
+    if (!wl_p2p_is_2g_channel(channel)) {
+        printf("invalid channel=%u\n", channel);
+        return -1;
+    }
+
+    if (argc >= 3) {
+        duration_sec = (unsigned int) atoi(argv[2]);
+        if (duration_sec == 0) {
+            duration_sec = WL_P2P_DEFAULT_LISTEN_WPS_DURATION_SEC;
+        }
+    }
+
+    if (mode == BL_P2P_WPS_PIN_DISPLAY && argc >= 4 &&
+        argv[3] != NULL && argv[3][0] != '\0' &&
+        strcmp(argv[3], "auto") != 0) {
+        pin = argv[3];
+    }
+
+    if (bl_p2p_listen_wps_start(mode, (uint8_t) channel,
+                                duration_sec * 1000U, pin) < 0) {
+        printf("%s failed (call p2p_init first)\n", cmd);
+        return -1;
+    }
+
+    if (mode == BL_P2P_WPS_PBC) {
+        printf("%s armed channel=%u duration=%u sec method=pbc\n",
+               cmd, channel, duration_sec);
+        printf("Start PBC on the peer while this device is listening.\n");
+    } else if (pin != NULL) {
+        printf("%s armed channel=%u duration=%u sec method=pin pin=%s\n",
+               cmd, channel, duration_sec, pin);
+        printf("When the peer prompts for a PIN, enter %s.\n", pin);
+    } else {
+        printf("%s armed channel=%u duration=%u sec method=pin\n",
+               cmd, channel, duration_sec);
+        printf("PIN will be generated after a peer requests PIN display.\n");
+    }
+    return 0;
+}
+
+static int wl_p2p_listen_pin_cmd(int argc, char **argv)
+{
+    return wl_p2p_listen_wps_cmd(argc, argv, BL_P2P_WPS_PIN_DISPLAY,
+                                 "wl_p2p_listen_pin");
+}
+
+static int wl_p2p_listen_pbc_cmd(int argc, char **argv)
+{
+    return wl_p2p_listen_wps_cmd(argc, argv, BL_P2P_WPS_PBC,
+                                 "wl_p2p_listen_pbc");
+}
+
 static int wl_p2p_connect_pbc_cmd(int argc, char **argv)
 {
     uint8_t peer[6];
@@ -257,6 +323,40 @@ static int wl_p2p_prov_disc_cmd(int argc, char **argv)
     return 0;
 }
 
+static int wl_p2p_go_intent_cmd(int argc, char **argv)
+{
+    int go_intent;
+    int listen_wps_go_intent;
+
+    if (argc < 3) {
+        bl_p2p_get_go_intent(&go_intent, &listen_wps_go_intent);
+        printf("usage: wl_p2p_go_intent <go_intent 0-%d> "
+               "<listen_wps_go_intent 0-%d>\n",
+               WL_P2P_MAX_GO_INTENT, WL_P2P_MAX_GO_INTENT);
+        printf("go_intent=%d listen_wps_go_intent=%d\n",
+               go_intent, listen_wps_go_intent);
+        return -1;
+    }
+
+    go_intent = atoi(argv[1]);
+    listen_wps_go_intent = atoi(argv[2]);
+    if (go_intent < 0 || go_intent > WL_P2P_MAX_GO_INTENT ||
+        listen_wps_go_intent < 0 || listen_wps_go_intent > WL_P2P_MAX_GO_INTENT) {
+        printf("invalid go_intent=%d listen_wps_go_intent=%d (range 0-%d)\n",
+               go_intent, listen_wps_go_intent, WL_P2P_MAX_GO_INTENT);
+        return -1;
+    }
+
+    if (bl_p2p_set_go_intent(go_intent, listen_wps_go_intent) < 0) {
+        printf("wl_p2p_go_intent failed\n");
+        return -1;
+    }
+
+    printf("wl_p2p_go_intent ok go_intent=%d listen_wps_go_intent=%d\n",
+           go_intent, listen_wps_go_intent);
+    return 0;
+}
+
 static int wl_p2p_stop_cmd(int argc, char **argv)
 {
     (void) argc;
@@ -283,21 +383,7 @@ static int wl_p2p_deinit_cmd(int argc, char **argv)
 
 static int p2p_init_cmd(int argc, char **argv)
 {
-    int ret;
-
-    if (wl_p2p_apply_device_name_arg(argc, argv) < 0) {
-        printf("p2p_init failed to set device name\n");
-        return -1;
-    }
-
-    ret = bl_p2p_init();
-    if (ret < 0) {
-        printf("p2p_init failed (%d)\n", ret);
-        return -1;
-    }
-
-    printf("p2p_init ok\n");
-    return 0;
+    return wl_p2p_init_cmd(argc, argv);
 }
 
 static int p2p_find_cmd(int argc, char **argv)
@@ -330,60 +416,6 @@ static int p2p_wps_pin_cmd(int argc, char **argv)
     return wl_p2p_group_add_pin_cmd(argc, argv);
 }
 
-static int wl_p2p_listen_wps_cmd(int argc, char **argv,
-                                 enum bl_p2p_wps_mode mode,
-                                 const char *cmd)
-{
-    const char *pin = NULL;
-    unsigned int duration_sec = WL_P2P_DEFAULT_LISTEN_WPS_DURATION_SEC;
-    unsigned int channel;
-
-    if (argc < 2) {
-        printf("usage: %s <channel> [duration_sec] [pin]\n", cmd);
-        return -1;
-    }
-
-    channel = (unsigned int) atoi(argv[1]);
-    if (!wl_p2p_is_2g_channel(channel)) {
-        printf("invalid channel=%u\n", channel);
-        return -1;
-    }
-
-    if (argc >= 3) {
-        duration_sec = (unsigned int) atoi(argv[2]);
-        if (duration_sec == 0) {
-            duration_sec = WL_P2P_DEFAULT_LISTEN_WPS_DURATION_SEC;
-        }
-    }
-
-    if (mode == BL_P2P_WPS_PIN_DISPLAY && argc >= 4 &&
-        argv[3] != NULL && argv[3][0] != '\0' &&
-        strcmp(argv[3], "auto") != 0) {
-        pin = argv[3];
-    }
-
-    if (bl_p2p_listen_wps_start(mode, (uint8_t) channel,
-                                duration_sec * 1000U, pin) < 0) {
-        printf("%s failed (call p2p_init first)\n", cmd);
-        return -1;
-    }
-
-    if (mode == BL_P2P_WPS_PBC) {
-        printf("%s armed channel=%u duration=%u sec method=pbc\n",
-               cmd, channel, duration_sec);
-        printf("Start PBC on the peer while this device is listening.\n");
-    } else if (pin != NULL) {
-        printf("%s armed channel=%u duration=%u sec method=pin pin=%s\n",
-               cmd, channel, duration_sec, pin);
-        printf("When the peer prompts for a PIN, enter %s.\n", pin);
-    } else {
-        printf("%s armed channel=%u duration=%u sec method=pin\n",
-               cmd, channel, duration_sec);
-        printf("PIN will be generated after a peer requests PIN display.\n");
-    }
-    return 0;
-}
-
 static int p2p_listen_pin_cmd(int argc, char **argv)
 {
     return wl_p2p_listen_wps_cmd(argc, argv, BL_P2P_WPS_PIN_DISPLAY,
@@ -406,6 +438,11 @@ static int p2p_connect_pin_cmd(int argc, char **argv)
     return wl_p2p_connect_pin_cmd(argc, argv);
 }
 
+static int p2p_go_intent_cmd(int argc, char **argv)
+{
+    return wl_p2p_go_intent_cmd(argc, argv);
+}
+
 static int p2p_stop_cmd(int argc, char **argv)
 {
     return wl_p2p_stop_cmd(argc, argv);
@@ -414,40 +451,6 @@ static int p2p_stop_cmd(int argc, char **argv)
 static int p2p_deinit_cmd(int argc, char **argv)
 {
     return wl_p2p_deinit_cmd(argc, argv);
-}
-
-static int p2p_go_intent_cmd(int argc, char **argv)
-{
-    int go_intent;
-    int listen_wps_go_intent;
-
-    if (argc < 3) {
-        bl_p2p_get_go_intent(&go_intent, &listen_wps_go_intent);
-        printf("usage: p2p_go_intent <go_intent 0-%d> "
-               "<listen_wps_go_intent 0-%d>\n",
-               WL_P2P_MAX_GO_INTENT, WL_P2P_MAX_GO_INTENT);
-        printf("go_intent=%d listen_wps_go_intent=%d\n",
-               go_intent, listen_wps_go_intent);
-        return -1;
-    }
-
-    go_intent = atoi(argv[1]);
-    listen_wps_go_intent = atoi(argv[2]);
-    if (go_intent < 0 || go_intent > WL_P2P_MAX_GO_INTENT ||
-        listen_wps_go_intent < 0 || listen_wps_go_intent > WL_P2P_MAX_GO_INTENT) {
-        printf("invalid go_intent=%d listen_wps_go_intent=%d (range 0-%d)\n",
-               go_intent, listen_wps_go_intent, WL_P2P_MAX_GO_INTENT);
-        return -1;
-    }
-
-    if (bl_p2p_set_go_intent(go_intent, listen_wps_go_intent) < 0) {
-        printf("p2p_go_intent failed\n");
-        return -1;
-    }
-
-    printf("p2p_go_intent ok go_intent=%d listen_wps_go_intent=%d\n",
-           go_intent, listen_wps_go_intent);
-    return 0;
 }
 
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_init_cmd, wl_p2p_init, wl80211 p2p runtime init);
@@ -459,14 +462,21 @@ SHELL_CMD_EXPORT_ALIAS(wl_p2p_group_add_pbc_cmd, wl_p2p_group_add_pbc,
                        wl80211 p2p autonomous go with pbc);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_group_add_pin_cmd, wl_p2p_group_add_pin,
                        wl80211 p2p autonomous go with pin);
+SHELL_CMD_EXPORT_ALIAS(wl_p2p_listen_pin_cmd, wl_p2p_listen_pin,
+                       wl80211 p2p listen for peer-initiated WPS PIN onboarding);
+SHELL_CMD_EXPORT_ALIAS(wl_p2p_listen_pbc_cmd, wl_p2p_listen_pbc,
+                       wl80211 p2p listen for peer-initiated WPS PBC onboarding);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_connect_pbc_cmd, wl_p2p_connect_pbc,
                        wl80211 p2p connect via pbc);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_connect_pin_cmd, wl_p2p_connect_pin,
                        wl80211 p2p connect via pin display);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_prov_disc_cmd, wl_p2p_prov_disc,
                        wl80211 p2p provision discovery);
+SHELL_CMD_EXPORT_ALIAS(wl_p2p_go_intent_cmd, wl_p2p_go_intent,
+                       wl80211 p2p set go_intent and listen_wps_go_intent);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_stop_cmd, wl_p2p_stop, wl80211 p2p stop);
 SHELL_CMD_EXPORT_ALIAS(wl_p2p_deinit_cmd, wl_p2p_deinit, wl80211 p2p runtime deinit);
+
 SHELL_CMD_EXPORT_ALIAS(p2p_init_cmd, p2p_init, prepare wl80211 p2p runtime);
 SHELL_CMD_EXPORT_ALIAS(p2p_find_cmd, p2p_find, start wl80211 p2p discovery scan);
 SHELL_CMD_EXPORT_ALIAS(p2p_listen_cmd, p2p_listen, start wl80211 p2p listen mode);
@@ -486,9 +496,9 @@ SHELL_CMD_EXPORT_ALIAS(p2p_connect_pbc_cmd, p2p_connect_pbc,
                        join a wl80211 P2P GO with WPS PBC);
 SHELL_CMD_EXPORT_ALIAS(p2p_connect_pin_cmd, p2p_connect_pin,
                        join a wl80211 P2P GO with WPS PIN display mode);
-SHELL_CMD_EXPORT_ALIAS(p2p_stop_cmd, p2p_stop, stop wl80211 p2p runtime activity);
-SHELL_CMD_EXPORT_ALIAS(p2p_deinit_cmd, p2p_deinit, deinit wl80211 p2p runtime);
 SHELL_CMD_EXPORT_ALIAS(p2p_go_intent_cmd, p2p_go_intent,
                        set go_intent and listen_wps_go_intent);
+SHELL_CMD_EXPORT_ALIAS(p2p_stop_cmd, p2p_stop, stop wl80211 p2p runtime activity);
+SHELL_CMD_EXPORT_ALIAS(p2p_deinit_cmd, p2p_deinit, deinit wl80211 p2p runtime);
 
 #endif /* CONFIG_BL_SUPPLICANT_P2P */

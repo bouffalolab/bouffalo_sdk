@@ -18,6 +18,7 @@ ifndef VERBOSE
 endif
 
 BUILD_DIR ?= build
+export BFLB_PICOLIBC_SPECS
 PYTHON ?= python3
 .DEFAULT_GOAL := $(BUILD_DIR)
 

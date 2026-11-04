@@ -1195,8 +1195,11 @@ int usbd_ep_set_stall(uint8_t busid, const uint8_t ep)
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     if (ep_idx == 0) {
+        /* Set CX_DONE in the same write as CX_STL to also complete the control
+         * transfer. Otherwise, after an OUT request is stalled, the controller
+         * ignores every following control transfer until the next bus reset. */
         regval = getreg32(BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
-        regval |= USB_CX_STL;
+        regval |= USB_CX_STL | USB_CX_DONE;
         putreg32(regval, BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
     } else {
         if (USB_EP_DIR_IS_OUT(ep)) {

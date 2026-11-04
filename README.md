@@ -117,11 +117,10 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 
 ## Toolchain
 
-- [riscv64-unknown-elf-gcc](https://github.com/bouffalolab/toolchain_gcc_t-head_windows) toolchain used in windows.
-- [riscv64-unknown-elf-gcc](https://github.com/bouffalolab/toolchain_gcc_t-head_linux) toolchain used in linux.
-- T-HEAD official does not provide macos toolchain, so you should build by yourself, refer to [build_toolchain_macos](https://github.com/p4ddy1/pine_ox64/blob/main/build_toolchain_macos.md).
-- [linux-riscv64-linux-gcc](https://gitee.com/bouffalolab/linuxtoolchain_gcc_t-head) toolchain used for compiling linux code.
-- [riscv64-zephyr-elf](https://github.com/zephyrproject-rtos/sdk-ng/releases/tag/v1.0.0) toolchain used for compiling BL618DG.
+Download the SDK toolchain from one of the following locations:
+
+- Global: [GitHub](https://github.com/bouffalolab/toolchain/releases/tag/default)
+- China: [Gitee](https://gitee.com/bouffalolab/toolchain/releases/tag/latest)
 
 ## Command Line Development
 

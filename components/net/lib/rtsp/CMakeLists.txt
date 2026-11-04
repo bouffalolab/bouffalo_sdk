@@ -1,5 +1,8 @@
 sdk_generate_library()
 
+sdk_library_add_sources(src/rtsp_server.c src/rtsp_server_jpeg.c)
+
+if(CONFIG_RTSP_LEGACY)
 sdk_library_add_sources(src/delay_task.c)
 sdk_library_add_sources(src/jpeg_parser.c)
 
@@ -14,5 +17,6 @@ sdk_library_add_sources(src/rtsp_srv.c)
 
 sdk_library_add_sources(src/sd_handler.c)
 sdk_library_add_sources(src/util.c)
+endif()
 
 sdk_add_include_directories(inc)

@@ -13,6 +13,7 @@ int main(void)
     uint8_t subaddr[2] = { 0x00, EEPROM_SELECT_PAGE0};
     uint8_t write_data[256];
     uint8_t read_data[256];
+    int ret;
 
     board_init();
     board_i2c0_gpio_init();
@@ -38,7 +39,11 @@ int main(void)
     msgs[1].buffer = write_data;
     msgs[1].length = EEPROM_TRANSFER_LENGTH;
 
-    bflb_i2c_transfer(i2c0, msgs, 2);
+    ret = bflb_i2c_transfer(i2c0, msgs, 2);
+    if (ret) {
+        printf("bflb_i2c_transfer write error, ret = %d\r\n", ret);
+        return ret;
+    }
     printf("write over\r\n");
     bflb_mtimer_delay_ms(100);
 
@@ -47,7 +52,11 @@ int main(void)
     msgs[1].flags = I2C_M_READ;
     msgs[1].buffer = read_data;
     msgs[1].length = EEPROM_TRANSFER_LENGTH;
-    bflb_i2c_transfer(i2c0, msgs, 2);
+    ret = bflb_i2c_transfer(i2c0, msgs, 2);
+    if (ret) {
+        printf("bflb_i2c_transfer read error, ret = %d\r\n", ret);
+        return ret;
+    }
     printf("read over\r\n");
     bflb_mtimer_delay_ms(100);
 

@@ -53,7 +53,14 @@ int agent_recv_nonblocking(Agent *agent, uint8_t *buf, int capacity)
 
 static void audio(uint8_t *data, size_t length, void *context)
 {
+    #if CONFIG_LIBPEER_RTP_PACKET_INFO
+    PeerRtpPacketInfo info;
+    assert(peer_connection_get_audio_packet_info(context, &info) == 0);
+    assert(info.ssrc == 42 && info.sequence == delivered && info.timestamp == delivered * 960);
+    assert(info.payload_type == PT_OPUS);
+#else
     (void)context;
+#endif
     assert(length == 1 && data[0] == (uint8_t)delivered);
     delivered++;
 }
@@ -63,7 +70,11 @@ int main(void)
     PeerConnection pc = {0};
     pc.state = PEER_CONNECTION_COMPLETED;
     pc.remote_assrc = 42;
-    assert(rtp_decoder_init(&pc.artp_decoder, CODEC_OPUS, audio, NULL) == 0);
+    assert(rtp_decoder_init(&pc.artp_decoder, CODEC_OPUS, audio, &pc) == 0);
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+    PeerRtpPacketInfo info;
+    assert(peer_connection_get_audio_packet_info(&pc, &info) == -1);
+#endif
     queued = 4;
     assert(peer_connection_loop(&pc) == 0);
     assert(delivered == 2 && queued == 2 && polls == 2);
@@ -82,10 +93,31 @@ int main(void)
         assert(delivered == before + 2 && queued == 38 - i * 2);
     }
     assert(delivered == 44 && queued == 0);
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+    RtpDiagnosticReport report;
+    assert(peer_connection_get_rtp_diagnostics(&pc, 0, &report) == 0);
+    assert(report.received_packets == 44 && report.expected_packets == 43);
+    assert(report.packets_lost == 0);
+    pc.artp_encoder.ssrc = 7;
+    uint8_t compound[60] = {0x80, 200, 0, 6};
+    compound[7] = 42; compound[23] = 44;
+    compound[28] = 0x81; compound[29] = 201; compound[31] = 7;
+    compound[35] = 42; compound[39] = 7; compound[43] = 2;
+    peer_connection_incoming_rtcp(&pc, compound, sizeof(compound));
+    assert(peer_connection_get_rtp_diagnostics(&pc, 0, &report) == 0);
+    assert(report.sender_reports == 1 && report.sender_packets == 44);
+    assert(report.remote_reports == 1 && report.remote_packets_lost == 2);
+    /* Every truncation boundary, including an incomplete compound tail. */
+    for (size_t len = 0; len < sizeof(compound); ++len)
+        peer_connection_incoming_rtcp(&pc, compound, len);
+#endif
     /* Unknown SSRC must consume budget and allow subsequent media to drain. */
     packet_ssrc = 99;
     queued = 2;
     assert(peer_connection_loop(&pc) == 0);
     assert(delivered == 44 && queued == 0);
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+    assert(peer_connection_get_audio_packet_info(&pc, &info) == -1);
+#endif
     puts("RTP bursts drain in order within the bounded receive budget");
 }

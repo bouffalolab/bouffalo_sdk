@@ -9,6 +9,11 @@
 #ifndef _ANSI_H_
 #define _ANSI_H_
 
+/* Older Picolibc POSIX headers still use Newlib's attribute macro. */
+#ifndef _ATTRIBUTE
+#define _ATTRIBUTE(attrs) __attribute__(attrs)
+#endif
+
 #ifdef __cplusplus
 #if defined(__GNUC__)
 #define __BEGIN_DECLS extern "C" {

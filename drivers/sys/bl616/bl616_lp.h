@@ -9,10 +9,14 @@ extern uint64_t (*shared_CPU_Get_MTimer_Counter)(void);
 extern void (*shared_arch_delay_ms)(uint32_t);
 extern void (*shared_arch_delay_us)(uint32_t);
 extern int32_t (*shared_CPU_Reset_MTimer)(void);
-extern int32_t (*shared_lpfw_calculate_beacon_delay)(uint32_t *, uint64_t, uint64_t, uint32_t);
-extern int32_t (*shared_lpfw_beacon_delay_sliding_win_get_average)(uint32_t *);
+/* First parameter is void *: these pointers carry the address of a function
+ * that lives in the LPFW image (TCM), so the concrete object type is only known
+ * on the LPFW side. Keeping it typed as uint32_t * no longer builds under GCC
+ * 14, which made -Wincompatible-pointer-types an error. */
+extern int32_t (*shared_lpfw_calculate_beacon_delay)(void *, uint64_t, uint64_t, uint32_t);
+extern int32_t (*shared_lpfw_beacon_delay_sliding_win_get_average)(void *);
 extern int32_t (*shared_AON_Set_LDO11_SOC_Sstart_Delay)(uint32_t);
-extern int32_t (*shared_PDS_Default_Level_Config)(uint32_t*, uint32_t);
+extern int32_t (*shared_PDS_Default_Level_Config)(void *, uint32_t);
 #endif
 
 #define IOT2LP_PARA_ADDR          0x20010400

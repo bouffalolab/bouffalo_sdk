@@ -267,9 +267,9 @@ struct p2p_funcs {
     void (*notify_ap_disassoc)(const uint8_t *addr);
 };
 
-int bl_wifi_register_p2p_cb_internal(const struct p2p_funcs *cb);
-int bl_wifi_unregister_p2p_cb_internal(void);
-const struct p2p_funcs *bl_wifi_get_p2p_cb_internal(void);
+int wl80211_supplicant_register_p2p_cb_internal(const struct p2p_funcs *cb);
+int wl80211_supplicant_unregister_p2p_cb_internal(void);
+const struct p2p_funcs *wl80211_supplicant_get_p2p_cb_internal(void);
 #endif /* CONFIG_WL80211_P2P */
 
 #if defined(CONFIG_BL_SUPPLICANT_WPS) || defined(CONFIG_WL80211_P2P)
@@ -283,9 +283,9 @@ struct wps_ap_funcs {
     void (*sta_removed)(const uint8_t *peer_addr);
 };
 
-int bl_wifi_register_wps_ap_cb_internal(const struct wps_ap_funcs *cb);
-int bl_wifi_unregister_wps_ap_cb_internal(void);
-const struct wps_ap_funcs *bl_wifi_get_wps_ap_cb_internal(void);
+int wl80211_supplicant_register_wps_ap_cb_internal(const struct wps_ap_funcs *cb);
+int wl80211_supplicant_unregister_wps_ap_cb_internal(void);
+const struct wps_ap_funcs *wl80211_supplicant_get_wps_ap_cb_internal(void);
 #endif
 
 typedef enum wps_status {
@@ -306,16 +306,14 @@ void bl_wifi_timer_start(bl_wifi_timer_t *ptimer, uint32_t time_ms);
 void bl_wifi_timer_stop(bl_wifi_timer_t *ptimer);
 void bl_wifi_timer_setfn(bl_wifi_timer_t *ptimer, bl_wifi_timer_func_t *pfunction, void *parg);
 #if defined(CONFIG_WL80211_P2P)
-int bl_wifi_set_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, const uint8_t *ie, uint16_t len, bool sta);
-int bl_wifi_unset_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, bool sta);
-const uint8_t *bl_wifi_get_appie_ram_internal(bool sta, wifi_appie_ram_t type, uint16_t *len);
+int wl80211_supplicant_set_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, const uint8_t *ie, uint16_t len,
+                                              bool sta);
+int wl80211_supplicant_unset_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, bool sta);
+const uint8_t *wl80211_supplicant_get_appie_ram_internal(bool sta, wifi_appie_ram_t type, uint16_t *len);
 #endif
 
 #if defined(CONFIG_WL80211_P2P)
-int bl_wifi_set_wps_cb_internal(const struct wps_funcs *wps_cb);
-const struct wps_funcs *bl_wifi_get_wps_cb_internal(void);
-wps_status_t bl_wifi_get_wps_status_internal(void);
-void bl_wifi_set_wps_status_internal(wps_status_t status);
+const struct wps_funcs *wl80211_supplicant_get_wps_cb_internal(void);
 const uint8_t *wl80211_supplicant_get_appie_internal(bool sta, wifi_appie_t type, uint16_t *len);
 #endif
 

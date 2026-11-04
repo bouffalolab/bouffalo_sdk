@@ -17,6 +17,7 @@ extern "C"
 #include <stdbool.h>
 
 #include <xutils/mringbuffer.h>
+#include <xcodec_pcm.h>
 
 #define AUDIO_ALIGNMENT_MASK (0x001f)
 #define AUDIO_ALIGNMENT_BYTES (32)
@@ -96,6 +97,7 @@ struct xcodec_output {
     void                  *priv;
     struct xcodec_output  *next;
     uint32_t              pa_pin;
+    xcodec_pcm_format_t    pcm_format;
 };
 
 typedef struct xcodec_input xcodec_input_t;
@@ -111,6 +113,7 @@ struct xcodec_input {
     xcodec_state_t        state;              ///< Dma channel handle
     void                  *priv;
     struct xcodec_input   *next;
+    xcodec_pcm_format_t    pcm_format;
 };
 
 struct xcodec {
@@ -145,6 +148,7 @@ typedef struct {
     uint32_t              pdm_clk_pin;                ///< used for digital
     uint32_t              negative_pin;               ///< used for negative_pin
     uint32_t              positive_pin;               ///< used for positive_pin
+    const xcodec_pcm_format_t *pcm_format;             ///< Optional logical PCM I/O; NULL keeps raw DMA byte I/O
 } xcodec_input_config_t;
 
 typedef struct {
@@ -159,7 +163,14 @@ typedef struct {
     uint32_t              pa_pin;
     uint32_t              negative_pin;               ///< used for negative_pin
     uint32_t              positive_pin;               ///< used for positive_pin
+    const xcodec_pcm_format_t *pcm_format;             ///< Optional logical PCM I/O; NULL keeps raw DMA byte I/O
 } xcodec_output_config_t;
+
+/* Register the board's FIFO layout before preparing PCM buffers. No registration
+ * is needed for native PCM. Existing raw configs and raw examples stay unchanged. */
+void xcodec_set_pcm_layout(const xcodec_pcm_layout_t *layout);
+int xcodec_pcm_prepare(xcodec_pcm_format_t *pcm, int input, uint32_t channels,
+                       uint32_t bit_width, uint32_t slot_width, uint32_t period, uint32_t buffer);
 
 typedef struct {
     uint64_t              clock_counter_48k;          ///< Presented audio frames mapped to the 48 kHz clock domain

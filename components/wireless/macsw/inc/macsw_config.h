@@ -74,9 +74,6 @@
 //#define CFG_LPM
 #undef CFG_LPM
 //#define CFG_HE_TB ??
-#ifndef RC_EZ23Q4
-#define RC_EZ23Q4 0
-#endif
 
 #ifndef RC_EZ23Q4_BCN
 #define RC_EZ23Q4_BCN 0

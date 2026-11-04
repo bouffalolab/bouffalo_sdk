@@ -409,6 +409,19 @@ config SOLN_SD_JPEG_LOG_LEVEL
 
 endif # SOLN_SD_AVI_AUDIO_EN
 
+config SOLN_HB_TX_WRAM_RESERVE_SIZE
+    int "HiBooster TX WRAM reserve threshold in bytes"
+    range 0 16384
+    default 4096
+    depends on WL80211
+    depends on SOLN_HB_TX_EN || SOLN_HB_RX_EN || SOLN_HB_TX_TEST_EN || SOLN_HB_RX_TEST_EN
+    help
+      Reject HiBooster TX pbuf allocations when the remaining WL80211
+      WRAM allocation quota is below this threshold. Shared by sender,
+      receiver control packets and HiBooster tests.
+      Set to 0 to disable this check. A nonzero WL80211 WRAM size limit
+      is required. This is a best-effort check, not a memory reservation.
+
 menuconfig SOLN_HB_TX_EN
     bool "HiBooster sender"
     default n
@@ -430,6 +443,14 @@ menuconfig SOLN_HB_RX_EN
     depends on LWIP && SOLN_FBQ_VID_JPEG_REMOTE_EN
     help
       Enable the Soln HiBooster JPEG receiver adapter.
+
+config SOLN_HB_RX_ACK_INTERVAL_MS
+    int "HiBooster receiver ACK interval in milliseconds"
+    range 5 200
+    default 10
+    depends on SOLN_HB_RX_EN
+    help
+      Interval in milliseconds between HiBooster receiver ACK packets.
 
 config SOLN_HB_RX_LOG_LEVEL
     int "HiBooster receiver log level"

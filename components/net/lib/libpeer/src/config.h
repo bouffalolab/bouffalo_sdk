@@ -29,6 +29,13 @@
 #ifndef CONFIG_MBEDTLS_DEBUG
 #define CONFIG_MBEDTLS_DEBUG 0
 #endif
+
+#ifndef CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+#define CONFIG_LIBPEER_MEDIA_DIAGNOSTICS 0
+#endif
+#ifndef CONFIG_LIBPEER_RTP_PACKET_INFO
+#define CONFIG_LIBPEER_RTP_PACKET_INFO 0
+#endif
 #ifndef CONFIG_MBEDTLS_2_X
 #define CONFIG_MBEDTLS_2_X 1
 #endif
@@ -88,6 +95,15 @@
 
 #ifndef CONFIG_SDP_BUFFER_SIZE
 #define CONFIG_SDP_BUFFER_SIZE 8096
+#endif
+
+/* Remote SDP is parsed from caller memory, not copied into the local SDP
+ * serialization buffer. Include space for the caller's trailing NUL. */
+#ifndef CONFIG_REMOTE_SDP_MAX_SIZE
+#define CONFIG_REMOTE_SDP_MAX_SIZE 49152
+#endif
+#if CONFIG_REMOTE_SDP_MAX_SIZE < 1 || CONFIG_REMOTE_SDP_MAX_SIZE > 60000
+#error "Remote SDP limit must be in 1..60000 bytes"
 #endif
 
 #ifndef CONFIG_SCTP_MESSAGE_SIZE

@@ -106,14 +106,14 @@ void bflb_rv_eclic_set_priority_irq(int irq, uint8_t priority)
 }
 
 /* Cache enable/disable touches MCACHE_CTL, so S-mode only does maintenance. */
-void bflb_rv_icache_enable(void)
+ATTR_TCM_SECTION void bflb_rv_icache_enable(void)
 {
 #if !defined(CONFIG_RV_PRIVILEGE_MODE_S)
     EnableICache();
 #endif
 }
 
-void bflb_rv_icache_disable(void)
+ATTR_TCM_SECTION void bflb_rv_icache_disable(void)
 {
 #if !defined(CONFIG_RV_PRIVILEGE_MODE_S)
     DisableICache();
@@ -138,18 +138,17 @@ ATTR_TCM_SECTION void bflb_rv_icache_invalid_range(unsigned long addr, unsigned 
 #endif
 }
 
-void bflb_rv_dcache_enable(void)
+ATTR_TCM_SECTION void bflb_rv_dcache_enable(void)
 {
 #if !defined(CONFIG_RV_PRIVILEGE_MODE_S)
     EnableDCache();
 #endif
 }
 
-void bflb_rv_dcache_disable(void)
+ATTR_TCM_SECTION void bflb_rv_dcache_disable(void)
 {
 #if !defined(CONFIG_RV_PRIVILEGE_MODE_S)
-    MFlushInvalDCache();
-    DisableDCache();
+    MFlushInvalDCacheAndDisable();
 #endif
 }
 

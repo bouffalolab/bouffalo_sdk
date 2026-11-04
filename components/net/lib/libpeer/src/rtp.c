@@ -6,6 +6,9 @@
 #include "peer_connection.h"
 #include "rtp.h"
 #include "utils.h"
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+#include "ports.h"
+#endif
 
 typedef enum RtpH264Type {
 
@@ -436,11 +439,24 @@ static int rtp_decode_generic(RtpDecoder* rtp_decoder, uint8_t* buf, size_t size
   uint8_t* payload;
   size_t payload_size;
 
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+  uint16_t sequence;
+  uint32_t timestamp;
+  if (rtp_get_payload(buf, size, &payload, &payload_size, &sequence, &timestamp) != 0)
+    return -1;
+  rtp_decoder->packet_info = (PeerRtpPacketInfo){.ssrc = rtp_get_ssrc(buf),
+      .timestamp = timestamp, .sequence = sequence, .payload_type = buf[1] & 127U};
+  rtp_decoder->packet_info_valid = 1;
+#else
   if (rtp_get_payload(buf, size, &payload, &payload_size, NULL, NULL) != 0) {
     return -1;
   }
+#endif
   if (rtp_decoder->on_packet != NULL)
     rtp_decoder->on_packet(payload, payload_size, rtp_decoder->user_data);
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+  rtp_decoder->packet_info_valid = 0;
+#endif
   return (int)size;
 }
 
@@ -450,6 +466,12 @@ int rtp_decoder_init(RtpDecoder* rtp_decoder, MediaCodec codec,
     return -1;
 
   memset(rtp_decoder, 0, sizeof(*rtp_decoder));
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+  uint32_t rate = codec == CODEC_H264 ? 90000U : codec == CODEC_OPUS ? 48000U :
+                  (codec == CODEC_PCMA || codec == CODEC_PCMU) ? 8000U : 0U;
+  rtp_diagnostics_init(&rtp_decoder->diagnostics, rate,
+                       codec == CODEC_PCMA || codec == CODEC_PCMU);
+#endif
   rtp_decoder->on_packet = on_packet;
   rtp_decoder->user_data = user_data;
 
@@ -489,5 +511,14 @@ void rtp_decoder_deinit(RtpDecoder* rtp_decoder) {
 int rtp_decoder_decode(RtpDecoder* rtp_decoder, uint8_t* buf, size_t size) {
   if (!rtp_decoder || rtp_decoder->decode_func == NULL)
     return -1;
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+  uint8_t *payload;
+  size_t payload_size;
+  uint16_t sequence;
+  uint32_t timestamp;
+  if (rtp_get_payload(buf, size, &payload, &payload_size, &sequence, &timestamp) == 0)
+    rtp_diagnostics_receive(&rtp_decoder->diagnostics, rtp_get_ssrc(buf),
+                             sequence, timestamp, payload_size, ports_get_epoch_time());
+#endif
   return rtp_decoder->decode_func(rtp_decoder, buf, size);
 }

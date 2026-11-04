@@ -16,10 +16,6 @@ EXCLUDE_DIRS=(
 )
 
 # pre-process compile_commands.json
-sed -i 's/-mtune=e907/-mtune=generic-rv32/' compile_commands.json
-sed -i 's/rv32imafcpzpsfoperand_xtheade/rv32imafc/' compile_commands.json
-sed -i 's/-march=rv32imafc_xtheade/-march=rv32imafc/' compile_commands.json
-sed -i 's/-march=rv32imafcpzpsfoperand_xtheade/-march=rv32imafc/' compile_commands.json
 sed -i '/-fstrict-volatile-bitfields/d' compile_commands.json
 
 while IFS= read -r file; do

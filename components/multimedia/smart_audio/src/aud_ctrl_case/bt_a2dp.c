@@ -477,7 +477,7 @@ void msp_app_bt_avrcp_get_play_status(void)
     bt_prf_avrcp_ct_cmd_get_play_status();
 }
 
-int msp_app_bt_a2dp_connect(uint8_t remote_addr[])
+int msp_app_bt_a2dp_connect(uint8_t remote_addr[BT_BD_ADDR_LEN])
 {
     return bt_prf_a2dp_sink_connect((bt_dev_addr_t *)remote_addr);
 }

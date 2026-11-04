@@ -92,11 +92,11 @@ const pmp_config pmp_entry_tab[] = {
         .base_addr = 0x20000000,
         .order = 28, /* 2^28 = 256M */
     },
-    /* 0x30000000 ~ 0x32000000, size:32M, flash, device */
+    /* 0x30000000 ~ 0x34000000, size:64M, flash, device */
     {
         .protection = PMP_L | PMP_R | PMP_W,
         .base_addr = 0x30000000,
-        .order = 25, /* 2^25 = 32M */
+        .order = 26, /* 2^26 = 64M */
     },
 #ifdef CONFIG_PSRAM
     /* 0x38000000 ~ 0x3A000000, size:32M, psram, device */
@@ -119,11 +119,11 @@ const pmp_config pmp_entry_tab[] = {
         .base_addr = 0x60000000,
         .order = 25, /* 2^25 = 32M */
     },
-    /* 0x70000000 ~ 0x72000000, size:32M, flash, non-cacheable */
+    /* 0x70000000 ~ 0x74000000, size:64M, flash, non-cacheable */
     {
         .protection = PMP_L | PMP_R | PMP_W | PMP_X,
         .base_addr = 0x70000000,
-        .order = 25, /* 2^25 = 32M */
+        .order = 26, /* 2^26 = 64M */
     },
 #ifdef CONFIG_PSRAM
     /* 0x78000000 ~ 0x7A000000, size:32M, psram, non-cacheable */
@@ -146,11 +146,11 @@ const pmp_config pmp_entry_tab[] = {
         .base_addr = 0xA0000000,
         .order = 25, /* 2^25 = 32M */
     },
-    /* 0xB0000000 ~ 0xB2000000, size:32M, flash, cacheable */
+    /* 0xB0000000 ~ 0xB4000000, size:64M, flash, cacheable */
     {
         .protection = PMP_L | PMP_R | PMP_W | PMP_X,
         .base_addr = 0xB0000000,
-        .order = 25, /* 2^25 = 32M */
+        .order = 26, /* 2^26 = 64M */
     },
 #ifdef CONFIG_PSRAM
     /* 0xB8000000 ~ 0xBA000000, size:32M, psram, cacheable */

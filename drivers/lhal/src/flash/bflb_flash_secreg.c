@@ -299,10 +299,30 @@ __UNUSED static const ATTR_TCM_CONST_SECTION bflb_flash_secreg_param_t flash_sec
 };
 
 __UNUSED static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_params[] = {
+    {
+        /*!< XM25QH512D */
+        .jedec_id = 0x204020,
+        .param = flash_secreg_param_gd_25q256d_25s512md,
+    },
 
     {
         /*!< IS25LP256H */
         .jedec_id = 0x19609d,
+        .param = flash_secreg_param_issi_25lp256h,
+    },
+    {
+        /*!< IS25LP01GJ */
+        .jedec_id = 0x21609d,
+        .param = flash_secreg_param_issi_25lp256h,
+    },
+    {
+        /*!< IS25LP01G */
+        .jedec_id = 0x1b609d,
+        .param = flash_secreg_param_issi_25lp256h,
+    },
+    {
+        /*!< IS25WP01G */
+        .jedec_id = 0x1b709d,
         .param = flash_secreg_param_issi_25lp256h,
     },
 

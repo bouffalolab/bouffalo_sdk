@@ -10,4 +10,5 @@ struct bflb_i2c_msg_s {
 #define I2C_M_NOSTOP 0x02
 #define I2C_M_READ 0x01
 int bflb_i2c_transfer(struct bflb_device_s *, struct bflb_i2c_msg_s *, int);
+void bflb_i2c_init(struct bflb_device_s *, uint32_t);
 #endif

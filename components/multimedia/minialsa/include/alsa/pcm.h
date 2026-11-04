@@ -281,6 +281,7 @@ int msp_pcm_hw_params_set_rate(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsi
 int msp_pcm_hw_params_set_rate_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int *val, int *dir);
 int msp_pcm_hw_params_get_period_size(const msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val, int *dir);
 int msp_pcm_hw_params_set_period_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val, int *dir);
+int msp_pcm_hw_params_set_buffer_time_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, unsigned int *val, int *dir);
 int msp_pcm_hw_params_get_buffer_size(const msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val);
 int msp_pcm_hw_params_set_buffer_size_near(msp_pcm_t *pcm, msp_pcm_hw_params_t *params, msp_pcm_uframes_t *val);
 

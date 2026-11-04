@@ -1,8 +1,8 @@
 CHIP ?= bl616
 BOARD ?= bl616dk
-ifeq ($(CHIP),bl618dg)
-CROSS_COMPILE ?= riscv64-zephyr-elf-
-CPU_ID ?= ap
-else
+# All Bouffalo chips build with the standard bare-metal RISC-V GCC
+# (riscv64-unknown-elf, GCC 14.3 with Picolibc).
 CROSS_COMPILE ?= riscv64-unknown-elf-
+ifeq ($(CHIP),bl618dg)
+CPU_ID ?= ap
 endif

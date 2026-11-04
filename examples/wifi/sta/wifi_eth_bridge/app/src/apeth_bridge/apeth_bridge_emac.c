@@ -129,7 +129,9 @@ static int emac_low_level_init(struct netif *netif)
     }
     bflb_emac_init(s_emac_ops.emac0, &s_emac_ops.emac_cfgdef);
     bflb_emac_irq_attach(s_emac_ops.emac0, __emac_irq_cb, NULL);
+#if !defined(BL618DG)
     bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_RX_PROMISCUOUS, true);
+#endif
 
     /* scan eth_phy */
     s_emac_ops.phy_ctrl.mac_mdio_dev = bsp_emac_get_device(0);
@@ -173,9 +175,9 @@ static int emac_low_level_init(struct netif *netif)
     /* rx process queue init */
     s_emac_ops.rx_process_queue = xQueueCreate(LWIP_EMAC_RX_BUFF_CNT, sizeof(struct bflb_emac_trans_desc_s));
 
-    /* create the task that handles the ETH_MAC */
+    /* Match the Wi-Fi firmware priority (27) to avoid starving Wi-Fi forwarding. */
     LOG_I("[OS] Starting emac rx task...\r\n");
-    xTaskCreate(ethernetif_input, (char *)"emac_rx_task", LWIP_EMAC_RX_STACK_SIZE, netif, osPriorityRealtime, &s_emac_ops.emac_rx_handle);
+    xTaskCreate(ethernetif_input, (char *)"emac_rx_task", LWIP_EMAC_RX_STACK_SIZE, netif, 27, &s_emac_ops.emac_rx_handle);
 
     netif_set_up(netif);
 
@@ -339,7 +341,11 @@ static void ethernetif_input(void *argument)
                 #else
                 memcpy(p->payload, trans_desc.buff_addr, trans_desc.data_len);
                 #endif
-                /* gpt code */
+                /* The pbuf already holds a copy. Return the DMA buffer before handing the frame to the stack so a stalled input path cannot be overwritten. */
+                /* The pbuf owns an independent copy. Return the DMA buffer
+                 * before bridge/Wi-Fi input can block or retain the pbuf. */
+                s_emac_dbg.rx_push_cnt += 1;
+                bflb_emac_queue_rx_push(s_emac_ops.emac0, &trans_desc);
                 if (netif->input(p, netif) != ERR_OK) {
                     printf("netif->input err, free emac package\r\n");
                     pbuf_free(p);
@@ -347,15 +353,16 @@ static void ethernetif_input(void *argument)
                     s_emac_dbg.lwip_input++;
                 }
             } else {
+                /* On allocation failure, return the DMA buffer before logging the drop. */
+                /* Inspect the dropped frame before DMA can overwrite it. */
+                s_emac_dbg.rx_push_cnt += 1;
+                bflb_emac_queue_rx_push(s_emac_ops.emac0, &trans_desc);
                 s_emac_dbg.lwip_input_memlimit++;
                 if (!(s_emac_dbg.lwip_input_memlimit%100)) {
                     printf("Drop the emac package_cnt:%d, because of pbuf alloc null.\r\n",
                         s_emac_dbg.lwip_input_memlimit);
                 }
             }
-
-            s_emac_dbg.rx_push_cnt += 1;
-            bflb_emac_queue_rx_push(s_emac_ops.emac0, &trans_desc);
         }
     }
 }
@@ -418,6 +425,28 @@ void eth_link_state_update(struct netif *netif)
     int sta = eth_phy_ctrl(&s_emac_ops.phy_ctrl, EPHY_CMD_GET_LINK_STA, 0);
     int speed = eth_phy_ctrl(&s_emac_ops.phy_ctrl, EPHY_CMD_GET_SPEED_MODE, 0);
 
+    if (sta == EPHY_LINK_STA_UP &&
+        /* When the link first comes up, wait until the PHY reports a valid speed. Duplex alone left FE_100M clear, so the port stayed at 10M. */
+        (speed < EPHY_SPEED_MODE_10M_HALF_DUPLEX || speed > EPHY_SPEED_MODE_100M_FULL_DUPLEX)) {
+        return; /* Wait for PHY negotiation to supply a valid mode. */
+    }
+    if (sta == EPHY_LINK_STA_UP &&
+        (link_sta != EPHY_LINK_STA_UP || speed != speed_mode)) {
+        if (speed == EPHY_SPEED_MODE_10M_HALF_DUPLEX || speed == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
+#if defined(EMAC_SPEED_10M_SUPPORT) && EMAC_SPEED_10M_SUPPORT
+            bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_SPEED_10M, 0);
+#else
+            return;
+#endif
+        } else {
+            /* Anything other than 10M is programmed into the EMAC as 100M. If the chip has no 10M support, return on a 10M result. */
+            bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_SPEED_100M, 0);
+        }
+        bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_FULL_DUPLEX,
+                                 speed == EPHY_SPEED_MODE_10M_FULL_DUPLEX ||
+                                 speed == EPHY_SPEED_MODE_100M_FULL_DUPLEX);
+    }
+
     if (sta == EPHY_LINK_STA_UP && link_sta != EPHY_LINK_STA_UP) {
         LOG_W("Lwip Eth Emac LinkUp !!!\r\n");
         /* tx queue reinit */
@@ -438,21 +467,15 @@ void eth_link_state_update(struct netif *netif)
             s_emac_dbg.rx_push_cnt += 1;
         }
 
-        /* enable full duplex mode */
-        if (speed == EPHY_SPEED_MODE_10M_FULL_DUPLEX || speed == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
-            bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
-        } else {
-            bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_FULL_DUPLEX, false);
-        }
         /* enable tx and rx */
         bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_TX_EN, true);
         bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_RX_EN, true);
 
-        netif_set_link_up(netif);
+        netifapi_netif_set_link_up(netif);
 
     } else if (sta != EPHY_LINK_STA_UP && link_sta == EPHY_LINK_STA_UP) {
         LOG_W("Lwip Eth Emac LinkDown !!!\r\n");
-        netif_set_link_down(netif);
+        netifapi_netif_set_link_down(netif);
 
         /* disable tx and rx, and clean tx/rx bd */
         bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_SET_TX_EN, false);
@@ -588,6 +611,8 @@ int emac_status_cmd(int argc, char **argv)
             rx_db_avail,
             bflb_emac_feature_control(s_emac_ops.emac0, EMAC_CMD_GET_RX_BD_PTR, 0));
 
+    (void)argc;
+    (void)argv;
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(emac_status_cmd, emac_status, put netif emac info);

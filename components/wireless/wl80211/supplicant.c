@@ -34,7 +34,6 @@ enum {
     WL80211_EAPOL_TYPE_EAPOL_START = 1,
 };
 
-extern struct wpa_sm gWpaSm;
 extern void *wl80211_ap_get_hostapd_ctx(void);
 
 struct wl80211_appie_slot {
@@ -160,7 +159,7 @@ int wl80211_supplicant_eapol_input(uint8_t vif_type, uint8_t *payload, size_t le
         }
     } else if (vif_type == WL80211_VIF_AP && WG.ap_en && ap_ctx) {
         void *wpa_sm = _ap_get_wpa_sm((uint8_t *)hdr->sa.array);
-        const struct wps_ap_funcs *wps_ap_cb = bl_wifi_get_wps_ap_cb_internal();
+        const struct wps_ap_funcs *wps_ap_cb = wl80211_supplicant_get_wps_ap_cb_internal();
 
         if (wps_ap_cb != NULL && wps_ap_cb->rx_eapol != NULL &&
             wps_ap_cb->rx_eapol((const uint8_t *)hdr->sa.array, (uint8_t *)payload + ETH_HDR_LEN, len - ETH_HDR_LEN)) {
@@ -198,35 +197,40 @@ int wl80211_supplicant_set_sta_key_internal(uint8_t vif_idx, uint8_t sta_idx, wp
 #ifdef DEBUG_FUNCTION
     wl80211_printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
 #endif
-#if defined(CONFIG_WL80211_P2P)
     int mac_cipher_suite_value(uint32_t cipher_suite);
 
     uint8_t cipher_suite;
 
-    (void)key_idx;
     (void)set_tx;
     (void)seq;
     (void)seq_len;
 
+#if defined(CONFIG_WL80211_P2P)
     if (vif_idx >= WL80211_VIF_MAX) {
         return -1;
     }
+#endif
 
     if (alg == WIFI_WPA_ALG_NONE) {
         if (sta_idx == 0xFF) {
             wl80211_mac_clr_gtk(vif_idx, sta_idx);
+#if defined(CONFIG_WL80211_P2P)
+            /* invalidate the cached GTK consumed by the GTK rekey attack check */
             wl80211_supplicant_ctx.sta_gtk_valid[vif_idx] = false;
             wl80211_supplicant_ctx.sta_gtk_len[vif_idx] = 0;
+#endif
         } else {
             wl80211_mac_clr_ptk(vif_idx, sta_idx);
         }
         return 0;
     }
 
+#if defined(CONFIG_WL80211_P2P)
     if (!pairwise && key_len > sizeof(wl80211_supplicant_ctx.sta_gtk[vif_idx])) {
         wl80211_printf("unsupported GTK length = %u\r\n", (unsigned int)key_len);
         return -1;
     }
+#endif
 
     if (key_len == WPA_AES_KEY_LEN) {
         cipher_suite = mac_cipher_suite_value(MAC_RSNIE_CIPHER_CCMP_128);
@@ -256,73 +260,15 @@ int wl80211_supplicant_set_sta_key_internal(uint8_t vif_idx, uint8_t sta_idx, wp
         wl80211_mac_set_key(vif_idx, sta_idx, key_idx, key, key_len, cipher_suite, 0, pairwise); // install PTK
     } else {
         wl80211_mac_set_key(vif_idx, 0xFF, key_idx, key, key_len, cipher_suite, 0, pairwise); // install GTK
+#if defined(CONFIG_WL80211_P2P)
+        /* cache the GTK for wl80211_supplicant_get_sta_gtk() */
         memcpy(wl80211_supplicant_ctx.sta_gtk[vif_idx], key, key_len);
         wl80211_supplicant_ctx.sta_gtk_len[vif_idx] = key_len;
         wl80211_supplicant_ctx.sta_gtk_valid[vif_idx] = true;
-    }
-
-    return 0;
-#else
-#define MAC_RSNIE_CIPHER_USE_GROUP    0x000FAC00
-#define MAC_RSNIE_CIPHER_WEP_40       0x000FAC01
-#define MAC_RSNIE_CIPHER_TKIP         0x000FAC02
-#define MAC_RSNIE_CIPHER_RSVD         0x000FAC03
-#define MAC_RSNIE_CIPHER_CCMP_128     0x000FAC04
-#define MAC_RSNIE_CIPHER_WEP_104      0x000FAC05
-#define MAC_RSNIE_CIPHER_BIP_CMAC_128 0x000FAC06
-#define MAC_RSNIE_CIPHER_NO_GROUP     0x000FAC07
-#define MAC_RSNIE_CIPHER_GCMP_128     0x000FAC08
-#define MAC_RSNIE_CIPHER_GCMP_256     0x000FAC09
-#define MAC_RSNIE_CIPHER_CCMP_256     0x000FAC0A
-#define MAC_RSNIE_CIPHER_BIP_GMAC_128 0x000FAC0B
-#define MAC_RSNIE_CIPHER_BIP_GMAC_256 0x000FAC0C
-#define MAC_RSNIE_CIPHER_BIP_CMAC_256 0x000FAC0D
-
-    int mac_cipher_suite_value(uint32_t cipher_suite);
-
-    uint8_t cipher_suite;
-
-    if (alg == WIFI_WPA_ALG_NONE) {
-        if (sta_idx == 0xFF) {
-            wl80211_mac_clr_gtk(vif_idx, sta_idx);
-        } else {
-            wl80211_mac_clr_ptk(vif_idx, sta_idx);
-        }
-        return 0;
-    }
-
-    if (key_len == WPA_AES_KEY_LEN) {
-        cipher_suite = mac_cipher_suite_value(MAC_RSNIE_CIPHER_CCMP_128);
-    } else if (key_len == WPA_TKIP_KEY_LEN) {
-        cipher_suite = mac_cipher_suite_value(MAC_RSNIE_CIPHER_TKIP);
-
-        uint32_t array[WPA_TKIP_KEY_LEN / 4];
-        uint32_t val1, val2;
-        memcpy(&array, key, WPA_TKIP_KEY_LEN);
-        val1 = array[4];
-        val2 = array[5];
-        array[4] = array[6];
-        array[5] = array[7];
-        array[6] = val1;
-        array[7] = val2;
-        memcpy(key, &array, WPA_TKIP_KEY_LEN);
-    } else if (key_len == WPA_WEP104_KEY_LEN) {
-        cipher_suite = mac_cipher_suite_value(MAC_RSNIE_CIPHER_WEP_104);
-    } else if (key_len == WPA_WEP40_KEY_LEN) {
-        cipher_suite = mac_cipher_suite_value(MAC_RSNIE_CIPHER_WEP_40);
-    } else {
-        wl80211_printf("unsupport key_len = %d!!!\r\n", key_len);
-        abort();
-    }
-
-    if (pairwise) {
-        wl80211_mac_set_key(vif_idx, sta_idx, key_idx, key, key_len, cipher_suite, 0, pairwise); // install PTK
-    } else {
-        wl80211_mac_set_key(vif_idx, 0xFF, key_idx, key, key_len, cipher_suite, 0, pairwise); // install GTK
-    }
-
-    return 0;
 #endif
+    }
+
+    return 0;
 }
 
 bool wl80211_supplicant_auth_done_internal(uint8_t sta_idx, uint16_t reason_code)
@@ -340,13 +286,8 @@ bool wl80211_supplicant_auth_done_internal(uint8_t sta_idx, uint16_t reason_code
         return true;
     }
 
-#if defined(CONFIG_WL80211_P2P)
-    wl80211_printf("wpa auth failed: sta_idx=%u reason=%u\r\n", sta_idx, reason_code);
-    wl80211_mac_disconnect(reason_code, WLAN_FW_DISCONNECT_BY_USER_WITH_DEAUTH);
-#else
-    wl80211_printf("%s:%d\n", __func__, __LINE__);
+    wl80211_printf("%s:%d failed: sta_idx=%u reason=%u\n", __func__, __LINE__, sta_idx, reason_code);
     wl80211_mac_disconnect(reason_code, WLAN_FW_4WAY_HANDSHAKE_ERROR_PSK_TIMEOUT_FAILURE);
-#endif
     return true;
 }
 
@@ -366,25 +307,21 @@ void bl_wifi_timer_setfn(bl_wifi_timer_t *ptimer, bl_wifi_timer_func_t *pfunctio
     ptimer->e.opaque = parg;
 }
 
-#if defined(CONFIG_WL80211_P2P)
-void *bl_wifi_get_hostap_private_internal(void)
-{
-#ifdef DEBUG_FUNCTION
-    wl80211_printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
-#endif
-    return wl80211_ap_get_hostapd_ctx();
-}
-
 int wl80211_supplicant_set_appie_internal(uint8_t vif_idx, wifi_appie_t type, uint8_t *ie, uint16_t len, bool sta)
 {
 #ifdef DEBUG_FUNCTION
     wl80211_printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
 #endif
+
+#if defined(CONFIG_WL80211_P2P)
     struct wl80211_appie_slot *slot;
 
     (void)vif_idx;
     slot = wl80211_get_appie_slot(sta, type);
     return wl80211_replace_appie(slot, ie, len);
+#else
+    return 0;
+#endif
 }
 
 int wl80211_supplicant_unset_appie_internal(uint8_t vif_idx, wifi_appie_t type)
@@ -395,6 +332,7 @@ int wl80211_supplicant_unset_appie_internal(uint8_t vif_idx, wifi_appie_t type)
     return wl80211_supplicant_set_appie_internal(vif_idx, type, NULL, 0, false);
 }
 
+#if defined(CONFIG_WL80211_P2P)
 const uint8_t *wl80211_supplicant_get_appie_internal(bool sta, wifi_appie_t type, uint16_t *len)
 {
     struct wl80211_appie_slot *slot = wl80211_get_appie_slot(sta, type);
@@ -411,26 +349,9 @@ const uint8_t *wl80211_supplicant_get_appie_internal(bool sta, wifi_appie_t type
     }
     return slot->ie;
 }
-#else
-int wl80211_supplicant_set_appie_internal(uint8_t vif_idx, wifi_appie_t type, uint8_t *ie, uint16_t len, bool sta)
-{
-#ifdef DEBUG_FUNCTION
-    wl80211_printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
-#endif
-    return 0;
-}
 
-int wl80211_supplicant_unset_appie_internal(uint8_t vif_idx, wifi_appie_t type)
-{
-#ifdef DEBUG_FUNCTION
-    wl80211_printf(">>>>>>>>>>>> Call function: %s, line: %d\r\n", __FUNCTION__, __LINE__);
-#endif
-    return wl80211_supplicant_set_appie_internal(vif_idx, type, NULL, 0, false);
-}
-#endif
-
-#if defined(CONFIG_WL80211_P2P)
-int bl_wifi_set_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, const uint8_t *ie, uint16_t len, bool sta)
+int wl80211_supplicant_set_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, const uint8_t *ie, uint16_t len,
+                                              bool sta)
 {
     struct wl80211_appie_slot *slot;
 
@@ -439,12 +360,12 @@ int bl_wifi_set_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, const
     return wl80211_replace_appie(slot, ie, len);
 }
 
-int bl_wifi_unset_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, bool sta)
+int wl80211_supplicant_unset_appie_ram_internal(uint8_t vif_idx, wifi_appie_ram_t type, bool sta)
 {
-    return bl_wifi_set_appie_ram_internal(vif_idx, type, NULL, 0, sta);
+    return wl80211_supplicant_set_appie_ram_internal(vif_idx, type, NULL, 0, sta);
 }
 
-const uint8_t *bl_wifi_get_appie_ram_internal(bool sta, wifi_appie_ram_t type, uint16_t *len)
+const uint8_t *wl80211_supplicant_get_appie_ram_internal(bool sta, wifi_appie_ram_t type, uint16_t *len)
 {
     struct wl80211_appie_slot *slot = wl80211_get_appie_ram_slot(sta, type);
 
@@ -619,57 +540,57 @@ int wl80211_supplicant_get_assoc_bssid_internal(uint8_t vif_idx, uint8_t *bssid)
 #endif
 }
 
-#if defined(CONFIG_WL80211_P2P)
 int wl80211_supplicant_set_wps_cb_internal(const struct wps_funcs *wps_cb)
 {
+#if defined(CONFIG_WL80211_P2P)
     wl80211_supplicant_ctx.wps_cb = wps_cb;
+#else
+    // wps_cbs = wps_cb;
+#endif
     return 0;
 }
 
-const struct wps_funcs *bl_wifi_get_wps_cb_internal(void)
+const struct wps_funcs *wl80211_supplicant_get_wps_cb_internal(void)
 {
+#if defined(CONFIG_WL80211_P2P)
     return wl80211_supplicant_ctx.wps_cb;
-}
 #else
-int wl80211_supplicant_set_wps_cb_internal(const struct wps_funcs *wps_cb)
-{
-    // wps_cbs = wps_cb;
-    return 0;
-}
+    return NULL;
 #endif
+}
 
 #if defined(CONFIG_BL_SUPPLICANT_WPS) || defined(CONFIG_WL80211_P2P)
 static const struct wps_ap_funcs *wps_ap_cbs;
 
-int bl_wifi_register_wps_ap_cb_internal(const struct wps_ap_funcs *cb)
+int wl80211_supplicant_register_wps_ap_cb_internal(const struct wps_ap_funcs *cb)
 {
     wps_ap_cbs = cb;
     return 0;
 }
 
-int bl_wifi_unregister_wps_ap_cb_internal(void)
+int wl80211_supplicant_unregister_wps_ap_cb_internal(void)
 {
     wps_ap_cbs = NULL;
     return 0;
 }
 
-const struct wps_ap_funcs *bl_wifi_get_wps_ap_cb_internal(void)
+const struct wps_ap_funcs *wl80211_supplicant_get_wps_ap_cb_internal(void)
 {
     return wps_ap_cbs;
 }
 #else
-int bl_wifi_register_wps_ap_cb_internal(const void *cb)
+int wl80211_supplicant_register_wps_ap_cb_internal(const void *cb)
 {
     (void)cb;
     return 0;
 }
 
-int bl_wifi_unregister_wps_ap_cb_internal(void)
+int wl80211_supplicant_unregister_wps_ap_cb_internal(void)
 {
     return 0;
 }
 
-const void *bl_wifi_get_wps_ap_cb_internal(void)
+const void *wl80211_supplicant_get_wps_ap_cb_internal(void)
 {
     return NULL;
 }
@@ -678,55 +599,44 @@ const void *bl_wifi_get_wps_ap_cb_internal(void)
 #if defined(CONFIG_WL80211_P2P)
 static const struct p2p_funcs *p2p_cbs;
 
-int bl_wifi_register_p2p_cb_internal(const struct p2p_funcs *cb)
+int wl80211_supplicant_register_p2p_cb_internal(const struct p2p_funcs *cb)
 {
     p2p_cbs = cb;
     return 0;
 }
 
-int bl_wifi_unregister_p2p_cb_internal(void)
+int wl80211_supplicant_unregister_p2p_cb_internal(void)
 {
     p2p_cbs = NULL;
     return 0;
 }
 
-const struct p2p_funcs *bl_wifi_get_p2p_cb_internal(void)
+const struct p2p_funcs *wl80211_supplicant_get_p2p_cb_internal(void)
 {
     return p2p_cbs;
 }
 #else
-int bl_wifi_register_p2p_cb_internal(const void *cb)
+int wl80211_supplicant_register_p2p_cb_internal(const void *cb)
 {
     (void)cb;
     return 0;
 }
 
-int bl_wifi_unregister_p2p_cb_internal(void)
+int wl80211_supplicant_unregister_p2p_cb_internal(void)
 {
     return 0;
 }
 
-const void *bl_wifi_get_p2p_cb_internal(void)
+const void *wl80211_supplicant_get_p2p_cb_internal(void)
 {
     return NULL;
 }
 #endif
 
+wps_status_t wl80211_supplicant_get_wps_status_internal(void)
+{
 #if defined(CONFIG_WL80211_P2P)
-wps_status_t wl80211_supplicant_get_wps_status_internal(void)
-{
     return wl80211_supplicant_ctx.wps_status;
-}
-
-void wl80211_supplicant_set_wps_status_internal(wps_status_t status)
-{
-    wl80211_supplicant_ctx.wps_status = status;
-}
-#else
-wps_status_t wl80211_supplicant_get_wps_status_internal(void)
-{
-#if 0
-    return sm_env.wps_status;
 #else
     return WPS_STATUS_DISABLE;
 #endif
@@ -734,11 +644,10 @@ wps_status_t wl80211_supplicant_get_wps_status_internal(void)
 
 void wl80211_supplicant_set_wps_status_internal(wps_status_t status)
 {
-#if 0
-    sm_env.wps_status = status;
+#if defined(CONFIG_WL80211_P2P)
+    wl80211_supplicant_ctx.wps_status = status;
 #endif
 }
-#endif
 
 int wl80211_supplicant_set_igtk_internal(uint8_t vif_idx, uint8_t sta_idx, uint16_t key_idx, const uint8_t *pn,
                                          const uint8_t *key)

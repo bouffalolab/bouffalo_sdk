@@ -36,6 +36,11 @@ static void *tlsf_allocator_init(uint32_t heap_id, void *mem_pool, size_t pool_s
     tlsf_t tlsf_handle;
     size_t heap_struct_size = ALIGN_UP(sizeof(mm_heap_t), 64);
 
+    if (pool_size < heap_struct_size + tlsf_size() +
+                    tlsf_pool_overhead() + tlsf_block_size_min()) {
+        return NULL;
+    }
+
     /* Initialize heap structure */
     heap = (mm_heap_t *)mem_pool;
     memset(heap, 0, heap_struct_size);

@@ -7,8 +7,20 @@
 
 /* RNG/crypto lifecycle is exercised with real mbedTLS in ice_transport.
  * Keep this fd-0/socket ownership test independent of crypto libraries. */
+uint32_t ports_get_epoch_time(void) { return 0; }
 UtilsRandom* utils_random_create(void) { return (UtilsRandom*)1; }
 void utils_random_destroy(UtilsRandom* random) { (void)random; }
+
+/* This test creates no TURN allocation. Keep the no-crypto lifecycle test
+ * independent, and fail loudly if the production code touches a NULL client. */
+int turn_release(TurnClient* c, uint32_t now) { (void)c; (void)now; abort(); }
+void turn_poll(TurnClient* c, uint32_t now) { (void)c; (void)now; abort(); }
+void turn_destroy(TurnClient* c) { (void)c; abort(); }
+int turn_input(TurnClient* c, const Address* source, const uint8_t* packet,
+               size_t size, Address* peer, uint8_t* data, size_t capacity, uint32_t now) {
+    (void)c; (void)source; (void)packet; (void)size;
+    (void)peer; (void)data; (void)capacity; (void)now; abort();
+}
 
 int main(void)
 {

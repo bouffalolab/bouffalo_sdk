@@ -411,6 +411,18 @@ int bflb_i2s_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + I2S_CONFIG_OFFSET);
             break;
 
+        case I2S_CMD_FS_INVERSE:
+            /* Inverse FS signal, arg use true or false, cleared by bflb_i2s_init.
+            Left justified with fs_offset_cycle 1 and FS inversed is the standard I2S (Philips) format */
+            regval = getreg32(reg_base + I2S_IO_CONFIG_OFFSET);
+            if (arg) {
+                regval |= I2S_CR_I2S_FS_INV;
+            } else {
+                regval &= ~I2S_CR_I2S_FS_INV;
+            }
+            putreg32(regval, reg_base + I2S_IO_CONFIG_OFFSET);
+            break;
+
         default:
             ret = -EPERM;
             break;

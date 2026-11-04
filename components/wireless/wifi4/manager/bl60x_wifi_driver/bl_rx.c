@@ -341,23 +341,26 @@ static int bl_rx_scanu_join_cfm(struct bl_hw *bl_hw, struct bl_cmd *cmd, struct 
 
 static int find_ie_ssid(uint8_t *buffer, int len, uint8_t *result, int *ssid_len)
 {
-    int i;
+    int i = 0;
 
-    i = 0;
-    while (i < len) {
+    while (i + 2 <= len) {
 #define IE_ID_SSID 0x00
+        uint8_t ie_len = buffer[1];
+
+        if (ie_len > len - i - 2)
+            return -1;
         if (IE_ID_SSID == buffer[0]) {//FIXME no magic ID for SSID
-            if (buffer[1] > 32) {
+            if (ie_len > 32) {
                 return -1;
             }
-            *ssid_len = buffer[1];
-            memcpy(result, &(buffer[2]), buffer[1]);//NO check for len valid
-            result[buffer[1]] = '\0';
+            *ssid_len = ie_len;
+            memcpy(result, &(buffer[2]), ie_len);
+            result[ie_len] = '\0';
             return 0;
         } else {
             /*move to next ie*/
-            i += buffer[1] + 2;//FIXME 2 is for id and len
-            buffer = buffer + buffer[1] + 2;
+            i += ie_len + 2;//FIXME 2 is for id and len
+            buffer += ie_len + 2;
         }
     }
 
@@ -366,21 +369,24 @@ static int find_ie_ssid(uint8_t *buffer, int len, uint8_t *result, int *ssid_len
 
 static int find_ie_ds(uint8_t *buffer, int len, uint8_t *result)
 {
-    int i;
+    int i = 0;
 
-    i = 0;
-    while (i < len) {
+    while (i + 2 <= len) {
 #define IE_ID_DS_CHANNEL 0x03
+        uint8_t ie_len = buffer[1];
+
+        if (ie_len > len - i - 2)
+            return -1;
         if (IE_ID_DS_CHANNEL == buffer[0]) {//FIXME no magic DS for SSID
-            if (buffer[1] > 32) {
+            if (ie_len < 1) {
                 return -1;
             }
             *result = buffer[2];
             return 0;
         } else {
             /*move to next ie*/
-            i += buffer[1] + 2;//FIXME 2 is for id and len
-            buffer = buffer + buffer[1] + 2;
+            i += ie_len + 2;//FIXME 2 is for id and len
+            buffer += ie_len + 2;
         }
     }
 
@@ -407,11 +413,14 @@ static void _rx_handle_beacon(struct scanu_result_ind *ind, struct ieee80211_mgm
 
     memset(&ind_new, 0, sizeof(ind_new));
 
+    if (ind->length < (uint32_t)&(((struct ieee80211_mgmt*)NULL)->u.beacon.variable))
+        return;
+
     var_part_addr = (uint32_t)(mgmt->u.beacon.variable);
     var_part_len = ind->length - (uint32_t)&(((struct ieee80211_mgmt*)NULL)->u.beacon.variable);
 
-    find_ie_ssid(mgmt->u.beacon.variable, ind->length, ind_new.ssid, &ind_new.ssid_len);
-    find_ie_ds(mgmt->u.beacon.variable, ind->length, &ind_new.channel);
+    find_ie_ssid(mgmt->u.beacon.variable, var_part_len, ind_new.ssid, &ind_new.ssid_len);
+    find_ie_ds(mgmt->u.beacon.variable, var_part_len, &ind_new.channel);
 
     elmt_addr = mac_vsie_find(var_part_addr, var_part_len, (const uint8_t *) "\x00\x50\xF2\x04", 4);
     if (elmt_addr != 0)

@@ -1,3 +1,7 @@
 mainmenu "SDK Configuration"
 
 source "$BL_SDK_BASE/Kconfig"
+
+config LVGL_V9_WITH_OSD_OTA
+    bool "Enable WiFi HTTP OTA for the OSD example"
+    default y

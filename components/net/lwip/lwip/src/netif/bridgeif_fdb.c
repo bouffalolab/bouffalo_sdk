@@ -210,3 +210,27 @@ bridgeif_fdb_init(u16_t max_fdb_entries)
 
   return fdb;
 }
+
+void
+bridgeif_fdb_clear(void *fdb_ptr)
+{
+  bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)fdb_ptr;
+  BRIDGEIF_DECL_PROTECT(lev);
+  if (fdb == NULL) {
+    return;
+  }
+  BRIDGEIF_READ_PROTECT(lev);
+  BRIDGEIF_WRITE_PROTECT(lev);
+  memset(fdb->fdb, 0, fdb->max_fdb_entries * sizeof(*fdb->fdb));
+  BRIDGEIF_WRITE_UNPROTECT(lev);
+  BRIDGEIF_READ_UNPROTECT(lev);
+}
+
+void
+bridgeif_fdb_deinit(void *fdb_ptr)
+{
+  if (fdb_ptr != NULL) {
+    sys_untimeout(bridgeif_age_tmr, fdb_ptr);
+    mem_free(fdb_ptr);
+  }
+}

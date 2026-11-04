@@ -685,9 +685,7 @@ int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config)
     struct wl80211_scan_params scan_params;
     memset(&scan_params, 0, sizeof(struct wl80211_scan_params));
 
-#if defined(CONFIG_WL80211_P2P)
     if (config != NULL)
-#endif
     {
         scan_params.ssid_len = config->ssid_length;
         if (config->ssid_length) {

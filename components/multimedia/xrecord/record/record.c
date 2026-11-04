@@ -12,6 +12,9 @@
 __attribute__((unused)) static const char *TAG = "record";
 
 #define READ_PIECE_SIZE 4096
+#ifndef CONFIG_RECORD_TASK_STACK_SIZE
+#define CONFIG_RECORD_TASK_STACK_SIZE (4 * 1024)
+#endif
 
 typedef struct _record_node {
     msp_slist_t         next;
@@ -39,7 +42,11 @@ static int recio_register_with_path(const char *path)
     msp_check_return_val(path, -1);
 
     if (strstr(path, "ws://")) {
+#if defined(XRECORD_ENABLE_WEBSOCKET)
         return recio_register_ws(path);
+#else
+        return -1;
+#endif
     } else if (strstr(path, "mem://")) {
         // return recio_register_mem(path);
     } else if (strstr(path, "rbuf://")) {
@@ -81,20 +88,16 @@ static void _record_task(void *arg)
     while(!node->quit) {
         bytes = recio_read(node->read_hdl, sendbuffer, node->chunk_size, 0);
         //printf("recio_read from:%05s, bytes:%d\r\n", node->from, bytes);
+        if (bytes <= 0) {
+            msp_msleep(40);
+            continue;
+        }
         if (node->d_rdy_func) {
             if (node->d_rdy_func(node->user_data, sendbuffer, bytes) < 0) {
                 continue;
             }
         }
-        if (bytes <= 0) {
-            // LOGI(TAG, "ws rec file finish, from:%s, to:%s, bytes:%d", node->from, node->to, bytes);
-            if (node->d_rdy_func) {
-                //node->d_rdy_func(node->user_data);
-            } else {
-                msp_msleep(40);
-            }
-            // break;
-        } else if (bytes > 0) {
+        if (bytes > 0) {
             // LOGD(TAG, "w %d", bytes);
             node->read_bytes += bytes;
             bytes = recio_write(node->write_hdl, sendbuffer, bytes, 0);
@@ -110,7 +113,7 @@ static void _record_task(void *arg)
     }
     msp_free(sendbuffer);
 out:
-    printf("_record %s task exit.\r\n", msp_task_get_name(msp_task_self()));
+    printf("_record %s task exit.\r\n", node->task_name);
     msp_free(node->task_name);
     msp_event_set(&node->quit_event, 0x01, MSP_EVENT_OR);
     msp_task_exit(0);
@@ -155,7 +158,8 @@ int record_start(rec_hdl_t hdl)
     }
     snprintf(task_name, sizeof(task_name), "rec:%s->%s", from, to);
     node->task_name = strdup(task_name);
-    msp_task_new(node->task_name, _record_task, (void *)node, 4096);
+    msp_task_new(node->task_name, _record_task, (void *)node,
+                 CONFIG_RECORD_TASK_STACK_SIZE);
     free(from);
     free(to);
 

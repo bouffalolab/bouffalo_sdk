@@ -43,17 +43,20 @@
 #define configUSE_TICK_HOOK                     0
 #define configCPU_CLOCK_HZ                      ((uint32_t)(1 * 1000 * 1000))
 #define configTICK_RATE_HZ                      ((TickType_t)1000)
-#if defined(CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO) && CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
+#ifdef CONFIG_LWIP
 #define configMAX_PRIORITIES                    (32)
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
+#define configTIMER_QUEUE_LENGTH                16
+#define configTIMER_TASK_STACK_DEPTH            (1024)
 #else
 #define configMAX_PRIORITIES                    (7)
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
+#define configTIMER_QUEUE_LENGTH                4
+#define configTIMER_TASK_STACK_DEPTH            (configMINIMAL_STACK_SIZE)
 #endif
 #define configMINIMAL_STACK_SIZE                ((unsigned short)128) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
-#if defined(CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO) && CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
 #define configTOTAL_HEAP_SIZE                   ((size_t)100 * 1024)
-#else
-#define configTOTAL_HEAP_SIZE                   ((size_t)24 * 1024)
-#endif
 #define configMAX_TASK_NAME_LEN                 (16)
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS    1
@@ -71,13 +74,6 @@
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
 
-#if defined(CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO) && CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1
-#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
-#else
-#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
-#endif
-
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                   0
 #define configMAX_CO_ROUTINE_PRIORITIES         (2)
@@ -85,13 +81,6 @@
 /* Software timer definitions. */
 #define configUSE_TIMERS                        1
 #define configTIMER_TASK_PRIORITY               (configMAX_PRIORITIES - 1)
-#if defined(CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO) && CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
-#define configTIMER_QUEUE_LENGTH                16
-#define configTIMER_TASK_STACK_DEPTH            (1024)
-#else
-#define configTIMER_QUEUE_LENGTH                4
-#define configTIMER_TASK_STACK_DEPTH            (configMINIMAL_STACK_SIZE)
-#endif
 /* Task priorities.  Allow these to be overridden. */
 #ifndef uartPRIMARY_PRIORITY
 #define uartPRIMARY_PRIORITY (configMAX_PRIORITIES - 3)

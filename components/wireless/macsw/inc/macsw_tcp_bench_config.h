@@ -21,7 +21,7 @@
 #define CFG_TXDESC1 32
 #define CFG_TXDESC2 1
 #define CFG_TXDESC3 1
-#define CFG_TXDESC4 4
+#define CFG_TXDESC4 1
 
 #define CFG_TWT 1
 #define CFG_REORD_BUF 8

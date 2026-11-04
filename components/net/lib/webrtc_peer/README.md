@@ -12,6 +12,8 @@ Public headers:
   AppRTC HTTPS/WSS.
 - `webrtc_peer_mjpeg.h`: optional MJPEG DataChannel chunking, pacing,
   reassembly, and statistics.
+- `webrtc_peer_audio.h`: optional bounded mono PCM playout and packet loss
+  concealment.
 - `webrtc_peer_mbedtls_config.h`: WebRTC prerequisites for the SDK's generic
   mbedTLS configuration, without an application-specific cipher policy.
 
@@ -118,6 +120,11 @@ these queues.
 
 ### ICE updates and connection liveness
 
+`webrtc_peer_get_selected_ice_types()` reports the local and remote nominated
+candidate types from the peer owner context. It returns `INVALID_STATE` before
+selection and leaves the output values untouched on error. Candidate type is a
+transport diagnostic; it is not a reliable bandwidth or LAN classifier.
+
 Trickled candidates append compatible pairs without resetting an existing
 check or the selected/nominated pair. Late candidates do not automatically
 migrate an established connection. In-place renegotiation and ICE restart are
@@ -145,17 +152,33 @@ does not block later usable pairs. State is bounded by
 per-probe allocation is needed. A delayed reply cannot be overwritten by a
 faster owner-loop poll or a later candidate. A winner requires a live transaction,
 matching source and authenticated response; other pending checks are retired.
-Adaptive RTT and complete ICE role-conflict/restart recovery are not provided.
+Adaptive RTT and in-place ICE restart are not provided.
 The removed `AGENT_CONNCHECK_MAX` loop counter no longer configures this budget;
 the deadline is measured in milliseconds per pair, not owner-loop iterations.
+
+Existing callers retain the first-success nomination policy. To opt a new
+connection into regular nomination, call
+`webrtc_peer_set_ice_direct_preference(peer, wait_ms)` after
+`webrtc_peer_new_connection()` and before applying remote SDP. The range is
+0–10000 ms; zero enables regular nomination without a direct-path wait.
+This mode authenticates role-conflict handling, learns remote peer-reflexive
+candidates, and separates pair validation from the controlling peer's
+USE-CANDIDATE transaction. Authenticated 487 responses renew the tiebreaker and
+queue a triggered check ahead of ordinary checks; RNG failure fails the
+checklist. Equal tiebreakers follow the role-specific RFC 8445 rules.
+Within the preference window it waits for pending
+higher-priority direct paths before nominating a lower-priority path, and
+delays relay nomination. The controlled peer follows the remote nomination.
+This is a per-connection opt-in, used by the V2 videocall client; it does not
+change other applications' ICE policy or migrate an established connection.
 
 Internal structure sizes depend on ABI, options and candidate limits. With the
 default 100-pair limit, example storage requirements are:
 
 | Build | IceCandidatePair | Agent (including inline pair/consent storage) |
 | --- | --- | --- |
-| BL618DG AP, RISC-V ILP32D | 56 bytes | 10760 bytes |
-| Linux x86_64 | 72 bytes | 12544 bytes |
+| BL618DG AP, RISC-V ILP32D | 56 bytes | 10808 bytes |
+| Linux x86_64 | 72 bytes | 12592 bytes |
 
 Other 32-bit ABIs can give different alignment and sizes. Include the full
 Agent storage in the per-connection budget, plus the separately allocated RNG
@@ -302,16 +325,53 @@ stream has completed OPEN/ACK. Data sends before that return
 
 ## Current Limits
 
-- libpeer's remote-description setter has no parse result. The facade can
-  propagate immediate native `FAILED` as `WEBRTC_PEER_ERR_LIBPEER` and counts
-  only accepted signaling. Missing mandatory DTLS/ICE fields fail immediately.
-  The parser still has limited validation; later negotiation errors are
-  visible through state callbacks and logs.
+The built-in SCTP backend supports up to five independently pending DCEP OPENs.
+Call `webrtc_peer_set_data_channel_open_callback()` to receive SID/label events
+after local ACK or remote OPEN/ACK acceptance. Association-open is a separate
+event; answerers create no channels automatically. Callback labels are borrowed,
+and lifecycle operations must wait until the owner loop returns. Labels longer
+than 31 bytes, duplicate local SIDs, invalid reliability and a local SID of the
+wrong DTLS parity are rejected before sending. Use the role-appropriate SID from
+`webrtc_peer_get_local_data_channel_sid()` after the SCTP association is ready
+(DTLS client even, server odd). The native equivalent is
+`peer_connection_get_local_datachannel_sid()`.
+Each pending OPEN allocates one MTU-sized retry record (maximum five) and frees
+it on ACK, failure or association teardown. A missing DCEP ACK after confirmed
+SCTP delivery fails one channel; an undelivered reliable OPEN fails the
+association to avoid a permanent shared TSN gap. Per-channel SCTP stream reset
+and SID reuse remain unsupported; replace the association to reclaim channels.
+These lifecycle changes are validated with the built-in backend, not usrsctp.
+`webrtc_peer_is_unreliable_unordered()` checks that an open channel has unordered
+zero-retransmit semantics; Video V2 validates the remote DCEP channel before
+starting JPEG transmission.
+
+- The facade uses libpeer's checked remote-description setter and accepts
+  caller-owned SDP up to 48 KiB by default. A caller can explicitly configure
+  `CONFIG_REMOTE_SDP_MAX_SIZE` up to 60000 bytes; Video V2 does so to match its
+  server contract. This does not enlarge the local SDP serialization buffer. Oversize input leaves the session untouched;
+  missing mandatory DTLS/ICE fields fail immediately. Later negotiation
+  errors remain visible through state callbacks and logs.
 - `webrtc_peer_main_loop()` mirrors libpeer's current coarse loop result.
 - Opening or closing independent handles concurrently requires an
   application-level lock around those lifecycle calls.
-- TURN relay media is not advertised by the AppRTC backend because libpeer
-  does not yet implement the complete TURN permission/channel data path.
+- Native/facade ICE support authenticated UDP/IPv4 TURN with permission,
+  channel, refresh and selected relay routing, one allocation per peer.
+  Set `ice_transport_policy` to `WEBRTC_PEER_ICE_TRANSPORT_RELAY` for relay-only;
+  the zero default allows direct and relay candidates. Rebuild callers and
+  library together because the configuration layout changed. Local SDP gather
+  is synchronous (up to eight seconds for TURN); destroy permits a bounded
+  200 ms best-effort release. TURN TCP/TLS and IPv6 relay are unsupported.
+  The optional AppRTC signaling backend continues to supply only STUN URLs.
+- TURN permission/channel progress or retryable relay rejection is treated as
+  datagram loss without waiting for a future owner tick inside the DTLS send.
+  The DTLS transport-drop counter saturates and includes persistent direct UDP
+  pressure and retryable TURN drops.
+- Temporary local UDP send-queue pressure gets one retry after a 1 ms yield,
+  then is treated as datagram loss at the DTLS boundary if it persists.
+  Failed attempts increment transport send failures; DTLS handshake and
+  reliable SCTP retransmissions recover loss. This avoids invalidating TLS or
+  retaining ciphertext for an already abandoned real-time SCTP message.
+  Permanent transport errors and ICE consent rejection still propagate.
 - The built-in SCTP implementation has bounded reliable DATA retries
   (by default 16 packet slots, 750 ms intervals, at most 8 retries) and per-stream
   reassembly. `CONFIG_SCTP_MESSAGE_SIZE` defaults to 16384 bytes and is also
@@ -431,12 +491,28 @@ the path. IPv6 literals, userinfo, fragments and control characters are rejected
 Room/client identifiers are excluded from normal join/error logs. The deployment
 must provide a certificate chain trusted by the configured anchor.
 
+## RTP diagnostic availability
+
+The public RTP diagnostic report type and `webrtc_peer_get_rtp_diagnostics()`
+are always declared, including for consumers that do not include SDK build
+configuration. A library built without `CONFIG_LIBPEER_MEDIA_DIAGNOSTICS`
+returns `WEBRTC_PEER_ERR_UNSUPPORTED` without inspecting arguments or modifying
+the output. Enabling diagnostics is a library build option; client-side macros
+are not a reliable way to discover a prebuilt library's capabilities. Jitter
+values converted to microseconds saturate at `UINT32_MAX` instead of wrapping.
+
 ## Host regressions
 
 `libpeer/tests/host/` compiles the production sources with transport/allocation
 faults and tests DTLS with the SDK's mbedTLS 2/3 and libsrtp. These scripts run
 separately from firmware CMake; the existing test source glob is not recursive.
-Supported environment: Linux, GCC, Python 3, CMake and Git.
+Supported environment: Linux, GCC/G++, Python 3, CMake and Git.
+The DTLS runner also compiles unconfigured C99/C++11 diagnostic consumers
+against enabled/disabled library builds and rejects injected report layout drift.
+To compare disabled RTP code with a chosen commit before diagnostics, run
+`python3 components/net/lib/libpeer/tests/host/check_diagnostics_overhead.py --baseline <commit>`.
+This optional check needs the baseline in local Git history and `objcopy`.
+
 Initialize the SDK crypto submodules, including the mbedTLS 3 framework, then
 run from the SDK root:
 
@@ -446,3 +522,51 @@ CC=gcc python3 components/net/lib/libpeer/tests/host/run_host_tests.py
 CC=gcc python3 components/net/lib/libpeer/tests/host/run_dtls_tests.py --build-dir /tmp/libpeer-dtls-v2
 CC=gcc python3 components/net/lib/libpeer/tests/host/run_dtls_tests.py --mbedtls-version 3 --build-dir /tmp/libpeer-dtls-v3
 ```
+
+## Optional audio playout
+
+Enable `CONFIG_WEBRTC_PEER_AUDIO_PLAYOUT` to build `webrtc_peer_audio.h`.
+The library default is off. This selects the RTP packet-info accessor without
+changing the existing configuration structure or `on_audio` callback signature.
+`webrtc_peer_get_audio_packet_info()` returns SSRC, sequence, timestamp and
+payload type only during that peer's synchronous `on_audio` callback.
+The accessor is declared without consumer configuration macros; if the library
+was built without packet metadata, it returns `WEBRTC_PEER_ERR_UNSUPPORTED`
+without changing the output. Copy metadata together with the payload into a
+bounded application queue if decoding and playback run in a different task;
+the accessor is not a retained snapshot.
+
+One audio owner opens a `webrtc_peer_audio_t`, decodes incoming packets to mono
+PCM, pushes their original timestamps, and pulls 20 ms whenever hardware needs
+more PCM. Supported PCM rates are 8 and 16 kHz. Timestamp units must match that
+PCM rate, including when a codec has a different RTP clock. The module handles
+sample placement, duplicates, reorder, 32-bit timestamp wrap, source changes,
+late samples and bounded re-priming. Delay limits are multiples of 20 ms, with
+`20 <= min_delay_ms <= max_delay_ms <= 1000`. Delay grows by 20 ms after extended
+starvation, up to the configured limit, and resets for a new call. It does not
+resample clock drift or continuously reduce delay during a call. Include any
+BSP/DMA prefetch in the application's end-to-end latency budget.
+
+The module allocates one bounded block at creation, with no allocation, clock
+read, logging or mutex in push/pull. Reset at a call boundary clears old PCM and
+history. Before first startup, or after reset, pull returns zero without writing
+the output until the initial delay is met. The first pull can already return a
+full frame if enough audio is queued. Once started, valid pulls keep returning
+20 ms of PCM even while re-priming after starvation or a timeline change;
+they output PLC while the queued media timeline waits for enough audio.
+Missing samples use a bounded pitch search and repetition with a 60 ms fade,
+then silence; real audio returns with a 5 ms blend from the last emitted sample,
+not a buffered waveform tail. This is lightweight loss
+concealment, not a bit-exact ITU G.711 Appendix I or WebRTC NetEQ implementation.
+It cannot reconstruct missing speech or increase the sender's sample rate.
+
+With `CONFIG_LIBPEER_MEDIA_DIAGNOSTICS`, a sized getter reports real, concealed,
+rebuffered, late and duplicate samples separately. `window_discard_samples` counts valid
+old PCM evicted when a short catch-up burst exceeds the timestamp window; a
+large discontinuity instead expires the timeline and increments `resyncs`. Rebuffer samples are a subset
+of concealed samples. Buffered samples describe the timestamp span, which can
+include holes; they are not a count of valid PCM samples. Counters omit initial
+priming silence and include PCM already handed to the BSP. The counter state and per-sample diagnostic updates compile out of normal builds.
+The public report and sized getter remain declared without consumer macros;
+with library diagnostics disabled, the getter returns
+`WEBRTC_PEER_ERR_UNSUPPORTED` without modifying the output.

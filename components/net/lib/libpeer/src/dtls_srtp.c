@@ -772,8 +772,9 @@ int dtls_srtp_handshake(DtlsSrtp* dtls_srtp, Address* addr) {
   }
 
   dtls_srtp->state = DTLS_SRTP_STATE_CONNECTED;
-  LOGI("DTLS %s handshake and fingerprint verified",
-       dtls_srtp->role == DTLS_SRTP_ROLE_CLIENT ? "client" : "server");
+  LOGI("DTLS %s handshake and fingerprint verified (%s)",
+       dtls_srtp->role == DTLS_SRTP_ROLE_CLIENT ? "client" : "server",
+       mbedtls_ssl_get_ciphersuite(&dtls_srtp->ssl));
   return 0;
 }
 

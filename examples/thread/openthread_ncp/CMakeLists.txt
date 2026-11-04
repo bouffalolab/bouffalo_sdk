@@ -13,10 +13,6 @@ sdk_add_compile_definitions(-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-c
 sdk_add_compile_definitions(-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-platform-config-check.h\")
 
 get_target_property(SDK_INTF_LIB_LINK_OPTIONS sdk_intf_lib INTERFACE_LINK_OPTIONS)
-list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS -nostartfiles)
-if(CONFIG_NEWLIB_STANDARD)
-    list(REMOVE_ITEM SDK_INTF_LIB_LINK_OPTIONS --specs=nano.specs)
-endif()
 
 set_target_properties(sdk_intf_lib PROPERTIES INTERFACE_LINK_OPTIONS "")
 foreach(item ${SDK_INTF_LIB_LINK_OPTIONS})

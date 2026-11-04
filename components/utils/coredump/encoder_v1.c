@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/types.h>
 #include <utils_base64.h>
 #include <utils_crc.h>
 #include <utils_hex.h>

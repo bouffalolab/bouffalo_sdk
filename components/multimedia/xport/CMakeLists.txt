@@ -17,7 +17,6 @@ sdk_library_add_sources(
 else()
 sdk_library_add_sources(
     src/msp_freertos.c
-    # src/msp_dma.c
     src/msp_port.c
     src/web_lower.c
     src/xav_port.c
@@ -32,7 +31,6 @@ sdk_library_add_sources(
     src/msp_romfs.c
     src/msp_fs.c
     src/msp_ltfs.c
-    #src/codec_es8388.c
     )
 endif()
 

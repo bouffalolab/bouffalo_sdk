@@ -52,14 +52,11 @@ typedef struct PM_DCDC_SYS_CFG_Type {
 #define PM_POWER_MODE_MAX             (8) /*!< Number of predefined power modes */
 
 typedef struct PM_LP_CFG_Type {
-    uint8_t pds_gpio_keep_en;        /*!< Whether keep GPIO state during PDS, reserved for runtime config */
-    uint8_t hbn_gpio_keep_en;        /*!< Whether keep GPIO state during HBN, reserved for runtime config */
     uint8_t pds_flash_power_off;     /*!< Whether power down flash during PDS */
     uint8_t pll_power_off;           /*!< Whether power down WiFi PLL during PDS */
     uint8_t rf_power_off;            /*!< Whether power down RF during PDS */
     uint8_t clk_default_sel;         /*!< PDS clock select, PM_PDS_CLK_* */
     uint8_t set_all_ram_ret_en;      /*!< Whether enable all RAM retention during PDS */
-    uint8_t hbn_flash_power_off;     /*!< Whether power down flash before HBN */
     uint8_t ldo18io_power_down;      /*!< Whether power down LDO18IO during PDS */
 } PM_LP_CFG_Type;
 
@@ -172,7 +169,7 @@ uint8_t pm_get_sf_pin_select(void);
 void pm_pds_mask_all_wakeup_src(void);
 BL_Err_Type pm_set_gpio_int_mask(int pin, int int_mask);
 BL_Err_Type pm_set_gpio_trig_mode_int_mask(int pin, int trig_mode, int int_mask);
-void pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *lowpower_cfg);
+void pm_pds_enable(PM_PDS_CFG_Type *cfg);
 void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time, const PM_LOWPOWER_CFG_Type *lowpower_cfg);
 void pm_hbn_mode_enter(uint32_t hbn_level, uint64_t sleep_time);
 char *pm_get_trig_mode_desc(int index);

@@ -8,6 +8,10 @@
 #include "ff.h"
 #include "port_file_fd.h"
 
+#ifndef FOPEN_MAX
+#define FOPEN_MAX 20
+#endif
+
 int fresult_table[20] = {
     0,      /* (0) Succeeded */
     EIO,    /* (1) A hard error occurred in the low level disk I/O layer */

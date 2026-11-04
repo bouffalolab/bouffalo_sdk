@@ -672,7 +672,7 @@ err_t bl_tx_intra_bss_forward(struct pbuf *p, int dst_sta_idx)
     }
 
     /* Reserve space for WiFi TX header */
-    pbuf_header(q, -PBUF_LINK_ENCAPSULATION_HLEN);
+    pbuf_header(q, -((s16_t)PBUF_LINK_ENCAPSULATION_HLEN));
     /* Copy the original data */
     pbuf_copy(q, p);
 
@@ -723,7 +723,7 @@ err_t bl_tx_intra_bss_broadcast(struct pbuf *p, int src_sta_idx)
             if (q)
             {
                 /* Reserve space for WiFi TX header */
-                pbuf_header(q, -PBUF_LINK_ENCAPSULATION_HLEN);
+                pbuf_header(q, -((s16_t)PBUF_LINK_ENCAPSULATION_HLEN));
                 /* Copy the original data */
                 pbuf_copy(q, p);
 

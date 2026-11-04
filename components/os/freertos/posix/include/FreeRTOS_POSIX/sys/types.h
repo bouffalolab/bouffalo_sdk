@@ -147,6 +147,10 @@ typedef void                         * pthread_barrierattr_t;
     typedef void                     * pthread_t;
 #endif
 
+/* POSIX pthread types also consumed by libstdc++'s gthread backend. */
+typedef unsigned int                 pthread_key_t;
+typedef int                          pthread_once_t;
+
 /**
  * @brief Used for a count of bytes or an error indication.
  *

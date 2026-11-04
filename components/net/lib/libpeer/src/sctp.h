@@ -176,6 +176,7 @@ typedef struct {
   uint8_t open;
   uint8_t unordered;
   uint8_t drop_on_send_failure;
+  uint8_t ack_pending;
 } SctpStreamEntry;
 
 typedef struct {
@@ -224,6 +225,8 @@ typedef struct Sctp {
   uint8_t forward_tsn_repeat_sacks;
   SctpTxHistoryEntry tx_history[SCTP_TX_HISTORY_SIZE];
   SctpRetryPacket retry_packet;
+  /* Independent, bounded pending DCEP OPENs; allocated only while opening. */
+  SctpRetryPacket* dcep_retries[SCTP_MAX_STREAMS];
   struct SctpTxPacket* tx_head;
   struct SctpTxPacket* tx_tail;
   unsigned int tx_count;
@@ -240,6 +243,8 @@ typedef struct Sctp {
   void (*onmessage)(char* msg, size_t len, void* userdata, uint16_t sid);
   void (*onopen)(void* userdata);
   void (*onclose)(void* userdata);
+  /* Channel event, distinct from the association's onopen. Borrowed label. */
+  void (*onchannelopen)(uint16_t sid, const char* label, void* userdata);
 
   void* userdata;
   uint8_t buf[CONFIG_MTU];
@@ -255,6 +260,8 @@ int sctp_is_connected(Sctp* sctp);
 void sctp_poll(Sctp* sctp, uint32_t now_ms);
 
 int sctp_is_stream_open(Sctp* sctp, uint16_t sid);
+
+void sctp_add_stream_mapping(Sctp* sctp, const char* label, uint16_t sid);
 
 void sctp_set_stream_unordered(Sctp* sctp, uint16_t sid, int unordered);
 

@@ -14,11 +14,6 @@
 #include <unistd.h>
 
 #include <lwip/inet.h>
-#include <lwip/sockets.h>
-#include <lwip/tcp.h>
-#ifdef CONFIG_SOCKET_OFFLOAD_CLIENT
-#include <socket_offload.h>
-#endif
 
 /** @brief Logging category for the TCP Socket backend. */
 #define DBG_TAG "IPERF_TCP_SOCKET"

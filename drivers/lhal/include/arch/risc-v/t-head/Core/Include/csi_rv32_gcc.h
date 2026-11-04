@@ -12,6 +12,7 @@
 #ifndef _CSI_RV32_GCC_H_
 #define _CSI_RV32_GCC_H_
 
+#include <stdint.h>
 #include <stdlib.h>
 
 #ifndef __ASM
@@ -130,7 +131,7 @@ __ALWAYS_STATIC_INLINE uint32_t __get_FXCR(void)
 {
     uint32_t result;
 
-    __ASM volatile("csrr %0, fxcr"
+    __ASM volatile("csrr %0, 0x800" /* fxcr */
                    : "=r"(result));
     return (result);
 }
@@ -142,7 +143,7 @@ __ALWAYS_STATIC_INLINE uint32_t __get_FXCR(void)
  */
 __ALWAYS_STATIC_INLINE void __set_FXCR(uint32_t fxcr)
 {
-    __ASM volatile("csrw fxcr, %0"
+    __ASM volatile("csrw 0x800, %0" /* fxcr */
                    :
                    : "r"(fxcr));
 }
@@ -310,7 +311,7 @@ __ALWAYS_STATIC_INLINE void __set_MTVEC(uint32_t mtvec)
  */
 __ALWAYS_STATIC_INLINE void __set_MTVT(uint32_t mtvt)
 {
-    __ASM volatile("csrw mtvt, %0"
+    __ASM volatile("csrw 0x307, %0" /* mtvt */
                    :
                    : "r"(mtvt));
 }
@@ -324,7 +325,7 @@ __ALWAYS_STATIC_INLINE uint32_t __get_MTVT(void)
 {
     uint32_t result;
 
-    __ASM volatile("csrr %0, mtvt"
+    __ASM volatile("csrr %0, 0x307" /* mtvt */
                    : "=r"(result));
     return (result);
 }
@@ -431,7 +432,7 @@ __ALWAYS_STATIC_INLINE uint32_t __get_MNXTI(void)
 {
     uint32_t result;
 
-    __ASM volatile("csrr %0, mnxti"
+    __ASM volatile("csrr %0, 0x345" /* mnxti */
                    : "=r"(result));
     return (result);
 }
@@ -443,7 +444,7 @@ __ALWAYS_STATIC_INLINE uint32_t __get_MNXTI(void)
  */
 __ALWAYS_STATIC_INLINE void __set_MNXTI(uint32_t mnxti)
 {
-    __ASM volatile("csrw mnxti, %0"
+    __ASM volatile("csrw 0x345, %0" /* mnxti */
                    :
                    : "r"(mnxti));
 }
@@ -457,7 +458,7 @@ __ALWAYS_STATIC_INLINE uint32_t __get_MINTSTATUS(void)
 {
     uint32_t result;
 
-    __ASM volatile("csrr %0, mintstatus"
+    __ASM volatile("csrr %0, 0x346" /* mintstatus */
                    : "=r"(result));
     return (result);
 }
@@ -1518,11 +1519,10 @@ __ALWAYS_STATIC_INLINE uint32_t __RBIT(uint32_t value)
 #else
 __ALWAYS_STATIC_INLINE uint32_t __CLZ(uint32_t in)
 {
-    uint32_t result;
+    register uint32_t result __ASM("a0") = in;
 
-    __ASM volatile("ff1 %0, %1"
-                   : "=r"(result)
-                   : "r"(in));
+    /* ff1 a0, a0: preserve the E907 instruction, including its zero case. */
+    __ASM volatile(".word 0x8605150b" : "+r"(result));
     return (result);
 }
 #endif

@@ -18,7 +18,8 @@
 #endif
 /* rx buff cnt */
 #ifndef LWIP_EMAC_RX_BUFF_CNT
-#define LWIP_EMAC_RX_BUFF_CNT (6)
+/* Six RX buffers are not enough for an Ethernet burst. Use 64 and do not grow the lwIP heap. */
+#define LWIP_EMAC_RX_BUFF_CNT (64)
 #endif
 
 /* tx buff size */
@@ -27,7 +28,8 @@
 #endif
 /* tx buff cnt */
 #ifndef LWIP_EMAC_TX_BUFF_CNT
-#define LWIP_EMAC_TX_BUFF_CNT (4)
+/* Raise the TX descriptor count from 4 to 24 so bridge forwarding does not run out of descriptors first. */
+#define LWIP_EMAC_TX_BUFF_CNT (24)
 #endif
 
 /* emac min frame size  */

@@ -134,7 +134,29 @@ sdk_library_add_sources(mbedtls_v3/library/ecp_curves_new.c)
 sdk_library_add_sources(mbedtls_v3/library/entropy.c)
 sdk_library_add_sources(mbedtls_v3/library/entropy_poll.c)
 sdk_library_add_sources(mbedtls_v3/library/error.c)
-sdk_library_add_sources(mbedtls_v3/library/gcm.c)
+if(CONFIG_MBEDTLS_GCM_SOFTWARE_AES)
+    # Compile the checked-out upstream software primitives independently: the
+    # public SDK uses GCM_ALT and retains AES_ALT for all other operations.
+    add_library(mbedtls_gcm_software OBJECT
+        mbedtls_v3/library/aes.c
+        mbedtls_v3/library/camellia.c
+        mbedtls_v3/library/block_cipher.c
+        mbedtls_v3/library/gcm.c
+        port/hw_acc/gcm_software_backend.c)
+    add_library(mbedtls_gcm_software_options INTERFACE)
+    target_compile_options(mbedtls_gcm_software_options INTERFACE -O3
+        "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/port/hw_acc/gcm_software_namespace.h")
+    target_link_libraries(mbedtls_gcm_software PRIVATE sdk_intf_lib mbedtls_gcm_software_options)
+    target_include_directories(mbedtls_gcm_software PRIVATE mbedtls_v3/library)
+    sdk_library_add_sources(mbedtls_v3/library/gcm.c port/hw_acc/gcm_software_alt.c)
+    target_sources(${CURRENT_STATIC_LIBRARY} PRIVATE $<TARGET_OBJECTS:mbedtls_gcm_software>)
+elseif(CONFIG_MBEDTLS_GCM_HW_PREFETCH)
+    sdk_library_add_sources(port/hw_acc/gcm_hw_prefetch.c)
+    set_source_files_properties(port/hw_acc/gcm_hw_prefetch.c
+        port/hw_acc/aes_alt.c PROPERTIES COMPILE_OPTIONS "-O3")
+else()
+    sdk_library_add_sources(mbedtls_v3/library/gcm.c)
+endif()
 sdk_library_add_sources(mbedtls_v3/library/hkdf.c)
 sdk_library_add_sources(mbedtls_v3/library/hmac_drbg.c)
 sdk_library_add_sources(mbedtls_v3/library/lmots.c)

@@ -78,6 +78,115 @@ static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t ecb_dec_buf[16];
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_aes_link_s link_ctx_temp;
 
+#if defined(CONFIG_MBEDTLS_GCM_HW_PREFETCH)
+#include "gcm_hw_prefetch.h"
+
+#define GCM_PREFETCH_BLOCKS 16U
+
+/* The engine requires uncached buffers. The existing AES mutex protects
+ * these buffers, the link descriptor and the cache as one operation. */
+static ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32)))
+    uint8_t gcm_counter_batch[GCM_PREFETCH_BLOCKS * 16U];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32)))
+    uint8_t gcm_result_batch[GCM_PREFETCH_BLOCKS * 16U];
+/* Read without the AES mutex only to avoid taking an uninitialized mutex
+ * before the first use of the hardware engine. All accesses are atomic. */
+static mbedtls_aes_context *gcm_cache_owner;
+static struct {
+    uint8_t key[32];
+    uint8_t expected[16];
+    uint8_t key_type;
+    unsigned int next;
+    unsigned int count;
+} gcm_cache;
+
+/* GCM increments only the low 32 bits, in network byte order. */
+static void gcm_counter_increment(uint8_t counter[16])
+{
+    for (int i = 15; i >= 12; --i) {
+        if (++counter[i] != 0) break;
+    }
+}
+
+/* Called while holding the AES mutex. Keystream and copied key material must
+ * not remain available after a context switch, rekey, failure or free. */
+static void gcm_cache_clear(void)
+{
+    __atomic_store_n(&gcm_cache_owner, NULL, __ATOMIC_RELEASE);
+    mbedtls_platform_zeroize(&gcm_cache, sizeof(gcm_cache));
+    mbedtls_platform_zeroize(gcm_counter_batch, sizeof(gcm_counter_batch));
+    mbedtls_platform_zeroize(gcm_result_batch, sizeof(gcm_result_batch));
+}
+
+static void gcm_cache_forget(mbedtls_aes_context *ctx)
+{
+    /* If this context has never owned a cache, AES may not yet be initialized. */
+    if (__atomic_load_n(&gcm_cache_owner, __ATOMIC_ACQUIRE) != ctx) return;
+    if (bflb_sec_aes_mutex_take() == 0) {
+        if (__atomic_load_n(&gcm_cache_owner, __ATOMIC_RELAXED) == ctx) gcm_cache_clear();
+        bflb_sec_aes_mutex_give();
+    }
+}
+
+int gcm_hw_prefetch_encrypt_block(mbedtls_aes_context *ctx,
+                                  const unsigned char input[16],
+                                  unsigned char output[16])
+{
+    const uint8_t *key = (const uint8_t *)&ctx->link_ctx.aes_key0;
+    uint8_t key_difference = 0;
+    uint8_t counter_difference = 0;
+
+    if (bflb_sec_aes_mutex_take() != 0)
+        return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
+
+    /* Compare the complete stored key without a data-dependent early exit.
+     * A context pointer can be reused after a key change. */
+    for (size_t i = 0; i < sizeof(gcm_cache.key); ++i)
+        key_difference |= gcm_cache.key[i] ^ key[i];
+    for (size_t i = 0; i < sizeof(gcm_cache.expected); ++i)
+        counter_difference |= gcm_cache.expected[i] ^ input[i];
+
+    if (__atomic_load_n(&gcm_cache_owner, __ATOMIC_RELAXED) != ctx ||
+        gcm_cache.key_type != ctx->link_ctx.aes_key || key_difference ||
+        gcm_cache.next >= gcm_cache.count || counter_difference) {
+        uint8_t counter[16];
+        int ret;
+
+        gcm_cache_clear();
+        memcpy(counter, input, sizeof(counter));
+        for (size_t i = 0; i < GCM_PREFETCH_BLOCKS; ++i) {
+            memcpy(gcm_counter_batch + i * 16U, counter, sizeof(counter));
+            gcm_counter_increment(counter);
+        }
+
+        memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(link_ctx_temp));
+        link_ctx_temp.aes_mode = AES_MODE_ECB;
+        memset(&link_ctx_temp.aes_iv0, 0, 16);
+        ret = bflb_aes_link_update(ctx->aes, (uint32_t)&link_ctx_temp,
+                                   gcm_counter_batch, gcm_result_batch,
+                                   sizeof(gcm_counter_batch));
+        mbedtls_platform_zeroize(counter, sizeof(counter));
+        if (ret != 0) {
+            gcm_cache_clear();
+            bflb_sec_aes_mutex_give();
+            return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
+        }
+
+        memcpy(gcm_cache.key, key, sizeof(gcm_cache.key));
+        memcpy(gcm_cache.expected, input, sizeof(gcm_cache.expected));
+        gcm_cache.key_type = ctx->link_ctx.aes_key;
+        gcm_cache.count = GCM_PREFETCH_BLOCKS;
+        __atomic_store_n(&gcm_cache_owner, ctx, __ATOMIC_RELEASE);
+    }
+
+    memcpy(output, gcm_result_batch + gcm_cache.next * 16U, 16);
+    gcm_cache.next++;
+    gcm_counter_increment(gcm_cache.expected);
+    bflb_sec_aes_mutex_give();
+    return 0;
+}
+#endif
+
 static void __attribute__((unused)) bflb_aes_xor( unsigned char *out,
                           const unsigned char *a,
                           const unsigned char *b,
@@ -138,6 +247,10 @@ void mbedtls_aes_init( mbedtls_aes_context *ctx )
 
     struct bflb_device_s *aes;
 
+#if defined(CONFIG_MBEDTLS_GCM_HW_PREFETCH)
+    gcm_cache_forget(ctx);
+#endif
+
     aes = bflb_device_get_by_name(BFLB_NAME_SEC_AES);
 
     memset( ctx, 0, sizeof( mbedtls_aes_context ) );
@@ -159,6 +272,9 @@ void mbedtls_aes_free( mbedtls_aes_context *ctx )
     if( ctx == NULL )
         return;
 
+#if defined(CONFIG_MBEDTLS_GCM_HW_PREFETCH)
+    gcm_cache_forget(ctx);
+#endif
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_aes_context ) );
 }
 
@@ -189,6 +305,9 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 {
     AES_VALIDATE_RET( ctx != NULL );
     AES_VALIDATE_RET( key != NULL );
+#if defined(CONFIG_MBEDTLS_GCM_HW_PREFETCH)
+    gcm_cache_forget(ctx);
+#endif
 
     ctx->link_ctx.aes_dec_en = 0;
 
@@ -221,6 +340,9 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
 {
     AES_VALIDATE_RET( ctx != NULL );
     AES_VALIDATE_RET( key != NULL );
+#if defined(CONFIG_MBEDTLS_GCM_HW_PREFETCH)
+    gcm_cache_forget(ctx);
+#endif
 
     ctx->link_ctx.aes_dec_en = 1;
 

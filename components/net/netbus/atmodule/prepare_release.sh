@@ -8,7 +8,7 @@ usage() {
     printf '%s\n' \
         "Usage: $0 TAG PREVIOUS_OR_- NOTES_FILE" \
         'Squash the current source snapshot into a tagged local release branch.' \
-        'Build and include English and Chinese HTML documentation.' \
+        'Build English and Chinese HTML documentation to validate the release.' \
         'Exclude this script from the release snapshot.' \
         'TAG: new public release tag.' \
         'PREVIOUS_OR_-: previous public tag, or - for the first release.' \
@@ -82,37 +82,20 @@ changelog=$(printf '# Changelog\n\n## %s — %s\n\n%s\n' "$tag" "$today" "$notes
 git var GIT_AUTHOR_IDENT >/dev/null
 git var GIT_COMMITTER_IDENT >/dev/null
 temporary=$(mktemp -d -t atmodule-release-XXXXXXXX)
-restore_docs=0
-trap '
-    if ((restore_docs)); then
-        { rm -rf -- docs/build && mv -- "$temporary/old-docs" docs/build; } ||
-            fail "could not restore docs/build; backup preserved in $temporary/old-docs"
-    fi
-    rm -rf -- "$temporary"
-' EXIT
+trap 'rm -rf -- "$temporary"' EXIT
 git archive "$source" docs | tar -x -C "$temporary"
-SPHINXOPTS="${SPHINXOPTS:-} -D html_copy_source=0 -D html_show_sourcelink=0" "$temporary/docs/build_all.sh"
-rm -f -- "$temporary/docs/build/en/html/.buildinfo" "$temporary/docs/build/zh/html/.buildinfo"
+"$temporary/docs/build_all.sh"
 GIT_INDEX_FILE=$temporary/index git read-tree "$source"
 GIT_INDEX_FILE=$temporary/index git update-index --force-remove -- prepare_release.sh
-GIT_INDEX_FILE=$temporary/index GIT_WORK_TREE=$temporary git add -f -- docs/build/en/html docs/build/zh/html
 blob=$(printf '%s\n' "$changelog" | git hash-object -w --stdin)
 GIT_INDEX_FILE=$temporary/index git update-index --add --cacheinfo "100644,$blob,CHANGELOG.md"
 tree=$(GIT_INDEX_FILE=$temporary/index git write-tree)
-if [[ -e docs/build || -L docs/build ]]; then
-    if ! mv -- docs/build "$temporary/old-docs"; then
-        trap - EXIT
-        fail "could not move docs/build; check docs/build and $temporary/old-docs"
-    fi
-    restore_docs=1
-fi
 commit=$(printf 'Release %s\n\n%s\n' "$tag" "$notes" | git commit-tree "$tree" "${parents[@]}")
 git tag -a -m "Release $tag" -- "$tag" "$commit"
 if ! git checkout --no-overwrite-ignore -B release "$commit"; then
     git tag -d -- "$tag" >/dev/null
     fail 'could not check out release'
 fi
-restore_docs=0
 printf 'Release commit: %s\nLocal tag: %s\nChecked out local branch: release\n' "$commit" "$tag"
 printf 'Manual push (replace github with your public remote):\n'
 printf 'git push --atomic github release %q\n' "$ref"

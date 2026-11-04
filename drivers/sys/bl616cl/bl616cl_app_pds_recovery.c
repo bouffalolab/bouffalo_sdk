@@ -49,23 +49,23 @@ static ATTR_NOCACHE_RAM_SECTION bl_lp_uart_snapshot_t pds_resume_uart_cfg = {
 static ATTR_NOCACHE_RAM_SECTION bl_lp_peripheral_clock_snapshot_t pds_resume_peripheral_clock_cfg = { 0 };
 static ATTR_NOCACHE_RAM_SECTION PM_LOWPOWER_CFG_Type pds_resume_lowpower_cfg;
 
-static void ATTR_TCM_SECTION pds_gpio_keep_enable(uint32_t sf_pin_select);
-static void ATTR_TCM_SECTION bl_lp_runtime_gpio_snapshot(void);
-static void ATTR_TCM_SECTION bl_lp_runtime_gpio_restore(void);
-static uint32_t ATTR_TCM_SECTION get_sf_pin_select(void);
-static void ATTR_TCM_SECTION bl_lp_system_init(void);
-static void ATTR_TCM_SECTION bl_lp_system_clock_init(void);
-static void ATTR_TCM_SECTION bl_lp_peripheral_clock_init(void);
+static void pds_gpio_keep_enable(uint32_t sf_pin_select);
+static void bl_lp_runtime_gpio_snapshot(void);
+static void bl_lp_runtime_gpio_restore(void);
+static uint32_t get_sf_pin_select(void);
+static void bl_lp_system_init(void);
+static void bl_lp_system_clock_init(void);
+static void bl_lp_peripheral_clock_init(void);
 static void bl_lp_console_init(void);
-static void ATTR_TCM_SECTION pds_cpu_wakeup_cb(void);
-static void ATTR_TCM_SECTION pds_wakeup_recover(void);
+static void pds_cpu_wakeup_cb(void);
+static void pds_wakeup_recover(void);
 static uint8_t bl_lp_get_current_mcu_clk_sel(void);
 static void bl_lp_runtime_clock_snapshot(void);
 static void bl_lp_runtime_uart_baudrate_snapshot(void);
 static void bl_lp_runtime_peripheral_clock_snapshot(void);
-static int ATTR_TCM_SECTION is_flash_io(uint8_t pin, uint32_t sf_pin_select);
-static int ATTR_TCM_SECTION is_psram_io(uint8_t pin);
-static int ATTR_TCM_SECTION is_uart_io(uint8_t pin);
+static int is_flash_io(uint8_t pin, uint32_t sf_pin_select);
+static int is_psram_io(uint8_t pin);
+static int is_uart_io(uint8_t pin);
 
 static void ATTR_TCM_SECTION bl_lp_system_init(void)
 {
@@ -205,7 +205,7 @@ static void ATTR_TCM_SECTION pds_wakeup_recover(void)
         "csrw   mtvec, a0\n\t"
 #ifdef CONFIG_IRQ_USE_VECTOR
         "la      a0, __Vectors\n\t"
-        "csrw    mtvt, a0\n\t"
+        "csrw    0x307, a0\n\t" /* mtvt */
 #endif
 #if defined(__riscv_flen)
         "csrr    t0, mstatus\n\t"
@@ -444,6 +444,13 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
 #endif
 
     bl_lp_debug_record_time(iot2lp_para, "restore context end");
+
+    /* Clear consumed wakeup boot flags before normal execution. */
+    BL_WR_REG(HBN_BASE, HBN_RSV0, 0);
+    if (BL_RD_WORD(0x90018800) == 0x0616a002) {
+        BL_WR_WORD(BL616CL_OCRAM_BASE, 0);
+        BL_WR_WORD(BL616CL_OCRAM_BASE + 4, 0);
+    }
 
     bflb_irq_restore(irq_flag);
 

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "config.h"
+#include "media_diagnostics.h"
 #include "peer_connection.h"
 
 typedef enum RtpPayloadType {
@@ -77,6 +78,13 @@ struct RtpDecoder {
   uint32_t h264_timestamp;
   uint16_t h264_expected_seq;
   int h264_assembling;
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+  PeerRtpPacketInfo packet_info;
+  int packet_info_valid;
+#endif
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+  RtpDiagnostics diagnostics;
+#endif
 };
 
 struct RtpEncoder {

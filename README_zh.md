@@ -108,10 +108,10 @@
 
 ## 工具链
 
-- windows 下使用 [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_t-head_windows)
-- Linux 下使用 [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_t-head_linux)
-- T-HEAD 官方没有提供 macos toolchain, 需要自行编译，参考 [build_toolchain_macos](https://github.com/p4ddy1/pine_ox64/blob/main/build_toolchain_macos.md)
-- 编译 linux 时使用 [linux-riscv64-linux-gcc](https://gitee.com/bouffalolab/linuxtoolchain_gcc_t-head)
+请从以下地址下载 SDK 工具链：
+
+- 国外：[GitHub](https://github.com/bouffalolab/toolchain/releases/tag/default)
+- 国内：[Gitee](https://gitee.com/bouffalolab/toolchain/releases/tag/latest)
 
 ## 命令行编译
 

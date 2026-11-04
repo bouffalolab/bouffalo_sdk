@@ -79,6 +79,7 @@
 #define I2S_CMD_MUTE                  (0x0A)
 #define I2S_CMD_BIT_REVERSE           (0x0B)
 #define I2S_CMD_MONO_CHANEL_SEL       (0x0C)
+#define I2S_CMD_FS_INVERSE            (0x0D)
 /**
   * @}
   */

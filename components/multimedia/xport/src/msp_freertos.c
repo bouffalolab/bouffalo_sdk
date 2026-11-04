@@ -7,21 +7,47 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
 #include <event_groups.h>
+#include <stream_buffer.h>
+#include "mm.h"
 
 #include <msp/kernel.h>
 #include <xutils/debug.h>
 
-#define ms2tick                     pdMS_TO_TICKS
-#define bzero(stack, stack_size)    memset(stack, 0, stack_size)
-
 #ifndef pvPortRealloc
-#define pvPortRealloc          realloc
+static void *msp_port_realloc(void *ptr, size_t size)
+{
+    /* Use the C library first. On this platform realloc() is backed by
+     * krealloc(), so it can grow a block in its original heap in place. */
+    void *new_ptr = realloc(ptr, size);
+
+    /* krealloc stays in the original heap. Media buffers may outgrow
+     * internal RAM while another heap (such as PSRAM) still has space. */
+    if (new_ptr == NULL && ptr != NULL && size != 0) {
+        size_t old_size = kmalloc_size(ptr);
+
+        if (old_size == 0) {
+            return NULL;
+        }
+        /* The Picolibc malloc hook in this port can route back to
+         * pvPortMalloc(), which is intentionally OCRAM-only. Use the memory
+         * manager directly so media buffers follow the board's automatic
+         * order: OCRAM, then PSRAM, then WRAM. */
+        new_ptr = kmalloc(size, MM_FLAG_HEAP_ANY);
+        if (new_ptr != NULL) {
+            memcpy(new_ptr, ptr, old_size < size ? old_size : size);
+            free(ptr);
+        }
+    }
+
+    return new_ptr;
+}
+
+#define pvPortRealloc          msp_port_realloc
 #endif
 
 int msp_task_new_ext(msp_task_t *task, const char *name, void (*fn)(void *), void *arg,
@@ -43,13 +69,11 @@ int msp_task_new_ext(msp_task_t *task, const char *name, void (*fn)(void *), voi
         if(task) {
             *task = xHandle;
         }
-        //aos_task_create_hook_lwip_thread_sem(task);
         return 0;
     } else {
         return -1;
     }
 
-    return 0;
 }
 
 int msp_task_new_static(msp_task_t *task, const char *name, void (*fn)(void *), void *arg,
@@ -74,12 +98,10 @@ int msp_task_new_static(msp_task_t *task, const char *name, void (*fn)(void *), 
         if(task) {
             *task = xHandle;
         }
-        //aos_task_create_hook_lwip_thread_sem(task);
         return 0; 
     } else {
         return -1;
     }
-    return -1;
 }
 
 int msp_task_new(const char *name, void (*fn)(void *), void *arg,
@@ -168,10 +190,14 @@ int msp_sem_new(msp_sem_t *sem, int count)
         return -1;
     }
 
-    SemaphoreHandle_t s = xSemaphoreCreateCounting(1024, count);
+    if (count < 0 || count > 1024) {
+        return -1;
+    }
+
+    SemaphoreHandle_t s = xSemaphoreCreateCounting(1024, (UBaseType_t)count);
     *sem = s;
 
-    return 0;
+    return s != NULL ? 0 : -1;
 }
 
 void msp_sem_free(msp_sem_t *sem)
@@ -222,7 +248,7 @@ msp_status_t msp_queue_create(msp_queue_t *queue, size_t size, size_t max_msg, u
     xQueueHandle q;
     (void)options;
     /* verify param */
-    if(NULL == queue || 0 == size) {
+    if(NULL == queue || max_msg == 0 || size < max_msg) {
         return -1;
     }
 
@@ -241,7 +267,7 @@ int msp_queue_new(msp_queue_t *queue, void *buf, unsigned int size, int max_msg)
     xQueueHandle q;
     (void)(buf);
     /* verify param */
-    if(NULL == queue || 0 == size) {
+    if(NULL == queue || max_msg <= 0 || size < (unsigned int)max_msg) {
         return -1;
     }
 
@@ -260,6 +286,7 @@ void msp_queue_free(msp_queue_t *queue)
     /* delete queue object */
     if(queue && *queue) {
         vQueueDelete(*queue);
+        *queue = NULL;
     }
 }
 
@@ -304,14 +331,76 @@ int msp_queue_get_count(msp_queue_t *queue)
 
 void *msp_queue_buf_ptr(msp_queue_t *queue)
 {
+    (void)queue;
     return NULL;
+}
+
+msp_streambuffer_t msp_streambuffer_create(size_t size,
+                                           size_t trigger_level)
+{
+    if (size == 0 || trigger_level == 0 || trigger_level > size) {
+        return NULL;
+    }
+
+    return xStreamBufferCreate(size, trigger_level);
+}
+
+void msp_streambuffer_delete(msp_streambuffer_t streambuffer)
+{
+    if (streambuffer) {
+        vStreamBufferDelete((StreamBufferHandle_t)streambuffer);
+    }
+}
+
+size_t msp_streambuffer_send(msp_streambuffer_t streambuffer,
+                             const void *data, size_t size,
+                             unsigned int timeout)
+{
+    if (streambuffer == NULL || data == NULL || size == 0) {
+        return 0;
+    }
+
+    return xStreamBufferSend((StreamBufferHandle_t)streambuffer, data, size,
+                             timeout == MSP_WAIT_FOREVER ? portMAX_DELAY :
+                             pdMS_TO_TICKS(timeout));
+}
+
+size_t msp_streambuffer_receive(msp_streambuffer_t streambuffer,
+                                void *data, size_t size,
+                                unsigned int timeout)
+{
+    if (streambuffer == NULL || data == NULL || size == 0) {
+        return 0;
+    }
+
+    return xStreamBufferReceive((StreamBufferHandle_t)streambuffer, data,
+                                size,
+                                timeout == MSP_WAIT_FOREVER ? portMAX_DELAY :
+                                pdMS_TO_TICKS(timeout));
+}
+
+size_t msp_streambuffer_bytes_available(msp_streambuffer_t streambuffer)
+{
+    if (streambuffer == NULL) {
+        return 0;
+    }
+
+    return xStreamBufferBytesAvailable((StreamBufferHandle_t)streambuffer);
+}
+
+size_t msp_streambuffer_spaces_available(msp_streambuffer_t streambuffer)
+{
+    if (streambuffer == NULL) {
+        return 0;
+    }
+
+    return xStreamBufferSpacesAvailable((StreamBufferHandle_t)streambuffer);
 }
 
 typedef struct tmr_adapter {
     TimerHandle_t timer;
     void (*func)(void *, void *);
     void *func_arg;
-    uint8_t bIsRepeat;
 } tmr_adapter_t;
 
 static void tmr_adapt_cb(TimerHandle_t xTimer)
@@ -320,12 +409,11 @@ static void tmr_adapt_cb(TimerHandle_t xTimer)
 
     if(pTmrObj->func)
         pTmrObj->func(pTmrObj, pTmrObj->func_arg);
-    return;
 }
 int msp_timer_new(msp_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
-    return msp_timer_new_ext(*timer, fn, arg, ms, repeat, 1);
+    return msp_timer_new_ext(timer, fn, arg, ms, repeat, 1);
 }
 
 int msp_timer_new_ext(msp_timer_t *timer, void (*fn)(void *, void *),
@@ -345,7 +433,6 @@ int msp_timer_new_ext(msp_timer_t *timer, void (*fn)(void *, void *),
 
     tmr_adapter->func = fn;
     tmr_adapter->func_arg = arg;
-    tmr_adapter->bIsRepeat = repeat;
 
     /* create timer by kernel api */
     TimerHandle_t ptimer = xTimerCreate("Timer", pdMS_TO_TICKS(ms), repeat, tmr_adapter, tmr_adapt_cb);
@@ -361,6 +448,9 @@ int msp_timer_new_ext(msp_timer_t *timer, void (*fn)(void *, void *),
     /* start timer if auto_run == TRUE */
     if(auto_run) {
         if(msp_timer_start(*timer) != 0) {
+            xTimerDelete(ptimer, 0);
+            vPortFree(tmr_adapter);
+            *timer = NULL;
             return -1;
         }
     }
@@ -382,9 +472,8 @@ void msp_timer_free(msp_timer_t *timer)
     }
 
     vPortFree(tmr_adapter);
-    timer = NULL;
+    *timer = NULL;
 
-    return ;
 }
 
 int msp_timer_start(msp_timer_t *timer)
@@ -466,11 +555,9 @@ int msp_timer_is_valid(msp_timer_t *timer)
     }
     tmr_adapter_t *pTimer = *timer;
     if( xTimerIsTimerActive(pTimer->timer) != pdFALSE ) {
-        // pTimer is active, do something.
         return 1;
     }
     else {
-        // pTimer is not active, do something else.
         return 0;
     }
 }
@@ -481,7 +568,6 @@ int msp_timer_change_once(msp_timer_t *timer, int ms)
     if (NULL == timer || NULL == *timer) {
         return -1;
     }
-    //msp_check_return_einval(time);
     tmr_adapter_t *pTimer = *timer;
     if( xTimerIsTimerActive(pTimer->timer) != pdFALSE ) {
         xTimerStop(pTimer->timer, 100);
@@ -505,15 +591,11 @@ int msp_timer_change_once(msp_timer_t *timer, int ms)
     return ret;
 }
 
-// Suspend the scheduler.
-// return time in ticks, for how long the system can sleep or power-down.
 void msp_kernel_sched_suspend(void)
 {
     vTaskSuspendAll();
 }
 
-// Resume the scheduler.
-// param[in]     sleep_ticks   time in ticks for how long the system was in sleep or power-down mode.
 void msp_kernel_sched_resume()
 {
     xTaskResumeAll();
@@ -525,10 +607,9 @@ void *msp_zalloc(unsigned int size)
         return NULL;
     }
     
-    void* ptr = pvPortMalloc(size);
+    void* ptr = kmalloc(size, MM_FLAG_ALIGN_CACHE);
     if(ptr) {
-        bzero(ptr,size);
-        //memset(ptr, 0, size);
+        memset(ptr, 0, size);
     }
 
     return ptr;
@@ -542,7 +623,7 @@ void *msp_malloc(unsigned int size)
 
     void *p = NULL;
 
-    p = pvPortMalloc(size);
+    p = kmalloc(size, MM_FLAG_ALIGN_CACHE);
 
     return p;
 }
@@ -567,22 +648,12 @@ void msp_msleep(int ms)
 
 long long msp_now_ms(void)
 {
-    // long long ms;
-    TickType_t ticks = 0;
-    // BaseType_t overflow_count = 0;
-
-    ticks = xTaskGetTickCount();
-
-    //TODO test this formula
-    //ms = ((long long)ticks) + ((TickType_t)(-1) * ((long long)overflow_count));
-
-    return ticks;
+    return ((long long)xTaskGetTickCount() * 1000) / configTICK_RATE_HZ;
 }
 
 int msp_event_new(msp_event_t *event, unsigned int flags)
 {
     EventGroupHandle_t event_handle;
-    //event = NULL;
     msp_check_return_einval(event);
 
     /* create event handle */
@@ -687,7 +758,7 @@ int msp_event_is_valid(msp_event_t *event)
 void *_yoc_malloc(int32_t size, void *caller)
 {
     (void)caller;
-    return pvPortMalloc(size);
+    return kmalloc(size, MM_FLAG_ALIGN_CACHE);
 
 }
 
@@ -709,7 +780,6 @@ void *msp_zalloc_check(size_t size)
 {
     void *ptr = _yoc_malloc(size, __builtin_return_address(0));
 
-    //msp_check_mem(ptr);
     if (ptr) {
         memset(ptr, 0, size);
     }
@@ -719,10 +789,7 @@ void *msp_zalloc_check(size_t size)
 
 void *msp_malloc_check(size_t size)
 {
-    void *p = _yoc_malloc(size, __builtin_return_address(0));
-    //msp_check_mem(p);
-
-    return p;
+    return _yoc_malloc(size, __builtin_return_address(0));
 }
 
 void *msp_calloc_check(size_t size, size_t num)
@@ -738,10 +805,7 @@ void *msp_realloc(void *mem, size_t size)
 
 void *msp_realloc_check(void *ptr, size_t size)
 {
-    void *new_ptr = _yoc_realloc(ptr, size, __builtin_return_address(0));
-    //msp_check_mem(new_ptr);
-
-    return new_ptr;
+    return _yoc_realloc(ptr, size, __builtin_return_address(0));
 }
 
 const char *msp_task_get_name(msp_task_t *task)
@@ -760,6 +824,8 @@ msp_task_t msp_task_self(void)
 
 void msp_task_wdt_attach(void (*will)(void *), void *args)
 {
+    (void)will;
+    (void)args;
 }
 
 void msp_task_wdt_detach()
@@ -768,6 +834,7 @@ void msp_task_wdt_detach()
 
 void msp_task_wdt_feed(int time)
 {
+    (void)time;
 }
 
 int msp_irq_context(void)
@@ -775,12 +842,3 @@ int msp_irq_context(void)
     return xPortIsInsideInterrupt();
 }
 
-// int msp_is_sched_disable(void)
-// {
-
-// }
-
-// int msp_is_irq_disable(void)
-// {
-
-// }

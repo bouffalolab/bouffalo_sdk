@@ -2,21 +2,31 @@ sdk_generate_library()
 
 sdk_add_include_directories(.)
 
+# The SDK links without crtbegin.o/crtend.o.  Keep the C++ runtime support in
+# the libc archive so C++ objects can use libstdc++ while retaining
+# -nostartfiles.  Normal application targets also force the translation unit
+# containing __dso_handle into the final image and wrap main to run C++
+# constructors.  Boot2 has its own entry flow and is built with LTO, so it
+# must not use that application-level main wrapper.
+sdk_library_add_sources(cxx/cxx_runtime.c)
+if(NOT CONFIG_BOOT2)
+    sdk_add_link_options(-u __cxx_runtime_dummy)
+    sdk_add_link_options(-Wl,-wrap,main)
+endif()
+
 if(CONFIG_POSIX)
 sdk_add_include_directories(./posix)
 endif()
 
-if("${CHIP}" STREQUAL "bl618dg" AND "${CPU_MODEL}" STREQUAL "b0")
-    sdk_add_include_directories(picolibc)
-    sdk_library_add_sources(picolibc/port_errno.c)
-    sdk_library_add_sources(picolibc/port_libcpp.c)
-    sdk_library_add_sources(picolibc/port_random.c)
-    sdk_library_add_sources(picolibc/stdio_streams.c)
-    sdk_add_compile_options(
-    -Wno-error=nonnull-compare
-    )
-    sdk_add_compile_definitions(-D__PICOLIBC_ERRNO_FUNCTION=__errno)
-endif()
+sdk_add_include_directories(picolibc)
+sdk_library_add_sources(picolibc/port_errno.c)
+sdk_library_add_sources(picolibc/port_tls.c)
+sdk_library_add_sources(picolibc/port_libcpp.c)
+sdk_library_add_sources(picolibc/port_random.c)
+sdk_library_add_sources(picolibc/stdio_streams.c)
+sdk_add_compile_options(
+-Wno-error=nonnull-compare
+)
 
 # ##################################################################################################
 # 1.syscall select

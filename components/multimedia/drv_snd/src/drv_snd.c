@@ -52,11 +52,6 @@ uint64_t msp_gettick_count(void);
 
 //#define DAC_GAIN_MIN     (-31)
 //#define DAC_GAIN_MAX     (-5)   // FIXME: because of pangu C2 board.
-#define INPUT_CACHE_TIME            (1200) //MS
-
-#define BYTE_TO_BITS            (8)
-#define SECOND_TO_MILLISECONDS  (1000)
-
 //#define CONST_TX_OUTPUT_BUFSIZE     ((24+512)*16 + 2*32) // output
 
 #if 0
@@ -76,6 +71,7 @@ typedef struct {
 typedef struct {
     xcodec_input_t  *hdl;
     void *dma_hdl;
+    uint8_t *buffer;
     msp_pcm_hw_params_t params;
     int state;
 } capture_t;
@@ -95,17 +91,9 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params);
 
 static uint32_t pcmc_calc_input_buffer_size(const msp_pcm_hw_params_t *params)
 {
-    uint64_t total_bits;
-
-    if (params == NULL || params->rate == 0U || params->sample_bits == 0U || params->channels == 0U) {
-        return 0U;
-    }
-
-    total_bits = (uint64_t)params->rate * (uint64_t)params->sample_bits *
-                 (uint64_t)params->channels * (uint64_t)INPUT_CACHE_TIME;
-
-    return (uint32_t)((total_bits + (BYTE_TO_BITS * SECOND_TO_MILLISECONDS) - 1U) /
-                      (BYTE_TO_BITS * SECOND_TO_MILLISECONDS));
+    /* Round the requested capture capacity up to whole DMA periods. */
+    return ((uint64_t)params->buffer_bytes + params->period_bytes - 1U) /
+           params->period_bytes * params->period_bytes;
 }
 
 static void playback_free(playback_t *playback)
@@ -125,11 +113,8 @@ static void playback_free(playback_t *playback)
         msp_free(playback->output_config);
 
         playback->state   = 0;
-        playback->state   = 0;
-        playback->state   = 0;
         playback->hdl     = NULL;
         playback->dma_hdl = NULL;
-        playback->output_config->buffer = NULL;
         playback->output_config = NULL;
     }
 }
@@ -178,6 +163,12 @@ static void codec_event_cb(xcodec_input_t *codec, xcodec_event_t event, void *ar
     msp_pcm_t *pcm = (msp_pcm_t *)arg;
 
     if (event == XCODEC_EVENT_PERIOD_WRITE_COMPLETE) {
+        playback_t *playback = (playback_t *)pcm->hdl;
+        if (playback->hdl->pcm_format.layout.recoverable_xrun) {
+            unsigned int flags;
+            /* A completed period supersedes the underrun on a resumable transport. */
+            msp_event_get(&pcm->evt, PCM_EVT_XRUN, MSP_EVENT_OR_CLEAR, &flags, 0);
+        }
         g_tx_cnt ++;
         pcm->event.cb(pcm, PCM_EVT_WRITE, pcm->event.priv);
     } else if (event == XCODEC_EVENT_PERIOD_READ_COMPLETE) {
@@ -194,7 +185,7 @@ static int pcm_format_supported(const msp_pcm_hw_params_t *params)
     int sample_bits;
     int slot_width;
 
-    if (params == NULL) {
+    if (params == NULL || params->rate <= 0) {
         return 0;
     }
 
@@ -237,42 +228,47 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
     //uint32_t g_dmachoutput_handle;// fixme unused
     int slot_width;
     playback_t *playback = (playback_t *)pcm->hdl;
+    xcodec_pcm_format_t pcm_format;
+    int opened = 0;
 
     if (!pcm_format_supported(params)) {
-        LOGE(TAG, "unsupported playback format(%d), sample_bits(%d)", params->format, params->sample_bits);
+        LOGE(TAG, "unsupported playback format");
         return -EINVAL;
     }
 
     slot_width = params->channels ? (params->frame_bits / params->channels) : 0;
+    if (params->period_bytes <= 0 || params->buffer_bytes <= 0 ||
+        xcodec_pcm_prepare(&pcm_format, 0, params->channels, params->sample_bits, slot_width,
+                           params->period_bytes, params->buffer_bytes) != 0) {
+        return -EINVAL;
+    }
 
     playback_free(playback);
 
     xcodec_output_t *codec = msp_zalloc(sizeof(xcodec_output_t));
-    codec->ring_buf = msp_zalloc(sizeof(m_ringbuf_t));
-    codec->sound_channel_num = params->channels;
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
+    codec->ring_buf = msp_zalloc(sizeof(m_ringbuf_t));
+    if (codec->ring_buf == NULL) {
+        msp_free(codec);
+        return -ENOMEM;
+    }
+    codec->sound_channel_num = params->channels;
 
-#ifdef CONST_TX_OUTPUT_BUFSIZE
-    uint8_t *send = msp_malloc(CONST_TX_OUTPUT_BUFSIZE);
-#else
-    uint32_t node = params->buffer_bytes / params->period_bytes;
-    //24 is equal sizeof(auo_segment_t), 2 * 32 for 32bytes alignment
-    uint32_t buf_size = params->buffer_bytes + 24 * node + 2 * 32;
-    uint8_t *send = msp_malloc(buf_size);
-#endif
+    uint8_t *send = msp_malloc(pcm_format.buffer_size);
     if (send == NULL) {
         goto pcmp_err0;
     }
 
-    playback->output_config = msp_malloc(sizeof(xcodec_output_config_t));
+    playback->output_config = msp_zalloc(sizeof(xcodec_output_config_t));
     if (playback->output_config == NULL) {
-        goto pcmp_err0;
+        goto pcmp_err1;
     }
 
     int ret = xcodec_output_open(&codec_a, codec, pcm->pcm_name[4] - 0x30);
     if (ret != 0) {
         goto pcmp_err1;
     }
+    opened = 1;
 
     xcodec_output_attach_callback(codec, codec_event_cb, pcm);
 
@@ -281,15 +277,12 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
     playback->output_config->sample_rate = params->rate;
     playback->output_config->buffer = send;
 
-#ifdef CONST_TX_OUTPUT_BUFSIZE
-    playback->output_config->buffer_size = CONST_TX_OUTPUT_BUFSIZE;
-#else
-    playback->output_config->buffer_size = buf_size;
-#endif
-    playback->output_config->period = params->period_bytes;
+    playback->output_config->buffer_size = pcm_format.buffer_size;
+    playback->output_config->period = pcm_format.period;
+    playback->output_config->pcm_format = &pcm_format;
     //output_config.period = 2048;
     playback->output_config->mode = XCODEC_OUTPUT_SINGLE_ENDED;
-    playback->output_config->sound_channel_num = params->channels;
+    playback->output_config->sound_channel_num = pcm_format.layout.channels ? pcm_format.layout.channels : params->channels;
 #if 0
     if (g_audio_gain_config) {
         playback->output_config->negative_pin = g_audio_gain_config->out_negative_pin;
@@ -297,6 +290,7 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
     }
 #endif
     ret = xcodec_output_config(codec, playback->output_config);
+    playback->output_config->pcm_format = NULL;
     if (ret != 0) {
         goto pcmp_err1;
     }
@@ -335,8 +329,15 @@ static int pcmp_param_set(msp_pcm_t *pcm, msp_pcm_hw_params_t *params)
     user_log("code init ok\r\n");
     return 0;
 pcmp_err1:
+    if (opened) {
+        xcodec_output_stop(codec);
+        xcodec_output_close(codec);
+    }
     msp_free(send);
+    msp_free(playback->output_config);
+    playback->output_config = NULL;
 pcmp_err0:
+    msp_free(codec->ring_buf);
     msp_free(codec);
 
     return -1;
@@ -352,6 +353,10 @@ int g_xlen;
 static int pcm_send(msp_pcm_t *pcm, void *data, int len)
 {
     playback_t *playback = (playback_t *)pcm->hdl;
+    const xcodec_pcm_format_t *format = &playback->hdl->pcm_format;
+    if (len < 0 || (format->layout.channels && len % (2U * format->frame_bytes))) {
+        return -EINVAL;
+    }
     int ret = xcodec_output_write_async(playback->hdl, (uint8_t *)data, len);
 
 #ifdef DUMP_DATA_FEATURE
@@ -437,11 +442,13 @@ static void capture_free(capture_t *capture)
     if (capture->state == 1) {
         xcodec_input_stop(capture->hdl);
         xcodec_input_close(capture->hdl);
-        //msp_free(capture->hdl->ring_buf->buffer_ptr);
+        msp_free(capture->hdl->dma);
         msp_free(capture->hdl->ring_buf);
         msp_free(capture->hdl);
+        msp_free(capture->buffer);
         capture->state = 0;
-        capture->hdl = 0;
+        capture->hdl = NULL;
+        capture->buffer = NULL;
     }
 }
 
@@ -487,25 +494,33 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
     int slot_width;
     uint32_t recv_buf_size;
     capture_t *capture = (capture_t *)pcm->hdl;
+    xcodec_pcm_format_t pcm_format;
+    int opened = 0;
 
     if (!pcm_format_supported(params)) {
-        LOGE(TAG, "unsupported capture format(%d), sample_bits(%d)", params->format, params->sample_bits);
+        LOGE(TAG, "unsupported capture format");
         return -EINVAL;
     }
 
     slot_width = params->channels ? (params->frame_bits / params->channels) : 0;
+    if (params->period_bytes <= 0 || params->buffer_bytes <= 0 ||
+        xcodec_pcm_prepare(&pcm_format, 1, params->channels, params->sample_bits, slot_width,
+                           params->period_bytes, pcmc_calc_input_buffer_size(params)) != 0) {
+        return -EINVAL;
+    }
+
+    params->buffer_bytes = pcm_format.periods * params->period_bytes;
+    params->buffer_size = params->buffer_bytes / (params->frame_bits / 8);
+    params->buffer_time = (uint64_t)params->buffer_size * 1000000U / params->rate;
 
     capture_free(capture);
 
-    xcodec_input_config_t input_config;
+    xcodec_input_config_t input_config = { 0 };
     xcodec_input_t *codec = msp_zalloc(sizeof(xcodec_input_t));
 
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
 
-    recv_buf_size = pcmc_calc_input_buffer_size(params);
-    if (recv_buf_size < params->buffer_bytes) {
-        recv_buf_size = params->buffer_bytes;
-    }
+    recv_buf_size = pcm_format.buffer_size;
 
     uint8_t *recv = msp_malloc(recv_buf_size);
     if (recv == NULL) {
@@ -519,10 +534,14 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
     // pcm->pcm_name[4] is ch ascii data, change to decimal num
     codec->ring_buf = msp_zalloc(sizeof(m_ringbuf_t));
     codec->dma = msp_zalloc_check(sizeof(xcodec_dma_ch_t));
+    if (codec->ring_buf == NULL) {
+        goto pcmc_err1;
+    }
     int ret = xcodec_input_open(&codec_a, codec, pcm->pcm_name[4] - 0x30);
     if (ret != 0) {
         goto pcmc_err1;
     }
+    opened = 1;
 
     /* input ch config */
     xcodec_input_attach_callback(codec, codec_event_cb, pcm);
@@ -531,9 +550,10 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
     input_config.sample_rate = params->rate;
     input_config.buffer = recv;
     input_config.buffer_size = recv_buf_size;
-    input_config.period = params->period_bytes;
+    input_config.period = pcm_format.period;
+    input_config.pcm_format = &pcm_format;
     input_config.mode = XCODEC_INPUT_DIFFERENCE;
-    input_config.sound_channel_num = params->channels;
+    input_config.sound_channel_num = pcm_format.layout.channels ? pcm_format.layout.channels : params->channels;
     /*config negative and positive*/
     //input_config.negative_pin = INPUT_NEGATIVE_PIN;   //negative pin
     //input_config.positive_pin = INPUT_POSITIVE_PIN;  //positive pin
@@ -554,12 +574,19 @@ static int pcmc_param_set(msp_pcm_t *pcm, struct msp_pcm_hw_params *params)
     capture->state = 1;
     capture->hdl = codec;
     capture->dma_hdl = NULL;//dma_hdl;
+    capture->buffer = recv;
     memcpy(&capture->params, params, sizeof(msp_pcm_hw_params_t));
 
     printf("csi codec input open success\r\n");
     return 0;
 
 pcmc_err1:
+    if (opened) {
+        xcodec_input_stop(codec);
+        xcodec_input_close(codec);
+    }
+    msp_free(codec->dma);
+    msp_free(codec->ring_buf);
     msp_free(recv);
 pcmc_err0:
     msp_free(codec);
@@ -570,7 +597,9 @@ pcmc_err0:
 static int pcm_recv(msp_pcm_t *pcm, void *buf, int size)
 {
     capture_t *capture = (capture_t *)pcm->hdl;
-
+    if (size < 0 || size % capture->hdl->pcm_format.frame_bytes) {
+        return -EINVAL;
+    }
     int ret = xcodec_input_read(capture->hdl, (uint8_t *)buf, size);
 
     return ret;

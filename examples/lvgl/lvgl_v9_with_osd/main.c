@@ -7,24 +7,36 @@
  *   - filesystem_reader_task : default mode, read /sd/<res>/CCC/pNNNN.jpg into a queue
  *   - usb_reader_task        : USB mode, de-frame DATA ACM JPEG stream into a queue
  *   - image_switch_task      : MJDEC-decode frames into ping-pong YUV, shown as background
- *   - lvgl_task              : SquareLine UI on a transparent OSD overlay, composited on top
+ *   - lvgl_task              : adaptive UI on a transparent OSD overlay, composited on top
  */
 
 #include "board.h"
 #include "bflb_l1c.h"
 #include "bflb_mtimer.h"
 #include "bflb_gpio.h"
-#include "bflb_osd.h"
 #include <FreeRTOS.h>
 #include "task.h"
 
 #ifndef CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
 #define CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO 0
 #endif
+#ifndef CONFIG_LVGL_V9_WITH_OSD_OTA
+#define CONFIG_LVGL_V9_WITH_OSD_OTA 0
+#endif
+#define APP_NETWORK_ENABLED (CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO || CONFIG_LVGL_V9_WITH_OSD_OTA)
 
-#if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
+#if APP_NETWORK_ENABLED
 #include "rfparam_adapter.h"
 #include "lwip/tcpip.h"
+#include "app_wifi.h"
+#ifdef CONFIG_SHELL
+#include "shell.h"
+#endif
+#endif
+#if CONFIG_LVGL_V9_WITH_OSD_OTA
+#include "app_ota.h"
+#endif
+#if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
 #include <string.h>
 #endif
 
@@ -32,27 +44,19 @@
 #include "dpi_manager.h"
 #if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
 #include "usb_reader.h"
-#include "app_wifi.h"
 #include "app_usb_composite.h"
 #include "nethub.h"
 #include "nethub_vchan.h"
-#ifdef CONFIG_SHELL
-#include "shell.h"
-#include <stdlib.h>
-#endif
 #else
 #include "filesystem_reader.h"
 #endif
 
 #include "lvgl.h"
-#include "lv_demos.h"
+#include "ui.h"
 #include "lv_port_disp.h"
 
 #if (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI)
 #include "bl618dg_glb.h" /* GLB_Set_Display_CLK for the DPI pixel clock */
-#endif
-#if defined(LVGL_WITH_SQUARELINE_UI) && LVGL_WITH_SQUARELINE_UI
-#include "ui.h" /* SquareLine UI; CMake picks the matching UICODE folder per panel */
 #endif
 
 #define DBG_TAG "MAIN"
@@ -61,15 +65,23 @@
 /* task stacks (words); LVGL needs a large stack (see lvgl-on-bl618dg-dsi-720p memory) */
 #define IMG_TASK_STACK   2048
 #define LVGL_TASK_STACK  4096 /* 16KB */
+#define FS_TASK_STACK            1536 /* FIL + FILINFO + path buffers */
+#define APP_INIT_TASK_STACK      4096
+#if APP_NETWORK_ENABLED
+#define APP_INIT_TASK_PRIORITY   26
+/* Keep display work below Wi-Fi, shell and OTA so large frames cannot starve them. */
+#define LVGL_TASK_PRIORITY       5
+#define IMG_TASK_PRIORITY        6
+#define FS_READER_TASK_PRIORITY  7
+#else
+#define APP_INIT_TASK_PRIORITY   (configMAX_PRIORITIES - 1)
+#define LVGL_TASK_PRIORITY       (configMAX_PRIORITIES - 3)
+#define IMG_TASK_PRIORITY        (configMAX_PRIORITIES - 2)
+#define FS_READER_TASK_PRIORITY  (configMAX_PRIORITIES - 1)
+#endif
 #if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
 #define USB_TASK_STACK           2048
-#define APP_INIT_TASK_STACK      4096
-#define APP_INIT_TASK_PRIORITY   26
-#define LVGL_TASK_PRIORITY       (configMAX_PRIORITIES - 5)
-#define IMG_TASK_PRIORITY        (configMAX_PRIORITIES - 4)
-#define USB_READER_TASK_PRIORITY (configMAX_PRIORITIES - 3)
-#else
-#define FS_TASK_STACK            1536 /* holds FIL(~580B)+FILINFO(~300B)+path buffers */
+#define USB_READER_TASK_PRIORITY FS_READER_TASK_PRIORITY
 #endif
 
 #if (DPI_PIXEL_CLOCK_USE_SW_GPIO)
@@ -102,7 +114,7 @@ static void lv_log_cb(lv_log_level_t level, const char *buf)
 }
 #endif
 
-/* The SquareLine UI runs on a transparent screen background so the video (background layer)
+/* The adaptive UI runs on a transparent screen background so the video (background layer)
  * shows through, with the widgets floating on top as an opaque HUD on the OSD overlay. */
 
 /* Panel hardware scan-out rate: the framework fires a CYCLE callback per scanned frame (OSD
@@ -148,6 +160,27 @@ static void panel_scan_cycle_cb(void)
     scan_frame_count++;
 }
 
+#if CONFIG_LVGL_V9_WITH_OSD_OTA
+static void ota_status_timer_cb(lv_timer_t *timer)
+{
+    static app_ota_phase_t last_phase = APP_OTA_IDLE;
+    static uint32_t last_percent = UINT32_MAX;
+    app_ota_phase_t phase = g_ota_status.phase;
+    uint32_t received = g_ota_status.received;
+    uint32_t total = g_ota_status.total;
+
+    (void)timer;
+    uint32_t percent = total ? (uint32_t)((uint64_t)received * 100 / total) : 0;
+    if (phase != last_phase || (g_ota_status.busy && percent != last_percent)) {
+        char text[96];
+        snprintf(text, sizeof(text), "OTA %s %lu%%", app_ota_phase_name(phase), (unsigned long)percent);
+        ui_set_ota_status(text);
+        last_phase = phase;
+        last_percent = percent;
+    }
+}
+#endif
+
 static void lvgl_task(void *param)
 {
     (void)param;
@@ -170,19 +203,15 @@ static void lvgl_task(void *param)
     /* Count SEOF scan-out frames to report the panel's true hardware refresh rate. */
     lcd_frame_callback_register(FRAME_INT_TYPE_CYCLE, panel_scan_cycle_cb);
 
-#if defined(LVGL_WITH_SQUARELINE_UI) && LVGL_WITH_SQUARELINE_UI
     ui_init();
-    // lv_demo_benchmark();
-#else
-    lv_demo_benchmark();
+#if CONFIG_LVGL_V9_WITH_OSD_OTA
+    lv_timer_create(ota_status_timer_cb, 100, NULL);
 #endif
 
     /* Make the screen background transparent so the video shows through, leaving
-     * the widgets as an opaque HUD. Set AFTER ui_init()'s lv_screen_load(). */
+     * the widgets as an opaque HUD. */
     lv_obj_set_style_bg_opa(lv_screen_active(), 0, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(lv_layer_top(), 0, LV_PART_MAIN);
-    // struct bflb_device_s *osd0 = bflb_device_get_by_name("osd0");
-    // bflb_osd_blend_set_global_a(osd0, true, 0x10);
 
 #if defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN
     /* Render the first frame before enabling the backlight so power-up never
@@ -208,29 +237,52 @@ static void lvgl_task(void *param)
     }
 }
 
-#if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
 static void app_init_task(void *param)
 {
     (void)param;
 
-    rfparam_init(0, NULL, 0);
+#if APP_NETWORK_ENABLED
+    int rf_ready = rfparam_init(0, NULL, 0);
+    if (rf_ready != 0) {
+        LOG_E("RF parameter initialization failed: %d\r\n", rf_ready);
+    }
     tcpip_init(NULL, NULL);
-    dpi_manager_init();
+#endif
+    if (dpi_manager_init() != 0) {
+        LOG_E("dpi_manager_init failed\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
+#if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
     usb_reader_init();
     app_usb_composite_configure();
     app_wifi_rx_filter_init();
     nethub_bootstrap();
     cmd_acm_ping_init();
     app_usb_composite_start();
+#else
+    if (filesystem_reader_init() != 0) {
+        LOG_E("filesystem_reader_init failed\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
+#endif
 
     xTaskCreate(lvgl_task, "lvgl", LVGL_TASK_STACK, NULL, LVGL_TASK_PRIORITY, NULL);
     xTaskCreate(image_switch_task, "img_switch", IMG_TASK_STACK, NULL, IMG_TASK_PRIORITY, NULL);
+#if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
     xTaskCreate(usb_reader_task, "usb_reader", USB_TASK_STACK, NULL, USB_READER_TASK_PRIORITY, NULL);
-    app_wifi_start();
+#else
+    xTaskCreate(filesystem_reader_task, "fs_reader", FS_TASK_STACK, NULL, FS_READER_TASK_PRIORITY, NULL);
+#endif
+#if APP_NETWORK_ENABLED
+    if (rf_ready == 0) {
+        xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
+    }
+#endif
 
     vTaskDelete(NULL);
 }
-#endif
 
 int main(void)
 {
@@ -239,17 +291,17 @@ int main(void)
 #if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
     /* USB DP/DM are GPIO40/41 on BL618DG; mux them before CherryUSB starts. */
     board_usb_gpio_init();
-
-#ifdef CONFIG_SHELL
-    shell_init_with_task(bflb_device_get_by_name("uart0"));
 #endif
+
+#if APP_NETWORK_ENABLED && defined(CONFIG_SHELL)
+    shell_init_with_task(bflb_device_get_by_name("uart0"));
 #endif
 
 #if (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI)
     /* DPI pixel clock */
-    GLB_Set_Display_CLK(1, GLB_DP_CLK_WIFIPLL_160M, 2); //1024x600 div=1
+    GLB_Set_Display_CLK(1, GLB_DP_CLK_WIFIPLL_96M, 3); //1024x600 div=1
     
-    LOG_I("DPI(standard RGB) + LVGL OSD: %s video background + LVGL benchmark overlay\r\n",
+    LOG_I("DPI(standard RGB) + LVGL OSD: %s video background + LVGL UI overlay\r\n",
           CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO ? "USB-ACM" : "SD");
 #else
     LOG_I("DSI(LCD framework) + LVGL OSD: %s video background + LVGL UI overlay\r\n",
@@ -264,29 +316,7 @@ int main(void)
      * the DPI background framebuffer is only switched in after the display is up
      * (same task ordering as lvgl_v8_with_osd). */
 
-#if CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO
     xTaskCreate(app_init_task, "app_init", APP_INIT_TASK_STACK, NULL, APP_INIT_TASK_PRIORITY, NULL);
-#else
-    /* Video pipeline HW (MJDEC + DMA2D + YUV background buffers). The display side comes up
-     * later in lvgl_task; the video task blocks on the JPEG queue until fs_reader produces a
-     * frame, so the background is only switched in after the display is up. */
-
-    if (dpi_manager_init() != 0) {
-        LOG_E("dpi_manager_init failed\r\n");
-        while (1) {
-        }
-    }
-
-    if (filesystem_reader_init() != 0) {
-        LOG_E("filesystem_reader_init failed\r\n");
-        while (1) {
-        }
-    }
-
-    xTaskCreate(lvgl_task, "lvgl", LVGL_TASK_STACK, NULL, configMAX_PRIORITIES - 3, NULL);
-    xTaskCreate(image_switch_task, "img_switch", IMG_TASK_STACK, NULL, configMAX_PRIORITIES - 2, NULL);
-    xTaskCreate(filesystem_reader_task, "fs_reader", FS_TASK_STACK, NULL, configMAX_PRIORITIES - 1, NULL);
-#endif
 
     vTaskStartScheduler();
 

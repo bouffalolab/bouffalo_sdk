@@ -25,7 +25,6 @@
 
 #include "board.h"
 
-extern void __libc_init_array(void);
 extern void board_ncp_init(void);
 
 void lmac154_app_init(void)
@@ -96,8 +95,6 @@ int main(void)
         return 0;
     }
 #endif
-
-    __libc_init_array();
 
     xTaskCreate(prvInitTask, "init", 1024, NULL, 15, NULL);
 

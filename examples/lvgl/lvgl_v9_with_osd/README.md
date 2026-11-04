@@ -2,6 +2,21 @@
 
 This example displays a JPEG video background with an LVGL v9 OSD overlay.
 
+The overlay uses one implementation in `demos/ui/` and one shared set of icons.
+It reads the LVGL display resolution at runtime to size and position the icons,
+volume slider, playback controls, and scrolling subtitle. Fonts are selected
+according to the shorter display side. Resolution changes also relayout the UI.
+
+As in the original overlays, portrait framebuffers are viewed in landscape:
+when the framebuffer height exceeds its width, widget coordinates and content
+are rotated 270 degrees. Square and landscape framebuffers use their native
+orientation. Widgets are transformed individually to avoid a full-screen
+intermediate rotation buffer. The screen background remains transparent for
+the JPEG video layer; icon cycling and the slider sweep are retained.
+
+Select the panel in `lcd_conf_user.h`. Adding a supported panel or changing its
+resolution no longer requires a separate UI directory or a CMake UI mapping.
+
 The display and OSD pipeline is shared. The JPEG input source is selected at
 build time:
 
@@ -36,14 +51,42 @@ mode. The example owns enumeration and notifies NetHub from USB callbacks;
 NetHub keeps endpoint read/write, routing, ECM, CMD ACM, and generic stream
 handling.
 
+## WiFi OTA (SD and USB modes)
+
+OTA works with any supported panel selected in `lcd_conf_user.h`; first install
+the OTA-enabled application and partition table over UART (the current layout
+requires at least 8 MiB Flash).
+
+Build and serve the RAW `.bin.ota` package from this directory:
+
+```bash
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CPU_MODEL=b0 BUILD_DIR=build_ota
+python3 -m http.server 8000 --directory build_ota/build_out
+```
+
+In the UART shell (2000000 baud), connect WiFi and use the computer's LAN IP:
+
+```text
+wifi_sta_connect <SSID> <PASSWORD>
+# Wait for CODE_WIFI_ON_GOT_IP.
+https_ota_start http://<COMPUTER_LAN_IP>:8000/lvgl_v9_with_osd_bl618dg_ap.bin.ota
+```
+
+The board verifies SHA256 and reboots automatically; use `ota_status` to check
+progress.
+
 ## WiFi + iperf (USB mode)
 
 The device runs a WiFi station and bridges it to the host through the ECM
-network interface. Connect WiFi from the device shell on `uart0` (115200):
+network interface. Connect WiFi from the device shell on `uart0` (2000000 on this BL618DG configuration):
 
 ```text
 wifi_sta_connect -D <SSID> <PASSWORD>
 ```
+
+`-D` disables DHCP on the device for this bridge setup. To use device-local
+OTA, connect with `wifi_sta_connect <SSID> <PASSWORD>` instead and wait for
+`CODE_WIFI_ON_GOT_IP` before starting an upgrade.
 
 On the host, find the USB-enumerated ECM interface (name like `enx<mac>`) and
 run iperf over it:

@@ -156,14 +156,11 @@ static int cmd_pm_power(int argc, char **argv)
         printf("  ldo_soc_active_level   : %u\r\n", app_lowpower_cfg.soc_cfg.ldo_soc_active_level);
         printf("  ldo_soc_enter_pds      : %u\r\n", app_lowpower_cfg.soc_cfg.ldo_soc_enter_pds_level);
         printf("  ldo_soc_pds_level      : %u\r\n", app_lowpower_cfg.soc_cfg.ldo_soc_pds_level);
-        printf("  pds_gpio_keep_en       : %u\r\n", app_lowpower_cfg.lp_cfg.pds_gpio_keep_en);
-        printf("  hbn_gpio_keep_en       : %u\r\n", app_lowpower_cfg.lp_cfg.hbn_gpio_keep_en);
         printf("  pds_flash_power_off    : %u\r\n", app_lowpower_cfg.lp_cfg.pds_flash_power_off);
         printf("  pll_power_off          : %u\r\n", app_lowpower_cfg.lp_cfg.pll_power_off);
         printf("  rf_power_off           : %u\r\n", app_lowpower_cfg.lp_cfg.rf_power_off);
         printf("  clk_default_sel        : %u\r\n", app_lowpower_cfg.lp_cfg.clk_default_sel);
         printf("  set_all_ram_ret_en     : %u\r\n", app_lowpower_cfg.lp_cfg.set_all_ram_ret_en);
-        printf("  hbn_flash_power_off    : %u\r\n", app_lowpower_cfg.lp_cfg.hbn_flash_power_off);
         printf("  ldo18io_power_down     : %u\r\n", app_lowpower_cfg.lp_cfg.ldo18io_power_down);
         return 0;
     }
@@ -209,14 +206,11 @@ static int cmd_pm_power(int argc, char **argv)
                 return -1;
             }
 
-            new_cfg.lp_cfg.pds_gpio_keep_en = (lp_mask >> 0) & 0x1;
-            new_cfg.lp_cfg.hbn_gpio_keep_en = (lp_mask >> 1) & 0x1;
             new_cfg.lp_cfg.pds_flash_power_off = (lp_mask >> 2) & 0x1;
             new_cfg.lp_cfg.pll_power_off = (lp_mask >> 3) & 0x1;
             new_cfg.lp_cfg.rf_power_off = (lp_mask >> 4) & 0x1;
             new_cfg.lp_cfg.clk_default_sel = pds_clk;
             new_cfg.lp_cfg.set_all_ram_ret_en = (lp_mask >> 5) & 0x1;
-            new_cfg.lp_cfg.hbn_flash_power_off = (lp_mask >> 6) & 0x1;
             new_cfg.lp_cfg.ldo18io_power_down = (lp_mask >> 7) & 0x1;
         }
 
@@ -233,7 +227,7 @@ static int cmd_pm_power(int argc, char **argv)
         printf("usage: pm_power <mode> <dcdc_sys_gpio> <dcdc_soc_gpio> <dcdc_soc_vsel_gpio>\r\n");
         printf("usage: pm_power <mode> <dcdc_sys_gpio> <dcdc_soc_gpio> <dcdc_soc_vsel_gpio> <lp_mask> <pds_clk>\r\n");
         printf("       use 0xff for unused GPIO\r\n");
-        printf("       lp_mask bit0=pds_gpio_keep bit1=hbn_gpio_keep bit2=pds_flash_off bit3=pll_off bit4=rf_off bit5=ram_ret bit6=hbn_flash_off bit7=ldo18io_down\r\n");
+        printf("       lp_mask bit0=reserved bit1=reserved bit2=pds_flash_off bit3=pll_off bit4=rf_off bit5=ram_ret bit6=reserved bit7=ldo18io_down\r\n");
         printf("       pds_clk: 0=f32k, 1=rc32m, 2=xtal, 3=xtal_lp, 4=rc8m, 5=rc16m\r\n");
         return -1;
     }

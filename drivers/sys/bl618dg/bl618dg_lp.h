@@ -81,7 +81,7 @@ enum PSM_EVENT {
 #define BL_LP_BLE_WAKE_TO_EXPIRY_US                (BL_LP_BLE_MAINTENANCE_LEAD_US + BL_LP_BLE_PDS_EARLY_US)
 
 #define LP_FW_BLE_PARA_MAGIC                       0x424C4550UL /* "BLEP" */
-#define LP_FW_BLE_PARA_VERSION                     22U
+#define LP_FW_BLE_PARA_VERSION                     28U
 #define LP_FW_BLE_DFE_MODE_STANDALONE              0U
 #define LP_FW_BLE_DFE_MODE_COMBO                   4U
 #define LP_FW_BLE_SPDT_GPIO_INVALID                0xFFU
@@ -397,6 +397,18 @@ typedef struct {
     uint16_t con_retry_max;       /* missed events re-tried in the LPFW before handing back */
     uint16_t con_retries;         /* re-tries used in this window */
     uint16_t con_rsvd1;
+    /* Pending channel map supplied by the APP controller. */
+    uint16_t con_chmap_instant;
+    uint8_t  con_chmap_pending;
+    uint8_t  con_chmap_rsvd;
+    uint16_t con_chmap_expected[3];
+    /* RX RTC ppm baseline retained across APP/LPFW handoffs. */
+    uint64_t con_rx_ppm_rtc_hus;   /* backdated RTC, half-us; 0 = no sample */
+    uint16_t con_rx_ppm_evt_cnt;
+    uint16_t con_rx_ppm_interval;  /* half-slots */
+    uint8_t  con_rx_ppm_rate;
+    uint8_t  con_rx_ppm_valid;    /* a computed estimate, including zero */
+    int32_t  con_rx_ppm;          /* latest RX estimate; 0 before first result */
 } lp_fw_ble_para_t;
 
 typedef struct {
@@ -556,6 +568,9 @@ void bl_lp_time_info_update_pds(struct bl_lp_info_s *lp_info);
 void bl_lp_time_info_update_lpfw(struct bl_lp_info_s *lp_info);
 /* user api */
 void bl_lp_info_clear(struct bl_lp_info_s *lp_info);
+/* Clear RX ppm baseline/result explicitly, e.g. for a new connection.
+ * Call from APP with LPFW/controller handoff quiescent; not during LPFW RX. */
+void bl_lp_ble_rx_ppm_clear(void);
 
 #if defined(CONFIG_LPFW_CUSTOM_RX)
 int bl_lp_custom_rx_config_set(lp_fw_custom_rx_cfg_t *cfg);

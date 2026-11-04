@@ -53,13 +53,9 @@ endif()
 
 sdk_add_include_directories(include include/hardware)
 
-set(MCPU "e907")
-set(MARCH "rv32imafc_xtheade")
-set(MABI "ilp32f")
-
 sdk_add_compile_definitions(-DARCH_RISCV -DBFLB_USE_HAL_DRIVER)
-sdk_add_compile_options(-march=${MARCH} -mabi=${MABI} -mtune=${MCPU})
-sdk_add_link_options(-march=${MARCH} -mabi=${MABI} -mtune=${MCPU})
+sdk_add_compile_options(${BFLB_RISCV_ARCH_FLAGS})
+sdk_add_link_options(${BFLB_RISCV_ARCH_FLAGS})
 sdk_add_private_compile_definitions_ifdef(CONFIG_USB_DISABLED -DCONFIG_USB_DISABLED)
 
 sdk_add_compile_definitions(-DCONFIG_IRQ_NUM=83)

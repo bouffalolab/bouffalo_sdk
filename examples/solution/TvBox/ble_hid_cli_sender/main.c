@@ -1,19 +1,17 @@
 #include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "bflb_mtd.h"
 #include "bflb_mtimer.h"
 #include "board.h"
-#include "lfs_kv.h"
 #include "incbin.h"
 #include "rfparam_adapter.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "usb_ecm_ble.h"
+#include "ble_common.h"
 
 #ifdef CONFIG_SHELL
 #include "shell.h"
@@ -57,14 +55,14 @@ static void ble_cli_dump_text(const uint8_t *data, size_t len)
     printf("\"");
 }
 
-static const char *ble_cli_channel_name(usb_ecm_ble_channel_t channel)
+static const char *ble_cli_channel_name(ble_common_channel_t channel)
 {
     switch (channel) {
-        case USB_ECM_BLE_CHANNEL_VOICE:
+        case BLE_COMMON_CHANNEL_VOICE:
             return "voice";
-        case USB_ECM_BLE_CHANNEL_KEY:
+        case BLE_COMMON_CHANNEL_KEY:
             return "key";
-        case USB_ECM_BLE_CHANNEL_USER:
+        case BLE_COMMON_CHANNEL_USER:
             return "user";
         default:
             return "unknown";
@@ -100,7 +98,7 @@ static int ble_cli_join_args(int argc, char **argv, int start, char *buf, size_t
     return (int)used;
 }
 
-static int ble_cli_send_text(usb_ecm_ble_channel_t channel, int argc, char **argv, int start)
+static int ble_cli_send_text(ble_common_channel_t channel, int argc, char **argv, int start)
 {
     char text[BLE_CLI_TX_TEXT_MAX];
     int len;
@@ -112,7 +110,7 @@ static int ble_cli_send_text(usb_ecm_ble_channel_t channel, int argc, char **arg
         return -1;
     }
 
-    ret = usb_ecm_ble_send_channel(channel, (const uint8_t *)text, (size_t)len);
+    ret = ble_common_send_channel(channel, (const uint8_t *)text, (size_t)len);
     printf("send %s %s: ", ble_cli_channel_name(channel), ret == 0 ? "ok" : "failed");
     ble_cli_dump_text((const uint8_t *)text, (size_t)len);
     printf("\r\n");
@@ -121,10 +119,16 @@ static int ble_cli_send_text(usb_ecm_ble_channel_t channel, int argc, char **arg
 
 static void ble_cli_log_voice_preview(const uint8_t *buf, size_t len)
 {
-    const int16_t *samples = (const int16_t *)buf;
+    int samples[8];
 
     if (!buf || len < (sizeof(int16_t) * 8U) || (len % sizeof(int16_t)) != 0U) {
         return;
+    }
+
+    /* Decode s16le bytes without assuming INCBIN or source-pointer alignment. */
+    for (size_t i = 0; i < 8U; i++) {
+        unsigned int value = buf[2U * i] | ((unsigned int)buf[2U * i + 1U] << 8);
+        samples[i] = (value >= 0x8000U) ? (int)value - 0x10000 : (int)value;
     }
 
     LOG_I("voice tx preview samples=%d,%d,%d,%d,%d,%d,%d,%d len=%u\r\n",
@@ -135,14 +139,13 @@ static void ble_cli_log_voice_preview(const uint8_t *buf, size_t len)
 
 static int ble_cli_stream_voice_bin(void)
 {
-    uint8_t packet[BLE_VOICE_PACKET_BYTES];
     const uint8_t *bin_src = gble_voice_bin_pcmData;
     size_t bin_total = (size_t)gble_voice_bin_pcmSize;
     size_t remaining_bytes;
-    unsigned long frames = 0;
-    unsigned long sent_packets = 0;
+    unsigned long attempted_packets = 0;
+    unsigned long queued_packets = 0;
     unsigned long failed_packets = 0;
-    unsigned long sent_bytes = 0;
+    unsigned long queued_bytes = 0;
     size_t bin_offset = 0U;
     TickType_t last_log_tick;
     TickType_t next_frame_tick;
@@ -165,11 +168,8 @@ static int ble_cli_stream_voice_bin(void)
     pcm_duration_ms = (uint32_t)(((uint64_t)bin_total * 1000ULL) /
                                  (BLE_VOICE_RATE_HZ * BLE_VOICE_SAMPLE_BYTES));
 
-    memset(packet, 0, sizeof(packet));
-    memcpy(packet, bin_src,
-           (remaining_bytes < sizeof(packet)) ? remaining_bytes : sizeof(packet));
-    ble_cli_log_voice_preview(packet,
-                              (remaining_bytes < sizeof(packet)) ? remaining_bytes : sizeof(packet));
+        ble_cli_log_voice_preview(bin_src,
+                      (remaining_bytes < BLE_VOICE_PACKET_BYTES) ? remaining_bytes : BLE_VOICE_PACKET_BYTES);
 
     start_ms = bflb_mtimer_get_time_ms();
     last_log_tick = xTaskGetTickCount();
@@ -177,59 +177,51 @@ static int ble_cli_stream_voice_bin(void)
     LOG_I("voice bin tx start embedded_bytes=%u duration_ms=%u bytes_per_frame=%u rate=%u ch=1\r\n",
           (unsigned int)bin_total,
           (unsigned int)pcm_duration_ms,
-          (unsigned int)sizeof(packet),
+          (unsigned int)BLE_VOICE_PACKET_BYTES,
           (unsigned int)BLE_VOICE_RATE_HZ);
 
     while (remaining_bytes > 0U) {
-        size_t packet_len = (remaining_bytes < sizeof(packet)) ? remaining_bytes : sizeof(packet);
+        size_t packet_len = (remaining_bytes < BLE_VOICE_PACKET_BYTES) ? remaining_bytes : BLE_VOICE_PACKET_BYTES;
         TickType_t now_tick;
         int ret;
 
-        if (frames > 0U) {
+        if (attempted_packets > 0U) {
             vTaskDelayUntil(&next_frame_tick, pdMS_TO_TICKS(BLE_VOICE_FRAME_MS));
         }
 
-        memset(packet, 0, sizeof(packet));
-        memcpy(packet, bin_src + bin_offset, packet_len);
-
-        /* usb_ecm_ble_send_channel() now applies buffer-level flow control with
+        /* ble_common_send_channel() now applies buffer-level flow control with
          * a short per-fragment timeout, so a frame that cannot be queued in
-         * time is dropped (live audio tolerates loss) rather than busy-retried. */
-        ret = usb_ecm_ble_send_channel(USB_ECM_BLE_CHANNEL_VOICE, packet, packet_len);
+         * time is dropped (live audio tolerates loss) rather than busy-retried.
+         * It copies fragments synchronously; no source pointer is retained. */
+        ret = ble_common_send_channel(BLE_COMMON_CHANNEL_VOICE, bin_src + bin_offset, packet_len);
         if (ret != 0) {
             failed_packets++;
+        } else {
+            queued_packets++;
+            queued_bytes += (unsigned long)packet_len;
         }
 
-        frames++;
-        bin_offset += (uint32_t)packet_len;
+        attempted_packets++;
+        bin_offset += packet_len;
         remaining_bytes -= packet_len;
-        sent_packets++;
-        sent_bytes += (unsigned long)packet_len;
 
         now_tick = xTaskGetTickCount();
         if ((now_tick - last_log_tick) >= pdMS_TO_TICKS(1000)) {
             elapsed_ms = bflb_mtimer_get_time_ms() - start_ms;
-            LOG_I("voice bin tx stats sent_pkt=%lu sent_bytes=%lu failed_pkt=%lu frame=%lu remaining=%u elapsed_ms=%u\r\n",
-                  sent_packets, sent_bytes, failed_packets, frames,
+            LOG_I("voice bin tx stats attempted_pkt=%lu queued_pkt=%lu queued_bytes=%lu failed_pkt=%lu remaining=%u elapsed_ms=%u\r\n",
+                attempted_packets, queued_packets, queued_bytes, failed_packets,
                   (unsigned int)remaining_bytes, (unsigned int)elapsed_ms);
             last_log_tick = now_tick;
         }
     }
 
     elapsed_ms = bflb_mtimer_get_time_ms() - start_ms;
-    printf("ble_voice_bin done frames=%lu sent_pkt=%lu sent_bytes=%lu failed_pkt=%lu embedded_bytes=%u duration_ms=%u elapsed_ms=%u\r\n",
-           frames, sent_packets, sent_bytes, failed_packets,
+        printf("ble_voice_bin done attempted_pkt=%lu queued_pkt=%lu queued_bytes=%lu failed_pkt=%lu embedded_bytes=%u duration_ms=%u elapsed_ms=%u\r\n",
+            attempted_packets, queued_packets, queued_bytes, failed_packets,
            (unsigned int)bin_total,
            (unsigned int)pcm_duration_ms,
            (unsigned int)elapsed_ms);
     return (failed_packets == 0U) ? 0 : -1;
-}
-
-static void ble_cli_channel_rx(usb_ecm_ble_channel_t channel, const uint8_t *data, size_t len)
-{
-    printf("[BLE_CLI] rx %s len=%u text=", ble_cli_channel_name(channel), (unsigned int)len);
-    ble_cli_dump_text(data, len);
-    printf("\r\n");
 }
 
 #ifdef CONFIG_SHELL
@@ -240,7 +232,7 @@ static int ble_hid_cmd(int argc, char **argv)
         return 0;
     }
 
-    return ble_cli_send_text(USB_ECM_BLE_CHANNEL_KEY, argc, argv, 1);
+    return ble_cli_send_text(BLE_COMMON_CHANNEL_KEY, argc, argv, 1);
 }
 SHELL_CMD_EXPORT_ALIAS(ble_hid_cmd, ble_hid, send KEY channel text for HID typing);
 
@@ -267,13 +259,9 @@ static void start_main(void *param)
     LOG_I("Shell ready\r\n");
 #endif
 
-    usb_ecm_ble_set_channel_data_callback(USB_ECM_BLE_CHANNEL_VOICE, ble_cli_channel_rx);
-    usb_ecm_ble_set_channel_data_callback(USB_ECM_BLE_CHANNEL_KEY, ble_cli_channel_rx);
-    usb_ecm_ble_set_channel_data_callback(USB_ECM_BLE_CHANNEL_USER, ble_cli_channel_rx);
-
     LOG_I("Start BLE CLI sender\r\n");
     LOG_I("Peer name: USB-ECM-AUD\r\n");
-    usb_ecm_ble_stack_init();
+    ble_common_stack_init();
 
     vTaskDelete(NULL);
 }
@@ -285,7 +273,6 @@ int main(void)
     LOG_I("BLE HID CLI Sender\r\n");
 
     bflb_mtd_init();
-    lfs_kv_init();
 
     if (rfparam_init(0, NULL, 0) != 0) {
         LOG_E("PHY RF init failed\r\n");

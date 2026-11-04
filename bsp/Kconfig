@@ -308,6 +308,15 @@ config BSP_AUDIO_PLAYER
     help
       Enable the BSP audio player framework.
 
+config BSP_AUDIO_PCM
+    bool "Shared PCM device sessions"
+    default n
+    depends on BSP_AUDIO_PLAYER
+    help
+      Provide checked PCM device ownership and capture/playback sessions over
+      the existing BSP audio transport. Applications using these sessions must
+      not independently reconfigure or stop the legacy player instance.
+
 source "$BL_SDK_BASE/bsp/common/audio_player/Kconfig"
 
 config BSP_CSI
@@ -535,14 +544,15 @@ endchoice
 
 config BOARD_BOOT2FILE
     string "Board Boot2 image file" if n
-    default "$BL_SDK_BASE/bsp/board/bl602dk/config/boot2_bl602_release_v8.1.3.bin" if CHIP = "bl602"
-    default "$BL_SDK_BASE/bsp/board/bl616dk/config/boot2_bl616_isp_release_v8.1.8.bin" if CHIP = "bl616"
-    default "$BL_SDK_BASE/bsp/board/bl616cldk/config/boot2_bl616cl_isp_release_v8.2.1.bin" if CHIP = "bl616cl"
-    default "$BL_SDK_BASE/bsp/board/bl618dgdk/config/boot2_bl618dg_isp_release_v8.2.4.bin" if CHIP = "bl618dg"
-    default "$BL_SDK_BASE/bsp/board/bl702dk/config/boot2_bl702_release_v8.1.2.bin" if CHIP = "bl702"
-    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/boot2_bl702l_isp_release_v8.1.5.bin" if CHIP = "bl702l"
+    default "$BL_SDK_BASE/bsp/board/bl602dk/config/boot2_*.bin" if CHIP = "bl602"
+    default "$BL_SDK_BASE/bsp/board/bl616dk/config/boot2_*.bin" if CHIP = "bl616"
+    default "$BL_SDK_BASE/bsp/board/bl616cldk/config/boot2_*.bin" if CHIP = "bl616cl"
+    default "$BL_SDK_BASE/bsp/board/bl618dgdk/config/boot2_*.bin" if CHIP = "bl618dg"
+    default "$BL_SDK_BASE/bsp/board/bl702dk/config/boot2_*.bin" if CHIP = "bl702"
+    default "$BL_SDK_BASE/bsp/board/bl702ldk/config/boot2_*.bin" if CHIP = "bl702l"
     help
-      Absolute path to the default Boot2 image for the selected board.
+      Boot2 image path or wildcard for the selected board. CMake resolves a
+      wildcard and requires exactly one matching image.
 
 config BOARD_PTFILE
     string "Board partition table file" if n

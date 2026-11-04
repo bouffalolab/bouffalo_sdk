@@ -1,5 +1,122 @@
 # CHANGELOG
 
+## v2.3.38 — since v2.3.37 (2026-10-19 → 2026-11-04)
+
+### Breaking Changes
+
+- **Toolchain**: The SDK has switched to GCC 14.3 with Picolibc for all supported chips. The Xuantie GCC and Zephyr GCC toolchains are deprecated. Migrate local development and CI environments to the GCC 14.3 toolchain before upgrading to this release
+
+### New Features
+
+- **WiFi / Networking**
+  - Added a four-address WDS Ethernet bridge with station and access-point support
+  - Added per-band WiFi rate-control algorithm selection and a CLI to switch algorithms
+  - Made the WiFi 4 scan-cache capacity configurable
+  - Added configurable RPMsg buffer sizes and optional raw-mode iperf support for dual-core networking; both cores must use matching buffer sizes
+
+- **WebRTC / RTSP**
+  - Added authenticated, nonblocking TURN-over-UDP transport for WebRTC relay connections
+  - Added an optional direct-first ICE nomination policy and exposed the selected local and remote ICE candidate types
+  - Added typed, per-stream DataChannel messaging
+  - Added optional timestamped audio playout with packet-loss concealment and RTP media diagnostics
+  - Added an RTSP server for JPEG video and G.711 A-law audio
+
+- **Storage / Flash**
+  - Added SPI-NAND storage support with Dhara flash translation and FATFS integration
+  - Added support for IS25LP/WP01G and XM25QH512D flash devices
+  - Added BL618DG support for loading RF calibration data from flash OTP
+
+- **Bluetooth**
+  - Added a BL616CL Bluetooth controller library supporting up to 10 connections
+
+- **Audio / Peripherals**
+  - Added I2C interrupt-mode transfers and examples
+  - Added per-channel microphone PGA gain control and capture sequence numbers for detecting dropped frames
+  - Added I2S frame-sync polarity control
+
+- **Graphics / Examples**
+  - Added HTTP OTA updates and a resolution-adaptive UI to the LVGL 9 OSD example
+  - Added an optimized GIF player for LVGL 9 with display output options
+  - Added phone remote-control input through BLE writes for USB keyboard and microphone forwarding on BL616/BL616CL; the BLE/USB router example now uses GATT Write/Write Without Response, so existing clients must update their input flow and rediscover services
+  - Added configurable transmit memory thresholds and receiver acknowledgement intervals to the image-transmission solution
+
+- **Build / Debug / Manufacturing**
+  - Expanded C++ runtime support, including startup and POSIX compatibility functions
+  - Added BL618DG reset and reconnect support to OpenOCD
+  - Added RAM-resident BL618DG manufacturing firmware
+
+### Bug Fixes
+
+- **WiFi / P2P**
+  - Hardened management-frame and information-element parsing in WiFi 4, WiFi 6, and Linux host drivers against malformed or truncated frames
+  - Fixed WiFi 6 capability parsing and rate encoding, and disabled invalid dual-carrier modulation settings for long extended-range frames
+  - Fixed access-point MAC initialization and beacon transmission, including duplicate submission of an active beacon
+  - Fixed WiFi 4 forwarding between access-point clients
+  - Fixed Wi-Fi Direct group-client discovery and remain-on-channel handling
+  - Fixed Wi-Fi Direct group-owner rate advertisement and association checks, and used OFDM rates for P2P action frames and discovery
+  - Restored ordinary SoftAP idle-client cleanup and disconnect handling in P2P-enabled builds
+  - Fixed Linux host-driver receive-buffer lifetime and key-deletion interface handling
+  - Fixed Linux host-driver compatibility with the monitor-channel API in kernel 6.12.101 and later
+  - Restored WiFi/BLE coexistence initialization in WLAN firmware
+  - Fixed BL616 WiFi linking for supported build targets
+
+- **Networking / Dual-Core**
+  - Fixed an lwIP assertion when closing sockets during concurrent send and receive operations
+  - Fixed bridge port removal and deletion, including stale forwarding entries
+  - Fixed DHCP cleanup before network-interface teardown
+  - Fixed socket-offload header and build configuration selection
+
+- **Bluetooth / Power Management**
+  - Fixed BLE peripheral-latency calculation when the connection event counter wraps around
+  - Fixed a BL616CL BLE controller hang
+  - Fixed BL618DG BLE low-power entry conditions
+  - Preserved BLE channel-map updates and receive-clock drift compensation across low-power firmware handoffs
+  - Fixed returns from low-power firmware to XIP code and cleared stale wakeup boot flags after resume
+  - Fixed races between Bluetooth AVDTP delayed-work scheduling and release
+
+- **WebRTC**
+  - Fixed UDP send backpressure handling and nonblocking socket configuration
+  - Fixed SDP answers to preserve offered media identifiers and validated remote SDP independently of local storage limits
+  - Fixed concurrent DataChannel open lifecycles and retained all six ICE servers under automatic connection policy
+  - Fixed builds for data-only peers
+
+- **Audio**
+  - Fixed playback DMA refills and TDM clock configuration
+  - Fixed audio-player initialization and allocation failures with the I2S codec configuration
+  - Fixed JY6316, JY6166, and JY6311 audio codec clock configuration
+  - Fixed AAC decoder out-of-bounds prefetches at the end of transform windows
+  - Fixed media-buffer reallocation when a buffer outgrows its original heap and memory remains available in another heap
+
+- **Memory / Drivers**
+  - Fixed BL618DG PSRAM clock-divider configuration order
+  - Fixed BL618DG SD host transfers with unaligned buffers
+  - Fixed BL618DG ADC calibration and temperature-sensor offsets
+  - Expanded BL618DG flash memory protection coverage to 64 MiB
+  - Fixed N900 cache-maintenance safety and kept cache operations in tightly coupled memory
+  - Fixed BL602 cache initialization to preserve disabled cache ways
+  - Fixed USB endpoint-zero stall completion
+  - Fixed FreeRTOS machine-timer interrupt detection
+  - Rejected heaps too small for TLSF allocator metadata
+
+- **Diagnostics / Manufacturing**
+  - Corrected CPU usage reporting in the image-transmission solution
+  - Fixed RF initialization for boards with an SPDT RF switch
+
+- **Build / Packaging**
+  - Fixed custom firmware post-processing with quoted arguments and multiple packaging options
+
+### Improvements
+
+- Improved WDS bridge scheduling and network buffer budgets
+- Reduced BL602 WiFi/BLE coexistence memory usage and adjusted BL602 and BL616 lwIP heap budgets
+- Made the TLSF allocator's second-level list count configurable to tune memory overhead
+- Reduced BL616CL WLAN firmware power use by lowering the MCU clock and gating unused peripherals
+- Updated BL618DG low-power firmware to v2.5.4 and refreshed its RF PHY library
+- Updated BL616CL and BL618DG Boot2 images and added wildcard selection for Boot2 packaging
+- Added optional AES-GCM backends for mbedTLS with configurable speed and memory trade-offs
+- Configured the BL618DG MStar board's TF card interface for single-bit SD host operation
+- Reduced WebRTC recovery-log overhead and improved audio DMA diagnostics across counter resets
+
 ## v2.3.37 — since v2.3.36 (2026-10-03 → 2026-10-19)
 
 ### New Features

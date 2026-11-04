@@ -182,9 +182,9 @@ static void ping_send(struct ping_var *env)
         log_info("env--dest %s\r\n", ipaddr_ntoa(&env->dest));
 #endif
         #if defined(CFG_IPV6) && CFG_IPV6
-        if(IP_IS_V6(&env->dest)){
+        if(IP_IS_V6_VAL(env->dest)){
             ping6_prepare_echo(p, (u16_t)ping_size, env);
-            if (ip_addr_islinklocal(&env->dest)) {
+            if (ip6_addr_islinklocal(ip_2_ip6(&env->dest))) {
                 printf("linklocal assign to wl1\r\n");
                 ip6_addr_assign_zone(ip_2_ip6(&env->dest), IP6_UNICAST, netif_find("wl1"));
             }
@@ -285,7 +285,7 @@ static int ping_init(void *arg)
 
     LOCK_TCPIP_CORE();
 #if defined(CFG_IPV6) && CFG_IPV6
-    if(IP_IS_V6(&env->dest))
+    if(IP_IS_V6_VAL(env->dest))
         pcb = raw_new(IP_PROTO_ICMPV6);
     else
 #endif
@@ -301,7 +301,7 @@ static int ping_init(void *arg)
     env->pcb = pcb;
     raw_recv(pcb, ping_recv, env);
     #if defined(CFG_IPV6) && CFG_IPV6
-    if(IP_IS_V6(&env->dest))
+    if(IP_IS_V6_VAL(env->dest))
     {
         raw_bind(pcb, IP6_ADDR_ANY);
     }
@@ -436,4 +436,3 @@ static struct t_hdr* find_and_extract(struct utils_list *list, u32_t seq)
 }
 
 #endif
-

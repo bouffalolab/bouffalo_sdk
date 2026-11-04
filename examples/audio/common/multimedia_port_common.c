@@ -68,7 +68,7 @@ uint32_t g_pa_delay_2 = 90;     /* this is time set according to the pa manual *
 static struct bflb_device_s *i2s0;
 static audio_codec_dev_t g_es8388_dev = { 0 };
 static int g_codec_mute = 0;
-static int g_codec_volume_percent = 30;
+static int g_codec_volume_percent = 80;
 
 static void i2s_gpio_init(void)
 {

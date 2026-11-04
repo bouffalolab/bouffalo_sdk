@@ -2,14 +2,17 @@
 
 #include <string.h>
 #include "mat.h"
+#include "rtos_al.h"
 #include "lwip/etharp.h"
 #include "lwip/sys.h"
 #include "lwip/ip.h"
 #include "lwip/udp.h"
 #include "lwip/prot/dhcp.h"
+#if LWIP_IPV6
 #include "lwip/prot/ip6.h"
 #include "lwip/prot/icmp6.h"
 #include "lwip/prot/nd6.h"
+#endif
 #include "lwip/inet_chksum.h"
 #include "pbuf_custom_ref.h"
 
@@ -48,27 +51,23 @@ struct mat_mib {
 
 static struct mat_mib mib;
 
-/* This function finds a connection tuple by hwaddr and ip. */
-struct mat_tuple *mat_tuple_find(uint8_t *hwaddr, ip_addr_t *ip)
+/* Caller holds rtos_protect. rtos_protect is not recursive. */
+static struct mat_tuple *mat_tuple_find_unlocked(uint8_t *hwaddr, ip_addr_t *ip)
 {
     if (hwaddr == NULL || ip == NULL)
         return NULL;
 
-    /* First check the cache */
-    if (last_active_tuple != NULL &&
+    if (last_active_tuple != NULL && last_active_tuple->used &&
         !memcmp(last_active_tuple->hwaddr, hwaddr, sizeof(last_active_tuple->hwaddr)) &&
         ip_addr_cmp(&last_active_tuple->ipaddr, ip)) {
-        /* Cache hit */
         last_active_tuple->ts = sys_now();
         return last_active_tuple;
     }
 
-    /* Cache miss, proceed to full search */
     for (int i = 0; i < CONN_TUPLE_NUM; i++) {
-        if (tuples[i].used && 
+        if (tuples[i].used &&
             !memcmp(tuples[i].hwaddr, hwaddr, sizeof(tuples[i].hwaddr)) &&
             ip_addr_cmp(&tuples[i].ipaddr, ip)) {
-            /* Update the cache */
             last_active_tuple = &tuples[i];
             last_active_tuple->ts = sys_now();
             return &tuples[i];
@@ -78,19 +77,17 @@ struct mat_tuple *mat_tuple_find(uint8_t *hwaddr, ip_addr_t *ip)
     return NULL;
 }
 
-struct mat_tuple *mat_tuple_find_by_ip(ip_addr_t *ip)
+static struct mat_tuple *mat_tuple_find_by_ip_unlocked(ip_addr_t *ip)
 {
     if (ip == NULL)
         return NULL;
 
-    /* First check the cache */
-    if (last_active_tuple != NULL &&
+    if (last_active_tuple != NULL && last_active_tuple->used &&
         ip_addr_cmp(&last_active_tuple->ipaddr, ip)) {
         last_active_tuple->ts = sys_now();
         return last_active_tuple;
     }
 
-    /* Cache miss, proceed to full search */
     for (int i = 0; i < CONN_TUPLE_NUM; i++) {
         if (tuples[i].used && ip_addr_cmp(&tuples[i].ipaddr, ip)) {
             last_active_tuple = &tuples[i];
@@ -100,6 +97,41 @@ struct mat_tuple *mat_tuple_find_by_ip(ip_addr_t *ip)
     }
 
     return NULL;
+}
+
+struct mat_tuple *mat_tuple_find(uint8_t *hwaddr, ip_addr_t *ip)
+{
+    struct mat_tuple *tuple;
+    uint32_t protect = rtos_protect();
+
+    tuple = mat_tuple_find_unlocked(hwaddr, ip);
+    rtos_unprotect(protect);
+    return tuple;
+}
+
+struct mat_tuple *mat_tuple_find_by_ip(ip_addr_t *ip)
+{
+    struct mat_tuple *tuple;
+    uint32_t protect = rtos_protect();
+
+    tuple = mat_tuple_find_by_ip_unlocked(ip);
+    rtos_unprotect(protect);
+    return tuple;
+}
+
+static int mat_tuple_copy_hwaddr_by_ip(ip_addr_t *ip, uint8_t hwaddr[6])
+{
+    struct mat_tuple *tuple;
+    uint32_t protect = rtos_protect();
+    int found = 0;
+
+    tuple = mat_tuple_find_by_ip_unlocked(ip);
+    if (tuple) {
+        memcpy(hwaddr, tuple->hwaddr, 6);
+        found = 1;
+    }
+    rtos_unprotect(protect);
+    return found;
 }
 
 static void mat_print_tuple(struct mat_tuple *tuple, const char *tag)
@@ -114,7 +146,9 @@ static void mat_print_tuple(struct mat_tuple *tuple, const char *tag)
         printf("MAT %s MAC %x:%x:%x:%x:%x:%x IP %d.%d.%d.%d\r\n",
                 tag, hwaddr[0], hwaddr[1], hwaddr[2], hwaddr[3],
                 hwaddr[4], hwaddr[5], ipa[0], ipa[1], ipa[2], ipa[3]);
-    } else if (IP_GET_TYPE(ipaddr) == IPADDR_TYPE_V6) {
+    }
+#if LWIP_IPV6
+    else if (IP_GET_TYPE(ipaddr) == IPADDR_TYPE_V6) {
         ip6_addr_t *ip6addr = ip_2_ip6(ipaddr);
 
         uint16_t *ipa = (uint16_t *)ip6addr;
@@ -125,28 +159,41 @@ static void mat_print_tuple(struct mat_tuple *tuple, const char *tag)
                 lwip_htons(ipa[2]), lwip_htons(ipa[3]), lwip_htons(ipa[4]),
                 lwip_htons(ipa[5]), lwip_htons(ipa[6]), lwip_htons(ipa[7]));
     }
+#endif
 }
 
 void mat_print_mib(void)
 {
+    struct mat_mib snap;
+    struct mat_tuple snap_tuples[CONN_TUPLE_NUM];
+    uint32_t protect = rtos_protect();
+    unsigned int limit;
+
+    snap = mib;
+    memcpy(snap_tuples, tuples, sizeof(tuples));
+    rtos_unprotect(protect);
+
     printf("MAT Statistics: active tuples %lu, tuple table overwrite %lu, "
             "err_mem %lu\r\n",
-            mib.active_tuples, mib.tuple_overwrite, mib.err_mem);
+            snap.active_tuples, snap.tuple_overwrite, snap.err_mem);
     printf("MAT Egress Statistics: handled %lu, arp %lu, ipv4 %lu, "
             "dhcpv4 %lu, ipv6 %lu, missed %lu, err_eth %lu, err_arp %lu, "
             "err_ipv4 %lu, err_ipv6 %lu\r\n",
-            mib.e_handled, mib.e_arp, mib.e_ipv4,
-            mib.e_dhcpv4, mib.e_ipv6, mib.e_missed, mib.e_err_eth,
-            mib.e_err_arp, mib.e_err_ipv4, mib.e_err_ipv6);
+            snap.e_handled, snap.e_arp, snap.e_ipv4,
+            snap.e_dhcpv4, snap.e_ipv6, snap.e_missed, snap.e_err_eth,
+            snap.e_err_arp, snap.e_err_ipv4, snap.e_err_ipv6);
     printf("MAT Ingress Statistics: handled %lu, arp %lu, "
             "ipv4 %lu, dhcpv4 %lu, ipv6 %lu, missed %lu, err_eth %lu, "
             "err_arp %lu, err_ipv4 %lu, err_ipv6 %lu\r\n",
-            mib.i_handled, mib.i_arp, mib.i_ipv4, mib.i_dhcpv4,
-            mib.i_ipv6, mib.i_missed, mib.i_err_eth, mib.i_err_arp,
-            mib.i_err_ipv4, mib.i_err_ipv6);
-    for (int i = 0; i < mib.active_tuples; i++) {
-        if (tuples[i].used)
-            mat_print_tuple(&tuples[i], "");
+            snap.i_handled, snap.i_arp, snap.i_ipv4, snap.i_dhcpv4,
+            snap.i_ipv6, snap.i_missed, snap.i_err_eth, snap.i_err_arp,
+            snap.i_err_ipv4, snap.i_err_ipv6);
+    limit = snap.active_tuples;
+    if (limit > CONN_TUPLE_NUM)
+        limit = CONN_TUPLE_NUM;
+    for (unsigned int i = 0; i < limit; i++) {
+        if (snap_tuples[i].used)
+            mat_print_tuple(&snap_tuples[i], "");
     }
 }
 
@@ -155,27 +202,31 @@ int mat_tuple_add(uint8_t *hwaddr, ip_addr_t *ip)
     int oldest = -1;
     s32_t idle_max = -1;
     struct mat_tuple *tuple = NULL;
+    struct mat_tuple added;
+    int do_print = 0;
+    uint32_t protect;
 
     if (hwaddr == NULL || ip == NULL)
         return -1;
 
-    /* Tuple already exists. */
-    if (mat_tuple_find(hwaddr, ip))
+    protect = rtos_protect();
+    if (mat_tuple_find_unlocked(hwaddr, ip)) {
+        rtos_unprotect(protect);
         return 0;
+    }
 
-    /* Find an empty tuple slot */
     for (int i = 0; i < CONN_TUPLE_NUM; i++) {
         tuple = &tuples[i];
         if (tuple->used == 0) {
-            /* Copy hwaddr and ip into the tuple */
             memcpy(tuple->hwaddr, hwaddr, sizeof(tuple->hwaddr));
             ip_addr_copy(tuple->ipaddr, *ip);
             tuple->used = 1;
             tuple->ts = sys_now();
             last_active_tuple = tuple;
             mib.active_tuples++;
-            mat_print_tuple(tuple, "ADD");
-            return 0;
+            added = *tuple;
+            do_print = 1;
+            break;
         }
 
         s32_t idle = (s32_t)(sys_now() - tuple->ts);
@@ -185,7 +236,7 @@ int mat_tuple_add(uint8_t *hwaddr, ip_addr_t *ip)
         }
     }
 
-    if (oldest >= 0) {
+    if (!do_print && oldest >= 0) {
         tuple = &tuples[oldest];
         memcpy(tuple->hwaddr, hwaddr, sizeof(tuple->hwaddr));
         ip_addr_copy(tuple->ipaddr, *ip);
@@ -193,29 +244,38 @@ int mat_tuple_add(uint8_t *hwaddr, ip_addr_t *ip)
         tuple->ts = sys_now();
         last_active_tuple = tuple;
         mib.tuple_overwrite++;
-        mat_print_tuple(tuple, "ADD");
+        added = *tuple;
+        do_print = 1;
     }
+    rtos_unprotect(protect);
+    if (do_print)
+        mat_print_tuple(&added, "ADD");
     return 0;
 }
 
 int mat_tuple_del(uint8_t *hwaddr, ip_addr_t *ip)
 {
+    uint32_t protect;
+    int ret = -1;
+
     if (hwaddr == NULL || ip == NULL)
         return -1;
 
-    /* Find the matching tuple */
+    protect = rtos_protect();
     for (int i = 0; i < CONN_TUPLE_NUM; i++) {
-        if (tuples[i].used && 
+        if (tuples[i].used &&
             !memcmp(tuples[i].hwaddr, hwaddr, sizeof(tuples[i].hwaddr)) &&
             ip_addr_cmp(&tuples[i].ipaddr, ip)) {
-            /* Mark the tuple as unused */
             tuples[i].used = 0;
+            if (last_active_tuple == &tuples[i])
+                last_active_tuple = NULL;
             mib.active_tuples--;
-            return 0;
+            ret = 0;
+            break;
         }
     }
-
-    return -1;
+    rtos_unprotect(protect);
+    return ret;
 }
 
 /*
@@ -411,28 +471,14 @@ static int mat_ipv4_handle_egress(struct netif *netif, struct pbuf *p,
     return MAT_ERR_OK;
 /* CONFIG_MAT_FULL_COPY is not defined. */
 #else
-    struct pbuf *header, *ref;
-    u16_t ethhdr_size = SIZEOF_ETH_HDR;
+    struct pbuf *header;
 
-    /* All we need to do is to modify the ethernet header. */
-    header = pbuf_alloc(PBUF_RAW_TX, ethhdr_size, PBUF_RAM); 
+    header = pbuf_tx_ref_chain(p);
     if (!header) {
         mib.err_mem++;
         mib.e_err_ipv4++;
         return MAT_ERR_MEM;
     }
-    memcpy(header->payload, p->payload, ethhdr_size);
-
-    /* Create a reference to the following data. */
-    ref = pbuf_custom_ref_create(p, ethhdr_size, p->tot_len - ethhdr_size);
-    if (!ref) {
-        mib.err_mem++;
-        mib.e_err_ipv4++;
-        pbuf_free(header);
-        return MAT_ERR_MEM;
-    }
-
-    pbuf_cat(header, ref);
 
     /* Add the tuple (original source MAC, source IP). */
     eth_hdr = (struct eth_hdr *)p->payload;
@@ -453,6 +499,7 @@ static int mat_ipv4_handle_egress(struct netif *netif, struct pbuf *p,
 #endif
 }
 
+#if LWIP_IPV6
 /*
  * Return 1 if the pbuf is ICMPv6 NS or NA.
  * TODO check RS.
@@ -639,28 +686,14 @@ static int mat_ipv6_handle_egress(struct netif *netif, struct pbuf *p,
     return MAT_ERR_OK;
 /* CONFIG_MAT_FULL_COPY is not defined. */
 #else
-    struct pbuf *header, *ref;
-    u16_t ethhdr_size = SIZEOF_ETH_HDR;
+    struct pbuf *header;
 
-    /* All we need to do is to modify the ethernet header. */
-    header = pbuf_alloc(PBUF_RAW_TX, ethhdr_size, PBUF_RAM); 
+    header = pbuf_tx_ref_chain(p);
     if (!header) {
         mib.err_mem++;
         mib.e_err_ipv6++;
         return MAT_ERR_MEM;
     }
-    memcpy(header->payload, p->payload, ethhdr_size);
-
-    /* Create a reference to the following data. */
-    ref = pbuf_custom_ref_create(p, ethhdr_size, p->tot_len - ethhdr_size);
-    if (!ref) {
-        pbuf_free(header);
-        mib.err_mem++;
-        mib.e_err_ipv6++;
-        return MAT_ERR_MEM;
-    }
-
-    pbuf_cat(header, ref);
 
     /* Add the tuple (original source MAC, source IP). */
     eth_hdr = (struct eth_hdr *)p->payload;
@@ -679,6 +712,7 @@ static int mat_ipv6_handle_egress(struct netif *netif, struct pbuf *p,
 /* CONFIG_MAT_FULL_COPY. */
 #endif
 }
+#endif /* LWIP_IPV6 */
 
 /*
  * Handle MAC address translation before sending the packet (egress)
@@ -691,7 +725,7 @@ int mat_handle_egress(struct netif *netif, struct pbuf *p, struct pbuf **out)
     if (!netif || !p || !out)
         return MAT_ERR_INVAL;
 
-    if (!netif_is_up(netif) || !netif_is_link_up(netif)) {
+    if (!netif_is_up(netif)) {
         mib.e_missed++;
         return MAT_ERR_STATUS;
     }
@@ -714,8 +748,10 @@ int mat_handle_egress(struct netif *netif, struct pbuf *p, struct pbuf **out)
     if (eth_hdr->type == PP_HTONS(ETHTYPE_IP))
         return mat_ipv4_handle_egress(netif, p, out);
 
+#if LWIP_IPV6
     if (eth_hdr->type == PP_HTONS(ETHTYPE_IPV6))
         return mat_ipv6_handle_egress(netif, p, out);
+#endif
 
     return MAT_ERR_PROTO;
 }
@@ -727,7 +763,7 @@ static int mat_arp_handle_ingress(struct netif *netif, struct pbuf *p)
     ip4_addr_t *ip4addr;
     struct etharp_hdr *arp_hdr;
     struct eth_hdr *eth_hdr;
-    struct mat_tuple *tuple;
+    uint8_t hwaddr[6];
 
     mib.i_arp++;
     if (p->len < SIZEOF_ETH_HDR + SIZEOF_ETHARP_HDR) {
@@ -740,12 +776,22 @@ static int mat_arp_handle_ingress(struct netif *netif, struct pbuf *p)
     IP_SET_TYPE_VAL(ipaddr, IPADDR_TYPE_V4);
     ip4addr = ip_2_ip4(&ipaddr);
     ip4_addr_set_u32(ip4addr, destip);
-    tuple = mat_tuple_find_by_ip(&ipaddr);
-    /* If tuple found, modify target MAC in ARP payload and Ethernet header */
-    if (tuple != NULL) {
-        memcpy(eth_hdr->dest.addr, tuple->hwaddr, ETH_HWADDR_LEN);
-        memcpy(arp_hdr->dhwaddr.addr, tuple->hwaddr, ETH_HWADDR_LEN);
+    if (mat_tuple_copy_hwaddr_by_ip(&ipaddr, hwaddr)) {
+        memcpy(eth_hdr->dest.addr, hwaddr, ETH_HWADDR_LEN);
+        memcpy(arp_hdr->dhwaddr.addr, hwaddr, ETH_HWADDR_LEN);
     }
+#ifdef CONFIG_WIFI_WDS
+    else if ((arp_hdr->dhwaddr.addr[0] & 1) == 0 &&
+             memcmp(arp_hdr->dhwaddr.addr, netif->hwaddr, ETH_HWADDR_LEN) != 0 &&
+             (arp_hdr->dhwaddr.addr[0] | arp_hdr->dhwaddr.addr[1] |
+              arp_hdr->dhwaddr.addr[2] | arp_hdr->dhwaddr.addr[3] |
+              arp_hdr->dhwaddr.addr[4] | arp_hdr->dhwaddr.addr[5]) != 0) {
+        /* The air header was aimed at this station. The ARP target is the host. */
+        memcpy(eth_hdr->dest.addr, arp_hdr->dhwaddr.addr, ETH_HWADDR_LEN);
+    } else {
+        memset(eth_hdr->dest.addr, 0xff, ETH_HWADDR_LEN);
+    }
+#endif
     return MAT_ERR_OK;
 }
 
@@ -754,7 +800,7 @@ static int mat_ipv4_handle_ingress(struct netif *netif, struct pbuf *p)
     ip_addr_t ipaddr;
     struct ip_hdr *iph;
     struct eth_hdr *eth_hdr;
-    struct mat_tuple *tuple;
+    uint8_t hwaddr[6];
 
     mib.i_ipv4++;
     if (p->len < SIZEOF_ETH_HDR + IP_HLEN) {
@@ -766,19 +812,23 @@ static int mat_ipv4_handle_ingress(struct netif *netif, struct pbuf *p)
     iph = (struct ip_hdr *)((char *)eth_hdr + SIZEOF_ETH_HDR);
     ip_addr_copy_from_ip4(ipaddr, iph->dest);
 
-    /* Try to restore ethernet destination MAC address. */
-    tuple = mat_tuple_find_by_ip(&ipaddr);
-    if (tuple)
-        memcpy(eth_hdr->dest.addr, tuple->hwaddr, ETH_HWADDR_LEN);
+    if (mat_tuple_copy_hwaddr_by_ip(&ipaddr, hwaddr))
+        memcpy(eth_hdr->dest.addr, hwaddr, ETH_HWADDR_LEN);
+#ifdef CONFIG_WIFI_WDS
+    else
+        /* No mapping yet. Flood so the Ethernet host can answer and create one. */
+        memset(eth_hdr->dest.addr, 0xff, ETH_HWADDR_LEN);
+#endif
     return MAT_ERR_OK;
 }
 
+#if LWIP_IPV6
 static int mat_ipv6_handle_ingress(struct netif *netif, struct pbuf *p)
 {
     ip_addr_t ipaddr;
     struct ip6_hdr *ip6h;
     struct eth_hdr *eth_hdr;
-    struct mat_tuple *tuple;
+    uint8_t hwaddr[6];
 
     mib.i_ipv6++;
     if (p->len < SIZEOF_ETH_HDR + IP6_HLEN) {
@@ -790,12 +840,11 @@ static int mat_ipv6_handle_ingress(struct netif *netif, struct pbuf *p)
     ip6h = (struct ip6_hdr *)((char *)eth_hdr + ETH_HWADDR_LEN);
     ip_addr_copy_from_ip6_packed(ipaddr, ip6h->dest);
 
-    /* Try to restore ethernet destination MAC address. */
-    tuple = mat_tuple_find_by_ip(&ipaddr);
-    if (tuple)
-        memcpy(eth_hdr->dest.addr, tuple->hwaddr, ETH_HWADDR_LEN);
+    if (mat_tuple_copy_hwaddr_by_ip(&ipaddr, hwaddr))
+        memcpy(eth_hdr->dest.addr, hwaddr, ETH_HWADDR_LEN);
     return MAT_ERR_OK;
 }
+#endif /* LWIP_IPV6 */
 
 /*
  * Since the received pbuf has not been seen by others, we can modify the
@@ -807,11 +856,6 @@ int mat_handle_ingress(struct netif *netif, struct pbuf *p)
 
     if (!netif || !p)
         return MAT_ERR_INVAL;
-
-    if (!netif_is_up(netif) || !netif_is_link_up(netif)) {
-        mib.i_missed++;
-        return MAT_ERR_STATUS;
-    }
 
     mib.i_handled++;
     if (p->len < SIZEOF_ETH_HDR) {
@@ -834,8 +878,10 @@ int mat_handle_ingress(struct netif *netif, struct pbuf *p)
     if (eth_hdr->type == PP_HTONS(ETHTYPE_IP))
         return mat_ipv4_handle_ingress(netif, p);
 
+#if LWIP_IPV6
     if (eth_hdr->type == PP_HTONS(ETHTYPE_IPV6))
         return mat_ipv6_handle_ingress(netif, p);
+#endif
 
     return MAT_ERR_PROTO;
 }

@@ -37,3 +37,4 @@ CONFIG_SOCKET_OFFLOAD_CLIENT =y
 # link pulls only the referenced address/byte-order helpers, not the stack.
 CONFIG_LWIP =y
 CONFIG_IPERF =y
+CONFIG_IPERF_RAW =n

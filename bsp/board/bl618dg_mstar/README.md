@@ -12,6 +12,15 @@ by applications that select this board.
 - Four DSP/TDM slots: playback reference, unused, unused microphone input,
   onboard microphone. The valid microphone mask is `0x08`, reference `0x01`.
 - USB Host uses GPIO40 and GPIO41.
+- TF/microSD supports the native **1-bit SDH** interface: CMD GPIO45,
+  CLK GPIO46 and DAT0 GPIO47. This board defines `CONFIG_SDH_BUS_WIDTH_1LINE`
+  for all applications; no application-specific bus-width setting is needed.
+  Call `board_sdh_gpio_init()` before initializing the SDH driver or mounting
+  the card (for FatFs, call `fatfs_sdh_driver_register()` and then `f_mount()`).
+  `board_sdh_gpio_init()` leaves GPIO43, GPIO44 and GPIO48 unchanged; DAT1-3
+  are not used for this board's TF transfers. GPIO48 remains available for the
+  audio-board enable above. Simultaneous TF and audio operation needs separate
+  application validation. Four-bit TF mode is unsupported on this wiring.
 
 The SDK names this external codec JY6316. The shared codec configuration
 provides four capture/bus slots; this board supplies its actual valid inputs.

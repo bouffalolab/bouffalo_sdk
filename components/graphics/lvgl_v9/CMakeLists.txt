@@ -25,6 +25,9 @@ file(GLOB_RECURSE SOURCES
 sdk_library_add_sources(${SOURCES})
 sdk_library_add_sources(lv_init.c)
 
+# GIF playback is an SDK port extension; keep its sources outside upstream LVGL trees.
+sdk_library_add_sources(port/gif_player.c)
+
 if(CONFIG_LVGL9_PORT_DISP)
     sdk_library_add_sources(port/lv_port_disp_mcu.c)
     sdk_library_add_sources(port/lv_port_disp_rgb.c)

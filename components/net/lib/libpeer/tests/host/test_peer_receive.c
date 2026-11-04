@@ -31,6 +31,23 @@ int agent_recv(Agent *agent, uint8_t *buffer, int size)
 int main(void)
 {
     PeerConnection pc = {0};
+    int local = -1, remote = -1;
+    IceCandidate local_candidate = {.type = ICE_CANDIDATE_TYPE_SRFLX};
+    IceCandidate remote_candidate = {.type = ICE_CANDIDATE_TYPE_RELAY};
+    IceCandidatePair pair = {.local = &local_candidate, .remote = &remote_candidate};
+    assert(peer_connection_get_selected_ice_types(NULL, &local, &remote) < 0);
+    assert(peer_connection_get_selected_ice_types(&pc, NULL, &remote) < 0);
+    assert(peer_connection_get_selected_ice_types(&pc, &local, NULL) < 0);
+    assert(peer_connection_get_selected_ice_types(&pc, &local, &remote) < 0);
+    assert(local == -1 && remote == -1);
+    pc.agent.selected_pair = &pair;
+    assert(peer_connection_get_selected_ice_types(&pc, &local, &remote) == 0);
+    assert(local == ICE_CANDIDATE_TYPE_SRFLX && remote == ICE_CANDIDATE_TYPE_RELAY);
+    pair.remote = NULL;
+    assert(peer_connection_get_selected_ice_types(&pc, &local, &remote) < 0);
+    assert(local == ICE_CANDIDATE_TYPE_SRFLX && remote == ICE_CANDIDATE_TYPE_RELAY);
+    pc.agent.selected_pair = NULL;
+    assert(peer_connection_get_selected_ice_types(&pc, &local, &remote) < 0);
     pc.state = PEER_CONNECTION_CONNECTED;
     pc.dtls_srtp.user_data = &pc;
     unsigned char buffer[16];

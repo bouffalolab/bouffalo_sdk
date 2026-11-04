@@ -933,9 +933,11 @@ typedef enum {
     ((void (*)(struct bflb_device_s *dev, bool enable)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_i2c_link_rxdma])
 
+#if 0
 #define romapi_bflb_i2c_transfer \
     ((int (*)(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, int count)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_i2c_transfer])
+#endif
 
 #define romapi_bflb_i2c_int_mask \
     ((void (*)(struct bflb_device_s *dev, uint32_t int_type, bool mask)) \
@@ -1105,6 +1107,8 @@ typedef enum {
     ((void (*)(int irq, uint8_t preemptprio, uint8_t subprio)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_irq_set_priority])
 
+/* Use local cache implementations for IRQ handling and range batching. */
+#if 0
 #define romapi_bflb_l1c_icache_enable \
     ((void (*)(void)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_l1c_icache_enable])
@@ -1125,11 +1129,9 @@ typedef enum {
     ((void (*)(void)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_l1c_dcache_enable])
 
-#if 0
 #define romapi_bflb_l1c_dcache_disable \
     ((void (*)(void)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_l1c_dcache_disable])
-#endif
 
 #define romapi_bflb_l1c_dcache_clean_all \
     ((void (*)(void)) \
@@ -1154,6 +1156,7 @@ typedef enum {
 #define romapi_bflb_l1c_dcache_clean_invalidate_range \
     ((void (*)(void *addr, uint32_t size)) \
     ROM_APITABLE[BFLB_LHAL_ROMAPI_INDEX_bflb_l1c_dcache_clean_invalidate_range])
+#endif
 
 #define romapi_bflb_mjdec_set_dqt_from_zigzag \
     ((void (*)(struct bflb_device_s *dev, uint8_t *yy, uint8_t *uv)) \

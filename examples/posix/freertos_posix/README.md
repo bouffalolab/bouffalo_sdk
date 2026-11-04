@@ -16,6 +16,15 @@ CONFIG_POSIX=y
 
 或者通过 `make menuconfig` 图形化配置启用该选项。
 
+默认构建所有测试，也可以选择单个测试源文件：
+
+```bash
+make CHIP=bl616 BOARD=bl616dk TARGET=10_cpp_mutex
+```
+
+烧录后运行 `posix_test` 执行已编入的测试，或用 `posix_test_single cpp_mutex` 选择测试组。
+
+
 ## 头文件
 
 ```c

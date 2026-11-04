@@ -179,8 +179,15 @@ static void sockaddr_to_ipaddr(const struct sockaddr *sa, ip_addr_t *ipaddr)
 #if defined(CFG_IPV6) && CFG_IPV6
     else if (sa->sa_family == AF_INET6) {
         const struct sockaddr_in6 *sa_in6 = (const struct sockaddr_in6 *)sa;
-        ip6_addr_set(ip_2_ip6(ipaddr), (const ip6_addr_t *)(&sa_in6->sin6_addr));
-        IP_SET_TYPE(ipaddr, IPADDR_TYPE_V6);
+        ip6_addr_t *ip6addr = ip_2_ip6(ipaddr);
+
+        memcpy(ip6addr->addr, sa_in6->sin6_addr.un.u32_addr, sizeof(ip6addr->addr));
+        if (sa_in6->sin6_scope_id != 0) {
+            ip6_addr_set_zone(ip6addr, (u8_t)sa_in6->sin6_scope_id);
+        } else {
+            ip6_addr_clear_zone(ip6addr);
+        }
+        IP_SET_TYPE_VAL(*ipaddr, IPADDR_TYPE_V6);
     }
 #endif
     else {
@@ -1375,10 +1382,7 @@ static int net_socket_recv(int id)
 static int net_socket_accept(int fd, int type, uint16_t port, uint16_t timeout, uint8_t num, uint8_t max_conn, uint8_t is_ipv6, int keepalive, bool udp_force)
 {
     int sock;
-    struct sockaddr_in remote_addr;
-#if defined(CFG_IPV6) && CFG_IPV6
-    struct sockaddr_in6 remote_addr6;
-#endif
+    struct sockaddr_storage remote_addr;
     socklen_t len;
     int id;
     void *priv = NULL;
@@ -1393,13 +1397,13 @@ static int net_socket_accept(int fd, int type, uint16_t port, uint16_t timeout, 
     } else {
 #if defined(CFG_IPV6) && CFG_IPV6
         if (is_ipv6) {
-            len = sizeof(struct sockaddr_in6);
-    	    sock = accept(fd, (struct sockaddr*)&remote_addr6, &len);
+            len = sizeof(remote_addr);
+            sock = accept(fd, (struct sockaddr*)&remote_addr, &len);
         } else
 #endif
         {
-            len = sizeof(struct sockaddr_in);
-    	    sock = accept(fd, (struct sockaddr*)&remote_addr, &len);
+            len = sizeof(remote_addr);
+            sock = accept(fd, (struct sockaddr*)&remote_addr, &len);
         }
     }
 
@@ -1470,13 +1474,13 @@ static int net_socket_accept(int fd, int type, uint16_t port, uint16_t timeout, 
         g_at_client_handle[id].priv = priv;
 #if defined(CFG_IPV6) && CFG_IPV6
         if (is_ipv6) {
-            sockaddr_to_ipaddr((struct sockaddr *)&remote_addr6, &g_at_client_handle[id].remote_ip);
-            g_at_client_handle[id].remote_port = ntohs(remote_addr6.sin6_port);
+            sockaddr_to_ipaddr((struct sockaddr *)&remote_addr, &g_at_client_handle[id].remote_ip);
+            g_at_client_handle[id].remote_port = ntohs(((struct sockaddr_in6 *)&remote_addr)->sin6_port);
         } else
 #endif
         {
             sockaddr_to_ipaddr((struct sockaddr *)&remote_addr, &g_at_client_handle[id].remote_ip);
-            g_at_client_handle[id].remote_port = ntohs(remote_addr.sin_port);
+            g_at_client_handle[id].remote_port = ntohs(((struct sockaddr_in *)&remote_addr)->sin_port);
         }
         g_at_client_handle[id].local_port = port;
         g_at_client_handle[id].udp_mode = 2;
@@ -1537,7 +1541,7 @@ static void net_poll_reconnect(void)
             return;
         }
 
-        if (ip_addr_isany(&g_at_client_handle[id].remote_ip)) {
+        if (ip_addr_isany_val(g_at_client_handle[id].remote_ip)) {
             int res = at_string_host_to_ip(g_at_net_savelink_host, &ipaddr);
             if (res != 0) {
                 return;
@@ -1710,13 +1714,10 @@ static void net_init_save_link(void)
         g_at_client_handle[id].fd = -1;
         g_at_client_handle[id].socket_accept = 0;
         g_at_client_handle[id].retry_cnt = 0;
-        ip_addr_set_any(
+        memset(&g_at_client_handle[id].remote_ip, 0, sizeof(g_at_client_handle[id].remote_ip));
 #if LWIP_IPV6
-            1,
-#else
-            0,
+        IP_SET_TYPE_VAL(g_at_client_handle[id].remote_ip, IPADDR_TYPE_V6);
 #endif
-            &g_at_client_handle[id].remote_ip);
         strlcpy(g_at_net_savelink_host, at_net_config->trans_link.remote_host, sizeof(g_at_net_savelink_host));
         g_at_client_handle[id].remote_port = at_net_config->trans_link.remote_port;
         g_at_client_handle[id].local_port = at_net_config->trans_link.local_port;
@@ -1915,21 +1916,21 @@ int at_net_client_get_info(int id, char *type, uint16_t len, ip_addr_t *remote_i
         if (type) {
             if (g_at_client_handle[id].type == NET_CLIENT_TCP) {
 #if defined(CFG_IPV6) && CFG_IPV6
-                if (IP_IS_V6(&g_at_client_handle[id].remote_ip)) {
+                if (IP_IS_V6_VAL(g_at_client_handle[id].remote_ip)) {
                     strlcpy(type, "TCPv6", len);
                 } else
 #endif
                     strlcpy(type, "TCP", len);
             } else if (g_at_client_handle[id].type == NET_CLIENT_UDP) {
 #if defined(CFG_IPV6) && CFG_IPV6
-                if (IP_IS_V6(&g_at_client_handle[id].remote_ip)) {
+                if (IP_IS_V6_VAL(g_at_client_handle[id].remote_ip)) {
                     strlcpy(type, "UDPv6", len);
                 } else
 #endif
                     strlcpy(type, "UDP", len);
             } else if (g_at_client_handle[id].type == NET_CLIENT_SSL) {
 #if defined(CFG_IPV6) && CFG_IPV6
-                if (IP_IS_V6(&g_at_client_handle[id].remote_ip)) {
+                if (IP_IS_V6_VAL(g_at_client_handle[id].remote_ip)) {
                     strlcpy(type, "SSLv6", len);
                 } else
 #endif
@@ -3104,13 +3105,13 @@ int at_string_host_to_ip(char *host, ip_addr_t *ip)
 int at_net_dns_load(void)
 {
     if(at_net_config->dns.dns_isset==1){
-        if (!ip_addr_isany(&at_net_config->dns.dns[0])) {
+        if (!ip_addr_isany_val(at_net_config->dns.dns[0])) {
             dns_setserver(0, &at_net_config->dns.dns[0]);
         }
-        if (!ip_addr_isany(&at_net_config->dns.dns[1])) {
+        if (!ip_addr_isany_val(at_net_config->dns.dns[1])) {
             dns_setserver(1, &at_net_config->dns.dns[1]);
         }
-        if (!ip_addr_isany(&at_net_config->dns.dns[2])) {
+        if (!ip_addr_isany_val(at_net_config->dns.dns[2])) {
             dns_setserver(2, &at_net_config->dns.dns[2]);
         }
         return 0;

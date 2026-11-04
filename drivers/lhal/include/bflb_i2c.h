@@ -46,6 +46,7 @@
 #define I2C_M_READ  0x0001 /* Read data, from slave to master */
 #define I2C_M_TEN   0x0002 /* Ten bit address */
 #define I2C_M_DMA   0x0004 /* Enable dma mode */
+#define I2C_M_INT   0x0008 /* enable interrupt mode */
 #if defined(BL616CL)
 #define I2C_M_RESTART 0x0010 /* Repeated start follows this message */
 #endif
@@ -220,6 +221,26 @@ void bflb_i2c_link_rxdma(struct bflb_device_s *dev, bool enable);
  * @return A negated errno value on failure.
  */
 int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, int count);
+
+/**
+ * @brief Write data to TX FIFO.
+ *
+ * @param [in] dev device handle
+ * @param [in] data pointer of i2c data, little-endian mode
+ * @param [in] count data count
+ * @return The actual count of data written.
+ */
+int bflb_i2c_fifo_write(struct bflb_device_s *dev, uint8_t *data, uint32_t count);
+
+/**
+ * @brief Read data from RX FIFO.
+ *
+ * @param [in] dev device handle
+ * @param [in] data pointer of i2c data, little-endian mode
+ * @param [in] count data count
+ * @return The actual count of data read.
+ */
+int bflb_i2c_fifo_read(struct bflb_device_s *dev, uint8_t *data, uint32_t count);
 
 /**
  * @brief Enable or disable i2c interrupt.

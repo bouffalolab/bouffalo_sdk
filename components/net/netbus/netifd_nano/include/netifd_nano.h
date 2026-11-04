@@ -118,6 +118,9 @@ struct netif *netifd_bridge_create(const char* bridge_name);
  */
 int netifd_bridge_delete(const char* bridge_name);
 
+/* Nonzero when wifi_wds owns this netif. Caller holds the tcpip core lock. */
+int app_wds_bridge_in_use(const struct netif *netif);
+
 /**
  * @brief Add network interface to bridge interface
  * @param char* bridge_name: Bridge interface name

@@ -98,7 +98,8 @@ void sys_thread_sem_deinit(void);
 
 #define MEMP_NUM_SYS_TIMEOUT          (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 8 + 3)
 #if (defined(BL602))
-#define LWIP_HEAP_SIZE (11 * 1024)
+/* Leave headroom for the shared scan IE buffer in ram_wifi. */
+#define LWIP_HEAP_SIZE (11 * 1024 - 512)
 #else
 #define LWIP_HEAP_SIZE (18 * 1024)
 #endif

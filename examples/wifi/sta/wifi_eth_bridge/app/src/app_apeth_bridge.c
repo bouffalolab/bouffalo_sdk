@@ -1,6 +1,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
+#include <stdbool.h>
 
 #include <lwip/tcpip.h>
 #include <lwip/sockets.h>
@@ -25,13 +26,20 @@
 #include <log.h>
 #include "async_event.h"
 #include "app_apeth_bridge.h"
+#ifdef CONFIG_NETIFD_NANO
+#include "netifd_nano.h"
+#endif
 #include "mm.h"
 
-#define WIFI_STACK_SIZE  (1536)
+#define WIFI_STACK_SIZE  (2048)
 #define TASK_PRIORITY_FW (16)
 
 // extern void app_atmoudle_init(void);
 void wifi_event_handler(async_input_event_t ev, void *priv);
+#ifdef CONFIG_WIFI_WDS
+/* Wait until the Wi-Fi manager is ready before starting the bridge, so WDS is not configured before the firmware is up. */
+static volatile bool wifi_mgmr_ready;
+#endif
 
 void wifi_start_firmware_task(void *param)
 {
@@ -45,6 +53,14 @@ void wifi_start_firmware_task(void *param)
     LOG_I("Starting fhost ...\r\n");
     fhost_init();
 
+#ifdef CONFIG_WIFI_WDS
+    while (!wifi_mgmr_ready)
+        vTaskDelay(pdMS_TO_TICKS(10));
+    if (app_emac_init())
+        LOG_E("EMAC initialization failed\r\n");
+    else
+        app_wds_bridge_wifi_ready();
+#endif
     vTaskDelete(NULL);
 }
 
@@ -63,6 +79,11 @@ void wifi_event_handler(async_input_event_t ev, void *priv)
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
+#ifdef CONFIG_WIFI_WDS
+            wifi_mgmr_ready = true;
+#else
+            app_wds_bridge_wifi_ready();
+#endif
 #ifdef USBWIFI_ENABLE
             usbwifi_start(&g_usbwifi);
 #elif defined(BL_HOSTROUTER_ENABLE)
@@ -78,6 +99,7 @@ extern int hostrouter_init(void);
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
             void mm_sec_keydump();
             mm_sec_keydump();
+            app_wds_bridge_radio_up(false);
         } break;
         #ifdef CODE_WIFI_ON_GOT_IP_ABORT
         case CODE_WIFI_ON_GOT_IP_ABORT: {
@@ -95,12 +117,15 @@ extern int hostrouter_init(void);
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+            app_wds_bridge_radio_down(false);
         } break;
         case CODE_WIFI_ON_AP_STARTED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
+            app_wds_bridge_radio_up(true);
         } break;
         case CODE_WIFI_ON_AP_STOPPED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
+            app_wds_bridge_radio_down(true);
         } break;
         case CODE_WIFI_ON_AP_STA_ADD: {
             LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
@@ -130,6 +155,9 @@ int app_apeth_bridge_init(void)
         return 0;
     }
 
+#ifdef CONFIG_NETIFD_NANO
+    netifd_nano_init();
+#endif
     /* TCP/IP stack init */
     tcpip_init(NULL, NULL);
 
@@ -149,10 +177,17 @@ int app_apeth_bridge_init(void)
     /* romsfs init mount use media factory*/
     // romfs_mount(0x378000);
 
-    app_emac_init();
+    if (app_wds_bridge_init()) {
+        LOG_E("Bridge initialization failed\r\n");
+        return -1;
+    }
+#ifndef CONFIG_WIFI_WDS
+    if (app_emac_init())
+        return -1;
+#endif
 
     /* Start Wifi_FW */
-    xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
+    xTaskCreate(wifi_start_firmware_task, "wifi init", WIFI_STACK_SIZE, NULL, 10, NULL);
 
     return 0;
 }

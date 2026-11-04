@@ -97,7 +97,7 @@ inline __attribute__((always_inline)) void RV_HPM_Set_mcountinhibit(uint32_t mco
 /* allow S-mode to write to counters */
 inline __attribute__((always_inline)) void RV_HPM_Set_mcounterwen(uint32_t mcounterwen)
 {
-    __asm volatile("csrw mcounterwen, %0"
+    __asm volatile("csrw 0x7c9, %0" /* mcounterwen */
                    :
                    : "r"(mcounterwen)
                    : "memory");

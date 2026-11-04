@@ -33,7 +33,6 @@ void wifi_country_add_custom_cmd(int argc, char **argv);
 void wifi_country_remove_custom_cmd(int argc, char **argv);
 void wifi_country_list_custom_cmd(int argc, char **argv);
 void wifi_country_clear_custom_cmd(int argc, char **argv);
-
 #if defined(CFG_CSIDMA_CLI) && CFG_CSIDMA_CLI
 #include "csidma_cmd.h"
 #endif

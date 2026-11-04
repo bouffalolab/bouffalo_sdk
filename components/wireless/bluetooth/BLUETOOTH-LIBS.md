@@ -40,6 +40,9 @@ Beacon-only variant for BL616CL.
 ### libbtblecontroller_bl616cl_m2s1
 2 BLE connections are supported, BL616CL can be master or slave in these connections.
 
+### libbtblecontroller_bl616cl_m10s1
+10 BLE connections are supported, BL616CL can be master or slave in these connections.
+
 ### libbtblecontroller_bl616cl_uarthci
 UART HCI transport variant.
 

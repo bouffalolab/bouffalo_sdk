@@ -69,12 +69,23 @@ typedef struct IceServer {
 
 } IceServer;
 
+/* Six entries cover the customer auto policy: STUN, TURN and four fallback
+ * STUN URLs. Applications and the library must be rebuilt with this header. */
+#define PEER_CONNECTION_MAX_ICE_SERVERS 6
+
+typedef enum {
+  ICE_TRANSPORT_POLICY_ALL = 0,
+  ICE_TRANSPORT_POLICY_RELAY = 1
+} IceTransportPolicy;
+
+/* Configuration layout changed: rebuild callers and library together. */
 typedef struct PeerConfiguration {
-  IceServer ice_servers[5];
+  IceServer ice_servers[PEER_CONNECTION_MAX_ICE_SERVERS];
 
   MediaCodec audio_codec;
   MediaCodec video_codec;
   DataChannelType datachannel;
+  IceTransportPolicy ice_transport_policy;
 
   void (*onaudiotrack)(uint8_t* data, size_t size, void* userdata);
   void (*onvideotrack)(uint8_t* data, size_t size, void* userdata);
@@ -85,15 +96,44 @@ typedef struct PeerConfiguration {
 
 typedef struct PeerConnection PeerConnection;
 
+#if defined(CONFIG_LIBPEER_RTP_PACKET_INFO) && CONFIG_LIBPEER_RTP_PACKET_INFO
+typedef struct {
+  uint32_t ssrc, timestamp;
+  uint16_t sequence;
+  uint8_t payload_type;
+} PeerRtpPacketInfo;
+/* Valid only synchronously inside onaudiotrack, on the connection owner. */
+int peer_connection_get_audio_packet_info(PeerConnection* pc, PeerRtpPacketInfo* info);
+#endif
+
+#if defined(CONFIG_LIBPEER_MEDIA_DIAGNOSTICS) && CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+#include "media_diagnostics.h"
+/* Owner-thread snapshot; video=0 selects audio, video=1 selects RTP video.
+ * DataChannel MJPEG uses SCTP statistics instead. */
+int peer_connection_get_rtp_diagnostics(PeerConnection* pc, int video,
+                                        RtpDiagnosticReport* report);
+#endif
+
 const char* peer_connection_state_to_string(PeerConnectionState state);
 
 PeerConnectionState peer_connection_get_state(PeerConnection* pc);
+
+/* Snapshot the nominated ICE candidate types on the connection owner thread.
+ * Returns -1 until a valid pair is selected. */
+int peer_connection_get_selected_ice_types(const PeerConnection* pc, int* local, int* remote);
 
 void* peer_connection_get_sctp(PeerConnection* pc);
 
 /* A locally-owned DataChannel ID, valid after DTLS negotiation: client even,
  * server odd. Use the same ID for channel creation and subsequent sends. */
 uint16_t peer_connection_get_local_datachannel_sid(PeerConnection* pc);
+int peer_connection_set_ice_direct_preference(PeerConnection* pc, uint32_t wait_ms);
+int peer_connection_is_unreliable_unordered(const PeerConnection* pc, uint16_t sid);
+
+/* Built-in SCTP: one event per successfully opened channel, local or remote. Label is
+ * borrowed for the callback. Defer connection destruction until owner returns. */
+void peer_connection_ondatachannel_open(PeerConnection* pc,
+    void (*callback)(uint16_t sid, const char* label, void* userdata));
 
 PeerConnection* peer_connection_create(PeerConfiguration* config);
 
@@ -116,6 +156,13 @@ int peer_connection_create_datachannel_sid(PeerConnection* pc, DecpChannelType c
 int peer_connection_datachannel_send(PeerConnection* pc, char* message, size_t len);
 
 int peer_connection_datachannel_send_sid(PeerConnection* pc, char* message, size_t len, uint16_t sid);
+
+/* Select the WebRTC text/binary PPID per message. The type is captured when
+ * queued; changing the global default never changes an accepted record.
+ * Returns len when accepted, -1 when nothing was accepted, -2 on a fatal
+ * partial transport failure. Zero-length application messages are unsupported. */
+int peer_connection_datachannel_send_sid_typed(PeerConnection* pc, const void* message,
+                                               size_t len, uint16_t sid, DataChannelType type);
 
 int peer_connection_get_data_buffered_amount(PeerConnection* pc);
 
@@ -144,6 +191,13 @@ void peer_connection_set_remote_description(PeerConnection* pc, const char* sdp)
 void peer_connection_set_remote_description_with_type(PeerConnection* pc,
                                                       const char* sdp,
                                                       SdpType sdp_type);
+
+/* Checked form: 0 accepted, -1 invalid input/state/negotiation failure.
+ * Input above the configured remote limit is rejected before any mutation.
+ * The NUL-terminated input remains caller-owned and is never retained. */
+int peer_connection_set_remote_description_checked(PeerConnection* pc,
+                                                   const char* sdp, SdpType type);
+size_t peer_connection_get_remote_description_limit(void);
 
 void peer_connection_set_local_description(PeerConnection* pc, const char* sdp, SdpType sdp_type);
 

@@ -10,6 +10,7 @@
 #include "ice.h"
 #include "socket.h"
 #include "stun.h"
+#include "turn.h"
 #include "utils.h"
 
 #ifndef AGENT_MAX_DESCRIPTION
@@ -49,6 +50,7 @@ typedef enum AgentMode {
 } AgentMode;
 
 typedef struct Agent Agent;
+typedef struct AgentTurn AgentTurn;
 
 struct Agent {
   char remote_ufrag[ICE_UFRAG_LENGTH + 1];
@@ -64,6 +66,10 @@ struct Agent {
   int remote_candidates_count;
 
   UdpSocket udp_sockets[2];
+  AgentTurn* turn;
+  /* Path of the current received packet: never infer this from peer IP. */
+  int received_relay;
+  int relay_only;
 
   Address host_addr;
   int b_host_addr;
@@ -90,6 +96,14 @@ struct Agent {
   AgentState state;
 
   AgentMode mode;
+  /* Explicitly enabled for endpoint-to-endpoint sessions; legacy defaults stay
+   * unchanged. Candidate success and nomination are separate transactions. */
+  int regular_nomination;
+  uint32_t direct_preference_ms;
+  uint32_t checks_started_ms;
+  int checks_started;
+  uint64_t tie_breaker;
+  IceCandidatePair* nomination_pair;
 
   IceCandidatePair candidate_pairs[AGENT_MAX_CANDIDATE_PAIRS];
   IceCandidatePair* selected_pair;
@@ -104,6 +118,9 @@ void agent_gather_candidate(Agent* agent, const char* urls, const char* username
 
 void agent_get_local_description(Agent* agent, char* description, int length);
 
+/* A retryable UDP/TURN rejection is distinct from an invalid/dead path.
+ * Reliable delivery belongs to SCTP above the datagram transport. */
+#define AGENT_SEND_AGAIN (-2)
 int agent_send(Agent* agent, const uint8_t* buf, int len);
 
 int agent_recv(Agent* agent, uint8_t* buf, int len);
@@ -117,6 +134,7 @@ void agent_set_remote_description(Agent* agent, char* description);
 int agent_select_candidate_pair(Agent* agent);
 
 int agent_connectivity_check(Agent* agent);
+int agent_set_direct_preference(Agent* agent, uint32_t wait_ms);
 
 void agent_clear_candidates(Agent* agent);
 

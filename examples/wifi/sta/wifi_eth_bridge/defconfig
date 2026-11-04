@@ -1,6 +1,8 @@
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 
 CONFIG_PSRAM =y
+## Copy code and read-only data from flash to PSRAM at startup so bridge buffers can use on-chip RAM.
+CONFIG_PSRAM_COPY_CODE = y
 CONFIG_MACSW_SELECT = bridge
 CONFIG_BFLB_LOG =n
 
@@ -8,8 +10,16 @@ CONFIG_BSP_ETH_PHY            =y
 # CONFIG_BSP_LWIP_NETIF_EMAC  =y
 
 CONFIG_WIFI_ETH_BRIDGE =y
+# bridge selects libfhost_*_bridge.a. WIFI_WDS has no prompt, so =n and
+# "# CONFIG_WIFI_WDS is not set" do not turn that library off; default y applies.
+# Delete CONFIG_WIFI_ETH_BRIDGE_4ADDR. =y fails as an undefined symbol;
+# =n and "# is not set" are ignored.
+# Boot is three-address. wifi_wds config ap|sta auto|<mac> enables four-address.
+# WIFI_MAT defaults on with WIFI_WDS. Set CONFIG_WIFI_MAT=n to omit translation.
+CONFIG_WIFI_WDS        =y
+CONFIG_WL80211         =n
 CONFIG_WIFI_IPERF      =y
 CONFIG_NETIFD_NANO     =y
 CONFIG_NETBUS          =y
-CONFIG_NETIFD_NANO     =y
 CONFIG_COREDUMP        =n
+CONFIG_WRAM_FOR_AP_SIZE = 0x50000

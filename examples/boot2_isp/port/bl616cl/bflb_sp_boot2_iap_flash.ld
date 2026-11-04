@@ -179,6 +179,7 @@ SECTIONS
 
         *(.data)
         *(.data.*)
+        *(.sdata .sdata.* .sdata2 .sdata2.*)
 
         . = ALIGN(4);
         __ram_data_end__ = .;
@@ -241,4 +242,3 @@ SECTIONS
     PROVIDE( __wifi_bss_end = 0 );
     PROVIDE(__LD_CONFIG_EM_SEL = 0K);
 }
-

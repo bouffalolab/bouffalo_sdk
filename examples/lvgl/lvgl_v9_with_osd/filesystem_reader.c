@@ -168,6 +168,9 @@ void filesystem_reader_task(void *param)
     if (filesystem_init() < 0) {
         LOG_E("filesystem init failed, reader task idle\r\n");
         while (1) {
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+            video_ota_checkpoint(VIDEO_OTA_PRODUCER);
+#endif
             vTaskDelay(1000);
         }
     }
@@ -176,6 +179,9 @@ void filesystem_reader_task(void *param)
     if (filesystem_count_frames() < 0) {
         LOG_E("frame count failed, reader task idle\r\n");
         while (1) {
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+            video_ota_checkpoint(VIDEO_OTA_PRODUCER);
+#endif
             vTaskDelay(1000);
         }
     }
@@ -183,6 +189,9 @@ void filesystem_reader_task(void *param)
     LOG_I("Reading " FRAME_DIR "/CCC/pNNNN.jpg ...\r\n");
 
     while (1) {
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+        video_ota_checkpoint(VIDEO_OTA_PRODUCER);
+#endif
         if (frame_buffer_get(&buffer, (TickType_t)100) != 0) {
             vTaskDelay(1);
             continue;

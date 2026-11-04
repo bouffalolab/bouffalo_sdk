@@ -10,6 +10,7 @@ void board_np_console_gpio_init(void);
 void board_lp_console_gpio_init(void);
 
 void board_i2c0_gpio_init(void);
+void board_sdh_gpio_init(void);
 void board_audio_pll_config_for_rate(unsigned int samplerate_hz);
 void board_i2s_codec_gpio_init(void);
 void board_audac_gpio_init(void);

@@ -4,6 +4,18 @@
 #include <setjmp.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+
+#define taskENTER_CRITICAL() ((void)0)
+#define taskEXIT_CRITICAL()  ((void)0)
+static bool wave_player_legacy_enter(void)
+{
+    return true;
+}
+
+static void wave_player_legacy_leave(void)
+{
+}
 
 #define WAVE_PLAYER_CAP_MAX_SAMPLES_PER_CH 16U
 #define WAVE_PLAYER_REC_MAX_SAMPLES 7U
@@ -16,11 +28,14 @@ typedef struct {
     uint32_t nbytes, hz, samples_per_ch;
     uint8_t channels;
     uint32_t seq;
+    uint32_t epoch;
+    uint64_t first_sample_index;
 } cap_msg_t;
 static struct {
     void *cap_queue;
     int16_t cap_blocks[WAVE_PLAYER_CAP_DMA_BLOCKS][16 * WAVE_PLAYER_REC_CHANNELS];
     uint32_t cap_isr_seq;
+    uint32_t cap_epoch;
     bool rec_enable;
     wave_player_capture_layout_t capture_layout;
     wave_player_rec_cb_t rec_cb;

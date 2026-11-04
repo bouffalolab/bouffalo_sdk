@@ -12,6 +12,7 @@
 #include "bl618dg_aon.h"
 #include "bl618dg_hbn.h"
 #include "bl618dg_mfg_media.h"
+#include "rfparam_bl618dg_flash_otp.h"
 #endif
 
 #if defined(BL616CL)
@@ -138,6 +139,157 @@ void rfparam_array_printf(char *str, void *buf, uint32_t buf_len, int type)
     printf("\r\n");
 }
 
+#if defined(BL618DG)
+static const char *rfparam_dg_status(int ret)
+{
+    switch (ret) {
+        case RFPARAM_DG_EMPTY:
+            return "empty/no enabled slot";
+        case RFPARAM_DG_PARITY:
+            return "no parity-valid slot";
+        case RFPARAM_DG_IO:
+            return "read failed";
+        case RFPARAM_DG_FORMAT:
+            return "invalid record format";
+        case RFPARAM_DG_CRC:
+            return "CRC mismatch";
+        case RFPARAM_DG_MEDIA:
+            return "media unavailable";
+        default:
+            return "invalid argument";
+    }
+}
+
+static const char *rfparam_dg_power_name(rfparam_bl618dg_power_type_t type)
+{
+    static const char *names[RFPARAM_DG_POWER_TYPE_MAX] = {
+        "wf_5g_hp", "wf_5g_lp", "wf_2g_hp", "wf_2g_lp",
+        "wfbz_hp", "wfbz_lp", "bz_hp", "bz_lp",
+    };
+
+    return names[type];
+}
+
+static int rfparam_dg_read_poweroffset(rfparam_bl618dg_power_type_t type,
+                                        int8_t *value, uint8_t reload,
+                                        const char **source)
+{
+    uint8_t slot = 0;
+    int ret = RFPARAM_DG_MEDIA;
+    rfparam_bl618dg_media_t media = rfparam_bl618dg_get_rf_param_media();
+
+    *source = "unavailable";
+    if (media == RFPARAM_BL618DG_MEDIA_FLASH_OTP) {
+        *source = "flash otp";
+        ret = rfparam_bl618dg_flash_otp_read_poweroffset(type, value, reload, &slot);
+    } else if (media == RFPARAM_BL618DG_MEDIA_EFUSE) {
+        *source = "efuse";
+        ret = rfparam_bl618dg_efuse_read_poweroffset(type, value, reload, &slot);
+    }
+    if (ret == 0) {
+        rfparam_printf("%s %s slot=%u loaded\r\n",
+                       *source, rfparam_dg_power_name(type), slot);
+    } else {
+        rfparam_printf("%s %s: %s; storage contribution=0\r\n",
+                       *source, rfparam_dg_power_name(type), rfparam_dg_status(ret));
+    }
+    return ret;
+}
+
+static int rfparam_dg_read_2g(rfparam_bl618dg_power_type_t type,
+                               int8_t value[14], uint8_t reload,
+                               const char **source)
+{
+    int8_t anchor[3];
+    int ret = rfparam_dg_read_poweroffset(type, anchor, reload, source);
+
+    if (ret != 0) {
+        return ret;
+    }
+    /* Match MFG APPLY: signed nearest rounding, then clamp to -16..15. */
+    for (int i = 0; i < 14; i++) {
+        int base = i < 6 ? 0 : 1;
+        int step = (anchor[base + 1] - anchor[base]) * 100 / 6;
+        int distance = i < 6 ? i : i - 6;
+
+        if (i == 13) {
+            base = 2;
+            step = (anchor[2] - anchor[1]) * 100 / 5;
+            distance = 2;
+        }
+        int num = step * distance;
+        int result = anchor[base] + (num + (num >= 0 ? 50 : -50)) / 100;
+        value[i] = result < -16 ? -16 : (result > 15 ? 15 : result);
+    }
+    return 0;
+}
+
+static int rfparam_read_hp_poweroffset(int8_t value[14], uint8_t reload,
+                                       const char **source)
+{
+    return rfparam_dg_read_2g(RFPARAM_DG_WF_2G_HP, value, reload, source);
+}
+
+static int rfparam_read_lp_poweroffset(int8_t value[14], uint8_t reload,
+                                       const char **source)
+{
+    return rfparam_dg_read_2g(RFPARAM_DG_WF_2G_LP, value, reload, source);
+}
+
+static int rfparam_read_bz_poweroffset(int8_t value[5], uint8_t reload,
+                                       const char **source)
+{
+    return rfparam_dg_read_poweroffset(RFPARAM_DG_WFBZ_HP, value, reload, source);
+}
+
+static int rfparam_read_capcode(uint8_t *value, uint8_t reload,
+                                const char **source)
+{
+    uint8_t slot = 0;
+    int ret = rfparam_bl618dg_efuse_read_capcode(value, reload, &slot);
+
+    *source = "efuse";
+    if (ret == 0) {
+        rfparam_printf("efuse capcode slot=%u loaded\r\n", slot);
+    } else {
+        rfparam_printf("efuse capcode: %s\r\n", rfparam_dg_status(ret));
+    }
+    return ret;
+}
+
+static void rfparam_dg_load_extra_poweroffset(uint32_t base_addr,
+                                              rfparam_bl618dg_power_type_t type,
+                                              int8_t *value, uint8_t count)
+{
+    uint8_t mode[RFTLV_MAXLEN_PWR_MODE] = { 0 };
+    int8_t tmp[8];
+    const char *source;
+
+    memset(value, 0, count);
+    if (rfparam_tlv_get(base_addr, RFTLV_TYPE_PWR_MODE, sizeof(mode), mode) <= 0) {
+        rfparam_printf("%s: pwr_mode missing; initialized to 0\r\n",
+                       rfparam_dg_power_name(type));
+        return;
+    }
+    for (unsigned int i = 0; i < sizeof(mode); i++) {
+        /* These fields have no TLV compensation item; F/f does not modify them. */
+        if (mode[i] != 'B' && mode[i] != 'b') {
+            continue;
+        }
+        if (rfparam_dg_read_poweroffset(type, tmp, 1, &source) == 0) {
+            if (mode[i] == 'B') {
+                memcpy(value, tmp, count);
+                return;
+            }
+            for (uint8_t j = 0; j < count; j++) {
+                value[j] += tmp[j];
+            }
+        }
+    }
+    rfparam_array_printf((char *)rfparam_dg_power_name(type), value, count, TYPE_INT8);
+}
+#endif
+
 /****************************************************************************/ /**
  * @brief  get wifi power offset by mode option
  *
@@ -152,6 +304,10 @@ int32_t rfparam_get_wlan_pwroffset_with_option(uint32_t base_addr, int8_t pwr_of
     uint8_t pwrmode[RFTLV_MAXLEN_PWR_MODE + 1] = { 0 };
     int8_t pwroffset_tmp[RFTLV_MAXLEN_PWR_OFFSET] = { 0 };
 
+#if defined(BL618DG)
+    memset(pwr_offset, 0, 14);
+#endif
+
     /* pwr_offset_mode */
     if (rfparam_tlv_get(base_addr, RFTLV_TYPE_PWR_MODE, RFTLV_MAXLEN_PWR_MODE, pwrmode) > 0) {
         rfparam_printf("pwr_mode is %s\r\n", pwrmode);
@@ -165,7 +321,7 @@ int32_t rfparam_get_wlan_pwroffset_with_option(uint32_t base_addr, int8_t pwr_of
             /* read pwr offset from efuse */
             case 'B':
             case 'b': {
-#if defined(BL616CL)
+#if defined(BL616CL) || defined(BL618DG)
                 const char *source = "unavailable";
                 int read_ret = rfparam_read_hp_poweroffset(pwroffset_tmp, reload, &source);
 #else
@@ -234,6 +390,10 @@ int32_t rfparam_get_wlan_pwroffset_lp_with_option(uint32_t base_addr, int8_t pwr
     uint8_t pwrmode[RFTLV_MAXLEN_PWR_MODE + 1] = { 0 };
     int8_t pwroffset_tmp[RFTLV_MAXLEN_PWR_OFFSET] = { 0 };
 
+#if defined(BL618DG)
+    memset(pwr_offset, 0, 14);
+#endif
+
     /* pwr_offset_mode */
     if (rfparam_tlv_get(base_addr, RFTLV_TYPE_PWR_MODE, RFTLV_MAXLEN_PWR_MODE, pwrmode) > 0) {
     } else {
@@ -245,7 +405,7 @@ int32_t rfparam_get_wlan_pwroffset_lp_with_option(uint32_t base_addr, int8_t pwr
             /* read pwr offset from efuse */
             case 'B':
             case 'b': {
-#if defined(BL616CL)
+#if defined(BL616CL) || defined(BL618DG)
                 const char *source = "unavailable";
                 int read_ret = rfparam_read_lp_poweroffset(pwroffset_tmp, reload, &source);
 #else
@@ -314,6 +474,10 @@ int32_t rfparam_get_bz_pwroffset_with_option(uint32_t base_addr, int8_t pwr_offs
     uint8_t pwrmode[RFTLV_MAXLEN_PWR_MODE + 1] = { 0 };
     int8_t pwroffset_tmp[RFTLV_MAXLEN_BLE_PWR_OFFSET] = { 0 };
 
+#if defined(BL618DG)
+    memset(pwr_offset, 0, 5);
+#endif
+
     /* pwr_offset_mode */
     if (rfparam_tlv_get(base_addr, RFTLV_TYPE_PWR_MODE, RFTLV_MAXLEN_PWR_MODE, pwrmode) > 0) {
     } else {
@@ -325,7 +489,7 @@ int32_t rfparam_get_bz_pwroffset_with_option(uint32_t base_addr, int8_t pwr_offs
             /* read pwr offset from efuse */
             case 'B':
             case 'b': {
-#if defined(BL616CL)
+#if defined(BL616CL) || defined(BL618DG)
                 const char *source = "unavailable";
                 int read_ret = rfparam_read_bz_poweroffset(pwroffset_tmp, reload, &source);
 #else
@@ -415,7 +579,7 @@ int32_t rfparam_get_cap_code_with_option(uint32_t base_addr, uint8_t *capcode_in
                 }
             } break;
             case 'M': {
-#if defined(BL616CL)
+#if defined(BL616CL) || defined(BL618DG)
                 const char *source = "unavailable";
                 int read_ret = rfparam_read_capcode(capcode_in, reload, &source);
 #else
@@ -503,6 +667,11 @@ int8_t rfparam_load(struct wl_param_t *param)
         return RFPARAM_ERR_PARAM_CHECK;
     }
 
+#if defined(BL618DG)
+    memset(&param->pwrcal, 0, sizeof(param->pwrcal));
+    rfparam_printf("power tables initialized to 0 before loading\r\n");
+#endif
+
     /* 1. get all rf params */
     /* pwr_offset_mode */
 
@@ -526,6 +695,19 @@ int8_t rfparam_load(struct wl_param_t *param)
         rfparam_printf("bz pwr_offset err\r\n");
         return RFPARAM_ERR_PWR_OFFSET_NULL;
     }
+
+#if defined(BL618DG)
+    rfparam_dg_load_extra_poweroffset(g_tlv_base_addr, RFPARAM_DG_WF_5G_HP,
+                                      param->pwrcal.channel_5g_pwrcomp_wlan, 8);
+    rfparam_dg_load_extra_poweroffset(g_tlv_base_addr, RFPARAM_DG_WF_5G_LP,
+                                      param->pwrcal.channel_5g_lp_pwrcomp_wlan, 8);
+    rfparam_dg_load_extra_poweroffset(g_tlv_base_addr, RFPARAM_DG_WFBZ_LP,
+                                      param->pwrcal.channel_lp_pwrcomp_bz, 5);
+    rfparam_dg_load_extra_poweroffset(g_tlv_base_addr, RFPARAM_DG_BZ_HP,
+                                      param->pwrcal.channel_pwrcomp_bz_only, 5);
+    rfparam_dg_load_extra_poweroffset(g_tlv_base_addr, RFPARAM_DG_BZ_LP,
+                                      param->pwrcal.channel_lp_pwrcomp_bz_only, 5);
+#endif
 
     /* pwr table */
     if (rfparam_tlv_get(g_tlv_base_addr, RFTLV_TYPE_PWR_TABLE_11B, RFTLV_MAXLEN_PWR_TABLE_11B, tmp_buf) > 0) {

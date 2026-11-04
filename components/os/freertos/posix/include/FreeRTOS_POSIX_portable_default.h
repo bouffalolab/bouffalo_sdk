@@ -151,6 +151,32 @@
 #ifndef posixconfigENABLE_SCHED_PARAM
     #define posixconfigENABLE_SCHED_PARAM            1 /**< sched_param in sched.h */
 #endif
+
+/* Picolibc owns the standard time and scalar POSIX types.  Do not redeclare
+ * them from the FreeRTOS compatibility header; the native <time.h>/<sys/types.h>
+ * headers are included by FreeRTOS_POSIX/time.h below. */
+#if defined(__PICOLIBC__)
+    #undef posixconfigENABLE_CLOCK_T
+    #define posixconfigENABLE_CLOCK_T                0
+    #undef posixconfigENABLE_CLOCKID_T
+    #define posixconfigENABLE_CLOCKID_T              0
+    #undef posixconfigENABLE_MODE_T
+    #define posixconfigENABLE_MODE_T                 0
+    #undef posixconfigENABLE_PID_T
+    #define posixconfigENABLE_PID_T                  0
+    #undef posixconfigENABLE_SSIZE_T
+    #define posixconfigENABLE_SSIZE_T                0
+    #undef posixconfigENABLE_TIME_T
+    #define posixconfigENABLE_TIME_T                 0
+    #undef posixconfigENABLE_TIMER_T
+    #define posixconfigENABLE_TIMER_T                0
+    #undef posixconfigENABLE_USECONDS_T
+    #define posixconfigENABLE_USECONDS_T             0
+    #undef posixconfigENABLE_TIMESPEC
+    #define posixconfigENABLE_TIMESPEC               0
+    #undef posixconfigENABLE_ITIMERSPEC
+    #define posixconfigENABLE_ITIMERSPEC             0
+#endif
 /**@} */
 
 #endif /* ifndef _FREERTOS_POSIX_PORTABLE_DEFAULT_H_ */

@@ -22,6 +22,7 @@ struct l2_packet_data {
 	void *rx_callback_ctx;
 };
 
+
 static void l2_packet_receive(int sock, void *eloop_ctx, void *sock_ctx)
 {
   struct l2_packet_data *l2 = eloop_ctx;
@@ -32,9 +33,14 @@ static void l2_packet_receive(int sock, void *eloop_ctx, void *sock_ctx)
   unsigned char *req_body;
   len = eloop_get_request_body(((void **)&req_body));
 
+  if (!req_body || len < sizeof(*eth)) {
+    return;
+  }
+
   eth = (struct mac_eth_hdr *)req_body;
   payload = &req_body[sizeof(*eth)];
   len -= sizeof(*eth);
+
 
   l2->rx_callback(l2->rx_callback_ctx, (u8 *)(&eth->sa), payload, len);
 }
@@ -102,14 +108,16 @@ int l2_packet_get_own_addr(struct l2_packet_data *l2, u8 *addr)
 int l2_packet_send(struct l2_packet_data *l2, const u8 *dst_addr, u16 proto,
 		   const u8 *buf, size_t len)
 {
-    bool ack;
+    bool ack = false;
+    int res;
     if (l2 == NULL)
         return -1;
 
     if (l2->l2_hdr)
         dst_addr = NULL;
 
-    if (net_l2_send(l2->net_if, buf, len, proto, dst_addr, &ack))
+    res = net_l2_send(l2->net_if, buf, len, proto, dst_addr, &ack);
+    if (res)
         return -1;
     if (!ack)
         return -1;

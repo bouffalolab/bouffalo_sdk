@@ -427,7 +427,7 @@ sntp_try_next_server(void *arg)
     if (sntp_current_server >= SNTP_MAX_SERVERS) {
       sntp_current_server = 0;
     }
-    if (!ip_addr_isany(&sntp_servers[sntp_current_server].addr)
+    if (!ip_addr_isany_val(sntp_servers[sntp_current_server].addr)
 #if SNTP_SERVER_DNS
         || (sntp_servers[sntp_current_server].name != NULL)
 #endif
@@ -634,7 +634,7 @@ sntp_request(void *arg)
 #if SNTP_SERVER_DNS
   if (sntp_servers[sntp_current_server].name) {
     /* always resolve the name and rely on dns-internal caching & timeout */
-    ip_addr_set_zero(&sntp_servers[sntp_current_server].addr);
+    sntp_servers[sntp_current_server].addr = (ip_addr_t){0};
     err = dns_gethostbyname(sntp_servers[sntp_current_server].name, &sntp_server_address,
                             sntp_dns_found, NULL);
     if (err == ERR_INPROGRESS) {
@@ -805,7 +805,7 @@ sntp_setserver(u8_t idx, const ip_addr_t *server)
     if (server != NULL) {
       sntp_servers[idx].addr = (*server);
     } else {
-      ip_addr_set_zero(&sntp_servers[idx].addr);
+      sntp_servers[idx].addr = (ip_addr_t){0};
     }
 #if SNTP_SERVER_DNS
     sntp_servers[idx].name = NULL;

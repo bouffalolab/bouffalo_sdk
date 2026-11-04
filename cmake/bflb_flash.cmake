@@ -57,6 +57,29 @@ if(CONFIG_OVERRIDE_MFGFILE)
     set(BFLB_MFG_FILE ${SDK_DEMO_PATH}/${CONFIG_OVERRIDE_MFGFILE})
 endif()
 
+# Kconfig cannot inspect the filesystem, so board defaults may use a wildcard
+# (for example, config/boot2_*.bin). Resolve it during CMake configuration and
+# fail early when the board image is missing or ambiguous.
+if(BFLB_BOOT2_FILE)
+    if("${BFLB_BOOT2_FILE}" MATCHES "[*?]")
+        file(GLOB BFLB_BOOT2_MATCHES CONFIGURE_DEPENDS LIST_DIRECTORIES false
+            "${BFLB_BOOT2_FILE}")
+        list(LENGTH BFLB_BOOT2_MATCHES BFLB_BOOT2_MATCH_COUNT)
+        if(NOT BFLB_BOOT2_MATCH_COUNT EQUAL 1)
+            string(REPLACE ";" "\n  " BFLB_BOOT2_MATCHES_TEXT
+                "${BFLB_BOOT2_MATCHES}")
+            message(FATAL_ERROR
+                "Boot2 image pattern must match exactly one file:\n"
+                "  ${BFLB_BOOT2_FILE}\n"
+                "Matched ${BFLB_BOOT2_MATCH_COUNT} files:\n"
+                "  ${BFLB_BOOT2_MATCHES_TEXT}")
+        endif()
+        list(GET BFLB_BOOT2_MATCHES 0 BFLB_BOOT2_FILE)
+    elseif(NOT EXISTS "${BFLB_BOOT2_FILE}")
+        message(FATAL_ERROR "Boot2 image does not exist: ${BFLB_BOOT2_FILE}")
+    endif()
+endif()
+
 if(FULL_FLASH_TOOL)
     set(FLASH_PROG_CFG_GENERATOR
         ${BL_SDK_BASE}/tools/bflb_tools/flash_prog_cfg.py)
@@ -146,7 +169,8 @@ if(FULL_FLASH_TOOL)
     endif()
 
     if(CONFIG_FW_POST_PROC_CUSTOM)
-        list(APPEND BL_FW_POST_PROC_CONFIG ${CONFIG_FW_POST_PROC_CUSTOM})
+        string(REGEX REPLACE "^\"|\"$" "" _fw_post_proc_custom "${CONFIG_FW_POST_PROC_CUSTOM}")
+        list(APPEND BL_FW_POST_PROC_CONFIG "${_fw_post_proc_custom}")
     endif()
 endif()
 
@@ -196,7 +220,7 @@ if(CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW)
         COMMAND python3 ${BL_SDK_BASE}/tools/byai/multi_bins.py
 	        ${BIN_FILE}
 		--append LPFW
-		${BL_SDK_BASE}/tools/lpfw/bin/${CHIP}_lp_fw.bin
+		${LPFW_BIN}
 		--output ${BIN_FILE}
 	        --align 0x20
                 --sha256-header

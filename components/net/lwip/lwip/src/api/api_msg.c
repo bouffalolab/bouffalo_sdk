@@ -85,6 +85,11 @@ static err_t lwip_netconn_do_close_internal(struct netconn *conn  WRITE_DELAYED_
 #endif
 
 static void netconn_drain(struct netconn *conn);
+#if LWIP_NETCONN_FULLDUPLEX
+/* netconn_drain() asserts NETCONN_FLAG_MBOXINVALID; netconns nobody deleted
+   need this before draining. Defined below, next to netconn_drain(). */
+static void netconn_mark_mbox_invalid(struct netconn *conn);
+#endif /* LWIP_NETCONN_FULLDUPLEX */
 
 #if LWIP_TCPIP_CORE_LOCKING
 #define TCPIP_APIMSG_ACK(m)
@@ -631,6 +636,13 @@ accept_function(void *arg, struct tcp_pcb *newpcb, err_t err)
     /* no need to drain since we know the recvmbox is empty. */
     sys_mbox_free(&newconn->recvmbox);
     sys_mbox_set_invalid(&newconn->recvmbox);
+#if LWIP_NETCONN_FULLDUPLEX
+    /* netconn_free() drains and asserts NETCONN_FLAG_MBOXINVALID, which nobody
+       set on this netconn. Currently unreachable (MEMP_NUM_NETCONN <
+       DEFAULT_ACCEPTMBOX_SIZE makes netconn_alloc() fail first), kept as a
+       safeguard. */
+    netconn_mark_mbox_invalid(newconn);
+#endif /* LWIP_NETCONN_FULLDUPLEX */
     netconn_free(newconn);
     return ERR_MEM;
   } else {
@@ -866,6 +878,17 @@ netconn_free(struct netconn *conn)
  * @bytes_drained bytes drained from recvmbox
  * @accepts_drained pending connections drained from acceptmbox
  */
+struct tcp_psb_msg {
+  struct tcpip_api_call_data call;
+  struct tcp_pcb *pcb;
+};
+
+static err_t tcp_do_abort(struct tcpip_api_call_data *msg)
+{
+  struct tcp_psb_msg *pcb_msg = __containerof(msg, struct tcp_psb_msg, call);
+  tcp_abort(pcb_msg->pcb);
+  return ERR_OK;
+}
 static void
 netconn_drain(struct netconn *conn)
 {
@@ -914,10 +937,26 @@ netconn_drain(struct netconn *conn)
           struct netconn *newconn = (struct netconn *)mem;
           /* Only tcp pcbs have an acceptmbox, so no need to check conn->type */
           /* pcb might be set to NULL already by err_tcp() */
+#if LWIP_NETCONN_FULLDUPLEX
+          /* A pending connection the application never accepted was never
+             deleted, so nobody set NETCONN_FLAG_MBOXINVALID on it - yet
+             netconn_drain() (called here, and again from netconn_free()
+             below) asserts it is set. Mark it closed first: it is being torn
+             down right here and no other thread holds a reference to it.
+
+             This is also what makes the tcp_abort() below reachable: without
+             the flag, the assert at the top of netconn_drain() fires first,
+             so the abort - and with it the unlocked-core crash it caused -
+             was never reached. The vendor's tcpip_api_call() wrap and this
+             mark are therefore a pair; either one alone is incomplete. */
+          netconn_mark_mbox_invalid(newconn);
+#endif /* LWIP_NETCONN_FULLDUPLEX */
           /* drain recvmbox */
           netconn_drain(newconn);
           if (newconn->pcb.tcp != NULL) {
-            tcp_abort(newconn->pcb.tcp);
+            struct tcp_psb_msg pcb_msg = { 0 };
+            pcb_msg.pcb = newconn->pcb.tcp;
+            tcpip_api_call(tcp_do_abort, &pcb_msg.call);
             newconn->pcb.tcp = NULL;
           }
           netconn_free(newconn);

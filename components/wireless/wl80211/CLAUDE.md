@@ -23,8 +23,8 @@ The `bouffalo.mk` makefile defines the component integration:
 
 ### Source Build Mode
 When `src/` directory is present, builds from source using `src/CMakeLists.txt`:
-- Toolchain: RISC-V (`riscv64-unknown-elf-gcc`)
-- Compiler flags: `-Os -march=rv32imafcpzpsfoperand_xtheade -mabi=ilp32f -mtune=e907`
+- Toolchain: standard RISC-V (`riscv64-unknown-elf-gcc`)
+- Compiler flags: `${BFLB_RISCV_ARCH_FLAGS}` (for example `-march=rv32imafc_zicsr_zifencei -mabi=ilp32f`)
 - Strict compilation enabled: `-Werror -Wstrict-prototypes`
 - Dependencies: PHYRF, MACSW, SUPPLICANT components
 

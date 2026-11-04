@@ -956,6 +956,31 @@ int sdh_sd_read_blocks(struct sd_card_s *sd_card, void *rd_buff, uint32_t blk_ad
     struct bflb_sdh_data_cfg_s data_cfg = { 0 };
     struct sdh_host_transfer_s transfer = { &cmd_cfg, &data_cfg };
 
+#if defined(BL618DG)
+    /* The current BL618DG ADMA path requires a 4-byte-aligned data address.
+     * FatFs can offset even an aligned application buffer after copying a
+     * partial sector. Use the host's aligned, uncached sector buffer. */
+    if ((uintptr_t)rd_buff & 3U) {
+        uint8_t *bounce = sd_card->host->internal_buff;
+        LOG_W("BL618DG SDH read buffer %p is not 4-byte aligned; using bounce buffer "
+              "(FatFs may offset an aligned buffer)\r\n", rd_buff);
+        if (!bounce || ((uintptr_t)bounce & 3U) ||
+            sd_card->host->internal_buff_size < SD_DEFAULT_BLOCK_SIZE) {
+            LOG_E("invalid SDH bounce buffer\r\n");
+            return -1;
+        }
+        for (uint32_t i = 0; i < blk_cnt; i++) {
+            ret = sdh_sd_read_blocks(sd_card, bounce, blk_addr + i, 1);
+            if (ret < 0) {
+                return ret;
+            }
+            memcpy((uint8_t *)rd_buff + i * SD_DEFAULT_BLOCK_SIZE,
+                   bounce, SD_DEFAULT_BLOCK_SIZE);
+        }
+        return 0;
+    }
+#endif
+
     LOG_D("read block start: buff:%p, blk_addr:%u, blk_cnt:%u\r\n", rd_buff, blk_addr, blk_cnt);
 
     /* cmd cfg */
@@ -1032,6 +1057,29 @@ int sdh_sd_write_blocks(struct sd_card_s *sd_card, void *wr_buff, uint32_t blk_a
     struct bflb_sdh_cmd_cfg_s cmd_cfg = { 0 };
     struct bflb_sdh_data_cfg_s data_cfg = { 0 };
     struct sdh_host_transfer_s transfer = { &cmd_cfg, &data_cfg };
+
+#if defined(BL618DG)
+    /* Keep byte offsets introduced by callers or FatFs out of the ADMA address. */
+    if ((uintptr_t)wr_buff & 3U) {
+        uint8_t *bounce = sd_card->host->internal_buff;
+        LOG_W("BL618DG SDH write buffer %p is not 4-byte aligned; using bounce buffer "
+              "(FatFs may offset an aligned buffer)\r\n", wr_buff);
+        if (!bounce || ((uintptr_t)bounce & 3U) ||
+            sd_card->host->internal_buff_size < SD_DEFAULT_BLOCK_SIZE) {
+            LOG_E("invalid SDH bounce buffer\r\n");
+            return -1;
+        }
+        for (uint32_t i = 0; i < blk_cnt; i++) {
+            memcpy(bounce, (uint8_t *)wr_buff + i * SD_DEFAULT_BLOCK_SIZE,
+                   SD_DEFAULT_BLOCK_SIZE);
+            ret = sdh_sd_write_blocks(sd_card, bounce, blk_addr + i, 1);
+            if (ret < 0) {
+                return ret;
+            }
+        }
+        return 0;
+    }
+#endif
 
     LOG_D("write block start: buff:%p, blk_addr:%u, blk_cnt:%u\r\n", wr_buff, blk_addr, blk_cnt);
 

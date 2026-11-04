@@ -10,6 +10,9 @@ config SOCKET_OFFLOAD
 
 if SOCKET_OFFLOAD
 
+config OPENAMP_RPMSG_BUFFER_SIZE
+    default 1600
+
 choice SOCKET_OFFLOAD_ROLE
     prompt "Socket RPC role"
     default SOCKET_OFFLOAD_SERVICE if LWIP

@@ -47,7 +47,15 @@ typedef struct msp_i2s_device_cfg {
 } msp_i2s_device_cfg_t;
 
 void msp_i2s_tx_enable(void);
+void msp_i2s_tx_prepare(void);
+void msp_i2s_tx_disable(void);
 void msp_i2s_rx_enable(void);
+void msp_i2s_rx_prepare(void);
+void msp_i2s_rx_disable(void);
+int msp_i2s_duplex_begin(void);
+void msp_i2s_duplex_cancel(void);
+int msp_i2s_duplex_requested(void);
+int msp_i2s_duplex_rx_armed(void);
 int msp_i2s_device_config(const msp_i2s_device_cfg_t *config);
 void msp_i2s_device_init(uint32_t sample_rate);
 void msp_i2s_port_init(void);

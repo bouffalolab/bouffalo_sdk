@@ -10,6 +10,16 @@ config IPC
     help
       Build the inter-processor communication framework.
 
+config OPENAMP_RPMSG_BUFFER_SIZE
+    int "RPMsg buffer size (bytes)"
+    range 512 65535
+    default 512
+    depends on IPC
+    help
+      Size of each RPMsg buffer, including the RPMsg header. Applies to all
+      RPMsg services and must match on communicating cores. Shared RAM must
+      accommodate 2 * VRING_SIZE buffers and vring metadata.
+
 config RPMSG_SERVICE
     bool "RPMsg service"
     default n

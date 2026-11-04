@@ -5,10 +5,10 @@ uint64_t (*shared_CPU_Get_MTimer_Counter)(void) = NULL;
 void (*shared_arch_delay_ms)(uint32_t) = NULL;
 void (*shared_arch_delay_us)(uint32_t) = NULL;
 int32_t (*shared_CPU_Reset_MTimer)(void) = NULL;
-int32_t (*shared_lpfw_calculate_beacon_delay)(uint32_t *, uint64_t, uint64_t, uint32_t) = NULL;
-int32_t (*shared_lpfw_beacon_delay_sliding_win_get_average)(uint32_t *) = NULL;
+int32_t (*shared_lpfw_calculate_beacon_delay)(void *, uint64_t, uint64_t, uint32_t) = NULL;
+int32_t (*shared_lpfw_beacon_delay_sliding_win_get_average)(void *) = NULL;
 int32_t (*shared_AON_Set_LDO11_SOC_Sstart_Delay)(uint32_t) = NULL;
-int32_t (*shared_PDS_Default_Level_Config)(uint32_t *, uint32_t) = NULL;
+int32_t (*shared_PDS_Default_Level_Config)(void *, uint32_t) = NULL;
 #endif
 
 uint32_t *shared_func_array[32];

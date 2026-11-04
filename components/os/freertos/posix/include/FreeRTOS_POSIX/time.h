@@ -38,6 +38,7 @@ extern "C" {
 #endif
 
 /* FreeRTOS+POSIX includes. */
+#include <stddef.h>
 #include "FreeRTOS_POSIX/sys/types.h"
 #include "FreeRTOS_POSIX/signal.h"
 
@@ -51,7 +52,13 @@ extern "C" {
 /**@} */
 
 #if defined(__PICOLIBC__)
+#ifdef __cplusplus
+}
+#endif
 #include_next "time.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 #else /* defined(__PICOLIBC__) */
 /**
  * @name Clock identifiers.
@@ -116,10 +123,31 @@ struct tm {
     };
 #endif
 
+#endif /* defined(__PICOLIBC__) */
+
+#if !defined(__PICOLIBC__)
+char *ctime_r(const time_t *timep, char *buf);
+#endif
+
 /* Forward declarations so function parameter lists don't implicitly define these
  * structs with scope limited to the parameter list (avoids -Werror). */
 struct timespec;
 struct itimerspec;
+
+/* Calendar-time declarations supplied by the selected C library.  They must
+ * remain visible when this POSIX compatibility header shadows the toolchain's
+ * <time.h>, otherwise libstdc++'s <ctime> cannot be parsed. */
+double difftime( time_t time1, time_t time0 );
+time_t time( time_t * timer );
+char * asctime( const struct tm * timeptr );
+char * ctime( const time_t * timer );
+struct tm * gmtime( const time_t * timer );
+struct tm * localtime( const time_t * timer );
+size_t strftime( char * str,
+                 size_t maxsize,
+                 const char * format,
+                 const struct tm * timeptr );
+time_t mktime( struct tm * timeptr );
 
 /**
  * @brief Report CPU time used.
@@ -286,9 +314,4 @@ int timer_settime( timer_t timerid,
 }
 #endif
 
-/* Standard C time functions not declared in this POSIX time header */
-struct tm *gmtime(const time_t *timep);
-time_t mktime(struct tm *tm);
-
-#endif /* defined(__PICOLIBC__) */
 #endif /* ifndef _FREERTOS_POSIX_TIME_H_ */

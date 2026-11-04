@@ -325,9 +325,9 @@ bool eth_link_state_update(void)
 #if (defined(EMAC_SPEED_10M_SUPPORT) && EMAC_SPEED_10M_SUPPORT)
         /* 10M/100M speed mode */
         if (speed == EPHY_SPEED_MODE_10M_HALF_DUPLEX || speed == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
-            bflb_emac_feature_control(emac0, EMAC_CMD_SET_SPEED_10M, NULL);
+            bflb_emac_feature_control(emac0, EMAC_CMD_SET_SPEED_10M, 0);
         } else {
-            bflb_emac_feature_control(emac0, EMAC_CMD_SET_SPEED_100M, NULL);
+            bflb_emac_feature_control(emac0, EMAC_CMD_SET_SPEED_100M, 0);
         }
 #endif
         /* enable full duplex mode */

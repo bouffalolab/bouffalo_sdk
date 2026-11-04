@@ -5,10 +5,13 @@
 #include <reent.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <sys/stat.h>
 
 #include "port_file_fd.h"
+
+int _fstat_r(struct _reent *reent, int fd, struct stat *st);
 
 #if defined(CONFIG_NEWLIB_LITTLEFS)
 #include "port_file_littlefs.h"

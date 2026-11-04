@@ -300,8 +300,8 @@ static void *errno_thread_func(void *arg)
 /**
  * T_PTH_010: errno is thread-safe
  * Verify that each thread has its own errno value.
- * FreeRTOS implements this via __errno() returning &FreeRTOS_errno,
- * which is saved/restored on context switch.
+ * TLS Picolibc stores errno in the task TLS block; global-errno builds
+ * save and restore FreeRTOS_errno on context switch.
  */
 static void test_errno_thread_safe(void)
 {

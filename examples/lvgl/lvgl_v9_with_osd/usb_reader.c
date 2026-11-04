@@ -381,6 +381,9 @@ void usb_reader_task(void *param)
     reader.task_handle = xTaskGetCurrentTaskHandle();
 
     while (1) {
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+        video_ota_checkpoint(VIDEO_OTA_PRODUCER);
+#endif
         usb_reader_polling();
 
 #if USB_READER_STATS_LOG

@@ -282,7 +282,7 @@ void *bflb_get_no_cache_addr(const void *addr)
     return (void *)addr;
 }
 #elif defined(BL618DG) && !defined(CPU_MODEL_A0)
-bool bflb_check_cache_addr(const void *addr)
+ATTR_TCM_SECTION bool bflb_check_cache_addr(const void *addr)
 {
     uintptr_t a = (uintptr_t)addr;
 

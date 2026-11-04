@@ -109,6 +109,22 @@
 
 #endif /* if ( configUSE_NEWLIB_REENTRANT == 1 ) */
 
+#if defined( BFLB_USE_PICOLIBC )
+    #ifndef configUSE_PICOLIBC_TLS
+        #define configUSE_PICOLIBC_TLS    1
+    #endif
+
+    #if ( configUSE_PICOLIBC_TLS != 1 )
+        #error BFLB_USE_PICOLIBC requires configUSE_PICOLIBC_TLS to be 1.
+    #endif
+
+    /* TLS errno replaces FreeRTOS' global errno save/restore mechanism. */
+    #ifdef configUSE_POSIX_ERRNO
+        #undef configUSE_POSIX_ERRNO
+    #endif
+    #define configUSE_POSIX_ERRNO    0
+#endif
+
 /* Must be defaulted before configUSE_PICOLIBC_TLS is used below. */
 #ifndef configUSE_PICOLIBC_TLS
     #define configUSE_PICOLIBC_TLS    0

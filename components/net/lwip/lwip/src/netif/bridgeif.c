@@ -98,6 +98,8 @@ struct bridgeif_private_s;
 typedef struct bridgeif_port_private_s {
   struct bridgeif_private_s *bridge;
   struct netif *port_netif;
+  netif_input_fn original_input;
+  u8_t original_etharp;
   u8_t port_num;
 } bridgeif_port_t;
 
@@ -299,6 +301,9 @@ bridgeif_output(struct netif *netif, struct pbuf *p)
 {
   err_t err;
   bridgeif_private_t *br = (bridgeif_private_t *)netif->state;
+  if (br == NULL || p == NULL || p->len < SIZEOF_ETH_HDR) {
+    return ERR_IF;
+  }
   struct eth_addr *dst = (struct eth_addr *)(p->payload);
 
   bridgeif_portmask_t dstports = bridgeif_find_dst_ports(br, dst);
@@ -334,9 +339,14 @@ bridgeif_input(struct pbuf *p, struct netif *netif)
     return ERR_VAL;
   }
   port = (bridgeif_port_t *)netif_get_client_data(netif, bridgeif_netif_client_id);
-  LWIP_ASSERT("port data not set", port != NULL);
   if (port == NULL || port->bridge == NULL) {
-    return ERR_VAL;
+    /* An input queued before detach must not access released bridge state. */
+    pbuf_free(p);
+    return ERR_OK;
+  }
+  if (p->len < SIZEOF_ETH_HDR) {
+    pbuf_free(p);
+    return ERR_OK;
   }
   br = (bridgeif_private_t *)port->bridge;
   rx_idx = netif_get_index(netif);
@@ -525,6 +535,7 @@ bridgeif_add_port(struct netif *bridgeif, struct netif *portif)
 {
   bridgeif_private_t *br;
   bridgeif_port_t *port;
+  u8_t port_num;
 
   LWIP_ASSERT("bridgeif != NULL", bridgeif != NULL);
   LWIP_ASSERT("bridgeif->state != NULL", bridgeif->state != NULL);
@@ -536,15 +547,26 @@ bridgeif_add_port(struct netif *bridgeif, struct netif *portif)
   }
 
   br = (bridgeif_private_t *)bridgeif->state;
-
-  if (br->num_ports >= br->max_ports) {
+  if (netif_get_client_data(portif, bridgeif_netif_client_id) != NULL) {
     return ERR_VAL;
   }
-  port = &br->ports[br->num_ports];
+  for (port_num = 0; port_num < br->max_ports; port_num++) {
+    if (br->ports[port_num].port_netif == NULL) {
+      break;
+    }
+  }
+  if (port_num == br->max_ports) {
+    return ERR_VAL;
+  }
+  port = &br->ports[port_num];
   port->port_netif = portif;
-  port->port_num = br->num_ports;
+  port->original_input = portif->input;
+  port->original_etharp = portif->flags & NETIF_FLAG_ETHARP;
+  port->port_num = port_num;
   port->bridge = br;
-  br->num_ports++;
+  if (br->num_ports <= port_num) {
+    br->num_ports = port_num + 1;
+  }
 
   /* let the port call us on input */
 #if BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
@@ -557,6 +579,73 @@ bridgeif_add_port(struct netif *bridgeif, struct netif *portif)
   /* remove ETHARP flag to prevent sending report events on netif-up */
   netif_clear_flags(portif, NETIF_FLAG_ETHARP);
 
+  return ERR_OK;
+}
+
+err_t
+bridgeif_fdb_flush(struct netif *bridgeif)
+{
+  bridgeif_private_t *br;
+  if (bridgeif == NULL || bridgeif->linkoutput != bridgeif_output || bridgeif->state == NULL) {
+    return ERR_VAL;
+  }
+  br = (bridgeif_private_t *)bridgeif->state;
+  bridgeif_fdb_clear(br->fdbd);
+  return ERR_OK;
+}
+
+err_t
+bridgeif_remove_port(struct netif *bridgeif, struct netif *portif)
+{
+  bridgeif_private_t *br;
+  bridgeif_port_t *port;
+  u8_t i;
+  if (bridgeif == NULL || portif == NULL || bridgeif->state == NULL ||
+      bridgeif->linkoutput != bridgeif_output) {
+    return ERR_VAL;
+  }
+  br = (bridgeif_private_t *)bridgeif->state;
+  port = (bridgeif_port_t *)netif_get_client_data(portif, bridgeif_netif_client_id);
+  if (port == NULL || port->bridge != br) {
+    return ERR_VAL;
+  }
+  portif->input = port->original_input;
+  if (port->original_etharp) {
+    netif_set_flags(portif, NETIF_FLAG_ETHARP);
+  }
+  netif_set_client_data(portif, bridgeif_netif_client_id, NULL);
+  for (i = 0; i < br->max_fdbs_entries; i++) {
+    br->fdbs[i].dst_ports &= ~((bridgeif_portmask_t)1 << port->port_num);
+  }
+  memset(port, 0, sizeof(*port));
+  while (br->num_ports && br->ports[br->num_ports - 1].port_netif == NULL) {
+    br->num_ports--;
+  }
+  bridgeif_fdb_clear(br->fdbd);
+  return ERR_OK;
+}
+
+err_t
+bridgeif_deinit(struct netif *bridgeif)
+{
+  bridgeif_private_t *br;
+  u8_t i;
+  if (bridgeif == NULL || bridgeif->state == NULL || bridgeif->linkoutput != bridgeif_output) {
+    return ERR_VAL;
+  }
+  if (netif_is_up(bridgeif) || netif_is_link_up(bridgeif)) {
+    return ERR_USE;
+  }
+  br = (bridgeif_private_t *)bridgeif->state;
+  for (i = 0; i < br->max_ports; i++) {
+    if (br->ports[i].port_netif != NULL) {
+      bridgeif_remove_port(bridgeif, br->ports[i].port_netif);
+    }
+  }
+  bridgeif_fdb_deinit(br->fdbd);
+  bridgeif->state = NULL;
+  bridgeif->linkoutput = NULL;
+  mem_free(br);
   return ERR_OK;
 }
 

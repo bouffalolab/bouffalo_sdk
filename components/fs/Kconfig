@@ -24,6 +24,13 @@ config FATFS_USBH
     help
       Mount FatFS volumes on USB mass storage devices.
 
+config FATFS_SPI_NAND
+    bool "FatFS SPI NAND support (Bouffalo + Dhara)"
+    default n
+    depends on FATFS && SPI_NAND
+    help
+      Register SPI NAND as DEV_FLASH (/flash) using 512-byte sectors.
+
 config ROMFS
     bool "ROMFS"
     default n

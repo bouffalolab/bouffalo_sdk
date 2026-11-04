@@ -11,6 +11,7 @@
 #include "wifi_mgmr.h"
 #include "wifi_mgmr_ext.h"
 
+#ifdef CONFIG_NETHUB
 #include "nethub.h"
 #include "nethub_filter.h"
 #include "lwip/def.h"
@@ -19,20 +20,17 @@
 #include "lwip/prot/ip.h"
 #include "lwip/prot/ip4.h"
 #include "lwip/prot/udp.h"
+#include "lwip/netif.h"
+#include "fhost.h"
+#endif
 
 #define DBG_TAG "APP_WIFI"
 #include "log.h"
-
-#define APP_WIFI_TASK_STACK     4096
-#define APP_WIFI_TASK_PRIORITY  24
-#define APP_WIFI_START_DELAY_MS 1500
 
 #define APP_ETH_HDR_LEN     14U
 #define APP_IP4_HDR_MIN_LEN 20U
 #define APP_UDP4_HDR_LEN    8U
 #define APP_ETHTYPE_8021X   0x888eU
-
-static bool wifi_init_done;
 
 static void wifi_event_handler(async_input_event_t ev, void *priv)
 {
@@ -45,7 +43,6 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
             break;
         case CODE_WIFI_ON_MGMR_DONE:
             LOG_I("CODE_WIFI_ON_MGMR_DONE\r\n");
-            wifi_init_done = true;
             break;
         case CODE_WIFI_ON_SCAN_DONE:
             LOG_I("CODE_WIFI_ON_SCAN_DONE\r\n");
@@ -87,48 +84,21 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
     }
 }
 
-int app_wifi_init(void)
+void wifi_start_firmware_task(void *param)
 {
+    (void)param;
+
     LOG_I("Starting wifi ...\r\n");
-
-    wifi_init_done = false;
     async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
-
     wifi_task_create();
-    vTaskDelay(pdMS_TO_TICKS(500));
 
     LOG_I("Starting fhost ...\r\n");
     fhost_init();
 
-    while (!wifi_init_done) {
-        vTaskDelay(1);
-    }
-
-    LOG_I("wifi ready\r\n");
-    return 0;
-}
-
-static void app_wifi_task(void *param)
-{
-    (void)param;
-
-    vTaskDelay(pdMS_TO_TICKS(APP_WIFI_START_DELAY_MS));
-
-    if (app_wifi_init() != 0) {
-        LOG_E("app_wifi_init failed\r\n");
-        while (1) {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
-    }
-
     vTaskDelete(NULL);
 }
 
-void app_wifi_start(void)
-{
-    xTaskCreate(app_wifi_task, "app_wifi", APP_WIFI_TASK_STACK, NULL, APP_WIFI_TASK_PRIORITY, NULL);
-}
-
+#ifdef CONFIG_NETHUB
 static bool app_pkt_has_len(const struct pbuf *pkt, uint16_t len)
 {
     return pkt != NULL && pkt->payload != NULL && pkt->len >= len;
@@ -209,6 +179,14 @@ static nethub_wifi_rx_filter_action_t app_nethub_wifi_rx_filter(nethub_channel_t
         return NETHUB_WIFI_RX_FILTER_BOTH;
     }
 
+    /* TCP/UDP replies addressed to this device must reach its sockets. */
+    const struct ip_hdr *ip = app_pkt_ip4_hdr(pkt);
+    struct netif *local = (struct netif *)fhost_env.vif[src_channel == NETHUB_CHANNEL_WIFI_AP ? 1 : 0].net_if;
+    if (ip != NULL && local != NULL &&
+        ip4_addr_cmp(&ip->dest, netif_ip4_addr(local))) {
+        return NETHUB_WIFI_RX_FILTER_LOCAL;
+    }
+
     return NETHUB_WIFI_RX_FILTER_HOST;
 }
 
@@ -222,3 +200,4 @@ void app_wifi_rx_filter_init(void)
         LOG_I("NetHub WiFi RX host filter ready\r\n");
     }
 }
+#endif

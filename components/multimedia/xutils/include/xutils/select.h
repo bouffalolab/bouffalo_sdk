@@ -9,6 +9,7 @@
 #define __SYS_SELECT_H
 
 #include <sys/_timeval.h>
+#include <sys/select.h>
 
 // #ifndef FD_SETSIZE
 // #define FD_SETSIZE 1024

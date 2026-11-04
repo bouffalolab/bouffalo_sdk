@@ -121,8 +121,8 @@ int is_netif_in_bridge_port(struct netif *bridgeif, struct netif *netif)
 
 struct netif *netifd_bridge_create(const char* bridge_name)
 {
-    struct netif* netif = NULL;
-
+    struct netif *storage;
+    struct netif *netif;
     uint8_t mac[6] = {0x18,0xB9,0x05,0x44,0x55};
 
     platform_get_mac(mac);
@@ -131,14 +131,15 @@ struct netif *netifd_bridge_create(const char* bridge_name)
         printf("now not support multbridge.\r\n");
         return NULL;
     }
-
-    netif = malloc(sizeof(struct netif));
-    if (!netif) {
+    /* lwIP stores two name characters. "br4" means name "br"; num is assigned later. */
+    if (!bridge_name || !bridge_name[0] || !bridge_name[1])
         return NULL;
-    }
-    g_bridge = netif;
 
-    printf("malloc netif:0x%p\r\n", netif);
+    storage = malloc(sizeof(struct netif));
+    if (!storage)
+        return NULL;
+
+    printf("malloc netif:0x%p\r\n", storage);
     /*
      * max_ports: Maximum number of ports in the bridge (ports are stored in an array,
      *            this influences memory allocated for netif->state of the
@@ -153,25 +154,41 @@ struct netif *netifd_bridge_create(const char* bridge_name)
 
     // TODO: control dynamic_entries and static_entries according to actual situation
     bridgeif_initdata_t bridge_initdata = BRIDGEIF_INITDATA1(2, 8, 8,
-                                          ETH_ADDR(mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]));
+                        ETH_ADDR(mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]));
 
-    netif = netif_add_noaddr(netif, &bridge_initdata, bridgeif_init, netif_input);// tcpip_input
+    netif = netif_add_noaddr(storage, &bridge_initdata, bridgeif_init, netif_input);
     if (netif == NULL) {
-        return NULL; // Failed to create bridge interface
+        free(storage);
+        return NULL;
     }
-    strncpy(netif->name, bridge_name, sizeof(netif->name) - 1);
-
-    // The bridge_name parameter in the input may be renamed.
+    netif->name[0] = bridge_name[0];
+    netif->name[1] = bridge_name[1];
+    g_bridge = netif;
     return netif;
 }
 
 int netifd_bridge_delete(const char* bridge_name)
 {
     struct netif* netif = netif_find(bridge_name);
-    if (netif == NULL) {
-        return -1; // Interface not found
+    int was_up;
+    int was_link;
+
+    /* Caller holds the tcpip core lock. This lock is not recursive. */
+    if (netif == NULL || netif != g_bridge)
+        return -1;
+    was_up = netif_is_up(netif);
+    was_link = netif_is_link_up(netif);
+    netif_set_down(netif);
+    netif_set_link_down(netif);
+    if (bridgeif_deinit(netif) != ERR_OK) {
+        if (was_link)
+            netif_set_link_up(netif);
+        if (was_up)
+            netif_set_up(netif);
+        return -1;
     }
     netif_remove(netif);
+    g_bridge = NULL;
 
     printf("free  netif:0x%p\r\n", netif);
     free(netif);
@@ -186,7 +203,8 @@ int netifd_bridge_add_if(const char* bridge_name, const char* ifname)
     if (bridgeif == NULL || netif == NULL) {
         return -1; // Interface not found
     }
-    bridgeif_add_port(bridgeif, netif);
+    if (bridgeif_add_port(bridgeif, netif) != ERR_OK)
+        return -1;
 
     return 0;
 }
@@ -198,11 +216,8 @@ int netifd_bridge_remove_if(const char* bridge_name, const char* ifname)
     if (bridgeif == NULL || netif == NULL) {
         return -1; // Interface not found
     }
-#if 0
-    //bridgeif_remove_port(bridgeif, netif);
+    if (bridgeif_remove_port(bridgeif, netif) != ERR_OK)
+        return -1;
     return 0;
-#else
-    return -2;
-#endif
 }
 

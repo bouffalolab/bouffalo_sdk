@@ -258,19 +258,9 @@
 /// Beaconing support
 #ifdef CFG_BCN
   #define MACSW_BEACONING 1
-#ifndef CFG_BCN_AC_MAX
-  // XXX:default use VI to send beacon for AP mode
-#ifdef CONFIG_WIFI_GATEWAY
+  // Beaconing interfaces use the dedicated hardware BCN queue.
   #define MACSW_BEACON_AC_VI 0
   #define MACSW_AC_BCN_USED  1
-#else
-  #define MACSW_BEACON_AC_VI 1
-  #define MACSW_AC_BCN_USED  0
-#endif
-#else
-  #define MACSW_BEACON_AC_VI 0
-  #define MACSW_AC_BCN_USED  1
-#endif
 #else
   #define MACSW_BEACONING 0
   #define MACSW_AC_BCN_USED 0
@@ -806,7 +796,6 @@
 /// Traffic generator support
 #ifdef CFG_TG
   #define MACSW_TG 1
-  #define CFG_BCN_AC_MAX
 #else
   #define MACSW_TG 0
 #endif
@@ -4264,13 +4253,8 @@ __INLINE bool txu_cntrl_host_use_bss_min_rate(struct hostdesc const *host)
 #endif
 
 /* size of internal structs */
-#if RC_EZ23Q4 /* TODO remove this ugly define */
 #define STRUCT_SIZE_UMACDESC 48
 #define STRUCT_SIZE_LMACDESC 24
-#else
-#define STRUCT_SIZE_UMACDESC 36
-#define STRUCT_SIZE_LMACDESC 16
-#endif
 #define STRUCT_SIZE_TX_HW_DESC 68
 #define STRUCT_SIZE_TXL_BUFFER_TAG 240
 #define STRUCT_SIZE_RXDESC 156
@@ -4359,10 +4343,6 @@ extern struct tx_agg_desc_pub tx_agg_desc_array1[];
 extern struct tx_agg_desc_pub tx_agg_desc_array2[];
 /// Array of aggregation descriptors for the VO queue
 extern struct tx_agg_desc_pub tx_agg_desc_array3[];
-#if MACSW_AC_BCN_USED
-/// Array of aggregation descriptors for the BCN queue
-extern struct tx_agg_desc_pub tx_agg_desc_array4[];
-#endif
 #if MACSW_MAC_HE
 /// Array of aggregation descriptors for the BCN queue
 extern struct tx_agg_desc_pub tx_agg_desc_array5[];
@@ -4379,6 +4359,11 @@ uint32_t mac_ie_sub_non_txed_bssid_find(uint32_t buffer, uint16_t buflen);
 uint32_t mac_ie_non_txed_bssid_capa_find(uint32_t buffer, uint16_t buflen);
 uint32_t mac_ie_multi_bssid_index_find(uint32_t buffer, uint16_t buflen);
 uint32_t mac_ie_ssid_find(uint32_t buffer, uint16_t buflen, uint8_t *ie_len);
+/**
+ * IE search functions below return the element address, or 0 if not found.
+ * The non-NULL len output receives the complete length including the IE header,
+ * and is set to 0 whenever the function returns 0.
+ */
 uint32_t mac_ext_ie_find(uint32_t addr, uint16_t buflen, uint8_t ext_ie_id, uint16_t *len);
 uint32_t mac_vsie_find(uint32_t addr, uint16_t buflen, uint8_t const *oui, uint8_t ouilen, uint16_t *len);
 uint32_t mac_ie_find(uint32_t addr, uint16_t buflen, uint8_t ie_id, uint16_t *len);
@@ -4476,6 +4461,7 @@ uint8_t sta_idx_get_key_idx(uint8_t sta_idx);
 void *sta_idx_getp_key_info(uint8_t sta_idx);
 uint32_t sta_idx_get_last_active(uint8_t sta_idx);
 bool sta_idx_get_valid(uint8_t sta_idx);
+bool sta_idx_get_port_open(uint8_t sta_idx);
 uint8_t sta_idx_get_inst_nbr(uint8_t sta_idx);
 uint8_t sta_idx_get_uapsd_queues(uint8_t sta_idx);
 uint8_t sta_get_staid(void *p);
@@ -4628,6 +4614,23 @@ int export_station_stats_reset_mac(const uint8_t mac[6]);
 
 int8_t export_hal_desc_get_rssi(void *rx_vec_1, int8_t *rx_rssi);
 uint16_t export_hal_desc_get_ht_length(void *rx_vec_1);
+
+/**
+ * Link-time default for 2.4 GHz RC: 0 selects v0, 1 selects v1.
+ * macsw uses v0 when this optional symbol is absent; a project may define
+ * it to select v1 without another macsw configuration library.
+ */
+extern const uint8_t __macsw_conf_rc_2g4_use_v1;
+/**
+ * Override the link-time default for subsequent STA initialization.
+ * Call before connecting to apply it to that connection. Existing stations
+ * retain their algorithm, and 5 GHz always uses v0 RC.
+ * STA cross-band CSA/ECSA is rejected and reported as a channel switch failure;
+ * reconnect on the target band to reinitialize RC.
+ */
+void export_rc_2g4_use_v1_set(uint8_t enable);
+/** Return the selection for subsequent STA initialization, not an active STA. */
+uint8_t export_rc_2g4_use_v1_get(void);
 
 uint8_t export_rc_get_format_mod(uint32_t rate_config);
 uint8_t export_rc_get_mcs_index(uint32_t rate_config);

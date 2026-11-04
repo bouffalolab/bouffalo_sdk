@@ -253,6 +253,8 @@ void board_auadc_gpio_init(void)
 
     board_audio_pll_config_for_rate(48000);
     GLB_Set_Audio_SOLO_CLK(ENABLE, 3);
+    /* Let the builtin codec rate selectors control their clock dividers. */
+    GLB_Set_Audio_AUTO_CLK(ENABLE);
 
 #ifdef CONFIG_AUDIO_MIC_PDM_MODE
     /* data */
@@ -276,6 +278,8 @@ void board_audac_gpio_init(void)
 
     board_audio_pll_config_for_rate(48000);
     GLB_Set_Audio_SOLO_CLK(ENABLE, 3);
+    /* Let the builtin codec rate selectors control their clock dividers. */
+    GLB_Set_Audio_AUTO_CLK(ENABLE);
     /* audac pwm output mode */
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_AUDAC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);

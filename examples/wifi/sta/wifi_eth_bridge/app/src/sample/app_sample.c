@@ -20,6 +20,8 @@ SHELL_CMD_EXPORT_ALIAS(cmd_sample_test, sample, sample test.);
 
 int cmd_netifd_nano(int argc, char *argv[]);
 int wifi_mgmr_ap_start_cmd(int argc, char *argv[]);
+/* Once WDS is enabled, do not export the demo commands. They would collide with the bridge commands. */
+#ifndef CONFIG_WIFI_WDS
 static void cmd_demo(void)
 {
     {
@@ -53,8 +55,8 @@ static void cmd_demo(void)
     }
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_demo, demo, demo test.);
+#endif
 
 void app_sample_init(void)
 {
 }
-

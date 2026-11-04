@@ -40,7 +40,6 @@ extern int at_wifi_sta_ip4_addr_get(uint32_t *ip, uint32_t *mask, uint32_t *gw, 
 extern size_t kfree_size(uint32_t heap_id);
 extern void *fhost_iperf_msg_handle_get(void);
 extern void shell_exe_cmd(uint8_t *cmd, uint16_t len);
-extern char *ctime_r(const time_t *timep, char *buf);
 #if defined(AT_TRANS_ZEROCOPY) && AT_TRANS_ZEROCOPY
 #include "nxspi.h"
 #endif
@@ -228,7 +227,7 @@ static int at_setup_cmd_cipdns(int argc, const char **argv)
         }
         at_net_config->dns.dns[1] = dns2;
     } else {
-        ip_addr_set_zero(&at_net_config->dns.dns[1]);
+        at_net_config->dns.dns[1] = (ip_addr_t){0};
     }
     if (dns3_valid) {
         ipaddr_aton(dns_str3, &dns3);
@@ -237,7 +236,7 @@ static int at_setup_cmd_cipdns(int argc, const char **argv)
         }
         at_net_config->dns.dns[2] = dns3;
     } else {
-        ip_addr_set_zero(&at_net_config->dns.dns[2]);
+        at_net_config->dns.dns[2] = (ip_addr_t){0};
     }
     at_net_config->dns.dns_isset = 1;
 

@@ -5,7 +5,12 @@
 
 #include "peer.h"
 #include "peer_connection.h"
+#include "ice.h"
 #include "sctp.h"
+
+#if WEBRTC_PEER_MAX_ICE_SERVERS > PEER_CONNECTION_MAX_ICE_SERVERS
+#error "The native PeerConfiguration cannot hold the facade ICE server list"
+#endif
 
 struct webrtc_peer {
     webrtc_peer_config_t config;
@@ -15,10 +20,29 @@ struct webrtc_peer {
     int active_sid_known;
     int data_association_open;
     int callback_error;
+    webrtc_peer_data_channel_open_cb_t on_channel_open;
     webrtc_peer_stats_t stats;
 };
 
 static unsigned int g_peer_library_references;
+
+int webrtc_peer_get_audio_packet_info(const webrtc_peer_t *peer,
+                                     webrtc_peer_audio_packet_info_t *info, size_t size)
+{
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+    PeerRtpPacketInfo native;
+    if (!peer || !info || size < sizeof(*info)) return WEBRTC_PEER_ERR_INVALID_ARG;
+    if (!peer->connection || peer_connection_get_audio_packet_info(peer->connection, &native))
+        return WEBRTC_PEER_ERR_INVALID_STATE;
+    *info = (webrtc_peer_audio_packet_info_t){.ssrc = native.ssrc,
+        .timestamp = native.timestamp, .sequence = native.sequence,
+        .payload_type = native.payload_type};
+    return WEBRTC_PEER_OK;
+#else
+    (void)peer; (void)info; (void)size;
+    return WEBRTC_PEER_ERR_UNSUPPORTED;
+#endif
+}
 
 static char *duplicate_string(const char *value)
 {
@@ -259,6 +283,22 @@ static void on_native_data_close(void *user_data)
     }
 }
 
+static void on_native_channel_open(uint16_t sid, const char *label, void *user_data)
+{
+    webrtc_peer_t *peer = user_data;
+    if (peer && peer->on_channel_open) {
+        peer->on_channel_open(sid, label, peer->config.user_data);
+    }
+}
+
+int webrtc_peer_set_data_channel_open_callback(
+    webrtc_peer_t *peer, webrtc_peer_data_channel_open_cb_t callback)
+{
+    if (!peer) return WEBRTC_PEER_ERR_INVALID_ARG;
+    peer->on_channel_open = callback;
+    return WEBRTC_PEER_OK;
+}
+
 static int map_send_result(webrtc_peer_t *peer, int result,
                            uint32_t *success_counter)
 {
@@ -288,7 +328,9 @@ int webrtc_peer_open(const webrtc_peer_config_t *config, webrtc_peer_t **out_pee
          config->video_codec != WEBRTC_PEER_CODEC_VP8 &&
          config->video_codec != WEBRTC_PEER_CODEC_MJPEG) ||
         config->data_channel_type < WEBRTC_PEER_DATA_CHANNEL_NONE ||
-        config->data_channel_type > WEBRTC_PEER_DATA_CHANNEL_BINARY) {
+        config->data_channel_type > WEBRTC_PEER_DATA_CHANNEL_BINARY ||
+        config->ice_transport_policy < WEBRTC_PEER_ICE_TRANSPORT_ALL ||
+        config->ice_transport_policy > WEBRTC_PEER_ICE_TRANSPORT_RELAY) {
         return WEBRTC_PEER_ERR_INVALID_ARG;
     }
     result = library_acquire();
@@ -334,6 +376,7 @@ int webrtc_peer_new_connection(webrtc_peer_t *peer, webrtc_peer_role_t role)
     config.audio_codec = map_codec(peer->config.audio_codec);
     config.video_codec = map_codec(peer->config.video_codec);
     config.datachannel = (DataChannelType)peer->config.data_channel_type;
+    config.ice_transport_policy = (IceTransportPolicy)peer->config.ice_transport_policy;
     config.onaudiotrack = on_native_audio;
     config.onvideotrack = on_native_video;
     config.on_request_keyframe = on_native_keyframe;
@@ -351,6 +394,7 @@ int webrtc_peer_new_connection(webrtc_peer_t *peer, webrtc_peer_role_t role)
     peer_connection_ondatachannel(peer->connection, on_native_data,
                                   on_native_data_open,
                                   on_native_data_close);
+    peer_connection_ondatachannel_open(peer->connection, on_native_channel_open);
     on_native_state(PEER_CONNECTION_NEW, peer);
     peer->stats.connection_attempts++;
 
@@ -388,10 +432,8 @@ int webrtc_peer_send_msg(webrtc_peer_t *peer,
                     PEER_CONNECTION_NEW) {
                 return WEBRTC_PEER_ERR_INVALID_STATE;
             }
-            peer_connection_set_remote_description_with_type(
-                peer->connection, message->payload, SDP_TYPE_OFFER);
-            if (peer_connection_get_state(peer->connection) ==
-                    PEER_CONNECTION_FAILED) {
+            if (peer_connection_set_remote_description_checked(
+                    peer->connection, message->payload, SDP_TYPE_OFFER) != 0) {
                 return WEBRTC_PEER_ERR_LIBPEER;
             }
             peer->callback_error = 0;
@@ -408,10 +450,9 @@ int webrtc_peer_send_msg(webrtc_peer_t *peer,
                     PEER_CONNECTION_NEW) {
                 return WEBRTC_PEER_ERR_INVALID_STATE;
             }
-            peer_connection_set_remote_description_with_type(
-                peer->connection, message->payload, SDP_TYPE_ANSWER);
-            result = peer_connection_get_state(peer->connection) ==
-                PEER_CONNECTION_FAILED ? WEBRTC_PEER_ERR_LIBPEER : WEBRTC_PEER_OK;
+            result = peer_connection_set_remote_description_checked(
+                peer->connection, message->payload, SDP_TYPE_ANSWER) == 0 ?
+                WEBRTC_PEER_OK : WEBRTC_PEER_ERR_LIBPEER;
             break;
         case WEBRTC_PEER_MSG_ICE_CANDIDATE:
             result = peer_connection_add_ice_candidate(
@@ -466,18 +507,58 @@ int webrtc_peer_send_data_on_channel(webrtc_peer_t *peer,
                                    const uint8_t *data, size_t size,
                                    uint16_t sid)
 {
+    if (!peer) {
+        return WEBRTC_PEER_ERR_INVALID_ARG;
+    }
+    /* Preserve the legacy NONE -> binary fallback. */
+    webrtc_peer_data_channel_type_t type =
+        peer->config.data_channel_type == WEBRTC_PEER_DATA_CHANNEL_STRING ?
+        WEBRTC_PEER_DATA_CHANNEL_STRING : WEBRTC_PEER_DATA_CHANNEL_BINARY;
+    return webrtc_peer_send_data_on_channel_typed(peer, data, size, sid, type);
+}
+
+int webrtc_peer_send_data_on_channel_typed(webrtc_peer_t *peer,
+                                         const uint8_t *data, size_t size,
+                                         uint16_t sid, webrtc_peer_data_channel_type_t type)
+{
+    int result;
     if (!peer || !peer->connection || !data || size == 0) {
+        return WEBRTC_PEER_ERR_INVALID_ARG;
+    }
+    if (type != WEBRTC_PEER_DATA_CHANNEL_STRING && type != WEBRTC_PEER_DATA_CHANNEL_BINARY) {
         return WEBRTC_PEER_ERR_INVALID_ARG;
     }
     if (!webrtc_peer_is_data_channel_open(peer, sid)) {
         peer->stats.send_failures++;
         return WEBRTC_PEER_ERR_INVALID_STATE;
     }
-    return map_send_result(
-        peer,
-        peer_connection_datachannel_send_sid(
-            peer->connection, (char *)data, size, sid),
-        &peer->stats.data_tx_messages);
+    result = peer_connection_datachannel_send_sid_typed(
+        peer->connection, data, size, sid, (DataChannelType)type);
+    if (result < -1 || (result >= 0 && (size_t)result != size)) {
+        /* A partially sent message must never be offered again as a retry. */
+        peer->stats.send_failures++;
+        return WEBRTC_PEER_ERR_LIBPEER;
+    }
+    return map_send_result(peer, result, &peer->stats.data_tx_messages);
+}
+
+int webrtc_peer_get_local_data_channel_sid(webrtc_peer_t *peer, uint16_t *sid)
+{
+    if (!peer || !peer->connection || !sid) return WEBRTC_PEER_ERR_INVALID_ARG;
+    if (!peer->data_association_open) return WEBRTC_PEER_ERR_INVALID_STATE;
+    *sid = peer_connection_get_local_datachannel_sid(peer->connection);
+    return WEBRTC_PEER_OK;
+}
+
+int webrtc_peer_set_ice_direct_preference(webrtc_peer_t *peer, uint32_t wait_ms)
+{
+    if (!peer || !peer->connection) return WEBRTC_PEER_ERR_INVALID_ARG;
+    return peer_connection_set_ice_direct_preference(peer->connection, wait_ms) == 0 ?
+        WEBRTC_PEER_OK : WEBRTC_PEER_ERR_INVALID_STATE;
+}
+int webrtc_peer_is_unreliable_unordered(const webrtc_peer_t *peer, uint16_t sid)
+{
+    return peer && peer_connection_is_unreliable_unordered(peer->connection, sid);
 }
 
 int webrtc_peer_create_data_channel(
@@ -607,12 +688,112 @@ int webrtc_peer_get_stats_ex(
     return WEBRTC_PEER_OK;
 }
 
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+/* Keep the public report independent of native headers. Enumerate mapped
+ * fields once; the byte sums also catch a field added to BOTH structs without
+ * updating this mapping. Layout checks deliberately live at the facade. */
+#define RTP_DIAGNOSTIC_FIELDS(F) \
+    F(ssrc) \
+    F(clock_rate) \
+    F(received_packets) \
+    F(expected_packets) \
+    F(packets_lost) \
+    F(duplicates_recent) \
+    F(reordered_packets) \
+    F(untracked_old_packets) \
+    F(sequence_rejects) \
+    F(sequence_restarts) \
+    F(jitter_us) \
+    F(max_arrival_gap_ms) \
+    F(timestamp_gaps) \
+    F(timestamp_gap_samples) \
+    F(sender_reports) \
+    F(sender_packets) \
+    F(sender_octets) \
+    F(remote_reports) \
+    F(remote_packets_lost) \
+    F(remote_fraction_lost_256) \
+    F(remote_jitter_us)
+#define NATIVE_FIELD_BYTES(field) + sizeof(((RtpDiagnosticReport *)0)->field)
+#define PUBLIC_FIELD_BYTES(field) + sizeof(((webrtc_peer_rtp_diagnostics_t *)0)->field)
+_Static_assert(sizeof(RtpDiagnosticReport) ==
+               (0 RTP_DIAGNOSTIC_FIELDS(NATIVE_FIELD_BYTES)),
+               "Update native RTP diagnostic field mapping");
+_Static_assert(sizeof(webrtc_peer_rtp_diagnostics_t) ==
+               (0 RTP_DIAGNOSTIC_FIELDS(PUBLIC_FIELD_BYTES)),
+               "Update public RTP diagnostic field mapping");
+#undef NATIVE_FIELD_BYTES
+#undef PUBLIC_FIELD_BYTES
+#endif
+
+int webrtc_peer_get_rtp_diagnostics(const webrtc_peer_t *peer, int video,
+                                   webrtc_peer_rtp_diagnostics_t *stats, size_t size)
+{
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+    RtpDiagnosticReport native;
+    webrtc_peer_rtp_diagnostics_t snapshot = {0};
+    if (!peer || !stats || size < sizeof(snapshot) || (video != 0 && video != 1))
+        return WEBRTC_PEER_ERR_INVALID_ARG;
+    if (!peer->connection) return WEBRTC_PEER_ERR_INVALID_STATE;
+    if (peer_connection_get_rtp_diagnostics(peer->connection, video, &native) != 0)
+        return WEBRTC_PEER_ERR_LIBPEER;
+#define COPY_DIAG(field) do { \
+    _Static_assert(offsetof(RtpDiagnosticReport, field) == \
+                   offsetof(webrtc_peer_rtp_diagnostics_t, field), \
+                   "RTP diagnostic field offset: " #field); \
+    _Static_assert(sizeof(native.field) == sizeof(snapshot.field), \
+                   "RTP diagnostic field width: " #field); \
+    snapshot.field = native.field; \
+} while (0);
+    RTP_DIAGNOSTIC_FIELDS(COPY_DIAG)
+#undef COPY_DIAG
+    memcpy(stats, &snapshot, sizeof(snapshot));
+    return WEBRTC_PEER_OK;
+#else
+    (void)peer;
+    (void)video;
+    (void)stats;
+    (void)size;
+    return WEBRTC_PEER_ERR_UNSUPPORTED;
+#endif
+}
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+#undef RTP_DIAGNOSTIC_FIELDS
+#endif
+
 webrtc_peer_state_t webrtc_peer_get_state(const webrtc_peer_t *peer)
 {
     if (!peer || !peer->connection) {
         return WEBRTC_PEER_STATE_CLOSED;
     }
     return map_state(peer_connection_get_state(peer->connection));
+}
+
+static int map_ice_candidate_type(int native, webrtc_peer_ice_candidate_type_t *out)
+{
+    switch (native) {
+        case ICE_CANDIDATE_TYPE_HOST: *out = WEBRTC_PEER_ICE_HOST; break;
+        case ICE_CANDIDATE_TYPE_SRFLX: *out = WEBRTC_PEER_ICE_SERVER_REFLEXIVE; break;
+        case ICE_CANDIDATE_TYPE_PRFLX: *out = WEBRTC_PEER_ICE_PEER_REFLEXIVE; break;
+        case ICE_CANDIDATE_TYPE_RELAY: *out = WEBRTC_PEER_ICE_RELAY; break;
+        default: return -1;
+    }
+    return 0;
+}
+
+int webrtc_peer_get_selected_ice_types(const webrtc_peer_t *peer,
+    webrtc_peer_ice_candidate_type_t *local, webrtc_peer_ice_candidate_type_t *remote)
+{
+    int a, b;
+    webrtc_peer_ice_candidate_type_t mapped_local, mapped_remote;
+    if (!peer || !local || !remote) return WEBRTC_PEER_ERR_INVALID_ARG;
+    if (!peer->connection || peer_connection_get_selected_ice_types(peer->connection, &a, &b))
+        return WEBRTC_PEER_ERR_INVALID_STATE;
+    if (map_ice_candidate_type(a, &mapped_local) || map_ice_candidate_type(b, &mapped_remote))
+        return WEBRTC_PEER_ERR_LIBPEER;
+    *local = mapped_local;
+    *remote = mapped_remote;
+    return WEBRTC_PEER_OK;
 }
 
 const char *webrtc_peer_state_to_string(webrtc_peer_state_t state)

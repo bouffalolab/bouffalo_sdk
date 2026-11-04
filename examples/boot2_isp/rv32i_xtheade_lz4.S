@@ -27,13 +27,22 @@
  */
 /* void unlz4(const void *aSource, void *aDestination, uint32_t FileLen); */
 
-#if !defined(BFLB_LZ4_NO_XTHEAD) && (defined(__riscv_xthead) || defined(__riscv_xtheadc))
+#if !defined(BFLB_LZ4_NO_XTHEAD) && (defined(BL616) || defined(BL616CL) || defined(__riscv_xthead) || defined(__riscv_xtheadc))
+/* Register fields for the E907 post-increment instructions used below. */
+.set .Llz4_reg_s0, 8
+.set .Llz4_reg_s1, 9
+.set .Llz4_reg_s2, 18
+.set .Llz4_reg_s3, 19
+.set .Llz4_reg_s6, 22
+
 .macro lbu_inc dst, ptr
-                    lbuia               \dst, (\ptr), 1, 0
+                    /* lbuia dst, (ptr), 1, 0 */
+                    .word 0x9810400b | (.Llz4_reg_\dst << 7) | (.Llz4_reg_\ptr << 15)
 .endm
 
 .macro sb_inc src, ptr
-                    sbia                \src, (\ptr), 1, 0
+                    /* sbia src, (ptr), 1, 0 */
+                    .word 0x1810500b | (.Llz4_reg_\src << 7) | (.Llz4_reg_\ptr << 15)
 .endm
 #else
 .macro lbu_inc dst, ptr
@@ -53,8 +62,8 @@
 
                     .type               unlz4,%function
 
+                    .section .tcm_code.unlz4.text, "ax", @progbits
                     .align              6
-                    .section .tcm_code.unlz4.text
 unlz4:
                     addi                sp, sp, -64         /* save fp and return-address */
                     sw                  ra, 60(sp)

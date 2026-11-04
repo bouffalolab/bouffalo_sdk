@@ -15,6 +15,17 @@ if sys.platform.startswith('linux'):
     flags += ['-fno-pie', '-no-pie']
 with tempfile.TemporaryDirectory(prefix='libpeer-host-') as directory:
     common = [os.environ.get('CC', 'cc'), *flags, '-I' + str(peer)]
+    for diagnostics in (0, 1):
+        output = Path(directory) / f'audio_playout_{diagnostics}'
+        subprocess.run([*common, '-I' + str(peer.parent.parent / 'webrtc_peer/include'),
+                        '-DCONFIG_LIBPEER_MEDIA_DIAGNOSTICS=' + str(diagnostics),
+                        str(host / 'test_audio_playout.c'), '-o', str(output)], check=True)
+        subprocess.run([str(output)], check=True, timeout=10)
+    output = Path(directory) / 'media_diagnostics'
+    subprocess.run([*common, '-DCONFIG_LIBPEER_MEDIA_DIAGNOSTICS=1',
+                    str(host / 'test_media_diagnostics.c'), str(peer / 'media_diagnostics.c'),
+                    str(peer / 'rtp.c'), '-o', str(output)], check=True)
+    subprocess.run([str(output)], check=True, timeout=10)
     for name in ('libpeer', 'sctp_review'):
         output = Path(directory) / name
         sources = [str(host / ('test_' + name + '.c'))]
@@ -27,6 +38,11 @@ with tempfile.TemporaryDirectory(prefix='libpeer-host-') as directory:
     subprocess.run([*common, '-Wno-unused-function', '-DCONFIG_SCTP_TX_WINDOW=2',
                     '-DSCTP_SEND_LIMITS_ONLY', '-include', str(host / 'libpeer_stubs.h'),
                     str(host / 'test_sctp_review.c'), '-o', str(output)], check=True)
+    subprocess.run([str(output)], check=True, timeout=10)
+    output = Path(directory) / 'socket_errno'
+    subprocess.run([*common, '-ffunction-sections', '-fdata-sections',
+                    str(host / 'test_socket_errno.c'), '-Wl,--gc-sections',
+                    '-o', str(output)], check=True)
     subprocess.run([str(output)], check=True, timeout=10)
     compact = Path(directory) / 'sctp_small_rx_window'
     subprocess.run([*common, '-Wno-unused-function', '-DCONFIG_SCTP_RX_WINDOW=2',

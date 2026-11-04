@@ -12,7 +12,7 @@ The nethub example supports the device running the network protocol stack simult
 
 ## Device Compilation and Flashing
 
-Make automatically detects an existing Bouffalo SDK or downloads it if missing.
+Make automatically selects the Bouffalo SDK version in `BOUFFALO_SDK_VERSION`.
 Set `BL_SDK_BASE` to select a specific SDK checkout.
 
 ```bash

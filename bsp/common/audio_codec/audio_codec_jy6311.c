@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "bflb_clock.h"
 #include "bflb_core.h"
 #include "bflb_mtimer.h"
 
@@ -2277,8 +2278,8 @@ void jy6311_config_play(const audio_codec_cfg_t *cfg)
     // Call jy6311_multichips_i2s_ext_cfg if use multichips.
 
     // JY6311 SYSCLK Config
-    sysclk_cfg.extclk_freq = 4096000;
-    sysclk_cfg.extclk_src = JY6311_EXT_CLK_SRC_MCLK;
+    sysclk_cfg.extclk_freq = sample_rate_hz * (uint32_t)cfg->channels * (uint32_t)cfg->bits;
+    sysclk_cfg.extclk_src = JY6311_EXT_CLK_SRC_BCLK;
     sysclk_cfg.play_smp_rate = sample_rate_hz;
     sysclk_cfg.rec_smp_rate = JY6311_USER_SR_NONE;
     sysclk_cfg.work_mode = JY6311_ADDA_WORK_MODE_NORMAL;
@@ -2348,8 +2349,8 @@ void jy6311_config_record(const audio_codec_cfg_t *cfg)
     // Call jy6311_multichips_i2s_ext_cfg if use multichips.
 
     // JY6311 SYSCLK Config
-    sysclk_cfg.extclk_freq = 4096000;
-    sysclk_cfg.extclk_src = JY6311_EXT_CLK_SRC_MCLK;
+    sysclk_cfg.extclk_freq = sample_rate_hz * (uint32_t)cfg->channels * (uint32_t)cfg->bits;
+    sysclk_cfg.extclk_src = JY6311_EXT_CLK_SRC_BCLK;
     sysclk_cfg.play_smp_rate = JY6311_USER_SR_NONE;
     sysclk_cfg.rec_smp_rate = sample_rate_hz;
     sysclk_cfg.work_mode = JY6311_ADDA_WORK_MODE_NORMAL;
@@ -2440,8 +2441,8 @@ void jy6311_config_play_record(const audio_codec_cfg_t *cfg)
     // Call jy6311_multichips_i2s_ext_cfg if use multichips.
 
     // JY6311 SYSCLK Config
-    sysclk_cfg.extclk_freq = 4096000;
-    sysclk_cfg.extclk_src = JY6311_EXT_CLK_SRC_MCLK;
+    sysclk_cfg.extclk_freq = sample_rate_hz * (uint32_t)cfg->channels * (uint32_t)cfg->bits;
+    sysclk_cfg.extclk_src = JY6311_EXT_CLK_SRC_BCLK;
     sysclk_cfg.play_smp_rate = sample_rate_hz;
     sysclk_cfg.rec_smp_rate = sample_rate_hz;
     sysclk_cfg.work_mode = JY6311_ADDA_WORK_MODE_NORMAL;
@@ -2460,9 +2461,7 @@ void jy6311_config_play_record(const audio_codec_cfg_t *cfg)
     //jy6311_multichips_play_path_cfg(i2c_addr, 2, JY6311_DAC_OUT_PATH_LINEOUT);
     jy6311_multichips_play_path_cfg(i2c_addr, 2, JY6311_DAC_OUT_PATH_HEADPHONE);
 #else
-    jy6311_play_vol_cfg(JY6311_I2C_ADDR, 0x80); // DAC Digital Volume 0dB
-    jy6311_dac_eq_cfg(JY6311_I2C_ADDR, true, dac_eq_filt_coef, JY6311_ARRAY_SIZE(dac_eq_filt_coef));
-    jy6311_dac_drc_cfg(JY6311_I2C_ADDR, true, dac_drc_filt_coef, JY6311_ARRAY_SIZE(dac_drc_filt_coef));
+    jy6311_play_vol_cfg(JY6311_I2C_ADDR, JY6311_DAC_DIG_VOL_0dB);
     jy6311_play_path_cfg(JY6311_I2C_ADDR, JY6311_DAC_OUT_PATH_HEADPHONE);
 #endif
 
@@ -2686,11 +2685,8 @@ static int audio_codec_jy6311_map_word_len(audio_codec_bits_t bits, JY6311_I2S_W
 
 static uint32_t audio_codec_jy6311_default_mclk(uint32_t sample_rate_hz)
 {
-    if (sample_rate_hz == 0U) {
-        return 0U;
-    }
-
-    return sample_rate_hz * 256U;
+    (void)sample_rate_hz;
+    return bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_I2S, 0);
 }
 
 static JY6311_InitModETypeDef __attribute__((unused)) audio_codec_jy6311_get_init_mod(const audio_codec_cfg_t *cfg)

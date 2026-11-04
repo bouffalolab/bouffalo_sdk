@@ -7,6 +7,7 @@
 #include "bflb_audac.h"
 #include "bflb_auadc.h"
 #include "bflb_clock.h"
+#include "hardware/audac_reg.h"
 #include "board.h"
 
 #ifndef CONFIG_BSP_AUDIO_CODEC_BL_AUDAC_OUTPUT_MODE
@@ -277,8 +278,13 @@ static int audio_codec_bl_init_playback(audio_codec_bl_state_t *state, const aud
         .volume_zero_cross_timeout = AUDAC_RAMP_RATE_FS_128,
     };
 
+    /* Re-arm clock control before changing an initialized playback rate.
+     * Keeping its prior enabled state can stall the first TX DMA request. */
+    uint32_t control = getreg32(state->audac_dev->reg_base + AUDAC_0_OFFSET);
+    putreg32(control & ~(uint32_t)AUDAC_CKG_ENA, state->audac_dev->reg_base + AUDAC_0_OFFSET);
     int ret = bflb_audac_init(state->audac_dev, &audac_init_cfg);
     if (ret != 0) {
+        putreg32(control, state->audac_dev->reg_base + AUDAC_0_OFFSET);
         return ret;
     }
 

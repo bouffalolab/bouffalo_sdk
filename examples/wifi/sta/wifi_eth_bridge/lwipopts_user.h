@@ -44,6 +44,8 @@
    ------------------------------------
 */
 #define LWIP_TCPIP_CORE_LOCKING_INPUT   1
+/* Bridge ports do not transmit directly from the netif callback. The tcpip thread does it, so Wi-Fi transmit does not take the same lock. */
+#define BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT 0
 
 /*
    ------------------------------------
@@ -74,8 +76,14 @@
 // #define MEM_SIZE                        8192
 // #endif
 // #endif
-#define MEM_SIZE                        (8192*2)
+#if defined(BL616)
+/* Keep the lwIP pools and Wi-Fi DMA buffers within BL616's 160 KiB WRAM. */
+#define MEM_SIZE                        (16 * 1024)
 #define PBUF_POOL_SIZE                  48
+#else
+#define MEM_SIZE                        (48 * 1024)
+#define PBUF_POOL_SIZE                  96
+#endif
 #define PBUF_POOL_BUFSIZE               (PBUF_LINK_ENCAPSULATION_HLEN + 24 + 1500 + 8) // 8 for potential align issue
 #define MEMP_NUM_SYS_TIMEOUT            (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 3)
 

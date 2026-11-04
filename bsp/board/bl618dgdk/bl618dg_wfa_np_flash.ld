@@ -206,7 +206,46 @@ SECTIONS
         __ram_data_end__ = .;
     } > ram_memory
 
+#ifdef BFLB_USE_PICOLIBC
+    ram_tdata : ALIGN_WITH_INPUT
+    {
+        *(.tdata .tdata.* .gnu.linkonce.td.*)
+    } > ram_memory AT > xip_memory
+
+    ram_tbss (NOLOAD) :
+    {
+        *(.tbss .tbss.* .gnu.linkonce.tb.*)
+        *(.tcommon)
+        __tls_end = .;
+    } > ram_memory
+
+    PROVIDE(__tdata_start = ADDR(ram_tdata));
+    PROVIDE(__tdata_source = LOADADDR(ram_tdata));
+    PROVIDE(__tdata_size = SIZEOF(ram_tdata));
+    PROVIDE(__tbss_start = ADDR(ram_tbss));
+    PROVIDE(__tbss_offset = ADDR(ram_tbss) - ADDR(ram_tdata));
+    PROVIDE(__tbss_size = SIZEOF(ram_tbss));
+    PROVIDE(__tls_base = ADDR(ram_tdata));
+    PROVIDE(__tls_align = MAX(MAX(ALIGNOF(ram_tdata), ALIGNOF(ram_tbss)), 4));
+    PROVIDE(__tls_size = __tls_end - __tls_base);
+
+    ram_tbss_space (NOLOAD) :
+    {
+        . = ADDR(ram_tbss);
+        . = . + SIZEOF(ram_tbss);
+    } > ram_memory
+
+    ram_tls_boot (NOLOAD) :
+    {
+        . = ALIGN(__tls_align);
+        PROVIDE(__boot_tls_start = .);
+        . = . + __tls_size;
+    } > ram_memory
+
+    __psram_load_addr = (__ram_load_addr + SIZEOF(RAM_DATA) + SIZEOF(ram_tdata));
+#else
     __psram_load_addr = (__ram_load_addr + SIZEOF (RAM_DATA));
+#endif
 
     .psram_data_region : AT (__psram_load_addr)
     {

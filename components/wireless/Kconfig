@@ -74,6 +74,33 @@ config FHOST
     help
       Build the FHOST Wi-Fi management and data-path implementation.
 
+# Four-address WDS. One FHOST interface has one wireless peer so both Ethernet endpoint MACs are kept.
+# WIFI_WDS has no prompt. CONFIG_WIFI_WDS=n and "# CONFIG_WIFI_WDS is not set"
+# do not turn off libfhost_*_bridge.a; default y applies while MACSW_SELECT is
+# bridge. Make drops "# CONFIG_..." lines before Kconfig. Delete
+# CONFIG_WIFI_ETH_BRIDGE_4ADDR. Assigning y fails as an undefined symbol;
+# =n and "# is not set" are ignored. Three-address mode is runtime enable 0.
+config WIFI_WDS
+    bool
+    depends on WIFI6 && FHOST && !WL80211 && MACSW_SELECT = "bridge"
+    default y if MACSW_SELECT = "bridge"
+    default n
+    help
+      Internal switch for the bridge FHOST library. It follows
+      MACSW_SELECT="bridge" the same way WIFI_P2P follows "p2p", and it has
+      no menu prompt. The release archive is libfhost_<chip>_bridge.a.
+      Assigning n has no effect while that profile is selected. The default
+      y applies. Three-address mode is runtime enable 0, not this macro.
+      The library can send three-address or four-address frames. Boot and
+      wifi_wds config <ap|sta> leave enable at 0, so frames stay
+      three-address. wifi_wds config <ap|sta> auto or a peer MAC sets enable
+      and sends four-address frames. WIFI_MAT defaults on alongside this
+      option and translates only while enable is 0. A three-address STA
+      bridge needs that translation. WIFI_MAT=n leaves it out, and the AP
+      still drops a unicast whose destination is not an associated station.
+      Four-address mode does not translate. This option does not select
+      WIFI_MAT.
+
 config WL80211_WRAM_MEM_SIZE_LIMIT
     hex "WL80211 WRAM allocation limit"
     default 0x8000 if WL80211
@@ -89,7 +116,8 @@ config WIFI_IPERF
 config WIFI_P2P
     bool "Wi-Fi Direct (P2P) support"
     depends on WIFI6 && MACSW_SELECT = "p2p"
-    default y
+    default y if WIFI6 && MACSW_SELECT = "p2p"
+    default n
     help
       Build Wi-Fi Direct control APIs, events, and supplicant integration.
       This option depends on MACSW_SELECT="p2p" and defaults to y when that
@@ -167,10 +195,17 @@ config WIFI_ETH_BRIDGE
     bool "Wi-Fi Ethernet bridge"
     default n
 config WIFI_MAT
-    bool "Wi-Fi Matter support"
+    bool "Wi-Fi MAC address translation"
+    default y if WIFI_WDS
     default n
+    help
+      Translate MAC addresses on a three-address STA bridge. This defaults
+      on when WIFI_WDS is enabled. Set n to leave mat.c out of the image.
+      Without it, the AP drops a three-address unicast whose destination is
+      not an associated station. Four-address WDS does not use this
+      translation.
 config WIFI_MAT_FULL_COPY
-    bool "Wi-Fi Matter full copy"
+    bool "Copy the whole frame during MAC translation"
     default n
 config WIFI_ENABLE
     bool "Wi-Fi enable"

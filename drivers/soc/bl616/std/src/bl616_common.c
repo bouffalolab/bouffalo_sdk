@@ -128,7 +128,6 @@ void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
 {
     uint32_t coreFreq;
     uint32_t loopTick = 3;
-#if defined(__riscv_xthead) || defined(__riscv_xtheadc)
 #if ((__ICACHE_PRESENT == 1U) && (__DCACHE_PRESENT == 1U))
     uint32_t iCacheEn;
     uint32_t dCacheEn;
@@ -147,7 +146,6 @@ void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
     }else{
         /* not recommend */
     }
-#endif
 #endif
 
 #if defined(DUAL_CORE)

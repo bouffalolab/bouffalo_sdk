@@ -679,6 +679,32 @@ static void test_missing_abandonable_first_fragment(void)
     sctp_destroy_association(&rx);
 }
 
+static int forward_packet_callback(void *arg, const uint8_t *packet, size_t size)
+{
+    unsigned *count = arg;
+    const SctpForwardTsnChunk *chunk = (const SctpForwardTsnChunk *)(packet + sizeof(SctpHeader));
+    assert(size == sizeof(SctpHeader) + sizeof(SctpChunkCommon) + sizeof(uint32_t));
+    assert(chunk->common.type == SCTP_FORWARD_TSN);
+    assert(ntohl(chunk->new_cumulative_tsn) == 1000 + *count);
+    ++*count;
+    return (int)size;
+}
+
+static void test_forward_tsn_log_throttle_keeps_packets(void)
+{
+    Sctp tx;
+    unsigned packets = 0;
+    setup(&tx);
+    tx.send_packet = forward_packet_callback;
+    tx.send_packet_user_data = &packets;
+    for (unsigned i = 0; i < 257; ++i) {
+        assert(sctp_send_forward_tsn(&tx, 1000 + i) == 0);
+    }
+    assert(packets == 257 && tx.forward_tsn_sent == 257);
+    sctp_destroy_association(&tx);
+    puts("SCTP recovery sends every FORWARD_TSN across log-throttle boundaries");
+}
+
 int main(void)
 {
 #ifdef SCTP_RX_COMPACTION_ONLY
@@ -694,6 +720,7 @@ int main(void)
     test_full_window_gap_retransmission();
     test_full_window_multiple_gaps();
     test_missing_abandonable_first_fragment();
+    test_forward_tsn_log_throttle_keeps_packets();
     test_more_fragments_than_receive_slots();
     test_fragment_allocation_recovery();
     test_forward_preserves_complete();

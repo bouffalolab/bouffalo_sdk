@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <limits.h>
 #include <string.h>
 #include <xutils/xringbuffer.h>
 #include "msp/kernel.h"
@@ -11,6 +12,7 @@
 #include <alsa/pcm.h>
 #include "xutils/debug.h"
 #define TAG "rec-mic"
+#define MIC_BUFFER_PERIOD_COUNT_DEFAULT 23
 
 typedef struct _mic_dev {
 	msp_pcm_t *pcmC;
@@ -18,6 +20,7 @@ typedef struct _mic_dev {
 	int sample_rate;
 	int chn_num;
 	int frame_ms;
+	unsigned int cache_time_ms;
 	uint8_t *pcm_data;
 } mic_dev_t;
 
@@ -38,7 +41,8 @@ static snd_pcm_format_t pcm_format_from_legacy_bits(int bits)
 }
 
 static msp_pcm_t *__capture_init(const char *devname, unsigned int sample_rate /*16000*/, int chn_num,
-                               int bit_format /*16bit*/, msp_pcm_uframes_t peroid_size)
+                                int bit_format /*16bit*/, msp_pcm_uframes_t peroid_size,
+                                unsigned int cache_time_ms)
 {
     msp_pcm_hw_params_t *params;
     msp_pcm_t           *pcm = NULL;
@@ -98,8 +102,8 @@ static msp_pcm_t *__capture_init(const char *devname, unsigned int sample_rate /
     msp_pcm_uframes_t val_peroid_size = peroid_size;
     msp_pcm_hw_params_set_period_size_near(pcm, params, &val_peroid_size, 0);
 
-    msp_pcm_uframes_t val_buffer_frames = val_peroid_size * 23; /* The buffer stores 16 frames */
-    msp_pcm_hw_params_set_buffer_size_near(pcm, params, &val_buffer_frames);
+    unsigned int buffer_time_us = cache_time_ms * 1000U;
+    msp_pcm_hw_params_set_buffer_time_near(pcm, params, &buffer_time_us, NULL);
 
     err = msp_pcm_hw_params(pcm, params);
 
@@ -126,7 +130,7 @@ static int __mic_pcm_open(recio_t *io, const char *path)
     }
 
     /*
-     * mic://format=16&sample=16000&chan=1&frame_ms=20
+     * mic://format=16&sample=16000&chan=1&frame_ms=20&cache_ms=460
      */
 
     if (uri_get_item_value_int(path, "format", &value) != 0) {
@@ -149,10 +153,20 @@ static int __mic_pcm_open(recio_t *io, const char *path)
     }
     priv->frame_ms = value;
 
+    priv->cache_time_ms = priv->frame_ms * MIC_BUFFER_PERIOD_COUNT_DEFAULT;
+    if (uri_get_item_value_int(path, "cache_ms", &value) == 0) {
+        priv->cache_time_ms = value;
+    }
+    if (priv->cache_time_ms == 0 || priv->cache_time_ms > INT_MAX / 1000U) {
+        goto err;
+    }
+
     /* Single frame single channel sample count */
     msp_pcm_uframes_t peroid_size = priv->frame_ms * (priv->sample_rate / 1000);
 
-    priv->pcmC = __capture_init("pcmC0", priv->sample_rate, priv->chn_num, priv->format, peroid_size);
+    priv->pcmC = __capture_init("pcmC0", priv->sample_rate, priv->chn_num,
+                                priv->format, peroid_size,
+                                priv->cache_time_ms);
 
     if (priv->pcmC == NULL) {
         goto err;
@@ -170,7 +184,13 @@ err:
 static int __mic_pcm_close(recio_t *io)
 {
     if (io->private) {
-        msp_free(io->private);
+        mic_dev_t *priv = (mic_dev_t *)io->private;
+
+        if (priv->pcmC) {
+            msp_pcm_close(priv->pcmC);
+        }
+        msp_free(priv);
+        io->private = NULL;
     }
     return 0;
 }

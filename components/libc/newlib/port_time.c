@@ -105,3 +105,15 @@ __attribute__((weak)) int settimeofday(const struct timeval *tp, const struct ti
 {
     return _settimeofday_r(_REENT, tp, tzp);
 }
+
+#if defined(__PICOLIBC__)
+clock_t times(struct tms *ptms)
+{
+    return _times_r(_REENT, ptms);
+}
+
+int gettimeofday(struct timeval *tp, void *tzvp)
+{
+    return _gettimeofday_r(_REENT, tp, tzvp);
+}
+#endif

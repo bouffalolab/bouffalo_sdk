@@ -149,6 +149,11 @@ typedef struct {
     uint8_t  current_prio;
     /* Slave latency was applied to the pending event. */
     uint8_t  latency_applied;
+    /* Pending instant procedure; map words cover bits [15:0], [31:16], [36:32]. */
+    uint8_t  instant_type;
+    uint8_t  instant_done;
+    uint16_t instant;
+    uint16_t pending_chmap[3];
 } btble_controller_lp_fw_con_info_t;
 
 /* What the LPFW did with a BTBLE_ST_CONN hand-off (activity con_wake_cause). */
@@ -160,7 +165,7 @@ typedef struct {
 #define BTBLE_LPFW_CON_WAKE_RX_DESC_NOT_VALID 5 /*rx descriptor is not valid*/
 #define BTBLE_LPFW_CON_WAKE_END_ISR_MISS   6 /*No end isr comes*/
 #define BTBLE_LPFW_CON_WAKE_LATENCY_SYNC_ERR 7
-#define BTBLE_LPFW_CCON_WAKE_OTHER_RX_ERR 8
+#define BTBLE_LPFW_CON_WAKE_OTHER_RX_ERR 8
 
 #define BTBLE_LPFW_CON_STATE_WAIT_NEXT_PROG 1  /* waiting for the next event to be programmed. */
 #define BTBLE_LPFW_CON_STATE_WAIT_END_ISR   2  /*event program time has been set and wait for end isr */

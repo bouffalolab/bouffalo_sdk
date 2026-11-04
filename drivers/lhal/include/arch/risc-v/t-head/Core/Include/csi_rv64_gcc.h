@@ -12,6 +12,7 @@
 #ifndef _CSI_RV64_GCC_H_
 #define _CSI_RV64_GCC_H_
 
+#include <stdint.h>
 #include <stdlib.h>
 
 #ifndef __ASM

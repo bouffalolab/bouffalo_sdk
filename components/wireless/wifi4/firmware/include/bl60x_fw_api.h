@@ -494,7 +494,7 @@ void wifi_main(void *param);
 
 void bl_tpc_update_power_table(int8_t power_table_config[38]);
 void bl_tpc_update_power_table_rate(int8_t power_table[24]);
-void bl_tpc_update_power_table_channel_offset(int8_t power_table[14]);
+void bl_tpc_update_power_table_channel_offset(int8_t *power_table);
 void bl_tpc_update_power_rate_11b(int8_t power_rate_table[4]);
 void bl_tpc_update_power_rate_11g(int8_t power_rate_table[8]);
 void bl_tpc_update_power_rate_11n(int8_t power_rate_table[8]);

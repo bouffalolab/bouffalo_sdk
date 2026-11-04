@@ -155,7 +155,7 @@ are intentionally not listed as applications.
 
 | Directory | Applications |
 | --- | --- |
-| [`pmu`](pmu) | [`bl616cl_lp_fw`](pmu/bl616cl_lp_fw), [`bl616_lp_fw`](pmu/bl616_lp_fw), [`wl_ble_lp`](pmu/wl_ble_lp), [`wl_lp`](pmu/wl_lp) |
+| [`pmu`](pmu) | [`bl616_lp_fw`](pmu/bl616_lp_fw), [`wl_ble_lp`](pmu/wl_ble_lp), [`wl_lp`](pmu/wl_lp) |
 | [`pmu/bl616`](pmu/bl616) | [`hbn_acomp`](pmu/bl616/hbn_acomp), [`hbn_io_wakeup`](pmu/bl616/hbn_io_wakeup), [`hbn_rtc`](pmu/bl616/hbn_rtc), [`pds_io_wakeup`](pmu/bl616/pds_io_wakeup), [`pds_rtc`](pmu/bl616/pds_rtc) |
 | [`pmu/bl616cl`](pmu/bl616cl) | [`hbn_io_wakeup`](pmu/bl616cl/hbn_io_wakeup), [`hbn_rtc`](pmu/bl616cl/hbn_rtc), [`hbn_watchdog`](pmu/bl616cl/hbn_watchdog), [`pds_bod`](pmu/bl616cl/pds_bod), [`pds_io_wakeup`](pmu/bl616cl/pds_io_wakeup), [`pds_rtc`](pmu/bl616cl/pds_rtc), [`pds_timer`](pmu/bl616cl/pds_timer) |
 | [`pmu/bl618dg`](pmu/bl618dg) | [`aon_wdt`](pmu/bl618dg/aon_wdt), [`hbn_io_wakeup`](pmu/bl618dg/hbn_io_wakeup), [`hbn_rtc`](pmu/bl618dg/hbn_rtc), [`mini_sys`](pmu/bl618dg/mini_sys), [`pds_bod`](pmu/bl618dg/pds_bod), [`pds_io_wakeup`](pmu/bl618dg/pds_io_wakeup), [`pds_lp_wakeup`](pmu/bl618dg/pds_lp_wakeup), [`pds_lp_wakeup/ap`](pmu/bl618dg/pds_lp_wakeup/ap), [`pds_lp_wakeup/lp`](pmu/bl618dg/pds_lp_wakeup/lp), [`pds_mini`](pmu/bl618dg/pds_mini), [`pds_rtc`](pmu/bl618dg/pds_rtc), [`pds_timer`](pmu/bl618dg/pds_timer), [`sdio3_lowpower`](pmu/bl618dg/sdio3_lowpower) |
@@ -169,7 +169,7 @@ are intentionally not listed as applications.
 | [`solution`](solution) | [`mimiclaw`](solution/mimiclaw), [`OpenAI_bl618`](solution/OpenAI_bl618) |
 | [`solution/solution_bl616`](solution/solution_bl616) | [`image_transmission`](solution/solution_bl616/image_transmission) |
 | [`solution/solution_dualcore`](solution/solution_dualcore) | [`solution_dualcore`](solution/solution_dualcore), [`wifi_ap`](solution/solution_dualcore/wifi_ap), [`wifi_np`](solution/solution_dualcore/wifi_np) |
-| [`solution/TvBox`](solution/TvBox) | [`ble_hid_cli_sender`](solution/TvBox/ble_hid_cli_sender), [`usb_ecm_audio-notify`](solution/TvBox/usb_ecm_audio-notify) |
+| [`solution/TvBox`](solution/TvBox) | [`ble_hid_cli_sender`](solution/TvBox/ble_hid_cli_sender), [`ble_usb_router`](solution/TvBox/ble_usb_router) |
 
 Most standalone projects contain the following files. The exact contents vary
 by example.

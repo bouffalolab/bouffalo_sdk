@@ -41,6 +41,10 @@
 #include "fhost.h"
 #include "fhost_wpa.h"
 #endif
+#ifdef CONFIG_WIFI_WDS
+#include "fhost.h"
+#include "fhost_wds.h"
+#endif
 
 
 #ifdef CONFIG_WPS
@@ -461,6 +465,22 @@ static int wpa_supplicant_conf_ap(struct wpa_supplicant *wpa_s,
 	conf->driver = wpa_s->driver;
 
 	os_strlcpy(bss->iface, wpa_s->ifname, sizeof(bss->iface));
+
+#ifdef CONFIG_WIFI_WDS
+	{
+		int vif = fhost_vif_idx_from_name(wpa_s->ifname);
+		wifi_wds_config_t wds;
+
+		if (vif >= 0 &&
+		    fhost_wds_auto_enabled(vif, WIFI_WDS_ROLE_AP) &&
+		    fhost_wds_config_get(vif, &wds) == WIFI_WDS_OK) {
+			/* Backhaul capability only identifies a four-address STA. Ciphers follow the AP configuration. */
+			bss->multi_ap = BACKHAUL_BSS;
+			if (wds.allow_normal_sta)
+				bss->multi_ap |= FRONTHAUL_BSS;
+		}
+	}
+#endif /* CONFIG_WIFI_WDS */
 
 	if (wpa_supplicant_conf_ap_ht(wpa_s, ssid, conf))
 		return -1;

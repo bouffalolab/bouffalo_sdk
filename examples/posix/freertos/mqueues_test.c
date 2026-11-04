@@ -12,6 +12,7 @@
  */
 
 // #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include "fcntl.h"
@@ -23,7 +24,6 @@
 #define MSG_SIZE	128
 #define MAX_MSG		3
 
-extern int FreeRTOS_errno;
 static const char *s_msg_ptr[] = { "msg test 1", "msg test 2", "msg test 3" };
 
 static char r_msg_ptr_1[MAX_MSG][MSG_SIZE];
@@ -74,8 +74,8 @@ static void receive_1(void *mq)
 	for (i = 0; i < MAX_MSG; i++) {
 retry:
 		if (-1 == mq_receive(mq1, r_msg_ptr_1[i], MSG_SIZE, NULL)) {
-	                printf("errno: %d \r\n", FreeRTOS_errno);
-			if (FreeRTOS_errno == 11)
+	                printf("errno: %d \r\n", errno);
+			if (errno == 11)
 				goto retry;
 			printf("mq_receive doesn't return success \r\n");
 			pthread_exit((void *)1);
@@ -95,8 +95,8 @@ static void receive_2(void *mq)
 	for (i = 0; i < MAX_MSG; i++) {
 retry:
 		if (-1 == mq_receive(mq2, r_msg_ptr_2[i], MSG_SIZE, NULL)) {
-			printf("errno: %d \r\n", FreeRTOS_errno);
-                        if (FreeRTOS_errno == 11)
+			printf("errno: %d \r\n", errno);
+                        if (errno == 11)
                                 goto retry;
 			printf("mq_receive doesn't return success \r\n");
 			pthread_exit((void *)1);

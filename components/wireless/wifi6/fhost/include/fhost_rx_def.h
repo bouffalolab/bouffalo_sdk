@@ -56,7 +56,6 @@ struct fhost_rx_buf_tag
     struct rx_info info;
     /// Payload buffer space - must be after rx_info  !!!
     uint32_t payload[CO_ALIGN4_HI(FHOST_RX_BUF_SIZE)/sizeof(uint32_t)];
-
 };
 
 #if MACSW_UF_EN

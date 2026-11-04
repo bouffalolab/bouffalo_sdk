@@ -193,7 +193,16 @@ config RTSP
     bool "RTSP"
     default n
     help
-      Build the RTSP client library.
+      Build the RTSP server library, including the owner-driven
+      rtsp_server API and the legacy librtspsrv API.
+
+config RTSP_LEGACY
+    bool "Legacy task-based RTSP API"
+    depends on RTSP
+    default y
+    help
+      Retain librtspsrv.h and its background FreeRTOS task. Applications using
+      only rtsp_server.h can disable this to omit the legacy implementation.
 
 config LIBPEER
     bool "libpeer"
@@ -208,6 +217,30 @@ config LIBPEER
       Build the peer-to-peer networking library.
 
 if LIBPEER
+
+config LIBPEER_RTP_PACKET_INFO
+    bool
+    default n
+
+config LIBPEER_MEDIA_DIAGNOSTICS
+    bool "RTP/RTCP media diagnostics (debug only)"
+    default n
+    help
+      Observe authenticated RTP sequence numbers, timestamps and arrival
+      jitter, plus existing RTCP sender/receiver reports. Applications may
+      also collect playback scheduling diagnostics with this option.
+      This is passive instrumentation: no new feedback packets are sent.
+      Disabled builds contain no diagnostic state or per-packet work.
+
+config REMOTE_SDP_MAX_SIZE
+    int "Maximum remote SDP bytes"
+    range 1024 60000
+    default 49152
+    help
+      The remote SDP is bounded and parsed in caller-owned memory without
+      adding a full-size copy to each connection. The caller supplies a NUL
+      terminated string valid for the duration of set_remote_description.
+      This is separate from the local SDP serialization buffer size.
 
 config SCTP_MESSAGE_SIZE
     int "Maximum DataChannel message bytes"
@@ -263,6 +296,17 @@ config WEBRTC_PEER_MJPEG
     depends on WEBRTC_PEER
     help
       Build the MJPEG DataChannel chunking and pacing adapter.
+
+config WEBRTC_PEER_AUDIO_PLAYOUT
+    bool "Timestamped mono PCM playout and loss concealment"
+    default n
+    depends on WEBRTC_PEER
+    select LIBPEER_RTP_PACKET_INFO
+    help
+      Build a bounded, sample-timestamped audio jitter buffer and lightweight
+      pitch repetition/fade concealment. Allocation occurs only at creation.
+      Applications serialize push/pull and drive pull from the playback clock.
+      Existing applications keep their original audio callbacks and playback.
 
 config WEBRTC_PEER_SIGNALING_APPRTC
     bool "AppRTC signaling backend"

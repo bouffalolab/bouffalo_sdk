@@ -37,6 +37,119 @@
 #include "FreeRTOS_POSIX/errno.h"
 #include "FreeRTOS_POSIX/pthread.h"
 
+/* libstdc++ uses pthread_once from its gthread backend. */
+#define POSIX_PTHREAD_ONCE_INPROGRESS    1
+#define POSIX_PTHREAD_ONCE_DONE          2
+
+/* Only contending callers need a completion semaphore.  Both the node and
+ * semaphore live on the waiter's stack, so completed once controls retain no
+ * heap allocation and the pthread_once_t ABI remains unchanged. */
+typedef struct pthread_once_waiter
+{
+    pthread_once_t * control;
+    StaticSemaphore_t completion;
+    struct pthread_once_waiter * next;
+} pthread_once_waiter_t;
+
+static StaticSemaphore_t xPthreadGlobalMutexBuffer;
+static SemaphoreHandle_t xPthreadGlobalMutex;
+static pthread_once_waiter_t * pxPthreadOnceWaiters;
+
+static SemaphoreHandle_t prvPthreadGlobalMutex( void )
+{
+    taskENTER_CRITICAL();
+
+    if( xPthreadGlobalMutex == NULL )
+    {
+        xPthreadGlobalMutex = xSemaphoreCreateMutexStatic( &xPthreadGlobalMutexBuffer );
+    }
+
+    taskEXIT_CRITICAL();
+    return xPthreadGlobalMutex;
+}
+
+int pthread_once( pthread_once_t * once_control,
+                  void ( * init_routine )( void ) )
+{
+    SemaphoreHandle_t mutex;
+    pthread_once_waiter_t waiter;
+    pthread_once_waiter_t ** link;
+    pthread_once_waiter_t * completed;
+
+    if( ( once_control == NULL ) || ( init_routine == NULL ) )
+    {
+        return EINVAL;
+    }
+
+    mutex = prvPthreadGlobalMutex();
+    ( void ) xSemaphoreTake( mutex, portMAX_DELAY );
+
+    if( *once_control == PTHREAD_ONCE_INIT )
+    {
+        *once_control = POSIX_PTHREAD_ONCE_INPROGRESS;
+        ( void ) xSemaphoreGive( mutex );
+
+        /* The callback may call other pthread APIs or initialize another
+         * once control, so never execute it under the global mutex. */
+        init_routine();
+
+        ( void ) xSemaphoreTake( mutex, portMAX_DELAY );
+        *once_control = POSIX_PTHREAD_ONCE_DONE;
+        link = &pxPthreadOnceWaiters;
+
+        while( *link != NULL )
+        {
+            if( ( *link )->control == once_control )
+            {
+                completed = *link;
+                *link = completed->next;
+                /* Unlink before waking: the waiter may immediately return
+                 * and reclaim its stack after receiving this notification. */
+                ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &completed->completion );
+            }
+            else
+            {
+                link = &( *link )->next;
+            }
+        }
+
+        ( void ) xSemaphoreGive( mutex );
+        return 0;
+    }
+
+    if( *once_control == POSIX_PTHREAD_ONCE_DONE )
+    {
+        ( void ) xSemaphoreGive( mutex );
+        return 0;
+    }
+
+    if( *once_control != POSIX_PTHREAD_ONCE_INPROGRESS )
+    {
+        ( void ) xSemaphoreGive( mutex );
+        return EINVAL;
+    }
+
+    waiter.control = once_control;
+    ( void ) xSemaphoreCreateBinaryStatic( &waiter.completion );
+    waiter.next = pxPthreadOnceWaiters;
+    pxPthreadOnceWaiters = &waiter;
+    ( void ) xSemaphoreGive( mutex );
+
+    /* Registration and completion share the mutex.  The binary semaphore
+     * also remembers completion if it is signalled before this task blocks.
+     * Unlike taskYIELD(), blocking lets a lower-priority initializer run. */
+    while( xSemaphoreTake( ( SemaphoreHandle_t ) &waiter.completion, portMAX_DELAY ) != pdPASS )
+    {
+    }
+
+    /* Ensure the signalling xSemaphoreGive() has returned before reclaiming
+     * the semaphore storage, even when this waiter has a higher priority. */
+    ( void ) xSemaphoreTake( mutex, portMAX_DELAY );
+    ( void ) xSemaphoreGive( mutex );
+    vSemaphoreDelete( ( SemaphoreHandle_t ) &waiter.completion );
+    return 0;
+}
+
 /**
  * @brief Thread attribute object.
  */

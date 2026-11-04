@@ -170,6 +170,46 @@ SECTIONS
         __bflb_log_tags_end__ = .;
     } > ocram_ret_2 AT > xip_memory
 
+    /* Picolibc thread-local storage. The boot TLS block is consumed by
+     * bflb_picolibc_init_boot_tls() before main(); FreeRTOS allocates a TLS
+     * block from each task stack afterwards. */
+    __tls_load_addr = LOADADDR(RAM_DATA) + SIZEOF(RAM_DATA);
+
+    ram_tdata : AT (__tls_load_addr)
+    {
+        *(.tdata .tdata.* .gnu.linkonce.td.*)
+    } > ocram_ret_2
+
+    ram_tbss (NOLOAD) :
+    {
+        *(.tbss .tbss.* .gnu.linkonce.tb.*)
+        *(.tcommon)
+        __tls_end = .;
+    } > ocram_ret_2
+
+    PROVIDE(__tdata_start = ADDR(ram_tdata));
+    PROVIDE(__tdata_source = LOADADDR(ram_tdata));
+    PROVIDE(__tdata_size = SIZEOF(ram_tdata));
+    PROVIDE(__tbss_start = ADDR(ram_tbss));
+    PROVIDE(__tbss_offset = ADDR(ram_tbss) - ADDR(ram_tdata));
+    PROVIDE(__tbss_size = SIZEOF(ram_tbss));
+    PROVIDE(__tls_base = ADDR(ram_tdata));
+    PROVIDE(__tls_align = MAX(MAX(ALIGNOF(ram_tdata), ALIGNOF(ram_tbss)), 4));
+    PROVIDE(__tls_size = __tls_end - __tls_base);
+
+    ram_tbss_space (NOLOAD) :
+    {
+        . = ADDR(ram_tbss);
+        . = . + SIZEOF(ram_tbss);
+    } > ocram_ret_2
+
+    ram_tls_boot (NOLOAD) :
+    {
+        . = ALIGN(__tls_align);
+        PROVIDE(__boot_tls_start = .);
+        . = . + __tls_size;
+    } > ocram_ret_2
+
     .bss (NOLOAD) :
     {
         __bss_start__ = ADDR(.bss);

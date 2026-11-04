@@ -15,4 +15,11 @@ config IPERF
       This component implements the Classic iPerf2 protocol and does not
       support iPerf3. Requires FreeRTOS and either local lwIP or the socket
       offload client. The offload client supports only the Socket backend.
+
+config IPERF_RAW
+    bool "Enable lwIP Raw backends"
+    default y
+    depends on IPERF && LWIP
+    help
+      Enable TCP and UDP throughput tests using the lwIP Raw API.
 endmenu

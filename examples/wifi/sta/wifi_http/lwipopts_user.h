@@ -93,7 +93,8 @@
 #define MEM_ALIGNMENT                 4
 
 #if (defined(BL602))
-#define LWIP_HEAP_SIZE (12 * 1024)
+/* Leave headroom for the shared scan IE buffer in ram_wifi. */
+#define LWIP_HEAP_SIZE (12 * 1024 - 512)
 #else 
 #define LWIP_HEAP_SIZE (18 * 1024)
 #endif 

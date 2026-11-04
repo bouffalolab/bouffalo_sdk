@@ -736,6 +736,7 @@ uint32_t board_psram_x8_init(void)
 {
     bflb_efuse_device_info_type device_info;
     uint32_t ret = 0;
+    uint32_t tmp_val;
 
     /* enable PSRAM access in BMX config */
     *((volatile uint32_t *)0x20000338) &= (~(1 << 30));
@@ -757,6 +758,10 @@ uint32_t board_psram_x8_init(void)
     AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(1);
 
     /* clk init */
+    /* Set the controller divider before enabling the PSRAM clock. */
+    tmp_val = BL_RD_REG(PSRAM_CTRL_BASE, PSRAM_CONFIGURE);
+    tmp_val = BL_SET_REG_BITS_VAL(tmp_val, PSRAM_REG_PCK_S_DIV, 1);
+    BL_WR_REG(PSRAM_CTRL_BASE, PSRAM_CONFIGURE, tmp_val);
     GLB_Set_PSRAMB_CLK_Sel(ENABLE, GLB_PSRAMB_CLK_480M, 0);
 
     /* gpio init */

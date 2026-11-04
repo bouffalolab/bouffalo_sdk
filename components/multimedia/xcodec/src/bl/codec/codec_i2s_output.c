@@ -66,6 +66,12 @@ static uint32_t auo_dma_transfer_bytes(const auo_ch_t *context)
     if (context->sound_channel_num == 2U) {
         return (slot_bytes == 1U) ? 2U : 4U;
     }
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    if (context->sound_channel_num == 4U && slot_bytes == 2U) {
+        /* The JY6316 TX FIFO is written as one 32-bit word per transfer. */
+        return 4U;
+    }
+#endif
 
     return 0;
 }
@@ -84,6 +90,53 @@ static int auo_dma_width_from_bytes(uint32_t transfer_bytes)
     }
 }
 
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+static void auo_jy_halt(auo_ch_t *context)
+{
+    /* Stop both producers before clearing the FIFO; otherwise stale data can be replayed. */
+    bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_SUSPEND, 0);
+    bflb_dma_channel_stop(context->device_dma);
+    msp_i2s_tx_disable();
+    context->dma->halt_flag = 1;
+    if (context->callback) {
+        context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
+    }
+}
+
+static void auo_jy_start_dma(auo_ch_t *context)
+{
+    msp_i2s_tx_prepare();
+    bflb_dma_channel_stop(context->device_dma);
+    bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG,
+                             (size_t)&context->dma->node[0].dma_cfg);
+    bflb_dma_channel_tcint_clear(context->device_dma);
+    bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_RESUME, 1);
+    bflb_dma_channel_start(context->device_dma);
+    msp_i2s_tx_enable();
+}
+
+static void _auo_recv(auo_ch_t *context)
+{
+    /* Each TX LLI raises one interrupt after one whole period.  The live DMA
+     * source address may already point into the next LLI, so it is not a
+     * reliable ring-buffer read index here. */
+    uint32_t queued = mringbuffer_data_len(context->ringbuffer);
+    if (queued < context->per_node_size ||
+        mringbuffer_get(context->ringbuffer, NULL, context->per_node_size) != context->per_node_size) {
+        auo_jy_halt(context);
+        return;
+    }
+
+    context->submitted_bytes_total += context->per_node_size;
+    if (context->callback) {
+        context->callback(context, BL_EVENT_NODE_WRITE_COMPLETE, context->arg);
+    }
+    if (queued == context->per_node_size) {
+        auo_jy_halt(context);
+    }
+}
+
+#else
 static void _auo_recv(auo_ch_t *context)
 {
     static uint64_t old_time = 0, tmp_time = 0;
@@ -169,6 +222,8 @@ static void _auo_recv(auo_ch_t *context)
     }
     old_time = tmp_time;
 }
+
+#endif
 
 #define EVENT_AU_ISR          (0x00000001)
 #define EVENT_AU_STOP         (0x00000002)
@@ -320,8 +375,13 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
 
     union bflb_dma_lli_control_s audio_dma_ctrl = {0};
     audio_dma_ctrl.bits.TransferSize = node_size / transfer_bytes;
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    audio_dma_ctrl.bits.SBSize       = DMA_BURST_INCR1;
+    audio_dma_ctrl.bits.DBSize       = DMA_BURST_INCR1;
+#else
     audio_dma_ctrl.bits.SBSize       = DMA_BURST_INCR4;
     audio_dma_ctrl.bits.DBSize       = DMA_BURST_INCR4;
+#endif
     audio_dma_ctrl.bits.SWidth       = dma_width;
     audio_dma_ctrl.bits.DWidth       = dma_width;
     audio_dma_ctrl.bits.SI           = DMA_ADDR_INCREMENT_ENABLE;
@@ -330,7 +390,6 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
 
     dma_id = context->ctrl_id;
     dma_ch = context->ch_id;
-    printf("dma_id:%d, dma_ch:%d\r\n", dma_id, dma_ch);
 
     if ((dma_id != 0) || (dma_ch > 3)) {
         printf("dma config error, dma_id:%d, dma_ch:%d\r\n", dma_id, dma_ch);
@@ -340,7 +399,6 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
     char dma_name[10] = {0};
 
     snprintf(dma_name, sizeof(dma_name), "dma%d_ch%d", dma_id, dma_ch);
-    printf("dma_dma_name:%s\r\n", dma_name);
     dma_name[9] = '\0';
 
     device_dma = bflb_device_get_by_name(dma_name);
@@ -353,8 +411,13 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
         .dst_req = DMA_REQUEST_I2S_TX,
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE,
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+        .src_burst_count = DMA_BURST_INCR1,
+        .dst_burst_count = DMA_BURST_INCR1,
+#else
         .src_burst_count = DMA_BURST_INCR4,
         .dst_burst_count = DMA_BURST_INCR4,
+#endif
         .src_width = dma_width,
         .dst_width = dma_width,
     };
@@ -481,10 +544,16 @@ static int _auo_hw_start(auo_ch_t *context)
     user_log("context = %p\r\n", context);
 
     msp_codec_pa_after_opendac();
-    msp_i2s_tx_enable();
-
-    bflb_dma_channel_start(context->device_dma);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    /* Start at the first FIFO word of a DSP frame, as in i2s_codec. */
+    msp_i2s_tx_prepare();
+    bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG,
+                             (size_t)&context->dma->node[0].dma_cfg);
+    bflb_dma_channel_tcint_clear(context->device_dma);
+#endif
     bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_RESUME, 1);
+    bflb_dma_channel_start(context->device_dma);
+    msp_i2s_tx_enable();
     if (context->first_output_timestamp_ns == 0) {
         context->first_output_timestamp_ns = auo_now_ns();
     }
@@ -522,7 +591,12 @@ int auo_stop(auo_ch_t *context)
 
     msp_codec_pa_before_closedac();
 
-    bflb_dma_channel_stop(context->device_dma);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    msp_i2s_tx_disable();
+#endif
+    if (context->device_dma) {
+        bflb_dma_channel_stop(context->device_dma);
+    }
 
     context->st = 0;
     context->pre_indx = 0;
@@ -636,6 +710,14 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
     static uint32_t cache_flag = 0;
 #endif
     irq_stat = bflb_irq_save();
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    if (context->dma->halt_flag) {
+        if (context->st != 0) {
+            mringbuffer_reset(context->ringbuffer);
+            context->st = 0;
+        }
+    }
+#else
     if (context->dma->halt_flag) {
 #ifdef CONFIG_XCODEC_OUTPUT_CACHE
         if (!cache_flag)
@@ -644,16 +726,27 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
             mringbuffer_reset(context->ringbuffer);
         }
     }
+#endif
     ret = mringbuffer_put_fflush_cache(context->ringbuffer,
         (uint8_t *)data, size,
         (cache_operate_t)bflb_l1c_dcache_clean_range);
     user_log("write:%d\r\n", context->ringbuffer->write_index);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    if (context->dma->halt_flag) {
+        /* PCM packing writes chunks smaller than one DMA period. */
+        if (mringbuffer_data_len(context->ringbuffer) >= 2U * context->per_node_size) {
+            /* Reloading an enabled, suspended channel can leave DMA stalled. */
+            auo_jy_start_dma(context);
+            context->dma->halt_flag = 0;
+            context->st = 1;
+        }
+    }
+#else
     if (context->dma->halt_flag) {
 #ifdef CONFIG_XCODEC_OUTPUT_CACHE
         cache_flag = 1;
         cache_total += size;
         if (cache_total >= CACHE_SIZE) {
-            printf("cache ok\r\n");
             cache_total = 0;
             cache_flag = 0;
             bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG, (size_t)(&(context->dma->node[0].dma_cfg)));
@@ -666,9 +759,18 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
         context->dma->halt_flag = 0;
 #endif
     }
+#endif
     bflb_irq_restore(irq_stat);
 
     if (0 == context->st) {
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+        /* Match wave_player: prime two DMA periods before clocking out TX. */
+        if (!context->dma->halt_flag &&
+            mringbuffer_data_len(context->ringbuffer) >= 2U * context->per_node_size) {
+            context->st = 1;
+            _auo_hw_start(context);
+        }
+#else
 #ifdef CONFIG_XCODEC_OUTPUT_CACHE
         cache_total += size;
         if (cache_total >= CACHE_SIZE) {
@@ -679,6 +781,7 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
 #else
         context->st = 1;
         _auo_hw_start(context);
+#endif
 #endif
     }
 

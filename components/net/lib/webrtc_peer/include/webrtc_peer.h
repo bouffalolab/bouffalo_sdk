@@ -8,9 +8,23 @@
 extern "C" {
 #endif
 
-#define WEBRTC_PEER_MAX_ICE_SERVERS 5
+/* Configuration layout changed from five to six entries. Rebuild callers
+ * together with the library; do not mix objects built from older headers. */
+#define WEBRTC_PEER_MAX_ICE_SERVERS 6
 
 typedef struct webrtc_peer webrtc_peer_t;
+
+typedef struct {
+    uint32_t ssrc, timestamp;
+    uint16_t sequence;
+    uint8_t payload_type;
+} webrtc_peer_audio_packet_info_t;
+/* Owner-thread accessor, valid only within the synchronous on_audio callback.
+ * Available without consumer feature macros. A library built without
+ * CONFIG_LIBPEER_RTP_PACKET_INFO returns ERR_UNSUPPORTED without output writes.
+ * Existing config and stats layouts are unchanged. */
+int webrtc_peer_get_audio_packet_info(const webrtc_peer_t *peer,
+                                     webrtc_peer_audio_packet_info_t *info, size_t size);
 
 typedef enum {
     WEBRTC_PEER_OK = 0,
@@ -66,6 +80,15 @@ typedef enum {
     WEBRTC_PEER_DATA_CHANNEL_STRING,
     WEBRTC_PEER_DATA_CHANNEL_BINARY,
 } webrtc_peer_data_channel_type_t;
+
+/* Allows consumers to build against SDK releases before this query existed. */
+#define WEBRTC_PEER_HAS_SELECTED_ICE_TYPES 1
+typedef enum {
+    WEBRTC_PEER_ICE_HOST = 0,
+    WEBRTC_PEER_ICE_SERVER_REFLEXIVE,
+    WEBRTC_PEER_ICE_PEER_REFLEXIVE,
+    WEBRTC_PEER_ICE_RELAY,
+} webrtc_peer_ice_candidate_type_t;
 
 typedef enum {
     WEBRTC_PEER_DATA_RELIABLE = 0x00,
@@ -123,6 +146,30 @@ typedef struct {
     uint32_t data_retry_exhaustions;
 } webrtc_peer_stats_ex_t;
 
+/* Debug-only, post-SRTP observations. Poll from the peer owner. Loss/expected
+ * reset at a confirmed sequence restart; duplicates are tracked over 64 packets.
+ * remote_* describes the opposite direction, reported by the remote receiver. */
+typedef struct {
+    uint32_t ssrc, clock_rate, received_packets, expected_packets;
+    int32_t packets_lost;
+    uint32_t duplicates_recent, reordered_packets, untracked_old_packets;
+    uint32_t sequence_rejects, sequence_restarts;
+    /* Converted jitter values saturate at UINT32_MAX microseconds. */
+    uint32_t jitter_us, max_arrival_gap_ms;
+    uint32_t timestamp_gaps, timestamp_gap_samples;
+    uint32_t sender_reports, sender_packets, sender_octets;
+    uint32_t remote_reports;
+    int32_t remote_packets_lost;
+    uint32_t remote_fraction_lost_256, remote_jitter_us;
+} webrtc_peer_rtp_diagnostics_t;
+
+/* video=0: audio; video=1: RTP video (not DataChannel MJPEG).
+ * The type and function are available regardless of consumer build macros.
+ * If the library was built without CONFIG_LIBPEER_MEDIA_DIAGNOSTICS, returns
+ * WEBRTC_PEER_ERR_UNSUPPORTED without inspecting arguments or writing stats. */
+int webrtc_peer_get_rtp_diagnostics(const webrtc_peer_t *peer, int video,
+                                   webrtc_peer_rtp_diagnostics_t *stats, size_t size);
+
 typedef int (*webrtc_peer_local_message_cb_t)(
     const webrtc_peer_message_t *message, void *user_data);
 typedef void (*webrtc_peer_state_cb_t)(
@@ -133,12 +180,21 @@ typedef void (*webrtc_peer_keyframe_cb_t)(void *user_data);
 typedef void (*webrtc_peer_data_message_cb_t)(
     const uint8_t *data, size_t size, uint16_t sid, void *user_data);
 typedef void (*webrtc_peer_event_cb_t)(void *user_data);
+typedef void (*webrtc_peer_data_channel_open_cb_t)(
+    uint16_t sid, const char *label, void *user_data);
 
+typedef enum {
+    WEBRTC_PEER_ICE_TRANSPORT_ALL = 0,
+    WEBRTC_PEER_ICE_TRANSPORT_RELAY = 1
+} webrtc_peer_ice_transport_policy_t;
+
+/* Rebuild callers and library together after this configuration extension. */
 typedef struct {
     webrtc_peer_ice_server_t ice_servers[WEBRTC_PEER_MAX_ICE_SERVERS];
     webrtc_peer_codec_t audio_codec;
     webrtc_peer_codec_t video_codec;
     webrtc_peer_data_channel_type_t data_channel_type;
+    webrtc_peer_ice_transport_policy_t ice_transport_policy;
     webrtc_peer_local_message_cb_t on_local_message;
     webrtc_peer_state_cb_t on_state;
     webrtc_peer_media_cb_t on_audio;
@@ -163,6 +219,12 @@ int webrtc_peer_send_data(webrtc_peer_t *peer,
 int webrtc_peer_send_data_on_channel(webrtc_peer_t *peer,
                                    const uint8_t *data, size_t size,
                                    uint16_t sid);
+/* Send text and binary on different open channels of one association.
+ * type must be STRING or BINARY; queued data retains its type on retry.
+ * Existing untyped APIs continue to use config.data_channel_type. */
+int webrtc_peer_send_data_on_channel_typed(webrtc_peer_t *peer,
+                                         const uint8_t *data, size_t size,
+                                         uint16_t sid, webrtc_peer_data_channel_type_t type);
 int webrtc_peer_create_data_channel(
     webrtc_peer_t *peer,
     const webrtc_peer_data_channel_config_t *config);
@@ -170,6 +232,18 @@ int webrtc_peer_lookup_data_channel(
     webrtc_peer_t *peer, const char *label, uint16_t *sid);
 int webrtc_peer_is_data_channel_open(
     const webrtc_peer_t *peer, uint16_t sid);
+/* Owner-thread, after association opens: DTLS client even / server odd. */
+int webrtc_peer_get_local_data_channel_sid(webrtc_peer_t *peer, uint16_t *sid);
+/* True only for an open unordered channel with maxRetransmits=0. */
+int webrtc_peer_is_unreliable_unordered(const webrtc_peer_t *peer, uint16_t sid);
+/* Opt-in regular ICE nomination with a bounded wait for higher-priority direct
+ * paths. Call after new_connection and before applying the remote description.
+ * Existing gateway users retain their current policy unless they opt in. */
+int webrtc_peer_set_ice_direct_preference(webrtc_peer_t *peer, uint32_t wait_ms);
+/* Built-in SCTP local/remote channel OPEN/ACK completion; distinct from association
+ * open. Borrowed label is valid during callback; defer destroy/disconnect. */
+int webrtc_peer_set_data_channel_open_callback(
+    webrtc_peer_t *peer, webrtc_peer_data_channel_open_cb_t callback);
 int webrtc_peer_main_loop(webrtc_peer_t *peer);
 int webrtc_peer_disconnect(webrtc_peer_t *peer);
 int webrtc_peer_get_stats(
@@ -180,6 +254,9 @@ int webrtc_peer_get_stats(
 int webrtc_peer_get_stats_ex(
     const webrtc_peer_t *peer, webrtc_peer_stats_ex_t *stats, size_t stats_size);
 webrtc_peer_state_t webrtc_peer_get_state(const webrtc_peer_t *peer);
+/* Owner-thread snapshot; returns INVALID_STATE before ICE selects a pair. */
+int webrtc_peer_get_selected_ice_types(const webrtc_peer_t *peer,
+    webrtc_peer_ice_candidate_type_t *local, webrtc_peer_ice_candidate_type_t *remote);
 const char *webrtc_peer_state_to_string(webrtc_peer_state_t state);
 void webrtc_peer_close(webrtc_peer_t *peer);
 

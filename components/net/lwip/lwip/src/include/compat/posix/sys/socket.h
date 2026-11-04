@@ -30,4 +30,8 @@
  *
  */
 
+#ifdef CONFIG_SOCKET_OFFLOAD_CLIENT
+#include "socket_offload.h"
+#else
 #include "lwip/sockets.h"
+#endif

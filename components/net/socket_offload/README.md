@@ -18,9 +18,12 @@ The service core provides the network interface and lwIP stack. The client
 does not require a local network interface. A BL618DG dual-core example is
 available in `examples/wifi/sta/dualcore`.
 
-The component uses 1600-byte RPMsg buffers on both cores. The service requires
-`LWIP_NETCONN_FULLDUPLEX=1` and `LWIP_NETCONN_SEM_PER_THREAD=1`. Both cores
-require `configSUPPORT_STATIC_ALLOCATION=1`.
+`CONFIG_OPENAMP_RPMSG_BUFFER_SIZE` sets the buffer size for all RPMsg services
+(default: 1600 bytes). Both cores must use the same value.
+
+The service requires `LWIP_NETCONN_FULLDUPLEX=1` and
+`LWIP_NETCONN_SEM_PER_THREAD=1`. Both cores require
+`configSUPPORT_STATIC_ALLOCATION=1`.
 
 Timeout defaults are defined in `src/ipc_socket.h` and can be overridden with
 compiler definitions:

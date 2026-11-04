@@ -52,7 +52,7 @@ __start:
     /* Intial the mtvt, MUST BE 64 bytes aligned*/
     .weak __Vectors
     la t0, __Vectors
-    csrw mtvt, t0
+    csrw 0x307, t0 /* mtvt: E24 CLIC vector table base */
 
 #ifdef __riscv_float_abi_single
     /* deal with FP */
@@ -77,6 +77,10 @@ __start:
 
     /* start load code to itcm like. */
     call start_load
+
+#if defined(BFLB_USE_PICOLIBC) && !defined(BFLB_BOOT2)
+    call bflb_picolibc_init_boot_tls
+#endif
 
     call System_Post_Init
 

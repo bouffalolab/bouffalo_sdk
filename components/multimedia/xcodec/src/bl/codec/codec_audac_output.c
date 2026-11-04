@@ -540,9 +540,10 @@ int auo_stop(auo_ch_t *context)
 
     msp_codec_pa_before_closedac();
 
-    bflb_audac_feature_control(aupwm_dev, AUDAC_CMD_PLAY_STOP, 0);
-
-    bflb_dma_channel_stop(context->device_dma);
+    if (context->device_dma) {
+        bflb_audac_feature_control(aupwm_dev, AUDAC_CMD_PLAY_STOP, 0);
+        bflb_dma_channel_stop(context->device_dma);
+    }
 
     context->st = 0;
     context->pre_indx = 0;

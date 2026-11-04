@@ -17,6 +17,7 @@
 #if defined(CFG_BLE_ENABLE)
 #include "bluetooth.h"
 #include "btble_lib_api.h"
+#include "btblecontroller_port.h"
 #endif
 #endif
 
@@ -239,6 +240,11 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
         return -4;
     }
 
+    if (info->state == BTBLE_ST_CONN &&
+        !btblecontroller_lp_rx_ppm_ready(info->con.link_id, info->con.interval, info->con.rx_rate)) {
+        return -7;
+    }
+
     if (info->saved_blecore == NULL || info->saved_ipcore == NULL ||
         (((uintptr_t)info->saved_blecore | (uintptr_t)info->saved_ipcore) & 0x3U) != 0U ||
         info->saved_blecore_count < LP_FW_BLECORE_REG_SAVE_COUNT ||
@@ -249,7 +255,7 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
     }
 
     rc32k_trigger_override = ble_rc32k_trigger_override;
-    ble->rc32k_trigger_en = info->state == BTBLE_ST_CONN ? 1U : 0U;
+    ble->rc32k_trigger_en = 0U; /* info->state == BTBLE_ST_CONN ? 1U : 0U;*/
     if (rc32k_trigger_override >= 0) {
         ble->rc32k_trigger_en = (uint8_t)rc32k_trigger_override;
     }
@@ -303,12 +309,17 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
         ble->con_events_synced   = 0U;
         ble->con_last_rxstat     = 0U;
         ble->con_last_rxphce     = 0U;
+        /* Preserve RX ppm history across APP/LPFW handoffs. */
         memset(ble->con_dbg, 0, sizeof(ble->con_dbg));
         memset(ble->con_elog, 0, sizeof(ble->con_elog));
         ble->con_sync_evt_cnt    = c->evt_cnt;   /* latency applied => the last event synced */
         ble->con_retry_max       = 4U;
         ble->con_retries         = 0U;
         ble->con_rsvd1           = 0U;
+        ble->con_chmap_instant   = c->instant;
+        ble->con_chmap_pending   = c->instant_type == 2U && !c->instant_done;
+        ble->con_chmap_rsvd      = 0U;
+        memcpy(ble->con_chmap_expected, c->pending_chmap, sizeof(ble->con_chmap_expected));
         ble->magic = LP_FW_BLE_PARA_MAGIC;
         return 0;
     }
@@ -357,6 +368,30 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
         ble->saved_blecore_count, (unsigned long)ble->saved_ipcore_addr, ble->saved_ipcore_count);
 
     return 0;
+}
+
+static void ble_lp_controller_wake_publish(uint64_t start_rtc_cnt, uint32_t sleep_cycles)
+{
+    const lp_fw_ble_para_t *ble = iot2lp_para->ble_parameter;
+    uint64_t sleep_us = BL_PDS_CNT_TO_US((uint64_t)sleep_cycles);
+    uint64_t rtc_sleep_us;
+    uint64_t target_rtc_us;
+    int32_t ppm = 0;
+
+    /* Controller returns nominal 32768-Hz cycles converted from its 40-MHz
+     * sleep duration. Only the duration needs RX ppm; the RTC epoch is already
+     * in the RTC domain. Advertising keeps its existing nominal conversion. */
+    if (ble->ble_activity_state == LP_FW_BLE_ST_CONN && ble->con_rx_ppm_valid &&
+        ble->con_rx_ppm > -1000000 && ble->con_rx_ppm < 1000000) {
+        ppm = ble->con_rx_ppm;
+    }
+    rtc_sleep_us = (sleep_us * (uint64_t)(1000000LL + ppm) + 500000U) / 1000000U;
+    target_rtc_us = BL_PDS_CNT_TO_US(start_rtc_cnt) + rtc_sleep_us;
+    lpfw_cfg.ble_pds_sleep_us = (uint32_t)sleep_us;
+    bl_lp_sched_publish(2, 1000, 10000, target_rtc_us);
+    tickless_debugf("[BLE_LP][handoff_sleep] cycles=%lu ppm=%ld sleep_us=%llu rtc_sleep_us=%llu target_rtc_us=%llu",
+                    (unsigned long)sleep_cycles, (long)ppm, (unsigned long long)sleep_us,
+                    (unsigned long long)rtc_sleep_us, (unsigned long long)target_rtc_us);
 }
 
 static void ble_lp_controller_sleep_abort(bool *controller_sleeping)
@@ -452,7 +487,6 @@ extern uint16_t btblecontroller_rc32k_xtal_count_wait_result(void);
             bl_lp_ble_parameter_invalidate();
             tickless_debugf("BLE has no wakeup deadline");
         } else {
-            uint64_t ble_sleep_elapsed_rtc_cnt;
             int ble_para_ret = bl_lp_prepare_ble_parameter_before_sleep();
             if (ble_para_ret != 0) {
                 tickless_debugf("[TIME] ble_parameter prepare ret=%d, abort this sleep", ble_para_ret);
@@ -461,9 +495,7 @@ extern uint16_t btblecontroller_rc32k_xtal_count_wait_result(void);
                 return;
             }
 
-            ble_sleep_elapsed_rtc_cnt = ble_sleep_pds_timer + (uint64_t)ble_sleep_pre_rtc_cnt;
-            lpfw_cfg.ble_pds_sleep_us = BL_PDS_CNT_TO_US(ble_sleep_pre_rtc_cnt);
-            bl_lp_sched_publish(2,1000, 10000, BL_PDS_CNT_TO_US(ble_sleep_elapsed_rtc_cnt));
+            ble_lp_controller_wake_publish(ble_sleep_pre_rtc_cnt, (uint32_t)ble_sleep_pds_timer);
             lpfw_cfg.ble_wakeup_en = 1;
             tickless_debugf("ble sleep duration: %d", lpfw_cfg.ble_pds_sleep_us);
         }

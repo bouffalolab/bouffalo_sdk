@@ -109,6 +109,7 @@ int udp_socket_sendto(UdpSocket* udp_socket, Address* addr, const uint8_t* buf, 
 
   if (udp_socket->fd < 0) {
     LOGE("sendto before socket init");
+    errno = EBADF;
     return -1;
   }
 
@@ -127,12 +128,16 @@ int udp_socket_sendto(UdpSocket* udp_socket, Address* addr, const uint8_t* buf, 
   }
 
   if ((ret = sendto(udp_socket->fd, buf, len, 0, sa, sock_len)) < 0) {
+    int saved_errno = errno;
     udp_socket->send_error_count++;
     if (udp_socket->send_error_count == 1 ||
         (udp_socket->send_error_count % 64U) == 0) {
-      LOGE("Failed to sendto: %s (%u failures)", strerror(errno),
+      LOGE("Failed to sendto: %s (%u failures)", strerror(saved_errno),
            udp_socket->send_error_count);
     }
+    /* libc formatting or an application log sink may change errno. The
+     * DTLS BIO needs the original socket error to distinguish pressure. */
+    errno = saved_errno;
     return -1;
   }
 

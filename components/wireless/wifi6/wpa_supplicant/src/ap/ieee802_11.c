@@ -55,6 +55,10 @@
 #include "fils_hlp.h"
 #include "dpp_hostapd.h"
 #include "gas_query_ap.h"
+#ifdef CONFIG_WIFI_WDS
+#include "fhost.h"
+#include "fhost_wds.h"
+#endif
 
 
 #ifdef CONFIG_FILS
@@ -4084,6 +4088,8 @@ static u16 check_multi_ap(struct hostapd_data *hapd, struct sta_info *sta,
 	if (multi_ap_ie) {
 		const u8 *multi_ap_subelem;
 
+		if (multi_ap_len < 4)
+			return WLAN_STATUS_INVALID_IE;
 		multi_ap_subelem = get_ie(multi_ap_ie + 4,
 					  multi_ap_len - 4,
 					  MULTI_AP_SUB_ELEM_TYPE);
@@ -4990,6 +4996,25 @@ static int add_associated_sta(struct hostapd_data *hapd,
 		   !!(sta->flags & WLAN_STA_AUTHORIZED),
 		   wpa_auth_sta_ft_tk_already_set(sta->wpa_sm),
 		   wpa_auth_sta_fils_tk_already_set(sta->wpa_sm));
+
+#ifdef CONFIG_WIFI_WDS
+	{
+		int vif = fhost_vif_idx_from_name(hapd->conf->iface);
+
+		/* sta_remove clears the auto peer. Reject first so a reassoc
+		 * that drops Multi-AP does not delete the current STA. */
+		if (vif >= 0 &&
+		    fhost_wds_auto_sta_admit(vif, sta->addr,
+					     !!(sta->flags & WLAN_STA_MULTI_AP)) !=
+		    WIFI_WDS_OK) {
+			wpa_printf(MSG_INFO,
+				   "WDS AUTO refused STA " MACSTR " backhaul=%d",
+				   MAC2STR(sta->addr),
+				   !!(sta->flags & WLAN_STA_MULTI_AP));
+			return -1;
+		}
+	}
+#endif /* CONFIG_WIFI_WDS */
 
 	if (!sta->added_unassoc &&
 	    (!(sta->flags & WLAN_STA_AUTHORIZED) ||
@@ -6480,6 +6505,7 @@ static void handle_assoc_cb(struct hostapd_data *hapd,
 		status = le_to_host16(mgmt->u.reassoc_resp.status_code);
 	else
 		status = le_to_host16(mgmt->u.assoc_resp.status_code);
+
 
 	if (!ok) {
 		hostapd_logger(hapd, mgmt->da, HOSTAPD_MODULE_IEEE80211,

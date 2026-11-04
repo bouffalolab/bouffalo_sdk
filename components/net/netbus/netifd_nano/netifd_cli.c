@@ -8,6 +8,13 @@
 
 #include <shell.h>
 
+/* Images without wifi_wds may delete the one netifd bridge. */
+int __attribute__((weak)) app_wds_bridge_in_use(const struct netif *netif)
+{
+    (void)netif;
+    return 0;
+}
+
 static void nifd_print_usage()
 {
     printf("Usage:\r\n");
@@ -27,9 +34,13 @@ static void print_interface_status()
 {
     struct netif *netif = netif_list;
 
-    printf("Default Interface %c%c%d, @:%p:\r\n",
-            netif_default->name[0], netif_default->name[1],
-            netif_default->num, netif_default);
+    if (netif_default) {
+        printf("Default Interface %c%c%d, @:%p:\r\n",
+                netif_default->name[0], netif_default->name[1],
+                netif_default->num, netif_default);
+    } else {
+        printf("Default Interface: none\r\n");
+    }
     while (netif != NULL) {
         char ipaddr_str[IP4ADDR_STRLEN_MAX];
         char netmask_str[IP4ADDR_STRLEN_MAX];
@@ -239,7 +250,18 @@ int cmd_netifd_nano(int argc, char *argv[])
                 printf("Failed to create bridge interface %s.\r\n", bridge);
             }
         } else if (strcmp(bridge_cmd, "delete") == 0) {
-            if (netifd_bridge_delete(bridge) == 0) {
+            struct netif *netif;
+            int rc;
+
+            /* wifi_wds holds this lock around its own bridge updates. */
+            LOCK_TCPIP_CORE();
+            netif = netif_find(bridge);
+            if (netif != NULL && app_wds_bridge_in_use(netif))
+                rc = -1;
+            else
+                rc = netifd_bridge_delete(bridge);
+            UNLOCK_TCPIP_CORE();
+            if (rc == 0) {
                 printf("Bridge interface %s deleted successfully.\r\n", bridge);
             } else {
                 printf("Failed to delete bridge interface %s.\r\n", bridge);
@@ -263,11 +285,21 @@ int cmd_netifd_nano(int argc, char *argv[])
                 printf("Failed to add interface %s to bridge %s.\r\n", interface, bridge);
             }
         } else if (strcmp(bridge_cmd, "remove") == 0) {
+            struct netif *netif;
+            int rc;
+
             if (interface == NULL) {
                 nifd_print_usage();
                 return -1;
             }
-            if (netifd_bridge_remove_if(bridge, interface) == 0) {
+            LOCK_TCPIP_CORE();
+            netif = netif_find(bridge);
+            if (netif != NULL && app_wds_bridge_in_use(netif))
+                rc = -1;
+            else
+                rc = netifd_bridge_remove_if(bridge, interface);
+            UNLOCK_TCPIP_CORE();
+            if (rc == 0) {
                 printf("Interface %s removed from bridge %s successfully.\r\n", interface, bridge);
             } else {
                 printf("Failed to remove interface %s from bridge %s.\r\n", interface, bridge);

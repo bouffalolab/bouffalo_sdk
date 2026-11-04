@@ -202,7 +202,8 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
     bflb_sec_sha_mutex_take();
     bflb_sha_link_init(ctx->sha);
     memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha512_link_ctx_s));
-    ret = bflb_sha512_link_finish(ctx->sha, &link_ctx_temp, output);
+    ret = 0;
+    bflb_sha512_link_finish(ctx->sha, &link_ctx_temp, output);
     bflb_sec_sha_mutex_give();
 
     if( ret != 0 )

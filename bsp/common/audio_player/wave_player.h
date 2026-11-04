@@ -36,8 +36,9 @@
 #define WAVE_PLAYER_I2S_DSP_MODE CONFIG_I2S_DSP_MODE
 #endif
 
-/* Zero derives bus slots from active I2S channels; fixed-frame codecs may
- * need an explicit slot count even when recording is disabled. */
+/* Zero derives bus slots from active I2S channels and the detected codec's
+ * frame requirements. JY6316 uses four slots, including playback-only;
+ * incompatible explicit slot counts are rejected during configuration. */
 #ifndef CONFIG_WAVE_PLAYER_I2S_TX_SLOTS
 #define WAVE_PLAYER_I2S_TX_SLOTS 0U
 #else
@@ -189,6 +190,11 @@ typedef struct {
  * init. Do not call start/recording APIs unless init returned 0. */
 int wave_player_init(const wave_player_hw_cfg_t *hw_cfg);
 void wave_player_deinit(void);
+/* Mutating legacy APIs refuse PCM-owned hardware: signed-result APIs return
+ * -EBUSY, unsigned byte-count APIs return zero, and void config/flush calls do
+ * nothing. Use audio_pcm controls for those sessions; read-only snapshots remain
+ * available. In-flight legacy operations also prevent the first PCM session
+ * from opening; initial hardware setup remains a quiescent, single-owner operation. */
 int wave_player_start(void);
 int wave_player_suspend(void);
 int wave_player_resume(void);
@@ -201,6 +207,16 @@ bool wave_player_get_mute(void);
 int wave_player_set_record_volume(uint8_t volume);
 int wave_player_set_record_pga(uint8_t pga);
 int wave_player_feed(uint8_t *data, uint32_t len);
+/* Queued source PCM, excluding PCM prefetched by the player/resampler and
+ * blocks scheduled for DMA. This is a snapshot, not a latency measurement
+ * or a reservation. */
+uint32_t wave_player_get_buffered_bytes(void);
+/* Discard oldest complete source PCM frames beyond this byte budget. Returns
+ * bytes discarded; preserves newer PCM, prefetched PCM and scheduled DMA
+ * blocks. This limits queued backlog; trim(0) does not immediately silence
+ * output. Use flush to invalidate pending source playback, and mute/stop
+ * to control output. */
+uint32_t wave_player_trim_buffer(uint32_t max_bytes);
 uint32_t wave_player_feed_blocking(uint8_t *data, uint32_t len);
 void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_t rx_block_bytes, uint8_t channels);
 void wave_player_dump_stack(void);
@@ -229,6 +245,12 @@ typedef struct {
     uint32_t sample_rate_hz;
     uint8_t channels;
     wave_player_capture_layout_t layout;
+    /* Monotonic DMA completion sequence; gaps expose dropped descriptors. */
+    uint32_t sequence;
+    /* Changes whenever the shared capture DMA timeline is reconfigured. */
+    uint32_t epoch;
+    /* Samples elapsed in this DMA epoch, including dropped callback blocks. */
+    uint64_t first_sample_index;
 } wave_player_rec_frame_t;
 typedef void (*wave_player_rec_cb_t)(const wave_player_rec_frame_t *frame, void *user_data);
 

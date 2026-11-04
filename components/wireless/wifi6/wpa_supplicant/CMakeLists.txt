@@ -1,5 +1,10 @@
 sdk_generate_library()
 
+if(CONFIG_WIFI_WDS)
+    # The supplicant WDS paths are part of the library, not the diagnostic switch.
+    sdk_add_compile_definitions(-DCONFIG_WIFI_WDS=1)
+endif()
+
 # wpa_supplicant is third-party code; suppress warnings that arise from its
 # use of debug macros (no-ops when debug disabled) and optional feature guards.
 sdk_add_private_compile_options(

@@ -22,6 +22,8 @@
 #include "bl616cl_tzc_sec.h"
 #include "bl616cl_pm.h"
 
+#include <time.h>
+
 #include "bl616cl_glb.h"
 
 #include "board_flash_psram.h"

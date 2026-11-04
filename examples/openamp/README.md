@@ -55,6 +55,5 @@ ipc_throughput_stop
 
 ## 配置说明
 
-示例沿用参考吞吐测试的 RPMsg 配置：`RPMSG_BUFFER_SIZE=1600`、
-`VRING_SIZE=4`，不修改公共 IPC 组件 API。AP 必须在 `defconfig` 中设置
-`CONFIG_RPMSG_SERVICE_MODE_MASTER=y`。
+示例使用 `CONFIG_OPENAMP_RPMSG_BUFFER_SIZE=1600` 和 `VRING_SIZE=4`。
+AP 使用 `CONFIG_RPMSG_SERVICE_MODE_MASTER=y`。

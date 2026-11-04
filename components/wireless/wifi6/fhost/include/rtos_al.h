@@ -84,6 +84,16 @@ uint32_t rtos_al_ms2tick(int ms);
 
 /**
  ****************************************************************************************
+ * @brief Convert RTOS ticks to milliseconds.
+ *
+ * @param[in] ticks Tick count.
+ * @return elapsed time in milliseconds.
+ ****************************************************************************************
+ */
+uint32_t rtos_al_tick2ms(uint32_t ticks);
+
+/**
+ ****************************************************************************************
  * @brief Get the current RTOS time, in ms.
  *
  * @param[in] isr  Indicate if this is called from ISR.
@@ -115,6 +125,15 @@ void *rtos_malloc(uint32_t size);
  ****************************************************************************************
  */
 void *rtos_calloc(uint32_t nb_elt, uint32_t size);
+
+/**
+ * @brief Retire a DMA pool when its address is cacheable.
+ *
+ * Call once with the full allocation size, including alignment padding.
+ * A cacheable address is cleaned and the uncached alias is returned.
+ * A non-cacheable address is returned unchanged.
+ */
+void *rtos_dma_pool_prepare(void *pool, uint32_t size);
 
 /**
  ****************************************************************************************

@@ -2,16 +2,20 @@ CONFIG_GCC_OPTIMISE_LEVEL =-O2
 
 ifneq (,$(filter $(CHIP),bl616 bl616cl))
     CONFIG_WL80211 =y
-    CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT = 0x4000 # 16KB
+    CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT = 0x5000 # 20KB
 endif
 # The default configuration of the wireless network
 -include $(BL_SDK_BASE)/examples/wifi/defconfig
 # The log of macsw affects the real-time performance.
 CONFIG_MACSW_LOG_NO_PRINT =y
 
+# 88KB WRAM for BL616/BL616CL, which is enough for this project.
+CONFIG_WRAM_LENGTH = 0x16000
+
 CONFIG_PSRAM =y
 CONFIG_SHELL =y
 CONFIG_IPERF =y
+CONFIG_PS_EXTEND =y
 
 ####################### soln_utils config #######################
 CONFIG_SOLN_UTILS =y
@@ -84,9 +88,6 @@ CONFIG_MBEDTLS_ECC_USE_HW    =y
 CONFIG_MBEDTLS_SHA1_USE_HW   =y
 CONFIG_MBEDTLS_SHA256_USE_HW =y
 CONFIG_MBEDTLS_SHA512_USE_HW =y
-
-# 84KB WRAM for BL616/BL616CL, which is enough for this project.
-CONFIG_WRAM_LENGTH = 0x15000
 
 ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI             =n

@@ -21,7 +21,7 @@ config BTBLECONTROLLER_LIB
       ble1m2s1bredr0, ble1m2s1bredr1, ble1m4s1bredr1, blespihci,
       bleuarthci, mfg, uarthci, wlanif; bl702l: m0s1p, m0s1rp, m0s1sp,
       m0s2p, m0s4p, m1s1p, m1s1t10, m2s1p, m4s1p, m8s1p, uarthci,
-      uarthcilp; bl616cl: m0b1, m0s1, m2s1, mfg, uarthci, wlanif); the
+      uarthcilp; bl616cl: m0b1, m0s1, m2s1, m10s1, mfg, uarthci, wlanif); the
       build aborts on unknown values or when the remaining options
       conflict with the selected library.
 

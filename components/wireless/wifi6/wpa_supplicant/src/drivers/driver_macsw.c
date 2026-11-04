@@ -15,6 +15,9 @@
 #include "fhost_api.h"
 #include "net_al.h"
 #include "fhost_wpa.h"
+#ifdef CONFIG_WIFI_WDS
+#include "fhost_wds.h"
+#endif
 
 #include "macsw.h"
 
@@ -23,6 +26,7 @@
 
 #include "eloop_rtos.h"
 #include "driver_macsw_priv.h"
+
 
 #if MACSW_WFA
 /* Sentinel symbol for CI verification: nm <elf> | grep __ci_wfa_sentinel */
@@ -41,10 +45,16 @@ volatile int __ci_wfa_sentinel = 1;
 struct wpa_mac_tx_frame {
 	// pointer to driver interface data
 	struct wpa_macsw_driver_itf_data *drv;
+	/* Immutable identity across the WIFI-task -> WPA-task handoff. */
+	u32 vif_epoch;
+	u32 peer_epoch;
+	u32 assoc_cookie;
 	// frame data length
 	size_t data_len;
 	// eapol frame
 	bool eapol;
+	/* Also guard the absence of a peer/cookie for rejection responses. */
+	bool assoc_response;
 	// dst addr (only for eapol)
 	u8 dst_addr[ETH_ALEN];
 	// frame data, actual buffer allocated is data_len bytes long
@@ -69,6 +79,58 @@ enum wpa_macsw_driver_status {
 	 * before MACSW reports a BSSID. Cleared on connect, disconnect, and deauth. */
 	MACSW_CONNECTING = BIT(8),
 };
+
+struct macsw_tx_peer {
+	u8 addr[ETH_ALEN];
+	u32 epoch;
+	u32 assoc_cookie;
+};
+
+struct macsw_tx_vif {
+	u32 epoch;
+	struct macsw_tx_peer peers[MACSW_REMOTE_STA_MAX];
+};
+
+/* Only the WPA task updates this sidecar. A driver/VIF pointer or station
+ * index can be reused while a TX status is still queued, so neither is an
+ * identity. Tokens survive driver reinitialization and never wrap. */
+static struct macsw_tx_vif macsw_tx_vifs[MACSW_VIRT_DEV_MAX];
+static u32 macsw_tx_token;
+
+static u32 macsw_tx_next_token(void)
+{
+	if (macsw_tx_token == (u32) -1)
+		return 0;
+	return ++macsw_tx_token;
+}
+
+static int macsw_tx_vif_renew(struct wpa_macsw_driver_itf_data *drv)
+{
+	struct macsw_tx_vif *vif = &macsw_tx_vifs[drv->fhost_vif_idx];
+
+	os_memset(vif, 0, sizeof(*vif));
+	vif->epoch = macsw_tx_next_token();
+	return vif->epoch ? 0 : -1;
+}
+
+static struct macsw_tx_peer *
+macsw_tx_peer_find(struct wpa_macsw_driver_itf_data *drv, const u8 *addr,
+		   int allow_free)
+{
+	struct macsw_tx_vif *vif = &macsw_tx_vifs[drv->fhost_vif_idx];
+	struct macsw_tx_peer *free_peer = NULL;
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(vif->peers); i++) {
+		struct macsw_tx_peer *peer = &vif->peers[i];
+
+		if (peer->epoch && os_memcmp(peer->addr, addr, ETH_ALEN) == 0)
+			return peer;
+		if (!peer->epoch && !free_peer)
+			free_peer = peer;
+	}
+	return allow_free ? free_peer : NULL;
+}
 
 // For STA only accept action frames
 #define STA_MGMT_RX_FILTER ~CO_BIT(WLAN_FC_STYPE_ACTION)
@@ -306,6 +368,24 @@ wpa_macsw_driver_init_tx_frame(struct wpa_macsw_driver_itf_data *drv, const u8 *
 			      size_t data_len, const u8 *dst_addr)
 {
 	struct wpa_mac_tx_frame *tx_frame = NULL;
+	struct macsw_tx_peer *peer = NULL;
+	bool assoc_response = false;
+	u32 vif_epoch = macsw_tx_vifs[drv->fhost_vif_idx].epoch;
+
+	if (!vif_epoch)
+		return NULL;
+	if (dst_addr && (drv->status & MACSW_AP_STARTED)) {
+		peer = macsw_tx_peer_find(drv, dst_addr, 0);
+		if (!peer)
+			return NULL;
+	} else if (data && data_len >= IEEE80211_HDRLEN &&
+		   WLAN_FC_GET_TYPE(data[0]) == WLAN_FC_TYPE_MGMT &&
+		   (WLAN_FC_GET_STYPE(data[0]) == WLAN_FC_STYPE_ASSOC_RESP ||
+		    WLAN_FC_GET_STYPE(data[0]) == WLAN_FC_STYPE_REASSOC_RESP)) {
+		assoc_response = true;
+		peer = macsw_tx_peer_find(drv,
+				 ((const struct ieee80211_hdr *) data)->addr1, 0);
+	}
 
 	tx_frame = os_malloc(sizeof(struct wpa_mac_tx_frame) + data_len);
 	if (!tx_frame) {
@@ -314,6 +394,10 @@ wpa_macsw_driver_init_tx_frame(struct wpa_macsw_driver_itf_data *drv, const u8 *
 	}
 
 	tx_frame->drv = drv;
+	tx_frame->vif_epoch = vif_epoch;
+	tx_frame->peer_epoch = peer ? peer->epoch : 0;
+	tx_frame->assoc_cookie = assoc_response && peer ? peer->assoc_cookie : 0;
+	tx_frame->assoc_response = assoc_response;
 	tx_frame->data_len = data_len;
 	if (dst_addr) {
 		tx_frame->eapol = true;
@@ -1042,6 +1126,8 @@ static void wpa_macsw_driver_process_tx_status_event(struct wpa_macsw_driver_dat
 	enum wpa_event_type wpa_event;
 	const u8 *dst;
 	bool acknowledged;
+	struct macsw_tx_vif *vif;
+	struct macsw_tx_peer *peer;
 
 	struct cfgmacsw_msg_hdr *msg_hdr;
 	unsigned int msg_len;
@@ -1050,6 +1136,22 @@ static void wpa_macsw_driver_process_tx_status_event(struct wpa_macsw_driver_dat
 	memcpy(&event, msg_hdr, msg_len);
 
 	tx_frame = (struct wpa_mac_tx_frame *)event.data;
+	vif = &macsw_tx_vifs[tx_frame->drv->fhost_vif_idx];
+	dst = tx_frame->eapol ? tx_frame->dst_addr :
+		((struct ieee80211_hdr *)tx_frame->data)->addr1;
+	if (!tx_frame->vif_epoch || tx_frame->vif_epoch != vif->epoch) {
+		wpa_macsw_driver_release_tx_frame(tx_frame);
+		return;
+	}
+	if (tx_frame->peer_epoch || tx_frame->assoc_response) {
+		peer = macsw_tx_peer_find(tx_frame->drv, dst, 0);
+		if (tx_frame->peer_epoch != (peer ? peer->epoch : 0) ||
+		    (tx_frame->assoc_response &&
+		     tx_frame->assoc_cookie != (peer ? peer->assoc_cookie : 0))) {
+			wpa_macsw_driver_release_tx_frame(tx_frame);
+			return;
+		}
+	}
 
 	if (tx_frame->eapol)
 	{
@@ -1120,6 +1222,7 @@ static void wpa_macsw_driver_tx_status(uint32_t frame_id, bool acknowledged, voi
 	struct wpa_macsw_driver_itf_data *drv = tx_frame->drv;
 	//struct wpa_macsw_driver_data *gdrv = drv->gdrv;
 	struct cfgmac_tx_status_event event;
+
 
 	// Remember this callback is called in the WIFI task context, so we cannot call
 	// wpa_supplicant_event as this may call another driver interface.
@@ -1362,6 +1465,8 @@ static void *wpa_macsw_driver_init2(void *ctx, const char *ifname, void *global_
 	drv->status = MACSW_INITIALIZED;
 	drv->ssid = NULL;
 	drv->ssid_len = 0;
+	if (macsw_tx_vif_renew(drv))
+		goto err;
 
 	if (vif_status.type == VIF_UNKNOWN) {
 		type = VIF_STA;
@@ -1397,6 +1502,8 @@ static void wpa_macsw_driver_deinit(void *priv)
 	//TRACE_FHOST(WPA_INFO, "{FVIF-%d} Driver MACSW deinit", drv->fhost_vif_idx);
 
 	drv->status &= ~MACSW_INITIALIZED;
+	os_memset(&macsw_tx_vifs[drv->fhost_vif_idx], 0,
+		  sizeof(macsw_tx_vifs[drv->fhost_vif_idx]));
 
 	if (drv->status & MACSW_SCANNING) {
 		// TODO: abort scan
@@ -1828,7 +1935,8 @@ static int wpa_macsw_driver_set_key(void *priv, struct wpa_driver_set_key_params
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_set_key cmd;
-	struct cfgmacsw_resp resp;
+	struct cfgmacsw_resp resp = { 0 };
+	int ret;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_SET_KEY_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_SET_KEY_RESP, sizeof(resp));
@@ -1849,7 +1957,8 @@ static int wpa_macsw_driver_set_key(void *priv, struct wpa_driver_set_key_params
 	cmd.seq_len = params->seq_len;
 	cmd.pairwise = !!(params->key_flag & KEY_FLAG_PAIRWISE);
 
-	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
+	ret = fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr);
+	if (ret || (resp.status != CFGMACSW_SUCCESS))
 		return -1;
 
 	return 0;
@@ -2293,6 +2402,7 @@ static int wpa_macsw_driver_send_mlme(void *priv, const u8 *data, size_t data_le
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct wpa_mac_tx_frame *tx_frame = NULL;
+	struct macsw_tx_peer *peer;
 	cb_fhost_tx cb = NULL;
     uint32_t ret = 0;
 
@@ -2308,10 +2418,32 @@ static int wpa_macsw_driver_send_mlme(void *priv, const u8 *data, size_t data_le
 			return -1;
         }
 		cb = wpa_macsw_driver_tx_status;
+		if ((drv->status & MACSW_AP_STARTED) &&
+		    data_len >= IEEE80211_HDRLEN + 4 &&
+		    WLAN_FC_GET_TYPE(data[0]) == WLAN_FC_TYPE_MGMT &&
+		    (WLAN_FC_GET_STYPE(data[0]) == WLAN_FC_STYPE_ASSOC_RESP ||
+		     WLAN_FC_GET_STYPE(data[0]) == WLAN_FC_STYPE_REASSOC_RESP) &&
+		    WPA_GET_LE16(data + IEEE80211_HDRLEN + 2) == WLAN_STATUS_SUCCESS) {
+			peer = macsw_tx_peer_find(drv,
+					 ((const struct ieee80211_hdr *) data)->addr1, 0);
+			if (!peer || !(tx_frame->assoc_cookie = macsw_tx_next_token())) {
+				wpa_macsw_driver_release_tx_frame(tx_frame);
+				return -1;
+			}
+			tx_frame->peer_epoch = peer->epoch;
+			/* Register before handing ownership to FHOST: a rejected TX
+			 * can already call back synchronously. Its caller still gets
+			 * the real submission failure and performs normal cleanup. */
+			peer->assoc_cookie = tx_frame->assoc_cookie;
+		}
 	}
 
     ret = fhost_send_80211_frame(drv->fhost_vif_idx, data, data_len, 0, cb, tx_frame);
     if (ret < 4) {
+        /* 0/1/2 precede the FHOST handoff. For 3, FHOST has consumed
+         * the buffer and may already have invoked cb; do not free twice. */
+        if (ret < 3 && tx_frame)
+            wpa_macsw_driver_release_tx_frame(tx_frame);
         wpa_extra_printf("[WPA]Fhost send failed, ret is %u\r\n", ret);
         return -1;
     }
@@ -2368,6 +2500,8 @@ static int wpa_macsw_driver_set_ap(void *priv, struct wpa_driver_ap_params *para
 #endif
 
 	if (wpa_macsw_driver_vif_update(drv, VIF_AP, p2p))
+		return -1;
+	if (macsw_tx_vif_renew(drv))
 		return -1;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_START_AP_CMD, sizeof(cmd));
@@ -2462,6 +2596,7 @@ static int wpa_macsw_driver_deinit_ap(void *priv)
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_resp resp;
 	struct cfgmacsw_set_vif_type cmd;
+	int epoch_ret = macsw_tx_vif_renew(drv);
 
 	// Always reset to STA filter whatever initial interface type
 	fhost_wpa_set_mgmt_rx_filter(drv->fhost_vif_idx, STA_MGMT_RX_FILTER);
@@ -2498,7 +2633,7 @@ static int wpa_macsw_driver_deinit_ap(void *priv)
 	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
 		return -1;
 
-	return 0;
+	return epoch_ret;
 }
 
 static int wpa_macsw_driver_set_tx_queue_params(void *priv, int queue, int aifs, int cw_min,
@@ -2536,6 +2671,12 @@ static int wpa_macsw_driver_hapd_send_eapol(void *priv, const u8 *addr, const u8
 	struct cfgmac_tx_status_event event;
 	struct wpa_mac_tx_frame *tx_frame;
 	bool ack;
+	struct macsw_tx_peer *peer = macsw_tx_peer_find(drv, addr, 0);
+
+	/* A queued EAPOL confirmation must not be attributed to a replacement
+	 * station with the same address. Do not submit untracked AP traffic. */
+	if ((drv->status & MACSW_AP_STARTED) && !peer)
+		return -1;
 
 	if (net_l2_send(fhost_to_net_if(drv->fhost_vif_idx), data, data_len, ETH_P_PAE,
 			addr, &ack))
@@ -2556,10 +2697,57 @@ static int wpa_macsw_driver_hapd_send_eapol(void *priv, const u8 *addr, const u8
 	return 0;
 }
 
+#ifdef CONFIG_WIFI_WDS
+static void wpa_macsw_wds_auto_release(struct wpa_macsw_driver_itf_data *drv,
+				       const u8 *addr, bool bound)
+{
+	if (bound)
+		fhost_wds_auto_peer_bind(drv->fhost_vif_idx, addr, false);
+}
+#endif
+
 static int wpa_macsw_driver_sta_add(void *priv, struct hostapd_sta_add_params *params)
 {
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_resp resp;
+	struct macsw_tx_peer *peer = NULL;
+	u32 peer_epoch = 0;
+#ifdef CONFIG_WIFI_WDS
+	bool wds_bound = false;
+#endif
+
+#ifdef CONFIG_WIFI_WDS
+	/* Bind before the association response. Same MAC is idempotent.
+	 * Take the single backhaul slot before the association response is sent. */
+	if (!params->set &&
+	    fhost_wds_auto_enabled(drv->fhost_vif_idx, WIFI_WDS_ROLE_AP)) {
+		bool backhaul = !!(params->flags & WPA_STA_MULTI_AP);
+
+		if (!backhaul) {
+			if (fhost_wds_auto_sta_admit(drv->fhost_vif_idx,
+						    params->addr, false) !=
+			    WIFI_WDS_OK)
+				return -1;
+		} else if (fhost_wds_auto_peer_bind(drv->fhost_vif_idx,
+						    params->addr, true) !=
+			   WIFI_WDS_OK) {
+			return -1;
+		} else {
+			wds_bound = true;
+		}
+	}
+#endif
+
+	if (!params->set && (drv->status & MACSW_AP_STARTED)) {
+		peer = macsw_tx_peer_find(drv, params->addr, 1);
+		if (!peer || !macsw_tx_vifs[drv->fhost_vif_idx].epoch ||
+		    !(peer_epoch = macsw_tx_next_token())) {
+#ifdef CONFIG_WIFI_WDS
+			wpa_macsw_wds_auto_release(drv, params->addr, wds_bound);
+#endif
+			return -1;
+		}
+	}
 
 	if (params->set)
 	{
@@ -2658,8 +2846,17 @@ static int wpa_macsw_driver_sta_add(void *priv, struct hostapd_sta_add_params *p
 		cmd.max_sp_len  = (params->qosinfo & 0x60) >> 4;
 		cmd.listen_interval = params->listen_interval;
 
-		if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
+		if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS)) {
+#ifdef CONFIG_WIFI_WDS
+			wpa_macsw_wds_auto_release(drv, params->addr, wds_bound);
+#endif
 			return -1;
+		}
+		if (peer) {
+			os_memcpy(peer->addr, params->addr, ETH_ALEN);
+			peer->epoch = peer_epoch;
+			peer->assoc_cookie = 0;
+		}
 	}
 
 	return 0;
@@ -2670,6 +2867,7 @@ static int wpa_macsw_driver_sta_remove(void *priv, const u8 *addr)
 	struct wpa_macsw_driver_itf_data *drv = priv;
 	struct cfgmacsw_sta_remove cmd;
 	struct cfgmacsw_resp resp;
+	struct macsw_tx_peer *peer;
 
 	wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_STA_REMOVE_CMD, sizeof(cmd));
 	wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_STA_REMOVE_RESP, sizeof(resp));
@@ -2679,6 +2877,10 @@ static int wpa_macsw_driver_sta_remove(void *priv, const u8 *addr)
 
 	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
 		return -1;
+	peer = macsw_tx_peer_find(drv, addr, 0);
+	if (peer) {
+		os_memset(peer, 0, sizeof(*peer));
+	}
 
 	return 0;
 }
@@ -2708,8 +2910,19 @@ static int wpa_macsw_driver_sta_set_flags(void *priv, const u8 *addr,
 	os_memcpy(cmd.addr.array, addr, ETH_ALEN);
 	cmd.authorized = authorized;
 
-	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) || (resp.status != CFGMACSW_SUCCESS))
+	if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) ||
+	    resp.status != CFGMACSW_SUCCESS) {
+#ifdef CONFIG_WIFI_WDS
+		static unsigned int port_error_logs;
+
+		if (port_error_logs++ < 16)
+			wpa_printf(MSG_WARNING,
+				   "WDS STA port update failed vif=%u peer=" MACSTR
+				   " authorized=%d",
+				   drv->fhost_vif_idx, MAC2STR(addr), authorized);
+#endif
 		return -1;
+	}
 
 	return 0;
 }
@@ -2903,8 +3116,11 @@ static int wpa_macsw_send_action(void *priv, unsigned int freq, unsigned int wai
            " src=" MACSTR " bssid=" MACSTR " len=%u no_cck=%d ret=%u\r\n",
            drv->fhost_vif_idx, freq, wait, MAC2STR(dst), MAC2STR(src),
            MAC2STR(bssid), (unsigned int)data_len, no_cck, ret);
-    if (ret < 4)
+    if (ret < 4) {
+        if (ret < 3)
+            wpa_macsw_driver_release_tx_frame(tx_frame);
         return -1;
+    }
 
     return 0;
 }
@@ -3049,6 +3265,39 @@ static int wpa_macsw_leave_mesh(void *priv)
 }
 #endif //MACSW_MESH_EN
 
+#ifdef CONFIG_WIFI_WDS
+/* Tell fhost when Multi-AP enables four-address mode. WDS and this link's PTK share one bridge port. */
+static int wpa_macsw_driver_set_4addr_mode(void *priv,
+					const char *bridge_ifname, int val)
+{
+	struct wpa_macsw_driver_itf_data *drv = priv;
+
+	(void) bridge_ifname;
+	if (!fhost_wds_auto_enabled(drv->fhost_vif_idx, WIFI_WDS_ROLE_STA))
+		return -1;
+	return fhost_wds_auto_peer_bind(drv->fhost_vif_idx, drv->bssid,
+				       val != 0) == WIFI_WDS_OK ? 0 : -1;
+}
+
+static int wpa_macsw_driver_set_wds_sta(void *priv, const u8 *addr,
+				      int aid, int val,
+				      const char *bridge_ifname,
+				      char *ifname_wds)
+{
+	struct wpa_macsw_driver_itf_data *drv = priv;
+
+	(void) aid;
+	(void) bridge_ifname;
+	/* WDS shares the physical Wi-Fi bridge port and the peer's PTK. */
+	if (ifname_wds)
+		ifname_wds[0] = '\0';
+	if (!fhost_wds_auto_enabled(drv->fhost_vif_idx, WIFI_WDS_ROLE_AP))
+		return -1;
+	return fhost_wds_auto_peer_bind(drv->fhost_vif_idx, addr,
+				       val != 0) == WIFI_WDS_OK ? 0 : -1;
+}
+#endif /* CONFIG_WIFI_WDS */
+
 const struct wpa_driver_ops wpa_driver_macsw_ops = {
 	.name = "MACSW",
 	.desc = "MACSW + LwIP driver",
@@ -3081,6 +3330,10 @@ const struct wpa_driver_ops wpa_driver_macsw_ops = {
 	.sta_set_flags = wpa_macsw_driver_sta_set_flags,
 	.sta_deauth = wpa_macsw_driver_sta_deauth,
 	.sta_disassoc = wpa_macsw_driver_sta_disassoc,
+#ifdef CONFIG_WIFI_WDS
+	.set_4addr_mode = wpa_macsw_driver_set_4addr_mode,
+	.set_wds_sta = wpa_macsw_driver_set_wds_sta,
+#endif
 	.get_seqnum = wpa_macsw_driver_get_seqnum,
 	.get_inact_sec = wpa_macsw_get_inact_sec,
 	.poll_client = wpa_macsw_poll_client,

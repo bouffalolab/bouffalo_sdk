@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if defined(BFLB_USE_PICOLIBC)
+#include <errno.h>
+#undef errno
+extern __thread int errno;
+#endif
+
 #include <FreeRTOS.h>
 #include "semphr.h"
 #if defined(CONFIG_BACKTRACE)
@@ -79,13 +85,15 @@ __attribute__((weak)) void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTime
     *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
 
-int *__errno()
+int *__errno(void)
 {
-    //#if(configUSE_POSIX_ERRNO == 1)
-      {
-      extern int FreeRTOS_errno;
-      return &FreeRTOS_errno;
-      }
-    //#endif
-    //return &_REENT->_errno;
+#if defined(BFLB_USE_PICOLIBC)
+    return &errno;
+#elif ( configUSE_POSIX_ERRNO == 1 )
+    extern int FreeRTOS_errno;
+    return &FreeRTOS_errno;
+#else
+    static int errno_value = 0;
+    return &errno_value;
+#endif
 }

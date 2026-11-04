@@ -42,6 +42,11 @@
 #define MBEDTLS_AES_ALT
 #endif
 
+// Use the SDK GCM alternative without changing the hardware AES implementation.
+#if defined(CONFIG_MBEDTLS_GCM_SOFTWARE_AES)
+#define MBEDTLS_GCM_ALT
+#endif
+
 // ECC HW
 #if defined(CONFIG_MBEDTLS_ECC_USE_HW)
 #define MBEDTLS_ECP_ALT

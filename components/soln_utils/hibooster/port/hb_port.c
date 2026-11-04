@@ -9,6 +9,10 @@
 #include "lwip/pbuf.h"
 #include "hb_port.h"
 
+#if IS_ENABLED(CONFIG_WL80211)
+#include "wl80211_platform.h"
+#endif
+
 #ifdef CONFIG_SOLN_HB_TX_LOG_LEVEL
 #undef CONFIG_LOG_LEVEL
 #define CONFIG_LOG_LEVEL CONFIG_SOLN_HB_TX_LOG_LEVEL
@@ -63,5 +67,18 @@ uint32_t hb_get_ms(void)
 /*************************** lwIP port ****************************/
 struct pbuf *hb_pbuf_alloc_tx(uint16_t len)
 {
+#if (CONFIG_SOLN_HB_TX_WRAM_RESERVE_SIZE > 0)
+
+#if IS_ENABLED(CONFIG_WL80211) && (CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT > 0)
+    const size_t limit = CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT;
+    const size_t usage = wl80211_platform_get_wram_mem_size_usage();
+    if (usage >= limit || (limit - usage) < CONFIG_SOLN_HB_TX_WRAM_RESERVE_SIZE) {
+        return NULL;
+    }
+#else
+#warning "WL80211 is not enabled, WRAM usage cannot be checked. Ensure that WRAM usage is within limits."
+#endif
+#endif
+
     return pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
 }

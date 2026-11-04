@@ -45,6 +45,10 @@ typedef uint8_t audio_codec_bits_t;
 #define AUDIO_CODEC_BITS_24 ((audio_codec_bits_t)24)
 #define AUDIO_CODEC_BITS_32 ((audio_codec_bits_t)32)
 
+typedef uint8_t audio_codec_channel_t;
+#define AUDIO_CODEC_CHANNEL_LEFT  ((audio_codec_channel_t)0)
+#define AUDIO_CODEC_CHANNEL_RIGHT ((audio_codec_channel_t)1)
+
 typedef uint8_t audio_codec_mic_input_t;
 /* Some codecs can switch mic input topology.
  * Default is DIFF when the field is omitted (0).
@@ -118,6 +122,12 @@ int audio_codec_set_record_volume(audio_codec_dev_t *dev, int volume_percent);
  * Each codec maps the percentage to its step range.
  */
 int audio_codec_set_mic_pga(audio_codec_dev_t *dev, int pga_percent);
+/* Configure one analog input without increasing the AEC reference input.
+ * Drivers without independent channel control use their existing PGA setter.
+ */
+int audio_codec_set_mic_pga_channel(audio_codec_dev_t *dev,
+                                    audio_codec_channel_t channel,
+                                    int pga_percent);
 int audio_codec_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_rate_hz);
 
 /* Simple helper: typical codecs use MCLK = Fs * 256.

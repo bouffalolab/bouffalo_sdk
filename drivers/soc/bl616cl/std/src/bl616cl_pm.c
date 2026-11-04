@@ -14,27 +14,21 @@
 #ifdef CONFIG_PSRAM
 #define PM_LP_CFG_DEFAULT                \
     {                                    \
-        .pds_gpio_keep_en = 0,           \
-        .hbn_gpio_keep_en = 0,           \
         .pds_flash_power_off = 1,        \
         .pll_power_off = 1,              \
         .rf_power_off = 1,               \
         .clk_default_sel = PM_PDS_CLK_F32K, \
         .set_all_ram_ret_en = 1,         \
-        .hbn_flash_power_off = 1,        \
         .ldo18io_power_down = 0,         \
     }
 #else
 #define PM_LP_CFG_DEFAULT                \
     {                                    \
-        .pds_gpio_keep_en = 0,           \
-        .hbn_gpio_keep_en = 0,           \
         .pds_flash_power_off = 1,        \
         .pll_power_off = 1,              \
         .rf_power_off = 1,               \
         .clk_default_sel = PM_PDS_CLK_F32K, \
         .set_all_ram_ret_en = 1,         \
-        .hbn_flash_power_off = 1,        \
         .ldo18io_power_down = 1,         \
     }
 #endif
@@ -246,13 +240,10 @@ static BL_Err_Type ATTR_TCM_SECTION pm_lp_cfg_validate(const PM_LP_CFG_Type *cfg
         return ERROR;
     }
 
-    if ((cfg->pds_gpio_keep_en > 1) ||
-        (cfg->hbn_gpio_keep_en > 1) ||
-        (cfg->pds_flash_power_off > 1) ||
+    if ((cfg->pds_flash_power_off > 1) ||
         (cfg->pll_power_off > 1) ||
         (cfg->rf_power_off > 1) ||
         (cfg->set_all_ram_ret_en > 1) ||
-        (cfg->hbn_flash_power_off > 1) ||
         (cfg->ldo18io_power_down > 1)) {
         return ERROR;
     }
@@ -916,7 +907,7 @@ BL_Err_Type ATTR_TCM_SECTION pm_disable_gpio_keep(uint32_t pin)
     return SUCCESS;
 }
 
-static BL_Err_Type ATTR_TCM_SECTION pm_gpio_output_keep(uint32_t pin, uint8_t high);
+static BL_Err_Type pm_gpio_output_keep(uint32_t pin, uint8_t high);
 
 void ATTR_TCM_SECTION pm_pds_dcdc_soc_set_0v7(uint32_t pin)
 {
@@ -1387,6 +1378,10 @@ void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time, const PM_LOWPOWE
 
     lp_cfg = &lowpower_cfg->lp_cfg;
 
+    /* Keep mutable PDS state separate from the caller's const configuration. */
+    PM_DCDC_SOC_CFG_Type soc_cfg = lowpower_cfg->soc_cfg;
+    PM_DCDC_SYS_CFG_Type sys_cfg = lowpower_cfg->sys_cfg;
+
     PM_PWR_Cfg ldosys_cfg = {
         .lp_mode_en = ENABLE,
         .voltage_level = lowpower_cfg->sys_cfg.ldo_sys_pds_level,
@@ -1408,8 +1403,8 @@ void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time, const PM_LOWPOWE
         .pdsClkType = lp_cfg->clk_default_sel,          /*!< pds_clk type */
         .pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K, /*!< pds gpio det clk type */
         .pdsLdo18ioPowerDown = lp_cfg->ldo18io_power_down, /*!< Whether power down LDO18IO */
-        .dcdc_soc_cfg = (PM_DCDC_SOC_CFG_Type *)&lowpower_cfg->soc_cfg, /*!< DCDC SOC GPIO and voltage config */
-        .dcdc_sys_cfg = (PM_DCDC_SYS_CFG_Type *)&lowpower_cfg->sys_cfg, /*!< DCDC SYS GPIO config */
+        .dcdc_soc_cfg = &soc_cfg,                       /*!< DCDC SOC GPIO and voltage config */
+        .dcdc_sys_cfg = &sys_cfg,                       /*!< DCDC SYS GPIO config */
         .ldo_sys_cfg = ldosys_cfg,                      /*!< Power Config of ldo_sys */
         .ldo_soc_cfg = ldosoc_cfg,                      /*!< Power Config of ldo_soc */
         .ldo_sys_lp_en_cnt = 0,                         /*!< delay_cnt before ldo_sys enable lowpower mode */
@@ -1422,62 +1417,39 @@ void pm_pds_mode_enter(uint32_t pds_level, uint32_t sleep_time, const PM_LOWPOWE
         .postCbFun = NULL,                              /*!< Post callback function */
     };
 
-    pm_pds_enable((uint32_t *)&cfg, lowpower_cfg);
+    if (cfg.pdsLdo18ioPowerDown || cfg.powerDownFlash) {
+        uint32_t flash_cfg_len;
+        bflb_flash_get_cfg((uint8_t **)&cfg.flashCfg, &flash_cfg_len);
+    }
+
+    pm_pds_enable(&cfg);
 }
 
-void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *lowpower_cfg)
+void ATTR_TCM_SECTION pm_pds_enable(PM_PDS_CFG_Type *cfg)
 {
     uint32_t sf_pin_select = 0;
-    PM_PDS_CFG_Type *p = (PM_PDS_CFG_Type *)cfg;
     PDS_DEFAULT_LV_CFG_Type *pPdsCfg = NULL;
     uint32_t irq_save = 0;
     uint8_t rc32m_speed = HBN_RCM_32M;
-    PM_DCDC_SOC_CFG_Type soc_cfg;
-    PM_DCDC_SYS_CFG_Type sys_cfg;
 
-    if ((p == NULL) || ((p->sleepTime != 0) && (p->sleepTime <= PDS_WARMUP_LATENCY_CNT))) {
+    if ((cfg == NULL) || ((cfg->sleepTime != 0) && (cfg->sleepTime <= PDS_WARMUP_LATENCY_CNT))) {
         return;
     }
 
-    if (pm_lowpower_cfg_validate(lowpower_cfg) != SUCCESS) {
-        return;
-    }
-
-    soc_cfg = lowpower_cfg->soc_cfg;
-    sys_cfg = lowpower_cfg->sys_cfg;
-
-    p->turnOffRF = lowpower_cfg->lp_cfg.rf_power_off;
-    p->powerDownFlash = lowpower_cfg->lp_cfg.pds_flash_power_off;
-    p->ramRetEn = lowpower_cfg->lp_cfg.set_all_ram_ret_en;
-    p->turnoffWifiPLL = lowpower_cfg->lp_cfg.pll_power_off;
-    p->pdsClkType = lowpower_cfg->lp_cfg.clk_default_sel;
-    p->pdsLdo18ioPowerDown = lowpower_cfg->lp_cfg.ldo18io_power_down;
-    p->ldo_sys_cfg.lp_mode_en = ENABLE;
-    p->ldo_sys_cfg.voltage_level = sys_cfg.ldo_sys_pds_level;
-    p->ldo_soc_cfg.lp_mode_en = ENABLE;
-    p->ldo_soc_cfg.voltage_level = soc_cfg.ldo_soc_pds_level;
-    p->dcdc_soc_cfg = &soc_cfg;
-    p->dcdc_sys_cfg = &sys_cfg;
-
-    if ((p->pdsClkType == PM_PDS_CLK_RC32M) || (p->pdsClkType == PM_PDS_CLK_RC16M) || (p->pdsClkType == PM_PDS_CLK_RC8M)) {
-        p->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_RC32M;
-        p->turnoffRC32M = DISABLE;
-    } else if ((p->pdsClkType == PM_PDS_CLK_XTAL) || (p->pdsClkType == PM_PDS_CLK_XTAL_LP)) {
-        p->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_XTAL;
-        p->turnoffXtal = DISABLE;
+    if ((cfg->pdsClkType == PM_PDS_CLK_RC32M) || (cfg->pdsClkType == PM_PDS_CLK_RC16M) || (cfg->pdsClkType == PM_PDS_CLK_RC8M)) {
+        cfg->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_RC32M;
+        cfg->turnoffRC32M = DISABLE;
+    } else if ((cfg->pdsClkType == PM_PDS_CLK_XTAL) || (cfg->pdsClkType == PM_PDS_CLK_XTAL_LP)) {
+        cfg->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_XTAL;
+        cfg->turnoffXtal = DISABLE;
     } else {
-        p->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K;
-    }
-
-    if (p->pdsLdo18ioPowerDown || p->powerDownFlash) {
-        uint32_t flash_cfg_len;
-        bflb_flash_get_cfg((uint8_t **)&p->flashCfg, &flash_cfg_len);
+        cfg->pdsGpioDetClkType = PDS_GPIO_INT_DET_CLK_F32K;
     }
 
     /* To make it simple and safe*/
     irq_save = csi_irq_save();
 
-    if (p->sleepTime) {
+    if (cfg->sleepTime) {
         PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_TIMER, UNMASK); // unmask pds sleep time wakeup
     } else {
         PDS_Set_Wakeup_Src_IntMask(PDS_WAKEUP_BY_PDS_TIMER, MASK); // mask pds sleep time wakeup
@@ -1491,7 +1463,7 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
     // pm_pds_irq_register();
     /***********************************************************/
 
-    switch (p->pdsLevel) {
+    switch (cfg->pdsLevel) {
         case PM_PDS_LEVEL_1:
             pPdsCfg = &pdsCfgLevel1;
             break;
@@ -1514,10 +1486,10 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
             return;
     }
 
-    if (ENABLE == p->ldo_soc_cfg.lp_mode_en) {
+    if (ENABLE == cfg->ldo_soc_cfg.lp_mode_en) {
         pPdsCfg->pdsCtl6.ldoSocLpEn = 1;
         pPdsCfg->pdsCtl.pdsLdoSocVselEn = 1;
-        HBN_Set_Ldo_Soc_Vout_in_Lowpower(p->ldo_soc_cfg.voltage_level);
+        HBN_Set_Ldo_Soc_Vout_in_Lowpower(cfg->ldo_soc_cfg.voltage_level);
         HBN_Ctrl_Ldo_Soc_Mode_by_HW(ENABLE);
         PDS_Set_Ldo_Soc_Enter_lp_delay(1);
         PDS_Set_Ldo_Soc_Exit_lp_delay(1);
@@ -1525,9 +1497,9 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
         pPdsCfg->pdsCtl6.ldoSocLpEn = 0;
     }
 
-    if (ENABLE == p->ldo_sys_cfg.lp_mode_en) {
+    if (ENABLE == cfg->ldo_sys_cfg.lp_mode_en) {
         pPdsCfg->pdsCtl6.ldoSysLpEn = 1;
-        HBN_Set_Ldo_Sys_Vout_in_Lowpower(p->ldo_sys_cfg.voltage_level);
+        HBN_Set_Ldo_Sys_Vout_in_Lowpower(cfg->ldo_sys_cfg.voltage_level);
         HBN_Ctrl_Ldo_Sys_Mode_by_HW(ENABLE);
         PDS_Set_Ldo_Sys_Enter_lp_delay(0);
         PDS_Set_Ldo_Sys_Exit_lp_delay(0);
@@ -1535,9 +1507,9 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
         pPdsCfg->pdsCtl6.ldoSysLpEn = 0;
     }
 
-    if (p->pdsLdo18ioPowerDown || p->powerDownFlash) {
+    if (cfg->pdsLdo18ioPowerDown || cfg->powerDownFlash) {
         sf_pin_select = pm_get_sf_pin_select();
-        HBN_Power_Down_Flash((spi_flash_cfg_type *)p->flashCfg);
+        HBN_Power_Down_Flash((spi_flash_cfg_type *)cfg->flashCfg);
 
         /* latch flash io pad */
         if (sf_pin_select & (1 << 2)) {
@@ -1554,22 +1526,22 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
         }
     }
 
-    if (p->pdsLdo18ioPowerDown) {
+    if (cfg->pdsLdo18ioPowerDown) {
         /* must power down ldo18io, Otherwise, the current is abnormal */
         GLB_Power_Down_Ldo18ioVout();
     }
 
-    if (p->pdsClkType == PM_PDS_CLK_F32K) {
+    if (cfg->pdsClkType == PM_PDS_CLK_F32K) {
         pPdsCfg->pdsCtl6.wakeSelFastClk = 1;
         pPdsCfg->pdsCtl6.wakeDisRepu = 0;
         pPdsCfg->pdsCtl.pdsFastClkSel = 0;
-    } else if ((p->pdsClkType == PM_PDS_CLK_RC32M) || (p->pdsClkType == PM_PDS_CLK_RC16M) || (p->pdsClkType == PM_PDS_CLK_RC8M)) {
+    } else if ((cfg->pdsClkType == PM_PDS_CLK_RC32M) || (cfg->pdsClkType == PM_PDS_CLK_RC16M) || (cfg->pdsClkType == PM_PDS_CLK_RC8M)) {
         /* RC32M/RC16M/RC8M as pds clk */
         pPdsCfg->pdsCtl6.pdsEisoCnt = 1;
         pPdsCfg->pdsCtl6.pdsSelFastClk = 1;
         pPdsCfg->pdsCtl6.wakeSelFastClk = 1;
         pPdsCfg->pdsCtl6.wakeDisRepu = 1;
-    } else if ((p->pdsClkType == PM_PDS_CLK_XTAL) || (p->pdsClkType == PM_PDS_CLK_XTAL_LP)) {
+    } else if ((cfg->pdsClkType == PM_PDS_CLK_XTAL) || (cfg->pdsClkType == PM_PDS_CLK_XTAL_LP)) {
         /* XTAL as pds clk */
         pPdsCfg->pdsCtl6.pdsEisoCnt = 1;
         pPdsCfg->pdsCtl6.pdsSelFastClk = 1;
@@ -1581,47 +1553,47 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
     } else {
     }
 
-    pPdsCfg->pdsCtl.gpioDetClkSel = p->pdsGpioDetClkType;
+    pPdsCfg->pdsCtl.gpioDetClkSel = cfg->pdsGpioDetClkType;
 
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_RC32M);
     PDS_Pu_PLL_Enable();
-    if (p->turnoffWifiPLL) {
+    if (cfg->turnoffWifiPLL) {
         GLB_Power_Off_WIFIPLL();
     } else {
         pPdsCfg->pdsCtl.wifipllOff = 0;
     }
 
-    if (p->turnoffRC32M == ENABLE) {
+    if (cfg->turnoffRC32M == ENABLE) {
         pPdsCfg->pdsCtl.pdsRC32mOn = 0;
     } else {
         pPdsCfg->pdsCtl.pdsRC32mOn = 1;
         rc32m_speed = HBN_Get_RC32M_Speed();
-        if ((p->pdsClkType == PM_PDS_CLK_RC8M) && (rc32m_speed != HBN_RCM_8M)) {
+        if ((cfg->pdsClkType == PM_PDS_CLK_RC8M) && (rc32m_speed != HBN_RCM_8M)) {
             HBN_Set_RC32M_Speed(HBN_RCM_8M);
-        } else if ((p->pdsClkType == PM_PDS_CLK_RC16M) && (rc32m_speed != HBN_RCM_16M)) {
+        } else if ((cfg->pdsClkType == PM_PDS_CLK_RC16M) && (rc32m_speed != HBN_RCM_16M)) {
             HBN_Set_RC32M_Speed(HBN_RCM_16M);
-        } else if ((p->pdsClkType == PM_PDS_CLK_RC32M) && (rc32m_speed != HBN_RCM_32M)) {
+        } else if ((cfg->pdsClkType == PM_PDS_CLK_RC32M) && (rc32m_speed != HBN_RCM_32M)) {
             HBN_Set_RC32M_Speed(HBN_RCM_32M);
         }
     }
 
-    if (p->turnoffXtal == DISABLE) {
+    if (cfg->turnoffXtal == DISABLE) {
         pPdsCfg->pdsCtl.xtalOff = 0;
-        if (p->pdsClkType == PM_PDS_CLK_XTAL_LP) {
+        if (cfg->pdsClkType == PM_PDS_CLK_XTAL_LP) {
             AON_XTAL_Enter_LowPower();
         }
     } else {
         pPdsCfg->pdsCtl.xtalOff = 1;
-        if (p->pdsLevel == PM_PDS_LEVEL_15) {
+        if (cfg->pdsLevel == PM_PDS_LEVEL_15) {
             AON_Power_Off_XTAL();
         }
     }
 
-    if (!(p->turnOffRF)) {
+    if (!(cfg->turnOffRF)) {
         pPdsCfg->pdsCtl.pdsCtlRfSel = 0;
     }
 
-    if (p->ramRetEn) {
+    if (cfg->ramRetEn) {
         pPdsCfg->pdsCtl4.miscMemStby = 1;
         pPdsCfg->pdsCtl4.wbMemStby = 1;
         PDS_Set_All_WRAM_Retention();
@@ -1630,49 +1602,49 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
         PDS_Disable_Ctrl_Ram();
     }
 
-    PDS_Default_Level_Config(pPdsCfg, p->sleepTime);
+    PDS_Default_Level_Config(pPdsCfg, cfg->sleepTime);
 
-    if (p->dcdc_soc_cfg) {
-        p->dcdc_soc_cfg->ldo_soc_pds_level = p->ldo_soc_cfg.voltage_level;
-        pm_dcdc_soc_enter_pds(p->dcdc_soc_cfg);
+    if (cfg->dcdc_soc_cfg) {
+        cfg->dcdc_soc_cfg->ldo_soc_pds_level = cfg->ldo_soc_cfg.voltage_level;
+        pm_dcdc_soc_enter_pds(cfg->dcdc_soc_cfg);
     }
-    if (p->dcdc_sys_cfg) {
-        pm_dcdc_sys_enter_pds(p->dcdc_sys_cfg);
+    if (cfg->dcdc_sys_cfg) {
+        pm_dcdc_sys_enter_pds(cfg->dcdc_sys_cfg);
     }
 
     __WFI();
 
-    if (p->dcdc_sys_cfg) {
-        pm_dcdc_sys_exit_pds(p->dcdc_sys_cfg);
+    if (cfg->dcdc_sys_cfg) {
+        pm_dcdc_sys_exit_pds(cfg->dcdc_sys_cfg);
     }
-    if (p->dcdc_soc_cfg) {
-        pm_dcdc_soc_exit_pds(p->dcdc_soc_cfg);
+    if (cfg->dcdc_soc_cfg) {
+        pm_dcdc_soc_exit_pds(cfg->dcdc_soc_cfg);
     }
 
     /******************************* Wakeup Flow *******************************/
-    if (p->turnoffRC32M == DISABLE) {
-        if ((rc32m_speed == HBN_RCM_8M) && (p->pdsClkType != PM_PDS_CLK_RC8M)) {
+    if (cfg->turnoffRC32M == DISABLE) {
+        if ((rc32m_speed == HBN_RCM_8M) && (cfg->pdsClkType != PM_PDS_CLK_RC8M)) {
             HBN_Set_RC32M_Speed(HBN_RCM_8M);
-        } else if ((rc32m_speed == HBN_RCM_16M) && (p->pdsClkType != PM_PDS_CLK_RC16M)) {
+        } else if ((rc32m_speed == HBN_RCM_16M) && (cfg->pdsClkType != PM_PDS_CLK_RC16M)) {
             HBN_Set_RC32M_Speed(HBN_RCM_16M);
-        } else if ((rc32m_speed == HBN_RCM_32M) && (p->pdsClkType != PM_PDS_CLK_RC32M)) {
+        } else if ((rc32m_speed == HBN_RCM_32M) && (cfg->pdsClkType != PM_PDS_CLK_RC32M)) {
             HBN_Set_RC32M_Speed(HBN_RCM_32M);
         }
     }
-    if (p->turnoffXtal == DISABLE) {
-        if (p->pdsClkType == PM_PDS_CLK_XTAL_LP) {
+    if (cfg->turnoffXtal == DISABLE) {
+        if (cfg->pdsClkType == PM_PDS_CLK_XTAL_LP) {
             AON_XTAL_Exit_LowPower();
         }
     }
 
-    if (p->pdsLdo18ioPowerDown) {
+    if (cfg->pdsLdo18ioPowerDown) {
         GLB_Power_Up_Ldo18ioVout();
     }
     GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL);
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
 
-    if (p->pdsLdo18ioPowerDown || p->powerDownFlash) {
-        if (p->pdsLevel < PM_PDS_LEVEL_2) {
+    if (cfg->pdsLdo18ioPowerDown || cfg->powerDownFlash) {
+        if (cfg->pdsLevel < PM_PDS_LEVEL_2) {
             /* Init flash gpio */
             /* clear latch flash io pad */
             if (sf_pin_select & (1 << 2)) {
@@ -1687,7 +1659,7 @@ void ATTR_TCM_SECTION pm_pds_enable(uint32_t *cfg, const PM_LOWPOWER_CFG_Type *l
             }
 
             bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
-            bflb_sflash_restore_from_powerdown((spi_flash_cfg_type *)p->flashCfg, 0, SF_CTRL_FLASH_BANK0);
+            bflb_sflash_restore_from_powerdown((spi_flash_cfg_type *)cfg->flashCfg, 0, SF_CTRL_FLASH_BANK0);
         }
     }
 

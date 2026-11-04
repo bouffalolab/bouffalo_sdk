@@ -27,6 +27,7 @@ static struct bflb_device_s *uart0;
 static struct bflb_device_s *rtc;
 #endif
 
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
 static int bl702_read_xtal_capcode(uint8_t *capcode)
 {
     uint32_t slot3_w3;
@@ -61,6 +62,7 @@ static int bl702_read_xtal_capcode(uint8_t *capcode)
 
     return -1;
 }
+#endif /* CFG_BLUETOOTH_ENABLED || CFG_M154_ENABLED */
 
 static void system_clock_init(void)
 {

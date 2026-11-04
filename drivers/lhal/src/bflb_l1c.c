@@ -96,7 +96,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
 #ifdef romapi_bflb_l1c_dcache_clean_range
     romapi_bflb_l1c_dcache_clean_range(addr, size);
 #else
-    if (bflb_check_cache_addr(addr)) {
+    if (size != 0U && bflb_check_cache_addr(addr)) {
         csi_dcache_clean_range(addr, size);
     }
 #endif
@@ -129,25 +129,21 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 #include "nmsis_core.h"
 #include <risc-v/bflb_rv_privilege.h>
 
-void bflb_l1c_icache_enable(void)
+ATTR_TCM_SECTION void bflb_l1c_icache_enable(void)
 {
 #ifdef romapi_bflb_l1c_icache_enable
     romapi_bflb_l1c_icache_enable();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_icache_enable();
-    bflb_irq_restore(flag);
 #endif
 }
 
-void bflb_l1c_icache_disable(void)
+ATTR_TCM_SECTION void bflb_l1c_icache_disable(void)
 {
 #ifdef romapi_bflb_l1c_icache_disable
     romapi_bflb_l1c_icache_disable();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_icache_disable();
-    bflb_irq_restore(flag);
 #endif
 }
 
@@ -156,9 +152,7 @@ ATTR_TCM_SECTION void bflb_l1c_icache_invalid_all(void)
 #ifdef romapi_bflb_l1c_icache_invalid_all
     romapi_bflb_l1c_icache_invalid_all();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_icache_invalid_all();
-    bflb_irq_restore(flag);
 #endif
 }
 
@@ -168,32 +162,26 @@ ATTR_TCM_SECTION void bflb_l1c_icache_invalid_range(void *addr, uint32_t size)
     romapi_bflb_l1c_icache_invalid_range(addr, size);
 #else
     if (bflb_check_cache_addr(addr)) {
-        uintptr_t flag = bflb_irq_save();
         bflb_rv_icache_invalid_range((unsigned long)addr, size);
-        bflb_irq_restore(flag);
     }
 #endif
 }
 
-void bflb_l1c_dcache_enable(void)
+ATTR_TCM_SECTION void bflb_l1c_dcache_enable(void)
 {
 #ifdef romapi_bflb_l1c_dcache_enable
     romapi_bflb_l1c_dcache_enable();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_dcache_enable();
-    bflb_irq_restore(flag);
 #endif
 }
 
-void bflb_l1c_dcache_disable(void)
+ATTR_TCM_SECTION void bflb_l1c_dcache_disable(void)
 {
 #ifdef romapi_bflb_l1c_dcache_disable
     romapi_bflb_l1c_dcache_disable();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_dcache_disable();
-    bflb_irq_restore(flag);
 #endif
 }
 
@@ -202,9 +190,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_all(void)
 #ifdef romapi_bflb_l1c_dcache_clean_all
     romapi_bflb_l1c_dcache_clean_all();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_dcache_clean_all();
-    bflb_irq_restore(flag);
 #endif
 }
 
@@ -213,9 +199,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_all(void)
 #ifdef romapi_bflb_l1c_dcache_invalidate_all
     romapi_bflb_l1c_dcache_invalidate_all();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_dcache_invalidate_all();
-    bflb_irq_restore(flag);
 #endif
 }
 
@@ -224,9 +208,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_all(void)
 #ifdef romapi_bflb_l1c_dcache_clean_invalidate_all
     romapi_bflb_l1c_dcache_clean_invalidate_all();
 #else
-    uintptr_t flag = bflb_irq_save();
     bflb_rv_dcache_clean_invalidate_all();
-    bflb_irq_restore(flag);
 #endif
 }
 
@@ -236,9 +218,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
     romapi_bflb_l1c_dcache_clean_range(addr, size);
 #else
     if (bflb_check_cache_addr(addr)) {
-        uintptr_t flag = bflb_irq_save();
         bflb_rv_dcache_clean_range((unsigned long)addr, size);
-        bflb_irq_restore(flag);
     }
 #endif
 }
@@ -249,9 +229,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size
     romapi_bflb_l1c_dcache_invalidate_range(addr, size);
 #else
     if (bflb_check_cache_addr(addr)) {
-        uintptr_t flag = bflb_irq_save();
         bflb_rv_dcache_invalidate_range((unsigned long)addr, size);
-        bflb_irq_restore(flag);
     }
 #endif
 }
@@ -262,9 +240,7 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
     romapi_bflb_l1c_dcache_clean_invalidate_range(addr, size);
 #else
     if (bflb_check_cache_addr(addr)) {
-        uintptr_t flag = bflb_irq_save();
         bflb_rv_dcache_clean_invalidate_range((unsigned long)addr, size);
-        bflb_irq_restore(flag);
     }
 #endif
 }

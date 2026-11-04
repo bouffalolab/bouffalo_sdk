@@ -83,6 +83,16 @@ typedef void *  net_al_tx_t;
 /// Minimum headroom to include in all TX buffer
 #define NET_AL_TX_HEADROOM 384
 
+/* Fixed buffer-provenance ABI for the released bridge library. These bits do not mean WDS is enabled. */
+#define NET_AL_WDS_RX_FLAG 0x40U
+#define NET_AL_WDS_PEER_FLAG 0x80U
+/* Clone Ethernet bytes after net_buf_tx_info() exposes the TX headroom. */
+net_al_tx_t net_al_tx_wds_copy(net_al_tx_t net_buf);
+void net_al_tx_wds_mark_peer(net_al_tx_t net_buf);
+bool net_al_tx_wds_is_peer(net_al_tx_t net_buf);
+void net_al_tx_wds_mark_rx(net_al_tx_t net_buf);
+bool net_al_tx_wds_is_rx(net_al_tx_t net_buf);
+
 /// Prototype for a function to free a network buffer */
 typedef void (*net_buf_free_fn)(void *net_buf);
 

@@ -39,6 +39,10 @@ u32 hostapd_sta_flags_to_drv(u32 flags)
 		res |= WPA_STA_AUTHENTICATED;
 	if (flags & WLAN_STA_ASSOC)
 		res |= WPA_STA_ASSOCIATED;
+#ifdef CONFIG_WIFI_WDS
+	if (flags & WLAN_STA_MULTI_AP)
+		res |= WPA_STA_MULTI_AP;
+#endif
 	return res;
 }
 

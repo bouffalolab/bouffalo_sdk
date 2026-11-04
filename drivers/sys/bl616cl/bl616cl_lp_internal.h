@@ -30,7 +30,7 @@ void bl616cl_lp_io_wakeup_prepare(void);
 void bl616cl_lp_soft_irq_trigger(void);
 
 void lp_fw_save_cpu_para(uint32_t save_addr);
-void ATTR_TCM_SECTION __attribute__((aligned(16))) lp_fw_restore_cpu_para(uint32_t save_addr);
+void __attribute__((aligned(16))) lp_fw_restore_cpu_para(uint32_t save_addr);
 
 struct lp_env *bl_lp_env_get(void);
 void bl_lp_env_init(void);

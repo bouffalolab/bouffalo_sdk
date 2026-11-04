@@ -31,6 +31,9 @@ typedef struct audio_codec_driver {
 
     audio_codec_type_t type;
     uint8_t i2c_addrs_num;
+    int (*set_mic_pga_channel)(audio_codec_dev_t *dev,
+                               audio_codec_channel_t channel,
+                               int pga_percent);
 } audio_codec_driver_t;
 
 

@@ -100,6 +100,8 @@ static int sctp_send_packet(Sctp* sctp, const uint8_t* packet,
   return dtls_srtp_write(sctp->dtls_srtp, packet, packet_size);
 }
 
+static void sctp_send_pending_acks(Sctp* sctp);
+
 #if !CONFIG_USE_USRSCTP
 #define SCTP_TX_WINDOW ((unsigned)CONFIG_SCTP_TX_WINDOW)
 #define SCTP_RX_WINDOW ((unsigned)CONFIG_SCTP_RX_WINDOW)
@@ -150,10 +152,17 @@ static int sctp_retry_store(Sctp* sctp, SctpRetryKind kind,
                             const uint8_t* packet, size_t size,
                             uint16_t sid) {
   SctpRetryPacket* retry = &sctp->retry_packet;
-
-  if (size > sizeof(retry->packet) ||
-      (retry->kind != SCTP_RETRY_NONE && kind == SCTP_RETRY_DCEP_OPEN)) {
-    return -1;
+  if (size > sizeof(retry->packet)) return -1;
+  if (kind == SCTP_RETRY_DCEP_OPEN) {
+    int slot = -1;
+    for (int i = 0; i < SCTP_MAX_STREAMS; ++i) {
+      if (sctp->dcep_retries[i] && sctp->dcep_retries[i]->sid == sid) return -1;
+      if (!sctp->dcep_retries[i] && slot < 0) slot = i;
+    }
+    if (slot < 0) return -1;
+    retry = calloc(1, sizeof(*retry));
+    if (!retry) return -1;
+    sctp->dcep_retries[slot] = retry;
   }
   memcpy(retry->packet, packet, size);
   retry->size = size;
@@ -164,11 +173,22 @@ static int sctp_retry_store(Sctp* sctp, SctpRetryKind kind,
   retry->kind = kind;
   return 0;
 }
+
+static int sctp_ack_channel(Sctp* sctp, uint16_t sid) {
+  for (int i = 0; i < SCTP_MAX_STREAMS; ++i) {
+    if (sctp->dcep_retries[i] && sctp->dcep_retries[i]->sid == sid) {
+      free(sctp->dcep_retries[i]);
+      sctp->dcep_retries[i] = NULL;
+      return 1;
+    }
+  }
+  return 0; /* Unsolicited/late ACK cannot open an unknown/failed channel. */
+}
 #endif
 
 void sctp_poll(Sctp* sctp, uint32_t now_ms) {
 #if CONFIG_USE_USRSCTP
-  (void)sctp;
+  if (sctp && sctp->connected) sctp_send_pending_acks(sctp);
   (void)now_ms;
 #else
   SctpRetryPacket* retry;
@@ -177,6 +197,7 @@ void sctp_poll(Sctp* sctp, uint32_t now_ms) {
   if (!sctp) {
     return;
   }
+  if (sctp->connected) sctp_send_pending_acks(sctp);
   if (sctp->connected && sctp->rx_head) {
     unsigned int queued = sctp->rx_count;
     sctp_compact_rx_prefix(sctp);
@@ -215,39 +236,53 @@ void sctp_poll(Sctp* sctp, uint32_t now_ms) {
     /* A synchronous transport hook may retire this copy in its SACK callback. */
     sctp_send_packet(sctp, packet->data, packet->length);
   }
-  if (sctp->retry_packet.kind == SCTP_RETRY_NONE) {
-    return;
-  }
-  retry = &sctp->retry_packet;
-  if (retry->retries >= SCTP_RETRY_MAX_RETRANSMISSIONS ||
-      now_ms - retry->started_ms >= SCTP_RETRY_DEADLINE_MS) {
-    int association_failed = retry->kind != SCTP_RETRY_DCEP_OPEN;
-    LOGW("SCTP control retry exhausted kind=%u sid=%u",
-         (unsigned)retry->kind, retry->sid);
-    sctp_retry_clear(sctp);
-    /* DCEP failure belongs to one stream. Other streams can already carry
-     * traffic even if the peer has not acknowledged this stream. */
-    if (association_failed) {
-      sctp_destroy_association(sctp);
-      if (sctp->onclose) sctp->onclose(sctp->userdata);
+  /* Handshake owns its fixed slot; each channel owns a separate heap slot.
+   * A synchronous send hook may deliver an ACK and free the current slot. */
+  for (int slot = -1; slot < SCTP_MAX_STREAMS; ++slot) {
+    retry = slot < 0 ? &sctp->retry_packet : sctp->dcep_retries[slot];
+    if (!retry || retry->kind == SCTP_RETRY_NONE) continue;
+    if (retry->retries >= SCTP_RETRY_MAX_RETRANSMISSIONS ||
+        now_ms - retry->started_ms >= SCTP_RETRY_DEADLINE_MS) {
+      int association_failed = retry->kind != SCTP_RETRY_DCEP_OPEN;
+      if (!association_failed) {
+        const SctpDataChunk* open = (const SctpDataChunk*)(retry->packet + sizeof(SctpHeader));
+        /* An unacknowledged reliable OPEN leaves a TSN gap for every stream.
+         * Only a delivered OPEN lacking DCEP ACK can fail independently. */
+        association_failed = !sctp->tx_cumulative_tsn_ack_valid ||
+            (int32_t)(sctp->tx_cumulative_tsn_ack - ntohl(open->tsn)) < 0;
+      }
+      LOGW("SCTP control retry exhausted kind=%u sid=%u",
+           (unsigned)retry->kind, retry->sid);
+      if (slot < 0) sctp_retry_clear(sctp);
+      else { free(retry); sctp->dcep_retries[slot] = NULL; }
+      /* A missing DCEP ACK after cumulative SCTP delivery fails one channel. */
+      if (association_failed) {
+        sctp_destroy_association(sctp);
+        if (sctp->onclose) sctp->onclose(sctp->userdata);
+        return;
+      }
+      continue;
     }
-    return;
-  }
-  delay_ms = SCTP_RETRY_BASE_MS << retry->retries;
-  if (delay_ms > SCTP_RETRY_MAX_DELAY_MS) {
-    delay_ms = SCTP_RETRY_MAX_DELAY_MS;
-  }
-  if (now_ms - retry->last_sent_ms < delay_ms) {
-    return;
-  }
-  retry->last_sent_ms = now_ms;
-  retry->retries++;
-  if (sctp_send_packet(sctp, retry->packet, retry->size) < 0) {
-    LOGW("SCTP control retry send failed kind=%u attempt=%u",
-         (unsigned)retry->kind, (unsigned)retry->retries);
-  } else {
-    LOGI("SCTP control retransmitted kind=%u attempt=%u",
-         (unsigned)retry->kind, (unsigned)retry->retries);
+    delay_ms = SCTP_RETRY_BASE_MS << retry->retries;
+    if (delay_ms > SCTP_RETRY_MAX_DELAY_MS) {
+      delay_ms = SCTP_RETRY_MAX_DELAY_MS;
+    }
+    if (now_ms - retry->last_sent_ms < delay_ms) {
+      continue;
+    }
+    retry->last_sent_ms = now_ms;
+    retry->retries++;
+    unsigned kind = retry->kind, attempt = retry->retries;
+    uint8_t packet[CONFIG_MTU];
+    size_t packet_size = retry->size;
+    memcpy(packet, retry->packet, packet_size);
+    if (sctp_send_packet(sctp, packet, packet_size) < 0) {
+      LOGW("SCTP control retry send failed kind=%u attempt=%u",
+           kind, attempt);
+    } else {
+      LOGI("SCTP control retransmitted kind=%u attempt=%u",
+           kind, attempt);
+    }
   }
 #endif
 }
@@ -268,6 +303,7 @@ static uint16_t sctp_current_ssn(Sctp* sctp, uint16_t sid) {
 
   if (sctp->stream_count < SCTP_MAX_STREAMS) {
     SctpStreamEntry* stream = &sctp->stream_table[sctp->stream_count++];
+    memset(stream, 0, sizeof(*stream));
     stream->label[0] = '\0';
     stream->sid = sid;
     stream->next_ssn = 0;
@@ -306,6 +342,7 @@ void sctp_set_stream_unordered(Sctp* sctp, uint16_t sid, int unordered) {
 
   if (sctp->stream_count < SCTP_MAX_STREAMS) {
     SctpStreamEntry* stream = &sctp->stream_table[sctp->stream_count++];
+    memset(stream, 0, sizeof(*stream));
     stream->label[0] = '\0';
     stream->sid = sid;
     stream->next_ssn = 0;
@@ -331,6 +368,7 @@ void sctp_set_stream_drop_on_send_failure(Sctp* sctp, uint16_t sid,
 
   if (sctp->stream_count < SCTP_MAX_STREAMS) {
     SctpStreamEntry* stream = &sctp->stream_table[sctp->stream_count++];
+    memset(stream, 0, sizeof(*stream));
     stream->label[0] = '\0';
     stream->sid = sid;
     stream->next_ssn = 0;
@@ -456,8 +494,10 @@ static int sctp_send_forward_tsn(Sctp* sctp, uint32_t new_cumulative_tsn) {
     return -1;
   }
   sctp->forward_tsn_sent++;
-  LOGW("SCTP gap recovery: FORWARD_TSN=%lu",
-       (unsigned long)new_cumulative_tsn);
+  if (sctp->forward_tsn_sent == 1U || (sctp->forward_tsn_sent % 128U) == 0U) {
+    LOGW("SCTP gap recovery: FORWARD_TSN=%lu (sent=%lu)",
+         (unsigned long)new_cumulative_tsn, (unsigned long)sctp->forward_tsn_sent);
+  }
   return 0;
 }
 
@@ -677,6 +717,14 @@ int sctp_outgoing_data(Sctp* sctp, char* buf, size_t len, SctpDataPpid ppid, uin
     } else {
       if (retry_open && sctp_retry_store(sctp, SCTP_RETRY_DCEP_OPEN,
                                           (uint8_t*)packet, packet_size, sid) < 0) return -1;
+      if (retry_open) {
+        uint8_t open_packet[CONFIG_MTU];
+        memcpy(open_packet, packet, packet_size);
+        sctp_record_tx(sctp, sctp->tsn++, 0);
+        sctp_commit_ssn(sctp, sid);
+        sctp_send_packet(sctp, open_packet, packet_size);
+        return (int)original_len;
+      }
       if (sctp_send_packet(sctp, (uint8_t*)packet, packet_size) < 0 && !retry_open) {
         if (i > 0) sctp_commit_ssn(sctp, sid);
         return i > 0 ? -2 : -1;
@@ -717,6 +765,7 @@ void sctp_add_stream_mapping(Sctp* sctp, const char* label, uint16_t sid) {
   }
 
   if (sctp->stream_count < SCTP_MAX_STREAMS) {
+    memset(&sctp->stream_table[sctp->stream_count], 0, sizeof(SctpStreamEntry));
     strncpy(sctp->stream_table[sctp->stream_count].label, label,
             sizeof(sctp->stream_table[sctp->stream_count].label) - 1);
     sctp->stream_table[sctp->stream_count].label[sizeof(sctp->stream_table[sctp->stream_count].label) - 1] = '\0';
@@ -734,20 +783,25 @@ void sctp_add_stream_mapping(Sctp* sctp, const char* label, uint16_t sid) {
 static void sctp_mark_stream_open(Sctp* sctp, uint16_t sid) {
   for (int i = 0; i < sctp->stream_count; i++) {
     if (sctp->stream_table[i].sid == sid) {
+      if (sctp->stream_table[i].open) return;
       sctp->stream_table[i].open = 1;
+      if (sctp->onchannelopen)
+        sctp->onchannelopen(sid, sctp->stream_table[i].label, sctp->userdata);
       return;
     }
   }
 
-  if (sctp->stream_count < SCTP_MAX_STREAMS) {
-    SctpStreamEntry* stream = &sctp->stream_table[sctp->stream_count++];
-    stream->label[0] = '\0';
-    stream->sid = sid;
-    stream->next_ssn = 0;
-    stream->rx_next_ssn = 0;
-    stream->open = 1;
-    stream->unordered = 0;
-    stream->drop_on_send_failure = 0;
+}
+
+static void sctp_send_pending_acks(Sctp* sctp) {
+  for (int i = 0; i < sctp->stream_count; ++i) {
+    SctpStreamEntry* stream = &sctp->stream_table[i];
+    if (!stream->ack_pending) continue;
+    char ack = DATA_CHANNEL_ACK;
+    stream->ack_pending = 0; /* Prevent re-entry from queuing a second ACK. */
+    if (sctp_outgoing_data(sctp, &ack, 1, PPID_CONTROL, stream->sid) == 1) {
+      sctp_mark_stream_open(sctp, stream->sid);
+    } else stream->ack_pending = 1;
   }
 }
 
@@ -759,7 +813,7 @@ static int sctp_map_data_channel_open(Sctp* sctp, uint16_t sid,
   char label[sizeof(sctp->stream_table[0].label)];
   size_t copied_label_length;
 
-  if (!sctp || !data || length < 12 || data[0] != DATA_CHANNEL_OPEN)
+  if (!sctp || !data || sid == UINT16_MAX || length < 12 || data[0] != DATA_CHANNEL_OPEN)
     return -1;
 
   memcpy(&label_length, data + 8, sizeof(label_length));
@@ -768,8 +822,17 @@ static int sctp_map_data_channel_open(Sctp* sctp, uint16_t sid,
   label_length = ntohs(label_length);
   protocol_length = ntohs(protocol_length);
   reliability_parameter = ntohl(reliability_parameter);
-  if (length < 12 + (size_t)label_length + (size_t)protocol_length)
+  if (length != 12 + (size_t)label_length + (size_t)protocol_length ||
+      label_length >= sizeof(label) || memchr(data + 12, 0, label_length) ||
+      ((data[1] & 0x7f) > 2) ||
+      ((data[1] & 0x7f) == 0 && reliability_parameter != 0))
     return -1;
+  for (int i = 0; i < sctp->stream_count; ++i)
+    if (sctp->stream_table[i].sid == sid && sctp->stream_table[i].open) return -1;
+#if !CONFIG_USE_USRSCTP
+  for (int i = 0; i < SCTP_MAX_STREAMS; ++i)
+    if (sctp->dcep_retries[i] && sctp->dcep_retries[i]->sid == sid) return -1;
+#endif
 
   copied_label_length = label_length;
   if (copied_label_length >= sizeof(label))
@@ -780,14 +843,18 @@ static int sctp_map_data_channel_open(Sctp* sctp, uint16_t sid,
   sctp_set_stream_unordered(sctp, sid, (data[1] & 0x80) != 0);
   sctp_set_stream_drop_on_send_failure(
       sctp, sid, (data[1] & 0x7f) == 0x01 && reliability_parameter == 0);
-  sctp_mark_stream_open(sctp, sid);
-  return 0;
+  for (int i = 0; i < sctp->stream_count; ++i) {
+    if (sctp->stream_table[i].sid == sid) {
+      sctp->stream_table[i].ack_pending = 1;
+      return 0;
+    }
+  }
+  return -1;
 }
 
 void sctp_parse_data_channel_open(Sctp* sctp, uint16_t sid, char* data, size_t length) {
   if (sctp_map_data_channel_open(sctp, sid, (const uint8_t*)data, length) == 0) {
-    char ack = DATA_CHANNEL_ACK;
-    sctp_outgoing_data(sctp, &ack, 1, PPID_CONTROL, sid);
+    sctp_send_pending_acks(sctp);
   }
 }
 
@@ -1007,9 +1074,7 @@ static int sctp_drain_rx(Sctp* sctp) {
       sctp_parse_data_channel_open(sctp, sid, message, size);
     } else if (ppid == DATA_CHANNEL_PPID_CONTROL && size == 1 &&
                (uint8_t)message[0] == DATA_CHANNEL_ACK) {
-      sctp_mark_stream_open(sctp, sid);
-      if (sctp->retry_packet.kind == SCTP_RETRY_DCEP_OPEN &&
-          sctp->retry_packet.sid == sid) sctp_retry_clear(sctp);
+      if (sctp_ack_channel(sctp, sid)) sctp_mark_stream_open(sctp, sid);
     } else if ((ppid == DATA_CHANNEL_PPID_DOMSTRING ||
                 ppid == DATA_CHANNEL_PPID_BINARY) && sctp->onmessage) {
       sctp->onmessage(message, size, sctp->userdata, sid);
@@ -1756,6 +1821,10 @@ void sctp_destroy_association(Sctp* sctp) {
 #else
   if (sctp) {
     sctp_retry_clear(sctp);
+    for (int i = 0; i < SCTP_MAX_STREAMS; ++i) {
+      free(sctp->dcep_retries[i]);
+      sctp->dcep_retries[i] = NULL;
+    }
     while (sctp->tx_head) {
       SctpTxPacket* packet = sctp->tx_head;
       sctp->tx_head = packet->next;

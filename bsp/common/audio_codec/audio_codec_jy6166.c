@@ -240,26 +240,19 @@ static uint8_t jy6166_osr_to_ratio(uint8_t osr_reg)
     return (osr_reg == JY6166_OSR_32_REG) ? 32U : 64U;
 }
 
-static uint8_t jy6166_cfg_physical_slots(const audio_codec_cfg_t *cfg, const audio_codec_jy6166_tdm_cfg_t *tdm_cfg)
-{
-    if (tdm_cfg != NULL && tdm_cfg->slot_count > 0U) {
-        return (uint8_t)(tdm_cfg->slot_count * 2U);
-    }
-    if (cfg != NULL && cfg->channels > 2U) {
-        return cfg->channels;
-    }
-
-    return 2U;
-}
-
 static int jy6166_clock_regs_from_cfg(const audio_codec_cfg_t *cfg, const audio_codec_jy6166_tdm_cfg_t *tdm_cfg,
                                       uint8_t *sysclk_reg, uint8_t *adc_clk_reg)
 {
     uint8_t osr_reg;
     uint8_t osr_ratio;
     uint8_t div_reg;
+#ifdef CONFIG_AUDIO_CODEC_JY6316_ENABLE
     uint32_t bclk_lrck_ratio;
     uint8_t physical_slots;
+#else
+    uint8_t physical_slots;
+    uint32_t bclk_lrck_ratio;
+#endif
 
     if (cfg == NULL || sysclk_reg == NULL || adc_clk_reg == NULL || cfg->codec_master) {
         return -1;
@@ -267,9 +260,23 @@ static int jy6166_clock_regs_from_cfg(const audio_codec_cfg_t *cfg, const audio_
 
     osr_reg = jy6166_sample_rate_to_osr(cfg->sample_rate_hz);
     osr_ratio = jy6166_osr_to_ratio(osr_reg);
-    physical_slots = jy6166_cfg_physical_slots(cfg, tdm_cfg);
+#ifdef CONFIG_AUDIO_CODEC_JY6316_ENABLE
+    physical_slots = (tdm_cfg != NULL && tdm_cfg->slot_count > 0U) ? (uint8_t)(tdm_cfg->slot_count * 2U) : cfg->channels;
     bclk_lrck_ratio = (uint32_t)physical_slots * (uint32_t)cfg->bits;
-
+    if (cfg->sample_rate_hz == 0U || bclk_lrck_ratio < osr_ratio ||
+        (bclk_lrck_ratio % osr_ratio) != 0U) {
+        return -1;
+    }
+    if (jy6166_divider_to_reg((uint8_t)(bclk_lrck_ratio / osr_ratio), &div_reg) != 0) {
+        return -1;
+    }
+    *sysclk_reg = JY6166_SYSCLK_SRC_BCLK | JY6166_SYSCLK_EN;
+    *adc_clk_reg = (uint8_t)((osr_reg << 4) | div_reg);
+    return 0;
+#else
+    physical_slots = (tdm_cfg != NULL && tdm_cfg->slot_count > 0U) ? (uint8_t)(tdm_cfg->slot_count * 2U) :
+                     (cfg->channels > 2U ? cfg->channels : 2U);
+    bclk_lrck_ratio = (uint32_t)physical_slots * (uint32_t)cfg->bits;
     if (bclk_lrck_ratio >= osr_ratio && (bclk_lrck_ratio % osr_ratio) == 0U &&
         jy6166_divider_to_reg((uint8_t)(bclk_lrck_ratio / osr_ratio), &div_reg) == 0) {
         *sysclk_reg = JY6166_SYSCLK_SRC_BCLK | JY6166_SYSCLK_EN;
@@ -277,7 +284,7 @@ static int jy6166_clock_regs_from_cfg(const audio_codec_cfg_t *cfg, const audio_
         return 0;
     }
 
-    /* Fallback for boards wiring MCLK at 256 * Fs, matching vendor base examples. */
+    /* Fall back to an external MCLK at 256 * Fs when BCLK cannot provide the required ratio. */
     if (jy6166_divider_to_reg((uint8_t)(256U / osr_ratio), &div_reg) == 0) {
         *sysclk_reg = JY6166_SYSCLK_SRC_MCLK | JY6166_SYSCLK_EN;
         *adc_clk_reg = (uint8_t)((osr_reg << 4) | div_reg);
@@ -285,6 +292,7 @@ static int jy6166_clock_regs_from_cfg(const audio_codec_cfg_t *cfg, const audio_
     }
 
     return -1;
+#endif
 }
 
 static int jy6166_write_tdm_cfg(struct bflb_device_s *i2c, uint8_t addr, const audio_codec_jy6166_tdm_cfg_t *tdm_cfg)
@@ -413,11 +421,6 @@ int audio_codec_jy6166_init_adc(struct bflb_device_s *i2c, uint8_t addr, const a
         jy6166_clock_regs_from_cfg(cfg, active_tdm_cfg, &sysclk_reg, &adc_clk_reg) != 0) {
         return -1;
     }
-
-    if (jy6166_write(i2c, addr, JY6166_REG_SRST, 0x01) != 0) {
-        return -1;
-    }
-    bflb_mtimer_delay_ms(2);
 
     if (jy6166_write(i2c, addr, JY6166_REG_I2S_PAD, 0x00) != 0 ||
         jy6166_write(i2c, addr, JY6166_REG_SYSCLK, 0x00) != 0 ||

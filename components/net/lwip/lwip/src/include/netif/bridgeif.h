@@ -47,6 +47,7 @@ extern "C" {
 #endif
 
 struct netif;
+struct pbuf;
 
 #if (BRIDGEIF_MAX_PORTS < 0) || (BRIDGEIF_MAX_PORTS >= 64)
 #error BRIDGEIF_MAX_PORTS must be [1..63]
@@ -93,6 +94,11 @@ typedef struct bridgeif_initdata_s {
 
 err_t bridgeif_init(struct netif *netif);
 err_t bridgeif_add_port(struct netif *bridgeif, struct netif *portif);
+/* Call with the TCP/IP core locked after stopping ingress on the port(s). */
+err_t bridgeif_remove_port(struct netif *bridgeif, struct netif *portif);
+err_t bridgeif_deinit(struct netif *bridgeif);
+/* Clear learned entries; static forwarding/filter entries are preserved. */
+err_t bridgeif_fdb_flush(struct netif *bridgeif);
 err_t bridgeif_has_port(struct netif *bridgeif, struct netif *portif);
 err_t bridgeif_fdb_add(struct netif *bridgeif, const struct eth_addr *addr, bridgeif_portmask_t ports);
 err_t bridgeif_fdb_remove(struct netif *bridgeif, const struct eth_addr *addr);
@@ -102,6 +108,8 @@ int netif_bridged(struct netif *portif);
 void                bridgeif_fdb_update_src(void *fdb_ptr, struct eth_addr *src_addr, u8_t port_idx);
 bridgeif_portmask_t bridgeif_fdb_get_dst_ports(void *fdb_ptr, struct eth_addr *dst_addr);
 void*               bridgeif_fdb_init(u16_t max_fdb_entries);
+void                bridgeif_fdb_clear(void *fdb_ptr);
+void                bridgeif_fdb_deinit(void *fdb_ptr);
 
 #if BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
 #ifndef BRIDGEIF_DECL_PROTECT

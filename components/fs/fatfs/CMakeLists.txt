@@ -7,6 +7,10 @@ sdk_library_add_sources(diskio.c)
 sdk_add_include_directories(.)
 sdk_add_include_directories(port)
 
+if(CONFIG_FATFS_SPI_NAND)
+    sdk_library_add_sources(port/fatfs_spi_nand.c)
+endif()
+
 # fatfs use sdcard over sdio
 if(CONFIG_FATFS_SDH_SDCARD)
     sdk_library_add_sources(port/fatfs_sdh_lhal_sdcard.c)

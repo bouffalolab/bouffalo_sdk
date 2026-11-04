@@ -34,7 +34,6 @@
 
 static struct bflb_device_s *uart0;
 
-extern void __libc_init_array(void);
 #if CONFIG_SHELL
 extern void shell_init_with_task(struct bflb_device_s *shell);
 #endif
@@ -159,8 +158,6 @@ int main(void)
 #else
     ot_uart_init(uart0);
 #endif
-
-    __libc_init_array();
 
     bflb_mtd_init();
 

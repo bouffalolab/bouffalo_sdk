@@ -370,8 +370,9 @@ freertos_risc_v_trap_handler:
     csrr a0, mcause
     csrr a1, mepc
 
-    /* There is other content in the mcause register of E907 */
-    li t0, 0x807FFFFF
+    /* Clear E907 mcause bits [30:10], preserving the interrupt flag (bit 31)
+     * and exception code (bits [9:0]) so extra status bits do not affect mtimer detection. */
+    li t0, 0x800003FF
     and a0, a0, t0
 
     bge a0, x0, synchronous_exception

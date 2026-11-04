@@ -246,10 +246,11 @@ static void test_handshake(void)
     sack->common.length = htons(sizeof(*sack));
     sack->cumulative_tsn_ack = htonl(sctp.tsn - 1);
     deliver(&sctp, raw, sizeof(SctpHeader) + sizeof(*sack));
-    assert(!sctp.tx_head && sctp.retry_packet.kind == SCTP_RETRY_DCEP_OPEN);
+    assert(!sctp.tx_head && sctp.dcep_retries[0] &&
+           sctp.dcep_retries[0]->kind == SCTP_RETRY_DCEP_OPEN);
     old_closed = closed;
     for (int i = 0; i < 10; i++) { now += 4000; sctp_poll(&sctp, now); }
-    assert(closed == old_closed && sctp.connected && sctp.retry_packet.kind == SCTP_RETRY_NONE);
+    assert(closed == old_closed && sctp.connected && !sctp.dcep_retries[0]);
     assert(sctp_outgoing_data(&sctp, "txt", 3, PPID_STRING, 1) == 3);
     sctp_destroy_association(&sctp);
 }

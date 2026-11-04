@@ -30,6 +30,9 @@
 #include "soln_solution.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#ifdef CONFIG_PS_EXTEND
+#include "ps_extend.h"
+#endif
 
 #ifdef CONFIG_SOLN_LOG_LEVEL
 #undef CONFIG_LOG_LEVEL
@@ -347,8 +350,9 @@ static void fps_statistics_task(void *pvParameters)
 #if IS_ENABLED(CONFIG_SOLN_FPS_PRINT_EN)
     uint32_t samples_since_print = 0;
 #endif
-#if (configGENERATE_RUN_TIME_STATS)
+#ifdef CONFIG_PS_EXTEND
     uint64_t runtime_stats_elapsed_ms = 0;
+    freertos_helper_ps_init();
 #endif
 
     (void)pvParameters;
@@ -434,15 +438,10 @@ static void fps_statistics_task(void *pvParameters)
         }
 #endif
 
-#if (configGENERATE_RUN_TIME_STATS)
-        /* print task run time stats every 10 seconds */
+#ifdef CONFIG_PS_EXTEND
         runtime_stats_elapsed_ms += elapsed_ms;
         if (runtime_stats_elapsed_ms >= 10000U) {
-            static char info_buffer[1024];
-            vTaskGetRunTimeStats(info_buffer);
-            puts("\r\nTask Name\t Run Time\t CPU Load\r\n");
-            puts(info_buffer);
-            puts("\r\n");
+            freertos_helper_ps_dump();
             runtime_stats_elapsed_ms %= 10000U;
         }
 #endif

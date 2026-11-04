@@ -96,6 +96,10 @@ __start:
     /* start load code to itcm like. */
     call     start_load
 
+#if defined(BFLB_USE_PICOLIBC) && !defined(BFLB_BOOT2)
+    call bflb_picolibc_init_boot_tls
+#endif
+
     call     System_Post_Init
 
     /* BPU cold bringup need time, so enable BPU before enter to main */
@@ -125,6 +129,10 @@ cpu_np_start:
     csrw    mscratch, sp
 
     call SystemInit_NP
+
+#if defined(BFLB_USE_PICOLIBC) && !defined(BFLB_BOOT2)
+    call bflb_picolibc_init_boot_tls
+#endif
 
     call np_board_main
 cpu_np_loop:

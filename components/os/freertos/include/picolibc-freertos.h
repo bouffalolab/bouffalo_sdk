@@ -37,7 +37,12 @@
  * https://github.com/picolibc/picolibc/blob/main/doc/tls.md
  * for additional information. */
 
+#include <picolibc.h>
 #include <picotls.h>
+
+#if !defined(__THREAD_LOCAL_STORAGE) || !defined(__THREAD_LOCAL_STORAGE_API)
+#error "BFLB_USE_PICOLIBC requires a Picolibc built with TLS support"
+#endif
 
 #define configUSE_C_RUNTIME_TLS_SUPPORT    1
 
@@ -46,7 +51,8 @@
 #define picolibcTLS_SIZE                   ( ( portPOINTER_SIZE_TYPE ) _tls_size() )
 #define picolibcSTACK_ALIGNMENT_MASK       ( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK )
 
-#if __PICOLIBC_MAJOR__ > 1 || __PICOLIBC_MINOR__ >= 8
+#if defined(__PICOLIBC__) && (__PICOLIBC__ > 1 || \
+    (__PICOLIBC__ == 1 && defined(__PICOLIBC_MINOR__) && __PICOLIBC_MINOR__ >= 8))
 
 /* Picolibc 1.8 and newer have explicit alignment values provided
  * by the _tls_align() inline */

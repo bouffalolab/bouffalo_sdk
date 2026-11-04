@@ -219,7 +219,7 @@ static void ATTR_TCM_SECTION pds_wakeup_recover(void)
         "csrw    mtvec, a0\n\t"
 #ifdef CONFIG_IRQ_USE_VECTOR
         "la      a0, __Vectors\n\t"
-        "csrw    mtvt, a0\n\t"
+        "csrw    0x307, a0\n\t"
 #endif
 #if defined(__riscv_flen)
         "csrr    t0, mstatus\n\t"
@@ -468,6 +468,13 @@ int ATTR_TCM_SECTION bl_lp_pds_enter_with_restore(uint32_t pds_level, uint32_t s
 #endif
 
     bl_lp_debug_record_time(iot2lp_para, "restore context end");
+
+    /* Clear consumed wakeup boot flags before normal execution. */
+    BL_WR_REG(HBN_BASE, HBN_RSV0, 0);
+#if !defined(CPU_MODEL_A0)
+    BL_WR_WORD(BL618DG_WRAM_BASE + 319 * 1024, 0);
+    BL_WR_WORD(BL618DG_WRAM_BASE + 319 * 1024 + 4, 0);
+#endif
 
     bflb_irq_restore(irq_flag);
 

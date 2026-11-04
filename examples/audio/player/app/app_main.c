@@ -18,15 +18,18 @@
 #include "bflb_mtd.h"
 #include "lfs_kv.h"
 #include "bflb_romfs.h"
+#include "msp_port.h"
 
 #include <sys/time.h>
 #include <reent.h>
 
+#if !defined(__PICOLIBC__)
 extern int _gettimeofday_r(struct _reent *, struct timeval *, void *);
 int gettimeofday(struct timeval *tv, void *tz)
 {
     return _gettimeofday_r(_REENT, tv, tz);
 }
+#endif
 
 void app_main_entry(void *arg)
 {
@@ -62,8 +65,7 @@ void app_main_entry(void *arg)
     app_bt_init();
 #endif
 
-#if defined(CONFIG_CODEC_USE_I2S)
-    extern msp_i2s_port_init(void);
+#if defined(CONFIG_CODEC_USE_I2S) && CONFIG_CODEC_USE_I2S
     msp_i2s_port_init();
 #endif
     extern int app_play_fifo_music();

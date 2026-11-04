@@ -547,7 +547,9 @@ int aui_stop(aui_ch_t *context)
 
     user_log("context = %p\r\n", context);
 
-    bflb_dma_channel_stop(context->device_dma);
+    if (context->device_dma) {
+        bflb_dma_channel_stop(context->device_dma);
+    }
 
     if (context->task_exit == 0) {
         msp_event_set(&context->event, EVENT_AU_STOP, 0);
@@ -620,7 +622,7 @@ uint32_t aui_read(aui_ch_t *context, const void *data, uint32_t size)
     ret = mringbuffer_get_invalid_cache(
         context->ringbuffer,
         (uint8_t *)data, rel_size,
-        NULL);
+        (cache_operate_t)bflb_l1c_dcache_clean_invalidate_range);
     if (ret != rel_size) {
         MSP_LOGE("never run here!\r\n");
     }

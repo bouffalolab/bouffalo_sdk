@@ -145,7 +145,9 @@ static inline void *_lwip_calloc(size_t count, size_t size)
 #define LWIP_TCP_KEEPALIVE        1
 
 extern int *__errno(void);
+#ifndef errno
 #define errno                         (*__errno())
+#endif
 #define LWIP_NETIF_STATUS_CALLBACK    1
 #define LWIP_NETIF_API                1
 

@@ -13,6 +13,7 @@
 #include "bl602_glb.h"
 
 #include "mm.h"
+#include "tlsf.h"
 
 extern void log_start(void);
 
@@ -155,10 +156,7 @@ void ram_heap_init(void)
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
 
     heap_len = (size_t)&_heap_wifi_size;
-    if (heap_len >= ALIGN_UP(sizeof(mm_heap_t), 64) + tlsf_size() +
-                    tlsf_pool_overhead() + tlsf_block_size_min()) {
-        mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, heap_len);
-    }
+    mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, heap_len);
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"

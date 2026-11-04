@@ -10,6 +10,8 @@
 #ifndef AT_WIFI_CONFIG_H
 #define AT_WIFI_CONFIG_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -216,4 +218,3 @@ int delete_credential_from_cache(const char *ssid);
 #endif
 
 #endif/* AT_WIFI_CONFIG_H */
-

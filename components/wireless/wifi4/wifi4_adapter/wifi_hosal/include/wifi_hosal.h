@@ -21,7 +21,7 @@
 #ifndef _WIFI_HOSAL_H_
 #define _WIFI_HOSAL_H_
 
-#include <sys/_stdint.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif

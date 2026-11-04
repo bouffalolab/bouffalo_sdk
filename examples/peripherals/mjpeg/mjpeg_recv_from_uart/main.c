@@ -85,7 +85,7 @@ int main(void)
             idx++;
             if (idx % sizeof(yuv_buffer[0]) == 0) {
                 bflb_mjpeg_feature_control(mjpeg, MJPEG_CMD_SET_INPUTADDR0, (size_t)yuv_buffer + flag * (sizeof(yuv_buffer[0])));
-                bflb_mjpeg_feature_control(mjpeg, MJPEG_CMD_UPDATE_KICK_ADDR, NULL);
+                bflb_mjpeg_feature_control(mjpeg, MJPEG_CMD_UPDATE_KICK_ADDR, 0);
                 bflb_mjpeg_kick(mjpeg);
                 flag ^= 1;
             }

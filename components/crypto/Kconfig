@@ -78,6 +78,33 @@ config MBEDTLS_AES_USE_HW
     help
       Use the chip AES engine for mbedTLS AES operations.
 
+config MBEDTLS_GCM_HW_PREFETCH
+    bool "Batch hardware AES counter blocks for GCM"
+    depends on MBEDTLS_AES_USE_HW && !MBEDTLS_V2 && !MBEDTLS_USE_PSA_CRYPTO
+    default n
+    help
+      Prefetch consecutive GCM counter blocks with the hardware AES engine.
+      This uses a shared, mutex-protected cache and additional uncached RAM.
+      Other cipher operations continue to use the regular AES interface.
+
+config MBEDTLS_GCM_SOFTWARE_AES
+    bool "Use software AES only for mbedTLS GCM"
+    depends on MBEDTLS_AES_USE_HW && !MBEDTLS_GCM_HW_PREFETCH && !MBEDTLS_V2 && !MBEDTLS_USE_PSA_CRYPTO
+    default n
+    help
+      Use the Mbed TLS GCM alternative with an independently compiled
+      software backend while retaining hardware AES for other modes.
+      Software AES uses lookup tables and may not be
+      suitable for applications requiring resistance to cache side channels.
+
+config MBEDTLS_GCM_SOFTWARE_LARGE_TABLE
+    bool "Use a large GHASH table for software GCM"
+    depends on MBEDTLS_GCM_SOFTWARE_AES
+    default y
+    help
+      Improve software GHASH speed at the cost of approximately 4 KiB
+      per active GCM context. Disable to use the smaller upstream table.
+
 config MBEDTLS_SHA1_USE_HW
     bool "SHA1 hardware acceleration"
     default n

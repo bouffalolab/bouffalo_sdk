@@ -389,7 +389,12 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
         switch (efuse_cfg->app_encrypt_type) {
             case HAL_APP_ENCRYPT_SAME_AS_BOOT2:
                 /* get hw cfg (signature and aes type) */
-                EF_Ctrl_Read_Secure_Boot((EF_Ctrl_SF_AES_Type *)efuse_cfg->encrypted);
+                {
+                    EF_Ctrl_SF_AES_Type aes[2];
+
+                    EF_Ctrl_Read_Secure_Boot(aes);
+                    efuse_cfg->encrypted[i] = aes[i];
+                }
                 if (efuse_cfg->encrypted[i] == EF_CTRL_SF_AES_192) {
                     efuse_cfg->encrypted[i] = SF_CTRL_AES_192BITS + 1;
                 } else if (efuse_cfg->encrypted[i] == EF_CTRL_SF_AES_256) {

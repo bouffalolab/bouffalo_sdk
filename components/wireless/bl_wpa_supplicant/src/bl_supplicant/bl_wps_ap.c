@@ -888,7 +888,7 @@ bl_wps_err_t bl_wifi_wps_ap_start(const struct bl_wps_config *config,
     }
 
     g_wps_ap = ctx;
-    bl_wifi_register_wps_ap_cb_internal(&bl_wps_ap_cb);
+    wl80211_supplicant_register_wps_ap_cb_internal(&bl_wps_ap_cb);
     return BL_WPS_ERR_OK;
 }
 
@@ -898,7 +898,7 @@ void bl_wifi_wps_stop(void)
         return;
     }
 
-    bl_wifi_unregister_wps_ap_cb_internal();
+    wl80211_supplicant_unregister_wps_ap_cb_internal();
     bl_wps_ap_free_ctx(g_wps_ap);
     g_wps_ap = NULL;
 }

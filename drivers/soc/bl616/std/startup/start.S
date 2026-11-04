@@ -29,7 +29,7 @@ __start:
 #ifdef CONFIG_IRQ_USE_VECTOR
     /* mtvt: for all vector mode IRQs */
     la      a0, __Vectors
-    csrw    mtvt, a0
+    csrw    0x307, a0
 #endif
 #if defined(__riscv_flen)
     /* FP: initial state */
@@ -55,6 +55,10 @@ __start:
     /* start load code to itcm like. */
     call     start_load
 
+#if defined(BFLB_USE_PICOLIBC) && !defined(BFLB_BOOT2)
+    call    bflb_picolibc_init_boot_tls
+#endif
+
     call     System_Post_Init
 
     call     main
@@ -63,4 +67,3 @@ __start:
 
 __exit:
     j      __exit
-

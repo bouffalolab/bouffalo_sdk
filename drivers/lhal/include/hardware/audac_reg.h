@@ -64,7 +64,7 @@
 #define AUDAC_DAC_ITF_EN        (1 << 1U)
 #define AUDAC_CKG_ENA           (1 << 27U)
 #define AUDAC_AU_PWM_MODE_SHIFT (28U)
-#define AUDAC_AU_PWM_MODE_MASK  (0xf << AUDAC_AU_PWM_MODE_SHIFT)
+#define AUDAC_AU_PWM_MODE_MASK  (0xfU << AUDAC_AU_PWM_MODE_SHIFT)
 
 /* 0x4 : audac_status */
 #define AUDAC_DAC_H0_BUSY      (1 << 12U)

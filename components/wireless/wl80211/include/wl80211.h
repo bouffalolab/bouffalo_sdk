@@ -266,20 +266,6 @@ enum wl80211_p2p_role {
     WL80211_P2P_ROLE_GO,
 };
 
-enum wl80211_p2p_action_kind {
-    WL80211_P2P_ACTION_NONE = 0,
-    WL80211_P2P_ACTION_PUBLIC,
-    WL80211_P2P_ACTION_VENDOR,
-};
-
-struct wl80211_p2p_action_info {
-    uint8_t category;
-    uint8_t action;
-    uint8_t kind;
-    const uint8_t *payload;
-    uint32_t payload_len;
-};
-
 struct wl80211_p2p_group_state {
     uint8_t peer_dev_addr[6];
     uint8_t go_dev_addr[6];
@@ -337,10 +323,11 @@ struct wl80211_global_state {
     /* station max idle time before send deauth (x5 seconds) */
     uint16_t ap_max_idle_time;
     struct aid_list_entry aid_list[4];
+    uint8_t assoc_sta_count;
+
 #if defined(CONFIG_WL80211_P2P)
     struct wl80211_p2p_state p2p;
 #endif
-    uint8_t assoc_sta_count;
 };
 extern struct wl80211_global_state wl80211_glb;
 
@@ -365,9 +352,6 @@ int wl80211_unregister_input_cb(void);
 #if defined(CONFIG_WL80211_P2P)
 int wl80211_register_mgmt_rx_cb(wl80211_mgmt_rx_cb_t cb, void *prv);
 int wl80211_unregister_mgmt_rx_cb(void);
-#endif
-#if defined(CONFIG_WL80211_P2P)
-bool wl80211_p2p_parse_action_frame(const uint8_t *frame, uint32_t frame_len, struct wl80211_p2p_action_info *info);
 #endif
 
 enum {

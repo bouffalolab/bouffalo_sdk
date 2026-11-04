@@ -139,16 +139,9 @@ void vApplicationSleep(uint32_t xExpectedIdleTime);
 #ifdef config_ENABLE_OS_TLS_SWITCH
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1
 #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
+#endif
 
-#if 1
-
-#if 1
-#define configGENERATE_RUN_TIME_STATS            1
-extern uint64_t bflb_mtimer_get_time_us(void);
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ((void)0)
-#define portGET_RUN_TIME_COUNTER_VALUE()         bflb_mtimer_get_time_us()
-#else
-static inline unsigned long long getCycleCounter()
+static inline unsigned long long getCycleCounter(void)
 {
 #if __riscv_xlen == 32
     register unsigned int cycle, cycleh, cycleh_tmp;
@@ -165,7 +158,7 @@ static inline unsigned long long getCycleCounter()
 #endif
 }
 
-static inline void resetCycleCounter()
+static inline void resetCycleCounter(void)
 {
     asm volatile("csrw mcycle, x0");
 }
@@ -178,11 +171,5 @@ static inline void resetCycleCounter()
 #define configGENERATE_RUN_TIME_STATS            1
 #define INCLUDE_xTaskGetIdleTaskHandle           1
 #define configRUN_TIME_COUNTER_TYPE              uint64_t
-
-#endif
-
-#endif
-
-#endif
 
 #endif /* FREERTOS_CONFIG_H */

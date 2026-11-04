@@ -420,6 +420,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num, uint1
 uint32_t hal_boot2_custom(void *custom_param)
 {
     uint16_t ret = 0;
+    uint32_t tmp_val;
 
     int32_t psram_dqs_win_num = 0;
     uint16_t psram_id = 0;
@@ -430,6 +431,10 @@ uint32_t hal_boot2_custom(void *custom_param)
         /* power init */
         AON_Set_Ldo18_AON_Power_Switch_For_PSRAM(1);
 
+        /* Set the controller divider before enabling the PSRAM clock. */
+        tmp_val = BL_RD_REG(PSRAM_CTRL_BASE, PSRAM_CONFIGURE);
+        tmp_val = BL_SET_REG_BITS_VAL(tmp_val, PSRAM_REG_PCK_S_DIV, 1);
+        BL_WR_REG(PSRAM_CTRL_BASE, PSRAM_CONFIGURE, tmp_val);
         GLB_Set_PSRAMB_CLK_Sel(ENABLE, GLB_PSRAMB_CLK_480M, 0);
 
         /* gpio init */

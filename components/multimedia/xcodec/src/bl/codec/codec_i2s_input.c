@@ -48,6 +48,12 @@ static uint32_t aui_dma_transfer_bytes(const aui_ch_t *context)
     if (context->sound_channel_num == 2U) {
         return (slot_bytes == 1U) ? 2U : 4U;
     }
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    if (context->sound_channel_num == 4U && slot_bytes == 2U) {
+        /* Four 16-bit TDM slots arrive as two 32-bit I2S FIFO entries. */
+        return 4U;
+    }
+#endif
 
     return 0;
 }
@@ -237,8 +243,13 @@ static int _aui_rx_dma_link(aui_ch_t *context, void *dma)
 
     union bflb_dma_lli_control_s audio_dma_ctrl = {0};
     audio_dma_ctrl.bits.TransferSize = node_size / transfer_bytes;
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    audio_dma_ctrl.bits.SBSize       = DMA_BURST_INCR1;
+    audio_dma_ctrl.bits.DBSize       = DMA_BURST_INCR1;
+#else
     audio_dma_ctrl.bits.SBSize       = DMA_BURST_INCR4;
     audio_dma_ctrl.bits.DBSize       = DMA_BURST_INCR4;
+#endif
     audio_dma_ctrl.bits.SWidth       = dma_width;
     audio_dma_ctrl.bits.DWidth       = dma_width;
     audio_dma_ctrl.bits.SI           = DMA_ADDR_INCREMENT_DISABLE;
@@ -329,8 +340,13 @@ static int _aui_rx_dma_link(aui_ch_t *context, void *dma)
     config.dst_req = DMA_REQUEST_NONE;
     config.src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
     config.dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    config.src_burst_count = DMA_BURST_INCR1;
+    config.dst_burst_count = DMA_BURST_INCR1;
+#else
     config.src_burst_count = DMA_BURST_INCR4;
     config.dst_burst_count = DMA_BURST_INCR4;
+#endif
     config.src_width = dma_width;
     config.dst_width = dma_width;
     bflb_dma_channel_init(device_dma, &config);
@@ -428,7 +444,16 @@ static int _aui_hw_start(aui_ch_t *context)
 {
     user_log("context = %p\r\n", context);
 
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    msp_i2s_rx_prepare();
+    bflb_dma_feature_control(context->device_dma, DMA_CMD_SET_LLI_CONFIG,
+                             (size_t)&context->dma->node[0].dma_cfg);
+    bflb_dma_channel_tcint_clear(context->device_dma);
+#endif
     bflb_dma_channel_start(context->device_dma);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    msp_i2s_rx_enable();
+#endif
 
     return 0;
 }
@@ -462,7 +487,12 @@ int aui_stop(aui_ch_t *context)
 
     user_log("context = %p\r\n", context);
 
-     bflb_dma_channel_stop(context->device_dma);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    msp_i2s_rx_disable();
+#endif
+    if (context->device_dma) {
+        bflb_dma_channel_stop(context->device_dma);
+    }
 
     if (context->task_exit == 0) {
         msp_event_set(&context->event, EVENT_AU_STOP, 0);
@@ -492,6 +522,9 @@ int aui_pause(aui_ch_t *context)
     context->debug.count_pause++;
 #endif
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    msp_i2s_rx_disable();
+#endif
     bflb_dma_channel_stop(context->device_dma);
     msp_mutex_unlock(&(context->mutex));
     return 0;
@@ -503,7 +536,10 @@ int aui_resume(aui_ch_t *context)
     context->debug.count_resume++;
 #endif
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
-     bflb_dma_channel_start(context->device_dma);
+    bflb_dma_channel_start(context->device_dma);
+#if defined(CONFIG_CODEC_USE_JY6316) && CONFIG_CODEC_USE_JY6316
+    msp_i2s_rx_enable();
+#endif
     msp_mutex_unlock(&(context->mutex));
     return 0;
 }

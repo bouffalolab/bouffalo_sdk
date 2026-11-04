@@ -6,7 +6,7 @@ export BL_SDK_BASE
 
 # TARGET parameter:
 #   not specified or all - compile all tests (default)
-#   01_pthread ~ 09_sched_unistd - compile single test
+#   01_pthread ~ 10_cpp_mutex - compile single test
 TARGET ?= all
 
 # Select compilation mode based on TARGET

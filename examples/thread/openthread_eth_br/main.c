@@ -112,7 +112,6 @@ static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(32)
 /****************************************************************************
  * Functions
  ****************************************************************************/
-extern void __libc_init_array(void);
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
 void lmac154_app_init(void)
@@ -326,8 +325,6 @@ int main(void)
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
-
-    __libc_init_array();
 
     /* emac gpio init */
     board_emac_rmii_gpio_init(0);

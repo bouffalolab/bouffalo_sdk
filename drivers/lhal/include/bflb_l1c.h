@@ -90,10 +90,17 @@ void bflb_l1c_dcache_invalidate_all(void);
 void bflb_l1c_dcache_clean_invalidate_all(void);
 
 /**
- * @brief
+ * @brief Write back cache lines covering the supplied range.
  *
- * @param [in] addr
- * @param [in] size
+ * On N900 without a ROM API, ranges are processed in batches covering at most
+ * 512 bytes of cache lines, allowing interrupts between batches if enabled by the
+ * caller. With a ROM API, the range is passed directly to ROM.
+ * The call is synchronous and preserves the caller's interrupt mask. The
+ * caller must prevent concurrent CPU writes to affected cache lines during
+ * maintenance and until ownership has been transferred to DMA or another core.
+ *
+ * @param [in] addr Start address; need not be cache-line aligned.
+ * @param [in] size Number of bytes; the non-ROM implementation ignores zero.
  */
 void bflb_l1c_dcache_clean_range(void *addr, uint32_t size);
 

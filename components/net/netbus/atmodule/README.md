@@ -31,8 +31,8 @@ build the default BL616 UART example from this repository's root:
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-The build detects an existing SDK or downloads it automatically. See the
-example guides below for wiring, configuration, and flashing.
+The build automatically selects the SDK version in `BOUFFALO_SDK_VERSION`.
+See the example guides below for wiring, configuration, and flashing.
 
 ## Documentation
 

@@ -14,7 +14,7 @@ PROJECT_DIR=`realpath .`
 BUILD_DIR="${PROJECT_DIR}/build/build_macsw"
 GCOV_DATA_DIR="${PROJECT_DIR}/gcov_data"
 OUTPUT_DIR="${PROJECT_DIR}/gcov_report"
-GCOV_TOOLCHAIN="riscv64-zephyr-elf"
+GCOV_TOOLCHAIN="riscv64-unknown-elf"
 
 # 颜色定义
 RED='\033[0;31m'

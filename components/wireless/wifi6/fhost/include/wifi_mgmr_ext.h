@@ -2639,4 +2639,62 @@ int wifi_mgmr_wifimode_valid_check(uint16_t mode);
  */
 int wifi_mgmr_ap_chan_switch(int channel, uint8_t cs_count);
 
+#include "wifi_wds.h"
+// ???
+
+#if defined(CONFIG_FHOST) && CONFIG_FHOST && \
+    defined(CONFIG_WIFI_WDS) && CONFIG_WIFI_WDS && \
+    (!defined(CONFIG_WL80211) || !CONFIG_WL80211)
+
+int wifi_mgmr_wds_config_set(uint8_t vif, const wifi_wds_config_t *cfg);
+int wifi_mgmr_wds_config_get(uint8_t vif, wifi_wds_config_t *cfg);
+int wifi_mgmr_wds_status_get(uint8_t vif, wifi_wds_status_t *status);
+int wifi_mgmr_wds_fdb_get(uint8_t vif, uint16_t start,
+                          wifi_wds_fdb_entry_t *entries,
+                          uint16_t capacity, uint16_t *count);
+int wifi_mgmr_wds_fdb_flush(uint8_t vif);
+
+#else
+
+static inline int wifi_mgmr_wds_config_set(uint8_t vif, const wifi_wds_config_t *cfg)
+{
+    (void)vif;
+    (void)cfg;
+    return WIFI_WDS_ERR_UNSUPPORTED;
+}
+
+static inline int wifi_mgmr_wds_config_get(uint8_t vif, wifi_wds_config_t *cfg)
+{
+    (void)vif;
+    (void)cfg;
+    return WIFI_WDS_ERR_UNSUPPORTED;
+}
+
+static inline int wifi_mgmr_wds_status_get(uint8_t vif, wifi_wds_status_t *status)
+{
+    (void)vif;
+    (void)status;
+    return WIFI_WDS_ERR_UNSUPPORTED;
+}
+
+static inline int wifi_mgmr_wds_fdb_get(uint8_t vif, uint16_t start,
+                                        wifi_wds_fdb_entry_t *entries,
+                                        uint16_t capacity, uint16_t *count)
+{
+    (void)vif;
+    (void)start;
+    (void)entries;
+    (void)capacity;
+    (void)count;
+    return WIFI_WDS_ERR_UNSUPPORTED;
+}
+
+static inline int wifi_mgmr_wds_fdb_flush(uint8_t vif)
+{
+    (void)vif;
+    return WIFI_WDS_ERR_UNSUPPORTED;
+}
+
+#endif
+
 #endif

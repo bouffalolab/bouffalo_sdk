@@ -329,10 +329,10 @@ sudo yum install lcov
 cd gcov_report
 
 # 为单个文件生成覆盖率
-riscv64-zephyr-elf-gcov -o bl616.c.gcov gcno_files/bl616.c.gcno gcda_files/bl616.c.gcda
+riscv64-unknown-elf-gcov -o bl616.c.gcov gcno_files/bl616.c.gcno gcda_files/bl616.c.gcda
 
 # 查看覆盖率
-riscv64-zephyr-elf-gcov bl616.c.gcov | less
+riscv64-unknown-elf-gcov bl616.c.gcov | less
 ```
 
 ### 方法 2: 使用 lcov
@@ -342,7 +342,7 @@ cd gcov_report
 
 # 生成 lcov 数据文件
 lcov --capture --directory . --output-file coverage.info \
-    --gcov-tool riscv64-zephyr-elf-gcov
+    --gcov-tool riscv64-unknown-elf-gcov
 
 # 生成 HTML 报告
 genhtml coverage.info --output-directory html
@@ -395,7 +395,7 @@ make flash
 
 **解决**: 在脚本中设置工具链路径
 ```bash
-export PATH="/data/riscv64-zephyr-elf/bin:$PATH"
+export PATH="/data/riscv64-unknown-elf/bin:$PATH"
 ```
 
 ### Q4: HTML 报告为空
@@ -416,7 +416,7 @@ cd gcov_report
 
 # 只生成 macsw 模块的覆盖率
 lcov --capture --directory gcno_files --output-file macsw.info \
-    --gcov-tool riscv64-zephyr-elf-gcov \
+    --gcov-tool riscv64-unknown-elf-gcov \
     --pattern "*/macsw/*"
 
 genhtml macsw.info --output-directory html_macsw

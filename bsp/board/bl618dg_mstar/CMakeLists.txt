@@ -5,6 +5,9 @@ endif()
 # Reuse the DK startup, memory and RF setup with MStar-specific GPIO wiring.
 set(BOARD_BASE_PATH ${BL_SDK_BASE}/bsp/board/bl618dgdk)
 
+# The MStar TF socket supports DAT0 only. Keep the SD host in 1-bit mode.
+sdk_add_compile_definitions(-DCONFIG_SDH_BUS_WIDTH_1LINE=1)
+
 sdk_add_include_directories(.)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board_gpio_overlay.c)
 add_subdirectory(${BOARD_BASE_PATH} bl618dgdk)

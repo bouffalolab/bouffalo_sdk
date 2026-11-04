@@ -50,6 +50,11 @@ struct IceCandidatePair {
   IceCandidate* remote;
   int conncheck;
   uint64_t priority;
+  uint8_t validated;
+  uint8_t nominating;
+  uint8_t remote_nominated;
+  /* 0 ordinary, 1 queued triggered check, 2 triggered transaction in flight. */
+  uint8_t triggered;
   /* Bounded per-pair connectivity transaction, independent of consent. */
   uint32_t check_id[3];
   uint32_t check_started_ms;

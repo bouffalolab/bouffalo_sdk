@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Find RISC-V tools used by the BYAI tools.
 
-The SDK may be used with either an ``riscv64-unknown-*`` or an
-``riscv64-zephyr-*`` toolchain.  Each requested tool is searched separately
-in PATH, so different tools may come from different toolchain installations.
+The SDK is built with the Bouffalo ``riscv64-unknown-*`` toolchain. Each
+requested tool is searched separately in PATH, so different tools may come
+from different toolchain installations.
 """
 
 import argparse
@@ -60,7 +60,7 @@ def find_tool(name: str) -> str:
         raise ValueError(f"Invalid tool name: {name!r}")
 
     pattern = re.compile(
-        rf"^riscv64-(?:unknown|zephyr)-.+-{re.escape(name)}(?:\.exe)?$"
+        rf"^riscv64-unknown-.+-{re.escape(name)}(?:\.exe)?$"
     )
     for directory in _path_entries():
         try:
@@ -86,7 +86,7 @@ def find_tool(name: str) -> str:
 
     raise FileNotFoundError(
         f"No RISC-V tool '{name}' found in PATH. Expected a tool matching "
-        f"riscv64-unknown-*-{name} or riscv64-zephyr-*-{name}."
+        f"riscv64-unknown-*-{name}."
     )
 
 

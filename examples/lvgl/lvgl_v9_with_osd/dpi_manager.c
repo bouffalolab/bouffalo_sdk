@@ -27,6 +27,45 @@
 #include "semphr.h"
 #endif
 
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+#include "event_groups.h"
+static EventGroupHandle_t video_pause_events;
+static volatile bool video_pause_requested;
+
+void video_ota_checkpoint(uint32_t participant)
+{
+    while (video_pause_requested) {
+        xEventGroupSetBits(video_pause_events, participant);
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+}
+
+/* Pause cooperatively before any Flash write. */
+int video_ota_pause(void)
+{
+    const EventBits_t both = VIDEO_OTA_PRODUCER | VIDEO_OTA_DECODER;
+    if (video_pause_events == NULL) {
+        video_pause_events = xEventGroupCreate();
+        if (video_pause_events == NULL) {
+            return -1;
+        }
+    }
+    xEventGroupClearBits(video_pause_events, both);
+    video_pause_requested = true;
+    EventBits_t ready = xEventGroupWaitBits(video_pause_events, both, pdFALSE, pdTRUE, pdMS_TO_TICKS(5000));
+    if ((ready & both) != both) {
+        video_pause_requested = false;
+        return -1;
+    }
+    return 0;
+}
+
+void video_ota_resume(void)
+{
+    video_pause_requested = false;
+}
+#endif
+
 #if defined(CONFIG_FREERTOS)
 static QueueHandle_t pool_queue;
 static QueueHandle_t out_queue;
@@ -431,6 +470,16 @@ void image_switch_task(void *param)
     LOG_I("image switch task started (DPI), target=%u fps\r\n", (unsigned)VIDEO_TARGET_FPS);
 
     while (1) {
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+        if (video_pause_requested) {
+            video_ota_checkpoint(VIDEO_OTA_DECODER);
+            /* Resume from now instead of catching up paused frame slots. */
+            last_frame_wake = xTaskGetTickCount();
+            time_stats = bflb_mtimer_get_time_ms();
+            success_count = 0;
+            timeout_count = 0;
+        }
+#endif
         if (frame_buffer_pop(&jpg_buffer, (TickType_t)100) != 0) {
             continue;
         }
@@ -888,6 +937,16 @@ void image_switch_task(void *param)
     LOG_I("image switch task started, target=%u fps\r\n", (unsigned)VIDEO_TARGET_FPS);
 
     while (1) {
+#if defined(CONFIG_LVGL_V9_WITH_OSD_OTA) && CONFIG_LVGL_V9_WITH_OSD_OTA
+        if (video_pause_requested) {
+            video_ota_checkpoint(VIDEO_OTA_DECODER);
+            /* Resume from now instead of catching up paused frame slots. */
+            last_frame_wake = xTaskGetTickCount();
+            t_stats = bflb_mtimer_get_time_ms();
+            success = 0;
+            timeout = 0;
+        }
+#endif
         if (frame_buffer_pop(&jpg_buffer, (TickType_t)100) != 0) {
             continue;
         }

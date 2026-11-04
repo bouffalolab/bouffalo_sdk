@@ -8,6 +8,9 @@ endif()
 if("${CHIP}" STREQUAL "bl616cl")
 sdk_library_add_sources(Src/rfparam_bl616cl_flash_otp.c)
 endif()
+if("${CHIP}" STREQUAL "bl618dg")
+sdk_library_add_sources(Src/rfparam_bl618dg_flash_otp.c Src/rfparam_bl618dg_efuse.c)
+endif()
 sdk_library_add_sources(Src/rfparam_rftlv.c)
 
 

@@ -34,6 +34,7 @@ typedef void * msp_task_t;
 typedef void * msp_mutex_t;
 typedef void * msp_sem_t;
 typedef void * msp_queue_t;
+typedef void * msp_streambuffer_t;
 typedef void * msp_timer_t;
 typedef void * msp_event_t;
 
@@ -264,6 +265,32 @@ const char *msp_task_get_name(msp_task_t *task);
      * @return  NULL: error.
      */
     void *msp_queue_buf_ptr(msp_queue_t *queue);
+
+    /**
+     * Create a byte stream buffer.
+     *
+     * @param[in] size           buffer capacity in bytes.
+     * @param[in] trigger_level  bytes required to wake a blocked receiver.
+     * @return stream buffer handle, or NULL on error.
+     */
+    msp_streambuffer_t msp_streambuffer_create(size_t size,
+                                               size_t trigger_level);
+
+    void msp_streambuffer_delete(msp_streambuffer_t streambuffer);
+
+    size_t msp_streambuffer_send(msp_streambuffer_t streambuffer,
+                                 const void *data, size_t size,
+                                 unsigned int timeout);
+
+    size_t msp_streambuffer_receive(msp_streambuffer_t streambuffer,
+                                    void *data, size_t size,
+                                    unsigned int timeout);
+
+    size_t msp_streambuffer_bytes_available(
+        msp_streambuffer_t streambuffer);
+
+    size_t msp_streambuffer_spaces_available(
+        msp_streambuffer_t streambuffer);
 
     /**
      * This function will create a timer and run auto.

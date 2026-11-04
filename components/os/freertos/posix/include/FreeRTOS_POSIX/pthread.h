@@ -50,6 +50,10 @@ extern "C" {
 #define PTHREAD_CREATE_JOINABLE    1       /**< Joinable (default). */
 /**@} */
 
+#ifndef PTHREAD_ONCE_INIT
+    #define PTHREAD_ONCE_INIT        0
+#endif
+
 /**
  * @name Returned to a single thread after a successful pthread_barrier_wait.
  *
@@ -258,6 +262,9 @@ int pthread_create( pthread_t * thread,
                     const pthread_attr_t * attr,
                     void *( *startroutine )( void * ),
                     void * arg );
+
+int pthread_once( pthread_once_t * once_control,
+                  void ( * init_routine )( void ) );
 
 /**
  * @brief Broadcast a condition.

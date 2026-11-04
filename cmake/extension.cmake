@@ -308,7 +308,7 @@ macro(project name)
   endif()
 
   if(EXISTS ${LINKER_SCRIPT_IN_PROPERTY})
-    set_target_properties(${proj_name}.elf PROPERTIES LINK_FLAGS "-T${SDK_DEMO_PATH}/${BUILD_DIR}/generated/linker.ld -Wl,-Map=${MAP_FILE}")
+    set_target_properties(${proj_name}.elf PROPERTIES LINK_FLAGS "-T${CMAKE_BINARY_DIR}/generated/linker.ld -Wl,-Map=${MAP_FILE}")
     set_target_properties(${proj_name}.elf PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT_IN_PROPERTY})
   endif()
 
@@ -379,9 +379,15 @@ macro(project name)
   include(${BL_SDK_BASE}/cmake/footprint.cmake)
 
   if(EXISTS ${LINKER_SCRIPT_IN_PROPERTY})
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${LINKER_SCRIPT_IN_PROPERTY})
+    set(linker_cpp_definitions -DBFLB_USE_PICOLIBC=1)
     execute_process(
-        COMMAND ${CMAKE_C_COMPILER} -E -P -include ${BUILD_DIR}/generated/autoconfig.h -x assembler-with-cpp ${LINKER_SCRIPT_IN_PROPERTY} -o ${BUILD_DIR}/generated/linker.ld
+        COMMAND ${CMAKE_C_COMPILER} ${linker_cpp_definitions} -E -P -include ${CMAKE_BINARY_DIR}/generated/autoconfig.h -x assembler-with-cpp ${LINKER_SCRIPT_IN_PROPERTY} -o ${CMAKE_BINARY_DIR}/generated/linker.ld
+        RESULT_VARIABLE linker_cpp_result
     )
+    if(NOT linker_cpp_result EQUAL 0)
+      message(FATAL_ERROR "Cannot preprocess linker script: ${LINKER_SCRIPT_IN_PROPERTY}")
+    endif()
   endif()
 
   sdk_add_compile_options(-include ${CMAKE_BINARY_DIR}/generated/autoconfig.h)

@@ -65,6 +65,31 @@ extern "C" {
 
 #define CACHE_LINE_SIZE 64
 
+/* Limit each interrupt-masked batch to 512 bytes of cache lines. */
+#define CCM_MAINTENANCE_CHUNK_BYTES 512UL
+
+/* RAM cache wrappers require both Range and nested Lines helpers to stay inline. */
+
+/* Preserve local interrupt state in the SDK's configured execution mode. */
+__STATIC_FORCEINLINE unsigned long __CCM_SaveIRQ(void)
+{
+#if defined(CONFIG_RV_PRIVILEGE_MODE_S)
+    return __RV_CSR_READ_CLEAR(CSR_SSTATUS, SSTATUS_SIE);
+#else
+    return __RV_CSR_READ_CLEAR(CSR_MSTATUS, MSTATUS_MIE);
+#endif
+}
+
+__STATIC_FORCEINLINE void __CCM_RestoreIRQ(unsigned long flags)
+{
+    /* Restore only the interrupt-enable bit, preserving other status fields. */
+#if defined(CONFIG_RV_PRIVILEGE_MODE_S)
+    __RV_CSR_SET(CSR_SSTATUS, flags & SSTATUS_SIE);
+#else
+    __RV_CSR_SET(CSR_MSTATUS, flags & MSTATUS_MIE);
+#endif
+}
+
 /**
  * \brief Cache CCM Operation Fail Info
  */
@@ -154,6 +179,24 @@ __STATIC_FORCEINLINE void DisableSUCCM(void)
 __STATIC_FORCEINLINE void FlushPipeCCM(void)
 {
     __RV_CSR_WRITE(CSR_CCM_FPIPE, 0x1);
+}
+
+/* Issue one lock command and capture its result. The caller must mask
+ * interrupts and set BEGINADDR before using these internal helpers. */
+__STATIC_FORCEINLINE unsigned long __CCM_MLockCommand(unsigned long command)
+{
+    __RV_CSR_WRITE(CSR_CCM_MCOMMAND, command);
+    FlushPipeCCM();
+    __RWMB();
+    return __RV_CSR_READ(CSR_CCM_MDATA);
+}
+
+__STATIC_FORCEINLINE unsigned long __CCM_SLockCommand(unsigned long command)
+{
+    __RV_CSR_WRITE(CSR_CCM_SCOMMAND, command);
+    FlushPipeCCM();
+    __RWMB();
+    return __RV_CSR_READ(CSR_CCM_SDATA);
 }
 /** @} */ /* End of Doxygen Group NMSIS_Core_Cache */
 #endif
@@ -285,10 +328,12 @@ __STATIC_INLINE int32_t GetICacheInfo(CacheInfo_Type *info)
  */
 __STATIC_INLINE void MInvalICacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -302,16 +347,37 @@ __STATIC_INLINE void MInvalICacheLine(unsigned long addr)
  * \param [in]    addr    start address to be invalidated
  * \param [in]    cnt     count of cache lines to be invalidated
  */
-__STATIC_INLINE void MInvalICacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void MInvalICacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -325,7 +391,7 @@ __STATIC_INLINE void MInvalICacheLines(unsigned long addr, unsigned long cnt)
  * \param [in]    addr    Start address of the memory range to be invalidated
  * \param [in]    size    Size in bytes of the memory range to be invalidated
  */
-__STATIC_INLINE void MInvalICacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void MInvalICacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -358,10 +424,12 @@ __STATIC_INLINE void MInvalICacheRange(unsigned long addr, unsigned long size)
  */
 __STATIC_INLINE void SInvalICacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -375,16 +443,37 @@ __STATIC_INLINE void SInvalICacheLine(unsigned long addr)
  * \param [in]    addr    start address to be invalidated
  * \param [in]    cnt     count of cache lines to be invalidated
  */
-__STATIC_INLINE void SInvalICacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void SInvalICacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -398,7 +487,7 @@ __STATIC_INLINE void SInvalICacheLines(unsigned long addr, unsigned long cnt)
  * \param [in]    addr    Start address of the memory range to be invalidated
  * \param [in]    size    Size in bytes of the memory range to be invalidated
  */
-__STATIC_INLINE void SInvalICacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void SInvalICacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -504,11 +593,14 @@ __STATIC_INLINE void UInvalICacheRange(unsigned long addr, unsigned long size)
  */
 __STATIC_INLINE unsigned long MLockICacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_LOCK);
     FlushPipeCCM();
     __RWMB();
-    return __RV_CSR_READ(CSR_CCM_MDATA);
+    unsigned long fail_info = __RV_CSR_READ(CSR_CCM_MDATA);
+    __CCM_RestoreIRQ(flags);
+    return fail_info;
 }
 
 /**
@@ -525,19 +617,65 @@ __STATIC_INLINE unsigned long MLockICacheLine(unsigned long addr)
  */
 __STATIC_INLINE unsigned long MLockICacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
-        unsigned long fail_info = CCM_OP_SUCCESS;
-        __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
-            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_LOCK);
-            FlushPipeCCM();
-            __RWMB();
-            fail_info = __RV_CSR_READ(CSR_CCM_MDATA);
-            if (CCM_OP_SUCCESS != fail_info) {
-                return fail_info;
-            }
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
         }
+        unsigned long remaining = batch;
+        unsigned long fail_info = CCM_OP_SUCCESS;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
+        __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
+        while (remaining >= 8UL) {
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            fail_info = __CCM_MLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining--;
+        }
+restore_irq:
+        __CCM_RestoreIRQ(flags);
+        if (CCM_OP_SUCCESS != fail_info) {
+            return fail_info;
+        }
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
     return CCM_OP_SUCCESS;
 }
@@ -554,11 +692,14 @@ __STATIC_INLINE unsigned long MLockICacheLines(unsigned long addr, unsigned long
  */
 __STATIC_INLINE unsigned long SLockICacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_LOCK);
     FlushPipeCCM();
     __RWMB();
-    return __RV_CSR_READ(CSR_CCM_SDATA);
+    unsigned long fail_info = __RV_CSR_READ(CSR_CCM_SDATA);
+    __CCM_RestoreIRQ(flags);
+    return fail_info;
 }
 
 /**
@@ -575,19 +716,65 @@ __STATIC_INLINE unsigned long SLockICacheLine(unsigned long addr)
  */
 __STATIC_INLINE unsigned long SLockICacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
-        unsigned long fail_info = CCM_OP_SUCCESS;
-        __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
-            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_LOCK);
-            FlushPipeCCM();
-            __RWMB();
-            fail_info = __RV_CSR_READ(CSR_CCM_SDATA);
-            if (CCM_OP_SUCCESS != fail_info) {
-                return fail_info;
-            }
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
         }
+        unsigned long remaining = batch;
+        unsigned long fail_info = CCM_OP_SUCCESS;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
+        __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
+        while (remaining >= 8UL) {
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            fail_info = __CCM_SLockCommand(CCM_IC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining--;
+        }
+restore_irq:
+        __CCM_RestoreIRQ(flags);
+        if (CCM_OP_SUCCESS != fail_info) {
+            return fail_info;
+        }
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
     return CCM_OP_SUCCESS;
 }
@@ -653,10 +840,12 @@ __STATIC_INLINE unsigned long ULockICacheLines(unsigned long addr, unsigned long
  */
 __STATIC_INLINE void MUnlockICacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -672,14 +861,35 @@ __STATIC_INLINE void MUnlockICacheLine(unsigned long addr)
  */
 __STATIC_INLINE void MUnlockICacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_UNLOCK);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -694,10 +904,12 @@ __STATIC_INLINE void MUnlockICacheLines(unsigned long addr, unsigned long cnt)
  */
 __STATIC_INLINE void SUnlockICacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -713,14 +925,35 @@ __STATIC_INLINE void SUnlockICacheLine(unsigned long addr)
  */
 __STATIC_INLINE void SUnlockICacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_UNLOCK);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -774,11 +1007,13 @@ __STATIC_INLINE void UUnlockICacheLines(unsigned long addr, unsigned long cnt)
  * This function must be executed in M-Mode only.
  * \param [in]    addr    start address to be invalidated
  */
-__STATIC_INLINE void MInvalICache(void)
+__STATIC_FORCEINLINE void MInvalICache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_IC_INVAL_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -790,11 +1025,13 @@ __STATIC_INLINE void MInvalICache(void)
  * This function must be executed in M/S-Mode only.
  * \param [in]    addr    start address to be invalidated
  */
-__STATIC_INLINE void SInvalICache(void)
+__STATIC_FORCEINLINE void SInvalICache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_IC_INVAL_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -942,10 +1179,12 @@ __STATIC_INLINE int32_t GetDCacheInfo(CacheInfo_Type *info)
  */
 __STATIC_INLINE void MInvalDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -959,16 +1198,37 @@ __STATIC_INLINE void MInvalDCacheLine(unsigned long addr)
  * \param [in]    addr    start address to be invalidated
  * \param [in]    cnt     count of cache lines to be invalidated
  */
-__STATIC_INLINE void MInvalDCacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void MInvalDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -982,7 +1242,7 @@ __STATIC_INLINE void MInvalDCacheLines(unsigned long addr, unsigned long cnt)
  * \param [in]    addr    Start address of the memory range to be invalidated
  * \param [in]    size    Size in bytes of the memory range to be invalidated
  */
-__STATIC_INLINE void MInvalDCacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void MInvalDCacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -1015,10 +1275,12 @@ __STATIC_INLINE void MInvalDCacheRange(unsigned long addr, unsigned long size)
  */
 __STATIC_INLINE void SInvalDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1032,16 +1294,37 @@ __STATIC_INLINE void SInvalDCacheLine(unsigned long addr)
  * \param [in]    addr    start address to be invalidated
  * \param [in]    cnt     count of cache lines to be invalidated
  */
-__STATIC_INLINE void SInvalDCacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void SInvalDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1055,7 +1338,7 @@ __STATIC_INLINE void SInvalDCacheLines(unsigned long addr, unsigned long cnt)
  * \param [in]    addr    Start address of the memory range to be invalidated
  * \param [in]    size    Size in bytes of the memory range to be invalidated
  */
-__STATIC_INLINE void SInvalDCacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void SInvalDCacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -1160,10 +1443,12 @@ __STATIC_INLINE void UInvalDCacheRange(unsigned long addr, unsigned long size)
  */
 __STATIC_INLINE void MFlushDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1177,16 +1462,37 @@ __STATIC_INLINE void MFlushDCacheLine(unsigned long addr)
  * \param [in]    addr    start address to be flushed
  * \param [in]    cnt     count of cache lines to be flushed
  */
-__STATIC_INLINE void MFlushDCacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void MFlushDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1200,7 +1506,7 @@ __STATIC_INLINE void MFlushDCacheLines(unsigned long addr, unsigned long cnt)
  * \param [in]    addr    Start address of the memory range to be flushed
  * \param [in]    size    Size in bytes of the memory range to be flushed
  */
-__STATIC_INLINE void MFlushDCacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void MFlushDCacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -1232,10 +1538,12 @@ __STATIC_INLINE void MFlushDCacheRange(unsigned long addr, unsigned long size)
  */
 __STATIC_INLINE void SFlushDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1249,16 +1557,37 @@ __STATIC_INLINE void SFlushDCacheLine(unsigned long addr)
  * \param [in]    addr    start address to be flushed
  * \param [in]    cnt     count of cache lines to be flushed
  */
-__STATIC_INLINE void SFlushDCacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void SFlushDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1272,7 +1601,7 @@ __STATIC_INLINE void SFlushDCacheLines(unsigned long addr, unsigned long cnt)
  * \param [in]    addr    Start address of the memory range to be flushed
  * \param [in]    size    Size in bytes of the memory range to be flushed
  */
-__STATIC_INLINE void SFlushDCacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void SFlushDCacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -1376,10 +1705,12 @@ __STATIC_INLINE void UFlushDCacheRange(unsigned long addr, unsigned long size)
  */
 __STATIC_INLINE void MFlushInvalDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1393,16 +1724,37 @@ __STATIC_INLINE void MFlushInvalDCacheLine(unsigned long addr)
  * \param [in]    addr    start address to be flushed and invalidated
  * \param [in]    cnt     count of cache lines to be flushed and invalidated
  */
-__STATIC_INLINE void MFlushInvalDCacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void MFlushInvalDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1416,7 +1768,7 @@ __STATIC_INLINE void MFlushInvalDCacheLines(unsigned long addr, unsigned long cn
  * \param [in]    addr    Start address of the memory range to be flushed and invalidated
  * \param [in]    size    Size in bytes of the memory range to be flushed and invalidated
  */
-__STATIC_INLINE void MFlushInvalDCacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void MFlushInvalDCacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -1448,10 +1800,12 @@ __STATIC_INLINE void MFlushInvalDCacheRange(unsigned long addr, unsigned long si
  */
 __STATIC_INLINE void SFlushInvalDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1465,16 +1819,37 @@ __STATIC_INLINE void SFlushInvalDCacheLine(unsigned long addr)
  * \param [in]    addr    start address to be flushed and invalidated
  * \param [in]    cnt     count of cache lines to be flushed and invalidated
  */
-__STATIC_INLINE void SFlushInvalDCacheLines(unsigned long addr, unsigned long cnt)
+__STATIC_FORCEINLINE void SFlushInvalDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1488,7 +1863,7 @@ __STATIC_INLINE void SFlushInvalDCacheLines(unsigned long addr, unsigned long cn
  * \param [in]    addr    Start address of the memory range to be flushed and invalidated
  * \param [in]    size    Size in bytes of the memory range to be flushed and invalidated
  */
-__STATIC_INLINE void SFlushInvalDCacheRange(unsigned long addr, unsigned long size)
+__STATIC_FORCEINLINE void SFlushInvalDCacheRange(unsigned long addr, unsigned long size)
 {
     /* Read cache line size from CSR */
     unsigned long cache_line_size = CACHE_LINE_SIZE;
@@ -1593,11 +1968,14 @@ __STATIC_INLINE void UFlushInvalDCacheRange(unsigned long addr, unsigned long si
  */
 __STATIC_INLINE unsigned long MLockDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_LOCK);
     FlushPipeCCM();
     __RWMB();
-    return __RV_CSR_READ(CSR_CCM_MDATA);
+    unsigned long fail_info = __RV_CSR_READ(CSR_CCM_MDATA);
+    __CCM_RestoreIRQ(flags);
+    return fail_info;
 }
 
 /**
@@ -1614,19 +1992,65 @@ __STATIC_INLINE unsigned long MLockDCacheLine(unsigned long addr)
  */
 __STATIC_INLINE unsigned long MLockDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
-        unsigned long fail_info = CCM_OP_SUCCESS;
-        __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
-            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_LOCK);
-            FlushPipeCCM();
-            __RWMB();
-            fail_info = __RV_CSR_READ(CSR_CCM_MDATA);
-            if (CCM_OP_SUCCESS != fail_info) {
-                return fail_info;
-            }
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
         }
+        unsigned long remaining = batch;
+        unsigned long fail_info = CCM_OP_SUCCESS;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
+        __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
+        while (remaining >= 8UL) {
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            fail_info = __CCM_MLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining--;
+        }
+restore_irq:
+        __CCM_RestoreIRQ(flags);
+        if (CCM_OP_SUCCESS != fail_info) {
+            return fail_info;
+        }
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
     return CCM_OP_SUCCESS;
 }
@@ -1643,11 +2067,14 @@ __STATIC_INLINE unsigned long MLockDCacheLines(unsigned long addr, unsigned long
  */
 __STATIC_INLINE unsigned long SLockDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_LOCK);
     FlushPipeCCM();
     __RWMB();
-    return __RV_CSR_READ(CSR_CCM_SDATA);
+    unsigned long fail_info = __RV_CSR_READ(CSR_CCM_SDATA);
+    __CCM_RestoreIRQ(flags);
+    return fail_info;
 }
 
 /**
@@ -1664,19 +2091,65 @@ __STATIC_INLINE unsigned long SLockDCacheLine(unsigned long addr)
  */
 __STATIC_INLINE unsigned long SLockDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
-        unsigned long fail_info = CCM_OP_SUCCESS;
-        __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
-            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_LOCK);
-            FlushPipeCCM();
-            __RWMB();
-            fail_info = __RV_CSR_READ(CSR_CCM_SDATA);
-            if (CCM_OP_SUCCESS != fail_info) {
-                return fail_info;
-            }
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
         }
+        unsigned long remaining = batch;
+        unsigned long fail_info = CCM_OP_SUCCESS;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
+        __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
+        while (remaining >= 8UL) {
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            fail_info = __CCM_SLockCommand(CCM_DC_LOCK);
+            if (CCM_OP_SUCCESS != fail_info) {
+                goto restore_irq;
+            }
+            remaining--;
+        }
+restore_irq:
+        __CCM_RestoreIRQ(flags);
+        if (CCM_OP_SUCCESS != fail_info) {
+            return fail_info;
+        }
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
     return CCM_OP_SUCCESS;
 }
@@ -1742,10 +2215,12 @@ __STATIC_INLINE unsigned long ULockDCacheLines(unsigned long addr, unsigned long
  */
 __STATIC_INLINE void MUnlockDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1761,14 +2236,35 @@ __STATIC_INLINE void MUnlockDCacheLine(unsigned long addr)
  */
 __STATIC_INLINE void MUnlockDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_MBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_UNLOCK);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1783,10 +2279,12 @@ __STATIC_INLINE void MUnlockDCacheLines(unsigned long addr, unsigned long cnt)
  */
 __STATIC_INLINE void SUnlockDCacheLine(unsigned long addr)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1802,14 +2300,35 @@ __STATIC_INLINE void SUnlockDCacheLine(unsigned long addr)
  */
 __STATIC_INLINE void SUnlockDCacheLines(unsigned long addr, unsigned long cnt)
 {
-    if (cnt > 0) {
-        unsigned long i;
+    while (cnt > 0) {
+        unsigned long batch = cnt;
+        if (batch > CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE) {
+            batch = CCM_MAINTENANCE_CHUNK_BYTES / CACHE_LINE_SIZE;
+        }
+        unsigned long remaining = batch;
+        unsigned long flags = __CCM_SaveIRQ();
+        /* An ISR may have used CCM since the previous batch. */
         __RV_CSR_WRITE(CSR_CCM_SBEGINADDR, addr);
-        for (i = 0; i < cnt; i++) {
+        while (remaining >= 8UL) {
             __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            remaining -= 8UL;
+        }
+        while (remaining > 0) {
+            __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_UNLOCK);
+            remaining--;
         }
         FlushPipeCCM();
         __RWMB();
+        __CCM_RestoreIRQ(flags);
+        addr += batch * CACHE_LINE_SIZE;
+        cnt -= batch;
     }
 }
 
@@ -1863,11 +2382,13 @@ __STATIC_INLINE void UUnlockDCacheLines(unsigned long addr, unsigned long cnt)
  * This function must be executed in M-Mode only.
  * \param [in]    addr    start address to be invalidated
  */
-__STATIC_INLINE void MInvalDCache(void)
+__STATIC_FORCEINLINE void MInvalDCache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_INVAL_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1879,11 +2400,13 @@ __STATIC_INLINE void MInvalDCache(void)
  * This function must be executed in M/S-Mode only.
  * \param [in]    addr    start address to be invalidated
  */
-__STATIC_INLINE void SInvalDCache(void)
+__STATIC_FORCEINLINE void SInvalDCache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_INVAL_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1913,11 +2436,13 @@ __STATIC_INLINE void UInvalDCache(void)
  * This function must be executed in M-Mode only.
  * \param [in]    addr    start address to be flushed
  */
-__STATIC_INLINE void MFlushDCache(void)
+__STATIC_FORCEINLINE void MFlushDCache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WB_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1929,11 +2454,13 @@ __STATIC_INLINE void MFlushDCache(void)
  * This function must be executed in M/S-Mode only.
  * \param [in]    addr    start address to be flushed
  */
-__STATIC_INLINE void SFlushDCache(void)
+__STATIC_FORCEINLINE void SFlushDCache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WB_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1961,11 +2488,25 @@ __STATIC_INLINE void UFlushDCache(void)
  * This function must be executed in M-Mode only.
  * \param [in]    addr    start address to be flushed and locked
  */
-__STATIC_INLINE void MFlushInvalDCache(void)
+__STATIC_FORCEINLINE void MFlushInvalDCache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
+}
+
+/* Flush and disable in M-mode before restoring interrupts, so an ISR cannot
+ * dirty cache lines between the two operations. */
+__STATIC_FORCEINLINE void MFlushInvalDCacheAndDisable(void)
+{
+    unsigned long flags = __CCM_SaveIRQ();
+    __RV_CSR_WRITE(CSR_CCM_MCOMMAND, CCM_DC_WBINVAL_ALL);
+    FlushPipeCCM();
+    __RWMB();
+    DisableDCache();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**
@@ -1977,11 +2518,13 @@ __STATIC_INLINE void MFlushInvalDCache(void)
  * This function must be executed in M/S-Mode only.
  * \param [in]    addr    start address to be flushed and locked
  */
-__STATIC_INLINE void SFlushInvalDCache(void)
+__STATIC_FORCEINLINE void SFlushInvalDCache(void)
 {
+    unsigned long flags = __CCM_SaveIRQ();
     __RV_CSR_WRITE(CSR_CCM_SCOMMAND, CCM_DC_WBINVAL_ALL);
     FlushPipeCCM();
     __RWMB();
+    __CCM_RestoreIRQ(flags);
 }
 
 /**

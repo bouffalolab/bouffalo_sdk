@@ -10,9 +10,26 @@ CONFIG_DPI_DISPLAY_BOARD_MODE = y
 # Default is the original SD-card JPEG video path. Build with
 # CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO=y to use USB DATA ACM + NetHub instead.
 CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO = n
+CONFIG_LVGL_V9_WITH_OSD_OTA = y
+
+ifneq ($(filter y,$(CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO) $(CONFIG_LVGL_V9_WITH_OSD_OTA)),)
+    -include $(BL_SDK_BASE)/examples/wifi/defconfig
+endif
+
+ifeq ($(CONFIG_LVGL_V9_WITH_OSD_OTA),y)
+    CONFIG_OVERRIDE_PTFILE = "partition_ota_8M.toml"
+    CONFIG_PARTITION = y
+    CONFIG_BFLB_MTD = y
+    CONFIG_FOTA = y
+    CONFIG_FOTA_NO_SHELL = y
+    CONFIG_FAST_OTA = 0
+    CONFIG_HTTP = y
+    CONFIG_HTTP_CLIENT = y
+    CONFIG_PROJECT_SDK_VERSION = "1.0.0"
+    CONFIG_OTA_HEADER_USE_SDK_VERSION = y
+endif
 
 ifeq ($(CONFIG_LVGL_V9_WITH_OSD_USB_VIDEO),y)
-    -include $(BL_SDK_BASE)/examples/wifi/defconfig
     CONFIG_WIFI_IPERF = y
 
     CONFIG_BSP_USB = y

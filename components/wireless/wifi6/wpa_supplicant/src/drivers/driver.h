@@ -2270,6 +2270,11 @@ struct wpa_bss_params {
 #define WPA_STA_TDLS_PEER BIT(4)
 #define WPA_STA_AUTHENTICATED BIT(5)
 #define WPA_STA_ASSOCIATED BIT(6)
+#ifdef CONFIG_WIFI_WDS
+/* MACSW-local bit. Upstream hostap has no Multi-AP station flag.
+ * Keep this bit local so a future hostap low-bit flag does not collide. */
+#define WPA_STA_MULTI_AP BIT(31)
+#endif
 
 enum tdls_oper {
 	TDLS_DISCOVERY_REQ,

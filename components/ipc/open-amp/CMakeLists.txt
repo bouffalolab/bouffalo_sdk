@@ -1,6 +1,8 @@
 
 sdk_generate_library()
 
+sdk_add_compile_definitions(-DRPMSG_BUFFER_SIZE=${CONFIG_OPENAMP_RPMSG_BUFFER_SIZE})
+
 sdk_library_add_sources(open-amp/lib/version.c)
 sdk_library_add_sources(open-amp/lib/virtio/virtio.c)
 sdk_library_add_sources(open-amp/lib/virtio/virtqueue.c)

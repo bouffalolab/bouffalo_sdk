@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@ struct PeerConnection {
   uint8_t temp_buf[CONFIG_MTU];
   uint8_t agent_buf[CONFIG_MTU];
   int agent_ret;
+  uint32_t dtls_transport_drops;
   int b_local_description_created;
   int agent_created;
   int dtls_initialized;
@@ -65,7 +67,19 @@ struct PeerConnection {
   uint32_t remote_vssrc;
   uint32_t dtls_started_ms;
   DtlsSrtpRole answer_dtls_role;
+  /* One supported section per media kind, in the offer's original order. */
+  char answer_mids[3][129];
+  unsigned char answer_order[3];
+  unsigned answer_sections;
 };
+
+#if CONFIG_LIBPEER_RTP_PACKET_INFO
+int peer_connection_get_audio_packet_info(PeerConnection* pc, PeerRtpPacketInfo* info) {
+  if (!pc || !info || !pc->artp_decoder.packet_info_valid) return -1;
+  *info = pc->artp_decoder.packet_info;
+  return 0;
+}
+#endif
 
 static void peer_connection_outgoing_rtp_packet(uint8_t* data, size_t size, void* user_data) {
   PeerConnection* pc = (PeerConnection*)user_data;
@@ -123,17 +137,48 @@ static int peer_connection_dtls_srtp_recv(void* ctx, unsigned char* buf, size_t 
 static int peer_connection_dtls_srtp_send(void* ctx, const uint8_t* buf, size_t len) {
   DtlsSrtp* dtls_srtp = (DtlsSrtp*)ctx;
   PeerConnection* pc = (PeerConnection*)dtls_srtp->user_data;
+  int result;
 
-  // LOGD("send %.4x %.4x, %ld", *(uint16_t*)buf, *(uint16_t*)(buf + 2), len);
-  return agent_send(&pc->agent, buf, len);
+  if (len > INT_MAX) return MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
+  for (unsigned attempt = 0; attempt < 2; attempt++) {
+    /* agent_send can reject consent without calling the socket. Do not
+     * mistake an earlier socket's errno for pressure on this datagram. */
+    errno = 0;
+    result = agent_send(&pc->agent, buf, (int)len);
+    /* TURN permission/channel progress needs a later owner tick. Keep its
+     * explicit retry status separate from socket errno and bounded retries. */
+    if (result == AGENT_SEND_AGAIN) break;
+    if (result >= 0 || !(errno == EAGAIN || errno == EWOULDBLOCK ||
+                         errno == ENOMEM || errno == ENOBUFS || errno == ENOSPC ||
+                         errno == EINTR)) return result;
+    /* Give the local network worker one bounded chance to drain its queue,
+     * instead of forcing a reliable message to wait a whole SCTP RTO. */
+    if (attempt == 0) ports_sleep_ms(1);
+  }
+  /* DTLS uses an unreliable datagram transport. Local queue pressure is a
+   * dropped datagram, just like loss in the network; DTLS handshake and SCTP
+   * reliability supply their own retransmissions. Returning a fatal error
+   * poisons the TLS context. WANT_WRITE would retain a ciphertext record
+   * whose SCTP caller may already have abandoned or freed its message.
+   * The UDP socket's send_error_count still accounts for this local loss. */
+  if (pc->dtls_transport_drops != UINT32_MAX) ++pc->dtls_transport_drops;
+  return (int)len;
 }
 
 static void peer_connection_incoming_rtcp(PeerConnection* pc, uint8_t* buf, size_t len) {
   RtcpHeader* rtcp_header;
   size_t pos = 0;
 
-  while (pos < len) {
+  while (len - pos >= 4) {
+    size_t packet_size = 4U * ((((size_t)buf[pos + 2] << 8) | buf[pos + 3]) + 1U);
+    if ((buf[pos] >> 6) != 2 || packet_size > len - pos) break;
     rtcp_header = (RtcpHeader*)(buf + pos);
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+    rtp_diagnostics_rtcp(&pc->artp_decoder.diagnostics, buf + pos, packet_size,
+                          pc->remote_assrc, pc->artp_encoder.ssrc);
+    rtp_diagnostics_rtcp(&pc->vrtp_decoder.diagnostics, buf + pos, packet_size,
+                          pc->remote_vssrc, pc->vrtp_encoder.ssrc);
+#endif
 
     switch (rtcp_header->type) {
       case RTCP_RR:
@@ -163,9 +208,19 @@ static void peer_connection_incoming_rtcp(PeerConnection* pc, uint8_t* buf, size
         break;
     }
 
-    pos += 4 * ntohs(rtcp_header->length) + 4;
+    pos += packet_size;
   }
 }
+
+#if CONFIG_LIBPEER_MEDIA_DIAGNOSTICS
+int peer_connection_get_rtp_diagnostics(PeerConnection* pc, int video,
+                                        RtpDiagnosticReport* report) {
+  if (!pc || !report || (video != 0 && video != 1)) return -1;
+  rtp_diagnostics_get(video ? &pc->vrtp_decoder.diagnostics :
+                               &pc->artp_decoder.diagnostics, report);
+  return 0;
+}
+#endif
 
 const char* peer_connection_state_to_string(PeerConnectionState state) {
   switch (state) {
@@ -192,12 +247,21 @@ PeerConnectionState peer_connection_get_state(PeerConnection* pc) {
   return pc->state;
 }
 
+int peer_connection_get_selected_ice_types(const PeerConnection* pc, int* local, int* remote) {
+  if (!pc || !local || !remote || !pc->agent.selected_pair ||
+      !pc->agent.selected_pair->local || !pc->agent.selected_pair->remote) return -1;
+  *local = pc->agent.selected_pair->local->type;
+  *remote = pc->agent.selected_pair->remote->type;
+  return 0;
+}
+
 void* peer_connection_get_sctp(PeerConnection* pc) {
   return &pc->sctp;
 }
 
 PeerConnection* peer_connection_create(PeerConfiguration* config) {
-  if (!config) {
+  if (!config || config->ice_transport_policy < ICE_TRANSPORT_POLICY_ALL ||
+      config->ice_transport_policy > ICE_TRANSPORT_POLICY_RELAY) {
     return NULL;
   }
 
@@ -216,6 +280,7 @@ PeerConnection* peer_connection_create(PeerConfiguration* config) {
     return NULL;
   }
   pc->agent_created = 1;
+  pc->agent.relay_only = config->ice_transport_policy == ICE_TRANSPORT_POLICY_RELAY;
 
   memset(&pc->sctp, 0, sizeof(pc->sctp));
 
@@ -325,7 +390,14 @@ int peer_connection_datachannel_send(PeerConnection* pc, char* message, size_t l
 }
 
 int peer_connection_datachannel_send_sid(PeerConnection* pc, char* message, size_t len, uint16_t sid) {
+  return peer_connection_datachannel_send_sid_typed(pc, message, len, sid,
+      pc && pc->config.datachannel == DATA_CHANNEL_STRING ? DATA_CHANNEL_STRING : DATA_CHANNEL_BINARY);
+}
+
+int peer_connection_datachannel_send_sid_typed(PeerConnection* pc, const void* message,
+                                               size_t len, uint16_t sid, DataChannelType type) {
   if (!pc || !message || len == 0 || len > INT_MAX ||
+      (type != DATA_CHANNEL_STRING && type != DATA_CHANNEL_BINARY) ||
       pc->state != PEER_CONNECTION_COMPLETED ||
       !sctp_is_connected(&pc->sctp)) {
     LOGD("sctp not connected");
@@ -333,16 +405,39 @@ int peer_connection_datachannel_send_sid(PeerConnection* pc, char* message, size
   }
 
 #if (CONFIG_DATA_BUFFER_SIZE) > 0
-  return buffer_push_tail_with_prefix(pc->data_rb, (const uint8_t*)&sid,
-                                      sizeof(sid), (uint8_t*)message,
-                                      (int)len);
+  uint8_t prefix[3];
+  memcpy(prefix, &sid, sizeof(sid));
+  prefix[2] = (uint8_t)type;
+  return buffer_push_tail_with_prefix(pc->data_rb, prefix, sizeof(prefix), message, (int)len);
 #else
-  if (pc->config.datachannel == DATA_CHANNEL_STRING)
-    return sctp_outgoing_data(&pc->sctp, message, len, PPID_STRING, sid);
-  else
-    return sctp_outgoing_data(&pc->sctp, message, len, PPID_BINARY, sid);
+  return sctp_outgoing_data(&pc->sctp, (char*)message, len,
+                           type == DATA_CHANNEL_STRING ? PPID_STRING : PPID_BINARY, sid);
 #endif
 }
+
+#if (CONFIG_DATA_BUFFER_SIZE) > 0
+static void peer_connection_flush_data(PeerConnection* pc) {
+  for (unsigned batch = 0; pc->data_rb && batch < CONFIG_DATA_TX_BATCH_SIZE; ++batch) {
+    int bytes;
+    uint8_t* data = buffer_peak_head(pc->data_rb, &bytes);
+    if (!data) break;
+    if (bytes <= 3 || (data[2] != DATA_CHANNEL_STRING && data[2] != DATA_CHANNEL_BINARY)) {
+      LOGE("corrupt datachannel buffer record");
+      buffer_pop_head(pc->data_rb);
+      break;
+    }
+    uint16_t sid;
+    memcpy(&sid, data, sizeof(sid));
+    SctpDataPpid ppid = data[2] == DATA_CHANNEL_STRING ? PPID_STRING : PPID_BINARY;
+    int result = sctp_outgoing_data(&pc->sctp, (char*)data + 3, bytes - 3, ppid, sid);
+    /* -1 is an atomic rejection, retry reliable records without changing
+     * SID/PPID or payload. -2 is a fatal partial send; never replay it. */
+    if (result != -1 || sctp_stream_drops_on_send_failure(&pc->sctp, sid))
+      buffer_pop_head(pc->data_rb);
+    if (result < 0) break;
+  }
+}
+#endif
 
 int peer_connection_get_data_buffered_amount(PeerConnection* pc) {
 #if (CONFIG_DATA_BUFFER_SIZE) > 0
@@ -425,11 +520,20 @@ int peer_connection_create_datachannel_sid(PeerConnection* pc, DecpChannelType c
   // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   label_len = strlen(label);
   protocol_len = strlen(protocol);
-  if (label_len > UINT16_MAX || protocol_len > UINT16_MAX ||
-      label_len + protocol_len > SIZE_MAX - 12) {
+  if (label_len >= sizeof(pc->sctp.stream_table[0].label) || protocol_len > UINT16_MAX ||
+      label_len + protocol_len > SIZE_MAX - 12 ||
+      pc->sctp.stream_count >= SCTP_MAX_STREAMS ||
+      sid == UINT16_MAX ||
+      (sid & 1) != peer_connection_get_local_datachannel_sid(pc) ||
+      (unsigned)channel_type > DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED ||
+      ((unsigned)channel_type & 0x7f) > 2 ||
+      (((unsigned)channel_type & 0x7f) == 0 && reliability_parameter != 0)) {
     return -1;
   }
+  for (int i = 0; i < pc->sctp.stream_count; ++i)
+    if (pc->sctp.stream_table[i].sid == sid) return -1;
   msg_size = 12 + label_len + protocol_len;
+  if (msg_size > SCTP_MTU - 16 - 12) return -1;
   uint16_t priority_big_endian = htons(priority);
   uint32_t reliability_big_endian = htonl(reliability_parameter);
   uint16_t label_length = htons((uint16_t)label_len);
@@ -448,6 +552,8 @@ int peer_connection_create_datachannel_sid(PeerConnection* pc, DecpChannelType c
   memcpy(msg + 12, label, label_len);
   memcpy(msg + 12 + label_len, protocol, protocol_len);
 
+  int previous_stream_count = pc->sctp.stream_count;
+  sctp_add_stream_mapping(&pc->sctp, label, sid);
   sctp_set_stream_unordered(&pc->sctp, sid,
                             ((uint8_t)channel_type & 0x80) != 0);
   sctp_set_stream_drop_on_send_failure(
@@ -455,6 +561,10 @@ int peer_connection_create_datachannel_sid(PeerConnection* pc, DecpChannelType c
       channel_type == DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED &&
           reliability_parameter == 0);
   rtrn = sctp_outgoing_data(&pc->sctp, msg, msg_size, PPID_CONTROL, sid);
+  if (rtrn < 0) {
+    pc->sctp.stream_count = previous_stream_count;
+    memset(&pc->sctp.stream_table[previous_stream_count], 0, sizeof(SctpStreamEntry));
+  }
   LOGI("DCEP OPEN sent sid=%u label=%s", sid, label);
   free(msg);
   return rtrn;
@@ -507,7 +617,6 @@ static int peer_connection_append_transport(Sdp* sdp, PeerConnection* pc,
 static const char* peer_connection_create_sdp(PeerConnection* pc, SdpType sdp_type) {
   Sdp sdp;
   int sdp_error = 0;
-  int audio_section = 0;
   DtlsSrtpRole role = DTLS_SRTP_ROLE_SERVER;
 
   if (!pc) {
@@ -555,18 +664,35 @@ static const char* peer_connection_create_sdp(PeerConnection* pc, SdpType sdp_ty
 
   /* --- Step 1: Session header --- */
   sdp_init(&sdp, pc->sdp, sizeof(pc->sdp));
-  sdp_error = sdp_create(&sdp,
-                         pc->config.video_codec != CODEC_NONE,
-                         pc->config.audio_codec != CODEC_NONE,
-                         pc->config.datachannel);
+  if (sdp_type == SDP_TYPE_ANSWER && pc->answer_sections) {
+    const char* mids[3] = {NULL, NULL, NULL};
+    sdp.video_mid = pc->answer_mids[0];
+    sdp.audio_mid = pc->answer_mids[1];
+    sdp.data_mid = pc->answer_mids[2];
+    for (unsigned i = 0; i < pc->answer_sections; i++)
+      mids[i] = pc->answer_mids[pc->answer_order[i]];
+    sdp_error = sdp_create_bundle(&sdp, mids[0], mids[1], mids[2]);
+  } else {
+    sdp_error = sdp_create(&sdp, pc->config.video_codec != CODEC_NONE,
+                           pc->config.audio_codec != CODEC_NONE, pc->config.datachannel);
+  }
 
   /* --- Step 2: Gather ICE candidates --- */
-  agent_gather_candidate(&pc->agent, NULL, NULL, NULL);  // host
+  if (pc->config.ice_transport_policy != ICE_TRANSPORT_POLICY_RELAY)
+    agent_gather_candidate(&pc->agent, NULL, NULL, NULL);  // host
   for (size_t i = 0; i < sizeof(pc->config.ice_servers) / sizeof(pc->config.ice_servers[0]); ++i) {
-    if (pc->config.ice_servers[i].urls) {
+    if (pc->config.ice_servers[i].urls &&
+        (pc->config.ice_transport_policy != ICE_TRANSPORT_POLICY_RELAY ||
+         !strncmp(pc->config.ice_servers[i].urls, "turn:", 5))) {
       LOGI("ice server: %s", pc->config.ice_servers[i].urls);
       agent_gather_candidate(&pc->agent, pc->config.ice_servers[i].urls, pc->config.ice_servers[i].username, pc->config.ice_servers[i].credential);
     }
+  }
+
+  if (pc->config.ice_transport_policy == ICE_TRANSPORT_POLICY_RELAY &&
+      pc->agent.local_candidates_count == 0) {
+    LOGE("Relay-only policy has no usable TURN allocation");
+    return NULL;
   }
 
   /* --- Step 3: Generate shared ICE credentials --- */
@@ -580,38 +706,26 @@ static const char* peer_connection_create_sdp(PeerConnection* pc, SdpType sdp_ty
     return NULL;
   }
 
-  /* --- Step 4: Media sections and their shared ICE candidates --- */
-  if (pc->config.video_codec == CODEC_H264) {
-    sdp_error = sdp_error || sdp_append_h264(&sdp);
-    sdp_error = sdp_error ||
-                peer_connection_append_transport(&sdp, pc, sdp_type, role);
-  }
-
-  switch (pc->config.audio_codec) {
-    case CODEC_PCMA:
-      sdp_error = sdp_error || sdp_append_pcma(&sdp);
-      audio_section = 1;
-      break;
-    case CODEC_PCMU:
-      sdp_error = sdp_error || sdp_append_pcmu(&sdp);
-      audio_section = 1;
-      break;
-    case CODEC_OPUS:
-      sdp_error = sdp_error || sdp_append_opus(&sdp);
-      audio_section = 1;
-      break;
-    default:
-      break;
-  }
-  if (audio_section) {
-    sdp_error = sdp_error ||
-                peer_connection_append_transport(&sdp, pc, sdp_type, role);
-  }
-
-  if (pc->config.datachannel) {
-    sdp_error = sdp_error || sdp_append_datachannel(&sdp);
-    sdp_error = sdp_error ||
-                peer_connection_append_transport(&sdp, pc, sdp_type, role);
+  /* --- Step 4: Keep the offer's m-section order and MID in the answer. --- */
+  unsigned sections = sdp_type == SDP_TYPE_ANSWER && pc->answer_sections ? pc->answer_sections : 3;
+  for (unsigned section = 0; section < sections; section++) {
+    unsigned kind = sdp_type == SDP_TYPE_ANSWER && pc->answer_sections ? pc->answer_order[section] : section;
+    int enabled = 0;
+    if (kind == 0 && pc->config.video_codec == CODEC_H264) {
+      sdp_error = sdp_error || sdp_append_h264(&sdp);
+      enabled = 1;
+    } else if (kind == 1) {
+      switch (pc->config.audio_codec) {
+        case CODEC_PCMA: sdp_error = sdp_error || sdp_append_pcma(&sdp); enabled = 1; break;
+        case CODEC_PCMU: sdp_error = sdp_error || sdp_append_pcmu(&sdp); enabled = 1; break;
+        case CODEC_OPUS: sdp_error = sdp_error || sdp_append_opus(&sdp); enabled = 1; break;
+        default: break;
+      }
+    } else if (kind == 2 && pc->config.datachannel) {
+      sdp_error = sdp_error || sdp_append_datachannel(&sdp);
+      enabled = 1;
+    }
+    if (enabled) sdp_error = sdp_error || peer_connection_append_transport(&sdp, pc, sdp_type, role);
   }
 
   if (sdp_error || sdp.failed) {
@@ -626,6 +740,20 @@ static const char* peer_connection_create_sdp(PeerConnection* pc, SdpType sdp_ty
   }
 
   return pc->sdp;
+}
+
+int peer_connection_set_ice_direct_preference(PeerConnection* pc, uint32_t wait_ms) {
+  if (!pc || pc->state != PEER_CONNECTION_NEW || wait_ms > 10000U) return -1;
+  return agent_set_direct_preference(&pc->agent, wait_ms);
+}
+int peer_connection_is_unreliable_unordered(const PeerConnection* pc, uint16_t sid) {
+  if (!pc) return 0;
+  for (int i = 0; i < pc->sctp.stream_count; ++i) {
+    const SctpStreamEntry* stream = &pc->sctp.stream_table[i];
+    if (stream->sid == sid)
+      return stream->open && stream->unordered && stream->drop_on_send_failure;
+  }
+  return 0;
 }
 
 const char* peer_connection_create_offer(PeerConnection* pc) {
@@ -683,8 +811,7 @@ static int peer_connection_check_consent(PeerConnection* pc) {
 }
 
 int peer_connection_loop(PeerConnection* pc) {
-#if (CONFIG_VIDEO_BUFFER_SIZE) > 0 || (CONFIG_AUDIO_BUFFER_SIZE) > 0 || \
-    (CONFIG_DATA_BUFFER_SIZE) > 0
+#if (CONFIG_VIDEO_BUFFER_SIZE) > 0 || (CONFIG_AUDIO_BUFFER_SIZE) > 0
   int bytes;
   uint8_t* data = NULL;
 #endif
@@ -770,51 +897,7 @@ int peer_connection_loop(PeerConnection* pc) {
 #endif
 
 #if (CONFIG_DATA_BUFFER_SIZE) > 0
-      if (pc->data_rb) {
-        unsigned int batch;
-
-        for (batch = 0; batch < CONFIG_DATA_TX_BATCH_SIZE; batch++) {
-          uint16_t sid;
-          int send_result = -2;
-
-          data = buffer_peak_head(pc->data_rb, &bytes);
-          if (!data) {
-            break;
-          }
-
-          if (bytes <= (int)sizeof(sid)) {
-            LOGE("corrupt datachannel buffer record");
-          } else {
-            memcpy(&sid, data, sizeof(sid));
-            data += sizeof(sid);
-            bytes -= sizeof(sid);
-            if (pc->config.datachannel == DATA_CHANNEL_STRING)
-              send_result =
-                  sctp_outgoing_data(&pc->sctp, (char*)data, bytes,
-                                     PPID_STRING, sid);
-            else
-              send_result =
-                  sctp_outgoing_data(&pc->sctp, (char*)data, bytes,
-                                     PPID_BINARY, sid);
-          }
-          /*
-           * -1 means no SCTP fragment reached UDP, so preserving the record
-           * provides an atomic retry on reliable channels. A real-time
-           * maxRetransmits=0 stream discards that stale record instead.
-           * -2 means a multi-fragment message failed after partial progress;
-           * drop it because replaying from the start would duplicate data.
-           */
-          if (send_result != -1 ||
-              sctp_stream_drops_on_send_failure(&pc->sctp, sid)) {
-            buffer_pop_head(pc->data_rb);
-          }
-          /* Stop the batch on transport pressure, including a discarded
-           * PR message. Reliable records remain queued for the next pass. */
-          if (send_result < 0) {
-            break;
-          }
-        }
-      }
+      peer_connection_flush_data(pc);
 #endif
 
 read_next:
@@ -913,6 +996,16 @@ read_next:
 void peer_connection_set_remote_description_with_type(PeerConnection* pc,
                                                       const char* sdp_text,
                                                       SdpType sdp_type) {
+  (void)peer_connection_set_remote_description_checked(pc, sdp_text, sdp_type);
+}
+
+size_t peer_connection_get_remote_description_limit(void) {
+  return CONFIG_REMOTE_SDP_MAX_SIZE;
+}
+
+int peer_connection_set_remote_description_checked(PeerConnection* pc,
+                                                   const char* sdp_text,
+                                                   SdpType sdp_type) {
   const char* start = sdp_text;
   const char* line = NULL;
   char buf[256];
@@ -921,35 +1014,57 @@ void peer_connection_set_remote_description_with_type(PeerConnection* pc,
   char remote_fingerprint[DTLS_SRTP_FINGERPRINT_LENGTH] = {0};
   DtlsSrtpRole role = sdp_type == SDP_TYPE_OFFER ? DTLS_SRTP_ROLE_CLIENT : DTLS_SRTP_ROLE_SERVER;
   int setup_seen = 0;
+  char mids[3][129] = {{0}};
+  unsigned char order[3] = {0};
+  unsigned sections = 0, seen_kinds = 0;
+  int media_kind = -1;
 
-  if (!pc || !sdp_text) {
-    return;
+  if (!pc || !sdp_text || (sdp_type != SDP_TYPE_OFFER && sdp_type != SDP_TYPE_ANSWER)) {
+    return -1;
   }
   /* Renegotiation/ICE restart needs coordinated SDP, DTLS, SCTP and queue
    * state. Reject in-place replacement before modifying any live state.
    * The facade reports INVALID_STATE; direct users must create a new session. */
   if (pc->state != PEER_CONNECTION_NEW) {
     LOGW("Remote SDP replacement is unsupported; create a new connection");
-    return;
+    return -1;
+  }
+
+  if (strnlen(sdp_text, CONFIG_REMOTE_SDP_MAX_SIZE + 1U) > CONFIG_REMOTE_SDP_MAX_SIZE) {
+    LOGE("Remote SDP exceeds configured input limit");
+    return -1;
   }
 
   /* Validate a fresh pin per description without erasing the active pin while
    * parsing. Invalid/missing pins fail closed; they never inherit an old pin. */
   while (*start) {
     size_t line_len;
-    int skip = 2;
-
-    line = strstr(start, "\r\n");
-    if (!line) {
-      line = strchr(start, '\n');
-      skip = 1;
-    }
-    if (!line) {
-      line = start + strlen(start);
-      skip = 0;
-    }
+    const char* next = strchr(start, '\n');
+    line = next ? next : start + strlen(start);
+    if (line > start && line[-1] == '\r') --line;
 
     line_len = (size_t)(line - start);
+    if (sdp_type == SDP_TYPE_OFFER && line_len >= 2 && !memcmp(start, "m=", 2)) {
+      media_kind = line_len >= 8 && !memcmp(start, "m=video ", 8) ? 0 :
+                   line_len >= 8 && !memcmp(start, "m=audio ", 8) ? 1 :
+                   line_len >= 14 && !memcmp(start, "m=application ", 14) ? 2 : -1;
+      /* Additional/disabled sections need SDP rejection/codec negotiation,
+       * which this connection does not implement. Never emit a false answer. */
+      if (media_kind < 0 || sections >= 3 || (seen_kinds & (1U << media_kind)) ||
+          (media_kind == 0 && pc->config.video_codec == CODEC_NONE) ||
+          (media_kind == 1 && pc->config.audio_codec == CODEC_NONE) ||
+          (media_kind == 2 && !pc->config.datachannel)) goto bad_media;
+      order[sections++] = (unsigned char)media_kind;
+      seen_kinds |= 1U << media_kind;
+    } else if (sdp_type == SDP_TYPE_OFFER && line_len >= 6 && !memcmp(start, "a=mid:", 6)) {
+      size_t length = line_len - 6;
+      if (media_kind < 0 || !length || length > 128 || mids[media_kind][0]) goto bad_media;
+      for (size_t i = 0; i < length; i++)
+        if ((unsigned char)start[6 + i] <= 32 || (unsigned char)start[6 + i] >= 127) goto bad_media;
+      memcpy(mids[media_kind], start + 6, length);
+      mids[media_kind][length] = 0;
+    }
+
     if (line_len < sizeof(buf)) {
       memcpy(buf, start, line_len);
       buf[line_len] = '\0';
@@ -961,11 +1076,11 @@ void peer_connection_set_remote_description_with_type(PeerConnection* pc,
           selected = DTLS_SRTP_ROLE_CLIENT;
         else {
           STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-          return;
+          return -1;
         }
         if (setup_seen && selected != role) {
           STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-          return;
+          return -1;
         }
         setup_seen = 1;
         role = selected;
@@ -977,19 +1092,19 @@ void peer_connection_set_remote_description_with_type(PeerConnection* pc,
         size_t fingerprint_length = strlen(fingerprint);
         if (fingerprint_length != 95) {
           STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-          return;
+          return -1;
         }
         for (size_t i = 0; i < fingerprint_length; ++i) {
           if ((i % 3 == 2) ? fingerprint[i] != ':' :
               !isxdigit((unsigned char)fingerprint[i])) {
             STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-            return;
+            return -1;
           }
         }
         if (remote_fingerprint[0] &&
             strcasecmp(remote_fingerprint, fingerprint) != 0) {
           STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-          return;
+          return -1;
         }
         memcpy(remote_fingerprint, fingerprint, fingerprint_length + 1);
       }
@@ -1005,10 +1120,13 @@ void peer_connection_set_remote_description_with_type(PeerConnection* pc,
         LOGD("SSRC: %" PRIu32, *ssrc);
       }
     } else {
-      LOGW("Ignoring overlong SDP line (%u bytes)", (unsigned int)line_len);
+      if (!strncmp(start, "a=setup:", 8) || !strncmp(start, "a=fingerprint:", 14)) {
+        STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
+        return -1;
+      }
     }
 
-    start = line + skip;
+    start = next ? next + 1 : start + strlen(start);
   }
 
   if (!remote_fingerprint[0] ||
@@ -1016,14 +1134,28 @@ void peer_connection_set_remote_description_with_type(PeerConnection* pc,
        strcasecmp(pc->dtls_srtp.remote_fingerprint, remote_fingerprint) != 0)) {
     LOGE("Remote SDP has no fingerprint or attempts to replace a connected peer");
     STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-    return;
+    return -1;
   }
 
   if (sdp_type == SDP_TYPE_OFFER) {
+    if (sections) {
+      unsigned expected = (pc->config.video_codec != CODEC_NONE ? 1U : 0U) |
+                          (pc->config.audio_codec != CODEC_NONE ? 2U : 0U) |
+                          (pc->config.datachannel ? 4U : 0U);
+      if (seen_kinds != expected) goto bad_media;
+      for (unsigned i = 0; i < sections; i++) {
+        if (!mids[order[i]][0]) goto bad_media;
+        for (unsigned j = i + 1; j < sections; j++)
+          if (!strcmp(mids[order[i]], mids[order[j]])) goto bad_media;
+      }
+    }
+    memcpy(pc->answer_mids, mids, sizeof(mids));
+    memcpy(pc->answer_order, order, sizeof(order));
+    pc->answer_sections = sections;
     pc->answer_dtls_role = role;
   } else if (!pc->dtls_initialized || dtls_srtp_set_role(&pc->dtls_srtp, role) != 0) {
     STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
-    return;
+    return -1;
   }
 
   agent_set_remote_description(&pc->agent, (char*)sdp_text);
@@ -1036,10 +1168,15 @@ void peer_connection_set_remote_description_with_type(PeerConnection* pc,
       pc->agent.remote_upwd[0] == '\0') {
     LOGE("Remote SDP is missing DTLS or ICE attributes");
     STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
+    return -1;
   } else {
     memcpy(pc->dtls_srtp.remote_fingerprint, remote_fingerprint, sizeof(remote_fingerprint));
     if (sdp_type == SDP_TYPE_ANSWER) STATE_CHANGED(pc, PEER_CONNECTION_CHECKING);
   }
+  return 0;
+bad_media:
+  STATE_CHANGED(pc, PEER_CONNECTION_FAILED);
+  return -1;
 }
 
 void peer_connection_set_remote_description(PeerConnection* pc,
@@ -1095,6 +1232,11 @@ void peer_connection_ondatachannel(PeerConnection* pc,
     sctp_onclose(&pc->sctp, onclose);
     sctp_onmessage(&pc->sctp, onmessage);
   }
+}
+
+void peer_connection_ondatachannel_open(PeerConnection* pc,
+    void (*callback)(uint16_t sid, const char* label, void* userdata)) {
+  if (pc) pc->sctp.onchannelopen = callback;
 }
 
 int peer_connection_lookup_sid(PeerConnection* pc, const char* label, uint16_t* sid) {

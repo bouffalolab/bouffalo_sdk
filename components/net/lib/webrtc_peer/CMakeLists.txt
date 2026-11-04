@@ -9,6 +9,10 @@ if(CONFIG_WEBRTC_PEER_MJPEG)
     sdk_library_add_sources(src/webrtc_peer_mjpeg.c)
 endif()
 
+if(CONFIG_WEBRTC_PEER_AUDIO_PLAYOUT)
+    sdk_library_add_sources(src/webrtc_peer_audio.c)
+endif()
+
 if(CONFIG_WEBRTC_PEER_SIGNALING_APPRTC)
     sdk_library_add_sources(src/apprtc_signaling.c)
 endif()

@@ -23,6 +23,8 @@
 #include "semphr.h"
 
 #include <stdbool.h>
+#include "bflb_common.h"
+#include "bflb_l1c.h"
 
 #define TST_SHRAM_PTR(...)
 #define ASSERT_ERR(...)
@@ -55,6 +57,16 @@ const int fhost_ping_priority = RTOS_TASK_PRIORITY(27);
  ****************************************************************************************
  */
 
+/* A cacheable address is cleaned across its cache lines and the uncached alias is returned. A non-cacheable address is returned unchanged. */
+void *rtos_dma_pool_prepare(void *pool, uint32_t size)
+{
+    void *uncached = bflb_get_no_cache_addr(pool);
+
+    if (uncached != pool && size != 0)
+        bflb_l1c_dcache_clean_invalidate_range(pool, size);
+    return uncached;
+}
+
 /**
  ****************************************************************************************
  * @brief ms to tick
@@ -71,6 +83,13 @@ uint32_t rtos_al_ms2tick(int ms)
     tick = (uint32_t)(pdMS_TO_TICKS(ms));
 
     return tick;
+}
+
+uint32_t rtos_al_tick2ms(uint32_t ticks)
+{
+    /* Use 64-bit intermediate arithmetic so the conversion cannot overflow
+     * before division on long-running systems. */
+    return (uint32_t)(((uint64_t)ticks * 1000U) / configTICK_RATE_HZ);
 }
 
 /**
