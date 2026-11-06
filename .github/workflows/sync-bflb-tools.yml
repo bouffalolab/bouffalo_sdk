@@ -40,17 +40,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check sync token
-        env:
-          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
-        run: |
-          set -euo pipefail
-          test -n "${TOKEN}"
+      - name: Create sync token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          owner: bouffalolab
+          repositories: bflb_flash_tools
+          permission-contents: write
 
       - name: Build bflb_tools snapshot
         id: snapshot
         env:
-          TOKEN: ${{ secrets.BOUFFALO_DRIVERS_SYNC_TOKEN }}
+          TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           git remote add bflb-flash-tools \
