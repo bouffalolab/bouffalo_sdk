@@ -10,39 +10,23 @@ config MULTIMEDIA
     help
       Build the multimedia framework and its codec backends.
 
+config XCODEC_IO
+    bool "Unified codec device IO"
+    depends on FREERTOS
+    depends on CHIP = "bl616" || CHIP = "bl616cl" || CHIP = "bl618dg"
+    select MULTIMEDIA
+    default n
+    help
+      Unified device, codec control and data interfaces. I2S, AUDAC and
+      AUADC data backends can coexist and are selected by board code.
+      Does not require the legacy MSP/minialsa codec integration.
+
 menu "Multimedia Options"
     depends on MULTIMEDIA
 
 config ALGRTC
     bool "Audio algorithm runtime"
     default n
-
-config GMF
-    bool "Bouffalo GMF pipelines"
-
-config GMF_SR_AEC
-    bool "BFLB-SR AEC node (16 kHz)"
-    depends on GMF && CHIP = "bl618dg"
-
-config GMF_SR_ANS
-    bool "BFLB-SR ANS node (16 kHz)"
-    depends on GMF && CHIP = "bl618dg"
-
-config GMF_SR_WAKE
-    bool "BFLB-SR English Alexa wake node"
-    depends on GMF && CHIP = "bl618dg" && FREERTOS
-
-config GMF_VIDEO
-    bool "GMF video"
-    depends on GMF
-
-config GMF_VIDEO_MJPEG
-    bool "DVP hardware MJPEG capture"
-    depends on GMF_VIDEO
-
-config GMF_VIDEO_MJPEG_HW_DECODER
-    bool "BL618DG MJDEC NV12 decoder node"
-    depends on GMF_VIDEO && CHIP = "bl618dg"
 
 config AACDEC
     bool "AAC decoder"
@@ -286,9 +270,6 @@ config WAVE_PLAYER_OUT_SAMPLES
 config WAVE_PLAYER_REC_CHANNELS
     int "Wave player record channels"
     default 2
-config WAVE_PLAYER_REC_DEFAULT_MIC_PGA
-    int "Wave player default microphone PGA"
-    default 90
 config WAVE_PLAYER_REC_DMA_BLOCKS
     int "Wave player record DMA blocks"
     default 8

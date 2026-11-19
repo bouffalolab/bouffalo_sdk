@@ -119,7 +119,8 @@ int main(void)
         printf("[WARN] create rec_init task failed, recorder init skipped\r\n");
     }
 
-    printf("i2s_codec ready. see audio command using help\r\n");
+    printf("i2s_codec ready. use speaker_vol, speaker_mute, mic_vol, mic_gain_db, mic_mute; "
+           "see help for player and recorder commands\r\n");
     vTaskStartScheduler();
 
     while (1) {}

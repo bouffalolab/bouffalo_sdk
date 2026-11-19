@@ -38,7 +38,7 @@ FBQ 的核心 API、所有权规则、引用计数、输出订阅和配置方法
 
 ### `display/` —— DBI 与 RGB 显示输出
 
-提供 MCU DBI 和 RGB 显示任务，以及显示刷新和绘图辅助功能。显示模块是 **RAW 视频消费者**：远端 RAW 流程启用时优先消费远端 RAW 队列，否则可以消费本地 RAW 队列。该模块不会继续生产其他媒体队列，依赖 BSP LCD 配置和对应显示驱动。
+提供 MCU DBI 和 RGB 显示任务，以及显示刷新和绘图辅助功能。显示模块是 **RAW 视频消费者**：远端 RAW 流程启用时优先消费远端 RAW 队列，否则可以消费本地 RAW 队列。该模块不会继续生产其他媒体队列，使用公共 [display 框架](../../bsp/common/display/README_CN.md)及默认屏（`CONFIG_BSP_DISPLAY`、`CONFIG_DISPLAY_DEFAULT`）：DBI 选 GRAM，RGB 选 VIDEO。
 
 ### `dvp/` —— DVP 摄像头采集
 

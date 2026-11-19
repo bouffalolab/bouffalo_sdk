@@ -2,6 +2,12 @@
 
 ## BL602
 
+### libblecontroller_bl602_m0s1
+1 BLE connection is supported, BL602 can only be slave in this connection.
+
+### libblecontroller_bl602_m0s1s
+1 BLE connection is supported, BL602 can only be slave in this connection, and scan is supported.
+
 ### libblecontroller_bl602_m1s1
 1 BLE connection is supported, BL602 can be master or slave in this connection.
 
@@ -14,6 +20,9 @@
 
 ### libbtblecontroller_bl616_ble1m0s1bredr0
 BLE only mode. 1 BLE connection is supported, BL616 can only be slave in this connection.
+
+### libbtblecontroller_bl616_ble1m0s1sbredr0
+BLE only mode. 1 BLE connection is supported, BL616 can only be slave in this connection, and scan is supported.
 
 ### libbtblecontroller_bl616_ble1m10s1bredr0
 BLE only mode. 10 BLE connections are supported, BL616 can be master or slave in each connection.
@@ -37,8 +46,14 @@ BLE UART HCI transport variant.
 ### libbtblecontroller_bl616cl_m0b1
 Beacon-only variant for BL616CL.
 
+### libbtblecontroller_bl616cl_m0s1s
+1 BLE connection is supported, BL616CL can only be slave in this connection, and scan is supported.
+
 ### libbtblecontroller_bl616cl_m2s1
 2 BLE connections are supported, BL616CL can be master or slave in these connections.
+
+### libbtblecontroller_bl616cl_m4s1
+4 BLE connections are supported, BL616CL can be master or slave in these connections.
 
 ### libbtblecontroller_bl616cl_m10s1
 10 BLE connections are supported, BL616CL can be master or slave in these connections.
@@ -50,6 +65,9 @@ UART HCI transport variant.
 
 ### libbtblecontroller_bl618dg_ble1m0s1bredr0
 BLE only mode. 1 BLE connection is supported, BL618DG can only be slave in this connection.
+
+### libbtblecontroller_bl618dg_ble1m0s1sbredr0
+BLE only mode. 1 BLE connection is supported, BL618DG can only be slave in this connection, and scan is supported.
 
 ### libbtblecontroller_bl618dg_ble1m2s1bredr1
 Based on BLE 2-connection mode, support bredr with 2 acl connections and 2 sco(or esco) links.

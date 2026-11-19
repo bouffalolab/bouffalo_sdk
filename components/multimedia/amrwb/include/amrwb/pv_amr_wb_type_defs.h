@@ -129,7 +129,7 @@ typedef unsigned int    UInt;
 ----------------------------------------------------------------------------*/
 
 #ifndef Flag
-typedef Int Flag;
+typedef int32_t Flag;
 #endif
 
 #ifndef Bool

@@ -24,6 +24,7 @@ set(POSIX_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test/08_clock_timer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/test/09_sched_unistd.c
     ${CMAKE_CURRENT_SOURCE_DIR}/test/10_cpp_mutex.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/11_cpp_condvar.cpp
 )
 
 # TARGET=<case> selects one test translation unit.  Keep the default build

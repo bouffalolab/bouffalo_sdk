@@ -72,6 +72,9 @@ void lvgl_main(void *param)
     // lv_demo_widgets();
 
     lv_task_handler();
+#if defined(LCD_BACKLIGHT_EN) && LCD_BACKLIGHT_EN
+    lcd_backlight_toggle(true);
+#endif
 
     LOG_I("lvgl success\r\n");
 
@@ -95,3 +98,5 @@ int main(void)
     lvgl_main(NULL);
 #endif
 }
+
+#warning "bsp/common/lcd/lcd.h is deprecated and will be removed in the next major SDK release; migrate to CONFIG_BSP_DISPLAY and the new Display framework."

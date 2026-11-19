@@ -1,39 +1,28 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
-#include <timers.h>
-#include <shell.h>
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
-#include "fhost.h"
 #include "async_event.h"
 #include "log.h"
 #include "at_main.h"
 
-extern void app_atmodule_init(void);
-
 /* External function declarations */
-extern int wifi_mgmr_task_start(void);
-extern int fhost_init(void);
 extern int at_module_init(void);
 
-static bool wifi_init_done = 0;
-
-
-static void wifi_event_handler(async_input_event_t ev, void *priv)
+void wifi_event_handler(async_input_event_t ev, void *priv)
 {
     uint32_t code = ev->code;
 
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
-            wifi_mgmr_task_start();
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
-            wifi_init_done = 1;
         } break;
         case CODE_WIFI_ON_SCAN_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
@@ -85,18 +74,5 @@ static void wifi_event_handler(async_input_event_t ev, void *priv)
 
 void app_wifi_init(void)
 {
-    LOG_I("Starting wifi ...\r\n");
-    async_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
-
-    wifi_task_create();
-    vTaskDelay(500);
-
-    LOG_I("Starting fhost ...\r\n");
-    fhost_init();
-
-    while (!wifi_init_done) {
-        vTaskDelay(500);
-    }
-
     at_module_init();
 }

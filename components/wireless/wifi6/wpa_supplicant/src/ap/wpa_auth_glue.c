@@ -48,6 +48,7 @@ static void hostapd_wpa_auth_conf(struct hostapd_bss_config *conf,
 	wconf->wpa_group = conf->wpa_group;
 	wconf->wpa_group_rekey = conf->wpa_group_rekey;
 	wconf->wpa_strict_rekey = conf->wpa_strict_rekey;
+	wconf->ignore_sta_gtk_rekey = conf->ignore_sta_gtk_rekey;
 	wconf->wpa_gmk_rekey = conf->wpa_gmk_rekey;
 	wconf->wpa_ptk_rekey = conf->wpa_ptk_rekey;
 	wconf->wpa_group_update_count = conf->wpa_group_update_count;
@@ -72,6 +73,11 @@ static void hostapd_wpa_auth_conf(struct hostapd_bss_config *conf,
 	wconf->beacon_prot = conf->beacon_prot;
 	wconf->group_mgmt_cipher = conf->group_mgmt_cipher;
 	wconf->sae_require_mfp = conf->sae_require_mfp;
+	if (!wconf->sae_require_mfp &&
+	    (conf->wpa_key_mgmt & WPA_KEY_MGMT_SAE) &&
+	    conf->ieee80211w != NO_MGMT_FRAME_PROTECTION) {
+		wconf->sae_require_mfp = 1;
+	}
 #ifdef CONFIG_IEEE80211R_AP
 	wconf->ssid_len = conf->ssid.ssid_len;
 	if (wconf->ssid_len > SSID_MAX_LEN)

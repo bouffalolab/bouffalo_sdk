@@ -215,6 +215,19 @@ void bflb_dbi_deinit(struct bflb_device_s *dev);
  */
 void bflb_dbi_qspi_set_addr(struct bflb_device_s *dev, uint8_t addr_byte_size, uint32_t addr_val);
 
+/**
+ * @brief Set the number of wires of each QSPI phase. Call only while the DBI is idle.
+ *
+ * Unlike bflb_dbi_init(), only the wire settings change: clock, mode, pixel formats and FIFO are kept,
+ * so it can be called between two transfers to use different wire layouts for parameters and pixels.
+ *
+ * @param [in] dev       device handle
+ * @param [in] cmd_wire  wires of the command phase, use @ref DBI_QSPI_WIRE_NUM
+ * @param [in] addr_wire wires of the address phase, use @ref DBI_QSPI_WIRE_NUM
+ * @param [in] data_wire wires of the data phase, use @ref DBI_QSPI_WIRE_NUM
+ */
+void bflb_dbi_qspi_set_wire(struct bflb_device_s *dev, uint8_t cmd_wire, uint8_t addr_wire, uint8_t data_wire);
+
 #endif
 
 /**

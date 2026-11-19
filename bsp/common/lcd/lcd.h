@@ -248,6 +248,15 @@
 #define LCD_COLOR_DEPTH              ST7102_YH494_DSI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) st7102_yh494_dsi_##_func(__VA_ARGS__)
 
+#elif defined LCD_DSI_ST7102_YDP395BT008
+
+#include "mipi_dsi/st7102_ydp395bt008_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        ST7102_YDP395BT008_DSI_W
+#define LCD_H                        ST7102_YDP395BT008_DSI_H
+#define LCD_COLOR_DEPTH              ST7102_YDP395BT008_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st7102_ydp395bt008_dsi_##_func(__VA_ARGS__)
+
 #elif defined LCD_DSI_ST7102_KD027HVF
 
 #include "mipi_dsi/st7102_kd027hvf_dsi.h"

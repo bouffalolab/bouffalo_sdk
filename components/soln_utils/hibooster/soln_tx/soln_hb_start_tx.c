@@ -20,8 +20,6 @@
 
 #define HB_TX_DEFAULT_LOCAL_PORT  8800
 
-#define HB_TX_DEFAULT_FRAME_DEPTH 4
-
 static uint32_t s_hb_tx_total_frame_count = 0;
 
 uint32_t soln_hb_sender_get_total_frame_count(void)
@@ -49,24 +47,12 @@ static void hb_sender_record_frame(void)
 
 static uint16_t local_jpeg_output_net_id = CONFIG_SOLN_FBQ_VID_JPEG_LOCAL_NET_ID;
 
-static fbq_elem_t *jpeg_frame_info[HB_TX_DEFAULT_FRAME_DEPTH] = { 0 };
-static bool frame_valid[HB_TX_DEFAULT_FRAME_DEPTH] = { false };
-
 static hb_sender_t *sender_hd = NULL;
 
 /* frame done callback */
 static void hb_sender_frame_cb(void *arg)
 {
-    int idx = (int)(uintptr_t)arg;
-    if (idx >= HB_TX_DEFAULT_FRAME_DEPTH || frame_valid[idx] == false) {
-        LOG_E("Invalid frame index in callback: %d\r\n", idx);
-        return;
-    }
-
-    fbq_elem_t *jpeg_frame = jpeg_frame_info[idx];
-    frame_valid[idx] = false;
-    jpeg_frame_info[idx] = NULL;
-
+    fbq_elem_t *jpeg_frame = arg;
     fbq_free(jpeg_frame);
 
     hb_sender_record_frame();
@@ -75,7 +61,7 @@ static void hb_sender_frame_cb(void *arg)
 /* sender task loop callback */
 static void hb_sender_loop_cb(void *arg)
 {
-    int ret, idx;
+    int ret;
     fbq_elem_t *jpeg_frame = NULL;
 
     ret = fbq_pop(soln_fbq_vid_jpeg_local(), &jpeg_frame, local_jpeg_output_net_id, 0);
@@ -91,18 +77,6 @@ static void hb_sender_loop_cb(void *arg)
         goto exit;
     }
 
-    /* get idle slot */
-    for (idx = 0; idx < HB_TX_DEFAULT_FRAME_DEPTH; idx++) {
-        if (!frame_valid[idx]) {
-            frame_valid[idx] = true;
-            jpeg_frame_info[idx] = jpeg_frame;
-            break;
-        }
-    }
-    if (idx >= HB_TX_DEFAULT_FRAME_DEPTH) {
-        goto exit;
-    }
-
     hb_frame_info_t info = {
         .data = (uint8_t *)jpeg_frame->data,
         .size = jpeg_frame->size,
@@ -110,11 +84,10 @@ static void hb_sender_loop_cb(void *arg)
         .height = CONFIG_SOLN_VID_DEFAULT_HEIGHT,
         .quality = 50,
         .release = hb_sender_frame_cb,
-        .release_arg = (void *)(uintptr_t)idx,
+        .release_arg = jpeg_frame,
     };
     ret = hb_sender_push(sender_hd, &info);
     if (ret < 0) {
-        frame_valid[idx] = false;
         goto exit;
     }
 
@@ -156,6 +129,7 @@ int soln_hb_sender_init(uint16_t local_port)
     hb_sender_config_t cfg = {
         .local_port = local_port,
         .loop_cb = hb_sender_loop_cb,
+        .frame_depth = CONFIG_SOLN_HB_TX_FRAME_DEPTH,
         .task_priority = 20,
         .loop_cb_arg = NULL,
     };

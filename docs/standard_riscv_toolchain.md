@@ -70,6 +70,18 @@ SDK's `__errno()` returns `&errno`, so lwIP, Bluetooth, OpenThread and other
 components that use `#define errno (*__errno())` share the same per-task errno
 as the Picolibc library.
 
+Picolibc TLS only covers `__thread` variables and errno. POSIX pthread
+thread-specific data is a separate mechanism: `pthread_key_create()` and its
+companions are backed by the FreeRTOS task-local storage pointers
+(`configNUM_THREAD_LOCAL_STORAGE_POINTERS`) and use the FreeRTOS TLS delete
+callbacks (`configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS`) to run key
+destructors when a task is deleted. TLS index 0 is reserved for the lwIP
+FreeRTOS port, so pthread keys use indices 1..N-1: applications using pthread
+keys must reserve enough pointers (for example 8, leaving 7 keys) and enable
+the delete callbacks. libstdc++'s gthread backend needs one key for its
+per-thread exception globals, so `CONFIG_POSIX` C++ applications must set both
+options.
+
 Every SDK linker script used with Picolibc provides the TLS template and boot
 block: `__tdata_start`, `__tdata_source`, `__tdata_size`, `__tbss_start`,
 `__tbss_offset`, `__tbss_size`, `__tls_size`, `__tls_align` and

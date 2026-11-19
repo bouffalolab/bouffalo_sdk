@@ -54,8 +54,9 @@ I2S and DMA drivers.
 Provides MCU DBI and RGB-panel display tasks, display flushing, and drawing
 helpers. A display is a **RAW video consumer**: it consumes the remote RAW queue
 when that pipeline is enabled, otherwise it can consume the local RAW queue.
-It does not produce another media queue. The module depends on the BSP LCD
-configuration and the selected display driver.
+It does not produce another media queue. The module uses the public
+[display framework](../../bsp/common/display/README.md) and its default display
+(`CONFIG_BSP_DISPLAY`, `CONFIG_DISPLAY_DEFAULT`): GRAM for DBI, VIDEO for RGB.
 
 ### `dvp/` — DVP camera capture
 

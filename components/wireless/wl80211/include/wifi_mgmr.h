@@ -42,10 +42,18 @@ struct wifi_mgmr_rate_config {
 };
 
 /* WiFi async event */
-#define EV_WIFI                                      ((uintptr_t)wifi_mgmr_init)
+/* The async event catalogue tag only needs a unique, stable address. Use the
+ * long-lived wifi_mgmr_sta_connect entry; EV_WIFI must not depend on the
+ * deprecated wifi_mgmr_init compatibility entry, which will be removed in
+ * Bouffalo SDK v3. */
+#define EV_WIFI                                      ((uintptr_t)wifi_mgmr_sta_connect)
 
 #define CODE_WIFI_ON_INIT_DONE                       1
 #define CODE_WIFI_ON_MGMR_DONE                       2
+/* Internal readiness events, isolated from the application-facing
+ * CODE_WIFI_ON_INIT_DONE/CODE_WIFI_ON_MGMR_DONE compatibility events. */
+#define CODE_WIFI_ON_INIT_DONE_SYS                   0x100
+#define CODE_WIFI_ON_MGMR_DONE_SYS                   0x101
 #define CODE_WIFI_CMD_RECONNECT                      3
 #define CODE_WIFI_ON_CONNECTED                       4
 #define CODE_WIFI_ON_DISCONNECT                      5
@@ -300,7 +308,9 @@ enum WIFI_STATE_ENUM_LIST {
 #endif
 
 /* Initialize WiFi manager and register event handlers */
-void wifi_mgmr_init(void);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+void wifi_mgmr_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 /* Enable power saving mode for STA */
 void wifi_mgmr_sta_ps_enter(void);
 /* Disable power saving mode for STA */

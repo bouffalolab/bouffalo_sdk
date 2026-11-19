@@ -1,7 +1,20 @@
 #ifndef __LWIP_NETIF_EMAC_H__
 #define __LWIP_NETIF_EMAC_H__
 
+#include <stdint.h>
 #include "lwip/err.h"
+
+struct netif;
+
+#if defined(BL618DG)
+#define LWIP_EMAC_PORT_COUNT CONFIG_EMAC_DEV_COUNT
+#else
+#define LWIP_EMAC_PORT_COUNT 1
+#endif
+
+#if LWIP_EMAC_PORT_COUNT < 1 || LWIP_EMAC_PORT_COUNT > 2
+#error "Unsupported EMAC port count"
+#endif
 
 #ifndef LWIP_EMAC_PORT_DEBUG
 #define LWIP_EMAC_PORT_DEBUG (1)
@@ -18,8 +31,11 @@
 #endif
 /* rx buff cnt */
 #ifndef LWIP_EMAC_RX_BUFF_CNT
-/* Six RX buffers are not enough for an Ethernet burst. Use 64 and do not grow the lwIP heap. */
+#if defined(BL618DG)
+#define LWIP_EMAC_RX_BUFF_CNT (128)
+#else
 #define LWIP_EMAC_RX_BUFF_CNT (64)
+#endif
 #endif
 
 /* tx buff size */
@@ -28,7 +44,6 @@
 #endif
 /* tx buff cnt */
 #ifndef LWIP_EMAC_TX_BUFF_CNT
-/* Raise the TX descriptor count from 4 to 24 so bridge forwarding does not run out of descriptors first. */
 #define LWIP_EMAC_TX_BUFF_CNT (24)
 #endif
 
@@ -60,8 +75,8 @@ typedef struct _emac_config_t {
     uint8_t mac_addr[6];
 } emac_config_t;
 
-void  eth_emac_hw_config(emac_config_t *cfg);
-err_t eth_emac_if_init(struct netif *netif);
+err_t eth_emac_netif_add(struct netif *netif, uint8_t port, const emac_config_t *cfg);
+void eth_emac_netif_remove(struct netif *netif);
 void eth_link_state_update(struct netif *netif);
 void dhcp_sta_update(struct netif *netif);
 

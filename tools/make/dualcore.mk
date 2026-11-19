@@ -9,8 +9,8 @@ defconfig:
 	    $(file >>defconfig,$(var)=$(value $(var))))
 
 all: defconfig
-	make -C $(APP_NAME)_np BUILD_DIR=../$(BUILD_DIR)/np CPU_ID=np;				      \
-	make -C $(APP_NAME)_ap BUILD_DIR=../$(BUILD_DIR)/ap CPU_ID=ap CONFIG_DUALCORE_NP_IMAGE=../np/build_out/$(APP_NAME)_$(CHIP)_np.bin;                                                                                     \
+	$(MAKE) -C $(APP_NAME)_np BUILD_DIR=../$(BUILD_DIR)/np CPU_ID=np
+	$(MAKE) -C $(APP_NAME)_ap BUILD_DIR=../$(BUILD_DIR)/ap CPU_ID=ap CONFIG_DUALCORE_NP_IMAGE=../np/build_out/$(APP_NAME)_$(CHIP)_np.bin
 	cp $(BUILD_DIR)/ap/build_out/$(APP_NAME)_$(CHIP)_ap.bin $(BUILD_DIR)/$(APP_NAME)_$(CHIP).bin
 
 clean:

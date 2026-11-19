@@ -20,16 +20,26 @@ config WAVE_PLAYER_I2S_TX_SLOTS
       playback-only operation; explicit values other than four are rejected
       when that codec is detected.
       Supported values are 0 (automatic), 1, 2, 3, 4 and 6. A value of 5
-      is rejected by the player. FIFO LR merge requires an even slot count.
+      is rejected by the player. DSP mode disables FIFO LR merge.
       Bus slots are independent of playback channels and capture role masks.
       Boards may override the default in their Kconfig.defconfig.
 
-config WAVE_PLAYER_I2S_DSP_LR_MERGE
-    bool "Pack two 16-bit DSP slots into one I2S FIFO entry"
-    depends on I2S_DSP_MODE
-    default y
+config WAVE_PLAYER_DEFAULT_SPEAKER_VOLUME
+    int "Default speaker volume"
+    range 0 100
+    default 50
     help
-      Pack two adjacent 16-bit DSP slots into one 32-bit FIFO/DMA entry.
+      Initial speaker volume in percent. Applications may change it using the
+      device API. A volume of zero does not change the speaker mute state.
+
+config WAVE_PLAYER_REC_DEFAULT_MIC_GAIN_DB
+    int "Default microphone analog gain (dB)"
+    range -12 60
+    default 39
+    help
+      Initial microphone gain in physical dB, quantized to the codec's native
+      steps and bounded by its range. Applications may choose another supported
+      gain using the device API. This setting does not apply software gain.
 
 config WAVE_PLAYER_DIAG
     bool "Enable audio player diagnostics"

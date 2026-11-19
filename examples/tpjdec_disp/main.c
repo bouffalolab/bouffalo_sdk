@@ -1,13 +1,18 @@
 
 #include "bflb_mtimer.h"
 #include "board.h"
-#include "lcd.h"
+#include "default/display_default.h"
+#include "display_os.h"
+#include "simple_font/display_simple_font.h"
 #include "tjpgd.h"
-
 #include "bflb_dbi.h"
+#include <string.h>
 
 /* fatfs */
 #ifdef CONFIG_FATFS
+#if !defined(CONFIG_FATFS_SDH_SDCARD) || !defined(CONFIG_BSP_SDH_SD)
+#error "The SD-card path requires FATFS_SDH_SDCARD and BSP_SDH_SD"
+#endif
 #include "fatfs_diskio_register.h"
 #include "ff.h"
 #else
@@ -22,19 +27,57 @@
 #define DBG_TAG "MAIN"
 #include "log.h"
 
-#if defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT
-#define N_BPP 3 /* yuv444 */
-#else
-#define N_BPP 2 /* rgb565 */
+#if !defined(CONFIG_DISPLAY_DEFAULT_TYPE_GRAM) || !defined(CONFIG_DISPLAY_BUS_DBI) || \
+    defined(CONFIG_DISPLAY_DEFAULT_IF_SPI) || !defined(CONFIG_DISPLAY_DEFAULT_FORMAT_RGB888)
+#error "This demo requires the hardware DBI peripheral and a default RGB888 GRAM display"
 #endif
 
-struct bflb_device_s *dbi_hd;
+#if !DBI_YUV_SUPPORT || !JD_YUV444_MODE || JD_FORMAT != 0
+#error "This demo requires packed YUV444 JPEG output and DBI YUV conversion"
+#endif
+
+#define N_BPP       3u
+#define IMAGE_COUNT 5u
+#define FILL_PIXELS 2048u
+
+static struct bflb_device_s *dbi_hd;
+static display_t *screen;
+static display_info_t info;
+static volatile bool draw_pending;
+static volatile int draw_result;
+static const void *pending_pixels;
+/* DBI reads whole words, including the last partial word of packed RGB/YUV. */
+static uint8_t draw_buff[FILL_PIXELS * N_BPP + 3] __ALIGNED(64);
+
+#if defined(CONFIG_DISPLAY_DEFAULT_MODULE_ST7796_320X480)
+/* Parameters of the ST7796 glass connected to this board. */
+static const display_dcs_cmd_t st7796_inversion[] = {
+    DISPLAY_DCS(0xF0, 0, 0xC3),
+    DISPLAY_DCS(0xF0, 0, 0x96),
+    DISPLAY_DCS(0xB4, 0, 0x01),
+    DISPLAY_DCS(0xF0, 0, 0x3C),
+    DISPLAY_DCS(0xF0, 0, 0x69),
+};
+
+static void adjust_default_module(void)
+{
+    display_dcs_module_t *module = display_default_get_module();
+
+    module->madctl[0] = 0x48;
+    module->madctl[1] = 0xE8;
+    module->madctl[2] = 0x88;
+    module->madctl[3] = 0x28;
+    module->invert = true;
+    module->init_extra = st7796_inversion;
+    module->init_extra_count = DISPLAY_DCS_COUNT(st7796_inversion);
+}
+#endif
 
 /* input jpeg buf */
 ATTR_NOINIT_PSRAM_SECTION __ALIGNED(64) uint8_t jpeg_buff[32 * 1024];
 
 /* output img buf */
-ATTR_NOINIT_PSRAM_SECTION __ALIGNED(64) uint8_t bpp_buff[1][320 * 240 * N_BPP];
+ATTR_NOINIT_PSRAM_SECTION __ALIGNED(64) uint8_t bpp_buff[320 * 240 * N_BPP + 3];
 
 /* Session identifier for input/output functions (Name, members and usage are as user defined) */
 struct IODEV {
@@ -43,17 +86,15 @@ struct IODEV {
     uint32_t in_jpg_data_size;
     uint32_t in_jpg_offset; /* */
 
-    uint8_t *out_img_buf[2]; /* Pointer to the frame buffer */
-    uint8_t out_img_buf_index;
+    uint8_t *out_img_buf; /* One application-owned frame, reused only after completion. */
     uint32_t out_img_buf_size;
     uint32_t out_img_w; /* Width of the frame buffer [pix] */
     uint32_t out_img_h;
-} jpeg_dev;
+};
 
 /*------------------------------*/
 /* User defined input funciton  */
 /*------------------------------*/
-ATTR_PSRAM_CODE_SECTION
 size_t in_func(               /* Returns number of bytes read (zero on error) */
                JDEC *jd,      /* Decompression object */
                uint8_t *buff, /* Pointer to the read buffer (null to remove data) */
@@ -62,8 +103,14 @@ size_t in_func(               /* Returns number of bytes read (zero on error) */
 {
     struct IODEV *dev = (struct IODEV *)jd->device; /* Session identifier (5th argument of jd_prepare function) */
 
+    if (dev->in_jpg_offset > dev->in_jpg_data_size) {
+        return 0;
+    }
+    if (nbyte > dev->in_jpg_data_size - dev->in_jpg_offset) {
+        nbyte = dev->in_jpg_data_size - dev->in_jpg_offset;
+    }
     if (buff) {
-        /* Raad data from imput stream */
+        /* Read only bytes present in the loaded JPEG. */
         memcpy(buff, (uint8_t *)dev->in_jpg_buf + dev->in_jpg_offset, nbyte);
     }
     dev->in_jpg_offset += nbyte;
@@ -74,7 +121,6 @@ size_t in_func(               /* Returns number of bytes read (zero on error) */
 /*------------------------------*/
 /* User defined output funciton */
 /*------------------------------*/
-ATTR_PSRAM_CODE_SECTION
 int out_func(              /* Returns 1 to continue, 0 to abort */
              JDEC *jd,     /* Decompression object */
              void *bitmap, /* Bitmap data to be output */
@@ -83,26 +129,24 @@ int out_func(              /* Returns 1 to continue, 0 to abort */
 {
     struct IODEV *dev = (struct IODEV *)jd->device; /* Session identifier (5th argument of jd_prepare function) */
 
-    uint8_t *src, *dst;
-    uint16_t y, bws;
-    unsigned int bwd;
+    const uint8_t *src = bitmap;
 
-    /* Progress indicator */
-    // if (rect->left == 0) {
-    //     LOG_I("\r%lu%%", (rect->top << jd->scale) * 100UL / jd->height);
-    // }
+    if (rect->left > rect->right || rect->top > rect->bottom ||
+        rect->right >= dev->out_img_w || rect->bottom >= dev->out_img_h ||
+        (size_t)dev->out_img_w * dev->out_img_h > dev->out_img_buf_size / N_BPP) {
+        return 0;
+    }
+    uint8_t *dst = dev->out_img_buf + N_BPP * (rect->top * dev->out_img_w + rect->left);
+    size_t bws = N_BPP * (rect->right - rect->left + 1u);
+    size_t bwd = N_BPP * dev->out_img_w;
 
-    // LOG_I("out rect w:%d, h:%d\r\n", rect->bottom - rect->top + 1, rect->right - rect->left + 1);
-
-    /* Copy the output image rectangle to the frame buffer */
-    src = (uint8_t *)bitmap;                                                                            /* Output bitmap */
-    dst = dev->out_img_buf[dev->out_img_buf_index] + N_BPP * (rect->top * dev->out_img_w + rect->left); /* Left-top of rectangle in the frame buffer */
-    bws = N_BPP * (rect->right - rect->left + 1);                                                       /* Width of the rectangle [byte] */
-    bwd = N_BPP * dev->out_img_w;                                                                       /* Width of the frame buffer [byte] */
-    for (y = rect->top; y <= rect->bottom; y++) {
+    /* The decoder supplies a tightly packed, clipped Y/U/V rectangle. */
+    for (unsigned y = rect->top; y <= rect->bottom; y++) {
         memcpy(dst, src, bws); /* Copy a line */
         src += bws;
-        dst += bwd; /* Next line */
+        if (y < rect->bottom) {
+            dst += bwd; /* Next line, but never beyond the output object. */
+        }
     }
 
     return 1; /* Continue to decompress */
@@ -114,6 +158,10 @@ int jpeg_raw_load(struct IODEV *dev, uint8_t n)
     dev->in_jpg_buf = (void *)jpeg_buff;
     dev->in_jpg_buf_size = sizeof(jpeg_buff);
     dev->in_jpg_offset = 0;
+    dev->in_jpg_data_size = 0;
+    if (n >= IMAGE_COUNT) {
+        return -EINVAL;
+    }
 
 #ifdef CONFIG_FATFS
     int ret;
@@ -128,15 +176,21 @@ int jpeg_raw_load(struct IODEV *dev, uint8_t n)
         return -1;
     }
 
-    if (f_size(&fnew) > dev->in_jpg_buf_size) {
+    FSIZE_t file_size = f_size(&fnew);
+    if (!file_size || file_size > dev->in_jpg_buf_size) {
         f_close(&fnew);
-        LOG_E("file size over: %d\r\n", f_size(&fnew));
+        LOG_E("Invalid JPEG file size\r\n");
         return -1;
     }
 
-    ret = f_read(&fnew, dev->in_jpg_buf, f_size(&fnew), &fnum);
-    LOG_I("file:%s, size:%d, rd_size:%d\r\n", file_name, f_size(&fnew), fnum);
+    ret = f_read(&fnew, dev->in_jpg_buf, (UINT)file_size, &fnum);
     f_close(&fnew);
+    if (ret != FR_OK || fnum != file_size) {
+        LOG_E("JPEG read failed: %d\r\n", ret);
+        return -1;
+    }
+    dev->in_jpg_data_size = fnum;
+    LOG_I("file:%s, size:%u\r\n", file_name, (unsigned)fnum);
 
 #else
     const uint8_t *img_tab[] = { _acimg0, _acimg1, _acimg2, _acimg3, _acimg4 };
@@ -163,10 +217,15 @@ int jpeg_dec(struct IODEV *dev)
     JDEC jdec;
     static uint32_t jpg_work_buff[16 * 1024 / 4];
 
-    dev->out_img_buf[0] = bpp_buff[0];
-    dev->out_img_buf[1] = bpp_buff[0];
-    dev->out_img_buf_size = sizeof(bpp_buff[0]);
-    dev->out_img_buf_index = !dev->out_img_buf_index;
+    /* Waiting here, before any output write, protects the single frame buffer. */
+    while (draw_pending) {
+        display_os_delay_ms(1);
+    }
+    if (draw_result) {
+        return draw_result;
+    }
+    dev->out_img_buf = bpp_buff;
+    dev->out_img_buf_size = sizeof(bpp_buff) - 3;
 
     uint32_t start_time = bflb_mtimer_get_time_ms();
 
@@ -179,11 +238,13 @@ int jpeg_dec(struct IODEV *dev)
 
     /* It is ready to dcompress and image info is available here */
     LOG_I("Image size is %u x %u.\r\n", jdec.width, jdec.height);
-    LOG_I("%u bytes of work ares is used.\r\n", sizeof(jpg_work_buff) - jdec.sz_pool);
+    LOG_I("%u bytes of workspace used.\r\n", (unsigned)(sizeof(jpg_work_buff) - jdec.sz_pool));
 
     /* Initialize output device (Create a frame buffer) */
-    if (jdec.width > lcd_max_x + 1 || jdec.height > lcd_max_y + 1) {
-        LOG_E("Image size OVER\r\n");
+    if (!jdec.width || !jdec.height || jdec.width > info.width || jdec.height > info.height ||
+        (size_t)jdec.width * jdec.height > dev->out_img_buf_size / N_BPP) {
+        LOG_E("Image exceeds screen or output buffer\r\n");
+        return -EINVAL;
     }
     dev->out_img_w = jdec.width;
     dev->out_img_h = jdec.height;
@@ -200,43 +261,176 @@ int jpeg_dec(struct IODEV *dev)
     return 0;
 }
 
-void flush_async_callback()
+static void restore_rgb(void)
 {
-    static uint32_t cnt;
-    cnt += 1;
-
-#if defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT
-    if (JD_YUV444_MODE) {
-        /* Switch YUV444 to RGB565 */
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-    }
+    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_888);
     bflb_dbi_feature_control(dbi_hd, DBI_CMD_CLEAR_TX_FIFO, 0);
-#endif
-
-    /* lcd async int come */
-    LOG_I("lcd async int come, cnt: %d\r\n", cnt);
 }
 
-int lcd_disp(struct IODEV *dev)
+static void flush_async_callback(display_t *display, const display_event_t *event, void *ctx)
 {
-    /* wait flush done */
-    while (lcd_draw_is_busy()) {
-        LOG_E("lcd_busy\r\n");
+    (void)ctx;
+
+    /* DBI TC means pixels have left the FIFO. May also run inline without DMA. */
+    if (display == screen && event->type == DISPLAY_EVT_DRAW_DONE &&
+        draw_pending && event->buf == pending_pixels) {
+        restore_rgb();
+        draw_result = event->result;
+        draw_pending = false; /* Publish completion only after restoring RGB. */
+    }
+}
+
+static int display_image(struct IODEV *dev)
+{
+    const size_t row_bytes = dev->out_img_w * N_BPP;
+    size_t max_rows = info.max_draw_bytes / row_bytes;
+    display_io_t *io = display_panel_get_io(display_get_panel(screen));
+
+    if (max_rows > dev->out_img_h) {
+        max_rows = dev->out_img_h;
+    }
+    /* Every non-final stripe must leave an aligned start for the next stripe. */
+    if (max_rows < dev->out_img_h) {
+        while (max_rows && (max_rows * row_bytes) % info.buf_align) {
+            max_rows--;
+        }
+    }
+    if (!max_rows) {
+        return -ENOTSUP;
+    }
+    for (unsigned row = 0; row < dev->out_img_h;) {
+        unsigned rows = dev->out_img_h - row;
+        int ret;
+
+        if (rows > max_rows) {
+            rows = max_rows;
+        }
+        /* DCS NOP applies this endpoint's normal configuration BEFORE the LHAL
+         * override, including after a previous configuration invalidation.
+         * This demo is the only user of the DBI peripheral; do not share it. */
+        ret = display_io_write(io, 0x00, NULL, 0);
+        if (ret) {
+            return ret;
+        }
+        pending_pixels = dev->out_img_buf + row * row_bytes;
+        draw_result = -EINPROGRESS;
+        draw_pending = true; /* Arm before submit: completion can be inline. */
+        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
+        display_area_t area = { .x = 0, .y = row, .w = dev->out_img_w, .h = rows };
+
+        ret = display_draw_async(screen, &area, pending_pixels, rows * row_bytes);
+        if (ret) {
+            restore_rgb(); /* Failed submissions do not produce a completion event. */
+            draw_result = ret;
+            draw_pending = false;
+            return ret;
+        }
+        while (draw_pending) {
+            display_os_delay_ms(1);
+        }
+        if (draw_result) {
+            return draw_result;
+        }
+        row += rows;
+    }
+    return 0;
+}
+
+static int fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t rgb)
+{
+    size_t capacity = info.max_draw_bytes / N_BPP;
+
+    if (capacity > FILL_PIXELS) {
+        capacity = FILL_PIXELS;
+    }
+    if (!capacity) {
+        return -ENOTSUP;
+    }
+    for (size_t i = 0; i < capacity; i++) {
+        draw_buff[i * N_BPP] = rgb;
+        draw_buff[i * N_BPP + 1] = rgb >> 8;
+        draw_buff[i * N_BPP + 2] = rgb >> 16;
+    }
+    for (unsigned dx = 0; dx < w;) {
+        unsigned cw = w - dx;
+
+        if (cw > capacity) {
+            cw = capacity;
+        }
+        for (unsigned dy = 0; dy < h;) {
+            unsigned ch = h - dy;
+            size_t rows = capacity / cw;
+
+            if (ch > rows) {
+                ch = rows;
+            }
+            display_area_t area = { .x = x + dx, .y = y + dy, .w = cw, .h = ch };
+            int ret = display_draw(screen, &area, draw_buff, cw * ch * N_BPP);
+
+            if (ret) {
+                return ret;
+            }
+            dy += ch;
+        }
+        dx += cw;
+    }
+    return 0;
+}
+
+static int draw_text(uint16_t y, uint32_t color, const char *text)
+{
+    uint16_t width = strlen(text) * 8u;
+    const display_simple_font_cfg_t cfg = {
+        .format = DISPLAY_FMT_RGB888, .width = width, .height = 16,
+        .font = DISPLAY_SIMPLE_FONT_ASCII_16X8,
+        .fg_color = 0xff000000u | color, .bg_color = 0xff000000u,
     };
 
-#if defined(DBI_YUV_SUPPORT) && DBI_YUV_SUPPORT
-    if (JD_YUV444_MODE) {
-        /* Switch RGB565 to YUV444 */
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
+    if (!width || (size_t)width * 16 > FILL_PIXELS || (size_t)width * 16 * N_BPP > info.max_draw_bytes) {
+        return -ENOTSUP;
     }
-#endif
+    int ret = display_simple_font_draw(&cfg, draw_buff, 0, 0, text);
+    display_area_t area = { .x = 20, .y = y, .w = width, .h = 16 };
 
-    LOG_I("disp addr: %p\r\n", (void *)dev->out_img_buf[dev->out_img_buf_index]);
+    return ret ? ret : display_draw(screen, &area, draw_buff, width * 16u * N_BPP);
+}
 
-    /* start draw lcd (async) */
-    lcd_draw_picture_nonblocking(0, 0, dev->out_img_w - 1, dev->out_img_h - 1, (void *)dev->out_img_buf[dev->out_img_buf_index]);
+static int draw_startup(void)
+{
+    static const uint32_t colors[] = { 0xff0000, 0x00ff00, 0x0000ff };
+    int ret = fill_rect(0, 0, info.width, info.height, 0x101010);
 
-    return 0;
+    if (!ret) {
+        ret = draw_text(20, 0xff0000, "Hello World !");
+    }
+    if (!ret) {
+        ret = draw_text(40, 0x00ff00, "dbi lcd test.");
+    }
+    for (unsigned i = 0; !ret && i < 3; i++) {
+        uint16_t inset = i * 5;
+        uint16_t w = info.width - 2 * inset;
+        uint16_t h = info.height - 2 * inset;
+
+        ret = fill_rect(inset, inset, w, 1, colors[i]);
+        if (!ret) {
+            ret = fill_rect(inset, inset + h - 1, w, 1, colors[i]);
+        }
+        if (!ret) {
+            ret = fill_rect(inset, inset + 1, 1, h - 2, colors[i]);
+        }
+        if (!ret) {
+            ret = fill_rect(inset + w - 1, inset + 1, 1, h - 2, colors[i]);
+        }
+    }
+    return ret;
+}
+
+static void fail_stop(int ret)
+{
+    LOG_E("Display demo stopped: %d\r\n", ret);
+    while (1) {
+        bflb_mtimer_delay_ms(1000);
+    }
 }
 
 #ifdef CONFIG_FATFS
@@ -265,33 +459,50 @@ int fatfs_init(void)
 
 int main(void)
 {
-    struct IODEV dev;
+    struct IODEV dev = { 0 };
+    int ret;
 
     board_init();
 
     LOG_I("tpjdec display test\r\n");
 
-    dbi_hd = bflb_device_get_by_name("dbi");
-
-    /* lcd init */
-    lcd_init();
-    lcd_set_dir(1, 0);
-
-    LOG_I("LCD init done\r\n");
-
-    /* register async callback */
-    lcd_async_callback_register(flush_async_callback);
-
-    /* clean lcd */
-    lcd_clear(LCD_COLOR_RGB(0x10, 0x10, 0x10));
-
-    /* disp font */
-    lcd_draw_str_ascii16(20, 20, LCD_COLOR_RGB(0xff, 0x00, 0x00), LCD_COLOR_RGB(0x00, 0x00, 0x00), (uint8_t *)"Hello World !", 100);
-    lcd_draw_str_ascii16(20, 40, LCD_COLOR_RGB(0x00, 0xff, 0x00), LCD_COLOR_RGB(0x00, 0x00, 0x00), (uint8_t *)"dbi lcd test.", 100);
-
-    lcd_draw_rectangle(0, 0, lcd_max_x, lcd_max_y, LCD_COLOR_RGB(0xff, 0x00, 0x00));
-    lcd_draw_rectangle(5, 5, lcd_max_x - 5, lcd_max_y - 5, LCD_COLOR_RGB(0x00, 0xff, 0x00));
-    lcd_draw_rectangle(10, 10, lcd_max_x - 10, lcd_max_y - 10, LCD_COLOR_RGB(0x00, 0x00, 0xff));
+    dbi_hd = bflb_device_get_by_name(CONFIG_DISPLAY_DEFAULT_DEV);
+    screen = display_default_get();
+    if (!dbi_hd) {
+        fail_stop(-ENODEV);
+    }
+#if defined(CONFIG_DISPLAY_DEFAULT_MODULE_ST7796_320X480)
+    adjust_default_module();
+#endif
+    ret = display_init(screen);
+    if (!ret) {
+        ret = display_set_rotation(screen, DISPLAY_ROTATION_90);
+    }
+    if (!ret) {
+        ret = display_get_info(screen, &info);
+    }
+    if (ret) {
+        fail_stop(ret);
+    }
+    if (info.kind != DISPLAY_KIND_GRAM || info.format != DISPLAY_FMT_RGB888 ||
+        info.width < 124 || info.height < 56 || info.x_align != 1 || info.y_align != 1 ||
+        !info.buf_align || (uintptr_t)bpp_buff % info.buf_align || (uintptr_t)draw_buff % info.buf_align) {
+        fail_stop(-ENOTSUP);
+    }
+    ret = display_set_callback(screen, flush_async_callback, NULL);
+    if (!ret) {
+        ret = draw_startup();
+    }
+    if (!ret) {
+        ret = display_set_backlight(screen, DISPLAY_BACKLIGHT_MAX);
+        if (ret == -ENOTSUP) {
+            ret = 0; /* The module may have an externally controlled backlight. */
+        }
+    }
+    if (ret) {
+        fail_stop(ret);
+    }
+    LOG_I("Display init done\r\n");
 
     bflb_mtimer_delay_ms(500);
 
@@ -299,23 +510,26 @@ int main(void)
     /* fatfs_init */
     ret = fatfs_init();
     if (ret < 0) {
-        while (1) {
-        };
+        fail_stop(ret);
     }
 #endif
 
-    memset(&jpeg_dev, 0, sizeof(jpeg_dev));
-
     while (1) {
-        for (int i = 0; i < 5; i++) {
-            /* load jpeg data */
-            jpeg_raw_load(&dev, i);
-
-            /* dec */
-            jpeg_dec(&dev);
-
-            /* display */
-            lcd_disp(&dev);
+        for (unsigned i = 0; i < IMAGE_COUNT; i++) {
+            ret = jpeg_raw_load(&dev, i);
+            if (!ret) {
+                ret = jpeg_dec(&dev);
+            }
+            if (ret) {
+                LOG_E("Skip JPEG %u: %d\r\n", i, ret);
+                continue;
+            }
+            ret = display_image(&dev);
+            if (ret) {
+                fail_stop(ret); /* Do not retry with unknown controller state. */
+            }
+            LOG_I("JPEG %u displayed: %ux%u, RGB888 input restored\r\n",
+                  i, (unsigned)dev.out_img_w, (unsigned)dev.out_img_h);
 
             bflb_mtimer_delay_ms(1000);
         }

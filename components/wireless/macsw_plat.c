@@ -101,7 +101,14 @@ static TaskHandle_t wifi_task_handle;
 /* Main wifi stack entry point */
 extern void wifi_main(void *param);
 
-void wifi_task_create(void)
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3"))) wifi_task_create(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+}
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+void _wifi_task_create(void)
 {
     BaseType_t res;
 

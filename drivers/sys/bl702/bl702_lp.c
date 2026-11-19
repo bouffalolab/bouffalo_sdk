@@ -712,7 +712,7 @@ int bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 }
 
 
-int bl_lp_init(void)
+int _bl_lp_init(void)
 {
     assert(!gp_lp_env);
 

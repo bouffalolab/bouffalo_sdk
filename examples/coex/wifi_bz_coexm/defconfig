@@ -13,6 +13,13 @@ ifeq ($(CHIP),bl618dg)
     CONFIG_ROMAPI             =n
     CONFIG_DUALCORE_DISABLE   =y
     CONFIG_BT_PATH            =y
+    CONFIG_COEX               =y
+    # BL618DG board RF topology is a build-time fact (menu: Wi-Fi/Bluetooth
+    # coexistence). The tested single-antenna board documented here uses a
+    # GPIO18 SPDT switch; combo or dual-antenna boards must select their own
+    # topology (and SPDT GPIO where applicable) instead.
+    CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT =y
+    CONFIG_COEX_BOARD_SPDT_GPIO                          =18
 endif
 
 

@@ -40,6 +40,7 @@ typedef struct netbus_uart_config {
 
 typedef struct netbus_uart_ctx {
     const netbus_uart_config_t *config;
+    netbus_uart_config_t runtime_config;
 
 #if defined(NETBUS_UART_DMA) && NETBUS_UART_DMA
     uint8_t *txslot_addr;
@@ -78,6 +79,12 @@ int netbus_uart_send(netbus_uart_ctx_t *pctx, const uint8_t *p_data, uint32_t le
 int netbus_uart_receive(netbus_uart_ctx_t *pctx, uint8_t *p_buffer, uint32_t buf_len, uint32_t timeout);
 int netbus_uart_wakeup(netbus_uart_ctx_t *pctx);
 int netbus_uart_deinit(netbus_uart_ctx_t *ctx);
+
+/* 0: success; -1: failure before reply; -2: reply may have been sent. */
+int netbus_uart_reconfigure(netbus_uart_ctx_t *pctx, const netbus_uart_config_t *next, const uint8_t *reply, uint32_t reply_len);
+int netbus_uart_get_config(netbus_uart_ctx_t *pctx, netbus_uart_config_t *config);
+
+int netbus_uart_config_validate(const netbus_uart_config_t *config);
 
 #endif
 

@@ -2,17 +2,10 @@ sdk_generate_library()
 
 sdk_add_include_directories(.)
 
-# The SDK links without crtbegin.o/crtend.o.  Keep the C++ runtime support in
-# the libc archive so C++ objects can use libstdc++ while retaining
-# -nostartfiles.  Normal application targets also force the translation unit
-# containing __dso_handle into the final image and wrap main to run C++
-# constructors.  Boot2 has its own entry flow and is built with LTO, so it
-# must not use that application-level main wrapper.
+# Freestanding C++ support; with CONFIG_SYSINIT=y the cxx_runtime record runs
+# the constructor array once before main(), so applications must not initialize
+# it manually.
 sdk_library_add_sources(cxx/cxx_runtime.c)
-if(NOT CONFIG_BOOT2)
-    sdk_add_link_options(-u __cxx_runtime_dummy)
-    sdk_add_link_options(-Wl,-wrap,main)
-endif()
 
 if(CONFIG_POSIX)
 sdk_add_include_directories(./posix)
@@ -163,6 +156,10 @@ if(NOT CONFIG_BOOT2)
         nuttx/libc/string/lib_vikmemcpy.c
     )
 endif()
+
+# Word stores in memset must alias objects of every destination type.
+set_source_files_properties(nuttx/libc/string/lib_memset.c
+    PROPERTIES COMPILE_OPTIONS "-fno-strict-aliasing")
 
 # use custom apis first, if not exist, then use builtin apis
 sdk_add_compile_options(-fno-builtin)

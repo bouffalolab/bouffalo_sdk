@@ -4,6 +4,13 @@
 
 menu "C Library"
 
+config MEMSET_OPTSPEED
+    bool "Optimize memset for speed"
+    default n
+    help
+      Use aligned 16-bit and 32-bit stores instead of byte writes.
+      This increases code size. Leave disabled to favor smaller code.
+
 config POSIX
     bool "POSIX API"
     default n

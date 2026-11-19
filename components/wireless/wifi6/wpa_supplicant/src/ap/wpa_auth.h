@@ -176,6 +176,7 @@ struct wpa_auth_config {
 	int wpa_group;
 	int wpa_group_rekey;
 	int wpa_strict_rekey;
+	int ignore_sta_gtk_rekey;
 	int wpa_gmk_rekey;
 	int wpa_ptk_rekey;
 	int wpa_deny_ptk0_rekey;

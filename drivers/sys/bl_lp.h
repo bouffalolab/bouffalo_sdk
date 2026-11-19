@@ -87,7 +87,9 @@ void bl_lp_call_user_after_exit(void);
 void bl_lp_call_sys_after_exit(void);
 
 /* Core LP functions */
-int bl_lp_init(void);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+int bl_lp_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 int bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg);
 
 /* WiFi resume / fw ready */

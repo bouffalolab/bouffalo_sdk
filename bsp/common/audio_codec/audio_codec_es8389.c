@@ -110,6 +110,8 @@
 #endif
 
 /* I2C register access functions */
+static bool g_es8389_digital_mic;
+
 static int es8389_write_reg(struct bflb_device_s *i2c, uint8_t addr, uint8_t reg, uint8_t val)
 {
     if (audio_codec_i2c_write_reg8(i2c, addr, reg, val) != 0) {
@@ -210,39 +212,40 @@ static int es8389_codec_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cf
     uint8_t state;
     uint8_t mic_input_val;
     uint8_t pga_gain;
+    int ret = 0;
 
     /* Reset sequence */
-    es8389_write_reg(i2c, addr, ES8389_ISO_CTL_REGF3, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x7E);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ISO_CTL_REGF3, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x7E);
     bflb_mtimer_delay_ms(10);
-    es8389_write_reg(i2c, addr, ES8389_ISO_CTL_REGF3, 0x38);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ISO_CTL_REGF3, 0x38);
 
     /* ADC HPF coefficients */
-    es8389_write_reg(i2c, addr, ES8389_ADC_HPF1_REG24, 0x64);
-    es8389_write_reg(i2c, addr, ES8389_ADC_HPF2_REG25, 0x04);
-    es8389_write_reg(i2c, addr, ES8389_DAC_INV_REG45, 0x03);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_HPF1_REG24, 0x64);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_HPF2_REG25, 0x04);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_INV_REG45, 0x03);
 
     /* Analog power management - initial settings */
-    es8389_write_reg(i2c, addr, ES8389_VMID_REG60, 0x2A);
-    es8389_write_reg(i2c, addr, ES8389_ANA_CTL1_REG61, 0xC9);
-    es8389_write_reg(i2c, addr, ES8389_ANA_VSEL_REG62, 0x4F);
-    es8389_write_reg(i2c, addr, ES8389_ANA_CTL2_REG63, 0x06);
-    es8389_write_reg(i2c, addr, ES8389_LOW_POWER1_REG6B, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_VMID_REG60, 0x2A);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ANA_CTL1_REG61, 0xC9);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ANA_VSEL_REG62, 0x4F);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ANA_CTL2_REG63, 0x06);
+    ret |= es8389_write_reg(i2c, addr, ES8389_LOW_POWER1_REG6B, 0x00);
 
     /* PGA and switch settings */
-    es8389_write_reg(i2c, addr, ES8389_PGA_SW_REG6E, 0xAA);
-    es8389_write_reg(i2c, addr, ES8389_MOD_SW1_REG6F, 0x66);
-    es8389_write_reg(i2c, addr, ES8389_MOD_SW2_REG70, 0x99);
+    ret |= es8389_write_reg(i2c, addr, ES8389_PGA_SW_REG6E, 0xAA);
+    ret |= es8389_write_reg(i2c, addr, ES8389_MOD_SW1_REG6F, 0x66);
+    ret |= es8389_write_reg(i2c, addr, ES8389_MOD_SW2_REG70, 0x99);
 
     /* DMIC/AMIC configuration */
     if (cfg->mic_input_mode == AUDIO_CODEC_MIC_INPUT_DIGITAL) {
         /* Enable DMIC mode */
-        es8389_write_reg(i2c, addr, ES8389_DMIC_EN_REG6D, 0x16 | 0xC0);
-        es8389_update_bits(i2c, addr, ES8389_ADC_MODE_REG23, 0x03, 0x03);
+        ret |= es8389_write_reg(i2c, addr, ES8389_DMIC_EN_REG6D, 0x16 | 0xC0);
+        ret |= es8389_update_bits(i2c, addr, ES8389_ADC_MODE_REG23, 0x03, 0x03);
     } else {
         /* AMIC mode - enable mic bias */
-        es8389_write_reg(i2c, addr, ES8389_DMIC_EN_REG6D, 0x16);
-        es8389_update_bits(i2c, addr, ES8389_ADC_MODE_REG23, 0x03, 0x00);
+        ret |= es8389_write_reg(i2c, addr, ES8389_DMIC_EN_REG6D, 0x16);
+        ret |= es8389_update_bits(i2c, addr, ES8389_ADC_MODE_REG23, 0x03, 0x00);
     }
 
     /* Microphone input configuration and PGA gain */
@@ -250,70 +253,70 @@ static int es8389_codec_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cf
     /* Default PGA gain: use mid-range (8 = +24dB) */
     pga_gain = 8;
 
-    es8389_write_reg(i2c, addr, ES8389_MIC1_GAIN_REG72, mic_input_val | pga_gain);
-    es8389_write_reg(i2c, addr, ES8389_MIC2_GAIN_REG73, mic_input_val | pga_gain);
+    ret |= es8389_write_reg(i2c, addr, ES8389_MIC1_GAIN_REG72, mic_input_val | pga_gain);
+    ret |= es8389_write_reg(i2c, addr, ES8389_MIC2_GAIN_REG73, mic_input_val | pga_gain);
 
     /* CSM and master/slave mode */
-    es8389_write_reg(i2c, addr, ES8389_CSM_JUMP_REG10, 0xC4);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CSM_JUMP_REG10, 0xC4);
     /* Reg[01]: bit7=BCLK_TRI, bit6=LRCK_TRI, bit5=ASDOUT_TRI, bit0=MS mode
      * For Slave mode: 0x08 (bit3=1 for internal clock, bit0=0 for slave)
      * For Master mode: 0x09 (bit3=1, bit0=1)
      */
-    es8389_write_reg(i2c, addr, ES8389_MASTER_MODE_REG01, cfg->codec_master ? 0x09 : 0x08);
-    es8389_write_reg(i2c, addr, ES8389_CSM_STATE1_REGF1, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_MASTER_MODE_REG01, cfg->codec_master ? 0x09 : 0x08);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CSM_STATE1_REGF1, 0x00);
 
     /* System registers initialization */
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG12, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG13, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG14, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG15, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG16, 0x35);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG17, 0x09);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG18, 0x91);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG19, 0x28);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG1A, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG1B, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG1C, 0x11);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG12, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG13, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG14, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG15, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG16, 0x35);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG17, 0x09);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG18, 0x91);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG19, 0x28);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG1A, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG1B, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG1C, 0x11);
 
     /* Clock configuration */
-    es8389_write_reg(i2c, addr, ES8389_CHIP_MISC_REGF0, 0x13);
-    es8389_write_reg(i2c, addr, ES8389_MASTER_CLK_REG02, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_CLK_DIV_REG04, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_CLK_MUL_REG05, 0x10);
-    es8389_write_reg(i2c, addr, ES8389_CLK_MUX_REG06, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_CLK_MUX_REG07, 0xC0);
-    es8389_write_reg(i2c, addr, ES8389_CLK_CTL_REG08, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_CLK_CTL_REG09, 0xC0);
-    es8389_write_reg(i2c, addr, ES8389_CLK_CTL_REG0A, 0x80);
-    es8389_write_reg(i2c, addr, ES8389_SCLK_DIV_REG0B, 0x04);
-    es8389_write_reg(i2c, addr, ES8389_LRCK_DIVH_REG0C, (ES8389_MCLK_LRCK_RATIO >> 8));
-    es8389_write_reg(i2c, addr, ES8389_LRCK_DIVL_REG0D, (ES8389_MCLK_LRCK_RATIO & 0xFF));
-    es8389_write_reg(i2c, addr, ES8389_OSC_CLK_REG0F, 0x10);  /* OSC_CLK: enable PLL */
+    ret |= es8389_write_reg(i2c, addr, ES8389_CHIP_MISC_REGF0, 0x13);
+    ret |= es8389_write_reg(i2c, addr, ES8389_MASTER_CLK_REG02, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_DIV_REG04, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_MUL_REG05, 0x10);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_MUX_REG06, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_MUX_REG07, 0xC0);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_CTL_REG08, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_CTL_REG09, 0xC0);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_CTL_REG0A, 0x80);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SCLK_DIV_REG0B, 0x04);
+    ret |= es8389_write_reg(i2c, addr, ES8389_LRCK_DIVH_REG0C, (ES8389_MCLK_LRCK_RATIO >> 8));
+    ret |= es8389_write_reg(i2c, addr, ES8389_LRCK_DIVL_REG0D, (ES8389_MCLK_LRCK_RATIO & 0xFF));
+    ret |= es8389_write_reg(i2c, addr, ES8389_OSC_CLK_REG0F, 0x10); /* OSC_CLK: enable PLL */
 
     /* ADC/DAC initial settings */
-    es8389_write_reg(i2c, addr, ES8389_ADC_REG21, 0x1F);
-    es8389_write_reg(i2c, addr, ES8389_ADC_REG22, 0x7F);
-    es8389_write_reg(i2c, addr, ES8389_ADC_MIX_REG31, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_DAC_MIX_REG44, 0x00);
-    es8389_write_reg(i2c, addr, ES8389_DAC_REG41, 0x7F);
-    es8389_write_reg(i2c, addr, ES8389_DAC_REG42, 0x7F);
-    es8389_write_reg(i2c, addr, ES8389_DAC_REG43, 0x10);
-    es8389_write_reg(i2c, addr, ES8389_DAC_RAMP_REG49, 0x0F);
-    es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG4C, 0xC0);
-    es8389_write_reg(i2c, addr, ES8389_DAC_RESET_REG4D, 0x02);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_REG21, 0x1F);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_REG22, 0x7F);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_MIX_REG31, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_MIX_REG44, 0x00);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_REG41, 0x7F);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_REG42, 0x7F);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_REG43, 0x10);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_RAMP_REG49, 0x0F);
+    ret |= es8389_write_reg(i2c, addr, ES8389_SYSTEM_REG4C, 0xC0);
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_RESET_REG4D, 0x02);
 
     /* Power sequence before BIAS_ON */
-    es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x00);  /* Chip reset */
-    es8389_write_reg(i2c, addr, ES8389_CLK_OFF_REG03, 0xC1);  /* Clock control */
-    es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x01);  /* Exit reset */
+    ret |= es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x00);   /* Chip reset */
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_OFF_REG03, 0xC1); /* Clock control */
+    ret |= es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x01);   /* Exit reset */
 
     /* Configure DMIC/ADC volume */
-    es8389_write_reg(i2c, addr, ES8389_DMIC_VOL_REG26, 0xBF); /* 0dB */
-    es8389_write_reg(i2c, addr, ES8389_ADCL_VOL_REG27, 0xBF);  /* 0dB */
-    es8389_write_reg(i2c, addr, ES8389_ADCR_VOL_REG28, 0xBF);  /* 0dB */
-    es8389_write_reg(i2c, addr, ES8389_DACL_VOL_REG46, 0xBF);  /* 0dB */
-    es8389_write_reg(i2c, addr, ES8389_DACR_VOL_REG47, 0xBF);  /* 0dB */
-    es8389_write_reg(i2c, addr, ES8389_MIX_VOL_REG48, 0xBE);   /* 0dB */
+    ret |= es8389_write_reg(i2c, addr, ES8389_DMIC_VOL_REG26, 0xBF); /* 0dB */
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADCL_VOL_REG27, 0xBF); /* 0dB */
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADCR_VOL_REG28, 0xBF); /* 0dB */
+    ret |= es8389_write_reg(i2c, addr, ES8389_DACL_VOL_REG46, 0xBF); /* 0dB */
+    ret |= es8389_write_reg(i2c, addr, ES8389_DACR_VOL_REG47, 0xBF); /* 0dB */
+    ret |= es8389_write_reg(i2c, addr, ES8389_MIX_VOL_REG48, 0xBE);  /* 0dB */
 
     /* Configure I2S format and bit width */
     state = 0;
@@ -321,48 +324,44 @@ static int es8389_codec_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cf
     state |= map_fmt(cfg->i2s_fmt);     /* I2S format: bits [4:2] */
 
     /* Apply format configuration to ADC and DAC */
-    es8389_update_bits(i2c, addr, ES8389_ADC_REG20,
-                      ES8389_DAIFMT_MASK | ES8389_DATA_LEN_MASK, state);
-    es8389_update_bits(i2c, addr, ES8389_DAC_REG40,
-                      ES8389_DAIFMT_MASK | ES8389_DATA_LEN_MASK, state);
+    ret |= es8389_update_bits(i2c, addr, ES8389_ADC_REG20, ES8389_DAIFMT_MASK | ES8389_DATA_LEN_MASK, state);
+    ret |= es8389_update_bits(i2c, addr, ES8389_DAC_REG40, ES8389_DAIFMT_MASK | ES8389_DATA_LEN_MASK, state);
 
     /* Configure master/slave mode */
-    es8389_update_bits(i2c, addr, ES8389_ADC_REG20, 0x03,
-                      cfg->codec_master ? 0x03 : 0x00);
-    es8389_update_bits(i2c, addr, ES8389_DAC_REG40, 0x03,
-                      cfg->codec_master ? 0x03 : 0x00);
+    ret |= es8389_update_bits(i2c, addr, ES8389_ADC_REG20, 0x03, cfg->codec_master ? 0x03 : 0x00);
+    ret |= es8389_update_bits(i2c, addr, ES8389_DAC_REG40, 0x03, cfg->codec_master ? 0x03 : 0x00);
 
     /*
      * BIAS_ON state - Critical steps to enable ADC/DAC
      * Reference: Linux driver es8389.c SND_SOC_BIAS_ON
      */
-    es8389_write_reg(i2c, addr, ES8389_DAC_RESET_REG4D, 0x02);
-    es8389_update_bits(i2c, addr, ES8389_HPSW_REG69, 0x20, 0x20);
-    es8389_write_reg(i2c, addr, ES8389_ANA_CTL1_REG61, 0xD9);   /* Enable analog power */
-    es8389_write_reg(i2c, addr, ES8389_ADC_EN_REG64, 0x8F);    /* Enable ADC */
-    es8389_write_reg(i2c, addr, ES8389_CSM_JUMP_REG10, 0xE4);  /* State machine jump */
-    es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x01);
-    es8389_write_reg(i2c, addr, ES8389_CLK_OFF_REG03, 0xC3);   /* Clock configuration */
-    es8389_write_reg(i2c, addr, ES8389_ADC_HPF1_REG24, 0x00);  /* HPF COEF1 - clear HPF */
-    es8389_write_reg(i2c, addr, ES8389_ADC_HPF2_REG25, 0x00);  /* HPF COEF2 - clear HPF */
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_RESET_REG4D, 0x02);
+    ret |= es8389_update_bits(i2c, addr, ES8389_HPSW_REG69, 0x20, 0x20);
+    ret |= es8389_write_reg(i2c, addr, ES8389_ANA_CTL1_REG61, 0xD9); /* Enable analog power */
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_EN_REG64, 0x8F);   /* Enable ADC */
+    ret |= es8389_write_reg(i2c, addr, ES8389_CSM_JUMP_REG10, 0xE4); /* State machine jump */
+    ret |= es8389_write_reg(i2c, addr, ES8389_RESET_REG00, 0x01);
+    ret |= es8389_write_reg(i2c, addr, ES8389_CLK_OFF_REG03, 0xC3);  /* Clock configuration */
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_HPF1_REG24, 0x00); /* HPF COEF1 - clear HPF */
+    ret |= es8389_write_reg(i2c, addr, ES8389_ADC_HPF2_REG25, 0x00); /* HPF COEF2 - clear HPF */
 
     /* Enable ADC/DAC based on configuration */
     if (cfg->enable_adc) {
-        es8389_update_bits(i2c, addr, ES8389_ADC_REG20, 0x03, 0x00); /* Unmute ADC */
+        ret |= es8389_update_bits(i2c, addr, ES8389_ADC_REG20, 0x03, 0x00); /* Unmute ADC */
     } else {
-        es8389_update_bits(i2c, addr, ES8389_ADC_REG20, 0x03, 0x03); /* Mute ADC */
+        ret |= es8389_update_bits(i2c, addr, ES8389_ADC_REG20, 0x03, 0x03); /* Mute ADC */
     }
 
     if (cfg->enable_dac) {
-        es8389_update_bits(i2c, addr, ES8389_DAC_REG40, 0x03, 0x00); /* Unmute DAC */
+        ret |= es8389_update_bits(i2c, addr, ES8389_DAC_REG40, 0x03, 0x00); /* Unmute DAC */
     } else {
-        es8389_update_bits(i2c, addr, ES8389_DAC_REG40, 0x03, 0x03); /* Mute DAC */
+        ret |= es8389_update_bits(i2c, addr, ES8389_DAC_REG40, 0x03, 0x03); /* Mute DAC */
     }
 
     bflb_mtimer_delay_ms(70);
-    es8389_write_reg(i2c, addr, ES8389_DAC_RESET_REG4D, 0x00);  /* Release DAC reset */
+    ret |= es8389_write_reg(i2c, addr, ES8389_DAC_RESET_REG4D, 0x00); /* Release DAC reset */
 
-    return 0;
+    return ret == 0 ? 0 : -1;
 }
 
 int audio_codec_es8389_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg)
@@ -374,7 +373,11 @@ int audio_codec_es8389_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg
         dev->i2c_addr = ES8389_I2C_DEFAULT_ADDR;
     }
 
-    return es8389_codec_init(dev, cfg);
+    int ret = es8389_codec_init(dev, cfg);
+    if (ret == 0) {
+        g_es8389_digital_mic = cfg->mic_input_mode == AUDIO_CODEC_MIC_INPUT_DIGITAL;
+    }
+    return ret;
 }
 
 int audio_codec_es8389_set_volume(audio_codec_dev_t *dev, int volume_percent)
@@ -422,33 +425,6 @@ static int audio_codec_es8389_set_record_volume(audio_codec_dev_t *dev, int volu
     return res;
 }
 
-static int audio_codec_es8389_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
-{
-    if (dev == NULL || dev->i2c == NULL) {
-        return -1;
-    }
-
-    if (pga_percent < 0) {
-        pga_percent = 0;
-    } else if (pga_percent > 100) {
-        pga_percent = 100;
-    }
-
-    /* ES8389 MIC PGA: 0x00 = 0dB, 0x0E = +42dB, 3dB/step
-     * Map 0-100% to 0-14 range
-     */
-    uint8_t gain = (uint8_t)((pga_percent * 14 + 50) / 100);
-
-    /* Read current register values to preserve input selection */
-    uint8_t val1, val2;
-    es8389_read_reg(dev->i2c, dev->i2c_addr, ES8389_MIC1_GAIN_REG72, &val1);
-    es8389_read_reg(dev->i2c, dev->i2c_addr, ES8389_MIC2_GAIN_REG73, &val2);
-
-    int res = 0;
-    res |= es8389_write_reg(dev->i2c, dev->i2c_addr, ES8389_MIC1_GAIN_REG72, (val1 & 0xF0) | gain);
-    res |= es8389_write_reg(dev->i2c, dev->i2c_addr, ES8389_MIC2_GAIN_REG73, (val2 & 0xF0) | gain);
-    return res;
-}
 
 static int audio_codec_es8389_set_mute(audio_codec_dev_t *dev, bool mute)
 {
@@ -481,19 +457,90 @@ uint32_t audio_codec_es8389_calc_mclk_hz(uint32_t sample_rate_hz)
     return sample_rate_hz * ES8389_MCLK_LRCK_RATIO;
 }
 
+static const float es8389_gain_steps_db[] = { 0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42 };
+
+static int audio_codec_es8389_get_mic_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                   audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB,
+        .independent_controls = AUDIO_CODEC_CONTROL_GAIN_DB,
+        .linked_mask = 0x03,
+        .gain_steps_db = es8389_gain_steps_db,
+        .gain_step_count = 15,
+    };
+    int ret = audio_codec_native_caps(0x03, slot, &native, caps);
+    if (ret == 0 && g_es8389_digital_mic) {
+        caps->controls &= ~AUDIO_CODEC_CONTROL_GAIN_DB;
+        caps->independent_controls &= ~AUDIO_CODEC_CONTROL_GAIN_DB;
+        caps->gain_steps_db = NULL;
+        caps->gain_step_count = 0;
+    }
+    return ret;
+}
+
+static int audio_codec_es8389_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                       audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = 0,
+        .linked_mask = 0x03,
+    };
+    return audio_codec_native_caps(0x03, slot, &native, caps);
+}
+
+static int audio_codec_es8389_set_mic_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x03 ? audio_codec_es8389_set_record_volume(dev, value) : -2;
+}
+
+static int audio_codec_es8389_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x03 ? audio_codec_es8389_set_volume(dev, value) : -2;
+}
+
+static int audio_codec_es8389_set_speaker_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x03 ? audio_codec_es8389_set_mute(dev, value) : -2;
+}
+
+static int audio_codec_es8389_set_mic_channel_gain_db(audio_codec_dev_t *dev, uint16_t mask, float gain_db)
+{
+    int step = audio_codec_gain_step_index(es8389_gain_steps_db, 15, gain_db);
+    if (dev == NULL || dev->i2c == NULL || mask == 0 || step < 0) {
+        return -1;
+    }
+    if (g_es8389_digital_mic || (mask & ~0x03U) != 0) {
+        return -2;
+    }
+    for (uint8_t slot = 0; slot < 2; slot++) {
+        if ((mask & (1U << slot)) != 0 &&
+            es8389_update_bits(dev->i2c, dev->i2c_addr, ES8389_MIC1_GAIN_REG72 + slot, 0x0f, (uint8_t)step) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
 static const uint8_t es8389_addrs[] = { ES8389_I2C_DEFAULT_ADDR };
 
 const audio_codec_driver_t audio_codec_es8389_driver = {
+    .get_mic_channel_caps = audio_codec_es8389_get_mic_channel_caps,
+    .get_speaker_channel_caps = audio_codec_es8389_get_speaker_channel_caps,
+    .set_mic_channel_volume = audio_codec_es8389_set_mic_channel_volume,
+    .set_mic_channel_gain_db = audio_codec_es8389_set_mic_channel_gain_db,
+    .set_speaker_channel_volume = audio_codec_es8389_set_speaker_channel_volume,
+    .set_speaker_channel_mute = audio_codec_es8389_set_speaker_channel_mute,
+
     .type = AUDIO_CODEC_TYPE_ES8389,
     .name = "ES8389",
     .i2c_addrs = es8389_addrs,
     .i2c_addrs_num = sizeof(es8389_addrs) / sizeof(es8389_addrs[0]),
     .probe = audio_codec_es8389_probe,
     .init = audio_codec_es8389_init,
-    .set_mute = audio_codec_es8389_set_mute,
-    .set_volume = audio_codec_es8389_set_volume,
-    .set_record_volume = audio_codec_es8389_set_record_volume,
-    .set_mic_pga = audio_codec_es8389_set_mic_pga,
     .set_sample_rate = audio_codec_es8389_set_sample_rate,
     .calc_mclk_hz = audio_codec_es8389_calc_mclk_hz,
 };

@@ -2,6 +2,7 @@
 #include "board_gpio.h"
 #include "bflb_gpio.h"
 #include "bl618dg_glb.h"
+#include <string.h>
 
 void board_np_console_gpio_init(void)
 {
@@ -349,34 +350,45 @@ void board_i2s_codec_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-void board_lcd_dbi_type_c_4_wire_gpio_init(void)
+#if defined(CONFIG_BSP_DISPLAY)
+/* Interface hooks leave CS untouched. Hardware CS has its own hook. */
+void board_display_dbi_c4_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
     bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-void board_lcd_dbi_type_c_3_wire_gpio_init(void)
+void board_display_dbi_c3_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
     bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-void board_lcd_dbi_type_b_gpio_init(void)
+void board_display_dbi_c4_cs_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_display_dbi_c3_cs_gpio_init(void)
+{
+    board_display_dbi_c4_cs_gpio_init();
+}
+
+void board_display_dbi_b8_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
     bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
@@ -389,38 +401,82 @@ void board_lcd_dbi_type_b_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-void board_lcd_dbi_ex_qspi_gpio_init(void)
+void board_display_dbi_b8_cs_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_display_qspi_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
-    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-void board_lcd_spi_0_hard_4_gpio_init(void)
+void board_display_qspi_cs_gpio_init(void)
 {
-    struct bflb_device_s *gpio;
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
 
-    gpio = bflb_device_get_by_name("gpio");
-    /* LCD_SPI_DAT */
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
-    /* LCD_SPI_CLK */
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
-#if defined(GPIO_FUNC_SPI1)
-void board_lcd_spi_1_hard_4_gpio_init(void)
+
+void board_display_spi_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
+#if defined(GPIO_FUNC_SPI1) && defined(CONFIG_DISPLAY_DEFAULT_IF_SPI)
+    uint32_t func = (strcmp(CONFIG_DISPLAY_DEFAULT_DEV, "spi1") == 0) ? GPIO_FUNC_SPI1 : GPIO_FUNC_SPI0;
+#else
+    uint32_t func = GPIO_FUNC_SPI0;
+#endif
     /* LCD_SPI_DAT */
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_15, func | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
     /* LCD_SPI_CLK */
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_13, func | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+/* Keep the board mux on release, as the board's default display hooks do. */
+void board_display_dbi_b8_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_b8_cs_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c4_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c4_cs_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c3_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c3_cs_gpio_deinit(void)
+{
+}
+
+void board_display_qspi_gpio_deinit(void)
+{
+}
+
+void board_display_qspi_cs_gpio_deinit(void)
+{
+}
+
+void board_display_spi_gpio_deinit(void)
+{
 }
 #endif

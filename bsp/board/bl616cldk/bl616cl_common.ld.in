@@ -601,7 +601,6 @@ SECTIONS
         __init_array_end = .;
 
         . = ALIGN(4);
-        *(.gcc_except_table.*)
 
 #ifdef CONFIG_GCOV_DUMP
         __gcov_info_start = .;
@@ -669,4 +668,13 @@ SECTIONS
 
     _heap_wifi_start = ABSOLUTE(__ram_wifi_end__);
     _heap_wifi_size = ABSOLUTE(ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start);
+
+    /DISCARD/ : {
+        *(.gcc_except_table)
+        *(.gcc_except_table.*)
+        *(.eh_frame)
+        *(.eh_frame.*)
+        *(.eh_frame_hdr)
+        *(.gnu.linkonce.eh.*)
+    }
 }

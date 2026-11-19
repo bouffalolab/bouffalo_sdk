@@ -225,3 +225,41 @@ uint64_t flashloader_port_time_ms(void)
 {
     return bflb_mtimer_get_time_ms();
 }
+
+int flashloader_port_get_bootinfo(uint8_t data[28])
+{
+    uint8_t reply[32] = { 'O', 'K', 28U, 0U };
+    uint32_t security = 0U;
+    uint32_t sw_usage0 = 0U;
+    uint32_t sw_usage1 = 0U;
+    uint32_t version;
+    uint32_t crc;
+
+    if (data == NULL) {
+        return -1;
+    }
+#if defined(CPU_MODEL_A0)
+    version = *(volatile const uint32_t *)0x60F82800UL;
+#else
+    version = *(volatile const uint32_t *)0xA0F82800UL;
+#endif
+    memcpy(reply + 4U, &version, sizeof(version));
+    bflb_ef_ctrl_read_direct(NULL, 0x00U, &security, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, 0x5CU, &sw_usage0, 1, 0);
+    bflb_ef_ctrl_read_direct(NULL, 0x60U, &sw_usage1, 1, 0);
+    reply[8] = (uint8_t)((sw_usage1 >> 24) & 7U);
+    reply[9] = (uint8_t)(security & 3U);
+    if (reply[9] >= 2U) {
+        reply[9] ^= 1U;
+    }
+    reply[9] |= (uint8_t)(((security >> 3) & 1U) << 6);
+    memcpy(reply + 12U, &sw_usage0, sizeof(sw_usage0));
+    if (bflb_efuse_get_chipid(reply + 16U) != 0) {
+        return -1;
+    }
+    memcpy(reply + 24U, &sw_usage1, sizeof(sw_usage1));
+    crc = flashloader_port_crc32(reply, 28U);
+    memcpy(reply + 28U, &crc, sizeof(crc));
+    memcpy(data, reply + 4U, 28U);
+    return 0;
+}

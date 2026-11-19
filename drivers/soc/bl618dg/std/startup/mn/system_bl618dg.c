@@ -10,7 +10,7 @@
 #include <nmsis_core.h>
 #endif
 
-extern void sysinit_run_all(void);
+#include "sysinit.h"
 
 /* sf_ctrl_2 */
 #define SF_CTRL_2_OFFSET       (0x70)
@@ -273,9 +273,9 @@ void SystemInit(void)
     /* make all slave unprotected */
     *(volatile uint32_t *)0x2000033C = 0x0;
 
-    /* halt mini cpu as default */    
+    /* halt mini cpu as default */
     *(volatile uint32_t *)0x20000548 |= (1 << 3);
-    
+
     /* clear AP/NP-to-MINI interrupt forwarding status and mask forwarding sources/routes */
     *(volatile uint32_t *)0x20000058 = 0xFFFFFFFF;
     *(volatile uint32_t *)0x2000005C = 0xFFFFFFFF;
@@ -295,10 +295,24 @@ void System_Post_Init(void)
 {
     __cpu_post_init();
 
-    sysinit_run_all();
+    {
+        uint32_t reg_val;
 
-    HBN_Trim_RC32K();
-    PDS_Trim_RC32M();
+        HBN_Trim_RC32K();
+        PDS_Trim_RC32M();
+
+        reg_val = *(volatile uint32_t *)0x2008F83C;
+        reg_val &= ~0x1F0U;
+        reg_val |= 0x170U;
+        *(volatile uint32_t *)0x2008F83C = reg_val;
+
+        reg_val = *(volatile uint32_t *)0x2008F82C;
+        reg_val &= ~0xF000U;
+        reg_val |= 0xC000U;
+        *(volatile uint32_t *)0x2008F82C = reg_val;
+    }
+
+    sysinit_run_pre_schedule();
 }
 
 void SystemInit_NP(void)
@@ -316,6 +330,6 @@ void System_Post_Init(void)
 {
     __cpu_post_init();
 
-    sysinit_run_all();
+    sysinit_run_pre_schedule();
 }
 #endif

@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s gc6153_init_list[] = {
+static const struct image_sensor_command_s gc6153_init_list[] = {
     {0xFE, 0xA0},
     {0xFE, 0xA0},
     {0xFE, 0xA0},
@@ -37,7 +37,7 @@ static struct image_sensor_command_s gc6153_init_list[] = {
     {0x01, 0x40},
     {0x02, 0x02},
     {0x0D, 0x40},
-    {0x14, 0x7e},//mirror/flip 7d   7e(OK)
+    {0x14, 0x7f},//mirror/flip 7d   7e(OK)
     {0x16, 0x05},
     {0x17, 0x18},
     {0x1C, 0x31},

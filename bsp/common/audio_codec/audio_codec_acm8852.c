@@ -679,19 +679,7 @@ static int audio_codec_acm8852_set_volume(audio_codec_dev_t *dev, int volume_per
     return (ret == 0) ? 0 : -1;
 }
 
-static int audio_codec_acm8852_set_record_volume(audio_codec_dev_t *dev, int volume_percent)
-{
-    (void)dev;
-    (void)volume_percent;
-    return -2;
-}
 
-static int audio_codec_acm8852_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
-{
-    (void)dev;
-    (void)pga_percent;
-    return -2;
-}
 
 static int audio_codec_acm8852_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_rate_hz)
 {
@@ -764,17 +752,39 @@ int audio_codec_acm8852_write_register(struct bflb_device_s *i2c, uint8_t addr, 
     return acm8852_write_reg(i2c, addr, reg, val);
 }
 
+static int audio_codec_acm8852_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                        audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = 0,
+        .linked_mask = 0x03,
+    };
+    return audio_codec_native_caps(0x03, slot, &native, caps);
+}
+
+static int audio_codec_acm8852_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x03 ? audio_codec_acm8852_set_volume(dev, value) : -2;
+}
+
+static int audio_codec_acm8852_set_speaker_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x03 ? audio_codec_acm8852_set_mute(dev, value) : -2;
+}
+
 const audio_codec_driver_t audio_codec_acm8852_driver = {
+    .get_speaker_channel_caps = audio_codec_acm8852_get_speaker_channel_caps,
+    .set_speaker_channel_volume = audio_codec_acm8852_set_speaker_channel_volume,
+    .set_speaker_channel_mute = audio_codec_acm8852_set_speaker_channel_mute,
+
     .type = AUDIO_CODEC_TYPE_ACM8852,
     .name = "ACM8852",
     .i2c_addrs = acm8852_addrs,
     .i2c_addrs_num = (uint8_t)(sizeof(acm8852_addrs) / sizeof(acm8852_addrs[0])),
     .probe = audio_codec_acm8852_probe,
     .init = audio_codec_acm8852_init,
-    .set_mute = audio_codec_acm8852_set_mute,
-    .set_volume = audio_codec_acm8852_set_volume,
-    .set_record_volume = audio_codec_acm8852_set_record_volume,
-    .set_mic_pga = audio_codec_acm8852_set_mic_pga,
     .set_sample_rate = audio_codec_acm8852_set_sample_rate,
     .calc_mclk_hz = audio_codec_acm8852_calc_mclk_hz,
 };

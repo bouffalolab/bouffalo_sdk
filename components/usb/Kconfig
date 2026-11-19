@@ -88,6 +88,15 @@ config CHERRYUSB_DEVICE_DFU
     help
       Build the device firmware update class.
 
+config CHERRYUSB_DEVICE_ADB
+    bool "ADB device class"
+    default n
+    depends on CHERRYUSB_DEVICE
+    help
+      Build the Android Debug Bridge (ADB) device class. The class only
+      implements the ADB transport; shell and file-sync backends must be
+      provided by the application.
+
 config CHERRYUSB_DEVICE_GAMEPAD
     bool "Gamepad device class"
     default n

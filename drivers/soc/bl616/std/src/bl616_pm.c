@@ -6,6 +6,8 @@
 #include "bl616_hbn.h"
 #include "bl616_pds.h"
 #include "ef_data_reg.h"
+#include <stdio.h>
+#include "sysinit.h"
 
 /* SDK boolean options are defined when enabled and undefined when disabled. */
 #if defined(CONFIG_PSRAM_RETENTION) && !defined(CONFIG_PSRAM)
@@ -1017,11 +1019,33 @@ void ATTR_TCM_SECTION HBN_OUT1_IRQ(void)
 static uint32_t mtimer_counter0=0;
 static uint32_t rtc_counter0=0;
 
-void pm_rc32k_auto_cal_init(void)
+void _pm_rc32k_auto_cal_init(void)
 {
     mtimer_counter0=0;
     rtc_counter0=0;
 }
+
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+void pm_rc32k_auto_cal_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+
+#if IS_ENABLED(CONFIG_SYSINIT)
+    return;
+#else
+    _pm_rc32k_auto_cal_init();
+#endif
+}
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
+
+#if IS_ENABLED(CONFIG_SYSINIT)
+static void pm_rc32k_auto_cal_sysinit(const void *arg)
+{
+    (void)arg;
+    _pm_rc32k_auto_cal_init();
+}
+SYSINIT(pm_rc32k_auto_cal, SI_SUB_PRE_SCHED, SI_ORDER_SECOND, pm_rc32k_auto_cal_sysinit, NULL);
+#endif
 
 void pm_rc32k_auto_cal(void)
 {

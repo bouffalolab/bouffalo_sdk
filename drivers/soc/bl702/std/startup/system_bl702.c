@@ -25,7 +25,7 @@
 #include "bl702_aon.h"
 #include <arch/risc-v/e24/clic.h>
 
-extern void sysinit_run_all(void);
+#include "sysinit.h"
 
 void SystemInit(void)
 {
@@ -121,13 +121,25 @@ void SystemInit(void)
     BL_WR_REG(AON_BASE, AON_DCDC18_TOP_0, tmpVal);
 }
 
+#if defined(CONFIG_SYSINIT) && defined(CONFIG_FREERTOS)
+/* Kept after the service records and before the scheduler barrier. */
+static void soc_post_init(const void *arg)
+{
+    (void)arg;
+    __enable_irq();
+}
+SYSINIT(soc_post, SI_SUB_PRE_SCHED, SI_ORDER_FIRST, soc_post_init, NULL);
+#endif
+
 void System_Post_Init(void)
 {
     PDS_Trim_RC32M();
     HBN_Trim_RC32K();
 
-    sysinit_run_all();
+    sysinit_run_pre_schedule();
 
+#if !defined(CONFIG_SYSINIT) || !defined(CONFIG_FREERTOS)
     /* global IRQ enable */
     __enable_irq();
+#endif
 }

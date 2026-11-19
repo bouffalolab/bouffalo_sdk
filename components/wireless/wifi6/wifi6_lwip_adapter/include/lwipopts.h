@@ -93,22 +93,24 @@ extern int sys_current_is_tcpip(void);
 
 #define PBUF_LINK_ENCAPSULATION_HLEN  388
 
-#define IP_REASS_MAX_PBUFS            (FHOST_RX_BUF_CNT - 2)
-
 #define MEMP_NUM_NETBUF               32
 #define MEMP_NUM_NETCONN              16
 #define MEMP_NUM_UDP_PCB              16
 #define MEMP_NUM_REASSDATA            LWIP_MIN((IP_REASS_MAX_PBUFS), 5)
 
-#if MACSW_TXDESC_CNT0 > MACSW_TXDESC_CNT1
-#define MAC_TXQ_DEPTH_0_1             MACSW_TXDESC_CNT0
+/* These sizes must be preprocessor constants for lwIP's static pools and
+ * configuration checks. Use the selected MACSW profile, not the private
+ * MACSW_TXDESC_CNTn / MACSW_AMPDU_RX_BUF_SIZE aliases or exported variables.
+ */
+#if CFG_TXDESC0 > CFG_TXDESC1
+#define MAC_TXQ_DEPTH_0_1             CFG_TXDESC0
 #else
-#define MAC_TXQ_DEPTH_0_1             MACSW_TXDESC_CNT1
+#define MAC_TXQ_DEPTH_0_1             CFG_TXDESC1
 #endif
-#if MACSW_TXDESC_CNT2 > MACSW_TXDESC_CNT3
-#define MAC_TXQ_DEPTH_2_3             MACSW_TXDESC_CNT2
+#if CFG_TXDESC2 > CFG_TXDESC3
+#define MAC_TXQ_DEPTH_2_3             CFG_TXDESC2
 #else
-#define MAC_TXQ_DEPTH_2_3             MACSW_TXDESC_CNT3
+#define MAC_TXQ_DEPTH_2_3             CFG_TXDESC3
 #endif
 #if MAC_TXQ_DEPTH_0_1 > MAC_TXQ_DEPTH_2_3
 #define MAC_TXQ_DEPTH                 MAC_TXQ_DEPTH_0_1
@@ -116,9 +118,18 @@ extern int sys_current_is_tcpip(void);
 #define MAC_TXQ_DEPTH                 MAC_TXQ_DEPTH_2_3
 #endif
 #if MACSW_AMPDU_RX
-#define MAC_RXQ_DEPTH                 MACSW_AMPDU_RX_BUF_SIZE
+#define MAC_RXQ_DEPTH                 CFG_REORD_BUF
+/* Match fhost_config_buffer.c: reserve two buffers outside the reorder pool. */
+#ifdef FHOST_RX_BUF_CNT
+#define IP_REASS_MAX_PBUFS            (FHOST_RX_BUF_CNT - 2)
+#elif defined(CFG_BARX) && !defined(CFG_ADHOC_ENABLE)
+#define IP_REASS_MAX_PBUFS            (CFG_BARX * MAC_RXQ_DEPTH)
+#else
+#define IP_REASS_MAX_PBUFS            MAC_RXQ_DEPTH
+#endif
 #else
 #define MAC_RXQ_DEPTH                 4
+#define IP_REASS_MAX_PBUFS            (MAC_RXQ_DEPTH - 2)
 #endif
 
 #ifdef BL_TCP_OPTIMIZE

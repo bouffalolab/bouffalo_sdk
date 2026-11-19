@@ -6,7 +6,7 @@
 #include "rv_hart.h"
 #include "rv_pmp.h"
 
-extern void sysinit_run_all(void);
+#include "sysinit.h"
 
 /* sf_ctrl_2 */
 #define SF_CTRL_2_OFFSET       (0x70)
@@ -190,14 +190,15 @@ void SystemInit(void)
     BL_WR_REG(GLB_BASE, GLB_UART_CFG2, 0x0000ffff);
 }
 
+
 void System_Post_Init(void)
 {
     __cpu_post_init();
 
-    sysinit_run_all();
-
     HBN_Trim_RC32K();
     PDS_Trim_RC32M();
+
+    sysinit_run_pre_schedule();
 }
 
 void SystemInit_NP(void)
@@ -215,6 +216,6 @@ void System_Post_Init(void)
 {
     __cpu_post_init();
 
-    sysinit_run_all();
+    sysinit_run_pre_schedule();
 }
 #endif

@@ -135,8 +135,13 @@ macsw_tx_peer_find(struct wpa_macsw_driver_itf_data *drv, const u8 *addr,
 // For STA only accept action frames
 #define STA_MGMT_RX_FILTER ~CO_BIT(WLAN_FC_STYPE_ACTION)
 
-// For AP accept everyting except beacon
+// WFA OBSS detection needs neighboring Beacons to reach hostapd.
+#if MACSW_WFA
+#define AP_MGMT_RX_FILTER 0
+#else
+// For ordinary AP builds accept everything except Beacon.
 #define AP_MGMT_RX_FILTER CO_BIT(WLAN_FC_STYPE_BEACON)
+#endif
 
 #if MACSW_MESH_EN
 // Conversion table BETWEEN MESH_STATE defined in WPA and MAC
@@ -2145,7 +2150,7 @@ static int wpa_macsw_driver_associate_ap(struct wpa_macsw_driver_itf_data *drv,
 					struct wpa_driver_associate_params *params)
 {
 	if (params->uapsd == -1)
-		params->uapsd = 1;
+		params->uapsd = 0;
 
 	fhost_wpa_set_mgmt_rx_filter(drv->fhost_vif_idx, AP_MGMT_RX_FILTER);
 

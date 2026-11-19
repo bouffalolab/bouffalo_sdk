@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s sc101iot_init_list[] = {
+static const struct image_sensor_command_s sc101iot_init_list[] = {
     {0xf0, 0x30},
     {0x01, 0xff},
     {0x02, 0xe0},

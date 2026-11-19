@@ -438,6 +438,9 @@ wifi_ap_start -s MyAP -k mypassword
 
 # With optional channel
 wifi_ap_start -s MyAP -k mypassword -c 6
+
+# Hidden SSID
+wifi_ap_start -s MyAP -k mypassword -h 1
 ```
 
 **Output:**
@@ -451,6 +454,7 @@ Starting AP: SSID=MyAP, Password=***
 - `-s <ssid>` - AP SSID (required)
 - `-k <password>` - AP password (optional, WPA2-PSK if provided)
 - `-c <channel>` - WiFi channel 1-14 (optional, default 11)
+- `-h <0|1>` - Hide the SSID (optional, default 0): beacons carry an empty SSID, wildcard probe requests are not answered and no WPS IE is sent
 
 **Default Settings:**
 - Channel: 11

@@ -100,6 +100,9 @@ void sys_thread_sem_deinit(void);
 
 #ifdef CONFIG_IPV6
 #define LWIP_IPV6 1
+#if defined(CONFIG_ATMODULE_V2_0) && CONFIG_ATMODULE_V2_0
+#define LWIP_NETIF_EXT_STATUS_CALLBACK 1
+#endif
 #endif 
 
 #define LWIP_HOOK_FILENAME        "lwiphooks.h"

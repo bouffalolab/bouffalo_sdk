@@ -74,6 +74,15 @@
   * @}
   */
 
+/** @defgroup DPI_YUV_RANGE dpi yuv range definition (BT.601)
+  * @{
+  */
+#define DPI_YUV_RANGE_FULL                     0 /* Y, U and V use 0..255 (the default) */
+#define DPI_YUV_RANGE_LIMITED                  1 /* Y uses 16..235, U and V use 16..240 */
+/**
+  * @}
+  */
+
 /** @defgroup DPI_PCLK_SAMPLE_EDGE dpi pixel clock sample edge definition
   * @{
   */
@@ -190,6 +199,37 @@ void bflb_dpi_framebuffer_switch(struct bflb_device_s *dev, uint32_t addr);
  * @param [in] uv_addr start address of UV framebuffer to switch
  */
 void bflb_dpi_framebuffer_planar_switch(struct bflb_device_s *dev, uint32_t y_addr, uint32_t uv_addr);
+
+/**
+ * @brief Change the input without restarting the output or changing its timing.
+ *
+ * Pattern input disables AXI frame reads. Framebuffer input initializes both
+ * address slots (Y and UV for planar input) before enabling reads. The BT.601
+ * matrices installed by bflb_dpi_set_yuv_range() are preserved. Subsequent
+ * address-only changes use bflb_dpi_framebuffer_switch() or its planar variant.
+ * The caller serializes this short MMIO sequence against its frame ISR; this
+ * call does not wait for a frame boundary or confirm retirement.
+ *
+ * @param [in] dev device handle
+ * @param [in] input_sel DPI_INPUT_SEL_*
+ * @param [in] data_format DPI_DATA_FORMAT_*; TEST_PATTERN for pattern input
+ * @param [in] y_addr framebuffer address; ignored for pattern input
+ * @param [in] uv_addr UV address for Y_UV_PLANAR; ignored otherwise
+ */
+void bflb_dpi_set_input(struct bflb_device_s *dev, uint8_t input_sel, uint8_t data_format,
+                       uint32_t y_addr, uint32_t uv_addr);
+
+/**
+ * @brief Set the range of the YUV data of the display path (BT.601).
+ *
+ * The range applies to the YUV frames of the framebuffer (YUYV, UYVY, planar) and to the conversion between RGB and YUV
+ * in front of the OSD blend and after it, so RGB frames and the OSD layers keep their colors. Call it after
+ * bflb_dpi_init(), which sets the full range for RGB frames.
+ *
+ * @param [in] dev device handle
+ * @param [in] range YUV range, use @ref DPI_YUV_RANGE
+ */
+void bflb_dpi_set_yuv_range(struct bflb_device_s *dev, uint8_t range);
 
 /**
  * @brief Get start address of the framebuffer which is using.

@@ -151,7 +151,9 @@ static void bluetooth_start_task(void *pvParameters)
     printf("cmd_set_btble_standalone\r\n");
     extern void cmd_set_btble_standalone(int argc, char **argv);
     cmd_set_btble_standalone(0, 0);
-    if (0 != rfparam_init(0, NULL, 0)) {
+    /* The Wi-Fi SYSINIT path owns cold-start RF initialization. Apply the
+     * parameters again after selecting the standalone BLE path. */
+    if (0 != board_rf_ctl(BRD_CTL_RF_INIT_BZ)) {
         printf("standalone PHY RF init failed!\r\n");
     }
 #else

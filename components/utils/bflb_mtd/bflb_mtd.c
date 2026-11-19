@@ -69,10 +69,14 @@ static int bflb_sys_isxipaddr(uint32_t addr)
 }
 #endif
 
+/* Retained as an empty compatibility entry point; the partition table used by
+ * MTD is loaded by the boot2 SYSINIT record. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
 void bflb_mtd_init(void)
 {
-    bflb_boot2_init();
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
 }
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 
 int bflb_mtd_open(const char *name, bflb_mtd_handle_t *handle, unsigned int flags)
 {

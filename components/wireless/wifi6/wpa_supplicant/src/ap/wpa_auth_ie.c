@@ -979,9 +979,21 @@ wpa_validate_wpa_ie(struct wpa_authenticator *wpa_auth,
 #ifdef CONFIG_SAE
 	if (sm->wpa_key_mgmt == WPA_KEY_MGMT_SAE && data.num_pmkid &&
 	    !sm->pmksa) {
+		/*
+		 * A fresh SAE exchange already established the PMK used by the
+		 * following 4-way handshake. In that case, an unmatched PMKID is
+		 * only a PMKSA-caching hint and must not block association. Keep
+		 * rejecting unmatched PMKIDs for non-SAE authentication, where the
+		 * PMK must come from the cache.
+		 */
+		if (sm->auth_alg != WLAN_AUTH_SAE) {
+			wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_DEBUG,
+					 "No PMKSA cache entry found for SAE");
+			return WPA_INVALID_PMKID;
+		}
+
 		wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_DEBUG,
-				 "No PMKSA cache entry found for SAE");
-		return WPA_INVALID_PMKID;
+				 "Ignore unmatched PMKID after fresh SAE authentication");
 	}
 #endif /* CONFIG_SAE */
 

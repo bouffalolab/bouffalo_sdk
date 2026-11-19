@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "audio_codec_driver.h"
+#include "audio_codec_internal.h"
 #include "bflb_audac.h"
 #include "bflb_auadc.h"
 #include "bflb_clock.h"
@@ -56,7 +57,7 @@ typedef struct {
     const audio_codec_bl_caps_t *caps;
     int volume_percent;
     int record_volume_percent;
-    int mic_pga_percent;
+    float mic_gain_db;
     bool mute;
 } audio_codec_bl_state_t;
 
@@ -197,9 +198,12 @@ static int audio_codec_bl_apply_volume(audio_codec_bl_state_t *state, int volume
         volume_percent = 100;
     }
 
-    state->volume_percent = volume_percent;
     int db_half = ((volume_percent * 190) + 50) / 100 - 190;
-    return bflb_audac_feature_control(state->audac_dev, AUDAC_CMD_SET_VOLUME_VAL, (size_t)db_half);
+    int ret = bflb_audac_feature_control(state->audac_dev, AUDAC_CMD_SET_VOLUME_VAL, (size_t)db_half);
+    if (ret == 0) {
+        state->volume_percent = volume_percent;
+    }
+    return ret;
 }
 
 static int audio_codec_bl_apply_record_volume(audio_codec_bl_state_t *state, int volume_percent)
@@ -214,37 +218,33 @@ static int audio_codec_bl_apply_record_volume(audio_codec_bl_state_t *state, int
         volume_percent = 100;
     }
 
-    state->record_volume_percent = volume_percent;
     int db_half = ((volume_percent * 190) + 50) / 100 - 190;
-    return bflb_auadc_feature_control(state->auadc_dev, AUADC_CMD_SET_VOLUME_VAL, (size_t)db_half);
+    int ret = bflb_auadc_feature_control(state->auadc_dev, AUADC_CMD_SET_VOLUME_VAL, (size_t)db_half);
+    if (ret == 0) {
+        state->record_volume_percent = volume_percent;
+    }
+    return ret;
 }
 
-static int audio_codec_bl_apply_mic_pga(audio_codec_bl_state_t *state, int pga_percent)
+static int audio_codec_bl_apply_mic_gain_db(audio_codec_bl_state_t *state, float gain_db)
 {
 #if AUADC_ANALOG_ADC_SUPPORT
+    static const float steps[] = { 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42 };
     if (state == NULL || state->auadc_dev == NULL || !state->caps->analog_capture_supported) {
         return -2;
     }
-
-    if (pga_percent < 0) {
-        pga_percent = 0;
-    } else if (pga_percent > 100) {
-        pga_percent = 100;
+    int step = audio_codec_gain_step_index(steps, 13, gain_db);
+    if (step < 0) {
+        return step;
     }
-
-    state->mic_pga_percent = pga_percent;
-    int gain_db = 6 + (((pga_percent * (42 - 6)) + 50) / 100);
-    gain_db = ((gain_db + 1) / 3) * 3;
-    if (gain_db < 6) {
-        gain_db = 6;
-    } else if (gain_db > 42) {
-        gain_db = 42;
+    int ret = bflb_auadc_feature_control(state->auadc_dev, AUADC_CMD_SET_PGA_GAIN_VAL, (size_t)steps[step]);
+    if (ret == 0) {
+        state->mic_gain_db = steps[step];
     }
-
-    return bflb_auadc_feature_control(state->auadc_dev, AUADC_CMD_SET_PGA_GAIN_VAL, (size_t)gain_db);
+    return ret;
 #else
     (void)state;
-    (void)pga_percent;
+    (void)gain_db;
     return -2;
 #endif
 }
@@ -373,7 +373,7 @@ static int audio_codec_bl_init_capture(audio_codec_bl_state_t *state, const audi
 
 #if AUADC_ANALOG_ADC_SUPPORT
     if (AUDIO_CODEC_BL_AUADC_INPUT_MODE == AUADC_INPUT_MODE_ADC) {
-        ret = audio_codec_bl_apply_mic_pga(state, state->mic_pga_percent);
+        ret = audio_codec_bl_apply_mic_gain_db(state, state->mic_gain_db);
         if (ret != 0) {
             return ret;
         }
@@ -431,8 +431,11 @@ static int audio_codec_bl_set_mute(audio_codec_dev_t *dev, bool mute)
         return -2;
     }
 
-    state->mute = mute;
-    return bflb_audac_feature_control(state->audac_dev, AUDAC_CMD_SET_MUTE, mute ? 1U : 0U);
+    int ret = bflb_audac_feature_control(state->audac_dev, AUDAC_CMD_SET_MUTE, mute ? 1U : 0U);
+    if (ret == 0) {
+        state->mute = mute;
+    }
+    return ret;
 }
 
 static int audio_codec_bl_set_volume(audio_codec_dev_t *dev, int volume_percent)
@@ -445,9 +448,72 @@ static int audio_codec_bl_set_record_volume(audio_codec_dev_t *dev, int volume_p
     return audio_codec_bl_apply_record_volume(audio_codec_bl_get_state(dev), volume_percent);
 }
 
-static int audio_codec_bl_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
+static int audio_codec_bl_set_mic_channel_volume(audio_codec_dev_t *dev, uint16_t slot_mask, int volume_percent)
 {
-    return audio_codec_bl_apply_mic_pga(audio_codec_bl_get_state(dev), pga_percent);
+    if (dev == NULL || slot_mask == 0 || volume_percent < 0 || volume_percent > 100) {
+        return -1;
+    }
+    /* The built-in capture endpoint exposes one PCM channel, in slot 0. */
+    if (slot_mask != 0x01) {
+        return -2;
+    }
+
+    return audio_codec_bl_set_record_volume(dev, volume_percent);
+}
+
+static int audio_codec_bl_set_mic_channel_gain_db(audio_codec_dev_t *dev, uint16_t mask, float gain_db)
+{
+    return mask == 0x01 ? audio_codec_bl_apply_mic_gain_db(audio_codec_bl_get_state(dev), gain_db) : -2;
+}
+
+static int audio_codec_bl_get_mic_channel_caps(audio_codec_dev_t *dev, uint8_t slot, audio_codec_channel_caps_t *caps)
+{
+    audio_codec_bl_state_t *state = audio_codec_bl_get_state(dev);
+    static const float steps[] = { 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42 };
+    if (state == NULL || !state->caps->capture_supported || slot != 0) {
+        return -2;
+    }
+    *caps = (audio_codec_channel_caps_t){
+        .controls = AUDIO_CODEC_CONTROL_VOLUME,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME,
+        .linked_mask = 0x01,
+    };
+#if AUADC_ANALOG_ADC_SUPPORT
+    if (state->caps->analog_capture_supported && AUDIO_CODEC_BL_AUADC_INPUT_MODE == AUADC_INPUT_MODE_ADC) {
+        caps->controls |= AUDIO_CODEC_CONTROL_GAIN_DB;
+        caps->independent_controls |= AUDIO_CODEC_CONTROL_GAIN_DB;
+        caps->gain_steps_db = steps;
+        caps->gain_step_count = 13;
+    }
+#else
+    (void)steps;
+#endif
+    return 0;
+}
+
+static int audio_codec_bl_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                   audio_codec_channel_caps_t *caps)
+{
+    audio_codec_bl_state_t *state = audio_codec_bl_get_state(dev);
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .linked_mask = 0x01,
+    };
+    if (state == NULL || !state->caps->playback_supported) {
+        return -2;
+    }
+    return audio_codec_native_caps(0x01, slot, &native, caps);
+}
+
+static int audio_codec_bl_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x01 ? audio_codec_bl_set_volume(dev, value) : -2;
+}
+
+static int audio_codec_bl_set_speaker_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x01 ? audio_codec_bl_set_mute(dev, value) : -2;
 }
 
 static int audio_codec_bl_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_rate_hz)
@@ -471,14 +537,16 @@ const audio_codec_driver_t audio_codec_bl_driver = {
     .i2c_addrs = NULL,
     .probe = NULL,
     .init = audio_codec_bl_init,
-    .set_mute = audio_codec_bl_set_mute,
-    .set_volume = audio_codec_bl_set_volume,
-    .set_record_volume = audio_codec_bl_set_record_volume,
-    .set_mic_pga = audio_codec_bl_set_mic_pga,
     .set_sample_rate = audio_codec_bl_set_sample_rate,
     .calc_mclk_hz = audio_codec_bl_calc_mclk_hz,
     .type = AUDIO_CODEC_TYPE_BL,
     .i2c_addrs_num = 0,
+    .get_mic_channel_caps = audio_codec_bl_get_mic_channel_caps,
+    .get_speaker_channel_caps = audio_codec_bl_get_speaker_channel_caps,
+    .set_speaker_channel_volume = audio_codec_bl_set_speaker_channel_volume,
+    .set_speaker_channel_mute = audio_codec_bl_set_speaker_channel_mute,
+    .set_mic_channel_gain_db = audio_codec_bl_set_mic_channel_gain_db,
+    .set_mic_channel_volume = audio_codec_bl_set_mic_channel_volume,
 };
 
 int audio_codec_bl_open(audio_codec_dev_t *out_dev, const audio_codec_bl_hw_cfg_t *cfg)
@@ -512,7 +580,7 @@ int audio_codec_bl_open(audio_codec_dev_t *out_dev, const audio_codec_bl_hw_cfg_
     state->cfg.mic_input_mode = AUDIO_CODEC_MIC_INPUT_DIFF;
     state->volume_percent = 50;
     state->record_volume_percent = 50;
-    state->mic_pga_percent = 50;
+    state->mic_gain_db = 24.0f;
     state->mute = false;
 
     out_dev->name = g_audio_codec_bl_caps.chip_name;

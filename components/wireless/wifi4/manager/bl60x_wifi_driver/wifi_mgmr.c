@@ -1609,7 +1609,7 @@ void wifi_mgmr_start(void)
     /*register filter for call in event loop*/
     platform_register_event(EV_WIFI, event_cb_wifi_event_mgmr, NULL);
     /*Noitfy mgmr is ready*/
-    platform_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
+    platform_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE_SYS, 0);
 
     /*TODO: use another way based on event sys?*/
     platform_sys_capcode_update(255, 255);
@@ -1652,22 +1652,48 @@ static void _wifi_mgmr_entry(void *pvParameters)
     wifi_mgmr_start();
 }
 
-void wifi_mgmr_start_background(wifi_conf_t *conf)
+static void _wifi_mgmr_start_background(wifi_conf_t *conf)
 {
     wifi_conf_t *conf_dup = bflb_os_zalloc(sizeof(wifi_conf_t));
     memcpy(conf_dup, conf, sizeof(wifi_conf_t));
     bflb_os_task_create("wifi_mgmr", _wifi_mgmr_entry, 1024 * 3, conf_dup, mgmr_TASK_PRIORITY, NULL);
 }
 
-int wifi_mgmr_init(wifi_conf_t *conf)
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void wifi_mgmr_start_background(wifi_conf_t *conf)
 {
-    wifi_mgmr_start_background(conf);
+    (void)conf;
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+}
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+static int _wifi_mgmr_init(wifi_conf_t *conf)
+{
+    _wifi_mgmr_start_background(conf);
     return 0;
 }
 
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int wifi_mgmr_init(wifi_conf_t *conf)
+{
+    (void)conf;
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+    return 0;
+}
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+__attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")))
 int wifi_mgmr_task_start(void)
 {
-    return wifi_mgmr_init(&conf);
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+    return 0;
+}
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+int _wifi_mgmr_task_start(void)
+{
+    return _wifi_mgmr_init(&conf);
 }
 
 int wifi_mgmr_internel_init(void)
@@ -1861,7 +1887,11 @@ int wifi_mgmr_api_fw_powersaving_get(void)
     return bl_main_powersaving_get();
 }
 
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+__attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")))
 int fhost_init(void)
 {
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
     return 0;
 }
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */

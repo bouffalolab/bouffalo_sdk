@@ -19,10 +19,26 @@ CONFIG_POSIX=y
 默认构建所有测试，也可以选择单个测试源文件：
 
 ```bash
-make CHIP=bl616 BOARD=bl616dk TARGET=10_cpp_mutex
+make CHIP=bl616 BOARD=bl616dk TARGET=11_cpp_condvar
 ```
 
-烧录后运行 `posix_test` 执行已编入的测试，或用 `posix_test_single cpp_mutex` 选择测试组。
+烧录后运行 `posix_test` 执行已编入的测试，或用 `posix_test_single cpp_condvar` 选择测试组。
+
+C++ 测试组说明：
+
+| 测试组 | 测试内容 |
+|--------|----------|
+| `cpp_mutex` | `std::mutex` 编译/链接，以及 FreeRTOS 任务竞争 |
+| `cpp_condvar` | `std::condition_variable` 的 `wait`/`notify_one`/`notify_all`、`wait_for` 超时，以及 libstdc++ 对条件变量的延迟初始化路径 |
+
+pthread key 使用 FreeRTOS 的 task-local storage pointers（与 `__thread`/`errno` 的 picolibc TLS
+是两套独立机制），本示例的 `FreeRTOSConfig.h` 已配置：
+
+```c
+/* TLS index 0 保留给 lwIP FreeRTOS port，pthread key 使用 1..7 */
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 8
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
+```
 
 
 ## 头文件

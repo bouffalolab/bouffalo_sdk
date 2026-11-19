@@ -21,17 +21,8 @@ void board_dvp_gpio_init(void);
 void board_i2s_gpio_init(void);
 void board_timer_gpio_init(void);
 
-#if defined(CONFIG_BSP_LCD)
-void board_lcd_dbi_type_c_4_wire_gpio_init(void);
-void board_lcd_dbi_type_c_3_wire_gpio_init(void);
-void board_lcd_dbi_type_b_gpio_init(void);
-void board_lcd_dbi_ex_qspi_gpio_init(void);
-
-void board_lcd_spi_0_hard_4_gpio_init(void);
-#if defined(GPIO_FUNC_SPI1)
-void board_lcd_spi_1_hard_4_gpio_init(void);
-#endif
-
+#if defined(CONFIG_BSP_DISPLAY)
+#include "default/display_default_gpio_ext.h"
 #endif
 
 #define BOARD_USB_VIA_GPIO

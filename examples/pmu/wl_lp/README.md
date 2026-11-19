@@ -10,7 +10,7 @@ CONFIG_PSRAM_RETENTION =y
 
 此选项替代原来的 `CONFIG_TICKLESS_PDS1`，表示 tickless 休眠时保持 PSRAM 供电，仅 BL616 生效。当前工作配置保留开启状态；设为 `n` 或删除该配置即可使用默认 PDS15 路径。其他芯片忽略此选项，保持默认休眠路径。该选项不负责启用或初始化 PSRAM，应用仍需按板级配置使用 PSRAM。
 
-BL616 APP 将 PDS1/PDS15 级别通过 `iot2lp_para.pds_level` 传给 LPFW；两种模式共用同一份 LPFW，无需分别编译。先在 `examples/pmu/bl616_lp_fw` 中运行 `bash auto_release`，再编译 APP。详细构建及镜像选择见 [BL616 LPFW 说明](../bl616_lp_fw/README.md)。切换保活配置只需重新编译 APP，不需切换 LPFW 镜像；首次迁移必须同时更新 APP 和统一 LPFW。
+BL616 APP 将 PDS1/PDS15 级别通过 `iot2lp_para.pds_level` 传给 LPFW；两种模式共用同一份 LPFW，无需分别编译。先在 `examples/pmu/lp_fw/bl616` 中运行 `bash auto_release`，再编译 APP。详细构建及镜像选择见 [BL616 LPFW 说明](../lp_fw/bl616/README.md)。切换保活配置只需重新编译 APP，不需切换 LPFW 镜像；首次迁移必须同时更新 APP 和统一 LPFW。
 
 PDS1 返回 APP 改为实验性的 CPU-only reset 路径，不再经过最终 PDS15 短睡眠跳板；复用 LPFW 的 XIP 和 APP 上下文恢复入口。需重新构建并打包新版 LPFW，单独重编 APP 不会更新已有 LPFW 二进制。默认 PDS15 模式不变。本次修改不替代上板验证：除定时、GPIO、Wi-Fi 唤醒和 PSRAM 内容外，还要验证唤醒后的实际 Wi-Fi 收发及连续多轮休眠，不能直接套用下文 PDS15 的功耗数据。
 

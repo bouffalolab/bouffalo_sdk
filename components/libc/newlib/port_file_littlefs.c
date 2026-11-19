@@ -962,13 +962,8 @@ int lfs_port_full_init(lfs_t *lfs, struct lfs_port_context *ctx,
         return -1;
     }
 
-#if CONFIG_LFS_USE_MTD
-    /* Initialize MTD */
-    bflb_mtd_init();
-#else
-    /* Initialize boot2 partition table */
-    bflb_boot2_init();
-#endif
+    /* Partition-table startup is owned by the SYSINIT boot2 record; ordinary
+     * applications must keep CONFIG_SYSINIT enabled. */
 
     /* Set partition name */
     ctx->partition_name = partition_name ? partition_name : LFS_DEFAULT_PARTITION_NAME;

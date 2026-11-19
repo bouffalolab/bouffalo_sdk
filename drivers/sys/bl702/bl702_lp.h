@@ -292,7 +292,9 @@ void lp_hook_pre_sleep(iot2lp_para_t *) __attribute__((weak));
 void lp_hook_post_sys(iot2lp_para_t *) __attribute__((weak));
 void lp_hook_post_user(iot2lp_para_t *) __attribute__((weak));
 
-int bl_lp_init(void);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+int bl_lp_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 int bl_lp_sys_callback_register(bl_lp_cb_t enter_callback, void *enter_arg, bl_lp_cb_t exit_callback, void *exit_arg);
 int bl_lp_user_callback_register(bl_lp_cb_t enter_callback, void *enter_arg, bl_lp_cb_t exit_callback, void *exit_arg);
 

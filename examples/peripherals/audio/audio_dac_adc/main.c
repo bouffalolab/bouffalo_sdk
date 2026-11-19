@@ -107,10 +107,10 @@ int main(void)
         printf("[ERROR] wave_player_init failed\r\n");
         while (1) {}
     }
-    if (wave_player_set_volume(85) != 0) {
+    if (wave_player_set_speaker_volume(85) != 0) {
         printf("[WARN] set default audio volume failed\r\n");
     }
-    if (wave_player_set_record_volume(100) != 0) {
+    if (wave_player_set_mic_volume(100) != 0) {
         printf("[WARN] set default record volume failed\r\n");
     }
 

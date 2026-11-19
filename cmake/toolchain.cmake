@@ -49,7 +49,8 @@ foreach(language C CXX)
            " -Wno-error=stringop-overread"
            " -Wno-error=stringop-truncation"
            " -Wno-error=format-overflow"
-           " -Wno-error=format-truncation")
+           " -Wno-error=format-truncation"
+           " -Wno-error=deprecated-declarations")
 endforeach()
 
 # Fixed ISA/ABI pairs for the Bouffalo toolchain. No multilib probing: the

@@ -18,6 +18,9 @@
 #include "tzc_sec_reg.h"
 #include "bl616_l1c.h"
 #include "bl616_clock.h"
+
+/* Real rc32k auto-cal reset; the compatibility entry is separate. */
+void _pm_rc32k_auto_cal_init(void);
 #include "bl616_xip_recovery.h"
 
 #if (0 && !defined(BL_WIFI_LP_FW))

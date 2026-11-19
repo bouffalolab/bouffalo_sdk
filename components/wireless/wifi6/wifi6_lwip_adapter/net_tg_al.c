@@ -648,6 +648,7 @@ static struct udp_pcb *net_tg_init(struct fhost_tg_stream *stream, udp_recv_fn r
 
     if (net_tg_pcb_config(pcb, stream))
     {
+        udp_remove(pcb);
         UNLOCK_TCPIP_CORE();
         return NULL;
     }
@@ -673,6 +674,8 @@ int net_tg_send_transc(struct fhost_tg_stream *stream)
     int duration;
     // current duration of TG sending process
     int duration_cur = 0;
+    int status = 0;
+    bool maxcnt_enabled = fhost_tg_maxcnt_enabled(stream);
 
     if (pack_len > NET_MAX_UDP_LEN)
         pack_len = NET_MAX_UDP_LEN;
@@ -695,7 +698,9 @@ int net_tg_send_transc(struct fhost_tg_stream *stream)
     stream->stats.rt_time = 2000;
 
     get_time_SINCE_EPOCH(&init.sec, &init.usec);
-    while (stream->active && duration_cur < duration)
+    while (stream->active && (maxcnt_enabled ?
+           (stream->stats.tx_frames < stream->prof.maxcnt) :
+           (duration_cur < duration)))
     {
         h = pbuf_alloc(PBUF_TRANSPORT, NET_TG_HEADER_SIZE, PBUF_RAM);
         if (h == NULL)
@@ -739,7 +744,8 @@ int net_tg_send_transc(struct fhost_tg_stream *stream)
         else
         {
             TRACE_APP(ERR, "[TG] Failed to send data packet");
-            return 1;
+            status = 1;
+            break;
         }
 
         if (rtos_semaphore_wait(stream->net_tg_semaphore, 20))
@@ -754,7 +760,7 @@ int net_tg_send_transc(struct fhost_tg_stream *stream)
     udp_remove(pcb);
     UNLOCK_TCPIP_CORE();
 
-    return 0;
+    return status;
 }
 
 int net_tg_send(struct fhost_tg_stream *stream)
@@ -803,6 +809,7 @@ int net_tg_send(struct fhost_tg_stream *stream)
             &sleep_time, &throttled_rate);
 
     get_time_SINCE_EPOCH(&init.sec, &init.usec);
+    actual = init;
 
     while (stream->active && duration_cur < duration)
     {
@@ -818,7 +825,8 @@ int net_tg_send(struct fhost_tg_stream *stream)
             {
                 TRACE_APP(ERR, "[TG] no more TX buffer");
                 rtos_mutex_unlock(stream->tg_mutex);
-                return 1;
+                status = 1;
+                break;
             }
             // Set the pbuf custom flag on
             h = pbuf_alloced_custom(PBUF_TRANSPORT, NET_TG_HEADER_SIZE, PBUF_RAM,
@@ -835,7 +843,8 @@ int net_tg_send(struct fhost_tg_stream *stream)
         } // We have to wait at least one free token if all are used
         else
         {
-            rtos_semaphore_wait(stream->net_tg_semaphore, -1);
+            /* A stop must wake this wait; do not leave TG stop blocked forever. */
+            rtos_semaphore_wait(stream->net_tg_semaphore, 100);
             continue;
         }
 
@@ -913,7 +922,7 @@ int net_tg_send(struct fhost_tg_stream *stream)
     // Wait until all of pbuf are freed
     while (stream->credits < FHOST_TG_SEND_BUF_CNT)
     {
-        rtos_semaphore_wait(stream->net_tg_semaphore, -1);
+        rtos_semaphore_wait(stream->net_tg_semaphore, 100);
     }
 
     stream->stats.throughput = net_cal_throughput(&init, &actual,

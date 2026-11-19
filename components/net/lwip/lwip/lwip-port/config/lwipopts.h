@@ -17,13 +17,32 @@
 #define ARP_QUEUEING            0
 #define LWIP_NETIF_API          1
 
+#ifdef CONFIG_MDNS
 #define LWIP_MDNS_RESPONDER     1
+#else
+#define LWIP_MDNS_RESPONDER     0
+#endif
 #define LWIP_IGMP               1
 
 #define LWIP_NUM_NETIF_CLIENT_DATA      1
 
+#ifdef CONFIG_LWIP_ALTCP
 #define LWIP_ALTCP                      1
+#else
+#define LWIP_ALTCP                      0
+#endif
+#if defined(CONFIG_LWIP_ALTCP) && defined(CONFIG_MBEDTLS)
 #define LWIP_ALTCP_TLS                  1
+#define LWIP_ALTCP_TLS_MBEDTLS          1
+#else
+#define LWIP_ALTCP_TLS                  0
+#define LWIP_ALTCP_TLS_MBEDTLS          0
+#endif
+
+#ifdef CONFIG_IPV6
+#define LWIP_IPV6                       1
+#define LWIP_IPV6_DHCP6                 1
+#endif
 /**
  * NO_SYS==1: Provides VERY minimal functionality. Otherwise,
  * use lwIP facilities.
@@ -352,7 +371,11 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_MEM_MALLOC                 0
 #define LWIP_SUPPORT_CUSTOM_PBUF        1
 
+#ifdef CONFIG_WL80211
+#define PBUF_LINK_ENCAPSULATION_HLEN    360u
+#else
 #define PBUF_LINK_ENCAPSULATION_HLEN    48u
+#endif
 
 #define LWIP_RAW                        1
 
@@ -368,11 +391,11 @@ a lot of data that needs to be copied, this should be set high. */
    ---------------------------------
 */
 
+#include <stdlib.h>
+
 #if defined(__cplusplus)
-extern "C" int bl_rand(void);
 extern "C" int * __errno(void);
 #else
-extern int bl_rand(void);
 extern int * __errno(void);
 #endif
 
@@ -385,7 +408,7 @@ extern int * __errno(void);
  */
 
 #define LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS 1
-#define LWIP_RAND() ((u32_t)bl_rand())
+#define LWIP_RAND() ((u32_t)random())
 
 #ifdef LWIP_NETCONN_DUPLEX_SWITCH
 #define LWIP_NETCONN_FULLDUPLEX 1

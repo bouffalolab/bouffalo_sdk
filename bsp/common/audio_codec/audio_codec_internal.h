@@ -2,8 +2,47 @@
 #define _BSP_COMMON_AUDIO_CODEC_INTERNAL_H_
 
 #include <stdint.h>
+#include <math.h>
+#include <stddef.h>
 
+#include "audio_codec.h"
 #include "bflb_i2c.h"
+
+static inline int audio_codec_native_caps(uint16_t slots, uint8_t slot, const audio_codec_channel_caps_t *native,
+                                          audio_codec_channel_caps_t *caps)
+{
+    if (caps == NULL || slot >= AUDIO_CODEC_MAX_SLOTS) {
+        return -1;
+    }
+    if ((slots & (1U << slot)) == 0) {
+        return -2;
+    }
+    *caps = *native;
+    return 0;
+}
+
+static inline int audio_codec_gain_step_index(const float *steps, uint16_t count, float gain_db)
+{
+    if (steps == NULL || count == 0) {
+        return -2;
+    }
+    if (!isfinite(gain_db) || gain_db < steps[0] || gain_db > steps[count - 1]) {
+        return -1;
+    }
+    uint16_t best = 0;
+    float difference = gain_db - steps[0];
+    for (uint16_t i = 1; i < count; i++) {
+        float next = gain_db - steps[i];
+        if (next < 0) {
+            next = -next;
+        }
+        if (next < difference) {
+            difference = next;
+            best = i;
+        }
+    }
+    return best;
+}
 
 static inline int audio_codec_i2c_write_reg8(struct bflb_device_s *i2c, uint8_t addr, uint8_t reg, uint8_t val)
 {

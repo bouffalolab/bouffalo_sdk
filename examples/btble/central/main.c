@@ -10,7 +10,6 @@
 #include "ble_lib_api.h"
 #else
 #include "btble_lib_api.h"
-#include "rfparam_adapter.h"
 #endif
 
 #if defined(BL616)
@@ -412,27 +411,7 @@ int main(void)
     /* ble stack need lfs_kv */
     lfs_kv_init();
 
-    /* Init rf */
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("PHY RF init failed!\r\n");
-        return 0;
-    }
-
-    #if defined(BL618DG)
-    #if defined(CONFIG_BTBLE_USE_STANDALONE_PATH)
-    printf("cmd_set_btble_standalone\r\n");
-    extern void cmd_set_btble_standalone(int argc, char **argv);
-    cmd_set_btble_standalone(0, 0);
-    if (0 != rfparam_init(0, NULL, 0)) {
-        printf("standalone PHY RF init failed!\r\n");
-        return 0;
-    }
-    #else
-    printf("cmd_set_btble_combo\r\n");
-    extern void cmd_set_btble_combo(int argc, char **argv);
-    cmd_set_btble_combo(0, 0);
-    #endif
-    #endif
+    /* RF cold start and the board BT RF path are owned by SYSINIT. */
 
     xTaskCreate(app_start_task, (char *)"app_start", 1024, NULL, configMAX_PRIORITIES - 2, &app_start_handle);
 

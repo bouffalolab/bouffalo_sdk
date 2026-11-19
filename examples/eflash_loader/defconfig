@@ -9,6 +9,12 @@ CONFIG_MULTIMEDIA_VIDEO     = n
 
 CONFIG_DEBUG                = n
 CONFIG_COREDUMP             = n
+
+# The loader is a RAM-resident JTAG image that owns its own startup (clock,
+# NP/LP halt, flash probe) and never uses the SDK heap.  Keep the default
+# board SYSINIT sequence out of the image: its heap registration needs an
+# allocator, which this build intentionally leaves out.
+CONFIG_SYSINIT              = n
 CONFIG_TLSF                 = n
 CONFIG_MEM_TLSF_EN          = n
 CONFIG_BFLB_LOG             = n

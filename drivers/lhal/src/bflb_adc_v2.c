@@ -187,6 +187,9 @@ static int32_t bflb_adc_get_internal_20mv_data(struct bflb_device_s *dev)
             while (bflb_adc_get_count(dev) == 0) {
                 if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
                     bflb_adc_stop_conversion(dev);
+                    regval = getreg32(ADC_MIX_BASE + 0x40);
+                    regval &= ~(1U << 23);
+                    putreg32(regval, ADC_MIX_BASE + 0x40);
                     return 0;
                 }
             }
@@ -197,6 +200,9 @@ static int32_t bflb_adc_get_internal_20mv_data(struct bflb_device_s *dev)
             while (bflb_adc_get_count(dev) == 0) {
                 if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
                     bflb_adc_stop_conversion(dev);
+                    regval = getreg32(ADC_MIX_BASE + 0x40);
+                    regval &= ~(1U << 23);
+                    putreg32(regval, ADC_MIX_BASE + 0x40);
                     return 0;
                 }
             }
@@ -208,6 +214,10 @@ static int32_t bflb_adc_get_internal_20mv_data(struct bflb_device_s *dev)
         raw_data = (sum + 8) / 16;
         data_20mv_final = (int32_t)(((int32_t)raw_data - offset * 2) / coe);
     }
+
+    regval = getreg32(ADC_MIX_BASE + 0x40);
+    regval &= ~(1U << 23);
+    putreg32(regval, ADC_MIX_BASE + 0x40);
     return data_20mv_final;
 }
 
@@ -1112,10 +1122,9 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].pos_chan = (buffer[i] >> 21) & 0x1F;
             result[i].neg_chan = (buffer[i] >> 16) & 0x1F;
             adc_out_raw = buffer[i] & 0xFFFF;
-            border = adc_out_raw - offset * 2;
-            adc_data = ((border < 0) ? 0 : ((border > 0xFFFF) ? 0xFFFF : border));
-            adc_data /= coe;
-            if ((adc_dth > adc_os1) && (adc_data <= (float)adc_dth)) {
+            border = (int32_t)adc_out_raw - offset * 2;
+            adc_data = border / coe;
+            if ((adc_dth > 0) && (adc_dth > adc_os1) && (adc_data <= (float)adc_dth)) {
                 adc_data = (adc_data - (float)adc_os1) * (float)adc_dth / (float)(adc_dth - adc_os1);
             }
             adc_data_final = (adc_data < 0.0f) ? 0U : ((adc_data > 65535.0f) ? 0xFFFFU : (uint32_t)adc_data);
@@ -1139,20 +1148,16 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].pos_chan = (buffer[i] >> 21) & 0x1F;
             result[i].neg_chan = (buffer[i] >> 16) & 0x1F;
 
-            if (buffer[i] & (1 << 15)) {
-                adc_out_raw = ~buffer[i];
-                adc_out_raw += 1;
-                neg = 1;
-            } else {
-                adc_out_raw = buffer[i];
-                neg = 0;
+            /* Apply signed offset before taking the magnitude. */
+            border = (int32_t)(buffer[i] & 0xFFFF);
+            if (border & 0x8000) {
+                border -= 0x10000;
             }
-
-            adc_out_raw = adc_out_raw & 0xFFFF;
-            border = adc_out_raw - offset;
-            adc_data_final = (border < 0) ? 0 : ((border > 0xFFFF) ? 0xFFFF : border);
-            adc_data_final /= coe;
-            adc_data_final = (adc_data_final > 0x7FFF) ? 0x7FFF : adc_data_final;
+            border -= offset;
+            adc_data = border / coe;
+            adc_data = (adc_data < -32768.0f) ? -32768.0f : ((adc_data > 32767.0f) ? 32767.0f : adc_data);
+            neg = (adc_data < 0.0f);
+            adc_data_final = (uint32_t)(neg ? -adc_data : adc_data);
             if (resolution == ADC_RESOLUTION_12B) {
                 result[i].value = adc_data_final >> 4;
                 result[i].millivolt = result[i].value * ref / 2048;

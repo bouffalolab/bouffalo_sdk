@@ -3,6 +3,7 @@
 #include <utils_list.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include <string.h>
 
 #include "bflb_clock.h"
 #include "bflb_uart.h"
@@ -128,7 +129,8 @@ int netbus_uart_init(netbus_uart_ctx_t *pctx, const netbus_uart_config_t *hwcfg,
     else
         return -1;
 
-    pctx->config  = hwcfg;
+    pctx->runtime_config = *hwcfg;
+    pctx->config = &pctx->runtime_config;
 	pctx->txbuf   = xStreamBufferCreate(txbuf_size, 1);
 	pctx->rxbuf   = xStreamBufferCreate(rxbuf_size, 1);
 	pctx->w_mutex = xSemaphoreCreateMutex();
@@ -148,6 +150,143 @@ int netbus_uart_init(netbus_uart_ctx_t *pctx, const netbus_uart_config_t *hwcfg,
 //    	printf("failed to create spisync task, %ld\r\n", ret);
 //	}
 	return 0;
+}
+
+static int netbus_uart_build_runtime_config( struct bflb_device_s *pdev, const netbus_uart_config_t *next, struct bflb_uart_config_s *cfg)
+{
+    uint64_t divider;
+
+    if (!pdev || !next || !cfg ||
+        next->speed < 80 || next->speed > 5000000 ||
+        next->databits < 5 || next->databits > 8 ||
+        next->stopbits < 1 || next->stopbits > 3 ||
+        next->parity > 2 || next->flow_control != 0) {
+        return -1;
+    }
+
+    divider = ((uint64_t)bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_UART, pdev->idx) * 10 / next->speed + 5) / 10;
+
+    if (divider == 0 || divider >= 0xffff) {
+        return -1;
+    }
+
+    memset(cfg, 0, sizeof(*cfg));
+    cfg->baudrate = next->speed;
+    cfg->data_bits = (uint8_t)(next->databits - 5);
+    cfg->stop_bits = next->stopbits;
+    cfg->parity = next->parity;
+    cfg->flow_ctrl = UART_FLOWCTRL_NONE;
+    cfg->tx_fifo_threshold = 7;
+    cfg->rx_fifo_threshold = 7;
+    cfg->bit_order = UART_LSB_FIRST;
+
+    return 0;
+}
+
+int netbus_uart_config_validate(const netbus_uart_config_t *config)
+{
+    struct bflb_uart_config_s hw_config;
+
+    if (!config || !config->name) {
+        return -1;
+    }
+
+    return netbus_uart_build_runtime_config(bflb_device_get_by_name(config->name), config, &hw_config);
+}
+
+int netbus_uart_get_config(netbus_uart_ctx_t *pctx, netbus_uart_config_t *config)
+{
+    if (!pctx || !pctx->config || !pctx->w_mutex || !config ||
+        xSemaphoreTake(pctx->w_mutex, pdMS_TO_TICKS(2000)) != pdTRUE) {
+        return -1;
+    }
+
+    *config = *pctx->config;
+
+    xSemaphoreGive(pctx->w_mutex);
+    return 0;
+}
+
+int netbus_uart_reconfigure(netbus_uart_ctx_t *pctx, const netbus_uart_config_t *next, const uint8_t *reply, uint32_t reply_len)
+{
+    struct bflb_uart_config_s cfg;
+    struct bflb_device_s *pdev;
+    TickType_t started;
+    int result = -1;
+
+#if defined(NETBUS_UART_DMA) && NETBUS_UART_DMA
+    /* DMA requires a separate transfer-stop and restart sequence. */
+    return -1;
+#endif
+
+    if (!pctx || !pctx->config || !pctx->config->name ||
+        !pctx->txbuf || !pctx->w_mutex ||
+        !next || !next->name || (reply_len && !reply) ||
+        strcmp(next->name, pctx->config->name) != 0) {
+        return -1;
+    }
+
+    pdev = bflb_device_get_by_name(pctx->config->name);
+
+    if (netbus_uart_build_runtime_config(pdev, next, &cfg) != 0) {
+        return -1;
+    }
+
+    if (xSemaphoreTake(pctx->w_mutex, pdMS_TO_TICKS(2000)) != pdTRUE) {
+        return -1;
+    }
+
+    /* Block other writers while the TX ISR drains the existing queue. */
+    started = xTaskGetTickCount();
+
+    while (xStreamBufferBytesAvailable(pctx->txbuf) != 0) {
+        bflb_uart_txint_mask(pdev, false);
+
+        if ((TickType_t)(xTaskGetTickCount() - started) >=
+            pdMS_TO_TICKS(2000)) {
+            goto done;
+        }
+
+        vTaskDelay(1);
+    }
+
+    if (bflb_uart_wait_tx_done(pdev) != 0) {
+        goto done;
+    }
+
+    bflb_uart_txint_mask(pdev, true);
+
+    if (reply_len) {
+        result = -2;
+
+        for (uint32_t i = 0; i < reply_len; i++) {
+            if (bflb_uart_putchar(pdev, reply[i]) != 0) {
+                goto done;
+            }
+        }
+
+        if (bflb_uart_wait_tx_done(pdev) != 0) {
+            goto done;
+        }
+    }
+
+    /* The reply has left the wire using the old settings. */
+    bflb_irq_disable(pdev->irq_num);
+
+    bflb_uart_init(pdev, &cfg);
+
+    pctx->runtime_config = *next;
+    pctx->config = &pctx->runtime_config;
+
+    bflb_uart_txint_mask(pdev, true);
+    bflb_uart_rxint_mask(pdev, false);
+    bflb_irq_enable(pdev->irq_num);
+
+    result = 0;
+
+done:
+    xSemaphoreGive(pctx->w_mutex);
+    return result;
 }
 
 int netbus_uart_recovery(void)

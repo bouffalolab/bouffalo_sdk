@@ -19,6 +19,9 @@
 #define  EV_WIFI                  0x0002
 #define  CODE_WIFI_ON_INIT_DONE   1
 #define  CODE_WIFI_ON_MGMR_DONE   2
+/* Internal readiness events, isolated from the application-facing codes. */
+#define  CODE_WIFI_ON_INIT_DONE_SYS      0x100
+#define  CODE_WIFI_ON_MGMR_DONE_SYS      0x101
 #define  CODE_WIFI_CMD_RECONNECT  3
 #define  CODE_WIFI_ON_CONNECTED   4
 #define  CODE_WIFI_ON_DISCONNECT  5
@@ -80,7 +83,7 @@ typedef enum
 
 typedef struct wifi_mgmr_sta_reconnect_policy
 {
-    wifi_mgmr_sta_reconnect_mode_t mode;  /* Reconnect mode, see wifi_mgmr_sta_reconnect_mode_t. */
+    uint8_t mode;                       /* ref @ wifi_mgmr_sta_reconnect_mode_t. */
     uint16_t auth_fail_threshold;         /* Apply fixed interval when auth_failures > threshold. */
     uint16_t fixed_interval_sec;          /* Fixed reconnect interval in seconds. */
 } wifi_mgmr_sta_reconnect_policy_t;
@@ -173,7 +176,7 @@ typedef struct wifi_mgmr_p2p_find_params
 typedef struct wifi_mgmr_p2p_connect_params
 {
     uint8_t peer_addr[WIFI_MGMR_P2P_ADDR_LEN]; /* Peer P2P device address. */
-    wifi_mgmr_p2p_method_t method;         /* WPS method. */
+    uint8_t method;                      /* WPS method, ref @ wifi_mgmr_p2p_method_t. */
     uint8_t join;                          /* Join an existing GO; mutually exclusive with auto_join and auth. */
     uint8_t auto_join;                     /* Join a GO or negotiate automatically; mutually exclusive with join and auth. */
     uint8_t auth;                          /* Authorize a later request without changing lifecycle; mutually exclusive with join and auto_join. */
@@ -219,7 +222,7 @@ typedef struct wifi_mgmr_p2p_persistent_groups
 typedef struct wifi_mgmr_p2p_prov_disc_params
 {
     uint8_t peer_addr[WIFI_MGMR_P2P_ADDR_LEN]; /* Peer P2P device address. */
-    wifi_mgmr_p2p_method_t method;         /* Provisioning config method. */
+    uint8_t method;                      /* Provisioning config method, ref @ wifi_mgmr_p2p_method_t. */
     uint8_t join;                          /* Join an existing GO; mutually exclusive with auto_join. */
     uint8_t auto_join;                     /* Find peer first; mutually exclusive with join. */
 } wifi_mgmr_p2p_prov_disc_params_t;
@@ -265,7 +268,7 @@ typedef struct wifi_mgmr_p2p_peer_info
 
 typedef struct wifi_mgmr_p2p_status
 {
-    wifi_mgmr_p2p_role_t role;
+    uint8_t role; /* ref @ wifi_mgmr_p2p_role_t. */
     uint8_t completed;
     uint16_t freq;
     char bssid[WIFI_MGMR_P2P_ADDR_STR_LEN];
@@ -290,7 +293,7 @@ typedef struct wifi_mgmr_p2p_event
 {
     wifi_mgmr_async_event_t event;        /* Same layout as struct async_input_event. */
     uint8_t vif_idx;                      /* fhost vif index, duplicated from event.value. */
-    wifi_mgmr_p2p_role_t role;
+    uint8_t role; /* ref @ wifi_mgmr_p2p_role_t. */
     uint16_t freq;
     int status;
     int persistent_id;
@@ -602,13 +605,14 @@ typedef struct wifi_mgmr_adhoc_start_params {
     void *cb_tx_cfm;
 } wifi_mgmr_adhoc_start_params_t;
 
-/// AP start parameters
+/// AP start parameters. Zero-initialize before setting optional fields.
 typedef struct wifi_mgmr_ap_params {
     /// The SSID of the AP. Must be set.
     char *ssid;
     /// If NULL and akm is not NULL, the default key is "12345678".
     char *key;
-    /// OPEN/WPA/WPA2; if NULL and key is not NULL, the default AKM is WPA2.
+    /// OPEN/WEP/WPA/WPA2/WPA3, WPA,WPA2 or WPA2,WPA3.
+    /// If NULL and key is not NULL, the default AKM is WPA2.
     char *akm;
     /// If zero, 5G selects the first AP-legal 5GHz channel in the
     /// current country-code list; 2.4GHz-only targets use channel 6.
@@ -659,6 +663,7 @@ typedef struct wifi_mgmr_ap_params {
     /// than bcn_timer seconds when bcn_mode is 0.
     int bcn_timer;
     /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames.
+    /// Disabling WMM also disables HT/VHT/HE and forces 20MHz operation.
     bool disable_wmm;
     /// Run ACS before starting the AP (20/40MHz, plus 80MHz on 5GHz).
     /// Surveys use 20MHz; type selects the AP bandwidth. Zero-initialize this structure.
@@ -669,7 +674,18 @@ typedef struct wifi_mgmr_ap_params {
     /// A connected STA takes precedence: the AP follows its channel without ACS.
     /// Starting with ACS can block for up to 60 seconds; do not call from WPA/control tasks.
     bool acs;
+    /// Bitmask of explicitly configured fields, see WIFI_MGMR_AP_FLAG_*.
+    uint32_t flag_set;
+    /// PMF: 0=disabled, 1=optional, 2=required; SAE-only requires 2.
+    uint8_t mfp;
+    /// SAE PWE mechanism; see enum fhost_sae_pwe (default is FHOST_SAE_PWE_BOTH).
+    uint8_t sae_pwe;
+    /// Transition Disable bitmap; 0 disables the indication.
+    int transition_disable;
 } wifi_mgmr_ap_params_t;
+
+#define WIFI_MGMR_AP_FLAG_MFP      (1U << 0)
+#define WIFI_MGMR_AP_FLAG_SAE_PWE  (1U << 1)
 
 /**
  * Fully hosted frame information
@@ -748,8 +764,14 @@ typedef struct wifi_mgmr_connect_ind_stat_info {
     uint8_t ch_idx;
     /// Flag indicating if the AP is supporting QoS
     bool qos;
-    /// bss mode
-    uint8_t bss_mode;
+    /// Peer AP/router PHY capability bitmap accepted by the local STA.
+    /// With the default mode, generally reflects the AP capabilities supported
+    /// locally. If the STA mode is restricted, reflects the capabilities
+    /// retained after local capability and configured-mode filtering.
+    /// This is a capability set, not the single highest association mode.
+    uint16_t bss_mode;
+    /// Association mode snapshot, or 0 when unassociated.
+    uint16_t link_mode;
 } wifi_mgmr_connect_ind_stat_info_t;
 
 typedef struct wifi_conf {
@@ -828,7 +850,7 @@ typedef struct {
     uint8_t ssid_len;
     char key[MGMR_KEY_LEN + 1];
     uint8_t key_len;
-    wifi_mgmr_wps_key_type_t key_type;
+    uint8_t key_type; /* ref @ wifi_mgmr_wps_key_type_t. */
 } wifi_mgmr_wps_credential_t;
 
 typedef void (*scan_item_cb_t)(void *env, void *arg, wifi_mgmr_scan_item_t *item);
@@ -1756,6 +1778,9 @@ int wifi_mgmr_ap_acl_set(ap_acl_type acl, ap_action_type action, char *mac_str);
  */
 char *wifi_mgmr_mode_to_str(uint32_t mode);
 
+/** Convert a single associated link mode to a protocol name, or "Unknown". */
+const char *wifi_mgmr_link_mode_to_str(uint16_t mode);
+
 /**
  * wifi_mgmr_mac_set
  * Set mac
@@ -2018,7 +2043,7 @@ int wifi_mgmr_sta_ps_enter(void);
 int wifi_mgmr_sta_ps_exit(void);
 /**
  * wifi_mgmr_sta_ps_active_time
- * set ps active time  
+ * set ps active time
  * param:
  *      ms: active time in milliseconds, valid range 10-90
  * return:
@@ -2366,6 +2391,10 @@ int fhost_rc_set_rate_sta(void *sta, const struct fhost_rc_params *params);
  * Toggle state of HT40 mode
  * Attention: configuration takes effect only
  *            before the initiation of the WiFi task.
+ * In SYSINIT builds the FHOST WIRELESS record applies the WFA project's
+ * CONFIG_WIFI6_HT40_ENABLE selection after RF bring-up and before the
+ * firmware/manager starts, so applications do not call this for startup
+ * configuration; main() already runs after the Wi-Fi task exists.
  * param:
  *  value : 1 = enable; 0 = disable
  * return:
@@ -2376,10 +2405,23 @@ int fhost_rc_set_rate_sta(void *sta, const struct fhost_rc_params *params);
 int wifi_mgmr_set_ht40_enable(uint8_t value);
 
 /**
+ * @brief Configure HE TX/RX DCM capabilities for all Wi-Fi interfaces.
+ *
+ * Call before starting the Wi-Fi task. The default value is 0. Enabling DCM
+ * preserves chip restrictions; it does not force every frame to use DCM.
+ *
+ * @param[in] value 0 disables DCM; 1 allows the chip's default capabilities.
+ * @return 0 on success, -1 for an invalid value, unavailable HE support, or
+ *         configuration after Wi-Fi initialization has started.
+ */
+int wifi_mgmr_set_dcm_enable(uint8_t value);
+
+/**
  * wifi_mgmr_set_ldpc_rx_enable
- * Toggle state of LDPC RX mode
- * Attention: configuration takes effect only
- *            before the initiation of the WiFi task.
+ * Toggle state of LDPC RX mode at runtime.
+ * Attention: this is a post-initialization runtime API, not a firmware-before
+ *            configuration. Call it only after WifiMgmr init, when the STA is
+ *            disconnected and the AP is disabled.
  * param:
  *  value : 1 = enable; 0 = disable
  * return:
@@ -2437,17 +2479,27 @@ int wifi_mgmr_get_remaining_tx(uint8_t *tx0_cnt, uint8_t *tx1_cnt, uint8_t *tx2_
  * param:
  * ap_or_sta: 1 = ap, 0 = sta
  * mode: @ref WiFi_Mode_t
+ * Must be called before starting the STA connection or AP. The caller must
+ * serialize mode changes with connect/start operations. This API only stores
+ * configuration; it does not renegotiate an existing link or rebuild the
+ * beacon of an active AP. Runtime interface state is not checked.
  */
 int wifi_mgmr_set_mode(uint8_t ap_or_sta, int mode);
 
 /**
- * wifi_mgmr_get_mode
- * param:
- * ap_or_sta: 1 = ap, 0 = sta
- * return:
- * @ref WiFi_Mode_t
- * */
+ * Get the configured PHY mode bitmap for AP (1) or STA (0).
+ * Returns the configured @ref WiFi_Mode_t value, independent of association.
+ * Use wifi_mgmr_sta_get_link_mode() to query the current STA association.
+ */
 int wifi_mgmr_get_mode(uint8_t ap_or_sta);
+
+/**
+ * Get the highest PHY mode saved from the current STA association.
+ * Returns one WIFI_MODE_802_11* bit from @ref WiFi_Mode_t, or 0 when
+ * unassociated. Priority: HE > VHT > HT > legacy A/G/B.
+ * This is the association mode, not the modulation used by each packet.
+ */
+int wifi_mgmr_sta_get_link_mode(void);
 
 /**
  * wifi_mgmr_adhoc_set_rate
@@ -2545,18 +2597,6 @@ int wifi_mgmr_adhoc_stop(void);
 #ifdef CFG_IPV6
 int wifi_sta_ipv6_enable(int enable);
 #endif
-
-/**
- * wifi_mgmr_set_mode
- * Set sta/ap mode (e.g. b/g/n/ax)
- */
-int wifi_mgmr_set_mode(uint8_t ap_or_sta, int mode);
-
-/**
- * wifi_mgmr_get_mode
- * Get sta/ap mode (e.g. b/g/n/ax)
- */
-int wifi_mgmr_get_mode(uint8_t ap_or_sta);
 
 /**
 *  @brief Get the number of valid 2.4GHz Wi-Fi channels

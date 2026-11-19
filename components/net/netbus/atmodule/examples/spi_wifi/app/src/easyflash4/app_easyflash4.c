@@ -59,10 +59,3 @@ int cmd_atef_dump(int argc, char **argv)
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_atef_dump, atef_dump, at lfs_kv dump.);
-
-void app_easyflash4_init(void)
-{
-    bflb_mtd_init();
-    lfs_kv_init();
-}
-

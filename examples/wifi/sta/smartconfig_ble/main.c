@@ -178,7 +178,21 @@ int main(void)
         LOG_I("PHY RF init failed!\r\n");
         return 0;
     }
-
+    #if defined(BL618DG)
+    #if defined(CONFIG_BTBLE_USE_STANDALONE_PATH)
+    printf("cmd_set_btble_standalone\r\n");
+    extern void cmd_set_btble_standalone(int argc, char **argv);
+    cmd_set_btble_standalone(0, 0);
+    if (0 != rfparam_init(0, NULL, 0)) {
+        printf("standalone PHY RF init failed!\r\n");
+        return 0;
+    }
+    #else
+    printf("cmd_set_btble_combo\r\n");
+    extern void cmd_set_btble_combo(int argc, char **argv);
+    cmd_set_btble_combo(0, 0);
+    #endif
+    #endif
     bflb_blesync_start();
 
     tcpip_init(NULL, NULL);

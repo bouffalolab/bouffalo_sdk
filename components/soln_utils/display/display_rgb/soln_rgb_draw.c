@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "lcd.h"
+#include "simple_font/display_simple_font.h"
 
 #include "soln_rgb_disp.h"
 #include "soln_solution.h"
@@ -133,9 +133,9 @@ void soln_nrgb888_640x480_to_nrgb8888_480x272(void *src, void *dst)
     memset(dst_buf + ((uint32_t)270 * 480), 0, (uint32_t)(2 * 480 * sizeof(uint32_t)));
 }
 
-void soln_rgb_draw_overlay(lcd_color_t *dst_buf)
+int soln_rgb_draw_overlay(uint32_t *dst_buf, uint16_t width, uint16_t height)
 {
-#if LCD_INFO_DISP_ENABLE && FONT_ASCII_16X8
+#if LCD_INFO_DISP_ENABLE
     int ret;
     char str_buff_total[128];
     uint16_t str_y;
@@ -146,17 +146,27 @@ void soln_rgb_draw_overlay(lcd_color_t *dst_buf)
         ret = strlen(str_buff_total);
     }
 
-    if ((ret + 1) * 8 < LCD_W) {
-        str_y = (LCD_H > 20) ? (LCD_H - 20) : 0;
+    if ((ret + 1) * 8 < width) {
+        str_y = (height > 20) ? (height - 20) : 0;
     } else {
-        str_y = (LCD_H > 40) ? (LCD_H - 40) : 0;
+        str_y = (height > 40) ? (height - 40) : 0;
     }
 
-    lcd_draw_str_ascii16(dst_buf, 4, str_y,
-                         LCD_COLOR_RGB(0xff, 0x80, 0x80),
-                         LCD_COLOR_RGB(0x40, 0x40, 0x40),
-                         (void *)str_buff_total, (uint8_t)ret);
+    /* The legacy renderer clipped at the right edge instead of wrapping. */
+    unsigned max_chars = width > 4u ? (width - 4u) / 8u : 0u;
+    if (max_chars < sizeof(str_buff_total)) {
+        str_buff_total[max_chars] = '\0';
+    }
+    display_simple_font_cfg_t cfg = {
+        .format = DISPLAY_FMT_XRGB8888, .width = width, .height = height,
+        .font = DISPLAY_SIMPLE_FONT_ASCII_16X8,
+        .fg_color = 0xffff8080, .bg_color = 0xff404040,
+    };
+    return display_simple_font_draw(&cfg, dst_buf, 4, str_y, str_buff_total);
 #else
     (void)dst_buf;
+    (void)width;
+    (void)height;
+    return 0;
 #endif
 }

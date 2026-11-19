@@ -12,6 +12,9 @@ extern "C" {
 #define  EV_WIFI                  0x0002
 #define  CODE_WIFI_ON_INIT_DONE   1
 #define  CODE_WIFI_ON_MGMR_DONE   2
+/* Internal readiness events, isolated from the application-facing codes. */
+#define  CODE_WIFI_ON_INIT_DONE_SYS      0x100
+#define  CODE_WIFI_ON_MGMR_DONE_SYS      0x101
 #define  CODE_WIFI_CMD_RECONNECT  3
 #define  CODE_WIFI_ON_CONNECTED   4
 #define  CODE_WIFI_ON_DISCONNECT  5
@@ -216,9 +219,15 @@ typedef struct wifi_conf {
 //FIXME implemented in wifi_mgmr.c
 int wifi_mgmr_psk_cal(char *password, char *ssid, int ssid_len, char *output);
 int wifi_mgmr_drv_init(wifi_conf_t *conf);
-int wifi_mgmr_init(wifi_conf_t *conf);
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int wifi_mgmr_init(wifi_conf_t *conf) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+/* Legacy compatibility entries; Wi-Fi startup is automatic through SYSINIT. */
+int wifi_mgmr_task_start(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+int fhost_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+void wifi_mgmr_start_background(wifi_conf_t *conf) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
 void wifi_mgmr_start(void);
-void wifi_mgmr_start_background(wifi_conf_t *conf);
 void wifi_mgmr_get_wifi_channel_conf(wifi_conf_t *wifi_chan_conf);
 
 wifi_interface_t wifi_mgmr_sta_enable(void);

@@ -44,6 +44,7 @@
 /** @defgroup ADC0_INTERNAL_CHANNEL adc channel definition
   * @{
   */
+#define ADC0_INTERNAL_CHANNEL_MAIN_BG   (0)
 #define ADC0_INTERNAL_CHANNEL_NULL      (4)
 #define ADC0_INTERNAL_CHANNEL_TSEN_P    (10)
 #define ADC0_INTERNAL_CHANNEL_TSEN_N    (11)

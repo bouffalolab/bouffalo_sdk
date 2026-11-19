@@ -28,12 +28,9 @@
 #define HB_RX_DEFAULT_PEER_IP3    1
 #define HB_RX_DEFAULT_LOCAL_PORT  9000
 #define HB_RX_DEFAULT_PEER_PORT   8800
-#define HB_RX_DEFAULT_FRAME_DEPTH 4
 
 typedef struct {
     hb_receiver_t *receiver;
-    fbq_elem_t *slots[HB_RX_DEFAULT_FRAME_DEPTH];
-    bool frame_valid[HB_RX_DEFAULT_FRAME_DEPTH];
 } hb_recv_ctx_t;
 
 static hb_recv_ctx_t s_ctx = { 0 };
@@ -66,21 +63,14 @@ static void hb_recv_record_frame(void)
 /* frame done callback */
 static void hb_recv_frame_cb(hb_recv_buf_desc_t *cb_desc)
 {
-    int idx = (int)(uintptr_t)cb_desc->user_arg;
-    if ((idx >= HB_RX_DEFAULT_FRAME_DEPTH) || (s_ctx.frame_valid[idx] == false)) {
-        LOG_E("Invalid slot index in callback: %d\r\n", idx);
-        return;
-    }
-
-    fbq_elem_t *slot = s_ctx.slots[idx];
-    s_ctx.frame_valid[idx] = false;
-    s_ctx.slots[idx] = NULL;
+    fbq_elem_t *slot = cb_desc->user_arg;
 
     if ((cb_desc->status == HB_RECV_STATUS_OK) &&
         (cb_desc->received_size > 0U) &&
         (cb_desc->received_size <= slot->capacity)) {
         slot->size = cb_desc->received_size;
         (void)fbq_push_mask(soln_fbq_vid_jpeg_remote(), slot, FBQ_OUTPUT_ALL, 0);
+        hb_recv_record_frame();
     } else {
         LOG_W("Received frame error or empty, status=%u size=%u\r\n",
               (unsigned int)cb_desc->status,
@@ -88,63 +78,52 @@ static void hb_recv_frame_cb(hb_recv_buf_desc_t *cb_desc)
     }
 
     fbq_free(slot);
-
-    hb_recv_record_frame();
 }
 
-/* Receiver loop callback */
-static void hb_recv_loop_cb(void *arg)
+/* Either the receiver task or a consumer returning a slot may submit it.
+ * FBQ allocation and the HiBooster frame queue provide the synchronization;
+ * the completion callback carries the FBQ pointer instead of a shared index. */
+int soln_hb_recv_submit_buffer(void)
 {
-    int ret, idx;
-    fbq_elem_t *slot = NULL;
+    hb_receiver_state_t state;
+    hb_recv_buf_desc_t desc = { 0 };
+    fbq_elem_t *slot;
+    int ret;
 
     if (s_ctx.receiver == NULL) {
-        return;
+        return -1;
     }
 
-    /* check state and buf */
-    if (hb_receiver_get_state(s_ctx.receiver) != HB_RECV_STATE_RECEIVING) {
-        return;
-    }
-    if (hb_recv_buf_available(s_ctx.receiver) <= 0U) {
-        return;
-    }
-
-    /* get idle slot */
-    for (idx = 0; idx < HB_RX_DEFAULT_FRAME_DEPTH; idx++) {
-        if (!s_ctx.frame_valid[idx]) {
-            s_ctx.frame_valid[idx] = true;
-            break;
-        }
-    }
-    if (idx >= HB_RX_DEFAULT_FRAME_DEPTH) {
-        return;
+    state = hb_receiver_get_state(s_ctx.receiver);
+    if ((state != HB_RECV_STATE_START && state != HB_RECV_STATE_RECEIVING) ||
+        hb_recv_buf_available(s_ctx.receiver) == 0U) {
+        return -1;
     }
 
     ret = fbq_alloc(soln_fbq_vid_jpeg_remote(), &slot, 0);
     if (ret != FBQ_OK) {
-        s_ctx.frame_valid[idx] = false;
-        return;
+        return ret;
     }
     slot->type_mask = SOLUTION_FBQ_TYPE_MASK_IMG_JPEG_HB_REC;
-    s_ctx.slots[idx] = slot;
-
-    hb_recv_buf_desc_t desc = {
-        .data = (uint8_t *)slot->data,
-        .size = slot->capacity,
-        .user_arg = (void *)(uintptr_t)idx,
-        .on_complete = hb_recv_frame_cb,
-    };
+    desc.data = slot->data;
+    desc.size = slot->capacity;
+    desc.user_arg = slot;
+    desc.on_complete = hb_recv_frame_cb;
 
     ret = hb_recv_buf_push(s_ctx.receiver, &desc);
     if (ret != 0) {
-        LOG_E("hb_recv_buf_push failed: %d\r\n", ret);
-        s_ctx.frame_valid[idx] = false;
-        s_ctx.slots[idx] = NULL;
+        /* Another caller may have filled the last entry after our check. */
         fbq_free(slot);
     }
 
-    return;
+    return ret;
+}
+
+/* Also replenish after START, receive errors and stop/start recovery. */
+static void hb_recv_loop_cb(void *arg)
+{
+    (void)arg;
+    (void)soln_hb_recv_submit_buffer();
 }
 
 /* Init receiver, local_port=0 means default port, peer_ip0~3 all 0 means default peer ip */
@@ -171,7 +150,7 @@ int soln_hb_recv_init(uint16_t local_port,
     hb_recv_config_t cfg = {
         .local_port = local_port,
         .peer_port = peer_port,
-        .frame_depth = HB_RX_DEFAULT_FRAME_DEPTH,
+        .frame_depth = CONFIG_SOLN_HB_RX_FRAME_DEPTH,
         .ack_interval_ms = CONFIG_SOLN_HB_RX_ACK_INTERVAL_MS,
         .frame_timeout_ms = 2000U,
         .task_priority = 20,

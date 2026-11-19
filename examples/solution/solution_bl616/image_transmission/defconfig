@@ -52,9 +52,30 @@ CONFIG_SOLN_HB_RX_TEST_EN            =y
 
 #################### soln_utils config end ###################
 
-# lcd display
-ifneq (,$(filter y,$(CONFIG_SOLN_DISP_DBI_EN) $(CONFIG_SOLN_DISP_RGB_EN)))
-    CONFIG_BSP_LCD =y
+# DBI display: fixed 3-byte input; YUYV uses two private 16-row YUV444 bands.
+ifeq ($(CONFIG_SOLN_DISP_DBI_EN),y)
+    CONFIG_BSP_DISPLAY =y
+    CONFIG_DISPLAY_DEFAULT =y
+    CONFIG_DISPLAY_DEFAULT_IF_DBI_B8 =y
+    CONFIG_DISPLAY_DEFAULT_FORMAT_RGB888 =y
+    CONFIG_DISPLAY_DEFAULT_CS_HARDWARE =y
+
+    CONFIG_DISPLAY_DEFAULT_MODULE_ST7796_320X480 =y
+#     CONFIG_DISPLAY_DEFAULT_MODULE_NT35510_480X800 =y
+#     CONFIG_DISPLAY_DEFAULT_WIRE_16 =y
+
+    ifeq ($(CHIP),bl616)
+        CONFIG_DISPLAY_DEFAULT_BACKLIGHT_GPIO =y
+        CONFIG_DISPLAY_DEFAULT_BACKLIGHT_PIN=17
+    endif
+endif
+
+# Optional framebuffer display; select the video panel separately.
+ifeq ($(CONFIG_SOLN_DISP_RGB_EN),y)
+    CONFIG_BSP_DISPLAY =y
+    CONFIG_DISPLAY_DEFAULT =y
+    CONFIG_DISPLAY_DEFAULT_TYPE_VIDEO =y
+    CONFIG_DISPLAY_DEFAULT_VIDEO_FORMAT_XRGB8888 =y
 endif
 
 # dvp sensor

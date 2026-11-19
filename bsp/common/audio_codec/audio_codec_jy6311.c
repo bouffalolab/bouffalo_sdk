@@ -24,11 +24,15 @@ typedef struct {
     uint8_t adc_volume_reg;
     JY6311_ADC_PGAGainETypeDef adc_pga_gain;
     bool dac_muted;
+    bool adc_muted;
+    bool transfer_failed;
     bool initialized;
 } audio_codec_jy6311_ctx_t;
 
 static struct bflb_device_s *g_jy6311_i2c_dev;
 static audio_codec_jy6311_ctx_t g_jy6311_ctx;
+
+static const float jy6311_gain_steps_db[] = { 0, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42 };
 
 static int audio_codec_jy6311_map_i2s_fmt(audio_codec_i2s_fmt_t i2s_fmt, JY6311_I2S_FmtETypeDef *out_fmt);
 static int audio_codec_jy6311_map_word_len(audio_codec_bits_t bits, JY6311_I2S_WordLenETypeDef *out_word_len);
@@ -2563,11 +2567,8 @@ unsigned char jy6311_i2c_read_byte(unsigned char i2c_addr, unsigned char reg)
     uint8_t value = 0;
     struct bflb_device_s *i2c = jy6311_get_i2c_dev();
 
-    if (i2c == NULL) {
-        return 0;
-    }
-
-    if (audio_codec_i2c_read_reg8(i2c, i2c_addr, reg, &value) != 0) {
+    if (i2c == NULL || audio_codec_i2c_read_reg8(i2c, i2c_addr, reg, &value) != 0) {
+        g_jy6311_ctx.transfer_failed = true;
         return 0;
     }
 
@@ -2578,11 +2579,11 @@ signed char jy6311_i2c_write_byte(unsigned char i2c_addr, unsigned char reg, uns
 {
     struct bflb_device_s *i2c = jy6311_get_i2c_dev();
 
-    if (i2c == NULL) {
-        return -1;
+    int result = i2c == NULL ? -1 : audio_codec_i2c_write_reg8(i2c, i2c_addr, reg, val);
+    if (result != 0) {
+        g_jy6311_ctx.transfer_failed = true;
     }
-
-    return (signed char)audio_codec_i2c_write_reg8(i2c, i2c_addr, reg, val);
+    return (signed char)result;
 }
 
 static uint8_t audio_codec_jy6311_percent_to_dig_vol(int volume_percent)
@@ -2600,31 +2601,6 @@ static uint8_t audio_codec_jy6311_percent_to_dig_vol(int volume_percent)
     return (uint8_t)(1 + (((volume_percent - 1) * 254) + 49) / 99);
 }
 
-static JY6311_ADC_PGAGainETypeDef audio_codec_jy6311_percent_to_pga(int pga_percent)
-{
-    static const JY6311_ADC_PGAGainETypeDef gain_table[] = {
-        JY6311_ADC_PGA_GAIN_0dB,  JY6311_ADC_PGA_GAIN_6dB,  JY6311_ADC_PGA_GAIN_12dB, JY6311_ADC_PGA_GAIN_18dB,
-        JY6311_ADC_PGA_GAIN_24dB, JY6311_ADC_PGA_GAIN_30dB, JY6311_ADC_PGA_GAIN_36dB, JY6311_ADC_PGA_GAIN_42dB,
-    };
-    int index;
-
-    if (pga_percent <= 0) {
-        return JY6311_ADC_PGA_GAIN_0dB;
-    }
-    if (pga_percent >= 100) {
-        return JY6311_ADC_PGA_GAIN_42dB;
-    }
-
-    index = (pga_percent * ((int)JY6311_ARRAY_SIZE(gain_table) - 1) + 50) / 100;
-    if (index < 0) {
-        index = 0;
-    }
-    if (index >= (int)JY6311_ARRAY_SIZE(gain_table)) {
-        index = (int)JY6311_ARRAY_SIZE(gain_table) - 1;
-    }
-
-    return gain_table[index];
-}
 
 static int audio_codec_jy6311_map_sample_rate(uint32_t sample_rate_hz, JY6311_UserSmpRateETypeDef *out_rate)
 {
@@ -2654,10 +2630,10 @@ static int audio_codec_jy6311_map_i2s_fmt(audio_codec_i2s_fmt_t i2s_fmt, JY6311_
     switch (i2s_fmt) {
         case AUDIO_CODEC_I2S_FMT_I2S:
             *out_fmt = JY6311_I2S_FMT_I2S;
-            return true;
+            return 0;
         case AUDIO_CODEC_I2S_FMT_LEFT_J:
             *out_fmt = JY6311_I2S_FMT_LEFT_J;
-            return true;
+            return 0;
         case AUDIO_CODEC_I2S_FMT_DSP:
             *out_fmt = JY6311_I2S_FMT_PCM_A;
             return 0;
@@ -2704,21 +2680,24 @@ static JY6311_InitModETypeDef __attribute__((unused)) audio_codec_jy6311_get_ini
     return JY6311_INIT_MOD_NONE;
 }
 
-static int __attribute__((unused)) audio_codec_jy6311_apply_runtime_state(audio_codec_dev_t *dev)
+static int __attribute__((unused)) audio_codec_jy6311_apply_runtime_state(audio_codec_dev_t *dev,
+                                                                        const audio_codec_cfg_t *cfg)
 {
-    if (dev == NULL) {
+    if (dev == NULL || dev->i2c == NULL || cfg == NULL) {
         return -1;
     }
-
-    if (g_jy6311_ctx.cfg.enable_dac) {
-        jy6311_play_vol_cfg(dev->i2c_addr, g_jy6311_ctx.dac_muted ? 0x00 : g_jy6311_ctx.dac_volume_reg);
+    if (cfg->enable_dac &&
+        audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, DAC_DVC_CTRL,
+                                  g_jy6311_ctx.dac_muted ? 0x00 : g_jy6311_ctx.dac_volume_reg) != 0) {
+        return -1;
     }
-
-    if (g_jy6311_ctx.cfg.enable_adc) {
-        __JY6311_ADC_DigVol_Set(dev->i2c_addr, g_jy6311_ctx.adc_volume_reg);
-        jy6311_record_gain_cfg(dev->i2c_addr, g_jy6311_ctx.adc_pga_gain);
+    if (cfg->enable_adc &&
+        (audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, ADC_DVC_CTRL,
+                                   g_jy6311_ctx.adc_muted ? 0x00 : g_jy6311_ctx.adc_volume_reg) != 0 ||
+         jy6311_update_bits(dev->i2c_addr, ANA_ADC_CTRL1, ADC_PGA_GAIN_Msk,
+                            (uint8_t)(g_jy6311_ctx.adc_pga_gain << ADC_PGA_GAIN_Pos)) != 0)) {
+        return -1;
     }
-
     return 0;
 }
 
@@ -2728,31 +2707,65 @@ static int audio_codec_jy6311_configure(audio_codec_dev_t *dev, const audio_code
         return -1;
     }
 
+    audio_codec_cfg_t active = *cfg;
+    if (active.work_mode == AUDIO_CODEC_WORK_MODE_RECORDING) {
+        active.enable_dac = false;
+    } else if (active.work_mode == AUDIO_CODEC_WORK_MODE_PLAYBACK) {
+        active.enable_adc = false;
+    }
+    JY6311_I2SCfgTypeDef i2s = { 0 };
+    JY6311_UserSmpRateETypeDef rate;
+    if (audio_codec_jy6311_map_i2s_fmt(active.i2s_fmt, &i2s.fmt) != 0 ||
+        audio_codec_jy6311_map_word_len(active.bits, &i2s.word_len) != 0 ||
+        audio_codec_jy6311_map_sample_rate(active.sample_rate_hz, &rate) != 0) {
+        return -2;
+    }
+    i2s.role = active.codec_master ? JY6311_I2S_ROLE_MASTER : JY6311_I2S_ROLE_SLAVE;
+    JY6311_SysclkCfgTypeDef clock = {
+        .extclk_freq = active.sample_rate_hz * (uint32_t)active.channels * (uint32_t)active.bits,
+        .extclk_src = JY6311_EXT_CLK_SRC_BCLK,
+        .play_smp_rate = active.enable_dac ? rate : JY6311_USER_SR_NONE,
+        .rec_smp_rate = active.enable_adc ? rate : JY6311_USER_SR_NONE,
+        .work_mode = JY6311_ADDA_WORK_MODE_NORMAL,
+        .i2s_lrck_period = 0,
+    };
     audio_codec_jy6311_bind_i2c(dev->i2c);
     if (dev->i2c_addr == 0U) {
         dev->i2c_addr = JY6311_I2C_ADDR_0;
     }
 
-    switch (cfg->work_mode) {
-        case AUDIO_CODEC_WORK_MODE_RECORDING:
-            jy6311_config_record(cfg);
-            break;
-        case AUDIO_CODEC_WORK_MODE_PLAYBACK:
-            jy6311_config_play(cfg);
-            break;
-        case AUDIO_CODEC_WORK_MODE_CODEC:
-        default:
-            jy6311_config_play_record(cfg);
-            break;
+    /* Vendor register macros have void/read-value APIs. Preserve transfer
+     * failures across this serialized configuration without changing them. */
+    g_jy6311_ctx.transfer_failed = false;
+    int result = jy6311_init(dev->i2c_addr, audio_codec_jy6311_get_init_mod(&active));
+    result |= jy6311_i2s_cfg(dev->i2c_addr, &i2s);
+    result |= jy6311_sysclk_cfg(dev->i2c_addr, &clock);
+    if (active.enable_dac) {
+        jy6311_play_vol_cfg(dev->i2c_addr, JY6311_DAC_DIG_VOL_0dB);
+        if (active.work_mode == AUDIO_CODEC_WORK_MODE_PLAYBACK) {
+            jy6311_dac_eq_cfg(dev->i2c_addr, true, dac_eq_filt_coef, JY6311_ARRAY_SIZE(dac_eq_filt_coef));
+            jy6311_dac_drc_cfg(dev->i2c_addr, true, dac_drc_filt_coef, JY6311_ARRAY_SIZE(dac_drc_filt_coef));
+        }
+        jy6311_play_path_cfg(dev->i2c_addr, JY6311_DAC_OUT_PATH_HEADPHONE);
+        jy6311_play_start(dev->i2c_addr);
     }
-
-    g_jy6311_ctx.cfg = *cfg;
-    if (audio_codec_jy6311_apply_runtime_state(dev) != 0) {
+    if (active.enable_adc) {
+        jy6311_record_gain_cfg(dev->i2c_addr, JY6311_ADC_PGA_GAIN_30dB);
+        if (active.work_mode == AUDIO_CODEC_WORK_MODE_RECORDING) {
+            jy6311_adc_eq_cfg(dev->i2c_addr, true, adc_eq_filt_coef, JY6311_ARRAY_SIZE(adc_eq_filt_coef));
+            jy6311_adc_drc_cfg(dev->i2c_addr, true, adc_drc_filt_coef, JY6311_ARRAY_SIZE(adc_drc_filt_coef));
+        }
+        jy6311_record_start(dev->i2c_addr);
+    }
+    if (result != JY6311_OK || g_jy6311_ctx.transfer_failed ||
+        audio_codec_jy6311_apply_runtime_state(dev, &active) != 0 || g_jy6311_ctx.transfer_failed) {
+        /* Force rate programming after a partially applied configuration. */
+        g_jy6311_ctx.cfg.sample_rate_hz = 0;
         return -1;
     }
 
+    g_jy6311_ctx.cfg = active;
     g_jy6311_ctx.initialized = 1;
-
     return 0;
 }
 
@@ -2787,6 +2800,7 @@ int audio_codec_jy6311_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg
         g_jy6311_ctx.adc_volume_reg = JY6311_DAC_DIG_VOL_0dB;
         g_jy6311_ctx.adc_pga_gain = JY6311_ADC_PGA_GAIN_0dB;
         g_jy6311_ctx.dac_muted = false;
+        g_jy6311_ctx.adc_muted = false;
     }
 
     return audio_codec_jy6311_configure(dev, cfg);
@@ -2802,13 +2816,11 @@ int audio_codec_jy6311_set_volume(audio_codec_dev_t *dev, int volume_percent)
 
     audio_codec_jy6311_bind_i2c(dev->i2c);
     volume_reg = audio_codec_jy6311_percent_to_dig_vol(volume_percent);
-    g_jy6311_ctx.dac_volume_reg = volume_reg;
-
-    if (g_jy6311_ctx.dac_muted) {
-        return 0;
+    if (audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, DAC_DVC_CTRL, g_jy6311_ctx.dac_muted ? 0x00 : volume_reg) !=
+        0) {
+        return -1;
     }
-
-    jy6311_play_vol_cfg(dev->i2c_addr, volume_reg);
+    g_jy6311_ctx.dac_volume_reg = volume_reg;
     return 0;
 }
 
@@ -2819,47 +2831,49 @@ static int audio_codec_jy6311_set_mute(audio_codec_dev_t *dev, bool mute)
     }
 
     audio_codec_jy6311_bind_i2c(dev->i2c);
+    if (audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, DAC_DVC_CTRL,
+                                  mute ? 0x00 : g_jy6311_ctx.dac_volume_reg) != 0) {
+        return -1;
+    }
     g_jy6311_ctx.dac_muted = mute;
-    jy6311_play_vol_cfg(dev->i2c_addr, mute ? 0x00 : g_jy6311_ctx.dac_volume_reg);
     return 0;
 }
 
-static int audio_codec_jy6311_set_record_volume(audio_codec_dev_t *dev, int volume_percent)
+static int audio_codec_jy6311_set_mic_channel_volume(audio_codec_dev_t *dev, uint16_t slot_mask, int volume_percent)
 {
-    uint8_t volume_reg;
+    uint8_t volume;
 
-    if (dev == NULL || dev->i2c == NULL) {
+    if (dev == NULL || dev->i2c == NULL || slot_mask == 0 || volume_percent < 0 || volume_percent > 100) {
         return -1;
     }
-
-    audio_codec_jy6311_bind_i2c(dev->i2c);
-    volume_reg = audio_codec_jy6311_percent_to_dig_vol(volume_percent);
-    g_jy6311_ctx.adc_volume_reg = volume_reg;
-    __JY6311_ADC_DigVol_Set(dev->i2c_addr, volume_reg);
-    return 0;
-}
-
-static int audio_codec_jy6311_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
-{
-    JY6311_ADC_PGAGainETypeDef pga_gain;
-
-    if (dev == NULL || dev->i2c == NULL) {
-        return -1;
+    /* The standalone converter has one ADC, in PCM slot 0. */
+    if (slot_mask != 0x01) {
+        return -2;
     }
 
-    audio_codec_jy6311_bind_i2c(dev->i2c);
-    pga_gain = audio_codec_jy6311_percent_to_pga(pga_percent);
-    g_jy6311_ctx.adc_pga_gain = pga_gain;
-    jy6311_record_gain_cfg(dev->i2c_addr, pga_gain);
+    volume = audio_codec_jy6311_percent_to_dig_vol(volume_percent);
+    if (audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, ADC_DVC_CTRL, g_jy6311_ctx.adc_muted ? 0x00 : volume) !=
+        0) {
+        return -1;
+    }
+    g_jy6311_ctx.adc_volume_reg = volume;
     return 0;
 }
 
 int audio_codec_jy6311_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_rate_hz)
 {
     audio_codec_cfg_t cfg;
+    JY6311_UserSmpRateETypeDef rate;
 
     if (dev == NULL || dev->i2c == NULL || !g_jy6311_ctx.initialized) {
         return -1;
+    }
+
+    if (audio_codec_jy6311_map_sample_rate(sample_rate_hz, &rate) != 0) {
+        return -2;
+    }
+    if (sample_rate_hz == g_jy6311_ctx.cfg.sample_rate_hz) {
+        return 0;
     }
 
     cfg = g_jy6311_ctx.cfg;
@@ -2872,17 +2886,190 @@ uint32_t audio_codec_jy6311_calc_mclk_hz(uint32_t sample_rate_hz)
     return audio_codec_jy6311_default_mclk(sample_rate_hz);
 }
 
+static int audio_codec_jy6311_set_mic_mute(audio_codec_dev_t *dev, bool mute)
+{
+    if (dev == NULL || dev->i2c == NULL) {
+        return -1;
+    }
+    if (audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, ADC_DVC_CTRL,
+                                  mute ? 0x00 : g_jy6311_ctx.adc_volume_reg) != 0) {
+        return -1;
+    }
+    g_jy6311_ctx.adc_muted = mute;
+    return 0;
+}
+
+static int audio_codec_jy6311_set_enable(audio_codec_dev_t *dev, audio_codec_work_mode_t mode, bool enable)
+{
+    int ret = 0;
+
+    if (mode != AUDIO_CODEC_WORK_MODE_PLAYBACK) {
+        ret = audio_codec_jy6311_set_mic_mute(dev, !enable);
+    }
+    if (mode != AUDIO_CODEC_WORK_MODE_RECORDING) {
+        int output_ret = audio_codec_jy6311_set_mute(dev, !enable);
+        if (ret == 0) {
+            ret = output_ret;
+        }
+    }
+    return ret;
+}
+
+static int audio_codec_jy6311_set_mic_gain(audio_codec_dev_t *dev, float gain_db)
+{
+    uint8_t old;
+    uint8_t gain;
+
+    if (dev == NULL || dev->i2c == NULL || !(gain_db >= 0.0f && gain_db <= 42.0f)) {
+        return -1;
+    }
+    int step = audio_codec_gain_step_index(jy6311_gain_steps_db, 14, gain_db);
+    if (step < 0) {
+        return step;
+    }
+    gain = step == 0 ? 0 : (uint8_t)(step + 1);
+    if (audio_codec_i2c_read_reg8(dev->i2c, dev->i2c_addr, ANA_ADC_CTRL1, &old) != 0 ||
+        audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, ANA_ADC_CTRL1,
+                                  (uint8_t)((old & ~ADC_PGA_GAIN_Msk) | (gain << ADC_PGA_GAIN_Pos))) != 0) {
+        return -1;
+    }
+    g_jy6311_ctx.adc_pga_gain = (JY6311_ADC_PGAGainETypeDef)gain;
+    return 0;
+}
+
+static int audio_codec_jy6311_set_mic_channel_gain_db(audio_codec_dev_t *dev, uint16_t channel_mask, float gain_db)
+{
+    if (channel_mask != 1U) {
+        return -2;
+    }
+    return audio_codec_jy6311_set_mic_gain(dev, gain_db);
+}
+
+static int audio_codec_jy6311_set_reg(audio_codec_dev_t *dev, int reg, int value)
+{
+    if (dev == NULL || dev->i2c == NULL || reg < 0 || reg > 0xff || value < 0 || value > 0xff) {
+        return -1;
+    }
+    return audio_codec_i2c_write_reg8(dev->i2c, dev->i2c_addr, (uint8_t)reg, (uint8_t)value) == 0 ? 0 : -1;
+}
+
+static int audio_codec_jy6311_get_reg(audio_codec_dev_t *dev, int reg, int *value)
+{
+    uint8_t val;
+
+    if (dev == NULL || dev->i2c == NULL || value == NULL || reg < 0 || reg > 0xff) {
+        return -1;
+    }
+    if (audio_codec_i2c_read_reg8(dev->i2c, dev->i2c_addr, (uint8_t)reg, &val) != 0) {
+        return -1;
+    }
+    *value = val;
+    return 0;
+}
+
+static int audio_codec_jy6311_dump_reg(audio_codec_dev_t *dev)
+{
+    size_t i;
+    int value;
+
+    for (i = 0; i < JY6311_ARRAY_SIZE(jy6311_reg_defaults); i++) {
+        if (audio_codec_jy6311_get_reg(dev, jy6311_reg_defaults[i].reg, &value) != 0) {
+            return -1;
+        }
+        printf("JY6311 reg 0x%02x: 0x%02x\n", jy6311_reg_defaults[i].reg, value);
+    }
+    return 0;
+}
+
+static int audio_codec_jy6311_clear_bits(audio_codec_dev_t *dev, uint8_t reg, uint8_t mask)
+{
+    int value;
+
+    if (audio_codec_jy6311_get_reg(dev, reg, &value) != 0) {
+        return -1;
+    }
+    return audio_codec_jy6311_set_reg(dev, reg, value & ~mask);
+}
+
+static int audio_codec_jy6311_deinit(audio_codec_dev_t *dev)
+{
+    if (dev == NULL || dev->i2c == NULL) {
+        return -1;
+    }
+    /* Mirror the vendor shutdown sequence with checked register access. */
+    if (audio_codec_jy6311_clear_bits(dev, PWR_CTRL2, POWER_MICBIAS_EN_Msk) != 0 ||
+        audio_codec_jy6311_clear_bits(dev, DAC_SMUTE, DAC_AMUTE_EN_Msk) != 0 ||
+        audio_codec_jy6311_clear_bits(dev, MODCLK_EN, ADC_MODULE_CLK_ALL_EN_Msk | DAC_MODULE_CLK_ALL_EN_Msk) != 0 ||
+        audio_codec_jy6311_clear_bits(dev, PWR_CTRL1, POWER_ALDO_EN_Msk) != 0 ||
+        audio_codec_jy6311_clear_bits(dev, I2S_CTRL, I2S_EN_Msk) != 0 ||
+        audio_codec_jy6311_clear_bits(dev, SYSCLK_CTRL, SYSCLK_EN_Msk) != 0) {
+        return -1;
+    }
+    g_jy6311_ctx.initialized = false;
+    dev->priv = NULL;
+    return 0;
+}
+
+static int audio_codec_jy6311_get_mic_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                   audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB | AUDIO_CODEC_CONTROL_MUTE,
+        .linked_mask = 0x01,
+        .gain_steps_db = jy6311_gain_steps_db,
+        .gain_step_count = 14,
+    };
+    return audio_codec_native_caps(0x01, slot, &native, caps);
+}
+
+static int audio_codec_jy6311_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                       audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .linked_mask = 0x01,
+    };
+    return audio_codec_native_caps(0x01, slot, &native, caps);
+}
+
+static int audio_codec_jy6311_set_mic_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x01 ? audio_codec_jy6311_set_mic_mute(dev, value) : -2;
+}
+
+static int audio_codec_jy6311_set_speaker_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x01 ? audio_codec_jy6311_set_mute(dev, value) : -2;
+}
+
+static int audio_codec_jy6311_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x01 ? audio_codec_jy6311_set_volume(dev, value) : -2;
+}
+
 static const uint8_t jy6311_addrs[] = { JY6311_I2C_ADDR_0, JY6311_I2C_ADDR_1 };
 
 const audio_codec_driver_t audio_codec_jy6311_driver = {
+    .set_enable = audio_codec_jy6311_set_enable,
+    .set_reg = audio_codec_jy6311_set_reg,
+    .get_reg = audio_codec_jy6311_get_reg,
+    .dump_reg = audio_codec_jy6311_dump_reg,
+    .deinit = audio_codec_jy6311_deinit,
     .name = "JY6311",
     .i2c_addrs = jy6311_addrs,
     .probe = audio_codec_jy6311_probe,
     .init = audio_codec_jy6311_init,
-    .set_mute = audio_codec_jy6311_set_mute,
-    .set_volume = audio_codec_jy6311_set_volume,
-    .set_record_volume = audio_codec_jy6311_set_record_volume,
-    .set_mic_pga = audio_codec_jy6311_set_mic_pga,
+    .get_mic_channel_caps = audio_codec_jy6311_get_mic_channel_caps,
+    .get_speaker_channel_caps = audio_codec_jy6311_get_speaker_channel_caps,
+    .set_mic_channel_mute = audio_codec_jy6311_set_mic_channel_mute,
+    .set_mic_channel_gain_db = audio_codec_jy6311_set_mic_channel_gain_db,
+    .set_speaker_channel_volume = audio_codec_jy6311_set_speaker_channel_volume,
+    .set_speaker_channel_mute = audio_codec_jy6311_set_speaker_channel_mute,
+    .set_mic_channel_volume = audio_codec_jy6311_set_mic_channel_volume,
     .set_sample_rate = audio_codec_jy6311_set_sample_rate,
     .calc_mclk_hz = audio_codec_jy6311_calc_mclk_hz,
     .type = AUDIO_CODEC_TYPE_JY6311,

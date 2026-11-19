@@ -28,46 +28,27 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "timers.h"
 
-#include "bl_fw_api.h"
-
-#include "bflb_irq.h"
 #include "bflb_uart.h"
-
-#include "rfparam_adapter.h"
 
 #include "board.h"
 #include "mm.h"
 #include "shell.h"
 
 #include "wl80211.h"
-#include "async_event.h"
 
 #include <lwip/etharp.h>
 #include <lwip/netdb.h>
 #include <lwip/netifapi.h>
 #include <lwip/sockets.h>
-#include <lwip/tcpip.h>
 /* clang-format on */
 
 #define DBG_TAG "MAIN"
 #include "log.h"
 
-/* for get mac address */
-#if defined(BL616)
-#include <bl616_mfg_media.h>
-#elif defined(BL616CL)
-#include <bl616cl_mfg_media.h>
-#endif
-
-#include "wifi_mgmr.h"
-
 #if defined(CONFIG_GCOV_DUMP)
 #include "bflb_mtd.h"
 #endif
-
-struct bflb_device_s *gpio;
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -94,44 +75,6 @@ extern int filesystem_init(void);
 /****************************************************************************
  * Functions
  ****************************************************************************/
-void wifi_start_firmware_task(void *param)
-{
-    LOG_I("Starting wifi ...\r\n");
-
-    wifi_task_create();
-
-    tcpip_init(NULL, NULL);
-
-    wl80211_init();
-
-    wifi_mgmr_init();
-
-    extern uint8_t _heap_wifi_size[];
-    printf("heap_wifi_size: %p\r\n", _heap_wifi_size);
-
-    vTaskDelete(NULL);
-}
-
-/* async event handler */
-static void async_event_handler(void *arg1, uint32_t arg2)
-{
-    vTaskSuspendAll();
-    async_event_loop();
-    xTaskResumeAll();
-}
-
-static void async_event_loop_wake(void)
-{
-    BaseType_t xReturn;
-    TickType_t wait = portMAX_DELAY;
-
-    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
-        wait = 0;
-    }
-
-    xReturn = xTimerPendFunctionCall(async_event_handler, (void *)NULL, 0, wait);
-    configASSERT(xReturn == pdPASS);
-}
 
 #if defined(CONFIG_GCOV_DUMP)
 struct gcov_info;
@@ -155,7 +98,6 @@ void register_all_gcov_info(void) {
 
 int main(void)
 {
-    board_init();
 #if defined(CONFIG_GCOV_DUMP)
     if (mm_heap_unregister(MM_HEAP_PSRAM_0) != 0) {
         LOG_E("Failed to unregister PSRAM heap\r\n");
@@ -178,20 +120,9 @@ int main(void)
     }
 #endif
 
-    if (0 != rfparam_init(0, NULL, 0)) {
-        LOG_I("PHY RF init failed!\r\n");
-        return 0;
-    }
-
-    LOG_I("PHY RF init success!\r\n");
-
-    async_event_init(async_event_loop_wake);
-
-    xTaskCreate(wifi_start_firmware_task, "wifi init", 1024, NULL, 10, NULL);
-
     vTaskStartScheduler();
-
-    while (1) {}
+    while(1) {}
+    return 0;
 }
 
 int macsw_scan_cmd(int argc, char **argv)

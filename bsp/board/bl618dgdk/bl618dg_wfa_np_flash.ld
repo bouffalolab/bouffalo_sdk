@@ -448,6 +448,8 @@ SECTIONS
         __init_array_end = .;
 
         . = ALIGN(4);
+
+        . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
         LONG(ORIGIN(ram_memory) + (__ram_nocache_noinit_end__ - ORIGIN(ram_nocache)));
         LONG(LENGTH(ram_memory) - (__ram_nocache_noinit_end__ - ORIGIN(ram_nocache)));
@@ -480,4 +482,13 @@ SECTIONS
     PROVIDE( _heap_wifi_size = ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start );
     ASSERT((ORIGIN(ram_memory) - 0x40000000 + LENGTH(ram_memory)) <= ORIGIN(ram_wifi), "ram_memory and ram_wifi physically overlap")
     ASSERT((ORIGIN(ram_wifi) + LENGTH(ram_wifi)) <= 0x210C0000, "ram_wifi exceeds BL618DG B0 WRAM")
+
+    /DISCARD/ : {
+        *(.gcc_except_table)
+        *(.gcc_except_table.*)
+        *(.eh_frame)
+        *(.eh_frame.*)
+        *(.eh_frame_hdr)
+        *(.gnu.linkonce.eh.*)
+    }
 }

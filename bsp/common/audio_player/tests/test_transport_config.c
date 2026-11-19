@@ -20,6 +20,9 @@
 #define AUDAC_INTSTS_FIFO_UNDER                   4U
 #define AUDAC_INTSTS_FIFO_OVER                    8U
 #define WAVE_PLAYER_DIAG_SET_HW_FAULT_LAST(value) ((void)(value))
+#if !defined(TEST_NO_I2S_RESET)
+#define BFLB_PERIPHERAL_I2S0                      1U
+#endif
 struct bflb_dma_channel_config_s {
     unsigned transport;
 };
@@ -81,12 +84,43 @@ static unsigned pll_calls;
 static unsigned builtin_play_starts;
 static unsigned builtin_capture_starts;
 static unsigned dma_starts;
+static unsigned capture_prepare_calls;
+static uint32_t capture_prepare_rate;
+static uint8_t capture_prepare_channels;
 static bool final_i2s_tx;
 static bool final_i2s_rx;
 static struct bflb_i2s_config_s observed_i2s;
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
+void wave_player_rec_prepare(uint32_t rate, uint8_t channels)
+{
+    assert(!g_audio.io_started && dma_starts == 0);
+    assert(g_audio.rec_path_enabled && g_audio.dma_ch_rx != NULL);
+    assert(rate == g_audio.cap_hz && channels == g_audio.cap_channels);
+    capture_prepare_rate = rate;
+    capture_prepare_channels = channels;
+    ++capture_prepare_calls;
+}
+#endif
+
+static void assert_capture_prepared(uint32_t rate, uint8_t channels)
+{
+#if defined(CONFIG_BSP_AUDIO_PCM)
+    (void)rate;
+    (void)channels;
+    assert(capture_prepare_calls == 0);
+#else
+    assert(capture_prepare_calls == 1 && capture_prepare_rate == rate && capture_prepare_channels == channels);
+#endif
+}
+
 #include "wave_player_slots_under_test.h"
 #include "wave_player_transport_helpers_under_test.h"
+
+void audio_controls_set_tx_layout(uint8_t slots, uint8_t slot_bytes)
+{
+    assert(slots == g_audio.tx_slot_count && slot_bytes == g_audio.tx_slot_word_bytes);
+}
 
 static bool wave_capture_enable_requested(void)
 {
@@ -130,10 +164,17 @@ void bflb_i2s_init(struct bflb_device_s *device, const struct bflb_i2s_config_s 
     ++i2s_calls;
 }
 
+#if defined(BFLB_PERIPHERAL_I2S0)
+static void bflb_peripheral_reset(unsigned peripheral)
+{
+    assert(peripheral == BFLB_PERIPHERAL_I2S0);
+}
+#endif
+
 int bflb_i2s_feature_control(struct bflb_device_s *device, int command, size_t argument)
 {
     assert(device == g_audio.i2s_dev && command == I2S_CMD_CHANNEL_LR_MERGE);
-    assert(argument == WAVE_PLAYER_I2S_DSP_LR_MERGE);
+    assert(argument == !WAVE_PLAYER_I2S_DSP_MODE);
     return 0;
 }
 
@@ -236,6 +277,7 @@ int audio_codec_set_sample_rate(audio_codec_dev_t *device, uint32_t rate)
     return 0;
 }
 
+
 static void bflb_dma_channel_tcint_clear(struct bflb_device_s *device)
 {
     assert(device == g_audio.dma_ch_tx || device == g_audio.dma_ch_rx);
@@ -290,6 +332,7 @@ static void reset(wave_player_backend_t playback, wave_player_backend_t capture)
 {
     memset(&g_audio, 0, sizeof(g_audio));
     i2s_calls = pll_calls = builtin_play_starts = builtin_capture_starts = dma_starts = 0;
+    capture_prepare_calls = capture_prepare_rate = capture_prepare_channels = 0;
     final_i2s_tx = final_i2s_rx = false;
     capture_requested = true;
     g_audio.playback_backend = playback;
@@ -314,18 +357,30 @@ int main(void)
     assert(i2s_calls == 0 && pll_calls == 0 && dma_starts == 2);
     assert(builtin_play_starts == 1 && builtin_capture_starts == 1 && g_audio.tx_slot_count == 1);
     assert(g_audio.tx_block_bytes == 320 * sizeof(int16_t));
+    assert_capture_prepared(16000, 1);
     reset(WAVE_PLAYER_BACKEND_I2S_CODEC, WAVE_PLAYER_BACKEND_I2S_CODEC);
-    assert(wave_player_config_internal(16000, 320 * sizeof(int16_t), 0, 1) == -EINVAL);
-    assert(!g_audio.io_started && i2s_calls == 0 && dma_starts == 0);
+    /* Storage preparation receives the resolved rate and physical RX slots. */
+    assert(wave_player_config_internal(0, 320 * sizeof(int16_t), 0, 1) == 0);
+    assert(g_audio.io_started && i2s_calls == 1 && dma_starts == 2);
+    assert(final_i2s_tx && final_i2s_rx && g_audio.tx_slot_count == 3);
+    assert(observed_i2s.channel_mode == I2S_CHANNEL_MODE_NUM_3);
+    assert_capture_prepared(16000, 3);
+    assert(wave_player_config_internal(0, 320 * sizeof(int16_t), 0, 1) == 0);
+    assert_capture_prepared(16000, 3);
+    assert(i2s_calls == 1 && dma_starts == 2);
     reset(WAVE_PLAYER_BACKEND_BL_CODEC, WAVE_PLAYER_BACKEND_I2S_CODEC);
-    assert(wave_player_config_internal(16000, 320 * sizeof(int16_t), 0, 1) == -EINVAL);
-    assert(!g_audio.io_started && i2s_calls == 0 && dma_starts == 0);
+    assert(wave_player_config_internal(16000, 320 * sizeof(int16_t), 0, 1) == 0);
+    assert(g_audio.io_started && i2s_calls == 1 && dma_starts == 2);
+    assert(!final_i2s_tx && final_i2s_rx && builtin_play_starts == 1 && builtin_capture_starts == 0);
+    assert(observed_i2s.channel_mode == I2S_CHANNEL_MODE_NUM_3);
+    reset(WAVE_PLAYER_BACKEND_BL_CODEC, WAVE_PLAYER_BACKEND_I2S_CODEC);
     capture_requested = false;
     /* An inactive external capture codec cannot impose a DSP geometry on the
      * builtin DAC, including when its codec type requires a four-slot bus. */
     g_audio.cap_codec.type = AUDIO_CODEC_TYPE_JY6316;
     assert(wave_player_config_internal(16000, 320 * sizeof(int16_t), 0, 1) == 0);
     assert(i2s_calls == 0 && builtin_play_starts == 1 && builtin_capture_starts == 0);
+    assert(capture_prepare_calls == 0);
     reset(WAVE_PLAYER_BACKEND_I2S_CODEC, WAVE_PLAYER_BACKEND_I2S_CODEC);
     capture_requested = false;
     g_audio.play_codec.type = AUDIO_CODEC_TYPE_JY6316;
@@ -333,6 +388,7 @@ int main(void)
     assert(i2s_calls == 1 && pll_calls == 1 && dma_starts == 1);
     assert(final_i2s_tx && !final_i2s_rx && builtin_play_starts == 0 && builtin_capture_starts == 0);
     assert(observed_i2s.channel_mode == I2S_CHANNEL_MODE_NUM_4 && g_audio.tx_slot_count == 4);
-    puts("Production config: builtin mono bypasses board DSP merge; active odd I2S slots remain rejected");
+    assert(capture_prepare_calls == 0);
+    puts("Production config: builtin mono stays independent; DSP supports odd slots without LR merge");
     return 0;
 }

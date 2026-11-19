@@ -435,6 +435,9 @@ static int es8311_config_fmt(struct bflb_device_s *i2c, uint8_t addr, es8311_for
 
 static int es8311_set_bits_per_sample(struct bflb_device_s *i2c, uint8_t addr, es8311_bits_t bits)
 {
+    if (bits == ES8311_BIT_LENGTH_24BITS) {
+        return -2;
+    }
     int ret = 0;
     uint8_t adc_iface = 0, dac_iface = 0;
     ret |= es8311_read_reg(i2c, addr, ES8311_SDPIN_REG09, &dac_iface);
@@ -452,7 +455,6 @@ static int es8311_set_bits_per_sample(struct bflb_device_s *i2c, uint8_t addr, e
             dac_iface |= 0x10;
             adc_iface |= 0x10;
             break;
-        case ES8311_BIT_LENGTH_24BITS:
         default:
             dac_iface |= 0x0C;
             adc_iface |= 0x0C;
@@ -560,6 +562,7 @@ static es8311_bits_t map_bits(audio_codec_bits_t bits)
         case AUDIO_CODEC_BITS_16: return ES8311_BIT_LENGTH_16BITS;
         case AUDIO_CODEC_BITS_32: return ES8311_BIT_LENGTH_32BITS;
         case AUDIO_CODEC_BITS_24:
+            return ES8311_BIT_LENGTH_24BITS;
         default: return ES8311_BIT_LENGTH_16BITS;
     }
 }
@@ -568,6 +571,10 @@ int audio_codec_es8311_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg
 {
     if (dev == NULL || dev->i2c == NULL || cfg == NULL) {
         return -1;
+    }
+    /* The native 24-bit path is not implemented; never program it as PCM16. */
+    if (cfg->bits == AUDIO_CODEC_BITS_24) {
+        return -2;
     }
 
     es8311_i2s_cfg_t i2s_cfg = {
@@ -582,7 +589,7 @@ int audio_codec_es8311_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg
         return ret;
     }
 
-    /* PGA is configured explicitly via audio_codec_set_mic_pga() after init. */
+    /* PGA is configured explicitly via audio_codec_set_mic_channel_gain_db() after init. */
 
     es_module_t module = ES_MODULE_DAC;
     if (cfg->enable_adc && cfg->enable_dac) {
@@ -713,22 +720,6 @@ static int audio_codec_es8311_set_record_volume(audio_codec_dev_t *dev, int volu
     return es8311_write_reg(dev->i2c, dev->i2c_addr, ES8311_ADC_REG17, vol);
 }
 
-static int audio_codec_es8311_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
-{
-    if (dev == NULL || dev->i2c == NULL) {
-        return -1;
-    }
-
-    if (pga_percent < 0) {
-        pga_percent = 0;
-    } else if (pga_percent > 100) {
-        pga_percent = 100;
-    }
-
-    /* ES8311 PGAGAIN supports 0..10 steps (0dB..30dB, 3dB/step). */
-    uint8_t step = (uint8_t)((pga_percent * 10 + 50) / 100);
-    return es8311_set_pga_gain(dev->i2c, dev->i2c_addr, step);
-}
 
 static int audio_codec_es8311_set_mute(audio_codec_dev_t *dev, bool mute)
 {
@@ -772,19 +763,77 @@ uint32_t audio_codec_es8311_calc_mclk_hz(uint32_t sample_rate_hz)
     return sample_rate_hz * 256U;
 }
 
+static const float es8311_gain_steps_db[] = { 0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30 };
+
+static int audio_codec_es8311_get_mic_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                   audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB,
+        .linked_mask = 0x01,
+        .gain_steps_db = es8311_gain_steps_db,
+        .gain_step_count = 11,
+    };
+    return audio_codec_native_caps(0x01, slot, &native, caps);
+}
+
+static int audio_codec_es8311_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                       audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .linked_mask = 0x01,
+    };
+    return audio_codec_native_caps(0x01, slot, &native, caps);
+}
+
+static int audio_codec_es8311_set_mic_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x01 ? audio_codec_es8311_set_record_volume(dev, value) : -2;
+}
+
+static int audio_codec_es8311_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x01 ? audio_codec_es8311_set_volume(dev, value) : -2;
+}
+
+static int audio_codec_es8311_set_speaker_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x01 ? audio_codec_es8311_set_mute(dev, value) : -2;
+}
+
+static int audio_codec_es8311_set_mic_channel_gain_db(audio_codec_dev_t *dev, uint16_t mask, float gain_db)
+{
+    int step = audio_codec_gain_step_index(es8311_gain_steps_db, 11, gain_db);
+    if (dev == NULL || dev->i2c == NULL || step < 0) {
+        return -1;
+    }
+    if (mask != 0x01) {
+        return -2;
+    }
+    return es8311_set_pga_gain(dev->i2c, dev->i2c_addr, (uint8_t)step);
+}
+
 static const uint8_t es8311_addrs[] = { 0x18, 0x19 };
 
 const audio_codec_driver_t audio_codec_es8311_driver = {
+    .get_mic_channel_caps = audio_codec_es8311_get_mic_channel_caps,
+    .get_speaker_channel_caps = audio_codec_es8311_get_speaker_channel_caps,
+    .set_mic_channel_volume = audio_codec_es8311_set_mic_channel_volume,
+    .set_mic_channel_gain_db = audio_codec_es8311_set_mic_channel_gain_db,
+    .set_speaker_channel_volume = audio_codec_es8311_set_speaker_channel_volume,
+    .set_speaker_channel_mute = audio_codec_es8311_set_speaker_channel_mute,
+
     .type = AUDIO_CODEC_TYPE_ES8311,
     .name = "ES8311",
     .i2c_addrs = es8311_addrs,
     .i2c_addrs_num = sizeof(es8311_addrs) / sizeof(es8311_addrs[0]),
     .probe = audio_codec_es8311_probe,
     .init = audio_codec_es8311_init,
-    .set_mute = audio_codec_es8311_set_mute,
-    .set_volume = audio_codec_es8311_set_volume,
-    .set_record_volume = audio_codec_es8311_set_record_volume,
-    .set_mic_pga = audio_codec_es8311_set_mic_pga,
     .set_sample_rate = audio_codec_es8311_set_sample_rate,
     .calc_mclk_hz = audio_codec_es8311_calc_mclk_hz,
 };

@@ -35,6 +35,14 @@ config STRICT
       -Wall is always enabled; this option additionally makes
       any warning a hard build failure.
 
+config COMPAT_V2
+    bool "Keep Bouffalo SDK v2 compatibility entries"
+    default y
+    help
+      Keep the compatibility entry points, deprecated wrappers and legacy
+      application-facing events that will be removed in Bouffalo SDK v3.
+      Disable this option when the SDK version is bumped to v3.
+
 config GCC_OPTIMISE_LEVEL
     string "Optimization level"
     default "-Os"
@@ -117,7 +125,7 @@ config COMX
 
 config FLASH_AUTO_2LINE_FALLBACK
     bool "Retry flash initialization in two-line mode"
-    default n
+    default y
     help
       Validate the configured quad read mode first. If validation fails,
       retry initialization in DIO or DO mode according to c_read_support.

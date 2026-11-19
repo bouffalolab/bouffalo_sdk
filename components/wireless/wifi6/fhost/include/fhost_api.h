@@ -258,6 +258,12 @@ enum fhost_config_id
      * - data: 32bits bitfield (Bit0 = VO, Bit1 = VI, Bit2 = BK, Bit3 = BE)
      */
     FHOST_CFG_UAPSD_QUEUES,
+    /**
+     * - use: Configure advertisement of HE TX/RX DCM support.
+     * - len: 1
+     * - data: 8bits boolean. 0=disable, 1=allow chip defaults.
+     */
+    FHOST_CFG_DCM,
     FHOST_CFG_MAX,
 };
 
@@ -536,6 +542,23 @@ struct fhost_vif_sta_cfg
 };
 
 
+/** SAE PWE mechanism selected for an AP. Values match wpa_supplicant. */
+enum fhost_sae_pwe {
+    FHOST_SAE_PWE_HNP = 0,
+    FHOST_SAE_PWE_H2E = 1,
+    FHOST_SAE_PWE_BOTH = 2,
+};
+
+/** Security protocol(s) advertised by an AP. */
+enum fhost_ap_proto
+{
+    /** Derive the protocol from AKM, preserving the legacy behaviour. */
+    FHOST_AP_PROTO_AUTO = 0,
+    FHOST_AP_PROTO_WPA,
+    FHOST_AP_PROTO_RSN,
+    FHOST_AP_PROTO_WPA_RSN,
+};
+
 /**
  * AP mode
  */
@@ -593,12 +616,15 @@ struct fhost_vif_ap_cfg
      * Supported combination are:\n
      * - MAC_AKM_NONE : for open security
      * - MAC_AKM_PRE_RSN : for WEP security (deprecated)
-     * - MAC_AKM_PRE_RSN | MAC_AKM_PSK : For WPA1 security (deprecated)
+     * - MAC_AKM_PRE_RSN | MAC_AKM_PSK : For WPA1 security; use
+     *   FHOST_AP_PROTO_WPA_RSN for WPA/WPA2 mixed mode
      * - MAC_AKM_PSK : For WPA2 security
      * - MAC_AKM_SAE : For WPA3 security
      * - MAC_AKM_PSK | MAC_AKM_SAE : For WPA2/WPA3 security
      */
     uint32_t akm;
+    /** AP protocol (@ref fhost_ap_proto); zero derives it from AKM. */
+    uint8_t proto;
     /**
      * AP password/PSK passed as a string (i.e. MUST be terminated by a null byte)
      */
@@ -609,6 +635,7 @@ struct fhost_vif_ap_cfg
      * ciphers are silently ignored (unless they are all unsupported).
      * Can be left to 0 to use default one (depending of AKM selected):\n
      * - WPA1: TKIP
+     * - WPA/WPA2 mixed mode: TKIP + CCMP
      * - WPA2/WPA3: CCMP
      */
     uint32_t unicast_cipher;
@@ -625,6 +652,10 @@ struct fhost_vif_ap_cfg
      * (Ignored if not supported by selected AKM)
      */
     int mfp;
+    /** Transition Disable indication bitmap, 0=disabled. */
+    int transition_disable;
+    /** SAE PWE mechanism; see enum fhost_sae_pwe. */
+    uint8_t sae_pwe;
     /**
      * Country code for Country IE (e.g. "US"). Empty string = not set.
      */
@@ -671,6 +702,7 @@ struct fhost_vif_ap_cfg
     int bcn_timer;
 
     /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames
+    /// In AP mode, also disable HT/VHT/HE and use a 20MHz channel.
     bool disable_wmm;
     /** Startup ACS in the band and bandwidth in chan; surveys use 20MHz. */
     bool acs;
@@ -733,7 +765,9 @@ typedef void (*cb_fhost_tx)(uint32_t frame_id, bool acknowledged, void *arg);
  * now init in fw firstly
  ****************************************************************************************
  */
-int fhost_init();
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int fhost_init() __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 
 /**
  ****************************************************************************************

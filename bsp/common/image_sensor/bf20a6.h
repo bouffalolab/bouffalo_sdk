@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s bf20a6_init_list[] = {
+static const struct image_sensor_command_s bf20a6_init_list[] = {
     {0x12, 0x10},
     {0x3a, 0x03},
     {0xe1, 0x51},

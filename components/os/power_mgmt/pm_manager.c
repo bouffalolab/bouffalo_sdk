@@ -14,6 +14,7 @@
 #include "pm_manager.h"
 
 #include "bl_lp.h"
+#include "sysinit.h"
 #include "bflb_common.h"
 #include "lpfw_bcmc_mailbox.h"
 #include <wifi_mgmr_ext.h>
@@ -443,7 +444,7 @@ int pm_alloc_mem_reset(void)
     return 0;
 }
 
-int pm_sys_init(void)
+int _pm_sys_init(void)
 {
     pm_mailbox = NULL;
 
@@ -457,6 +458,28 @@ int pm_sys_init(void)
 
     return 0;
 }
+
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+int pm_sys_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+
+#if IS_ENABLED(CONFIG_SYSINIT) && defined(CONFIG_LPAPP) && CONFIG_LPAPP
+    return 0;
+#else
+    return _pm_sys_init();
+#endif
+}
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
+
+#if IS_ENABLED(CONFIG_SYSINIT) && defined(CONFIG_LPAPP) && CONFIG_LPAPP
+static void pm_sys_sysinit(const void *arg)
+{
+    (void)arg;
+    (void)_pm_sys_init();
+}
+SYSINIT(pm_sys, SI_SUB_PRE_SCHED, SI_ORDER_THIRD, pm_sys_sysinit, NULL);
+#endif
 
 int pm_sleep_check_register(const char *name, pm_sleep_check_cb_t cb, uint8_t priority)
 {

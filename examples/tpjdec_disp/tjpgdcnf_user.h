@@ -3,16 +3,17 @@
 /*----------------------------------------------*/
 #include "bflb_core.h"
 
-#define TJPGDEC_ATTRIBUTE_CODE ATTR_PSRAM_CODE_SECTION
-#define TJPGDEC_ATTRIBUTE_DATA ATTR_PSRAM_DATA_SECTION
+/* Keep code/constants in Flash: direct boot initializes PSRAM in board_init(). */
+#define TJPGDEC_ATTRIBUTE_CODE
+#define TJPGDEC_ATTRIBUTE_DATA
 
 #define JD_SZBUF               2048
 /* Specifies size of stream input buffer */
 
-#if defined(BL616)
+#if defined(BL616) || defined(BL616CL) || defined(BL618DG)
 #define JD_YUV444_MODE 1 /* support dbi_yuv444 mode */
 #else
-#define JD_YUV444_MODE 0
+#error "This demo requires a DBI peripheral with YUV444 conversion"
 #endif
 /* YUV444 output
 /  JD_FORMAT   : 0

@@ -9,7 +9,14 @@
 #include "board_gpio.h"
 #include "board_flash_psram.h"
 
-void board_init(void);
+/* Compatibility entry point; board startup is handled by SYSINIT. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void board_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+/* Optional hardware hooks around the default board startup. */
+void board_early_init(void);
+void board_late_init(void);
 
 enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void);
 

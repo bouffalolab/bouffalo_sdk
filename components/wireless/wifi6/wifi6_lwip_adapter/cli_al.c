@@ -331,8 +331,11 @@ void cmd_iperf(int argc, char **argv)
  " Once a stream has been configured, it can be started/stopped\r\n" \
  "   tg config <id> <profile> <direction> <remote_ip> <remote_port> <local_ip> <local_port>\r\n" \
  "             <rate> <pksize> <duration> <tos>\r\n" \
+ "             [<maxcnt>] (AP Transaction sender only; 0 uses duration)\r\n" \
  "   tg start  <id1> [<id2> ... <id8>]\r\n" \
- "   tg stop   <id1> [<id2> ... <id8>]\r\n"
+ "   tg stop   <id1> [<id2> ... <id8>]\r\n" \
+ "   tg reset (interrupt all streams and clear configuration/statistics)\r\n" \
+ " AP Transaction stop waits for maxcnt; reset interrupts it.\r\n"
 
 void cmd_tg(int argc, char **argv) {
     char *str = NULL;
@@ -363,10 +366,13 @@ void cmd_tg(int argc, char **argv) {
     char *token, *next = str;
 
     token = fhost_ipc_next_token(&next);
+    if (!token)
+        goto exit;
     if (!strcmp("config", token))
     {
         char *id, *prof, *direction, *remote_ip, *remote_port, *local_ip,
-        *local_port, *rate, *pksize, *duration, *tos;
+        *local_port, *rate, *pksize, *duration, *tos, *maxcnt;
+        uint32_t max_frames = 0;
         uint32_t stream_id;
         uint32_t rip, lip;
         char fmt[] = "Configure stream %d for %s\n";
@@ -382,11 +388,13 @@ void cmd_tg(int argc, char **argv) {
         pksize = fhost_ipc_next_token(&next);
         duration = fhost_ipc_next_token(&next);
         tos = fhost_ipc_next_token(&next);
+        maxcnt = fhost_ipc_next_token(&next);
 
         if (!id || !prof || !direction ||
             !remote_ip || fhost_ipc_parse_ip4(remote_ip, &rip, NULL) || !remote_port ||
             !local_ip || fhost_ipc_parse_ip4(local_ip, &lip, NULL) || !local_port ||
-            !pksize || !duration || !tos) {
+            !rate || !pksize || !duration || !tos ||
+            fhost_tg_parse_maxcnt(maxcnt, &max_frames)) {
             //show usage
             fhost_printf("invaild args, usage:\r\n %s", TG_USAGE0);
             fhost_printf("%s", TG_USAGE1);
@@ -397,7 +405,7 @@ void cmd_tg(int argc, char **argv) {
 
         if (fhost_tg_config(stream_id, atoi(prof), atoi(direction), rip, atoi(remote_port),
                             lip, atoi(local_port), atoi(rate), atoi(pksize), atoi(duration),
-                            atoi(tos)))
+                            atoi(tos), max_frames))
         {
             fhost_printf("Configuration error\n");
             goto exit; // FHOST_IPC_ERROR;
@@ -495,6 +503,10 @@ void cmd_tg(int argc, char **argv) {
                          stats->unordered,
                          stats->rt_time);
         } while((token = fhost_ipc_next_token(&next)));
+    }
+    else if (!strcmp("reset", token))
+    {
+        fhost_printf("TG reset complete, stopped %u stream(s)\r\n", fhost_tg_reset());
     }
     else
     {
@@ -771,6 +783,11 @@ void wifi_sta_info_cmd(int argc, char **argv)
         fhost_printf("Channel: not connected\r\n");
     else
         fhost_printf("Channel: %d \r\n", channel);
+    if (wifi_mgmr_sta_state_get()) {
+        int link_mode = wifi_mgmr_sta_get_link_mode();
+        fhost_printf("Link mode: %s (0x%x)\r\n",
+                     wifi_mgmr_link_mode_to_str(link_mode), link_mode);
+    }
     #ifdef CFG_IPV6
     struct netif *nif;
 
@@ -816,9 +833,11 @@ static void wifi_mgmr_ap_start_usage(const char *command)
            "[-g <0|1>] [-d <0|1>]\r\n");
     printf("               [-I <ipv4_addr>] [-S <pool_start>] "
            "[-L <pool_limit>] [-n <beacon_TU>] [-w <0|1>]\r\n");
+    printf("               [-m <0|1|2>] [-p <0|1|2>] [-T <bitmap>]\r\n");
     printf("  -s: SSID (required)\r\n");
     printf("  -k: key; omitted for an open AP\r\n");
-    printf("  -a: AKM, e.g. OPEN, WPA, WPA2/RSN, or WPA3/SAE; OPEN cannot use -k\r\n");
+    printf("  -a: AKM: OPEN, WEP, WPA, WPA2/RSN, WPA3/SAE, WPA,WPA2, or WPA2,WPA3\r\n");
+    printf("      OPEN cannot use -k; WPA-only cannot enable PMF\r\n");
     printf("  -c: primary channel; BL618DG default is the first legal 5GHz channel;\r\n");
     printf("      with ACS enabled, channel selects the band (0 uses the chip default).\r\n");
     printf("  -A: startup ACS, 0=disabled (default), 1=enabled; 20MHz surveys, -b selects AP bandwidth\r\n");
@@ -833,6 +852,10 @@ static void wifi_mgmr_ap_start_usage(const char *command)
     printf("  -L: DHCP pool lease count\r\n");
     printf("  -n: beacon interval in TU; 0 selects the default 100 TU\r\n");
     printf("  -w: disable WMM, 0=keep enabled (default), 1=disable\r\n");
+    printf("      disabling WMM also disables HT/VHT/HE and forces 20MHz\r\n");
+    printf("  -m: PMF, 0=disabled, 1=optional, 2=required; SAE-only requires 2\r\n");
+    printf("  -p: SAE PWE, 0=hunting-and-pecking, 1=H2E, 2=both (default)\r\n");
+    printf("  -T: Transition Disable bitmap, 0=disabled (default)\r\n");
 }
 
 void wifi_mgmr_ap_start_cmd(int argc, char **argv)
@@ -854,7 +877,7 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
     config.use_dhcpd = true;
 
     utils_al_getopt_init(&getopt_env, 0);
-    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:w:A:")) != -1) {
+    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:w:A:m:p:T:")) != -1) {
         switch (opt) {
         case 'A':
             if (!getopt_env.optarg || !utils_al_parse_long(getopt_env.optarg, 0, 1, &value))
@@ -932,6 +955,31 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
     case 'w':
         config.disable_wmm = (uint32_t)atoi(getopt_env.optarg);
         break;
+
+        case 'm':
+            if (!getopt_env.optarg || !utils_al_parse_long(getopt_env.optarg,
+                                                            0, 2,
+                                                            &value))
+                goto _ERROUT;
+            config.mfp = (uint8_t)value;
+            config.flag_set |= WIFI_MGMR_AP_FLAG_MFP;
+            break;
+
+        case 'p':
+            if (!getopt_env.optarg || !utils_al_parse_long(getopt_env.optarg,
+                                                            FHOST_SAE_PWE_HNP,
+                                                            FHOST_SAE_PWE_BOTH,
+                                                            &value))
+                goto _ERROUT;
+            config.sae_pwe = (uint8_t)value;
+            config.flag_set |= WIFI_MGMR_AP_FLAG_SAE_PWE;
+            break;
+
+        case 'T':
+            if (!getopt_env.optarg || !utils_al_parse_long(getopt_env.optarg, 0, 255, &value))
+                goto _ERROUT;
+            config.transition_disable = (int)value;
+            break;
 
 	case '?':
 	    printf("unknow option: %c \r\n", getopt_env.optopt);
@@ -1183,15 +1231,17 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_ps_set_cmd, wifi_sta_ps_set, wifi sta powersave 
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_ipv6_enable, wifi_sta_ipv6_enable, enable STA IPv6);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_sta_ipv6_disable, wifi_sta_ipv6_disable, disable STA IPv6);
 #endif
-SHELL_CMD_EXPORT_ALIAS(wifi_coex_board_config_cmd, wifi_coex_board_config, declare coex board wiring);
-SHELL_CMD_EXPORT_ALIAS(wifi_coex_init_cmd, wifi_coex_init, prepare coex RF mode before stack startup);
+/* The board wiring is fixed in Kconfig and the RF path is prepared by the
+ * SYSINIT WIRELESS record before main()/shell exists, so the old startup
+ * commands (wifi_coex_board_config / wifi_coex_init) are retired. The debug
+ * alias below still shows the compiled-in wiring. */
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_start_cmd, wifi_coex_start, wifi coex start);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_stop_cmd, wifi_coex_stop, wifi coex stop);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_duty_set_cmd, wifi_coex_duty_set, wifi coex duty set);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_status_cmd, wifi_coex_status, wifi coex status);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_protection_cmd, wifi_coex_protection, wifi coex protection);
 #if defined(CONFIG_WIFI_COEX_DEBUG_CLI)
-SHELL_CMD_EXPORT_ALIAS(wifi_coex_board_config_cmd, wifi_coex_debug_board_config, declare or show coex board wiring);
+SHELL_CMD_EXPORT_ALIAS(wifi_coex_board_config_cmd, wifi_coex_debug_board_config, show compiled-in coex board wiring);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_status_cmd, wifi_coex_debug_status, wifi coex debug status);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_spdt_bt_cmd, spdt_bt, debug force SPDT to BT);
 SHELL_CMD_EXPORT_ALIAS(wifi_coex_debug_spdt_2g_cmd, spdt_2g, debug force SPDT to 2G);

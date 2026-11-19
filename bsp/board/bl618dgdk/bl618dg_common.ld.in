@@ -741,7 +741,6 @@ SECTIONS
         __init_array_end = .;
 
         . = ALIGN(4);
-        *(.gcc_except_table.*)
 
 #ifdef CONFIG_GCOV_DUMP
         __gcov_info_start = .;
@@ -805,5 +804,11 @@ SECTIONS
 
     /DISCARD/ : {
         *(.riscv.attributes)
+        *(.gcc_except_table)
+        *(.gcc_except_table.*)
+        *(.eh_frame)
+        *(.eh_frame.*)
+        *(.eh_frame_hdr)
+        *(.gnu.linkonce.eh.*)
     }
 }

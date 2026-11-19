@@ -26,6 +26,7 @@ int wifi_connect_cmd(int argc, char **argv)
     }
 
     conn_param.use_dhcp = 1;
+    conn_param.pmf_cfg = 1;
     utils_getopt_init(&getopt_env, 0);
 
     /* Parsing parameters */
@@ -253,12 +254,13 @@ void wifi_ap_start_cmd(int argc, char **argv)
     struct wl80211_ap_settings ap_setting;
     int channel = 11;
     int beacon_interval = 100;
+    int hidden = 0;
     const char *ssid = NULL;
     const char *password = NULL;
 
     utils_getopt_init(&getopt_env, 0);
 
-    while ((opt = utils_getopt(&getopt_env, argc, argv, "s:k:c:i:")) >= 0) {
+    while ((opt = utils_getopt(&getopt_env, argc, argv, "s:k:c:i:h:")) >= 0) {
         switch (opt) {
             case 's':
                 ssid = getopt_env.optarg;
@@ -280,16 +282,19 @@ void wifi_ap_start_cmd(int argc, char **argv)
                 wl80211_printf("Beacon interval: %d * 1.024ms\n", beacon_interval);
                 break;
             }
+            case 'h':
+                hidden = atoi(getopt_env.optarg);
+                break;
             default:
                 wl80211_printf("unknown option: %c\r\n", getopt_env.optopt);
-                wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>] [-i <beacon interval>]\r\n");
+                wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>] [-i <beacon interval>] [-h <0|1>]\r\n");
                 return;
         }
     }
 
     if (ssid == NULL) {
         wl80211_printf("Error: SSID is required\r\n");
-        wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>] [-i <beacon interval>]\r\n");
+        wl80211_printf("Usage: wifi_ap_start -s <ssid> [-k <password>] [-c <channel>] [-i <beacon interval>] [-h <0|1>]\r\n");
         return;
     }
 
@@ -314,6 +319,9 @@ void wifi_ap_start_cmd(int argc, char **argv)
     ap_setting.channel_width = WL80211_CHAN_WIDTH_20;
     ap_setting.max_power = 0x14;
     ap_setting.beacon_interval = beacon_interval;
+    if (hidden) {
+        ap_setting.flags |= WL80211_AP_FLAGS_HIDDEN_SSID;
+    }
 
     if (wl80211_ap_start(&ap_setting) != 0) {
         wl80211_printf("Error: Failed to start AP\r\n");

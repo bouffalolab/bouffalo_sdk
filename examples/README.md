@@ -24,6 +24,7 @@ standalone projects; build a project from the directory that contains its
 | [`coremark_v1.01`](coremark_v1.01) | CoreMark benchmark. |
 | [`crash`](crash) | Crash handling and diagnostic examples. |
 | [`dhrystone`](dhrystone) | Dhrystone benchmark. |
+| [`display`](display) | LVGL v8, LVGL v9, and LVGL v9 with OSD examples. |
 | [`dsp`](dsp) | Digital signal processing examples. |
 | [`easyflash`](easyflash) | LittleFS key-value (lfs_kv) examples. |
 | [`fatfs`](fatfs) | FAT file-system examples. |
@@ -33,7 +34,6 @@ standalone projects; build a project from the directory that contains its
 | [`lmac154`](lmac154) | Low-MAC IEEE 802.15.4 examples. |
 | [`log_dbg_assert`](log_dbg_assert) | Log, debug, and assertion examples. |
 | [`lua`](lua) | Lua runtime examples. |
-| [`lvgl`](lvgl) | LVGL graphics and UI examples. |
 | [`mbedtls`](mbedtls) | Mbed TLS security examples. |
 | [`memheap`](memheap) | Memory heap examples. |
 | [`memtester`](memtester) | Memory test examples. |
@@ -76,6 +76,7 @@ are intentionally not listed as applications.
 | [`coremark_v1.01`](coremark_v1.01) | [`coremark_v1.01`](coremark_v1.01) |
 | [`crash`](crash) | [`crash`](crash) |
 | [`dhrystone`](dhrystone) | [`dhrystone`](dhrystone) |
+| [`display`](display) | [`lvgl_v8`](display/lvgl_v8), [`lvgl_v9`](display/lvgl_v9), [`lvgl_v9_with_osd`](display/lvgl_v9_with_osd) |
 | [`dsp`](dsp) | [`dsp`](dsp) |
 | [`easyflash`](easyflash) | [`easyflash`](easyflash) |
 | [`fatfs`](fatfs) | [`fatfs`](fatfs) |
@@ -85,7 +86,6 @@ are intentionally not listed as applications.
 | [`lmac154`](lmac154) | [`lmac154`](lmac154/lmac154), [`lmac154_cli`](lmac154/lmac154_cli) |
 | [`log_dbg_assert`](log_dbg_assert) | [`log_dbg_assert`](log_dbg_assert) |
 | [`lua`](lua) | [`lua`](lua) |
-| [`lvgl`](lvgl) | [`lvgl_v8`](lvgl/lvgl_v8), [`lvgl_v8_with_osd`](lvgl/lvgl_v8_with_osd), [`lvgl_v9`](lvgl/lvgl_v9), [`lvgl_v9_with_osd`](lvgl/lvgl_v9_with_osd) |
 | [`mbedtls`](mbedtls) | [`mbedtls`](mbedtls) |
 | [`memheap`](memheap) | [`memheap`](memheap) |
 | [`memtester`](memtester) | [`memtester`](memtester), [`memtester/memtester`](memtester/memtester) |
@@ -155,7 +155,7 @@ are intentionally not listed as applications.
 
 | Directory | Applications |
 | --- | --- |
-| [`pmu`](pmu) | [`bl616_lp_fw`](pmu/bl616_lp_fw), [`wl_ble_lp`](pmu/wl_ble_lp), [`wl_lp`](pmu/wl_lp) |
+| [`pmu`](pmu) | [`lp_fw/bl616`](pmu/lp_fw/bl616), [`wl_ble_lp`](pmu/wl_ble_lp), [`wl_lp`](pmu/wl_lp) |
 | [`pmu/bl616`](pmu/bl616) | [`hbn_acomp`](pmu/bl616/hbn_acomp), [`hbn_io_wakeup`](pmu/bl616/hbn_io_wakeup), [`hbn_rtc`](pmu/bl616/hbn_rtc), [`pds_io_wakeup`](pmu/bl616/pds_io_wakeup), [`pds_rtc`](pmu/bl616/pds_rtc) |
 | [`pmu/bl616cl`](pmu/bl616cl) | [`hbn_io_wakeup`](pmu/bl616cl/hbn_io_wakeup), [`hbn_rtc`](pmu/bl616cl/hbn_rtc), [`hbn_watchdog`](pmu/bl616cl/hbn_watchdog), [`pds_bod`](pmu/bl616cl/pds_bod), [`pds_io_wakeup`](pmu/bl616cl/pds_io_wakeup), [`pds_rtc`](pmu/bl616cl/pds_rtc), [`pds_timer`](pmu/bl616cl/pds_timer) |
 | [`pmu/bl618dg`](pmu/bl618dg) | [`aon_wdt`](pmu/bl618dg/aon_wdt), [`hbn_io_wakeup`](pmu/bl618dg/hbn_io_wakeup), [`hbn_rtc`](pmu/bl618dg/hbn_rtc), [`mini_sys`](pmu/bl618dg/mini_sys), [`pds_bod`](pmu/bl618dg/pds_bod), [`pds_io_wakeup`](pmu/bl618dg/pds_io_wakeup), [`pds_lp_wakeup`](pmu/bl618dg/pds_lp_wakeup), [`pds_lp_wakeup/ap`](pmu/bl618dg/pds_lp_wakeup/ap), [`pds_lp_wakeup/lp`](pmu/bl618dg/pds_lp_wakeup/lp), [`pds_mini`](pmu/bl618dg/pds_mini), [`pds_rtc`](pmu/bl618dg/pds_rtc), [`pds_timer`](pmu/bl618dg/pds_timer), [`sdio3_lowpower`](pmu/bl618dg/sdio3_lowpower) |

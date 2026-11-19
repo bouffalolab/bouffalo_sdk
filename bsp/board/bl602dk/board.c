@@ -14,6 +14,7 @@
 
 #include "mm.h"
 #include "tlsf.h"
+#include "sysinit.h"
 
 extern void log_start(void);
 
@@ -146,17 +147,28 @@ static void console_init()
 
 void ram_heap_init(void)
 {
-    size_t heap_len;
+    volatile uintptr_t ocram_heap_len;
+    volatile uintptr_t wram_heap_len;
 
     /* ram heap init */
-    mem_manager_init();
+    if (mem_manager_init() != 0) {
+        __builtin_trap();
+    }
 
     /* ocram heap init */
-    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+    ocram_heap_len = (uintptr_t)&__HeapLimit - (uintptr_t)&__HeapBase;
+    if (ocram_heap_len != 0) {
+        if (mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, ocram_heap_len) == NULL) {
+            printf("warning: OCRAM heap registration failed (%u bytes)\r\n", (unsigned int)ocram_heap_len);
+        }
+    }
 
-    heap_len = (size_t)&_heap_wifi_size;
-    mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, heap_len);
+    wram_heap_len = (uintptr_t)&_heap_wifi_size;
+    if (wram_heap_len != 0) {
+        if (mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, wram_heap_len) == NULL) {
+            printf("warning: WRAM heap registration failed (%u bytes)\r\n", (unsigned int)wram_heap_len);
+        }
+    }
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"
@@ -171,37 +183,71 @@ enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
     return BFLB_RTC_32K_CLK_RC;
 }
 
-void board_init(void)
+static uintptr_t board_irq_flags;
+
+static void board_sysinit_flash(const void *arg)
 {
-    int ret = -1;
-    uintptr_t flag;
-    int run_from_xip = 0;
+    int ret = 0;
+    (void)arg;
 
-    flag = bflb_irq_save();
-
+    board_irq_flags = bflb_irq_save();
     if (((uint32_t)main & 0xff000000) == 0x23000000) {
         ret = bflb_flash_init();
-        run_from_xip = 1;
     }
+    if (ret != 0) {
+        __builtin_trap();
+    }
+}
 
+SYSINIT(board_flash, SI_SUB_HW, SI_ORDER_FIRST, board_sysinit_flash, NULL);
+
+static void board_clock_init(const void *arg)
+{
+    (void)arg;
     system_clock_init();
     bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
     peripheral_clock_init();
+}
+
+SYSINIT(board_clock, SI_SUB_CLOCK, SI_ORDER_FIRST, board_clock_init, NULL);
+
+static void board_irq_init(const void *arg)
+{
+    (void)arg;
     bflb_irq_initialize();
+}
 
+SYSINIT(board_irq, SI_SUB_INTR, SI_ORDER_FIRST, board_irq_init, NULL);
+
+static void board_console_init(const void *arg)
+{
+    (void)arg;
     console_init();
+}
 
-    /* heap init */
+SYSINIT(board_console, SI_SUB_DRIVERS, SI_ORDER_FIRST, board_console_init, NULL);
+
+static void board_heap_init(const void *arg)
+{
+    (void)arg;
     ram_heap_init();
+    if (kfree_size(0) == 0) {
+        puts("heap init failed: no usable memory\r\n");
+        __builtin_trap();
+    }
+}
+
+SYSINIT(board_heap, SI_SUB_DRIVERS, SI_ORDER_SECOND, board_heap_init, NULL);
+
+static void board_services_init(const void *arg)
+{
+    (void)arg;
 
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
     bl_show_log();
 #endif
     printf("Version of used components:\r\n");
-    if (run_from_xip) {
-        if (ret != 0) {
-            printf("flash init fail!!!\r\n");
-        }
+    if (((uint32_t)main & 0xff000000) == 0x23000000) {
         bl_show_flashinfo();
     }
 
@@ -213,13 +259,27 @@ void board_init(void)
 #endif
 
     bflb_sec_mutex_init();
+}
 
-    bflb_irq_restore(flag);
+SYSINIT(board_services, SI_SUB_DRIVERS, SI_ORDER_THIRD, board_services_init, NULL);
 
+static void board_sysinit_finish(const void *arg)
+{
+    (void)arg;
+    bflb_irq_restore(board_irq_flags);
     printf("board init done\r\n");
     printf("===========================\r\n");
 }
 
+SYSINIT(board_finish, SI_SUB_DRIVERS, SI_ORDER_FOURTH, board_sysinit_finish, NULL);
+
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void board_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+}
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 
 void board_i2c0_gpio_init()
 {

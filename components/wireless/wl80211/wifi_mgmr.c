@@ -403,6 +403,10 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
         case CODE_WIFI_ON_MGMR_DONE: {
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
         } break;
+        case CODE_WIFI_ON_INIT_DONE_SYS:
+        case CODE_WIFI_ON_MGMR_DONE_SYS: {
+            /* SDK-internal readiness events; handled by the SYSINIT records. */
+        } break;
         case CODE_WIFI_ON_SCAN_DONE: {
             wl80211_printf("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
 #if defined(CONFIG_WL80211_P2P)
@@ -463,15 +467,18 @@ static void wifi_mgmr_event_handler(async_input_event_t ev, void *priv)
 }
 #endif
 
+#if IS_ENABLED(CONFIG_COMPAT_V2)
 void wifi_mgmr_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+}
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+void _wl80211_mgmr_init(void)
 {
 #if !defined(__NuttX__)
     async_register_event_filter(EV_WL80211, wl80211_event_handler, NULL);
     async_register_event_filter(EV_WIFI, wifi_mgmr_event_handler, NULL);
-
-    /* compat legacy wifi mgmr */
-    async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
-    async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
 #endif
 }
 
@@ -531,7 +538,7 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
         if (ssid_len <= 0 || ssid_len > MGMR_SSID_LEN) {
             return -1;
         }
-        strlcpy((char *)conn_params.ssid, ssid, 32);
+        strlcpy((char *)conn_params.ssid, ssid, sizeof(conn_params.ssid));
     } else {
         return -1;
     }
@@ -541,7 +548,7 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
         if ((key_len < 8 && key_len != 5 && key_len != 0) || (key_len > MGMR_KEY_LEN)) {
             return -1;
         }
-        strlcpy((char *)conn_params.password, key, 64);
+        strlcpy((char *)conn_params.password, key, sizeof(conn_params.password));
     }
 
     if (bssid) {
@@ -564,6 +571,9 @@ int wifi_sta_connect(const char *ssid, const char *key, const char *bssid, const
     } else {
         uint16_t freq = freq1 ? freq1 : freq2;
         conn_params.channel = wl80211_freq_to_channel(freq);
+        if (conn_params.channel == (uint8_t)-1) {
+            conn_params.channel = 0;
+        }
     }
 
     rtos_lock();
@@ -1369,6 +1379,9 @@ int wifi_mgmr_ap_start(const wifi_mgmr_ap_params_t *config)
     ap_setting.channel_width = WL80211_CHAN_WIDTH_20;
     ap_setting.beacon_interval = 100;
     ap_setting.max_power = 0x14;
+    if (config->hidden_ssid) {
+        ap_setting.flags |= WL80211_AP_FLAGS_HIDDEN_SSID;
+    }
 
 #if !defined(__NuttX__)
     wifi_mgmr_ap_netif_cfg_save(config);

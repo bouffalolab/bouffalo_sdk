@@ -17,6 +17,8 @@
 #ifndef EASYFLASH_H_
 #define EASYFLASH_H_
 
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -33,77 +35,79 @@ extern "C" {
 typedef lfs_kv_err_t EfErrCode;
 
 enum {
-    EF_NO_ERR          = LFS_KV_OK,
-    EF_ERASE_ERR       = LFS_KV_ERR_ERASE,
-    EF_READ_ERR        = LFS_KV_ERR_READ,
-    EF_WRITE_ERR       = LFS_KV_ERR_WRITE,
-    EF_ENV_NAME_ERR    = LFS_KV_ERR_NAME,
-    EF_ENV_NAME_EXIST  = LFS_KV_ERR_NAME_EXIST,
-    EF_ENV_FULL        = LFS_KV_ERR_FULL,
+    EF_NO_ERR = LFS_KV_OK,
+    EF_ERASE_ERR = LFS_KV_ERR_ERASE,
+    EF_READ_ERR = LFS_KV_ERR_READ,
+    EF_WRITE_ERR = LFS_KV_ERR_WRITE,
+    EF_ENV_NAME_ERR = LFS_KV_ERR_NAME,
+    EF_ENV_NAME_EXIST = LFS_KV_ERR_NAME_EXIST,
+    EF_ENV_FULL = LFS_KV_ERR_FULL,
     EF_ENV_INIT_FAILED = LFS_KV_ERR_INIT_FAILED,
-    EF_ENV_ARG_ERR     = LFS_KV_ERR_ARG,
+    EF_ENV_ARG_ERR = LFS_KV_ERR_ARG,
 };
 
 /* the ENV max name length must less then it */
 #ifndef EF_ENV_NAME_MAX
-#define EF_ENV_NAME_MAX                          LFS_KV_KEY_MAX
+#define EF_ENV_NAME_MAX LFS_KV_KEY_MAX
 #endif
 
 #if defined(__GNUC__)
-#define EF_DEPRECATED \
-    __attribute__((deprecated("EasyFlash KV API is deprecated, use the lfs_kv API (lfs_kv.h) instead")))
+#define EF_DEPRECATED __attribute__((deprecated("use the lfs_kv API (lfs_kv.h); will be removed in Bouffalo SDK v3")))
 #else
 #define EF_DEPRECATED
 #endif
 
 /* lfs_kv.c */
-EF_DEPRECATED static inline EfErrCode
-easyflash_init(void)
+#if defined(__GNUC__)
+/* lfs_kv_init() is itself deprecated; silence its warning inside this inline
+ * wrapper. Call sites of easyflash_init() still get the EF_DEPRECATED warning. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+EF_DEPRECATED static inline EfErrCode easyflash_init(void)
 {
     return lfs_kv_init();
 }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
-EF_DEPRECATED static inline size_t
-ef_get_env_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len)
+EF_DEPRECATED static inline size_t ef_get_env_blob(const char *key, void *value_buf, size_t buf_len,
+                                                   size_t *saved_value_len)
 {
     return lfs_kv_get_blob(key, value_buf, buf_len, saved_value_len);
 }
 
-EF_DEPRECATED static inline size_t
-ef_get_env_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset)
+EF_DEPRECATED static inline size_t ef_get_env_blob_offset(const char *key, void *value_buf, size_t buf_len,
+                                                          size_t *saved_value_len, int offset)
 {
     return lfs_kv_get_blob_offset(key, value_buf, buf_len, saved_value_len, offset);
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_set_env_blob(const char *key, const void *value_buf, size_t buf_len)
+EF_DEPRECATED static inline EfErrCode ef_set_env_blob(const char *key, const void *value_buf, size_t buf_len)
 {
     return lfs_kv_set_blob(key, value_buf, buf_len);
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_del_env(const char *key)
+EF_DEPRECATED static inline EfErrCode ef_del_env(const char *key)
 {
     return lfs_kv_del(key);
 }
 
 /* clear all env */
-EF_DEPRECATED static inline EfErrCode
-ef_env_set_default(void)
+EF_DEPRECATED static inline EfErrCode ef_env_set_default(void)
 {
     return lfs_kv_clear();
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_print_env(void)
+EF_DEPRECATED static inline EfErrCode ef_print_env(void)
 {
     return lfs_kv_print();
 }
 
 /* Added by Bouffalolab */
 typedef lfs_kv_foreach_cb_t ef_foreach_cb_t;
-EF_DEPRECATED static inline EfErrCode
-ef_foreach_env(ef_foreach_cb_t cb, void *arg)
+EF_DEPRECATED static inline EfErrCode ef_foreach_env(ef_foreach_cb_t cb, void *arg)
 {
     return lfs_kv_foreach(cb, arg);
 }
@@ -112,8 +116,7 @@ ef_foreach_env(ef_foreach_cb_t cb, void *arg)
  *   String-style API.  ef_save_env is a no-op: every write is committed
  *   to the LittleFS backend immediately.
  ***************************************************************************/
-static inline bool
-ef_is_str(uint8_t *value, size_t len)
+static inline bool ef_is_str(uint8_t *value, size_t len)
 {
 #define __is_print(ch) ((unsigned int)((ch) - ' ') < 127u - ' ')
     size_t i;
@@ -130,8 +133,7 @@ ef_is_str(uint8_t *value, size_t len)
 #define EF_STR_ENV_VALUE_MAX_SIZE (3979)
 #endif
 
-EF_DEPRECATED static inline char *
-ef_get_env(const char *key)
+EF_DEPRECATED static inline char *ef_get_env(const char *key)
 {
     static char value[EF_STR_ENV_VALUE_MAX_SIZE + 1];
     size_t get_size;
@@ -151,32 +153,28 @@ ef_get_env(const char *key)
     }
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_set_env(const char *key, const char *value)
+EF_DEPRECATED static inline EfErrCode ef_set_env(const char *key, const char *value)
 {
     if (value == NULL) {
-        return EF_ENV_ARG_ERR;
+        return (EfErrCode)EF_ENV_ARG_ERR;
     }
     return lfs_kv_set_blob(key, value, strlen(value) + 1);
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_save_env(void)
+EF_DEPRECATED static inline EfErrCode ef_save_env(void)
 {
-    return EF_NO_ERR;
+    return (EfErrCode)EF_NO_ERR;
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_set_and_save_env(const char *key, const char *value)
+EF_DEPRECATED static inline EfErrCode ef_set_and_save_env(const char *key, const char *value)
 {
     if (value == NULL) {
-        return EF_ENV_ARG_ERR;
+        return (EfErrCode)EF_ENV_ARG_ERR;
     }
     return lfs_kv_set_blob(key, value, strlen(value) + 1);
 }
 
-EF_DEPRECATED static inline EfErrCode
-ef_del_and_save_env(const char *key)
+EF_DEPRECATED static inline EfErrCode ef_del_and_save_env(const char *key)
 {
     return lfs_kv_del(key);
 }
@@ -184,5 +182,7 @@ ef_del_and_save_env(const char *key)
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 
 #endif /* EASYFLASH_H_ */

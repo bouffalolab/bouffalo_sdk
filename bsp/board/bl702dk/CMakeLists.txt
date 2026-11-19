@@ -1,6 +1,8 @@
 sdk_add_include_directories(.)
 
-target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board.c)
+if(NOT CONFIG_SYSINIT_CUSTOM_BOARD_INIT)
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board.c)
+endif()
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fw_header.c)
 
 sdk_add_compile_definitions_ifdef(CONFIG_BLUETOOTH -DCFG_BLUETOOTH_ENABLED)

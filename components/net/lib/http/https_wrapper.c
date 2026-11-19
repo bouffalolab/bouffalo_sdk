@@ -73,6 +73,7 @@ typedef struct {
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
     int ssl_inited;
+    int ca_bundle_attached;
 } ssl_param_t;
 
 typedef struct {
@@ -322,15 +323,18 @@ static void *ssl_connect(int fd, const http_wrapper_ssl_param_t *param)
 #ifdef CONFIG_X509_CERTIFICATE_BUNDLE
         /* Use certificate bundle from firmware */
         LOG_DBG("[MBEDTLS] Using certificate bundle from firmware\r\n");
-        if (bl_crt_bundle_attach(&ssl_param->conf) == 0) {
-            mbedtls_ssl_conf_authmode(&ssl_param->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
-            LOG_DBG("[MBEDTLS] Certificate bundle attached successfully\r\n");
-        } else {
-            LOG_DBG("[MBEDTLS] Failed to attach certificate bundle, falling back to no verification\r\n");
-            mbedtls_ssl_conf_authmode(&ssl_param->conf, MBEDTLS_SSL_VERIFY_NONE);
+        ret = bl_crt_bundle_attach(&ssl_param->conf);
+        if (ret != 0) {
+            LOG_ERR("[MBEDTLS] Certificate bundle attach failed, aborting connection\r\n");
+            goto ERROR;
         }
+        ssl_param->ca_bundle_attached = 1;
+        mbedtls_ssl_conf_authmode(&ssl_param->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+        LOG_DBG("[MBEDTLS] Certificate bundle attached successfully\r\n");
 #else
-        mbedtls_ssl_conf_authmode(&ssl_param->conf, MBEDTLS_SSL_VERIFY_NONE);
+        LOG_ERR("[MBEDTLS] No CA certificate and certificate bundle disabled, aborting connection\r\n");
+        ret = -1;
+        goto ERROR;
 #endif
     }
 
@@ -411,6 +415,11 @@ ERROR:
         if(param->private_cert && param->private_cert_len > 0)
             mbedtls_pk_free(&ssl_param->pkey);
         mbedtls_ssl_free(&ssl_param->ssl);
+#ifdef CONFIG_X509_CERTIFICATE_BUNDLE
+        if (ssl_param->ca_bundle_attached) {
+            bl_crt_bundle_detach(&ssl_param->conf);
+        }
+#endif
         mbedtls_ssl_config_free(&ssl_param->conf);
         mbedtls_ctr_drbg_free(&ssl_param->ctr_drbg);
         mbedtls_entropy_free(&ssl_param->entropy);
@@ -545,19 +554,18 @@ static int ssl_close(void *ssl)
     mbedtls_ssl_close_notify(&ssl_param->ssl);
 
 #ifdef CONFIG_X509_CERTIFICATE_BUNDLE
-    /* Detach certificate bundle if it was used
-     * Note: We check if ca_cert was initialized to determine if bundle was used
-     * This is because bundle is used when ca_cert is NOT provided by user
-     */
+    /* Detach the certificate bundle only if this connection attached it.
+     * Detaching unconditionally would free the global bundle while other
+     * connections still reference it. */
     mbedtls_x509_crt_free(&ssl_param->owncert);
     mbedtls_pk_free(&ssl_param->pkey);
     mbedtls_ssl_free(&ssl_param->ssl);
+    if (ssl_param->ca_bundle_attached) {
+        bl_crt_bundle_detach(&ssl_param->conf);
+    }
     mbedtls_ssl_config_free(&ssl_param->conf);
     mbedtls_ctr_drbg_free(&ssl_param->ctr_drbg);
     mbedtls_entropy_free(&ssl_param->entropy);
-
-    /* Detach certificate bundle callback */
-    bl_crt_bundle_detach(&ssl_param->conf);
 #else
     mbedtls_x509_crt_free(&ssl_param->ca_cert);
     mbedtls_x509_crt_free(&ssl_param->owncert);

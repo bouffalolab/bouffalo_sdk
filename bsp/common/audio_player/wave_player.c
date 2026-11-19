@@ -1,6 +1,12 @@
 #include "wave_player.h"
 #include "audio_pcm.h"
+#include "wave_player_pcm.h"
+#if defined(CONFIG_PVMP3DEC) && !defined(CONFIG_BSP_AUDIO_PCM)
+#include "mp3_player.h"
+#endif
 #include "bflb_i2s.h"
+#include "bflb_peri.h"
+#include "bflb_reset.h"
 #include "bflb_i2c.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
@@ -30,76 +36,16 @@
 #include <stddef.h>
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 
-#if defined(CONFIG_BSP_AUDIO_PCM)
-static bool audio_pcm_owned(void);
-static bool wave_player_legacy_enter(void);
-static void wave_player_legacy_leave(void);
-static bool audio_pcm_keep_capture(void);
-#if WAVE_PLAYER_ENABLE_REC
-static bool audio_pcm_capture_prepared(void);
-#endif
-static void audio_pcm_player_cleanup(void);
-static bool audio_pcm_player_wait_reference(void);
-static void audio_pcm_player_started(void);
-static void audio_pcm_player_failed(void);
-static void audio_pcm_prepare_playback(int16_t *samples, size_t bytes);
-#else
-static bool audio_pcm_owned(void)
-{
-    return false;
-}
 
-static bool wave_player_legacy_enter(void)
-{
-    return true;
-}
-
-static void wave_player_legacy_leave(void)
-{
-}
-
-static bool audio_pcm_keep_capture(void)
-{
-    return false;
-}
-
-#if WAVE_PLAYER_ENABLE_REC
-static bool audio_pcm_capture_prepared(void)
-{
-    return false;
-}
-#endif
-
-static void audio_pcm_player_cleanup(void)
-{
-}
-
-static bool audio_pcm_player_wait_reference(void)
-{
-    return true;
-}
-
-static void audio_pcm_player_started(void)
-{
-}
-
-static void audio_pcm_player_failed(void)
-{
-}
-
-static void audio_pcm_prepare_playback(int16_t *samples, size_t bytes)
-{
-    (void)samples;
-    (void)bytes;
-}
-#endif
 
 static wave_player_playback_frame_cb_t playback_frame_cb;
 static void *playback_frame_user_data;
 static volatile uint32_t playback_flush_epoch;
 static UBaseType_t playback_task_priority = 3;
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 static int wave_player_set_playback_callback_internal(wave_player_playback_frame_cb_t cb, void *user_data)
 {
     playback_frame_cb = cb;
@@ -109,13 +55,9 @@ static int wave_player_set_playback_callback_internal(wave_player_playback_frame
 
 int wave_player_set_playback_callback(wave_player_playback_frame_cb_t cb, void *user_data)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_set_playback_callback_internal(cb, user_data);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_set_playback_callback_internal(cb, user_data);
 }
+#endif
 
 #ifdef CONFIG_BSP_AUDIO_CODEC_BL_ENABLE
 #define WAVE_PLAYER_BUILTIN_CODEC_AVAILABLE 1
@@ -135,7 +77,7 @@ int wave_player_set_playback_callback(wave_player_playback_frame_cb_t cb, void *
 #define WAVE_PLAYER_CODEC_REG_CLI CONFIG_WAVE_PLAYER_CODEC_REG_CLI
 #endif
 
-#if WAVE_PLAYER_TEST_WAVE
+#if WAVE_PLAYER_TEST_WAVE && !defined(CONFIG_BSP_AUDIO_PCM)
 #include "incbin.h"
 INCBIN(wave_src_buffer0, "../../bsp/common/audio_player/ruyuan_30s_16k_mono.wav");
 INCBIN(wave_src_buffer1, "../../bsp/common/audio_player/therose_30s_11k.wav");
@@ -207,7 +149,13 @@ typedef struct {
 #endif
 
 #if WAVE_PLAYER_ENABLE_REC_RB
-#define WAVE_PLAYER_REC_MAX_SAMPLES (WAVE_PLAYER_REC_MAX_FS_HZ * WAVE_PLAYER_REC_SECONDS * WAVE_PLAYER_REC_CHANNELS)
+#define WAVE_PLAYER_REC_MAX_FRAMES (WAVE_PLAYER_REC_MAX_FS_HZ * WAVE_PLAYER_REC_SECONDS)
+#define WAVE_PLAYER_REC_MAX_SAMPLES (WAVE_PLAYER_REC_MAX_FRAMES * WAVE_PLAYER_REC_CHANNELS)
+#ifdef CONFIG_PSRAM
+static ATTR_NOINIT_PSRAM_SECTION int16_t g_rec_pcm[WAVE_PLAYER_REC_MAX_SAMPLES];
+#else
+static int16_t g_rec_pcm[WAVE_PLAYER_REC_MAX_SAMPLES];
+#endif
 #define WAVE_PLAYER_REC_DUMP_FLASH_ADDR_DEFAULT      (0x378000U)
 #define WAVE_PLAYER_REC_DUMP_FLASH_MEDIA_SIZE_DEFAULT (0x71000U)
 #define WAVE_PLAYER_REC_DUMP_FLASH_ERASE_ALIGN       (4096U)
@@ -225,16 +173,11 @@ typedef struct {
 #else
 #define WAVE_PLAYER_TX_SLOT_MAX WAVE_PLAYER_OUT_CHANNELS
 #endif
-#if WAVE_PLAYER_I2S_DSP_LR_MERGE
-#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(int16_t))
-#else
-#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(uint32_t))
-#endif
 #else
 #define WAVE_PLAYER_TX_SLOT_MAX WAVE_PLAYER_OUT_CHANNELS
-#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(int16_t))
 #endif
 
+#define WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX ((uint32_t)sizeof(int16_t))
 #define WAVE_PLAYER_TX_PCM_BYTES_MAX \
     ((uint32_t)WAVE_PLAYER_OUT_SAMPLES * (uint32_t)WAVE_PLAYER_TX_SLOT_MAX * WAVE_PLAYER_TX_SLOT_WORD_BYTES_MAX)
 #define WAVE_PLAYER_TX_PCM_SAMPLES_MAX \
@@ -266,8 +209,6 @@ typedef struct {
     uint32_t rx_block_bytes;
     uint8_t tx_slot_count;
     uint8_t tx_slot_word_bytes;
-    uint8_t volume;
-    bool muted;
     bool io_started;
     SemaphoreHandle_t sem_tx_dma_done;
     SemaphoreHandle_t sem_wave_rb_space;
@@ -279,6 +220,7 @@ typedef struct {
     uint32_t tx_period_samples;
     volatile bool stop;
     volatile bool paused;
+    volatile bool playback_primed;
     int16_t pcm_ping[WAVE_PLAYER_TX_PCM_SAMPLES_MAX] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
     int16_t pcm_pong[WAVE_PLAYER_TX_PCM_SAMPLES_MAX] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
     wave_player_cfg_t wave_cfg;
@@ -298,9 +240,11 @@ typedef struct {
     volatile uint32_t cap_epoch;
     uint64_t cap_total_samples;
 #if WAVE_PLAYER_ENABLE_REC_RB
-    int16_t rec_mono_buf[WAVE_PLAYER_REC_MAX_SAMPLES] __attribute__((aligned(BFLB_CACHE_LINE_SIZE)));
     volatile uint32_t rec_write;
     volatile bool rec_filled;
+    uint32_t rec_capacity;
+    uint32_t rec_sample_rate_hz;
+    uint8_t rec_channels;
 #endif
     volatile bool rec_enable;
     volatile bool rec_path_enabled;
@@ -309,6 +253,9 @@ typedef struct {
     wave_player_capture_layout_t capture_layout;
     wave_player_rec_cb_t rec_cb;
     void *rec_cb_user_data;
+    volatile bool rec_callback_active;
+    wave_player_rec_stop_cb_t rec_stop_cb;
+    void *rec_stop_cb_user_data;
 #endif
 } wave_player_ctx_t;
 
@@ -357,8 +304,6 @@ static wave_player_ctx_t g_audio = {
     .tx_slot_word_bytes = 0,
     .playback_backend = WAVE_PLAYER_BACKEND_AUTO,
     .capture_backend = WAVE_PLAYER_BACKEND_AUTO,
-    .volume = 50,
-    .muted = false,
     .io_started = false,
     .sem_tx_dma_done = NULL,
     .sem_wave_rb_space = NULL,
@@ -386,93 +331,6 @@ static wave_player_ctx_t g_audio = {
 #endif
 };
 
-#if defined(CONFIG_BSP_AUDIO_PCM)
-struct audio_pcm_session {
-    audio_pcm_direction_t direction;
-    audio_pcm_config_t config;
-    audio_pcm_frame_cb_t capture_callback;
-    audio_pcm_frame_cb_t playback_callback;
-    void *capture_context;
-    void *playback_context;
-    uint32_t generation;
-    uint32_t callback_users;
-    uint32_t capture_callback_users;
-    uint32_t playback_callback_users;
-    uint32_t io_users;
-    uint32_t open_capture_sequence;
-    uint32_t capture_epoch;
-    uint32_t previous_capture_sequence;
-    uint64_t capture_sample_index;
-    bool used;
-    bool closing;
-    bool aborted;
-    bool capture_seen;
-};
-
-static struct {
-    SemaphoreHandle_t lock;
-    wave_player_hw_cfg_t hardware;
-    char hardware_names[6][32];
-    struct audio_pcm_session sessions[2];
-    uint32_t generation;
-    unsigned legacy_operations;
-    unsigned control_operations;
-    bool initialized;
-    bool claimed;
-    bool prepare_capture;
-    bool requested_mute;
-    uint8_t requested_volume;
-    uint8_t requested_record_volume;
-    uint8_t requested_record_pga;
-    bool record_volume_set;
-    bool record_pga_set;
-    volatile int player_start_result;
-    uint64_t playback_next_sample;
-    uint32_t playback_sequence;
-    bool playback_reference_valid;
-    bool playback_reference_silent;
-    bool playback_reference_gap;
-    uint32_t engine_epoch;
-    bool tx_resume_pending;
-} g_pcm;
-
-static bool audio_pcm_owned(void)
-{
-    bool owned;
-    taskENTER_CRITICAL();
-    owned = g_pcm.claimed;
-    taskEXIT_CRITICAL();
-    return owned;
-}
-
-/* Reserve legacy operations before touching the shared engine. The first PCM
- * session claims it under the same critical section, so a checked-but-not-yet
- * executed codec write cannot cross the handoff. Nested legacy calls share the
- * count; no lock is held across codec IO or a blocking player operation. */
-static bool wave_player_legacy_enter(void)
-{
-    taskENTER_CRITICAL();
-    bool available = !g_pcm.claimed && !g_pcm.control_operations;
-    if (available) {
-        g_pcm.legacy_operations++;
-    }
-    taskEXIT_CRITICAL();
-    return available;
-}
-
-static void wave_player_legacy_leave(void)
-{
-    taskENTER_CRITICAL();
-    g_pcm.legacy_operations--;
-    taskEXIT_CRITICAL();
-}
-
-#if WAVE_PLAYER_ENABLE_REC
-static void audio_pcm_capture_dispatch(const wave_player_rec_frame_t *frame, void *context);
-#endif
-static void audio_pcm_playback_dispatch(const int16_t *samples, uint32_t count, uint32_t rate, uint8_t channels,
-                                        void *context);
-#endif
 
 #if WAVE_PLAYER_DIAG
 static wave_player_diag_t g_wave_diag = { 0 };
@@ -480,7 +338,7 @@ static wave_player_diag_t g_wave_diag = { 0 };
 
 #define WAVE_PLAYER_TX_DONE_NOTIFY_BIT (1UL << 0)
 
-#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
+#if WAVE_PLAYER_TEST_WAVE && !defined(CONFIG_BSP_AUDIO_PCM)
 static int wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_t sample_rate_hz,
                                      uint8_t src_channels, bool restore_rec_enable, bool rec_enable_after_done);
 #endif
@@ -726,6 +584,7 @@ static inline uint8_t audio_channel_count_clamp(uint8_t channels)
     return channels;
 }
 
+#if WAVE_PLAYER_ENABLE_REC
 static bool audio_sample_rate_is_44k1_family(uint32_t sample_rate_hz)
 {
     switch (sample_rate_hz) {
@@ -742,6 +601,7 @@ static bool audio_sample_rate_share_pll_family(uint32_t a_hz, uint32_t b_hz)
 {
     return audio_sample_rate_is_44k1_family(a_hz) == audio_sample_rate_is_44k1_family(b_hz);
 }
+#endif
 
 static uint8_t wave_player_default_playback_channels(void)
 {
@@ -797,15 +657,7 @@ static uint8_t wave_player_i2s_tx_slot_count(uint8_t i2s_channels, uint8_t out_c
 
 static uint8_t wave_player_i2s_tx_slot_word_bytes(void)
 {
-#if WAVE_PLAYER_I2S_DSP_MODE
-#if WAVE_PLAYER_I2S_DSP_LR_MERGE
     return (uint8_t)sizeof(int16_t);
-#else
-    return (uint8_t)sizeof(uint32_t);
-#endif
-#else
-    return (uint8_t)sizeof(int16_t);
-#endif
 }
 
 static void audio_fill_i2s_cfg(struct bflb_i2s_config_s *cfg, uint32_t samplerate_hz, uint8_t channels)
@@ -855,8 +707,13 @@ static void audio_fill_dma_tx_cfg(struct bflb_dma_channel_config_s *cfg)
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE,
         .src_burst_count = DMA_BURST_INCR1,
         .dst_burst_count = DMA_BURST_INCR1,
+#if WAVE_PLAYER_I2S_DSP_MODE
+        .src_width = DMA_DATA_WIDTH_16BIT,
+        .dst_width = DMA_DATA_WIDTH_16BIT,
+#else
         .src_width = DMA_DATA_WIDTH_32BIT,
         .dst_width = DMA_DATA_WIDTH_32BIT,
+#endif
     };
 }
 
@@ -874,8 +731,13 @@ static void audio_fill_dma_rx_cfg(struct bflb_dma_channel_config_s *cfg)
         .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE,
         .src_burst_count = DMA_BURST_INCR1,
         .dst_burst_count = DMA_BURST_INCR1,
+#if WAVE_PLAYER_I2S_DSP_MODE
+        .src_width = DMA_DATA_WIDTH_16BIT,
+        .dst_width = DMA_DATA_WIDTH_16BIT,
+#else
         .src_width = DMA_DATA_WIDTH_32BIT,
         .dst_width = DMA_DATA_WIDTH_32BIT,
+#endif
     };
 }
 #endif
@@ -930,7 +792,7 @@ static const char *wave_player_backend_name(wave_player_backend_t backend)
     }
 }
 
-#if WAVE_PLAYER_CODEC_REG_CLI
+#if WAVE_PLAYER_CODEC_REG_CLI && !defined(CONFIG_BSP_AUDIO_PCM)
 static int wave_player_codec_i2c_write_reg8(struct bflb_device_s *i2c, uint8_t addr, uint8_t reg, uint8_t val)
 {
     struct bflb_i2c_msg_s msgs[2];
@@ -1099,12 +961,7 @@ static int wave_player_codec_cli_read_internal(bool capture, uint32_t reg, uint8
 /* A register read also reconfigures the shared I2C controller. */
 static int wave_player_codec_cli_read(bool capture, uint32_t reg, uint8_t width, uint32_t *value)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_codec_cli_read_internal(capture, reg, width, value);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_codec_cli_read_internal(capture, reg, width, value);
 }
 
 static int wave_player_codec_cli_write_internal(bool capture, uint32_t reg, uint32_t value, uint8_t width)
@@ -1134,12 +991,7 @@ static int wave_player_codec_cli_write_internal(bool capture, uint32_t reg, uint
 
 static int wave_player_codec_cli_write(bool capture, uint32_t reg, uint32_t value, uint8_t width)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_codec_cli_write_internal(capture, reg, value, width);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_codec_cli_write_internal(capture, reg, value, width);
 }
 
 static void wave_player_codec_cli_usage(void)
@@ -1322,20 +1174,32 @@ static void audio_io_stop(void)
 {
     audio_transport_stop();
 #if WAVE_PLAYER_ENABLE_REC
+    taskENTER_CRITICAL();
+    bool was_capturing = g_audio.rec_path_enabled;
     ++g_audio.cap_epoch;
     g_audio.cap_block_bytes = 0;
     g_audio.cap_samples_per_ch = 0;
     g_audio.rec_path_enabled = false;
+    wave_player_rec_stop_cb_t callback = g_audio.rec_stop_cb;
+    void *callback_context = g_audio.rec_stop_cb_user_data;
+    taskEXIT_CRITICAL();
+    if (was_capturing && callback != NULL) {
+        /* No old frame may enter after the recording file is finalized. */
+        while (g_audio.rec_callback_active) {
+            vTaskDelay(1);
+        }
+        callback(callback_context);
+    }
 #endif
 }
 
-static int wave_player_apply_rec_mic_pga(uint8_t pga)
+#if WAVE_PLAYER_ENABLE_REC && !defined(CONFIG_BSP_AUDIO_PCM)
+__attribute__((weak)) void wave_player_rec_prepare(uint32_t sample_rate_hz, uint8_t channels)
 {
-    if (pga > 100U) {
-        pga = 100U;
-    }
-    return audio_codec_set_mic_pga(&g_audio.cap_codec, (int)pga);
+    (void)sample_rate_hz;
+    (void)channels;
 }
+#endif
 
 static int wave_player_reload_tx_ring(uint32_t block_bytes)
 {
@@ -1484,13 +1348,6 @@ static int wave_player_config_internal(uint32_t samplerate_hz, uint32_t tx_block
             i2s_channels = tx_slot_count;
         }
     }
-#if WAVE_PLAYER_I2S_DSP_MODE && WAVE_PLAYER_I2S_DSP_LR_MERGE
-    if ((i2s_tx_enable || i2s_rx_enable) && (i2s_channels & 0x01U) != 0U) {
-        printf("wave_player: dsp lr merge requires an even slot count, got %u\r\n", i2s_channels);
-        return -EINVAL;
-    }
-#endif
-
     tx_frame_bytes = (uint32_t)out_channels * sample_bytes;
     if (logical_tx_block_bytes == 0U || (logical_tx_block_bytes % tx_frame_bytes) != 0U) {
         printf("wave_player: bad logical tx_block_bytes=%u, frame=%u\r\n", logical_tx_block_bytes, tx_frame_bytes);
@@ -1574,9 +1431,11 @@ static int wave_player_config_internal(uint32_t samplerate_hz, uint32_t tx_block
         struct bflb_i2s_config_s i2s_cfg;
         audio_fill_i2s_cfg(&i2s_cfg, i2s_tx_enable ? out_hz : cap_hz, i2s_channels);
 
+#if defined(BFLB_PERIPHERAL_I2S0)
+        bflb_peripheral_reset(BFLB_PERIPHERAL_I2S0);
+#endif
         bflb_i2s_init(i2s0, &i2s_cfg);
-        bflb_i2s_feature_control(i2s0, I2S_CMD_CHANNEL_LR_MERGE,
-                                  WAVE_PLAYER_I2S_DSP_MODE ? WAVE_PLAYER_I2S_DSP_LR_MERGE : true);
+        bflb_i2s_feature_control(i2s0, I2S_CMD_CHANNEL_LR_MERGE, !WAVE_PLAYER_I2S_DSP_MODE);
         bflb_i2s_link_txdma(i2s0, i2s_tx_enable);
         bflb_i2s_link_rxdma(i2s0, i2s_rx_enable);
     }
@@ -1662,6 +1521,7 @@ static int wave_player_config_internal(uint32_t samplerate_hz, uint32_t tx_block
     g_audio.rx_block_bytes = rx_block_bytes;
     g_audio.tx_slot_count = tx_slot_count;
     g_audio.tx_slot_word_bytes = tx_slot_word_bytes;
+    audio_controls_set_tx_layout(tx_slot_count, tx_slot_word_bytes);
     g_audio.tx_period_samples = tx_samples_per_ch;
     g_audio.tx_total_samples = 0;
 
@@ -1682,6 +1542,8 @@ static int wave_player_config_internal(uint32_t samplerate_hz, uint32_t tx_block
     }
 #endif
 
+    /* Rate setters retain each channel's native controls. A global volume
+     * replay here would overwrite independently configured channel levels. */
     if (g_audio.play_codec.drv != NULL) {
         int ret = audio_codec_set_sample_rate(&g_audio.play_codec, out_hz);
         if (ret != 0 && ret != -2) {
@@ -1697,6 +1559,11 @@ static int wave_player_config_internal(uint32_t samplerate_hz, uint32_t tx_block
             return -EINVAL;
         }
     }
+#if !defined(CONFIG_BSP_AUDIO_PCM)
+    if (g_audio.rec_path_enabled && g_audio.dma_ch_rx != NULL) {
+        wave_player_rec_prepare(cap_hz, cap_channels);
+    }
+#endif
 #endif
 
     bflb_dma_channel_tcint_clear(g_audio.dma_ch_tx);
@@ -1736,15 +1603,12 @@ static int wave_player_config_internal(uint32_t samplerate_hz, uint32_t tx_block
     return 0;
 }
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 void wave_player_config(uint32_t samplerate_hz, uint32_t tx_block_bytes, uint32_t rx_block_bytes, uint8_t channels)
 {
-    if (!wave_player_legacy_enter()) {
-        printf("wave_player: PCM sessions own hardware configuration\r\n");
-        return;
-    }
     (void)wave_player_config_internal(samplerate_hz, tx_block_bytes, rx_block_bytes, channels);
-    wave_player_legacy_leave();
 }
+#endif
 
 void wave_player_dump_stack(void)
 {
@@ -1795,6 +1659,12 @@ static uint32_t rb_read_block_aligned(Ring_Buffer_Type *rb, uint8_t *dst, uint32
 static void pcm_fill_pcm_block(int16_t *dst, const int16_t *src, uint32_t src_bytes, uint32_t src_channels,
                                uint32_t dst_channels, uint32_t dst_block_bytes)
 {
+    uint16_t muted = audio_controls_get_speaker_mute_mask();
+    if (audio_controls_playback_is_muted()) {
+        memset(dst, 0, dst_block_bytes);
+        bflb_l1c_dcache_clean_range((void *)dst, dst_block_bytes);
+        return;
+    }
     if (src_channels == 0U) {
         src_channels = 1U;
     }
@@ -1811,19 +1681,19 @@ static void pcm_fill_pcm_block(int16_t *dst, const int16_t *src, uint32_t src_by
 #if WAVE_PLAYER_I2S_DSP_MODE
     if (g_audio.playback_backend == WAVE_PLAYER_BACKEND_I2S_CODEC &&
         g_audio.tx_slot_count >= dst_channels &&
-        (g_audio.tx_slot_word_bytes == (uint8_t)sizeof(uint32_t) ||
-         g_audio.tx_slot_word_bytes == (uint8_t)sizeof(int16_t))) {
+        g_audio.tx_slot_word_bytes == (uint8_t)sizeof(int16_t)) {
         uint8_t slot_count = g_audio.tx_slot_count;
         uint32_t frame_words = (uint32_t)slot_count;
         uint32_t n = src_bytes / (src_channels * (uint32_t)sizeof(int16_t));
         uint32_t max_n = dst_block_bytes / (frame_words * (uint32_t)g_audio.tx_slot_word_bytes);
-        uint32_t *dst32 = (uint32_t *)(uintptr_t)dst;
 
         if (n > max_n) {
             n = max_n;
         }
-        memset(dst, 0, dst_block_bytes);
-        if (src != NULL && n > 0U) {
+        if (src == NULL) {
+            n = 0U;
+        }
+        if (n > 0U) {
             for (uint32_t i = 0; i < n; i++) {
                 int16_t l;
                 int16_t r;
@@ -1836,17 +1706,15 @@ static void pcm_fill_pcm_block(int16_t *dst, const int16_t *src, uint32_t src_by
                     r = l;
                 }
 
-                if (g_audio.tx_slot_word_bytes == (uint8_t)sizeof(uint32_t)) {
-                    for (uint8_t slot = 0U; slot < slot_count; slot++) {
-                        int16_t sample = ((slot & 0x01U) != 0U && dst_channels >= 2U) ? r : l;
-                        dst32[i * frame_words + slot] = (uint32_t)(uint16_t)sample;
-                    }
-                } else {
-                    for (uint8_t slot = 0U; slot < slot_count; slot++) {
-                        dst[i * frame_words + slot] = ((slot & 0x01U) != 0U && dst_channels >= 2U) ? r : l;
-                    }
+                for (uint8_t slot = 0U; slot < slot_count; slot++) {
+                    int16_t value = ((slot & 0x01U) != 0U && dst_channels >= 2U) ? r : l;
+                    dst[i * frame_words + slot] = (muted & (1U << slot)) ? 0 : value;
                 }
             }
+        }
+        uint32_t used_bytes = n * frame_words * (uint32_t)sizeof(int16_t);
+        if (used_bytes < dst_block_bytes) {
+            memset(((uint8_t *)dst) + used_bytes, 0, dst_block_bytes - used_bytes);
         }
         bflb_l1c_dcache_clean_range((void *)dst, dst_block_bytes);
         return;
@@ -1892,6 +1760,13 @@ static void pcm_fill_pcm_block(int16_t *dst, const int16_t *src, uint32_t src_by
         memset(((uint8_t *)dst) + used_bytes, 0, dst_block_bytes - used_bytes);
     }
 
+    for (uint32_t i = 0; muted != 0U && i < n; ++i) {
+        for (uint8_t channel = 0; channel < dst_channels; ++channel) {
+            if (muted & (1U << channel)) {
+                dst[i * dst_channels + channel] = 0;
+            }
+        }
+    }
     bflb_l1c_dcache_clean_range((void *)dst, dst_block_bytes);
 }
 
@@ -2172,6 +2047,7 @@ static void wave_player_task(void *arg)
             pong_fill_seen = true;
             pong_last_fill_isr = WAVE_PLAYER_DIAG_GET_TX_ISR();
             need_prime_pong = false;
+            g_audio.playback_primed = true;
             audio_pcm_player_started();
             continue;
         }
@@ -2242,20 +2118,25 @@ static void wave_player_task(void *arg)
 
 cleanup:
     audio_pcm_player_failed();
+    /* Unblock sources before recording finalization can wait for their file lock. */
+    g_audio.stop = true;
+    if (g_audio.sem_wave_rb_space != NULL) {
+        xSemaphoreGive(g_audio.sem_wave_rb_space);
+    }
     if (stop_audio && cfg != NULL && cfg->audio_stop != NULL) {
         cfg->audio_stop();
     }
     if (cfg != NULL && cfg->pcm_ping != NULL && tx_block_bytes > 0U && tx_block_bytes <= sizeof(g_audio.pcm_ping)) {
         memset(cfg->pcm_ping, 0, tx_block_bytes);
-        if (audio_pcm_owned()) {
-            bflb_l1c_dcache_clean_range(cfg->pcm_ping, tx_block_bytes);
-        }
+#if defined(CONFIG_BSP_AUDIO_PCM)
+        bflb_l1c_dcache_clean_range(cfg->pcm_ping, tx_block_bytes);
+#endif
     }
     if (cfg != NULL && cfg->pcm_pong != NULL && tx_block_bytes > 0U && tx_block_bytes <= sizeof(g_audio.pcm_pong)) {
         memset(cfg->pcm_pong, 0, tx_block_bytes);
-        if (audio_pcm_owned()) {
-            bflb_l1c_dcache_clean_range(cfg->pcm_pong, tx_block_bytes);
-        }
+#if defined(CONFIG_BSP_AUDIO_PCM)
+        bflb_l1c_dcache_clean_range(cfg->pcm_pong, tx_block_bytes);
+#endif
     }
 #if WAVE_PLAYER_ENABLE_RESAMPLE
     if (resampler != NULL) {
@@ -2268,11 +2149,13 @@ cleanup:
     if (src_pcm != NULL) {
         vPortFree(src_pcm);
     }
-    /* Clear the stop flag before making the engine available to a new owner. */
+    /* Publish task exit only after the stopped DMA buffers have been cleared. */
     taskENTER_CRITICAL();
     g_audio.stop = false;
+    g_audio.playback_primed = false;
     g_audio.wave_task = NULL;
     taskEXIT_CRITICAL();
+    xSemaphoreGive(g_audio.sem_wave_rb_space);
     vTaskDelete(NULL);
 }
 
@@ -2292,73 +2175,19 @@ static uint32_t align_up_u32(uint32_t value, uint32_t align)
     return value + (align - rem);
 }
 
-static uint32_t gcd_u32(uint32_t a, uint32_t b)
+/* Preserve the legacy mono export API without mixing the stored slots. */
+#if !defined(CONFIG_BSP_AUDIO_PCM)
+static int16_t recorder_mono_sample(uint32_t frame)
 {
-    while (b != 0U) {
-        uint32_t t = a % b;
-        a = b;
-        b = t;
-    }
-    return a;
-}
-
-static void rotate_left_s16(int16_t *buf, uint32_t len, uint32_t shift)
-{
-    if (buf == NULL || len <= 1U) {
-        return;
-    }
-    shift %= len;
-    if (shift == 0U) {
-        return;
-    }
-
-    uint32_t g = gcd_u32(len, shift);
-    for (uint32_t start = 0; start < g; start++) {
-        int16_t tmp = buf[start];
-        uint32_t j = start;
-        while (1) {
-            uint32_t k = j + shift;
-            if (k >= len) {
-                k -= len;
-            }
-            if (k == start) {
-                break;
-            }
-            buf[j] = buf[k];
-            j = k;
+    int32_t sum = 0;
+    uint32_t selected = 0U;
+    for (uint32_t c = 0U; c < g_audio.rec_channels; c++) {
+        if (g_audio.capture_layout.mic_mask & (1U << c)) {
+            sum += g_rec_pcm[frame * g_audio.rec_channels + c];
+            selected++;
         }
-        buf[j] = tmp;
     }
-}
-
-static void recorder_reorder_ring_s16(int16_t *buf, uint32_t len, uint32_t write_pos, bool filled,
-                                      uint32_t *out_samples)
-{
-    if (out_samples != NULL) {
-        *out_samples = 0;
-    }
-    if (buf == NULL || len == 0U) {
-        return;
-    }
-
-    if (!filled) {
-        if (write_pos > len) {
-            write_pos = len;
-        }
-        if (out_samples != NULL) {
-            *out_samples = write_pos;
-        }
-        return;
-    }
-
-    if (out_samples != NULL) {
-        *out_samples = len;
-    }
-
-    write_pos %= len;
-    if (write_pos != 0U) {
-        rotate_left_s16(buf, len, write_pos);
-    }
+    return selected > 0U ? (int16_t)(sum / (int32_t)selected) : 0;
 }
 
 static int wave_player_rec_dump_flash_internal(uint32_t flash_addr, uint32_t max_bytes)
@@ -2366,11 +2195,9 @@ static int wave_player_rec_dump_flash_internal(uint32_t flash_addr, uint32_t max
     uint32_t write_pos;
     uint32_t sample_rate;
     uint32_t total_samples;
-    uint32_t capacity = (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES;
+    uint32_t capacity;
     uint32_t start_idx;
     uint32_t erase_bytes;
-    uint32_t first_samples;
-    uint32_t second_samples;
     uint32_t dump_bytes;
     bool filled;
     bool truncated = false;
@@ -2383,11 +2210,12 @@ static int wave_player_rec_dump_flash_internal(uint32_t flash_addr, uint32_t max
     taskENTER_CRITICAL();
     write_pos = g_audio.rec_write;
     filled = g_audio.rec_filled;
-    sample_rate = g_audio.cap_hz;
+    capacity = g_audio.rec_capacity;
+    sample_rate = g_audio.rec_sample_rate_hz;
     taskEXIT_CRITICAL();
 
     total_samples = filled ? capacity : write_pos;
-    if (total_samples == 0U) {
+    if (total_samples == 0U || g_audio.capture_layout.mic_mask == 0U) {
         printf("rec_dump_flash: no data\r\n");
         return -1;
     }
@@ -2430,29 +2258,23 @@ static int wave_player_rec_dump_flash_internal(uint32_t flash_addr, uint32_t max
         return -1;
     }
 
-    first_samples = total_samples;
-    if ((start_idx + first_samples) > capacity) {
-        first_samples = capacity - start_idx;
-    }
-    second_samples = total_samples - first_samples;
-
-    if (first_samples > 0U) {
-        uint32_t first_bytes = first_samples * (uint32_t)sizeof(int16_t);
-        if (bflb_flash_write(flash_addr, (uint8_t *)&g_audio.rec_mono_buf[start_idx], first_bytes) != 0) {
+    int16_t pcm[64];
+    for (uint32_t offset = 0U; offset < total_samples;) {
+        uint32_t count = total_samples - offset;
+        if (count > sizeof(pcm) / sizeof(pcm[0])) {
+            count = sizeof(pcm) / sizeof(pcm[0]);
+        }
+        for (uint32_t i = 0U; i < count; i++) {
+            pcm[i] = recorder_mono_sample((start_idx + offset + i) % capacity);
+        }
+        uint32_t addr = flash_addr + offset * sizeof(int16_t);
+        uint32_t bytes = count * sizeof(int16_t);
+        if (bflb_flash_write(addr, (uint8_t *)pcm, bytes) != 0) {
             printf("rec_dump_flash: write failed addr=0x%08lx len=0x%08lx\r\n",
-                   (unsigned long)flash_addr, (unsigned long)first_bytes);
+                   (unsigned long)addr, (unsigned long)bytes);
             return -1;
         }
-    }
-
-    if (second_samples > 0U) {
-        uint32_t second_addr = flash_addr + first_samples * (uint32_t)sizeof(int16_t);
-        uint32_t second_bytes = second_samples * (uint32_t)sizeof(int16_t);
-        if (bflb_flash_write(second_addr, (uint8_t *)g_audio.rec_mono_buf, second_bytes) != 0) {
-            printf("rec_dump_flash: write failed addr=0x%08lx len=0x%08lx\r\n",
-                   (unsigned long)second_addr, (unsigned long)second_bytes);
-            return -1;
-        }
+        offset += count;
     }
 
     printf("rec_dump_flash: addr=0x%08lx bytes=%lu samples=%lu sample_rate=%lu ch=1 erase=0x%08lx%s\r\n",
@@ -2464,18 +2286,14 @@ static int wave_player_rec_dump_flash_internal(uint32_t flash_addr, uint32_t max
 
 static int wave_player_rec_dump_flash(uint32_t flash_addr, uint32_t max_bytes)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_rec_dump_flash_internal(flash_addr, max_bytes);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_rec_dump_flash_internal(flash_addr, max_bytes);
 }
+#endif
 #endif
 
 static bool wave_player_capture_layout_valid(wave_player_capture_layout_t layout, uint8_t channels)
 {
-    return channels > 0U && channels <= 16U &&
+    return channels > 0U && channels <= AUDIO_CODEC_MAX_SLOTS &&
            ((layout.mic_mask | layout.ref_mask) >> channels) == 0U &&
            (layout.mic_mask & layout.ref_mask) == 0U;
 }
@@ -2504,7 +2322,9 @@ static void audio_cap_proc(void *arg)
              * descriptors whose buffer is being reused, including at wrap. */
             uint32_t lag = g_audio.cap_isr_seq - msg.seq;
             WAVE_PLAYER_DIAG_NOTE_RX_LAG(lag);
-            if (lag >= WAVE_PLAYER_CAP_DMA_BLOCKS - 1U) continue;
+            if (lag >= WAVE_PLAYER_CAP_DMA_BLOCKS - 1U) {
+                continue;
+            }
         }
         const int16_t *samples = g_audio.cap_blocks[msg.block_idx];
         bflb_l1c_dcache_invalidate_range((void *)samples, msg.nbytes);
@@ -2514,38 +2334,71 @@ static void audio_cap_proc(void *arg)
             .sample_rate_hz = msg.hz,
             .channels = msg.channels,
             .layout = g_audio.capture_layout,
+            .muted_mic_mask = wave_player_get_mic_mute_mask(),
             .sequence = msg.seq,
             .epoch = msg.epoch,
             .first_sample_index = msg.first_sample_index,
         };
-        wave_player_rec_cb_t callback;
-        void *callback_context;
+#if WAVE_PLAYER_ENABLE_REC_RB
+        /* Snapshot every slot before an application callback can block on SD. */
+        uint32_t capacity = frame.sample_rate_hz * WAVE_PLAYER_REC_SECONDS;
+        if (capacity > WAVE_PLAYER_REC_MAX_FRAMES) {
+            capacity = WAVE_PLAYER_REC_MAX_FRAMES;
+        }
         taskENTER_CRITICAL();
-        callback = g_audio.rec_cb;
-        callback_context = g_audio.rec_cb_user_data;
+        if (capacity > 0U && g_audio.rec_enable && msg.epoch == g_audio.cap_epoch) {
+            if (g_audio.rec_sample_rate_hz != frame.sample_rate_hz ||
+                g_audio.rec_channels != frame.channels || g_audio.rec_capacity != capacity) {
+                g_audio.rec_write = 0U;
+                g_audio.rec_filled = false;
+            }
+            g_audio.rec_capacity = capacity;
+            g_audio.rec_sample_rate_hz = frame.sample_rate_hz;
+            g_audio.rec_channels = frame.channels;
+            uint32_t offset = 0U;
+            while (offset < frame.samples_per_channel) {
+                uint32_t count = frame.samples_per_channel - offset;
+                uint32_t available = capacity - g_audio.rec_write;
+                if (count > available) {
+                    count = available;
+                }
+                int16_t *output = &g_rec_pcm[g_audio.rec_write * frame.channels];
+                memcpy(output, &samples[offset * frame.channels], count * frame.channels * sizeof(int16_t));
+                if (frame.muted_mic_mask != 0U) {
+                    for (uint32_t i = 0; i < count; ++i) {
+                        for (uint8_t c = 0; c < frame.channels; ++c) {
+                            if (frame.muted_mic_mask & (1U << c)) {
+                                output[i * frame.channels + c] = 0;
+                            }
+                        }
+                    }
+                }
+                offset += count;
+                g_audio.rec_write += count;
+                if (g_audio.rec_write == capacity) {
+                    g_audio.rec_write = 0U;
+                    g_audio.rec_filled = true;
+                }
+            }
+        }
+        taskEXIT_CRITICAL();
+#endif
+        wave_player_rec_cb_t callback = NULL;
+        void *callback_context = NULL;
+        taskENTER_CRITICAL();
+        /* Stop may have invalidated this descriptor after the first check. */
+        if (g_audio.rec_enable && g_audio.rec_path_enabled && msg.epoch == g_audio.cap_epoch) {
+            callback = g_audio.rec_cb;
+            callback_context = g_audio.rec_cb_user_data;
+            g_audio.rec_callback_active = (callback != NULL);
+        }
         taskEXIT_CRITICAL();
         if (callback != NULL) {
             callback(&frame, callback_context);
+            taskENTER_CRITICAL();
+            g_audio.rec_callback_active = false;
+            taskEXIT_CRITICAL();
         }
-#if WAVE_PLAYER_ENABLE_REC_RB
-        /* Compatibility storage only: the callback above always gets all slots. */
-        uint32_t selected = 0U;
-        for (uint32_t c = 0U; c < frame.channels; c++) {
-            if (frame.layout.mic_mask & (1U << c)) selected++;
-        }
-        if (selected == 0U) continue;
-        for (uint32_t i = 0U; i < frame.samples_per_channel; i++) {
-            int32_t sum = 0;
-            for (uint32_t c = 0U; c < frame.channels; c++) {
-                if (frame.layout.mic_mask & (1U << c)) sum += samples[i * frame.channels + c];
-            }
-            g_audio.rec_mono_buf[g_audio.rec_write++] = (int16_t)(sum / (int32_t)selected);
-            if (g_audio.rec_write >= (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES) {
-                g_audio.rec_write = 0;
-                g_audio.rec_filled = true;
-            }
-        }
-#endif
     }
 }
 #endif
@@ -2743,19 +2596,10 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
 
         if (need_ext_play) {
             g_audio.play_codec = ext_codec;
-            (void)audio_codec_set_mute(&g_audio.play_codec, false);
-            if (0 != audio_codec_set_volume(&g_audio.play_codec, 50)) {
-                printf("audio codec set volume failed\r\n");
-                return -1;
-            }
         }
 
         if (need_ext_cap) {
             g_audio.cap_codec = ext_codec;
-            if (0 != wave_player_apply_rec_mic_pga((uint8_t)WAVE_PLAYER_REC_DEFAULT_MIC_PGA)) {
-                printf("audio codec set mic pga failed\r\n");
-                return -1;
-            }
         }
 
         printf("audio codec ready: %s (0x%02x)\r\n", ext_codec.name, ext_codec.i2c_addr);
@@ -2773,11 +2617,6 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
             printf("wave_player_init: builtin playback codec init failed\r\n");
             return -1;
         }
-        (void)audio_codec_set_mute(&g_audio.play_codec, false);
-        if (0 != audio_codec_set_volume(&g_audio.play_codec, 50)) {
-            printf("wave_player_init: builtin playback volume init failed\r\n");
-            return -1;
-        }
         printf("audio codec ready: %s (builtin playback)\r\n", g_audio.play_codec.name);
     }
 
@@ -2791,13 +2630,6 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
             audio_codec_init(&g_audio.cap_codec, &cap_codec_cfg) != 0) {
             printf("wave_player_init: builtin capture codec init failed\r\n");
             return -1;
-        }
-        {
-            int ret = wave_player_apply_rec_mic_pga((uint8_t)WAVE_PLAYER_REC_DEFAULT_MIC_PGA);
-            if (ret != 0 && ret != -2) {
-                printf("wave_player_init: builtin capture pga init failed\r\n");
-                return -1;
-            }
         }
         printf("audio codec ready: %s (builtin capture)\r\n", g_audio.cap_codec.name);
     }
@@ -2814,14 +2646,23 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
         return -1;
     }
     g_audio.capture_layout = hw_cfg->capture_layout;
-#if WAVE_PLAYER_ENABLE_REC_RB
-    if (g_audio.capture_layout.mic_mask == 0U) {
-        printf("wave_player_init: warning: capture_layout.mic_mask=0; mono recording ring will stay empty\r\n");
-    }
-#endif
 #endif
     g_audio.tx_slot_count = g_audio.out_channels;
     g_audio.tx_slot_word_bytes = (uint8_t)sizeof(int16_t);
+    audio_controls_config_t controls = {
+        .playback = &g_audio.play_codec,
+        .capture = &g_audio.cap_codec,
+        .speaker_mask = hw_cfg->speaker_mask,
+#if WAVE_PLAYER_ENABLE_REC
+        .mic_mask = (uint16_t)hw_cfg->capture_layout.mic_mask,
+#endif
+        .tx_slots = g_audio.tx_slot_count,
+        .tx_slot_bytes = g_audio.tx_slot_word_bytes,
+    };
+    if (audio_controls_init(&controls) != 0) {
+        printf("wave_player_init: device control setup failed\r\n");
+        return -1;
+    }
     g_audio.sem_tx_dma_done = xSemaphoreCreateBinary();
     g_audio.sem_wave_rb_space = xSemaphoreCreateBinary();
     if (g_audio.sem_tx_dma_done == NULL || g_audio.sem_wave_rb_space == NULL) {
@@ -2847,7 +2688,7 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
     }
     /* VAD callback path is heavier than plain copy; keep capture task stack sufficient. */
     UBaseType_t capture_priority = hw_cfg->capture_task_priority ? hw_cfg->capture_task_priority : 2;
-    if (xTaskCreate(audio_cap_proc, (char *)"audio_cap", 2048, NULL, capture_priority, &g_audio.cap_task) != pdPASS) {
+    if (xTaskCreate(audio_cap_proc, (char *)"audio_cap", 1280, NULL, capture_priority, &g_audio.cap_task) != pdPASS) {
         printf("wave_player_init: capture task alloc failed\r\n");
         goto fail;
     }
@@ -2856,6 +2697,7 @@ int wave_player_init(const wave_player_hw_cfg_t *hw_cfg)
     return 0;
 
 fail:
+    audio_controls_reset();
 #if WAVE_PLAYER_ENABLE_REC
     /* Task creation is the last allocation; no capture task runs on failure. */
     g_audio.cap_task = NULL;
@@ -2897,15 +2739,12 @@ static int wave_player_feed_internal(uint8_t *data, uint32_t len)
     return wrote;
 }
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 int wave_player_feed(uint8_t *data, uint32_t len)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_feed_internal(data, len);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_feed_internal(data, len);
 }
+#endif
 
 uint32_t wave_player_get_buffered_bytes(void)
 {
@@ -2929,15 +2768,13 @@ static uint32_t wave_player_trim_buffer_internal(uint32_t max_bytes)
     return dropped;
 }
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 uint32_t wave_player_trim_buffer(uint32_t max_bytes)
 {
-    if (!wave_player_legacy_enter()) {
-        return 0;
-    }
     uint32_t discarded = wave_player_trim_buffer_internal(max_bytes);
-    wave_player_legacy_leave();
     return discarded;
 }
+#endif
 
 static void wave_player_flush_internal(void)
 {
@@ -2951,24 +2788,21 @@ static void wave_player_flush_internal(void)
     }
 }
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 void wave_player_flush(void)
 {
-    if (!wave_player_legacy_enter()) {
-        return;
-    }
     wave_player_flush_internal();
-    wave_player_legacy_leave();
 }
 
 uint32_t wave_player_feed_blocking(uint8_t *data, uint32_t len)
 {
-    if (data == NULL || len == 0 || !wave_player_legacy_enter()) {
+    if (data == NULL || len == 0) {
         return 0;
     }
 
     uint32_t wrote_total = 0;
     while (wrote_total < len) {
-        if (g_audio.paused || g_audio.stop) {
+        if (g_audio.paused || g_audio.stop || g_audio.wave_task == NULL) {
             break;
         }
         uint32_t empty = Ring_Buffer_Get_Empty_Length(&g_audio.wave_rb);
@@ -2998,9 +2832,9 @@ uint32_t wave_player_feed_blocking(uint8_t *data, uint32_t len)
         }
     }
 
-    wave_player_legacy_leave();
     return wrote_total;
 }
+#endif
 
 /* Start audio output */
 static int wave_player_start_internal(void)
@@ -3019,6 +2853,7 @@ static int wave_player_start_internal(void)
 
     g_audio.stop = false;
     g_audio.paused = false;
+    g_audio.playback_primed = false;
     g_audio.wave_cfg.wave_rb = &g_audio.wave_rb;
     g_audio.wave_cfg.sem_wave_rb_space = g_audio.sem_wave_rb_space;
     g_audio.wave_cfg.src_sample_rate_hz = g_audio.src_hz;
@@ -3031,33 +2866,113 @@ static int wave_player_start_internal(void)
     g_audio.wave_cfg.pcm_ping = g_audio.pcm_ping;
     g_audio.wave_cfg.pcm_pong = g_audio.pcm_pong;
     g_audio.wave_cfg.pcm_fill = pcm_fill_pcm_block;
-    g_audio.wave_cfg.audio_stop = audio_pcm_owned() ? audio_pcm_player_cleanup : audio_io_stop;
+#if defined(CONFIG_BSP_AUDIO_PCM)
+    g_audio.wave_cfg.audio_stop = audio_pcm_player_cleanup;
+#else
+    g_audio.wave_cfg.audio_stop = audio_io_stop;
+#endif
     if (xTaskCreate(wave_player_task, (char *)"wav_play", WAVE_PLAYER_TASK_STACK_DEPTH, &g_audio.wave_cfg, playback_task_priority,
                     &g_audio.wave_task) != pdPASS) {
         printf("wave_player: create task failed\r\n");
         g_audio.wave_task = NULL;
-        if (audio_pcm_owned()) {
-            audio_pcm_player_cleanup();
-        } else {
-            audio_io_stop();
-        }
+#if defined(CONFIG_BSP_AUDIO_PCM)
+        audio_pcm_player_cleanup();
+#else
+        audio_io_stop();
+#endif
         return -1;
     }
 
     return 0;
 }
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 int wave_player_start(void)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
+    if (!g_audio.io_started) {
+        if (g_audio.logical_tx_block_bytes == 0U) {
+            printf("wave_player: configure before start\r\n");
+            return -EINVAL;
+        }
+        int result = wave_player_config_internal(g_audio.src_hz, g_audio.logical_tx_block_bytes,
+                                                  g_audio.rx_block_bytes, g_audio.src_channels);
+        if (result != 0) {
+            return result;
+        }
     }
-    int result = wave_player_start_internal();
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_start_internal();
+}
+#endif
+
+typedef struct {
+    void (*run)(void *);
+    void *arg;
+} wave_player_source_cfg_t;
+
+#if !defined(CONFIG_BSP_AUDIO_PCM)
+static void wave_player_source_task(void *arg)
+{
+    wave_player_source_cfg_t cfg = *(wave_player_source_cfg_t *)arg;
+    vPortFree(arg);
+    cfg.run(cfg.arg);
+    taskENTER_CRITICAL();
+    g_audio.wave_src_task = NULL;
+    taskEXIT_CRITICAL();
+    vTaskDelete(NULL);
 }
 
+int wave_player_start_source_task(void (*run)(void *), void *arg)
+{
+    if (run == NULL) {
+        return -EINVAL;
+    }
+    int result = -EBUSY;
+    if (g_audio.wave_src_task == NULL && wave_player_is_running()) {
+        wave_player_source_cfg_t *cfg = pvPortMalloc(sizeof(*cfg));
+        if (cfg == NULL) {
+            result = -ENOMEM;
+        } else {
+            cfg->run = run;
+            cfg->arg = arg;
+            if (xTaskCreate(wave_player_source_task, (char *)"wave_src", 384,
+                            cfg, 2, &g_audio.wave_src_task) == pdPASS) {
+                result = 0;
+            } else {
+                vPortFree(cfg);
+                result = -ENOMEM;
+            }
+        }
+    }
+    return result;
+}
+#endif
+
+bool wave_player_is_running(void)
+{
+    return g_audio.wave_task != NULL && !g_audio.stop;
+}
+
+#if !defined(CONFIG_BSP_AUDIO_PCM)
+void wave_player_drain(void)
+{
+    while (wave_player_is_running() &&
+           (!g_audio.playback_primed || wave_player_get_buffered_bytes() != 0U)) {
+        vTaskDelay(1);
+    }
+    /* Finish the prefetched block and ping/pong, then flush the I2S FIFO. */
+    uint32_t completed = g_audio.tx_dma_completions;
+    while (wave_player_is_running() &&
+           (g_audio.paused || (uint32_t)(g_audio.tx_dma_completions - completed) < 4U)) {
+        if (g_audio.paused) {
+            completed = g_audio.tx_dma_completions;
+        }
+        vTaskDelay(1);
+    }
+}
+#endif
+
 /* Start audio suspend */
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 static int wave_player_suspend_internal(void)
 {
     if (g_audio.wave_task == NULL) {
@@ -3072,12 +2987,7 @@ static int wave_player_suspend_internal(void)
 
 int wave_player_suspend(void)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_suspend_internal();
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_suspend_internal();
 }
 
 static int wave_player_resume_internal(void)
@@ -3093,13 +3003,9 @@ static int wave_player_resume_internal(void)
 
 int wave_player_resume(void)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_resume_internal();
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_resume_internal();
 }
+#endif
 
 /* Stop audio output */
 static int wave_player_stop_timeout_internal(uint32_t timeout_ms)
@@ -3125,6 +3031,10 @@ static int wave_player_stop_timeout_internal(uint32_t timeout_ms)
         (void)xTaskNotify(g_audio.wave_task, WAVE_PLAYER_TX_DONE_NOTIFY_BIT, eSetBits);
     }
     taskEXIT_CRITICAL();
+    /* Cancel a blocked source before cleanup may wait for its SD/file lock. */
+    if (g_audio.sem_wave_rb_space != NULL) {
+        xSemaphoreGive(g_audio.sem_wave_rb_space);
+    }
     while (g_audio.wave_task != NULL) {
         if (timeout_ms != UINT32_MAX && bflb_mtimer_get_time_us() - started >= (uint64_t)timeout_ms * 1000U) {
             return -ETIMEDOUT;
@@ -3134,113 +3044,21 @@ static int wave_player_stop_timeout_internal(uint32_t timeout_ms)
     return 0;
 }
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 int wave_player_stop(void)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
     int result = wave_player_stop_timeout_internal(UINT32_MAX);
-    wave_player_legacy_leave();
+    /* Let the old source finish cleanup before another playback starts. */
+    if (result == 0 && g_audio.wave_src_task != xTaskGetCurrentTaskHandle()) {
+        while (g_audio.wave_src_task != NULL) {
+            vTaskDelay(1);
+        }
+    }
     return result;
 }
+#endif
 
-/* Mute/unmute audio output */
-static int wave_player_set_mute_internal(bool mute)
-{
-    g_audio.muted = mute;
-    return audio_codec_set_mute(&g_audio.play_codec, mute);
-}
-
-int wave_player_set_mute(bool mute)
-{
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_set_mute_internal(mute);
-    wave_player_legacy_leave();
-    return result;
-}
-
-/* Set volume (0-100) */
-static int wave_player_set_volume_internal(uint8_t volume)
-{
-    if (volume > 100) {
-        volume = 100;
-    }
-
-    g_audio.volume = volume;
-    int ret = audio_codec_set_volume(&g_audio.play_codec, volume);
-
-    if (ret == 0) {
-        printf("[AUDIO] Volume set to %d\r\n", volume);
-    } else {
-        printf("[AUDIO] ERROR: Failed to set volume: %d\r\n", ret);
-    }
-
-    return ret;
-}
-
-int wave_player_set_volume(uint8_t volume)
-{
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_set_volume_internal(volume);
-    wave_player_legacy_leave();
-    return result;
-}
-
-static int wave_player_set_record_volume_internal(uint8_t volume)
-{
-    if (volume > 100) {
-        volume = 100;
-    }
-
-    return audio_codec_set_record_volume(&g_audio.cap_codec, volume);
-}
-
-int wave_player_set_record_volume(uint8_t volume)
-{
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_set_record_volume_internal(volume);
-    wave_player_legacy_leave();
-    return result;
-}
-
-static int wave_player_set_record_pga_internal(uint8_t pga)
-{
-    if (pga > 100) {
-        pga = 100;
-    }
-
-    return wave_player_apply_rec_mic_pga(pga);
-}
-
-int wave_player_set_record_pga(uint8_t pga)
-{
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_set_record_pga_internal(pga);
-    wave_player_legacy_leave();
-    return result;
-}
-
-/* Get volume (0-100) */
-uint8_t wave_player_get_volume(void)
-{
-    return g_audio.volume;
-}
-
-/* Get mute status */
-bool wave_player_get_mute(void)
-{
-    return g_audio.muted;
-}
-
-#if WAVE_PLAYER_ENABLE_REC
+#if WAVE_PLAYER_ENABLE_REC && !defined(CONFIG_BSP_AUDIO_PCM)
 static int wave_player_rec_set_callback_internal(wave_player_rec_cb_t cb, void *user_data)
 {
     taskENTER_CRITICAL();
@@ -3252,34 +3070,33 @@ static int wave_player_rec_set_callback_internal(wave_player_rec_cb_t cb, void *
 
 int wave_player_rec_set_callback(wave_player_rec_cb_t cb, void *user_data)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_rec_set_callback_internal(cb, user_data);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_rec_set_callback_internal(cb, user_data);
+}
+
+int wave_player_rec_set_stop_callback(wave_player_rec_stop_cb_t cb, void *user_data)
+{
+    taskENTER_CRITICAL();
+    g_audio.rec_stop_cb = cb;
+    g_audio.rec_stop_cb_user_data = user_data;
+    taskEXIT_CRITICAL();
+    return 0;
 }
 
 static int wave_record_enable_internal(bool enable)
 {
-    bool changed = (g_audio.rec_enable != enable);
-    g_audio.rec_enable = enable;
-
-    if (changed && g_audio.io_started && g_audio.logical_tx_block_bytes > 0U && g_audio.src_hz > 0U) {
-        wave_player_config(g_audio.src_hz, g_audio.logical_tx_block_bytes, g_audio.rx_block_bytes, g_audio.src_channels);
+    if (g_audio.io_started) {
+        printf("rec_en: playback active, stop playback first\r\n");
+        return -EBUSY;
     }
+
+    g_audio.rec_enable = enable;
 
     return 0;
 }
 
 int wave_record_enable(bool enable)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_record_enable_internal(enable);
-    wave_player_legacy_leave();
-    return result;
+    return wave_record_enable_internal(enable);
 }
 
 bool wave_record_is_enabled(void)
@@ -3300,32 +3117,19 @@ int wave_player_rec_get_mono(int16_t *dst, uint32_t max_samples, uint32_t *out_s
     taskENTER_CRITICAL();
     uint32_t write_pos = g_audio.rec_write;
     bool filled = g_audio.rec_filled;
-    taskEXIT_CRITICAL();
-
-    uint32_t total = filled ? (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES : write_pos;
-    if (total == 0U) {
-        *out_samples = 0U;
+    uint32_t capacity = g_audio.rec_capacity;
+    uint32_t total = filled ? capacity : write_pos;
+    if (total == 0U || g_audio.capture_layout.mic_mask == 0U) {
+        taskEXIT_CRITICAL();
         return 0;
     }
     if (total > max_samples) {
         total = max_samples;
     }
 
-    taskENTER_CRITICAL();
-    if (!filled) {
-        memcpy(dst, g_audio.rec_mono_buf, total * sizeof(int16_t));
-    } else {
-        uint32_t start = write_pos;
-        if (total < (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES) {
-            start = (write_pos + (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES - total) % (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES;
-        }
-        for (uint32_t i = 0; i < total; i++) {
-            uint32_t idx = start + i;
-            if (idx >= (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES) {
-                idx -= (uint32_t)WAVE_PLAYER_REC_MAX_SAMPLES;
-            }
-            dst[i] = g_audio.rec_mono_buf[idx];
-        }
+    uint32_t start = filled ? (write_pos + capacity - total) % capacity : 0U;
+    for (uint32_t i = 0U; i < total; i++) {
+        dst[i] = recorder_mono_sample((start + i) % capacity);
     }
     taskEXIT_CRITICAL();
 
@@ -3348,40 +3152,43 @@ static int wave_player_rec_start_internal(uint32_t duration_ms, uint32_t sample_
     }
 
     bool prev_enable = wave_record_is_enabled();
-    (void)wave_record_enable(true);
+    int ret = wave_record_enable(true);
+    if (ret != 0) {
+        return ret;
+    }
 #if WAVE_PLAYER_ENABLE_REC_RB
+    taskENTER_CRITICAL();
     g_audio.rec_write = 0;
     g_audio.rec_filled = false;
+    taskEXIT_CRITICAL();
 #endif
     g_audio.rec_stop = false;
 
-#if WAVE_PLAYER_ENABLE_REC_RB
-    memset(g_audio.rec_mono_buf, 0, sizeof(g_audio.rec_mono_buf));
-#endif
     uint32_t tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
-    wave_player_config(sample_rate_hz, tx_block_bytes, tx_block_bytes, channels);
-    wave_player_start();
+    int result = wave_player_config_internal(sample_rate_hz, tx_block_bytes, tx_block_bytes, channels);
+    if (result == 0) {
+        result = wave_player_start();
+    }
+    if (result != 0) {
+        (void)wave_record_enable(prev_enable);
+        return result;
+    }
 
     const TickType_t ticks_total = pdMS_TO_TICKS(duration_ms);
     const TickType_t tick_start = xTaskGetTickCount();
     while ((xTaskGetTickCount() - tick_start) < ticks_total && !g_audio.rec_stop) {
         vTaskDelay(pdMS_TO_TICKS(2));
     }
-    wave_player_stop();
+    result = wave_player_stop();
     g_audio.rec_stop = false;
     (void)wave_record_enable(prev_enable);
 
-    return 0;
+    return result;
 }
 
 int wave_player_rec_start(uint32_t duration_ms, uint32_t sample_rate_hz, uint8_t channels)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_rec_start_internal(duration_ms, sample_rate_hz, channels);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_rec_start_internal(duration_ms, sample_rate_hz, channels);
 }
 
 static int wave_player_rec_stop_internal(void)
@@ -3396,33 +3203,82 @@ static int wave_player_rec_stop_internal(void)
 
 int wave_player_rec_stop(void)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_rec_stop_internal();
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_rec_stop_internal();
 }
 
 static int cmd_rec_start(int argc, char **argv)
 {
-    if (argc < 4) {
-        printf("usage: rec_start <duration_ms> <sample_rate> <channels>\r\n");
-        return 0;
+    if (argc != 2) {
+        printf("usage: rec_start <duration_ms>\r\n");
+        return -1;
+    }
+    char *end;
+    uint32_t duration_ms = (uint32_t)strtoul(argv[1], &end, 10);
+    if (end == argv[1] || *end != '\0' || duration_ms == 0U) {
+        return -1;
     }
 
-    uint32_t duration_ms = (uint32_t)strtoul(argv[1], NULL, 0);
-    uint32_t sample_rate = (uint32_t)strtoul(argv[2], NULL, 0);
-    uint32_t channels = (uint32_t)strtoul(argv[3], NULL, 0);
-    return wave_player_rec_start(duration_ms, sample_rate, (uint8_t)channels);
+    int ret = wave_player_stop();
+#if defined(CONFIG_PVMP3DEC) && !defined(CONFIG_BSP_AUDIO_PCM)
+    if (ret == 0) {
+        ret = mp3_player_stop();
+    }
+#endif
+    if (ret != 0) {
+        return ret;
+    }
+    uint32_t sample_rate = WAVE_PLAYER_FIX_SAMPLE_RATE > 0U ? WAVE_PLAYER_FIX_SAMPLE_RATE : WAVE_PLAYER_REC_MAX_FS_HZ;
+    return wave_player_rec_start(duration_ms, sample_rate, WAVE_PLAYER_OUT_CHANNELS);
 }
 
-static int cmd_rec_stop(int argc, char **argv)
+#if WAVE_PLAYER_ENABLE_REC_RB
+typedef struct {
+    uint8_t slot;
+    bool rec_enable_after_done;
+} rec_slot_play_cfg_t;
+
+static void rec_slot_playback(void *arg)
 {
-    (void)argc;
-    (void)argv;
-    return wave_player_rec_stop();
+    rec_slot_play_cfg_t *cfg = (rec_slot_play_cfg_t *)arg;
+    uint32_t frames = g_audio.rec_filled ? g_audio.rec_capacity : g_audio.rec_write;
+    uint32_t start = g_audio.rec_filled ? g_audio.rec_write : 0U;
+    uint32_t offset = 0U;
+    int16_t pcm[64];
+    while (offset < frames && g_audio.wave_task != NULL && !g_audio.stop) {
+        uint32_t count = frames - offset;
+        if (count > sizeof(pcm) / sizeof(pcm[0])) {
+            count = sizeof(pcm) / sizeof(pcm[0]);
+        }
+        for (uint32_t i = 0U; i < count; i++) {
+            uint32_t frame = (start + offset + i) % g_audio.rec_capacity;
+            pcm[i] = g_rec_pcm[frame * g_audio.rec_channels + cfg->slot];
+        }
+        uint32_t bytes = count * sizeof(int16_t);
+        uint32_t sent = 0U;
+        while (sent < bytes && wave_player_is_running()) {
+            sent += wave_player_feed_blocking((uint8_t *)pcm + sent, bytes - sent);
+            if (sent < bytes) {
+                vTaskDelay(1);
+            }
+        }
+        if (sent != bytes) {
+            break;
+        }
+        offset += count;
+    }
+    if (offset == frames) {
+        wave_player_drain();
+    }
+    bool rec_enable_after_done = cfg->rec_enable_after_done;
+    vPortFree(cfg);
+    wave_player_stop();
+    wave_record_enable(rec_enable_after_done);
+    taskENTER_CRITICAL();
+    g_audio.wave_src_task = NULL;
+    taskEXIT_CRITICAL();
+    vTaskDelete(NULL);
 }
+#endif
 
 static int cmd_rec_play_internal(int argc, char **argv)
 {
@@ -3432,42 +3288,70 @@ static int cmd_rec_play_internal(int argc, char **argv)
     printf("rec_play: disabled (WAVE_PLAYER_ENABLE_REC_RB=0)\r\n");
     return -1;
 #else
-    if (argc > 1) {
-        printf("usage: rec_play\r\n");
-        return 0;
+    if (argc != 2 || strncmp(argv[1], "slot", 4) != 0) {
+        printf("usage: rec_play slot<N>\r\n");
+        return -1;
+    }
+    char *end;
+    unsigned long slot = strtoul(argv[1] + 4, &end, 10);
+    if (end == argv[1] + 4 || *end != '\0') {
+        return -1;
     }
 
-    uint32_t sample_rate = (g_audio.cap_hz > 0U) ? (uint32_t)g_audio.cap_hz : 16000U;
-    const uint8_t channels = 1U;
-    if (g_audio.cap_hz == 0U) {
-        printf("rec_play: invalid record sample rate, fallback to 16000\r\n");
+    int ret = wave_player_stop();
+#if defined(CONFIG_PVMP3DEC) && !defined(CONFIG_BSP_AUDIO_PCM)
+    if (ret == 0) {
+        ret = mp3_player_stop();
     }
-
-    uint32_t out_samples = 0;
-    recorder_reorder_ring_s16(g_audio.rec_mono_buf, WAVE_PLAYER_REC_MAX_SAMPLES, g_audio.rec_write, g_audio.rec_filled,
-                              &out_samples);
-    if (out_samples == 0) {
+#endif
+    if (ret != 0) {
+        return ret;
+    }
+    uint32_t frames = g_audio.rec_filled ? g_audio.rec_capacity : g_audio.rec_write;
+    if (frames == 0U) {
         printf("rec_play: no data\r\n");
         return -1;
     }
-    g_audio.rec_write = out_samples;
-    g_audio.rec_filled = 0;
+    if (slot >= g_audio.rec_channels) {
+        printf("rec_play: recorded slots: slot0-slot%u\r\n", (unsigned)(g_audio.rec_channels - 1U));
+        return -1;
+    }
+
+    rec_slot_play_cfg_t *cfg = (rec_slot_play_cfg_t *)pvPortMalloc(sizeof(*cfg));
+    if (cfg == NULL) {
+        return -1;
+    }
     bool prev_rec_enable = wave_record_is_enabled();
-    wave_player_stop();
     wave_record_enable(false);
-    return wave_player_play_one_wave((const uint8_t *)g_audio.rec_mono_buf, out_samples * (uint32_t)sizeof(int16_t),
-                                     sample_rate, (uint8_t)channels, true, prev_rec_enable);
+    uint32_t tx_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
+    ret = wave_player_config_internal(g_audio.rec_sample_rate_hz, tx_bytes, 0U, 1U);
+    if (ret == 0) {
+        ret = wave_player_start();
+    }
+    if (ret != 0) {
+        vPortFree(cfg);
+        wave_record_enable(prev_rec_enable);
+        return ret;
+    }
+    *cfg = (rec_slot_play_cfg_t){
+        .slot = (uint8_t)slot,
+        .rec_enable_after_done = prev_rec_enable,
+    };
+    printf("rec_play: slot%lu, %lu frames, %lu Hz\r\n", slot, (unsigned long)frames,
+           (unsigned long)g_audio.rec_sample_rate_hz);
+    if (xTaskCreate(rec_slot_playback, (char *)"rec_play", 152, cfg, 2, &g_audio.wave_src_task) != pdPASS) {
+        vPortFree(cfg);
+        wave_player_stop();
+        wave_record_enable(prev_rec_enable);
+        return -1;
+    }
+    return 0;
 #endif
 }
 
 static int cmd_rec_play(int argc, char **argv)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = cmd_rec_play_internal(argc, argv);
-    wave_player_legacy_leave();
-    return result;
+    return cmd_rec_play_internal(argc, argv);
 }
 
 static int cmd_rec_dump_flash(int argc, char **argv)
@@ -3500,6 +3384,7 @@ static int cmd_rec_dump_flash(int argc, char **argv)
 }
 #endif
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 static int cmd_audio_start(int argc, char **argv)
 {
     (void)argc;
@@ -3511,45 +3396,34 @@ static int cmd_audio_stop(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
-    return wave_player_stop();
-}
-
-static int cmd_audio_vol(int argc, char **argv)
-{
-    if (argc < 2) {
-        printf("usage: audio_vol <0-100>\r\n");
-        printf("current volume: %u\r\n", wave_player_get_volume());
-        return 0;
+    int ret = wave_player_stop();
+#if defined(CONFIG_PVMP3DEC) && !defined(CONFIG_BSP_AUDIO_PCM)
+    if (ret == 0) {
+        ret = mp3_player_stop();
     }
-
-    unsigned long vol = strtoul(argv[1], NULL, 0);
-    if (vol > 100) {
-        vol = 100;
-    }
-    return wave_player_set_volume((uint8_t)vol);
+#endif
+    return ret;
 }
-
-static int cmd_audio_mute(int argc, char **argv)
-{
-    if (argc < 2) {
-        printf("usage: audio_mute <0|1>\r\n");
-        printf("current mute: %u\r\n", wave_player_get_mute() ? 1U : 0U);
-        return 0;
-    }
-
-    unsigned long mute = strtoul(argv[1], NULL, 0);
-    return wave_player_set_mute(mute != 0U);
-}
+#endif
 
 static int cmd_audio_info(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
-    printf("audio: playing=%u play=%s cap=%s src_hz=%u play_hz=%u cap_hz=%u out_ch=%u cap_ch=%u tx=%u/%u slot=%ux%u volume=%u mute=%u\r\n",
+    uint8_t volume;
+    char volume_text[12];
+    if (wave_player_get_speaker_volume(&volume) == 0) {
+        snprintf(volume_text, sizeof(volume_text), "%u", volume);
+    } else {
+        strcpy(volume_text, "mixed");
+    }
+    printf("audio: playing=%u play=%s cap=%s src_hz=%u play_hz=%u cap_hz=%u out_ch=%u cap_ch=%u "
+           "tx=%u/%u slot=%ux%u speaker_vol=%s speaker_mute=%u mic_mute=%u\r\n",
            (g_audio.wave_task != NULL) ? 1U : 0U, wave_player_backend_name(g_audio.playback_backend),
            wave_player_backend_name(g_audio.capture_backend), g_audio.src_hz, g_audio.out_hz, g_audio.cap_hz,
            g_audio.out_channels, g_audio.cap_channels, g_audio.logical_tx_block_bytes, g_audio.tx_block_bytes,
-           g_audio.tx_slot_count, g_audio.tx_slot_word_bytes, g_audio.volume, g_audio.muted ? 1U : 0U);
+           g_audio.tx_slot_count, g_audio.tx_slot_word_bytes, volume_text, wave_player_get_speaker_mute() ? 1U : 0U,
+           wave_player_get_mic_mute() ? 1U : 0U);
     return 0;
 }
 
@@ -3599,7 +3473,7 @@ static int cmd_audio_diag(int argc, char **argv)
 #endif
 }
 
-#if WAVE_PLAYER_CODEC_REG_CLI
+#if WAVE_PLAYER_CODEC_REG_CLI && !defined(CONFIG_BSP_AUDIO_PCM)
 static int cmd_codec_reg(int argc, char **argv)
 {
     bool capture = false;
@@ -3693,48 +3567,7 @@ static int cmd_codec_reg(int argc, char **argv)
 #endif
 
 #if WAVE_PLAYER_ENABLE_REC
-static int cmd_rec_vol(int argc, char **argv)
-{
-    if (argc < 2) {
-        printf("usage: rec_vol <0-100>\r\n");
-        return 0;
-    }
-
-    unsigned long vol = strtoul(argv[1], NULL, 0);
-    if (vol > 100U) {
-        vol = 100U;
-    }
-
-    int ret = wave_player_set_record_volume((uint8_t)vol);
-    if (ret == 0) {
-        printf("rec_vol set to %u\r\n", (unsigned)vol);
-    } else {
-        printf("rec_vol set failed: %d\r\n", ret);
-    }
-    return ret;
-}
-
-static int cmd_rec_pga(int argc, char **argv)
-{
-    if (argc < 2) {
-        printf("usage: rec_pga <0-100>\r\n");
-        return 0;
-    }
-
-    unsigned long pga = strtoul(argv[1], NULL, 0);
-    if (pga > 100U) {
-        pga = 100U;
-    }
-
-    int ret = wave_player_set_record_pga((uint8_t)pga);
-    if (ret == 0) {
-        printf("rec_pga set to %u\r\n", (unsigned)pga);
-    } else {
-        printf("rec_pga set failed: %d\r\n", ret);
-    }
-    return ret;
-}
-
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 static int cmd_rec_en(int argc, char **argv)
 {
     if (argc < 2) {
@@ -3750,10 +3583,11 @@ static int cmd_rec_en(int argc, char **argv)
     }
     return ret;
 }
+#endif
 
 #endif
 
-#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
+#if WAVE_PLAYER_TEST_WAVE && !defined(CONFIG_BSP_AUDIO_PCM)
 static void wave_src_sink(void *arg)
 {
     wave_src_task_cfg_t *cfg = (wave_src_task_cfg_t *)arg;
@@ -3767,6 +3601,9 @@ static void wave_src_sink(void *arg)
 
     size_t off = 0;
     while (off < cfg->src_len) {
+        if (g_audio.stop || g_audio.wave_task == NULL) {
+            break;
+        }
         uint32_t empty = Ring_Buffer_Get_Empty_Length(cfg->rb);
         if (empty == 0) {
             if (cfg->sem_wave_rb_space != NULL) {
@@ -3798,6 +3635,9 @@ static void wave_src_sink(void *arg)
         }
     }
     while (Ring_Buffer_Get_Length(cfg->rb) > 0) {
+        if (g_audio.stop || g_audio.wave_task == NULL) {
+            break;
+        }
         vTaskDelay(pdMS_TO_TICKS(10));
     }
     printf("wave_src_sink: done feeding\r\n");
@@ -3821,7 +3661,7 @@ static void wave_src_sink(void *arg)
 }
 #endif
 
-#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
+#if WAVE_PLAYER_TEST_WAVE && !defined(CONFIG_BSP_AUDIO_PCM)
 static int wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_t sample_rate_hz, uint8_t src_channels,
                                      bool restore_rec_enable, bool rec_enable_after_done)
 {
@@ -3862,7 +3702,7 @@ static int wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_
         .rec_enable_after_done = rec_enable_after_done,
 #endif
     };
-    if (xTaskCreate(wave_src_sink, (char *)"wave_src", 256, src_cfg, 2, &g_audio.wave_src_task) != pdPASS) {
+    if (xTaskCreate(wave_src_sink, (char *)"wave_src", 144, src_cfg, 2, &g_audio.wave_src_task) != pdPASS) {
         printf("play_one_wave: create src task failed\r\n");
         vPortFree(src_cfg);
         wave_player_stop();
@@ -3877,7 +3717,7 @@ static int wave_player_play_one_wave(const uint8_t *src, size_t src_len, uint32_
 }
 #endif
 
-#if WAVE_PLAYER_TEST_WAVE
+#if WAVE_PLAYER_TEST_WAVE && !defined(CONFIG_BSP_AUDIO_PCM)
 static uint16_t wav_le16(const uint8_t *p)
 {
     return (uint16_t)p[0] | (uint16_t)(p[1] << 8);
@@ -3941,18 +3781,21 @@ static int wave_player_play_wave_buffer_internal(const uint8_t *buf, size_t len)
         return -1;
     }
 
-    wave_player_stop();
+    int ret = wave_player_stop();
+#if defined(CONFIG_PVMP3DEC) && !defined(CONFIG_BSP_AUDIO_PCM)
+    if (ret == 0) {
+        ret = mp3_player_stop();
+    }
+#endif
+    if (ret != 0) {
+        return ret;
+    }
     return wave_player_play_one_wave(data, data_size, sample_rate, (uint8_t)channels, false, false);
 }
 
 static int wave_player_play_wave_buffer(const uint8_t *buf, size_t len)
 {
-    if (!wave_player_legacy_enter()) {
-        return -EBUSY;
-    }
-    int result = wave_player_play_wave_buffer_internal(buf, len);
-    wave_player_legacy_leave();
-    return result;
+    return wave_player_play_wave_buffer_internal(buf, len);
 }
 
 static int cmd_audio_play0(int argc, char **argv)
@@ -3970,1099 +3813,167 @@ static int cmd_audio_play1(int argc, char **argv)
 }
 #endif
 
+#if !defined(CONFIG_BSP_AUDIO_PCM)
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_start, audio_start, "start audio player");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_stop, audio_stop, "stop audio player");
-SHELL_CMD_EXPORT_ALIAS(cmd_audio_vol, audio_vol, "set audio volume (0-100)");
-SHELL_CMD_EXPORT_ALIAS(cmd_audio_mute, audio_mute, "set audio mute (0/1)");
+#endif
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_info, audio_info, "show audio player status");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_stack, audio_stack, "show audio stack high watermarks");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_diag, audio_diag, "show/reset audio diagnostics: audio_diag [clr]");
-#if WAVE_PLAYER_CODEC_REG_CLI
+#if WAVE_PLAYER_CODEC_REG_CLI && !defined(CONFIG_BSP_AUDIO_PCM)
 SHELL_CMD_EXPORT_ALIAS(cmd_codec_reg, codec_reg, "read/write codec registers: codec_reg <r|w> <play|cap> <reg> [value] [width]");
 #endif
-#if WAVE_PLAYER_ENABLE_REC
-SHELL_CMD_EXPORT_ALIAS(cmd_rec_start, rec_start, "start recording: rec_start <duration_ms> <sample_rate> <channels>");
-SHELL_CMD_EXPORT_ALIAS(cmd_rec_stop, rec_stop, "stop recording");
-SHELL_CMD_EXPORT_ALIAS(cmd_rec_play, rec_play, "play recording: rec_play");
+#if WAVE_PLAYER_ENABLE_REC && !defined(CONFIG_BSP_AUDIO_PCM)
+SHELL_CMD_EXPORT_ALIAS(cmd_rec_start, rec_start, "start recording: rec_start <duration_ms>");
+SHELL_CMD_EXPORT_ALIAS(cmd_rec_play, rec_play, "play recorded RX slot: rec_play slot<N>");
 SHELL_CMD_EXPORT_ALIAS(cmd_rec_dump_flash, rec_dump_flash, "dump last record buffer to flash: rec_dump_flash [flash_addr] [max_bytes]");
-SHELL_CMD_EXPORT_ALIAS(cmd_rec_vol, rec_vol, "set record digital volume: rec_vol <0-100>");
-SHELL_CMD_EXPORT_ALIAS(cmd_rec_pga, rec_pga, "set record mic pga: rec_pga <0-100>");
 SHELL_CMD_EXPORT_ALIAS(cmd_rec_en, rec_en, "enable/disable record path: rec_en <0|1>");
 #endif
-#if WAVE_PLAYER_TEST_WAVE
+#if WAVE_PLAYER_TEST_WAVE && !defined(CONFIG_BSP_AUDIO_PCM)
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_play0, audio_play0, "play embedded wave buffer 0");
 SHELL_CMD_EXPORT_ALIAS(cmd_audio_play1, audio_play1, "play embedded wave buffer 1");
 #endif
 
 #if defined(CONFIG_BSP_AUDIO_PCM)
-/* The PCM device shares the existing DMA engine. Application-specific queues
- * and read deadlines belong to its consumer, not to this hardware owner. */
-static int audio_pcm_lock(void)
+/* Keep transport state private while the PCM owner manages logical sessions. */
+void wave_player_pcm_engine_snapshot(wave_player_pcm_engine_state_t *state)
 {
-    if (g_pcm.lock == NULL) {
-        return -ENODEV;
-    }
-    return xSemaphoreTake(g_pcm.lock, portMAX_DELAY) == pdTRUE ? 0 : -EIO;
-}
-
-static int audio_pcm_lock_until(uint64_t started, uint32_t timeout_ms)
-{
-    if (g_pcm.lock == NULL) {
-        return -ENODEV;
-    }
-    uint64_t elapsed = (bflb_mtimer_get_time_us() - started) / 1000U;
-    uint32_t remaining = elapsed < timeout_ms ? timeout_ms - (uint32_t)elapsed : 0;
-    TickType_t ticks = pdMS_TO_TICKS(remaining);
-    if (remaining != 0U && ticks == 0U) {
-        ticks = 1;
-    }
-    return xSemaphoreTake(g_pcm.lock, ticks) == pdTRUE ? 0 : -ETIMEDOUT;
-}
-
-static int audio_pcm_try_lock(void)
-{
-    if (g_pcm.lock == NULL) {
-        return -ENODEV;
-    }
-    return xSemaphoreTake(g_pcm.lock, 0) == pdTRUE ? 0 : -EAGAIN;
-}
-
-static void audio_pcm_unlock(void)
-{
-    (void)xSemaphoreGive(g_pcm.lock);
-}
-
-static bool audio_pcm_session_valid(audio_pcm_handle_t session)
-{
-    return session == &g_pcm.sessions[AUDIO_PCM_PLAYBACK] || session == &g_pcm.sessions[AUDIO_PCM_CAPTURE];
-}
-
-static bool audio_pcm_session_live(audio_pcm_handle_t session)
-{
-    return audio_pcm_session_valid(session) && session->used && !session->closing && !session->aborted;
-}
-
-static bool audio_pcm_keep_capture(void)
-{
-    bool keep;
+    TaskHandle_t self = xTaskGetCurrentTaskHandle();
     taskENTER_CRITICAL();
-    keep = g_pcm.claimed && audio_pcm_session_live(&g_pcm.sessions[AUDIO_PCM_CAPTURE]);
-    taskEXIT_CRITICAL();
-    return keep;
-}
-
+    memset(state, 0, sizeof(*state));
+    state->playback_running = g_audio.wave_task != NULL;
+    state->called_from_audio_task = self != NULL && self == g_audio.wave_task;
+    state->stopped = g_audio.stop;
+    state->muted = audio_controls_playback_is_muted();
+    state->tx_total_samples = g_audio.tx_total_samples;
+    state->tx_period_samples = g_audio.tx_period_samples;
 #if WAVE_PLAYER_ENABLE_REC
-static bool audio_pcm_capture_prepared(void)
-{
-    return g_pcm.prepare_capture;
-}
+    state->called_from_audio_task = state->called_from_audio_task || (self != NULL && self == g_audio.cap_task);
+    state->capture_sequence = g_audio.cap_isr_seq;
+    state->capture_epoch = g_audio.cap_epoch;
 #endif
-
-static void audio_pcm_player_cleanup(void)
-{
-    if (!audio_pcm_keep_capture()) {
-        audio_io_stop();
-    }
-}
-
-static bool audio_pcm_player_wait_reference(void)
-{
-    if (!audio_pcm_owned()) {
-        return true;
-    }
-    for (;;) {
-        taskENTER_CRITICAL();
-        uint32_t users = g_pcm.sessions[AUDIO_PCM_CAPTURE].playback_callback_users;
-        bool stopped = g_audio.stop;
-        taskEXIT_CRITICAL();
-        if (stopped || users == 0U) {
-            return !stopped;
-        }
-        /* Writer reservation blocks new silence. Let the capture task finish
-         * its admitted reference before this task publishes either prime. */
-        vTaskDelay(1);
-    }
-}
-
-static void audio_pcm_player_started(void)
-{
-    if (audio_pcm_owned()) {
-        if (g_pcm.tx_resume_pending) {
-            /* Linking a ring alone does not reset a stopped channel's current
-             * source, destination or remaining transfer count. Reload the
-             * primed ping/pong blocks without disturbing capture DMA. */
-            int used = wave_player_reload_tx_ring(g_audio.tx_block_bytes);
-            if (used <= 0) {
-                g_pcm.player_start_result = -EIO;
-                g_audio.stop = true;
-                return;
-            }
-            g_audio.tx_lli_count = (uint32_t)used;
-            bflb_dma_channel_lli_link_head(g_audio.dma_ch_tx, g_audio.tx_llipool, g_audio.tx_lli_count);
-            bflb_dma_channel_tcint_clear(g_audio.dma_ch_tx);
-            bflb_dma_channel_start(g_audio.dma_ch_tx);
-            audio_io_resume();
-            g_pcm.tx_resume_pending = false;
-        }
-        g_pcm.player_start_result = 0;
-    }
-}
-
-static void audio_pcm_player_failed(void)
-{
-    if (audio_pcm_owned() && !g_audio.stop) {
-        g_pcm.player_start_result = -EIO;
-    }
-}
-
-static void audio_pcm_prepare_playback(int16_t *samples, size_t bytes)
-{
-    bool silence;
-    taskENTER_CRITICAL();
-    silence = g_pcm.claimed && (!audio_pcm_session_live(&g_pcm.sessions[AUDIO_PCM_PLAYBACK]) || g_audio.muted);
     taskEXIT_CRITICAL();
-    if (silence) {
-        memset(samples, 0, bytes);
-    }
 }
 
-static bool audio_pcm_same_name(const char *a, const char *b)
+void wave_player_pcm_engine_get_caps(audio_pcm_caps_t *caps)
 {
-    return a == b || (a != NULL && b != NULL && strcmp(a, b) == 0);
+    memset(caps, 0, sizeof(*caps));
+    caps->speaker_mask = audio_controls_get_speaker_mask();
+    caps->mic_mask = audio_controls_get_mic_mask();
+    caps->playback_supported = true;
+    caps->bits_per_sample = 16;
+    caps->playback_channels = wave_player_default_playback_channels();
+    caps->playback_source_channels_max = 2;
+    caps->fixed_sample_rate_hz = WAVE_PLAYER_FIX_SAMPLE_RATE;
+    caps->playback_period_samples_max = WAVE_PLAYER_OUT_SAMPLES;
+#if WAVE_PLAYER_ENABLE_REC
+    caps->capture_supported = g_audio.dma_ch_rx != NULL;
+    caps->capture_channels = wave_player_default_capture_channels();
+    caps->capture_block_samples = WAVE_PLAYER_CAP_MAX_SAMPLES_PER_CH;
+    caps->capture_layout = g_audio.capture_layout;
+#endif
 }
 
-static bool audio_pcm_same_hardware(const wave_player_hw_cfg_t *a, const wave_player_hw_cfg_t *b)
+void wave_player_pcm_engine_attach(
+#if WAVE_PLAYER_ENABLE_REC
+    wave_player_rec_cb_t capture,
+#endif
+    wave_player_playback_frame_cb_t playback, bool capture_enabled)
 {
-    return audio_pcm_same_name(a->i2s_dev_name, b->i2s_dev_name) &&
-           audio_pcm_same_name(a->i2c_dev_name, b->i2c_dev_name) &&
-           audio_pcm_same_name(a->dma_tx_dev_name, b->dma_tx_dev_name) &&
-           audio_pcm_same_name(a->dma_rx_dev_name, b->dma_rx_dev_name) &&
-           audio_pcm_same_name(a->audac_dev_name, b->audac_dev_name) &&
-           audio_pcm_same_name(a->auadc_dev_name, b->auadc_dev_name) && a->playback_backend == b->playback_backend &&
-           a->capture_backend == b->capture_backend && a->required_ext_codec_type == b->required_ext_codec_type &&
-           a->playback_task_priority == b->playback_task_priority &&
-           a->capture_task_priority == b->capture_task_priority &&
-           a->capture_layout.mic_mask == b->capture_layout.mic_mask &&
-           a->capture_layout.ref_mask == b->capture_layout.ref_mask;
+    playback_frame_cb = playback;
+    playback_frame_user_data = NULL;
+#if WAVE_PLAYER_ENABLE_REC
+    g_audio.rec_enable = capture_enabled;
+    g_audio.rec_cb = capture;
+    g_audio.rec_cb_user_data = NULL;
+#else
+    (void)capture_enabled;
+#endif
 }
 
-static int audio_pcm_retain_hardware(const wave_player_hw_cfg_t *hardware)
+void wave_player_pcm_engine_detach(void)
 {
-    const char *names[] = {
-        hardware->i2s_dev_name,    hardware->i2c_dev_name,   hardware->dma_tx_dev_name,
-        hardware->dma_rx_dev_name, hardware->audac_dev_name, hardware->auadc_dev_name,
-    };
-    const char **retained[] = {
-        &g_pcm.hardware.i2s_dev_name,    &g_pcm.hardware.i2c_dev_name,   &g_pcm.hardware.dma_tx_dev_name,
-        &g_pcm.hardware.dma_rx_dev_name, &g_pcm.hardware.audac_dev_name, &g_pcm.hardware.auadc_dev_name,
-    };
-    for (unsigned i = 0; i < 6; ++i) {
-        if (names[i] == NULL) {
-            continue;
-        }
-        size_t length = 0;
-        while (length < sizeof(g_pcm.hardware_names[i]) && names[i][length] != '\0') {
-            ++length;
-        }
-        if (length == sizeof(g_pcm.hardware_names[i])) {
-            return -ENAMETOOLONG;
-        }
-    }
-    g_pcm.hardware = *hardware;
-    for (unsigned i = 0; i < 6; ++i) {
-        if (names[i] != NULL) {
-            strcpy(g_pcm.hardware_names[i], names[i]);
-            *retained[i] = g_pcm.hardware_names[i];
-        }
-    }
-    return 0;
+    wave_player_pcm_engine_attach(
+#if WAVE_PLAYER_ENABLE_REC
+        NULL,
+#endif
+        NULL, false);
 }
 
-static int audio_pcm_control_result(int result)
+void wave_player_pcm_engine_capture_enable(bool enabled)
 {
-    if (result == -2) {
-        return -ENOTSUP;
-    }
-    return result == 0 ? 0 : -EIO;
+#if WAVE_PLAYER_ENABLE_REC
+    g_audio.rec_enable = enabled;
+#else
+    (void)enabled;
+#endif
 }
 
-static int audio_pcm_apply_controls(void)
+int wave_player_pcm_engine_configure(uint32_t rate, uint32_t period, uint8_t channels)
 {
-    int result = audio_pcm_control_result(wave_player_set_volume_internal(g_pcm.requested_volume));
-    if (result) {
-        return result;
+    int result = wave_player_config_internal(rate, period * wave_player_default_playback_channels() * sizeof(int16_t),
+                                             0, channels);
+    if (!result && (!g_audio.io_started || g_audio.out_hz != rate || g_audio.src_channels != channels
+#if WAVE_PLAYER_ENABLE_REC
+                    || (g_audio.dma_ch_rx != NULL && g_audio.cap_hz != rate)
+#endif
+                        )) {
+        result = -ENOTSUP;
     }
-    result = audio_codec_set_mute(&g_audio.play_codec, g_pcm.requested_mute);
-    if (result != 0 && result != -2) {
+    return result;
+}
+
+int wave_player_pcm_engine_start_playback(uint8_t channels)
+{
+    g_audio.src_channels = channels;
+    /* Prime stopped TX blocks while capture and its serial clock continue. */
+    audio_io_pause();
+    bflb_dma_channel_stop(g_audio.dma_ch_tx);
+    bflb_dma_channel_tcint_clear(g_audio.dma_ch_tx);
+    g_audio.tx_dma_completions = 0;
+    return wave_player_start_internal();
+}
+
+int wave_player_pcm_engine_resume_tx(void)
+{
+    int used = wave_player_reload_tx_ring(g_audio.tx_block_bytes);
+    if (used <= 0) {
+        g_audio.stop = true;
         return -EIO;
     }
-    /* A codec without a mute operation uses PCM silence in the worker. */
-    g_audio.muted = g_pcm.requested_mute;
-    if (g_pcm.record_volume_set) {
-        result = audio_pcm_control_result(wave_player_set_record_volume_internal(g_pcm.requested_record_volume));
-        if (result) {
-            return result;
-        }
-    }
-    if (g_pcm.record_pga_set) {
-        result = audio_pcm_control_result(wave_player_set_record_pga_internal(g_pcm.requested_record_pga));
-    }
-    return result;
-}
-
-int audio_pcm_init(const wave_player_hw_cfg_t *hardware)
-{
-    if (hardware == NULL) {
-        return -EINVAL;
-    }
-    if (g_pcm.lock == NULL) {
-        SemaphoreHandle_t candidate = xSemaphoreCreateMutex();
-        if (candidate == NULL) {
-            return -ENOMEM;
-        }
-        taskENTER_CRITICAL();
-        if (g_pcm.lock == NULL) {
-            g_pcm.lock = candidate;
-            candidate = NULL;
-        }
-        taskEXIT_CRITICAL();
-        if (candidate != NULL) {
-            vSemaphoreDelete(candidate);
-        }
-    }
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    if (g_pcm.initialized) {
-        result = audio_pcm_same_hardware(hardware, &g_pcm.hardware) ? 0 : -EBUSY;
-    } else if (g_audio.sem_tx_dma_done != NULL) {
-        result = -EBUSY;
-    } else {
-        result = audio_pcm_retain_hardware(hardware);
-        if (!result) {
-            result = wave_player_init(&g_pcm.hardware);
-            if (result) {
-                result = -EIO;
-            }
-        }
-        if (!result) {
-            g_pcm.initialized = true;
-            g_pcm.requested_mute = g_audio.muted;
-            g_pcm.requested_volume = g_audio.volume;
-        }
-    }
-    audio_pcm_unlock();
-    return result;
-}
-
-int audio_pcm_get_caps(audio_pcm_caps_t *caps)
-{
-    if (caps == NULL) {
-        return -EINVAL;
-    }
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    if (!g_pcm.initialized) {
-        result = -ENODEV;
-    } else {
-        memset(caps, 0, sizeof(*caps));
-        caps->playback_supported = true;
-        caps->bits_per_sample = 16;
-        caps->playback_channels = wave_player_default_playback_channels();
-        caps->playback_source_channels_max = 2;
-        caps->fixed_sample_rate_hz = WAVE_PLAYER_FIX_SAMPLE_RATE;
-        caps->playback_period_samples_max = WAVE_PLAYER_OUT_SAMPLES;
-#if WAVE_PLAYER_ENABLE_REC
-        caps->capture_supported = g_audio.dma_ch_rx != NULL;
-        caps->capture_channels = wave_player_default_capture_channels();
-        caps->capture_block_samples = WAVE_PLAYER_CAP_MAX_SAMPLES_PER_CH;
-        caps->capture_layout = g_audio.capture_layout;
-#endif
-    }
-    audio_pcm_unlock();
-    return result;
-}
-
-static bool audio_pcm_rate_supported(uint32_t rate)
-{
-    switch (rate) {
-        case 8000:
-        case 11025:
-        case 12000:
-        case 16000:
-        case 22050:
-        case 24000:
-        case 32000:
-        case 44100:
-        case 48000:
-            return true;
-        default:
-            return false;
-    }
-}
-
-static int audio_pcm_validate_config(audio_pcm_direction_t direction, const audio_pcm_config_t *config)
-{
-    if (config == NULL || (direction != AUDIO_PCM_CAPTURE && direction != AUDIO_PCM_PLAYBACK)) {
-        return -EINVAL;
-    }
-    if (config->bits_per_sample != 16 || !audio_pcm_rate_supported(config->sample_rate_hz) ||
-        config->period_samples > WAVE_PLAYER_OUT_SAMPLES) {
-        return -ENOTSUP;
-    }
-#if WAVE_PLAYER_FIX_SAMPLE_RATE > 0
-    if (config->sample_rate_hz != WAVE_PLAYER_FIX_SAMPLE_RATE) {
-        return -ENOTSUP;
-    }
-#endif
-    if (direction == AUDIO_PCM_PLAYBACK) {
-        return config->channels >= 1 && config->channels <= 2 ? 0 : -ENOTSUP;
-    }
-#if WAVE_PLAYER_ENABLE_REC
-    return g_audio.dma_ch_rx != NULL && config->channels == wave_player_default_capture_channels() ? 0 : -ENOTSUP;
-#else
-    return -ENOTSUP;
-#endif
-}
-
-int audio_pcm_open(audio_pcm_direction_t direction, const audio_pcm_config_t *config, audio_pcm_handle_t *out)
-{
-    if (out == NULL) {
-        return -EINVAL;
-    }
-    *out = NULL;
-    TaskHandle_t self = xTaskGetCurrentTaskHandle();
-    if (self != NULL && (self == g_audio.wave_task
-#if WAVE_PLAYER_ENABLE_REC
-                         || self == g_audio.cap_task
-#endif
-                         )) {
-        return -EDEADLK;
-    }
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    result = g_pcm.initialized ? audio_pcm_validate_config(direction, config) : -ENODEV;
-    if (result) {
-        audio_pcm_unlock();
-        return result;
-    }
-    struct audio_pcm_session *session = &g_pcm.sessions[direction];
-    bool first = !g_pcm.claimed;
-    if (session->used || g_pcm.sessions[0].closing || g_pcm.sessions[1].closing) {
-        result = -EBUSY;
-    } else if (!first && (g_audio.out_hz != config->sample_rate_hz ||
-                          (config->period_samples &&
-                           config->period_samples * wave_player_default_playback_channels() * sizeof(int16_t) !=
-                               g_audio.logical_tx_block_bytes))) {
-        result = -EBUSY;
-    } else if (first && (g_audio.io_started || g_audio.wave_task != NULL || playback_frame_cb != NULL
-#if WAVE_PLAYER_ENABLE_REC
-                         || g_audio.rec_cb != NULL
-#endif
-                         )) {
-        result = -EBUSY;
-    }
-    if (result) {
-        audio_pcm_unlock();
-        return result;
-    }
-    if (first) {
-        uint32_t period = config->period_samples ? config->period_samples : WAVE_PLAYER_OUT_SAMPLES;
-        uint8_t source_channels = direction == AUDIO_PCM_PLAYBACK ? config->channels : 1U;
-        taskENTER_CRITICAL();
-        /* Recheck engine activity after reserving the handoff: an earlier
-         * legacy operation may have finished since the initial validation. */
-        if (g_pcm.legacy_operations || g_pcm.control_operations || g_audio.io_started || g_audio.wave_task != NULL ||
-            playback_frame_cb != NULL
-#if WAVE_PLAYER_ENABLE_REC
-            || g_audio.rec_cb != NULL
-#endif
-#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
-            || g_audio.wave_src_task != NULL
-#endif
-        ) {
-            taskEXIT_CRITICAL();
-            audio_pcm_unlock();
-            return -EBUSY;
-        }
-        g_pcm.claimed = true;
-#if WAVE_PLAYER_ENABLE_REC
-        g_pcm.prepare_capture = g_audio.dma_ch_rx != NULL;
-        g_audio.rec_enable = direction == AUDIO_PCM_CAPTURE;
-        g_audio.rec_cb = audio_pcm_capture_dispatch;
-        g_audio.rec_cb_user_data = NULL;
-#endif
-        playback_frame_cb = audio_pcm_playback_dispatch;
-        playback_frame_user_data = NULL;
-        taskEXIT_CRITICAL();
-        result = wave_player_config_internal(config->sample_rate_hz,
-                                             period * wave_player_default_playback_channels() * sizeof(int16_t), 0,
-                                             source_channels);
-        g_pcm.prepare_capture = false;
-        if (!result &&
-            (!g_audio.io_started || g_audio.out_hz != config->sample_rate_hz || g_audio.src_channels != source_channels
-#if WAVE_PLAYER_ENABLE_REC
-             || (g_audio.dma_ch_rx != NULL && g_audio.cap_hz != config->sample_rate_hz)
-#endif
-                 )) {
-            result = -ENOTSUP;
-        }
-        if (!result) {
-            result = audio_pcm_apply_controls();
-        }
-        if (result) {
-            audio_io_stop();
-            taskENTER_CRITICAL();
-            g_pcm.claimed = false;
-            playback_frame_cb = NULL;
-            playback_frame_user_data = NULL;
-#if WAVE_PLAYER_ENABLE_REC
-            g_audio.rec_enable = false;
-            g_audio.rec_cb = NULL;
-            g_audio.rec_cb_user_data = NULL;
-#endif
-            taskEXIT_CRITICAL();
-            audio_pcm_unlock();
-            return result;
-        }
-        g_pcm.playback_next_sample = 0;
-        g_pcm.playback_sequence = 0;
-        g_pcm.playback_reference_valid = false;
-        g_pcm.playback_reference_gap = false;
-        ++g_pcm.engine_epoch;
-    }
-    taskENTER_CRITICAL();
-    memset(session, 0, sizeof(*session));
-    session->used = true;
-    session->direction = direction;
-    session->config = *config;
-    session->generation = ++g_pcm.generation;
-#if WAVE_PLAYER_ENABLE_REC
-    session->open_capture_sequence = g_audio.cap_isr_seq;
-    session->capture_epoch = g_audio.cap_epoch;
-    if (direction == AUDIO_PCM_CAPTURE) {
-        g_audio.rec_enable = true;
-    }
-#endif
-    taskEXIT_CRITICAL();
-    if (direction == AUDIO_PCM_PLAYBACK) {
-        result = audio_codec_set_mute(&g_audio.play_codec, g_pcm.requested_mute);
-        if (result != 0 && result != -2) {
-            /* No worker has been created yet, so rollback cannot abandon an
-             * asynchronously running task or invalidate an in-flight lease. */
-            taskENTER_CRITICAL();
-            session->used = false;
-            taskEXIT_CRITICAL();
-            if (first) {
-                audio_io_stop();
-                taskENTER_CRITICAL();
-                g_pcm.claimed = false;
-                playback_frame_cb = NULL;
-                playback_frame_user_data = NULL;
-#if WAVE_PLAYER_ENABLE_REC
-                g_audio.rec_enable = false;
-                g_audio.rec_cb = NULL;
-                g_audio.rec_cb_user_data = NULL;
-#endif
-                taskEXIT_CRITICAL();
-            }
-            audio_pcm_unlock();
-            return -EIO;
-        }
-        /* Capture-only operation retains a silent TX DMA clock without a
-         * software player. Selecting the source channels here does not touch
-         * RX DMA, its queue, or its sample timeline. */
-        g_audio.src_channels = config->channels;
-        g_pcm.player_start_result = 1;
-        /* TX may have been running a silent ring for capture-only clocks.
-         * Prime both buffers with DMA stopped so the task never writes an
-         * active block; RX and the shared serial clock continue unchanged. */
-        audio_io_pause();
-        bflb_dma_channel_stop(g_audio.dma_ch_tx);
-        bflb_dma_channel_tcint_clear(g_audio.dma_ch_tx);
-        g_audio.tx_dma_completions = 0;
-        g_pcm.tx_resume_pending = true;
-        result = wave_player_start_internal();
-        if (result) {
-            taskENTER_CRITICAL();
-            session->aborted = true;
-            session->closing = true;
-            taskEXIT_CRITICAL();
-            /* Task creation failed synchronously; the existing capture
-             * transport remains owned and the silent TX clock can resume. */
-            if (audio_pcm_keep_capture() && g_pcm.tx_resume_pending) {
-                audio_pcm_player_started();
-            }
-            taskENTER_CRITICAL();
-            session->used = false;
-            session->closing = false;
-            if (!g_pcm.sessions[AUDIO_PCM_CAPTURE].used) {
-                g_pcm.claimed = false;
-                playback_frame_cb = NULL;
-#if WAVE_PLAYER_ENABLE_REC
-                g_audio.rec_enable = false;
-                g_audio.rec_cb = NULL;
-#endif
-            }
-            taskEXIT_CRITICAL();
-            audio_pcm_unlock();
-            return -EIO;
-        }
-    }
-    *out = session;
-    audio_pcm_unlock();
+    g_audio.tx_lli_count = (uint32_t)used;
+    bflb_dma_channel_lli_link_head(g_audio.dma_ch_tx, g_audio.tx_llipool, g_audio.tx_lli_count);
+    bflb_dma_channel_tcint_clear(g_audio.dma_ch_tx);
+    bflb_dma_channel_start(g_audio.dma_ch_tx);
+    audio_io_resume();
     return 0;
 }
 
-static int audio_pcm_set_callback(audio_pcm_handle_t session, audio_pcm_frame_cb_t callback, void *context,
-                                  bool capture)
+int wave_player_pcm_engine_stop(uint32_t timeout_ms)
 {
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    taskENTER_CRITICAL();
-    if (!audio_pcm_session_live(session) || (capture && session->direction != AUDIO_PCM_CAPTURE)) {
-        result = -EINVAL;
-    } else if (capture ? session->capture_callback_users != 0 : session->playback_callback_users != 0) {
-        result = -EBUSY;
-    } else if (capture) {
-        session->capture_callback = callback;
-        session->capture_context = context;
-    } else {
-        session->playback_callback = callback;
-        session->playback_context = context;
-    }
-    taskEXIT_CRITICAL();
-    audio_pcm_unlock();
-    return result;
+    return wave_player_stop_timeout_internal(timeout_ms);
 }
 
-int audio_pcm_set_capture_callback(audio_pcm_handle_t session, audio_pcm_frame_cb_t callback, void *context)
+void wave_player_pcm_engine_stop_io(void)
 {
-    return audio_pcm_set_callback(session, callback, context, true);
+    audio_io_stop();
 }
 
-int audio_pcm_set_playback_callback(audio_pcm_handle_t session, audio_pcm_frame_cb_t callback, void *context)
+int wave_player_pcm_engine_write(const void *samples, size_t bytes, uint32_t frame_bytes)
 {
-    return audio_pcm_set_callback(session, callback, context, false);
+    uint32_t capacity = Ring_Buffer_Get_Empty_Length(&g_audio.wave_rb);
+    size_t writable = bytes < capacity ? bytes : capacity;
+    writable -= writable % frame_bytes;
+    return wave_player_feed_internal((uint8_t *)(uintptr_t)samples, (uint32_t)writable);
 }
 
-int audio_pcm_write(audio_pcm_handle_t session, const void *samples, size_t bytes)
+void wave_player_pcm_engine_flush(void)
 {
-    if (samples == NULL || bytes > INT_MAX) {
-        return -EINVAL;
-    }
-    int result = audio_pcm_try_lock();
-    if (result) {
-        return result;
-    }
-    if (!audio_pcm_session_valid(session) || !session->used || session->direction != AUDIO_PCM_PLAYBACK) {
-        result = -EINVAL;
-    } else if (session->aborted || session->closing) {
-        result = -ECANCELED;
-    } else if (bytes % (session->config.channels * sizeof(int16_t))) {
-        result = -EINVAL;
-    } else if (g_pcm.player_start_result < 0 || g_audio.wave_task == NULL) {
-        result = -EIO;
-    } else {
-        uint32_t frame_bytes = session->config.channels * sizeof(int16_t);
-        uint32_t capacity = Ring_Buffer_Get_Empty_Length(&g_audio.wave_rb);
-        size_t writable = bytes < capacity ? bytes : capacity;
-        writable -= writable % frame_bytes;
-        result = wave_player_feed_internal((uint8_t *)(uintptr_t)samples, (uint32_t)writable);
-    }
-    audio_pcm_unlock();
-    return result;
+    wave_player_flush_internal();
 }
 
-int audio_pcm_abort(audio_pcm_handle_t session)
+uint32_t wave_player_pcm_engine_trim(uint32_t max_bytes)
 {
-    int result = 0;
-    bool playback = false;
-    taskENTER_CRITICAL();
-    if (!audio_pcm_session_valid(session) || !session->used) {
-        result = -EINVAL;
-    } else {
-        session->aborted = true;
-        playback = session->direction == AUDIO_PCM_PLAYBACK;
-        if (playback) {
-            /* Keep the ring owner alive until the lock-free flush finishes. */
-            ++session->io_users;
-        }
-#if WAVE_PLAYER_ENABLE_REC
-        if (session->direction == AUDIO_PCM_CAPTURE) {
-            g_audio.rec_enable = false;
-        }
-#endif
-    }
-    taskEXIT_CRITICAL();
-    if (playback) {
-        wave_player_flush_internal();
-        taskENTER_CRITICAL();
-        --session->io_users;
-        taskEXIT_CRITICAL();
-    }
-    return result;
-}
-
-int audio_pcm_close(audio_pcm_handle_t session, uint32_t timeout_ms)
-{
-    uint64_t started = bflb_mtimer_get_time_us();
-    int result = audio_pcm_lock_until(started, timeout_ms);
-    if (result) {
-        return result;
-    }
-    if (!audio_pcm_session_valid(session) || !session->used) {
-        audio_pcm_unlock();
-        return -EINVAL;
-    }
-    TaskHandle_t self = xTaskGetCurrentTaskHandle();
-    if (self == g_audio.wave_task
-#if WAVE_PLAYER_ENABLE_REC
-        || self == g_audio.cap_task
-#endif
-    ) {
-        audio_pcm_unlock();
-        return -EDEADLK;
-    }
-    uint32_t generation = session->generation;
-    taskENTER_CRITICAL();
-    session->closing = true;
-    session->aborted = true;
-#if WAVE_PLAYER_ENABLE_REC
-    if (session->direction == AUDIO_PCM_CAPTURE) {
-        g_audio.rec_enable = false;
-    }
-#endif
-    taskEXIT_CRITICAL();
-    audio_pcm_unlock();
-    for (;;) {
-        uint32_t users;
-        taskENTER_CRITICAL();
-        users = session->callback_users + session->io_users;
-        taskEXIT_CRITICAL();
-        if (!users) {
-            break;
-        }
-        if (bflb_mtimer_get_time_us() - started >= (uint64_t)timeout_ms * 1000U) {
-            return -ETIMEDOUT;
-        }
-        vTaskDelay(1);
-    }
-    result = audio_pcm_lock_until(started, timeout_ms);
-    if (result) {
-        return result;
-    }
-    if (!session->used || session->generation != generation) {
-        audio_pcm_unlock();
-        return -EINVAL;
-    }
-    if (session->direction == AUDIO_PCM_PLAYBACK) {
-        wave_player_flush_internal();
-        uint64_t elapsed = (bflb_mtimer_get_time_us() - started) / 1000U;
-        uint32_t remaining = elapsed < timeout_ms ? timeout_ms - (uint32_t)elapsed : 0;
-        result = wave_player_stop_timeout_internal(remaining);
-    } else if (!g_pcm.sessions[AUDIO_PCM_PLAYBACK].used) {
-        uint64_t elapsed = (bflb_mtimer_get_time_us() - started) / 1000U;
-        uint32_t remaining = elapsed < timeout_ms ? timeout_ms - (uint32_t)elapsed : 0;
-        result = wave_player_stop_timeout_internal(remaining);
-    }
-    if (!result) {
-        taskENTER_CRITICAL();
-        session->capture_callback = NULL;
-        session->playback_callback = NULL;
-        session->capture_context = NULL;
-        session->playback_context = NULL;
-        session->used = false;
-        session->closing = false;
-        if (!g_pcm.sessions[0].used && !g_pcm.sessions[1].used) {
-            g_pcm.claimed = false;
-            playback_frame_cb = NULL;
-            playback_frame_user_data = NULL;
-#if WAVE_PLAYER_ENABLE_REC
-            g_audio.rec_cb = NULL;
-            g_audio.rec_cb_user_data = NULL;
-#endif
-        }
-        taskEXIT_CRITICAL();
-    }
-    audio_pcm_unlock();
-    return result;
-}
-
-static bool audio_pcm_callback_enter(audio_pcm_handle_t session, bool capture, audio_pcm_frame_cb_t *callback,
-                                     void **context)
-{
-    bool acquired = false;
-    taskENTER_CRITICAL();
-    if (audio_pcm_session_live(session)) {
-        *callback = capture ? session->capture_callback : session->playback_callback;
-        *context = capture ? session->capture_context : session->playback_context;
-        if (*callback != NULL) {
-            ++session->callback_users;
-            if (capture) {
-                ++session->capture_callback_users;
-            } else {
-                ++session->playback_callback_users;
-            }
-            acquired = true;
-        }
-    }
-    taskEXIT_CRITICAL();
-    return acquired;
-}
-
-static void audio_pcm_callback_leave(audio_pcm_handle_t session, bool callback, bool capture)
-{
-    taskENTER_CRITICAL();
-    --session->callback_users;
-    if (callback) {
-        if (capture) {
-            --session->capture_callback_users;
-        } else {
-            --session->playback_callback_users;
-        }
-    }
-    taskEXIT_CRITICAL();
-}
-
-static bool audio_pcm_reference_update(audio_pcm_frame_info_t *info, bool silent)
-{
-    taskENTER_CRITICAL();
-    if (!silent) {
-        uint64_t scheduled = g_audio.tx_total_samples;
-        if (!g_pcm.tx_resume_pending) {
-            /* A running player's inactive refill follows the current DMA
-             * block, including after coalesced completion notifications. */
-            scheduled += g_audio.tx_period_samples;
-        }
-        info->first_sample_index = g_pcm.playback_next_sample;
-        if (info->first_sample_index < scheduled) {
-            info->first_sample_index = scheduled;
-            info->flags |= AUDIO_PCM_FRAME_DISCONTINUITY;
-        }
-    }
-    if (info->first_sample_index < g_pcm.playback_next_sample) {
-        uint64_t overlap = g_pcm.playback_next_sample - info->first_sample_index;
-        if (overlap >= info->samples_per_channel) {
-            /* A queued capture descriptor can predate the final player
-             * reference. Discard it instead of moving the clock backward. */
-            g_pcm.playback_reference_gap = true;
-            taskEXIT_CRITICAL();
-            return false;
-        }
-        info->samples_per_channel -= (uint32_t)overlap;
-        info->first_sample_index = g_pcm.playback_next_sample;
-        info->flags |= AUDIO_PCM_FRAME_DISCONTINUITY;
-    }
-    if (info->first_sample_index > g_pcm.playback_next_sample || g_pcm.playback_reference_gap ||
-        (g_pcm.playback_reference_valid && g_pcm.playback_reference_silent != silent)) {
-        info->flags |= AUDIO_PCM_FRAME_DISCONTINUITY;
-    }
-    info->sequence = ++g_pcm.playback_sequence;
-    g_pcm.playback_next_sample = info->first_sample_index + info->samples_per_channel;
-    g_pcm.playback_reference_valid = true;
-    g_pcm.playback_reference_silent = silent;
-    g_pcm.playback_reference_gap = false;
-    taskEXIT_CRITICAL();
-    info->pts_us = info->first_sample_index * 1000000U / info->sample_rate_hz;
-    return true;
-}
-
-#if WAVE_PLAYER_ENABLE_REC
-static const int16_t audio_pcm_silence[WAVE_PLAYER_CAP_MAX_SAMPLES_PER_CH];
-
-static void audio_pcm_capture_dispatch(const wave_player_rec_frame_t *frame, void *context)
-{
-    (void)context;
-    struct audio_pcm_session *session = &g_pcm.sessions[AUDIO_PCM_CAPTURE];
-    audio_pcm_frame_cb_t callback = NULL;
-    void *callback_context = NULL;
-    if (frame == NULL || frame->sample_rate_hz == 0) {
-        return;
-    }
-    /* Admit a frame even without a data callback so that a reference-only
-     * subscriber and later callbacks observe the same capture sample clock. */
-    taskENTER_CRITICAL();
-    uint32_t previous_sequence =
-        session->capture_seen ? session->previous_capture_sequence : session->open_capture_sequence;
-    uint32_t sequence_delta = frame->sequence - previous_sequence;
-    bool live = audio_pcm_session_live(session) && frame->epoch == session->capture_epoch &&
-                sequence_delta <= INT32_MAX && sequence_delta != 0;
-    if (live) {
-        ++session->callback_users;
-    }
-    taskEXIT_CRITICAL();
-    if (!live) {
-        return;
-    }
-    uint32_t flags = sequence_delta != 1U ? AUDIO_PCM_FRAME_DISCONTINUITY : 0;
-    session->capture_sample_index = frame->first_sample_index;
-    audio_pcm_frame_info_t info = {
-        .sample_rate_hz = frame->sample_rate_hz,
-        .samples_per_channel = frame->samples_per_channel,
-        .sequence = frame->sequence,
-        .epoch = g_pcm.engine_epoch,
-        .flags = flags,
-        .first_sample_index = session->capture_sample_index,
-        .pts_us = session->capture_sample_index * 1000000U / frame->sample_rate_hz,
-        .channels = frame->channels,
-        .bits_per_sample = 16,
-        .layout = frame->layout,
-    };
-    session->previous_capture_sequence = frame->sequence;
-    session->capture_seen = true;
-    taskENTER_CRITICAL();
-    callback = session->capture_callback;
-    callback_context = session->capture_context;
-    if (callback != NULL) {
-        ++session->capture_callback_users;
-    }
-    taskEXIT_CRITICAL();
-    if (callback != NULL) {
-        callback(frame->samples, &info, callback_context);
-        taskENTER_CRITICAL();
-        --session->capture_callback_users;
-        taskEXIT_CRITICAL();
-    }
-    bool silent_reference;
-    taskENTER_CRITICAL();
-    /* A closing/aborted player still emits scheduled silence until its task
-     * exits. Synthesize reference only after that producer is gone. */
-    silent_reference = g_audio.wave_task == NULL && !g_pcm.sessions[AUDIO_PCM_PLAYBACK].used;
-    callback = session->playback_callback;
-    callback_context = session->playback_context;
-    if (silent_reference && callback != NULL) {
-        ++session->playback_callback_users;
-    }
-    taskEXIT_CRITICAL();
-    if (silent_reference && callback != NULL && frame->samples_per_channel <= WAVE_PLAYER_CAP_MAX_SAMPLES_PER_CH) {
-        info.channels = 1;
-        info.layout.mic_mask = 0;
-        info.layout.ref_mask = 1;
-        /* Silence can be shortened safely when the capture descriptor partly
-         * overlaps a reference already emitted by the stopped player. */
-        if (audio_pcm_reference_update(&info, true)) {
-            callback(audio_pcm_silence, &info, callback_context);
-        }
-    }
-    if (silent_reference && callback != NULL) {
-        taskENTER_CRITICAL();
-        --session->playback_callback_users;
-        taskEXIT_CRITICAL();
-    }
-    audio_pcm_callback_leave(session, false, false);
-}
-#endif
-
-static void audio_pcm_playback_dispatch(const int16_t *samples, uint32_t count, uint32_t rate, uint8_t channels,
-                                        void *context)
-{
-    (void)context;
-    audio_pcm_frame_info_t info = {
-        .sample_rate_hz = rate,
-        .samples_per_channel = count,
-        .epoch = g_pcm.engine_epoch,
-        .channels = channels,
-        .bits_per_sample = 16,
-        .layout = { .mic_mask = 0, .ref_mask = (1U << channels) - 1U },
-    };
-    if (!audio_pcm_reference_update(&info, false)) {
-        return;
-    }
-    for (unsigned i = 0; i < 2; ++i) {
-        struct audio_pcm_session *session = &g_pcm.sessions[i];
-        audio_pcm_frame_cb_t callback = NULL;
-        void *callback_context = NULL;
-        if (!audio_pcm_callback_enter(session, false, &callback, &callback_context)) {
-            continue;
-        }
-        callback(samples, &info, callback_context);
-        audio_pcm_callback_leave(session, true, false);
-    }
-}
-
-uint32_t audio_pcm_buffered_bytes(audio_pcm_handle_t session)
-{
-    uint32_t bytes = 0;
-    if (!audio_pcm_lock()) {
-        if (audio_pcm_session_live(session) && session->direction == AUDIO_PCM_PLAYBACK) {
-            bytes = wave_player_get_buffered_bytes();
-        }
-        audio_pcm_unlock();
-    }
-    return bytes;
-}
-
-uint32_t audio_pcm_trim_buffer(audio_pcm_handle_t session, uint32_t max_bytes)
-{
-    uint32_t discarded = 0;
-    if (!audio_pcm_lock()) {
-        if (audio_pcm_session_live(session) && session->direction == AUDIO_PCM_PLAYBACK) {
-            discarded = wave_player_trim_buffer_internal(max_bytes);
-        }
-        audio_pcm_unlock();
-    }
-    return discarded;
-}
-
-int audio_pcm_flush(audio_pcm_handle_t session)
-{
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    if (!audio_pcm_session_valid(session) || !session->used || session->direction != AUDIO_PCM_PLAYBACK) {
-        result = -EINVAL;
-    } else {
-        wave_player_flush_internal();
-    }
-    audio_pcm_unlock();
-    return result;
-}
-
-/* Global PCM controls may be used before opening a session. Reserve that
- * short hardware operation as well, without taking a legacy engine over. */
-static int audio_pcm_control_enter(void)
-{
-    taskENTER_CRITICAL();
-    if (!g_pcm.claimed &&
-        (g_pcm.legacy_operations || g_audio.io_started || g_audio.wave_task != NULL || playback_frame_cb != NULL
-#if WAVE_PLAYER_ENABLE_REC
-         || g_audio.rec_cb != NULL
-#endif
-#if WAVE_PLAYER_TEST_WAVE || (WAVE_PLAYER_ENABLE_REC && WAVE_PLAYER_ENABLE_REC_RB)
-         || g_audio.wave_src_task != NULL
-#endif
-         )) {
-        taskEXIT_CRITICAL();
-        return -EBUSY;
-    }
-    g_pcm.control_operations++;
-    taskEXIT_CRITICAL();
-    return 0;
-}
-
-static void audio_pcm_control_leave(void)
-{
-    taskENTER_CRITICAL();
-    g_pcm.control_operations--;
-    taskEXIT_CRITICAL();
-}
-
-int audio_pcm_set_volume(uint8_t volume)
-{
-    if (volume > 100U) {
-        return -EINVAL;
-    }
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    result = g_pcm.initialized ? audio_pcm_control_enter() : -ENODEV;
-    if (result) {
-        audio_pcm_unlock();
-        return result;
-    }
-    uint8_t previous_volume = g_audio.volume;
-    result = audio_pcm_control_result(wave_player_set_volume_internal(volume));
-    if (!result) {
-        g_pcm.requested_volume = volume;
-    } else {
-        g_audio.volume = previous_volume;
-    }
-    audio_pcm_control_leave();
-    audio_pcm_unlock();
-    return result;
-}
-
-uint8_t audio_pcm_get_volume(void)
-{
-    return wave_player_get_volume();
-}
-
-int audio_pcm_set_mute(bool mute)
-{
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    result = g_pcm.initialized ? audio_pcm_control_enter() : -ENODEV;
-    if (result) {
-        audio_pcm_unlock();
-        return result;
-    }
-    result = audio_codec_set_mute(&g_audio.play_codec, mute);
-    if (result == -2) {
-        result = 0;
-    } else if (result != -ENODEV) {
-        result = audio_pcm_control_result(result);
-    }
-    if (!result) {
-        g_pcm.requested_mute = mute;
-        g_audio.muted = mute;
-    }
-    audio_pcm_control_leave();
-    audio_pcm_unlock();
-    return result;
-}
-
-bool audio_pcm_get_mute(void)
-{
-    return wave_player_get_mute();
-}
-
-int audio_pcm_set_record_volume(uint8_t volume)
-{
-    if (volume > 100U) {
-        return -EINVAL;
-    }
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    result = g_pcm.initialized ? audio_pcm_control_enter() : -ENODEV;
-    if (result) {
-        audio_pcm_unlock();
-        return result;
-    }
-    result = audio_pcm_control_result(wave_player_set_record_volume_internal(volume));
-    if (!result) {
-        g_pcm.requested_record_volume = volume;
-        g_pcm.record_volume_set = true;
-    }
-    audio_pcm_control_leave();
-    audio_pcm_unlock();
-    return result;
-}
-
-int audio_pcm_set_record_pga(uint8_t pga)
-{
-    if (pga > 100U) {
-        return -EINVAL;
-    }
-    int result = audio_pcm_lock();
-    if (result) {
-        return result;
-    }
-    result = g_pcm.initialized ? audio_pcm_control_enter() : -ENODEV;
-    if (result) {
-        audio_pcm_unlock();
-        return result;
-    }
-    result = audio_pcm_control_result(wave_player_set_record_pga_internal(pga));
-    if (!result) {
-        g_pcm.requested_record_pga = pga;
-        g_pcm.record_pga_set = true;
-    }
-    audio_pcm_control_leave();
-    audio_pcm_unlock();
-    return result;
+    return wave_player_trim_buffer_internal(max_bytes);
 }
 #endif

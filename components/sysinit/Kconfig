@@ -4,6 +4,14 @@
 
 menu "System Initialization"
 
-comment "sysinit is always built and has no user configurable options"
+config SYSINIT_TASK_STACK_DEPTH
+    int "SYSINIT continuation task stack depth"
+    depends on SYSINIT
+    range 512 65536
+    default 2048
+    help
+      FreeRTOS stack depth of the task that runs the SYSINIT entries placed
+      after SI_SUB_SCHED and then enters the application main(). The unit
+      is the FreeRTOS stack word (StackType_t), not bytes.
 
 endmenu

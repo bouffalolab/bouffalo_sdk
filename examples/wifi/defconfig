@@ -16,7 +16,7 @@ ifeq ($(CHIP),bl602)
     CONFIG_MM_TLSF_FL_INDEX_MAX=18
 else
     CONFIG_WIFI6=y
-    CONFIG_MACSW_SELECT = default
+    # Kconfig defaults to MACSW_DEFAULT; applications can select another profile.
     ifeq ($(CONFIG_WL80211),y)
         CONFIG_BL_WPA_SUPPLICANT =y
         CONFIG_WL80211_WRAM_MEM_SIZE_LIMIT ?= 0x4000 # 16KB

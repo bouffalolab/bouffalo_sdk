@@ -484,7 +484,7 @@ void bl_lp_fw_init(void)
     BL_LP_LOG("[LP] init finish\r\n");
 }
 
-int bl_lp_init(void)
+int _bl_lp_init(void)
 {
     bl_lp_env_init();
 

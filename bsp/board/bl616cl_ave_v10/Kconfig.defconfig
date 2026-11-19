@@ -10,6 +10,10 @@ config WAVE_PLAYER_OUT_CHANNELS
 config WAVE_PLAYER_REC_CHANNELS
     default 2 if !AUDIO_CODEC_JY6316_ENABLE
 
+# ES8388 supports 0..24 dB; the generic 39 dB setting is for other codecs.
+config WAVE_PLAYER_REC_DEFAULT_MIC_GAIN_DB
+    default 21 if !AUDIO_CODEC_JY6316_ENABLE
+
 endif
 
 config BOARD_AUDIO_CAPTURE_MIC_MASK
@@ -17,5 +21,22 @@ config BOARD_AUDIO_CAPTURE_MIC_MASK
 
 config BOARD_AUDIO_CAPTURE_REF_MASK
     default 0x01 if !AUDIO_CODEC_JY6316_ENABLE && WAVE_PLAYER_REC_CHANNELS >= 2
+
+endif
+
+if BSP_DISPLAY && DISPLAY_DEFAULT
+
+choice DISPLAY_DEFAULT_IFACE
+    default DISPLAY_DEFAULT_IF_DBI_B8
+endchoice
+
+# Reference module used by the SDK's DBI examples. Change the module for a
+# different panel attached to U10; its 8080 pin mapping remains the same.
+choice DISPLAY_DEFAULT_MODULE
+    default DISPLAY_DEFAULT_MODULE_ST7796_320X480
+endchoice
+
+config DISPLAY_DEFAULT_CS_PIN
+    default 0
 
 endif

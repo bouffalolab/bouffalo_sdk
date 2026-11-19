@@ -1,4 +1,11 @@
 # Changes
+## 2026-11-17
+1. [ble_tp_cli] Improve receive-side throughput reporting in Kbps with warm-up exclusion, corrected averages, final summaries on stop or disconnection, totals beyond 4 GiB, printf compatibility, startup protection, and consistent code style.
+
+## 2026-11-02
+1.[blestack] Add optional signed-write status propagation to GATT callbacks under BFLB_BLE_PATCH_SIGNED_WRITE.
+2.[blestack] Silently discard Signed Write Commands received on encrypted links when BFLB_BLE_PATCH_SIGNED_WRITE is enabled.
+
 ## 2026-10-13
 1. [BR/EDR] Preserve Inquiry Scan and Page Scan flags after connection failures and disconnections to keep the host synchronized with the controller's Scan Enable configuration, preventing subsequent scan-disable requests from incorrectly returning -EALREADY.
 

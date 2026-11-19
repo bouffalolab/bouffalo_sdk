@@ -278,11 +278,14 @@ int main(void)
         LOG_I("PHY RF init failed!\r\n");
         return 0;
     }
+#elif defined (BL618DG)
+#if defined(CONFIG_COEX)
+    LOG_I("Coex board topology and RF mode are fixed by CONFIG_COEX_BOARD_*; RF is ready.\r\n");
 #else
-    LOG_I("Declare wiring with wifi_coex_board_config <topology> [gpio].\r\n");
-    LOG_I("Then run wifi_coex_init <combo|standalone>; see README.md.\r\n");
+    LOG_I("RF is initialized by SYSINIT.\r\n");
 #endif
-    LOG_I("And then, run wifi_bt_init command to start wifi & bluetooth stack tasks.\r\n");
+#endif
+    LOG_I("Run wifi_bt_init to start the Bluetooth stack; Wi-Fi is initialized by SYSINIT.\r\n");
 
     vTaskStartScheduler();
 
@@ -299,9 +302,9 @@ int cmd_wifi_bt_create_task(int argc, char **argv)
         printf("usage: %s\r\n", argv[0]);
         return -1;
     }
-#if defined(BL618DG)
+#if defined(BL618DG) && defined(CONFIG_COEX)
     if (wifi_mgmr_coex_rf_status_get() != WIFI_MGMR_COEX_OK) {
-        LOG_I("Coex preparation incomplete; run wifi_coex_init, or reboot after RF failure.\r\n");
+        LOG_I("Coex RF not ready; check CONFIG_COEX_BOARD_* and reboot after RF failure.\r\n");
         return -1;
     }
 #else

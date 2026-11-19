@@ -38,145 +38,275 @@
 #include "FreeRTOS_POSIX/pthread.h"
 
 /* libstdc++ uses pthread_once from its gthread backend. */
-#define POSIX_PTHREAD_ONCE_INPROGRESS    1
-#define POSIX_PTHREAD_ONCE_DONE          2
+#define POSIX_PTHREAD_ONCE_INPROGRESS 1
+#define POSIX_PTHREAD_ONCE_DONE       2
 
 /* Only contending callers need a completion semaphore.  Both the node and
  * semaphore live on the waiter's stack, so completed once controls retain no
  * heap allocation and the pthread_once_t ABI remains unchanged. */
-typedef struct pthread_once_waiter
-{
-    pthread_once_t * control;
+typedef struct pthread_once_waiter {
+    pthread_once_t *control;
     StaticSemaphore_t completion;
-    struct pthread_once_waiter * next;
+    struct pthread_once_waiter *next;
 } pthread_once_waiter_t;
 
 static StaticSemaphore_t xPthreadGlobalMutexBuffer;
 static SemaphoreHandle_t xPthreadGlobalMutex;
-static pthread_once_waiter_t * pxPthreadOnceWaiters;
+static pthread_once_waiter_t *pxPthreadOnceWaiters;
 
-static SemaphoreHandle_t prvPthreadGlobalMutex( void )
+static SemaphoreHandle_t prvPthreadGlobalMutex(void)
 {
     taskENTER_CRITICAL();
 
-    if( xPthreadGlobalMutex == NULL )
-    {
-        xPthreadGlobalMutex = xSemaphoreCreateMutexStatic( &xPthreadGlobalMutexBuffer );
+    if (xPthreadGlobalMutex == NULL) {
+        xPthreadGlobalMutex = xSemaphoreCreateMutexStatic(&xPthreadGlobalMutexBuffer);
     }
 
     taskEXIT_CRITICAL();
     return xPthreadGlobalMutex;
 }
 
-int pthread_once( pthread_once_t * once_control,
-                  void ( * init_routine )( void ) )
+int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 {
     SemaphoreHandle_t mutex;
     pthread_once_waiter_t waiter;
-    pthread_once_waiter_t ** link;
-    pthread_once_waiter_t * completed;
+    pthread_once_waiter_t **link;
+    pthread_once_waiter_t *completed;
 
-    if( ( once_control == NULL ) || ( init_routine == NULL ) )
-    {
+    if ((once_control == NULL) || (init_routine == NULL)) {
         return EINVAL;
     }
 
     mutex = prvPthreadGlobalMutex();
-    ( void ) xSemaphoreTake( mutex, portMAX_DELAY );
+    (void)xSemaphoreTake(mutex, portMAX_DELAY);
 
-    if( *once_control == PTHREAD_ONCE_INIT )
-    {
+    if (*once_control == PTHREAD_ONCE_INIT) {
         *once_control = POSIX_PTHREAD_ONCE_INPROGRESS;
-        ( void ) xSemaphoreGive( mutex );
+        (void)xSemaphoreGive(mutex);
 
         /* The callback may call other pthread APIs or initialize another
          * once control, so never execute it under the global mutex. */
         init_routine();
 
-        ( void ) xSemaphoreTake( mutex, portMAX_DELAY );
+        (void)xSemaphoreTake(mutex, portMAX_DELAY);
         *once_control = POSIX_PTHREAD_ONCE_DONE;
         link = &pxPthreadOnceWaiters;
 
-        while( *link != NULL )
-        {
-            if( ( *link )->control == once_control )
-            {
+        while (*link != NULL) {
+            if ((*link)->control == once_control) {
                 completed = *link;
                 *link = completed->next;
                 /* Unlink before waking: the waiter may immediately return
                  * and reclaim its stack after receiving this notification. */
-                ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &completed->completion );
-            }
-            else
-            {
-                link = &( *link )->next;
+                (void)xSemaphoreGive((SemaphoreHandle_t)&completed->completion);
+            } else {
+                link = &(*link)->next;
             }
         }
 
-        ( void ) xSemaphoreGive( mutex );
+        (void)xSemaphoreGive(mutex);
         return 0;
     }
 
-    if( *once_control == POSIX_PTHREAD_ONCE_DONE )
-    {
-        ( void ) xSemaphoreGive( mutex );
+    if (*once_control == POSIX_PTHREAD_ONCE_DONE) {
+        (void)xSemaphoreGive(mutex);
         return 0;
     }
 
-    if( *once_control != POSIX_PTHREAD_ONCE_INPROGRESS )
-    {
-        ( void ) xSemaphoreGive( mutex );
+    if (*once_control != POSIX_PTHREAD_ONCE_INPROGRESS) {
+        (void)xSemaphoreGive(mutex);
         return EINVAL;
     }
 
     waiter.control = once_control;
-    ( void ) xSemaphoreCreateBinaryStatic( &waiter.completion );
+    (void)xSemaphoreCreateBinaryStatic(&waiter.completion);
     waiter.next = pxPthreadOnceWaiters;
     pxPthreadOnceWaiters = &waiter;
-    ( void ) xSemaphoreGive( mutex );
+    (void)xSemaphoreGive(mutex);
 
     /* Registration and completion share the mutex.  The binary semaphore
      * also remembers completion if it is signalled before this task blocks.
      * Unlike taskYIELD(), blocking lets a lower-priority initializer run. */
-    while( xSemaphoreTake( ( SemaphoreHandle_t ) &waiter.completion, portMAX_DELAY ) != pdPASS )
-    {
-    }
+    while (xSemaphoreTake((SemaphoreHandle_t)&waiter.completion, portMAX_DELAY) != pdPASS) {}
 
     /* Ensure the signalling xSemaphoreGive() has returned before reclaiming
      * the semaphore storage, even when this waiter has a higher priority. */
-    ( void ) xSemaphoreTake( mutex, portMAX_DELAY );
-    ( void ) xSemaphoreGive( mutex );
-    vSemaphoreDelete( ( SemaphoreHandle_t ) &waiter.completion );
+    (void)xSemaphoreTake(mutex, portMAX_DELAY);
+    (void)xSemaphoreGive(mutex);
+    vSemaphoreDelete((SemaphoreHandle_t)&waiter.completion);
     return 0;
 }
+
+/*-----------------------------------------------------------*/
+
+/* Thread-specific data.
+ *
+ * POSIX pthread thread-local storage is backed by the FreeRTOS task-local
+ * storage pointers (configNUM_THREAD_LOCAL_STORAGE_POINTERS), separately from
+ * the Picolibc TLS block that backs `__thread` variables and errno.  TLS index
+ * 0 is reserved for the lwIP FreeRTOS port (PTHREAD_TLS_INDEX in
+ * lwip-port/FreeRTOS/sys_arch.c), so pthread keys start at index 1.  Key
+ * destructors run from the FreeRTOS TLS delete callback when a task is
+ * deleted.  Applications using pthread keys must reserve enough pointers (for
+ * example 8, leaving 7 keys) and enable
+ * configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS in FreeRTOSConfig.h. */
+#define posixPTHREAD_TLS_KEY_BASE  1
+#define posixPTHREAD_TLS_KEY_COUNT (configNUM_THREAD_LOCAL_STORAGE_POINTERS - posixPTHREAD_TLS_KEY_BASE)
+
+#if (posixPTHREAD_TLS_KEY_COUNT > 0)
+
+typedef struct pthread_key_internal {
+    BaseType_t xAllocated;
+    void (*pvDestructor)(void *);
+} pthread_key_internal_t;
+
+static pthread_key_internal_t xPthreadKeys[posixPTHREAD_TLS_KEY_COUNT];
+
+#if (configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS == 1)
+static void prvPthreadTlsDeleteCallback(int iIndex, void *pvValue)
+{
+    int iKey = iIndex - posixPTHREAD_TLS_KEY_BASE;
+
+    if ((iKey >= 0) && (iKey < posixPTHREAD_TLS_KEY_COUNT) && (xPthreadKeys[iKey].xAllocated == pdTRUE) &&
+        (xPthreadKeys[iKey].pvDestructor != NULL) && (pvValue != NULL)) {
+        xPthreadKeys[iKey].pvDestructor(pvValue);
+    }
+}
+#endif /* configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS */
+
+#endif /* posixPTHREAD_TLS_KEY_COUNT > 0 */
+
+/*-----------------------------------------------------------*/
+
+int pthread_key_create(pthread_key_t *key, void (*destr_function)(void *))
+{
+#if (posixPTHREAD_TLS_KEY_COUNT > 0)
+    int i;
+
+    if (key == NULL) {
+        return EINVAL;
+    }
+
+    taskENTER_CRITICAL();
+    for (i = 0; i < posixPTHREAD_TLS_KEY_COUNT; i++) {
+        if (xPthreadKeys[i].xAllocated == pdFALSE) {
+            xPthreadKeys[i].xAllocated = pdTRUE;
+            xPthreadKeys[i].pvDestructor = destr_function;
+            *key = (pthread_key_t)(i + posixPTHREAD_TLS_KEY_BASE);
+            taskEXIT_CRITICAL();
+            return 0;
+        }
+    }
+    taskEXIT_CRITICAL();
+
+    return EAGAIN;
+#else
+    (void)key;
+    (void)destr_function;
+
+    return ENOSYS;
+#endif
+}
+
+/*-----------------------------------------------------------*/
+
+int pthread_key_delete(pthread_key_t key)
+{
+#if (posixPTHREAD_TLS_KEY_COUNT > 0)
+    int iKey = (int)key - posixPTHREAD_TLS_KEY_BASE;
+
+    if ((iKey < 0) || (iKey >= posixPTHREAD_TLS_KEY_COUNT) || (xPthreadKeys[iKey].xAllocated == pdFALSE)) {
+        return EINVAL;
+    }
+
+    taskENTER_CRITICAL();
+    xPthreadKeys[iKey].xAllocated = pdFALSE;
+    xPthreadKeys[iKey].pvDestructor = NULL;
+    taskEXIT_CRITICAL();
+
+    return 0;
+#else
+    (void)key;
+
+    return ENOSYS;
+#endif
+}
+
+/*-----------------------------------------------------------*/
+
+void *pthread_getspecific(pthread_key_t key)
+{
+#if (posixPTHREAD_TLS_KEY_COUNT > 0)
+    int iKey = (int)key - posixPTHREAD_TLS_KEY_BASE;
+
+    if ((iKey < 0) || (iKey >= posixPTHREAD_TLS_KEY_COUNT)) {
+        return NULL;
+    }
+
+    return pvTaskGetThreadLocalStoragePointer(NULL, (BaseType_t)key);
+#else
+    (void)key;
+
+    return NULL;
+#endif
+}
+
+/*-----------------------------------------------------------*/
+
+int pthread_setspecific(pthread_key_t key, const void *value)
+{
+#if (posixPTHREAD_TLS_KEY_COUNT > 0)
+    int iKey = (int)key - posixPTHREAD_TLS_KEY_BASE;
+
+    if ((iKey < 0) || (iKey >= posixPTHREAD_TLS_KEY_COUNT) || (xPthreadKeys[iKey].xAllocated == pdFALSE)) {
+        return EINVAL;
+    }
+
+#if (configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS == 1)
+    if (vTaskSetThreadLocalStoragePointerAndDelCallback(NULL, (BaseType_t)key, (void *)value,
+                                                        prvPthreadTlsDeleteCallback) != pdTRUE) {
+        return EINVAL;
+    }
+#else
+    vTaskSetThreadLocalStoragePointer(NULL, (BaseType_t)key, (void *)value);
+#endif
+
+    return 0;
+#else
+    (void)key;
+    (void)value;
+
+    return ENOSYS;
+#endif
+}
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Thread attribute object.
  */
-typedef struct pthread_attr_internal
-{
+typedef struct pthread_attr_internal {
     uint16_t usStackSize;                /**< Stack size. */
     uint16_t usSchedPriorityDetachState; /**< Schedule priority 15 bits (LSB) Detach state: 1 bits (MSB) */
 } pthread_attr_internal_t;
 
-#define pthreadDETACH_STATE_MASK      0x8000
-#define pthreadSCHED_PRIORITY_MASK    0x7FFF
-#define pthreadDETACH_STATE_SHIFT     15
-#define pthreadGET_SCHED_PRIORITY( var )    ( ( var ) & ( pthreadSCHED_PRIORITY_MASK ) )
-#define pthreadIS_JOINABLE( var )           ( ( ( var ) & ( pthreadDETACH_STATE_MASK ) ) == pthreadDETACH_STATE_MASK )
+#define pthreadDETACH_STATE_MASK       0x8000
+#define pthreadSCHED_PRIORITY_MASK     0x7FFF
+#define pthreadDETACH_STATE_SHIFT      15
+#define pthreadGET_SCHED_PRIORITY(var) ((var) & (pthreadSCHED_PRIORITY_MASK))
+#define pthreadIS_JOINABLE(var)        (((var) & (pthreadDETACH_STATE_MASK)) == pthreadDETACH_STATE_MASK)
 
 /**
  * @brief Thread object.
  */
-typedef struct pthread_internal
-{
-    pthread_attr_internal_t xAttr;        /**< Thread attributes. */
-    void * ( *pvStartRoutine )( void * ); /**< Application thread function. */
-    void * xTaskArg;                      /**< Arguments for application thread function. */
-    TaskHandle_t xTaskHandle;             /**< FreeRTOS task handle. */
-    StaticSemaphore_t xJoinBarrier;       /**< Synchronizes the two callers of pthread_join. */
-    StaticSemaphore_t xJoinMutex;         /**< Ensures that only one other thread may join this thread. */
-    void * xReturn;                       /**< Return value of pvStartRoutine. */
+typedef struct pthread_internal {
+    pthread_attr_internal_t xAttr;   /**< Thread attributes. */
+    void *(*pvStartRoutine)(void *); /**< Application thread function. */
+    void *xTaskArg;                  /**< Arguments for application thread function. */
+    TaskHandle_t xTaskHandle;        /**< FreeRTOS task handle. */
+    StaticSemaphore_t xJoinBarrier;  /**< Synchronizes the two callers of pthread_join. */
+    StaticSemaphore_t xJoinMutex;    /**< Ensures that only one other thread may join this thread. */
+    void *xReturn;                   /**< Return value of pvStartRoutine. */
 } pthread_internal_t;
 
 /**
@@ -187,7 +317,7 @@ typedef struct pthread_internal
  *
  * @return This function does not return.
  */
-static void prvExitThread( void );
+static void prvExitThread(void);
 
 /**
  * @brief Wrapper function for the user's thread routine.
@@ -197,52 +327,49 @@ static void prvExitThread( void );
  *
  * @return nothing
  */
-static void prvRunThread( void * pxArg );
+static void prvRunThread(void *pxArg);
 
 /**
  * @brief Default pthread_attr_t.
  */
-static const pthread_attr_internal_t xDefaultThreadAttributes =
-{
-    .usStackSize                = PTHREAD_STACK_MIN,
-    .usSchedPriorityDetachState = ( ( uint16_t ) tskIDLE_PRIORITY & pthreadSCHED_PRIORITY_MASK ) | ( PTHREAD_CREATE_JOINABLE << pthreadDETACH_STATE_SHIFT ),
+static const pthread_attr_internal_t xDefaultThreadAttributes = {
+    .usStackSize = PTHREAD_STACK_MIN,
+    .usSchedPriorityDetachState = ((uint16_t)tskIDLE_PRIORITY & pthreadSCHED_PRIORITY_MASK) |
+                                  (PTHREAD_CREATE_JOINABLE << pthreadDETACH_STATE_SHIFT),
 };
 
 /*-----------------------------------------------------------*/
 
-static void prvExitThread( void )
+static void prvExitThread(void)
 {
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) pthread_self();
+    pthread_internal_t *pxThread = (pthread_internal_t *)pthread_self();
 
     vTaskSuspendAll();
 
     /* If this thread is joinable, wait for a call to pthread_join. */
-    if( pthreadIS_JOINABLE( pxThread->xAttr.usSchedPriorityDetachState ) )
-    {
-        ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier );
-        ( void ) xTaskResumeAll();
+    if (pthreadIS_JOINABLE(pxThread->xAttr.usSchedPriorityDetachState)) {
+        (void)xSemaphoreGive((SemaphoreHandle_t)&pxThread->xJoinBarrier);
+        (void)xTaskResumeAll();
 
         /* Suspend until the call to pthread_join. The caller of pthread_join
          * will perform cleanup. */
-        vTaskSuspend( NULL );
-    }
-    else
-    {
-        ( void ) xTaskResumeAll();
+        vTaskSuspend(NULL);
+    } else {
+        (void)xTaskResumeAll();
         /* For a detached thread, perform cleanup of thread object. */
-        vPortFree( pxThread );
-        vTaskDelete( NULL );
+        vPortFree(pxThread);
+        vTaskDelete(NULL);
     }
 }
 
 /*-----------------------------------------------------------*/
 
-static void prvRunThread( void * pxArg )
+static void prvRunThread(void *pxArg)
 {
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) pxArg;
+    pthread_internal_t *pxThread = (pthread_internal_t *)pxArg;
 
     /* Run the thread routine. */
-    pxThread->xReturn = pxThread->pvStartRoutine( ( void * ) pxThread->xTaskArg );
+    pxThread->xReturn = pxThread->pvStartRoutine((void *)pxThread->xTaskArg);
 
     /* Exit once finished. This function does not return. */
     prvExitThread();
@@ -250,26 +377,22 @@ static void prvRunThread( void * pxArg )
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_destroy( pthread_attr_t * attr )
+int pthread_attr_destroy(pthread_attr_t *attr)
 {
-    ( void ) attr;
+    (void)attr;
 
     return 0;
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_getdetachstate( const pthread_attr_t * attr,
-                                 int * detachstate )
+int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate)
 {
-    pthread_attr_internal_t * pxAttr = ( pthread_attr_internal_t * ) ( attr );
+    pthread_attr_internal_t *pxAttr = (pthread_attr_internal_t *)(attr);
 
-    if( pthreadIS_JOINABLE( pxAttr->usSchedPriorityDetachState ) )
-    {
+    if (pthreadIS_JOINABLE(pxAttr->usSchedPriorityDetachState)) {
         *detachstate = PTHREAD_CREATE_JOINABLE;
-    }
-    else
-    {
+    } else {
         *detachstate = PTHREAD_CREATE_DETACHED;
     }
 
@@ -278,55 +401,49 @@ int pthread_attr_getdetachstate( const pthread_attr_t * attr,
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_getschedparam( const pthread_attr_t * attr,
-                                struct sched_param * param )
+int pthread_attr_getschedparam(const pthread_attr_t *attr, struct sched_param *param)
 {
-    pthread_attr_internal_t * pxAttr = ( pthread_attr_internal_t * ) ( attr );
+    pthread_attr_internal_t *pxAttr = (pthread_attr_internal_t *)(attr);
 
-    param->sched_priority = ( int ) ( pthreadGET_SCHED_PRIORITY( pxAttr->usSchedPriorityDetachState ) );
+    param->sched_priority = (int)(pthreadGET_SCHED_PRIORITY(pxAttr->usSchedPriorityDetachState));
 
     return 0;
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_getstacksize( const pthread_attr_t * attr,
-                               size_t * stacksize )
+int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize)
 {
-    pthread_attr_internal_t * pxAttr = ( pthread_attr_internal_t * ) ( attr );
+    pthread_attr_internal_t *pxAttr = (pthread_attr_internal_t *)(attr);
 
-    *stacksize = ( size_t ) pxAttr->usStackSize;
+    *stacksize = (size_t)pxAttr->usStackSize;
 
     return 0;
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_init( pthread_attr_t * attr )
+int pthread_attr_init(pthread_attr_t *attr)
 {
     /* Copy the default values into the new thread attributes object. */
-    *( ( pthread_attr_internal_t * ) ( attr ) ) = xDefaultThreadAttributes;
+    *((pthread_attr_internal_t *)(attr)) = xDefaultThreadAttributes;
 
     return 0;
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_setdetachstate( pthread_attr_t * attr,
-                                 int detachstate )
+int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
 {
     int iStatus = 0;
-    pthread_attr_internal_t * pxAttr = ( pthread_attr_internal_t * ) ( attr );
+    pthread_attr_internal_t *pxAttr = (pthread_attr_internal_t *)(attr);
 
-    if( ( detachstate != PTHREAD_CREATE_DETACHED ) && ( detachstate != PTHREAD_CREATE_JOINABLE ) )
-    {
+    if ((detachstate != PTHREAD_CREATE_DETACHED) && (detachstate != PTHREAD_CREATE_JOINABLE)) {
         iStatus = EINVAL;
-    }
-    else
-    {
+    } else {
         /* clear and then set msb bit to detachstate) */
         pxAttr->usSchedPriorityDetachState &= ~pthreadDETACH_STATE_MASK;
-        pxAttr->usSchedPriorityDetachState |= ( ( uint16_t ) detachstate << pthreadDETACH_STATE_SHIFT );
+        pxAttr->usSchedPriorityDetachState |= ((uint16_t)detachstate << pthreadDETACH_STATE_SHIFT);
     }
 
     return iStatus;
@@ -334,32 +451,27 @@ int pthread_attr_setdetachstate( pthread_attr_t * attr,
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_setschedparam( pthread_attr_t * attr,
-                                const struct sched_param * param )
+int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param)
 {
     int iStatus = 0;
-    pthread_attr_internal_t * pxAttr = ( pthread_attr_internal_t * ) ( attr );
+    pthread_attr_internal_t *pxAttr = (pthread_attr_internal_t *)(attr);
 
     /* Check for NULL param. */
-    if( param == NULL )
-    {
+    if (param == NULL) {
         iStatus = EINVAL;
     }
 
     /* Ensure that param.sched_priority is valid. */
-    if( ( iStatus == 0 ) &&
-        ( ( param->sched_priority > sched_get_priority_max( SCHED_OTHER ) ) ||
-          ( param->sched_priority < 0 ) ) )
-    {
+    if ((iStatus == 0) &&
+        ((param->sched_priority > sched_get_priority_max(SCHED_OTHER)) || (param->sched_priority < 0))) {
         iStatus = ENOTSUP;
     }
 
     /* Set the sched_param. */
-    if( iStatus == 0 )
-    {
+    if (iStatus == 0) {
         /* clear and then set  15 LSB to schedule priority) */
         pxAttr->usSchedPriorityDetachState &= ~pthreadSCHED_PRIORITY_MASK;
-        pxAttr->usSchedPriorityDetachState |= ( ( uint16_t ) param->sched_priority );
+        pxAttr->usSchedPriorityDetachState |= ((uint16_t)param->sched_priority);
     }
 
     return iStatus;
@@ -367,31 +479,26 @@ int pthread_attr_setschedparam( pthread_attr_t * attr,
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_setschedpolicy( pthread_attr_t * attr,
-                                 int policy )
+int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy)
 {
     /* Silence warnings about unused parameters. */
-    ( void ) attr;
-    ( void ) policy;
+    (void)attr;
+    (void)policy;
 
     return 0;
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_attr_setstacksize( pthread_attr_t * attr,
-                               size_t stacksize )
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 {
     int iStatus = 0;
-    pthread_attr_internal_t * pxAttr = ( pthread_attr_internal_t * ) ( attr );
+    pthread_attr_internal_t *pxAttr = (pthread_attr_internal_t *)(attr);
 
-    if( stacksize < PTHREAD_STACK_MIN )
-    {
+    if (stacksize < PTHREAD_STACK_MIN) {
         iStatus = EINVAL;
-    }
-    else
-    {
-        pxAttr->usStackSize = ( uint16_t ) stacksize;
+    } else {
+        pxAttr->usStackSize = (uint16_t)stacksize;
     }
 
     return iStatus;
@@ -399,39 +506,32 @@ int pthread_attr_setstacksize( pthread_attr_t * attr,
 
 /*-----------------------------------------------------------*/
 
-int pthread_create( pthread_t * thread,
-                    const pthread_attr_t * attr,
-                    void *( *startroutine )( void * ),
-                    void * arg )
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*startroutine)(void *), void *arg)
 {
     int iStatus = 0;
-    pthread_internal_t * pxThread = NULL;
+    pthread_internal_t *pxThread = NULL;
     struct sched_param xSchedParam = { .sched_priority = tskIDLE_PRIORITY };
 
     /* Allocate memory for new thread object. */
-    pxThread = ( pthread_internal_t * ) pvPortMalloc( sizeof( pthread_internal_t ) );
+    pxThread = (pthread_internal_t *)pvPortMalloc(sizeof(pthread_internal_t));
 
-    if( pxThread == NULL )
-    {
+    if (pxThread == NULL) {
         /* No memory. */
         iStatus = EAGAIN;
     }
 
-    if( iStatus == 0 )
-    {
+    if (iStatus == 0) {
         /* No attributes given, use default attributes. */
-        if( attr == NULL )
-        {
+        if (attr == NULL) {
             pxThread->xAttr = xDefaultThreadAttributes;
         }
         /* Otherwise, use provided attributes. */
-        else
-        {
-            pxThread->xAttr = *( ( pthread_attr_internal_t * ) ( attr ) );
+        else {
+            pxThread->xAttr = *((pthread_attr_internal_t *)(attr));
         }
 
         /* Get priority from attributes */
-        xSchedParam.sched_priority = ( int ) pthreadGET_SCHED_PRIORITY( pxThread->xAttr.usSchedPriorityDetachState );
+        xSchedParam.sched_priority = (int)pthreadGET_SCHED_PRIORITY(pxThread->xAttr.usSchedPriorityDetachState);
 
         /* Set argument and start routine. */
         pxThread->xTaskArg = arg;
@@ -440,43 +540,35 @@ int pthread_create( pthread_t * thread,
         /* If this thread is joinable, create the synchronization mechanisms for
          * pthread_join. */
 
-        if( pthreadIS_JOINABLE( pxThread->xAttr.usSchedPriorityDetachState ) )
-        {
+        if (pthreadIS_JOINABLE(pxThread->xAttr.usSchedPriorityDetachState)) {
             /* These calls will not fail when their arguments aren't NULL. */
-            ( void ) xSemaphoreCreateMutexStatic( &pxThread->xJoinMutex );
-            ( void ) xSemaphoreCreateBinaryStatic( &pxThread->xJoinBarrier );
+            (void)xSemaphoreCreateMutexStatic(&pxThread->xJoinMutex);
+            (void)xSemaphoreCreateBinaryStatic(&pxThread->xJoinBarrier);
         }
     }
 
-    if( iStatus == 0 )
-    {
+    if (iStatus == 0) {
         /* Suspend all tasks to create a critical section. This ensures that
          * the new thread doesn't exit before a tag is assigned. */
         vTaskSuspendAll();
 
         /* Create the FreeRTOS task that will run the pthread. */
-        if( xTaskCreate( prvRunThread,
-                         posixconfigPTHREAD_TASK_NAME,
-                         ( uint16_t ) ( pxThread->xAttr.usStackSize / sizeof( StackType_t ) ),
-                         ( void * ) pxThread,
-                         xSchedParam.sched_priority,
-                         &pxThread->xTaskHandle ) != pdPASS )
-        {
+        if (xTaskCreate(prvRunThread, posixconfigPTHREAD_TASK_NAME,
+                        (uint16_t)(pxThread->xAttr.usStackSize / sizeof(StackType_t)), (void *)pxThread,
+                        xSchedParam.sched_priority, &pxThread->xTaskHandle) != pdPASS) {
             /* Task creation failed, no memory. */
-            vPortFree( pxThread );
+            vPortFree(pxThread);
             iStatus = EAGAIN;
-        }
-        else
-        {
+        } else {
             /* Store the pointer to the thread object in the task tag. */
-            vTaskSetApplicationTaskTag( pxThread->xTaskHandle, ( TaskHookFunction_t ) pxThread );
+            vTaskSetApplicationTaskTag(pxThread->xTaskHandle, (TaskHookFunction_t)pxThread);
 
             /* Set the thread object for the user. */
-            *thread = ( pthread_t ) pxThread;
+            *thread = (pthread_t)pxThread;
         }
 
         /* End the critical section. */
-        ( void ) xTaskResumeAll();
+        (void)xTaskResumeAll();
     }
 
     return iStatus;
@@ -484,32 +576,44 @@ int pthread_create( pthread_t * thread,
 
 /*-----------------------------------------------------------*/
 
-int pthread_getschedparam( pthread_t thread,
-                           int * policy,
-                           struct sched_param * param )
+int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *param)
 {
     int iStatus = 0;
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) thread;
+    pthread_internal_t *pxThread = (pthread_internal_t *)thread;
 
     *policy = SCHED_OTHER;
-    param->sched_priority = ( int ) pthreadGET_SCHED_PRIORITY( pxThread->xAttr.usSchedPriorityDetachState );
+    param->sched_priority = (int)pthreadGET_SCHED_PRIORITY(pxThread->xAttr.usSchedPriorityDetachState);
 
     return iStatus;
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_equal( pthread_t t1,
-                   pthread_t t2 )
+int pthread_equal(pthread_t t1, pthread_t t2)
 {
     return t1 == t2;
 }
 
 /*-----------------------------------------------------------*/
 
-void pthread_exit( void * value_ptr )
+int pthread_cancel(pthread_t pthread)
 {
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) pthread_self();
+    /* POSIX thread cancellation is not supported by this port and this entry
+     * only reports that fact.  The function must still be defined: libstdc++'s
+     * gthreads backend uses the address of pthread_cancel as its
+     * __gthread_active_p() probe.  If it is left undefined the probe resolves
+     * to zero and all inline std::mutex/std::once wrappers silently become
+     * no-ops. */
+    (void)pthread;
+
+    return ENOSYS;
+}
+
+/*-----------------------------------------------------------*/
+
+void pthread_exit(void *value_ptr)
+{
+    pthread_internal_t *pxThread = (pthread_internal_t *)pthread_self();
 
     /* Set the return value. */
     pxThread->xReturn = value_ptr;
@@ -520,25 +624,21 @@ void pthread_exit( void * value_ptr )
 
 /*-----------------------------------------------------------*/
 
-int pthread_join( pthread_t pthread,
-                  void ** retval )
+int pthread_join(pthread_t pthread, void **retval)
 {
     int iStatus = 0;
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) pthread;
+    pthread_internal_t *pxThread = (pthread_internal_t *)pthread;
 
     /* Make sure pthread is joinable. Otherwise, this function would block
      * forever waiting for an unjoinable thread. */
-    if( !pthreadIS_JOINABLE( pxThread->xAttr.usSchedPriorityDetachState ) )
-    {
+    if (!pthreadIS_JOINABLE(pxThread->xAttr.usSchedPriorityDetachState)) {
         iStatus = EDEADLK;
     }
 
     /* Only one thread may attempt to join another. Lock the join mutex
      * to prevent other threads from calling pthread_join on the same thread. */
-    if( iStatus == 0 )
-    {
-        if( xSemaphoreTake( ( SemaphoreHandle_t ) &pxThread->xJoinMutex, 0 ) != pdPASS )
-        {
+    if (iStatus == 0) {
+        if (xSemaphoreTake((SemaphoreHandle_t)&pxThread->xJoinMutex, 0) != pdPASS) {
             /* Another thread has already joined the requested thread, which would
              * cause this thread to wait forever. */
             iStatus = EDEADLK;
@@ -546,45 +646,41 @@ int pthread_join( pthread_t pthread,
     }
 
     /* Attempting to join the calling thread would cause a deadlock. */
-    if( iStatus == 0 )
-    {
-        if( pthread_equal( pthread_self(), pthread ) != 0 )
-        {
+    if (iStatus == 0) {
+        if (pthread_equal(pthread_self(), pthread) != 0) {
             iStatus = EDEADLK;
         }
     }
 
-    if( iStatus == 0 )
-    {
+    if (iStatus == 0) {
         /* Wait for the joining thread to finish. Because this call waits forever,
          * it should never fail. */
-        ( void ) xSemaphoreTake( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier, portMAX_DELAY );
+        (void)xSemaphoreTake((SemaphoreHandle_t)&pxThread->xJoinBarrier, portMAX_DELAY);
 
         /* Create a critical section to clean up the joined thread. */
         vTaskSuspendAll();
 
         /* Release xJoinBarrier and delete it. */
-        ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier );
-        vSemaphoreDelete( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier );
+        (void)xSemaphoreGive((SemaphoreHandle_t)&pxThread->xJoinBarrier);
+        vSemaphoreDelete((SemaphoreHandle_t)&pxThread->xJoinBarrier);
 
         /* Release xJoinMutex and delete it. */
-        ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxThread->xJoinMutex );
-        vSemaphoreDelete( ( SemaphoreHandle_t ) &pxThread->xJoinMutex );
+        (void)xSemaphoreGive((SemaphoreHandle_t)&pxThread->xJoinMutex);
+        vSemaphoreDelete((SemaphoreHandle_t)&pxThread->xJoinMutex);
 
         /* Delete the FreeRTOS task that ran the thread. */
-        vTaskDelete( pxThread->xTaskHandle );
+        vTaskDelete(pxThread->xTaskHandle);
 
         /* Set the return value. */
-        if( retval != NULL )
-        {
+        if (retval != NULL) {
             *retval = pxThread->xReturn;
         }
 
         /* Free the thread object. */
-        vPortFree( pxThread );
+        vPortFree(pxThread);
 
         /* End the critical section. */
-        ( void ) xTaskResumeAll();
+        (void)xTaskResumeAll();
     }
 
     return iStatus;
@@ -595,55 +691,47 @@ int pthread_join( pthread_t pthread,
 int pthread_detach(pthread_t pthread)
 {
     int iStatus = 0;
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) pthread;
+    pthread_internal_t *pxThread = (pthread_internal_t *)pthread;
     eTaskState pThreadState;
 
     /* Make sure pthread is joinable. */
-    if( !pthreadIS_JOINABLE( pxThread->xAttr.usSchedPriorityDetachState ) )
-    {
+    if (!pthreadIS_JOINABLE(pxThread->xAttr.usSchedPriorityDetachState)) {
         iStatus = EINVAL;
     }
 
-    if ( iStatus == 0 )
-    {
+    if (iStatus == 0) {
         /* Create a critical section to verify that pthread is joinable. */
         vTaskSuspendAll();
 
         pThreadState = eTaskGetState(pxThread->xTaskHandle);
 
         /* Thread has been deleted or is invalid. */
-        if ( (pThreadState == eDeleted) || (pThreadState == eInvalid) )
-        {
-           iStatus = EINVAL;
-        }
-        else
-        {
-           /* Release xJoinBarrier and delete it. */
-            ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier );
-            vSemaphoreDelete( ( SemaphoreHandle_t ) &pxThread->xJoinBarrier );
+        if ((pThreadState == eDeleted) || (pThreadState == eInvalid)) {
+            iStatus = EINVAL;
+        } else {
+            /* Release xJoinBarrier and delete it. */
+            (void)xSemaphoreGive((SemaphoreHandle_t)&pxThread->xJoinBarrier);
+            vSemaphoreDelete((SemaphoreHandle_t)&pxThread->xJoinBarrier);
 
             /* Release xJoinMutex and delete it. */
-            ( void ) xSemaphoreGive( ( SemaphoreHandle_t ) &pxThread->xJoinMutex );
-            vSemaphoreDelete( ( SemaphoreHandle_t ) &pxThread->xJoinMutex );
+            (void)xSemaphoreGive((SemaphoreHandle_t)&pxThread->xJoinMutex);
+            vSemaphoreDelete((SemaphoreHandle_t)&pxThread->xJoinMutex);
 
             /* Thread has been finished */
-            if ( pThreadState == eSuspended )
-            {
-               /* Delete the FreeRTOS task that ran the thread. */
-               vTaskDelete( pxThread->xTaskHandle );
+            if (pThreadState == eSuspended) {
+                /* Delete the FreeRTOS task that ran the thread. */
+                vTaskDelete(pxThread->xTaskHandle);
 
-               /* Free the thread object. */
-               vPortFree( pxThread );
-            }
-            else
-            {
-               /* Thread is in the running or ready state. */
-               pthread_attr_setdetachstate( (pthread_attr_t *) &pxThread->xAttr, PTHREAD_CREATE_DETACHED );
+                /* Free the thread object. */
+                vPortFree(pxThread);
+            } else {
+                /* Thread is in the running or ready state. */
+                pthread_attr_setdetachstate((pthread_attr_t *)&pxThread->xAttr, PTHREAD_CREATE_DETACHED);
             }
         }
 
         /* End the critical section. */
-        ( void ) xTaskResumeAll();
+        (void)xTaskResumeAll();
     }
 
     return iStatus;
@@ -651,33 +739,30 @@ int pthread_detach(pthread_t pthread)
 
 /*-----------------------------------------------------------*/
 
-pthread_t pthread_self( void )
+pthread_t pthread_self(void)
 {
     /* Return a reference to this pthread object, which is stored in the
      * FreeRTOS task tag. */
-    return ( pthread_t ) xTaskGetApplicationTaskTag( NULL );
+    return (pthread_t)xTaskGetApplicationTaskTag(NULL);
 }
 
 /*-----------------------------------------------------------*/
 
-int pthread_setschedparam( pthread_t thread,
-                           int policy,
-                           const struct sched_param * param )
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param)
 {
     int iStatus = 0;
 
-    pthread_internal_t * pxThread = ( pthread_internal_t * ) thread;
+    pthread_internal_t *pxThread = (pthread_internal_t *)thread;
 
     /* Silence compiler warnings about unused parameters. */
-    ( void ) policy;
+    (void)policy;
 
     /* Copy the given sched_param. */
-    iStatus = pthread_attr_setschedparam( ( pthread_attr_t * ) &pxThread->xAttr, param );
+    iStatus = pthread_attr_setschedparam((pthread_attr_t *)&pxThread->xAttr, param);
 
-    if( iStatus == 0 )
-    {
+    if (iStatus == 0) {
         /* Change the priority of the FreeRTOS task. */
-        vTaskPrioritySet( pxThread->xTaskHandle, param->sched_priority );
+        vTaskPrioritySet(pxThread->xTaskHandle, param->sched_priority);
     }
 
     return iStatus;

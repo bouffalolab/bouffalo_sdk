@@ -39,6 +39,8 @@ typedef struct {
     uint32_t capture_block_samples;
     uint32_t playback_period_samples_max;
     wave_player_capture_layout_t capture_layout;
+    uint16_t mic_mask;
+    uint16_t speaker_mask;
 } audio_pcm_caps_t;
 
 #define AUDIO_PCM_FRAME_DISCONTINUITY (1U << 0)
@@ -54,21 +56,24 @@ typedef struct {
     uint8_t channels;
     uint8_t bits_per_sample;
     wave_player_capture_layout_t layout;
+    uint16_t muted_mic_mask;
 } audio_pcm_frame_info_t;
 
 /* PCM and metadata are borrowed together until the callback returns. The
  * callback runs in an audio task and must not block, open or close a session.
- * Deferred consumers must copy both into their own bounded storage. */
+ * Deferred consumers must copy both into their own bounded storage. Capture
+ * PCM is raw: honor muted_mic_mask in that writable copy; never edit DMA PCM. */
 typedef void (*audio_pcm_frame_cb_t)(const int16_t *samples, const audio_pcm_frame_info_t *info, void *context);
 
-/* One shared physical device is initialized once. Device names are copied by
- * init and may contain at most 31 bytes excluding the trailing zero. Each direction has one
- * logical owner. Capture and playback may coexist at a compatible physical
- * rate; closing one direction does not close the other direction. */
+/* PCM exclusively owns one physical device. Hardware configuration is consumed
+ * by the first successful init; later calls return -EALREADY without applying
+ * their configuration. The physical device is not deinitialized. Each direction
+ * has one logical owner; capture and playback may coexist at a compatible rate.
+ * Closing one direction does not close the other direction. */
 int audio_pcm_init(const wave_player_hw_cfg_t *hardware);
 int audio_pcm_get_caps(audio_pcm_caps_t *caps);
-/* Returns -EBUSY while a legacy operation or asynchronous legacy source still
- * owns the shared engine; the caller may retry after that operation finishes. */
+/* Returns -EBUSY when the direction is already open or the other direction's
+ * active physical rate/period is incompatible with the requested configuration. */
 int audio_pcm_open(audio_pcm_direction_t direction, const audio_pcm_config_t *config, audio_pcm_handle_t *session);
 /* Replacement/unregistration returns -EBUSY while that callback is in flight.
  * Retain its context and retry after it returns. A successful close provides
@@ -93,14 +98,30 @@ int audio_pcm_close(audio_pcm_handle_t session, uint32_t timeout_ms);
 uint32_t audio_pcm_buffered_bytes(audio_pcm_handle_t session);
 uint32_t audio_pcm_trim_buffer(audio_pcm_handle_t session, uint32_t max_bytes);
 int audio_pcm_flush(audio_pcm_handle_t session);
-/* Controls reject an active legacy engine or in-flight legacy operation with
- * -EBUSY, including before the first PCM session is opened. */
-int audio_pcm_set_volume(uint8_t volume);
-uint8_t audio_pcm_get_volume(void);
-int audio_pcm_set_mute(bool mute);
-bool audio_pcm_get_mute(void);
-int audio_pcm_set_record_volume(uint8_t volume);
-int audio_pcm_set_record_pga(uint8_t pga);
+/* Controls share the session mutex and may be used before opening a session. */
+/* Global controls select all declared channels of that role. Channel masks
+ * are nonzero PCM slot masks; reference/unknown slots are rejected. Percent is
+ * 0..100; analog gain uses native dB steps. All-mute getters mean every declared
+ * channel is muted; use per-channel state to distinguish a partial mute. */
+int audio_pcm_set_mic_volume(uint8_t volume);
+int audio_pcm_set_mic_channel_volume(uint16_t mask, uint8_t volume);
+int audio_pcm_set_mic_gain_db(float gain_db);
+int audio_pcm_set_mic_channel_gain_db(uint16_t mask, float gain_db);
+int audio_pcm_set_mic_mute(bool mute);
+int audio_pcm_set_mic_channel_mute(uint16_t mask, bool mute);
+int audio_pcm_get_mic_channel_caps(uint8_t slot, audio_codec_channel_caps_t *caps);
+int audio_pcm_get_mic_channel_state(uint8_t slot, audio_codec_channel_state_t *state);
+bool audio_pcm_get_mic_mute(void);
+int audio_pcm_set_speaker_volume(uint8_t volume);
+int audio_pcm_set_speaker_channel_volume(uint16_t mask, uint8_t volume);
+int audio_pcm_set_speaker_mute(bool mute);
+int audio_pcm_set_speaker_channel_mute(uint16_t mask, bool mute);
+int audio_pcm_get_speaker_channel_caps(uint8_t slot, audio_codec_channel_caps_t *caps);
+int audio_pcm_get_speaker_channel_state(uint8_t slot, audio_codec_channel_state_t *state);
+bool audio_pcm_get_speaker_mute(void);
+uint16_t audio_pcm_get_mic_mute_mask(void);
+/* Returns -ENOTSUP for mixed or not-yet-configured channel volumes. */
+int audio_pcm_get_speaker_volume(uint8_t *volume);
 
 #ifdef __cplusplus
 }

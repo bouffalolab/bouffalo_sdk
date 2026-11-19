@@ -138,7 +138,7 @@ WebRtcSpl_DownBy2ShortToInt(const int16_t *in,
     // lower allpass filter (operates on even input samples)
     for (i = 0; i < len; i++)
     {
-        tmp0 = ((int32_t)in[i << 1] << 15) + (1 << 14);
+        tmp0 = ((int32_t)in[i << 1] * (1 << 15)) + (1 << 14);
         diff = tmp0 - state[1];
         // scale down and round
         diff = (diff + (1 << 13)) >> 14;
@@ -170,7 +170,7 @@ WebRtcSpl_DownBy2ShortToInt(const int16_t *in,
     // upper allpass filter (operates on odd input samples)
     for (i = 0; i < len; i++)
     {
-        tmp0 = ((int32_t)in[i << 1] << 15) + (1 << 14);
+        tmp0 = ((int32_t)in[i << 1] * (1 << 15)) + (1 << 14);
         diff = tmp0 - state[5];
         // scale down and round
         diff = (diff + (1 << 13)) >> 14;

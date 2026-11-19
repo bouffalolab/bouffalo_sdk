@@ -688,6 +688,15 @@ DDB 提供 `show sysinit` 命令，遍历 `sysinit_done_list` + `sysinit_list` �
 
 ## 9. 嵌入式 MCU 适配设计
 
+> **说明（2026-11-11 更新）**：本节是 FreeBSD SYSINIT 向 MCU 移植的可行性分析与候选方案
+> （方案 A/B）记录，其中的代码与链接脚本片段是设计示意，不是当前 SDK 源码。当前 SDK 实现位于
+> `components/sysinit/`，使用两段式执行和调度器分隔符：pre-scheduler 记录 + 续跑任务中的
+> post-scheduler 记录（含 `APP/MIDDLE` 进入 `main()`、`APP/LAST` 发布面向应用的兼容事件），
+> section 名使用两位十六进制 subsystem/order 并配合 `KEEP(*(SORT_BY_NAME(.sysinit.*)))`。
+> 当前行为以 [迁移规范](2026-11-04-sysinit-migration.md)、
+> [接入指南](sysinit-migration-guide.md)和
+> [框架设计](2026-04-29-sysinit-framework-design.md) 为准。
+
 ### 9.1 约束分析
 
 | FreeBSD 特性 | 依赖 | MCU 可行性 |
@@ -793,7 +802,7 @@ static void sysinit_insert(struct sysinit *slot,
 }
 
 /* 启动时执行所有 SYSINIT */
-void sysinit_run_all(void)
+void sysinit_run_pre_schedule(void)
 {
     SYSINIT_FOREACH(sip) {
         if (sip->init_fn) {

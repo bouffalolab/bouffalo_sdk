@@ -49,9 +49,9 @@
 #define NETIF_MAX_HWADDR_LEN          (6)
 #define CONFIG_WL80211_TX_RETRY_COUNT (7)
 
-/* STA frames wl80211_output() may keep queued in the MAC.  Each keeps its
- * IOB chain until completion and the MAC queue itself is unbounded, so this
- * leaves IOBs for reception.
+/* Frames wl80211_output() may keep queued in the MAC, STA and AP together.
+ * Each keeps its IOB chain until completion and the MAC queue itself is
+ * unbounded, so this leaves IOBs for reception.
  */
 
 #define WL80211_TX_INFLIGHT_MAX       (24)
@@ -261,10 +261,10 @@ void internal_register_recv_cb(rx_cb_type cb)
 
 /**
  ****************************************************************************************
- * @brief Register STA TX completion callback
+ * @brief Register TX completion callback
  *
- * Called after a STA frame handed to wl80211_output() has been released by
- * the MAC layer, so the driver can retry frames refused with -EAGAIN.
+ * Called after a frame handed to wl80211_output() has been released by the
+ * MAC layer, so the driver can retry frames refused with -EAGAIN.
  *
  * @param[in] cb  Pointer to TX completion callback function
  ****************************************************************************************
@@ -277,7 +277,7 @@ void internal_register_txdone_cb(void (*cb)(void))
 
 /**
  ****************************************************************************************
- * @brief Check whether wl80211_output() can take another STA frame
+ * @brief Check whether wl80211_output() can take another frame
  *
  * @return true if fewer than WL80211_TX_INFLIGHT_MAX frames are in flight
  ****************************************************************************************
@@ -557,13 +557,13 @@ void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_
  * NuttX IOB buffers. Unlike lwip which uses reference counting, NuttX IOB
  * uses a copy-based approach or callback-based cleanup.
  *
- * @param[in] net_if  Pointer to network interface
- * @param[in] buf     Pointer to packet buffer
+ * @param[in] vif_type  Virtual interface type (STA/AP)
+ * @param[in] buf       Pointer to packet buffer
  *
  * @return OK on success, error code otherwise
  ****************************************************************************************
  */
-int wl80211_output(net_buf_tx_t *buf)
+int wl80211_output(uint8_t vif_type, net_buf_tx_t *buf)
 {
   struct wl80211_tx_header *txhdr;
   struct iob_s *iob = (struct iob_s *)buf;
@@ -639,7 +639,7 @@ int wl80211_output(net_buf_tx_t *buf)
    * after transmission is complete.
    */
 
-  ret = wl80211_mac_tx(WL80211_VIF_STA, txhdr, 0, txseg, seg_cnt,
+  ret = wl80211_mac_tx(vif_type, txhdr, 0, txseg, seg_cnt,
                        wl80211_sta_tx_complete, iob);
   if (ret != 0)
     {

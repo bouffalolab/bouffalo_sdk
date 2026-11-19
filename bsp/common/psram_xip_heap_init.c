@@ -36,8 +36,8 @@ void ram_psram_heap_init(void)
     heap_len = heap_limit - heap_base;
     if (mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF,
                          (void *)heap_base, heap_len) == NULL) {
-        puts("psram xip heap init fail !!!\r\n");
-        while (1) {}
+        printf("warning: PSRAM heap registration failed (%u bytes)\r\n", (unsigned int)heap_len);
+        return;
     }
 
     printf("  psram heap size: %u Kbyte\r\n", (unsigned int)(heap_len / 1024U));

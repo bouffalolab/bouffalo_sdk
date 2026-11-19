@@ -74,7 +74,13 @@ typedef void (*tcpip_callback_fn)(void *ctx);
 /* Forward declarations */
 struct tcpip_callback_msg;
 
-void   tcpip_init(tcpip_init_done_fn tcpip_init_done, void *arg);
+/** SDK-internal real TCP/IP initialization; applications must not call it. */
+void   _tcpip_init(tcpip_init_done_fn tcpip_init_done, void *arg);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+/** Deprecated compatibility entry; the SDK initializes TCP/IP through SYSINIT. */
+void   tcpip_init(tcpip_init_done_fn tcpip_init_done, void *arg)
+    __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 
 err_t  tcpip_inpkt(struct pbuf *p, struct netif *inp, netif_input_fn input_fn);
 err_t  tcpip_input(struct pbuf *p, struct netif *inp);

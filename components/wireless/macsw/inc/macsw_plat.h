@@ -98,7 +98,7 @@ bool wifi_verbosity_enabled(uint8_t severity);
  * @return 0 on success and != 0 if error occurred.
  ****************************************************************************************
  */
-void wifi_task_create(void);
+void wifi_task_create(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
 
 /**
  ****************************************************************************************

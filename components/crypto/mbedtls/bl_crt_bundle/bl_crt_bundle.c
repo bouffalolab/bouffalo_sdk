@@ -19,6 +19,7 @@
 #endif
 
 static mbedtls_x509_crt s_dummy_crt;
+static unsigned int s_bundle_references;
 
 typedef struct crt_bundle_t {
     const uint8_t **crts;
@@ -70,9 +71,31 @@ cleanup:
     return ret;
 }
 
+static int bl_crt_verify_one(mbedtls_x509_crt *child)
+{
+    if (child == NULL || child->issuer_raw.p == NULL || child->issuer_raw.len == 0) {
+        return MBEDTLS_ERR_X509_FATAL_ERROR;
+    }
+
+    for (uint16_t i = 0; i < s_crt_bundle.num_certs; i++) {
+        size_t name_len = ((size_t)s_crt_bundle.crts[i][0] << 8) | s_crt_bundle.crts[i][1];
+        const uint8_t *crt_name = s_crt_bundle.crts[i] + CRT_HEADER_OFFSET;
+
+        /* Names are sorted, but their lengths differ. A prefix compare sends
+         * binary search to the wrong side, so match the full issuer name. */
+        if (name_len != child->issuer_raw.len ||
+            memcmp(child->issuer_raw.p, crt_name, name_len) != 0) {
+            continue;
+        }
+        size_t key_len = ((size_t)s_crt_bundle.crts[i][2] << 8) | s_crt_bundle.crts[i][3];
+        return bl_crt_check_signature(child, crt_name + name_len, key_len);
+    }
+    return MBEDTLS_ERR_X509_FATAL_ERROR;
+}
+
 int bl_crt_verify_callback(void *buf, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 {
-    mbedtls_x509_crt *child = crt;
+    (void)buf;
 
     uint32_t flags_filtered = *flags & ~(MBEDTLS_X509_BADCERT_BAD_MD);
 
@@ -88,47 +111,19 @@ int bl_crt_verify_callback(void *buf, mbedtls_x509_crt *crt, int depth, uint32_t
 
     LOG_D("Bundle contains %u certs", s_crt_bundle.num_certs);
 
-    size_t name_len = 0;
-    const uint8_t *crt_name;
-
-    bool crt_found = false;
-    int start = 0;
-    int end = s_crt_bundle.num_certs - 1;
-    int middle = (end - start) / 2;
-
-    while (start <= end) {
-        name_len = s_crt_bundle.crts[middle][0] << 8 | s_crt_bundle.crts[middle][1];
-        crt_name = s_crt_bundle.crts[middle] + CRT_HEADER_OFFSET;
-
-        size_t compare_len = child->issuer_raw.len < name_len ? child->issuer_raw.len : name_len;
-        int cmp_res = memcmp(child->issuer_raw.p, crt_name, compare_len);
-        if (cmp_res == 0 && child->issuer_raw.len != name_len) {
-            cmp_res = child->issuer_raw.len < name_len ? -1 : 1;
+    /* The peer chain may be leaf -> intermediate -> root. The bundle holds
+     * root subjects, so keep walking until a bundled root signs a cert. */
+    for (mbedtls_x509_crt *child = crt; child != NULL; child = child->next) {
+        if (bl_crt_verify_one(child) == 0) {
+            LOG_I("Cert verification passed");
+            *flags = 0;
+            return 0;
         }
-        if (cmp_res == 0) {
-            crt_found = true;
-            break;
-        } else if (cmp_res < 0) {
-            end = middle - 1;
-        } else {
-            start = middle + 1;
-        }
-        middle = (start + end) / 2;
     }
 
-    int ret = MBEDTLS_ERR_X509_FATAL_ERROR;
-    if (crt_found) {
-        size_t key_len = s_crt_bundle.crts[middle][2] << 8 | s_crt_bundle.crts[middle][3];
-        ret = bl_crt_check_signature(child, s_crt_bundle.crts[middle] + CRT_HEADER_OFFSET + name_len, key_len);
-    }
-
-    if (ret == 0) {
-        LOG_I("Cert verification passed");
-        *flags = 0;
-        return 0;
-    }
-
-    LOG_E("Cert verification failed");
+    LOG_E("Cert verification failed depth=%d flags=0x%x issuer_len=%u",
+          depth, (unsigned)*flags,
+          (crt != NULL && crt->issuer_raw.p != NULL) ? (unsigned)crt->issuer_raw.len : 0);
     return MBEDTLS_ERR_X509_FATAL_ERROR;
 }
 
@@ -208,6 +203,7 @@ int bl_crt_bundle_attach(void *conf)
         mbedtls_x509_crt_init(&s_dummy_crt);
         mbedtls_ssl_conf_ca_chain(ssl_conf, &s_dummy_crt, NULL);
         mbedtls_ssl_conf_verify(ssl_conf, bl_crt_verify_callback, NULL);
+        s_bundle_references++;
     }
 
     return ret;
@@ -215,15 +211,26 @@ int bl_crt_bundle_attach(void *conf)
 
 void bl_crt_bundle_detach(mbedtls_ssl_config *conf)
 {
-    free(s_crt_bundle.crts);
-    s_crt_bundle.crts = NULL;
     if (conf) {
+        mbedtls_ssl_conf_ca_chain(conf, NULL, NULL);
         mbedtls_ssl_conf_verify(conf, NULL, NULL);
+        if (s_bundle_references > 0) {
+            s_bundle_references--;
+        }
+    }
+    if (s_bundle_references == 0) {
+        free(s_crt_bundle.crts);
+        s_crt_bundle.crts = NULL;
+        s_crt_bundle.num_certs = 0;
     }
 }
 
 int bl_crt_bundle_set(const uint8_t *x509_bundle, size_t bundle_size)
 {
+    if (s_bundle_references != 0) {
+        LOG_E("Cannot replace certificate bundle while SSL configs use it");
+        return -1;
+    }
     return bl_crt_bundle_init(x509_bundle, bundle_size);
 }
 

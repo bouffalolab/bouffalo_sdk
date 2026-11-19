@@ -240,6 +240,16 @@ struct flashloader_command_result flashloader_command_execute(
     uint32_t value;
 
     switch (command) {
+        case FLASHLOADER_CMD_GET_BOOTINFO:
+            if ((payload_length != 0U) || (response_capacity < 28U)) {
+                result.status = FLASHLOADER_CMD_LEN_ERROR;
+            } else if (flashloader_port_get_bootinfo(response_data) != 0) {
+                result.status = FLASHLOADER_FAIL;
+            } else {
+                result = data_result(28U);
+            }
+            break;
+
         case FLASHLOADER_CMD_CHANGE_RATE:
             if (payload_length != 8U) {
                 result.status = FLASHLOADER_CMD_LEN_ERROR;

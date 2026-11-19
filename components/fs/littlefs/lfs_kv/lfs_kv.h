@@ -28,11 +28,18 @@ typedef enum {
 
 /* the key max name length must less then it */
 #ifndef LFS_KV_KEY_MAX
-#define LFS_KV_KEY_MAX                          (64)
+#define LFS_KV_KEY_MAX (64)
 #endif
 
-/* lfs_kv.c */
-lfs_kv_err_t lfs_kv_init(void);
+/* Deprecated compatibility alias: the PSM store is initialized by SYSINIT
+ * before main, so this entry only prints a warning and returns LFS_KV_OK. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+lfs_kv_err_t lfs_kv_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+/* Real initializer; call explicitly only when SYSINIT is disabled. Safe to
+ * call more than once. */
+lfs_kv_err_t _lfs_kv_init(void);
 
 size_t lfs_kv_get_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len);
 size_t lfs_kv_get_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset);

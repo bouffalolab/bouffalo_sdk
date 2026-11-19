@@ -89,6 +89,11 @@ if(CONFIG_CHERRYUSB_DEVICE)
     endif()
     if(CONFIG_CHERRYUSB_DEVICE_ADB)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/adb/usbd_adb.c)
+        # The ADB class serializes application and class IN transfers with a
+        # critical section when an OSAL backend is available.
+        if(DEFINED CONFIG_CHERRYUSB_OSAL AND NOT "${CONFIG_CHERRYUSB_OSAL}" STREQUAL "")
+            add_compile_definitions(CONFIG_CHERRYUSB_ADB_OSAL_LOCK=1)
+        endif()
     endif()
     if(CONFIG_CHERRYUSB_DEVICE_GAMEPAD)
         list(APPEND cherryusb_srcs ${CMAKE_CURRENT_LIST_DIR}/class/gamepad/usbd_gamepad.c)

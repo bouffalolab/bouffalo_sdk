@@ -22,7 +22,7 @@
 #endif
 
 #ifndef SHELL_ARG_NUM
-#define SHELL_ARG_NUM 16
+#define SHELL_ARG_NUM 20
 #endif
 
 //#define SHELL_USING_FS

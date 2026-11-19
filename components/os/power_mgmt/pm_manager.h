@@ -28,7 +28,9 @@ typedef struct {
     uint8_t enabled;            /**< Whether this entry is enabled/registered */
 } pm_sleep_check_entry_t;
 
-int pm_sys_init(void);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+int pm_sys_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 int pm_mem_pool_alloc(void);
 int pm_mem_pool_free(void);
 uint32_t pm_manager_handle_get(void);

@@ -35,7 +35,7 @@ enum wlan_netif_state {
 
 struct wlan_netif {
     uint8_t mode;//0: sta; 1: ap
-    enum wlan_netif_state state;
+    uint8_t state; // ref @ enum wlan_netif_state
     uint8_t set;
     uint8_t mac[6];
 };
@@ -136,7 +136,9 @@ extern wifi_mgmr_t wifiMgmr;
 extern wifi_mgmr_scan_item_t wifi_mgmr_scan_items[];
 extern const uint16_t wifi_mgmr_scan_items_count;
 
-int wifi_mgmr_init(void);
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int wifi_mgmr_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 
 /* Bitmap conversion functions */
 void wifi_mgmr_bitmap_to_chanlist(const uint8_t *bitmap, uint8_t *chan_list, uint8_t *chan_count);
@@ -148,11 +150,13 @@ void wifi_mgmr_init_country_bitmaps(void);
 /* Print channel information for a country code */
 void wifi_mgmr_print_channel_info(const char *country_code);
 
-int wifi_mgmr_task_start(void);
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int wifi_mgmr_task_start(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);
 char *wifi_mgmr_auth_to_str(uint8_t auth);
 char *wifi_mgmr_cipher_to_str(uint8_t cipher);
-void wifi_mgmr_scan_items_scan_start(void);
+void wifi_mgmr_scan_items_scan_start(bool clear_cache);
 int wifi_mgmr_scan_beacon_save( wifi_mgmr_scan_item_t *scan );
 void wifi_mgmr_scan_channel_surveys_clear(void);
 void wifi_mgmr_scan_channel_survey_update(uint8_t channel, uint8_t utilization);

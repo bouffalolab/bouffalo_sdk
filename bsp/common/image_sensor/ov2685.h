@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s ov2685_init_list[] = {
+static const struct image_sensor_command_s ov2685_init_list[] = {
     {0x0103, 0x0001},
     {0xffff, 0x0005},
     {0x3002, 0x0000},

@@ -18,6 +18,8 @@ source "$BL_SDK_BASE/components/os/Kconfig"
 source "$BL_SDK_BASE/components/iperf/Kconfig"
 source "$BL_SDK_BASE/components/shell/Kconfig"
 source "$BL_SDK_BASE/components/soln_utils/Kconfig"
+# Load SDK-level extension configuration; silently skip missing files.
+osource "$BL_SDK_BASE/extensions/*/Kconfig"
 source "$BL_SDK_BASE/components/usb/Kconfig"
 source "$BL_SDK_BASE/components/utils/Kconfig"
 source "$BL_SDK_BASE/components/wamr/Kconfig"
@@ -25,6 +27,9 @@ source "$BL_SDK_BASE/components/multimedia/Kconfig"
 source "$BL_SDK_BASE/components/ipc/Kconfig"
 source "$BL_SDK_BASE/components/fota/Kconfig"
 source "$BL_SDK_BASE/components/wireless/Kconfig"
+# The Wi-Fi 6 stack ships in a submodule; keep its options with its sources
+# and tolerate the submodule missing from external release archives.
+osource "$BL_SDK_BASE/components/wireless/wifi6/Kconfig"
 source "$BL_SDK_BASE/components/wireless/wifi4/Kconfig"
 # zigbee ships out-of-tree in external releases; tolerate its absence there
 osource "$BL_SDK_BASE/components/wireless/zigbee/Kconfig"

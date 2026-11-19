@@ -1,359 +1,57 @@
 # 芯片系列差异
 
-## 芯片系列概览
+具体芯片、封装、板子和 SDK 配置决定可用外设、内存与协议。不要根据其他芯片的结果推断支持情况；以目标芯片的 `drivers/soc/<chip>/`、`drivers/lhal/config/`、`bsp/board/<board>/`、示例 `defconfig` 及芯片资料为准。
 
-Bouffalo SDK 支持多个芯片系列，每个系列针对不同的应用场景，在性能、功耗、外设等方面各有侧重。
+## 芯片和无线入口
 
-| 芯片系列 | 核心数 | 架构 | 主频 | 无线协议 | 应用场景 |
-|---------|-------|------|------|---------|---------|
-| BL602/BL604 | 单核 | RISC-V | 320MHz | WiFi 4, BLE | 低功耗IoT |
-| BL702/BL704/BL706 | 单核 | RISC-V | 320MHz | BLE | 可穿戴设备 |
-| BL616/BL618 | 双核 | RISC-V (M0+LP) | 320MHz | WiFi 6, BLE | 高性能IoT |
-| BL618DG | 双核 | RISC-V (M0+LP) | 320MHz | WiFi 6, BLE | 高性能IoT |
-| BL616CL | 双核 | RISC-V (M0+LP) | 320MHz | BLE | 可穿戴设备 |
+| 系列 | 当前 SDK 入口 | 查证方向 |
+| --- | --- | --- |
+| BL602/BL604 | `drivers/soc/bl602/`、`bsp/board/bl602dk/` | WiFi 4 与 BLE 示例及其配置 |
+| BL702/BL704/BL706 | `drivers/soc/bl702/`、`bsp/board/bl702dk/` | 以所选芯片和示例确认无线协议及外设 |
+| BL702L | `drivers/soc/bl702l/`、`bsp/board/bl702ldk/` | 查看独立的芯片驱动、设备表和示例配置 |
+| BL616/BL618 | `drivers/soc/bl616/`、`bsp/board/bl616dk/` | WiFi 6、BLE 及所选板级配置 |
+| BL616CL | `drivers/soc/bl616cl/`、`bsp/board/bl616cldk/` | WiFi、BLE、板级配置；WiFi/BLE 共存示例含 BL616CL 分支 |
+| BL618DG | `drivers/soc/bl618dg/`、`bsp/board/bl618dgdk/` | 多核配置及相应核心的示例 |
 
-## 外设支持矩阵
+BL616CL 不是仅支持 BLE；`examples/wifi/coex/wifi_ble/defconfig` 和 `examples/wifi/nethub/defconfig` 含 BL616CL 分支。这是源码配置证据，不代表所有示例或组合均已在硬件上验证。
 
-### 符号说明
-- **√**: 支持
-- **×**: 不支持
-- **○**: 支持但未充分测试
-- **-**: 无此外设
+查询可用芯片、板子和配置的示例：
 
-### 通用外设
+```bash
+ls drivers/soc
+ls bsp/board
+rg -n 'BL616CL|bl616cl' examples/wifi
+```
 
-| 外设 | BL602/BL604 | BL702/BL704/BL706 | BL616/BL618 | BL618DG | BL616CL |
-|-----|-------------|-------------------|------------|--------|--------|
-| GPIO | ○ | √ | √ | √ | √ |
-| UART | √ | √ | √ | √ | √ |
-| SPI | ○ | √ | √ | √ | √ |
-| I2C | ○ | √ | √ | √ | √ |
-| I2S | ○ | ○ | √ | √ | √ |
-| ADC | ○ | √ | √ | √ | √ |
-| DAC | ○ | √ | √ | √ | √ |
-| DMA | ○ | √ | √ | √ | √ |
-| TIMER | ○ | √ | √ | √ | √ |
-| PWM v1 | ○ | √ | - | - | - |
-| PWM v2 | - | - | √ | √ | √ |
-| RTC | ○ | √ | √ | √ | √ |
-| FLASH | √ | √ | √ | √ | √ |
-| WDG | ○ | √ | √ | √ | √ |
-| IR | ○ | √ | √ | √ | √ |
-| CAM | - | √ | √ | √ | √ |
-| CKS | ○ | √ | √ | √ | √ |
-| CSI | - | - | - | - | - |
+上表不提供未经核实的外设测试状态、容量或性能数值。Flash/PSRAM 的实际容量还与具体物料、板级配置和分区有关，须结合目标硬件确认。
 
-### 安全外设
+## 构建选择
 
-| 外设 | BL602/BL604 | BL702/BL704/BL706 | BL616/BL618 | BL618DG | BL616CL |
-|-----|-------------|-------------------|------------|--------|--------|
-| SEC_AES | ○ | √ | √ | √ | √ |
-| SEC_SHA | ○ | √ | √ | √ | √ |
-| SEC_TRNG | ○ | √ | √ | √ | √ |
-| SEC_PKA | ○ | √ | √ | √ | √ |
-| EFUSE | × | × | × | × | × |
-
-### 网络外设
-
-| 外设 | BL602/BL604 | BL702/BL704/BL706 | BL616/BL618 | BL618DG | BL616CL |
-|-----|-------------|-------------------|------------|--------|--------|
-| EMAC | - | √ | √ | √ | √ |
-| USB v1 | - | √ | - | - | - |
-| USB v2 | - | - | √ | √ | √ |
-
-### 无线协议
-
-| 协议 | BL602/BL604 | BL702/BL704/BL706 | BL616/BL618 | BL618DG | BL616CL |
-|-----|-------------|-------------------|------------|--------|--------|
-| WiFi 4 | √ | - | - | - | - |
-| WiFi 6 | - | - | √ | √ | - |
-| BLE | √ | × | √ | √ | √ |
-| Zigbee | - | × | × | × | × |
-| Thread | - | × | × | × | × |
-
-## 核心差异
-
-### BL602/BL604 系列
-
-**特点：**
-- 单核 RISC-V (320MHz)
-- WiFi 4 + BLE
-- 低功耗设计
-- 基础外设支持
-
-**适用场景：**
-- 智能家居传感器
-- 低功耗IoT设备
-- WiFi + BLE双模设备
-
-**限制：**
-- 外设支持较少（GPIO/UART等部分未充分测试）
-- 无DMA（未充分测试）
-- 安全外设未充分测试
-
-### BL702/BL704/BL706 系列
-
-**特点：**
-- 单核 RISC-V (320MHz)
-- BLE专用
-- 丰富外设
-- 成本优化
-
-**适用场景：**
-- 可穿戴设备（手环、手表）
-- BLE传感器
-- 便携设备
-
-**优势：**
-- 完整的外设支持
-- USB v1支持
-- 摄像头接口
-
-**限制：**
-- 仅支持BLE
-- 无WiFi
-
-### BL616/BL618 系列
-
-**特点：**
-- 双核 (M0 + LP)
-- WiFi 6 + BLE
-- 高性能外设
-- USB v2
-
-**适用场景：**
-- 高性能IoT网关
-- 智能摄像头
-- WiFi 6设备
-
-**优势：**
-- WiFi 6支持
-- 完整的外设支持
-- USB v2
-- 双核架构（LP核心用于低功耗）
-
-**特别：**
-- BL618DG：类似BL616，针对特定市场
-- BL616CL：仅BLE，无WiFi
-
-### BL618DG 系列
-
-**特点：**
-- 多核 (AP + NP)
-- WiFi（版本待确认）
-- 丰富外设
-- 高性能
-
-**适用场景：**
-- 智能家电
-- 工业IoT
-- 需要高性能的应用
-
-**优势：**
-- 多核架构（NP核心可能用于加速）
-- 最丰富的外设支持
-
-**限制：**
-- BLE支持（标记为×）
-- Zigbee/Thread支持（标记为×）
-
-## 内存差异
-
-| 芯片系列 | Flash | SRAM | PSRAM |
-|---------|-------|------|-------|
-| BL602/BL604 | 2MB | 320KB | - |
-| BL702/BL704/BL706 | 2MB | 320KB | - |
-| BL616/BL618 | 4MB | 640KB | √ |
-| BL618DG | 4MB | 640KB | √ |
-| BL616CL | 2MB | 320KB | √ |
-
-## 电源管理差异
-
-| 芯片系列 | 深度睡眠 | 休眠 | 唤醒源 |
-|---------|---------|------|--------|
-| BL602/BL604 | √ | √ | GPIO、定时器、RTC |
-| BL702/BL704/BL706 | √ | √ | GPIO、定时器、RTC |
-| BL616/BL618 | √ | √ | GPIO、定时器、RTC、LP核心 |
-| BL618DG | √ | √ | GPIO、定时器、RTC、LP核心 |
-| BL616CL | √ | √ | GPIO、定时器、RTC、LP核心 |
-
-## 开发板支持
-
-| 芯片系列 | 开发板 | 特性 |
-|---------|-------|------|
-| BL602/BL604 | bl602dk | 基础开发板 |
-| BL702/BL704/BL706 | bl702dk | 基础开发板 |
-| BL616/BL618 | bl616dk | 标准开发板 |
-| BL618DG | bl618dgdk | 特定开发板 |
-| BL616CL | bl616cldk | 特定开发板 |
-
-## 编译差异
-
-### 单核芯片（BL602、BL702、BL616、BL618）
+在对应示例目录中显式指定芯片与板子：
 
 ```bash
 make CHIP=bl616 BOARD=bl616dk
-```
-
-### 多核芯片（BL618DG）
-
-需要指定 `CPU_ID`：
-
-```bash
-# AP核心（主控）
-make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
-
-# NP核心（专用，如WiFi）
-make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
-```
-
-### BL616CL（仅BLE）
-
-```bash
 make CHIP=bl616cl BOARD=bl616cldk
 ```
 
-## SDK配置差异
-
-### WiFi配置
-
-**BL602 (WiFi 4):**
-```bash
-# Kconfig
-CONFIG_WIFI4=y
-```
-
-**BL616 (WiFi 6):**
-```bash
-# Kconfig
-CONFIG_WIFI6=y
-```
-
-### BLE配置
-
-**所有支持BLE的芯片：**
-```bash
-# Kconfig
-CONFIG_BLE=y
-```
-
-### 双核配置（BL618DG）
+BL618DG 的 `CPU_ID` 默认是 `ap`；编译其他核心时显式传入，且应使用目标核心对应的工程：
 
 ```bash
-# AP核心
-CONFIG_CORE_AP=y
-
-# NP核心
-CONFIG_CORE_NP=y
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
+# LP 核示例：examples/pmu/bl618dg/pds_lp_wakeup/lp/
+make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=lp
 ```
 
-### LP核心配置（BL616、BL618DG、BL616CL）
+AP/NP 示例可参考 `examples/wifi/sta/dualcore/`。LP 示例需要在其自身目录执行；这些命令不表示同一个示例一定支持三个核心。
 
-```bash
-# LP核心
-CONFIG_CORE_LP=y
-```
+其他入口包括 `examples/bl618dg_dualcore/helloworld_ap/` 和 `helloworld_np/`，以及 `examples/pmu/bl618dg/pds_lp_wakeup/lp/`。双核及 LP 唤醒工程的父 Makefile 还负责组合镜像，不能用单核构建成功推断组合镜像或运行成功。
 
-## 性能对比
+BL618DG 板级 `CPU_MODEL` 默认 `b0`。`drivers/soc/bl618dg/std/CMakeLists.txt` 在非 LP 核按 `CPU_MODEL=a0` 选择 `startup/mx/`、其他型号选择 `startup/mn/`，LP 选择 `startup/lp/`；NP 和 LP 构建会强制关闭 `CONFIG_ROMAPI`。默认链接脚本还取决于板级配置和 `CONFIG_CUSTOM_LINKSCRIPT`，其中 DK 的 LP b0 使用专用脚本，LP 非 b0 分支未在该处设置默认脚本。排查时读取实际 CMake 配置和链接命令，而不是仅根据芯片名推断。
 
-### 主频
+## 迁移检查
 
-| 芯片系列 | M0主频 | D0主频 | LP主频 |
-|---------|-------|-------|-------|
-| BL602/BL604 | 320MHz | - | - |
-| BL702/BL704/BL706 | 320MHz | - | - |
-| BL616/BL618 | 320MHz | - | 低频 |
-| BL618DG | 320MHz | - | 低频 |
-| BL616CL | 320MHz | - | 低频 |
-
-### 吞吐量
-
-| 芯片系列 | WiFi速率 | BLE速率 |
-|---------|---------|---------|
-| BL602/BL604 | 72Mbps (WiFi 4) | 1Mbps |
-| BL702/BL704/BL706 | - | 1Mbps |
-| BL616/BL618 | 1200Mbps (WiFi 6) | 1Mbps |
-| BL618DG | 1200Mbps (WiFi 6) | 1Mbps |
-| BL616CL | - | 1Mbps |
-
-## 选择建议
-
-### 低功耗IoT（传感器）
-- **推荐**: BL602
-- **理由**: WiFi 4 + BLE，低功耗，成本低
-
-### 可穿戴设备（手环、手表）
-- **推荐**: BL702 或 BL616CL
-- **理由**: BLE，丰富外设，成本优化
-
-### 高性能IoT网关
-- **推荐**: BL616 或 BL618DG
-- **理由**: WiFi 6（BL616）或高性能（BL618DG），丰富外设
-
-### 智能家电
-- **推荐**: BL618DG
-- **理由**: 多核，高性能，丰富外设
-
-### 智能摄像头
-- **推荐**: BL616 或 BL618DG
-- **理由**: 摄像头接口，高性能
-
-## 移植建议
-
-### 从BL602到BL616
-
-**相同点：**
-- LHAL API相同
-- WiFi支持（但版本不同）
-- BLE支持
-
-**不同点：**
-- WiFi 4 → WiFi 6
-- 单核 → 双核（M0 + LP）
-- 外设支持更完整
-
-**迁移步骤：**
-1. 更新 `CHIP=bl616`
-2. 检查WiFi配置（WiFi 4 → WiFi 6）
-3. 检查LP核心使用（可选）
-4. 测试外设（部分BL602未测试的外设在BL616已验证）
-
-### 从BL702到BL616
-
-**相同点：**
-- LHAL API相同
-- BLE支持
-- 外设接口
-
-**不同点：**
-- BLE → WiFi 6 + BLE
-- 单核 → 双核（M0 + LP）
-- 新增WiFi功能
-
-**迁移步骤：**
-1. 更新 `CHIP=bl616`
-2. 启用WiFi配置
-3. 检查双核配置
-4. 测试WiFi功能
-
-### 从BL616到BL618DG
-
-**相同点：**
-- LHAL API相同
-- WiFi支持（版本可能不同）
-- 外设接口
-
-**不同点：**
-- 双核（M0 + LP）→ 多核（AP + NP）
-- 更大Flash/SRAM
-
-**迁移步骤：**
-1. 更新 `CHIP=bl618dg`
-2. 指定 `CPU_ID=ap` 或 `CPU_ID=np`
-3. 适配内存配置
-4. 测试多核通信（如需要）
-5. 测试新增外设
-
-## 总结
-
-Bouffalo SDK支持多个芯片系列，通过LHAL统一API，应用代码可以在不同芯片间无缝移植。选择芯片时，需根据应用场景、性能需求、功耗要求、成本等因素综合考虑。移植时，主要关注芯片特有的功能（如WiFi版本、核心架构、外设支持）。
+1. 确定目标 `CHIP`、`BOARD`、核心及相应示例。
+2. 比较目标芯片的设备表、引脚、时钟、中断和外设实现；相同 LHAL API 不保证所有能力相同。
+3. 检查无线、内存和低功耗配置及目标板硬件。MACSW coex 中的芯片差异遵循项目的 HAL 平台隔离规则。
+4. 分别验证编译、烧录与运行结果；性能、功耗和协议组合需在目标硬件上测量。

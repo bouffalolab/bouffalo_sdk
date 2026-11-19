@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include "async_event.h"
+#include "wifi_mgmr_ext.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
@@ -22,17 +25,26 @@
 
 static struct bflb_device_s *uart0;
 extern void shell_init_with_task(struct bflb_device_s *shell);
+extern void wifi_event_handler(async_input_event_t ev, void *priv);
 
 void app_init_entry(void *param)
 {
-    app_usbwifi_init();
+    if (app_usbwifi_init() != 0) {
+        abort();
+    }
 
     vTaskDelete(NULL);
 }
 
 int main(void)
 {
-    board_init();
+    if (async_register_event_filter(EV_WIFI, wifi_event_handler, NULL) != 0) {
+        abort();
+    }
+
+    if (xTaskCreate(app_init_entry, (char *)"init", INIT_STACK_SIZE, NULL, INIT_TASK_PRIORITY, NULL) != pdPASS) {
+        abort();
+    }
 
 #ifdef CONFIG_LPAPP
     app_pm_init();
@@ -44,8 +56,6 @@ int main(void)
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
-
-    xTaskCreate(app_init_entry, (char *)"init", INIT_STACK_SIZE, NULL, INIT_TASK_PRIORITY, NULL);
 
     vTaskStartScheduler();
 

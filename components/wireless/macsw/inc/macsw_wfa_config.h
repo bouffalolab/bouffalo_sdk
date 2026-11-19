@@ -1,7 +1,7 @@
 #define CFG_AMSDU_4K
 #define CFG_TXDESC0 4
 #define CFG_TXDESC1 16
-#define CFG_TXDESC2 1
+#define CFG_TXDESC2 4
 #define CFG_TXDESC3 4
 // Each AP VIF submits its Beacon through a static descriptor.
 #define CFG_TXDESC4 1

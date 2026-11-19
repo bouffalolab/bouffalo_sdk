@@ -27,7 +27,12 @@ uint8_t bflb_boot2_get_active_partition(void);
 int bflb_boot2_get_active_entries(int type, bflb_partition_config_t *ptEntry);
 int bflb_boot2_update_ptable(bflb_partition_config_t *ptEntry);
 int bflb_boot2_dump(void);
-int bflb_boot2_init(void);
+
+/* Compatibility entry point; the partition table is loaded by SYSINIT. */
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+int bflb_boot2_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
+
 void bflb_update_mfg_ptable(void);
 pt_table_stuff_config *bflb_boot2_get_pt_config(void);
 

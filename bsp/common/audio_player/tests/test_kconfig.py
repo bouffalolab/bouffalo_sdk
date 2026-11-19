@@ -35,31 +35,30 @@ def resolve(entry, values):
 profiles = (
     ({'CONFIG_CHIP': 'bl618dg', 'CONFIG_BOARD': 'bl618dg_mstar',
       'CONFIG_CPU_ID': 'ap', 'CONFIG_CPU_MODEL': 'b0'},
-     (0x08, 1, 1, 4, 1, 2, 4)),
-    ({}, (2, 1, 0, 0, 0, 2, 2)),
+     (0x08, 1, 1, 4, 2, 4)),
+    ({}, (2, 1, 0, 0, 2, 2)),
     ({'CONFIG_WAVE_PLAYER_OUT_CHANNELS': '1', 'CONFIG_WAVE_PLAYER_REC_CHANNELS': '1'},
-     (1, 0, 0, 0, 0, 1, 1)),
-    ({'CONFIG_BOARD': 'audio_test_no_defaults'}, (1, 0, 0, 0, 0, 2, 2)),
+     (1, 0, 0, 0, 1, 1)),
+    ({'CONFIG_BOARD': 'audio_test_no_defaults'}, (1, 0, 0, 0, 2, 2)),
     ({'CONFIG_BOARD': '', 'CONFIG_WAVE_PLAYER_REC_CHANNELS': '2'},
-     (1, 0, 0, 0, 0, 2, 2)),
+     (1, 0, 0, 0, 2, 2)),
     ({'CONFIG_WAVE_PLAYER_REC_CHANNELS': '2',
       'CONFIG_BOARD_AUDIO_CAPTURE_MIC_MASK': '0x01',
-      'CONFIG_BOARD_AUDIO_CAPTURE_REF_MASK': '0x02'}, (1, 2, 0, 0, 0, 2, 2)),
-    ({'CONFIG_AUDIO_CODEC_JY6316_ENABLE': 'y'}, (0x0c, 1, 1, 4, 1, 2, 4)),
+      'CONFIG_BOARD_AUDIO_CAPTURE_REF_MASK': '0x02'}, (1, 2, 0, 0, 2, 2)),
+    ({'CONFIG_AUDIO_CODEC_JY6316_ENABLE': 'y'}, (0x0c, 1, 1, 4, 2, 4)),
     ({'CONFIG_AUDIO_CODEC_JY6316_ENABLE': 'y', 'CONFIG_WAVE_PLAYER_I2S_TX_SLOTS': '0'},
-     (0x0c, 1, 1, 0, 1, 2, 4)),
+     (0x0c, 1, 1, 0, 2, 4)),
     ({'CONFIG_AUDIO_CODEC_JY6316_ENABLE': 'y', 'CONFIG_WAVE_PLAYER_ENABLE_REC': 'n',
-      'CONFIG_WAVE_PLAYER_OUT_CHANNELS': '1'}, (0x0c, 1, 1, 4, 1, 1, 4)),
-    ({'CONFIG_AUDIO_CODEC_JY6316_ENABLE': 'y',
-      'CONFIG_WAVE_PLAYER_I2S_DSP_LR_MERGE': 'n'}, (0x0c, 1, 1, 4, 0, 2, 4)),
+      'CONFIG_WAVE_PLAYER_OUT_CHANNELS': '1'}, (0x0c, 1, 1, 4, 1, 4)),
+    ({'CONFIG_I2S_DSP_MODE': 'y'}, (2, 1, 1, 0, 2, 2)),
     ({'CONFIG_I2S_DSP_MODE': 'y', 'CONFIG_WAVE_PLAYER_I2S_TX_SLOTS': '6',
       'CONFIG_WAVE_PLAYER_REC_CHANNELS': '4',
       'CONFIG_BOARD_AUDIO_CAPTURE_MIC_MASK': '0x03',
-      'CONFIG_BOARD_AUDIO_CAPTURE_REF_MASK': '0x08'}, (3, 8, 1, 6, 1, 2, 4)),
+      'CONFIG_BOARD_AUDIO_CAPTURE_REF_MASK': '0x08'}, (3, 8, 1, 6, 2, 4)),
 )
 names = ('CONFIG_BOARD_AUDIO_CAPTURE_MIC_MASK', 'CONFIG_BOARD_AUDIO_CAPTURE_REF_MASK',
          'WAVE_PLAYER_I2S_DSP_MODE', 'WAVE_PLAYER_I2S_TX_SLOTS',
-         'WAVE_PLAYER_I2S_DSP_LR_MERGE', 'WAVE_PLAYER_OUT_CHANNELS',
+         'WAVE_PLAYER_OUT_CHANNELS',
          'CONFIG_WAVE_PLAYER_REC_CHANNELS')
 with tempfile.TemporaryDirectory(prefix='audio-kconfig-') as directory:
     header = Path(directory) / 'config.h'
@@ -67,8 +66,8 @@ with tempfile.TemporaryDirectory(prefix='audio-kconfig-') as directory:
         for overrides, expected in profiles:
             config = resolve(entry, {**base, **overrides})
             assert not config.warnings, config.warnings
-            for name in ('I2S_DSP_MODE', 'WAVE_PLAYER_I2S_TX_SLOTS',
-                         'WAVE_PLAYER_I2S_DSP_LR_MERGE'):
+            assert 'WAVE_PLAYER_I2S_DSP_LR_MERGE' not in config.syms
+            for name in ('I2S_DSP_MODE', 'WAVE_PLAYER_I2S_TX_SLOTS'):
                 assert len(config.syms[name].nodes) == 1, name
             write_header(str(header), resolved_values(config))
             source = '#include "wave_player.h"\n'
@@ -116,4 +115,4 @@ with tempfile.TemporaryDirectory(prefix='audio-kconfig-') as directory:
                                      'CONFIG_AUDIO_CODEC_JY6316_ENABLE': 'y'})
     assert not unavailable.warnings, unavailable.warnings
     assert unavailable.syms['WAVE_PLAYER_REC_CHANNELS'].str_value == ''
-print('Shared audio Kconfig profiles, generated headers and LR merge disable passed')
+print('Shared audio Kconfig profiles, generated headers and DSP mode selection passed')

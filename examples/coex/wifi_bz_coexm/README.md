@@ -18,6 +18,41 @@ Choose the command matching the board. BL618DG uses the SDK's default PHYRF
 library, including for standalone operation; no PHYRF CMake changes or library
 override are needed.
 
+### BL618DG Coex Board Configuration
+
+On BL618DG, coexistence needs the board RF topology at build time: the SDK's
+SYSINIT `WIRELESS` record prepares RF before `main()` and the shell can run, so
+there is no earlier point that could accept a runtime command. Select the
+topology in the `Wi-Fi/Bluetooth coexistence` menu, either through `menuconfig`
+or by editing the `ifeq ($(CHIP),bl618dg)` block in this example's `defconfig`:
+
+| Board wiring | Kconfig choice | Notes |
+|---|---|---|
+| Combo, no external SPDT | `CONFIG_COEX_BOARD_TOPOLOGY_COMBO` | combo RF path, 2.4 GHz coexistence |
+| Standalone single antenna, SPDT + diplexer | `CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT` | also set `CONFIG_COEX_BOARD_SPDT_GPIO` |
+| Standalone dual antenna, no SPDT | `CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT` | runtime coexistence needs the dual-antenna validation build below |
+
+The checked-in defconfig selects the SDK's tested single-antenna board: one SPDT
+control GPIO on GPIO18. Verify that GPIO and the switch polarity against the
+schematic and the BSP before use. For a combo or dual-antenna board, change the
+selection and rebuild; the topology is a hardware fact and cannot be changed at
+runtime:
+
+```sh
+make menuconfig CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
+```
+
+The corresponding defconfig entries are:
+
+```make
+CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT =y
+CONFIG_COEX_BOARD_SPDT_GPIO                          =18
+```
+
+If no topology is selected on a BL618DG `CONFIG_COEX` build, the build
+intentionally fails with a diagnostic instead of starting with an unknown RF
+path.
+
 ### BL618DG Flash / PSRAM
 
 Use separate build directories and a board with compatible PSRAM:
@@ -34,7 +69,8 @@ make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap BUILD_DIR=build_psram \
 alone does not. Use the artifacts from the selected build directory when
 flashing. Keep `COEX_SPDT_EXPERIMENT` off for normal operation.
 
-For integration testing on a real standalone dual-antenna board:
+For integration testing on a real standalone dual-antenna board, build with
+`CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT=y` and:
 
 ```sh
 make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap BUILD_DIR=build_dual_ant \
@@ -46,31 +82,25 @@ It is disabled in the default build and requires board-level validation.
 
 ## Startup
 
-On BL618DG, declare the board wiring, select its RF mode, then run `wifi_bt_init`:
+The BL618DG board topology and RF mode are selected at build time (see
+[Build](#build)). During boot, the SDK SYSINIT `WIRELESS` record publishes the
+board wiring, prepares the RF path, and verifies that RF is ready before it
+starts the Wi-Fi firmware and manager. A failure is logged and the firmware does
+not continue to the application. This happens before `main()` and the shell, so
+no startup command is required: the old `wifi_coex_board_config` and
+`wifi_coex_init` commands are retired and no longer exported. Use
+`wifi_coex_debug_board_config show` to inspect the topology compiled into the
+firmware.
 
-| Hardware | Declare wiring | Prepare RF | Wi-Fi operation |
-|---|---|---|---|
-| Combo, no external SPDT | `wifi_coex_board_config combo` | `wifi_coex_init combo` | 2.4 GHz STA/AP |
-| Standalone single antenna, SPDT + diplexer | `wifi_coex_board_config standalone_single_ant <gpio>` | `wifi_coex_init standalone` | 2.4/5 GHz STA/AP |
-| Standalone dual antenna, no SPDT | `wifi_coex_board_config standalone_dual_ant` | `wifi_coex_init standalone` | 2.4/5 GHz STA/AP, validation build |
-
-Declaration records immutable hardware facts without changing RF or GPIO. Supply
-the actual SPDT control GPIO and verify the switch polarity against the BSP.
-There is no default GPIO. BL616/BL616CL prepare RF during boot and start at
-`wifi_bt_init`, without a topology command.
-
-`wifi_coex_init` requires a declaration and accepts only `combo` or `standalone`.
-Unsupported board/mode combinations are rejected before RF preparation; it does
-not switch mode automatically. A successful prepare is not an already-running
-hardware baseline. Use `wifi_coex_board_config show` to inspect both layers.
-
-For example, on the tested single-antenna board whose GPIO18 high level selects BT:
+After boot, `wifi_bt_init` starts the Bluetooth stack; Wi-Fi is already
+initialized by SYSINIT:
 
 ```text
-wifi_coex_board_config standalone_single_ant 18
-wifi_coex_init standalone
 wifi_bt_init
 ```
+
+BL616/BL616CL have no board topology choice: they prepare RF during boot and
+start Bluetooth at `wifi_bt_init` as well.
 
 Wait for `CODE_WIFI_ON_MGMR_DONE` and successful Bluetooth initialization.
 Then choose one Wi-Fi role, replacing the connection parameters as needed:
@@ -94,8 +124,9 @@ change the STA parameters or AP channel, not the physical topology.
 Hardware coexistence is automatic. Single-antenna SPDT uses dynamic PTA before
 connecting and on 2.4 GHz; stable 5 GHz uses fixed-BT. Scan temporarily uses
 dynamic PTA and restores the valid home configuration. Do not manually switch
-GPIO/RF paths while operating; reboot before changing topology or after an RF
-initialization failure.
+GPIO/RF paths while operating. Changing the board topology requires changing the
+Kconfig selection, rebuilding, and reflashing; reboot after an RF initialization
+failure.
 
 ## Coex Commands
 

@@ -58,7 +58,9 @@ uint64_t pwr_info_get(void)
     printf("\r\nVirtual time: %llu us\r\n", bl_lp_get_virtual_us());
     printf("Power info dump:\r\n");
     printf("LPFW try recv bcn: %d, loss %d\r\n", lp_info.lpfw_recv_cnt, lp_info.lpfw_loss_cnt);
+#if defined(BL618DG)
     printf("LPFW try ble adv: %u, loss %u\r\n", lp_info.ble_lpfw_adv_success_cnt, lp_info.ble_lpfw_adv_loss_cnt);
+#endif
     printf("Total time %lldms\r\n", lp_info.time_total_us / 1000);
     printf("PDS sleep: %lldms\r\n", lp_info.sleep_pds_us / 1000);
     printf("LPFW active: %lldms\r\n", lp_info.active_lpfw_us / 1000);

@@ -46,12 +46,12 @@ extern "C" {
  * @name pthread detach state.
  */
 /**@{ */
-#define PTHREAD_CREATE_DETACHED    0       /**< Detached. */
-#define PTHREAD_CREATE_JOINABLE    1       /**< Joinable (default). */
+#define PTHREAD_CREATE_DETACHED 0 /**< Detached. */
+#define PTHREAD_CREATE_JOINABLE 1 /**< Joinable (default). */
 /**@} */
 
 #ifndef PTHREAD_ONCE_INIT
-    #define PTHREAD_ONCE_INIT        0
+#define PTHREAD_ONCE_INIT 0
 #endif
 
 /**
@@ -61,23 +61,23 @@ extern "C" {
  * <pthread.h> and its value shall be distinct from any other value returned by pthread_barrier_wait()."
  * So it's defined as negative to distinguish it from the errnos, which are positive.
  */
-#define PTHREAD_BARRIER_SERIAL_THREAD    ( -2 )
+#define PTHREAD_BARRIER_SERIAL_THREAD (-2)
 
 /**
  * @name Mutex types.
  */
 /**@{ */
 #ifndef PTHREAD_MUTEX_NORMAL
-    #define PTHREAD_MUTEX_NORMAL        0                        /**< Non-robust, deadlock on relock, does not remember owner. */
+#define PTHREAD_MUTEX_NORMAL 0 /**< Non-robust, deadlock on relock, does not remember owner. */
 #endif
 #ifndef PTHREAD_MUTEX_ERRORCHECK
-    #define PTHREAD_MUTEX_ERRORCHECK    1                        /**< Non-robust, error on relock,  remembers owner. */
+#define PTHREAD_MUTEX_ERRORCHECK 1 /**< Non-robust, error on relock,  remembers owner. */
 #endif
 #ifndef PTHREAD_MUTEX_RECURSIVE
-    #define PTHREAD_MUTEX_RECURSIVE     2                        /**< Non-robust, recursive relock, remembers owner. */
+#define PTHREAD_MUTEX_RECURSIVE 2 /**< Non-robust, recursive relock, remembers owner. */
 #endif
 #ifndef PTHREAD_MUTEX_DEFAULT
-    #define PTHREAD_MUTEX_DEFAULT       PTHREAD_MUTEX_NORMAL     /**< PTHREAD_MUTEX_NORMAL (default). */
+#define PTHREAD_MUTEX_DEFAULT PTHREAD_MUTEX_NORMAL /**< PTHREAD_MUTEX_NORMAL (default). */
 #endif
 /**@} */
 
@@ -92,11 +92,11 @@ extern "C" {
  */
 /**@{ */
 #if posixconfigENABLE_PTHREAD_COND_T == 1
-    #define PTHREAD_COND_INITIALIZER    FREERTOS_POSIX_COND_INITIALIZER       /**< pthread_cond_t. */
+#define PTHREAD_COND_INITIALIZER FREERTOS_POSIX_COND_INITIALIZER /**< pthread_cond_t. */
 #endif
 
 #if posixconfigENABLE_PTHREAD_MUTEX_T == 1
-    #define PTHREAD_MUTEX_INITIALIZER    FREERTOS_POSIX_MUTEX_INITIALIZER /**< pthread_mutex_t. */
+#define PTHREAD_MUTEX_INITIALIZER FREERTOS_POSIX_MUTEX_INITIALIZER /**< pthread_mutex_t. */
 #endif
 
 /**@} */
@@ -108,7 +108,7 @@ extern "C" {
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_attr_destroy( pthread_attr_t * attr );
+int pthread_attr_destroy(pthread_attr_t *attr);
 
 /**
  * @brief Get detachstate attribute.
@@ -117,8 +117,7 @@ int pthread_attr_destroy( pthread_attr_t * attr );
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_attr_getdetachstate( const pthread_attr_t * attr,
-                                 int * detachstate );
+int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
 
 /**
  * @brief Get schedparam attribute.
@@ -127,8 +126,7 @@ int pthread_attr_getdetachstate( const pthread_attr_t * attr,
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_attr_getschedparam( const pthread_attr_t * attr,
-                                struct sched_param * param );
+int pthread_attr_getschedparam(const pthread_attr_t *attr, struct sched_param *param);
 
 /**
  * @brief Get stacksize attribute.
@@ -137,8 +135,7 @@ int pthread_attr_getschedparam( const pthread_attr_t * attr,
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_attr_getstacksize( const pthread_attr_t * attr,
-                               size_t * stacksize );
+int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize);
 
 /**
  * @brief Initialize the thread attributes object.
@@ -150,7 +147,7 @@ int pthread_attr_getstacksize( const pthread_attr_t * attr,
  * @note Currently, only stack size, sched_param, and detach state attributes
  * are supported. Also see pthread_attr_get*() and pthread_attr_set*().
  */
-int pthread_attr_init( pthread_attr_t * attr );
+int pthread_attr_init(pthread_attr_t *attr);
 
 /**
  * @brief Set detachstate attribute.
@@ -161,8 +158,7 @@ int pthread_attr_init( pthread_attr_t * attr );
  * @retval EINVAL - The value of detachstate is not valid. Currently, supported detach states are --
  *                  PTHREAD_CREATE_DETACHED and PTHREAD_CREATE_JOINABLE.
  */
-int pthread_attr_setdetachstate( pthread_attr_t * attr,
-                                 int detachstate );
+int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 
 /**
  * @brief Set schedparam attribute.
@@ -173,8 +169,7 @@ int pthread_attr_setdetachstate( pthread_attr_t * attr,
  * @retval EINVAL - The value of param is not valid.
  * @retval ENOTSUP - An attempt was made to set the attribute to an unsupported value.
  */
-int pthread_attr_setschedparam( pthread_attr_t * attr,
-                                const struct sched_param * param );
+int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param);
 
 /**
  * @brief Set the schedpolicy attribute.
@@ -185,8 +180,7 @@ int pthread_attr_setschedparam( pthread_attr_t * attr,
  *
  * @warning This function is a stub and always returns 0.
  */
-int pthread_attr_setschedpolicy( pthread_attr_t * attr,
-                                 int policy );
+int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy);
 
 /**
  * @brief Set stacksize attribute.
@@ -196,8 +190,7 @@ int pthread_attr_setschedpolicy( pthread_attr_t * attr,
  * @retval 0 - Upon successful completion.
  * @retval EINVAL - The value of stacksize is less than {PTHREAD_STACK_MIN}.
  */
-int pthread_attr_setstacksize( pthread_attr_t * attr,
-                               size_t stacksize );
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 
 /**
  * @brief Destroy a barrier object.
@@ -208,7 +201,7 @@ int pthread_attr_setstacksize( pthread_attr_t * attr,
  *
  * @note This function does not validate whether there is any thread blocking on the barrier before destroying.
  */
-int pthread_barrier_destroy( pthread_barrier_t * barrier );
+int pthread_barrier_destroy(pthread_barrier_t *barrier);
 
 /**
  * @brief Initialize a barrier object.
@@ -227,9 +220,7 @@ int pthread_barrier_destroy( pthread_barrier_t * barrier );
  * file, which defines how many bits tick count type has. See further details and limitation about event
  * group and configUSE_16_BIT_TICKS in FreeRTOS site.
  */
-int pthread_barrier_init( pthread_barrier_t * barrier,
-                          const pthread_barrierattr_t * attr,
-                          unsigned count );
+int pthread_barrier_init(pthread_barrier_t *barrier, const pthread_barrierattr_t *attr, unsigned count);
 
 /**
  * @brief Synchronize at a barrier.
@@ -239,7 +230,7 @@ int pthread_barrier_init( pthread_barrier_t * barrier,
  * @retval PTHREAD_BARRIER_SERIAL_THREAD - Upon successful completion, the first thread.
  * @retval 0 - Upon successful completion, other thread(s).
  */
-int pthread_barrier_wait( pthread_barrier_t * barrier );
+int pthread_barrier_wait(pthread_barrier_t *barrier);
 
 /**
  * @brief Request cancellation of thread.
@@ -248,7 +239,7 @@ int pthread_barrier_wait( pthread_barrier_t * barrier );
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_cancel( pthread_t thread );
+int pthread_cancel(pthread_t thread);
 
 /**
  * @brief Thread creation.
@@ -258,13 +249,49 @@ int pthread_cancel( pthread_t thread );
  * @retval 0 - Upon successful completion.
  * @retval EAGAIN - Insufficient memory for either thread structure or task creation.
  */
-int pthread_create( pthread_t * thread,
-                    const pthread_attr_t * attr,
-                    void *( *startroutine )( void * ),
-                    void * arg );
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*startroutine)(void *), void *arg);
 
-int pthread_once( pthread_once_t * once_control,
-                  void ( * init_routine )( void ) );
+int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+
+/**
+ * @brief Create a thread-specific data key.
+ *
+ * Declared for libstdc++ gthreads header compatibility.  The task-local
+ * storage implementation is supplied separately.
+ *
+ * @see http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_key_create.html
+ *
+ * @retval 0 - Upon successful completion.
+ */
+int pthread_key_create(pthread_key_t *key, void (*destr_function)(void *));
+
+/**
+ * @brief Delete a thread-specific data key.
+ *
+ * @see http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_key_delete.html
+ *
+ * @retval 0 - Upon successful completion.
+ */
+int pthread_key_delete(pthread_key_t key);
+
+/**
+ * @brief Get a thread-specific data value.
+ *
+ * @see http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_getspecific.html
+ *
+ * @return The value associated with key, or NULL.
+ */
+void *pthread_getspecific(pthread_key_t key);
+
+/**
+ * @brief Set a thread-specific data value.
+ *
+ * @see http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_setspecific.html
+ *
+ * @retval 0 - Upon successful completion.
+ * @retval ENOMEM - The value could not be stored.
+ */
+int pthread_setspecific(pthread_key_t key, const void *value);
 
 /**
  * @brief Broadcast a condition.
@@ -273,7 +300,7 @@ int pthread_once( pthread_once_t * once_control,
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_cond_broadcast( pthread_cond_t * cond );
+int pthread_cond_broadcast(pthread_cond_t *cond);
 
 /**
  * @brief Destroy condition variables.
@@ -282,7 +309,7 @@ int pthread_cond_broadcast( pthread_cond_t * cond );
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_cond_destroy( pthread_cond_t * cond );
+int pthread_cond_destroy(pthread_cond_t *cond);
 
 /**
  * @brief Initialize condition variables.
@@ -294,8 +321,7 @@ int pthread_cond_destroy( pthread_cond_t * cond );
  *
  * @note attr is ignored and treated as NULL. Default setting is always used.
  */
-int pthread_cond_init( pthread_cond_t * cond,
-                       const pthread_condattr_t * attr );
+int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr);
 
 /**
  * @brief Signal a condition.
@@ -304,7 +330,7 @@ int pthread_cond_init( pthread_cond_t * cond,
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_cond_signal( pthread_cond_t * cond );
+int pthread_cond_signal(pthread_cond_t *cond);
 
 /**
  * @brief Wait on a condition with a timeout.
@@ -317,9 +343,7 @@ int pthread_cond_signal( pthread_cond_t * cond );
  *                  greater than or equal to 1000 million.
  * @retval ETIMEDOUT - The time specified by abstime to pthread_cond_timedwait() has passed.
  */
-int pthread_cond_timedwait( pthread_cond_t * cond,
-                            pthread_mutex_t * mutex,
-                            const struct timespec * abstime );
+int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime);
 
 /**
  * @brief Wait on a condition.
@@ -328,8 +352,7 @@ int pthread_cond_timedwait( pthread_cond_t * cond,
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_cond_wait( pthread_cond_t * cond,
-                       pthread_mutex_t * mutex );
+int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
 
 /**
  * @brief Compare thread IDs.
@@ -339,8 +362,7 @@ int pthread_cond_wait( pthread_cond_t * cond,
  * @retval 0 - t1 and t2 are both not NULL && equal.
  * @retval non-zero - otherwise.
  */
-int pthread_equal( pthread_t t1,
-                   pthread_t t2 );
+int pthread_equal(pthread_t t1, pthread_t t2);
 
 /**
  * @brief Thread termination.
@@ -349,7 +371,7 @@ int pthread_equal( pthread_t t1,
  *
  * @retval void - this function cannot return to its caller.
  */
-void pthread_exit( void * value_ptr );
+void pthread_exit(void *value_ptr);
 
 /**
  * @brief Dynamic thread scheduling parameters access.
@@ -360,9 +382,7 @@ void pthread_exit( void * value_ptr );
  *
  * @note policy is always set to SCHED_OTHER by this function.
  */
-int pthread_getschedparam( pthread_t thread,
-                           int * policy,
-                           struct sched_param * param );
+int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *param);
 
 /**
  * @brief Wait for thread termination.
@@ -375,8 +395,7 @@ int pthread_getschedparam( pthread_t thread,
  *                   specifying the same target thread OR the value specified by the thread argument
  *                   to pthread_join() refers to the calling thread.
  */
-int pthread_join( pthread_t thread,
-                  void ** retval );
+int pthread_join(pthread_t thread, void **retval);
 
 /**
  * @brief  Marks the thread identified by thread as detached.
@@ -398,7 +417,7 @@ int pthread_detach(pthread_t thread);
  *
  * @note If there exists a thread holding this mutex, this function returns 0 with mutex not being destroyed.
  */
-int pthread_mutex_destroy( pthread_mutex_t * mutex );
+int pthread_mutex_destroy(pthread_mutex_t *mutex);
 
 /**
  * @brief Initialize a mutex.
@@ -409,8 +428,7 @@ int pthread_mutex_destroy( pthread_mutex_t * mutex );
  * @retval ENOMEM - Insufficient memory exists to initialize the mutex structure.
  * @retval EAGAIN - Unable to initialize the mutex structure member(s).
  */
-int pthread_mutex_init( pthread_mutex_t * mutex,
-                        const pthread_mutexattr_t * attr );
+int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
 
 /**
  * @brief Lock a mutex.
@@ -423,7 +441,7 @@ int pthread_mutex_init( pthread_mutex_t * mutex,
  * @retval EDEADLK - The mutex type is PTHREAD_MUTEX_ERRORCHECK and the current thread already
  *                   owns the mutex.
  */
-int pthread_mutex_lock( pthread_mutex_t * mutex );
+int pthread_mutex_lock(pthread_mutex_t *mutex);
 
 /**
  * @brief Lock a mutex with timeout.
@@ -437,8 +455,7 @@ int pthread_mutex_lock( pthread_mutex_t * mutex );
  * @retval EDEADLK - The mutex type is PTHREAD_MUTEX_ERRORCHECK and the current thread already owns the mutex.
  * @retval ETIMEDOUT - The mutex could not be locked before the specified timeout expired.
  */
-int pthread_mutex_timedlock( pthread_mutex_t * mutex,
-                             const struct timespec * abstime );
+int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime);
 
 /**
  * @brief Attempt to lock a mutex. Fail immediately if mutex is already locked.
@@ -452,7 +469,7 @@ int pthread_mutex_timedlock( pthread_mutex_t * mutex,
  *                   owns the mutex.
  * @retval EBUSY - The mutex could not be acquired because it was already locked.
  */
-int pthread_mutex_trylock( pthread_mutex_t * mutex );
+int pthread_mutex_trylock(pthread_mutex_t *mutex);
 
 /**
  * @brief Unlock a mutex.
@@ -463,7 +480,7 @@ int pthread_mutex_trylock( pthread_mutex_t * mutex );
  * @retval EPERM - The mutex type is PTHREAD_MUTEX_ERRORCHECK or PTHREAD_MUTEX_RECURSIVE, and
  *                 the current thread does not own the mutex.
  */
-int pthread_mutex_unlock( pthread_mutex_t * mutex );
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
 
 /**
  * @brief Destroy the mutex attributes object.
@@ -472,7 +489,7 @@ int pthread_mutex_unlock( pthread_mutex_t * mutex );
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_mutexattr_destroy( pthread_mutexattr_t * attr );
+int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
 
 /**
  * @brief Get the mutex type attribute.
@@ -481,8 +498,7 @@ int pthread_mutexattr_destroy( pthread_mutexattr_t * attr );
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_mutexattr_gettype( const pthread_mutexattr_t * attr,
-                               int * type );
+int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type);
 
 /**
  * @brief Initialize the mutex attributes object.
@@ -494,7 +510,7 @@ int pthread_mutexattr_gettype( const pthread_mutexattr_t * attr,
  * @note Currently, only the type attribute is supported. Also see pthread_mutexattr_settype()
  *       and pthread_mutexattr_gettype().
  */
-int pthread_mutexattr_init( pthread_mutexattr_t * attr );
+int pthread_mutexattr_init(pthread_mutexattr_t *attr);
 
 /**
  * @brief Set the mutex type attribute.
@@ -504,8 +520,7 @@ int pthread_mutexattr_init( pthread_mutexattr_t * attr );
  * @retval 0 - Upon successful completion.
  * @retval EINVAL - The value type is invalid.
  */
-int pthread_mutexattr_settype( pthread_mutexattr_t * attr,
-                               int type );
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 
 /**
  * @brief Get the calling thread ID.
@@ -514,7 +529,7 @@ int pthread_mutexattr_settype( pthread_mutexattr_t * attr,
  *
  * @retval the thread ID of the calling thread.
  */
-pthread_t pthread_self( void );
+pthread_t pthread_self(void);
 
 /**
  * @brief Dynamic thread scheduling parameters access.
@@ -525,9 +540,7 @@ pthread_t pthread_self( void );
  *
  * @retval 0 - Upon successful completion.
  */
-int pthread_setschedparam( pthread_t thread,
-                           int policy,
-                           const struct sched_param * param );
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param);
 
 #ifdef __cplusplus
 }

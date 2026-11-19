@@ -21,9 +21,12 @@
  */
 #include <string.h>
 #include "fhost.h"
+#include "wifi_mgmr_ext.h"
 
 #include "net_tg_al_priv.h"
 #include "net_tg_al.h"
+
+#define FHOST_TG_STOP_WAIT_MS 5000
 
 /*
  * GLOBAL VARIABLES
@@ -84,9 +87,39 @@ static struct fhost_tg_stream *fhost_tg_find_stream_profile(uint32_t stream_id)
     }
 }
 
+int fhost_tg_parse_maxcnt(const char *text, uint32_t *value)
+{
+    uint32_t count = 0;
+
+    if (text && !*text)
+        return 1;
+    while (text && *text)
+    {
+        unsigned int digit = (unsigned int)(*text++ - '0');
+
+        if (digit > 9 || count > (UINT32_MAX - digit) / 10)
+            return 1;
+        count = count * 10 + digit;
+    }
+    *value = count;
+    return 0;
+}
+
+bool fhost_tg_maxcnt_enabled(struct fhost_tg_stream *stream)
+{
+    struct fhost_vif_status status;
+
+    if (!stream || stream->prof.direction != FHOST_TG_DIRECT_SEND ||
+        stream->prof.prof_id != FHOST_PROF_TRANSC || stream->prof.maxcnt == 0 ||
+        fhost_get_vif_status(MGMR_VIF_AP, &status))
+        return false;
+
+    return status.type == VIF_AP;
+}
+
 int fhost_tg_config(uint32_t stream_id, uint32_t prof, int direction, uint32_t rip,
                     uint32_t remote_port, uint32_t lip, uint32_t local_port, uint32_t rate,
-                    uint32_t pksize, uint32_t duration, uint16_t tos)
+                    uint32_t pksize, uint32_t duration, uint16_t tos, uint32_t maxcnt)
 {
     struct fhost_tg_stream *stream = fhost_tg_find_stream_profile(stream_id);
     if (stream == NULL)
@@ -126,6 +159,9 @@ int fhost_tg_config(uint32_t stream_id, uint32_t prof, int direction, uint32_t r
     stream->prof.pksize = pksize;
     stream->prof.duration = duration;
     stream->prof.tos = tos;
+    stream->prof.maxcnt = maxcnt;
+    if (!fhost_tg_maxcnt_enabled(stream))
+        stream->prof.maxcnt = 0;
 
     return 0;
 }
@@ -185,10 +221,12 @@ int fhost_tg_start(uint32_t stream_id)
             case FHOST_PROF_IPTV :
             case FHOST_PROF_FILE_TX :
             case FHOST_PROF_MCAST :
-                net_tg_recv_start(stream);
+                if (net_tg_recv_start(stream))
+                    return 1;
                 break;
             case FHOST_PROF_TRANSC :
-                net_tg_recv_transc_start(stream);
+                if (net_tg_recv_transc_start(stream))
+                    return 1;
                 break;
             default :
                 fhost_printf("Invalid profile for RX");
@@ -219,20 +257,58 @@ struct fhost_tg_stats *fhost_tg_stop(uint32_t stream_id)
         return NULL;
     }
 
+    stream->stop_requested = true;
     stream->active = false;
+    /* Wake net_tg_send if it is waiting for a returned TX credit. */
+    if (stream->prof.direction == FHOST_TG_DIRECT_SEND)
+        rtos_semaphore_signal(stream->net_tg_semaphore, false);
     if (stream->prof.direction == FHOST_TG_DIRECT_SEND)
     {
         // Wait for the TG task to finish its processing
-        rtos_semaphore_wait(stream->tg_semaphore, -1);
-        rtos_semaphore_delete(stream->tg_semaphore);
-        rtos_mutex_delete(stream->tg_mutex);
-        rtos_semaphore_delete(stream->net_tg_semaphore);
+        if (rtos_semaphore_wait(stream->tg_semaphore, FHOST_TG_STOP_WAIT_MS))
+        {
+            /* Return the statistics to the host even if a TX buffer is still
+             * owned by the network stack.  Keep all synchronization objects
+             * alive so the late pbuf callback remains safe. */
+            TRACE_APP(ERR, "[TG] stop timeout: stream=%d credits=%d/%d\\r\\n",
+                      stream->id, stream->credits, FHOST_TG_SEND_BUF_CNT);
+            stream->cleanup_pending = true;
+            return &(stream->stats);
+        }
+        if (!stream->cleanup_pending)
+        {
+            rtos_semaphore_delete(stream->tg_semaphore);
+            rtos_mutex_delete(stream->tg_mutex);
+            rtos_semaphore_delete(stream->net_tg_semaphore);
+        }
     }
     else if (stream->prof.direction == FHOST_TG_DIRECT_RECV)
     {
         net_tg_recv_stop(stream);
     }
+    stream->active = false;
     return &(stream->stats);
+}
+
+uint32_t fhost_tg_reset(void)
+{
+    uint32_t stopped = 0;
+
+    for (uint32_t id = 0; id < FHOST_TG_MAX_TRAFFIC_STREAMS; id++)
+    {
+        struct fhost_tg_stream *stream = &g_streams[id];
+
+        if (!stream->active)
+            continue;
+
+        /* Reset interrupts AP Transaction rather than waiting for maxcnt. */
+        stream->prof.maxcnt = 0;
+        if (fhost_tg_stop(id))
+            stopped++;
+    }
+
+    memset(g_streams, 0, sizeof(g_streams));
+    return stopped;
 }
 
 /// @}

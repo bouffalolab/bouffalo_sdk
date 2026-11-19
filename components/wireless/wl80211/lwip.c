@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <lwip/etharp.h>
+#include <lwip/ethip6.h>
 #include <lwip/mem.h>
 #include <lwip/netifapi.h>
 #include <lwip/pbuf.h>

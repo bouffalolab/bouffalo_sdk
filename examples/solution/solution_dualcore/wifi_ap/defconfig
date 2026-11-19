@@ -40,4 +40,3 @@ endif
 
 CONFIG_PSRAM =y
 CONFIG_PSRAM_COPY_CODE      =y
-CONFIG_MACSW_SELECT = default

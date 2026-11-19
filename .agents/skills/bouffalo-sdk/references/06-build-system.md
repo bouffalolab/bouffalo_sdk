@@ -1,574 +1,129 @@
 # 构建系统
 
-## 构建系统概览
+本页以当前 SDK 中 `project.build`、`project.build.linux`、`board.build`、`cmake/bouffalo_sdk-config.cmake` 和 `examples/helloworld/` 为依据。修改构建逻辑或排查具体示例时，以这些文件和该示例的 `Makefile`、`CMakeLists.txt`、`Kconfig`、`defconfig` 为准。
 
-Bouffalo SDK 使用混合构建系统：
-- **Makefile**: 作为入口和包装器
-- **CMake**: 作为实际构建引擎
-- **Kconfig**: 作为配置系统
+## 按需求查找
 
-## 构建流程
+路径相对 SDK 根目录。先选目标示例，再查看其构建文件和配置。
 
-```
-Makefile (用户入口)
-   ↓
-project.build (Makefile包装器)
-   ↓
-CMakeLists.txt (CMake配置)
-   ↓
-board.build (板级配置)
-   ↓
-Kconfig (配置系统)
-   ↓
-defconfig (.config → .config.cmake)
-   ↓
-CMake (生成构建文件)
-   ↓
-Ninja/Make (实际构建)
-```
+| 需求 | 入口 |
+| --- | --- |
+| 示例怎样接入 SDK | `examples/helloworld/Makefile`、`examples/helloworld/CMakeLists.txt`；通用入口 `project.build`、`board.build` |
+| 菜单、配置来源和生成文件 | `project.build`、`project.build.linux`、`tools/kconfig/config_seed.py`；中文指南 `docs/zh/get_started/menuconfig_guide.rst` |
+| 配置定义与组件依赖 | `Kconfig`、`bsp/Kconfig`、`components/Kconfig` 和目标组件的 `Kconfig` |
+| 比较两份配置 | `tools/kconfig/diffconfig.py` |
+| 编译器、ISA 和 ABI | `cmake/toolchain.cmake`、`docs/standard_riscv_toolchain.md` |
 
-## 目录结构
+菜单指南可帮助理解界面，但其中部分描述与当前构建入口不一致：示例 `examples/wifi/defconfig` 包含 Make 条件语句，`project.build` 先通过 Make 解析；直接交给 `config_seed.py` 的输入则不接受这些语句。另外无线选项应查 `components/wireless/Kconfig` 的实际定义和依赖，不能笼统认为全部不在菜单中。以当前源码与生成配置为准。
 
-```
-bouffalo_sdk/
-├── Makefile                 # 示例Makefile入口
-├── project.build            # 主Makefile包装器
-├── board.build              # 板级Makefile
-├── CMakeLists.txt           # 主CMakeLists
-├── Kconfig                  # 主Kconfig
-├── cmake/                   # CMake工具链配置
-│   ├── toolchain.cmake     # 工具链配置
-│   ├── compiler_flags.cmake # 编译器标志
-│   ├── auto_config.cmake   # 自动配置
-│   └── bflb_flash.cmake    # Flash配置
-├── components/              # 组件CMakeLists
-│   └── Kconfig
-├── examples/                # 示例
-│   └── helloworld/
-│       ├── Makefile
-│       ├── CMakeLists.txt
-│       ├── Kconfig
-│       └── defconfig
-└── tools/                   # 构建工具
-    └── kconfig/            # Kconfig工具
-        ├── menuconfig.py
-        ├── guiconfig.py
-        └── kconfig2cmake.py
-```
+## 构建入口
 
-## Makefile 入口
-
-### 基本结构
-
-示例的Makefile通常很简单：
-
-```makefile
-include $(BL_SDK_BASE)/project.build
-```
-
-### 常用Make命令
-
-#### 基本构建
+普通单工程示例的 `Makefile` 设置 `SDK_DEMO_PATH`、`BL_SDK_BASE`，并包含 SDK 的 `project.build`。后者包含 `board.build`，生成配置并调用 CMake；CMake 再生成 Make 或 Ninja 构建文件。双核父工程可能另用专门的 Makefile 组合多个子工程。
 
 ```bash
-# 进入示例目录
 cd examples/helloworld
-
-# 构建BL616
+riscv64-unknown-elf-gcc --version  # 应为 GCC 14.3.0
 make CHIP=bl616 BOARD=bl616dk
-
-# 构建BL602
-make CHIP=bl602 BOARD=bl602dk
+# 或：make ninja CHIP=bl616 BOARD=bl616dk
 ```
 
-#### 多核芯片构建
+使用 GCC 14.3 的 `riscv64-unknown-elf-` 工具链，默认 C 库为 Picolibc。`board.build` 默认 `CHIP=bl616`、`BOARD=bl616dk`；即使有默认值也要显式传入，防止误编目标。BL618DG 的 `CPU_ID` 默认为 `ap`，切换到 NP 或 LP 时须显式指定并选择相应示例：
 
 ```bash
-# AP核心
 make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap
-
-# NP核心
 make CHIP=bl618dg BOARD=bl618dgdk CPU_ID=np
+# LP 核参见 examples/pmu/bl618dg/pds_lp_wakeup/lp/
 ```
 
-#### 使用Ninja
+每个命令在对应示例目录执行；并非每个示例都支持所有芯片、板子或核心。单独指定 `BUILD_DIR` 可以隔离构建产物。`examples/wifi/sta/dualcore/` 父工程使用 `build/np` 和 `build/ap`；直接进入 `wifi_np/` 时默认是该目录下的 `build/`。父工程构建还会向父目录 defconfig 追加配置，先检查其 Makefile。
+
+隔离构建目录不代表所有辅助目标都完全支持该目录：`tools/bflb_tools/project_flash.build` 的 ELF 自动发现仍固定查找 `build/build_out/`，而 `ram`、`puncover` 等命令又引用 `BUILD_DIR`。使用非默认目录时，先检查目标实现和实际文件，不能假定辅助目标会找到对应产物。
+
+## 配置来源和生成文件
+
+`project.build` 默认读取示例目录的 `defconfig`，`DEFCONFIG` 可指定其他文件；若示例有 `Kconfig` 就用它，否则使用 SDK 根目录的 `Kconfig`。Make 解析 defconfig、命令行 `CONFIG_*` 与芯片选择变量后，通过 `tools/kconfig/config_seed.py` 生成配置：
+
+```text
+defconfig + CHIP/BOARD/CPU_ID + 命令行 CONFIG_*
+    -> build/generated/autoconfig.input
+    -> Kconfig/config_seed.py
+    -> autoconfig.def、autoconfig.cmake、autoconfig.h、autoconfig.mk
+    -> CMake / 编译
+```
+
+没有菜单配置时，`project.build` 先写 `CHIP`、`BOARD`、`CPU_ID`、`CPU_MODEL`，再写 `CONFIG_*`。`config_seed.py` 会把这两类选择器映射到同一 Kconfig 名称，输入归并时后出现的赋值覆盖前值，最终结果还需经过 Kconfig 解析。例如同时传入 `CHIP=bl616 CONFIG_CHIP=bl616cl`，生成配置的芯片值是 `bl616cl`。避免同时传入相互矛盾的写法；排查时应比较 `autoconfig.input` 和 `autoconfig.def`，不能只看 Make 命令。
+
+Make 自身的 `CHIP`、`CPU_ID` 不会因此自动改写。若 Make 变量与生成配置不一致，构建配置与 `flash` 等仍使用 Make 变量的辅助目标可能指向不同芯片或核心。烧录前须核对固件配置和目标设备。
+
+`DEFCONFIG` 默认相对于 `SDK_DEMO_PATH` 解析；需要指定完整路径时使用 `DEFCONFIG_FILE`。`config_seed.py` 先将解析后的芯片、板子和核心选择器写入环境，再加载 Kconfig；板级配置通过 `$BOARD` 选择。Make 条件语句和 `include` 应由 Make 入口解析，不能直接作为 `config_seed.py` 的纯 defconfig 输入。
+
+如果存在 `build/generated/autoconfig.menuconfig`，它会作为后续配置源。此时命令行选择器和 `CONFIG_*` 仍写入 `autoconfig.input`，但实际加载的是菜单配置，不能假定命令行选项覆盖了它。切换芯片、板子或核心前，检查 `make config-info` 中的配置源和菜单配置内容；需要保留原配置时使用独立 `BUILD_DIR`。`make menuconfig`（Linux 的 `project.build.linux` 目标）先运行 `config`，再从 `autoconfig.def` 复制菜单配置并启动交互界面。该文件位于构建目录内；`make clean` 会删除整个构建目录，包括菜单配置。需要持久保存的选项应记录到示例 defconfig；`make savedefconfig` 当前只打印提示，不会自动保存。
 
 ```bash
-# 更快的构建
-make ninja CHIP=bl616 BOARD=bl616dk
+make config-info CHIP=bl616 BOARD=bl616dk  # 配置入口和文件路径
+make config-show CHIP=bl616 BOARD=bl616dk # Linux：显示项目 defconfig
+make menuconfig CHIP=bl616 BOARD=bl616dk  # 交互终端
 ```
 
-#### 清理
+`config-info` 只显示配置来源和路径，不验证最终选择器。执行过配置生成后，应检查所示 `autoconfig.def` 中的 `CONFIG_CHIP`、`CONFIG_BOARD`、`CONFIG_CPU_ID` 和 `CONFIG_CPU_MODEL`。需要保留旧目标时，选用尚不存在或已确认无旧菜单配置的独立目录：
 
 ```bash
-make clean
+make config CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CPU_MODEL=b0 BUILD_DIR=build-bl618dg-ap-b0
+make config-info CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CPU_MODEL=b0 BUILD_DIR=build-bl618dg-ap-b0
 ```
 
-### Makefile 参数
+在支持该目标的示例中执行；后续构建继续使用同一 `BUILD_DIR`。旧芯片菜单配置不应直接当成新芯片配置复用。
 
-| 参数 | 说明 | 示例 |
-|-----|------|------|
-| CHIP | 芯片类型 | bl616, bl602, bl618dg |
-| BOARD | 开发板 | bl616dk, bl602dk, bl618dgdk |
-| CPU_ID | 核心ID（多核芯片） | ap, np |
-| COMX | 串口 | COM5, /dev/ttyUSB0 |
-| BAUDRATE | 波特率 | 2000000 |
+修改 `CONFIG_*` 后需全新编译时，先确认并保存需要保留的菜单配置，再运行 `make clean`；如需菜单配置，应在清理后重新配置，再按目标构建。不要把 `build/generated/` 下生成文件当作持久配置手工维护。当前没有 `distclean` 目标。
 
-## project.build 详解
+再次运行 `menuconfig` 时，现有 `autoconfig.menuconfig` 先作为配置源解析，再由生成的 `autoconfig.def` 重新填充菜单文件。普通构建每次执行 `config` 并重新生成 CMake 缓存；这不等于所有源码文件都会重新编译。
 
-### 主要内容
+### 配置输出
 
-`project.build` 是Makefile包装器，负责：
-1. 包含 `board.build`
-2. 配置构建工具
-3. 定义构建目标
-4. 处理配置变量
+`autoconfig.input` 是 Make 输入，`autoconfig.def` 是 Kconfig 解析结果；`autoconfig.cmake`、`autoconfig.h`、`autoconfig.mk` 分别供构建工具消费。关闭的布尔选项可能不出现在 `.mk` 中。配置异常时对照输入、最终结果与目标消费者；直接调用配置工具时，语法和行为见 `tools/kconfig/config_seed.py`、`tools/kconfig/config_replace.py`。
 
-### 关键变量
+## 工具链、ISA 与 ABI
 
-```makefile
-# 工具链路径
-CROSS_COMPILE ?= riscv64-unknown-elf-
-CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+SDK 要求 Bouffalo `riscv64-unknown-elf` GCC 14.3 和默认 Picolibc；T-Head GCC 与 Zephyr SDK 不在支持范围。详细背景和编译矩阵见 `docs/standard_riscv_toolchain.md`。`cmake/toolchain.cmake` 按目标固定选择 ISA/ABI，并同时用于编译与链接：
 
-# 构建目录
-BUILD_DIR?=build
+| 目标 | `-march` | `-mabi` |
+| --- | --- | --- |
+| 非 BL618DG 芯片 | `rv32imafc_zicsr_zifencei` | `ilp32f` |
+| BL618DG AP/NP，`CPU_MODEL=b0` | `rv32imafdc_zicsr_zifencei` | `ilp32d` |
+| BL618DG AP/NP，`CPU_MODEL=a0` 分支 | `rv32imafc_zicsr_zifencei` | `ilp32f` |
+| BL618DG LP | `rv32emc_zicsr_zifencei` | `ilp32e` |
 
-# 芯片配置
-CHIP ?=
-BOARD ?=
-CPU_ID ?=
-CPU_MODEL ?=a0
+BL618DG 的 Kconfig 默认 `CPU_MODEL=b0`；`a0` 行描述当前源码分支，不表示所有发布配置都支持 A0。预编译库必须匹配对应 ABI。b0 的 `libbl618dg_phyrf_b0.a` 和 `libbl618dg_phyrf_lpfw_b0.a` 均使用 `ilp32d`；后者用于 AP 侧低功耗固件，不能据名称推断 LP 核也是 `ilp32d`。实际 PHY 库选择由 `drivers/soc/bl618dg/phyrf/CMakeLists.txt` 和 `CONFIG_PHY_LPFW` 决定。
 
-# 配置变量
-CONFIG_ROMAPI ?=y
-CONFIG_DEBUG ?=y
-CONFIG_TLSF ?=y
-CONFIG_COREDUMP ?=y
+Picolibc 使用 TLS errno：FreeRTOS 为任务准备 TLS，启动代码也在 `main()` 前初始化 boot TLS。SDK 常规构建依赖工具链默认 Picolibc，不自行添加 `--specs=picolibc.specs`。自定义链接脚本须提供 SDK 使用的 TLS 模板和 boot TLS 符号；不应通过假定存在 Newlib 回退来解决链接问题。编译/链接标志还可能由板级 CMake 追加，应结合 `cmake/compiler_flags.cmake`、目标板代码、生成配置和实际编译命令检查：正常 Kconfig 的优化级默认为 `-Os`，CMake 变量未定义时才回退 `-O2`；`CONFIG_NO_SHORT_ENUMS` 控制是否取消默认 `-fshort-enums`。
 
-# 串口配置
-COMX ?=COM5
-BAUDRATE ?=2000000
+```bash
+riscv64-unknown-elf-gcc -march=rv32imafdc_zicsr_zifencei -mabi=ilp32d -print-multi-directory
+# -print-multi-directory 只检查工具链，检查实际归档的成员 ABI：
+riscv64-unknown-elf-readelf -h path/to/selected_phyrf.a
+python3 tests/toolchain/test_e907.py -v  # 在 SDK 根目录，先确认 GCC 版本
 ```
 
-### 构建目标
+工具链测试可能因未找到 Picolibc specs 跳过相关用例，需查看测试输出；它验证编码和 ELF/TLS，不代替目标板运行。
 
-```makefile
-# 默认目标（构建）
-$(BUILD_DIR): Makefile cmake_cache library_build
-	$(MAKE) -C $(BUILD_DIR) pre_build
-	$(MAKE) -C $(BUILD_DIR) -j8
-	$(MAKE) -C $(BUILD_DIR) post_build
-	$(MAKE) -C $(BUILD_DIR) combine
+## 示例 CMake 接入
 
-# Ninja构建
-ninja: Makefile
-	$(CMAKE) -S . -B $(BUILD_DIR) -G Ninja $(cmake_definition)
-	cd $(BUILD_DIR) && ninja && ninja combine
-
-# 清理
-clean:
-	$(RM) $(BUILD_DIR)
-
-# 烧录
-flash:
-	$(command_flash)
-```
-
-## CMakeLists.txt
-
-### 主CMakeLists.txt
+`examples/helloworld/CMakeLists.txt` 使用 SDK 的 CMake 包和入口：
 
 ```cmake
-# 设置最低CMake版本
 cmake_minimum_required(VERSION 3.15)
-
-# 项目名称
-project(bouffalo_sdk C ASM)
-
-# 加载工具链
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/toolchain.cmake)
-
-# 加载编译器标志
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/compiler_flags.cmake)
-
-# 加载自动配置
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/auto_config.cmake)
-
-# 加载Flash配置
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/bflb_flash.cmake)
-
-# 加载项目构建
-include(${BL_SDK_BASE}/project.build)
+find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
+sdk_set_main_file(main.c)
+project(helloworld)
 ```
 
-### 示例CMakeLists.txt
-
-```cmake
-# 示例CMakeLists.txt
-cmake_minimum_required(VERSION 3.15)
-
-# 定义可执行文件
-add_executable(${PROJECT_NAME}
-    main.c
-)
-
-# 添加组件
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-# 链接库
-target_link_libraries(${PROJECT_NAME}
-    bflb_platform
-    bflb_common
-)
-```
-
-## Kconfig 配置系统
-
-### Kconfig 概述
-
-Kconfig是一个配置系统，用于管理SDK的编译选项。
-
-### 主要特性
-
-- **图形化配置**: menuconfig, guiconfig
-- **依赖管理**: 自动处理组件依赖
-- **配置文件**: defconfig
-- **格式转换**: Kconfig → CMake
-
-### menuconfig 使用
-
-```bash
-# 启动图形化配置
-make menuconfig
-
-# 或使用Python脚本
-python3 $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
-```
-
-### Kconfig 语法
-
-```kconfig
-# 布尔选项
-config CONFIG_DEBUG
-    bool "Enable debug"
-    default y
-
-# 三态选项
-config CONFIG_FREERTOS
-    bool "Enable FreeRTOS"
-    default y
-
-# 字符串选项
-config CONFIG_BOARD_NAME
-    string "Board name"
-    default "bl616dk"
-
-# 数字选项
-config CONFIG_HEAP_SIZE
-    int "Heap size"
-    default 65536
-
-# 选择选项
-choice CONFIG_RTOS
-    prompt "RTOS selection"
-    default CONFIG_FREERTOS
-
-config CONFIG_FREERTOS
-    bool "FreeRTOS"
-
-config CONFIG_NUTTX
-    bool "NuttX"
-endchoice
-
-# 依赖
-config CONFIG_BLE
-    bool "Enable BLE"
-    depends on CONFIG_WIFI
-
-# 选择
-config CONFIG_FATFS
-    bool "Enable FatFS"
-    select CONFIG_LWIP
-```
-
-### defconfig 示例
-
-```
-# 示例defconfig
-CONFIG_DEBUG=y
-CONFIG_FREERTOS=y
-CONFIG_HEAP_SIZE=65536
-CONFIG_BOARD_NAME="bl616dk"
-CONFIG_BLE=y
-CONFIG_FATFS=y
-```
-
-### Kconfig 到 CMake 转换
-
-```bash
-# 生成.config.cmake
-make menuconfig
-python3 $(BL_SDK_BASE)/tools/kconfig/kconfig2cmake.py --config .config --output .config.cmake
-
-# 或使用Make目标
-make .config.cmake
-```
-
-## 工具链配置
-
-### toolchain.cmake
-
-```cmake
-# 交叉编译工具链
-set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR RISC-V)
-
-# 工具链前缀
-set(CROSS_COMPILE ${CROSS_COMPILE})
-
-# 编译器
-set(CMAKE_C_COMPILER ${CROSS_COMPILE}gcc)
-set(CMAKE_CXX_COMPILER ${CROSS_COMPILE}g++)
-set(CMAKE_ASM_COMPILER ${CROSS_COMPILE}gcc)
-```
-
-### 编译器标志
-
-```cmake
-# C标志
-add_compile_options(
-    -Wall
-    -Wextra
-    -O2
-    -g
-    -fdata-sections
-    -ffunction-sections
-)
-
-# 链接器标志
-add_link_options(
-    -Wl,--gc-sections
-    -Wl,--start-group
-    -Wl,--end-group
-)
-```
-
-## 构建过程详解
-
-### 1. 配置阶段
-
-```bash
-# 1. 生成配置
-make menuconfig
-
-# 2. 转换Kconfig到CMake
-make .config.cmake
-
-# 3. 生成CMake配置
-make cmake_cache
-```
-
-### 2. 编译阶段
-
-```bash
-# 标准构建
-make
-
-# 或使用Ninja
-make ninja
-```
-
-### 3. 后处理阶段
-
-```bash
-# 合并固件（自动在构建完成后执行）
-make combine
-```
-
-## 配置系统工作流
-
-### 配置文件生成流程
-
-```
-defconfig / boards/defconfig (Make 变量)
-   ↓ cmake_config
-build/generated/defconfig.cmake
-   ↓ CMake 配置
-CONFIG_* CMake 变量
-
-menuconfig (.config)
-   ↓ kconfig2cmake
-.config.cmake（覆盖 defconfig.cmake 中的同名变量）
-   ↓ CMake 配置
-build/generated/autoconf.h → -include 注入所有编译单元
-```
-
-### 依赖管理
-
-Kconfig自动处理依赖关系：
-
-```kconfig
-# WiFi依赖BLE
-config CONFIG_BLE
-    bool "Enable BLE"
-    depends on CONFIG_WIFI
-
-# 选择BLE时自动启用WiFi
-```
-
-### 配置变量传递
-
-```makefile
-# Kconfig → .config → .config.cmake → CMake → autoconf.h
-CONFIG_DEBUG=y  →  set(CONFIG_DEBUG y)  →  #define CONFIG_DEBUG 1
-CONFIG_DEBUG=n  →  set(CONFIG_DEBUG n)  →  #undef CONFIG_DEBUG
-```
-
-## 组件构建
-
-### 组件CMakeLists.txt
-
-```cmake
-# 组件CMakeLists.txt
-cmake_minimum_required(VERSION 3.15)
-
-# 定义库
-add_library(my_component STATIC
-    src/component.c
-)
-
-# 头文件
-target_include_directories(my_component PUBLIC
-    include
-)
-
-# 依赖
-target_link_libraries(my_component PUBLIC
-    bflb_common
-)
-```
-
-### 组件Kconfig
-
-```kconfig
-# 组件Kconfig
-config CONFIG_MY_COMPONENT
-    bool "Enable my component"
-    default y
-    depends on CONFIG_FREERTOS
-    help
-      This is my custom component
-```
-
-## 常见构建问题
-
-### 1. 找不到工具链
-
-**问题：**
-```
-error: cannot find riscv64-unknown-elf-gcc
-```
-
-**解决：**
-```bash
-# 设置工具链路径
-export PATH=/path/to/toolchain/bin:$PATH
-
-# 或在Makefile中指定
-CROSS_COMPILE=/path/to/toolchain/bin/riscv64-unknown-elf-
-```
-
-### 2. Kconfig 错误
-
-**问题：**
-```
-error: recursive dependency detected
-```
-
-**解决：**
-检查Kconfig中的依赖关系，确保没有循环依赖。
-
-### 3. CMake 配置错误
-
-**问题：**
-```
-CMake Error: could not find cache file
-```
-
-**解决：**
-```bash
-# 清理构建目录
-make clean
-
-# 重新配置
-make menuconfig
-make cmake_cache
-```
-
-### 4. 链接错误
-
-**问题：**
-```
-undefined reference to `xxx'
-```
-
-**解决：**
-1. 检查是否链接了正确的库
-2. 检查Kconfig配置是否启用了相关组件
-3. 检查组件的CMakeLists.txt
-
-## 最佳实践
-
-### 1. 使用menuconfig
-
-```bash
-# 总是使用menuconfig配置
-make menuconfig
-
-# 保存为板级默认配置（可选）
-make savedefconfig
-
-# 查看当前配置
-make config-show
-```
-
-### 2. 清理构建
-
-```bash
-# 修改配置后通常无需清理，CMake 会自动重新配置
-make clean
-
-# 或删除构建目录
-rm -rf build
-```
-
-### 3. 使用Ninja
-
-```bash
-# 使用Ninja可以加速构建
-make ninja CHIP=bl616 BOARD=bl616dk
-```
-
-### 4. 检查配置
-
-```bash
-# 查看当前配置
-make config-show
-
-# 查看CMake配置
-cat build/CMakeCache.txt
-```
-
-### 5. 增量构建
-
-```bash
-# 只重新构建修改的部分
-make -j8
-```
-
-## 总结
-
-Bouffalo SDK使用混合构建系统，Makefile作为入口，CMake作为构建引擎，Kconfig作为配置系统。理解三者之间的关系和交互是有效使用SDK的关键。使用menuconfig进行配置，使用make或ninja进行构建。
+SDK 的 CMake 配置加载 `generated/autoconfig.cmake`、工具链和扩展，再添加 SDK 子目录。创建新项目时，从目标示例复制并按位置调整 `BL_SDK_BASE`，参照实际示例的组件接口；不要把通用 CMake 草稿当作 SDK 项目模板。
+
+## 常用诊断
+
+- 编译器找不到或版本不对：检查 `PATH`、`riscv64-unknown-elf-gcc --version` 和已有 `build/CMakeCache.txt` 的编译器路径。
+- 芯片或板子不对：检查每次命令的 `CHIP`、`BOARD`，以及 BL618DG 的 `CPU_ID`。
+- 配置与预期不符：先看 `make config-info`、defconfig、命令行选项和是否存在 `autoconfig.menuconfig`；需要重建前保存菜单配置。
+- 链接或组件问题：检查目标示例的 `CMakeLists.txt`、`Kconfig`、`defconfig` 与构建日志。
+- ABI 或 TLS 链接问题：对照 `CPU_ID`、`CPU_MODEL`、`-march`、`-mabi`、预编译库及链接脚本的 TLS 符号。
+- `make size` 和 `make puncover` 分别调用项目中的大小报告与分析目标；使用前先完成构建。

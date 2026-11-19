@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include "netifd_nano.h"
 #include <netif/bridgeif.h>
@@ -104,6 +105,9 @@ int netifd_pppoe_stop(const char* ifname)
 }
 
 /* Bridge Management */
+#ifndef NETIFD_BRIDGE_MAX_PORTS
+#define NETIFD_BRIDGE_MAX_PORTS 2
+#endif
 struct netif*  g_bridge = NULL;
 
 extern int is_netif_in_bridge(struct netif *bridgeif, struct netif *netif);
@@ -135,7 +139,8 @@ struct netif *netifd_bridge_create(const char* bridge_name)
     if (!bridge_name || !bridge_name[0] || !bridge_name[1])
         return NULL;
 
-    storage = malloc(sizeof(struct netif));
+    /* netif_add does not initialize addr_ext, including the DHCP callback. */
+    storage = calloc(1, sizeof(struct netif));
     if (!storage)
         return NULL;
 
@@ -153,7 +158,7 @@ struct netif *netifd_bridge_create(const char* bridge_name)
      */
 
     // TODO: control dynamic_entries and static_entries according to actual situation
-    bridgeif_initdata_t bridge_initdata = BRIDGEIF_INITDATA1(2, 8, 8,
+    bridgeif_initdata_t bridge_initdata = BRIDGEIF_INITDATA1(NETIFD_BRIDGE_MAX_PORTS, 64, 8,
                         ETH_ADDR(mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]));
 
     netif = netif_add_noaddr(storage, &bridge_initdata, bridgeif_init, netif_input);

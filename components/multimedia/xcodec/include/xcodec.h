@@ -5,6 +5,13 @@
  *   2019-03-25  MSP          the first version
  */
 
+/**
+ * @file xcodec.h
+ * @deprecated Legacy CONFIG_XCODEC API, retained for existing applications.
+ * New applications should use xcodec_dev.h with CONFIG_XCODEC_IO.
+ * See src/bl/codec/README.md for migration notes.
+ */
+
 #ifndef _XCODEC_H_
 #define _XCODEC_H_
 

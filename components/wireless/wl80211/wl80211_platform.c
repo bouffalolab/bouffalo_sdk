@@ -12,7 +12,9 @@
 
 /* MACSW_MAX_BA_RX is not defined by macsw.h (no hard-coded value there);
  * derive it from the config value that was pulled in above. */
-#ifdef CFG_BARX
+#if !MACSW_AMPDU_RX
+#define MACSW_MAX_BA_RX 0
+#elif defined(CFG_BARX)
 #define MACSW_MAX_BA_RX CFG_BARX
 #else
 #define MACSW_MAX_BA_RX 2 /* safe fallback */
@@ -27,6 +29,138 @@
 #include "wl80211.h"
 
 #include "wl80211_async_event.h"
+#include "sysinit.h"
+#include "wifi_mgmr.h"
+
+#ifdef BL616
+#include "bl616_sys.h"
+#endif
+
+/* Real startup entry points used only by the SDK. */
+void _wifi_task_create(void);
+void _wl80211_init(void);
+void _wl80211_mgmr_init(void);
+
+#define DBG_TAG "WIFI_INIT"
+#include "log.h"
+
+static void wifi_sysinit_event_loop(void *arg, uint32_t value)
+{
+    (void)arg;
+    (void)value;
+
+    vTaskSuspendAll();
+    async_event_loop();
+    xTaskResumeAll();
+}
+
+static void wifi_sysinit_event_loop_wake(void)
+{
+    TickType_t wait = portMAX_DELAY;
+
+    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
+        wait = 0;
+    }
+
+    if (xTimerPendFunctionCall(wifi_sysinit_event_loop, NULL, 0, wait) != pdPASS) {
+        abort();
+    }
+}
+
+static void wifi_sysinit_events(const void *arg)
+{
+    (void)arg;
+    /* The async event loop must be ready before the synchronous Wi-Fi
+     * bring-up and the application main(). */
+    async_event_init(wifi_sysinit_event_loop_wake);
+}
+SYSINIT(wifi_events, SI_SUB_EVENTS, SI_ORDER_FIRST, wifi_sysinit_events, NULL);
+
+#ifndef WL80211_WIFI_STARTUP_PRIORITY
+#define WL80211_WIFI_STARTUP_PRIORITY 10
+#endif
+#ifndef WL80211_FIRMWARE_SETTLE_DELAY_MS
+#define WL80211_FIRMWARE_SETTLE_DELAY_MS 300
+#endif
+#ifndef WL80211_APP_EVENTS_PRIORITY
+#define WL80211_APP_EVENTS_PRIORITY 1
+#endif
+
+/* WL80211 bring-up needs a task priority below the Wi-Fi firmware task (27);
+ * otherwise the SYSINIT continuation task (configMAX_PRIORITIES - 1) sends the
+ * first KE message before the firmware has run macswl_init()/ke_init(). The
+ * MM_RESET_REQ is then dropped and macif_kmsg_call() waits forever. Temporarily
+ * lower the SYSINIT task priority instead of creating a private startup task. */
+#if !defined(INCLUDE_vTaskPrioritySet) || (INCLUDE_vTaskPrioritySet != 1)
+#error "WL80211 SYSINIT bring-up requires INCLUDE_vTaskPrioritySet = 1 in FreeRTOSConfig.h"
+#endif
+
+static void wifi_sysinit_start(const void *arg)
+{
+    (void)arg;
+
+    /* Runs synchronously before the application main(); the async event loop is
+     * already initialized (SI_SUB_EVENTS). */
+#ifdef BL616
+    /* Restore the configured Wi-Fi/BT memory split after low-power setup. */
+    if (bl_sys_em_config() != 0) {
+        abort();
+    }
+#endif
+
+    /* The continuation task runs at configMAX_PRIORITIES - 1, above the Wi-Fi
+     * firmware task (27). Lower it so the firmware preempts the SYSINIT task
+     * right after _wifi_task_create() and finishes macswl_init()/ke_init()
+     * before the first KE message is sent. */
+    vTaskPrioritySet(NULL, WL80211_WIFI_STARTUP_PRIORITY);
+
+    LOG_I("Starting wifi ...\r\n");
+    _wifi_task_create();
+
+    /* The WL80211 port needs firmware settling before host setup. */
+    vTaskDelay(pdMS_TO_TICKS(WL80211_FIRMWARE_SETTLE_DELAY_MS));
+
+    /* The SDK owns TCP/IP initialization; WIRELESS runs before SI_SUB_APP. */
+    _tcpip_init(NULL, NULL);
+    _wl80211_init();
+    /* The Wi-Fi layer always owns the low-level event bridge
+     * (EV_WL80211 -> EV_WIFI translation and manager handling). Upper layers
+     * only observe the system async event bus; the Wi-Fi layer never depends
+     * on their configuration. */
+    _wl80211_mgmr_init();
+
+    /* Back to the priority used by sysinit_freertos.c for the continuation
+     * task; the remaining WIRELESS/NET/APP records must not be preempted by
+     * application tasks. */
+    vTaskPrioritySet(NULL, configMAX_PRIORITIES - 1);
+
+    /* System-internal readiness events (isolated from the application-facing
+     * compatibility events). */
+    if (async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE_SYS, 0) != 0 ||
+        async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE_SYS, 0) != 0) {
+        abort();
+    }
+}
+SYSINIT(wifi_start, SI_SUB_WIRELESS, SI_ORDER_FIRST, wifi_sysinit_start, NULL);
+
+/* Application-facing compatibility events. This record runs after the APP
+ * main() record (SI_SUB_APP/MIDDLE), so application filters and tasks created
+ * by main() exist. The SYSINIT task is temporarily lowered to let application
+ * tasks run while the events are queued, then restored for the remaining
+ * records. The events stay isolated from the internal CODE_WIFI_ON_*_SYS
+ * events. */
+static void wifi_app_events(const void *arg)
+{
+    (void)arg;
+
+    vTaskPrioritySet(NULL, WL80211_APP_EVENTS_PRIORITY);
+    if (async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0) != 0 ||
+        async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0) != 0) {
+        abort();
+    }
+    vTaskPrioritySet(NULL, configMAX_PRIORITIES - 1);
+}
+SYSINIT(wifi_app_events, SI_SUB_APP, SI_ORDER_LAST, wifi_app_events, NULL);
 
 extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
 
@@ -44,7 +178,13 @@ const struct platform_feature wl80211_platform_feature[] = { { 2, 1, 1 }, { 1, 0
 // for monitor mode
 #define WL80211_RX_DESC_AMSDU_LEN (sizeof(struct wl80211_mac_rx_desc) + CO_ALIGN4_HI(MACSW_CONFIG(MACSW_MAX_AMSDU_RX)))
 
-#define WL80211_RX_BUF_MEM_LEN    ((MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2) * WL80211_RX_DESC_MPDU_LEN)
+/* Keep enough ordinary RX buffers when no BA/reordering buffers are reserved. */
+#if MACSW_AMPDU_RX
+#define WL80211_RX_BUF_NUM 2
+#else
+#define WL80211_RX_BUF_NUM 4
+#endif
+#define WL80211_RX_BUF_MEM_LEN    ((MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + WL80211_RX_BUF_NUM) * WL80211_RX_DESC_MPDU_LEN)
 const unsigned int wl80211_rx_buf_mem_len = WL80211_RX_BUF_MEM_LEN;
 uint32_t wl80211_rx_buf_mem[CO_ALIGN4_HI(WL80211_RX_BUF_MEM_LEN) / sizeof(uint32_t)] __SHAREDRAM;
 

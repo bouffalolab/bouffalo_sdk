@@ -4276,8 +4276,13 @@ static void prvCheckTasksWaitingTermination( void )
 
         #if ( configUSE_C_RUNTIME_TLS_SUPPORT == 1 )
         {
-            /* Free up the memory allocated for the task's TLS Block. */
-            configDEINIT_TLS_BLOCK( pxCurrentTCB->xTLSBlock );
+            /* Release the TLS block of the task that is being deleted.  Use
+             * pxTCB, not pxCurrentTCB: this function may run for a task that
+             * was deleted by another task or by the idle task, in which case
+             * pxCurrentTCB belongs to a different (still running) task.  With
+             * the Newlib reentrant backend this would reclaim the running
+             * task's _reent. */
+            configDEINIT_TLS_BLOCK( pxTCB->xTLSBlock );
         }
         #endif
 

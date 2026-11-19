@@ -242,8 +242,25 @@ static inline void bflb_i2c_disable(struct bflb_device_s *dev)
 {
     uint32_t regval;
     uint32_t reg_base;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
+
+    start_time = bflb_mtimer_get_time_ms();
+    while (1) {
+        regval = getreg32(reg_base + I2C_INT_STS_OFFSET);
+        if (regval & (I2C_INTSTS_ARB | I2C_INTSTS_NACK | I2C_INTSTS_FER)) {
+            if (regval & I2C_INTSTS_END) {
+                break;
+            } else {
+                if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                    break;
+                }
+            }
+        } else {
+            break;
+        }
+    }
 
     regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
     regval &= ~I2C_CR_I2C_M_EN;

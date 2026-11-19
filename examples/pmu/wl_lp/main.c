@@ -584,12 +584,6 @@ void tcpip_init_done(void *arg)
 int main(void)
 {
     board_init();
-#if defined(BL616)
-    uint8_t soc_v, rt_v, aon_v;
-    hal_pm_ldo11_cfg(PM_PDS_LDO_LEVEL_SOC_DEFAULT, PM_PDS_LDO_LEVEL_RT_DEFAULT, PM_PDS_LDO_LEVEL_AON_DEFAULT);
-    hal_pm_ldo11_cfg_get(&soc_v, &rt_v, &aon_v);
-    printf("SOC:%d RT:%d AON:%d\r\n", soc_v, rt_v, aon_v);
-#endif
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);

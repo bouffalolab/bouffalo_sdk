@@ -115,13 +115,13 @@ static inline spx_float_t FLOAT_ADD(spx_float_t a, spx_float_t b)
    {
       if (r.m<16384)
       {
-         r.m<<=1;
+         r.m*=2;
          r.e-=1;
       }
    } else {
       if (r.m>-16384)
       {
-         r.m<<=1;
+         r.m*=2;
          r.e-=1;
       }
    }
@@ -150,13 +150,13 @@ static inline spx_float_t FLOAT_SUB(spx_float_t a, spx_float_t b)
    {
       if (r.m<16384)
       {
-         r.m<<=1;
+         r.m*=2;
          r.e-=1;
       }
    } else {
       if (r.m>-16384)
       {
-         r.m<<=1;
+         r.m*=2;
          r.e-=1;
       }
    }
@@ -191,13 +191,13 @@ static inline spx_float_t FLOAT_MULT(spx_float_t a, spx_float_t b)
    {
       if (r.m<16384)
       {
-         r.m<<=1;
+         r.m*=2;
          r.e-=1;
       }
    } else {
       if (r.m>-16384)
       {
-         r.m<<=1;
+         r.m*=2;
          r.e-=1;
       }
    }
@@ -224,23 +224,36 @@ static inline spx_float_t FLOAT_SHL(spx_float_t a, int b)
 
 static inline spx_int16_t FLOAT_EXTRACT16(spx_float_t a)
 {
+   /* Tiny values round to zero; wide left shifts discard every bit. */
+   if (a.e < -15 || a.e >= 32)
+      return 0;
    if (a.e<0)
       return EXTRACT16((EXTEND32(a.m)+(EXTEND32(1)<<(-a.e-1)))>>-a.e);
    else
-      return a.m<<a.e;
+      return SHL32(a.m,a.e);
 }
 
 static inline spx_int32_t FLOAT_EXTRACT32(spx_float_t a)
 {
+   /* Tiny values round to zero; wide left shifts discard every bit. */
+   if (a.e < -15 || a.e >= 32)
+      return 0;
    if (a.e<0)
       return (EXTEND32(a.m)+(EXTEND32(1)<<(-a.e-1)))>>-a.e;
    else
-      return EXTEND32(a.m)<<a.e;
+      return SHL32(a.m,a.e);
 }
 
 static inline spx_int32_t FLOAT_MUL32(spx_float_t a, spx_word32_t b)
 {
-   return VSHR32(MULT16_32_Q15(a.m, b),-a.e-15);
+   int shift = -a.e-15;
+   spx_word32_t product = MULT16_32_Q15(a.m, b);
+   /* Tiny values sign-extend; shifts beyond a word discard every bit. */
+   if (shift >= 32)
+      return product < 0 ? -1 : 0;
+   if (shift <= -32)
+      return 0;
+   return VSHR32(product,shift);
 }
 
 static inline spx_float_t FLOAT_MUL32U(spx_word32_t a, spx_word32_t b)
@@ -328,7 +341,7 @@ static inline spx_float_t FLOAT_DIVU(spx_float_t a, spx_float_t b)
       e++;
       a.m >>= 1;
    }
-   num = num << (15-e);
+   num = SHL32(num, (15-e));
    r.m = DIV32_16(num,b.m);
    r.e = a.e-b.e-15+e;
    return r;

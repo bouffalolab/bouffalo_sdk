@@ -6,7 +6,7 @@
 #endif
 
 #include "lvgl.h"
-#include "lv_port_disp.h"
+#include "lv_port_disp_default.h"
 #ifdef CONFIG_LVGL8_PORT_INDEV
 #include "lv_port_indev.h"
 #endif
@@ -30,7 +30,11 @@ static void lvgl_main(void *param)
     /* lvgl init */
     lv_log_register_print_cb(lv_log_print_g_cb);
     lv_init();
-    lv_port_disp_init();
+    if (lv_port_disp_init() == NULL) {
+        LOG_E("LVGL display initialization failed\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
 #ifdef CONFIG_LVGL8_PORT_INDEV
     lv_port_indev_init();
 #endif

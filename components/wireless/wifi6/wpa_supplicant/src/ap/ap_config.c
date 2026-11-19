@@ -47,6 +47,14 @@ static void hostapd_config_free_vlan(struct hostapd_bss_config *bss)
 #define DEFAULT_WPA_DISABLE_EAPOL_KEY_RETRIES 0
 #endif /* DEFAULT_WPA_DISABLE_EAPOL_KEY_RETRIES */
 
+#ifndef DEFAULT_IGNORE_STA_GTK_REKEY
+#if MACSW_WFA
+#define DEFAULT_IGNORE_STA_GTK_REKEY 1
+#else /* MACSW_WFA */
+#define DEFAULT_IGNORE_STA_GTK_REKEY 0
+#endif /* MACSW_WFA */
+#endif /* DEFAULT_IGNORE_STA_GTK_REKEY */
+
 void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
 {
 	dl_list_init(&bss->anqp_elem);
@@ -69,6 +77,7 @@ void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
 	bss->eap_reauth_period = 3600;
 
 	bss->wpa_group_rekey = 600;
+	bss->ignore_sta_gtk_rekey = DEFAULT_IGNORE_STA_GTK_REKEY;
 	bss->wpa_gmk_rekey = 86400;
 	bss->wpa_deny_ptk0_rekey = PTK0_REKEY_ALLOW_ALWAYS;
 	bss->wpa_group_update_count = 4;

@@ -51,7 +51,9 @@ void pm_irq_callback(enum pm_event_type event);
 void pm_pds_irq_register(void);
 void PDS_WAKEUP_IRQ(void);
 void pm_rc32k_auto_cal(void);
-void pm_rc32k_auto_cal_init(void);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+void pm_rc32k_auto_cal_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 void hal_pm_ldo11_use_ext_dcdc(void);
 void hal_pm_ldo11_cfg(uint8_t soc_v, uint8_t rt_v, uint8_t aon_v);
 void hal_pm_ldo11_cfg_get(uint8_t *soc_v, uint8_t *rt_v, uint8_t *aon_v);

@@ -11,6 +11,7 @@
 #include "bl702_glb.h"
 #include "ef_data_reg.h"
 #include "board.h"
+#include "sysinit.h"
 
 #include "mm.h"
 
@@ -342,23 +343,36 @@ void ram_heap_init(void)
         MM_HEAP_OCRAM_0,
         MM_HEAP_PSRAM_0,
     };
-    size_t heap_len;
+    volatile uintptr_t ocram_heap_len;
+#ifdef CONFIG_PSRAM
+    volatile uintptr_t psram_heap_len;
+#endif
 
     /* ram heap init */
-    mem_manager_init();
+    if (mem_manager_init() != 0) {
+        __builtin_trap();
+    }
 
     /* ocram heap init */
-    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+    ocram_heap_len = (uintptr_t)&__HeapLimit - (uintptr_t)&__HeapBase;
+    if (ocram_heap_len != 0) {
+        if (mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, ocram_heap_len) == NULL) {
+            printf("warning: OCRAM heap registration failed (%u bytes)\r\n", (unsigned int)ocram_heap_len);
+        }
+    }
 
 #ifdef CONFIG_PSRAM
     if (board_psram_init() != 0) {
         printf("psram init failed\r\n");
-        while (1) {}
+        __builtin_trap();
     }
 
-    heap_len = (size_t)&__psram_limit - (size_t)&__psram_heap_base;
-    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
+    psram_heap_len = (uintptr_t)&__psram_limit - (uintptr_t)&__psram_heap_base;
+    if (psram_heap_len != 0) {
+        if (mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, psram_heap_len) == NULL) {
+            printf("warning: PSRAM heap registration failed (%u bytes)\r\n", (unsigned int)psram_heap_len);
+        }
+    }
 
     /* ram info dump */
     printf("dynamic memory init success\r\n"
@@ -373,7 +387,9 @@ void ram_heap_init(void)
            ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 #endif
 
-    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
+    if (mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0])) != 0) {
+        __builtin_trap();
+    }
 }
 
 enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
@@ -381,31 +397,64 @@ enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
     return BFLB_RTC_32K_CLK_RC;
 }
 
-void board_init(void)
+static uintptr_t board_irq_flags;
+
+static void board_sysinit_flash(const void *arg)
 {
-    int ret = -1;
-    uintptr_t flag;
+    (void)arg;
+    board_irq_flags = bflb_irq_save();
+    if (bflb_flash_init() != 0) {
+        __builtin_trap();
+    }
+}
 
-    flag = bflb_irq_save();
+SYSINIT(board_flash, SI_SUB_HW, SI_ORDER_FIRST, board_sysinit_flash, NULL);
 
-    ret = bflb_flash_init();
-
+static void board_clock_init(const void *arg)
+{
+    (void)arg;
     system_clock_init();
     bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
     peripheral_clock_init();
+}
+
+SYSINIT(board_clock, SI_SUB_CLOCK, SI_ORDER_FIRST, board_clock_init, NULL);
+
+static void board_irq_init(const void *arg)
+{
+    (void)arg;
     bflb_irq_initialize();
+}
 
+SYSINIT(board_irq, SI_SUB_INTR, SI_ORDER_FIRST, board_irq_init, NULL);
+
+static void board_console_init(const void *arg)
+{
+    (void)arg;
     console_init();
+}
 
-    /* heap init */
+SYSINIT(board_console, SI_SUB_DRIVERS, SI_ORDER_FIRST, board_console_init, NULL);
+
+static void board_heap_init(const void *arg)
+{
+    (void)arg;
     ram_heap_init();
+    if (kfree_size(0) == 0) {
+        puts("heap init failed: no usable memory\r\n");
+        __builtin_trap();
+    }
+}
+
+SYSINIT(board_heap, SI_SUB_DRIVERS, SI_ORDER_SECOND, board_heap_init, NULL);
+
+static void board_services_init(const void *arg)
+{
+    (void)arg;
 
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
     bl_show_log();
 #endif
-    if (ret != 0) {
-        printf("flash init fail!!!\r\n");
-    }
     bl_show_flashinfo();
 
     printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
@@ -416,13 +465,27 @@ void board_init(void)
 #endif
 
     bflb_sec_mutex_init();
+}
 
-    bflb_irq_restore(flag);
+SYSINIT(board_services, SI_SUB_DRIVERS, SI_ORDER_THIRD, board_services_init, NULL);
 
+static void board_sysinit_finish(const void *arg)
+{
+    (void)arg;
+    bflb_irq_restore(board_irq_flags);
     printf("board init done\r\n");
     printf("===========================\r\n");
 }
 
+SYSINIT(board_finish, SI_SUB_DRIVERS, SI_ORDER_FOURTH, board_sysinit_finish, NULL);
+
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void board_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+}
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 void board_uartx_gpio_init()
 {
     struct bflb_device_s *gpio;

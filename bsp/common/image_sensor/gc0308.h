@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s gc0308_init_list[] = {
+static const struct image_sensor_command_s gc0308_init_list[] = {
     { 0xfe, 0x80 },
     { 0xfe, 0x00 }, //set page0
     { 0xd2, 0x10 }, //close AEC

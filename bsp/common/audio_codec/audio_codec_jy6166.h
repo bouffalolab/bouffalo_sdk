@@ -29,15 +29,25 @@ typedef struct {
     uint8_t slot_count; /* 1..8 JY6166 stereo TDM chip slots, each slot group is 2 channels. */
     uint8_t slot_index; /* 1..8, selects the JY6166 stereo slot group. */
     bool multi_speed;
+    bool bclk_pll; /* Six PCM16 slots: use the vendor BCLK PLL clock plan. */
 } audio_codec_jy6166_tdm_cfg_t;
 
 int audio_codec_jy6166_probe(struct bflb_device_s *i2c, uint8_t addr);
 int audio_codec_jy6166_init_adc(struct bflb_device_s *i2c, uint8_t addr, const audio_codec_cfg_t *cfg,
                                 const audio_codec_jy6166_tdm_cfg_t *tdm_cfg, int record_volume_percent,
                                 int mic_pga_percent);
-int audio_codec_jy6166_set_record_volume(struct bflb_device_s *i2c, uint8_t addr, int volume_percent);
-int audio_codec_jy6166_set_mic_pga(struct bflb_device_s *i2c, uint8_t addr, int pga_percent);
+/* Local ADC bits 0/1; composite drivers translate their PCM slot masks. */
+int audio_codec_jy6166_set_mic_channel_volume(struct bflb_device_s *i2c, uint8_t addr, uint8_t adc_mask,
+                                              int volume_percent);
+int audio_codec_jy6166_set_mic_channel_gain_db(struct bflb_device_s *i2c, uint8_t addr, uint8_t adc_mask,
+                                               float gain_db);
 int audio_codec_jy6166_set_sample_rate(struct bflb_device_s *i2c, uint8_t addr, uint32_t sample_rate_hz);
+
+int audio_codec_jy6166_set_adc_enable(struct bflb_device_s *i2c, uint8_t addr, bool enable);
+int audio_codec_jy6166_set_reg(struct bflb_device_s *i2c, uint8_t addr, int reg, int value);
+int audio_codec_jy6166_get_reg(struct bflb_device_s *i2c, uint8_t addr, int reg, int *value);
+int audio_codec_jy6166_dump_reg(struct bflb_device_s *i2c, uint8_t addr);
+int audio_codec_jy6166_deinit(struct bflb_device_s *i2c, uint8_t addr);
 
 extern const audio_codec_driver_t audio_codec_jy6166_driver;
 

@@ -1,6 +1,7 @@
 #include "bflb_boot2.h"
 #include "partition.h"
 #include "bflb_flash.h"
+#include "sysinit.h"
 
 #define USER_UNUSED(a) ((void)(a))
 
@@ -238,7 +239,9 @@ int bflb_boot2_dump(void)
     return 0;
 }
 
-int bflb_boot2_init(void)
+/* Partition-table initializer; the SYSINIT record below is its only caller.
+ * No special app depends on it, so no CONFIG_SYSINIT=n call path is provided. */
+int _bflb_boot2_init(void)
 {
     pt_table_stuff_config ptstuff[2];
     pt_table_id_type active_id;
@@ -263,6 +266,33 @@ int bflb_boot2_init(void)
 
     return 0;
 }
+
+/* Compatibility entry point; the partition table is loaded by the SYSINIT
+ * record below. It never re-runs the initialization. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int bflb_boot2_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+    return 0;
+}
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+static void boot2_sysinit(const void *arg)
+{
+    (void)arg;
+
+    if (_bflb_boot2_init() != 0) {
+        abort();
+    }
+}
+#if defined(BL618DG) && defined(CPU_AP)
+/* AP must load the partition table before releasing NP/LP. */
+SYSINIT(boot2, SI_SUB_DRIVERS, SI_ORDER_FOURTH, boot2_sysinit, NULL);
+#else
+/* FIRST so the table is loaded before the LittleFS/KV service records
+ * (SI_SUB_SERVICES/SECOND), which resolve partitions through it. */
+SYSINIT(boot2, SI_SUB_SERVICES, SI_ORDER_FIRST, boot2_sysinit, NULL);
+#endif
 
 #define     PT_OTA_TYPE_NAME         "FW"
 #define     PT_MEDIA_TYPE_NAME       "mfg"

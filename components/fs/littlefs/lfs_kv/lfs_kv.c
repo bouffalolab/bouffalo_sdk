@@ -15,6 +15,7 @@
 #include "lfs.h"
 #include "lfs_port.h"
 #include "lfs_kv.h"
+#include "sysinit.h"
 
 static lfs_t *lfs = NULL;
 static char path_buffer[LFS_KV_KEY_MAX];
@@ -30,39 +31,51 @@ static SemaphoreHandle_t env_giant_lock = NULL;
 #endif
 
 static struct lfs_context lfs_ctx = { .partition_name = "PSM" };
-static struct lfs_config lfs_cfg = { .read_size = 256,
-                                     .prog_size = 256,
-                                     .lookahead_size = 256,
-                                     .cache_size = 512,
-                                     .block_size = 4096,
-                                     .block_cycles = 500
-                                   };
+static struct lfs_config lfs_cfg = {
+    .read_size = 256,
+    .prog_size = 256,
+    .lookahead_size = 256,
+    .cache_size = 512,
+    .block_size = 4096,
+    .block_cycles = 500,
+};
 
-/* littlefs init */
-lfs_kv_err_t
-lfs_kv_init(void)
+/* Real initializer run by SYSINIT; also callable directly by applications
+ * that build with CONFIG_SYSINIT=n. */
+lfs_kv_err_t _lfs_kv_init(void)
 {
     struct lfs_info stat;
+    lfs_t *fs;
     int32_t ret;
 
-    lfs = lfs_xip_init(&lfs_ctx, &lfs_cfg);
-    if (lfs == NULL) {
+    if (lfs != NULL) {
+        return LFS_KV_OK;
+    }
+
+    fs = lfs_xip_init(&lfs_ctx, &lfs_cfg);
+    if (fs == NULL) {
         LOG_E("littlefs backend init failed.\r\n");
         return LFS_KV_ERR_INIT_FAILED;
     }
 
 #ifdef CONFIG_FREERTOS
+    if (env_giant_lock == NULL) {
 #if configUSE_RECURSIVE_MUTEXES
-    env_giant_lock = xSemaphoreCreateRecursiveMutex();
+        env_giant_lock = xSemaphoreCreateRecursiveMutex();
 #else
-    env_giant_lock = xSemaphoreCreateMutex();
+        env_giant_lock = xSemaphoreCreateMutex();
 #endif
+        if (env_giant_lock == NULL) {
+            return LFS_KV_ERR_INIT_FAILED;
+        }
+    }
 #endif
 
     /* init namespace */
-    ret = lfs_stat(lfs, LFS_KV_NAMESPACE, &stat);
+    ret = lfs_stat(fs, LFS_KV_NAMESPACE, &stat);
     if (ret == LFS_ERR_OK) {
         if (stat.type == LFS_TYPE_DIR) {
+            lfs = fs;
             return LFS_KV_OK;
         } else if (stat.type == LFS_TYPE_REG) {
             LOG_E("namespace directory conflicts with standard file.\r\n");
@@ -70,15 +83,38 @@ lfs_kv_init(void)
         }
     }
 
-    ret = lfs_mkdir(lfs, LFS_KV_NAMESPACE);
+    ret = lfs_mkdir(fs, LFS_KV_NAMESPACE);
     if (ret != LFS_ERR_OK) {
         errno = -ret;
         LOG_E("create namespace directory failed.\r\n");
         return LFS_KV_ERR_INIT_FAILED;
     }
 
+    lfs = fs;
     return LFS_KV_OK;
 }
+
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+lfs_kv_err_t lfs_kv_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+    return LFS_KV_OK;
+}
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+static void lfs_kv_sysinit(const void *arg)
+{
+    (void)arg;
+
+    /* Every build that links the LittleFS component runs this record, but only
+     * applications with a PSM partition actually use the KV store. A missing
+     * partition is therefore not fatal: report it and keep booting, the KV API
+     * will fail later if the application really needs the store. */
+    if (_lfs_kv_init() != LFS_KV_OK) {
+        LOG_E("lfs_kv init skipped: no usable PSM partition\r\n");
+    }
+}
+SYSINIT(lfs_kv, SI_SUB_SERVICES, SI_ORDER_SECOND, lfs_kv_sysinit, NULL);
 
 #ifdef CONFIG_FREERTOS
 static void lfs_kv_lock(void)
@@ -108,8 +144,7 @@ static void lfs_kv_unlock(void)
 #define LFS_KV_UNLOCK(ret) return (ret)
 #endif
 
-static int
-kv_key2path(char *buf, size_t buf_len, const char *prefix, const char *path)
+static int kv_key2path(char *buf, size_t buf_len, const char *prefix, const char *path)
 {
     int i, j = 0;
     int prefix_len = strlen(prefix);
@@ -154,8 +189,7 @@ kv_key2path(char *buf, size_t buf_len, const char *prefix, const char *path)
     return prefix_len + 1 + i;
 }
 
-static int
-kv_path2key(char *buf, size_t buf_len, const char *key)
+static int kv_path2key(char *buf, size_t buf_len, const char *key)
 {
     int i, j = 0;
     int key_len = strlen(key);
@@ -192,8 +226,7 @@ kv_path2key(char *buf, size_t buf_len, const char *key)
     return i;
 }
 
-size_t
-lfs_kv_get_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset)
+size_t lfs_kv_get_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset)
 {
     lfs_file_t file;
     int32_t ret, read_len = 0;
@@ -256,8 +289,7 @@ lfs_kv_get_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t 
     LFS_KV_UNLOCK(read_len);
 }
 
-size_t
-lfs_kv_get_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len)
+size_t lfs_kv_get_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len)
 {
     return lfs_kv_get_blob_offset(key, value_buf, buf_len, saved_value_len, 0);
 }
@@ -268,8 +300,7 @@ static lfs_kv_err_t kv_write_error(int32_t ret)
     return ret == LFS_ERR_NOSPC ? LFS_KV_ERR_FULL : LFS_KV_ERR_WRITE;
 }
 
-lfs_kv_err_t
-lfs_kv_set_blob(const char *key, const void *value_buf, size_t buf_len)
+lfs_kv_err_t lfs_kv_set_blob(const char *key, const void *value_buf, size_t buf_len)
 {
     lfs_file_t file;
     int32_t ret;
@@ -321,8 +352,7 @@ lfs_kv_set_blob(const char *key, const void *value_buf, size_t buf_len)
     LFS_KV_UNLOCK(LFS_KV_OK);
 }
 
-lfs_kv_err_t
-lfs_kv_del(const char *key)
+lfs_kv_err_t lfs_kv_del(const char *key)
 {
     int32_t ret;
 
@@ -350,8 +380,7 @@ lfs_kv_del(const char *key)
 }
 
 /* clear all kv */
-lfs_kv_err_t
-lfs_kv_clear(void)
+lfs_kv_err_t lfs_kv_clear(void)
 {
     lfs_dir_t dir = {};
     int ret;
@@ -364,8 +393,8 @@ lfs_kv_clear(void)
 
     ret = lfs_dir_open(lfs, &dir, LFS_KV_NAMESPACE);
     if (ret != LFS_ERR_OK) {
-      errno = -ret;
-      LFS_KV_UNLOCK(LFS_KV_ERR_READ);
+        errno = -ret;
+        LFS_KV_UNLOCK(LFS_KV_ERR_READ);
     }
 
     struct lfs_info info = {};
@@ -406,8 +435,7 @@ lfs_kv_clear(void)
     LFS_KV_UNLOCK(ret);
 }
 
-lfs_kv_err_t
-lfs_kv_print(void)
+lfs_kv_err_t lfs_kv_print(void)
 {
     lfs_dir_t dir = {};
     int ret;
@@ -420,8 +448,8 @@ lfs_kv_print(void)
 
     ret = lfs_dir_open(lfs, &dir, LFS_KV_NAMESPACE);
     if (ret != LFS_ERR_OK) {
-      errno = -ret;
-      LFS_KV_UNLOCK(LFS_KV_ERR_READ);
+        errno = -ret;
+        LFS_KV_UNLOCK(LFS_KV_ERR_READ);
     }
 
     struct lfs_info info = {};
@@ -449,7 +477,8 @@ lfs_kv_print(void)
     LFS_KV_UNLOCK(LFS_KV_OK);
 }
 
-lfs_kv_err_t lfs_kv_foreach(lfs_kv_foreach_cb_t cb, void *arg) {
+lfs_kv_err_t lfs_kv_foreach(lfs_kv_foreach_cb_t cb, void *arg)
+{
     lfs_dir_t dir = {};
     int ret;
 
@@ -465,8 +494,8 @@ lfs_kv_err_t lfs_kv_foreach(lfs_kv_foreach_cb_t cb, void *arg) {
 
     ret = lfs_dir_open(lfs, &dir, LFS_KV_NAMESPACE);
     if (ret != LFS_ERR_OK) {
-      errno = -ret;
-      LFS_KV_UNLOCK(LFS_KV_ERR_READ);
+        errno = -ret;
+        LFS_KV_UNLOCK(LFS_KV_ERR_READ);
     }
 
     struct lfs_info info = {};

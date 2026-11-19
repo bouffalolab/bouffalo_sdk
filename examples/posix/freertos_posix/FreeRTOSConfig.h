@@ -63,6 +63,9 @@
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
+/* POSIX pthread thread-local storage: TLS index 0 is reserved for the lwIP
+ * FreeRTOS port, pthread keys use indices 1..7. */
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 8
 #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
 
 /* Co-routine definitions. */

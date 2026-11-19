@@ -43,6 +43,7 @@ extern void test_mqueue_run(void) POSIX_TEST_WEAK;
 extern void test_clock_timer_run(void) POSIX_TEST_WEAK;
 extern void test_sched_unistd_run(void) POSIX_TEST_WEAK;
 extern void test_cpp_mutex_run(void) POSIX_TEST_WEAK;
+extern void test_cpp_condvar_run(void) POSIX_TEST_WEAK;
 
 typedef struct {
     const char *name;
@@ -61,6 +62,7 @@ static const posix_test_group_t s_test_groups[] = {
     { "clock", "8. clock/timer tests", test_clock_timer_run },
     { "sched", "9. sched/unistd tests", test_sched_unistd_run },
     { "cpp_mutex", "10. C++ std::mutex tests", test_cpp_mutex_run },
+    { "cpp_condvar", "11. C++ std::condition_variable tests", test_cpp_condvar_run },
 };
 
 /* Run all tests */
@@ -97,7 +99,7 @@ static void cmd_posix_test_single(int argc, char **argv)
 {
     if (argc < 2) {
         printf("Usage: posix_test_single <group>\r\n");
-        printf("Groups: pthread, pthread_attr, mutex, cond, barrier, sem, mqueue, clock, sched, cpp_mutex\r\n");
+        printf("Groups: pthread, pthread_attr, mutex, cond, barrier, sem, mqueue, clock, sched, cpp_mutex, cpp_condvar\r\n");
         return;
     }
 

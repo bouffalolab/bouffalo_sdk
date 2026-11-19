@@ -84,3 +84,8 @@ sdk_library_add_sources(lwip-port/FreeRTOS/sys_arch.c)
 sdk_add_include_directories(lwip-port)
 sdk_add_include_directories(src/include)
 sdk_add_include_directories(src/include/compat/posix)
+
+if(CONFIG_WIFI4 OR CONFIG_WL80211)
+    # App lwipopts_user.h keeps precedence through lwIP's existing override.
+    sdk_add_include_directories(lwip-port/config)
+endif()

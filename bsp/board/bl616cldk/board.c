@@ -29,6 +29,7 @@
 #include "board_flash_psram.h"
 
 #include "mm.h"
+#include "sysinit.h"
 #if defined(CONFIG_PSRAM) || defined(CONFIG_PSRAM_XIP)
 #include "psram_heap_init.h"
 #endif
@@ -362,23 +363,33 @@ void ram_heap_init(void)
     size_t heap_len;
 
     /* ram heap init */
-    mem_manager_init();
+    if (mem_manager_init() != 0) {
+        __builtin_trap();
+    }
 
     /* ocram heap init */
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
 #ifdef CONFIG_MEM_HEAP5_EN
-    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_HEAP5, &__HeapBase, heap_len);
-    mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_HEAP5, &_heap_wifi_start, (uintptr_t)&_heap_wifi_size);
+    const uint32_t allocator_id = MM_ALLOCATOR_HEAP5;
 #else
-    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
-    mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, (uintptr_t)&_heap_wifi_size);
+    const uint32_t allocator_id = MM_ALLOCATOR_TLSF;
 #endif
+    if (mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", allocator_id, &__HeapBase, heap_len) == NULL) {
+        printf("warning: OCRAM heap registration failed (%u bytes)\r\n", (unsigned int)heap_len);
+    }
+    /* This absolute linker symbol may be zero; retain the runtime check. */
+    volatile uintptr_t wram_heap_len = (uintptr_t)&_heap_wifi_size;
+    if (wram_heap_len != 0) {
+        if (mm_register_heap(MM_HEAP_WRAM_0, "WRAM", allocator_id, &_heap_wifi_start, wram_heap_len) == NULL) {
+            printf("warning: WRAM heap registration failed (%u bytes)\r\n", (unsigned int)wram_heap_len);
+        }
+    }
 
 #ifdef CONFIG_PSRAM
     /* psram init */
     if (board_psram_x8_init() != SUCCESS) {
         puts("psram init fail !!!\r\n");
-        while (1) {}
+        __builtin_trap();
     }
 #endif
 
@@ -403,42 +414,44 @@ enum bflb_rtc_32k_clk_type board_get_rtc_32k_clk_type(void)
     return BFLB_RTC_32K_CLK_RC;
 }
 
-void board_init(void)
+static int board_flash_init(void)
 {
-    int ret = -1;
-    uintptr_t flag;
-
-    /* lock */
-    flag = bflb_irq_save();
-
 #ifndef CONFIG_BOARD_FLASH_INIT_SKIP
-    /* flash init */
-    ret = bflb_flash_init();
+    int ret = bflb_flash_init();
+    if (ret != 0) {
+        return ret;
+    }
 #ifndef CONFIG_BOARD_FLASH_LOW_SPEED
 #ifdef CONFIG_BOARD_FLASH_96M
-    /* flash clock frequency increased to 96MHz */
-    if( 1 != board_set_flash_hs(GLB_SFLASH_CLK_WIFIPLL_96M)){
+    /* Keep the existing calibration and 96 MHz to 80 MHz fallback. */
+    if (board_set_flash_hs(GLB_SFLASH_CLK_WIFIPLL_96M) != 1) {
         board_set_flash_hs(GLB_SFLASH_CLK_MUXPLL_80M);
     }
 #else
-    /* flash clock frequency increased to 80MHz */
     board_set_flash_hs(GLB_SFLASH_CLK_MUXPLL_80M);
 #endif
 #endif
 #endif
+    return 0;
+}
 
-    /* system clock */
+static void board_clock_init(const void *arg)
+{
+    (void)arg;
     system_clock_init();
-
     bflb_rtc_init(NULL, board_get_rtc_32k_clk_type());
-
 #ifndef CONFIG_LPAPP
     peripheral_clock_init();
 #else
     peripheral_clock_init_lp();
 #endif
+}
 
-    /* irq init */
+SYSINIT(board_clock, SI_SUB_CLOCK, SI_ORDER_FIRST, board_clock_init, NULL);
+
+static void board_irq_init(const void *arg)
+{
+    (void)arg;
     bflb_irq_initialize();
 #ifdef CONFIG_WIFI6
     extern void interrupt0_handler(void);
@@ -448,72 +461,111 @@ void board_init(void)
 #ifdef CONFIG_HIGH_ISR_STACK
     bflb_wfa_init();
 #endif
+}
 
+SYSINIT(board_irq, SI_SUB_INTR, SI_ORDER_FIRST, board_irq_init, NULL);
+
+static void board_console_init(const void *arg)
+{
+    (void)arg;
 #ifndef CONFIG_BSP_CONSOLE_USB_CDC
     console_init();
 #endif
-
-    /* config chip pod */
+    /* BL616CL configures BOD after console setup and before heap setup. */
     bflb_irq_attach(BOD_IRQn, system_bod_isr, NULL);
     bflb_irq_enable(BOD_IRQn);
     system_bod_init();
+}
 
-    /* ram and heap init (including psram) */
+SYSINIT(board_console, SI_SUB_DRIVERS, SI_ORDER_FIRST, board_console_init, NULL);
+
+static void board_heap_init(const void *arg)
+{
+    (void)arg;
     ram_heap_init();
 #if defined(CONFIG_PSRAM) || defined(CONFIG_PSRAM_XIP)
     ram_psram_heap_init();
 #endif
-    mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0]));
+    if (mm_heap_set_any_alloc_order(any_alloc_order, sizeof(any_alloc_order) / sizeof(any_alloc_order[0])) != 0) {
+        __builtin_trap();
+    }
+    if (kfree_size(0) == 0) {
+        puts("heap init failed: no usable memory\r\n");
+        __builtin_trap();
+    }
+}
 
-    /* boot info dump */
+SYSINIT(board_heap, SI_SUB_DRIVERS, SI_ORDER_SECOND, board_heap_init, NULL);
+
+static void board_services_init(const void *arg)
+{
+    (void)arg;
 #ifndef CONFIG_BOARD_SHOW_LOG_DISABLE
     bl_show_log();
 #endif
-    /* version info dump */
     bl_show_component_version();
-    /* trim info dump */
     bflb_show_trim_info();
-
 #if defined(CONFIG_ANTI_ROLLBACK) && !defined(CONFIG_BOOT2)
     bflb_check_anti_rollback();
 #endif
-
-    /* flash info dump */
     bl_show_flashinfo();
-    if (ret != 0) {
-        printf("flash init fail !!!\r\n");
-    }
-    //printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
-
     log_start();
-
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLB_LOG) || defined(CONFIG_FATFS))
     rtc = bflb_device_get_by_name("rtc");
 #endif
-
     bflb_sec_mutex_init();
+}
 
-    /* unlock */
-    bflb_irq_restore(flag);
+SYSINIT(board_services, SI_SUB_DRIVERS, SI_ORDER_THIRD, board_services_init, NULL);
 
+static void board_finish(void)
+{
 #ifdef CONFIG_BSP_CONSOLE_USB_CDC
     usb_console_init();
 #endif
-
     printf("board init done\r\n");
     printf("===========================\r\n");
 
-    /* mcu_bus_cfg0 */
+    /* Keep bus error/timeout setup after restoring the board IRQ flags. */
     *(volatile uint32_t *)MCU_MISC_BASE |= 0x1 << MCU_MISC_REG_MCU_INFRA_TIMEOUT_EN_POS;
     *(volatile uint32_t *)MCU_MISC_BASE &= ~(0x1 << MCU_MISC_DEC_ERR_RSP_POS);
-
     bflb_irq_attach(BMX_MCU_BUS_ERR_IRQn, (irq_callback)ebreak_cpu, NULL);
     bflb_irq_attach(BMX_MCU_TO_IRQn, (irq_callback)ebreak_cpu, NULL);
-
     bflb_irq_enable(BMX_MCU_BUS_ERR_IRQn);
     bflb_irq_enable(BMX_MCU_TO_IRQn);
 }
 
+/* Carries the original board IRQ boundary across its registered steps. */
+static uintptr_t board_irq_flags;
+
+static void board_sysinit_flash(const void *arg)
+{
+    (void)arg;
+    board_irq_flags = bflb_irq_save();
+    if (board_flash_init() != 0) {
+        /* Console and heap are not available yet. Enter the trap handler. */
+        __builtin_trap();
+    }
+}
+
+SYSINIT(board_flash, SI_SUB_HW, SI_ORDER_FIRST, board_sysinit_flash, NULL);
+
+static void board_sysinit_finish(const void *arg)
+{
+    (void)arg;
+    bflb_irq_restore(board_irq_flags);
+    board_finish();
+}
+
+SYSINIT(board_finish, SI_SUB_DRIVERS, SI_ORDER_FOURTH, board_sysinit_finish, NULL);
+
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void board_init(void)
+{
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+}
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 void board_acomp_init(void)
 {
     struct bflb_device_s *gpio;

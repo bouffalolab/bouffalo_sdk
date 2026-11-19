@@ -14,6 +14,9 @@
 #include "mm.h"
 #include "shell.h"
 #include "wave_player.h"
+#if defined(CONFIG_PVMP3DEC)
+#include "mp3_player.h"
+#endif
 #include "recorder.h"
 #ifdef CONFIG_LIBFVAD
 #include "fvad.h"
@@ -39,7 +42,6 @@
 #define REC_SD_INDEX_PATH         REC_SD_RECORD_DIR "/RECLIST.TXT"
 #define REC_SD_MKFS_WORKBUF_ALIGN 64U
 #define REC_SD_MKFS_WORKBUF_SIZE  (FF_MAX_SS * 16U)
-#define REC_SD_SEGMENT_SECONDS    30U
 #define REC_SD_STORE_DEFAULT_ENABLE 1U
 #define REC_SD_LIST_DEFAULT_LIMIT 32U
 #if (WAVE_PLAYER_FIX_SAMPLE_RATE > 0U)
@@ -68,7 +70,7 @@ typedef struct {
     char wav_path[64];
     uint32_t wav_seq;
     uint32_t wav_sample_rate_hz;
-    uint32_t wav_samples_written;
+    uint8_t wav_channels;
     uint32_t wav_data_bytes;
     uint32_t sd_write_calls;
     uint32_t sd_write_max_us;
@@ -217,7 +219,6 @@ static void rec_sd_unmount_locked(void)
     g_rec_store.sd_fs_ready = false;
     g_rec_store.sd_init_done = false;
     g_rec_store.wav_sample_rate_hz = 0U;
-    g_rec_store.wav_samples_written = 0U;
     g_rec_store.wav_data_bytes = 0U;
 }
 
@@ -426,16 +427,13 @@ static int rec_wav_write_header_locked(FIL *fp, uint32_t sample_rate_hz, uint16_
 
 static void rec_sd_close_wav_locked(void)
 {
-    char closed_path[sizeof(g_rec_store.wav_path)];
     bool finalize_ok = true;
 
     if (!g_rec_store.wav_file_open) {
         return;
     }
 
-    memcpy(closed_path, g_rec_store.wav_path, sizeof(closed_path));
-
-    if (rec_wav_write_header_locked(&g_rec_store.wav_file, g_rec_store.wav_sample_rate_hz, 1U, 16U,
+    if (rec_wav_write_header_locked(&g_rec_store.wav_file, g_rec_store.wav_sample_rate_hz, g_rec_store.wav_channels, 16U,
                                     g_rec_store.wav_data_bytes) != 0) {
         printf("[REC] update wav header failed\r\n");
         finalize_ok = false;
@@ -450,19 +448,17 @@ static void rec_sd_close_wav_locked(void)
     }
 
     g_rec_store.wav_file_open = false;
+    if (finalize_ok && g_rec_store.wav_path[0] != '\0') {
+        rec_sd_manifest_append_locked(g_rec_store.wav_path);
+    }
     g_rec_store.wav_path[0] = '\0';
     g_rec_store.wav_sample_rate_hz = 0U;
-    g_rec_store.wav_samples_written = 0U;
     g_rec_store.wav_data_bytes = 0U;
-
-    if (finalize_ok && closed_path[0] != '\0') {
-        rec_sd_manifest_append_locked(closed_path);
-    }
 }
 
 static void rec_sd_manifest_append_locked(const char *path)
 {
-    FIL fp;
+    FIL *fp = &g_rec_store.wav_file;
     UINT bw = 0;
     FRESULT ret;
     char line[96];
@@ -472,9 +468,9 @@ static void rec_sd_manifest_append_locked(const char *path)
         return;
     }
 
-    ret = f_open(&fp, REC_SD_INDEX_PATH, FA_OPEN_APPEND | FA_WRITE);
+    ret = f_open(fp, REC_SD_INDEX_PATH, FA_OPEN_APPEND | FA_WRITE);
     if (ret == FR_NO_FILE) {
-        ret = f_open(&fp, REC_SD_INDEX_PATH, FA_CREATE_NEW | FA_WRITE);
+        ret = f_open(fp, REC_SD_INDEX_PATH, FA_CREATE_NEW | FA_WRITE);
     }
     if (ret != FR_OK) {
         printf("[REC] append %s failed: %d\r\n", REC_SD_INDEX_PATH, (int)ret);
@@ -483,7 +479,7 @@ static void rec_sd_manifest_append_locked(const char *path)
 
     line_len = snprintf(line, sizeof(line), "%s\r\n", path);
     if (line_len <= 0) {
-        (void)f_close(&fp);
+        (void)f_close(fp);
         return;
     }
     if ((size_t)line_len >= sizeof(line)) {
@@ -491,11 +487,11 @@ static void rec_sd_manifest_append_locked(const char *path)
         line[line_len++] = '\n';
     }
 
-    ret = f_write(&fp, line, (UINT)line_len, &bw);
+    ret = f_write(fp, line, (UINT)line_len, &bw);
     if (ret != FR_OK || bw != (UINT)line_len) {
         printf("[REC] write %s failed: ret=%d bw=%u exp=%d\r\n", REC_SD_INDEX_PATH, (int)ret, (unsigned int)bw, line_len);
     }
-    (void)f_close(&fp);
+    (void)f_close(fp);
 }
 
 static void rec_sd_finish_active_wav_locked(void)
@@ -626,7 +622,7 @@ static int rec_sd_format_locked(void)
     return rec_sd_try_init_locked(true);
 }
 
-static int rec_sd_open_next_wav_locked(uint32_t sample_rate_hz)
+static int rec_sd_open_next_wav_locked(uint32_t sample_rate_hz, uint8_t channels)
 {
     if (sample_rate_hz == 0U) {
         return -1;
@@ -653,7 +649,7 @@ static int rec_sd_open_next_wav_locked(uint32_t sample_rate_hz)
                 return -1;
             }
 
-            if (rec_wav_write_header_locked(&g_rec_store.wav_file, sample_rate_hz, 1U, 16U, 0U) != 0) {
+            if (rec_wav_write_header_locked(&g_rec_store.wav_file, sample_rate_hz, channels, 16U, 0U) != 0) {
                 printf("[REC] write wav header failed: %s\r\n", path);
                 (void)f_close(&g_rec_store.wav_file);
                 (void)f_unlink(path);
@@ -664,7 +660,7 @@ static int rec_sd_open_next_wav_locked(uint32_t sample_rate_hz)
             strncpy(g_rec_store.wav_path, path, sizeof(g_rec_store.wav_path) - 1U);
             g_rec_store.wav_path[sizeof(g_rec_store.wav_path) - 1U] = '\0';
             g_rec_store.wav_sample_rate_hz = sample_rate_hz;
-            g_rec_store.wav_samples_written = 0U;
+            g_rec_store.wav_channels = channels;
             g_rec_store.wav_data_bytes = 0U;
             g_rec_store.wav_seq++;
             return 0;
@@ -679,63 +675,48 @@ static int rec_sd_open_next_wav_locked(uint32_t sample_rate_hz)
     return -1;
 }
 
-static void rec_sd_store_samples_locked(const int16_t *samples, uint32_t sample_count, uint32_t sample_rate_hz)
+static void rec_sd_store_samples_locked(const int16_t *samples, uint32_t sample_count, uint32_t sample_rate_hz, uint8_t channels)
 {
-    if (samples == NULL || sample_count == 0U || sample_rate_hz == 0U) {
+    if (samples == NULL || sample_count == 0U || sample_rate_hz == 0U || channels == 0U) {
         return;
     }
-    if (!g_rec_store.sd_fs_ready) {
+    if (!g_rec_store.sd_fs_ready || !g_rec_store.wav_file_open) {
+        return;
+    }
+    if (g_rec_store.wav_sample_rate_hz != sample_rate_hz || g_rec_store.wav_channels != channels) {
+        printf("[REC] capture format changed, stop SD store\r\n");
+        rec_sd_close_wav_locked();
         return;
     }
 
-    const uint32_t segment_samples = sample_rate_hz * REC_SD_SEGMENT_SECONDS;
-    if (segment_samples == 0U) {
+    uint32_t bytes = sample_count * (uint32_t)channels * (uint32_t)sizeof(int16_t);
+    /* Keep the 44-byte header and complete audio frames below 4 GiB. */
+    if (bytes > UINT32_MAX - 44U - g_rec_store.wav_data_bytes) {
+        rec_sd_close_wav_locked();
+        printf("[REC] WAV file size limit reached, stop SD store\r\n");
         return;
     }
 
-    const int16_t *cur = samples;
-    uint32_t remain = sample_count;
-
-    while (remain > 0U) {
-        if (!g_rec_store.wav_file_open || g_rec_store.wav_sample_rate_hz != sample_rate_hz ||
-            g_rec_store.wav_samples_written >= segment_samples) {
-            rec_sd_close_wav_locked();
-            if (rec_sd_open_next_wav_locked(sample_rate_hz) != 0) {
-                return;
-            }
-        }
-
-        uint32_t seg_left = segment_samples - g_rec_store.wav_samples_written;
-        uint32_t n = rec_u32_min(remain, seg_left);
-        uint32_t bytes = n * (uint32_t)sizeof(int16_t);
-        UINT bw = 0;
-        uint64_t t0_us = bflb_mtimer_get_time_us();
-        FRESULT ret = f_write(&g_rec_store.wav_file, cur, bytes, &bw);
-        uint32_t write_us = (uint32_t)(bflb_mtimer_get_time_us() - t0_us);
-        g_rec_store.sd_write_calls++;
-        if (write_us > g_rec_store.sd_write_max_us) {
-            g_rec_store.sd_write_max_us = write_us;
-        }
-
-        if (ret != FR_OK || bw != bytes) {
-            printf("[REC] write failed ret=%d bw=%u exp=%lu\r\n", (int)ret, (unsigned int)bw, (unsigned long)bytes);
-            g_rec_store.sd_write_fail_count++;
-            rec_sd_close_wav_locked();
-            g_rec_store.sd_fs_ready = false;
-            printf("[REC] disable SD store after write error\r\n");
-            return;
-        }
-
-        g_rec_store.wav_samples_written += n;
-        g_rec_store.wav_data_bytes += bytes;
-        g_rec_store.sd_write_bytes_total += bytes;
-        cur += n;
-        remain -= n;
-
-        if (g_rec_store.wav_samples_written >= segment_samples) {
-            rec_sd_close_wav_locked();
-        }
+    UINT bw = 0;
+    uint64_t t0_us = bflb_mtimer_get_time_us();
+    FRESULT ret = f_write(&g_rec_store.wav_file, samples, bytes, &bw);
+    uint32_t write_us = (uint32_t)(bflb_mtimer_get_time_us() - t0_us);
+    g_rec_store.sd_write_calls++;
+    if (write_us > g_rec_store.sd_write_max_us) {
+        g_rec_store.sd_write_max_us = write_us;
     }
+
+    if (ret != FR_OK || bw != bytes) {
+        printf("[REC] write failed ret=%d bw=%u exp=%lu\r\n", (int)ret, (unsigned int)bw, (unsigned long)bytes);
+        g_rec_store.sd_write_fail_count++;
+        rec_sd_close_wav_locked();
+        g_rec_store.sd_fs_ready = false;
+        printf("[REC] disable SD store after write error\r\n");
+        return;
+    }
+
+    g_rec_store.wav_data_bytes += bytes;
+    g_rec_store.sd_write_bytes_total += bytes;
 }
 
 static int rec_sd_rm_all_locked(void)
@@ -850,7 +831,7 @@ static int rec_wav_parse_header_locked(FIL *fp, rec_wav_info_t *info)
     if (info->bits_per_sample != 16U) {
         return -1;
     }
-    if (info->channels < 1U || info->channels > 2U) {
+    if (info->channels < 1U) {
         return -1;
     }
     if (info->sample_rate_hz == 0U) {
@@ -929,15 +910,71 @@ static int rec_sd_list_files_locked(uint32_t limit)
     return 0;
 }
 
-static int rec_sd_play_file_locked(const char *path)
-{
-    FIL fp;
-    FRESULT ret;
+typedef struct {
+    FIL file;
     rec_wav_info_t wav;
-    uint32_t tx_block_bytes;
+    int slot;
+    bool rec_enable_after_done;
+} rec_sd_play_cfg_t;
+
+static void rec_sd_play_source(void *arg)
+{
+    rec_sd_play_cfg_t *cfg = (rec_sd_play_cfg_t *)arg;
+    uint32_t frame_bytes = (uint32_t)cfg->wav.channels * sizeof(int16_t);
+    uint32_t remain = cfg->wav.data_size;
+    int16_t io_buf[256];
+
+    (void)xSemaphoreTake(g_rec_store.lock, portMAX_DELAY);
+    while (remain >= frame_bytes && wave_player_is_running()) {
+        UINT br = 0;
+        uint32_t to_read = rec_u32_min((uint32_t)sizeof(io_buf), remain);
+        uint32_t play_bytes;
+
+        to_read -= to_read % frame_bytes;
+        if (f_read(&cfg->file, io_buf, (UINT)to_read, &br) != FR_OK) {
+            printf("rec_file_play: read failed\r\n");
+            break;
+        }
+        if (br == 0U) {
+            break;
+        }
+
+        play_bytes = ((uint32_t)br / frame_bytes) * frame_bytes;
+        if (cfg->slot >= 0) {
+            uint32_t frames = play_bytes / frame_bytes;
+            for (uint32_t i = 0U; i < frames; i++) {
+                io_buf[i] = io_buf[i * cfg->wav.channels + (uint32_t)cfg->slot];
+            }
+            play_bytes = frames * sizeof(int16_t);
+        }
+        uint32_t sent = 0U;
+        while (sent < play_bytes && wave_player_is_running()) {
+            sent += wave_player_feed_blocking((uint8_t *)io_buf + sent, play_bytes - sent);
+            if (sent < play_bytes) {
+                vTaskDelay(1);
+            }
+        }
+        if (sent != play_bytes) {
+            break;
+        }
+        remain -= (uint32_t)br;
+    }
+
+    if (remain < frame_bytes) {
+        wave_player_drain();
+    }
+    /* Release the file lock before stop can run the recording-finalize hook. */
+    (void)f_close(&cfg->file);
+    xSemaphoreGive(g_rec_store.lock);
+    wave_player_stop();
+    (void)wave_record_enable(cfg->rec_enable_after_done);
+    kfree(cfg);
+}
+
+static int rec_sd_play_file_locked(const char *path, int slot, bool rec_enable_after_done)
+{
+    FRESULT ret;
     uint32_t frame_bytes;
-    uint32_t remain;
-    uint8_t io_buf[512];
     uint8_t probe_hdr[12];
     char resolved_path[96];
 
@@ -949,101 +986,90 @@ static int rec_sd_play_file_locked(const char *path)
         return -1;
     }
 
-    rec_sd_finish_active_wav_locked();
-
     rec_sd_resolve_path(path, resolved_path, sizeof(resolved_path));
     if (resolved_path[0] == '\0') {
         printf("rec_file_play: bad path\r\n");
         return -1;
     }
 
-    ret = f_open(&fp, resolved_path, FA_READ);
+    rec_sd_play_cfg_t *cfg = kmemalign(sizeof(*cfg), 64U);
+    if (cfg == NULL) {
+        return -1;
+    }
+    FIL *fp = &cfg->file;
+    rec_wav_info_t *wav = &cfg->wav;
+    cfg->slot = slot;
+    cfg->rec_enable_after_done = rec_enable_after_done;
+    ret = f_open(fp, resolved_path, FA_READ);
     if (ret != FR_OK) {
         printf("rec_file_play: open %s failed: %d\r\n", resolved_path, (int)ret);
+        kfree(cfg);
         return -1;
     }
 
-    if (rec_wav_parse_header_locked(&fp, &wav) != 0) {
-        FSIZE_t file_size = f_size(&fp);
+    if (rec_wav_parse_header_locked(fp, wav) != 0) {
+        FSIZE_t file_size = f_size(fp);
         UINT probe_br = 0;
         FSIZE_t raw_offset = 0U;
 
-        if (f_lseek(&fp, 0) != FR_OK) {
+        if (f_lseek(fp, 0) != FR_OK) {
             printf("rec_file_play: unsupported wav: %s\r\n", resolved_path);
-            (void)f_close(&fp);
-            return -1;
+            goto fail;
         }
-        if (f_read(&fp, probe_hdr, sizeof(probe_hdr), &probe_br) == FR_OK && probe_br == sizeof(probe_hdr) &&
+        if (f_read(fp, probe_hdr, sizeof(probe_hdr), &probe_br) == FR_OK && probe_br == sizeof(probe_hdr) &&
             memcmp(&probe_hdr[0], "RIFF", 4) == 0 && memcmp(&probe_hdr[8], "WAVE", 4) == 0 && file_size > 44U) {
             raw_offset = 44U;
         }
         if (file_size <= raw_offset + sizeof(int16_t)) {
             printf("rec_file_play: unsupported wav: %s\r\n", resolved_path);
-            (void)f_close(&fp);
-            return -1;
+            goto fail;
         }
 
-        wav.channels = 1U;
-        wav.bits_per_sample = 16U;
-        wav.sample_rate_hz = REC_SD_RAW_FALLBACK_HZ;
-        wav.data_offset = (uint32_t)raw_offset;
-        wav.data_size = (uint32_t)((file_size - raw_offset) & ~(FSIZE_t)1U);
+        wav->channels = 1U;
+        wav->bits_per_sample = 16U;
+        wav->sample_rate_hz = REC_SD_RAW_FALLBACK_HZ;
+        wav->data_offset = (uint32_t)raw_offset;
+        wav->data_size = (uint32_t)((file_size - raw_offset) & ~(FSIZE_t)1U);
         printf("rec_file_play: fallback raw pcm %lu Hz mono: %s\r\n",
-               (unsigned long)wav.sample_rate_hz, resolved_path);
+               (unsigned long)wav->sample_rate_hz, resolved_path);
     }
 
-    frame_bytes = (uint32_t)wav.channels * sizeof(int16_t);
-    if (frame_bytes == 0U) {
-        (void)f_close(&fp);
-        return -1;
+    frame_bytes = (uint32_t)wav->channels * sizeof(int16_t);
+    if (slot >= 0 && (uint32_t)slot >= wav->channels) {
+        printf("rec_file_play: recorded slots: slot0-slot%u\r\n", (unsigned)(wav->channels - 1U));
+        goto fail;
+    }
+    if (frame_bytes == 0U || (slot < 0 && wav->channels > 2U)) {
+        printf("rec_file_play: specify slot<N> for a multichannel file\r\n");
+        goto fail;
     }
 
-    tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
-    wave_player_stop();
-    wave_player_config(wav.sample_rate_hz, tx_block_bytes, 0, (uint8_t)wav.channels);
+    if (f_lseek(fp, (FSIZE_t)wav->data_offset) != FR_OK) {
+        printf("rec_file_play: seek data failed\r\n");
+        goto fail;
+    }
+
+    uint32_t tx_block_bytes = WAVE_PLAYER_OUT_SAMPLES * WAVE_PLAYER_OUT_CHANNELS * sizeof(int16_t);
+    wave_player_config(wav->sample_rate_hz, tx_block_bytes, 0, slot >= 0 ? 1U : (uint8_t)wav->channels);
     if (wave_player_start() != 0) {
         printf("rec_file_play: start audio failed\r\n");
-        (void)f_close(&fp);
-        return -1;
+        goto fail;
     }
 
-    if (f_lseek(&fp, (FSIZE_t)wav.data_offset) != FR_OK) {
-        printf("rec_file_play: seek data failed\r\n");
-        wave_player_stop();
-        (void)f_close(&fp);
-        return -1;
+    if (slot >= 0) {
+        printf("rec_file_play: %s slot%d, %lu Hz, %u slots\r\n", resolved_path, slot,
+               (unsigned long)wav->sample_rate_hz, (unsigned)wav->channels);
     }
-
-    remain = wav.data_size;
-    while (remain > 0U) {
-        UINT br = 0;
-        uint32_t to_read = rec_u32_min((uint32_t)sizeof(io_buf), remain);
-        uint32_t play_bytes;
-        uint32_t wrote;
-
-        if (f_read(&fp, io_buf, (UINT)to_read, &br) != FR_OK) {
-            printf("rec_file_play: read failed\r\n");
-            break;
-        }
-        if (br == 0U) {
-            break;
-        }
-
-        play_bytes = ((uint32_t)br / frame_bytes) * frame_bytes;
-        if (play_bytes > 0U) {
-            wrote = wave_player_feed_blocking(io_buf, play_bytes);
-            if (wrote < play_bytes) {
-                printf("rec_file_play: feed short %lu/%lu\r\n", (unsigned long)wrote, (unsigned long)play_bytes);
-                break;
-            }
-        }
-
-        remain -= (uint32_t)br;
+    if (wave_player_start_source_task(rec_sd_play_source, cfg) != 0) {
+        printf("rec_file_play: create source task failed\r\n");
+        goto fail;
     }
-
-    wave_player_stop();
-    (void)f_close(&fp);
     return 0;
+
+fail:
+    (void)f_close(fp);
+    kfree(cfg);
+    return -1;
 }
 #endif
 
@@ -1177,12 +1203,6 @@ static void rec_store_on_frame(const int16_t *samples, uint32_t sample_count, ui
     rec_vad_process_locked(samples, sample_count, sample_rate_hz);
 #endif
 
-#if RECORDER_ENABLE_SD_STORE
-    if (g_rec_store.sd_store_enabled) {
-        rec_sd_store_samples_locked(samples, sample_count, sample_rate_hz);
-    }
-#endif
-
     {
         uint32_t cb_us = (uint32_t)(bflb_mtimer_get_time_us() - t0_us);
         uint64_t frame_us = ((uint64_t)sample_count * 1000000ULL) / (uint64_t)sample_rate_hz;
@@ -1265,18 +1285,46 @@ static int cmd_rec_file_play(int argc, char **argv)
 {
 #if RECORDER_ENABLE_SD_STORE
     int ret;
-    if (argc < 2) {
-        printf("usage: rec_file_play <wav_path>\r\n");
+    int slot = -1;
+    if (argc < 2 || argc > 3) {
+        printf("usage: rec_file_play <wav_path> [slot<N>]\r\n");
         return -1;
+    }
+    if (argc == 3) {
+        if (strncmp(argv[2], "slot", 4) != 0) {
+            return -1;
+        }
+        char *end;
+        unsigned long index = strtoul(argv[2] + 4, &end, 10);
+        if (end == argv[2] + 4 || *end != '\0' || index >= 16U) {
+            return -1;
+        }
+        slot = (int)index;
     }
     if (g_rec_store.lock == NULL) {
         return -1;
     }
+    ret = wave_player_stop();
+#if defined(CONFIG_PVMP3DEC)
+    if (ret == 0) {
+        ret = mp3_player_stop();
+    }
+#endif
+    if (ret != 0) {
+        return ret;
+    }
+    bool rec_enable = wave_record_is_enabled();
+    (void)wave_record_enable(false);
     if (xSemaphoreTake(g_rec_store.lock, pdMS_TO_TICKS(200)) != pdTRUE) {
+        (void)wave_record_enable(rec_enable);
         return -1;
     }
-    ret = rec_sd_play_file_locked(argv[1]);
+    ret = rec_sd_play_file_locked(argv[1], slot, rec_enable);
     xSemaphoreGive(g_rec_store.lock);
+    if (ret != 0) {
+        wave_player_stop();
+        (void)wave_record_enable(rec_enable);
+    }
     return ret;
 #else
     (void)argc;
@@ -1287,7 +1335,7 @@ static int cmd_rec_file_play(int argc, char **argv)
 }
 
 SHELL_CMD_EXPORT_ALIAS(cmd_rec_ls, rec_ls, "list recording files in /sd/records");
-SHELL_CMD_EXPORT_ALIAS(cmd_rec_file_play, rec_file_play, "play wav file: rec_file_play <wav_path>");
+SHELL_CMD_EXPORT_ALIAS(cmd_rec_file_play, rec_file_play, "play wav file: rec_file_play <wav_path> [slot<N>]");
 
 static int cmd_rec_sd_store(int argc, char **argv)
 {
@@ -1312,7 +1360,8 @@ static int cmd_rec_sd_store(int argc, char **argv)
         rec_sd_close_wav_locked();
     }
     g_rec_store.sd_store_enabled = enable;
-    printf("rec_sd_store=%u\r\n", g_rec_store.sd_store_enabled ? 1U : 0U);
+    printf("rec_sd_store=%u%s\r\n", g_rec_store.sd_store_enabled ? 1U : 0U,
+           enable && !g_rec_store.wav_file_open ? " (from next recording)" : "");
     xSemaphoreGive(g_rec_store.lock);
     return 0;
 #else
@@ -1378,32 +1427,90 @@ static int cmd_rec_sd_format(int argc, char **argv)
 
 SHELL_CMD_EXPORT_ALIAS(cmd_rec_sd_format, rec_sd_format, "format SD card to FAT32: rec_sd_format confirm");
 
-/* This recorder stores mono. Keep channel policy here, not in audio_player;
- * array processing can instead consume the original interleaved callback. */
+#if RECORDER_ENABLE_SD_STORE
+void wave_player_rec_prepare(uint32_t sample_rate_hz, uint8_t channels)
+{
+    if (g_rec_store.lock == NULL) {
+        return;
+    }
+    if (xSemaphoreTake(g_rec_store.lock, portMAX_DELAY) == pdTRUE) {
+        if (g_rec_store.sd_store_enabled && g_rec_store.sd_fs_ready &&
+            rec_sd_open_next_wav_locked(sample_rate_hz, channels) != 0) {
+            g_rec_store.sd_fs_ready = false;
+            printf("[REC] disable SD store after file preparation error\r\n");
+        }
+        xSemaphoreGive(g_rec_store.lock);
+    }
+}
+
+static void rec_store_on_stop(void *user_data)
+{
+    (void)user_data;
+    if (xSemaphoreTake(g_rec_store.lock, portMAX_DELAY) == pdTRUE) {
+        rec_sd_close_wav_locked();
+        xSemaphoreGive(g_rec_store.lock);
+    }
+}
+#endif
+
+/* SD stores all RX slots and VAD uses microphone mono. */
 static void rec_store_on_interleaved_frame(const wave_player_rec_frame_t *frame, void *user_data)
 {
-    if (frame == NULL) return;
+    if (frame == NULL) {
+        return;
+    }
     const int16_t *samples = frame->samples;
     uint32_t sample_count = frame->samples_per_channel;
     const uint8_t channels = frame->channels;
     const uint32_t mask = frame->layout.mic_mask;
     static int16_t mono[REC_VAD_MAX_FRAME_SAMPLES];
-    if (samples == NULL || channels == 0U || channels > 16U || mask == 0U ||
+    if (samples == NULL || channels == 0U || channels > 16U) {
+        return;
+    }
+#if RECORDER_ENABLE_SD_STORE
+    /* SD writes may outlast this DMA block's reuse period. */
+    static int16_t pcm[((WAVE_PLAYER_REC_MAX_FS_HZ * WAVE_PLAYER_REC_FRAME_MS) / 1000U) *
+                       WAVE_PLAYER_REC_CHANNELS];
+    if (xSemaphoreTake(g_rec_store.lock, 0) == pdTRUE) {
+        if (g_rec_store.sd_store_enabled && g_rec_store.sd_fs_ready && g_rec_store.wav_file_open) {
+            memcpy(pcm, samples, sample_count * channels * sizeof(int16_t));
+            for (uint32_t i = 0; frame->muted_mic_mask != 0U && i < sample_count; ++i) {
+                for (uint8_t c = 0; c < channels; ++c) {
+                    if (frame->muted_mic_mask & (1U << c)) {
+                        pcm[i * channels + c] = 0;
+                    }
+                }
+            }
+            samples = pcm;
+            rec_sd_store_samples_locked(samples, sample_count, frame->sample_rate_hz, channels);
+        }
+        xSemaphoreGive(g_rec_store.lock);
+    } else {
+        g_rec_store.cb_lock_busy_drop_count++;
+    }
+#endif
+    if (mask == 0U ||
         ((mask | frame->layout.ref_mask) >> channels) != 0U ||
         (mask & frame->layout.ref_mask) != 0U) {
         return;
     }
     uint32_t selected = 0U;
     for (uint32_t c = 0U; c < channels; c++) {
-        if (mask & (1U << c)) selected++;
+        if (mask & (1U << c)) {
+            selected++;
+        }
     }
     while (sample_count > 0U) {
         uint32_t n = sample_count;
-        if (n > REC_VAD_MAX_FRAME_SAMPLES) n = REC_VAD_MAX_FRAME_SAMPLES;
+        if (n > REC_VAD_MAX_FRAME_SAMPLES) {
+            n = REC_VAD_MAX_FRAME_SAMPLES;
+        }
         for (uint32_t i = 0U; i < n; i++) {
             int32_t sum = 0;
             for (uint32_t c = 0U; c < channels; c++) {
-                if (mask & (1U << c)) sum += samples[i * channels + c];
+                if ((mask & ~frame->muted_mic_mask) & (1U << c)) {
+                    sum += samples[i * channels + c];
+                }
             }
             mono[i] = (int16_t)(sum / (int32_t)selected);
         }
@@ -1505,7 +1612,6 @@ int recorder_storage_init(void)
     g_rec_store.wav_path[0] = '\0';
     g_rec_store.wav_seq = 0U;
     g_rec_store.wav_sample_rate_hz = 0U;
-    g_rec_store.wav_samples_written = 0U;
     g_rec_store.wav_data_bytes = 0U;
 
     if (rec_sd_try_init_locked(false) != 0) {
@@ -1527,6 +1633,12 @@ int recorder_storage_init(void)
         printf("[ERROR] set record callback failed\r\n");
         return -1;
     }
+#if RECORDER_ENABLE_SD_STORE
+    if (wave_player_rec_set_stop_callback(rec_store_on_stop, NULL) != 0) {
+        printf("[ERROR] set record stop callback failed\r\n");
+        return -1;
+    }
+#endif
 
     (void)wave_record_enable(true);
 

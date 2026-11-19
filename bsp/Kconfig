@@ -4,6 +4,31 @@
 
 menu "SoC Drivers"
 
+config SYSINIT
+    bool "Run SDK SYSINIT (keep enabled for applications)"
+    default n if BOOT2
+    default y
+    help
+      SDK startup policy for dedicated firmware integration. BOOT2 images
+      default to disabled because they own their startup. Ordinary applications
+      must keep this enabled. LPFW, manufacturing firmware and bootloaders may
+      disable it for their own startup requirements.
+      Disabling SYSINIT only suppresses registration and dispatch. It does
+      not initialize the board or components through a fallback path, and
+      does not change the empty compatibility initialization entry points.
+
+config SYSINIT_CUSTOM_BOARD_INIT
+    bool "Use custom board SYSINIT initialization"
+    default n
+    help
+      Skip the selected SDK board's built-in startup sources, including
+      secondary-core startup on multi-core boards. The project must provide
+      its own board initialization through SYSINIT, or explicit calls when
+      SYSINIT is disabled. GPIO, Flash/PSRAM helpers, RF data and the board
+      linker layout remain available.
+      This only replaces board initialization; enabled SDK components still
+      initialize automatically when SYSINIT is enabled.
+
 config RF
     bool "Radio frequency (RF) driver"
     default n
@@ -269,6 +294,17 @@ config PM
     help
       Enable board power management support such as sleep and wakeup.
 
+config AUDIO_CODEC_JY6416_ENABLE
+    bool "JY6311 with two JY6166 audio codecs"
+    default n
+    depends on BSP_AUDIO_CODEC
+    help
+      Enable JY6311 at 0x44 and two JY6166 ADCs at 0x64/0x65.
+      Requires six PCM16 DSP slots: REF, unused, MIC0, MIC1, MIC2, MIC3.
+      All converters derive clocks from BCLK; no external MCLK is needed.
+      Supported rates: 8000, 11025, 16000, 22050, 32000, 44100, 48000 Hz.
+      The board must configure a six-slot DSP bus independently.
+
 config AUDIO_CODEC_JY6316_ENABLE
     bool "JY6316 audio codec"
     default n
@@ -338,10 +374,25 @@ config BSP_IMAGE_SENSOR
       Enable the image sensor drivers used by camera applications.
 
 config BSP_LCD
-    bool "LCD support"
+    bool "Legacy LCD support (deprecated)"
     default n
     help
-      Enable the common BSP LCD framework and board LCD GPIO support.
+      Compatibility support for existing LCD applications and lcd_conf_user.h.
+      Deprecated and scheduled for removal in the next major SDK release.
+      Use BSP_DISPLAY and examples/display for new applications.
+
+config BSP_DISPLAY
+    bool "Display framework"
+    default n
+    depends on CHIP = "bl616" || CHIP = "bl616cl" || CHIP = "bl618dg" || CHIP = "bl702l"
+    help
+      Enable the layered display framework (bsp/common/display): buses, panel drivers, scanout backends and the
+      default display. Its options are below; panels with frame memory (SPI / DBI / QSPI) and video panels
+      (RGB / MIPI DSI) are supported.
+
+if BSP_DISPLAY
+source "$BL_SDK_BASE/bsp/common/display/Kconfig"
+endif
 
 config BSP_USB
     bool "Board USB support"

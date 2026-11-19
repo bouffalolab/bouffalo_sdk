@@ -316,6 +316,27 @@ void bflb_dbi_qspi_set_addr(struct bflb_device_s *dev, uint8_t addr_byte_size, u
     putreg32(addr_val, reg_base + DBI_QSPI_ADR_OFFSET);
 #endif
 }
+
+void bflb_dbi_qspi_set_wire(struct bflb_device_s *dev, uint8_t cmd_wire, uint8_t addr_wire, uint8_t data_wire)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + DBI_QSPI_CONFIG_OFFSET);
+    regval &= ~(DBI_CR_QSPI_CMD_4B | DBI_CR_QSPI_ADR_4B | DBI_CR_QSPI_DAT_4B);
+    if (cmd_wire == DBI_QSPI_WIRE_NUM_4) {
+        regval |= DBI_CR_QSPI_CMD_4B;
+    }
+    if (addr_wire == DBI_QSPI_WIRE_NUM_4) {
+        regval |= DBI_CR_QSPI_ADR_4B;
+    }
+    if (data_wire == DBI_QSPI_WIRE_NUM_4) {
+        regval |= DBI_CR_QSPI_DAT_4B;
+    }
+    putreg32(regval, reg_base + DBI_QSPI_CONFIG_OFFSET);
+}
 #endif
 
 __UNUSED static void bflb_dbi_fill_fifo(struct bflb_device_s *dev, uint32_t words_cnt, uint32_t *data_buff)

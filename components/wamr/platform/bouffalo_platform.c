@@ -14,17 +14,17 @@ void bh_platform_destroy(void)
 {
 }
 
-void *os_malloc(unsigned size)
+__attribute__((weak)) void *os_malloc(unsigned size)
 {
     return malloc(size);
 }
 
-void *os_realloc(void *ptr, unsigned size)
+__attribute__((weak)) void *os_realloc(void *ptr, unsigned size)
 {
     return realloc(ptr, size);
 }
 
-void os_free(void *ptr)
+__attribute__((weak)) void os_free(void *ptr)
 {
     free(ptr);
 }

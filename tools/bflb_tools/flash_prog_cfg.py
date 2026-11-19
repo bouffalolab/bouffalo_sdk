@@ -31,6 +31,8 @@ def load_partition_table(path):
         raise ConfigError("partition table must contain [pt_table] and [[pt_entry]]")
     if not isinstance(table.get("address0"), int):
         raise ConfigError("pt_table.address0 must be an integer")
+    if not isinstance(table.get("address1"), int):
+        raise ConfigError("pt_table.address1 must be an integer")
 
     by_name = {}
     for index, entry in enumerate(entries):
@@ -46,7 +48,7 @@ def load_partition_table(path):
         if not isinstance(address, int) or not isinstance(size, int):
             raise ConfigError("{}.address0 and size0 must be integers".format(name))
         by_name[name] = (address, size)
-    return table["address0"], by_name
+    return table["address0"], table["address1"], by_name
 
 
 def validate_section(section):
@@ -55,7 +57,7 @@ def validate_section(section):
 
 
 def generate(args):
-    pt_address, partitions = load_partition_table(args.partition_table)
+    pt_address, pt_backup_address, partitions = load_partition_table(args.partition_table)
     images = []
     sections = {"cfg"}
     used_partitions = {"FW"}
@@ -74,6 +76,7 @@ def generate(args):
         used_partitions.add("Boot2")
         add_image("boot2", args.boot2, boot2[0])
         add_image("partition", args.partition_bin, pt_address)
+        add_image("partition_backup", args.partition_bin, pt_backup_address)
 
     for partition, path in args.image:
         entry = partitions.get(partition)

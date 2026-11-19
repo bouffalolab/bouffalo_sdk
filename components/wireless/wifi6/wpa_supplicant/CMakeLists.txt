@@ -16,7 +16,7 @@ sdk_add_private_compile_options(
     -Wno-error=discarded-qualifiers
 )
 
-if(CONFIG_MACSW_SELECT STREQUAL "wfa")
+if(MACSW_PROFILE STREQUAL "wfa")
 set(MACSW_WFA 1)
 endif()
 

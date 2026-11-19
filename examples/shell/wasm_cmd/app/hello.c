@@ -1,8 +1,9 @@
 __attribute__((import_module("env"), import_name("puts")))
 extern int host_puts(const char *text);
 
-int main(void)
+__attribute__((export_name("main")))
+int wasm_entry(void)
 {
-    host_puts("Hello World from WAMR!");
+    host_puts("Hello World from WAMRsadsadad!");
     return 0;
 }

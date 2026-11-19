@@ -861,7 +861,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     /* try to use app mtimer to cal rc32,so make beacon_stamp_mtimer_valid=0 and init rc32k auto cal
        if xtal32 used, following code is also ok */
-    pm_rc32k_auto_cal_init();
+    _pm_rc32k_auto_cal_init();
 
     PDS_IntClear();
 
@@ -1032,7 +1032,7 @@ int bl_lp_fw_enter_check_allow(void)
 }
 
 /* get the remaining time of the next beacon or dtim, mode 0:dtim, 1:beacon */
-int bl_lp_init(void)
+int _bl_lp_init(void)
 {
     bl_lp_env_init();
 

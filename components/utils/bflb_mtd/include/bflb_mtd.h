@@ -16,7 +16,10 @@ typedef struct {
 #define BFLB_MTD_OPEN_FLAG_BACKUP        (1 << 0)
 #define BFLB_MTD_OPEN_FLAG_BUSADDR       (1 << 1)
 
-void bflb_mtd_init(void);
+/* Compatibility entry point; partition setup is handled by SYSINIT. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void bflb_mtd_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 int bflb_mtd_open(const char *name, bflb_mtd_handle_t *handle, unsigned int flags);
 int bflb_mtd_close(bflb_mtd_handle_t handle);
 int bflb_mtd_info(bflb_mtd_handle_t handle, bflb_mtd_info_t *info);

@@ -10,6 +10,7 @@
 #define CFG_COEX
 #define CFG_BCN
 #define CFG_AGG
+#define CFG_HT
 
 #define CFG_VIF_MAX 2
 #define CFG_STA_MAX 4

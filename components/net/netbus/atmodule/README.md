@@ -36,8 +36,10 @@ See the example guides below for wiring, configuration, and flashing.
 
 ## Documentation
 
-- [English AT Command Reference](docs/en/samples/atmoudle/atmoudle.rst)
-- [中文 AT 命令参考](docs/zh/samples/atmoudle/atmoudle.rst)
+- [English AT 1.0 Command Reference](docs/en/samples/atmoudle/v1.0/atmodule.rst)
+- [English AT 2.0 Command Reference](docs/en/samples/atmoudle/v2.0/atmodule.rst)
+- [中文 AT 1.0 命令参考](docs/zh/samples/atmoudle/v1.0/atmodule.rst)
+- [中文 AT 2.0 命令参考](docs/zh/samples/atmoudle/v2.0/atmodule.rst)
 
 To build the documentation locally:
 

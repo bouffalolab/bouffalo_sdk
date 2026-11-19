@@ -1,3 +1,9 @@
+# Dedicated firmware can provide its own startup entry and must not inherit
+# the common board SYSINIT wrapper.
+if(CONFIG_SYSINIT AND NOT CONFIG_SYSINIT_CUSTOM_BOARD_INIT)
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/board.c)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${BOARD}/CMakeLists.txt")
     message(STATUS "Select board: ${CMAKE_CURRENT_SOURCE_DIR}/${BOARD}")
     add_subdirectory("${BOARD}")

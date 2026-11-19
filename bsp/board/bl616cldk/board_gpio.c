@@ -1,9 +1,9 @@
-
 #if __has_include("board_gpio_overlay.h")
 /* Use board_gpio_overlay.c instead of this file */
 #else
 
 #include "board_gpio.h"
+#include <stdint.h>
 #include "bflb_gpio.h"
 #include "bl616cl_glb.h"
 #include "bflb_audac.h"
@@ -449,4 +449,162 @@ void board_lcd_spi_1_hard_4_gpio_init(void)
 #endif
 #endif
 
-#endif
+/**
+ * @brief Display pin functions of bl616cldk (contract: default/display_default_gpio_ext.h of the display framework).
+ *
+ * Display connector pin mapping follows BL616CL_PINMUX.xlsx (examples/display_test).
+ *
+ * | Interface | GPIO function | Muxed by _gpio_init                                    | Muxed by _cs_gpio_init |
+ * |-----------|---------------|--------------------------------------------------------|------------------------|
+ * | DBI B8    | DBI_B         | RD 1, WR 2, D/C 3, D0..D7 on 12..19                    | CS 0                   |
+ * | DBI C4    | DBI_C         | SDA 12, D/C 13, SCL 14                                 | CS 15                  |
+ * | DBI C3    | DBI_C         | SDA 12, SCL 14                                         | CS 15                  |
+ * | QSPI      | DISP_QSPI     | SCL 12, SDA0..SDA3 14..17 (see below)                  | CS 13                  |
+ * | SPI       | SPI0          | CLK 13, MOSI 14 (D/C and CS: software GPIOs)          | -                      |
+ *
+ * QSPI uses the DISP_QSPI group on GPIO12..17; verify the board schematic before use.
+ *
+ * The BL616CL has no display processing unit: the DPU functions are not provided.
+ *
+ * Boards with an overlay provide their own display pin functions in board_gpio_overlay.c.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#if defined(CONFIG_BSP_DISPLAY)
+
+/* Pad configuration of a muxed pin */
+#define DISPLAY_PIN_FLAGS (GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2)
+
+/* Mux a list of pins to one GPIO function */
+static void display_pins_mux(const uint8_t *pins, uint8_t count, uint32_t func)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    for (uint8_t i = 0; i < count; i++) {
+        bflb_gpio_init(gpio, pins[i], func | DISPLAY_PIN_FLAGS);
+    }
+}
+
+/* DBI Type B (8080 x8): RD, WR, D/C and D0..D7. CS is GPIO0 (see board_display_dbi_b8_cs_gpio_init). */
+void board_display_dbi_b8_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_1,  GPIO_PIN_2,  GPIO_PIN_3,  GPIO_PIN_12, GPIO_PIN_13, GPIO_PIN_14,
+                                    GPIO_PIN_15, GPIO_PIN_16, GPIO_PIN_17, GPIO_PIN_18, GPIO_PIN_19 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_B);
+}
+
+void board_display_dbi_b8_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+void board_display_dbi_b8_cs_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_0 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_B);
+}
+
+void board_display_dbi_b8_cs_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+/* DBI Type C 4-wire: SDA, D/C, SCL. CS is GPIO15 (see board_display_dbi_c4_cs_gpio_init). */
+void board_display_dbi_c4_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_12, GPIO_PIN_13, GPIO_PIN_14 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_C);
+}
+
+void board_display_dbi_c4_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+void board_display_dbi_c4_cs_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_15 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_C);
+}
+
+void board_display_dbi_c4_cs_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+/* DBI Type C 3-wire (no D/C pin): SDA, SCL. CS is GPIO15 (see board_display_dbi_c3_cs_gpio_init). */
+void board_display_dbi_c3_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_12, GPIO_PIN_14 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_C);
+}
+
+void board_display_dbi_c3_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+void board_display_dbi_c3_cs_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_15 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_C);
+}
+
+void board_display_dbi_c3_cs_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+/* DBI QSPI: SCL, SDA0..SDA3. CS is GPIO13 (see board_display_qspi_cs_gpio_init). */
+void board_display_qspi_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_12, GPIO_PIN_14, GPIO_PIN_15, GPIO_PIN_16, GPIO_PIN_17 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_QSPI);
+}
+
+void board_display_qspi_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+void board_display_qspi_cs_gpio_init(void)
+{
+    static const uint8_t pins[] = { GPIO_PIN_13 };
+
+    display_pins_mux(pins, sizeof(pins), GPIO_FUNC_DBI_QSPI);
+}
+
+void board_display_qspi_cs_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+/*
+ * Hardware SPI (SPI0): only CLK and MOSI are muxed. The D/C and CS pins are software controlled GPIOs and can be any
+ * GPIO, there is no pin limit for them.
+ */
+void board_display_spi_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    /* SPI_DAT (MOSI): GPIO14 with the default MOSI/MISO assignment of board_init() */
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    /* SPI_CLK */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+void board_display_spi_gpio_deinit(void)
+{
+    /* Nothing to do when the display is released */
+}
+
+#endif /* CONFIG_BSP_DISPLAY */
+
+#endif /* __has_include("board_gpio_overlay.h") */

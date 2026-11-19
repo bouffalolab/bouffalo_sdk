@@ -102,8 +102,8 @@ enum coexm_hw_topology {
 
 /** Immutable board/RF-path facts used by connection Protection. */
 struct coexm_protect_profile {
-    enum coexm_hw_topology topology;
-    enum coex_rf_path rf_path;
+    uint8_t topology; // ref @ enum coexm_hw_topology
+    uint8_t rf_path; // ref @ enum coex_rf_path
 };
 
 /** Runtime policy carried by the firmware-internal hardware plan. */
@@ -118,8 +118,8 @@ enum coexm_hw_runtime {
  * This is a WiFi6-to-MACSW firmware contract, not a customer-facing API.
  */
 struct coexm_hw_plan {
-    enum coexm_hw_topology topology;
-    enum coex_rf_path rf_path;
+    uint8_t topology; // ref @ enum coexm_hw_topology
+    uint8_t rf_path; // ref @ enum coex_rf_path
     uint8_t band;
     uint8_t runtime;
     struct mac_chan_op channel;
@@ -237,7 +237,7 @@ uint32_t coexm_hw_capabilities_get(void);
  *
  * This query never changes the PHYRF path or coexistence registers.
  */
-int coexm_rf_path_get(enum coex_rf_path *path);
+int coexm_rf_path_get(uint8_t *path); // ref @ enum coex_rf_path
 
 /** Apply a resolved hardware plan using the selected chip backend. */
 int coexm_hw_plan_apply(const struct coexm_hw_plan *plan);

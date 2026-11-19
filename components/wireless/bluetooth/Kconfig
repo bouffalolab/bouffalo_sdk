@@ -21,9 +21,9 @@ config BTBLECONTROLLER_LIB
       ble1m2s1bredr0, ble1m2s1bredr1, ble1m4s1bredr1, blespihci,
       bleuarthci, mfg, uarthci, wlanif; bl702l: m0s1p, m0s1rp, m0s1sp,
       m0s2p, m0s4p, m1s1p, m1s1t10, m2s1p, m4s1p, m8s1p, uarthci,
-      uarthcilp; bl616cl: m0b1, m0s1, m2s1, m10s1, mfg, uarthci, wlanif); the
-      build aborts on unknown values or when the remaining options
-      conflict with the selected library.
+      uarthcilp; bl616cl: m0b1, m0s1, m0s1s, m2s1, m4s1, m10s1, mfg, uarthci,
+      wlanif); the build aborts on unknown values or when the remaining
+      options conflict with the selected library.
 
 menu "Controller build integration"
 
@@ -54,6 +54,11 @@ config BFLB_BLETP_SVC
 config NIMBLE
     bool "Use the NimBLE host stack"
     default n
+    select LITTLEFS if BLUETOOTH && !BLE_HOST_DISABLE && !BLE_BEACON_ONLY
+    select LITTLEFS_KV_EASYFLASH if BLUETOOTH && !BLE_HOST_DISABLE && !BLE_BEACON_ONLY
+    help
+      The SDK NimBLE host enables persistent configuration storage and uses
+      the automatically initialized LittleFS key-value store on PSM.
 
 config NIMBLE_STACK_CLI
     bool "NimBLE stack shell commands"
@@ -465,9 +470,12 @@ config BT_BROADCASTER
 config BT_SETTINGS
     bool "Settings-based persistent storage"
     default n
+    select LITTLEFS if BLUETOOTH && !BLE_HOST_DISABLE && !BLE_BEACON_ONLY && !NIMBLE
+    select LITTLEFS_KV_EASYFLASH if BLUETOOTH && !BLE_HOST_DISABLE && !BLE_BEACON_ONLY && !NIMBLE
     help
       Enable storing Bluetooth settings (bonds, CCC, etc.) through the
-      settings subsystem.
+      settings subsystem. The SDK host uses the automatically initialized
+      LittleFS key-value store on PSM.
 
 config BLE_TP_SERVER
     bool "Throughput server"

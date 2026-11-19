@@ -7,6 +7,7 @@
 #include "flashloader_config.h"
 
 enum flashloader_command {
+    FLASHLOADER_CMD_GET_BOOTINFO      = 0x10,
     FLASHLOADER_CMD_CHANGE_RATE       = 0x20,
     FLASHLOADER_CMD_RESET             = 0x21,
     FLASHLOADER_CMD_CLOCK_SET         = 0x22,

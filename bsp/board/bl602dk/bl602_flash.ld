@@ -14,7 +14,11 @@ OUTPUT_ARCH( "riscv" )
 /* configure the entry point */
 ENTRY(__start)
 
-StackSize    = 0x0400; /*  1KB */
+/* Must fit the SDK pre-scheduler SYSINIT stages, which run on this stack from
+ * System_Post_Init() before the RTOS scheduler starts.  MTD/partition table
+ * init alone uses >1.8KB (bflb_boot2_init() keeps two pt_table_stuff_config
+ * buffers on the stack), so the old 1KB stack overflowed into .itcm_region. */
+StackSize    = 0x1000; /*  4KB */
 HeapMinSize  = 0x1000; /*  4KB */
 
 __EM_SIZE = DEFINED(ble_controller_init) ? 8K : 0K;

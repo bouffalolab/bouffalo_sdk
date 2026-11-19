@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "bflb_gpio.h"
 #include "bflb_irq.h"
@@ -15,7 +16,9 @@
 
 #include "wl_api.h"
 #include "rfparam_adapter.h"
+#include "rfparam_adapter_internal.h"
 #include "bl618dg_hbn.h"
+#include "sysinit.h"
 
 #define USER_UNUSED(a) ((void)(a))
 
@@ -277,7 +280,7 @@ static int board_rf_initialize(bool standalone, int spdt_gpio)
 
     board_rf_phyrf_cfg_get();
     cmd_set_btble_combo(0, NULL);
-    ret = rfparam_init(0, NULL, 0);
+    ret = _rfparam_init(0, NULL, 0);
     if (ret != 0) {
         ret = -EIO;
         goto done;
@@ -291,7 +294,7 @@ static int board_rf_initialize(bool standalone, int spdt_gpio)
             }
         }
         cmd_set_btble_standalone(0, NULL);
-        if (rfparam_init(0, NULL, 0) != 0) {
+        if (_rfparam_init(0, NULL, 0) != 0) {
             ret = -EIO;
         }
     } else {
@@ -338,7 +341,7 @@ void board_rf_single_ant_spdt_force_bt_init(int pin_bt_path, int pin_2g_path)
 
     board_rf_phyrf_cfg_get();
     cmd_set_btble_combo(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
+    if (0 != _rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return;
     }
@@ -350,7 +353,7 @@ void board_rf_single_ant_spdt_force_bt_init(int pin_bt_path, int pin_2g_path)
         bflb_gpio_reset(gpio, pin_2g_path);
     }
     cmd_set_btble_standalone(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
+    if (0 != _rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return;
     }
@@ -371,7 +374,7 @@ void board_rf_single_ant_spdt_force_2g_init(int pin_bt_path, int pin_2g_path)
 
     board_rf_phyrf_cfg_get();
     cmd_set_btble_combo(0, NULL);
-    if (0 != rfparam_init(0, NULL, 0)) {
+    if (0 != _rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return;
     }
@@ -382,5 +385,60 @@ int board_rf_dual_ant_init(void)
 {
     return board_rf_initialize(true, -1);
 }
+
+/*
+ * BL618DG BT-only SYSINIT images: the RF driver performs the cold start at
+ * SI_SUB_WIRELESS/SI_ORDER_FIRST (drivers/rfparam/Src/rfparam_adapter.c).
+ * The board RF path must then be selected, and the standalone path needs a
+ * second RF initialization after the switch:
+ *
+ *     _rfparam_init()             generic cold start (default combo path)
+ *     cmd_set_btble_standalone()  switch PHY/GLB to the standalone path
+ *     _rfparam_init()             apply RF parameters on the new path
+ *
+ * That is the sequence the BT examples used before RF init moved to SYSINIT
+ * (416d168a: rfparam_init -> cmd_set_btble_standalone -> rfparam_init). The
+ * application calls are now empty compatibility wrappers, so keeping the
+ * sequence here makes the RF path a board property and keeps the PHY
+ * configured for the path the board is wired for.
+ *
+ * CONFIG_BTBLE_USE_STANDALONE_PATH is the application/project build setting
+ * that describes the board wiring (each BT-only example declares it in its
+ * own Kconfig, the same way the wl_ble_lp example does). It is deliberately
+ * not a global Kconfig symbol: LPFW and other non-SYSINIT images keep their
+ * own configuration and runtime RF reconfiguration path instead.
+ *
+ * The record is registered at SI_ORDER_SECOND so it runs after the driver
+ * cold start. It is limited to BL618DG AP images that build the Bluetooth
+ * stack without a WiFi backend (WiFi4/FHOST/WLAN): those backends own RF
+ * initialization. The combo branch keeps the pre-SYSINIT behaviour of the
+ * BT examples that used to call cmd_set_btble_combo() themselves. Images
+ * that disable SYSINIT, or replace board startup with
+ * CONFIG_SYSINIT_CUSTOM_BOARD_INIT, own the RF path selection and the
+ * follow-up _rfparam_init() instead.
+ */
+#if !IS_ENABLED(CONFIG_SYSINIT_CUSTOM_BOARD_INIT) && \
+    defined(CPU_AP) && \
+    IS_ENABLED(CONFIG_BLUETOOTH) && \
+    !IS_ENABLED(CONFIG_WIFI4) && !IS_ENABLED(CONFIG_WIFI6) && \
+    !IS_ENABLED(CONFIG_FHOST) && !IS_ENABLED(CONFIG_WLAN) && \
+    !defined(CFG_DBG_RUN_ON_FPGA)
+static void board_rf_btble_sysinit(const void *arg)
+{
+    (void)arg;
+
+#if IS_ENABLED(CONFIG_BTBLE_USE_STANDALONE_PATH)
+    cmd_set_btble_standalone(0, NULL);
+    if (_rfparam_init(0, NULL, 0) != 0) {
+        printf("standalone PHY RF init failed!\r\n");
+        abort();
+    }
+#else
+    /* Keep the pre-SYSINIT behaviour: confirm the combo/shared RF path. */
+    cmd_set_btble_combo(0, NULL);
+#endif
+}
+SYSINIT(board_rf_btble, SI_SUB_WIRELESS, SI_ORDER_SECOND, board_rf_btble_sysinit, NULL);
+#endif
 
 #endif

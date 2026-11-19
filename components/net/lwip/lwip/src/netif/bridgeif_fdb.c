@@ -147,6 +147,43 @@ bridgeif_fdb_get_dst_ports(void *fdb_ptr, struct eth_addr *dst_addr)
 
 /**
  * @ingroup bridgeif_fdb
+ * Read a slot in the default dynamic FDB. Outputs are valid only on ERR_OK.
+ *
+ * @param idx zero-based slot index
+ * @param addr receives the learned MAC address
+ * @param port receives the zero-based bridge port number
+ * @param age receives the remaining lifetime in seconds
+ * @return ERR_OK if valid, ERR_VAL if unused, expired or out of range,
+ *         ERR_ARG for NULL arguments
+ */
+err_t
+bridgeif_fdb_get_slot(void *fdb_ptr, u16_t idx, struct eth_addr *addr, u8_t *port, u16_t *age)
+{
+  bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)fdb_ptr;
+  bridgeif_dfdb_entry_t *e;
+  err_t ret = ERR_VAL;
+  BRIDGEIF_DECL_PROTECT(lev);
+
+  if ((fdb == NULL) || (addr == NULL) || (port == NULL) || (age == NULL)) {
+    return ERR_ARG;
+  }
+  if (idx >= fdb->max_fdb_entries) {
+    return ERR_VAL;
+  }
+  BRIDGEIF_READ_PROTECT(lev);
+  e = &fdb->fdb[idx];
+  if (e->used && e->ts) {
+    memcpy(addr, &e->addr, sizeof(struct eth_addr));
+    *port = e->port;
+    *age = (u16_t)e->ts;
+    ret = ERR_OK;
+  }
+  BRIDGEIF_READ_UNPROTECT(lev);
+  return ret;
+}
+
+/**
+ * @ingroup bridgeif_fdb
  * Aging implementation of our simple fdb
  */
 static void

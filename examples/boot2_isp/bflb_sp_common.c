@@ -45,8 +45,83 @@
 #include "bflb_eflash_loader.h"
 #include "bflb_sec_trng.h"
 #include "bflb_uart.h"
+#if defined(CHIP_BL616CL)
+#include "bflb_sflash.h"
+#include "bl616cl_glb.h"
+#endif
 
 ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE];
+
+#if defined(CHIP_BL616CL)
+#define BFLB_BOOT2_FLASH_WRITE_PROTECT_START_ADDR    (0xE000U)
+#define BFLB_BOOT2_FLASH_WRITE_PROTECT_MAX_SIZE      (0x1000000U)
+#define BFLB_BOOT2_FLASH_WRITE_PROTECT_ADDR_UNIT     (0x100U)
+/* Keep 32/64 KB erase blocks that overlap boot2 outside the whitelist. */
+#define BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR      (0x10000U)
+
+static int ATTR_TCM_SECTION bflb_sp_boot2_enable_flash_write_protect(void)
+{
+    uint8_t *flash_cfg_data;
+    const spi_flash_cfg_type *flash_cfg;
+    uint32_t flash_cfg_len;
+    uint32_t flash_size;
+    uint32_t flash_end;
+    uint8_t io_mode;
+    uint8_t program_cmd;
+
+    bflb_flash_get_cfg(&flash_cfg_data, &flash_cfg_len);
+    flash_cfg = (const spi_flash_cfg_type *)flash_cfg_data;
+
+    /* Match the command selection in bflb_sflash_program(). */
+    io_mode = flash_cfg->io_mode & 0x0f;
+    if (io_mode == SF_CTRL_NIO_MODE || io_mode == SF_CTRL_DO_MODE || io_mode == SF_CTRL_DIO_MODE) {
+        program_cmd = flash_cfg->page_program_cmd;
+    } else if (io_mode == SF_CTRL_QO_MODE || io_mode == SF_CTRL_QIO_MODE) {
+        program_cmd = flash_cfg->qpage_program_cmd;
+    } else {
+        return -1;
+    }
+
+    if (flash_cfg->sector_erase_cmd == 0 || flash_cfg->sector_erase_cmd == BFLB_SPIFLASH_CMD_INVALID ||
+        flash_cfg->blk32_erase_cmd == 0 || flash_cfg->blk32_erase_cmd == BFLB_SPIFLASH_CMD_INVALID ||
+        flash_cfg->blk64_erase_cmd == 0 || flash_cfg->blk64_erase_cmd == BFLB_SPIFLASH_CMD_INVALID ||
+        program_cmd == 0 || program_cmd == BFLB_SPIFLASH_CMD_INVALID) {
+        return -1;
+    }
+
+    flash_size = bflb_flash_get_size();
+    if (flash_size <= BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR) {
+        return -1;
+    }
+    /* Cap the range at 16 MB; the END field is an exclusive boundary. */
+    flash_end = flash_size > BFLB_BOOT2_FLASH_WRITE_PROTECT_MAX_SIZE
+                    ? BFLB_BOOT2_FLASH_WRITE_PROTECT_MAX_SIZE
+                    : flash_size;
+    /* 0x10000 does not fit in the 16-bit END field; leave the last unit protected. */
+    if (flash_end == BFLB_BOOT2_FLASH_WRITE_PROTECT_MAX_SIZE) {
+        flash_end -= BFLB_BOOT2_FLASH_WRITE_PROTECT_ADDR_UNIT;
+    }
+
+    /* Protect the first 56 KB (boot2); allow updates to both partition tables. */
+    GLB_SF_Write_Protect_Set(0, flash_cfg->sector_erase_cmd, BFLB_BOOT2_FLASH_WRITE_PROTECT_START_ADDR,
+                             flash_end - BFLB_BOOT2_FLASH_WRITE_PROTECT_START_ADDR);
+    GLB_SF_Write_Protect_Set(1, flash_cfg->blk32_erase_cmd, BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR,
+                             flash_end - BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR);
+    GLB_SF_Write_Protect_Set(2, flash_cfg->blk64_erase_cmd, BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR,
+                             flash_end - BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR);
+    GLB_SF_Write_Protect_Set(3, program_cmd, BFLB_BOOT2_FLASH_WRITE_PROTECT_START_ADDR,
+                             flash_end - BFLB_BOOT2_FLASH_WRITE_PROTECT_START_ADDR);
+
+    GLB_SF_Write_Protect_Enable();
+    BOOT2_MSG_DBG("SF write protect: erase=%x/%x/%x, program=%x, iomode=%x\r\n",
+                  flash_cfg->sector_erase_cmd, flash_cfg->blk32_erase_cmd,
+                  flash_cfg->blk64_erase_cmd, program_cmd, io_mode);
+    BOOT2_MSG_DBG("SF write protect: sector/program [%x, %x), block [%x, %x)\r\n",
+                  BFLB_BOOT2_FLASH_WRITE_PROTECT_START_ADDR, flash_end,
+                  BFLB_BOOT2_FLASH_BLOCK_ERASE_START_ADDR, flash_end);
+    return 0;
+}
+#endif
 
 /****************************************************************************/ /**
  * @brief  Dump data
@@ -85,6 +160,13 @@ void bflb_sp_dump_data(void *datain, int len)
 int32_t bflb_sp_mediaboot_pre_jump(void)
 {
     extern void system_mtimer_clock_reinit(void);
+
+#if defined(CHIP_BL616CL)
+    if (bflb_sp_boot2_enable_flash_write_protect() != 0) {
+        BOOT2_MSG_ERR("SF write protect setup failed\r\n");
+        return BFLB_BOOT2_FAIL;
+    }
+#endif
 
     /* reinit mtimer clock */
     //system_mtimer_clock_reinit();

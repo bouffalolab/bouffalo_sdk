@@ -2,10 +2,8 @@
 #include "assert.h"
 #include <string.h>
 #include "mac_frame.h"
+#include "mm.h"
 
-#ifndef CO_ALIGN4_HI
-#define CO_ALIGN4_HI(val) (((val)+3)&~3)
-#endif
 #ifndef ASSERT_ERR
 #define ASSERT_ERR(cond) assert(cond)
 #endif
@@ -93,14 +91,30 @@ struct bc_tx_buf_pool
 
 struct bc_tx_buf_pool tx_buf_pool;
 
-void bc_tx_init_tx_pool()
+int bc_tx_init_tx_pool(void)
 {
     size_t i;
     struct bc_tx_buf_pool *pool = &tx_buf_pool;
-    struct bc_tx_buf_tag *buf;
-    size_t len;
-    extern uint8_t _heap_wifi_start;
-    extern uint8_t _heap_wifi_size;
+    struct bc_tx_buf_tag *buf = NULL;
+    size_t count;
+
+    /* Keep the allocation and any outstanding slots across reinitialization. */
+    if (pool->cnt_total) {
+        return 0;
+    }
+
+    count = kmax_free_size(MM_HEAP_WRAM_0) / sizeof(*buf);
+    while (count) {
+        buf = kmalloc(count * sizeof(*buf), MM_FLAG_HEAP_WRAM_0 | MM_FLAG_ALIGN_PTR);
+        if (buf) {
+            break;
+        }
+        /* The free-space snapshot can change; allocator overhead can also grow. */
+        --count;
+    }
+    if (!buf) {
+        return -1;
+    }
 
     memset(pool, 0, sizeof(*pool));
     bc_list_init(&pool->free_list);
@@ -109,16 +123,14 @@ void bc_tx_init_tx_pool()
         bc_list_init(&queue->pending_tx_list);
     }
 
-    buf = (struct bc_tx_buf_tag *)CO_ALIGN4_HI((uint32_t)&_heap_wifi_start);
-    len = (size_t)&_heap_wifi_size;
-    while (len >= sizeof(*buf)) {
-        bc_list_push_back(&pool->free_list, (struct bc_list_hdr *)buf);
-        ++pool->cnt_total;
-        ++pool->cnt_free;
-        len -= sizeof(*buf);
-        ++buf;
+    /* Retain this WRAM allocation for the lifetime of the COPY pool. */
+    for (i = 0; i < count; ++i) {
+        bc_list_push_back(&pool->free_list, &buf[i].hdr);
     }
+    pool->cnt_total = count;
+    pool->cnt_free = count;
     bc_dbg("TX buf total %lu\r\n", pool->cnt_total);
+    return 0;
 }
 
 static void bc_tx_buf_free(struct pbuf *p)

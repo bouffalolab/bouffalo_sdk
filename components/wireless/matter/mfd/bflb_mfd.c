@@ -1,5 +1,5 @@
 
-#if defined BL616 || defined BL616CL
+#if defined BL616 || defined BL616CL || defined BL618DG
 #include "bflb_mfd_common.h"
 #elif defined BL602
 #include "bflb_mfd_bl602.h"
@@ -9,6 +9,7 @@
 #include "bflb_mfd_bl702l.h"
 #endif
 #include "bflb_mfd.h"
+#include <stddef.h>
 
 #define MATTER_FACTORY_DATA_NAME                    "MFD"
 

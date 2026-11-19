@@ -1,7 +1,14 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
-void board_init(void);
+/* Compatibility entry point; board startup is handled by SYSINIT. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+void board_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+
+/* Optional hardware hooks around the default board startup. */
+void board_early_init(void);
+void board_late_init(void);
 
 void board_uartx_gpio_init();
 void board_i2c0_gpio_init();

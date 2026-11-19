@@ -1,4 +1,5 @@
 #include "audio_codec_wm8978.h"
+#include "audio_codec_internal.h"
 
 #include <stddef.h>
 
@@ -64,7 +65,7 @@ int audio_codec_wm8978_probe(struct bflb_device_s *i2c, uint8_t addr)
     return wm8978_write_reg(i2c, addr, 0, 0);
 }
 
-static void wm8978_setvol_headset(struct bflb_device_s *i2c, uint8_t addr, uint8_t voll, uint8_t volr)
+static int wm8978_setvol_headset(struct bflb_device_s *i2c, uint8_t addr, uint8_t voll, uint8_t volr)
 {
     voll &= 0x3F;
     volr &= 0x3F;
@@ -74,22 +75,25 @@ static void wm8978_setvol_headset(struct bflb_device_s *i2c, uint8_t addr, uint8
     if (volr == 0) {
         volr |= 1 << 6;
     }
-    (void)wm8978_write_reg(i2c, addr, 52, voll);
-    (void)wm8978_write_reg(i2c, addr, 53, (uint16_t)(volr | (1 << 8)));
+    int ret = wm8978_write_reg(i2c, addr, 52, voll);
+    ret |= wm8978_write_reg(i2c, addr, 53, (uint16_t)(volr | (1 << 8)));
+    return ret;
 }
 
-static void wm8978_setvol_speaker(struct bflb_device_s *i2c, uint8_t addr, uint8_t volx)
+static int wm8978_setvol_speaker(struct bflb_device_s *i2c, uint8_t addr, uint8_t volx)
 {
     volx &= 0x3F;
     if (volx == 0) {
         volx |= 1 << 6;
     }
-    (void)wm8978_write_reg(i2c, addr, 54, volx);
-    (void)wm8978_write_reg(i2c, addr, 55, (uint16_t)(volx | (1 << 8)));
+    int ret = wm8978_write_reg(i2c, addr, 54, volx);
+    ret |= wm8978_write_reg(i2c, addr, 55, (uint16_t)(volx | (1 << 8)));
+    return ret;
 }
 
-static void wm8978_config_adda(struct bflb_device_s *i2c, uint8_t addr, uint8_t dacen, uint8_t adcen)
+static int wm8978_config_adda(struct bflb_device_s *i2c, uint8_t addr, uint8_t dacen, uint8_t adcen)
 {
+    int ret = 0;
     /* WM8978 control interface is effectively write-only.
      * Some registers (e.g. R2/R3) carry multiple unrelated enable bits.
      * We must preserve the previously written value when toggling DAC/ADC.
@@ -109,12 +113,14 @@ static void wm8978_config_adda(struct bflb_device_s *i2c, uint8_t addr, uint8_t 
         r2 &= (uint16_t)~(3 << 0);
     }
 
-    (void)wm8978_write_reg(i2c, addr, 3, r3);
-    (void)wm8978_write_reg(i2c, addr, 2, r2);
+    ret |= wm8978_write_reg(i2c, addr, 3, r3);
+    ret |= wm8978_write_reg(i2c, addr, 2, r2);
+    return ret;
 }
 
-static void wm8978_config_output(struct bflb_device_s *i2c, uint8_t addr, uint8_t dacen, uint8_t bpsen)
+static int wm8978_config_output(struct bflb_device_s *i2c, uint8_t addr, uint8_t dacen, uint8_t bpsen)
 {
+    int ret = 0;
     uint16_t regval = 0;
     if (dacen) {
         regval |= 1 << 0;
@@ -123,12 +129,15 @@ static void wm8978_config_output(struct bflb_device_s *i2c, uint8_t addr, uint8_
         regval |= 1 << 1;
         regval |= 5 << 2;
     }
-    (void)wm8978_write_reg(i2c, addr, 50, regval);
-    (void)wm8978_write_reg(i2c, addr, 51, regval);
+    ret |= wm8978_write_reg(i2c, addr, 50, regval);
+    ret |= wm8978_write_reg(i2c, addr, 51, regval);
+    return ret;
 }
 
-static void wm8978_config_i2s(struct bflb_device_s *i2c, uint8_t addr, audio_codec_i2s_fmt_t fmt, audio_codec_bits_t bits)
+static int wm8978_config_i2s(struct bflb_device_s *i2c, uint8_t addr, audio_codec_i2s_fmt_t fmt,
+                             audio_codec_bits_t bits)
 {
+    int ret = 0;
     uint8_t fmtv = 0;
     uint8_t bitv = 0;
 
@@ -150,7 +159,8 @@ static void wm8978_config_i2s(struct bflb_device_s *i2c, uint8_t addr, audio_cod
         default: bitv = 0; break;
     }
 
-    (void)wm8978_write_reg(i2c, addr, 4, (uint16_t)((fmtv << 3) | (bitv << 5)));
+    ret |= wm8978_write_reg(i2c, addr, 4, (uint16_t)((fmtv << 3) | (bitv << 5)));
+    return ret;
 }
 
 static void AUDIO_CODEC_UNUSED wm8978_legacy_setgain_mic(struct bflb_device_s *i2c, uint8_t addr, uint8_t gain)
@@ -160,17 +170,6 @@ static void AUDIO_CODEC_UNUSED wm8978_legacy_setgain_mic(struct bflb_device_s *i
     (void)wm8978_write_reg(i2c, addr, 46, (uint16_t)(gain | (1 << 8)));
 }
 
-static int wm8978_set_mic_gain_raw(struct bflb_device_s *i2c, uint8_t addr, uint8_t gain)
-{
-    /* WM8978 uses 6-bit mic gain in regs 45/46.
-     * Bit8 in the right register is an update bit (mirror existing driver behavior).
-     */
-    gain &= 0x3F;
-    int ret = 0;
-    ret |= wm8978_write_reg(i2c, addr, 45, gain);
-    ret |= wm8978_write_reg(i2c, addr, 46, (uint16_t)(gain | (1 << 8)));
-    return ret;
-}
 
 static void AUDIO_CODEC_UNUSED wm8978_legacy_setgain_linein(struct bflb_device_s *i2c, uint8_t addr, uint8_t gain)
 {
@@ -319,6 +318,8 @@ static void AUDIO_CODEC_UNUSED wm8978_legacy_config_eq5(struct bflb_device_s *i2
 
 int audio_codec_wm8978_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg)
 {
+    int ret = 0;
+
     if (dev == NULL || dev->i2c == NULL || cfg == NULL) {
         return -1;
     }
@@ -331,22 +332,22 @@ int audio_codec_wm8978_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg
         return -2;
     }
 
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 1, 0x1B);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 2, 0x1B0);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 3, 0x6C);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 6, 0);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 43, 1 << 4);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 47, 1 << 8);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 48, 1 << 8);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 49, 1 << 1);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 10, 1 << 3);
-    (void)wm8978_write_reg(dev->i2c, dev->i2c_addr, 14, 1 << 3);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 1, 0x1B);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 2, 0x1B0);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 3, 0x6C);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 6, 0);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 43, 1 << 4);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 47, 1 << 8);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 48, 1 << 8);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 49, 1 << 1);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 10, 1 << 3);
+    ret |= wm8978_write_reg(dev->i2c, dev->i2c_addr, 14, 1 << 3);
 
-    wm8978_config_adda(dev->i2c, dev->i2c_addr, cfg->enable_dac ? 1 : 0, cfg->enable_adc ? 1 : 0);
-    wm8978_config_output(dev->i2c, dev->i2c_addr, cfg->enable_dac ? 1 : 0, 0);
-    wm8978_config_i2s(dev->i2c, dev->i2c_addr, cfg->i2s_fmt, cfg->bits);
+    ret |= wm8978_config_adda(dev->i2c, dev->i2c_addr, cfg->enable_dac ? 1 : 0, cfg->enable_adc ? 1 : 0);
+    ret |= wm8978_config_output(dev->i2c, dev->i2c_addr, cfg->enable_dac ? 1 : 0, 0);
+    ret |= wm8978_config_i2s(dev->i2c, dev->i2c_addr, cfg->i2s_fmt, cfg->bits);
 
-    return 0;
+    return ret == 0 ? 0 : -1;
 }
 
 int audio_codec_wm8978_set_volume(audio_codec_dev_t *dev, int volume_percent)
@@ -362,9 +363,9 @@ int audio_codec_wm8978_set_volume(audio_codec_dev_t *dev, int volume_percent)
     }
 
     uint8_t vol63 = (uint8_t)((volume_percent * 63) / 100);
-    wm8978_setvol_headset(dev->i2c, dev->i2c_addr, vol63, vol63);
-    wm8978_setvol_speaker(dev->i2c, dev->i2c_addr, vol63);
-    return 0;
+    int ret = wm8978_setvol_headset(dev->i2c, dev->i2c_addr, vol63, vol63);
+    ret |= wm8978_setvol_speaker(dev->i2c, dev->i2c_addr, vol63);
+    return ret == 0 ? 0 : -1;
 }
 
 static int audio_codec_wm8978_set_record_volume(audio_codec_dev_t *dev, int volume_percent)
@@ -398,22 +399,6 @@ static int audio_codec_wm8978_set_record_volume(audio_codec_dev_t *dev, int volu
     return ret;
 }
 
-static int audio_codec_wm8978_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
-{
-    if (dev == NULL || dev->i2c == NULL) {
-        return -1;
-    }
-
-    if (pga_percent < 0) {
-        pga_percent = 0;
-    } else if (pga_percent > 100) {
-        pga_percent = 100;
-    }
-
-    /* Map percentage to WM8978 mic gain range (0..63). */
-    uint8_t step = (uint8_t)((pga_percent * 63 + 50) / 100);
-    return wm8978_set_mic_gain_raw(dev->i2c, dev->i2c_addr, step);
-}
 
 int audio_codec_wm8978_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_rate_hz)
 {
@@ -428,18 +413,86 @@ uint32_t audio_codec_wm8978_calc_mclk_hz(uint32_t sample_rate_hz)
     return sample_rate_hz * 256U;
 }
 
+static const float wm8978_gain_steps_db[] = {
+    -12.0f, -11.25f, -10.5f, -9.75f, -9.0f,  -8.25f, -7.5f,  -6.75f, -6.0f,  -5.25f, -4.5f,  -3.75f, -3.0f,
+    -2.25f, -1.5f,   -0.75f, 0.0f,   0.75f,  1.5f,   2.25f,  3.0f,   3.75f,  4.5f,   5.25f,  6.0f,   6.75f,
+    7.5f,   8.25f,   9.0f,   9.75f,  10.5f,  11.25f, 12.0f,  12.75f, 13.5f,  14.25f, 15.0f,  15.75f, 16.5f,
+    17.25f, 18.0f,   18.75f, 19.5f,  20.25f, 21.0f,  21.75f, 22.5f,  23.25f, 24.0f,  24.75f, 25.5f,  26.25f,
+    27.0f,  27.75f,  28.5f,  29.25f, 30.0f,  30.75f, 31.5f,  32.25f, 33.0f,  33.75f, 34.5f,  35.25f
+};
+
+static int audio_codec_wm8978_get_mic_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                   audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB,
+        .independent_controls = AUDIO_CODEC_CONTROL_GAIN_DB,
+        .linked_mask = 0x03,
+        .gain_steps_db = wm8978_gain_steps_db,
+        .gain_step_count = 64,
+    };
+    return audio_codec_native_caps(0x03, slot, &native, caps);
+}
+
+static int audio_codec_wm8978_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                       audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME,
+        .independent_controls = 0,
+        .linked_mask = 0x03,
+    };
+    return audio_codec_native_caps(0x03, slot, &native, caps);
+}
+
+static int audio_codec_wm8978_set_mic_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x03 ? audio_codec_wm8978_set_record_volume(dev, value) : -2;
+}
+
+static int audio_codec_wm8978_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x03 ? audio_codec_wm8978_set_volume(dev, value) : -2;
+}
+
+static int audio_codec_wm8978_set_mic_channel_gain_db(audio_codec_dev_t *dev, uint16_t mask, float gain_db)
+{
+    int step = audio_codec_gain_step_index(wm8978_gain_steps_db, 64, gain_db);
+    if (dev == NULL || dev->i2c == NULL || mask == 0 || step < 0) {
+        return -1;
+    }
+    if ((mask & ~0x03U) != 0) {
+        return -2;
+    }
+    /* INPPGAVOL is -12..35.25 dB in 0.75 dB steps. Preserve mute/zero-cross bits. */
+    for (uint8_t slot = 0; slot < 2; slot++) {
+        if ((mask & (1U << slot)) != 0) {
+            uint16_t value = (uint16_t)((wm8978_read_reg_shadow(45 + slot) & ~0x3fU) | (uint16_t)step | 0x100U);
+            if (wm8978_write_reg(dev->i2c, dev->i2c_addr, 45 + slot, value) != 0) {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
 static const uint8_t wm8978_addrs[] = { WM8978_I2C_DEFAULT_ADDR };
 
 const audio_codec_driver_t audio_codec_wm8978_driver = {
+    .set_mic_channel_gain_db = audio_codec_wm8978_set_mic_channel_gain_db,
+    .get_mic_channel_caps = audio_codec_wm8978_get_mic_channel_caps,
+    .get_speaker_channel_caps = audio_codec_wm8978_get_speaker_channel_caps,
+    .set_mic_channel_volume = audio_codec_wm8978_set_mic_channel_volume,
+    .set_speaker_channel_volume = audio_codec_wm8978_set_speaker_channel_volume,
+
     .type = AUDIO_CODEC_TYPE_WM8978,
     .name = "WM8978",
     .i2c_addrs = wm8978_addrs,
     .i2c_addrs_num = sizeof(wm8978_addrs) / sizeof(wm8978_addrs[0]),
     .probe = audio_codec_wm8978_probe,
     .init = audio_codec_wm8978_init,
-    .set_volume = audio_codec_wm8978_set_volume,
-    .set_record_volume = audio_codec_wm8978_set_record_volume,
-    .set_mic_pga = audio_codec_wm8978_set_mic_pga,
     .set_sample_rate = audio_codec_wm8978_set_sample_rate,
     .calc_mclk_hz = audio_codec_wm8978_calc_mclk_hz,
 };

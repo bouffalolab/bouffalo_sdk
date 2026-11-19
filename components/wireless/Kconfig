@@ -6,15 +6,24 @@ menu "Wireless"
 
 config WIFI4
     bool "Wi-Fi 4 stack"
+    select FREERTOS
+    select LWIP
+    select RF
+    select MBEDTLS
+    select DHCPD
     default n
     help
-      Build the Wi-Fi 4 protocol stack and integration layer.
+      Build and automatically initialize the Wi-Fi 4 protocol stack through
+      SYSINIT. Applications provide connection policy and start the scheduler.
 
 config WIFI6
     bool "Wi-Fi 6 stack"
+    select FREERTOS
+    select RF
     default n
     help
-      Build the Wi-Fi 6 MAC software and integration layer.
+      Build the Wi-Fi 6 MAC software. FHOST is the default host backend;
+      enabling a host backend automatically initializes Wi-Fi through SYSINIT.
 
 config WIFI_VERBOSITY_DEFAULT
     int "Wi-Fi MAC automatic output verbosity"
@@ -29,9 +38,17 @@ config WIFI_VERBOSITY_DEFAULT
 
 config WL80211
     bool "WL80211 Wi-Fi interface"
+    depends on WIFI6
+    select BL_WPA_SUPPLICANT
+    select FREERTOS
+    select LWIP
+    select RF
+    select MBEDTLS
+    select DHCPD
     default n
     help
-      Use the WL80211 Wi-Fi management and data-path implementation.
+      Build and automatically initialize the WL80211 Wi-Fi management and
+      data-path implementation. Applications only provide Wi-Fi policy.
 
 config LMAC154
     bool "IEEE 802.15.4 MAC"
@@ -49,12 +66,69 @@ config LMAC154_DBG_ALL
     depends on LMAC154_DBG
     default n
 
-config MACSW_SELECT
-    string "Wi-Fi 6 MAC software profile"
+choice MACSW_PROFILE
+    prompt "Wi-Fi 6 MAC software profile"
+    depends on WIFI6
+    default MACSW_DEFAULT
+    help
+      Select exactly one MAC software configuration library profile.
+
+config MACSW_DEFAULT
+    bool "Default"
+
+config MACSW_BGA
+    bool "Legacy 802.11b/g/a"
+
+config MACSW_P2P
+    bool "Wi-Fi Direct (P2P)"
+
+config MACSW_WFA
+    bool "Wi-Fi Alliance certification"
+
+config MACSW_TCP_BENCH
+    bool "TCP benchmark"
+
+config MACSW_BRIDGE
+    bool "Ethernet bridge"
+
+config MACSW_ADHOC
+    bool "Ad-hoc"
+
+config MACSW_ACK
+    bool "ACK"
+
+config MACSW_TWT_PDS15
+    bool "TWT PDS15"
+
+config MACSW_VELA_616
+    bool "Vela BL616"
+
+config MACSW_VELA_616_LP
+    bool "Vela BL616 low power"
+
+config MACSW_VELA_BL616CL
+    bool "Vela BL616CL"
+
+endchoice
+
+config MACSW_PROFILE_NAME
+    string
+    default "default" if MACSW_DEFAULT
+    default "bga" if MACSW_BGA
+    default "p2p" if MACSW_P2P
+    default "wfa" if MACSW_WFA
+    default "tcp_bench" if MACSW_TCP_BENCH
+    default "bridge" if MACSW_BRIDGE
+    default "adhoc" if MACSW_ADHOC
+    default "ack" if MACSW_ACK
+    default "twt_pds15" if MACSW_TWT_PDS15
+    default "vela_616" if MACSW_VELA_616
+    default "vela_616_lp" if MACSW_VELA_616_LP
+    default "vela_bl616cl" if MACSW_VELA_BL616CL
     default ""
     help
-      Select the MAC software configuration library profile, such as default
-      or wfa.
+      Internal MAC software profile name derived from the selected choice.
+      Applications should select CONFIG_MACSW_<PROFILE> instead.
 
 config MACSW_LOG_NO_PRINT
     bool "Wi-Fi 6 MAC software log print"
@@ -70,9 +144,17 @@ config BL_WPA_SUPPLICANT
 
 config FHOST
     bool "Wi-Fi 6 FHOST interface"
+    depends on WIFI6
+    select FREERTOS
+    select LWIP
+    select RF
+    select MBEDTLS
+    select DHCPD
+    default y if WIFI6 && !WL80211
     default n
     help
-      Build the FHOST Wi-Fi management and data-path implementation.
+      Build and automatically initialize the FHOST Wi-Fi management and
+      data-path implementation. Applications only provide Wi-Fi policy.
 
 # Four-address WDS. One FHOST interface has one wireless peer so both Ethernet endpoint MACs are kept.
 # WIFI_WDS has no prompt. CONFIG_WIFI_WDS=n and "# CONFIG_WIFI_WDS is not set"
@@ -82,8 +164,8 @@ config FHOST
 # =n and "# is not set" are ignored. Three-address mode is runtime enable 0.
 config WIFI_WDS
     bool
-    depends on WIFI6 && FHOST && !WL80211 && MACSW_SELECT = "bridge"
-    default y if MACSW_SELECT = "bridge"
+    depends on WIFI6 && FHOST && !WL80211 && MACSW_BRIDGE
+    default y if MACSW_BRIDGE
     default n
     help
       Internal switch for the bridge FHOST library. It follows
@@ -115,14 +197,14 @@ config WIFI_IPERF
 
 config WIFI_P2P
     bool "Wi-Fi Direct (P2P) support"
-    depends on WIFI6 && MACSW_SELECT = "p2p"
-    default y if WIFI6 && MACSW_SELECT = "p2p"
+    depends on WIFI6 && MACSW_P2P
+    default y if WIFI6 && MACSW_P2P
     default n
     help
       Build Wi-Fi Direct control APIs, events, and supplicant integration.
-      This option depends on MACSW_SELECT="p2p" and defaults to y when that
-      profile is selected. Enabling it turns on UNSINGLE_MAC_ADDR by default
-      so the STA and AP virtual interfaces use different MAC addresses.
+      Enabling this option selects the P2P MACSW profile and turns on
+      UNSINGLE_MAC_ADDR by default so the STA and AP virtual interfaces use
+      different MAC addresses.
 
 config UNSINGLE_MAC_ADDR
     bool "Use different MAC addresses for STA and AP"
@@ -213,12 +295,6 @@ config WIFI_ENABLE
 config WIFI_ETH_BRIDGE
     bool "Wi-Fi Ethernet bridge"
     default n
-config COEX
-    bool "Coexistence"
-    default n
-config COEX_WIFI_MODE
-    int "Coexistence Wi-Fi mode"
-    default 0
 config THREAD
     bool "Thread support"
     default n
@@ -228,7 +304,6 @@ config THREAD_TPERF
 
 config MATTER
     bool "Matter support"
-    depends on THREAD
     default n
 
 config OT_CLI

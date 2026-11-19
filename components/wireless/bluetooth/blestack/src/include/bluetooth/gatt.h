@@ -111,6 +111,15 @@ enum {
 	 * response) which doesn't generate any response.
 	 */
 	BT_GATT_WRITE_FLAG_CMD = BIT(1),
+
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+	/** Attribute signed-write flag
+	 *
+	 * Set when ATT has verified the command signature. BIT(2) is reserved for
+	 * the upstream execute-write flag.
+	 */
+	BT_GATT_WRITE_FLAG_SIGNED = BIT(3),
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
 };
 
 /** @brief GATT Attribute structure. */

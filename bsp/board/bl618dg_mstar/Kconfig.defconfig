@@ -6,6 +6,29 @@ config AUDIO_CODEC_JY6316_ENABLE
 
 endif
 
+# WKS70WSV114 on the MStar MIPI DSI connector. The display framework
+# replaces the legacy lcd_conf_user.h selection used by this board.
+if BSP_DISPLAY && DISPLAY_DEFAULT
+
+choice DISPLAY_DEFAULT_TYPE
+    default DISPLAY_DEFAULT_TYPE_VIDEO
+endchoice
+
+choice DISPLAY_DEFAULT_VIDEO_MODULE
+    default DISPLAY_DEFAULT_VIDEO_EK79007_2LANE
+endchoice
+
+config DISPLAY_DEFAULT_DSI_LANES
+    default 2
+
+config DISPLAY_DEFAULT_RESET_USED
+    default y
+
+config DISPLAY_DEFAULT_RESET_PIN
+    default 2
+
+endif
+
 if BSP_AUDIO_PLAYER
 
 config BOARD_AUDIO_CAPTURE_MIC_MASK

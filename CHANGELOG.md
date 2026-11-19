@@ -1,5 +1,162 @@
 # CHANGELOG
 
+## v2.3.39 — since v2.3.38 (2026-11-04 → 2026-11-19)
+
+### Breaking Changes
+
+- **SDK initialization**: Fixed SDK startup now runs through the SYSINIT framework on all supported chips, so console, heap, flash and partition setup, filesystems, RF and Wi-Fi bring-up, Bluetooth storage, TCP/IP and the C++ runtime are all initialized automatically before the application starts. Applications must remove their own calls to the managed initialization entry points and must not start the RTOS scheduler manually; legacy calls are still accepted during the transition but only print a deprecation warning, no longer re-run initialization, and will be removed in SDK v3. Startup settings that applications previously applied from `main()` before bringing up Wi-Fi are now taken from build configuration or board initialization.
+
+- **Wi-Fi 6 / Bluetooth coexistence (BL618DG)**: The board RF topology — combo shared path, standalone dual antenna, or standalone single antenna with an SPDT switch — is now a build-time selection that is prepared during startup. The previous runtime topology commands are retired, and a coexistence build without a topology selection now fails at build time instead of running an unknown RF path.
+
+- **Display**: The legacy BSP LCD framework has been replaced by the unified display framework. Legacy LCD drivers and LVGL v8/v9 examples are still provided as a deprecated compatibility path that emits deprecation warnings and is scheduled for removal in the next major release; existing LCD applications should migrate to the display framework and the display examples.
+
+- **Audio devices**: The legacy codec interface is deprecated in favor of a unified audio-device layer that covers I2S codecs, the built-in audio ADC/DAC and PDM microphones.
+
+- **Wi-Fi 6 MAC profiles**: The MAC software profile is now selected from a fixed set of named profiles instead of a free-form string, so project configurations that set a string value must select the equivalent named profile.
+
+- **Flash tooling**: Generated flash programming configurations now program a backup copy of the partition table as well as the primary copy, and partition layouts must define the backup address; custom partition tables without one are rejected when the programming configuration is generated.
+
+### New Features
+
+- **Wi-Fi**
+  - Added a three-port WDS bridge on BL618DG that forwards traffic between Wi-Fi and both Ethernet ports, with independent DMA rings, queues, PHY and link state per port, PSRAM-backed receive buffers, a larger forwarding database and per-port diagnostics
+  - Added bridge forwarding-database inspection APIs to look up a port, resolve the destination ports for an address, and iterate learned and static entries with their remaining lifetime
+  - Added per-station statistics reporting: last RX/TX PHY rate with format, MCS, bandwidth, spatial streams and guard interval, MPDU counters, per-TID counters and receive-discard events, with reports rejected when collected across station-slot reuse or counter resets
+  - SoftAP security is now configurable with management-frame protection (disabled, optional or required), SAE password-element handling, Transition Disable, distinct WPA/WPA2 mixed-mode advertisement and validated WEP hexadecimal keys in non-HT mode; U-APSD is off by default and disabling WMM forces legacy 20 MHz operation
+  - Added access-point SSID hiding: beacons carry an empty SSID, wildcard probe requests are not answered and the WPS information element is omitted; configurable from the access-point start API, the CLI and AT firmware
+  - Raw 802.11 frame injection now supports 5 GHz channels on dual-band chips, validating the channel against the configured channel plan, rejecting disabled, passive and radar channels, and using the channel power limit and a valid dwell time
+  - Wi-Fi Alliance tooling: access-point transaction streams can be limited by frame count and reset, stopping a stream interrupts active senders instead of hanging, the UDP echo server can be stopped and restarted, and shell commands accept more option/value pairs
+  - Added control over HE dual-carrier modulation advertisement; it is disabled by default and the chip defaults can be restored before Wi-Fi starts
+
+- **Bluetooth**
+  - Added optional BLE Signed Write support, with write callbacks informed whether a write carried a verified signature and signed write commands on encrypted links discarded as the specification requires
+  - Added BL616CL controller library variants for up to 4 simultaneous connections with power-down sleep, and for one connection in peripheral role while scanning
+
+- **Audio**
+  - Added a unified audio-device layer covering I2S codecs, the built-in audio ADC/DAC and PDM microphones, with channel selection, partial-frame transfers, driver-default DMA buffering and shared I2S full-duplex operation; an echo demo exposes volume, mute, channel, tone and register commands
+  - Added board audio adapters for BL616, BL616CL and BL618DG Orion boards, and support for a JY6416 codec with two JY6166 ADCs on a six-slot PCM bus
+  - Added multi-slot recording and playback with SD card storage
+  - Unified speaker and microphone channel control across the direct and PCM audio frontends, with per-channel gain in dB and independent microphone mute
+
+- **Display / Graphics**
+  - Added a unified display framework for GRAM-transfer and VIDEO scanout panels, separating panel IC and module configuration, bus access, scanout backends and board GPIO hooks, with explicit frame lifecycle events and a software bitmap font renderer
+  - Added runtime DBI wire-width control (1, 2 or 4 lanes) and DPI input switching with BT.601 full or limited YUV range selection
+  - Added a ST7102_YDP395BT008 MIPI-DSI panel and corrected the AXS15231E 258x960 panel configuration
+  - The LVGL v8 and v9 display ports now render through the unified display framework, with partial GRAM updates for SPI/DBI panels, buffer reuse on flip for RGB/MIPI-DSI panels and touch ranges that follow the active display
+  - Added BL618DG Touch V2 examples for self-capacitance interrupt and continuous scan and 4x4 mutual-capacitance, with shared calibration, thresholds and channel diagnostics
+
+- **AT command interface**
+  - Added an optional AT 2.0 command core that can be selected at build time, with AT 1.0 remaining the default
+  - AT 2.0 adds sleep modes and timed deep sleep, light-sleep GPIO wakeup, RF calibration, register access, OTA image rollback, system timestamp, regular-expression result filtering, a configurable pass-through interval and UART parameters changeable at runtime
+  - AT 2.0 adds a factory-data partition: a parameter file is converted into a factory key-value image during the build and loaded at startup, with commands to read, write and erase the partition
+  - AT 2.0 pass-through mode accepts the escape sequence only after a guard time, so payload received together with the escape is processed as commands instead of being dropped
+
+- **WebAssembly**
+  - Enabled AOT execution on BL616CL
+  - Added a runtime AOT module flow that lists modules, downloads them over HTTP(S), installs them into a flash AOT partition and runs them from flash or RAM, with a Wi-Fi station helper for downloads
+  - Added XZ-compressed AOT images that are stored compressed and decompressed on install or run to save flash space and download time
+  - Added a CoreMark benchmark comparing native, interpreter, AOT, dynamic AOT and execute-in-place AOT execution
+
+- **USB / Matter**
+  - Added Android Debug Bridge device support, with a demo that enumerates as a standard ADB interface and provides an interactive shell and one-shot commands over serialized, error-checked transfers
+  - The Matter factory-data module now supports BL618DG, including its flash layout and image offsets
+
+- **Flash / Boot / Boards**
+  - BL616CL: boot2 now write-protects the first 56 KB while still allowing partition and application updates
+  - Flash initialization now falls back to two-line mode automatically when the configured quad mode is not validated, enabled by default
+  - BL618DG: the flash loader answers GET_BOOTINFO with the BootROM-compatible payload without entering the ROM ISP
+  - Added the BL618DG Sirius audio-video board and a BL618DG dual-core Wi-Fi/Bluetooth/802.15.4 coexistence test example
+
+- **Build / RTOS / libc**
+  - SDK components can be delivered as separately supplied extensions that are enabled without modifying the SDK tree, and Kconfig now tolerates absent optional components
+  - Added C++ condition variable support to the FreeRTOS POSIX layer, including pthread cancellation, thread-local storage keys and key destructors
+  - Added an alias-safe fast memset implementation, Picolibc system types when SDK POSIX is disabled, and Matter support without Thread for Wi-Fi and Ethernet applications
+
+### Bug Fixes
+
+- **Wi-Fi**
+  - After a station restart, the station now notifies the access point of its presence immediately after association, so an access point that kept the previous power-save state no longer stalls the WPA handshake with buffered EAPOL frames
+  - Management-frame protection: SA Query responses now follow the protection policy instead of being marked protected without carrying a security header
+  - Scanning: the associated access point's beacons are now included while connected, and explicit user-requested scans clear earlier results
+  - Rate control: 40 MHz stations now use the matching 40 MHz legacy rate table instead of the 20 MHz table
+  - 802.11k radio measurement: beacon measurement requests for 80, 160 and 80+80 MHz are parsed with the correct band, channel and operating class, and malformed subelements are rejected before use
+  - 5 GHz station reporting now shows the actual negotiated link mode instead of the configured mode, including for 5 GHz Wi-Fi 6 links; the negotiated mode is also available from a new station link-mode query, and raw frame transmission selects the correct band policy
+  - Fixed access-point HT20 capability advertisement, which claimed 40 MHz-only capabilities and an incorrect maximum rate
+  - Fixed frame corruption when an access point resends a buffered frame to a power-saving station by building the headers in the private transmit copy
+  - Fixed possible memory corruption during Wi-Fi 6 host initialization by allocating the copy transmit pool from the Wi-Fi RAM heap
+  - Access-point station information and deletion now validate the station index and output pointer and propagate errors instead of accessing invalid table entries
+  - Management frames with a truncated 802.11 header are now rejected before parsing
+  - Fixed truncation of maximum-length SSIDs and 64-character hexadecimal passphrases in the string-based station connect API, which now also reports the real result of automatic channel selection
+  - Fixed a crash during WPA3-SAE authentication when the access point requests an anti-clogging token
+  - Fixed a BL616 WLAN firmware DHCP failure caused by a PHY calibration workspace overflowing into adjacent retained memory; the same latent overlap on BL616CL was also fixed
+  - Fixed compilation failures in reduced and strict build configurations, including minimum Wi-Fi feature sets, IPv6 builds and warning-as-error builds
+  - Fixed a C++ compilation error when the Wi-Fi MAC public header is included from C++ sources
+
+- **Bluetooth**
+  - BL616: fixed corruption of the Bluetooth non-retention heap after low-power wakeup when it is dynamically allocated
+  - Receive-clock drift sampling is now enabled only after the low-power firmware has initialized, so applications that do not use it no longer read invalid timing data
+  - BL616CL: fixed a manufacturing firmware build failure caused by a character-output macro expansion conflict
+  - BLE throughput test: receive throughput is now reported in Kbps with warm-up traffic excluded, corrected averages, a final per-connection summary and correct totals beyond 4 GiB
+
+- **Security / HTTPS**
+  - The certificate bundle lifetime is now reference-counted, its CA chain is cleared on detach, and replacement is refused while connections still use it
+  - Certificate bundle lookup now matches full issuer names and verifies leaf-plus-intermediate chains against a root-only bundle
+  - HTTPS connections now fail instead of silently disabling peer verification when no trust anchor is available
+  - HTTP Host headers now include non-default ports
+
+- **RF / Power**
+  - BL618DG: fixed Bluetooth-only builds reporting advertising success while nothing was transmitted, by re-applying the standalone RF path calibration and TX power after the path switch
+  - BL618DG low-power firmware: fixed late advertising events not being transmitted, deriving the advertising delay and late-event budget from the configured timing precision and interval
+  - BL618DG: fixed startup by programming the required DCDC and SOC LDO voltages during early initialization
+  - BL618DG: fixed CPU PLL stability after frequency changes by resetting the PLL and allowing it time to lock
+  - Fixed the BLE low-power example build on BL616 and its RF re-initialization on BL618DG
+
+- **Audio**
+  - Fixed fixed-point math in the bundled audio algorithms so large shifts no longer rely on undefined overflow, extreme small values clamp to zero and buffer reallocation failures no longer lose state
+  - Fixed echo cancellation to keep the exact sampling rate above 32 kHz, such as 44.1 and 48 kHz
+  - Fixed the Orion six-slot JY6416 topology
+  - Reduced audio memory use and fixed the recording flow
+  - Removed the unverified BL616CL codec board adapter and example instructions that claimed built-in audio support
+
+- **Peripherals**
+  - BL618DG: added ADC low-voltage calibration based on internal ground and 20 mV reference measurements, with each sample corrected by the calibration of the unit that produced it
+  - BL616CL/BL618DG: fixed differential ADC offset sign handling so negative readings are no longer clamped to zero
+  - BL616CL: fixed low-voltage ADC offset compensation and disabled the internal 20 mV calibration reference after calibration
+  - I2C: after a NAK or arbitration loss the driver now waits for the current transaction to end before disabling the controller instead of shutting it down while the bus may still be active
+
+- **Media / Display**
+  - Completed AVE and MStar media board defaults, including microphone gain, display DBI hooks and panel profiles
+  - Reduced image sensor memory use by storing initialization tables in read-only memory
+
+- **Storage / Matter / C++**
+  - Fixed the EasyFlash-compatible key-value API so it can be used from C++ without enum-conversion errors
+  - Fixed a Matter factory-data build issue caused by relying on transitive NULL definitions
+  - Fixed C++ runtime startup and linker configuration
+
+- **Host drivers**
+  - The Linux host driver's SDIO interrupt handler now schedules packet processing on the driver workqueue instead of running it in interrupt context
+  - The NuttX host driver now transmits access-point traffic on the access-point interface instead of always using the station interface
+
+- **Manufacturing**
+  - BL618DG: fixed in-RAM manufacturing firmware linking and runtime, the 154ANT command and flash two-line fallback
+  - BL616CL: fixed the manufacturing firmware linker configuration
+
+### Improvements
+
+- Updated the BL618DG low-power firmware to v2.5.5, refreshed its RF PHY library so saved Wi-Fi channel calibration is restored after wakeup and WLAN clock initialization is skipped in Bluetooth/802.15.4 modes, and reduced power use by gating unused clocks and disabling unused initialization records
+- Reduced receive-buffer memory when A-MPDU reception is disabled, cutting the BL616CL receive pool from about 41 KB to 6.4 KB
+- Reduced BL616 WLAN firmware OCRAM use by moving transmit descriptors to Wi-Fi RAM and using one fewer transmit buffer
+- Removed the dependency on the compiler's short-enum setting from the wireless and RF libraries, so their structures no longer change layout between components built with different flags
+- lwIP now builds optional mDNS, TCP-over-TLS and IPv6/DHCPv6 support only when the corresponding options are enabled, and Wi-Fi builds use a larger packet link headroom
+- Enabled an alias-safe fast memset option and turned it on in the I2S codec example to reduce repeated PCM buffer clearing cost
+- Removed duplicate PCM block clearing by filling valid TDM slots directly and zeroing only the remaining tail
+- Increased the default shell argument capacity from 16 to 20
+- Increased the transmit descriptors reserved for the video access category from one to four in the Wi-Fi Alliance certification profile
+- The station connect CLI now requests management-frame-protection-capable operation by default
+- Legacy-only 802.11b/g/a builds now omit disabled HT, HE and VHT capabilities from beacons and association requests and release unsupported receive aggregates instead of forwarding them
+- Console USB identity now uses the standard CDC descriptor set with VID/PID read from eFuse and no serial number on BL616CL and BL618DG
+- Moved the BL616 low-power firmware sources into a common directory
+
 ## v2.3.38 — since v2.3.37 (2026-10-19 → 2026-11-04)
 
 ### Breaking Changes

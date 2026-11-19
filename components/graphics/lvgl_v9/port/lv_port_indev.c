@@ -23,7 +23,7 @@
  *  STATIC PROTOTYPES
  **********************/
 
-static void touchpad_init(void);
+static bool touchpad_init(void);
 static void touchpad_read(lv_indev_t * indev, lv_indev_data_t * data);
 
 #if 0
@@ -91,7 +91,7 @@ void lv_port_indev_init(void)
      * -----------------*/
 
     /*Initialize your touchpad if you have*/
-    touchpad_init();
+    if (!touchpad_init()) return;
 
     /*Register a touchpad input device*/
     indev_touchpad = lv_indev_create();
@@ -190,14 +190,18 @@ void lv_port_indev_init(void)
 #include "touch.h"
 
 /*Initialize your touchpad*/
-static void touchpad_init(void)
+static bool touchpad_init(void)
 {
+    lv_display_t *display = lv_display_get_default();
+    if (display == NULL) return false;
+
     touch_coord_t touch_max_point = {
-        .coord_x = LCD_W,
-        .coord_y = LCD_H,
+        .coord_x = lv_display_get_horizontal_resolution(display),
+        .coord_y = lv_display_get_vertical_resolution(display),
     };
 
     touch_init(&touch_max_point);
+    return true;
 }
 
 /*Will be called by the library to read the touchpad*/

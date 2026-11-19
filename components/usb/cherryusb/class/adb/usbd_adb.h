@@ -11,6 +11,10 @@
 #define ADB_SHELL_LOALID 0x01
 #define ADB_FILE_LOALID  0x02
 
+/* Maximum length of the service string (the text after "shell:"/"sync:")
+ * that is forwarded to usbd_adb_notify_open(), including the terminator. */
+#define ADB_MAX_SERVICE_LEN 128
+
 // clang-format off
 #define ADB_DESCRIPTOR_INIT(bFirstInterface, in_ep, out_ep, wMaxPacketSize)             \
     USB_INTERFACE_DESCRIPTOR_INIT(bFirstInterface, 0x00, 0x02, 0xff, 0x42, 0x01, 0x02), \
@@ -24,10 +28,17 @@ extern "C" {
 
 struct usbd_interface *usbd_adb_init_intf(uint8_t busid, struct usbd_interface *intf, uint8_t in_ep, uint8_t out_ep);
 
+/* Called after an A_OPEN request has been accepted and A_OKAY has been sent.
+ * localid is ADB_SHELL_LOALID or ADB_FILE_LOALID. service points to the text
+ * after "shell:"/"sync:" (not NUL-terminated), and is empty for a bare
+ * "shell:" interactive request. Runs in USB interrupt context. */
+void usbd_adb_notify_open(uint32_t localid, const uint8_t *service, uint32_t len);
 void usbd_adb_notify_shell_read(uint8_t *data, uint32_t len);
 void usbd_adb_notify_file_read(uint8_t *data, uint32_t len);
 void usbd_adb_notify_write_done(void);
 bool usbd_adb_can_write(void);
+/* Queue one A_WRTE payload. Returns -1 if the IN endpoint is busy with a
+ * class response or a previous write; call again from task context later. */
 int usbd_abd_write(uint32_t localid, const uint8_t *data, uint32_t len);
 void usbd_adb_close(uint32_t localid);
 

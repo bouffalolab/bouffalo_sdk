@@ -141,8 +141,10 @@
   #define MACSW_FULLY_HOSTED  1
   // No A-MSDU TX in fully hosted
   #undef CFG_AMSDU
-  // A-MSDU de-aggregation enabled
-  #define CFG_DEAGG
+  // A-MSDU de-aggregation requires HT or a newer PHY mode.
+  #ifdef CFG_HT
+    #define CFG_DEAGG
+  #endif
 #else  // !CFG_FHOST
   #define MACSW_FULLY_HOSTED  0
 #endif // CFG_FHOST
@@ -285,6 +287,16 @@
   #undef CFG_HE
 #endif
 
+/// HT support, enabled by default in macsw_config.h.
+#ifdef CFG_HT
+  #define MACSW_HT 1
+#else
+  #define MACSW_HT 0
+  #if defined(CFG_HE) || defined(CFG_VHT) || defined(CFG_AMSDU)
+    #error "HE, VHT and TX A-MSDU require HT support"
+  #endif
+#endif
+
 /// HE Support
 #ifdef CFG_HE
   #define MACSW_HE 1
@@ -397,7 +409,7 @@
  * @name A-MPDU Configuration
  *******************************************************************************
  */
-#ifdef CFG_AGG
+#if defined(CFG_AGG) && MACSW_HT
   /// A-MPDU TX support
   #define MACSW_AMPDU_TX 1
 #else  // !CFG_AGG
@@ -407,9 +419,14 @@
   #define CFG_MU_CNT          1
 #endif // CFG_AGG
 
-#if MACSW_UMAC_PRESENT
-  /// A-MPDU RX support (feature flag: always enabled when UMAC present)
+#if MACSW_UMAC_PRESENT && MACSW_HT
+  /// A-MPDU RX support requires HT or a newer PHY mode.
   #define MACSW_AMPDU_RX  1
+#else
+  #define MACSW_AMPDU_RX  0
+#endif
+
+#if MACSW_UMAC_PRESENT && MACSW_HT
   /// A-MSDU de-aggregation support
   #ifdef CFG_DEAGG
     #define MACSW_AMSDU_DEAGG 1
@@ -417,8 +434,6 @@
     #define MACSW_AMSDU_DEAGG 0
   #endif
 #else  // !MACSW_UMAC_PRESENT
-  /// RX Packet Reordering support
-  #define MACSW_AMPDU_RX     0
   /// A-MSDU de-aggregation support
   #define MACSW_AMSDU_DEAGG 0
 #endif // MACSW_UMAC_PRESENT
@@ -1510,8 +1525,14 @@ struct sm_connect_ind
     /// AP operating channel
     struct mac_chan_op chan;
     uint8_t security;
-    /// bss mode
-    uint8_t bss_mode;
+    /// Peer AP/router PHY capability bitmap accepted by the local STA.
+    /// With the default mode, generally reflects the AP capabilities supported
+    /// locally. If the STA mode is restricted, reflects the capabilities
+    /// retained after local capability and configured-mode filtering.
+    /// This is a capability set, not the single highest association mode.
+    uint16_t bss_mode;
+    /// Highest associated PHY mode as one WIFI_MODE_802_11* bit.
+    uint16_t link_mode;
     /// EDCA parameters
     uint32_t ac_param[AC_MAX];
     /// IE buffer
@@ -3708,6 +3729,8 @@ enum rx_status_bits
 #define RX_FLAGS_USER_PRIO_INDEX_OFT 4
 /// Mask of the User priority index field
 #define RX_FLAGS_USER_PRIO_INDEX_MSK (0x7 << RX_FLAGS_USER_PRIO_INDEX_OFT)
+/// QoS Control was present; distinguishes TID 0 from non-QoS data.
+#define RX_FLAGS_IS_QOS_BIT          CO_BIT(7)
 /// Offset of the VIF index field
 #define RX_FLAGS_VIF_INDEX_OFT  8
 /// Mask of the VIF index field
@@ -3771,6 +3794,14 @@ struct rxu_cntrl_reord_elt
     uint32_t host_id;
     /// flag indicating if the PN must be verified
     bool pn_check;
+    /* These two bytes use tail padding in the RV32 layout without increasing sizeof.
+     * Retain the source station and MSDU count while buffered; account for delivery
+     * only when the frame leaves the reorder window with RX_STAT_FORWARD.
+     */
+    /// Transmitter station index retained for delivery accounting.
+    uint8_t sta_idx;
+    /// MSDUs in this MPDU: actual A-MSDU subframe count, otherwise one.
+    uint8_t msdu_cnt;
 };
 
 
@@ -3935,7 +3966,7 @@ static inline __attribute__((always_inline))
 enum macsw_tx_classify_result macsw_tx_classify_contiguous(
     const void *frame, uint16_t frame_len, struct macsw_tx_meta *meta)
 {
-    const uint8_t *data = frame;
+    const uint8_t *data = (const uint8_t *) frame;
     const uint8_t *ipv4;
     const uint8_t *udp;
     uint16_t ethertype;
@@ -4257,7 +4288,11 @@ __INLINE bool txu_cntrl_host_use_bss_min_rate(struct hostdesc const *host)
 #define STRUCT_SIZE_LMACDESC 24
 #define STRUCT_SIZE_TX_HW_DESC 68
 #define STRUCT_SIZE_TXL_BUFFER_TAG 240
+#if MACSW_AMSDU_DEAGG
 #define STRUCT_SIZE_RXDESC 156
+#else
+#define STRUCT_SIZE_RXDESC 128
+#endif
 
 struct tx_hw_desc_public {
     uint32_t pad[STRUCT_SIZE_TX_HW_DESC / 4];
@@ -4294,13 +4329,13 @@ typedef struct bcn_param {
 
 //// lmac/txl_agg
 /// Number of A-MPDU descriptor queues
-#define TX_AMPDU_DESC_QUEUE_CNT (MACSW_TXQ_CNT + MACSW_MAC_HE)
+#define TX_AMPDU_DESC_QUEUE_CNT (MACSW_TXQ_CNT + (MACSW_MAC_HE && MACSW_HE))
 /// Minimum of A-MPDU descriptors per queue
 #define TX_MIN_AMPDU_NB_PER_AC  (3 * MACSW_USER_MAX)
 /// Number of TX descriptors for 1 AGG descriptor
 #define TX_AGG_DIVIDER          (8 / MACSW_USER_MAX)
 
-#if MACSW_MAC_HE
+#if MACSW_MAC_HE && MACSW_HE
 /// Number of A-MPDU descriptors for HE TB queue
 #define TX_MAX_AMPDU_NB_FOR_HE_TB 3 // FIXME check if 3 is appropriate
 /// Index of the HE TB A-MPDU descriptor queue
@@ -4551,6 +4586,89 @@ uint8_t export_stats_get_rx_mcs(void);
 char* export_stats_get_rx_format(void);
 char* export_stats_get_tx_format(void);
 
+/** Last received payload-bearing data MPDU for one associated peer.
+ * This is a PHY rate, not application throughput or the negotiated maximum.
+ * Beacon and Null frames are excluded.
+ */
+struct macsw_rx_rate {
+    uint32_t rate_kbps; /**< Zero when the RX parameters cannot be decoded. */
+    uint32_t age_ms;    /**< Time since reception, modulo the 32-bit us MAC clock. */
+    uint16_t bw_mhz;    /**< PPDU channel width; HE MU rate uses ru_tones. */
+    uint16_t gi_ns;     /**< Guard interval, zero for legacy formats. */
+    uint16_t ru_tones;  /**< HE MU/ER allocation, zero for full-channel SU. */
+    uint8_t format;     /**< FORMATMOD_*. */
+    uint8_t mcs;        /**< HT: full MCS; legacy: HW_RATE_* (CCK then OFDM). */
+    uint8_t nss;        /**< Number of spatial streams, starting at one. */
+    uint8_t dcm;        /**< HE dual carrier modulation. */
+};
+
+/** Atomic snapshot; requires CONFIG_MACSW_STATION_STATS in the macsw profile,
+ * sampling only while station stats are enabled. Pausing retains the last sample.
+ * Queries remain available while paused. Returns -1 when unavailable,
+ * for invalid arguments, an inactive peer, or no data sample.
+ * On failure a non-NULL out is cleared. Slot records expire on disassociation.
+ * Conversion runs at query time; rate_kbps=0 means unsupported parameters.
+ */
+int export_stats_get_rx_rate(uint8_t sta_idx, struct macsw_rx_rate *out);
+
+/** Last hardware-completed unicast data attempt for one associated peer.
+ * STATINFO contains retries/BW/result, not MCS/GI. The PHY rate is reconstructed
+ * from this transmission's retained policy/aggregate PHY snapshot, never the current peer RC
+ * table. rate_kbps=0 means the completion cannot identify the rate safely.
+ * A failed attempt may subsequently be retried by software; acked describes
+ * this completion, not final MSDU delivery.
+ */
+struct macsw_tx_rate {
+    struct macsw_rx_rate phy; /**< Common PHY parameters, converted at query time. */
+    uint32_t status;          /**< Hardware status, with per-MPDU BA result. */
+    uint32_t sequence;        /**< Sample counter, reset on slot reuse. */
+    uint8_t retries;          /**< NUM_MPDU_RETRIES, excludes SW retry count. */
+    uint8_t retry_step;       /**< Policy step 0..3, or 255 if not identifiable. */
+    uint8_t acked;
+    uint8_t aggregated;
+    uint8_t retry_limit;
+    uint8_t expired;
+};
+
+/** Same validity/lifetime rules as export_stats_get_rx_rate(). */
+int export_stats_get_tx_rate(uint8_t sta_idx, struct macsw_tx_rate *out);
+
+/** Stable association identity for profiles with CONFIG_MACSW_STATION_STATS,
+ * independent of the runtime counter switch.
+ * The station index, VIF, MAC and generation identify one association. Station
+ * deletion or slot reuse advances the generation. This finite-width token must
+ * be used promptly rather than cached indefinitely.
+ */
+struct macsw_peer_identity {
+    uint32_t generation;
+    uint8_t sta_idx;
+    uint8_t vif_idx;
+    uint8_t mac[6];
+};
+
+/** RX and TX copied together for the same association.
+ * valid=0 means no sample; valid=1 and rate_kbps=0 means unsupported/ambiguous.
+ */
+struct macsw_peer_rates {
+    struct macsw_rx_rate rx;
+    struct macsw_tx_rate tx;
+    uint8_t rx_valid;
+    uint8_t tx_valid;
+};
+
+/** Snapshot the current peer identity; clears out and returns -1 if unavailable
+ * in the selected profile or if the peer is inactive.
+ */
+int export_stats_get_peer_identity(uint8_t sta_idx, struct macsw_peer_identity *out);
+/** Validate the expected identity and copy both raw samples atomically.
+ * Returns -1 and clears out if the identity changed, so an old request cannot
+ * receive a replacement peer's samples. Like the individual rate APIs, this
+ * requires CONFIG_MACSW_STATION_STATS in the profile. Pausing station stats
+ * freezes samples but leaves queries available. Conversion runs outside the lock.
+ */
+int export_stats_get_peer_rates(const struct macsw_peer_identity *peer,
+                                struct macsw_peer_rates *out);
+
 /**
  * Per-associated-peer 802.11 statistics.
  *
@@ -4571,8 +4689,25 @@ struct macsw_station_stats {
     uint64_t rx_beacons;     /**< Number of received Beacon frames. */
     uint32_t tx_packets;     /**< Original TX MPDUs; software retries excluded. */
     uint32_t rx_packets;     /**< Received data and management frames. */
+    /** UMAC RX data discard events for a known, active peer. Requires a profile
+     * with station_stats support and runtime statistics enabled.
+     *
+     * Covers the instrumented reject/delete paths: duplicate filtering, software
+     * MIC/PN failures, format/security-policy rejection, defragmentation timeout,
+     * reassembly-buffer eviction and oversized reassembled frames.
+     * Each immediate rejection or deletion of buffered data adds one, without
+     * A-MSDU subframe weighting. Deleting a pending reassembly counts once; later
+     * rejected fragments count separately. This is not a lost-MSDU count.
+     *
+     * Excludes Null/management frames, drops without a valid peer, frames never
+     * received over the air, PHY/FCS errors and RX resource shortages before UMAC.
+     * Later FHOST filtering, lwIP input failures and protocol/application drops
+     * are also excluded. Duplicate or invalid frames may not affect delivery, so
+     * this counter cannot directly measure application packet loss or loss rate.
+     */
+    uint32_t rx_dropped;
     uint32_t tx_retries;     /**< Hardware NUM_MPDU_RETRIES accumulation. */
-    uint32_t tx_failed;      /**< Final TX confirmations reported as failed. */
+    uint32_t tx_failed;      /**< Terminal HW failures or SW flush drops after push. */
     uint32_t connected_at_sec; /**< Boot second when the slot was allocated. */
     uint32_t connected_seconds; /**< Filled by the export getters. */
     uint16_t generation;     /**< Changes on allocation, deletion, or reset. */
@@ -4584,6 +4719,73 @@ struct macsw_station_stats {
     uint8_t local_role;      /**< MACSW_STATION_STATS_ROLE_*. */
     uint8_t mac[6];          /**< Peer MAC address. */
 };
+
+#define MACSW_TID_STATS_QOS_COUNT  8
+#define MACSW_TID_STATS_NON_QOS    MACSW_TID_STATS_QOS_COUNT
+#define MACSW_TID_STATS_COUNT     (MACSW_TID_STATS_QOS_COUNT + 1)
+
+/** Per-peer MSDUs, separate from MPDU totals that include management frames. */
+struct macsw_tid_stats {
+    uint64_t rx_msdu;         /**< MACSW-forwarded MSDUs, before host-side filtering. */
+    uint64_t tx_msdu;         /**< First-pushed TX MSDUs, including failures. */
+    uint64_t tx_msdu_retries; /**< Reported HW retries plus SW resubmissions. */
+    uint64_t tx_msdu_failed;  /**< First-pushed MSDUs terminally failed in HW or SW flush. */
+};
+
+struct macsw_station_tid_stats {
+    /** Entries 0..7 are QoS TIDs; entry NON_QOS is not TID 8. */
+    struct macsw_tid_stats tid[MACSW_TID_STATS_COUNT];
+};
+
+/** Complete report from one association and one counter generation.
+ * The totals count MPDUs/management frames; tids counts MSDUs. Do not add or
+ * directly reconcile the two domains. tx_failed includes terminal software
+ * flushes, excludes resubmissions and never derives air retries from SW-only
+ * completions. TX totals include in-flight frames, so tx - failed is not a
+ * count of successfully delivered frames.
+ */
+struct macsw_station_snapshot {
+    struct macsw_peer_identity peer;
+    struct macsw_station_stats stats;
+    struct macsw_station_tid_stats tids;
+    struct macsw_peer_rates rates;
+};
+
+/** Verify station_stats generation and atomically copy identity/counters/rates.
+ * Returns -1 and clears out if inactive/reused/reset or counters not compiled.
+ * generation comes from export_station_stats_get()/next().
+ */
+int export_station_snapshot_get(uint8_t sta_idx, uint16_t generation,
+                                struct macsw_station_snapshot *out);
+
+/** Snapshot the MSDU counters for the generation returned by station_stats_get
+ * or station_stats_next. Returns -1 for an inactive/reused/reset peer slot or
+ * invalid arguments; a non-NULL out is cleared on failure. Counters follow
+ * station_stats enable/disable/reset and association lifetime.
+ *
+ * A-MSDU subframes count separately. Retry counts weight the reported hardware
+ * MPDU retries and software resubmissions by their MSDU count; they cannot
+ * recover A-MPDU air retries that hardware does not report per MPDU.
+ * RX MSDUs are counted only at MACSW's RX_STAT_FORWARD boundary; see
+ * export_station_stats_rx_msdu(). Host-side length, WDS and 802.1X checks run
+ * later, so MSDUs rejected by FHOST are still included.
+ */
+int export_station_tid_stats_get(uint8_t sta_idx, uint16_t generation,
+                                 struct macsw_station_tid_stats *out);
+
+/** RX delivery hook: count MSDUs only at a confirmed RX_STAT_FORWARD boundary.
+ * Do not count first-fragment or out-of-order buffering with RX_STAT_ALLOC,
+ * reassembly timeout, buffer eviction or PN/MIC rejection. A reorder timeout
+ * that releases and forwards buffered data does count as delivery.
+ * @p rx_flags is the original rx_info.flags of the frame (or an equivalent
+ * rebuilt from the staged sta_idx/tid/qos). @p msdu_cnt is the number of
+ * MSDUs this MPDU delivers: the actual A-MSDU subframe count, 1 otherwise.
+ * Management/Null/duplicate/replay frames must already be excluded.
+ * FHOST may still reject forwarded MSDUs in length, WDS or 802.1X checks; this
+ * counter measures MACSW delivery rather than host-stack acceptance.
+ * This is a no-op while station stats are disabled.
+ */
+void export_station_stats_rx_msdu(uint32_t rx_flags, uint8_t msdu_cnt);
 
 /** Store 0 or 1. Does not reset counters, generation, or peer validity. */
 void export_station_stats_set(uint8_t enable);

@@ -40,15 +40,20 @@ static bl_err_t wpa3_build_sae_commit(u8 *bssid, u8 *own_addr, u8 *pw) {
     g_sae_commit = NULL;
   }
 
-  if (g_sae_token) {
-    len = wpabuf_len(g_sae_token);
-    goto reuse_data;
-  }
-
-  memset(&g_sae_data, 0, sizeof(g_sae_data));
-  if (sae_set_group(&g_sae_data, default_group)) {
-    wpa_printf(MSG_ERROR, "wpa3: could not set SAE group %d", default_group);
-    return BL_FAIL;
+  /* Always re-prepare with a fresh random scalar - fhost / upstream
+   * wpa_supplicant never reuses a commit (sme_external_auth_send_sae_commit()
+   * passes reuse=0). Reusing made the token-carrying commit a duplicate of
+   * the token-less one, which stale-state APs reject with status 1. The
+   * pending anti-clogging token stays attached and is written by
+   * sae_write_commit() below. */
+  if (!g_sae_data.tmp) {
+    /* No live SAE context: clear any orphaned crypto pointers, then set the
+     * group fresh. */
+    sae_clear_data(&g_sae_data);
+    if (sae_set_group(&g_sae_data, default_group)) {
+      wpa_printf(MSG_ERROR, "wpa3: could not set SAE group %d", default_group);
+      return BL_FAIL;
+    }
   }
 
   if (!bssid) {
@@ -62,7 +67,6 @@ static bl_err_t wpa3_build_sae_commit(u8 *bssid, u8 *own_addr, u8 *pw) {
     return BL_FAIL;
   }
 
-reuse_data:
   len += SAE_COMMIT_MAX_LEN;
   g_sae_commit = wpabuf_alloc(len);
   if (!g_sae_commit) {
@@ -89,6 +93,12 @@ reuse_data:
 static bl_err_t wpa3_build_sae_confirm(void) {
   if (g_sae_data.state != SAE_COMMITTED)
     return BL_FAIL;
+
+  if (!g_sae_data.tmp || !g_sae_data.peer_commit_scalar ||
+      !g_sae_data.tmp->peer_commit_element_ecc) {
+    wpa_printf(MSG_ERROR, "wpa3: peer commit not parsed, skip confirm");
+    return BL_FAIL;
+  }
 
   if (g_sae_confirm) {
     wpabuf_free(g_sae_confirm);

@@ -1356,6 +1356,18 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPUPLL_To_632P2176M_By_Sdmin(void)
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_SDM_IN, sdmin);
     BL_WR_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET, tmpVal);
 
+    /* cpupll_rstb=0 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_RSTB, 0);
+    BL_WR_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET, tmpVal);
+    /* delay > 1us */
+    arch_delay_us(2);
+    /* cpupll_rstb=1 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_RSTB, 1);
+    BL_WR_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET, tmpVal);
+    arch_delay_us(270);
+
     return SUCCESS;
 }
 
@@ -1390,6 +1402,18 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPUPLL_To_638P976M_By_Sdmin(void)
     tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_SDM_IN, sdmin);
     BL_WR_WORD(CCI_BASE + CCI_CPUPLL_SDM1_OFFSET, tmpVal);
+
+    /* cpupll_rstb=0 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_RSTB, 0);
+    BL_WR_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET, tmpVal);
+    /* delay > 1us */
+    arch_delay_us(2);
+    /* cpupll_rstb=1 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_RSTB, 1);
+    BL_WR_WORD(CCI_BASE + CCI_CPUPLL_ANA_CTRL_OFFSET, tmpVal);
+    arch_delay_us(270);
 
     return SUCCESS;
 }

@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s bf3901_init_list[] = {
+static const struct image_sensor_command_s bf3901_init_list[] = {
     /* Analog */
     { 0x06, 0x68 },
 

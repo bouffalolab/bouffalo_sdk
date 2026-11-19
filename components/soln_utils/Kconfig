@@ -188,9 +188,13 @@ menuconfig SOLN_DISP_DBI_EN
     bool "DBI display"
     default n
     depends on SOLN_FBQ_VID_RAW_LOCAL_EN || SOLN_FBQ_VID_RAW_REMOTE_EN
-    depends on BSP_LCD
+    depends on BSP_DISPLAY && DISPLAY_DEFAULT && DISPLAY_DEFAULT_TYPE_GRAM
+    depends on DISPLAY_BUS_DBI && DISPLAY_DEFAULT_FORMAT_RGB888
+    select DISPLAY_SIMPLE_FONT
+    select DISPLAY_SIMPLE_FONT_ASCII_16X8
     help
-      Enable the MCU DBI display consumer.
+      Enable the single-screen DBI display consumer. RGB888 is sent directly;
+      YUYV is converted into two alternating 16-row YUV444 buffers.
 
 config SOLN_DISP_DBI_LOG_LEVEL
     int "DBI display log level"
@@ -200,30 +204,19 @@ config SOLN_DISP_DBI_LOG_LEVEL
     help
       Log level for the DBI display adapter.
 
-config SOLN_DISP_TX_TIME_US
-    int "Display transfer time in microseconds"
-    range 1 1000000
-    default 17000
-    depends on SOLN_DISP_DBI_EN
-    help
-      Estimated display transfer time used by the TE timing logic.
-
-config SOLN_DISP_TE_BOUNDARY_US
-    int "Display TE boundary in microseconds"
-    range 0 1000000
-    default 0
-    depends on SOLN_DISP_DBI_EN
-    help
-      Optional TE timing boundary used by the display flush adapter.
-
 menuconfig SOLN_DISP_RGB_EN
     bool "RGB display"
     default n
     depends on SOLN_FBQ_VID_RAW_LOCAL_EN || SOLN_FBQ_VID_RAW_REMOTE_EN
-    depends on BSP_LCD
+    depends on BSP_DISPLAY && DISPLAY_DEFAULT && DISPLAY_DEFAULT_TYPE_VIDEO
+    depends on DISPLAY_DEFAULT_VIDEO_FORMAT_XRGB8888
     depends on !SOLN_DISP_DBI_EN
+    select DISPLAY_SIMPLE_FONT
+    select DISPLAY_SIMPLE_FONT_ASCII_16X8
     help
-      Enable the RGB display consumer.
+      Enable the framebuffer display consumer with two or three XRGB8888 buffers.
+      The existing converter accepts 640x480 RGB888/NRGB8888 for a 480x272
+      output only. Other input/output dimensions are rejected, not resized.
 
 config SOLN_DISP_RGB_LOG_LEVEL
     int "RGB display log level"
@@ -429,6 +422,16 @@ menuconfig SOLN_HB_TX_EN
     help
       Enable the Soln HiBooster JPEG sender adapter.
 
+config SOLN_HB_TX_FRAME_DEPTH
+    int "HiBooster sender frame queue depth"
+    range 1 16
+    default 2
+    depends on SOLN_HB_TX_EN
+    help
+      Maximum number of frames held by the HiBooster sender.
+      Must be a power of two: 1, 2, 4, 8 or 16.
+      JPEG buffers are provided by the local FBQ pool.
+
 config SOLN_HB_TX_LOG_LEVEL
     int "HiBooster sender log level"
     range 0 5
@@ -443,6 +446,16 @@ menuconfig SOLN_HB_RX_EN
     depends on LWIP && SOLN_FBQ_VID_JPEG_REMOTE_EN
     help
       Enable the Soln HiBooster JPEG receiver adapter.
+
+config SOLN_HB_RX_FRAME_DEPTH
+    int "HiBooster receiver frame queue depth"
+    range 1 16
+    default 2
+    depends on SOLN_HB_RX_EN
+    help
+      Maximum number of buffers held by the HiBooster receiver.
+      Must be a power of two: 1, 2, 4, 8 or 16.
+      JPEG buffers are provided by the remote FBQ pool.
 
 config SOLN_HB_RX_ACK_INTERVAL_MS
     int "HiBooster receiver ACK interval in milliseconds"

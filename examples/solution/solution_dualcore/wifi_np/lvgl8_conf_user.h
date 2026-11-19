@@ -19,19 +19,22 @@
 
 #include <stdint.h>
 
-#include "lcd.h"
-
 #ifndef CONFIG_LVGL8
 #error "CONFIG_LVGL8 is not enabled"
 #endif
 
-/* LCD custom display buff def (lvgl_v8/port/lv_port_disp_xxx.c) */
-#if 0
-/* buff size */
-#define LCD_LVGL_CUSTOM_DRAW_BUFF_SIZE ((LCD_W * LCD_H / 8) * (LCD_COLOR_DEPTH / 8))
-/* buff address */
-#define LCD_LVGL_CUSTOM_DRAW_BUFF(buff_n, buff_name) \
-    __ALIGNED(64) uint8_t buff_name[LCD_LVGL_CUSTOM_DRAW_BUFF_SIZE]
+#if !defined(CONFIG_DISPLAY_DEFAULT) || !defined(CONFIG_DISPLAY_DEFAULT_TYPE_GRAM)
+#error "wifi_np requires a default GRAM display"
+#endif
+
+/* The optional public input port needs only the panel dimensions. */
+#if defined(CONFIG_LVGL8_PORT_INDEV)
+#include "default/display_default_module.h"
+#if !defined(DISPLAY_DEFAULT_GRAM_WIDTH) || !defined(DISPLAY_DEFAULT_GRAM_HEIGHT)
+#error "Provide input dimensions for the selected custom panel"
+#endif
+#define LCD_W DISPLAY_DEFAULT_GRAM_WIDTH
+#define LCD_H DISPLAY_DEFAULT_GRAM_HEIGHT
 #endif
 #define LV_LOG(...)
 /*====================
@@ -39,7 +42,13 @@
  *====================*/
 
 /*Color depth: 1 (1 byte per pixel), 8 (RGB332), 16 (RGB565), 32 (ARGB8888)*/
-#define LV_COLOR_DEPTH LCD_COLOR_DEPTH
+#if defined(CONFIG_DISPLAY_DEFAULT_FORMAT_RGB565)
+#define LV_COLOR_DEPTH 16
+#elif defined(CONFIG_DISPLAY_DEFAULT_FORMAT_XRGB8888)
+#define LV_COLOR_DEPTH 32
+#else
+#error "LVGL v8 GRAM port supports RGB565 or XRGB8888, not packed RGB888"
+#endif
 
 /*Swap the 2 bytes of RGB565 color. Useful if the display has an 8-bit interface (e.g. SPI)*/
 #define LV_COLOR_16_SWAP 0
@@ -47,7 +56,7 @@
 /*Enable features to draw on transparent background.
  *It's required if opa, and transform_* style properties are used.
  *Can be also used if the UI is above another layer, e.g. an OSD menu or video player.*/
-#define LV_COLOR_SCREEN_TRANSP 1
+#define LV_COLOR_SCREEN_TRANSP (LV_COLOR_DEPTH == 32)
 
 /* Adjust color mix functions rounding. GPUs might calculate color mix (blending) differently.
  * 0: round down, 64: round up from x.75, 128: round up from half, 192: round up from x.25, 254: round up */

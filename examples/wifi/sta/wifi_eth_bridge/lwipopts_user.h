@@ -82,7 +82,15 @@
 #define PBUF_POOL_SIZE                  48
 #else
 #define MEM_SIZE                        (48 * 1024)
+#if defined(CONFIG_PSRAM) || defined(CONFIG_PSRAM_XIP)
+#define PBUF_POOL_SIZE                  128
+/* Keep the bridge pools and allocation buffers out of WiFi WRAM. */
+#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) \
+    u8_t variable_name[LWIP_MEM_ALIGN_BUFFER(size)] \
+    __attribute__((section(".psram_noinit.lwip"), aligned(MEM_ALIGNMENT)))
+#else
 #define PBUF_POOL_SIZE                  96
+#endif
 #endif
 #define PBUF_POOL_BUFSIZE               (PBUF_LINK_ENCAPSULATION_HLEN + 24 + 1500 + 8) // 8 for potential align issue
 #define MEMP_NUM_SYS_TIMEOUT            (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 3)

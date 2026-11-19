@@ -5,6 +5,7 @@
 #if defined(BL618DG)
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
 #define ADC_AON_BASE  ((uint32_t)0x2008F000)
+#define ADC_RF_BASE   ((uint32_t)0x20001000)
 #define ADC_COUNTS    (2)
 #else
 #error "Please select correct chip that support adc_v3"
@@ -13,6 +14,148 @@
 volatile float coe[ADC_COUNTS];
 volatile int32_t offset[ADC_COUNTS];
 volatile uint32_t tsen_offset = 2480;
+
+static volatile int32_t adc_os1;
+static volatile int32_t adc_dth;
+
+static int32_t bflb_adc_get_internal_gnd_data(struct bflb_device_s *dev)
+{
+    struct bflb_adc_channel_s chan;
+    uint32_t raw_data;
+    uint32_t sum;
+    uint64_t start_time;
+    int32_t data_gnd_final = 0;
+
+    chan.pos_chan = ADC0_INTERNAL_CHANNEL_AVSS;
+    chan.neg_chan = ADC0_INTERNAL_CHANNEL_AVSS;
+    if (bflb_adc_channel_config_internal(dev, &chan, 1) == 0) {
+        bflb_adc_clear_fifo(dev);
+        sum = 0;
+        bflb_adc_start_conversion(dev);
+        for (int i = 0; i < 8; i++) {
+            start_time = bflb_mtimer_get_time_ms();
+            while (1) {
+                if (bflb_adc_get_count(dev) > 0) {
+                    raw_data = bflb_adc_read_raw(dev);
+                    if ((raw_data & (1U << 29)) == 0) {
+                        break;
+                    }
+                }
+                if ((bflb_mtimer_get_time_ms() - start_time) >= 100) {
+                    bflb_adc_stop_conversion(dev);
+                    return 0;
+                }
+            }
+        }
+        for (int i = 0; i < 16; i++) {
+            start_time = bflb_mtimer_get_time_ms();
+            while (1) {
+                if (bflb_adc_get_count(dev) > 0) {
+                    raw_data = bflb_adc_read_raw(dev);
+                    if ((raw_data & (1U << 29)) == 0) {
+                        break;
+                    }
+                }
+                if ((bflb_mtimer_get_time_ms() - start_time) >= 100) {
+                    bflb_adc_stop_conversion(dev);
+                    return 0;
+                }
+            }
+            sum += (raw_data & 0xFFFF);
+        }
+        bflb_adc_stop_conversion(dev);
+
+        raw_data = (sum + 8) / 16;
+        data_gnd_final = (int32_t)(((int32_t)raw_data - offset[0] * 2) / coe[0]);
+        if (data_gnd_final < 0) {
+            data_gnd_final = 0;
+        }
+    }
+    return data_gnd_final;
+}
+
+static int32_t bflb_adc_get_internal_20mv_data(struct bflb_device_s *dev)
+{
+    struct bflb_adc_channel_s chan;
+    uint32_t regval;
+    uint32_t raw_data;
+    uint32_t sum;
+    uint64_t start_time;
+    int32_t data_20mv_final = 0;
+
+    regval = getreg32(ADC_AON_BASE + 0x808);
+    regval |= (1U << 0);
+    putreg32(regval, ADC_AON_BASE + 0x808);
+    bflb_mtimer_delay_ms(100);
+
+    regval = getreg32(ADC_AON_BASE + 0x808);
+    regval |= (1U << 6);
+    putreg32(regval, ADC_AON_BASE + 0x808);
+    bflb_mtimer_delay_ms(10);
+
+    regval = getreg32(ADC_RF_BASE + 0x0C);
+    regval |= (1U << 24);
+    putreg32(regval, ADC_RF_BASE + 0x0C);
+    regval = getreg32(ADC_AON_BASE + 0x844);
+    regval &= ~0x7U;
+    regval |= 0x7U;
+    putreg32(regval, ADC_AON_BASE + 0x844);
+    bflb_mtimer_delay_ms(100);
+
+    chan.pos_chan = ADC0_INTERNAL_CHANNEL_MAIN_BG;
+    chan.neg_chan = ADC0_INTERNAL_CHANNEL_AVSS;
+    if (bflb_adc_channel_config_internal(dev, &chan, 1) == 0) {
+        bflb_adc_clear_fifo(dev);
+        sum = 0;
+        bflb_adc_start_conversion(dev);
+        for (int i = 0; i < 8; i++) {
+            start_time = bflb_mtimer_get_time_ms();
+            while (1) {
+                if (bflb_adc_get_count(dev) > 0) {
+                    raw_data = bflb_adc_read_raw(dev);
+                    if ((raw_data & (1U << 29)) == 0) {
+                        break;
+                    }
+                }
+                if ((bflb_mtimer_get_time_ms() - start_time) >= 100) {
+                    bflb_adc_stop_conversion(dev);
+                    regval = getreg32(ADC_RF_BASE + 0x0C);
+                    regval &= ~(1U << 24);
+                    putreg32(regval, ADC_RF_BASE + 0x0C);
+                    return 0;
+                }
+            }
+        }
+        for (int i = 0; i < 16; i++) {
+            start_time = bflb_mtimer_get_time_ms();
+            while (1) {
+                if (bflb_adc_get_count(dev) > 0) {
+                    raw_data = bflb_adc_read_raw(dev);
+                    if ((raw_data & (1U << 29)) == 0) {
+                        break;
+                    }
+                }
+                if ((bflb_mtimer_get_time_ms() - start_time) >= 100) {
+                    bflb_adc_stop_conversion(dev);
+                    regval = getreg32(ADC_RF_BASE + 0x0C);
+                    regval &= ~(1U << 24);
+                    putreg32(regval, ADC_RF_BASE + 0x0C);
+                    return 0;
+                }
+            }
+            sum += (raw_data & 0xFFFF);
+        }
+        bflb_adc_stop_conversion(dev);
+
+        raw_data = (sum + 8) / 16;
+        data_20mv_final = (int32_t)(((int32_t)raw_data - offset[0] * 2) / coe[0]);
+    }
+
+    regval = getreg32(ADC_RF_BASE + 0x0C);
+    regval &= ~(1U << 24);
+    putreg32(regval, ADC_RF_BASE + 0x0C);
+    return data_20mv_final;
+}
 
 __UNUSED static int bflb_adc_fifo1_is_enabled(void)
 {
@@ -108,25 +251,11 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= (3 << AON_GPADC1_PGA_VCM_SHIFT);  /* 0.9V */
     regval |= (1 << AON_GPADC1_PGA_GAIN_SHIFT); /* gain 1 */
     regval |= AON_GPADC1_PGA_EN;
-    if (config->resolution == ADC_RESOLUTION_12B) {
-        regval |= (1 << AON_GPADC1_CHOP_MODE_SHIFT); /* Vref AZ and PGA chop */
-    } else {
-        regval |= (2 << AON_GPADC1_CHOP_MODE_SHIFT); /* Vref AZ and PGA chop */
-    }
+    regval |= (2 << AON_GPADC1_CHOP_MODE_SHIFT);
+    regval |= AON_GPADC1_NEG_GND;
     regval |= (bflb_efuse_get_adc_vref_trim(dev) << AON_GPADC1_VREF_TRIM_SHIFT);
 
-    if (config->differential_mode) {
-        regval |= AON_GPADC1_DIFF_MODE;
-        regval &= ~AON_GPADC1_NEG_GND;
-    } else {
-        regval &= ~AON_GPADC1_DIFF_MODE;
-        regval |= AON_GPADC1_NEG_GND;
-    }
-#if defined(CPU_MODEL_A0)
-    if (config->vref == ADC_VREF_INTERNAL_1P25) {
-#else
     if (config->vref == ADC_VREF_EXTERNAL_1P25) {
-#endif
         regval |= AON_GPADC1_VREF_EX_SEL;
     }
     putreg32(regval, reg_base + AON_GPADC1_REG_CONFIG1_OFFSET);
@@ -144,17 +273,6 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval &= ~AON_GPADC1_DITHER_EN;
     regval &= ~AON_GPADC1_DWA_EN;
     putreg32(regval, reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
-
-    regval = 0;
-    regval |= (config->resolution << AON_GPADC1_RES_SEL_SHIFT); /* resolution */
-    if (config->scan_conv_mode) {
-        regval |= AON_GPADC1_SCAN_EN;
-    }
-    if (config->continuous_conv_mode) {
-        regval |= AON_GPADC1_CONT_CONV_EN;
-    }
-    regval |= (1 << AON_GPADC1_CONV_DELAY_SHIFT); /* delay 2(=1+1) clk */
-    putreg32(regval, reg_base + AON_GPADC1_REG_CTRL_0_OFFSET);
 
     /* calibration offset */
     regval = getreg32(reg_base + AON_GPADC1_REG_OS_CAL_DATA_OFFSET);
@@ -177,8 +295,12 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
 
     offset[dev->idx] = bflb_efuse_get_adc_offset_trim(dev);
     coe[dev->idx] = bflb_efuse_get_adc_gain_trim(dev);
-#if !defined(CPU_MODEL_A0)
     if (dev->idx == 0) {
+        uint32_t cmd1;
+        uint32_t cmd2;
+        uint32_t mbg_ten;
+        uint32_t tmux;
+
         tsen_offset = bflb_efuse_get_adc_tsen_trim();
 
         regval = getreg32(reg_base + AON_GPADC_REG_CMD1_OFFSET);
@@ -190,8 +312,95 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
         regval = getreg32(reg_base + AON_GPADC1_REG_RAW_DATA_OFFSET);
         regval |= (1U << (AON_GPADC1_RESERVED_SHIFT + 1));
         putreg32(regval, reg_base + AON_GPADC1_REG_RAW_DATA_OFFSET);
+
+        cmd1 = getreg32(ADC_AON_BASE + AON_GPADC_REG_CMD1_OFFSET);
+        cmd2 = getreg32(ADC_AON_BASE + AON_GPADC_REG_CMD2_OFFSET);
+        mbg_ten = getreg32(ADC_AON_BASE + 0x808) & (1U << 6);
+        tmux = getreg32(ADC_AON_BASE + 0x844) & 0x7U;
+
+        adc_dth = 0;
+        adc_os1 = 0;
+
+        regval = (1 << AON_GPADC1_CONV_DELAY_SHIFT);
+        regval |= AON_GPADC1_CONT_CONV_EN | (ADC_RESOLUTION_16B << AON_GPADC1_RES_SEL_SHIFT);
+        putreg32(regval, ADC_AON_BASE + AON_GPADC1_REG_CTRL_0_OFFSET);
+        regval = cmd2;
+        regval &= ~AON_GPADC_MODE_MASK;
+        putreg32(regval, ADC_AON_BASE + AON_GPADC_REG_CMD2_OFFSET);
+
+        adc_os1 = bflb_adc_get_internal_gnd_data(dev);
+        adc_dth = bflb_adc_get_internal_20mv_data(dev);
+
+        /* Main BG power is shared; restore only its test enable. */
+        regval = getreg32(ADC_AON_BASE + 0x808);
+        regval &= ~(1U << 6);
+        regval |= mbg_ten;
+        putreg32(regval, ADC_AON_BASE + 0x808);
+        regval = getreg32(ADC_AON_BASE + 0x844);
+        regval &= ~0x7U;
+        regval |= tmux;
+        putreg32(regval, ADC_AON_BASE + 0x844);
+
+        bflb_adc_clear_fifo(dev);
+        bflb_adc_int_saturation_clear(dev, ADC_INT_SATURATION_ALL);
+        bflb_adc_int_done_clear(dev, ADC_INT_DONE_ALL);
+        bflb_adc_int_fifo_clear(dev, ADC_INT_FIFO_ALL);
+        putreg32(cmd1, ADC_AON_BASE + AON_GPADC_REG_CMD1_OFFSET);
+        putreg32(cmd2, ADC_AON_BASE + AON_GPADC_REG_CMD2_OFFSET);
+
+        if ((adc_dth <= 0) || (adc_dth <= adc_os1)) {
+            adc_os1 = 0;
+            adc_dth = 0;
+        }
     }
-#endif
+
+    if (dev->idx == 0) {
+        regval = getreg32(reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
+        regval |= AON_GPADC1_SOFT_RST;
+        putreg32(regval, reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
+
+        __asm volatile("nop");
+        __asm volatile("nop");
+        __asm volatile("nop");
+        __asm volatile("nop");
+        __asm volatile("nop");
+        __asm volatile("nop");
+        __asm volatile("nop");
+        __asm volatile("nop");
+
+        regval = getreg32(reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
+        regval &= ~AON_GPADC1_SOFT_RST;
+        putreg32(regval, reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
+    }
+
+    regval = 0;
+    regval |= (config->resolution << AON_GPADC1_RES_SEL_SHIFT); /* resolution */
+    if (config->scan_conv_mode) {
+        regval |= AON_GPADC1_SCAN_EN;
+    }
+    if (config->continuous_conv_mode) {
+        regval |= AON_GPADC1_CONT_CONV_EN;
+    }
+    regval |= (1 << AON_GPADC1_CONV_DELAY_SHIFT); /* delay 2(=1+1) clk */
+    putreg32(regval, reg_base + AON_GPADC1_REG_CTRL_0_OFFSET);
+
+    regval = getreg32(reg_base + AON_GPADC1_REG_CONFIG1_OFFSET);
+    regval &= ~(AON_GPADC1_DIFF_MODE | AON_GPADC1_NEG_GND | AON_GPADC1_CHOP_MODE_MASK);
+    if (config->differential_mode) {
+        regval |= AON_GPADC1_DIFF_MODE;
+    } else {
+        regval |= AON_GPADC1_NEG_GND;
+    }
+    if (config->resolution == ADC_RESOLUTION_12B) {
+        regval |= (1 << AON_GPADC1_CHOP_MODE_SHIFT); /* Vref AZ and PGA chop */
+    } else {
+        regval |= (2 << AON_GPADC1_CHOP_MODE_SHIFT); /* Vref AZ and PGA chop */
+    }
+    putreg32(regval, reg_base + AON_GPADC1_REG_CONFIG1_OFFSET);
+
+    if (dev->idx == 0) {
+        bflb_adc_clear_fifo(dev);
+    }
 #endif
 }
 
@@ -204,6 +413,11 @@ void bflb_adc_deinit(struct bflb_device_s *dev)
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
+
+    if (dev->idx == 0) {
+        adc_dth = 0;
+        adc_os1 = 0;
+    }
 
     putreg32(0x03002320, reg_base + AON_GPADC1_REG_CONFIG1_OFFSET);
     putreg32(0x00FF2000, reg_base + AON_GPADC1_REG_CONFIG2_OFFSET);
@@ -322,7 +536,11 @@ int bflb_adc_channel_config_external(struct bflb_device_s *dev, struct bflb_adc_
         regval &= ~AON_GPADC_INT_POS_SEL_MASK;
         regval |= (4 << AON_GPADC_INT_POS_SEL_SHIFT);
         regval &= ~AON_GPADC_INT_NEG_SEL_MASK;
-        regval |= (4 << AON_GPADC_INT_NEG_SEL_SHIFT);
+        if (getreg32(reg_base + AON_GPADC1_REG_CONFIG1_OFFSET) & AON_GPADC1_DIFF_MODE) {
+            regval |= (ADC0_INTERNAL_CHANNEL_NULL << AON_GPADC_INT_NEG_SEL_SHIFT);
+        } else {
+            regval |= (ADC0_INTERNAL_CHANNEL_AVSS << AON_GPADC_INT_NEG_SEL_SHIFT);
+        }
         putreg32(regval, ADC_AON_BASE + AON_GPADC_REG_CMD1_OFFSET);
     }
 
@@ -968,6 +1186,7 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
     uint32_t diff_mode;
     uint32_t neg;
     int32_t border;
+    float adc_data;
 
     reg_base = dev->reg_base;
 
@@ -982,10 +1201,12 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].pos_chan = (buffer[i] >> 20) & 0xF;
             result[i].neg_chan = (buffer[i] >> 16) & 0xF;
             conv_result = buffer[i] & 0xFFFF;
-            border = conv_result - offset[dev->idx] * 2;
-            conv_result = (border < 0) ? 0 : ((border > 0xFFFF) ? 0xFFFF : border);
-            conv_result /= coe[dev->idx];
-            conv_result = (conv_result > 0xFFFF) ? 0xFFFF : conv_result;
+            border = (int32_t)conv_result - offset[result[i].adc_id] * 2;
+            adc_data = border / coe[result[i].adc_id];
+            if ((result[i].adc_id == 0) && (adc_dth > 0) && (adc_dth > adc_os1) && (adc_data < (float)adc_dth)) {
+                adc_data = (adc_data - (float)adc_os1) * (float)adc_dth / (float)(adc_dth - adc_os1);
+            }
+            conv_result = (adc_data < 0.0f) ? 0U : ((adc_data > 65535.0f) ? 0xFFFFU : (uint32_t)adc_data);
             if (resolution == ADC_RESOLUTION_12B) {
                 result[i].value = conv_result >> 4;
                 result[i].millivolt = result[i].value * ref / 4096;
@@ -1008,20 +1229,16 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].pos_chan = (buffer[i] >> 20) & 0xF;
             result[i].neg_chan = (buffer[i] >> 16) & 0xF;
 
-            if (buffer[i] & (1 << 15)) {
-                conv_result = ~buffer[i];
-                conv_result += 1;
-                neg = 1;
-            } else {
-                conv_result = buffer[i];
-                neg = 0;
+            /* Apply signed offset before taking the magnitude. */
+            border = (int32_t)(buffer[i] & 0xFFFF);
+            if (border & 0x8000) {
+                border -= 0x10000;
             }
-
-            conv_result = conv_result & 0xFFFF;
-            border = conv_result - offset[dev->idx];
-            conv_result = (border < 0) ? 0 : ((border > 0xFFFF) ? 0xFFFF : border);
-            conv_result /= coe[dev->idx];
-            conv_result = (conv_result > 0x7FFF) ? 0x7FFF : conv_result;
+            border -= offset[result[i].adc_id];
+            adc_data = border / coe[result[i].adc_id];
+            adc_data = (adc_data < -32768.0f) ? -32768.0f : ((adc_data > 32767.0f) ? 32767.0f : adc_data);
+            neg = (adc_data < 0.0f);
+            conv_result = (uint32_t)(neg ? -adc_data : adc_data);
             if (resolution == ADC_RESOLUTION_12B) {
                 result[i].value = conv_result >> 4;
                 result[i].millivolt = result[i].value * ref / 2048;

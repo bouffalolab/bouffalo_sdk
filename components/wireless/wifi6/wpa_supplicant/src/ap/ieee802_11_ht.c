@@ -40,6 +40,29 @@ u8 * hostapd_eid_ht_capabilities(struct hostapd_data *hapd, u8 *eid)
 	os_memcpy(cap->supported_mcs_set, hapd->iface->current_mode->mcs_set,
 		  16);
 
+	/* A 20/40 BSS can temporarily fall back to 20 MHz due to overlap. */
+	if (!(hapd->iconf->ht_capab & HT_CAP_INFO_SUPP_CHANNEL_WIDTH_SET) &&
+	    !hapd->iface->secondary_ch) {
+		unsigned int nss = 0;
+		unsigned int i;
+		u16 rate;
+
+		cap->ht_capabilities_info = host_to_le16(
+			le_to_host16(cap->ht_capabilities_info) &
+			~HT_CAP_INFO_SHORT_GI40MHZ);
+		cap->supported_mcs_set[4] &= ~BIT(0); /* MCS32 requires 40 MHz */
+		for (i = 0; i < 4; i++) {
+			if (cap->supported_mcs_set[i])
+				nss = i + 1;
+		}
+		if (nss && (cap->supported_mcs_set[10] ||
+			    cap->supported_mcs_set[11])) {
+			rate = nss * (hapd->iconf->ht_capab &
+				HT_CAP_INFO_SHORT_GI20MHZ ? 72 : 65);
+			WPA_PUT_LE16(cap->supported_mcs_set + 10, rate);
+		}
+	}
+
 	/* TODO: ht_extended_capabilities (now fully disabled) */
 	/* TODO: tx_bf_capability_info (now fully disabled) */
 	/* TODO: asel_capabilities (now fully disabled) */

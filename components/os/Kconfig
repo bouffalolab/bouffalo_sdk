@@ -47,6 +47,8 @@ config TICKLESS_ACCURATE
 config CLOCK_SOURCE_EF_PARAM
     bool "Clock source from eFuse parameters"
     default n
+    select LITTLEFS
+    select LITTLEFS_KV_EASYFLASH
     help
       Select the system clock source from eFuse parameters at runtime.
 

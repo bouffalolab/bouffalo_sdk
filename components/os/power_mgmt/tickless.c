@@ -214,6 +214,8 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
     iot2lp_para_t *lp = (iot2lp_para_t *)IOT2LP_PARA_ADDR;
     const btble_controller_lp_fw_info_t *info;
     lp_fw_ble_para_t *ble;
+    btblecontroller_lp_rx_ppm_state_t rx_ppm_state;
+    bool rx_ppm_state_valid = false;
     int8_t rc32k_trigger_override;
 
     if (lp == NULL || lp->ble_parameter == NULL) {
@@ -244,6 +246,12 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
         !btblecontroller_lp_rx_ppm_ready(info->con.link_id, info->con.interval, info->con.rx_rate)) {
         return -7;
     }
+    if (info->state == BTBLE_ST_CONN &&
+        !btblecontroller_lp_rx_ppm_state_export(info->con.link_id, info->con.interval,
+                                                info->con.rx_rate, &rx_ppm_state)) {
+        return -7;
+    }
+    rx_ppm_state_valid = info->state == BTBLE_ST_CONN;
 
     if (info->saved_blecore == NULL || info->saved_ipcore == NULL ||
         (((uintptr_t)info->saved_blecore | (uintptr_t)info->saved_ipcore) & 0x3U) != 0U ||
@@ -320,6 +328,14 @@ int bl_lp_prepare_ble_parameter_before_sleep(void)
         ble->con_chmap_pending   = c->instant_type == 2U && !c->instant_done;
         ble->con_chmap_rsvd      = 0U;
         memcpy(ble->con_chmap_expected, c->pending_chmap, sizeof(ble->con_chmap_expected));
+        if (rx_ppm_state_valid) {
+            ble->con_rx_ppm_rtc_hus = rx_ppm_state.rtc_hus;
+            ble->con_rx_ppm_evt_cnt = rx_ppm_state.evt_cnt;
+            ble->con_rx_ppm_interval = rx_ppm_state.interval;
+            ble->con_rx_ppm_rate = rx_ppm_state.rate;
+            ble->con_rx_ppm_valid = rx_ppm_state.valid;
+            ble->con_rx_ppm = rx_ppm_state.ppm;
+        }
         ble->magic = LP_FW_BLE_PARA_MAGIC;
         return 0;
     }
@@ -573,8 +589,26 @@ extern uint16_t btblecontroller_rc32k_xtal_count_wait_result(void);
     }
 
 #if defined(CFG_BLE_ENABLE) && defined(BL618DG)
-    ble_lp_controller_sleep_abort(&ble_controller_sleeping);
     lp_fw_ble_para_t *ble = iot2lp_para->ble_parameter;
+
+    /* Bring LPFW's updated sample back before BLE IRQs are restored. */
+    if (ble->ble_activity_state == LP_FW_BLE_ST_CONN) {
+        const btble_controller_lp_fw_info_t *info = btble_controller_get_lp_fw_info();
+        btblecontroller_lp_rx_ppm_state_t rx_ppm_state = {
+            .rtc_hus = ble->con_rx_ppm_rtc_hus,
+            .evt_cnt = ble->con_rx_ppm_evt_cnt,
+            .interval = ble->con_rx_ppm_interval,
+            .rate = ble->con_rx_ppm_rate,
+            .valid = ble->con_rx_ppm_valid,
+            .ppm = ble->con_rx_ppm,
+        };
+
+        if (info != NULL && info->state == BTBLE_ST_CONN &&
+            info->con.interval == rx_ppm_state.interval && info->con.rx_rate == rx_ppm_state.rate) {
+            btblecontroller_lp_rx_ppm_state_import(info->con.link_id, &rx_ppm_state);
+        }
+    }
+    ble_lp_controller_sleep_abort(&ble_controller_sleeping);
 
     if (ble->ble_activity_state == LP_FW_BLE_ST_ADV || ble->ble_activity_state == LP_FW_BLE_ST_RX_CONN_IND) {
         btble_controller_lp_fw_activity_t restore = {

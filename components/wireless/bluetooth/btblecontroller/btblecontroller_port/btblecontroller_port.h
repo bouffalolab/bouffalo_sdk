@@ -43,15 +43,34 @@ void btblecontroller_puts(const char *str);
 uint64_t btblecontroller_mtimer_get_time_us(void);
 #if defined(BL618DG)
 /* RX ppm sampling runs in controller interrupt context; overrides must not block.
- * The SDK BL618DG PDS port retains history in the shared LPFW parameters.
  * RTC getter returns nominal us; sample/age use half-us, interval half-slots. */
+typedef struct {
+    uint64_t rtc_hus;
+    uint16_t evt_cnt;
+    uint16_t interval;
+    uint8_t rate;
+    uint8_t valid;
+    int32_t ppm;
+} btblecontroller_lp_rx_ppm_state_t;
+
+/* Disabled until LPFW initialization succeeds. Changing this setting clears
+ * the sampling history; repeated calls with the same setting preserve it. */
+void btblecontroller_lp_rx_ppm_set_enabled(bool enabled);
 uint64_t btblecontroller_lp_rtc_get_us(void);
+/* Read-only check for a new baseline or at least 500 ms of connection events. */
+bool btblecontroller_lp_rx_ppm_sample_due(uint8_t link_id, uint16_t evt_cnt,
+                                        uint16_t interval, uint8_t rate);
 void btblecontroller_lp_rx_ppm_update(uint8_t link_id, uint16_t evt_cnt,
                                     uint16_t interval, uint8_t rate, uint64_t rx_rtc_hus,
                                     int64_t age_hus);
 void btblecontroller_lp_rx_ppm_reset(uint8_t link_id);
 /* False until an estimate exists for this link, interval and RX rate. */
 bool btblecontroller_lp_rx_ppm_ready(uint8_t link_id, uint16_t interval, uint8_t rate);
+/* Export/import the complete APP-side sampling state at an LPFW handoff. */
+bool btblecontroller_lp_rx_ppm_state_export(uint8_t link_id, uint16_t interval, uint8_t rate,
+                                            btblecontroller_lp_rx_ppm_state_t *state);
+void btblecontroller_lp_rx_ppm_state_import(uint8_t link_id,
+                                            const btblecontroller_lp_rx_ppm_state_t *state);
 void btblecontroller_gpio_config(uint8_t pin, uint8_t is_high);
 void btblecontroller_rc32k_xtal_count_trigger(void);
 uint16_t btblecontroller_rc32k_xtal_count_wait_result(void);

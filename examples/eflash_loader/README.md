@@ -32,8 +32,8 @@ used for BootROM and J-Link/OpenOCD loading.
 
 | Item | Address/value |
 | --- | --- |
-| JTAG load address | `0xA1000400` |
-| AP entry/PC | `0xA1000400` |
+| JTAG load address | `0xA1000000` |
+| AP entry/PC | `0xA1000000` |
 | ABI descriptor | `0x2106AFE0` |
 | Mailbox flag (non-cache AP RAM) | `0x2106AFF0` |
 | Mailbox data | `0x2106B000` |
@@ -92,6 +92,7 @@ the host starts the next transaction by writing new data and `HRDY`.
 Implemented command IDs are:
 
 ```text
+10 get boot info
 20 change rate       21 reset             22 clock set
 23 option finish     30 erase             31 write
 32 read              34 XIP read          35 switch bank (bank 0)
@@ -106,6 +107,9 @@ A3 OTP set parameter  A4 OTP get parameter A5 OTP lock by index
 A6 OTP lock by addr   A7 OTP erase index   A8 OTP write index
 A9 OTP read index
 ```
+
+`0x10 GET_BOOTINFO` accepts an empty payload and returns the ROM version and
+eFuse information.
 
 Range erase and chip erase publish `PD` before entering a long erase operation;
 the host then polls at a reduced rate until the final response. `0x42` returns
@@ -130,19 +134,18 @@ unsupported, so `0x35` accepts bank 0 only.
 
 ## Build
 
-From this directory:
+From this directory, explicitly select the RAM linker layout:
 
 ```bash
-make -j8
-make test
-make package FLASH_CUBE_ROOT=/path/to/bouffalo_flash_cube
+make -j8 CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CONFIG_FLASH_XIP_ADDRESS=0
+make package CHIP=bl618dg CPU_ID=ap CONFIG_FLASH_XIP_ADDRESS=0 FLASH_CUBE_ROOT=/path/to/bouffalo_flash_cube
 ```
 
-The host tests cover frame parsing, checksum handling, reply encoding, erase
-pending callbacks, parameter dispatch, eFuse/OTP dispatch, the MAC/CRC response
-format, and a complete protocol/transport link with only the Flash capability.
 The target build requires the SDK toolchain and produces the ELF and standard
 BootROM RAM `.bin` under `build/build_out/`.
+
+The validated RAM load address and entry point are `0xA1000000`;
+use the addresses specified by the actual image.
 
 ### CI
 
@@ -152,8 +155,8 @@ BOARD=bl618dgdk CPU_ID=ap` and the usual `CONFIG_STRICT=y`. Reproduce the CI
 build locally with:
 
 ```bash
-make BUILD_DIR=build_eflash_loader_618dgap CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CONFIG_STRICT=y
-make CHIP=bl618dg BUILD_DIR=build_eflash_loader_618dgap CPU_ID=ap whole
+make BUILD_DIR=build_eflash_loader_618dgap CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap CONFIG_STRICT=y CONFIG_FLASH_XIP_ADDRESS=0
+make CHIP=bl618dg BUILD_DIR=build_eflash_loader_618dgap CPU_ID=ap CONFIG_FLASH_XIP_ADDRESS=0 whole
 ```
 
 The matrix runs a `whole` step after every build. This loader is loaded into RAM
@@ -162,9 +165,6 @@ and no whole-flash image. The example overrides the SDK's flash-only `whole`
 rule and copies the linked RAM image to `$(BUILD_DIR)/whole_flash_data.bin`,
 which is the file the CI artifact collector publishes. The archived `.bin`/`.elf`
 are therefore the RAM image itself, not a flash layout.
-
-The host tests under `tests/` also run locally through `make test`, but they are
-not yet part of the Jenkins pipeline.
 
 ## Adding another chip
 
@@ -182,11 +182,11 @@ and flash commands remain shared.
 
 ## FlashCube usage
 
-The matching FlashCube source uses:
+For the RAM build above, the matching host configuration is:
 
 ```text
-jtag_load_addr = 0xA1000400
-jtag_run_addr  = 0xA1000400
+jtag_load_addr = 0xA1000000
+jtag_run_addr  = 0xA1000000
 shake_hand_addr = 0x2106AFF0
 data_addr       = 0x2106B000
 ```
@@ -249,7 +249,7 @@ disabled until its AP TAP selector is verified.
 
 ## Validation status
 
-The target ELF has been built and checked to have entry point `0xA1000400`;
+The target ELF has been built and checked to have entry point `0xA1000000`;
 the linked image ends below the reserved mailbox region. On BL618DG B0,
 OpenOCD RAM loading, descriptor publication, handshake, JEDEC-ID read, and a
 1 MiB range erase/write/XIP-SHA verification have been exercised with the

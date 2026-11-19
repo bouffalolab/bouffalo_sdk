@@ -6,7 +6,7 @@
 #include "rv_hart.h"
 #include "rv_pmp.h"
 
-extern void sysinit_run_all(void);
+#include "sysinit.h"
 
 /* sf_ctrl_2 */
 #define SF_CTRL_2_OFFSET       (0x70)
@@ -275,12 +275,13 @@ void System_Post_Init(void)
 
     system_setup_xtal_config();
 
-    sysinit_run_all();
-
     HBN_Trim_RC32K();
+    HBN_Enable_RTC_Counter();
 
 #ifndef CONFIG_FREERTOS
     /* global IRQ enable */
     __enable_irq();
 #endif
+
+    sysinit_run_pre_schedule();
 }

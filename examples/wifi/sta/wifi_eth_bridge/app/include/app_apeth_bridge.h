@@ -9,8 +9,9 @@ struct netif;
 
 int app_apeth_bridge_init(void);
 int app_emac_init(void);
-struct netif *app_emac_netif(void);
-bool app_emac_physical_link_up(void);
+uint8_t app_emac_port_count(void);
+struct netif *app_emac_netif(uint8_t port);
+uint8_t app_emac_physical_link_mask(void);
 int app_wds_bridge_init(void);
 void app_wds_bridge_wifi_ready(void);
 void app_wds_bridge_poll(void);

@@ -1,6 +1,35 @@
 #ifndef _BOARD_GPIO_H_
 #define _BOARD_GPIO_H_
 
+#if defined(CONFIG_BSP_DISPLAY)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void board_display_dbi_b8_gpio_init(void);
+void board_display_dbi_b8_gpio_deinit(void);
+void board_display_dbi_b8_cs_gpio_init(void);
+void board_display_dbi_b8_cs_gpio_deinit(void);
+void board_display_dbi_c4_gpio_init(void);
+void board_display_dbi_c4_gpio_deinit(void);
+void board_display_dbi_c4_cs_gpio_init(void);
+void board_display_dbi_c4_cs_gpio_deinit(void);
+void board_display_dbi_c3_gpio_init(void);
+void board_display_dbi_c3_gpio_deinit(void);
+void board_display_dbi_c3_cs_gpio_init(void);
+void board_display_dbi_c3_cs_gpio_deinit(void);
+void board_display_qspi_gpio_init(void);
+void board_display_qspi_gpio_deinit(void);
+void board_display_qspi_cs_gpio_init(void);
+void board_display_qspi_cs_gpio_deinit(void);
+void board_display_spi_gpio_init(void);
+void board_display_spi_gpio_deinit(void);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 #if defined(CONFIG_BSP_LED_MATRIX)
 #include "bflb_led_matrix.h"
 

@@ -323,3 +323,6 @@ int main(void)
     while (1) {
     }
 }
+
+#warning "bsp/common/lcd/lcd.h is deprecated and will be removed in the next major SDK release; migrate to CONFIG_BSP_DISPLAY and the new Display framework."
+

@@ -4,6 +4,12 @@
 
 if ATMODULE
 
+config ATMODULE_V2_0
+    bool "AT module 2.0 core"
+    default n
+    help
+      Build the AT module core from at_core/v2.0 instead of at_core/v1.0.
+
 config BLUETOOTH_APP
     bool "Bluetooth application"
     default n
@@ -144,8 +150,11 @@ config ATMODULE_CONFIG_STORAGE
     bool "Persistent configuration storage"
     default y
     depends on ATMODULE_BASE
+    select LITTLEFS
+    select LITTLEFS_KV_EASYFLASH
     help
-      Store AT configuration persistently across reboots.
+      Store AT configuration persistently across reboots using the
+      automatically initialized LittleFS key-value store on PSM.
 
 config ATMODULE_MINIDUMP
     bool "Minidump commands"

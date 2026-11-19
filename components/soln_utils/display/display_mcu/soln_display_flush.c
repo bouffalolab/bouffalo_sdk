@@ -1,709 +1,312 @@
-#include <stdint.h>
+#include <string.h>
 
-#include "bflb_irq.h"
 #include "bflb_dbi.h"
-#include "bflb_gpio.h"
-#include "bflb_mtimer.h"
+#include "default/display_default.h"
+#include "display_os.h"
+#include "simple_font/display_simple_font.h"
+#include "soln_display_convert.h"
+#include "soln_display_flush.h"
 
-#include "hardware/dbi_reg.h"
-
-#include "lcd.h"
-#include "soln_fbq.h"
-
-#include <FreeRTOS.h>
-#include <semphr.h>
-
-#ifdef CONFIG_SOLN_DISP_DBI_LOG_LEVEL
-#undef CONFIG_LOG_LEVEL
-#define CONFIG_LOG_LEVEL CONFIG_SOLN_DISP_DBI_LOG_LEVEL
-#endif
-#define DBG_TAG "SOLN_DBI_FLUSH"
-#include "log.h"
-
-#if !defined(LCD_DBI_INTERFACE_TYPE)
-#error "The example code is only for LCD with DBI interface, please check your LCD config in menuconfig"
+#if !defined(CONFIG_DISPLAY_DEFAULT_TYPE_GRAM) || !defined(CONFIG_DISPLAY_BUS_DBI) || \
+    !defined(CONFIG_DISPLAY_DEFAULT_FORMAT_RGB888)
+#error "Solution DBI display needs a default DBI GRAM display with packed RGB888 input"
 #endif
 
-#if IS_ENABLED(CONFIG_PSRAM)
-#define ATTR_FAST_CODE_SECTION ATTR_PSRAM_CODE_SECTION
+#define BAND_WIDTH ((DISPLAY_DEFAULT_WIDTH > DISPLAY_DEFAULT_HEIGHT) ? DISPLAY_DEFAULT_WIDTH : DISPLAY_DEFAULT_HEIGHT)
+/* Each buffer starts on its own cache line, with readable padding for word-rounded DBI reads. */
+#define BAND_BYTES (((BAND_WIDTH * SOLN_DISPLAY_BAND_ROWS * 3u + 3u + 63u) / 64u) * 64u)
+#if defined(CONFIG_PSRAM)
+#define BAND_ATTR __ALIGNED(64) ATTR_NOINIT_PSRAM_SECTION
 #else
-#define ATTR_FAST_CODE_SECTION ATTR_TCM_SECTION
+#define BAND_ATTR __ALIGNED(64) ATTR_NOCACHE_NOINIT_RAM_SECTION
 #endif
 
-static struct bflb_device_s *dbi_hd = NULL;
+static uint8_t BAND_ATTR bands[2][BAND_BYTES];
+static display_t *screen;
+static display_io_t *screen_io;
+static display_info_t screen_info;
+static struct bflb_device_s *dbi;
+/* Available means the previous transfer is complete. Initialized once to 1. */
+static display_os_sem_t transfer_sem;
+static volatile int transfer_result;
 
-/*
-    The CPU will directly write the converted data into the dbi fifo.
-    The number of lines must be a multiple of LCD_BLOCK_NUM_A.
-    The screen size must be larger than 480x320.
-    The input pixels must be yuyv 640x480.
-*/
-#define LCD_BLOCK_NUM_A 10
-ATTR_FAST_CODE_SECTION void soln_yuyv422_640x480_to_yuv444_480x320_to_dbi_partition_fast(void *src, uint16_t y_start, uint16_t y_end)
+static void flush_done(display_t *display, const display_event_t *event, void *ctx)
 {
-    uint32_t dbi_send_buff[9]; /* 9-word, 12-pixel */
-    uint8_t *p_src, *p_dst;
+    (void)display;
+    (void)ctx;
+    if (event->type == DISPLAY_EVT_DRAW_DONE) {
+        transfer_result = event->result;
+        display_os_sem_give(&transfer_sem); /* ISR with DMA, task context without DMA. */
+    }
+}
 
-    uint32_t regval;
-    uint32_t reg_base = dbi_hd->reg_base;
+static void restore_rgb(void)
+{
+    bflb_dbi_feature_control(dbi, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_888);
+    bflb_dbi_feature_control(dbi, DBI_CMD_CLEAR_TX_FIFO, 0);
+}
 
-    uint16_t s_block_width, s_block_width_offset;
-    uint16_t d_block_width;
+static int submit_band(const display_area_t *area, const void *pixels)
+{
+    int ret = display_os_sem_take(&transfer_sem, DISPLAY_OS_WAIT_FOREVER);
+    if (ret) {
+        return ret;
+    }
+    ret = transfer_result;
+    if (!ret) {
+        /* Take before submit, NOT before conversion: CPU prepares the other buffer
+         * while DBI is reading the previous one. Completion may precede return. */
+        ret = display_draw_async(screen, area, pixels, (size_t)area->w * area->h * 3u);
+    }
+    if (ret) {
+        /* A rejected draw has no completion callback. Return the idle token ourselves. */
+        display_os_sem_give(&transfer_sem);
+    }
+    return ret;
+}
 
-    d_block_width = 480 / LCD_BLOCK_NUM_A;
+const display_info_t *soln_disp_dbi_info(void)
+{
+    return &screen_info;
+}
 
-    s_block_width = 640 / LCD_BLOCK_NUM_A;
-    s_block_width_offset = s_block_width * (LCD_BLOCK_NUM_A - 1) * 2;
+int soln_disp_dbi_init(void)
+{
+    int ret;
 
-    bflb_irq_disable(dbi_hd->irq_num);
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
-
-    /* block loop */
-    for (uint8_t bn = 0; bn < LCD_BLOCK_NUM_A; bn++) {
-        lcd_draw_picture_blocking(d_block_width * bn, 0, d_block_width * (bn + 1) - 1, 320 - 1, NULL);
-
-        p_src = (uint8_t *)src + bn * s_block_width * 2; /* column offset */
-        p_dst = (void *)dbi_send_buff;
-
-        /* column loop */
-        for (uint16_t i = 0; i < 320; i++) {
-            /* row loop */
-            for (uint16_t j = 0; j < d_block_width; j += 12) {
-                /* pixel 0,1,2 */
-                p_dst[0] = p_src[0];
-                p_dst[1] = p_src[1];
-                p_dst[2] = p_src[3];
-
-                p_dst[3] = p_src[2];
-                p_dst[4] = p_src[1];
-                p_dst[5] = p_src[3];
-
-                p_dst[6] = p_src[4];
-                p_dst[7] = p_src[5];
-                p_dst[8] = p_src[7];
-
-                /* pixel 3,4,5 */
-                p_dst[9] = p_src[8];
-                p_dst[10] = p_src[9];
-                p_dst[11] = p_src[11];
-
-                p_dst[12] = p_src[10];
-                p_dst[13] = p_src[9];
-                p_dst[14] = p_src[11];
-
-                p_dst[15] = p_src[12];
-                p_dst[16] = p_src[13];
-                p_dst[17] = p_src[15];
-
-                /* send to dbi fifo */
-                do {
-                    regval = getreg32(reg_base + DBI_FIFO_CONFIG_1_OFFSET);
-                } while ((regval & DBI_TX_FIFO_CNT_MASK) >> DBI_TX_FIFO_CNT_SHIFT < 3);
-
-                putreg32(dbi_send_buff[0], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[1], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[2], reg_base + DBI_FIFO_WDATA_OFFSET);
-
-                /* pixel 6,7,8 */
-                p_dst[18] = p_src[16];
-                p_dst[19] = p_src[17];
-                p_dst[20] = p_src[19];
-
-                p_dst[21] = p_src[18];
-                p_dst[22] = p_src[17];
-                p_dst[23] = p_src[19];
-
-                p_dst[24] = p_src[20];
-                p_dst[25] = p_src[21];
-                p_dst[26] = p_src[23];
-
-                /* pixel 9,10,11 */
-                p_dst[27] = p_src[24];
-                p_dst[28] = p_src[25];
-                p_dst[29] = p_src[27];
-
-                p_dst[30] = p_src[26];
-                p_dst[31] = p_src[25];
-                p_dst[32] = p_src[27];
-
-                p_dst[33] = p_src[28];
-                p_dst[34] = p_src[29];
-                p_dst[35] = p_src[31];
-
-                p_src += (16 * 2);
-
-                /* send to dbi fifo */
-                do {
-                    regval = getreg32(reg_base + DBI_FIFO_CONFIG_1_OFFSET);
-                } while ((regval & DBI_TX_FIFO_CNT_MASK) >> DBI_TX_FIFO_CNT_SHIFT < 6);
-
-                putreg32(dbi_send_buff[3], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[4], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[5], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[6], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[7], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[8], reg_base + DBI_FIFO_WDATA_OFFSET);
+    screen = display_default_get();
+    screen_io = display_panel_get_io(display_get_panel(screen));
+    dbi = bflb_device_get_by_name(CONFIG_DISPLAY_DEFAULT_DEV);
+    if (!dbi || !screen_io) {
+        return -ENODEV;
+    }
+    ret = display_os_sem_init(&transfer_sem);
+    if (ret) {
+        return ret;
+    }
+    ret = display_init(screen);
+    if (!ret) {
+        ret = display_set_rotation(screen, DISPLAY_ROTATION_90);
+    }
+    if (!ret) {
+        ret = display_get_info(screen, &screen_info);
+    }
+    if (!ret && (screen_info.kind != DISPLAY_KIND_GRAM || screen_info.format != DISPLAY_FMT_RGB888 ||
+                 screen_info.width > BAND_WIDTH || screen_info.buf_align > 64u ||
+                 (size_t)screen_info.width * SOLN_DISPLAY_BAND_ROWS * 3u > screen_info.max_draw_bytes)) {
+        ret = -ENOTSUP;
+    }
+    if (!ret) {
+        ret = display_set_callback(screen, flush_done, NULL);
+    }
+    if (!ret) {
+        memset(bands[0], 0, BAND_BYTES);
+        for (unsigned y = 0; y < screen_info.height && !ret; y += SOLN_DISPLAY_BAND_ROWS) {
+            unsigned rows = screen_info.height - y;
+            if (rows > SOLN_DISPLAY_BAND_ROWS) {
+                rows = SOLN_DISPLAY_BAND_ROWS;
             }
+            display_area_t area = { .x = 0, .y = y, .w = screen_info.width, .h = rows };
+            ret = display_draw(screen, &area, bands[0], (size_t)area.w * area.h * 3u);
+        }
+    }
+    if (!ret) {
+        ret = display_set_backlight(screen, DISPLAY_BACKLIGHT_MAX);
+        if (ret == -ENOTSUP) {
+            ret = 0;
+        }
+    }
+    if (ret) {
+        display_deinit(screen);
+        display_os_sem_deinit(&transfer_sem);
+    }
+    return ret;
+}
 
-            /* next row */
-            p_src += s_block_width_offset;
+/* RGB888 and packed YUV444 already have the endpoint's three-byte layout.
+ * Direct blocks use whole rows with aligned starts/lengths; only unaligned
+ * data or the final sub-word tail needs a staging copy. */
+static int flush_packed_frame(const uint8_t *src, unsigned width, unsigned height)
+{
+    const size_t stride = (size_t)width * 3u;
+    const unsigned alignment = screen_info.buf_align > 4u ? screen_info.buf_align : 4u;
+    unsigned a = alignment, b = stride % alignment;
+    while (b) {
+        unsigned remainder = a % b;
+        a = b;
+        b = remainder;
+    }
+    const unsigned row_quantum = alignment / a;
+    const unsigned max_rows = screen_info.max_draw_bytes / stride;
+    unsigned index = 0;
 
-            /*  */
-            if (i % 2 == 1) {
-                p_src += (640 * 2);
+    for (unsigned y = 0; y < height;) {
+        unsigned rows = height - y;
+        if (rows > max_rows) {
+            rows = max_rows;
+        }
+        const uint8_t *pixels = src + (size_t)y * stride;
+        unsigned direct_rows = !((uintptr_t)pixels % alignment) ? rows - rows % row_quantum : 0;
+        if (direct_rows) {
+            rows = direct_rows;
+        } else {
+            if (rows > SOLN_DISPLAY_BAND_ROWS) {
+                rows = SOLN_DISPLAY_BAND_ROWS;
             }
-
-            // bflb_mtimer_delay_ms(2);
+            size_t bytes = rows * stride;
+            memcpy(bands[index], pixels, bytes);
+            memset(bands[index] + bytes, 0, (4u - bytes % 4u) % 4u);
+            pixels = bands[index];
+            index ^= 1u;
         }
-
-        /* Wait transfer complete */
-        do {
-            regval = bflb_dbi_get_intstatus(dbi_hd);
-        } while ((regval & DBI_INTSTS_TC) == 0);
-        bflb_dbi_int_clear(dbi_hd, DBI_INTCLR_TC);
-
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_CLEAR_TX_FIFO, 0);
-    }
-
-    bflb_irq_enable(dbi_hd->irq_num);
-
-#if (LCD_COLOR_DEPTH == 16)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-#elif (LCD_COLOR_DEPTH == 32)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_NRGB_8888);
-#endif
-}
-
-/*
-    The CPU will directly write the converted data into the dbi fifo.
-    Must not exceed the size of the screen. 
-    The number of lines must be a multiple of LCD_BLOCK_NUM_B.
-    The number of columns must be a multiple of 8.
-*/
-#define LCD_BLOCK_NUM_B 16
-ATTR_FAST_CODE_SECTION void soln_yuyv422_to_yuv444_dbi_to_dbi_partition_fast(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, void *src)
-{
-    uint32_t dbi_send_buff[6]; /* 6-word, 8-pixel */
-    uint8_t *p_src, *p_dst;
-
-    uint32_t regval;
-    uint32_t reg_base = dbi_hd->reg_base;
-
-    uint16_t width, height, block_width, block_width_offset;
-
-    width = (x2 - x1 + 1);
-    height = (y2 - y1 + 1);
-    block_width = width / LCD_BLOCK_NUM_B;
-    block_width_offset = block_width * (LCD_BLOCK_NUM_B - 1) * 2;
-
-    if (x2 < x1 || y2 < y1 || width % (8 * LCD_BLOCK_NUM_B)) {
-        return;
-    }
-
-    bflb_irq_disable(dbi_hd->irq_num);
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
-
-    /* block loop */
-    for (uint8_t bn = 0; bn < LCD_BLOCK_NUM_B; bn++) {
-        x2 = x1 + block_width - 1;
-        lcd_draw_picture_blocking(x1, y1, x2, y2, NULL);
-        x1 += block_width;
-
-        p_src = (uint8_t *)src + bn * block_width * 2; /* column offset */
-        p_dst = (void *)dbi_send_buff;
-
-        /* column loop */
-        for (uint16_t i = 0; i < height; i++) {
-            /* row loop */
-            for (uint16_t j = 0; j < block_width; j += 8) {
-                /*  */
-                p_dst[0] = p_src[0];
-                p_dst[1] = p_src[1];
-                p_dst[2] = p_src[3];
-                p_dst[3] = p_src[2];
-                p_dst[4] = p_src[1];
-                p_dst[5] = p_src[3];
-
-                p_dst[6] = p_src[4];
-                p_dst[7] = p_src[5];
-                p_dst[8] = p_src[7];
-                p_dst[9] = p_src[6];
-                p_dst[10] = p_src[5];
-                p_dst[11] = p_src[7];
-
-                p_dst[12] = p_src[8];
-                p_dst[13] = p_src[9];
-                p_dst[14] = p_src[11];
-                p_dst[15] = p_src[10];
-                p_dst[16] = p_src[9];
-                p_dst[17] = p_src[11];
-
-                p_dst[18] = p_src[12];
-                p_dst[19] = p_src[13];
-                p_dst[20] = p_src[15];
-                p_dst[21] = p_src[14];
-                p_dst[22] = p_src[13];
-                p_dst[23] = p_src[15];
-
-                /* next 8 pixel */
-                p_src += (8 * 2);
-
-                /* send to dbi fifo */
-                do {
-                    regval = getreg32(reg_base + DBI_FIFO_CONFIG_1_OFFSET);
-                } while ((regval & DBI_TX_FIFO_CNT_MASK) >> DBI_TX_FIFO_CNT_SHIFT < 6);
-
-                putreg32(dbi_send_buff[0], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[1], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[2], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[3], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[4], reg_base + DBI_FIFO_WDATA_OFFSET);
-                putreg32(dbi_send_buff[5], reg_base + DBI_FIFO_WDATA_OFFSET);
-            }
-
-            p_src += block_width_offset; /* next row */
-
-            // bflb_mtimer_delay_ms(2);
+        display_area_t area = { .x = 0, .y = y, .w = width, .h = rows };
+        int ret = submit_band(&area, pixels);
+        if (ret) {
+            return ret;
         }
-
-        /* Wait transfer complete */
-        do {
-            regval = bflb_dbi_get_intstatus(dbi_hd);
-        } while ((regval & DBI_INTSTS_TC) == 0);
-        bflb_dbi_int_clear(dbi_hd, DBI_INTCLR_TC);
-
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_CLEAR_TX_FIFO, 0);
+        y += rows;
     }
-
-    bflb_irq_enable(dbi_hd->irq_num);
-
-#if (LCD_COLOR_DEPTH == 16)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-#elif (LCD_COLOR_DEPTH == 32)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_NRGB_8888);
-#endif
-}
-
-/*  
-    The CPU will directly write the converted data into the dbi fifo.
-    The screen size must be larger than 480x320.
-    The input pixels must be yuyv 640x480.
-
-    BL616:
-    CPU-384M + DBI 40M RGB565 output : 10.91ms
-    CPU-384M + DBI 40M RGB888 output : 11.57ms
-    CPU-320M + DBI 40M RGB565 output : 12.54ms
-    CPU-320M + DBI 40M RGB888 output : 12.54ms
-    CPU-320M only conversion : 10.60ms
-    CPU-384M only conversion : 9.29ms
-    DBI-B 40M RGB888 output : 11.6ms
-    DBI-B 40M RGB565 output : 7.7ms
-*/
-ATTR_FAST_CODE_SECTION void soln_yuyv422_640x480_to_yuv444_480x320_to_dbi_fast(void *src, uint16_t y_start, uint16_t y_end)
-{
-    uint32_t dbi_send_buff[9];
-    uint8_t *p_src, *p_dst;
-
-    uint32_t regval;
-    uint32_t reg_base = dbi_hd->reg_base;
-
-    /* src to dst */
-    y_start = y_start * 2 / 3;
-    y_end = y_end * 2 / 3;
-
-    bflb_irq_disable(dbi_hd->irq_num);
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
-
-    lcd_draw_picture_blocking(0, y_start, 480 - 1, y_end - 1, NULL);
-
-    p_src = (uint8_t *)src;
-    p_dst = (void *)dbi_send_buff;
-
-    for (uint16_t i = y_start; i < y_end; i++) {
-        /* 480 / 12 = 40 */
-        for (uint16_t j = 0; j < 40; j++) {
-            /* pixel 0,1,2 */
-            p_dst[0] = p_src[0];
-            p_dst[1] = p_src[1];
-            p_dst[2] = p_src[3];
-
-            p_dst[3] = p_src[2];
-            p_dst[4] = p_src[1];
-            p_dst[5] = p_src[3];
-
-            p_dst[6] = p_src[4];
-            p_dst[7] = p_src[5];
-            p_dst[8] = p_src[7];
-
-            /* pixel 3,4,5 */
-            p_dst[9] = p_src[8];
-            p_dst[10] = p_src[9];
-            p_dst[11] = p_src[11];
-
-            p_dst[12] = p_src[10];
-            p_dst[13] = p_src[9];
-            p_dst[14] = p_src[11];
-
-            p_dst[15] = p_src[12];
-            p_dst[16] = p_src[13];
-            p_dst[17] = p_src[15];
-
-            /* send to dbi fifo */
-            do {
-                regval = getreg32(reg_base + DBI_FIFO_CONFIG_1_OFFSET);
-            } while ((regval & DBI_TX_FIFO_CNT_MASK) >> DBI_TX_FIFO_CNT_SHIFT < 3);
-
-            putreg32(dbi_send_buff[0], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[1], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[2], reg_base + DBI_FIFO_WDATA_OFFSET);
-
-            /* pixel 6,7,8 */
-            p_dst[18] = p_src[16];
-            p_dst[19] = p_src[17];
-            p_dst[20] = p_src[19];
-
-            p_dst[21] = p_src[18];
-            p_dst[22] = p_src[17];
-            p_dst[23] = p_src[19];
-
-            p_dst[24] = p_src[20];
-            p_dst[25] = p_src[21];
-            p_dst[26] = p_src[23];
-
-            /* pixel 9,10,11 */
-            p_dst[27] = p_src[24];
-            p_dst[28] = p_src[25];
-            p_dst[29] = p_src[27];
-
-            p_dst[30] = p_src[26];
-            p_dst[31] = p_src[25];
-            p_dst[32] = p_src[27];
-
-            p_dst[33] = p_src[28];
-            p_dst[34] = p_src[29];
-            p_dst[35] = p_src[31];
-
-            p_src += (16 * 2);
-
-            /* send to dbi fifo */
-            do {
-                regval = getreg32(reg_base + DBI_FIFO_CONFIG_1_OFFSET);
-            } while ((regval & DBI_TX_FIFO_CNT_MASK) >> DBI_TX_FIFO_CNT_SHIFT < 6);
-
-            putreg32(dbi_send_buff[3], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[4], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[5], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[6], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[7], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[8], reg_base + DBI_FIFO_WDATA_OFFSET);
-        }
-
-        /* (320 / 480) = 2 / 3 */
-        if (i % 2 == 1) {
-            p_src += (640 * 2);
-        }
-    }
-
-    /* Wait transfer complete */
-    do {
-        regval = bflb_dbi_get_intstatus(dbi_hd);
-    } while ((regval & DBI_INTSTS_TC) == 0);
-    bflb_dbi_int_clear(dbi_hd, DBI_INTCLR_TC);
-
-    bflb_irq_enable(dbi_hd->irq_num);
-
-#if (LCD_COLOR_DEPTH == 16)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-#elif (LCD_COLOR_DEPTH == 32)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_NRGB_8888);
-#endif
-}
-
-/* 
-    The CPU will directly write the converted data into the dbi fifo. 
-    Must not exceed the size of the screen. 
-    The number of rows and columns must all be multiples of 8.
-*/
-ATTR_FAST_CODE_SECTION void soln_yuyv422_to_yuv444_to_dbi_fast(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, void *src)
-{
-    uint32_t dbi_send_buff[6]; /* 6-word, 8-pixel */
-    uint8_t *p_src, *p_dst;
-
-    uint32_t regval;
-    uint32_t reg_base = dbi_hd->reg_base;
-
-    uint16_t width, height;
-
-    if (x2 < x1 || y2 < y1 || (x2 - x1 + 1) % 8) {
-        return;
-    }
-
-    width = (x2 - x1 + 1);
-    height = (y2 - y1 + 1);
-
-    bflb_irq_disable(dbi_hd->irq_num);
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
-
-    lcd_draw_picture_blocking(x1, y1, x2, y2, NULL);
-
-    p_src = (uint8_t *)src;
-    p_dst = (void *)dbi_send_buff;
-
-    for (uint16_t i = 0; i < height; i++) {
-        /*  */
-        p_src = (uint8_t *)src + i * width * 2;
-
-        for (uint16_t j = 0; j < width; j += 8) {
-            /*  */
-            p_dst[0] = p_src[0];
-            p_dst[1] = p_src[1];
-            p_dst[2] = p_src[3];
-            p_dst[3] = p_src[2];
-            p_dst[4] = p_src[1];
-            p_dst[5] = p_src[3];
-
-            p_dst[6] = p_src[4];
-            p_dst[7] = p_src[5];
-            p_dst[8] = p_src[7];
-            p_dst[9] = p_src[6];
-            p_dst[10] = p_src[5];
-            p_dst[11] = p_src[7];
-
-            p_dst[12] = p_src[8];
-            p_dst[13] = p_src[9];
-            p_dst[14] = p_src[11];
-            p_dst[15] = p_src[10];
-            p_dst[16] = p_src[9];
-            p_dst[17] = p_src[11];
-
-            p_dst[18] = p_src[12];
-            p_dst[19] = p_src[13];
-            p_dst[20] = p_src[15];
-            p_dst[21] = p_src[14];
-            p_dst[22] = p_src[13];
-            p_dst[23] = p_src[15];
-
-            /* next 8 pixel */
-            p_src += (8 * 2);
-
-            /* send to dbi fifo */
-            do {
-                regval = getreg32(reg_base + DBI_FIFO_CONFIG_1_OFFSET);
-            } while ((regval & DBI_TX_FIFO_CNT_MASK) >> DBI_TX_FIFO_CNT_SHIFT < 6);
-
-            putreg32(dbi_send_buff[0], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[1], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[2], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[3], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[4], reg_base + DBI_FIFO_WDATA_OFFSET);
-            putreg32(dbi_send_buff[5], reg_base + DBI_FIFO_WDATA_OFFSET);
-        }
-    }
-
-    /* Wait transfer complete */
-    do {
-        regval = bflb_dbi_get_intstatus(dbi_hd);
-    } while ((regval & DBI_INTSTS_TC) == 0);
-    bflb_dbi_int_clear(dbi_hd, DBI_INTCLR_TC);
-
-    bflb_irq_enable(dbi_hd->irq_num);
-
-#if (LCD_COLOR_DEPTH == 16)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-#elif (LCD_COLOR_DEPTH == 32)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_NRGB_8888);
-#endif
-}
-
-/****************************************************************************************************************** */
-/* DMA */
-static SemaphoreHandle_t disp_sem = NULL;
-
-/* flush done isr */
-static void disp_flush_done_cb(void)
-{
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    xSemaphoreGiveFromISR(disp_sem, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken == pdTRUE) {
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-    }
-}
-
-/* display dbi init */
-void soln_disp_dbi_init(void)
-{
-    /* lcd init */
-    lcd_init();
-
-    lcd_clear(LCD_COLOR_RGB(0x00, 0X00, 0X00));
-
-    dbi_hd = bflb_device_get_by_name(BFLB_NAME_DBI);
-
-    disp_sem = xSemaphoreCreateBinary();
-    lcd_async_callback_register(disp_flush_done_cb);
-}
-
-/* 
-    1: RGB565, 2: RGB888, 3: NRGB8888, 4: YUYV, 5: YUV,
-*/
-static int disp_pixel_format_switch(uint32_t pixel_format)
-{
-    if (pixel_format == IMG_RAW_FRAME_FORMAT_RGB565) {
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-    } else if (pixel_format == IMG_RAW_FRAME_FORMAT_RGB888) {
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_888);
-    } else if (pixel_format == IMG_RAW_FRAME_FORMAT_NRGB8888) {
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_NRGB_8888);
-    }
-#if defined(BL616CL)
-    else if (pixel_format == IMG_RAW_FRAME_FORMAT_YUYV) {
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUYV);
-    }
-#endif
-#if defined(BL616CL) || defined(BL616)
-    else if (pixel_format == IMG_RAW_FRAME_FORMAT_YUV) {
-        bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
-    }
-#endif
-    else {
-        LOG_W("Unsupported pixel format: %u\r\n", pixel_format);
-        return -1;
-    }
-
     return 0;
 }
 
-/* flush with dma to dbi, blocking until flush done */
-void soln_disp_flush_dma_blocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, void *picture, uint32_t pixel_format)
+static int flush_yuyv422_frame(const uint8_t *src, unsigned width, unsigned height)
 {
-    if (disp_pixel_format_switch(pixel_format) < 0) {
-        return;
+    unsigned index = 0;
+    for (unsigned y = 0; y < height; y += SOLN_DISPLAY_BAND_ROWS) {
+        unsigned rows = height - y;
+        if (rows > SOLN_DISPLAY_BAND_ROWS) {
+            rows = SOLN_DISPLAY_BAND_ROWS;
+        }
+        /* Convert before waiting: the other band may still be read by DMA. */
+        soln_yuyv422_to_yuv444_band(bands[index], src, width, y, rows);
+        size_t bytes = (size_t)width * rows * 3u;
+        memset(bands[index] + bytes, 0, (4u - bytes % 4u) % 4u);
+        display_area_t area = { .x = 0, .y = y, .w = width, .h = rows };
+        int ret = submit_band(&area, bands[index]);
+        if (ret) {
+            return ret;
+        }
+        index ^= 1u;
     }
-
-    xSemaphoreTake(disp_sem, 0);
-
-    lcd_draw_picture_nonblocking(x1, y1, x2, y2, picture);
-
-    xSemaphoreTake(disp_sem, portMAX_DELAY);
-
-#if (LCD_COLOR_DEPTH == 16)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_RGB_565);
-#elif (LCD_COLOR_DEPTH == 32)
-    bflb_dbi_feature_control(dbi_hd, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_NRGB_8888);
-#endif
+    return 0;
 }
 
-/****************************************************************************************************************** */
-/* TE */
-
-#ifndef CONFIG_SOLN_DISP_TX_TIME_US
-/* 320x480 RGB888 @ 27MB/s -> 320*480*3/27000 ~= 17067us */
-#define CONFIG_SOLN_DISP_TX_TIME_US 17000U
-#endif
-
-#ifndef CONFIG_SOLN_DISP_TE_BOUNDARY_US
-#define CONFIG_SOLN_DISP_TE_BOUNDARY_US 300U
-#endif
-
-static volatile uint32_t disp_te_last_us = 0;
-static volatile uint32_t disp_te_period_us = 0;
-
-/* te signal gpio isr, calculate the te period */
-static void disp_te_gpio_isr(uint8_t pin)
+static int flush_yuyv422_640x480_to_480x320(const uint8_t *src)
 {
-    uint32_t now_us = (uint32_t)bflb_mtimer_get_time_us();
-    if (disp_te_last_us == 0U) {
-        disp_te_last_us = now_us;
-        return;
+    unsigned index = 0;
+    for (unsigned y = 0; y < 320u; y += SOLN_DISPLAY_BAND_ROWS) {
+        unsigned rows = 320u - y;
+        if (rows > SOLN_DISPLAY_BAND_ROWS) {
+            rows = SOLN_DISPLAY_BAND_ROWS;
+        }
+        soln_yuyv422_640x480_to_yuv444_480x320_band(bands[index], src, y, rows);
+        display_area_t area = { .x = 0, .y = y, .w = 480, .h = rows };
+        int ret = submit_band(&area, bands[index]);
+        if (ret) {
+            return ret;
+        }
+        index ^= 1u;
     }
-
-    uint32_t sample_us = now_us - disp_te_last_us;
-
-    if (sample_us < 1000 || sample_us > 100000) {
-        LOG_W("TE signal abnormal, sample_us: %u\r\n", sample_us);
-        return;
-    }
-
-    if (disp_te_period_us == 0U) {
-        disp_te_period_us = sample_us;
-        disp_te_last_us = now_us;
-    } else {
-        disp_te_period_us = (disp_te_period_us * 7 + sample_us) / 8;
-        disp_te_last_us = now_us;
-    }
+    return 0;
 }
 
-/* Get the minimum delay time to meet TE timing requirement, 0 means no need to delay. */
-static uint32_t disp_te_get_min_delay_us(void)
+int soln_disp_flush_frame(const fbq_elem_t *frame)
 {
-    uint32_t te_last_us = disp_te_last_us;
-    uint32_t te_period_us = disp_te_period_us;
-    uint32_t w_s, w_e;
-    uint32_t now_us = (uint32_t)bflb_mtimer_get_time_us();
-
-    if (disp_te_last_us == 0 || disp_te_period_us == 0) {
-        LOG_W("TE timing is not ready, te_last_us: %u, te_period_us: %u\r\n", te_last_us, te_period_us);
-        return 0U;
+    if (!frame) {
+        return -EINVAL;
     }
+    const soln_fbq_img_raw_ext_t *raw = soln_fbq_img_raw_ext_const(frame);
+    unsigned width, height, bpp;
+    bool scaled = false;
 
-    /* calculate the valid window for TE, which is [w_s, w_e] after the start of TE period */
-    if (CONFIG_SOLN_DISP_TX_TIME_US < te_period_us) {
-        w_s = te_period_us - CONFIG_SOLN_DISP_TX_TIME_US;
-        w_e = te_period_us;
-    } else if (CONFIG_SOLN_DISP_TX_TIME_US < te_period_us * 2) {
-        w_s = 0;
-        w_e = te_period_us * 2 - CONFIG_SOLN_DISP_TX_TIME_US;
-    } else {
-        LOG_W("The LCD interface is too slow and does not meet the requirements of TE.\r\n");
-        return 0U;
+    if (!frame->data || raw->x_end < raw->x_start || raw->y_end < raw->y_start) {
+        return -EINVAL;
     }
-
-    if (w_e - w_s <= 1000) {
-        LOG_W("TE timing is too tight, w_s: %u, w_e: %u\r\n", w_s, w_e);
-        return 0U;
+    width = (unsigned)raw->x_end - raw->x_start + 1u;
+    height = (unsigned)raw->y_end - raw->y_start + 1u;
+    switch (raw->format) {
+        case IMG_RAW_FRAME_FORMAT_YUYV:
+            bpp = 2;
+            break;
+        case IMG_RAW_FRAME_FORMAT_RGB888:
+        case IMG_RAW_FRAME_FORMAT_YUV:
+            bpp = 3;
+            break;
+        default:
+            return -ENOTSUP;
     }
+    if ((size_t)width * height > frame->size / bpp ||
+        (raw->format == IMG_RAW_FRAME_FORMAT_YUYV && (width & 1u))) {
+        return -EINVAL;
+    }
+    if (width > screen_info.width || height > screen_info.height) {
+        if (width != 640 || height != 480 || raw->format != IMG_RAW_FRAME_FORMAT_YUYV ||
+            screen_info.width < 480 || screen_info.height < 320) {
+            return -ENOTSUP;
+        }
+        scaled = true;
+    }
+    int ret = display_os_sem_take(&transfer_sem, DISPLAY_OS_WAIT_FOREVER);
+    if (ret) {
+        return ret;
+    }
+    transfer_result = 0;
+    /* Apply the RGB888 endpoint before the temporary override. Single-screen exclusive
+     * ownership keeps it applied throughout this frame; on any error we stop the frame. */
+    ret = display_io_write(screen_io, 0x00, NULL, 0);
+    if (!ret && raw->format != IMG_RAW_FRAME_FORMAT_RGB888) {
+        ret = bflb_dbi_feature_control(dbi, DBI_CMD_INPUT_PIXEL_FORMAT, DBI_PIXEL_INPUT_FORMAT_YUV444);
+    }
+    display_os_sem_give(&transfer_sem);
 
-    /* add 500us margin */
-    w_s += CONFIG_SOLN_DISP_TE_BOUNDARY_US;
-    w_e -= CONFIG_SOLN_DISP_TE_BOUNDARY_US;
-
-    /* calculate the phase of current time in TE period */
-    uint32_t phase_us = (now_us - te_last_us) % te_period_us;
-    uint32_t delay_us;
-    if (phase_us > w_s && phase_us < w_e) {
-        delay_us = 0;
-    } else {
-        if (phase_us < w_s) {
-            delay_us = w_s - phase_us;
+    if (!ret) {
+        if (raw->format == IMG_RAW_FRAME_FORMAT_RGB888 || raw->format == IMG_RAW_FRAME_FORMAT_YUV) {
+            ret = flush_packed_frame(frame->data, width, height);
+        } else if (!scaled) {
+            ret = flush_yuyv422_frame(frame->data, width, height);
         } else {
-            delay_us = w_e + te_period_us - phase_us;
+            ret = flush_yuyv422_640x480_to_480x320(frame->data);
         }
     }
 
-    // LOG_I("TE timing, te_period_us: %u, w_s: %u, w_e: %u, phase_us: %u, delay_us: %u\r\n",
-    //       te_period_us, w_s, w_e, phase_us, delay_us);
-
-    return delay_us;
-}
-
-/* te signal gpio init */
-void soln_disp_te_init(uint8_t pin)
-{
-    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
-
-    bflb_gpio_init(gpio, pin, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN);
-    bflb_gpio_int_init(gpio, pin, GPIO_INT_TRIG_MODE_SYNC_FALLING_EDGE);
-    bflb_gpio_int_mask(gpio, pin, false);
-
-    bflb_gpio_irq_attach(pin, disp_te_gpio_isr);
-    bflb_irq_enable(gpio->irq_num);
-}
-
-void soln_disp_te_delay(void)
-{
-    uint32_t delay_us = disp_te_get_min_delay_us();
-    if (delay_us > 0) {
-        vTaskDelay(pdMS_TO_TICKS((delay_us + 999) / 1000));
+    /* The final band has no following submit to wait for it. Drain before restoring
+     * the input format, drawing text, reusing buffers, or releasing a direct source. */
+    int wait_ret = display_os_sem_take(&transfer_sem, DISPLAY_OS_WAIT_FOREVER);
+    if (wait_ret) {
+        return wait_ret;
     }
+    if (!ret) {
+        ret = transfer_result;
+    }
+    restore_rgb();
+    display_os_sem_give(&transfer_sem);
+    return ret;
+}
+
+int soln_disp_draw_text(uint16_t x, uint16_t y, uint32_t fg, uint32_t bg, const char *text)
+{
+    if (x >= screen_info.width || y >= screen_info.height) {
+        return -EINVAL;
+    }
+    /* Text is drawn only between completed frames, in normal RGB888 mode. */
+    for (; *text && x + 8u <= screen_info.width; text++, x += 8u) {
+        unsigned rows = screen_info.height - y;
+        if (rows > 16u) {
+            rows = 16u;
+        }
+        display_simple_font_cfg_t cfg = {
+            .format = DISPLAY_FMT_RGB888, .width = 8, .height = rows,
+            .font = DISPLAY_SIMPLE_FONT_ASCII_16X8, .fg_color = fg, .bg_color = bg,
+        };
+        char glyph[2] = { *text, '\0' };
+        int ret = display_simple_font_draw(&cfg, bands[0], 0, 0, glyph);
+        if (!ret) {
+            display_area_t area = { .x = x, .y = y, .w = 8, .h = rows };
+            ret = display_draw(screen, &area, bands[0], (size_t)8u * rows * 3u);
+        }
+        if (ret) {
+            return ret;
+        }
+    }
+    return 0;
 }

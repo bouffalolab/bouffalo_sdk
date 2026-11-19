@@ -12,6 +12,10 @@ by applications that select this board.
 - Four DSP/TDM slots: playback reference, unused, unused microphone input,
   onboard microphone. The valid microphone mask is `0x08`, reference `0x01`.
 - USB Host uses GPIO40 and GPIO41.
+- The default display is the WKS70WSV114 1024x600 panel on MIPI DSI, with
+  two data lanes, RGB565 framebuffers and active-low reset on GPIO2. Enabling
+  `BSP_DISPLAY` and `DISPLAY_DEFAULT` selects this profile through Kconfig;
+  applications using the display framework do not need `lcd_conf_user.h`.
 - TF/microSD supports the native **1-bit SDH** interface: CMD GPIO45,
   CLK GPIO46 and DAT0 GPIO47. This board defines `CONFIG_SDH_BUS_WIDTH_1LINE`
   for all applications; no application-specific bus-width setting is needed.

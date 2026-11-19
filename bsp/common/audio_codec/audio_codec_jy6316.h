@@ -16,6 +16,10 @@ extern "C" {
 #define JY6316_JY6311_I2C_ADDR (0x44)
 #define JY6316_JY6166_I2C_ADDR JY6166_I2C_ADDR_0
 
+/* Register tokens select the primary codec (0) or stereo ADC (1). */
+#define JY6316_JY6311_REG(reg) (reg)
+#define JY6316_JY6166_REG(reg) (0x100 | (reg))
+
 extern const audio_codec_driver_t audio_codec_jy6316_driver;
 
 #ifdef __cplusplus

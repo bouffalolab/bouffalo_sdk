@@ -96,6 +96,8 @@ struct fhost_tg_profile
     uint32_t pksize;
     /// Traffic duration (seconds)
     uint32_t duration;
+    /// Maximum successful UDP sends (AP Transaction TX only; 0 uses duration).
+    uint32_t maxcnt;
     /// TOS value to be put in the IP header
     uint16_t tos;
 };
@@ -134,6 +136,10 @@ struct fhost_tg_stream
     uint32_t id;
     /// State of TG stream (true for active, false for inactive)
     bool active;
+    /* Set by stop to wake a sender blocked waiting for TX credits. */
+    bool stop_requested;
+    /* TX buffers were still owned by the network stack at stop time. */
+    bool cleanup_pending;
     /// TG semaphore used to synchronize the TG thread and the FHOST IPC one
     rtos_semaphore tg_semaphore;
     /// NET_TG Semaphore used to synchronize the process in the net_tg_al layer
@@ -187,7 +193,13 @@ extern struct fhost_tg_stream g_streams[FHOST_TG_MAX_TRAFFIC_STREAMS];
  */
 int fhost_tg_config(uint32_t stream_id, uint32_t prof, int direction, uint32_t rip,
                     uint32_t remote_port, uint32_t lip, uint32_t local_port, uint32_t rate,
-                    uint32_t pksize, uint32_t duration, uint16_t tos);
+                    uint32_t pksize, uint32_t duration, uint16_t tos, uint32_t maxcnt);
+
+// Return whether this stream may use AP Transaction maxcnt termination.
+bool fhost_tg_maxcnt_enabled(struct fhost_tg_stream *stream);
+
+/* Optional decimal frame count; reject signs, junk and uint32 overflow. */
+int fhost_tg_parse_maxcnt(const char *text, uint32_t *value);
 
 /**
  ****************************************************************************************
@@ -218,7 +230,13 @@ int fhost_tg_start(uint32_t stream_id);
  * @return pointer to the statistics structure of stream, NULL if error
  ****************************************************************************************
  */
+/* AP Transaction maxcnt streams finish their count before stop returns.
+ * Use fhost_tg_reset() to interrupt those streams.
+ */
 struct fhost_tg_stats *fhost_tg_stop(uint32_t stream_id);
+
+/* Interrupt all active streams, then clear profiles and statistics. */
+uint32_t fhost_tg_reset(void);
 
 
 /*

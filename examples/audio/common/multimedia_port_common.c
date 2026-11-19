@@ -263,8 +263,8 @@ static int msp_codec_reconfigure(const msp_i2s_device_cfg_t *config)
         return ret;
     }
 
-    audio_codec_set_mute(&g_es8388_dev, g_codec_mute != 0);
-    audio_codec_set_volume(&g_es8388_dev, g_codec_volume_percent);
+    audio_codec_set_speaker_channel_mute(&g_es8388_dev, 0x03, g_codec_mute != 0);
+    audio_codec_set_speaker_channel_volume(&g_es8388_dev, 0x03, g_codec_volume_percent);
 
     return 0;
 }

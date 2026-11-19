@@ -68,11 +68,12 @@ void image_sensor_read(struct bflb_device_s *i2c, uint32_t sensor_index, struct 
     }
 }
 
-void image_sensor_write(struct bflb_device_s *i2c, uint32_t sensor_index, struct image_sensor_command_s *read_list, uint32_t list_len)
+void image_sensor_write(struct bflb_device_s *i2c, uint32_t sensor_index, const struct image_sensor_command_s *write_list, uint32_t list_len)
 {
     uint32_t i;
     struct bflb_i2c_msg_s msgs[2];
     uint8_t buffer[2];
+    uint8_t value;
 
     msgs[0].addr = sensor_list[sensor_index]->slave_addr;
     msgs[0].flags = I2C_M_NOSTOP;
@@ -86,14 +87,16 @@ void image_sensor_write(struct bflb_device_s *i2c, uint32_t sensor_index, struct
 
     for (i = 0; i < list_len; i++) {
         if (sensor_list[sensor_index]->reg_size == 1) {
-            buffer[0] = read_list[i].address & 0xff;
+            buffer[0] = write_list[i].address & 0xff;
         } else {
-            buffer[0] = read_list[i].address >> 8;
-            buffer[1] = read_list[i].address & 0xff;
+            buffer[0] = write_list[i].address >> 8;
+            buffer[1] = write_list[i].address & 0xff;
         }
 
+        /* Stage one byte in RAM so the initialization table can stay in Flash. */
+        value = write_list[i].paramete;
         msgs[0].buffer = buffer;
-        msgs[1].buffer = &read_list[i].paramete;
+        msgs[1].buffer = &value;
         bflb_i2c_transfer(i2c, msgs, 2);
     }
 }

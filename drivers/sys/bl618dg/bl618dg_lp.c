@@ -3,6 +3,9 @@
 #include "bflb_irq.h"
 #endif
 #include "bflb_l1c.h"
+#if defined(CONFIG_BLUETOOTH) && !defined(CONFIG_BT_CONTROLLER_DISABLE)
+#include "btblecontroller_port.h"
+#endif
 
 static ATTR_NOCACHE_RAM_SECTION struct bl_lp_info_s lp_info_struct = { 0 };
 static ATTR_NOCACHE_RAM_SECTION lp_fw_wifi_para_t wifi_param = { 0 };
@@ -485,15 +488,23 @@ void bl_lp_info_clear(struct bl_lp_info_s *lp_info)
     lp_info->time_record_start_rtc_cnt = rtc_cnt_now;
 }
 
-void bl_lp_fw_init(void)
+int bl_lp_fw_init(void)
 {
+    int ret;
+
+#if defined(CONFIG_BLUETOOTH) && !defined(CONFIG_BT_CONTROLLER_DISABLE)
+    btblecontroller_lp_rx_ppm_set_enabled(false);
+#endif
+
     /* Global iot2lp_para pointer is already initialized as const */
     PDS_IntClear();
     PDS_Mask_All_Wakeup_Src();
     HBN_Pin_WakeUp_Mask(0xF);
 
-    if (bl_lpfw_bin_check() < 0) {
+    ret = bl_lpfw_bin_check();
+    if (ret < 0) {
         assert(0);
+        return ret;
     }
 
     /* clean iot2lp_para */
@@ -582,13 +593,24 @@ void bl_lp_fw_init(void)
 
 #ifndef CONFIG_LPFW_INIT_LOAD
     /* First load */
-    bl_lpfw_ram_load();
-    if (bl_lpfw_ram_verify() < 0) {
+    ret = bl_lpfw_ram_load();
+    if (ret < 0) {
         assert(0);
+        return ret;
+    }
+    ret = bl_lpfw_ram_verify();
+    if (ret < 0) {
+        assert(0);
+        return ret;
     }
 #endif
 
+#if defined(CONFIG_BLUETOOTH) && !defined(CONFIG_BT_CONTROLLER_DISABLE)
+    /* Collect the first estimate before connection-state PDS requires it. */
+    btblecontroller_lp_rx_ppm_set_enabled(true);
+#endif
     BL_LP_LOG("[LP] init finish\r\n");
+    return 0;
 }
 
 void bl_lp_ble_rx_ppm_clear(void)
@@ -607,15 +629,15 @@ void bl_lp_ble_rx_ppm_clear(void)
     ble->con_rx_ppm = 0;
 }
 
-int bl_lp_init(void)
+int _bl_lp_init(void)
 {
     bl_lp_env_init();
 
 #ifdef CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW
-    bl_lp_fw_init();
-#endif
-
+    return bl_lp_fw_init();
+#else
     return 0;
+#endif
 }
 
 static void bl_lp_vtime_before_sleep(void)

@@ -2,11 +2,14 @@
 /* Exercise the production session owner with controlled RTOS/DMA failures. */
 #define _POSIX_C_SOURCE 200809L
 #include "audio_pcm.h"
+#include "wave_player_pcm.h"
+#include <math.h>
 #include <FreeRTOS.h>
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,12 +21,15 @@
 #define DMA_ADDR_I2S_TDR                   0x100U
 #define DMA_ADDR_AUDAC_TDR                 0x200U
 #define eSetBits                           0
-#define taskENTER_CRITICAL()               ((void)pthread_mutex_lock(&critical))
+#define taskENTER_CRITICAL()               test_enter_critical()
 #define taskEXIT_CRITICAL()                test_exit_critical()
+static void test_enter_critical(void);
 static void test_exit_critical(void);
 typedef pthread_mutex_t *SemaphoreHandle_t;
 static pthread_mutex_t critical = PTHREAD_MUTEX_INITIALIZER;
+static _Thread_local unsigned critical_depth;
 static unsigned config_calls;
+static unsigned init_calls;
 static unsigned transport_stops;
 static unsigned tx_starts;
 static bool fail_init;
@@ -36,9 +42,17 @@ static bool tx_dma_restarted;
 static unsigned tx_pauses;
 static unsigned tx_resumes;
 static bool hold_worker;
+static int volume_error;
 static int mute_error;
+static unsigned volume_calls;
+static unsigned mute_calls;
+static uint8_t current_playback_volume;
 static uint8_t current_record_volume;
-static uint8_t current_record_pga;
+static float current_record_gain_db;
+static uint8_t record_volume_slots[AUDIO_CODEC_MAX_SLOTS];
+static float record_gain_slots[AUDIO_CODEC_MAX_SLOTS];
+static unsigned record_control_calls;
+static int record_control_error;
 static _Thread_local TaskHandle_t current_task;
 static _Thread_local bool schedule_capture_reference;
 static _Thread_local bool schedule_handoff_wait;
@@ -46,8 +60,6 @@ static bool handoff_waiting;
 static pthread_mutex_t handoff_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t handoff_condition = PTHREAD_COND_INITIALIZER;
 static void (*capture_reservation_hook)(void);
-static void (*legacy_volume_hook)(void);
-static void (*legacy_read_hook)(void);
 static uint8_t hardware_tokens[4];
 struct bflb_dma_channel_lli_transfer_s {
     uint32_t src_addr;
@@ -60,6 +72,7 @@ static struct {
 } fake_ring;
 static struct {
     SemaphoreHandle_t sem_tx_dma_done;
+    SemaphoreHandle_t sem_wave_rb_space;
     void *dma_ch_tx;
     void *dma_ch_rx;
     uint32_t tx_llipool[8];
@@ -77,15 +90,13 @@ static struct {
     uint32_t tx_period_samples;
     uint64_t tx_total_samples;
     uint8_t src_channels;
-    uint8_t volume;
+    uint8_t tx_slot_count, tx_slot_word_bytes;
     bool io_started;
     bool rec_enable;
     bool rec_stop;
-    bool muted;
     bool stop;
     bool paused;
     TaskHandle_t wave_task;
-    TaskHandle_t wave_src_task;
     TaskHandle_t cap_task;
     wave_player_capture_layout_t capture_layout;
     wave_player_rec_cb_t rec_cb;
@@ -94,20 +105,13 @@ static struct {
     audio_codec_dev_t cap_codec;
     int wave_rb;
 } g_audio;
+#include "mock_codec_channel_caps.h"
 static wave_player_playback_frame_cb_t playback_frame_cb;
 static void *playback_frame_user_data;
-static bool audio_pcm_owned(void);
-static bool wave_player_legacy_enter(void);
-static void wave_player_legacy_leave(void);
-static bool audio_pcm_keep_capture(void);
-static bool audio_pcm_capture_prepared(void);
-static void audio_pcm_player_cleanup(void);
-static void audio_pcm_player_started(void);
-static void audio_pcm_player_failed(void);
 static int audio_pcm_lock(void);
 static void audio_pcm_unlock(void);
 
-static uint64_t bflb_mtimer_get_time_us(void)
+uint64_t bflb_mtimer_get_time_us(void)
 {
     struct timespec now;
     assert(clock_gettime(CLOCK_MONOTONIC, &now) == 0);
@@ -144,7 +148,8 @@ static int xSemaphoreTake(SemaphoreHandle_t mutex, uint32_t ticks)
 
 static int xSemaphoreGive(SemaphoreHandle_t mutex)
 {
-    return pthread_mutex_unlock(mutex) == 0 ? pdTRUE : 0;
+    int result = pthread_mutex_unlock(mutex) == 0 ? pdTRUE : 0;
+    return result;
 }
 
 static TaskHandle_t xTaskGetCurrentTaskHandle(void)
@@ -212,6 +217,7 @@ static uint8_t wave_player_default_capture_channels(void)
 
 int wave_player_init(const wave_player_hw_cfg_t *config)
 {
+    ++init_calls;
     if (fail_init) {
         return -EIO;
     }
@@ -220,8 +226,22 @@ int wave_player_init(const wave_player_hw_cfg_t *config)
     g_audio.dma_ch_rx = &hardware_tokens[2];
     g_audio.cap_task = &hardware_tokens[3];
     g_audio.capture_layout = config->capture_layout;
-    g_audio.volume = 50;
-    return 0;
+    g_audio.play_codec.drv = g_audio.cap_codec.drv = &mock_codec_driver;
+    g_audio.tx_slot_count = 2;
+    g_audio.tx_slot_word_bytes = sizeof(int16_t);
+    current_record_volume = 100;
+    current_record_gain_db = 6.0f;
+    memset(record_volume_slots, 100, sizeof(record_volume_slots));
+    for (unsigned slot = 0; slot < AUDIO_CODEC_MAX_SLOTS; ++slot) {
+        record_gain_slots[slot] = 6.0f;
+    }
+
+    const audio_controls_config_t controls = {
+        .playback = &g_audio.play_codec, .capture = &g_audio.cap_codec,
+        .speaker_mask = 3, .mic_mask = (uint16_t)config->capture_layout.mic_mask,
+        .tx_slots = 2, .tx_slot_bytes = sizeof(int16_t),
+    };
+    return audio_controls_init(&controls);
 }
 
 static int wave_player_config_internal(uint32_t rate, uint32_t tx_bytes, uint32_t rx_bytes, uint8_t channels)
@@ -243,10 +263,6 @@ static int wave_player_config_internal(uint32_t rate, uint32_t tx_bytes, uint32_
     tx_peripheral_paused = false;
     tx_dma_restarted = true;
     g_audio.cap_isr_seq = 0;
-    g_audio.volume = 50;
-    g_audio.muted = false;
-    current_record_volume = 100;
-    current_record_pga = 71;
     g_audio.tx_total_samples = 0;
     ++g_audio.cap_epoch;
     return 0;
@@ -297,6 +313,11 @@ static void bflb_dma_channel_start(void *device)
 
 static int wave_player_start_internal(void)
 {
+    if (capture_reservation_hook != NULL) {
+        void (*hook)(void) = capture_reservation_hook;
+        capture_reservation_hook = NULL;
+        hook();
+    }
     if (fail_start) {
         audio_pcm_player_cleanup();
         return -1;
@@ -336,53 +357,251 @@ static void wave_player_flush_internal(void)
     fake_ring.used = 0;
 }
 
-int audio_codec_set_mute(audio_codec_dev_t *codec, bool mute)
+int audio_codec_set_speaker_channel_mute(audio_codec_dev_t *codec, uint16_t mask, bool mute)
 {
-    assert(codec == &g_audio.play_codec);
-    (void)mute;
+    assert(codec == &g_audio.play_codec && mask != 0 && (mask & ~3U) == 0U);
+    mute_calls++;
     if (capture_reservation_hook != NULL) {
         void (*hook)(void) = capture_reservation_hook;
         capture_reservation_hook = NULL;
         hook();
     }
+    if (mute_error == 0) {
+        (void)mute;
+    }
     return mute_error;
 }
 
-int audio_codec_set_volume(audio_codec_dev_t *codec, int volume)
+int audio_codec_set_speaker_channel_volume(audio_codec_dev_t *codec, uint16_t mask, int volume)
 {
-    assert(codec == &g_audio.play_codec && volume >= 0 && volume <= 100);
-    if (legacy_volume_hook != NULL) {
-        legacy_volume_hook();
+    assert(codec == &g_audio.play_codec && mask != 0 && (mask & ~3U) == 0U && volume >= 0 && volume <= 100);
+    volume_calls++;
+    if (capture_reservation_hook != NULL) {
+        void (*hook)(void) = capture_reservation_hook;
+        capture_reservation_hook = NULL;
+        hook();
     }
-    return 0;
+    if (volume_error == 0) {
+        current_playback_volume = volume;
+    }
+    return volume_error;
 }
 
-int audio_codec_set_record_volume(audio_codec_dev_t *codec, int volume)
+int audio_codec_set_mic_channel_volume(audio_codec_dev_t *codec, uint16_t mask, int volume)
 {
-    assert(codec == &g_audio.cap_codec && volume >= 0 && volume <= 100);
+    assert(codec == &g_audio.cap_codec && mask != 0 && (mask & ~12U) == 0U);
+    assert(volume >= 0 && volume <= 100);
+    ++record_control_calls;
+    if (record_control_error != 0) {
+        return record_control_error;
+    }
     current_record_volume = volume;
-    return 0;
-}
-
-static int wave_player_apply_rec_mic_pga(uint8_t pga)
-{
-    current_record_pga = pga;
-    return pga <= 100U ? 0 : -EINVAL;
-}
-
-static int wave_player_codec_cli_read_internal(bool capture, uint32_t reg, uint8_t width, uint32_t *value)
-{
-    assert(!capture && reg == 0 && width == 8 && value != NULL);
-    if (legacy_read_hook != NULL) {
-        legacy_read_hook();
+    for (unsigned c = 0; c < AUDIO_CODEC_MAX_SLOTS; ++c) {
+        if (mask & (1U << c)) {
+            record_volume_slots[c] = volume;
+        }
     }
-    *value = 0x5a;
     return 0;
+}
+
+int audio_codec_set_mic_channel_gain_db(audio_codec_dev_t *codec, uint16_t mask, float gain_db)
+{
+    int step = audio_codec_gain_step_index(mock_mic_gain_steps,
+                                         sizeof(mock_mic_gain_steps) / sizeof(mock_mic_gain_steps[0]), gain_db);
+    assert(step >= 0);
+    assert(codec == &g_audio.cap_codec && mask != 0 && (mask & ~12U) == 0U);
+    assert(gain_db >= -12.0f && gain_db <= 24.0f);
+    ++record_control_calls;
+    if (record_control_error != 0) {
+        return record_control_error;
+    }
+    current_record_gain_db = mock_mic_gain_steps[step];
+    for (unsigned c = 0; c < AUDIO_CODEC_MAX_SLOTS; ++c) {
+        if (mask & (1U << c)) {
+            record_gain_slots[c] = mock_mic_gain_steps[step];
+        }
+    }
+    return 0;
+}
+
+int audio_codec_set_mic_channel_mute(audio_codec_dev_t *codec, uint16_t mask, bool mute)
+{
+    assert(codec == &g_audio.cap_codec && mask != 0 && (mask & ~12U) == 0U);
+    (void)mute;
+    ++record_control_calls;
+    return record_control_error;
 }
 
 #include "wave_player_controls_under_test.h"
 
-#include "audio_pcm_under_test.h"
+/* Exercise the real engine boundary and session module together. The engine
+ * primitives above provide controlled RTOS, codec and DMA failures. */
+#include "wave_player_pcm_engine_under_test.h"
+#include "../audio_pcm.c"
+
+static char cli_message[160];
+
+static int capture_cli_message(const char *format, ...)
+{
+    va_list arguments;
+    va_start(arguments, format);
+    int result = vsnprintf(cli_message, sizeof(cli_message), format, arguments);
+    va_end(arguments);
+    assert(result >= 0 && (size_t)result < sizeof(cli_message));
+    return result;
+}
+
+#define printf capture_cli_message
+#include "wave_player_cli_controls_under_test.h"
+#undef printf
+
+static uint8_t speaker_volume(void)
+{
+    uint8_t volume = 0;
+    assert(audio_pcm_get_speaker_volume(&volume) == 0);
+    return volume;
+}
+
+static void test_cli_uninitialized(void)
+{
+    char *mic_on[] = { "mic_mute", "1" };
+    assert(audio_pcm_set_mic_mute(true) == -ENODEV);
+    assert(cmd_mic_mute(2, mic_on) == -ENODEV && audio_pcm_get_mic_mute_mask() == 0);
+}
+
+static void test_record_mute_controls(const audio_pcm_config_t *config)
+{
+    audio_codec_channel_state_t state;
+    assert(audio_pcm_set_mic_channel_mute(4, true) == 0);
+    assert(audio_pcm_get_mic_mute_mask() == 4 && !audio_pcm_get_mic_mute());
+    assert(audio_pcm_get_mic_channel_state(2, &state) == 0 && state.muted);
+    assert(audio_pcm_get_mic_channel_state(3, &state) == 0 && !state.muted);
+    assert(audio_pcm_set_mic_mute(true) == 0 && audio_pcm_get_mic_mute_mask() == 12);
+    for (unsigned attempt = 0; attempt < 2; ++attempt) {
+        audio_pcm_config_t capture = *config;
+        capture.sample_rate_hz = attempt ? 48000 : 16000;
+        audio_pcm_handle_t session = NULL;
+        assert(audio_pcm_open(AUDIO_PCM_CAPTURE, &capture, &session) == 0);
+        assert(audio_pcm_get_mic_mute() && audio_pcm_get_mic_mute_mask() == 12);
+        assert(audio_pcm_close(session, 20) == 0);
+    }
+    assert(audio_pcm_set_mic_channel_mute(4, false) == 0);
+    assert(audio_pcm_get_mic_mute_mask() == 8 && !audio_pcm_get_mic_mute());
+    assert(audio_pcm_set_mic_mute(false) == 0 && audio_pcm_get_mic_mute_mask() == 0);
+}
+
+static void test_mic_slot_controls(const audio_pcm_config_t *config)
+{
+    audio_pcm_handle_t session = NULL;
+    audio_codec_channel_state_t state;
+    audio_codec_channel_caps_t caps;
+    assert(audio_pcm_set_mic_channel_volume(4, 32) == 0);
+    assert(audio_pcm_set_mic_channel_gain_db(8, 10.5f) == 0);
+    assert(audio_pcm_get_mic_channel_state(2, &state) == 0 && state.volume_percent == 32);
+    assert(audio_pcm_get_mic_channel_state(3, &state) == 0 && state.gain_db == 12.0f);
+    assert(audio_pcm_get_mic_channel_caps(2, &caps) == 0);
+    assert(caps.independent_controls & AUDIO_CODEC_CONTROL_GAIN_DB);
+    unsigned before = record_control_calls;
+    const uint16_t invalid[] = { 0, 1, 5, 16, UINT16_MAX };
+    for (unsigned i = 0; i < sizeof(invalid) / sizeof(invalid[0]); ++i) {
+        assert(audio_pcm_set_mic_channel_volume(invalid[i], 44) == -EINVAL);
+        assert(audio_pcm_set_mic_channel_gain_db(invalid[i], 6.0f) == -EINVAL);
+        assert(audio_pcm_set_mic_channel_mute(invalid[i], true) == -EINVAL);
+    }
+    assert(audio_pcm_set_mic_gain_db(NAN) == -EINVAL);
+    assert(audio_pcm_set_mic_gain_db(INFINITY) == -EINVAL);
+    assert(audio_pcm_set_mic_gain_db(25.0f) == -ERANGE);
+    assert(record_control_calls == before);
+    record_control_error = -2;
+    assert(audio_pcm_set_mic_channel_volume(4, 44) == -ENOTSUP);
+    assert(audio_pcm_get_mic_channel_state(2, &state) == 0 && state.volume_percent == 32);
+    assert(state.valid & AUDIO_CODEC_CONTROL_VOLUME);
+    record_control_error = -1;
+    assert(audio_pcm_set_mic_channel_gain_db(8, 6.0f) == -EIO);
+    assert(audio_pcm_get_mic_channel_state(3, &state) == 0 && state.gain_db == 12.0f);
+    assert(!(state.valid & AUDIO_CODEC_CONTROL_GAIN_DB));
+    record_control_error = 0;
+    assert(audio_pcm_set_mic_channel_gain_db(8, 12.0f) == 0);
+    for (unsigned attempt = 0; attempt < 2; ++attempt) {
+        audio_pcm_config_t capture = *config;
+        capture.sample_rate_hz = attempt ? 48000 : 16000;
+        assert(audio_pcm_open(AUDIO_PCM_CAPTURE, &capture, &session) == 0);
+        assert(record_volume_slots[2] == 32 && record_volume_slots[3] == 100);
+        assert(record_gain_slots[2] == 6.0f && record_gain_slots[3] == 12.0f);
+        assert(audio_pcm_close(session, 20) == 0);
+    }
+    assert(audio_pcm_set_mic_volume(72) == 0);
+    assert(audio_pcm_set_mic_gain_db(6.0f) == 0);
+}
+
+static void test_cli_presets(const audio_pcm_config_t *config)
+{
+    char *volume[] = { "speaker_vol", "20" };
+    char *new_volume[] = { "speaker_vol", "90" };
+    char *mute_on[] = { "speaker_mute", "1" };
+    char *mute_off[] = { "speaker_mute", "0" };
+    audio_pcm_handle_t session = NULL;
+    assert(cmd_speaker_vol(2, volume) == 0 && speaker_volume() == 20);
+    assert(cmd_speaker_mute(2, mute_on) == 0);
+    g_audio.io_started = true;
+    assert(cmd_speaker_vol(2, new_volume) == 0 && speaker_volume() == 90);
+    assert(cmd_speaker_mute(2, mute_off) == 0);
+    g_audio.io_started = false;
+    /* Preset controls survive opening the first session. */
+    assert(audio_pcm_open(AUDIO_PCM_CAPTURE, config, &session) == 0);
+    assert(speaker_volume() == 90 && current_playback_volume == 90 && !audio_pcm_get_speaker_mute());
+    assert(audio_pcm_close(session, 20) == 0);
+}
+
+static void test_cli_pcm_owned(void)
+{
+    char *volume[] = { "speaker_vol", "20" };
+    char *mute_on[] = { "speaker_mute", "1" };
+    assert(audio_pcm_owned());
+    assert(cmd_speaker_vol(2, volume) == 0 && speaker_volume() == 20);
+    volume[1] = "90";
+    assert(cmd_speaker_vol(2, volume) == 0 && speaker_volume() == 90);
+    assert(cmd_speaker_mute(2, mute_on) == 0 && audio_pcm_get_speaker_mute());
+    unsigned before = volume_calls;
+    volume_error = -1;
+    volume[1] = "20";
+    assert(cmd_speaker_vol(2, volume) == -EIO && volume_calls == before + 1);
+    uint8_t uncertain = 77;
+    assert(audio_pcm_get_speaker_volume(&uncertain) == -ENOTSUP && uncertain == 77);
+    volume_error = 0;
+    volume[1] = "90";
+    assert(cmd_speaker_vol(2, volume) == 0 && speaker_volume() == 90);
+    char *mic_volume[] = { "mic_vol", "83" };
+    char *mic_gain[] = { "mic_gain_db", "-6.0" };
+    assert(cmd_mic_vol(2, mic_volume) == 0 && record_volume_slots[2] == 83 && record_volume_slots[3] == 83);
+    assert(cmd_mic_gain_db(2, mic_gain) == 0 && record_gain_slots[2] == -6.0f && record_gain_slots[3] == -6.0f);
+    char *selected[] = { "mic_vol", "34", "4" };
+    assert(cmd_mic_vol(3, selected) == 0 && record_volume_slots[2] == 34 && record_volume_slots[3] == 83);
+    selected[1] = "10.5";
+    selected[2] = "8";
+    assert(cmd_mic_gain_db(3, selected) == 0 && record_gain_slots[2] == -6.0f && record_gain_slots[3] == 12.0f);
+    char *query[] = { "audio_channel", "mic", "3" };
+    unsigned before_query = volume_calls + record_control_calls;
+    assert(cmd_audio_channel(3, query) == 0 && strstr(cli_message, "role=mic slot=3") != NULL);
+    assert(strstr(cli_message, "volume=83") != NULL && strstr(cli_message, "gain_db=12.00") != NULL);
+    assert(volume_calls + record_control_calls == before_query);
+    char *partial_mute[] = { "mic_mute", "1", "4" };
+    assert(cmd_mic_mute(3, partial_mute) == 0 && audio_pcm_get_mic_mute_mask() == 4);
+    assert(!audio_pcm_get_mic_mute());
+    partial_mute[1] = "0";
+    assert(cmd_mic_mute(3, partial_mute) == 0 && audio_pcm_get_mic_mute_mask() == 0);
+    const char *invalid_gain[] = { "nan", "inf", "-inf", "6tail", "" };
+    for (unsigned i = 0; i < sizeof(invalid_gain) / sizeof(invalid_gain[0]); ++i) {
+        mic_gain[1] = (char *)invalid_gain[i];
+        assert(cmd_mic_gain_db(2, mic_gain) == -EINVAL);
+    }
+    selected[1] = "50";
+    selected[2] = "0";
+    before = record_control_calls;
+    assert(cmd_mic_vol(3, selected) == -EINVAL);
+    selected[2] = "1";
+    assert(cmd_mic_vol(3, selected) == -EINVAL && record_control_calls == before);
+}
 
 static audio_pcm_frame_info_t received;
 static audio_pcm_frame_info_t reference;
@@ -402,8 +621,19 @@ static bool handoff_result;
 static bool reference_self_open;
 static uint32_t paused_reference_sequence;
 
+static void test_enter_critical(void)
+{
+    if (critical_depth++ == 0U) {
+        assert(pthread_mutex_lock(&critical) == 0);
+    }
+}
+
 static void test_exit_critical(void)
 {
+    assert(critical_depth != 0U);
+    if (--critical_depth != 0U) {
+        return;
+    }
     bool pause = schedule_capture_reference && pause_reference &&
                  g_pcm.playback_sequence == paused_reference_sequence &&
                  g_pcm.sessions[AUDIO_PCM_CAPTURE].playback_callback_users != 0U;
@@ -605,115 +835,10 @@ static void test_reference_reservation(void)
     assert(audio_pcm_close(input, 20) == 0);
 }
 
-static pthread_mutex_t legacy_control_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t legacy_control_changed = PTHREAD_COND_INITIALIZER;
-static bool legacy_control_entered;
-static bool legacy_control_release;
-
-static void hold_legacy_codec_write(void)
-{
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    legacy_control_entered = true;
-    assert(pthread_cond_broadcast(&legacy_control_changed) == 0);
-    while (!legacy_control_release) {
-        assert(pthread_cond_wait(&legacy_control_changed, &legacy_control_lock) == 0);
-    }
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-}
-
-static void *legacy_control_worker(void *pcm_control)
-{
-    if (pcm_control == &hardware_tokens[0]) {
-        assert(audio_pcm_set_volume(37) == 0);
-    } else if (pcm_control == &hardware_tokens[1]) {
-        uint32_t value = 0;
-        assert(wave_player_codec_cli_read(false, 0, 8, &value) == 0 && value == 0x5a);
-    } else {
-        assert(wave_player_set_volume(44) == 0);
-    }
-    return NULL;
-}
-
-static void test_legacy_claim_barrier(const audio_pcm_config_t *config)
-{
-    pthread_t worker;
-    legacy_volume_hook = hold_legacy_codec_write;
-    legacy_control_entered = false;
-    legacy_control_release = false;
-    assert(pthread_create(&worker, NULL, legacy_control_worker, NULL) == 0);
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    while (!legacy_control_entered) {
-        assert(pthread_cond_wait(&legacy_control_changed, &legacy_control_lock) == 0);
-    }
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-
-    unsigned configured = config_calls;
-    audio_pcm_handle_t session = NULL;
-    assert(audio_pcm_open(AUDIO_PCM_CAPTURE, config, &session) == -EBUSY);
-    assert(session == NULL && !audio_pcm_owned() && config_calls == configured);
-    assert(audio_pcm_set_volume(55) == -EBUSY);
-    assert(g_pcm.requested_volume == 37);
-
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    legacy_control_release = true;
-    assert(pthread_cond_broadcast(&legacy_control_changed) == 0);
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-    assert(pthread_join(worker, NULL) == 0);
-    assert(g_pcm.legacy_operations == 0);
-
-    /* Conversely, a PCM preset in flight rejects newly arriving legacy IO. */
-    legacy_control_entered = false;
-    legacy_control_release = false;
-    assert(pthread_create(&worker, NULL, legacy_control_worker, &hardware_tokens[0]) == 0);
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    while (!legacy_control_entered) {
-        assert(pthread_cond_wait(&legacy_control_changed, &legacy_control_lock) == 0);
-    }
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-    assert(wave_player_set_volume(66) == -EBUSY);
-    assert(wave_player_set_record_pga(67) == -EBUSY);
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    legacy_control_release = true;
-    assert(pthread_cond_broadcast(&legacy_control_changed) == 0);
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-    assert(pthread_join(worker, NULL) == 0);
-    legacy_volume_hook = NULL;
-    assert(g_pcm.control_operations == 0 && g_pcm.legacy_operations == 0);
-    /* A logical read still owns its controller transaction until it completes. */
-    legacy_read_hook = hold_legacy_codec_write;
-    legacy_control_entered = false;
-    legacy_control_release = false;
-    assert(pthread_create(&worker, NULL, legacy_control_worker, &hardware_tokens[1]) == 0);
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    while (!legacy_control_entered) {
-        assert(pthread_cond_wait(&legacy_control_changed, &legacy_control_lock) == 0);
-    }
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-    assert(audio_pcm_open(AUDIO_PCM_CAPTURE, config, &session) == -EBUSY);
-    assert(session == NULL && !audio_pcm_owned() && config_calls == configured);
-    assert(audio_pcm_set_record_pga(55) == -EBUSY);
-    assert(pthread_mutex_lock(&legacy_control_lock) == 0);
-    legacy_control_release = true;
-    assert(pthread_cond_broadcast(&legacy_control_changed) == 0);
-    assert(pthread_mutex_unlock(&legacy_control_lock) == 0);
-    assert(pthread_join(worker, NULL) == 0);
-    legacy_read_hook = NULL;
-    assert(g_pcm.legacy_operations == 0);
-    g_audio.io_started = true;
-    assert(audio_pcm_set_volume(55) == -EBUSY && g_pcm.requested_volume == 37);
-    g_audio.io_started = false;
-#if WAVE_PLAYER_ENABLE_REC_RB
-    /* A stopped player can still have an asynchronous legacy source writer. */
-    g_audio.wave_src_task = &hardware_tokens[0];
-    assert(audio_pcm_open(AUDIO_PCM_CAPTURE, config, &session) == -EBUSY);
-    assert(session == NULL && !audio_pcm_owned() && config_calls == configured);
-    g_audio.wave_src_task = NULL;
-#endif
-}
-
 int main(void)
 {
     current_task = &current_task;
+    test_cli_uninitialized();
     fake_ring.size = 11;
     const wave_player_hw_cfg_t hardware = {
         .i2s_dev_name = "i2s0",
@@ -728,44 +853,64 @@ int main(void)
     assert(audio_pcm_init(&hardware) == -EIO);
     fail_init = false;
     assert(audio_pcm_init(&hardware) == 0);
-    assert(audio_pcm_init(&hardware) == 0);
+    assert(audio_pcm_init(&hardware) == -EALREADY);
+    unsigned initialized = init_calls;
+    unsigned char initialized_state[sizeof(g_audio)];
+    memcpy(initialized_state, &g_audio, sizeof(g_audio));
     char same_name[] = "i2s0";
     wave_player_hw_cfg_t copied_hardware = hardware;
     copied_hardware.i2s_dev_name = same_name;
-    assert(audio_pcm_init(&copied_hardware) == 0);
+    assert(audio_pcm_init(&copied_hardware) == -EALREADY);
     same_name[0] = 'x';
-    assert(audio_pcm_init(&copied_hardware) == -EBUSY);
-    assert(audio_pcm_init(&hardware) == 0);
-    assert(audio_pcm_set_volume(37) == 0);
-    assert(audio_pcm_set_mute(true) == 0);
-    assert(audio_pcm_set_record_volume(72) == 0);
-    assert(audio_pcm_set_record_pga(61) == 0);
+    assert(audio_pcm_init(&copied_hardware) == -EALREADY);
+    assert(audio_pcm_init(&hardware) == -EALREADY);
+    assert(init_calls == initialized && memcmp(initialized_state, &g_audio, sizeof(g_audio)) == 0);
+    const audio_controls_config_t narrow_controls = {
+        .playback = &g_audio.play_codec, .capture = &g_audio.cap_codec,
+        .speaker_mask = 1, .mic_mask = 12, .tx_slots = 2, .tx_slot_bytes = sizeof(int16_t),
+    };
+    assert(audio_controls_init(&narrow_controls) == 0);
+    assert(wave_player_set_speaker_mute(true) == 0 && wave_player_get_speaker_mute());
+    wave_player_pcm_engine_state_t narrow_state;
+    wave_player_pcm_engine_snapshot(&narrow_state);
+    assert(!narrow_state.muted);
+    audio_controls_config_t full_controls = narrow_controls;
+    full_controls.speaker_mask = 3;
+    assert(audio_controls_init(&full_controls) == 0);
+    test_mic_slot_controls(&cap);
+    test_record_mute_controls(&cap);
+    test_cli_presets(&cap);
+    assert(audio_pcm_set_speaker_volume(37) == 0);
+    assert(audio_pcm_set_speaker_mute(true) == 0);
+    assert(audio_pcm_set_mic_volume(72) == 0);
+    assert(audio_pcm_set_mic_gain_db(6.0f) == 0);
     wave_player_hw_cfg_t other_hardware = hardware;
     other_hardware.dma_tx_dev_name = "dma_other";
-    assert(audio_pcm_init(&other_hardware) == -EBUSY);
+    assert(audio_pcm_init(&other_hardware) == -EALREADY);
+    assert(init_calls == initialized);
     audio_pcm_caps_t caps;
     assert(audio_pcm_get_caps(&caps) == 0 && caps.capture_channels == 4 && caps.bits_per_sample == 16);
+    assert(caps.mic_mask == 12 && caps.speaker_mask == 3);
+    audio_pcm_caps_t initialized_caps = caps;
+    void *capture_dma = g_audio.dma_ch_rx;
+    g_audio.dma_ch_rx = NULL;
+    assert(audio_pcm_get_caps(&caps) == 0 && memcmp(&caps, &initialized_caps, sizeof(caps)) == 0);
+    g_audio.dma_ch_rx = capture_dma;
     cap.bits_per_sample = 24;
     assert(audio_pcm_open(AUDIO_PCM_CAPTURE, &cap, &input) == -ENOTSUP);
     cap.bits_per_sample = 16;
-    test_legacy_claim_barrier(&cap);
     fail_config = true;
     assert(audio_pcm_open(AUDIO_PCM_CAPTURE, &cap, &input) == -EINVAL && input == NULL);
     assert(!audio_pcm_owned());
     fail_config = false;
     assert(audio_pcm_open(AUDIO_PCM_CAPTURE, &cap, &input) == 0);
-    assert(g_audio.volume == 37 && g_audio.muted && current_record_volume == 72 && current_record_pga == 61);
-    assert(wave_player_set_volume(90) == -EBUSY);
-    assert(wave_player_set_mute(false) == -EBUSY);
-    assert(wave_player_set_record_volume(91) == -EBUSY);
-    assert(wave_player_set_record_pga(92) == -EBUSY);
-    assert(wave_player_rec_stop() == -EBUSY);
-    assert(g_audio.volume == 37 && g_audio.muted && current_record_volume == 72 && current_record_pga == 61);
+    assert(speaker_volume() == 37 && audio_pcm_get_speaker_mute() && current_record_volume == 72 && current_record_gain_db == 6.0f);
     assert(!g_audio.rec_stop && g_audio.rec_enable);
-    /* Session controls retain their internal path while legacy writes are blocked. */
-    assert(audio_pcm_set_volume(38) == 0 && g_audio.volume == 38);
-    assert(audio_pcm_set_record_volume(73) == 0 && current_record_volume == 73);
-    assert(audio_pcm_set_record_pga(62) == 0 && current_record_pga == 62);
+    test_cli_pcm_owned();
+    /* Session controls use the engine while capture is active. */
+    assert(audio_pcm_set_speaker_volume(38) == 0 && speaker_volume() == 38);
+    assert(audio_pcm_set_mic_volume(73) == 0 && current_record_volume == 73);
+    assert(audio_pcm_set_mic_gain_db(12.0f) == 0 && current_record_gain_db == 12.0f);
     unsigned configured = config_calls;
     unsigned stops = transport_stops;
     assert(audio_pcm_set_capture_callback(input, on_capture, &received) == 0);
@@ -776,27 +921,26 @@ int main(void)
         .sample_rate_hz = 16000,
         .channels = 4,
         .layout = hardware.capture_layout,
+        .muted_mic_mask = 12,
         .sequence = 1,
         .epoch = g_audio.cap_epoch,
         .first_sample_index = 0,
     };
     audio_pcm_capture_dispatch(&frame, NULL);
     assert(received_calls == 1 && received.first_sample_index == 0 && received.layout.mic_mask == 12);
+    assert(received.muted_mic_mask == 12 && reference.muted_mic_mask == 0);
+    frame.muted_mic_mask = 0;
     assert(reference_calls == 1 && reference.channels == 1 && reference.layout.ref_mask == 1);
     frame.sequence = 4;
     frame.first_sample_index = 1920;
     audio_pcm_capture_dispatch(&frame, NULL);
-    assert(received_calls == 2 && received.pts_us == 120000);
+    assert(received_calls == 2 && received.pts_us == 120000 && received.muted_mic_mask == 0);
     assert(received.flags == AUDIO_PCM_FRAME_DISCONTINUITY);
     uint32_t first_epoch = received.epoch;
     play.sample_rate_hz = 48000;
     assert(audio_pcm_open(AUDIO_PCM_PLAYBACK, &play, &output) == -EBUSY);
     assert(config_calls == configured && g_audio.rec_enable);
     play.sample_rate_hz = 16000;
-    mute_error = -1;
-    assert(audio_pcm_open(AUDIO_PCM_PLAYBACK, &play, &output) == -EIO && output == NULL);
-    assert(config_calls == configured && transport_stops == stops && g_audio.rec_enable);
-    mute_error = 0;
     fail_start = true;
     assert(audio_pcm_open(AUDIO_PCM_PLAYBACK, &play, &output) == -EIO && output == NULL);
     assert(config_calls == configured && transport_stops == stops && g_audio.rec_enable);
@@ -826,10 +970,10 @@ int main(void)
     assert(reference.first_sample_index == 4000 && reference.epoch == first_epoch);
     assert(reference.flags == AUDIO_PCM_FRAME_DISCONTINUITY);
     int16_t muted[] = { 1, 2, 3 };
-    assert(audio_pcm_set_mute(true) == 0);
+    assert(audio_pcm_set_speaker_mute(true) == 0);
     audio_pcm_prepare_playback(muted, sizeof(muted));
     assert(muted[0] == 0 && muted[2] == 0);
-    assert(audio_pcm_set_mute(false) == 0);
+    assert(audio_pcm_set_speaker_mute(false) == 0);
     hold_worker = true;
     assert(audio_pcm_close(output, 2) == -ETIMEDOUT);
     assert(audio_pcm_write(output, pcm, 2) == -ECANCELED);
@@ -928,6 +1072,6 @@ int main(void)
     assert(tx_starts >= 3);
     assert(tx_pauses >= tx_resumes && tx_resumes == tx_starts);
     vSemaphoreDelete(g_pcm.lock);
-    puts("PCM shared ownership, exact format, DMA metadata, backpressure, abort and close barriers passed");
+    puts("PCM exclusive ownership, one-time init, exact format, DMA metadata, backpressure, abort and close barriers passed");
     return 0;
 }

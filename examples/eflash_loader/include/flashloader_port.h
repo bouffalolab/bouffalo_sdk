@@ -6,6 +6,7 @@
 #include "flashloader_config.h"
 
 void flashloader_port_init(void);
+int flashloader_port_get_bootinfo(uint8_t data[28]);
 int flashloader_port_flash_init(void);
 int flashloader_port_flash_configure(uint32_t setting);
 #if (FLASHLOADER_CAPABILITIES & FLASHLOADER_CAP_RESET) != 0U

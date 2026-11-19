@@ -4,6 +4,9 @@
 #include "bflb_auadc.h"
 #include "bflb_gpio.h"
 #include "bl616_glb.h"
+#if defined(CONFIG_BSP_DISPLAY)
+#include "default/display_default_gpio_ext.h"
+#endif
 
 void board_uartx_gpio_init(void)
 {
@@ -227,29 +230,54 @@ void board_dvp_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_34, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
-void board_lcd_dbi_type_b_gpio_init(void)
+#if defined(CONFIG_BSP_DISPLAY)
+static void display_pins_mux(const uint8_t *pins, unsigned int count, uint32_t function)
 {
-    struct bflb_device_s *gpio;
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
 
-    gpio = bflb_device_get_by_name("gpio");
+    for (unsigned int i = 0; i < count; i++) {
+        bflb_gpio_init(gpio, pins[i], function | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    }
+}
 
+static void display_pins_release(const uint8_t *pins, unsigned int count)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    for (unsigned int i = 0; i < count; i++) {
+        bflb_gpio_init(gpio, pins[i], GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
+    }
+}
+
+static const uint8_t display_b8_pins[] = { 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+static const uint8_t display_b8_cs[] = { 5 };
+
+void board_display_dbi_b8_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    /* Retain the board's GPIO16 high level; it is not a framework backlight pin. */
     bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_set(gpio, GPIO_PIN_16);
-
-    /* DBI type B */
-    bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_6, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_7, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_8, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_9, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* Do not mux CS5 here: software CS and no-CS must remain independent. */
+    display_pins_mux(display_b8_pins, sizeof(display_b8_pins), GPIO_FUNC_DBI_B);
 }
+
+void board_display_dbi_b8_gpio_deinit(void)
+{
+    display_pins_release(display_b8_pins, sizeof(display_b8_pins));
+}
+
+void board_display_dbi_b8_cs_gpio_init(void)
+{
+    display_pins_mux(display_b8_cs, sizeof(display_b8_cs), GPIO_FUNC_DBI_B);
+}
+
+void board_display_dbi_b8_cs_gpio_deinit(void)
+{
+    display_pins_release(display_b8_cs, sizeof(display_b8_cs));
+}
+#endif
 
 void board_i2s_gpio_init(void)
 {
@@ -313,58 +341,85 @@ void board_i2s_codec_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-#if defined(CONFIG_BSP_LCD)
-void board_lcd_dbi_type_c_4_wire_gpio_init(void)
-{
-    struct bflb_device_s *gpio;
+#if defined(CONFIG_BSP_DISPLAY)
+static const uint8_t display_c4_pins[] = { 12, 14, 15 };
+static const uint8_t display_c3_pins[] = { 12, 15 };
+static const uint8_t display_c_cs[] = { 13 };
+static const uint8_t display_qspi_pins[] = { 10, 12, 13, 14, 15 };
+static const uint8_t display_qspi_cs[] = { 11 };
+static const uint8_t display_spi_pins[] = { 15, 13 };
 
-    gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+void board_display_dbi_c4_gpio_init(void)
+{
+    display_pins_mux(display_c4_pins, sizeof(display_c4_pins), GPIO_FUNC_DBI_C);
 }
 
-void board_lcd_dbi_type_c_3_wire_gpio_init(void)
+void board_display_dbi_c4_gpio_deinit(void)
 {
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_C | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    display_pins_release(display_c4_pins, sizeof(display_c4_pins));
 }
 
-void board_lcd_dbi_ex_qspi_gpio_init(void)
+void board_display_dbi_c4_cs_gpio_init(void)
 {
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_DBI_QSPI | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    display_pins_mux(display_c_cs, sizeof(display_c_cs), GPIO_FUNC_DBI_C);
 }
 
-void board_lcd_spi_0_hard_4_gpio_init(void)
+void board_display_dbi_c4_cs_gpio_deinit(void)
 {
-    struct bflb_device_s *gpio;
+    display_pins_release(display_c_cs, sizeof(display_c_cs));
+}
 
-    gpio = bflb_device_get_by_name("gpio");
+void board_display_dbi_c3_gpio_init(void)
+{
+    display_pins_mux(display_c3_pins, sizeof(display_c3_pins), GPIO_FUNC_DBI_C);
+}
+
+void board_display_dbi_c3_gpio_deinit(void)
+{
+    display_pins_release(display_c3_pins, sizeof(display_c3_pins));
+}
+
+void board_display_dbi_c3_cs_gpio_init(void)
+{
+    display_pins_mux(display_c_cs, sizeof(display_c_cs), GPIO_FUNC_DBI_C);
+}
+
+void board_display_dbi_c3_cs_gpio_deinit(void)
+{
+    display_pins_release(display_c_cs, sizeof(display_c_cs));
+}
+
+void board_display_qspi_gpio_init(void)
+{
+    display_pins_mux(display_qspi_pins, sizeof(display_qspi_pins), GPIO_FUNC_DBI_QSPI);
+}
+
+void board_display_qspi_gpio_deinit(void)
+{
+    display_pins_release(display_qspi_pins, sizeof(display_qspi_pins));
+}
+
+void board_display_qspi_cs_gpio_init(void)
+{
+    display_pins_mux(display_qspi_cs, sizeof(display_qspi_cs), GPIO_FUNC_DBI_QSPI);
+}
+
+void board_display_qspi_cs_gpio_deinit(void)
+{
+    display_pins_release(display_qspi_cs, sizeof(display_qspi_cs));
+}
+
+void board_display_spi_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    /* Retain SPI0 SCK15 (pulldown), MOSI13 (pullup), without muxing software CS/DC. */
     bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
-#if defined(GPIO_FUNC_SPI1)
-void board_lcd_spi_1_hard_4_gpio_init(void)
+void board_display_spi_gpio_deinit(void)
 {
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI1 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    display_pins_release(display_spi_pins, sizeof(display_spi_pins));
 }
-#endif
 #endif

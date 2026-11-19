@@ -30,7 +30,7 @@
 #define GC2145_SIZE_800X600   2
 #define GC2145_SIZE_USE       GC2145_SIZE_1280X720
 
-static struct image_sensor_command_s gc2145_init_list[] = {
+static const struct image_sensor_command_s gc2145_init_list[] = {
     { 0xfe, 0xf0 }, //reset
     { 0xfe, 0xf0 },
     { 0xfe, 0xf0 },

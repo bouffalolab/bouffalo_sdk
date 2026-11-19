@@ -278,6 +278,7 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
     size_t path_len;
     size_t query_len;
     char *request_uri = NULL;
+    char host_port[8];
     struct http_request req = {0};
     struct http_client client = {0};
 
@@ -340,6 +341,11 @@ int https_client_request(const struct https_client_request *request, uint32_t ti
     req.header_fields = request->header_fields;
     req.content_type_value = request->content_type_value;
     req.host = client.host;
+    if (client.port > 0 && client.port != DEFAULT_HTTP_PORT &&
+        client.port != DEFAULT_HTTPS_PORT) {
+        snprintf(host_port, sizeof(host_port), "%d", client.port);
+        req.port = host_port;
+    }
     req.payload_cb = request->payload_cb;
     req.payload = request->payload;
     req.payload_len = request->payload_len;

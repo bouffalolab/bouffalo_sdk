@@ -15,6 +15,15 @@
    doesn't have a stat, and the necv70 doesn't matter.) -- eichin
  */
 
+/* Picolibc and libstdc++ must use matching system and pthread types. Do not
+ * shadow the toolchain header with this legacy Newlib compatibility header.
+ * CONFIG_POSIX retains the SDK's separate FreeRTOS POSIX type selection.
+ */
+#include <sys/features.h>
+#if defined(__PICOLIBC__) && !defined(CONFIG_POSIX)
+#include_next <sys/types.h>
+#else
+
 #ifndef _SYS_TYPES_H
 
 #include <_ansi.h>
@@ -232,3 +241,5 @@ typedef	__int64_t	sbintime_t;
 #undef __need_inttypes
 
 #endif	/* _SYS_TYPES_H */
+
+#endif /* Picolibc toolchain header */

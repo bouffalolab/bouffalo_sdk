@@ -98,8 +98,9 @@ endif()
 
 # DBI Display
 if(CONFIG_SOLN_DISP_DBI_EN)
-    if(NOT CONFIG_BSP_LCD)
-        message(FATAL_ERROR "DBI display requires BSP_LCD")
+    if(NOT CONFIG_BSP_DISPLAY OR NOT CONFIG_DISPLAY_DEFAULT_TYPE_GRAM OR
+       NOT CONFIG_DISPLAY_BUS_DBI OR NOT CONFIG_DISPLAY_DEFAULT_FORMAT_RGB888)
+        message(FATAL_ERROR "DBI display requires a default BSP_DISPLAY DBI GRAM screen with RGB888 input")
     endif()
     if((NOT CONFIG_SOLN_FBQ_VID_RAW_LOCAL_EN) AND (NOT CONFIG_SOLN_FBQ_VID_RAW_REMOTE_EN))
         message(FATAL_ERROR "DBI display requires a local or remote RAW queue")
@@ -108,12 +109,14 @@ if(CONFIG_SOLN_DISP_DBI_EN)
     sdk_add_include_directories(display/display_mcu)
     sdk_library_add_sources(display/display_mcu/soln_dbi_disp.c)
     sdk_library_add_sources(display/display_mcu/soln_display_flush.c)
+    sdk_library_add_sources(display/display_mcu/soln_display_convert.c)
 endif()
 
 # RGB Display
 if(CONFIG_SOLN_DISP_RGB_EN)
-    if(NOT CONFIG_BSP_LCD)
-        message(FATAL_ERROR "RGB display requires BSP_LCD")
+    if(NOT CONFIG_BSP_DISPLAY OR NOT CONFIG_DISPLAY_DEFAULT OR
+       NOT CONFIG_DISPLAY_DEFAULT_TYPE_VIDEO OR NOT CONFIG_DISPLAY_DEFAULT_VIDEO_FORMAT_XRGB8888)
+        message(FATAL_ERROR "RGB display requires a default BSP_DISPLAY VIDEO screen with XRGB8888 input")
     endif()
     if((NOT CONFIG_SOLN_FBQ_VID_RAW_LOCAL_EN) AND (NOT CONFIG_SOLN_FBQ_VID_RAW_REMOTE_EN))
         message(FATAL_ERROR "RGB display requires a local or remote RAW queue")

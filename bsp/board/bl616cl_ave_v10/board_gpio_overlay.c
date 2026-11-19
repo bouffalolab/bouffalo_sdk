@@ -188,3 +188,101 @@ void board_lcd_dbi_type_b_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_36, GPIO_FUNC_DBI_B | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 #endif
+
+#if defined(CONFIG_BSP_DISPLAY)
+/* U10 exposes 8080 x8: WR=2, D/C=36, D0..D7=12..19 and CS=0.
+ * RD is not connected. GPIO1 and GPIO3 remain the audio/camera clocks.
+ * CS is left as GPIO until the framework selects its hardware-CS mode. */
+void board_display_dbi_b8_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+    static const uint8_t pins[] = {
+        GPIO_PIN_2, GPIO_PIN_36, GPIO_PIN_12, GPIO_PIN_13, GPIO_PIN_14,
+        GPIO_PIN_15, GPIO_PIN_16, GPIO_PIN_17, GPIO_PIN_18, GPIO_PIN_19,
+    };
+
+    for (unsigned int i = 0; i < sizeof(pins) / sizeof(pins[0]); i++) {
+        bflb_gpio_init(gpio, pins[i], GPIO_FUNC_DBI_B | GPIO_ALTERNATE |
+                       GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    }
+}
+
+void board_display_dbi_b8_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_b8_cs_gpio_init(void)
+{
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_DBI_B | GPIO_ALTERNATE |
+                   GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+}
+
+void board_display_dbi_b8_cs_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c4_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_dbi_c4_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c4_cs_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_dbi_c4_cs_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c3_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_dbi_c3_gpio_deinit(void)
+{
+}
+
+void board_display_dbi_c3_cs_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_dbi_c3_cs_gpio_deinit(void)
+{
+}
+
+void board_display_qspi_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_qspi_gpio_deinit(void)
+{
+}
+
+void board_display_qspi_cs_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_qspi_cs_gpio_deinit(void)
+{
+}
+
+void board_display_spi_gpio_init(void)
+{
+    /* TODO */
+}
+
+void board_display_spi_gpio_deinit(void)
+{
+}
+#endif

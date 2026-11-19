@@ -2655,9 +2655,9 @@ static const struct parse_data ssid_fields[] = {
 	{ INT_RANGE(owe_ptk_workaround, 0, 1) },
 	{ INT_RANGE(ft_eap_pmksa_caching, 0, 1) },
 	{ INT_RANGE(beacon_prot, 0, 1) },
-	{ INT_RANGE(transition_disable, 0, 255) },
 	{ INT_RANGE(sae_pk, 0, 2) },
 #endif
+	{ INT_RANGE(transition_disable, 0, 255) },
 #ifdef CONFIG_EXTRA_WPA_SSID_FLAG
 	{ INT(extra_flags) },
 #endif

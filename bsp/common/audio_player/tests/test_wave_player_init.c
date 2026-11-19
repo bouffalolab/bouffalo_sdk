@@ -66,7 +66,7 @@ static int xTaskCreate(void (*entry)(void *), char *name, unsigned depth, void *
                        UBaseType_t priority, TaskHandle_t *task)
 {
     assert(entry == audio_cap_proc && strcmp(name, "audio_cap") == 0);
-    assert(depth == 2048 && arg == NULL && priority == 7);
+    assert(depth == 1280 && arg == NULL && priority == 7);
     void *object = allocate_object();
     if (object == NULL) return 0;
     *task = object;
@@ -104,9 +104,17 @@ int audio_codec_init(audio_codec_dev_t *dev, const audio_codec_cfg_t *cfg)
     assert(cfg->mic_input_mode == AUDIO_CODEC_MIC_INPUT_DIFF);
     return 0;
 }
-int audio_codec_set_mute(audio_codec_dev_t *dev, bool mute) { (void)dev; (void)mute; return 0; }
-int audio_codec_set_volume(audio_codec_dev_t *dev, int volume) { (void)dev; (void)volume; return 0; }
-static int wave_player_apply_rec_mic_pga(uint8_t pga) { (void)pga; return 0; }
+int audio_controls_init(const audio_controls_config_t *config)
+{
+    assert(config != NULL && config->playback == &g_audio.play_codec && config->capture == &g_audio.cap_codec);
+    assert(config->tx_slots == g_audio.out_channels && config->tx_slot_bytes == sizeof(int16_t));
+    return 0;
+}
+
+void audio_controls_reset(void)
+{
+}
+
 static uint8_t wave_player_default_playback_channels(void) { return WAVE_PLAYER_OUT_CHANNELS; }
 static uint8_t wave_player_default_capture_channels(void) { return 2; }
 static void rb_lock(void) { }

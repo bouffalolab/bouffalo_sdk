@@ -103,7 +103,7 @@ COMPONENT_SRCS := \
     src/eap_common/eap_common.c \
     src/ap/ctrl_iface_ap.c \
 
-ifeq ($(CONFIG_MACSW_SELECT),wfa)
+ifeq ($(CONFIG_MACSW_WFA),y)
 COMPONENT_SRCS += \
     src/rsn_supp/pmksa_cache.c
 endif

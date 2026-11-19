@@ -11,7 +11,10 @@ void ram_psram_heap_init(void)
 {
     size_t heap_len = (size_t)&__psram_limit - (size_t)&__psram_heap_base;
 
-    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF,
-                     &__psram_heap_base, heap_len);
+    if (mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF,
+                         &__psram_heap_base, heap_len) == NULL) {
+        printf("warning: PSRAM heap registration failed (%u bytes)\r\n", (unsigned int)heap_len);
+        return;
+    }
     printf("  psram heap size: %u Kbyte\r\n", (unsigned int)(heap_len / 1024U));
 }

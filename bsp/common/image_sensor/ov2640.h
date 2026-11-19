@@ -30,7 +30,7 @@
 
 #define OV2640_RESO_USE OV2640_SXGA_1600x1200
 
-static struct image_sensor_command_s ov2640_init_list[] = {
+static const struct image_sensor_command_s ov2640_init_list[] = {
 #if (OV2640_RESO_USE == OV2640_SXGA_1600x1200)
     { 0xff, 0x00 },
     { 0x2c, 0xff },

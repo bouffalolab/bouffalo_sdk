@@ -280,9 +280,6 @@ __attribute__((weak)) int btblecontroller_putchar(int c)
      extern int bl_putchar(int c);
      return bl_putchar(c);
      #else
-     #if !defined(BL618DG)
-     extern int putchar(int c);
-     #endif
      return putchar(c);
      #endif
 }
@@ -308,7 +305,39 @@ __attribute__((weak)) uint64_t btblecontroller_mtimer_get_time_us(void)
 #if defined(BL618DG)
 #if defined(CONFIG_BLE_PDS) && !defined(CONFIG_IOT_SDK)
 #define BLE_RX_PPM_MIN_HUS 1000000ULL /* At least 500 ms between reference events. */
+static btblecontroller_lp_rx_ppm_state_t ble_rx_ppm_state = {
+    .rtc_hus = 0U,
+    .evt_cnt = 0U,
+    .interval = 0U,
+    .rate = 0U,
+    .valid = 0U,
+    .ppm = 0,
+};
 static uint8_t ble_rx_ppm_link_id = UINT8_MAX;
+static bool ble_rx_ppm_enabled = false;
+
+static void ble_rx_ppm_state_clear(void)
+{
+    ble_rx_ppm_state.rtc_hus = 0U;
+    ble_rx_ppm_state.evt_cnt = 0U;
+    ble_rx_ppm_state.interval = 0U;
+    ble_rx_ppm_state.rate = 0U;
+    ble_rx_ppm_state.valid = 0U;
+    ble_rx_ppm_state.ppm = 0;
+}
+
+__attribute__((weak)) void btblecontroller_lp_rx_ppm_set_enabled(bool enabled)
+{
+    uintptr_t irq_flags = bflb_irq_save();
+
+    if (ble_rx_ppm_enabled != enabled) {
+        ble_rx_ppm_state_clear();
+        ble_rx_ppm_link_id = UINT8_MAX;
+        ble_rx_ppm_enabled = enabled;
+    }
+
+    bflb_irq_restore(irq_flags);
+}
 
 __attribute__((weak)) uint64_t btblecontroller_lp_rtc_get_us(void)
 {
@@ -321,9 +350,29 @@ __attribute__((weak)) uint64_t btblecontroller_lp_rtc_get_us(void)
 __attribute__((weak)) void btblecontroller_lp_rx_ppm_reset(uint8_t link_id)
 {
     if (ble_rx_ppm_link_id == link_id) {
-        bl_lp_ble_rx_ppm_clear();
+        ble_rx_ppm_state_clear();
         ble_rx_ppm_link_id = UINT8_MAX;
     }
+}
+
+__attribute__((weak)) bool btblecontroller_lp_rx_ppm_sample_due(uint8_t link_id, uint16_t evt_cnt,
+                                                             uint16_t interval, uint8_t rate)
+{
+    const btblecontroller_lp_rx_ppm_state_t *state = &ble_rx_ppm_state;
+    uint16_t evt_delta;
+
+    if (!ble_rx_ppm_enabled || interval == 0U) {
+        return false;
+    }
+    if (ble_rx_ppm_link_id != link_id || state->rtc_hus == 0U ||
+        state->interval != interval || state->rate != rate) {
+        return true;
+    }
+
+    evt_delta = (uint16_t)(evt_cnt - state->evt_cnt);
+    /* Check nominal elapsed time before reading RTC/BT timestamps. */
+    return evt_delta >= 0x8000U ||
+           (uint32_t)evt_delta * interval >= BLE_RX_PPM_MIN_HUS / 625U;
 }
 
 /* Called only for the first usable peripheral RX packet in an event. Shared
@@ -333,67 +382,101 @@ __attribute__((weak)) void btblecontroller_lp_rx_ppm_update(uint8_t link_id, uin
                                                          uint16_t interval, uint8_t rate, uint64_t rx_rtc_hus,
                                                          int64_t age_hus)
 {
-    lp_fw_ble_para_t *ble = iot2lp_para->ble_parameter;
+    btblecontroller_lp_rx_ppm_state_t *state = &ble_rx_ppm_state;
     uint16_t evt_delta;
     uint64_t expected_hus, rtc_delta_hus;
     int64_t error, numerator;
 
     (void)age_hus;
 
-    if (ble == NULL || interval == 0U || rx_rtc_hus == 0U) {
+    if (!ble_rx_ppm_enabled || interval == 0U || rx_rtc_hus == 0U) {
         return;
     }
     if (ble_rx_ppm_link_id != link_id) {
-        bl_lp_ble_rx_ppm_clear();
+        ble_rx_ppm_state_clear();
         ble_rx_ppm_link_id = link_id;
     }
-    if (ble->con_rx_ppm_rtc_hus == 0U || ble->con_rx_ppm_interval != interval ||
-        ble->con_rx_ppm_rate != rate) {
-        ble->con_rx_ppm_valid = 0U;
+    if (state->rtc_hus == 0U || state->interval != interval || state->rate != rate) {
+        state->valid = 0U;
         goto baseline;
     }
-    evt_delta = (uint16_t)(evt_cnt - ble->con_rx_ppm_evt_cnt);
+    evt_delta = (uint16_t)(evt_cnt - state->evt_cnt);
     if (evt_delta == 0U) {
         return;
     }
-    if (evt_delta >= 0x8000U || rx_rtc_hus <= ble->con_rx_ppm_rtc_hus) {
-        ble->con_rx_ppm_valid = 0U;
+    if (evt_delta >= 0x8000U || rx_rtc_hus <= state->rtc_hus) {
+        state->valid = 0U;
         goto baseline;
     }
     expected_hus = (uint64_t)evt_delta * interval * 625U;
     if (expected_hus < BLE_RX_PPM_MIN_HUS) {
         return;
     }
-    rtc_delta_hus = rx_rtc_hus - ble->con_rx_ppm_rtc_hus;
+    rtc_delta_hus = rx_rtc_hus - state->rtc_hus;
     if (expected_hus > UINT32_MAX || rtc_delta_hus >= expected_hus * 2U) {
-        ble->con_rx_ppm_valid = 0U;
+        state->valid = 0U;
         goto baseline;
     }
     error = (int64_t)rtc_delta_hus - (int64_t)expected_hus;
     numerator = error * 1000000LL;
     numerator += error < 0 ? -(int64_t)(expected_hus / 2U) : (int64_t)(expected_hus / 2U);
-    ble->con_rx_ppm = (int32_t)(numerator / (int64_t)expected_hus);
-    ble->con_rx_ppm_valid = 1U;
+    state->ppm = (int32_t)(numerator / (int64_t)expected_hus);
+    state->valid = 1U;
 
 baseline:
-    ble->con_rx_ppm_rtc_hus = rx_rtc_hus;
-    ble->con_rx_ppm_evt_cnt = evt_cnt;
-    ble->con_rx_ppm_interval = interval;
-    ble->con_rx_ppm_rate = rate;
+    state->rtc_hus = rx_rtc_hus;
+    state->evt_cnt = evt_cnt;
+    state->interval = interval;
+    state->rate = rate;
 }
 
 __attribute__((weak)) bool btblecontroller_lp_rx_ppm_ready(uint8_t link_id, uint16_t interval, uint8_t rate)
 {
-    const lp_fw_ble_para_t *ble = iot2lp_para->ble_parameter;
+    return ble_rx_ppm_enabled && ble_rx_ppm_link_id == link_id && ble_rx_ppm_state.valid != 0U &&
+           ble_rx_ppm_state.interval == interval && ble_rx_ppm_state.rate == rate;
+}
 
-    return ble != NULL && ble_rx_ppm_link_id == link_id && ble->con_rx_ppm_valid != 0U &&
-           ble->con_rx_ppm_interval == interval && ble->con_rx_ppm_rate == rate;
+__attribute__((weak)) bool btblecontroller_lp_rx_ppm_state_export(uint8_t link_id, uint16_t interval, uint8_t rate,
+                                                                  btblecontroller_lp_rx_ppm_state_t *state)
+{
+    if (state == NULL || !btblecontroller_lp_rx_ppm_ready(link_id, interval, rate)) {
+        return false;
+    }
+
+    *state = ble_rx_ppm_state;
+    return true;
+}
+
+__attribute__((weak)) void btblecontroller_lp_rx_ppm_state_import(uint8_t link_id,
+                                                                  const btblecontroller_lp_rx_ppm_state_t *state)
+{
+    if (!ble_rx_ppm_enabled || state == NULL) {
+        return;
+    }
+
+    ble_rx_ppm_state = *state;
+    ble_rx_ppm_link_id = link_id;
 }
 
 #else
+__attribute__((weak)) void btblecontroller_lp_rx_ppm_set_enabled(bool enabled)
+{
+    (void)enabled;
+}
+
 __attribute__((weak)) uint64_t btblecontroller_lp_rtc_get_us(void)
 {
     return 0;
+}
+
+__attribute__((weak)) bool btblecontroller_lp_rx_ppm_sample_due(uint8_t link_id, uint16_t evt_cnt,
+                                                             uint16_t interval, uint8_t rate)
+{
+    (void)link_id;
+    (void)evt_cnt;
+    (void)interval;
+    (void)rate;
+    return false;
 }
 
 __attribute__((weak)) void btblecontroller_lp_rx_ppm_update(uint8_t link_id, uint16_t evt_cnt,
@@ -419,6 +502,24 @@ __attribute__((weak)) bool btblecontroller_lp_rx_ppm_ready(uint8_t link_id, uint
     (void)interval;
     (void)rate;
     return false;
+}
+
+__attribute__((weak)) bool btblecontroller_lp_rx_ppm_state_export(uint8_t link_id, uint16_t interval,
+                                                                  uint8_t rate,
+                                                                  btblecontroller_lp_rx_ppm_state_t *state)
+{
+    (void)link_id;
+    (void)interval;
+    (void)rate;
+    (void)state;
+    return false;
+}
+
+__attribute__((weak)) void btblecontroller_lp_rx_ppm_state_import(uint8_t link_id,
+                                                                  const btblecontroller_lp_rx_ppm_state_t *state)
+{
+    (void)link_id;
+    (void)state;
 }
 
 #endif

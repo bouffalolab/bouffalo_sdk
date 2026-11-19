@@ -183,6 +183,7 @@ static void audio_player_mp3_task(void *arg)
 
     size_t mp3_cache_len = 0;
     bool stream_done = false;
+    bool need_more_data = false;
     bool playback_started = false;
     int last_info_hz = -1;
     int last_info_ch = -1;
@@ -199,7 +200,7 @@ static void audio_player_mp3_task(void *arg)
             break;
         }
 
-        if (!stream_done && mp3_cache_len < 1024U) {
+        if (!stream_done && (mp3_cache_len < 1024U || need_more_data)) {
             uint32_t space = (uint32_t)(MP3_PLAYER_CACHE_BYTES - mp3_cache_len);
             if (space > 0) {
                 int r = cfg->ops.read(cfg->user_data, mp3_cache + mp3_cache_len, space);
@@ -209,6 +210,7 @@ static void audio_player_mp3_task(void *arg)
                     stream_done = true;
                 }
             }
+            need_more_data = false;
         }
 
         if (mp3_cache_len == 0) {
@@ -256,7 +258,14 @@ static void audio_player_mp3_task(void *arg)
 
         if (ecode != NO_DECODING_ERROR || pvmp3_ext.outputFrameSize <= 0 || pvmp3_ext.num_channels <= 0 ||
             pvmp3_ext.samplingRate <= 0) {
-            if (stream_done && mp3_cache_len == 0) {
+            if (pvmp3_ext.inputBufferUsedLength == 0) {
+                /* A truncated final frame cannot progress. Before EOF, fill
+                 * beyond the usual watermark when a complete frame needs it. */
+                if (stream_done || mp3_cache_len == MP3_PLAYER_CACHE_BYTES) {
+                    break;
+                }
+                need_more_data = true;
+            } else if (stream_done && mp3_cache_len == 0) {
                 break;
             }
             if (mp3_cache_len == 0) {
@@ -298,9 +307,14 @@ static void audio_player_mp3_task(void *arg)
 
         uint32_t total_samples = (uint32_t)pvmp3_ext.outputFrameSize;
         uint32_t out_bytes = total_samples * (uint32_t)sizeof(int16_t);
-        (void)mp3_feed_pcm_blocking((const uint8_t *)mp3_pcm_tmp, out_bytes);
+        if (mp3_feed_pcm_blocking((const uint8_t *)mp3_pcm_tmp, out_bytes) != out_bytes && !wave_player_is_running()) {
+            break;
+        }
     }
 
+    if (playback_started && !g_mp3.stop) {
+        wave_player_drain();
+    }
     wave_player_stop();
 
     if (cfg->ops.close != NULL) {
@@ -398,6 +412,8 @@ int mp3_player_stop(void)
     }
 
     g_mp3.stop = true;
+    /* Wake a full-ring feed or a natural-EOF drain, including paused output. */
+    wave_player_stop();
     while (g_mp3.task != NULL) {
         vTaskDelay(pdMS_TO_TICKS(10));
     }

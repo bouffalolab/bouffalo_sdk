@@ -47,7 +47,7 @@ typedef struct {
 // Country to regulatory domain mapping entry
 struct country_reg_map_t {
     char country_code[2];  // ISO 3166-1 alpha-2 country code
-    reg_domain_t domain;   // Regulatory domain for this country
+    uint8_t domain;        // Regulatory domain for this country, ref @ reg_domain_t
     const char *name;      // Country name (optional, for debugging)
     uint16_t country_phone_code; // Country Phone Code
 };

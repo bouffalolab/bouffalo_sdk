@@ -10,6 +10,7 @@ AOT loader, built-in libc, allocator, and shared utilities. The `platform/`
 directory adapts WAMR to the Bouffalo SDK's FreeRTOS, heap and cache APIs.
 
 `CONFIG_WAMR_INTERP` and `CONFIG_WAMR_AOT` can be enabled separately. AOT
-currently targets the BL616 ILP32F ABI only and needs executable SRAM. It does
-not support loading AOT code into non-executable PSRAM. No JIT or WASI APIs
-are enabled. The interpreter can run architecture-independent `.wasm` modules.
+currently targets the BL616 and BL616CL ILP32F ABI and needs executable SRAM.
+It does not support loading AOT code into non-executable PSRAM. No JIT or WASI
+APIs are enabled. The interpreter can run architecture-independent `.wasm`
+modules.

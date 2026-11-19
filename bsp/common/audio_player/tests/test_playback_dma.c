@@ -28,8 +28,8 @@ typedef struct {
 } wave_player_cfg_t;
 static struct {
     int16_t pcm_ping[640], pcm_pong[640];
-    bool stop, io_started;
-    void *wave_task, *dma_ch_tx;
+    bool stop, io_started, playback_primed;
+    void *wave_task, *dma_ch_tx, *sem_wave_rb_space;
     volatile uint32_t tx_dma_completions;
 } g_audio;
 static volatile uint32_t playback_flush_epoch;
@@ -48,6 +48,9 @@ static bool know_source;
 static unsigned critical_depth;
 static unsigned terminal_publications;
 static unsigned next_owner;
+#if defined(CONFIG_BSP_AUDIO_PCM)
+static unsigned clean_calls;
+#endif
 
 static void test_enter_critical(void)
 {
@@ -62,6 +65,9 @@ static void test_exit_critical(void)
     if (g_audio.wave_task == NULL) {
         assert(!g_audio.stop);
         terminal_publications++;
+#if defined(CONFIG_BSP_AUDIO_PCM)
+        assert(clean_calls == 2);
+#endif
         /* A higher-priority owner can claim and stop immediately on handoff. */
         g_audio.wave_task = &next_owner;
         g_audio.stop = true;
@@ -118,10 +124,6 @@ static void fill_pcm(int16_t *dst,const int16_t *src,uint32_t src_bytes,uint32_t
     if(fill_count==schedule_count+2)g_audio.stop=true;
 }
 static void audio_stop(void) {}
-static bool audio_pcm_owned(void)
-{
-    return false;
-}
 static __attribute__((unused)) bool audio_pcm_player_wait_reference(void)
 {
     assert(fill_count == 0 && wakes == 0);
@@ -133,17 +135,27 @@ static void audio_pcm_player_started(void)
 }
 static void audio_pcm_player_failed(void)
 {
+    if (!reference_wait_continue) {
+        assert(!g_audio.stop);
+    }
 }
 static void audio_pcm_prepare_playback(int16_t *samples, size_t bytes)
 {
     (void)samples;
     (void)bytes;
 }
+#if defined(CONFIG_BSP_AUDIO_PCM)
 static void bflb_l1c_dcache_clean_range(void *samples, uint32_t bytes)
 {
-    (void)samples;
-    (void)bytes;
+    assert(samples == (clean_calls == 0 ? g_audio.pcm_ping : g_audio.pcm_pong));
+    assert(bytes == block_bytes);
+    const uint8_t *cleared = samples;
+    for (uint32_t i = 0; i < bytes; ++i) {
+        assert(cleared[i] == 0);
+    }
+    ++clean_calls;
 }
+#endif
 #include "wave_player_loop_under_test.h"
 static unsigned run(const completion_t *events,unsigned count,bool source,unsigned slots)
 {
@@ -151,6 +163,9 @@ static unsigned run(const completion_t *events,unsigned count,bool source,unsign
     fill_count=wakes=unsafe_writes=active=prepared=0;
     reference_wait_calls = 0;
     critical_depth = terminal_publications = 0;
+#if defined(CONFIG_BSP_AUDIO_PCM)
+    clean_calls = 0;
+#endif
     g_wave_diag.tx_isr_cnt=diagnostic_max_delta=0;
     know_source=source;schedule=events;schedule_count=count;block_bytes=160*slots*2;
     Ring_Buffer_Type rb={0};

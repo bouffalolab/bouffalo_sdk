@@ -267,7 +267,7 @@ typedef void (* release_buf_cb)(net_al_tx_t net_buf, uint32_t tx_status,
                                 void *buf_rx);
 void net_al_tx_cfm();
 void net_al_tx_do_sta_del(uint8_t sta_id, release_buf_cb release_buf);
-void net_al_tx_init();
+int net_al_tx_init(void);
 
 /**
  ****************************************************************************************

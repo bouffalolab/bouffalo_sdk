@@ -14,7 +14,6 @@
 #ifdef CONFIG_WIFI_P2P_PERSISTENT_GROUP
 #include "crc32.h"
 #include "lfs_kv.h"
-#include "bflb_mtd.h"
 
 #define P2P_CONFIG_NAME "p2p"
 #define P2P_GROUP_STORE_KEY "wpa.p2p.groups"
@@ -24,23 +23,6 @@
 #define P2P_GROUP_STORE_RECORD_LEN 64
 #define P2P_GROUP_STORE_PSK_LEN (ETH_ALEN + 32 + sizeof(u8))
 #define P2P_GROUP_STORE_MAX_LEN (24 * 1024)
-
-static int p2p_group_store_initialized;
-
-static int p2p_group_store_init(void)
-{
-	if (p2p_group_store_initialized)
-		return 0;
-
-	bflb_mtd_init();
-	if (lfs_kv_init() != LFS_KV_OK) {
-		wpa_printf(MSG_ERROR, "P2P: Persistent storage init failed");
-		return -1;
-	}
-
-	p2p_group_store_initialized = 1;
-	return 0;
-}
 
 static int p2p_group_store_name(const char *name)
 {
@@ -157,8 +139,6 @@ static int p2p_group_store_write(struct wpa_config *config)
 	u32 group_count;
 	int ret = -1;
 
-	if (p2p_group_store_init())
-		return -1;
 	if (p2p_group_store_measure(config, &total_len, &group_count)) {
 		wpa_printf(MSG_ERROR, "P2P: Persistent group data is too large");
 		return -1;
@@ -309,8 +289,6 @@ static int p2p_group_store_read(struct wpa_config *config)
 	size_t loaded = 0, i;
 	int ret = -1;
 
-	if (p2p_group_store_init())
-		return -1;
 	lfs_kv_get_blob(P2P_GROUP_STORE_KEY, NULL, 0, &total_len);
 	if (!total_len)
 		return 0;

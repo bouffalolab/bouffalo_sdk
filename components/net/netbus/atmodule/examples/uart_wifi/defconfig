@@ -14,7 +14,6 @@ ifeq ($(CONFIG_AT_MDNS_ENABLE),y)
 CONFIG_MDNS =y
 endif
 
-
 -include $(SDK_DEMO_PATH)/../at_defconfig
 
 CONFIG_ATMODULE_UART        =y

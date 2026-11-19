@@ -2,3 +2,15 @@ mainmenu "SDK Configuration"
 
 source "$BL_SDK_BASE/Kconfig"
 
+
+config BTBLE_USE_STANDALONE_PATH
+    bool "BL618DG Bluetooth standalone RF path"
+    depends on CHIP = "bl618dg"
+    default n
+    help
+      Select the dedicated BL618DG standalone Bluetooth RF path for this
+      BT-only image instead of the combo/shared RF path. The board RF SYSINIT
+      selects the path and re-initializes the PHY after the RF cold start, so
+      enable this only when the board is wired for the standalone BT RF
+      output. LPFW and other non-SYSINIT images configure their RF path
+      separately.

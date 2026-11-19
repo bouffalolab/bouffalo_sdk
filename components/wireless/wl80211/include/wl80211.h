@@ -20,6 +20,7 @@
 #endif
 #include "tree/tree.h"
 
+
 //#define INVARIANTS
 #define COMPAT_WIFI_MGMR
 
@@ -34,6 +35,7 @@
 
 #if defined(__NuttX__)
 #include <sys/uio.h>
+
 #elif !defined(IOVEC_DEFINED)
 #define IOVEC_DEFINED
 struct iovec {
@@ -236,6 +238,7 @@ struct wl80211_ap_settings {
 #endif
     const uint8_t *probe_resp_ie;
     uint16_t probe_resp_ie_len;
+#define WL80211_AP_FLAGS_HIDDEN_SSID 0x1
     uint32_t flags;
 };
 
@@ -250,7 +253,7 @@ struct ieee80211_dot_d {
 typedef void (*wl80211_monitor_rx_cb_t)(void *ctx, void *pkt, size_t len, size_t mac_hdr_len, int rssi);
 struct wl80211_monitor_settings {
     /* channel settings */
-    enum wl80211_chan_width channel_width;
+    uint8_t channel_width; // ref @ enum wl80211_chan_width
     uint32_t center_freq1;
     uint32_t center_freq2;
 
@@ -339,7 +342,9 @@ typedef int (*wl80211_mgmt_rx_cb_t)(void *prv, uint8_t vif_type, void *rxhdr, co
                                     uint32_t status);
 #endif
 
-void wl80211_init(void);
+#if defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2
+void wl80211_init(void) __attribute__((deprecated("handled by SYSINIT; will be removed in Bouffalo SDK v3")));
+#endif /* defined(CONFIG_COMPAT_V2) && CONFIG_COMPAT_V2 */
 int wl80211_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
 void wl80211_tcpip_input(uint8_t vif_type, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);

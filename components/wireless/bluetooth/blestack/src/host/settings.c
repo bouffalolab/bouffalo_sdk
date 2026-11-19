@@ -234,41 +234,14 @@ K_WORK_DEFINE(save_id_work, save_id);
 #endif //!BFLB_BLE
 #if defined (BFLB_BLE)
 #if defined(CONFIG_BT_SETTINGS)
-bool lfs_kv_ready_flag = false;
-int bt_check_if_lfs_kv_ready()
-{
-    int err = 0;
-    
-    if(!lfs_kv_ready_flag){
-        err = lfs_kv_init();
-        if(!err)
-            lfs_kv_ready_flag = true;
-    }
-
-    return err;
-}
-
 int bt_settings_set_bin(const char *key, const uint8_t *value, size_t length)
 {    
-    int err;
-
-    err =  bt_check_if_lfs_kv_ready();
-    if(err)
-        return err;
-
-    err = lfs_kv_set_blob(key, value, length);
-
-    return err;
+    return lfs_kv_set_blob(key, value, length);
 }
 
 int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *real_len)
 {
-    int err;
     size_t rlen;
-
-    err = bt_check_if_lfs_kv_ready();
-    if(err)
-        return err;
 
     rlen = lfs_kv_get_blob(key, value, exp_len, NULL);
 
@@ -301,8 +274,6 @@ void bt_settings_save_id(void)
 {
 #if defined(BFLB_BLE)
 #if defined(CONFIG_BT_SETTINGS)
-    if(bt_check_if_lfs_kv_ready())
-        return;
     bt_settings_set_bin(NV_LOCAL_ID_ADDR, (const u8_t *)&bt_dev.id_addr[0], sizeof(bt_addr_le_t)*CONFIG_BT_ID_MAX); 
 #if defined(CONFIG_BT_PRIVACY)
     bt_settings_set_bin(NV_LOCAL_IRK, (const u8_t *)&bt_dev.irk[0], 16*CONFIG_BT_ID_MAX); 
@@ -322,8 +293,6 @@ void bt_settings_save_name(void)
 
 void bt_local_info_load(void)
 {
-    if(bt_check_if_lfs_kv_ready())
-        return;
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
     bt_settings_get_bin(NV_LOCAL_NAME, (u8_t*)bt_dev.name, CONFIG_BT_DEVICE_NAME_MAX, NULL);
 #endif

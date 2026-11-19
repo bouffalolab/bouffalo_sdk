@@ -22,7 +22,7 @@ struct wifi_mgmr_coex_status
     bool hardware_configured;
     bool active;
     bool ps_pta_running;
-    wifi_mgmr_coex_runtime_policy_t effective_runtime;
+    uint8_t effective_runtime; // ref @ enum wifi_mgmr_coex_runtime_policy_t
     uint8_t band;
     uint8_t duty_active_ms;
 };
@@ -47,7 +47,7 @@ enum wifi_mgmr_coex_board_topology {
 
 /** Startup-time coexistence integration data. */
 struct wifi_mgmr_coex_board_config {
-    enum wifi_mgmr_coex_board_topology topology;
+    uint8_t topology; // ref @ enum wifi_mgmr_coex_board_topology
     int8_t spdt_gpio;
 };
 
@@ -63,6 +63,11 @@ enum wifi_mgmr_coex_rf_mode {
  * creation. Returns wifi_mgmr_coex_error, not board_config_status.
  * Success does not mean the MACSW hardware baseline is already applied.
  * After a partial RF/integration failure, reboot before retrying.
+ *
+ * SYSINIT builds on BL618DG call this from the WIRELESS record using the
+ * build-time CONFIG_COEX_BOARD_TOPOLOGY_* selection, before main()/shell can
+ * run. Applications must not prepare RF a second time; the API is only for
+ * board integration code that owns the platform binding.
  */
 int wifi_mgmr_coex_rf_prepare(enum wifi_mgmr_coex_rf_mode mode);
 /** Check complete startup preparation, not just BSP RF calibration. */
@@ -86,6 +91,11 @@ enum wifi_mgmr_coex_board_config_status {
  * PS-PTA. Repeating the same configuration is idempotent; changing a locked
  * configuration returns BUSY. Declare before RF preparation/stack startup;
  * declaration alone does not permit starting a topology-aware Coex session.
+ *
+ * SYSINIT builds on BL618DG derive this call from CONFIG_COEX_BOARD_TOPOLOGY_*
+ * during the WIRELESS record; applications do not need to declare the board
+ * again. The API remains for board integration code that owns the platform
+ * binding; application startup must not call it.
  */
 int wifi_mgmr_coex_board_configure(
     enum wifi_mgmr_coex_board_topology topology, int spdt_gpio);

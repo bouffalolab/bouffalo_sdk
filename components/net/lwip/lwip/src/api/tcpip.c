@@ -594,7 +594,7 @@ tcpip_callbackmsg_trycallback_fromisr(struct tcpip_callback_msg *msg)
 
 /**
  * @ingroup lwip_os
- * Initialize this module:
+ * Real TCP/IP initialization, called by the SDK only:
  * - initialize all sub modules
  * - start the tcpip_thread
  *
@@ -602,7 +602,7 @@ tcpip_callbackmsg_trycallback_fromisr(struct tcpip_callback_msg *msg)
  * @param arg argument to pass to initfunc
  */
 void
-tcpip_init(tcpip_init_done_fn initfunc, void *arg)
+_tcpip_init(tcpip_init_done_fn initfunc, void *arg)
 {
   lwip_init();
 
@@ -620,6 +620,31 @@ tcpip_init(tcpip_init_done_fn initfunc, void *arg)
   sys_thread_new(TCPIP_THREAD_NAME, tcpip_thread, NULL, TCPIP_THREAD_STACKSIZE, TCPIP_THREAD_PRIO);
 }
 
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+/**
+ * Deprecated compatibility entry kept for applications written against the old
+ * SDK. The SDK initializes TCP/IP through SYSINIT; this wrapper only warns and,
+ * when the stack is not up yet (CONFIG_SYSINIT=n or a non-Wi-Fi image), performs
+ * the real initialization to preserve the legacy behavior.
+ */
+void
+tcpip_init(tcpip_init_done_fn initfunc, void *arg)
+{
+  printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+
+  if (sys_mbox_valid(&tcpip_mbox)) {
+    /* Already initialized: keep the legacy done-callback contract for old
+     * applications without reinitializing the stack. */
+    if (initfunc != NULL) {
+      (void)tcpip_callback((tcpip_callback_fn)initfunc, arg);
+    }
+    return;
+  }
+
+  _tcpip_init(initfunc, arg);
+}
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
 /**
  * Simple callback function used with tcpip_callback to free a pbuf
  * (pbuf_free has a wrong signature for tcpip_callback)

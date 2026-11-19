@@ -1,4 +1,6 @@
 #include "rfparam_adapter.h"
+#include "sysinit.h"
+#include <stdlib.h>
 #include "wl_api.h"
 
 #include "FreeRTOS.h"
@@ -16,14 +18,14 @@ extern void ble_controller_set_tx_pwr(int ble_tx_power);
 BFLB_LOG_DEFINE_TAG(RFPARAM, DBG_TAG, true);
 
 #undef BFLB_LOG_TAG
-#define BFLB_LOG_TAG           BFLB_LOG_GET_TAG(RFPARAM)
-#define XTAL_ORDER_ADDR_LEN_MAX      (2)
+#define BFLB_LOG_TAG            BFLB_LOG_GET_TAG(RFPARAM)
+#define XTAL_ORDER_ADDR_LEN_MAX (2)
 
-#define rfparam_printf(...) LOG_I(__VA_ARGS__)
+#define rfparam_printf(...)     LOG_I(__VA_ARGS__)
 
-#define TCAL_PARA_CHANNELS          5
+#define TCAL_PARA_CHANNELS      5
 
-typedef struct{
+typedef struct {
     uint16_t Tchannels[TCAL_PARA_CHANNELS];
     int16_t Tchannel_os[TCAL_PARA_CHANNELS];
     int16_t Tchannel_os_low[TCAL_PARA_CHANNELS];
@@ -36,7 +38,7 @@ enum {
     E_RF_TCAL_UPDATE_PARAM = 0,
 };
 
-void rf_pri_update_tcal_param(uint8_t operation);//FIXME
+void rf_pri_update_tcal_param(uint8_t operation); //FIXME
 
 static void log_buf_int8(int8_t *buf, size_t buf_len)
 {
@@ -125,7 +127,8 @@ static int tcl_param_update(uint32_t rftlv_addr, tcal_param_struct *param)
         for (int i = 0; i < RFTLV_MAXLEN_TCHANNELS / 2; i++) {
             param->Tchannels[i] = tmp_buf[i * 2] | (tmp_buf[i * 2 + 1] << 8);
         }
-        rfparam_array_printf((char *)"tcal.Tchannels", (void *)param->Tchannels, sizeof(param->Tchannels) / 2, TYPE_UINT16);
+        rfparam_array_printf((char *)"tcal.Tchannels", (void *)param->Tchannels, sizeof(param->Tchannels) / 2,
+                             TYPE_UINT16);
     } else {
         rfparam_printf("tcal.Tchannels null\r\n");
         return RFPARAM_ERR_TCAL_CHANNELS_NULL;
@@ -135,7 +138,8 @@ static int tcl_param_update(uint32_t rftlv_addr, tcal_param_struct *param)
         for (int i = 0; i < RFTLV_MAXLEN_TCHANNEL_OS / 2; i++) {
             param->Tchannel_os[i] = tmp_buf[i * 2] | (tmp_buf[i * 2 + 1] << 8);
         }
-        rfparam_array_printf((char *)"tcal.Tchannel_os", (void *)param->Tchannel_os, sizeof(param->Tchannel_os) / 2, TYPE_INT16);
+        rfparam_array_printf((char *)"tcal.Tchannel_os", (void *)param->Tchannel_os, sizeof(param->Tchannel_os) / 2,
+                             TYPE_INT16);
     } else {
         rfparam_printf("tcal.Tchannel_os null\r\n");
         return RFPARAM_ERR_TCAL_CHANNEL_OS_NULL;
@@ -145,7 +149,8 @@ static int tcl_param_update(uint32_t rftlv_addr, tcal_param_struct *param)
         for (int i = 0; i < RFTLV_MAXLEN_TCHANNEL_OS_LOW / 2; i++) {
             param->Tchannel_os_low[i] = tmp_buf[i * 2] | (tmp_buf[i * 2 + 1] << 8);
         }
-        rfparam_array_printf((char *)"tcal.Tchannel_os_low", (void *)param->Tchannel_os_low, sizeof(param->Tchannel_os_low) / 2, TYPE_INT16);
+        rfparam_array_printf((char *)"tcal.Tchannel_os_low", (void *)param->Tchannel_os_low,
+                             sizeof(param->Tchannel_os_low) / 2, TYPE_INT16);
     } else {
         rfparam_printf("tcal.Tchannel_os_low null\r\n");
         return RFPARAM_ERR_TCAL_CHANNEL_OS_LOW_NULL;
@@ -161,7 +166,6 @@ static int tcl_param_update(uint32_t rftlv_addr, tcal_param_struct *param)
     return RFPARAM_SUSS;
 }
 
-
 static void update_poweroffset_config_rftv(uint32_t tlv_addr, const char *pw_mode)
 {
     int i, set, len, j;
@@ -174,8 +178,7 @@ static void update_poweroffset_config_rftv(uint32_t tlv_addr, const char *pw_mod
     for (i = 0; i < XTAL_ORDER_ADDR_LEN_MAX && i < len; i++) {
         switch (pw_mode[i]) {
             case 'B':
-            case 'b':
-            {
+            case 'b': {
                 if (0 == bl_efuse_read_pwroft(poweroffset_tmp)) {
                     set = 1;
                     rfparam_printf("get pwr offset from B(b) ready\r\n");
@@ -197,18 +200,16 @@ static void update_poweroffset_config_rftv(uint32_t tlv_addr, const char *pw_mod
                 } else {
                     rfparam_printf("get pwr offset from B(b) failed\r\n");
                 }
-            }
-            break;
+            } break;
             case 'F':
-            case 'f':
-            {
+            case 'f': {
                 if (rfparam_tlv_get(tlv_addr, RFTLV_TYPE_PWR_OFFSET, sizeof(poweroffset_tmp), poweroffset_tmp) > 0) {
                     set = 1;
                     rfparam_printf("get pwr offset from F(f) ready\r\n");
                     if ('F' == pw_mode[i]) {
                         /*non-incremental mode*/
                         for (j = 0; j < sizeof(poweroffset); j++) {
-                            poweroffset[j] = (poweroffset_tmp[j] - 10)*4;
+                            poweroffset[j] = (poweroffset_tmp[j] - 10) * 4;
                         }
                         rfparam_printf("Use pwr offset from F only\r\n");
                         goto break_scan;
@@ -216,29 +217,28 @@ static void update_poweroffset_config_rftv(uint32_t tlv_addr, const char *pw_mod
                         /*incremental mode*/
                         rfparam_printf("Use pwr offset from f in incremental mode\r\n");
                         for (j = 0; j < sizeof(poweroffset); j++) {
-                            poweroffset[j] += (poweroffset_tmp[j] - 10)*4;
+                            poweroffset[j] += (poweroffset_tmp[j] - 10) * 4;
                         }
                     }
                     goto break_scan;
                 } else {
                     rfparam_printf("get pwr offset from F(f) failed\r\n");
                 }
-            }
-            break;
-            default:
-            {
-                while(1);
+            } break;
+            default: {
+                while (1)
+                    ;
             }
         }
     }
 break_scan:
     if (0 == set) {
-        rfparam_printf("Using Default pwr offset\r\n");//all zeros actually
+        rfparam_printf("Using Default pwr offset\r\n"); //all zeros actually
     }
     log_buf_int8(poweroffset, sizeof(poweroffset));
 #ifdef CONFIG_BLE_ENABLE
-    extern void ble_rf_set_pwr_offset_table(int8_t *poweroffset_table);
-	ble_rf_set_pwr_offset_table(poweroffset);
+    extern void ble_rf_set_pwr_offset_table(int8_t * poweroffset_table);
+    ble_rf_set_pwr_offset_table(poweroffset);
 #endif
 #if defined(CFG_PHY_TRPC)
     phy_powroffset_set(poweroffset);
@@ -265,9 +265,9 @@ static int update_xtal_config_get_mac_from_factory(uint32_t capcode[5])
 static void update_xtal_config_rftv(uint32_t tlv_addr)
 {
     int i, set, len;
-    uint8_t buffer[20] = {0};
-    uint32_t capcode[5] = {0};
-    char xtal_mode[3] = {0};
+    uint8_t buffer[20] = { 0 };
+    uint32_t capcode[5] = { 0 };
+    char xtal_mode[3] = { 0 };
 
     if (rfparam_tlv_get(tlv_addr, RFTLV_TYPE_XTAL_MODE, 3, xtal_mode) > 0) {
         xtal_mode[sizeof(xtal_mode) - 1] = '\0';
@@ -278,8 +278,7 @@ static void update_xtal_config_rftv(uint32_t tlv_addr)
     len = strlen(xtal_mode);
     for (i = 0; i < XTAL_ORDER_ADDR_LEN_MAX && i < len; i++) {
         switch (xtal_mode[i]) {
-            case 'F':
-            {
+            case 'F': {
                 if (rfparam_tlv_get(tlv_addr, RFTLV_TYPE_XTAL, sizeof(buffer), buffer) > 0) {
                     capcode[0] = *(uint32_t *)buffer;
                     capcode[1] = *(uint32_t *)(buffer + 4);
@@ -287,37 +286,26 @@ static void update_xtal_config_rftv(uint32_t tlv_addr)
                     capcode[3] = *(uint32_t *)(buffer + 12);
                     capcode[4] = *(uint32_t *)(buffer + 16);
                     set = 1;
-                    rfparam_printf("get xtal from F ready %d %d %d %d %d\r\n",
-                            capcode[0],
-                            capcode[1],
-                            capcode[2],
-                            capcode[3],
-                            capcode[4]);
+                    rfparam_printf("get xtal from F ready %d %d %d %d %d\r\n", capcode[0], capcode[1], capcode[2],
+                                   capcode[3], capcode[4]);
                     goto break_scan;
                 } else {
                     rfparam_printf("get xtal from F failed\r\n");
                 }
-            }
-            break;
-            case 'M':
-            {
+            } break;
+            case 'M': {
                 if (0 == update_xtal_config_get_mac_from_factory(capcode)) {
                     set = 1;
-                    rfparam_printf("get xtal from M ready %d %d %d %d %d\r\n",
-                            capcode[0],
-                            capcode[1],
-                            capcode[2],
-                            capcode[3],
-                            capcode[4]);
+                    rfparam_printf("get xtal from M ready %d %d %d %d %d\r\n", capcode[0], capcode[1], capcode[2],
+                                   capcode[3], capcode[4]);
                     goto break_scan;
                 } else {
                     rfparam_printf("get xtal from M failed\r\n");
                 }
-            }
-            break;
-            default:
-            {
-                while(1);
+            } break;
+            default: {
+                while (1)
+                    ;
             }
         }
     }
@@ -359,14 +347,9 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
         for (i = 0; i < 4; i++) {
             pwr_table[i] = *(int8_t *)(p_buffer + i);
         }
-        rfparam_printf("pwr_table_11b :%u %u %u %u\r\n",
-            pwr_table[0],
-            pwr_table[1],
-            pwr_table[2],
-            pwr_table[3]
-        );
+        rfparam_printf("pwr_table_11b :%u %u %u %u\r\n", pwr_table[0], pwr_table[1], pwr_table[2], pwr_table[3]);
 #if defined(CFG_PHY_TRPC)
-        trpc_update_power_11b((int8_t*)pwr_table);
+        trpc_update_power_11b((int8_t *)pwr_table);
 #endif
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_11B NULL\r\n");
@@ -375,18 +358,10 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
         for (i = 0; i < 8; i++) {
             pwr_table[i] = *(int8_t *)(p_buffer + i);
         }
-        rfparam_printf("pwr_table_11g :%u %u %u %u %u %u %u %u\r\n",
-            pwr_table[0],
-            pwr_table[1],
-            pwr_table[2],
-            pwr_table[3],
-            pwr_table[4],
-            pwr_table[5],
-            pwr_table[6],
-            pwr_table[7]
-        );
+        rfparam_printf("pwr_table_11g :%u %u %u %u %u %u %u %u\r\n", pwr_table[0], pwr_table[1], pwr_table[2],
+                       pwr_table[3], pwr_table[4], pwr_table[5], pwr_table[6], pwr_table[7]);
 #if defined(CFG_PHY_TRPC)
-        trpc_update_power_11g((int8_t*)pwr_table);
+        trpc_update_power_11g((int8_t *)pwr_table);
 #endif
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_11G NULL\r\n");
@@ -395,18 +370,10 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
         for (i = 0; i < 8; i++) {
             pwr_table[i] = *(int8_t *)(p_buffer + i);
         }
-        rfparam_printf("pwr_table_11n :%u %u %u %u %u %u %u %u\r\n",
-            pwr_table[0],
-            pwr_table[1],
-            pwr_table[2],
-            pwr_table[3],
-            pwr_table[4],
-            pwr_table[5],
-            pwr_table[6],
-            pwr_table[7]
-        );
+        rfparam_printf("pwr_table_11n :%u %u %u %u %u %u %u %u\r\n", pwr_table[0], pwr_table[1], pwr_table[2],
+                       pwr_table[3], pwr_table[4], pwr_table[5], pwr_table[6], pwr_table[7]);
 #if defined(CFG_PHY_TRPC)
-        trpc_update_power_11n((int8_t*)pwr_table);
+        trpc_update_power_11n((int8_t *)pwr_table);
 #endif
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_11N NULL\r\n");
@@ -426,7 +393,7 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
         LOG_E("RFTLV_TYPE_PWR_TABLE_BLE NULL\r\n");
     }
 #ifdef CONFIG_BLE_ENABLE
-        ble_controller_set_tx_pwr(pwr_table_ble);
+    ble_controller_set_tx_pwr(pwr_table_ble);
 #endif
 
     vPortFree(p_buffer);
@@ -435,7 +402,7 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
 }
 
 extern uint32_t _ld_symbol_rftlv_address;
-extern tcal_param_struct* tcal_param;
+extern tcal_param_struct *tcal_param;
 
 static int __try_load_rftlv(void)
 {
@@ -462,9 +429,43 @@ static int __try_load_rftlv(void)
  * @return RFPARAM_SUSS is suss, other is err
  *
 *******************************************************************************/
-int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
+int32_t _rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
 {
     int ret = 0;
     ret = __try_load_rftlv();
     return ret;
 }
+
+/* Retained as an empty compatibility entry point. */
+#if IS_ENABLED(CONFIG_COMPAT_V2)
+int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
+{
+#ifdef CONFIG_SYSINIT
+    (void)base_addr;
+    (void)rf_para;
+    (void)apply_flag;
+    printf("[W] deprecated: %s() is handled by SYSINIT, will be removed in Bouffalo SDK v3\r\n", __func__);
+    return RFPARAM_SUSS;
+#else
+    return _rfparam_init(base_addr, rf_para, apply_flag);
+#endif
+}
+
+#endif /* IS_ENABLED(CONFIG_COMPAT_V2) */
+/*
+ * Cold-start RF initialization belongs to the RF driver, not to a WiFi
+ * backend. WiFi4 and FHOST initialize RF in their own startup tasks, and the
+ * dedicated WLAN firmware initializes it in its platform code. With WL80211 or
+ * without any WiFi backend the RF driver performs the single cold start here.
+ */
+#if !defined(CONFIG_WIFI4) && !defined(CONFIG_FHOST) && !defined(CONFIG_WLAN) && !defined(CFG_DBG_RUN_ON_FPGA)
+static void rfparam_sysinit(const void *arg)
+{
+    (void)arg;
+    if (_rfparam_init(0, NULL, 0) != 0) {
+        LOG_E("PHY RF init failed!\r\n");
+        abort();
+    }
+}
+SYSINIT(rfparam, SI_SUB_WIRELESS, SI_ORDER_FIRST, rfparam_sysinit, NULL);
+#endif

@@ -8,6 +8,77 @@
 #include "board_rf.h"
 #endif
 
+#define DBG_TAG "COEX_RF"
+#include "log.h"
+
+/* Default RF bring-up implemented by the platform adapter. */
+extern int platform_rf_param_init(void);
+
+#if defined(CONFIG_COEX)
+
+/* The SYSINIT WIRELESS record runs before main() and before any shell command
+ * can execute, so the board wiring is a build-time fact selected through
+ * Kconfig. The RF mode follows from the topology: combo wiring uses the combo
+ * path, both standalone wirings use the BT standalone path. */
+#if defined(CONFIG_COEX_BOARD_TOPOLOGY_COMBO)
+#define PLATFORM_COEX_BOARD_TOPOLOGY WIFI_MGMR_COEX_BOARD_COMBO_SHARED_PATH
+#define PLATFORM_COEX_RF_MODE        WIFI_MGMR_COEX_RF_COMBO
+#define PLATFORM_COEX_SPDT_GPIO      (-1)
+#elif defined(CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT)
+#define PLATFORM_COEX_BOARD_TOPOLOGY WIFI_MGMR_COEX_BOARD_STANDALONE_DUAL_ANT
+#define PLATFORM_COEX_RF_MODE        WIFI_MGMR_COEX_RF_STANDALONE
+#define PLATFORM_COEX_SPDT_GPIO      (-1)
+#elif defined(CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT)
+#define PLATFORM_COEX_BOARD_TOPOLOGY WIFI_MGMR_COEX_BOARD_STANDALONE_SINGLE_ANT_SPDT
+#define PLATFORM_COEX_RF_MODE        WIFI_MGMR_COEX_RF_STANDALONE
+#define PLATFORM_COEX_SPDT_GPIO      CONFIG_COEX_BOARD_SPDT_GPIO
+#else
+#error "CONFIG_COEX on BL618DG requires CONFIG_COEX_BOARD_TOPOLOGY_* (menu: Wi-Fi/Bluetooth coexistence)"
+#endif
+
+/* Publish the board facts and prepare the RF path before the Wi-Fi firmware
+ * starts. This replaces the runtime declaration/RF-preparation CLI sequence,
+ * which could only run after the shell existed. */
+static int platform_coex_rf_init(void)
+{
+    int ret;
+
+    ret = wifi_mgmr_coex_board_configure(
+        (enum wifi_mgmr_coex_board_topology)PLATFORM_COEX_BOARD_TOPOLOGY,
+        PLATFORM_COEX_SPDT_GPIO);
+    if (ret != WIFI_MGMR_COEX_BOARD_CONFIG_OK) {
+        LOG_E("coex board topology %d rejected: %d\r\n",
+              PLATFORM_COEX_BOARD_TOPOLOGY, ret);
+        return -1;
+    }
+
+    ret = wifi_mgmr_coex_rf_prepare(PLATFORM_COEX_RF_MODE);
+    if (ret != WIFI_MGMR_COEX_OK) {
+        LOG_E("coex RF preparation failed: %d\r\n", ret);
+        return -1;
+    }
+
+    ret = wifi_mgmr_coex_rf_status_get();
+    if (ret != WIFI_MGMR_COEX_OK) {
+        LOG_E("coex RF not ready after preparation: %d\r\n", ret);
+        return -1;
+    }
+
+    return 0;
+}
+
+#endif /* CONFIG_COEX */
+
+int platform_chip_rf_init(void)
+{
+#if defined(CONFIG_COEX)
+    return platform_coex_rf_init();
+#else
+    /* Plain RF bring-up: no coexistence board preparation is owned here. */
+    return platform_rf_param_init();
+#endif
+}
+
 #if defined(CONFIG_RF) && defined(CONFIG_FHOST) && \
     defined(BOARD_RF_COEX_OPS_SUPPORTED)
 static int platform_coex_rf_result(int ret)

@@ -98,23 +98,14 @@ extern "C" {
 /** @brief Allocator selection configuration */
 /* ======================================================================== */
 
-/**
- * @brief Enable TLSF allocator
- *
- * TLSF (Two-Level Segregate Fit) efficient memory allocator.
+/*
+ * Allocator selection is owned by components/mm/Kconfig and reaches the code
+ * as CONFIG_MEM_TLSF_EN / CONFIG_MEM_HEAP5_EN.  The configuration step emits
+ * enabled options as "#define CONFIG_X 1" and disabled ones as
+ * "#undef CONFIG_X", so these switches must not be given #ifndef fallbacks
+ * here: a fallback would re-enable an allocator whose sources were not
+ * compiled into the library.
  */
-#ifndef CONFIG_MM_TLSF_EN
-#define CONFIG_MM_TLSF_EN 1
-#endif
-
-/**
- * @brief Enable FreeRTOS heap5 allocator
- *
- * Compatible with FreeRTOS heap5 memory allocator.
- */
-#ifndef CONFIG_MM_ENABLE_FREERTOS_HEAP5
-#define CONFIG_MM_ENABLE_FREERTOS_HEAP5 0
-#endif
 
 /* ======================================================================== */
 /** @brief Internal macros */

@@ -102,6 +102,11 @@ err_t bridgeif_fdb_flush(struct netif *bridgeif);
 err_t bridgeif_has_port(struct netif *bridgeif, struct netif *portif);
 err_t bridgeif_fdb_add(struct netif *bridgeif, const struct eth_addr *addr, bridgeif_portmask_t ports);
 err_t bridgeif_fdb_remove(struct netif *bridgeif, const struct eth_addr *addr);
+/* Management queries: call with the TCP/IP core locked. */
+err_t bridgeif_fdb_entry_get(struct netif *bridgeif, u16_t idx, struct eth_addr *addr,
+                           u8_t *is_static, bridgeif_portmask_t *ports, u16_t *age);
+bridgeif_portmask_t bridgeif_fdb_lookup(struct netif *bridgeif, struct eth_addr *addr);
+struct netif *bridgeif_port_get(struct netif *bridgeif, u8_t port_num);
 int netif_bridged(struct netif *portif);
 
 /* FDB interface, can be replaced by own implementation */
@@ -110,6 +115,7 @@ bridgeif_portmask_t bridgeif_fdb_get_dst_ports(void *fdb_ptr, struct eth_addr *d
 void*               bridgeif_fdb_init(u16_t max_fdb_entries);
 void                bridgeif_fdb_clear(void *fdb_ptr);
 void                bridgeif_fdb_deinit(void *fdb_ptr);
+err_t               bridgeif_fdb_get_slot(void *fdb_ptr, u16_t idx, struct eth_addr *addr, u8_t *port, u16_t *age);
 
 #if BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
 #ifndef BRIDGEIF_DECL_PROTECT

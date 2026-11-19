@@ -1379,6 +1379,11 @@ continue_processing:
 		} else {
 			wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
 					"received EAPOL-Key Request for GTK rekeying");
+			if (wpa_auth->conf.ignore_sta_gtk_rekey) {
+				wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
+						"ignored STA-initiated GTK rekey request");
+				return;
+			}
 			eloop_cancel_timeout(wpa_rekey_gtk, wpa_auth, NULL);
 			if (wpa_auth_gtk_rekey_in_process(wpa_auth))
 				wpa_auth_logger(wpa_auth, NULL, LOGGER_DEBUG,

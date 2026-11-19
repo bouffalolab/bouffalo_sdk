@@ -8,16 +8,79 @@
 #include <string.h>
 
 static uint8_t registers[256];
+static unsigned writes[256];
+static int fail_read = -1;
+static int fail_write = -1;
 int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, int count)
 {
     assert(dev && count == 2 && msgs[0].length == 1 && msgs[1].length == 1);
     assert(msgs[0].addr == 0x10 && msgs[1].addr == 0x10);
     uint8_t reg = *msgs[0].buffer;
-    if (msgs[1].flags & I2C_M_READ) *msgs[1].buffer = registers[reg];
-    else registers[reg] = *msgs[1].buffer;
+    if (msgs[1].flags & I2C_M_READ) {
+        if (reg == fail_read) {
+            return -1;
+        }
+        *msgs[1].buffer = registers[reg];
+    } else {
+        if (reg == fail_write) {
+            return -1;
+        }
+        registers[reg] = *msgs[1].buffer;
+        ++writes[reg];
+    }
     return 0;
 }
 void bflb_mtimer_delay_ms(uint32_t ms) { (void)ms; }
+
+static void test_mic_slot_controls(audio_codec_dev_t *codec)
+{
+    const struct audio_codec_driver *driver = &audio_codec_es8388_driver;
+    assert(driver->set_mic_channel_volume && driver->set_mic_channel_gain_db);
+    audio_codec_channel_caps_t caps;
+    assert(driver->get_mic_channel_caps(codec, 0, &caps) == 0);
+    assert(caps.gain_step_count == 9 && caps.gain_steps_db[8] == 24.0f);
+    assert(driver->get_speaker_channel_caps(codec, 0, &caps) == 0);
+    assert(caps.linked_mask == 3 && caps.independent_controls == 0);
+    registers[0x10] = 0x31;
+    registers[0x11] = 0x52;
+    registers[0x09] = 0x35;
+    memset(writes, 0, sizeof(writes));
+    assert(driver->set_mic_channel_volume(codec, 1, 100) == 0);
+    assert(registers[0x10] == 0 && registers[0x11] == 0x52);
+    assert(writes[0x10] == 1 && writes[0x11] == 0);
+    assert(driver->set_mic_channel_volume(codec, 2, 0) == 0);
+    assert(registers[0x10] == 0 && registers[0x11] == 192);
+    assert(writes[0x10] == 1 && writes[0x11] == 1);
+    assert(driver->set_mic_channel_gain_db(codec, 1, 24.0f) == 0 && registers[0x09] == 0x85);
+    assert(driver->set_mic_channel_gain_db(codec, 2, 0) == 0 && registers[0x09] == 0x80);
+    assert(driver->set_mic_channel_volume(codec, 3, 50) == 0);
+    assert(registers[0x10] == 96 && registers[0x11] == 96);
+    assert(driver->set_mic_channel_gain_db(codec, 3, 12.0f) == 0 && registers[0x09] == 0x44);
+    uint8_t original[256];
+    unsigned before[256];
+    memcpy(original, registers, sizeof(original));
+    memcpy(before, writes, sizeof(before));
+    const uint16_t invalid_masks[] = { 0, 4, 5, UINT16_MAX };
+    for (unsigned i = 0; i < sizeof(invalid_masks) / sizeof(invalid_masks[0]); ++i) {
+        assert(driver->set_mic_channel_volume(codec, invalid_masks[i], 25) != 0);
+        assert(driver->set_mic_channel_gain_db(codec, invalid_masks[i], 25) != 0);
+    }
+    assert(driver->set_mic_channel_volume(codec, 1, -1) != 0);
+    assert(driver->set_mic_channel_gain_db(codec, 2, 101) != 0);
+    assert(memcmp(original, registers, sizeof(original)) == 0);
+    assert(memcmp(before, writes, sizeof(before)) == 0);
+    fail_write = 0x10;
+    assert(driver->set_mic_channel_volume(codec, 1, 25) != 0);
+    fail_write = -1;
+    fail_read = 0x09;
+    assert(driver->set_mic_channel_gain_db(codec, 2, 6.0f) != 0);
+    fail_read = -1;
+    fail_write = 0x09;
+    assert(driver->set_mic_channel_gain_db(codec, 1, 6.0f) != 0);
+    fail_write = -1;
+    assert(memcmp(original, registers, sizeof(original)) == 0);
+    assert(memcmp(before, writes, sizeof(before)) == 0);
+}
 
 int main(void)
 {
@@ -41,7 +104,8 @@ int main(void)
             assert(registers[0x03] == 0x09); /* ADC on, MICBIAS off. */
         }
     }
+    test_mic_slot_controls(&codec);
     assert(audio_codec_es8388_driver.init(NULL, &cfg) < 0);
-    puts("ES8388 independent differential routes in codec and recording modes passed");
+    puts("ES8388 routes, independent mic slot registers, invalid masks and I2C failures passed");
     return 0;
 }

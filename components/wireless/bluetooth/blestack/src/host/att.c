@@ -1306,6 +1306,9 @@ struct write_data {
 	struct bt_conn *conn;
 	struct net_buf *buf;
 	u8_t req;
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+	bool signed_write;
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
 	const void *value;
 	u16_t len;
 	u16_t offset;
@@ -1331,6 +1334,11 @@ static u8_t write_cb(const struct bt_gatt_attr *attr, void *user_data)
 	if (!data->req) {
 		flags |= BT_GATT_WRITE_FLAG_CMD;
 	}
+	#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+	if (data->signed_write) {
+		flags |= BT_GATT_WRITE_FLAG_SIGNED;
+	}
+	#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
 
 	/* Write attribute value */
 	write = attr->write(data->conn, attr, data->value, data->len,
@@ -1347,7 +1355,11 @@ static u8_t write_cb(const struct bt_gatt_attr *attr, void *user_data)
 
 static u8_t att_write_rsp(struct bt_conn *conn, u8_t req, u8_t rsp,
 			  u16_t handle, u16_t offset, const void *value,
-			  u16_t len)
+			  u16_t len
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+			  , bool signed_write
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
+)
 {
 	struct write_data data;
 
@@ -1377,6 +1389,9 @@ static u8_t att_write_rsp(struct bt_conn *conn, u8_t req, u8_t rsp,
 
 	data.conn = conn;
 	data.req = req;
+	#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+	data.signed_write = signed_write;
+	#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
 	data.offset = offset;
 	data.value = value;
 	data.len = len;
@@ -1412,7 +1427,11 @@ static u8_t att_write_req(struct bt_att *att, struct net_buf *buf)
 	BT_DBG("handle 0x%04x", handle);
 
 	return att_write_rsp(conn, BT_ATT_OP_WRITE_REQ, BT_ATT_OP_WRITE_RSP,
-			     handle, 0, buf->data, buf->len);
+			     handle, 0, buf->data, buf->len
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+			     , false
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
+			     );
 }
 
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
@@ -1571,7 +1590,11 @@ static u8_t att_exec_write_rsp(struct bt_att *att, u8_t flags)
 		if (!err && flags == BT_ATT_FLAG_EXEC) {
 			err = att_write_rsp(conn, BT_ATT_OP_EXEC_WRITE_REQ, 0,
 					    data->handle, data->offset,
-					    buf->data, buf->len);
+					    buf->data, buf->len
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+					    , false
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
+					    );
 			if (err) {
 				/* Respond here since handle is set */
 				send_err_rsp(conn, BT_ATT_OP_EXEC_WRITE_REQ,
@@ -1623,7 +1646,11 @@ static u8_t att_write_cmd(struct bt_att *att, struct net_buf *buf)
 
 	BT_DBG("handle 0x%04x", handle);
 
-	return att_write_rsp(conn, 0, 0, handle, 0, buf->data, buf->len);
+	return att_write_rsp(conn, 0, 0, handle, 0, buf->data, buf->len
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+				     , false
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
+				     );
 }
 
 #if defined(CONFIG_BT_SIGNING)
@@ -1633,6 +1660,14 @@ static u8_t att_signed_write_cmd(struct bt_att *att, struct net_buf *buf)
 	struct bt_att_signed_write_cmd *req;
 	u16_t handle;
 	int err;
+
+	#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+	/* Core Vol 3, Part C, 10.2.2: signing is not used with encryption. */
+	if (bt_conn_get_security(conn) >= BT_SECURITY_L2) {
+		/* Commands are silently discarded; do not consume the sign counter. */
+		return 0;
+	}
+	#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
 
 	req = (void *)buf->data;
 
@@ -1653,7 +1688,11 @@ static u8_t att_signed_write_cmd(struct bt_att *att, struct net_buf *buf)
 	net_buf_pull(buf, sizeof(*req));
 
 	return att_write_rsp(conn, 0, 0, handle, 0, buf->data,
-			     buf->len - sizeof(struct bt_att_signature));
+			     buf->len - sizeof(struct bt_att_signature)
+#if defined(BFLB_BLE_PATCH_SIGNED_WRITE)
+			     , true
+#endif /* BFLB_BLE_PATCH_SIGNED_WRITE */
+			     );
 }
 #endif /* CONFIG_BT_SIGNING */
 

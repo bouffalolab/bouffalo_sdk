@@ -26,9 +26,9 @@ static struct {
     bool configured;
     bool running;
     bool attached;
-    bool ethernet_added;
+    uint8_t ethernet_added;
     bool data_ready;
-    bool ethernet_link;
+    uint8_t ethernet_links;
     bool peer_active;
     uint8_t vif;
     wifi_wds_config_t config;
@@ -120,15 +120,19 @@ int app_wds_bridge_in_use(const struct netif *netif)
 /* netif_find and bridgeif_add_port require the tcpip core lock. */
 static int bridge_ensure(void)
 {
-    struct netif *ethernet = app_emac_netif();
     struct netif *wireless = fhost_to_net_if(bridge.vif);
     char bridge_name[8];
     char eth_name[8];
     char wifi_name[8];
     int ret = WIFI_WDS_ERR_NOT_READY;
 
-    if (!ethernet || !wireless || !ethernet->linkoutput || !wireless->linkoutput)
+    if (!wireless || !wireless->linkoutput)
         return WIFI_WDS_ERR_NOT_READY;
+    for (uint8_t port = 0; port < app_emac_port_count(); port++) {
+        struct netif *ethernet = app_emac_netif(port);
+        if (!ethernet || !ethernet->linkoutput)
+            return WIFI_WDS_ERR_NOT_READY;
+    }
 
     LOCK_TCPIP_CORE();
     if (!bridge.bridge_if) {
@@ -138,7 +142,6 @@ static int bridge_ensure(void)
         bridge_unnumber(bridge.bridge_if);
     }
     netif_lwip_name(bridge.bridge_if, bridge_name, sizeof(bridge_name));
-    netif_lwip_name(ethernet, eth_name, sizeof(eth_name));
     netif_lwip_name(wireless, wifi_name, sizeof(wifi_name));
     if (bridge.wireless && bridge.wireless != wireless) {
         char old_name[8];
@@ -150,12 +153,18 @@ static int bridge_ensure(void)
         bridge.wireless = NULL;
         bridge.attached = false;
     }
-    if (!bridge.ethernet_added) {
-        bridge_unnumber(ethernet);
-        if (netifd_bridge_add_if(bridge_name, eth_name))
-            goto end;
-        netif_set_up(ethernet);
-        bridge.ethernet_added = true;
+    for (uint8_t port = 0; port < app_emac_port_count(); port++) {
+        struct netif *ethernet = app_emac_netif(port);
+        uint8_t bit = 1U << port;
+
+        if (!(bridge.ethernet_added & bit)) {
+            netif_lwip_name(ethernet, eth_name, sizeof(eth_name));
+            bridge_unnumber(ethernet);
+            if (netifd_bridge_add_if(bridge_name, eth_name))
+                goto end;
+            netif_set_up(ethernet);
+            bridge.ethernet_added |= bit;
+        }
     }
     if (!bridge.wireless) {
         netif_set_flags(wireless, NETIF_FLAG_ETHERNET);
@@ -220,7 +229,7 @@ static int bridge_configure(wifi_wds_role_t role, wifi_wds_peer_mode_t peer_mode
 static void bridge_close_data(void)
 {
     bridge.data_ready = false;
-    bridge.ethernet_link = false;
+    bridge.ethernet_links = 0;
     bridge.peer_active = false;
     if (!bridge.attached || !bridge.wireless)
         return;
@@ -269,7 +278,7 @@ static int bridge_release(void)
     }
     bridge.wireless = NULL;
     bridge.attached = false;
-    bridge.ethernet_added = false;
+    bridge.ethernet_added = 0;
     UNLOCK_TCPIP_CORE();
     if (bridge.radio_seq == seq)
         bridge.radio_edge = 0;
@@ -320,31 +329,34 @@ void app_wds_bridge_radio_down(bool ap)
 void app_wds_bridge_poll(void)
 {
     wifi_wds_status_t status;
-    bool data_ready;
-    bool ethernet_link;
-    bool forward_ready;
+    uint8_t ethernet_links;
+    bool have_status;
     bool flush;
 
     if (!bridge.lock || xSemaphoreTake(bridge.lock, 0) != pdTRUE)
         return;
     bridge_apply_radio();
-    if (bridge.running && bridge.attached &&
-        !wifi_mgmr_wds_status_get(bridge.vif, &status)) {
-        LOCK_TCPIP_CORE();
-        ethernet_link = app_emac_physical_link_up();
+    have_status = bridge.running && bridge.attached &&
+                  !wifi_mgmr_wds_status_get(bridge.vif, &status);
+    LOCK_TCPIP_CORE();
+    ethernet_links = app_emac_physical_link_mask();
+    /* The Ethernet ports can forward locally even while Wi-Fi is stopped.
+     * Flush on either port dropping, including when the other stays up. */
+    flush = (bridge.ethernet_links & ~ethernet_links) != 0;
+    if (have_status) {
+        bool data_ready;
+        bool forward_ready;
+
         if (bridge.config.enable) {
-            forward_ready = ethernet_link &&
+            forward_ready = ethernet_links &&
                             (bridge.config.role == WIFI_WDS_ROLE_AP ? status.link_up :
                              status.active);
-            data_ready = status.active && ethernet_link;
+            data_ready = status.active && ethernet_links;
         } else {
-            forward_ready = ethernet_link && status.link_up;
+            forward_ready = ethernet_links && status.link_up;
             data_ready = forward_ready;
         }
-        flush = (bridge.ethernet_link && !ethernet_link) ||
-                (bridge.peer_active && !status.active);
-        if (flush && bridge.bridge_if)
-            bridgeif_fdb_flush(bridge.bridge_if);
+        flush = flush || (bridge.peer_active && !status.active);
         if (bridge.wireless) {
             if (forward_ready)
                 netif_set_link_up(bridge.wireless);
@@ -354,13 +366,15 @@ void app_wds_bridge_poll(void)
         /* Connection setup may temporarily select the unnumbered Wi-Fi port. */
         if (bridge.bridge_if)
             netif_set_default(bridge.bridge_if);
-        UNLOCK_TCPIP_CORE();
-        if (flush)
-            wifi_mgmr_wds_fdb_flush(bridge.vif);
         bridge.data_ready = data_ready;
-        bridge.ethernet_link = ethernet_link;
         bridge.peer_active = status.active;
     }
+    if (flush && bridge.bridge_if)
+        bridgeif_fdb_flush(bridge.bridge_if);
+    bridge.ethernet_links = ethernet_links;
+    UNLOCK_TCPIP_CORE();
+    if (flush && bridge.configured)
+        wifi_mgmr_wds_fdb_flush(bridge.vif);
     xSemaphoreGive(bridge.lock);
 }
 
@@ -385,14 +399,14 @@ static void bridge_status(void)
     wifi_wds_status_t status = {0};
     char wifi_name[8] = "none";
     char bridge_name[8] = "none";
-    bool eth_up;
+    uint8_t eth_links;
     const char *role = "none";
     const char *peer_mode = "none";
 
     if (bridge.configured)
         wifi_mgmr_wds_status_get(bridge.vif, &status);
     LOCK_TCPIP_CORE();
-    eth_up = app_emac_physical_link_up();
+    eth_links = app_emac_physical_link_mask();
     if (bridge.attached && bridge.bridge_if && bridge.wireless) {
         netif_lwip_name(bridge.bridge_if, bridge_name, sizeof(bridge_name));
         netif_lwip_name(bridge.wireless, wifi_name, sizeof(wifi_name));
@@ -407,14 +421,14 @@ static void bridge_status(void)
            "\"bridge\":\"%s\",\"wireless\":\"%s\",\"vif\":%u,\"role\":\"%s\","
            "\"peer_mode\":\"%s\",\"peer\":\"" MACSTR "\","
            "\"resolved_peer\":\"" MACSTR "\",\"discovery_pending\":%u,"
-           "\"ethernet_link\":%u,\"peer_associated\":%u,"
+           "\"ethernet_link\":%u,\"ethernet_link_mask\":%u,\"peer_associated\":%u,"
            "\"addr4\":%u,\"tx_4addr_ready\":%u,\"rx_4addr_seen\":%u,\"active\":%u,"
            "\"data_ready\":%u,\"fdb_count\":%u,\"last_error\":%d}\r\n",
            bridge.ready, bridge.configured, bridge.running,
            bridge_name, wifi_name, bridge.vif, role,
            peer_mode,
            MAC2STR(bridge.config.peer_mac), MAC2STR(status.resolved_peer_mac),
-           status.discovery_pending, eth_up, status.peer_associated,
+           status.discovery_pending, eth_links != 0, eth_links, status.peer_associated,
            bridge.config.enable, status.tx_4addr_ready, status.rx_4addr_seen,
            status.active, bridge.data_ready, status.fdb_count, bridge.last_error);
 }

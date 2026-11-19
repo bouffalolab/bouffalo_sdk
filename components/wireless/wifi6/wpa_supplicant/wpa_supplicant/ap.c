@@ -285,6 +285,23 @@ int wpa_supplicant_conf_ap_ht(struct wpa_supplicant *wpa_s,
 		return -1;
 	}
 
+	/* HT/VHT/HE require WMM; retain the selected band in legacy mode. */
+	if (ssid->disable_wmm) {
+		conf->ieee80211n = 0;
+#ifdef CONFIG_IEEE80211AC
+		conf->ieee80211ac = 0;
+#endif
+#ifdef CONFIG_IEEE80211AX
+		conf->ieee80211ax = 0;
+#endif
+		conf->ht_capab = 0;
+		conf->secondary_channel = 0;
+		hostapd_set_oper_chwidth(conf, CHANWIDTH_USE_HT);
+		hostapd_set_oper_centr_freq_seg0_idx(conf, 0);
+		hostapd_set_oper_centr_freq_seg1_idx(conf, 0);
+		return 0;
+	}
+
 	/*
 	 * Enable HT20 if the driver supports it, by setting conf->ieee80211n
 	 * and a mask of allowed capabilities within conf->ht_capab.
@@ -546,7 +563,7 @@ static int wpa_supplicant_conf_ap(struct wpa_supplicant *wpa_s,
 #ifdef CONFIG_IEEE80211AX
 	if (ssid->mode == WPAS_MODE_P2P_GO ||
 	    ssid->mode == WPAS_MODE_P2P_GROUP_FORMATION)
-		conf->ieee80211ax = ssid->he;
+		conf->ieee80211ax = ssid->he && !ssid->disable_wmm;
 #endif /* CONFIG_IEEE80211AX */
 
 	bss->isolate = !wpa_s->conf->p2p_intra_bss;
@@ -695,8 +712,13 @@ static int wpa_supplicant_conf_ap(struct wpa_supplicant *wpa_s,
 	}
 #endif /* CONFIG_P2P */
 
-	if ((bss->wpa & 2) && bss->rsn_pairwise == 0)
-		bss->rsn_pairwise = bss->wpa_pairwise;
+	if ((bss->wpa & WPA_PROTO_RSN) && bss->rsn_pairwise == 0) {
+		if (bss->wpa == (WPA_PROTO_WPA | WPA_PROTO_RSN) &&
+		    bss->wpa_pairwise == (WPA_CIPHER_CCMP | WPA_CIPHER_TKIP))
+			bss->rsn_pairwise = WPA_CIPHER_CCMP;
+		else
+			bss->rsn_pairwise = bss->wpa_pairwise;
+	}
 	bss->wpa_group = wpa_select_ap_group_cipher(bss->wpa, bss->wpa_pairwise,
 						    bss->rsn_pairwise);
 
@@ -1086,10 +1108,8 @@ int wpa_supplicant_create_ap(struct wpa_supplicant *wpa_s,
 	os_memcpy(wpa_s->ap_iface->conf->tx_queue, wpa_s->conf->tx_queue,
 		  sizeof(wpa_s->conf->tx_queue));
 
-	if (params.uapsd > 0) {
-		conf->bss[0]->wmm_enabled = !ssid->disable_wmm;
-		conf->bss[0]->wmm_uapsd = !ssid->disable_wmm;
-	}
+	conf->bss[0]->wmm_enabled = !ssid->disable_wmm;
+	conf->bss[0]->wmm_uapsd = params.uapsd > 0 && !ssid->disable_wmm;
 
 	if (wpa_supplicant_conf_ap(wpa_s, ssid, conf)) {
 		wpa_printf(MSG_ERROR, "Failed to create AP configuration");

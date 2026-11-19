@@ -25,7 +25,7 @@
 
 #include "image_sensor.h"
 
-static struct image_sensor_command_s gc2053_init_list[] = {
+static const struct image_sensor_command_s gc2053_init_list[] = {
 #ifdef CONFIG_BSP_CSI
     { 0xfe, 0x80 },
     { 0xfe, 0x80 },

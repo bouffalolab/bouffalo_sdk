@@ -79,12 +79,14 @@ int mem_manager_init(void)
     /* Zero-initialize manager structure */
     memset(manager, 0, sizeof(mem_manager_t));
 
-    /* Register compile-time configured managers */
-#if IS_ENABLED(CONFIG_MM_TLSF_EN)
+    /* Register compile-time configured managers.  Keep the switches in sync
+     * with the Kconfig symbols that gate the allocator sources in
+     * CMakeLists.txt (MEM_TLSF_EN / MEM_HEAP5_EN). */
+#if IS_ENABLED(CONFIG_MEM_TLSF_EN)
     mm_register_allocator(MM_ALLOCATOR_TLSF, &g_tlsf_allocator);
 #endif
 
-#if IS_ENABLED(CONFIG_MM_ENABLE_FREERTOS_HEAP5)
+#if IS_ENABLED(CONFIG_MEM_HEAP5_EN)
     mm_register_allocator(MM_ALLOCATOR_HEAP5, &g_heap5_allocator);
 #endif
 

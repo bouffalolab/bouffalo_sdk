@@ -1,5 +1,10 @@
 # change log on Matter MFD module
 
+## 2026/11/16
+- Version: 1.6.5
+- Changes
+  - Added BL618DG support for MFD compilation.
+
 ## 2026/6/29
 - Version: 1.6.4
 - Changes

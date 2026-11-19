@@ -114,7 +114,6 @@
 
 #define AC101S_DVC_0DB                   0x81U
 #define AC101S_DEFAULT_PGA_STEP          24U
-#define AC101S_DEFAULT_PGA_PERCENT       ((AC101S_DEFAULT_PGA_STEP * 100U + 15U) / 31U)
 
 /* The codec derives ADC_CLK/DAC_CLK (which must be 128*Fs) from SYSCLK, and
  * SYSCLK comes from the external MCLK pin. On bl616cldk the host outputs a
@@ -127,7 +126,7 @@ typedef struct {
     bool initialized;
     int playback_volume_percent;
     int record_volume_percent;
-    int mic_pga_percent;
+    float mic_gain_db;
     bool muted;
 } audio_codec_ac101s_ctx_t;
 
@@ -175,11 +174,6 @@ static uint8_t ac101s_percent_to_dvc(int percent)
     return (uint8_t)((percent * AC101S_DVC_0DB + 50) / 100);
 }
 
-static uint8_t ac101s_percent_to_pga(int percent)
-{
-    percent = ac101s_percent_clamp(percent);
-    return (uint8_t)((percent * 31 + 50) / 100);
-}
 
 static int ac101s_map_i2s_format(audio_codec_i2s_fmt_t fmt, uint8_t *mode, uint8_t *offset)
 {
@@ -683,7 +677,7 @@ static int audio_codec_ac101s_init(audio_codec_dev_t *dev, const audio_codec_cfg
     if (!g_ac101s_ctx.initialized) {
         g_ac101s_ctx.playback_volume_percent = 100;
         g_ac101s_ctx.record_volume_percent = 100;
-        g_ac101s_ctx.mic_pga_percent = AC101S_DEFAULT_PGA_PERCENT;
+        g_ac101s_ctx.mic_gain_db = AC101S_DEFAULT_PGA_STEP;
         g_ac101s_ctx.muted = false;
     }
 
@@ -715,9 +709,9 @@ static int audio_codec_ac101s_init(audio_codec_dev_t *dev, const audio_codec_cfg
     if (cfg->enable_adc) {
         ret |= ac101s_write(dev->i2c, dev->i2c_addr, AC101S_ADC_DVC,
                             ac101s_percent_to_dvc(g_ac101s_ctx.record_volume_percent));
-        ret |= ac101s_update_bits(
-            dev->i2c, dev->i2c_addr, AC101S_ADC_ANA_CTRL1, (uint8_t)(0x1FU << AC101S_ADC_PGA_GAIN_SHIFT),
-            (uint8_t)(ac101s_percent_to_pga(g_ac101s_ctx.mic_pga_percent) << AC101S_ADC_PGA_GAIN_SHIFT));
+        ret |= ac101s_update_bits(dev->i2c, dev->i2c_addr, AC101S_ADC_ANA_CTRL1,
+                                  (uint8_t)(0x1FU << AC101S_ADC_PGA_GAIN_SHIFT),
+                                  (uint8_t)((uint8_t)g_ac101s_ctx.mic_gain_db << AC101S_ADC_PGA_GAIN_SHIFT));
     }
     if (cfg->enable_dac) {
         ret |= ac101s_write(dev->i2c, dev->i2c_addr, AC101S_DAC_DVC,
@@ -784,23 +778,6 @@ static int audio_codec_ac101s_set_record_volume(audio_codec_dev_t *dev, int volu
     return ret;
 }
 
-static int audio_codec_ac101s_set_mic_pga(audio_codec_dev_t *dev, int pga_percent)
-{
-    int ret;
-
-    if (dev == NULL || dev->i2c == NULL) {
-        return -1;
-    }
-
-    pga_percent = ac101s_percent_clamp(pga_percent);
-    ret =
-        ac101s_update_bits(dev->i2c, dev->i2c_addr, AC101S_ADC_ANA_CTRL1, (uint8_t)(0x1FU << AC101S_ADC_PGA_GAIN_SHIFT),
-                           (uint8_t)(ac101s_percent_to_pga(pga_percent) << AC101S_ADC_PGA_GAIN_SHIFT));
-    if (ret == 0) {
-        g_ac101s_ctx.mic_pga_percent = pga_percent;
-    }
-    return ret;
-}
 
 static int audio_codec_ac101s_set_sample_rate(audio_codec_dev_t *dev, uint32_t sample_rate_hz)
 {
@@ -823,20 +800,92 @@ static uint32_t audio_codec_ac101s_calc_mclk_hz(uint32_t sample_rate_hz)
     return AC101S_MCLK_HZ;
 }
 
+static const float ac101s_gain_steps_db[] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                                              16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
+
+static int audio_codec_ac101s_get_mic_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                   audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_GAIN_DB,
+        .linked_mask = 0x01,
+        .gain_steps_db = ac101s_gain_steps_db,
+        .gain_step_count = 32,
+    };
+    int ret = audio_codec_native_caps(0x01, slot, &native, caps);
+    if (ret == 0 && g_ac101s_ctx.cfg.mic_input_mode == AUDIO_CODEC_MIC_INPUT_DIGITAL) {
+        caps->controls &= ~AUDIO_CODEC_CONTROL_GAIN_DB;
+        caps->independent_controls &= ~AUDIO_CODEC_CONTROL_GAIN_DB;
+        caps->gain_steps_db = NULL;
+        caps->gain_step_count = 0;
+    }
+    return ret;
+}
+
+static int audio_codec_ac101s_get_speaker_channel_caps(audio_codec_dev_t *dev, uint8_t slot,
+                                                       audio_codec_channel_caps_t *caps)
+{
+    (void)dev;
+    static const audio_codec_channel_caps_t native = {
+        .controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .independent_controls = AUDIO_CODEC_CONTROL_VOLUME | AUDIO_CODEC_CONTROL_MUTE,
+        .linked_mask = 0x01,
+    };
+    return audio_codec_native_caps(0x01, slot, &native, caps);
+}
+
+static int audio_codec_ac101s_set_mic_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x01 ? audio_codec_ac101s_set_record_volume(dev, value) : -2;
+}
+
+static int audio_codec_ac101s_set_speaker_channel_volume(audio_codec_dev_t *dev, uint16_t mask, int value)
+{
+    return mask == 0x01 ? audio_codec_ac101s_set_volume(dev, value) : -2;
+}
+
+static int audio_codec_ac101s_set_speaker_channel_mute(audio_codec_dev_t *dev, uint16_t mask, bool value)
+{
+    return mask == 0x01 ? audio_codec_ac101s_set_mute(dev, value) : -2;
+}
+
+static int audio_codec_ac101s_set_mic_channel_gain_db(audio_codec_dev_t *dev, uint16_t mask, float gain_db)
+{
+    int step = audio_codec_gain_step_index(ac101s_gain_steps_db, 32, gain_db);
+    if (dev == NULL || dev->i2c == NULL || step < 0) {
+        return -1;
+    }
+    if (g_ac101s_ctx.cfg.mic_input_mode == AUDIO_CODEC_MIC_INPUT_DIGITAL || mask != 0x01) {
+        return -2;
+    }
+    int ret =
+        ac101s_update_bits(dev->i2c, dev->i2c_addr, AC101S_ADC_ANA_CTRL1, (uint8_t)(0x1fU << AC101S_ADC_PGA_GAIN_SHIFT),
+                           (uint8_t)(step << AC101S_ADC_PGA_GAIN_SHIFT));
+    if (ret == 0) {
+        g_ac101s_ctx.mic_gain_db = ac101s_gain_steps_db[step];
+    }
+    return ret;
+}
+
 static const uint8_t ac101s_addrs[] = {
     AC101S_I2C_ADDR0,
     AC101S_I2C_ADDR1,
 };
 
 const audio_codec_driver_t audio_codec_ac101s_driver = {
+    .get_mic_channel_caps = audio_codec_ac101s_get_mic_channel_caps,
+    .get_speaker_channel_caps = audio_codec_ac101s_get_speaker_channel_caps,
+    .set_mic_channel_volume = audio_codec_ac101s_set_mic_channel_volume,
+    .set_mic_channel_gain_db = audio_codec_ac101s_set_mic_channel_gain_db,
+    .set_speaker_channel_volume = audio_codec_ac101s_set_speaker_channel_volume,
+    .set_speaker_channel_mute = audio_codec_ac101s_set_speaker_channel_mute,
+
     .name = "AC101S",
     .i2c_addrs = ac101s_addrs,
     .probe = audio_codec_ac101s_probe,
     .init = audio_codec_ac101s_init,
-    .set_mute = audio_codec_ac101s_set_mute,
-    .set_volume = audio_codec_ac101s_set_volume,
-    .set_record_volume = audio_codec_ac101s_set_record_volume,
-    .set_mic_pga = audio_codec_ac101s_set_mic_pga,
     .set_sample_rate = audio_codec_ac101s_set_sample_rate,
     .calc_mclk_hz = audio_codec_ac101s_calc_mclk_hz,
     .type = AUDIO_CODEC_TYPE_AC101S,

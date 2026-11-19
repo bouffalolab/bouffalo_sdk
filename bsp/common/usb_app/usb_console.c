@@ -14,6 +14,16 @@
 #include "usbd_cdc_acm.h"
 #include "usbd_core.h"
 
+#if defined(BL616CL)
+#define USB_CONSOLE_EFUSE_VID_PID_OFFSET 0x78U
+#elif defined(BL618DG)
+#define USB_CONSOLE_EFUSE_VID_PID_OFFSET 0xF8U
+#endif
+
+#ifdef USB_CONSOLE_EFUSE_VID_PID_OFFSET
+#include "bflb_ef_ctrl.h"
+#endif
+
 #define USB_CONSOLE_BUS_ID         0U
 #define USB_CONSOLE_IN_EP          0x83U
 #define USB_CONSOLE_OUT_EP         0x04U
@@ -45,8 +55,8 @@
 
 #define USB_CONSOLE_RETRY_DELAY_MS 10U
 
-static const uint8_t usb_console_device_descriptor[] = { USB_DEVICE_DESCRIPTOR_INIT(
-    USB_2_0, 0xEF, 0x02, 0x01, CONFIG_CONSOLE_USB_CDC_VID, CONFIG_CONSOLE_USB_CDC_PID, 0x0100, 0x01) };
+static uint8_t usb_console_device_descriptor[] = { USB_DEVICE_DESCRIPTOR_INIT(
+    USB_2_0, USB_DEVICE_CLASS_CDC, 0x02, 0x01, CONFIG_CONSOLE_USB_CDC_VID, CONFIG_CONSOLE_USB_CDC_PID, 0x0200, 0x01) };
 
 #ifdef CONFIG_USB_HS
 static const uint8_t usb_console_hs_config_descriptor[] = {
@@ -72,15 +82,33 @@ static const uint8_t usb_console_other_fs_config_descriptor[] = {
 };
 
 static const uint8_t usb_console_device_qualifier_descriptor[] = { USB_DEVICE_QUALIFIER_DESCRIPTOR_INIT(
-    USB_2_0, 0xEF, 0x02, 0x01, 0x01) };
+    USB_2_0, USB_DEVICE_CLASS_CDC, 0x02, 0x01, 0x01) };
 #endif
 
 static const char *usb_console_string_descriptors[] = {
     (const char[]){ 0x09, 0x04 },
-    "Bouffalo Lab",
-    "Bouffalo Lab USB Console",
-    "00000001",
+    "Generics",
+    "Generics CDC Device",
+    "2024102300",
 };
+
+static void usb_console_init_device_descriptor(void)
+{
+    struct usb_device_descriptor *device = (struct usb_device_descriptor *)usb_console_device_descriptor;
+
+#ifdef USB_CONSOLE_EFUSE_VID_PID_OFFSET
+    uint32_t vid_pid = 0;
+
+    bflb_ef_ctrl_read_direct(NULL, USB_CONSOLE_EFUSE_VID_PID_OFFSET, &vid_pid, 1, 0);
+    if (vid_pid == 0U) {
+        vid_pid = 0xFFFFFFFFU;
+    }
+    device->idVendor = (uint16_t)(vid_pid >> 16);
+    device->idProduct = (uint16_t)vid_pid;
+#endif
+    /* Use the USB port location as the instance identity across reboot. */
+    device->iSerialNumber = 0;
+}
 
 static const uint8_t *usb_console_device_descriptor_cb(uint8_t speed)
 {
@@ -537,6 +565,7 @@ void usb_console_init(void)
 
     shell_init_with_task(NULL);
 
+    usb_console_init_device_descriptor();
     usbd_desc_register(USB_CONSOLE_BUS_ID, &usb_console_descriptor);
     usbd_add_interface(USB_CONSOLE_BUS_ID, usbd_cdc_acm_init_intf(USB_CONSOLE_BUS_ID, &usb_console_intf0));
     usbd_add_interface(USB_CONSOLE_BUS_ID, usbd_cdc_acm_init_intf(USB_CONSOLE_BUS_ID, &usb_console_intf1));

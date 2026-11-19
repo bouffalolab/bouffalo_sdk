@@ -220,6 +220,100 @@ bridgeif_find_dst_ports(bridgeif_private_t *br, struct eth_addr *dst_addr)
   return bridgeif_fdb_get_dst_ports(br->fdbd, dst_addr);
 }
 
+/**
+ * @ingroup bridgeif
+ * Return the netif for a bridge port, or NULL for an unused or invalid port.
+ * Call with the TCP/IP core locked.
+ */
+struct netif *
+bridgeif_port_get(struct netif *bridgeif, u8_t port_num)
+{
+  bridgeif_private_t *br;
+
+  LWIP_ASSERT("invalid netif", bridgeif != NULL);
+  br = (bridgeif_private_t *)bridgeif->state;
+  LWIP_ASSERT("invalid state", br != NULL);
+
+  if (port_num >= br->num_ports) {
+    return NULL;
+  }
+  return br->ports[port_num].port_netif;
+}
+
+/**
+ * @ingroup bridgeif
+ * Read entry idx from the list of valid dynamic followed by static FDB entries.
+ * Call with the TCP/IP core locked. Outputs are valid only on ERR_OK.
+ *
+ * @param idx zero-based index, skipping unused and expired entries
+ * @param addr receives the MAC address
+ * @param is_static receives 1 for a static entry, 0 for a learned entry
+ * @param ports receives the forwarding port mask (0 means drop)
+ * @param age receives the remaining lifetime in seconds, or 0 for static entries
+ * @return ERR_OK if found, ERR_VAL at the end of the list, ERR_ARG for NULL arguments
+ */
+err_t
+bridgeif_fdb_entry_get(struct netif *bridgeif, u16_t idx, struct eth_addr *addr,
+                      u8_t *is_static, bridgeif_portmask_t *ports, u16_t *age)
+{
+  int i;
+  bridgeif_private_t *br;
+  BRIDGEIF_DECL_PROTECT(lev);
+
+  if ((bridgeif == NULL) || (bridgeif->state == NULL) || (addr == NULL) ||
+      (is_static == NULL) || (ports == NULL) || (age == NULL)) {
+    return ERR_ARG;
+  }
+  br = (bridgeif_private_t *)bridgeif->state;
+
+  for (i = 0; i < br->max_fdbd_entries; i++) {
+    u8_t port;
+    if (bridgeif_fdb_get_slot(br->fdbd, (u16_t)i, addr, &port, age) == ERR_OK) {
+      if (idx == 0) {
+        *is_static = 0;
+        *ports = (bridgeif_portmask_t)1 << port;
+        return ERR_OK;
+      }
+      idx--;
+    }
+  }
+  BRIDGEIF_READ_PROTECT(lev);
+  for (i = 0; i < br->max_fdbs_entries; i++) {
+    if (br->fdbs[i].used) {
+      if (idx == 0) {
+        memcpy(addr, &br->fdbs[i].addr, sizeof(struct eth_addr));
+        *is_static = 1;
+        *ports = br->fdbs[i].dst_ports;
+        *age = 0;
+        BRIDGEIF_READ_UNPROTECT(lev);
+        return ERR_OK;
+      }
+      idx--;
+    }
+  }
+  BRIDGEIF_READ_UNPROTECT(lev);
+  return ERR_VAL;
+}
+
+/**
+ * @ingroup bridgeif
+ * Return the forwarding port mask, or BR_FLOOD if the destination is unknown.
+ * Static entries take precedence, including multicast and drop entries.
+ * Call with the TCP/IP core locked.
+ */
+bridgeif_portmask_t
+bridgeif_fdb_lookup(struct netif *bridgeif, struct eth_addr *addr)
+{
+  bridgeif_private_t *br;
+
+  LWIP_ASSERT("invalid netif", bridgeif != NULL);
+  br = (bridgeif_private_t *)bridgeif->state;
+  LWIP_ASSERT("invalid state", br != NULL);
+  LWIP_ASSERT("invalid addr", addr != NULL);
+
+  return bridgeif_find_dst_ports(br, addr);
+}
+
 /** Helper function to see if a destination mac belongs to the bridge
  * (bridge netif or one of the port netifs), in which case the frame
  * is sent to the cpu only.

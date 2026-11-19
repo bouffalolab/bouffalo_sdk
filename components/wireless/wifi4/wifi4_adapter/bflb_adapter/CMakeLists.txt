@@ -9,12 +9,13 @@ sdk_add_include_directories(. bflb_os_adapter/include
 
 sdk_library_add_sources(bflb_os_adapter/bflb_os_hal.c
                         plat_bouffalo_sdk.c
-                        cli_al.c
                         net_iperf_al.c
                         rtos_al.c
                         tlv/utils_tlv_bl.c
                         blcrypto_sec_pka/blcrypto_sec_pka.c)
 
+
+sdk_library_add_sources_ifdef(CONFIG_SHELL cli_al.c)
 
 sdk_add_compile_definitions(-DCFG_FREERTOS -DBOUFFALO_SDK)
 

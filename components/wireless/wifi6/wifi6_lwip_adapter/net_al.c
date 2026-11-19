@@ -906,10 +906,12 @@ void net_al_tx_do_sta_del(uint8_t sta_id, release_buf_cb release_buf)
 #endif
 }
 
-void net_al_tx_init()
+int net_al_tx_init(void)
 {
 #ifdef FHOST_BUFFER_COPY
-    bc_tx_init_tx_pool();
+    return bc_tx_init_tx_pool();
+#else
+    return 0;
 #endif
 }
 

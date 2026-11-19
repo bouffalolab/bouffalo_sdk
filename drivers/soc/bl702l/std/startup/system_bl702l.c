@@ -23,7 +23,7 @@
 #include "bl702l_glb.h"
 #include <arch/risc-v/e24/clic.h>
 
-extern void sysinit_run_all(void);
+#include "sysinit.h"
 
 void SystemInit(void)
 {
@@ -86,14 +86,26 @@ void SystemInit(void)
     // HBN_Set_BOR_Cfg(&borCfg);
 }
 
+#if defined(CONFIG_SYSINIT) && defined(CONFIG_FREERTOS)
+/* Kept after the service records and before the scheduler barrier. */
+static void soc_post_init(const void *arg)
+{
+    (void)arg;
+    __enable_irq();
+}
+SYSINIT(soc_post, SI_SUB_PRE_SCHED, SI_ORDER_FIRST, soc_post_init, NULL);
+#endif
+
 void System_Post_Init(void)
 {
     GLB_Trim_RC32M();
     HBN_Trim_RC32K();
     GLB_GPIO_O_Latch_Mode_Set(1);
 
-    sysinit_run_all();
+    sysinit_run_pre_schedule();
 
+#if !defined(CONFIG_SYSINIT) || !defined(CONFIG_FREERTOS)
     /* global IRQ enable */
     __enable_irq();
+#endif
 }

@@ -34,7 +34,7 @@ struct bc_tx_info_tag
     struct net_al_tx_req req;
 };
 struct bc_tx_buf_tag *bc_tx_buf_alloc();
-void bc_tx_init_tx_pool();
+int bc_tx_init_tx_pool(void);
 void bc_tx_queue_release_sta(uint8_t sta_id, release_buf_cb release_buf);
 void bc_try_tx_queued_pkts();
 void bc_tx_enqueue(struct bc_tx_info_tag *info, uint8_t std_id, struct net_al_tx_req req);

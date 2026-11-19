@@ -428,6 +428,7 @@ make menuconfig CHIP=bl616 BOARD=bl616dk
 
 - [本文件](AGENTS.md) - 环境设置和项目概览
 - [WiFi 驱动文档](components/wireless/wl80211/CLAUDE.md) - wl80211 详细 API
+- [SYSINIT 迁移与接入指南](docs/superpowers/specs/sysinit-migration-guide.md) - 固定初始化迁移、SI_SUB/SI_ORDER 选择、deprecated 兼容层与验收清单
 - [Bouffalo SDK 开发指南](.agents/skills/bouffalo-sdk/SKILL.md) - AI 辅助开发技能
 - [SDK 发布说明规范](.agents/skills/sdk-changelog/SKILL.md) - 面向用户的 CHANGELOG 生成规则
 - [手工测试规范](.agents/skills/test-manual/SKILL.md) - Jenkins 手工测试流程

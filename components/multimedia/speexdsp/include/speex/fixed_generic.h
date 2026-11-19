@@ -42,10 +42,11 @@
 #define NEG32(x) (-(x))
 #define EXTRACT16(x) ((spx_word16_t)(x))
 #define EXTEND32(x) ((spx_word32_t)(x))
+/* Shift unsigned values to preserve fixed-point wraparound without signed UB. */
 #define SHR16(a,shift) ((a) >> (shift))
-#define SHL16(a,shift) ((a) << (shift))
+#define SHL16(a,shift) ((spx_word32_t)((spx_uint32_t)(a) << (shift)))
 #define SHR32(a,shift) ((a) >> (shift))
-#define SHL32(a,shift) ((a) << (shift))
+#define SHL32(a,shift) ((spx_word32_t)((spx_uint32_t)(a) << (shift)))
 #define PSHR16(a,shift) (SHR16((a)+((1<<((shift))>>1)),shift))
 #define PSHR32(a,shift) (SHR32((a)+((EXTEND32(1)<<((shift))>>1)),shift))
 #define VSHR32(a, shift) (((shift)>0) ? SHR32(a, shift) : SHL32(a, -(shift)))
@@ -57,7 +58,7 @@
                                    (PSHR32(x, shift)))
 
 #define SHR(a,shift) ((a) >> (shift))
-#define SHL(a,shift) ((spx_word32_t)(a) << (shift))
+#define SHL(a,shift) SHL32(a,shift)
 #define PSHR(a,shift) (SHR((a)+((EXTEND32(1)<<((shift))>>1)),shift))
 #define SATURATE(x,a) (((x)>(a) ? (a) : (x)<-(a) ? -(a) : (x)))
 
