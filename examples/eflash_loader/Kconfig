@@ -1,0 +1,9 @@
+mainmenu "eFlash Loader Configuration"
+
+source "$BL_SDK_BASE/Kconfig"
+
+config FLASH_XIP_ADDRESS
+    hex "Flash XIP base address (0 selects RAM execution)"
+    default 0
+    help
+        Keep zero to run the JTAG flash loader from RAM.

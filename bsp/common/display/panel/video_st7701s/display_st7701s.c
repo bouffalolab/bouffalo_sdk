@@ -1,0 +1,198 @@
+/**
+ * @file display_st7701s.c
+ * @brief ST7701S IC description and default modules: RGB panel with a command port, and MIPI DSI panel.
+ *
+ * 0xFF is a real bank-switch command of this IC; delays are a separate field. The IC has two init tables: the one
+ * of the RGB panels (command port on a 3 or 4 wire serial bus), and the one of the MIPI DSI panel.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#include "panel/video_st7701s/display_st7701s.h"
+
+static const display_dcs_cmd_t st7701s_rgb_init[] = {
+    DISPLAY_DCS0(0x00, 0),                              /* NOP */
+    DISPLAY_DCS0(0x01, 10),                             /* Software Reset */
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x13), /* Command2 BK3 */
+    DISPLAY_DCS(0xEF, 0, 0x08),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x10), /* Command2 BK0 */
+    DISPLAY_DCS(0xC0, 0, 0x3B, 0x00),                   /* (0x3B+1)*8 = 480 lines */
+    DISPLAY_DCS(0xC1, 0, 0x0B, 0x02),                   /* VBP/VFP */
+    DISPLAY_DCS(0xC2, 0, 0x30, 0x02),
+    DISPLAY_DCS(0xCC, 0, 0x10),
+    DISPLAY_DCS(0xCD, 0, 0x04),
+    DISPLAY_DCS(0xB0, 0, 0x00, 0x0F, 0x16, 0x0E, 0x11, 0x07, 0x09, 0x09, 0x08, 0x23, 0x05, 0x11, 0x0F, 0x28, 0x2D,
+                0x18), /* positive gamma */
+    DISPLAY_DCS(0xB1, 0, 0x00, 0x0F, 0x16, 0x0E, 0x11, 0x07, 0x09, 0x09, 0x08, 0x23, 0x05, 0x11, 0x0F, 0x28, 0x2D,
+                0x18),                                  /* negative gamma */
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x11), /* Command2 BK1 */
+    DISPLAY_DCS(0xB0, 0, 0x4D),
+    DISPLAY_DCS(0xB1, 0, 0x33),
+    DISPLAY_DCS(0xB2, 0, 0x87),
+    DISPLAY_DCS(0xB5, 0, 0x4B),
+    DISPLAY_DCS(0xB7, 0, 0x8C),
+    DISPLAY_DCS(0xB8, 0, 0x20),
+    DISPLAY_DCS(0xC1, 0, 0x78),
+    DISPLAY_DCS(0xC2, 20, 0x78),
+    DISPLAY_DCS(0xE0, 0, 0x00, 0x00, 0x02),
+    DISPLAY_DCS(0xE1, 0, 0x02, 0xF0, 0x00, 0x00, 0x03, 0xF0, 0x00, 0x00, 0x00, 0x44, 0x44),
+    DISPLAY_DCS(0xE2, 0, 0x10, 0x10, 0x40, 0x40, 0xF2, 0xF0, 0x00, 0x00, 0xF2, 0xF0, 0x00, 0x00),
+    DISPLAY_DCS(0xE3, 0, 0x00, 0x00, 0x11, 0x11),
+    DISPLAY_DCS(0xE4, 0, 0x44, 0x44),
+    DISPLAY_DCS(0xE5, 0, 0x07, 0xEF, 0xF0, 0xF0, 0x09, 0xF1, 0xF0, 0xF0, 0x03, 0xF3, 0xF0, 0xF0, 0x05, 0xED, 0xF0,
+                0xF0),
+    DISPLAY_DCS(0xE6, 0, 0x00, 0x00, 0x11, 0x11),
+    DISPLAY_DCS(0xE7, 0, 0x44, 0x44),
+    DISPLAY_DCS(0xE8, 0, 0x08, 0xF0, 0xF0, 0xF0, 0x0A, 0xF2, 0xF0, 0xF0, 0x04, 0xF4, 0xF0, 0xF0, 0x06, 0xEE, 0xF0,
+                0xF0),
+    DISPLAY_DCS(0xEB, 0, 0x00, 0x00, 0xE4, 0xE4, 0x44, 0x88, 0x40),
+    DISPLAY_DCS(0xEC, 0, 0x78, 0x00),
+    DISPLAY_DCS(0xED, 0, 0x20, 0xF9, 0x87, 0x76, 0x65, 0x54, 0x4F, 0xFF, 0xFF, 0xF4, 0x45, 0x56, 0x67, 0x78, 0x9F,
+                0x02),
+    DISPLAY_DCS(0xEF, 0, 0x10, 0x0D, 0x04, 0x08, 0x3F, 0x1F),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x00), /* leave Command2 */
+    DISPLAY_DCS(0x35, 0, 0x00),                         /* Tearing Effect On */
+    DISPLAY_DCS(0x36, 0, 0x08),                         /* color order: B-G-R (R-G-B is 0x00) */
+    DISPLAY_DCS(0x3A, 0, 0x66),                         /* RGB interface 18 bit */
+    DISPLAY_DCS0(0x11, 120),                            /* Sleep Out */
+};
+
+/*
+ * Vendor sequence of the MIPI DSI panel (HD40007C30-V5). It reads as a series of bank switches: 0xFF 0x77 0x01 0x00
+ * 0x00 <bank> selects Command2 BK0 (0x10), BK1 (0x11) or BK3 (0x13); bank 0x00 leaves Command2, so that the
+ * standard commands (0x11, 0x36, 0x3A) can be reached. The memory access control and the pixel format are in the
+ * modules.
+ */
+static const display_dcs_cmd_t st7701s_dsi_init[] = {
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x13), /* Command2 BK3 */
+    DISPLAY_DCS(0xEF, 0, 0x08),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x10), /* Command2 BK0 */
+    DISPLAY_DCS(0xC0, 0, 0x3B, 0x00),                   /* Display Line Setting: (0x3B+1)*8 = 480 */
+    DISPLAY_DCS(0xC1, 0, 0x0D, 0x02),                   /* Porch Control: VBP 13, VFP 2 (panel-internal) */
+    DISPLAY_DCS(0xC2, 0, 0x21, 0x08),                   /* Inversion selection (2-dot) & Frame Rate Control */
+    /* Positive / negative gamma */
+    DISPLAY_DCS(0xB0, 0, 0x00, 0x11, 0x18, 0x0E, 0x11, 0x06, 0x07, 0x08, 0x07, 0x22, 0x04, 0x12, 0x0F, 0xAA, 0x31,
+                0x18),
+    DISPLAY_DCS(0xB1, 0, 0x00, 0x11, 0x19, 0x0E, 0x12, 0x07, 0x08, 0x08, 0x08, 0x22, 0x04, 0x11, 0x11, 0xA9, 0x32,
+                0x18),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x11), /* Command2 BK1 */
+    DISPLAY_DCS(0xB0, 0, 0x60),                         /* VOP amplitude */
+    DISPLAY_DCS(0xB1, 0, 0x30),                         /* VCOM amplitude */
+    DISPLAY_DCS(0xB2, 0, 0x87),                         /* VGH voltage */
+    DISPLAY_DCS(0xB3, 0, 0x80),                         /* TEST command */
+    DISPLAY_DCS(0xB5, 0, 0x49),                         /* VGL voltage */
+    DISPLAY_DCS(0xB7, 0, 0x85),                         /* Power control 1 */
+    DISPLAY_DCS(0xB8, 0, 0x21),                         /* Power control 2 */
+    DISPLAY_DCS(0xC1, 0, 0x78),                         /* Source pre_drive timing set 1 */
+    DISPLAY_DCS(0xC2, 20, 0x78),                        /* Source pre_drive timing set 2 */
+    /* GIP / gate timing */
+    DISPLAY_DCS(0xE0, 0, 0x00, 0x1B, 0x02),
+    DISPLAY_DCS(0xE1, 0, 0x08, 0xA0, 0x00, 0x00, 0x07, 0xA0, 0x00, 0x00, 0x00, 0x44, 0x44),
+    DISPLAY_DCS(0xE2, 0, 0x11, 0x11, 0x44, 0x44, 0xED, 0xA0, 0x00, 0x00, 0xEC, 0xA0, 0x00, 0x00),
+    DISPLAY_DCS(0xE3, 0, 0x00, 0x00, 0x11, 0x11),
+    DISPLAY_DCS(0xE4, 0, 0x44, 0x44),
+    DISPLAY_DCS(0xE5, 0, 0x0A, 0xE9, 0xD8, 0xA0, 0x0C, 0xEB, 0xD8, 0xA0, 0x0E, 0xED, 0xD8, 0xA0, 0x10, 0xEF, 0xD8,
+                0xA0),
+    DISPLAY_DCS(0xE6, 0, 0x00, 0x00, 0x11, 0x11),
+    DISPLAY_DCS(0xE7, 0, 0x44, 0x44),
+    DISPLAY_DCS(0xE8, 0, 0x09, 0xE8, 0xD8, 0xA0, 0x0B, 0xEA, 0xD8, 0xA0, 0x0D, 0xEC, 0xD8, 0xA0, 0x0F, 0xEE, 0xD8,
+                0xA0),
+    DISPLAY_DCS(0xEB, 0, 0x02, 0x00, 0xE4, 0xE4, 0x88, 0x00, 0x40),
+    DISPLAY_DCS(0xEC, 0, 0x3C, 0x00),
+    DISPLAY_DCS(0xED, 0, 0xAB, 0x89, 0x76, 0x54, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x20, 0x45, 0x67, 0x98,
+                0xBA),
+    DISPLAY_DCS(0xEF, 0, 0x10, 0x0D, 0x04, 0x08, 0x3F, 0x1F),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x00), /* leave Command2 */
+    /* Vendor sleep-out wrapper: BK3 0xE8 gates the source output around the
+     * 0x11 exit-sleep so the panel does not glitch while power ramps. */
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x13),
+    DISPLAY_DCS(0xE8, 0, 0x00, 0x0E),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x00),
+    DISPLAY_DCS0(0x11, 120), /* Exit Sleep */
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x13),
+    DISPLAY_DCS(0xE8, 10, 0x00, 0x0C),
+    DISPLAY_DCS(0xE8, 0, 0x00, 0x00),
+    DISPLAY_DCS(0xFF, 0, 0x77, 0x01, 0x00, 0x00, 0x00),
+};
+
+static const display_dcs_iface_init_t st7701s_iface_init[] = {
+    { DISPLAY_IFACE_BIT(DISPLAY_IFACE_DSI_LP), st7701s_dsi_init, DISPLAY_DCS_COUNT(st7701s_dsi_init) },
+};
+
+/* Command port of the RGB panel (the pixels go through the RGB interface, so no colmod here) and MIPI DSI */
+static const display_link_t st7701s_links[] = {
+    { .iface = DISPLAY_IFACE_DBI_C3 },
+    { .iface = DISPLAY_IFACE_DBI_C4 },
+    { .iface = DISPLAY_IFACE_DSI_LP },
+};
+
+const display_dcs_ic_t display_ic_st7701s = {
+    .name = "st7701s",
+    .ram_width = 480,
+    .ram_height = 864,
+    .reset_low_ms = 10,
+    .reset_wait_ms = 120,
+    DISPLAY_DCS_LINKS(st7701s_links),
+    DISPLAY_DCS_INIT(st7701s_rgb_init),
+    DISPLAY_DCS_IFACE_INIT(st7701s_iface_init),
+};
+
+/* 60 Hz: (480+30) x (480+16) x 60 ≈ 15.18 MHz */
+static const display_video_mode_t video_480x480[] = {
+    {
+        .link = DISPLAY_VLINK_DPI,
+        .width = 480,
+        .height = 480,
+        .hsw = 10,
+        .hbp = 10,
+        .hfp = 10,
+        .vsw = 4,
+        .vbp = 8,
+        .vfp = 4,
+        .clock_hz = 15177600,
+    },
+};
+
+const display_dcs_module_t display_module_st7701s_rgb_480x480 = {
+    .name = "st7701s_rgb_480x480",
+    .ic = &display_ic_st7701s,
+    .width = 480,
+    .height = 480,
+    DISPLAY_DCS_VIDEO(video_480x480),
+};
+
+/*
+ * 96 MHz / 5 = 19.2 MHz: 572 x 551 clocks per frame give about 60.9 Hz (the panel asks for 19 MHz). RGB888 over
+ * 2 lanes needs 230 Mbit/s per lane, so the 400 Mbit/s step has ample headroom.
+ */
+static const display_video_mode_t video_dsi_480x480[] = {
+    {
+        .link = DISPLAY_VLINK_DSI,
+        .width = 480,
+        .height = 480,
+        .hsw = 2,
+        .hbp = 44,
+        .hfp = 46,
+        .vsw = 5,
+        .vbp = 16,
+        .vfp = 50,
+        .clock_hz = 19200000,
+        .dsi = { .lanes = 2, .lane_mbps = 400, .format = DISPLAY_DSI_FMT_RGB888 },
+    },
+};
+
+/* Memory data access control (B-G-R) and the 24 bit pixel format of the DSI link; the vendor script has 18 bit */
+static const display_dcs_cmd_t st7701s_dsi_pixel[] = {
+    DISPLAY_DCS(0x36, 0, 0x08), /* B-G-R */
+    DISPLAY_DCS(0x3A, 0, 0x77), /* 24 bit */
+};
+
+const display_dcs_module_t display_module_st7701s_dsi_480x480 = {
+    .name = "st7701s_dsi_480x480",
+    .ic = &display_ic_st7701s,
+    .width = 480,
+    .height = 480,
+    .iface_mask = DISPLAY_IFACE_BIT(DISPLAY_IFACE_DSI_LP),
+    .video_start_delay_ms = 20, /* the display is on, the panel needs this time before the first line */
+    DISPLAY_DCS_VIDEO(video_dsi_480x480),
+    DISPLAY_DCS_INIT_EXTRA(st7701s_dsi_pixel),
+};

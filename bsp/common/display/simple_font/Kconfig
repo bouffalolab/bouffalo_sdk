@@ -1,0 +1,22 @@
+menuconfig DISPLAY_SIMPLE_FONT
+    bool "Simple ASCII font renderer (memory only)"
+    default y
+    help
+      Synchronously draw fixed-size 1bpp ASCII fonts into RGB565, RGB888 or
+      XRGB8888 memory. No screen, hardware, allocation or OS calls are used.
+
+if DISPLAY_SIMPLE_FONT
+
+config DISPLAY_SIMPLE_FONT_ASCII_16X8
+    bool "SDK Code Bitmap ASCII 16x8 (8 pixels wide, 16 high)"
+    default y
+
+config DISPLAY_SIMPLE_FONT_ASCII_32X16
+    bool "SDK Code Bitmap ASCII 32x16 (16 pixels wide, 32 high)"
+    default n
+
+config DISPLAY_SIMPLE_FONT_ASCII_64X32
+    bool "SDK Code Bitmap ASCII 64x32 (32 pixels wide, 64 high; digits 0..9 only)"
+    default n
+
+endif

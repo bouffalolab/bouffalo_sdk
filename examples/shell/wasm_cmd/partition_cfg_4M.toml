@@ -1,0 +1,117 @@
+[pt_table]
+# partition table is 4K in size
+address0 = 0xE000
+address1 = 0xF000
+# If version is 2, It will use dynamic mode.
+version = 2
+
+[[pt_entry]]
+type = 16
+name = "Boot2"
+device = 0
+address0 = 0
+size0 = 0xE000
+address1 = 0
+size1 = 0
+len = 0
+header = 1
+security = 1
+
+[[pt_entry]]
+type = 0
+name = "FW"
+device = 0
+address0 = 0x10000
+size0 = 0x200000
+address1 = 0x210000
+size1 = 0x168000
+len = 0
+header = 1
+security = 1
+
+[[pt_entry]]
+type = 10
+name = "mfg"
+device = 0
+address0 = 0x210000
+size0 = 0x168000
+address1 = 0
+size1 = 0
+len = 0
+header = 1
+security = 1
+
+# LittleFS AOT repository. 192 KB, 48 x 4 KB blocks.
+[[pt_entry]]
+type = 2
+name = "media"
+device = 0
+address0 = 0x378000
+size0 = 0x30000
+address1 = 0
+size1 = 0
+len = 0
+header = 0
+security = 0
+
+# Raw, contiguous XIP image slot. 256 KB. The first 4 KB are reserved for
+# the slot header; the AOT image starts at offset 0x100 and is flashed here.
+[[pt_entry]]
+type = 7
+name = "AOT"
+device = 0
+address0 = 0x3A8000
+size0 = 0x40000
+address1 = 0
+size1 = 0
+len = 0
+header = 0
+security = 0
+
+[[pt_entry]]
+type = 3
+name = "PSM"
+device = 0
+address0 = 0x3E9000
+size0 = 0x8000
+address1 = 0
+size1 = 0
+len = 0
+header = 0
+security = 0
+
+[[pt_entry]]
+type = 4
+name = "KEY"
+device = 0
+address0 = 0x3F1000
+size0 = 0x2000
+address1 = 0
+size1 = 0
+len = 0
+header = 0
+security = 0
+
+[[pt_entry]]
+type = 5
+name = "DATA"
+device = 0
+address0 = 0x3F3000
+size0 = 0x5000
+address1 = 0
+size1 = 0
+len = 0
+header = 0
+security = 0
+
+[[pt_entry]]
+type = 6
+name = "factory"
+device = 0
+address0 = 0x3F8000
+size0 = 0x8000
+address1 = 0
+size1 = 0
+len = 0
+header = 0
+security = 0

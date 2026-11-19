@@ -1,0 +1,20 @@
+mainmenu "SDK Configuration"
+
+source "$BL_SDK_BASE/Kconfig"
+
+config LVGL_V9_WITH_OSD_USB_VIDEO
+    bool "Enable USB DATA ACM + NetHub video for the OSD example"
+    default n
+    depends on LVGL9
+    help
+      Receive JPEG frames through USB DATA ACM and enable the example's
+      NetHub network path. When disabled, read JPEG frames from the SD card.
+
+config LVGL_V9_WITH_OSD_OTA
+    bool "Enable WiFi HTTP OTA for the OSD example"
+    default n
+
+config LVGL_V9_WITH_OSD_DPI_BOARD
+    bool
+    default y if DISPLAY_DEFAULT_TYPE_VIDEO && !DISPLAY_DEFAULT_DSI
+    select DPI_DISPLAY_BOARD_MODE

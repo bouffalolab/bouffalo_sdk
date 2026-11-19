@@ -1,0 +1,2 @@
+mainmenu "Xcodec IO example"
+source "$BL_SDK_BASE/Kconfig"

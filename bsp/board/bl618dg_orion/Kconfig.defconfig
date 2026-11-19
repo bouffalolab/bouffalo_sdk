@@ -1,0 +1,20 @@
+# Orion uses the JY6311 DAC and JY6166 ADC pair.
+if BSP_AUDIO_CODEC
+
+config AUDIO_CODEC_JY6316_ENABLE
+    default y
+
+endif
+
+if XCODEC_IO
+
+config BSP_AUDIO_CODEC
+    default y
+
+endif
+
+config PSRAM_LENGTH
+    default 0x1000000
+
+config PSRAM_FOR_AP_SIZE
+    default 0x1000000 if DUALCORE_DISABLE

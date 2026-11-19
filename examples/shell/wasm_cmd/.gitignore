@@ -1,0 +1,5 @@
+app/*.wasm
+app/*.wasm.hex
+app/*.aot
+__pycache__/
+app/*.aot.xz

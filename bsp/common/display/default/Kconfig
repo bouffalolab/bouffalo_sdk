@@ -1,0 +1,430 @@
+# Default display
+#
+# Defines one display from Kconfig, for the common case of a single screen that needs no special
+# configuration: a screen with its own frame memory (SPI / DBI / QSPI), or a video screen (MIPI DSI / RGB). The
+# application (or the LVGL port) gets it with display_default_get() and drives it like any other display. Projects with
+# several screens, or with special needs, define their displays in C and write their own port instead.
+#
+# CS is a software GPIO by default: the board pin functions (default/display_default_gpio_ext.h) never mux a CS pin to
+# the controller on their own. A panel without CS, or with CS driven by the DBI hardware, is a choice below.
+# Optional pins are a "used" switch plus a pin number (the SDK Kconfig generator writes negative numbers as
+# strings, so -1 cannot mean "none"). Backlight, reset and power can also be implemented by the project
+# (for example on an I/O expander); CS cannot: it is always a GPIO, driven by the software or by the DBI hardware
+# (see the choice).
+
+menuconfig DISPLAY_DEFAULT
+    bool "Default display (one screen defined from Kconfig)"
+    default n
+    help
+      Define the display returned by display_default_get(). Pixel format, wire width, clock, command
+      encoding and the rest of the settings come from the interface and the panel IC.
+
+if DISPLAY_DEFAULT
+
+choice DISPLAY_DEFAULT_TYPE
+    prompt "Screen type"
+    default DISPLAY_DEFAULT_TYPE_GRAM
+config DISPLAY_DEFAULT_TYPE_GRAM
+    bool "Screen with frame memory (SPI / DBI / QSPI), pixels pushed with display_draw()"
+config DISPLAY_DEFAULT_TYPE_VIDEO
+    bool "Video screen (MIPI DSI / RGB), frames scanned out and switched with display_flip()"
+    depends on CHIP = "bl618dg"
+    select DISPLAY_SCANOUT_BL618DG_DPU
+endchoice
+
+if DISPLAY_DEFAULT_TYPE_GRAM
+
+choice DISPLAY_DEFAULT_IFACE
+    prompt "Interface"
+    default DISPLAY_DEFAULT_IF_SPI
+    help
+      The interface the panel is wired to. The board (bsp/board/<board>) provides its pin function, see
+      default/display_default_gpio_ext.h; a missing one is a link error.
+config DISPLAY_DEFAULT_IF_SPI
+    bool "Hardware SPI (DBI Type C 4-wire)"
+    select DISPLAY_BUS_SPI
+config DISPLAY_DEFAULT_IF_DBI_C4
+    bool "DBI peripheral, Type C 4-wire (SCL + SDA + D/C)"
+    depends on CHIP = "bl616" || CHIP = "bl616cl" || CHIP = "bl618dg"
+    select DISPLAY_BUS_DBI
+config DISPLAY_DEFAULT_IF_DBI_B8
+    bool "DBI peripheral, Type B (8080 x8)"
+    depends on CHIP = "bl616" || CHIP = "bl616cl" || CHIP = "bl618dg"
+    select DISPLAY_BUS_DBI
+config DISPLAY_DEFAULT_IF_QSPI
+    bool "DBI peripheral, QSPI"
+    depends on CHIP = "bl616" || CHIP = "bl616cl" || CHIP = "bl618dg"
+    select DISPLAY_BUS_DBI
+endchoice
+
+choice DISPLAY_DEFAULT_MODULE
+    prompt "Panel module"
+    default DISPLAY_DEFAULT_MODULE_ST7789_240X320
+config DISPLAY_DEFAULT_MODULE_ST7789_240X320
+    bool "ST7789 240x320"
+    depends on DISPLAY_PANEL_ST7789
+config DISPLAY_DEFAULT_MODULE_ST7789_240X240
+    bool "ST7789 240x240"
+    depends on DISPLAY_PANEL_ST7789
+config DISPLAY_DEFAULT_MODULE_GC9307_240X320
+    bool "GC9307 240x320"
+    depends on DISPLAY_PANEL_GC9307
+config DISPLAY_DEFAULT_MODULE_ILI9486_320X480
+    bool "ILI9486 320x480"
+    depends on DISPLAY_PANEL_ILI9486
+config DISPLAY_DEFAULT_MODULE_JD9853_240X320
+    bool "JD9853 240x320"
+    depends on DISPLAY_PANEL_JD9853
+config DISPLAY_DEFAULT_MODULE_ST7735_240X320
+    bool "ST7735 (240x320)"
+    depends on DISPLAY_PANEL_ST7735
+config DISPLAY_DEFAULT_MODULE_ST77922_320X480
+    bool "ST77922 320x480 (DBI)"
+    depends on DISPLAY_PANEL_ST77922
+config DISPLAY_DEFAULT_MODULE_ST77926_320X480
+    bool "ST77926 320x480 (QSPI)"
+    depends on DISPLAY_PANEL_ST77922
+config DISPLAY_DEFAULT_MODULE_SPD2010_412X412
+    bool "SPD2010 412x412 (QSPI)"
+    depends on DISPLAY_PANEL_SPD2010
+config DISPLAY_DEFAULT_MODULE_ST7796_320X480
+    bool "ST7796 320x480"
+    depends on DISPLAY_PANEL_ST7796
+config DISPLAY_DEFAULT_MODULE_ILI9341_240X320
+    bool "ILI9341 240x320"
+    depends on DISPLAY_PANEL_ILI9341
+config DISPLAY_DEFAULT_MODULE_ILI9488_320X480
+    bool "ILI9488 320x480"
+    depends on DISPLAY_PANEL_ILI9488
+config DISPLAY_DEFAULT_MODULE_GC9A01_240X240
+    bool "GC9A01 240x240"
+    depends on DISPLAY_PANEL_GC9A01
+config DISPLAY_DEFAULT_MODULE_NT35510_480X800
+    bool "NT35510 480x800"
+    depends on DISPLAY_PANEL_NT35510
+config DISPLAY_DEFAULT_MODULE_CUSTOM
+    bool "Custom (the project defines display_default_custom_module)"
+    help
+      The project provides `const display_dcs_module_t display_default_custom_module`, a module description
+      like panel/template/display_module_template.c.
+endchoice
+
+choice DISPLAY_DEFAULT_FORMAT
+    prompt "Pixel format in memory"
+    default DISPLAY_DEFAULT_FORMAT_RGB565
+config DISPLAY_DEFAULT_FORMAT_RGB565
+    bool "RGB565"
+config DISPLAY_DEFAULT_FORMAT_XRGB8888
+    bool "XRGB8888"
+config DISPLAY_DEFAULT_FORMAT_RGB888
+    bool "RGB888, packed 3 bytes per pixel"
+    depends on !DISPLAY_DEFAULT_IF_SPI
+    help
+      Saves a quarter of the memory of XRGB8888. The DBI peripheral converts it; the hardware SPI backend does
+      not support this format.
+endchoice
+
+choice DISPLAY_DEFAULT_WIRE
+    prompt "Pixel format on the wire"
+    default DISPLAY_DEFAULT_WIRE_AUTO
+    help
+      Independent of the pixel format in memory. AUTO uses 16 bits per pixel for RGB565 and
+      24 bits per pixel for RGB888/XRGB8888. The DBI peripheral can convert between input and
+      output formats; hardware SPI always derives its wire format from the memory format.
+config DISPLAY_DEFAULT_WIRE_AUTO
+    bool "Auto (derive from memory format)"
+config DISPLAY_DEFAULT_WIRE_16
+    bool "16 bits per pixel (RGB565)"
+    depends on !DISPLAY_DEFAULT_IF_SPI
+config DISPLAY_DEFAULT_WIRE_24
+    bool "24 bits per pixel (RGB888/RGB666)"
+    depends on !DISPLAY_DEFAULT_IF_SPI
+endchoice
+
+config DISPLAY_DEFAULT_DEV
+    string "Controller device name"
+    default "spi0" if DISPLAY_DEFAULT_IF_SPI
+    default "dbi"
+
+config DISPLAY_DEFAULT_DMA
+    string "DMA channel for the pixels (empty: CPU only)"
+    default "dma0_ch3"
+
+config DISPLAY_DEFAULT_LLI_COUNT
+    int "DMA list nodes"
+    range 1 255
+    default 40
+    help
+      16 bytes per node. One draw can carry up to about 16 KB per node on the DBI peripheral and 8 KB per node
+      on SPI (RGB565); 40 nodes cover a full 320x480 RGB565 frame on both. display_get_info() reports the limit
+      as max_draw_bytes.
+
+config DISPLAY_DEFAULT_FREQ_HZ
+    int "Clock (Hz, 0: interface default)"
+    default 0
+    help
+      0 selects the default of the interface: 27 MHz for Type B, 40 MHz otherwise.
+
+choice DISPLAY_DEFAULT_CS_MODE
+    prompt "Chip select"
+    default DISPLAY_DEFAULT_CS_GPIO
+    help
+      How the panel is selected. The panel is the only one on its bus, so it may also be always selected.
+config DISPLAY_DEFAULT_CS_GPIO
+    bool "Software CS (GPIO, active low)"
+    help
+      The framework drives a GPIO around every transaction. It is released in the DMA completion interrupt,
+      so it has to be a real GPIO (an I/O expander behind I2C cannot do that). Other kinds of CS are not supported.
+config DISPLAY_DEFAULT_CS_HARDWARE
+    bool "Hardware CS (the same GPIO, driven by the DBI controller)"
+    depends on !DISPLAY_DEFAULT_IF_SPI
+    help
+      The CS pin of the interface is muxed to the DBI controller (board function board_display_<interface>_cs_gpio_init)
+      and driven by the hardware; the software does nothing. Only the DBI peripheral supports it.
+config DISPLAY_DEFAULT_CS_NONE
+    bool "No CS (the panel is always selected)"
+    help
+      CS is not wired, or tied to ground on the panel module.
+endchoice
+
+config DISPLAY_DEFAULT_CS_PIN
+    int "CS GPIO (active low)"
+    range 0 63
+    depends on DISPLAY_DEFAULT_CS_GPIO
+    help
+      Set this to a free GPIO wired to the panel CS. The board pin functions leave that pin as a plain GPIO.
+
+config DISPLAY_DEFAULT_DC_PIN
+    int "D/C GPIO of the SPI interface (high: data)"
+    range 0 63
+    depends on DISPLAY_DEFAULT_IF_SPI
+
+endif # DISPLAY_DEFAULT_TYPE_GRAM
+
+if DISPLAY_DEFAULT_TYPE_VIDEO
+
+choice DISPLAY_DEFAULT_VIDEO_MODULE
+    prompt "Video panel"
+    default DISPLAY_DEFAULT_VIDEO_EK79007_2LANE
+config DISPLAY_DEFAULT_VIDEO_EK79007_2LANE
+    bool "EK79007 1024x600, MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_EK79007
+config DISPLAY_DEFAULT_VIDEO_EK79007_4LANE
+    bool "EK79007 1024x600, MIPI DSI 4 lanes"
+    depends on DISPLAY_PANEL_EK79007
+config DISPLAY_DEFAULT_VIDEO_AXS15231B_172X640
+    bool "AXS15231B 172x640, MIPI DSI 1 lane"
+    depends on DISPLAY_PANEL_AXS15231B
+config DISPLAY_DEFAULT_VIDEO_AXS15231E_258X960
+    bool "AXS15231E 258x960, MIPI DSI 1 lane"
+    depends on DISPLAY_PANEL_AXS15231E
+config DISPLAY_DEFAULT_VIDEO_FL7707N_720X720
+    bool "FL7707N 720x720, MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_FL7707N
+config DISPLAY_DEFAULT_VIDEO_ILI9806E_480X854
+    bool "ILI9806E 480x854, MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_ILI9806E
+config DISPLAY_DEFAULT_VIDEO_ILI9881C_KD050020
+    bool "ILI9881C 720x1280 (KD050020), MIPI DSI 4 lanes"
+    depends on DISPLAY_PANEL_ILI9881C
+config DISPLAY_DEFAULT_VIDEO_ILI9881C_KD050023W4
+    bool "ILI9881C 720x1280 (KD050023W4), MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_ILI9881C
+config DISPLAY_DEFAULT_VIDEO_JD9365TX_720X1280
+    bool "JD9365TX 720x1280, MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_JD9365TX
+config DISPLAY_DEFAULT_VIDEO_ST7102_KD027HVF
+    bool "ST7102 320x320 (KD027HVF), MIPI DSI 1 lane"
+    depends on DISPLAY_PANEL_ST7102
+config DISPLAY_DEFAULT_VIDEO_ST7102_YH494
+    bool "ST7102 480x960 (YH494), MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_ST7102
+config DISPLAY_DEFAULT_VIDEO_ST7701S_DSI_480X480
+    bool "ST7701S 480x480, MIPI DSI 2 lanes"
+    depends on DISPLAY_PANEL_ST7701S
+config DISPLAY_DEFAULT_VIDEO_GC9503V_480X480
+    bool "GC9503V 480x480, RGB with a command port"
+    depends on DISPLAY_PANEL_GC9503V
+config DISPLAY_DEFAULT_VIDEO_ST7701P_480X480
+    bool "ST7701P 480x480, RGB with a command port"
+    depends on DISPLAY_PANEL_ST7701P
+config DISPLAY_DEFAULT_VIDEO_ST7701S_RGB_480X480
+    bool "ST7701S 480x480, RGB with a command port"
+    depends on DISPLAY_PANEL_ST7701S
+config DISPLAY_DEFAULT_VIDEO_JD9165BA_1024X600
+    bool "JD9165BA 1024x600, RGB (command port optional)"
+    depends on DISPLAY_PANEL_JD9165BA
+config DISPLAY_DEFAULT_VIDEO_RGB_800X480
+    bool "Standard RGB 800x480 (no driver IC)"
+config DISPLAY_DEFAULT_VIDEO_RGB_1024X600
+    bool "Standard RGB 1024x600 (no driver IC)"
+endchoice
+
+config DISPLAY_DEFAULT_DSI
+    bool
+    default y if DISPLAY_DEFAULT_VIDEO_EK79007_2LANE || DISPLAY_DEFAULT_VIDEO_EK79007_4LANE || DISPLAY_DEFAULT_VIDEO_AXS15231B_172X640 || DISPLAY_DEFAULT_VIDEO_AXS15231E_258X960 || DISPLAY_DEFAULT_VIDEO_FL7707N_720X720 || DISPLAY_DEFAULT_VIDEO_ILI9806E_480X854 || DISPLAY_DEFAULT_VIDEO_ILI9881C_KD050020 || DISPLAY_DEFAULT_VIDEO_ILI9881C_KD050023W4 || DISPLAY_DEFAULT_VIDEO_JD9365TX_720X1280 || DISPLAY_DEFAULT_VIDEO_ST7102_KD027HVF || DISPLAY_DEFAULT_VIDEO_ST7102_YH494 || DISPLAY_DEFAULT_VIDEO_ST7701S_DSI_480X480
+
+config DISPLAY_DEFAULT_RGB_CMD
+    bool
+    select DISPLAY_BUS_SOFT_DBI_C
+    default y if DISPLAY_DEFAULT_VIDEO_GC9503V_480X480 || DISPLAY_DEFAULT_VIDEO_ST7701P_480X480 || DISPLAY_DEFAULT_VIDEO_ST7701S_RGB_480X480 || DISPLAY_DEFAULT_VIDEO_JD9165BA_1024X600
+
+# Panels with a driver IC (a command port): the module can be changed with display_default_get_module()
+config DISPLAY_DEFAULT_VIDEO_DCS
+    bool
+    default y if DISPLAY_DEFAULT_DSI || DISPLAY_DEFAULT_RGB_CMD
+
+config DISPLAY_DEFAULT_DSI_LANES
+    int "Data lanes wired on the board"
+    range 1 4
+    default 2
+    depends on DISPLAY_DEFAULT_DSI
+    help
+      1, 2 or 4. It has to be at least the number of lanes of the panel module; the default is the number of lanes of
+      the panel selected above.
+
+choice DISPLAY_DEFAULT_DSI_LANE_ORDER
+    prompt "Lane order of the board layout"
+    default DISPLAY_DEFAULT_DSI_LANES_3210
+    depends on DISPLAY_DEFAULT_DSI
+config DISPLAY_DEFAULT_DSI_LANES_3210
+    bool "3, 2, 1, 0"
+config DISPLAY_DEFAULT_DSI_LANES_2130
+    bool "2, 1, 3, 0"
+config DISPLAY_DEFAULT_DSI_LANES_1320
+    bool "1, 3, 2, 0"
+config DISPLAY_DEFAULT_DSI_LANES_3120
+    bool "3, 1, 2, 0"
+endchoice
+
+if DISPLAY_DEFAULT_RGB_CMD
+
+choice DISPLAY_DEFAULT_RGB_CMD_PORT
+    prompt "Command port of the RGB panel"
+    default DISPLAY_DEFAULT_RGB_CMD_C3
+    help
+      The command port of an RGB panel is slow and used during initialization only: it is driven by software on
+      GPIOs (the software DBI Type C bus), chip select included.
+config DISPLAY_DEFAULT_RGB_CMD_C3
+    bool "3-wire (SCK, data, CS; 9 bit)"
+config DISPLAY_DEFAULT_RGB_CMD_C4
+    bool "4-wire (SCK, data, D/C, CS)"
+config DISPLAY_DEFAULT_RGB_CMD_NONE
+    bool "No command port (the panel needs no initialization)"
+    depends on DISPLAY_DEFAULT_VIDEO_JD9165BA_1024X600
+endchoice
+
+config DISPLAY_DEFAULT_RGB_CMD_SCK_PIN
+    int "Command port clock GPIO"
+    range 0 63
+    depends on !DISPLAY_DEFAULT_RGB_CMD_NONE
+
+config DISPLAY_DEFAULT_RGB_CMD_MOSI_PIN
+    int "Command port data GPIO"
+    range 0 63
+    depends on !DISPLAY_DEFAULT_RGB_CMD_NONE
+
+config DISPLAY_DEFAULT_RGB_CMD_CS_PIN
+    int "Command port CS GPIO (active low)"
+    range 0 63
+    depends on !DISPLAY_DEFAULT_RGB_CMD_NONE
+
+config DISPLAY_DEFAULT_RGB_CMD_DC_PIN
+    int "Command port D/C GPIO (high: data)"
+    range 0 63
+    depends on DISPLAY_DEFAULT_RGB_CMD_C4
+
+endif # DISPLAY_DEFAULT_RGB_CMD
+
+choice DISPLAY_DEFAULT_RGB_PINS
+    prompt "RGB data pin layout of the board"
+    default DISPLAY_DEFAULT_RGB_PINS_24
+    depends on !DISPLAY_DEFAULT_DSI
+    help
+      The board provides the pin functions: board_display_dpu_gpio_init() and board_display_dpu_gpio_deinit()
+      (default/display_default_gpio_ext.h) mux the pins of this layout.
+config DISPLAY_DEFAULT_RGB_PINS_24
+    bool "24 bit, D0..D23"
+config DISPLAY_DEFAULT_RGB_PINS_18_MODE1
+    bool "18 bit, D0..D17"
+config DISPLAY_DEFAULT_RGB_PINS_18_MODE2
+    bool "18 bit, D0..D5, D8..D13, D16..D21"
+config DISPLAY_DEFAULT_RGB_PINS_16_MODE1
+    bool "16 bit, D0..D15"
+config DISPLAY_DEFAULT_RGB_PINS_16_MODE2
+    bool "16 bit, D0..D4, D8..D13, D16..D20"
+config DISPLAY_DEFAULT_RGB_PINS_16_MODE3
+    bool "16 bit, D1..D5, D8..D13, D17..D21"
+endchoice
+
+choice DISPLAY_DEFAULT_VIDEO_FORMAT
+    prompt "Pixel format of the frames in memory"
+    default DISPLAY_DEFAULT_VIDEO_FORMAT_RGB565
+config DISPLAY_DEFAULT_VIDEO_FORMAT_RGB565
+    bool "RGB565"
+config DISPLAY_DEFAULT_VIDEO_FORMAT_RGB888
+    bool "RGB888 (packed, 3 bytes per pixel)"
+    help
+      For scanouts that read packed 24-bit frames. The scanout of the BL618DG does not: display_init() then
+      returns -ENOTSUP.
+config DISPLAY_DEFAULT_VIDEO_FORMAT_XRGB8888
+    bool "XRGB8888"
+config DISPLAY_DEFAULT_VIDEO_FORMAT_ARGB8888
+    bool "ARGB8888 (per-pixel alpha over the black base layer)"
+endchoice
+
+endif # DISPLAY_DEFAULT_TYPE_VIDEO
+
+config DISPLAY_DEFAULT_BOARD_CUSTOM
+    bool "Power, reset and backlight implemented by the project"
+    default n
+    help
+      The project provides `const display_board_ops_t display_default_board_ops` (power, reset and backlight
+      callbacks, for example on an I/O expander or a PWM); the pins of this menu are not used.
+
+config DISPLAY_DEFAULT_RESET_USED
+    bool "Panel reset pin"
+    default n
+    depends on !DISPLAY_DEFAULT_BOARD_CUSTOM
+
+config DISPLAY_DEFAULT_RESET_PIN
+    int "Reset GPIO (active low)"
+    range 0 63
+    depends on DISPLAY_DEFAULT_RESET_USED
+
+config DISPLAY_DEFAULT_POWER_USED
+    bool "Panel power enable pin"
+    default n
+    depends on !DISPLAY_DEFAULT_BOARD_CUSTOM
+
+config DISPLAY_DEFAULT_POWER_PIN
+    int "Power enable GPIO (active high)"
+    range 0 63
+    depends on DISPLAY_DEFAULT_POWER_USED
+
+choice DISPLAY_DEFAULT_BACKLIGHT_MODE
+    prompt "Backlight"
+    default DISPLAY_DEFAULT_BACKLIGHT_NONE
+    depends on !DISPLAY_DEFAULT_BOARD_CUSTOM
+    help
+      A GPIO backlight, switched with display_set_backlight(): any level above 0 is on. The backlight is off
+      after display_init(). For a PWM or I/O expander backlight use "Power, reset and backlight implemented by
+      the project" above and set the backlight callback of display_default_board_ops.
+
+config DISPLAY_DEFAULT_BACKLIGHT_NONE
+    bool "None"
+config DISPLAY_DEFAULT_BACKLIGHT_GPIO
+    bool "GPIO"
+endchoice
+
+config DISPLAY_DEFAULT_BACKLIGHT_PIN
+    int "Backlight GPIO"
+    range 0 63
+    depends on DISPLAY_DEFAULT_BACKLIGHT_GPIO
+
+config DISPLAY_DEFAULT_BACKLIGHT_ACTIVE_HIGH
+    bool "Backlight is on when the pin is high"
+    default y
+    depends on DISPLAY_DEFAULT_BACKLIGHT_GPIO
+
+endif # DISPLAY_DEFAULT

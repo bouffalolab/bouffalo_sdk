@@ -1,0 +1,14 @@
+key,type,encoding,value
+factory_param,namespace,,
+module_name,data,string,bl616dk
+max_tx_power,data,i8,-1
+country_code,data,string,CN
+start_channel,data,u8,1
+channel_num,data,u8,13
+uart_port,data,i8,1
+uart_baudrate,data,i32,2000000
+uart_tx_pin,data,i32,14
+uart_rx_pin,data,i32,15
+uart_cts_pin,data,i32,-1
+uart_rts_pin,data,i32,-1
+sys_store,data,u8,1

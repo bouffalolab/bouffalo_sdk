@@ -1,0 +1,24 @@
+# The card socket connects only CMD, CLK and DAT0.
+config SDH_BUS_WIDTH_1LINE
+    bool
+    default y if BSP_SDH_SD || BSP_SDH_SDIO
+
+if BSP_AUDIO_CODEC
+
+# SDK composite driver for the JY6311 DAC and JY6166 ADC pair.
+config AUDIO_CODEC_JY6316_ENABLE
+    default y
+
+endif
+
+if BSP_AUDIO_PLAYER
+
+# Electrical slot roles have not been measured on this PCB. Zero means unknown;
+# do not inherit the other board's single-microphone slot-3 assumption.
+config BOARD_AUDIO_CAPTURE_MIC_MASK
+    default 0x00 if AUDIO_CODEC_JY6316_ENABLE
+
+config BOARD_AUDIO_CAPTURE_REF_MASK
+    default 0x00 if AUDIO_CODEC_JY6316_ENABLE
+
+endif

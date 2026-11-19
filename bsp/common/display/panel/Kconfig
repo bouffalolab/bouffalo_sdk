@@ -1,0 +1,110 @@
+# Display panel drivers (panel/)
+#
+# Sourced by display/Kconfig inside `if BSP_DISPLAY`. The IC descriptions and default modules of the panels are data;
+# a panel that is switched off is not compiled, so a project that references one of its modules does not link.
+# The generic DCS driver (panel/dcs) and the standard RGB panels (panel/video_standard) are always built.
+# All panels are on by default: unreferenced data is dropped by the linker.
+
+menu "Panel drivers"
+
+comment "Panels with frame memory (SPI / DBI / QSPI)"
+
+config DISPLAY_PANEL_ST7789
+    bool "ST7789"
+    default y
+
+config DISPLAY_PANEL_ST7796
+    bool "ST7796"
+    default y
+
+config DISPLAY_PANEL_ILI9341
+    bool "ILI9341"
+    default y
+
+config DISPLAY_PANEL_ILI9488
+    bool "ILI9488"
+    default y
+
+config DISPLAY_PANEL_GC9A01
+    bool "GC9A01 (round)"
+    default y
+
+config DISPLAY_PANEL_GC9307
+    bool "GC9307"
+    default y
+
+config DISPLAY_PANEL_ILI9486
+    bool "ILI9486"
+    default y
+
+config DISPLAY_PANEL_JD9853
+    bool "JD9853"
+    default y
+
+config DISPLAY_PANEL_ST7735
+    bool "ST7735"
+    default y
+
+config DISPLAY_PANEL_ST77922
+    bool "ST77922 / ST77926"
+    default y
+
+config DISPLAY_PANEL_SPD2010
+    bool "SPD2010 (QSPI)"
+    default y
+
+config DISPLAY_PANEL_NT35510
+    bool "NT35510"
+    default y
+
+comment "Video panels (RGB / MIPI DSI)"
+
+config DISPLAY_PANEL_ST7701S
+    bool "ST7701S (RGB and MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_ST7701P
+    bool "ST7701P (RGB)"
+    default y
+
+config DISPLAY_PANEL_GC9503V
+    bool "GC9503V (RGB)"
+    default y
+
+config DISPLAY_PANEL_JD9165BA
+    bool "JD9165BA (RGB)"
+    default y
+
+config DISPLAY_PANEL_EK79007
+    bool "EK79007 (MIPI DSI bridge)"
+    default y
+
+config DISPLAY_PANEL_AXS15231B
+    bool "AXS15231B (MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_AXS15231E
+    bool "AXS15231E (MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_FL7707N
+    bool "FL7707N (MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_ILI9806E
+    bool "ILI9806E (MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_ILI9881C
+    bool "ILI9881C (MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_JD9365TX
+    bool "JD9365TX (MIPI DSI)"
+    default y
+
+config DISPLAY_PANEL_ST7102
+    bool "ST7102 (MIPI DSI)"
+    default y
+
+endmenu

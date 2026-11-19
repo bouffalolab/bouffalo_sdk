@@ -1,0 +1,38 @@
+# Display bus backends (bus/)
+#
+# Sourced by display/Kconfig inside `if BSP_DISPLAY`. Every backend of the chip is on by default: backends are statically
+# allocated and unreferenced code is dropped by the linker, so unused ones cost no code space.
+
+config DISPLAY_BUS_SPI
+    bool "SPI bus backend (DBI Type-C 4-wire)"
+    default y
+
+config DISPLAY_SPI_MODE
+    int "SPI mode (clock polarity and phase) of the SPI backend"
+    range 0 3
+    default 0
+    depends on DISPLAY_BUS_SPI
+
+config DISPLAY_BUS_DBI
+    bool "DBI peripheral bus backend (Type-B / Type-C 4-wire / Type-C 3-wire / QSPI)"
+    default y if CHIP = "bl616" || CHIP = "bl616cl" || CHIP = "bl618dg"
+    help
+      The interfaces of a DBI bus, and the board functions that mux their pins, are listed in the
+      static definition of the bus (DISPLAY_DBI_IFACES), not here.
+
+config DISPLAY_DBI_CLK_MODE
+    int "Clock polarity and phase (DBI_CLOCK_MODE_x) of the DBI peripheral"
+    range 0 3
+    default 1
+    depends on DISPLAY_BUS_DBI
+
+config DISPLAY_BUS_SOFT_DBI_C
+    bool "Software DBI Type C bus backend (3-wire / 4-wire GPIO, command port of RGB panels)"
+    default y
+
+config DISPLAY_BUS_DSI
+    bool "MIPI DSI host (BL618DG)"
+    default y if CHIP = "bl618dg"
+    depends on CHIP = "bl618dg"
+    help
+      Command port of MIPI DSI panels (LP packets) and the HS video output of the DPU scanout.

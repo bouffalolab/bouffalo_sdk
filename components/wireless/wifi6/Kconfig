@@ -1,0 +1,73 @@
+#
+# Wi-Fi 6 specific configuration. The BL618DG coexistence board wiring is
+# consumed by this submodule's platform adapter (macsw_os_adapter), so its
+# Kconfig lives next to the implementation.
+#
+
+menu "Wi-Fi/Bluetooth coexistence"
+
+config COEX
+    bool "Coexistence"
+    default n
+    help
+      Build Wi-Fi/Bluetooth coexistence support. BL618DG additionally needs
+      the board RF topology below; the SYSINIT WIRELESS record prepares the
+      RF path from that build-time configuration before it starts Wi-Fi.
+
+config COEX_WIFI_MODE
+    int "Coexistence Wi-Fi mode"
+    default 0
+
+if COEX && CHIP = "bl618dg"
+
+choice COEX_BOARD_TOPOLOGY
+    prompt "BL618DG board RF topology"
+    optional
+    help
+      Physical RF/antenna wiring of the board. This is a board fact, so it is
+      selected at build time instead of being entered through a shell command
+      after boot: the SYSINIT WIRELESS record runs before main()/shell and has
+      no earlier command producer. The selected topology fixes the RF mode
+      prepared during that record (combo wiring uses the combo path, both
+      standalone wirings use the BT standalone path) and whether an SPDT
+      control GPIO is claimed. It must match the schematic; changing it
+      requires a rebuild and reboot. A coexistence build that leaves the
+      topology unset fails with a diagnostic instead of running an unknown
+      RF path.
+
+config COEX_BOARD_TOPOLOGY_COMBO
+    bool "Combo shared path (no external SPDT)"
+    help
+      Wi-Fi 2.4 GHz and Bluetooth share the internal combo RF path. Prepares
+      the combo RF mode; no SPDT GPIO is used.
+
+config COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT
+    bool "Standalone dual antenna (no SPDT)"
+    help
+      Bluetooth and Wi-Fi use separate antennas. Prepares the BT standalone
+      RF mode; no SPDT GPIO is used. Runtime coexistence additionally needs
+      the MACSW dual-antenna validation build.
+
+config COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT
+    bool "Standalone single antenna with SPDT"
+    help
+      Wi-Fi 2.4 GHz and Bluetooth share one antenna through a single-control
+      SPDT switch; Wi-Fi 5 GHz uses the diplexer. Prepares the BT standalone
+      RF mode and claims CONFIG_COEX_BOARD_SPDT_GPIO during SYSINIT.
+
+endchoice
+
+config COEX_BOARD_SPDT_GPIO
+    int "SPDT control GPIO"
+    depends on COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT
+    range 0 52
+    default 18
+    help
+      BL618DG GPIO (0-52) that controls the antenna SPDT switch for the
+      single-antenna topology. The default matches the SDK's tested
+      single-antenna board; verify it against the schematic and the BSP
+      switch polarity rules before use. Other topologies ignore this value.
+
+endif
+
+endmenu

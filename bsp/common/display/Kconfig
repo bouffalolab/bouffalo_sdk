@@ -1,0 +1,20 @@
+# Display framework
+#
+# Kconfig selects which backends and panel drivers are built and sets their private options, one file per layer:
+# bus/Kconfig, panel/Kconfig, scanout/Kconfig, default/Kconfig. Backends are on by default (chip specific backends
+# only on their chip): objects are statically allocated and unreferenced code is dropped by the linker, so unused
+# ones cost no code space. The default display (default/Kconfig) defines one screen from Kconfig; boards with several
+# displays define them statically in C (see examples/display_test/doc/samples/board_display_demo.c).
+# Sourced by bsp/Kconfig inside `if BSP_DISPLAY`: a project enables the framework with CONFIG_BSP_DISPLAY=y.
+# simple_font/Kconfig provides an optional memory-only ASCII renderer, off by default.
+
+
+config DISPLAY_BUS_LOCK_TIMEOUT_MS
+    int "Bus lock wait timeout (ms)"
+    default 1000
+
+source "$BL_SDK_BASE/bsp/common/display/bus/Kconfig"
+source "$BL_SDK_BASE/bsp/common/display/panel/Kconfig"
+source "$BL_SDK_BASE/bsp/common/display/scanout/Kconfig"
+source "$BL_SDK_BASE/bsp/common/display/default/Kconfig"
+source "$BL_SDK_BASE/bsp/common/display/simple_font/Kconfig"

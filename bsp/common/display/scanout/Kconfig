@@ -1,0 +1,21 @@
+# Display scanout backends (scanout/)
+#
+# Sourced by display/Kconfig inside `if BSP_DISPLAY`. Chip specific backends are only on, and only selectable, on their
+# chip; unreferenced code is dropped by the linker.
+
+config DISPLAY_SCANOUT_BL618DG_DPU
+    bool "BL618DG DPU scanout (RGB pins or MIPI DSI video panels)"
+    default y if CHIP = "bl618dg"
+    depends on CHIP = "bl618dg"
+    select DISPLAY_BUS_DSI
+    help
+      The screen is the OSD0 layer of the display processing unit; the Base layer is a black test pattern.
+
+config DISPLAY_SCANOUT_SIM_V1
+    bool "BL616 RGB scanout (SIM v1, RGB565 frames by DMA)"
+    default y if CHIP = "bl616"
+    depends on CHIP = "bl616"
+    help
+      Needs the library that provides the table of ROM functions of the SIM engine (linker symbol
+      __edata_etext_final): without it display_init() of an RGB panel on this scanout returns -ENOTSUP. Not tested
+      on hardware.

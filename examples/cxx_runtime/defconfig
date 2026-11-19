@@ -1,0 +1,13 @@
+CONFIG_VSNPRINTF_NANO       =n
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+CONFIG_SCANF_FLOAT          =y
+CONFIG_SCANF_FLOAT_EX       =y
+
+CONFIG_BFLB_LOG             =n
+
+# The C++ condition variable test cases need threads and the POSIX pthread
+# compatibility layer (libstdc++ gthreads requires a pthread implementation).
+CONFIG_FREERTOS             =y
+CONFIG_POSIX                =y

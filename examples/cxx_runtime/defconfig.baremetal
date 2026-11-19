@@ -1,0 +1,17 @@
+# Bare-metal C++ runtime configuration.
+#
+# Use it to keep the SYSINIT constructor regression of the cxx_runtime demo
+# without FreeRTOS/POSIX:
+#
+#   make CHIP=bl616 BOARD=bl616dk BUILD_DIR=build-baremetal \
+#        DEFCONFIG=defconfig.baremetal
+#
+# The C++ condition variable tests need threads and are skipped in this mode.
+CONFIG_VSNPRINTF_NANO       =n
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+CONFIG_SCANF_FLOAT          =y
+CONFIG_SCANF_FLOAT_EX       =y
+
+CONFIG_BFLB_LOG             =n
