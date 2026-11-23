@@ -1,7 +1,8 @@
 # Wi-Fi/Bluetooth Coexistence Guide
 
-本文介绍 BL616、BL616CL 和 BL618DG 的共存配置。编译、测速命令和 PSRAM 参考数据见
-[README.md](README.md)。
+本文介绍 BL616、BL616CL 和 BL618DG 的共存配置。编译和测速命令见 [README.md](README.md)。
+BL618DG 在 5 GHz、40 MHz 下的四方向吞吐见
+[AP40 实测结果](README.md#bl618dg-ap40-throughput-2026-11-20)。
 
 ## 1. 使用原则
 
@@ -23,11 +24,11 @@
 | BL618DG combo | 2.4 GHz | 硬件 PTA | 已连接的单 STA |
 | BL618DG standalone 单天线/SPDT | 2.4 GHz | 动态 PTA/SPDT | 已连接的单 STA |
 | BL618DG standalone 单天线/SPDT | 5 GHz | SPDT 固定 BT，5G channel-aware 配置 | 不使用 |
-| BL618DG standalone 双天线 | 2.4 / 5 GHz | 并行配置，仅双天线验证构建 | 不使用 |
+| BL618DG standalone 双天线 | 2.4 / 5 GHz | 并行共存，需发布版 MACSW 库支持 | 不使用 |
 
-双天线配置需在 Kconfig 选择 `CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT`，显式启用
-`COEX_DUAL_ANT_VALIDATION=ON`，并在实际双天线硬件上完成集成验证；默认构建不启用。
-BL618DG combo 的当前共存配置用于 2.4 GHz，不用于 5 GHz。
+应用链接预编译的发布版 MACSW 库。`CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT` 用于声明
+双天线板级拓扑，仅在所用发布版 MACSW 库支持双天线并行共存时选择。
+BL618DG combo 的当前共存配置限于 2.4 GHz。
 
 基础硬件共存适用于上述配置的 STA、AP，以及使用相同完整信道配置的 STA+AP；不同信道的
 STA+AP 不支持。PS-PTA 只用于受支持的 2.4 GHz 单 STA，不用于 AP、STA+AP 或 5 GHz。
@@ -42,7 +43,7 @@ BL618DG 的板级拓扑是硬件事实，在编译期通过 `Wi-Fi/Bluetooth coe
 |---|---|---|---|
 | Combo | 内部 combo/2G path，无外部 SPDT | `CONFIG_COEX_BOARD_TOPOLOGY_COMBO` | combo |
 | Standalone 单天线 | BZ 与 Wi-Fi 2.4G 经 SPDT，5G 经 diplexer，合用一根天线 | `CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT` | standalone |
-| Standalone 双天线 | BZ 独立天线；Wi-Fi 使用另一根双频天线，无 SPDT | `CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT` | standalone，另需双天线验证构建 |
+| Standalone 双天线 | BZ 独立天线；Wi-Fi 使用另一根双频天线，无 SPDT | `CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT` | standalone |
 
 按原理图选择拓扑，不需要提前选择 Wi-Fi band，也不能把 SPDT 单天线板配置成双天线。
 拓扑决定 WIRELESS 记录准备的 RF 模式（combo 或 standalone）以及是否占用 SPDT GPIO；
@@ -56,11 +57,13 @@ SPDT 只使用一个 GPIO，对应 `CONFIG_COEX_BOARD_SPDT_GPIO`，**默认 18**
 
 BL618DG 的拓扑和 RF 模式在编译期确定，启动顺序由 SDK 的 SYSINIT 完成，不需要 shell 命令：
 
-1. 在 menuconfig 的 `Wi-Fi/Bluetooth coexistence` 菜单选择拓扑，或编辑工程的 defconfig；
+1. 在 menuconfig 的 `Wi-Fi/Bluetooth coexistence` 菜单或工程 defconfig 中，选择与板卡匹配、
+   且由发布版 MACSW 库支持的拓扑。
 2. 编译、烧录并复位；
 3. SYSINIT 的 WIRELESS 记录在 `main()`/shell 之前发布板级配置并准备 RF，校验 RF 状态后启动
-   Wi-Fi 固件和 manager；失败时打印日志并中止，不进入应用；
-4. 启动完成后执行 `wifi_bt_init`，只启动 Bluetooth 协议栈；Wi-Fi 已由 SYSINIT 初始化。
+   Wi-Fi 固件和 manager。失败时打印日志并中止启动。
+4. BL618DG 看到 `RF is ready` 和 shell 提示符后即可使用 Wi-Fi 命令。需要 Bluetooth 时，
+   执行一次 `wifi_bt_init` 并等到 `BD_ADDR` 日志。
 
 例如示例默认的单天线 GPIO18 板，defconfig 中对应：
 
@@ -69,19 +72,14 @@ CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT =y
 CONFIG_COEX_BOARD_SPDT_GPIO                          =18
 ```
 
-或在 `make menuconfig CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap` 中选择相同选项。combo 或双天线板
-改为对应选项并重新编译；未选择拓扑的 `CONFIG_COEX` 构建会以 `#error` 明确失败。拓扑和 GPIO
-运行期不可修改，改变拓扑需重新编译、烧录并重启。
+也可在 `make menuconfig CHIP=bl618dg BOARD=bl618dgdk CPU_ID=ap` 中选择相同选项，
+并使用相同的 `BUILD_DIR` 编译。保存后的 menuconfig 优先于 defconfig 和命令行配置。未选择
+拓扑的 `CONFIG_COEX` 构建会报错。改变拓扑或 GPIO 后需重新编译、烧录并重启。
 
 `wifi_coex_debug_board_config show` 可查看编译进固件的拓扑、允许模式、已选模式和实际 RF path。
-启动命令 `wifi_coex_board_config` / `wifi_coex_init` 已退役，不再从 shell 导出；RF 准备完全由
-SYSINIT 的 WIRELESS 记录完成，应用不需要也不应重复调用板级配置/RF 准备接口。
-
-BL616/BL616CL 在上电时初始化 RF，直接执行 `wifi_bt_init`。
-
-等待 `CODE_WIFI_ON_MGMR_DONE` 和 Bluetooth 初始化成功，再启动 Wi-Fi/Bluetooth 业务。
-每次启动只初始化一次；RF 初始化失败后不要继续启动协议栈，应检查 `CONFIG_COEX_BOARD_*` 对应的
-板级拓扑和 GPIO 后重启。`Run WifiMgmr init first...` 表示 Wi-Fi MGMR 尚未完成初始化。
+BL616/BL616CL 同样在上电时初始化 Wi-Fi，需要 Bluetooth 时执行 `wifi_bt_init`。应用注册事件
+日志的时间可能晚于 Wi-Fi manager 就绪，`CODE_WIFI_ON_MGMR_DONE` 日志可能缺失。若 RF 初始化
+失败，检查 `CONFIG_COEX_BOARD_*` 对应的板级拓扑和 GPIO 后重新启动。
 
 单天线/SPDT 的自动切换如下，无需手动操作 GPIO 或寄存器：
 
@@ -99,9 +97,9 @@ F 不表示所有 Coex 寄存器清零，也不代表并发吞吐必然与单负
 
 ## 4. 典型场景
 
-先按第 3 节完成构建配置并启动，再选择一个场景。将 `<...>` 替换为实际参数；BSSID、信道必须与目标路由器
-一致，信道也必须符合当地法规及板级配置。STA 等待连接和 IP 获取完成，AP 等待
-`CODE_WIFI_ON_AP_STARTED` 后，再查询状态或开始打流。
+按第 3 节完成构建配置并启动。将 `<...>` 替换为实际参数。STA 使用目标 AP 的 BSSID 和信道，
+等到连接并取得 IP。AP 等到 `AP-ENABLED`，确认实际信道和带宽，再验证对端 STA 成功关联、
+取得 IP 并能 ping 通 AP。使用符合当地法规及板级配置的信道。
 
 ### 2.4 GHz Combo：STA / AP + BLE
 
@@ -117,7 +115,7 @@ wifi_sta_connect -b <BSSID_2G> -c 6 <SSID_2G> <password>
 或选择 AP：
 
 ```text
-wifi_ap_start -s COEX_2G_AP -k 12345678 -c 6 -I 192.168.169.1 -S 2 -L 100
+wifi_ap_start -s COEX_2G_AP -a WPA2 -k <passphrase> -c 6 -b 0 -I 192.168.169.1
 ```
 
 BLE 广播、GATT 服务和对端连接由应用启动。两种 Wi-Fi 角色均不需要硬件 start；单 STA 可按
@@ -135,28 +133,24 @@ wifi_sta_connect -b <BSSID_5G> -c 36 <SSID_5G> <password>
 或 AP：
 
 ```text
-wifi_ap_start -s COEX_5G_AP -k 12345678 -c 36 -I 192.168.169.1 -S 2 -L 100
+wifi_ap_start -s COEX_5G_AP -a WPA2 -k <passphrase> -c 36 -b 1 -I 192.168.169.1
 ```
 
-SDK 自动使用 F，不执行 `wifi_coex_start`。若改用 2.4 GHz，只需更换连接参数或 AP 信道，
-板级初始化不变，SDK 自动使用 D。BR/EDR SPP 示例见 [README.md](README.md#bluetooth-spp)。
+`-b 1` 请求 40 MHz。使用 40 MHz 时保持 WMM 开启，并在 AP 和对端 STA 上核对实际带宽。SDK 在 5 GHz
+自动使用 F，采用 `hardware_only` 运行。切换到 2.4 GHz 时，按对应频段选择连接参数，SDK
+自动使用 D。BR/EDR SPP 示例见 [README.md](README.md#bluetooth-spp)。
 
-### Standalone 双天线：STA / AP + BT/BLE
-
-使用 README 中的双天线验证构建，并在 Kconfig 选择
-`CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_DUAL_ANT`，在真实双天线板上构建、烧录并启动。
-启动后执行 `wifi_bt_init` 启动 Bluetooth 协议栈；Wi-Fi 已由 SYSINIT 初始化。
-
-初始化成功后使用上面的 STA 或 AP 命令，可选 2.4 GHz 或 5 GHz。基础配置允许双 path 并行，
-不配置 SPDT，不执行 PS-PTA start。
+复测 5 GHz AP40 时关闭对端 STA 的省电，保持 Bluetooth 空闲，四个方向各测 60 秒 × 2。
+板卡、构建配置和接收端数据见 [AP40 实测结果](README.md#bl618dg-ap40-throughput-2026-11-20)。
 
 ## 5. PS-PTA 与 Protection
 
 ### PS-PTA
 
-受支持的 2.4 GHz 单 STA 获得 IP 后，按需执行：
+受支持的 2.4 GHz 单 STA 获得 IP 后，先关闭普通 STA 省电，再开启 PS-PTA。
 
 ```text
+wifi_sta_ps_off
 wifi_coex_duty_set 50
 wifi_coex_start
 wifi_coex_status
@@ -165,7 +159,7 @@ wifi_coex_status
 Duty 范围为 `10～90 ms`，表示每个 TBTT 周期内的 Wi-Fi active window，常见周期约 100 ms。
 可以提前设置或运行中调整；未开启 PS-PTA 时仅保存该值。
 
-启动前由应用保证普通 STA PS 关闭；PS-PTA 运行时不要同时调用普通 STA PS 控制接口。
+确认 `ps_pta_running=1`。PS-PTA 负责运行期间的 STA 省电控制。
 返回 hardware-only：
 
 ```text
@@ -210,8 +204,8 @@ BL618DG 构建中，SYSINIT 的 WIRELESS 记录在启动 Wi-Fi 固件/manager �
 RF/GPIO 操作，仍按上述顺序调用这些公开接口，须与 RF 配置和任务创建串行执行；普通应用启动
 流程不调用。准备成功不等于 MACSW baseline 已经应用。
 
-自定义 BSP 只实现 RF/GPIO 操作，经 `platform_bouffalo_sdk.c` 的静态操作表适配；
-运行时 SPDT callback 不阻塞、不查询 MGMR。Board overlay 只有实现相同硬件合同后才声明
+自定义 BSP 提供 RF/GPIO 操作，BL618DG 在 `platform_chip_bl618dg.c` 中通过静态操作表绑定。
+运行时 SPDT callback 不阻塞、不查询 MGMR。Board overlay 实现相同的板级接口后才声明
 `BOARD_RF_COEX_OPS_SUPPORTED`，包括无硬件写入的 `board_rf_modes_get()`。缺少绑定时初始化返回 `NOT_SUPPORTED`。
 底层 `board_rf_*_init()` 不再登记共存配置，应用不应绕过统一入口直接启动协议栈。
 `wifi_mgmr_coex_board_configure()` 仍仅保存事实，不代替 RF 准备。

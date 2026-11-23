@@ -155,6 +155,8 @@
 #define LWIP_SUPPORT_CUSTOM_PBUF      1
 #ifdef HIGH_PERFORMANCE_PBUF
 #define LWIP_NETIF_TX_SINGLE_PBUF 0
+/* Place application TX data in lwIP's WRAM heap for FHOST DMA. */
+#define LWIP_TCPIP_FORCE_TX_COPY 1
 #else
 #define LWIP_NETIF_TX_SINGLE_PBUF 1
 #endif
