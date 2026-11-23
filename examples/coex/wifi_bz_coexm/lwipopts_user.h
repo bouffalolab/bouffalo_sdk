@@ -79,12 +79,14 @@
 #define TCP_MSS                       (1500 - 40)
 #if (defined(BL602))
 #define TCP_WND                       (3 * TCP_MSS)
+#elif defined(BL618DG)
+/* Allow more data in flight over the Wi-Fi round trip. */
+#define TCP_WND                       (256 * TCP_MSS)
 #else 
 #define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
 #endif
 #if defined(BL618DG)
-/* A modest TX window; retain RAM for Bluetooth and the default MACSW profile. */
-#define TCP_SND_BUF                   (8 * TCP_MSS)
+#define TCP_SND_BUF                   (48 * TCP_MSS)
 #else
 #define TCP_SND_BUF                   (4 * TCP_MSS)
 #endif
@@ -103,7 +105,11 @@
 #endif
 #define PBUF_POOL_SIZE                0
 #define LWIP_WND_SCALE                1
+#if defined(BL618DG)
+#define TCP_RCV_SCALE                 3
+#else
 #define TCP_RCV_SCALE                 2
+#endif
 #define TCP_SNDLOWAT                  LWIP_MIN(LWIP_MAX(((TCP_SND_BUF) / 4), (2 * TCP_MSS) + 1), (TCP_SND_BUF)-1)
 
 #define MEM_MIN_TCP                   (2300 + MEMP_NUM_PBUF * (100 + PBUF_LINK_ENCAPSULATION_HLEN))
@@ -113,7 +119,7 @@
 #if (defined(BL602))
 #define LWIP_HEAP_SIZE (14 * 1024)
 #elif defined(BL618DG)
-#define LWIP_HEAP_SIZE (32 * 1024)
+#define LWIP_HEAP_SIZE (96 * 1024)
 #else 
 #define LWIP_HEAP_SIZE (18 * 1024)
 #endif 

@@ -20,6 +20,8 @@ ifeq ($(CHIP),bl618dg)
     # topology (and SPDT GPIO where applicable) instead.
     CONFIG_COEX_BOARD_TOPOLOGY_STANDALONE_SINGLE_ANT_SPDT =y
     CONFIG_COEX_BOARD_SPDT_GPIO                          =18
+    # Allocate 320 KiB of WRAM to the AP core for Wi-Fi AP and STA modes.
+    CONFIG_WRAM_FOR_AP_SIZE   = 0x50000
 endif
 
 
